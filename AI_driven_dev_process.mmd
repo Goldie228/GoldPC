@@ -1,0 +1,577 @@
+flowchart TD
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🚀 ИНИЦИАЛИЗАЦИЯ
+    %% ═══════════════════════════════════════════════════════════════════
+    Start([🚀 СТАРТ ПРОЕКТА]) --> Init
+
+    subgraph Init[🏁 ИНИЦИАЛИЗАЦИЯ]
+        direction TB
+        Step1[📋 Анализ требований] --> Step2[🔪 Декомпозиция на модули]
+        Step2 --> Step3[📊 Анализ зависимостей]
+        Step3 --> Step3a[🎯 Критический путь]
+        Step3 --> Step3b[🔀 Параллельные ветки]
+        Step3 --> Step3c[⏱️ ML-оценка сроков]
+        Step3a & Step3b & Step3c --> WIPCheck{⚖️ WIP Limits OK?}
+        WIPCheck -- Нет --> WIPAdjust[🔧 Перераспределение задач]
+        WIPAdjust --> WIPCheck
+        WIPCheck -- Да --> ThreatModeling
+    end
+
+    subgraph ThreatModeling[🛡️ THREAT MODELING]
+        direction LR
+        STRIDE[🔍 STRIDE анализ]
+        AttackSurface[🗺️ Attack Surface Map]
+        SecurityReqs[📋 Security Requirements]
+        STRIDE --> AttackSurface --> SecurityReqs
+    end
+
+    Init --> ThreatModeling
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 📋 КОНТРАКТЫ
+    %% ═══════════════════════════════════════════════════════════════════
+    ThreatModeling --> ContractLayer
+
+    subgraph ContractLayer[📋 CONTRACT-FIRST LAYER]
+        direction TB
+        OpenAPI[📗 OpenAPI спецификация]
+        Pact[📘 Pact контракты]
+        AsyncAPI[📙 AsyncAPI Events]
+        OpenAPI & Pact & AsyncAPI --> ContractValidate[✅ Валидация контрактов]
+        ContractValidate --> ContractDecision{Контракты валидны?}
+        ContractDecision -- Нет --> ContractFix[🔧 Исправление]
+        ContractFix --> ContractValidate
+        ContractDecision -- Да --> ContractApproved([📌 Контракты утверждены])
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 📚 БАЗА ЗНАНИЙ
+    %% ═══════════════════════════════════════════════════════════════════
+    subgraph Knowledge[📚 БАЗА ЗНАНИЙ]
+        direction LR
+        KB[(🗄️ Knowledge Base)]
+        Lessons[(📖 Lessons Learned)]
+        Solutions[(💡 Solutions Library)]
+        Patterns[(📐 Architecture Patterns)]
+        KB <--> Lessons
+        KB <--> Solutions
+        KB <--> Patterns
+    end
+
+    ContractApproved --> Knowledge
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🏗️ ИЗОЛЯЦИЯ РАБОЧИХ ПРОСТРАНСТВ
+    %% ═══════════════════════════════════════════════════════════════════
+    Knowledge --> WorkspaceIsolation
+
+    subgraph WorkspaceIsolation[🏗️ ИЗОЛЯЦИЯ РАБОЧИХ ПРОСТРАНСТВ]
+        direction TB
+
+        subgraph MonorepoStructure[📦 Monorepo Structure]
+            Monorepo[(📁 Монорепозиторий)]
+            SharedLibs[📚 Shared Libraries]
+            Monorepo --> SharedLibs
+        end
+
+        subgraph GitWorktree[🌳 Git Worktree Engine]
+            WT_A[🌿 worktree/agent-a]
+            WT_B[🌿 worktree/agent-b]
+            WT_C[🌿 worktree/agent-c]
+        end
+
+        subgraph DockerIsolation[🐳 Docker Isolation]
+            DC_A[🐳 container-agent-a]
+            DC_B[🐳 container-agent-b]
+            DC_C[🐳 container-agent-c]
+        end
+
+        subgraph WorkspaceSync[🔄 Workspace Sync]
+            SyncBus[📡 Sync Bus]
+            LockManager[🔒 Lock Manager]
+            SyncBus --> LockManager
+        end
+
+        Monorepo --> WT_A & WT_B & WT_C
+        WT_A --> DC_A
+        WT_B --> DC_B
+        WT_C --> DC_C
+        DC_A & DC_B & DC_C --> SyncBus
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🧩 УМНЫЕ ЗАГЛУШКИ
+    %% ═══════════════════════════════════════════════════════════════════
+    WorkspaceIsolation --> SmartStubs
+
+    subgraph SmartStubs[🧩 УМНЫЕ ЗАГЛУШКИ]
+        direction LR
+        FakerData[🎲 Faker данные]
+        ChaosEng[💥 Chaos Engineering]
+        ContractMock[📋 Contract-based Mocks]
+        FakerData & ChaosEng & ContractMock --> StubRegistry[(📦 Stub Registry)]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 👨‍💼 КООРДИНАТОР
+    %% ═══════════════════════════════════════════════════════════════════
+    SmartStubs --> Coordinator
+
+    subgraph Coordinator[👨‍💼 КООРДИНАТОР]
+        direction TB
+        CoordCore[🧠 Координатор]
+        Dashboard[📊 Real-time Dashboard]
+        CriticalPathAnalysis[🎯 Critical Path Monitor]
+        CoordCore --> Dashboard
+        CoordCore --> CriticalPathAnalysis
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 👥 ПУЛ АГЕНТОВ
+    %% ═══════════════════════════════════════════════════════════════════
+    Coordinator --> AgentPool
+
+    subgraph AgentPool[👥 ПУЛ АГЕНТОВ]
+        direction TB
+
+        subgraph KnowledgeInjection[💉 Knowledge Injection]
+            KI_Patterns[📐 Паттерны]
+            KI_Contracts[📋 Контракты]
+            KI_Lessons[📖 Уроки]
+            KI_Stubs[🧩 Заглушки]
+        end
+
+        subgraph TierSystem[🥇 TIER-система]
+            Tier1[🥇 TIER-1: Архитекторы]
+            Tier2[🥈 TIER-2: Разработчики]
+            Tier3[🥉 TIER-3: Специалисты]
+        end
+
+        KnowledgeInjection --> TierSystem
+    end
+
+    Knowledge --> KnowledgeInjection
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% ⚡ ПАРАЛЛЕЛЬНАЯ РАЗРАБОТКА
+    %% ═══════════════════════════════════════════════════════════════════
+    AgentPool --> ParallelWork
+
+    subgraph ParallelWork[⚡ ПАРАЛЛЕЛЬНАЯ РАЗРАБОТКА]
+        direction TB
+
+        subgraph FrontendAgent[🖥️ Агент A: Frontend]
+            direction TB
+            F1_Plan[📋 Планирование]
+            F1_Impl[💻 Реализация]
+            F1_Iter{🔄 Итерация OK?}
+            F1_Plan --> F1_Impl --> F1_Iter
+            F1_Iter -- Нет --> F1_Plan
+            F1_Iter -- Да --> F1_QC[✅ QC Frontend]
+        end
+
+        subgraph BackendAgent[⚙️ Агент B: Backend]
+            direction TB
+            B1_Plan[📋 Планирование]
+            B1_Impl[💻 Реализация]
+            B1_Iter{🔄 Итерация OK?}
+            B1_Plan --> B1_Impl --> B1_Iter
+            B1_Iter -- Нет --> B1_Plan
+            B1_Iter -- Да --> B1_QC[✅ QC Backend]
+        end
+
+        subgraph TestAgent[🧪 Агент C: Tests]
+            direction TB
+            T1_Plan[📋 Планирование]
+            T1_Impl[💻 Реализация]
+            T1_Iter{🔄 Итерация OK?}
+            T1_Plan --> T1_Impl --> T1_Iter
+            T1_Iter -- Нет --> T1_Plan
+            T1_Iter -- Да --> T1_QC[✅ QC Tests]
+        end
+
+        subgraph InfraAgent[🏗️ Агент D: Infra]
+            direction TB
+            I1_Plan[📋 Планирование]
+            I1_Impl[💻 Реализация]
+            I1_Iter{🔄 Итерация OK?}
+            I1_Plan --> I1_Impl --> I1_Iter
+            I1_Iter -- Нет --> I1_Plan
+            I1_Iter -- Да --> I1_QC[✅ QC Infra]
+        end
+    end
+
+    StubRegistry --> FrontendAgent & BackendAgent & TestAgent & InfraAgent
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🛡️ ANTI-NEUROSLOP SHIELD
+    %% ═══════════════════════════════════════════════════════════════════
+    F1_QC & B1_QC & T1_QC & I1_QC --> AntiNeuroslop
+
+    subgraph AntiNeuroslop[🛡️ ANTI-NEUROSLOP SHIELD — 5 СЛОЁВ]
+        direction TB
+
+        subgraph Layer1_Static[🔎 Слой 1: Статический анализ]
+            L1_ESLint[ESLint / Pylint]
+            L1_Sonar[SonarQube]
+            L1_ESLint --> L1_Sonar
+        end
+
+        subgraph Layer2_Semantic[🧠 Слой 2: Семантический анализ]
+            L2_Hallucination[🚫 Детекция галлюцинаций]
+            L2_FakeLibs[🔍 Несуществующие библиотеки]
+            L2_FakeAPI[🔍 Выдуманные API]
+            L2_Hallucination --> L2_FakeLibs --> L2_FakeAPI
+        end
+
+        subgraph Layer3_Arch[🏗️ Слой 3: Архитектурный анализ]
+            L3_Patterns[📐 Соответствие паттернам]
+            L3_Dependencies[🔗 Проверка зависимостей]
+            L3_Patterns --> L3_Dependencies
+        end
+
+        subgraph Layer4_Complexity[⚖️ Слой 4: Сложность]
+            L4_OverEngineer[⚠️ Over-engineering]
+            L4_Premature[⚠️ Premature optimization]
+            L4_OverEngineer --> L4_Premature
+        end
+
+        subgraph Layer5_Duplication[🔍 Слой 5: Дублирование]
+            L5_CopyPaste[📋 Copy-paste детектор]
+        end
+
+        L1_Sonar --> L2_Hallucination
+        L2_FakeAPI --> L3_Patterns
+        L3_Dependencies --> L4_OverEngineer
+        L4_Premature --> L5_CopyPaste
+
+        L5_CopyPaste --> NeuroslipDecision{🛡️ Качество OK?}
+        NeuroslipDecision -- Нет --> NeuroslipFix[🔧 Исправление]
+        NeuroslipFix --> L1_ESLint
+        NeuroslipDecision -- Да --> NeuroslipPass([✅ Прошло проверку])
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🔐 SECURITY SCANNING
+    %% ═══════════════════════════════════════════════════════════════════
+    NeuroslipPass --> SecurityScanning
+
+    subgraph SecurityScanning[🔐 SECURITY SCANNING]
+        direction TB
+        SAST[🔍 SAST — Semgrep / CodeQL]
+        DepScan[📦 Dependency Scan — Snyk]
+        SecretScan[🔑 Secret Scan — git-secrets]
+        VaultCheck[🔐 HashiCorp Vault Check]
+
+        SAST & DepScan & SecretScan & VaultCheck --> SecurityReport[📋 Security Report]
+        SecurityReport --> SecDecision{✅ Безопасно?}
+        SecDecision -- Нет --> SecFix[🔧 Исправление уязвимостей]
+        SecFix --> SAST
+        SecDecision -- Да --> SecPass([🔒 Безопасность подтверждена])
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🧪 ТЕСТИРОВАНИЕ
+    %% ═══════════════════════════════════════════════════════════════════
+    SecPass --> Testing
+
+    subgraph Testing[🧪 ТЕСТИРОВАНИЕ]
+        direction TB
+        TestPool[📊 Пул тестов]
+        TestPool --> UnitTest[🔬 Unit тесты]
+        TestPool --> IntegrationTest[🔗 Integration тесты]
+        TestPool --> ContractTests[📋 Contract тесты]
+        TestPool --> MutationTest[🧬 Mutation тесты]
+        TestPool --> VisualTest[📸 Visual Regression]
+
+        MutationTest --> MutantScore{Мутанты > 80%?}
+        VisualTest --> VisualDiff{Визуальные отличия?}
+
+        MutantScore -- Нет --> WeakTests[⚠️ Слабые тесты]
+        MutantScore -- Да --> TestReport
+        VisualDiff -- Unintended --> VisualBug[🐛 Визуальный баг]
+        VisualDiff -- OK --> TestReport
+
+        UnitTest & IntegrationTest & ContractTests --> TestReport[📄 Отчёт о тестировании]
+    end
+
+    WeakTests --> F1_Plan
+    VisualBug --> F1_Plan
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 📚 AUTO-DOC PIPELINE
+    %% ═══════════════════════════════════════════════════════════════════
+    TestReport --> AutoDoc
+
+    subgraph AutoDoc[📚 AUTO-DOC PIPELINE]
+        direction LR
+        CodeAnalysis[🔍 Анализ кода]
+        CodeAnalysis --> OpenAPIGen[📗 OpenAPI Generation]
+        CodeAnalysis --> SequenceGen[📊 Sequence Diagrams]
+        CodeAnalysis --> ReadmeGen[📄 README Generation]
+        CodeAnalysis --> ADRGen[📋 ADR Generation]
+        OpenAPIGen & SequenceGen & ReadmeGen & ADRGen --> DocRepo[(📚 Documentation Repo)]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🏆 СИСТЕМА РЕПУТАЦИИ
+    %% ═══════════════════════════════════════════════════════════════════
+    TestReport --> Reputation
+
+    subgraph Reputation[🏆 СИСТЕМА РЕПУТАЦИИ АГЕНТОВ]
+        direction TB
+        AgentReport[📊 Отчёт агента]
+        AgentReport --> RepScore[(⭐ Репутация)]
+        AgentReport --> CodeOwnership[(📝 Code Ownership)]
+        AgentReport --> ReviewHistory[(📋 История ревью)]
+        RepScore & CodeOwnership & ReviewHistory --> AgentAnalytics[📈 Аналитика]
+        AgentAnalytics --> Velocity[🚀 Velocity]
+        AgentAnalytics --> QualityScore[⭐ Quality Score]
+        AgentAnalytics --> Collaboration[🤝 Collaboration Index]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 📡 ШИНА СОБЫТИЙ
+    %% ═══════════════════════════════════════════════════════════════════
+    AgentReport --> EventSystem
+
+    subgraph EventSystem[📡 ШИНА СОБЫТИЙ РЕАЛЬНОГО ВРЕМЕНИ]
+        direction TB
+        EventBus{🚌 Event Bus}
+
+        subgraph ACL[💬 Agent Communication Language]
+            MessageTypes[📨 Structured Messages]
+            Semaphores[🔒 Resource Semaphores]
+            DeadLetterQueue[📬 Dead Letter Queue]
+            MessageTypes --> Semaphores --> DeadLetterQueue
+        end
+
+        EventBus --> ACL
+        EventBus --> ProgressUpdate[📊 Обновление прогресса]
+        EventBus --> BlockerAlert[🚨 Алерт о блокерах]
+        EventBus --> DependencySync[🔄 Синхронизация зависимостей]
+        EventBus --> StandupGen[📋 Авто-Standup]
+        StandupGen --> StandupReport[📄 Standup Report]
+    end
+
+    ProgressUpdate --> Dashboard
+    BlockerAlert --> CoordCore
+    StandupReport --> Dashboard
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🔀 ИНТЕГРАЦИЯ И РЕВЬЮ
+    %% ═══════════════════════════════════════════════════════════════════
+    EventBus --> Integration
+
+    subgraph Integration[🔀 ИНТЕГРАЦИЯ И РЕВЬЮ]
+        direction TB
+        CoordinatorCollect[👨‍💼 Координатор собирает отчёты]
+        CoordinatorCollect --> CrossReview[🔄 Кросс-ревью агентов]
+        CrossReview --> HumanReview[👨‍💻 Human-in-the-loop ревью]
+        HumanReview --> ReviewDecision{✅ Принято?}
+
+        ReviewDecision -- Нет --> Feedback[📝 Замечания]
+        Feedback --> IssueClassifier[🔍 ML-классификатор проблем]
+        IssueClassifier --> KB
+        IssueClassifier --> Lessons
+        IssueClassifier --> Solutions
+        Feedback --> F1_Plan
+
+        ReviewDecision -- Да --> ConflictResolution
+
+        subgraph ConflictResolution[⚔️ Разрешение конфликтов]
+            ConflictDetect{🔍 Конфликты?}
+            ConflictDetect -- Нет --> AutoMerge[✅ Auto Merge]
+            ConflictDetect -- Да: комменты --> SemiAutoMerge[🔄 Semi-Auto Merge]
+            ConflictDetect -- Да: логика --> EscalateCoordinator[👨‍💼 Escalation]
+            EscalateCoordinator --> AgentDuel[⚔️ Agent Duel]
+            AgentDuel --> PeerVote[🗳️ Peer Voting]
+        end
+
+        AutoMerge & SemiAutoMerge & PeerVote --> MergeQueue[📥 Очередь слияния]
+        MergeQueue --> Integrate[🔀 Интеграция модулей]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🧪 ПОЛНОЕ ТЕСТИРОВАНИЕ
+    %% ═══════════════════════════════════════════════════════════════════
+    Integrate --> FullTesting
+
+    subgraph FullTesting[🧪 ПОЛНОЕ СИСТЕМНОЕ ТЕСТИРОВАНИЕ]
+        direction TB
+        FullTest[⚙️ Системные тесты]
+        FullTest --> E2E[🎬 E2E тесты]
+        FullTest --> Perf[📈 Нагрузочные тесты]
+        FullTest --> SecTest[🔐 Penetration Testing]
+        FullTest --> DAST[🔍 DAST сканирование]
+        E2E & Perf & SecTest & DAST --> FullTestReport[📄 Финальный отчёт]
+        FullTestReport --> DeployDecision{✅ Готово к деплою?}
+        DeployDecision -- Нет --> Rollback[⏪ Автоматический откат]
+        Rollback --> Feedback
+        DeployDecision -- Да --> DeployReady([🚀 Готово к развёртыванию])
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🚀 РАЗВЁРТЫВАНИЕ
+    %% ═══════════════════════════════════════════════════════════════════
+    DeployReady --> Deployment
+
+    subgraph Deployment[🚀 РАЗВЁРТЫВАНИЕ]
+        direction TB
+        Deploy[📦 Сборка артефактов]
+        Deploy --> ContainerScan[🐳 Container Scan — Trivy]
+        ContainerScan --> BlueGreen[🔵🟢 Blue-Green Deploy]
+        BlueGreen --> HealthCheck[✅ Health Check]
+        HealthCheck --> TrafficSwitch[🔀 Traffic Switch]
+
+        subgraph FeatureFlags[🚩 Feature Flags]
+            FlagManager[⚙️ Flag Manager — LaunchDarkly]
+            GradualRollout[📈 Gradual Rollout]
+            KillSwitch[🔴 Kill Switch]
+            FlagManager --> GradualRollout
+            FlagManager --> KillSwitch
+        end
+
+        TrafficSwitch --> FeatureFlags
+        GradualRollout --> Canary[🐤 Canary Release]
+        Canary --> CanaryTest[📊 Мониторинг метрик]
+        CanaryTest --> CanaryDecision{📊 Метрики OK?}
+        CanaryDecision -- Нет --> RollbackCanary[⏪ Откат канарейки]
+        RollbackCanary --> Feedback
+        CanaryDecision -- Да --> FullDeploy[🌍 Полный деплой]
+
+        subgraph GitOps[📦 GitOps Pipeline]
+            GitRepo[(📚 Git Repository)]
+            ArgoCD[🔄 ArgoCD Sync]
+            K8sCluster[(☸️ Kubernetes Cluster)]
+            GitRepo --> ArgoCD --> K8sCluster
+        end
+
+        FullDeploy --> GitOps
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 👁️ OBSERVABILITY
+    %% ═══════════════════════════════════════════════════════════════════
+    GitOps --> Observability
+
+    subgraph Observability[👁️ OBSERVABILITY PIPELINE]
+        direction TB
+        OTEL[📡 OpenTelemetry Collector]
+        OTEL --> Traces[🔍 Traces → Jaeger]
+        OTEL --> Metrics[📊 Metrics → Prometheus / Grafana]
+        OTEL --> Logs[📝 Logs → Loki]
+        Traces & Metrics & Logs --> Correlation[🔗 Distributed Tracing]
+        Correlation --> Alerting[🚨 Alertmanager]
+        Alerting --> PagerDuty[📟 PagerDuty / OpsGenie]
+    end
+
+    Correlation --> Monitor[📈 Мониторинг в проде]
+    Monitor --> PostMortem{🔍 Инциденты?}
+    PostMortem -- Да --> IncidentResponse[🚒 Incident Response]
+    IncidentResponse --> KB
+    PostMortem -- Нет --> Done
+
+    Done([✅ ГОТОВО — ПРОЕКТ ЗАВЕРШЁН])
+    Done --> KB
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🛠️ STANDARD TOOLCHAIN (легенда)
+    %% ═══════════════════════════════════════════════════════════════════
+    subgraph Toolchain[🛠️ STANDARD TOOLCHAIN]
+        direction LR
+        TC_Contracts[📋 OpenAPI + Pact + AsyncAPI]
+        TC_Scan[🔍 SonarQube + Snyk + Semgrep + CodeQL]
+        TC_CICD[⚡ GitHub Actions + ArgoCD]
+        TC_Monitor[📊 Prometheus + Grafana + Loki + Jaeger]
+        TC_Flags[🚩 LaunchDarkly]
+        TC_Docs[📚 Swagger + Storybook + ADR]
+        TC_Vault[🔐 HashiCorp Vault]
+        TC_K8s[☸️ Kubernetes + Helm]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🆕 НОВЫЕ МЕХАНИЗМЫ V2.2 (легенда)
+    %% ═══════════════════════════════════════════════════════════════════
+    subgraph NewFeatures[🆕 НОВЫЕ МЕХАНИЗМЫ V2.2]
+        direction LR
+        NF1[🎯 Critical Path Analysis]
+        NF2[🥇🥈🥉 TIER-система агентов]
+        NF3[💉 Knowledge Injection]
+        NF4[🧩 Smart Stubs + Chaos Engineering]
+        NF5[🛡️ Anti-Neuroslop Shield — 5 слоёв]
+        NF6[🏆 Система репутации агентов]
+        NF7[🧬 Mutation Testing]
+        NF8[📸 Visual Regression Testing]
+        NF9[🛡️ Threat Modeling STRIDE]
+        NF10[🔐 HashiCorp Vault Integration]
+        NF11[📋 Contract-First Development]
+        NF12[📚 Auto-Doc Pipeline]
+        NF13[💬 Agent Communication Language]
+        NF14[⚔️ Conflict Resolution Protocol]
+        NF15[📋 Auto Standup Generation]
+        NF16[⏱️ ML-оценка сроков]
+        NF17[⚖️ WIP Limits]
+        NF18[🚩 Feature Flags — LaunchDarkly]
+        NF19[🔵🟢 Blue-Green Deployment]
+        NF20[📦 GitOps + ArgoCD]
+        NF21[👁️ OpenTelemetry Observability]
+        NF22[🔍 ML Issue Classifier]
+        NF23[📁 Isolated Workspaces]
+        NF24[📦 Monorepo Structure]
+        NF25[🌳 Git Worktree Engine]
+        NF26[🐳 Docker Agent Isolation]
+        NF27[🔄 Workspace Synchronization]
+        NF28[🚒 Incident Response Loop]
+        NF29[📟 PagerDuty / OpsGenie Alerting]
+        NF30[🔍 DAST + Penetration Testing]
+    end
+
+    %% ═══════════════════════════════════════════════════════════════════
+    %% 🎨 СТИЛИ
+    %% ═══════════════════════════════════════════════════════════════════
+    style Start fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+    style Done fill:#4caf50,stroke:#2e7d32,stroke-width:3px,color:#fff
+
+    style Init fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    style ThreatModeling fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style ContractLayer fill:#fff8e1,stroke:#f9a825,stroke-width:2px
+    style Knowledge fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
+    style WorkspaceIsolation fill:#e8f5e9,stroke:#1b5e20,stroke-width:3px
+    style MonorepoStructure fill:#c8e6c9,stroke:#2e7d32,stroke-width:1px
+    style GitWorktree fill:#dcedc8,stroke:#33691e,stroke-width:1px
+    style DockerIsolation fill:#b2dfdb,stroke:#00796b,stroke-width:1px
+    style WorkspaceSync fill:#a5d6a7,stroke:#388e3c,stroke-width:1px
+    style SmartStubs fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style Coordinator fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style AgentPool fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px
+    style KnowledgeInjection fill:#a5d6a7,stroke:#2e7d32,stroke-width:1px
+    style TierSystem fill:#81c784,stroke:#2e7d32,stroke-width:1px
+    style ParallelWork fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    style FrontendAgent fill:#ffe0b2,stroke:#e65100,stroke-width:1px
+    style BackendAgent fill:#ffe0b2,stroke:#e65100,stroke-width:1px
+    style TestAgent fill:#ffe0b2,stroke:#e65100,stroke-width:1px
+    style InfraAgent fill:#ffe0b2,stroke:#e65100,stroke-width:1px
+    style AntiNeuroslop fill:#ffebee,stroke:#c62828,stroke-width:3px
+    style Layer1_Static fill:#ffcdd2,stroke:#c62828,stroke-width:1px
+    style Layer2_Semantic fill:#ef9a9a,stroke:#c62828,stroke-width:1px
+    style Layer3_Arch fill:#e57373,stroke:#c62828,stroke-width:1px
+    style Layer4_Complexity fill:#ef5350,stroke:#c62828,stroke-width:1px
+    style Layer5_Duplication fill:#f44336,stroke:#c62828,stroke-width:1px,color:#fff
+    style SecurityScanning fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style Testing fill:#e0f7fa,stroke:#00838f,stroke-width:2px
+    style AutoDoc fill:#ede7f6,stroke:#512da8,stroke-width:2px
+    style Reputation fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    style EventSystem fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
+    style ACL fill:#c5cae9,stroke:#3f51b5,stroke-width:1px
+    style Integration fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    style ConflictResolution fill:#f8bbd0,stroke:#880e4f,stroke-width:1px
+    style FullTesting fill:#e0f2f1,stroke:#004d40,stroke-width:2px
+    style Deployment fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+    style FeatureFlags fill:#dcedc8,stroke:#33691e,stroke-width:1px
+    style GitOps fill:#c5e1a5,stroke:#33691e,stroke-width:1px
+    style Observability fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style Toolchain fill:#f5f5f5,stroke:#424242,stroke-width:2px
+    style NewFeatures fill:#fafafa,stroke:#212121,stroke-width:2px,stroke-dasharray: 5 5
+    style CriticalPathAnalysis fill:#bbdefb,stroke:#1565c0,stroke-width:1px
+    style Dashboard fill:#fff9c4,stroke:#f9a825,stroke-width:2px
