@@ -1,16 +1,16 @@
-# Этап 8: Тестирование
+# Этап 8: Модульное и интеграционное тестирование
 
-## 🧪 ТЕСТИРОВАНИЕ: Unit → Integration → Contract
+## 🧪 Testing Layer
 
 **Версия документа:** 1.0  
-**Длительность этапа:** Постоянно (в процессе разработки)  
-**Ответственный:** TIER-2/3 Разработчики, QA
+**Длительность этапа:** Постоянно (интегрировано в CI/CD)  
+**Ответственный:** TIER-2 Разработчик, QA Engineer
 
 ---
 
 ## Цель этапа
 
-Обеспечить качество кода через многоуровневое тестирование: Unit тесты, Integration тесты, Contract тесты.
+Обеспечить качество кода через комплексное тестирование: модульные тесты (Unit) для изолированной проверки компонентов, интеграционные тесты для проверки взаимодействия между модулями, и контрактные тесты для верификации соответствия API-контрактам.
 
 ---
 
@@ -18,25 +18,41 @@
 
 | Данные | Источник |
 |--------|----------|
-| Исходный код | [05-parallel-development.md](./05-parallel-development.md) |
 | API контракты | [02-contracts-and-architecture.md](./02-contracts-and-architecture.md) |
-| Тестовые данные | [04-stub-generation.md](./04-stub-generation.md) |
+| Заглушки и моки | [04-stub-generation.md](./04-stub-generation.md) |
+| Критерии качества | [06-quality-checks.md](./06-quality-checks.md) |
+| Технологический стек | [Инструменты_для_разработки.md](./appendices/Инструменты_для_разработки.md) |
 
 ---
 
-## Пирамида тестирования
+## Введение: Роль тестирования в обеспечении качества
+
+Тестирование является критически важным этапом в процессе разработки, обеспечивающим:
+
+1. **Доверие к коду** — уверенность в корректности работы отдельных компонентов
+2. **Раннее обнаружение ошибок** — выявление проблем на этапе разработки, а не в продакшене
+3. **Документацию поведения** — тесты служат живой документацией ожидаемого поведения
+4. **Безопасность рефакторинга** — возможность безопасного изменения кода
+5. **Контрактное соответствие** — гарантия совместимости между сервисами
 
 ```mermaid
 graph TB
-    subgraph Pyramid
-        E2E[E2E Tests<br/>5%]
-        Integration[Integration Tests<br/>25%]
-        Unit[Unit Tests<br/>70%]
+    subgraph TestingPyramid[📐 Пирамида тестирования]
+        direction BT
+        E2E[🎬 E2E Tests<br/>5%]
+        Integration[🔗 Integration Tests<br/>25%]
+        Unit[🔬 Unit Tests<br/>70%]
     end
     
-    E2E --> |Медленные| Cost1[Высокая стоимость]
-    Integration --> |Средние| Cost2[Средняя стоимость]
-    Unit --> |Быстрые| Cost3[Низкая стоимость]
+    subgraph Characteristics[Характеристики]
+        Speed[⚡ Скорость]
+        Cost[💰 Стоимость]
+        Isolation[🔒 Изоляция]
+    end
+    
+    Unit --> |Быстрые| Speed
+    Integration --> |Средние| Speed
+    E2E --> |Медленные| Speed
     
     style E2E fill:#ff6b6b
     style Integration fill:#ffd93d
@@ -45,310 +61,342 @@ graph TB
 
 ---
 
-## 8.1 Unit Tests
+## 1. Модульное тестирование (Unit Tests)
 
-### Структура тестов
+### 1.1 Принципы модульного тестирования
 
-```
-src/backend/GoldPC.Tests/
-├── Unit/
-│   ├── Core/
-│   │   ├── Services/
-│   │   │   ├── OrderServiceTests.cs
-│   │   │   ├── ProductServiceTests.cs
-│   │   │   └── AuthServiceTests.cs
-│   │   └── Entities/
-│   └── Infrastructure/
-│       ├── Repositories/
-│       └── Validators/
-├── Integration/
-│   ├── API/
-│   └── Database/
-└── TestHelpers/
-    ├── Fakers/
-    ├── Builders/
-    └── Mocks/
-```
+Модульные тесты проверяют изолированные единицы кода (функции, методы, классы) без внешних зависимостей.
 
-### Пример Unit теста
+**Ключевые принципы (FIRST):**
+
+| Принцип | Описание | Пример |
+|---------|----------|--------|
+| **F**ast | Быстрое выполнение | Тесты выполняются за миллисекунды |
+| **I**ndependent | Независимость друг от друга | Каждый тест создаёт свои данные |
+| **R**epeatable | Повторяемость | Одинаковый результат при каждом запуске |
+| **S**elf-validating | Самопроверка | Автоматический assert без ручной проверки |
+| **T**imely | Своевременность | Пишутся вместе или до кода (TDD) |
+
+### 1.2 Инструменты для бэкенда (C# / .NET)
+
+| Инструмент | Назначение | Особенности |
+|------------|------------|-------------|
+| **xUnit** | Test framework | Атрибуты [Fact], [Theory], [InlineData] |
+| **FluentAssertions** | Assertions | Читаемые утверждения `.Should().Be()` |
+| **Moq** | Mocking | Создание моков `Mock<IInterface>` |
+| **AutoFixture** | Test data | Автогенерация тестовых данных |
+| **Shouldly** | Assertions | Альтернатива FluentAssertions |
 
 ```csharp
-// src/backend/GoldPC.Tests/Unit/Core/Services/OrderServiceTests.cs
-public class OrderServiceTests
-{
-    private readonly Mock<IOrderRepository> _orderRepositoryMock;
-    private readonly Mock<IProductRepository> _productRepositoryMock;
-    private readonly Mock<IEventBus> _eventBusMock;
-    private readonly Mock<ILogger<OrderService>> _loggerMock;
-    private readonly OrderService _sut; // System Under Test
+// tests/backend/GoldPC.UnitTests/Services/CatalogServiceTests.cs
+using Xunit;
+using FluentAssertions;
+using Moq;
+using AutoFixture;
 
-    public OrderServiceTests()
+public class CatalogServiceTests
+{
+    private readonly Fixture _fixture = new();
+    private readonly Mock<IProductRepository> _repositoryMock;
+    private readonly Mock<ICacheService> _cacheMock;
+    private readonly CatalogService _sut; // System Under Test
+
+    public CatalogServiceTests()
     {
-        _orderRepositoryMock = new Mock<IOrderRepository>();
-        _productRepositoryMock = new Mock<IProductRepository>();
-        _eventBusMock = new Mock<IEventBus>();
-        _loggerMock = new Mock<ILogger<OrderService>>();
-        
-        _sut = new OrderService(
-            _orderRepositoryMock.Object,
-            _productRepositoryMock.Object,
-            _eventBusMock.Object,
-            _loggerMock.Object);
+        _repositoryMock = new Mock<IProductRepository>();
+        _cacheMock = new Mock<ICacheService>();
+        _sut = new CatalogService(_repositoryMock.Object, _cacheMock.Object);
     }
 
     [Fact]
-    public async Task CreateOrderAsync_WithValidItems_ReturnsOrder()
+    public async Task GetProductById_WhenProductExists_ReturnsProduct()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var products = new ProductFaker().Generate(3);
-        var request = new CreateOrderRequest
-        {
-            Items = products.Select(p => new OrderItemRequest
-            {
-                ProductId = p.Id,
-                Quantity = 2
-            }).ToList()
-        };
-
-        _productRepositoryMock
-            .Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>()))
-            .ReturnsAsync(products);
-
-        _orderRepositoryMock
-            .Setup(r => r.AddAsync(It.IsAny<Order>()))
-            .ReturnsAsync((Order o) => o);
+        var productId = _fixture.Create<Guid>();
+        var expectedProduct = _fixture.Build<Product>()
+            .With(p => p.Id, productId)
+            .Create();
+        
+        _repositoryMock
+            .Setup(r => r.GetByIdAsync(productId))
+            .ReturnsAsync(expectedProduct);
 
         // Act
-        var result = await _sut.CreateOrderAsync(userId, request);
+        var result = await _sut.GetProductByIdAsync(productId);
 
         // Assert
         result.Should().NotBeNull();
-        result.Status.Should().Be(OrderStatus.New);
-        result.Items.Should().HaveCount(3);
-        
-        _orderRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Order>()), Times.Once);
-        _eventBusMock.Verify(e => e.PublishAsync(It.IsAny<OrderCreatedEvent>()), Times.Once);
+        result.Should().BeEquivalentTo(expectedProduct);
+        _repositoryMock.Verify(r => r.GetByIdAsync(productId), Times.Once);
     }
 
     [Fact]
-    public async Task CreateOrderAsync_WithInsufficientStock_ThrowsException()
+    public async Task GetProductById_WhenProductNotFound_ThrowsNotFoundException()
     {
         // Arrange
-        var products = new ProductFaker()
-            .RuleFor(p => p.Stock, 1) // Только 1 на складе
-            .Generate(1);
-            
-        var request = new CreateOrderRequest
-        {
-            Items = new List<OrderItemRequest>
-            {
-                new() { ProductId = products[0].Id, Quantity = 5 } // Запрос 5
-            }
-        };
+        var productId = _fixture.Create<Guid>();
+        _repositoryMock
+            .Setup(r => r.GetByIdAsync(productId))
+            .ReturnsAsync((Product?)null);
 
-        _productRepositoryMock
-            .Setup(r => r.GetByIdsAsync(It.IsAny<IEnumerable<Guid>>()))
-            .ReturnsAsync(products);
+        // Act
+        var act = async () => await _sut.GetProductByIdAsync(productId);
 
-        // Act & Assert
-        await Assert.ThrowsAsync<InsufficientStockException>(
-            () => _sut.CreateOrderAsync(Guid.NewGuid(), request));
+        // Assert
+        await act.Should().ThrowAsync<NotFoundException>()
+            .WithMessage($"Product with id {productId} not found");
     }
 
     [Theory]
-    [InlineData(OrderStatus.New, OrderStatus.Processing)]
-    [InlineData(OrderStatus.Processing, OrderStatus.Paid)]
-    [InlineData(OrderStatus.Paid, OrderStatus.Ready)]
-    public async Task UpdateStatus_ValidTransition_ChangesStatus(
-        OrderStatus current, OrderStatus next)
+    [InlineData("cpu", 10)]
+    [InlineData("gpu", 5)]
+    [InlineData("ram", 20)]
+    public async Task GetProductsByCategory_ReturnsFilteredProducts(
+        string category, int expectedCount)
     {
         // Arrange
-        var order = new OrderFaker().Generate();
-        order.Status = current;
+        var products = _fixture.CreateMany<Product>(30).ToList();
+        products.Take(expectedCount).ToList().ForEach(p => p.Category = category);
         
-        _orderRepositoryMock
-            .Setup(r => r.GetByIdAsync(order.Id))
-            .ReturnsAsync(order);
+        _repositoryMock
+            .Setup(r => r.GetByCategoryAsync(category))
+            .ReturnsAsync(products.Where(p => p.Category == category));
 
         // Act
-        await _sut.UpdateStatusAsync(order.Id, next);
+        var result = await _sut.GetProductsByCategoryAsync(category);
 
         // Assert
-        order.Status.Should().Be(next);
+        result.Should().HaveCount(expectedCount);
+        result.All(p => p.Category == category).Should().BeTrue();
     }
 }
 ```
 
-### Тестирование с Test Builders
+### 1.3 Инструменты для фронтенда (TypeScript / React)
+
+| Инструмент | Назначение | Особенности |
+|------------|------------|-------------|
+| **Vitest / Jest** | Test runner | Быстрый, ESM-first |
+| **React Testing Library** | Component testing | Тестирование поведения пользователя |
+| **MSW** | API mocking | Service Worker для перехвата запросов |
+| **@testing-library/user-event** | User interactions | Реалистичные действия пользователя |
+
+```typescript
+// src/frontend/src/components/ProductCard/ProductCard.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { ProductCard } from './ProductCard';
+import type { Product } from '@/types';
+
+describe('ProductCard', () => {
+  const mockProduct: Product = {
+    id: '1',
+    name: 'AMD Ryzen 9 7950X',
+    price: 59999,
+    stock: 10,
+    category: 'cpu',
+    manufacturer: 'AMD',
+    specifications: {}
+  };
+
+  it('renders product name and price', () => {
+    render(<ProductCard product={mockProduct} onAddToCart={() => {}} />);
+    
+    expect(screen.getByText('AMD Ryzen 9 7950X')).toBeInTheDocument();
+    expect(screen.getByText(/59 999/)).toBeInTheDocument();
+  });
+
+  it('shows "Out of stock" when stock is 0', () => {
+    render(
+      <ProductCard product={{ ...mockProduct, stock: 0 }} onAddToCart={() => {}} />
+    );
+    
+    expect(screen.getByText(/нет в наличии/i)).toBeInTheDocument();
+  });
+
+  it('calls onAddToCart when button clicked', () => {
+    const mockAddToCart = vi.fn();
+    render(<ProductCard product={mockProduct} onAddToCart={mockAddToCart} />);
+    
+    fireEvent.click(screen.getByRole('button', { name: /в корзину/i }));
+    
+    expect(mockAddToCart).toHaveBeenCalledWith(mockProduct.id);
+  });
+});
+```
+
+### 1.4 Использование моков и стабов
 
 ```csharp
-// src/backend/GoldPC.Tests/TestHelpers/Builders/OrderBuilder.cs
-public class OrderBuilder
+// Моки для изоляции зависимостей
+public class OrderServiceTests
 {
-    private Order _order = new();
+    private readonly Mock<IOrderRepository> _orderRepoMock;
+    private readonly Mock<IProductService> _productServiceMock;
+    private readonly Mock<INotificationService> _notificationMock;
+    private readonly OrderService _sut;
 
-    public OrderBuilder WithId(Guid id)
+    public OrderServiceTests()
     {
-        _order.Id = id;
-        return this;
+        _orderRepoMock = new Mock<IOrderRepository>();
+        _productServiceMock = new Mock<IProductService>();
+        _notificationMock = new Mock<INotificationService>();
+        
+        _sut = new OrderService(
+            _orderRepoMock.Object,
+            _productServiceMock.Object,
+            _notificationMock.Object
+        );
     }
 
-    public OrderBuilder WithUser(Guid userId)
+    [Fact]
+    public async Task CreateOrder_WhenProductsAvailable_SendsNotification()
     {
-        _order.UserId = userId;
-        return this;
-    }
+        // Arrange
+        var orderData = new CreateOrderDto { /* ... */ };
+        
+        _productServiceMock
+            .Setup(p => p.CheckAvailabilityAsync(It.IsAny<IEnumerable<Guid>>()))
+            .ReturnsAsync(true);
 
-    public OrderBuilder WithProducts(params Product[] products)
-    {
-        _order.Items = products.Select(p => new OrderItem
-        {
-            ProductId = p.Id,
-            Quantity = 1,
-            Price = p.Price
-        }).ToList();
-        return this;
-    }
+        // Act
+        await _sut.CreateOrderAsync(orderData);
 
-    public OrderBuilder WithStatus(OrderStatus status)
-    {
-        _order.Status = status;
-        return this;
-    }
-
-    public Order Build()
-    {
-        var result = _order;
-        _order = new Order();
-        return result;
+        // Assert
+        _notificationMock.Verify(
+            n => n.SendOrderCreatedAsync(It.IsAny<Guid>(), orderData.UserId),
+            Times.Once
+        );
     }
 }
+```
 
-// Использование
-var order = new OrderBuilder()
-    .WithId(Guid.NewGuid())
-    .WithUser(userId)
-    .WithProducts(product1, product2)
-    .WithStatus(OrderStatus.New)
-    .Build();
+### 1.5 Минимальное покрытие кода
+
+| Компонент | Минимальное покрытие | Обоснование |
+|-----------|---------------------|-------------|
+| Бизнес-логика (Services) | 80% | Критическая функциональность |
+| Доменные сущности | 80% | Сложные правила и инварианты |
+| Валидаторы | 90% | Корректность данных |
+| Контроллеры | 70% | Проверка ответов и статусов |
+| React компоненты | 70% | Критические пути |
+| Custom Hooks | 80% | Бизнес-логика фронтенда |
+
+### 1.6 Запуск в CI при каждом коммите
+
+```yaml
+# .github/workflows/unit-tests.yml
+name: Unit Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Run Unit Tests
+        run: dotnet test --filter "FullyQualifiedName~UnitTests" 
+             --configuration Release 
+             --collect:"XPlat Code Coverage"
+
+  frontend-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        working-directory: src/frontend
+        run: npm ci
+      
+      - name: Run Tests
+        working-directory: src/frontend
+        run: npm run test:coverage
 ```
 
 ---
 
-## 8.2 Integration Tests
+## 2. Интеграционное тестирование
 
-### WebApplicationFactory Setup
+### 2.1 Принципы интеграционного тестирования
 
-```csharp
-// src/backend/GoldPC.Tests/Integration/CustomWebApplicationFactory.cs
-public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
-{
-    private readonly TestcontainersContainer _postgres;
-    private readonly TestcontainersContainer _redis;
+Интеграционные тесты проверяют взаимодействие между модулями: API-запросы к реальному или заглушенному сервису, работу с базой данных, кэшем.
 
-    public CustomWebApplicationFactory()
-    {
-        _postgres = new TestcontainersBuilder<PostgreSqlTestcontainer>()
-            .WithDatabase(new PostgreSqlTestcontainerConfiguration
-            {
-                Database = "goldpc_test",
-                Username = "test",
-                Password = "test"
-            })
-            .Build();
-
-        _redis = new TestcontainersBuilder<RedisTestcontainer>()
-            .WithDatabase(new RedisTestcontainerConfiguration())
-            .Build();
-    }
-
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.ConfigureServices(services =>
-        {
-            // Замена реальных сервисов на тестовые
-            var descriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-            if (descriptor != null)
-                services.Remove(descriptor);
-
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(_postgres.ConnectionString));
-
-            services.AddStackExchangeRedisCache(options =>
-                options.Configuration = _redis.ConnectionString);
-        });
-
-        builder.UseEnvironment("Testing");
-    }
-
-    public async Task InitializeAsync()
-    {
-        await _postgres.StartAsync();
-        await _redis.StartAsync();
-    }
-
-    public new async Task DisposeAsync()
-    {
-        await _postgres.DisposeAsync();
-        await _redis.DisposeAsync();
-    }
-}
+```mermaid
+graph LR
+    subgraph IntegrationTest[🔗 Integration Test]
+        Client[📡 HTTP Client]
+        Server[🖥️ Test Server]
+        DB[(🗄️ Test DB)]
+        Cache[(⚡ Test Cache)]
+    end
+    
+    Client --> Server --> DB
+    Server --> Cache
 ```
 
-### Пример Integration теста
+### 2.2 Инструменты
+
+| Инструмент | Назначение | Особенности |
+|------------|------------|-------------|
+| **Testcontainers** | Контейнерные БД | PostgreSQL, Redis, Kafka |
+| **WebApplicationFactory** | Тестовый сервер | ASP.NET Core in-memory |
+| **Supertest** | HTTP assertions | Для Express.js API |
+
+### 2.3 Тестирование взаимодействия с БД
 
 ```csharp
-// src/backend/GoldPC.Tests/Integration/API/OrdersApiTests.cs
-public class OrdersApiTests : IClassFixture<CustomWebApplicationFactory>, IAsyncLifetime
+// Testcontainers для реальной БД в тестах
+public class DatabaseFixture : IAsyncLifetime
 {
-    private readonly CustomWebApplicationFactory _factory;
+    private readonly PostgreSQLContainer _postgres = new PostgreSQLBuilder()
+        .WithImage("postgres:16-alpine")
+        .WithDatabase("goldpc_test")
+        .Build();
+
+    public string ConnectionString => _postgres.GetConnectionString();
+
+    public async Task InitializeAsync() => await _postgres.StartAsync();
+    public async Task DisposeAsync() => await _postgres.DisposeAsync();
+}
+
+// Интеграционный тест с WebApplicationFactory
+public class OrdersApiTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
+{
+    private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
-    private readonly ApplicationDbContext _db;
+    private readonly ApplicationDbContext _dbContext;
 
-    public OrdersApiTests(CustomWebApplicationFactory factory)
+    public OrdersApiTests(DatabaseFixture fixture)
     {
-        _factory = factory;
-        _client = factory.CreateClient();
-        var scope = factory.Services.CreateScope();
-        _db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    }
-
-    [Fact]
-    public async Task GetOrders_WithoutAuth_Returns401()
-    {
-        // Act
-        var response = await _client.GetAsync("/api/v1/orders");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task GetOrders_WithAuth_ReturnsUserOrders()
-    {
-        // Arrange
-        var user = new UserFaker().Generate();
-        _db.Users.Add(user);
+        _factory = new WebApplicationFactory<Program>()
+            .WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    services.AddDbContext<ApplicationDbContext>(options =>
+                        options.UseNpgsql(fixture.ConnectionString));
+                });
+            });
         
-        var orders = new OrderFaker()
-            .RuleFor(o => o.UserId, user.Id)
-            .Generate(3);
-        _db.Orders.AddRange(orders);
-        await _db.SaveChangesAsync();
-
-        var token = GenerateTestToken(user);
-        _client.DefaultRequestHeaders.Authorization = 
-            new AuthenticationHeaderValue("Bearer", token);
-
-        // Act
-        var response = await _client.GetAsync("/api/v1/orders");
-        var content = await response.Content.ReadFromJsonAsync<PaginatedResult<OrderDto>>();
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        content!.Data.Should().HaveCount(3);
+        _client = _factory.CreateClient();
+        _dbContext = _factory.Services.CreateScope()
+            .ServiceProvider.GetRequiredService<ApplicationDbContext>();
     }
 
     [Fact]
@@ -356,11 +404,11 @@ public class OrdersApiTests : IClassFixture<CustomWebApplicationFactory>, IAsync
     {
         // Arrange
         var user = new UserFaker().Generate();
-        _db.Users.Add(user);
+        _dbContext.Users.Add(user);
         
         var products = new ProductFaker().Generate(2);
-        _db.Products.AddRange(products);
-        await _db.SaveChangesAsync();
+        _dbContext.Products.AddRange(products);
+        await _dbContext.SaveChangesAsync();
 
         var token = GenerateTestToken(user);
         _client.DefaultRequestHeaders.Authorization = 
@@ -369,8 +417,7 @@ public class OrdersApiTests : IClassFixture<CustomWebApplicationFactory>, IAsync
         var request = new
         {
             Items = products.Select(p => new { ProductId = p.Id, Quantity = 1 }),
-            DeliveryMethod = "Pickup",
-            PaymentMethod = "Online"
+            DeliveryMethod = "Pickup"
         };
 
         // Act
@@ -383,409 +430,350 @@ public class OrdersApiTests : IClassFixture<CustomWebApplicationFactory>, IAsync
         order!.Status.Should().Be("New");
     }
 
-    private string GenerateTestToken(User user)
+    public async Task InitializeAsync() => await _dbContext.Database.MigrateAsync();
+    public async Task DisposeAsync() => await _dbContext.Database.EnsureDeletedAsync();
+}
+```
+
+### 2.4 Использование заглушек из этапа 4
+
+В соответствии с [04-stub-generation.md](./04-stub-generation.md):
+
+```csharp
+// WireMock для внешних сервисов (платёжные шлюзы, SMS)
+public class OrderProcessingTests : IClassFixture<WireMockFixture>
+{
+    private readonly HttpClient _client;
+    private readonly WireMockServer _wireMock;
+
+    [Fact]
+    public async Task ProcessOrder_WhenPaymentSucceeds_CreatesOrder()
     {
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
-        };
+        // Arrange - настройка заглушки
+        _wireMock.Given(Request.Create()
+            .WithPath("/api/payments")
+            .UsingPost())
+        .RespondWith(Response.Create()
+            .WithStatusCode(200)
+            .WithBodyAsJson(new { success = true, transactionId = "TRX-123" }));
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("test_key_for_testing_1234567890"));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/orders", orderDto);
 
-        var token = new JwtSecurityToken(
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        
+        // Проверка вызова заглушки
+        _wireMock.Verify(
+            Request.Create().WithPath("/api/payments").UsingPost(),
+            Times.Once()
+        );
     }
-
-    public Task InitializeAsync() => Task.CompletedTask;
-    public Task DisposeAsync() => _db.Database.EnsureDeletedAsync();
 }
 ```
 
 ---
 
-## 8.3 Contract Tests
+## 3. Контрактное тестирование
 
-### Pact Tests (Consumer)
+### 3.1 Принципы Consumer-Driven Contract Testing
 
-```csharp
-// src/backend/GoldPC.Tests/Contract/PaymentServiceContractTests.cs
-public class PaymentServiceContractTests
-{
-    private readonly IPactBuilderV3 _pactBuilder;
-
-    public PaymentServiceContractTests()
-    {
-        _pactBuilder = Pact.V3("GoldPC-API", "PaymentService", new PactConfig
-        {
-            PactDir = "../../../pacts"
-        });
-    }
-
-    [Fact]
-    public async Task ProcessPayment_WithValidRequest_ReturnsSuccess()
-    {
-        // Arrange
-        _pactBuilder
-            .UponReceiving("A payment request")
-            .Given("Payment gateway is available")
-            .WithRequest(HttpMethod.Post, "/api/v1/payments")
-            .WithHeader("Content-Type", "application/json")
-            .WithJsonBody(new
-            {
-                orderId = Match.Regex(Guid.NewGuid().ToString(), @"[\d\w-]+"),
-                amount = Match.Decimal(100.00m),
-                currency = "RUB",
-                return_url = "https://goldpc.by/payment/return"
-            })
-            .WillRespond()
-            .WithStatus(200)
-            .WithHeader("Content-Type", "application/json")
-            .WithJsonBody(new
-            {
-                success = true,
-                transaction_id = Match.Regex("TRX-[\d\w]+", @"TRX-[\d\w]+"),
-                payment_url = "https://pay.yookassa.ru/..."
-            });
-
-        await _pactBuilder.VerifyAsync(async ctx =>
-        {
-            var client = new PaymentServiceClient(ctx.MockServerUri.ToString());
-            
-            var result = await client.ProcessPaymentAsync(new PaymentRequest
-            {
-                OrderId = Guid.NewGuid(),
-                Amount = 100.00m,
-                Currency = "RUB",
-                ReturnUrl = "https://goldpc.by/payment/return"
-            });
-
-            result.Success.Should().BeTrue();
-            result.TransactionId.Should().StartWith("TRX-");
-        });
-    }
-}
+```mermaid
+sequenceDiagram
+    participant Consumer as 📱 Consumer
+    participant Broker as 📋 Pact Broker
+    participant Provider as 🔧 Provider
+    
+    Consumer->>Consumer: 1. Пишет тест с ожиданиями
+    Consumer->>Broker: 2. Публикует контракт
+    Provider->>Broker: 3. Забирает контракт
+    Provider->>Provider: 4. Запускает verification
+    Provider->>Broker: 5. Публикует результат
+    
+    Note over Broker: Can I Deploy? ✅
 ```
 
-### Pact Tests (Provider)
+### 3.2 Инструменты
+
+| Инструмент | Назначение | Язык/Платформа |
+|------------|------------|----------------|
+| **Pact** | Consumer-driven contracts | Multi-language |
+| **Pact JS** | Frontend consumer tests | TypeScript |
+| **Pact Net** | Backend provider tests | C#/.NET |
+| **Pact Broker** | Хранение контрактов | Docker/SaaS |
+
+### 3.3 Consumer Tests (Frontend → Backend)
+
+```typescript
+// src/frontend/src/api/__tests__/pacts/catalog-consumer.test.ts
+import Pact from '@pact-foundation/pact';
+import { CatalogApiClient } from '../catalog-client';
+
+const provider = new Pact.Pact({
+  consumer: 'GoldPC-Frontend',
+  provider: 'GoldPC-Catalog-API',
+  port: 1234,
+  dir: './pacts'
+});
+
+describe('Catalog API Consumer', () => {
+  beforeAll(() => provider.setup());
+  afterAll(() => provider.finalize());
+
+  it('returns a list of products', async () => {
+    await provider.addInteraction({
+      uponReceiving: 'a request for products',
+      withRequest: {
+        method: 'GET',
+        path: '/api/v1/catalog/products',
+        query: { page: '1', limit: '20' }
+      },
+      willRespondWith: {
+        status: 200,
+        body: {
+          data: Pact.Matchers.eachLike({
+            id: Pact.Matchers.uuid(),
+            name: Pact.Matchers.string('Product Name'),
+            price: Pact.Matchers.decimal(1000.00)
+          })
+        }
+      }
+    });
+
+    const client = new CatalogApiClient(`http://localhost:${provider.opts.port}`);
+    const result = await client.getProducts({ page: 1, limit: 20 });
+
+    expect(result.data).toBeInstanceOf(Array);
+  });
+});
+```
+
+### 3.4 Provider Verification (Backend)
 
 ```csharp
-// src/backend/GoldPC.Tests/Contract/CatalogApiProviderTests.cs
+// tests/backend/GoldPC.Tests/Contract/CatalogApiProviderTests.cs
 public class CatalogApiProviderTests
 {
-    private readonly ITestOutputHelper _output;
-    private readonly PactVerifier _verifier;
-
-    public CatalogApiProviderTests(ITestOutputHelper output)
-    {
-        _output = output;
-        _verifier = new PactVerifier(new PactVerifierConfig
-        {
-            Outputters = new[] { new XunitOutput(_output) }
-        });
-    }
-
     [Fact]
     public void VerifyPactWithFrontend()
     {
-        var config = new PactVerifierConfig
-        {
-            ProviderVersion = "1.0.0"
-        };
-
-        _verifier
+        new PactVerifier(new PactVerifierConfig())
             .ServiceProvider("GoldPC-Catalog-API", 5000)
             .HonoursPactWith("GoldPC-Frontend")
-            .PactUri("https://pact-broker.example.com/pacts/provider/GoldPC-Catalog-API/consumer/GoldPC-Frontend/latest")
+            .PactUri("https://pact-broker.example.com/pacts/...")
             .Verify();
     }
 }
 ```
 
----
+### 3.5 Интеграция в CI
 
-## 8.4 Frontend Testing
-
-### Unit Tests (Jest + React Testing Library)
-
-```typescript
-// src/frontend/src/components/ProductCard/ProductCard.test.tsx
-import { render, screen, fireEvent } from '@testing-library/react';
-import { ProductCard } from './ProductCard';
-import { BrowserRouter } from 'react-router-dom';
-
-const mockProduct = {
-  id: '1',
-  name: 'AMD Ryzen 9 7950X',
-  price: 59999,
-  stock: 10,
-  category: 'cpu',
-  manufacturer: 'AMD',
-};
-
-const renderWithRouter = (component: React.ReactNode) => {
-  return render(
-    <BrowserRouter>
-      {component}
-    </BrowserRouter>
-  );
-};
-
-describe('ProductCard', () => {
-  it('renders product name and price', () => {
-    renderWithRouter(<ProductCard product={mockProduct} />);
+```yaml
+# .github/workflows/contract-tests.yml
+contract-tests:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
     
-    expect(screen.getByText('AMD Ryzen 9 7950X')).toBeInTheDocument();
-    expect(screen.getByText('59 999 ₽')).toBeInTheDocument();
-  });
-
-  it('shows in stock status when available', () => {
-    renderWithRouter(<ProductCard product={mockProduct} />);
+    - name: Run Contract Tests
+      run: dotnet test --filter "FullyQualifiedName~Contract"
     
-    expect(screen.getByText('В наличии')).toBeInTheDocument();
-  });
-
-  it('shows out of stock when stock is 0', () => {
-    renderWithRouter(<ProductCard product={{ ...mockProduct, stock: 0 }} />);
-    
-    expect(screen.getByText('Нет в наличии')).toBeInTheDocument();
-  });
-
-  it('calls onAddToCart when button clicked', () => {
-    const mockAddToCart = jest.fn();
-    renderWithRouter(
-      <ProductCard product={mockProduct} onAddToCart={mockAddToCart} />
-    );
-    
-    fireEvent.click(screen.getByText('В корзину'));
-    
-    expect(mockAddToCart).toHaveBeenCalledWith(mockProduct);
-  });
-});
-```
-
-### Hooks Testing
-
-```typescript
-// src/frontend/src/hooks/useProducts.test.ts
-import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useProducts } from './useProducts';
-
-const createWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } }
-  });
-  
-  return ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  );
-};
-
-describe('useProducts', () => {
-  it('fetches products successfully', async () => {
-    const { result } = renderHook(() => useProducts({}), {
-      wrapper: createWrapper()
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-    expect(result.current.data).toBeDefined();
-    expect(result.current.data?.data).toBeInstanceOf(Array);
-  });
-
-  it('filters by category', async () => {
-    const { result } = renderHook(() => useProducts({ category: 'cpu' }), {
-      wrapper: createWrapper()
-    });
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-    const products = result.current.data?.data;
-    products?.forEach(product => {
-      expect(product.category).toBe('cpu');
-    });
-  });
-});
+    - name: Publish Pact Files
+      run: |
+        npm install -g @pact-foundation/pact-cli
+        pact-broker publish ./pacts \
+          --consumer-app-version ${{ github.sha }} \
+          --branch ${{ github.ref_name }}
 ```
 
 ---
 
-## 8.5 Test Coverage
+## 4. Организация тестовых данных
 
-### Конфигурация coverlet
+### 4.1 Фикстуры и фабрики
 
-```xml
-<!-- В csproj -->
-<ItemGroup>
-  <PackageReference Include="coverlet.collector" Version="6.0.0">
-    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    <PrivateAssets>all</PrivateAssets>
-  </PackageReference>
-</ItemGroup>
+```csharp
+// Bogus для генерации тестовых данных
+public class ProductFaker : Faker<Product>
+{
+    public ProductFaker()
+    {
+        RuleFor(p => p.Id, f => f.Random.Guid());
+        RuleFor(p => p.Name, f => f.Commerce.ProductName());
+        RuleFor(p => p.Sku, f => f.Commerce.Ean13());
+        RuleFor(p => p.Price, f => decimal.Parse(f.Commerce.Price(100, 100000)));
+        RuleFor(p => p.Stock, f => f.Random.Int(0, 100));
+        RuleFor(p => p.Category, f => f.PickRandom("cpu", "gpu", "ram"));
+        RuleFor(p => p.Manufacturer, f => f.Company.CompanyName());
+    }
+}
+
+// Использование
+var products = new ProductFaker().Generate(100);
 ```
 
-### Запуск с покрытием
+```typescript
+// @faker-js/faker для Frontend
+import { faker } from '@faker-js/faker';
+
+export const generateProduct = (): Product => ({
+  id: faker.string.uuid(),
+  name: faker.commerce.productName(),
+  price: parseFloat(faker.commerce.price({ min: 100, max: 100000 })),
+  stock: faker.number.int({ min: 0, max: 100 }),
+  category: faker.helpers.arrayElement(['cpu', 'gpu', 'ram']),
+  manufacturer: faker.company.name()
+});
+
+export const generateProducts = (count: number): Product[] => 
+  Array.from({ length: count }, generateProduct);
+```
+
+### 4.2 Очистка данных после тестов
+
+```csharp
+// Автоматическая очистка
+public class DatabaseCleanup : IAsyncLifetime
+{
+    private readonly ApplicationDbContext _dbContext;
+
+    public async Task InitializeAsync() { }
+    
+    public async Task DisposeAsync()
+    {
+        // Очистка всех таблиц
+        var tableNames = new[] { "Orders", "Products", "Users" };
+        foreach (var table in tableNames)
+        {
+            await _dbContext.Database.ExecuteSqlRawAsync($"TRUNCATE TABLE \"{table}\" CASCADE");
+        }
+    }
+}
+```
+
+### 4.3 Тестовые данные в изолированных схемах
+
+```csharp
+// Каждому тесту — своя схема БД
+public class IsolatedDatabaseFixture : IAsyncLifetime
+{
+    private readonly string _schemaName = $"test_{Guid.NewGuid():N}";
+    
+    public async Task InitializeAsync()
+    {
+        await CreateSchemaAsync(_schemaName);
+        await RunMigrationsAsync(_schemaName);
+    }
+
+    public async Task DisposeAsync()
+    {
+        await DropSchemaAsync(_schemaName);
+    }
+}
+```
+
+---
+
+## 5. Отчёты о тестировании
+
+### 5.1 Генерация отчётов о покрытии
 
 ```bash
-# Генерация отчёта о покрытии
-dotnet test --collect:"XPlat Code Coverage" \
-  --results-directory ./coverage
-
-# Генерация HTML отчёта
+# Backend - coverlet + ReportGenerator
+dotnet test --collect:"XPlat Code Coverage"
 reportgenerator \
   -reports:"./coverage/*/coverage.cobertura.xml" \
   -targetdir:"./coverage/report" \
-  -reporttypes:Html
+  -reporttypes:Html;Badges
 
-# Открыть отчёт
-open ./coverage/report/index.html
+# Frontend - Jest/Vitest
+npm run test:coverage -- --reporter=html
 ```
 
-### Проверка минимального покрытия
+### 5.2 Метрики отчётов
 
-```xml
-<!-- runsettings.xml -->
-<?xml version="1.0" encoding="utf-8"?>
-<RunSettings>
-  <DataCollectionRunSettings>
-    <DataCollectors>
-      <DataCollector friendlyName="XPlat code coverage">
-        <Configuration>
-          <MinimumCoverage>
-            <Threshold>70</Threshold>
-          </MinimumCoverage>
-          <Exclude>
-            <ExcludeType>.*Tests.*</ExcludeType>
-            <ExcludeType>.*Migrations.*</ExcludeType>
-          </Exclude>
-          <Include>
-            <IncludeType>.*Core\.Services.*</IncludeType>
-            <IncludeType>.*Core\.Entities.*</IncludeType>
-          </Include>
-        </Configuration>
-      </DataCollector>
-    </DataCollectors>
-  </DataCollectionRunSettings>
-</RunSettings>
-```
+| Метрика | Описание | Источник |
+|---------|----------|----------|
+| Line Coverage | Покрытие строк кода | coverlet, Jest |
+| Branch Coverage | Покрытие ветвлений | coverlet |
+| Function Coverage | Покрытие функций/методов | coverlet, Jest |
+| Mutation Score | Мутационное тестирование | Stryker.NET |
+| Test Count | Количество тестов | Test runner |
+| Test Duration | Время выполнения | Test runner |
 
----
-
-## 8.6 CI/CD Integration
+### 5.3 Визуализация в CI
 
 ```yaml
-# .github/workflows/test.yml
-name: Tests
+# Интеграция с Codecov
+- name: Upload Coverage to Codecov
+  uses: codecov/codecov-action@v3
+  with:
+    files: ./coverage/coverage.xml
+    flags: unittests
+    fail_ci_if_error: true
 
-on: [push, pull_request]
-
-jobs:
-  unit-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-      
-      - name: Run Unit Tests
-        run: dotnet test --filter "FullyQualifiedName!~Integration" \
-             --collect:"XPlat Code Coverage" \
-             --settings runsettings.xml
-      
-      - name: Upload Coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/*/coverage.cobertura.xml
-
-  integration-tests:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: goldpc_test
-        ports:
-          - 5432:5432
-      redis:
-        image: redis:7
-        ports:
-          - 6379:6379
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-      
-      - name: Run Integration Tests
-        run: dotnet test --filter "FullyQualifiedName~Integration"
-        env:
-          ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Database=goldpc_test;Username=test;Password=test"
-          Redis__Connection: "localhost:6379"
-
-  contract-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Run Contract Tests
-        run: dotnet test --filter "FullyQualifiedName~Contract"
-      
-      - name: Publish Pact Files
-        run: |
-          npm install -g @pact-foundation/pact-cli
-          pact-broker publish ./pacts \
-            --consumer-app-version ${{ github.sha }} \
-            --branch ${{ github.ref_name }}
+# Бейджи в README
+[![Coverage](https://codecov.io/gh/org/repo/branch/main/graph/badge.svg)](https://codecov.io/gh/org/repo)
 ```
 
----
+### 5.4 Отчёт о результатах тестов
 
-## Метрики тестирования
-
-| Метрика | Целевое значение |
-|---------|------------------|
-| Unit Test Coverage | ≥70% |
-| Integration Tests | Все критические сценарии |
-| Contract Tests | Все API контракты |
-| Failed Tests | 0 |
-| Test Duration | <5 минут (unit) |
+```xml
+<!-- junit-xml формат для CI систем -->
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="UnitTests" tests="150" failures="0" errors="0" time="2.5">
+    <testcase name="GetProductById_WhenProductExists_ReturnsProduct" time="0.015"/>
+    <testcase name="GetProductById_WhenProductNotFound_ThrowsNotFoundException" time="0.008"/>
+  </testsuite>
+</testsuites>
+```
 
 ---
 
 ## Критерии готовности (Definition of Done)
 
-- [ ] Unit тесты для всех сервисов
-- [ ] Unit тесты для всех репозиториев
-- [ ] Integration тесты для всех API endpoints
-- [ ] Contract тесты для всех контрактов
-- [ ] Code coverage ≥70%
+- [ ] Все модули имеют модульные тесты
+- [ ] Критический путь покрыт интеграционными тестами
+- [ ] Контрактные тесты настроены для всех публичных API
+- [ ] Code coverage ≥70% для бизнес-логики
 - [ ] Все тесты проходят в CI/CD
-- [ ] Нет skipped тестов
+- [ ] Нет пропущенных (skipped) тестов
+- [ ] Отчёты о покрытии генерируются автоматически
+- [ ] Тестовые данные генерируются через фабрики/фикстуры
+
+---
+
+## Возможные риски и митигация
+
+| Риск | Вероятность | Влияние | Меры митигации |
+|------|-------------|---------|----------------|
+| Низкое покрытие тестами | Средняя | Высокое | Code coverage gates в CI, обязательное покрытие 70% |
+| Медленные тесты | Средняя | Среднее | Пирамида тестирования, параллельный запуск |
+| Хрупкие тесты (flaky) | Средняя | Среднее | Изоляция данных, детерминированные тесты |
+| Устаревшие тесты | Низкая | Низкое | Рефакторинг вместе с кодом |
+| Неполные контракты | Средняя | Высокое | Code review контрактов, интеграция Pact в CI |
+
+---
+
+## Выходные артефакты
+
+| Артефакт | Формат | Расположение |
+|----------|--------|--------------|
+| Unit тесты | C#, TypeScript | `tests/`, `*.test.ts` |
+| Integration тесты | C# | `tests/Integration/` |
+| Contract тесты | Pact JSON | `pacts/` |
+| Отчёт о покрытии | HTML, XML | `coverage/` |
+| CI конфигурация | YAML | `.github/workflows/` |
 
 ---
 
 ## Связанные документы
 
-- [README.md](./README.md) — Обзор плана
-- [06-quality-checks.md](./06-quality-checks.md) — Проверки качества
-- [09-code-review-and-integration.md](./09-code-review-and-integration.md) — Ревью
+- [02-contracts-and-architecture.md](./02-contracts-and-architecture.md) — API контракты
+- [04-stub-generation.md](./04-stub-generation.md) — Заглушки и моки
+- [06-quality-checks.md](./06-quality-checks.md) — Критерии качества
+- [09-code-review-and-integration.md](./09-code-review-and-integration.md) — Ревью и интеграция
 
 ---
 

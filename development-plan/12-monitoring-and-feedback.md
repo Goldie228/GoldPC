@@ -889,9 +889,438 @@ export const AnalyticsDashboard: React.FC = () => {
 
 ---
 
-## 12.8 Continuous Improvement
+## 12.8 Обратная связь в процесс разработки
 
-### Feedback Loop
+### Замыкание цикла улучшений
+
+Критически важный аспект мониторинга — использование собранных данных для непрерывного улучшения системы. Информация из production-среды должна влиять на требования и архитектуру.
+
+```mermaid
+flowchart TD
+    subgraph Production["Production Environment"]
+        LOGS[📋 Логи]
+        METRICS[📊 Метрики]
+        TRACES[🔍 Трассы]
+        FEEDBACK[💬 Обратная связь]
+    end
+    
+    subgraph Analysis["Анализ и обработка"]
+        AGG[📈 Агрегация данных]
+        ANOM[🚨 Детекция аномалий]
+        ROOT[🔎 Root Cause Analysis]
+        TRENDS[📉 Трендовый анализ]
+    end
+    
+    subgraph Actions["Действия"]
+        TICKET[🎫 Создание тикета]
+        RFC[📝 RFC / Change Request]
+        ADR[📋 Architecture Decision Record]
+        BACKLOG[📥 Обновление бэклога]
+    end
+    
+    subgraph Planning["Планирование"]
+        REQ[📋 Уточнение требований]
+        ARCH[🏗️ Изменение архитектуры]
+        REFACTOR[🔧 Планирование рефакторинга]
+    end
+    
+    LOGS & METRICS & TRACES & FEEDBACK --> AGG
+    AGG --> ANOM --> ROOT --> TRENDS
+    
+    ROOT --> TICKET
+    TRENDS --> RFC
+    ROOT --> ADR
+    TRENDS --> BACKLOG
+    
+    TICKET & RFC --> REQ
+    ADR --> ARCH
+    BACKLOG --> REFACTOR
+    
+    REQ --> |Возврат на этап 1| REQ_ANALYSIS[📁 01-requirements-analysis.md]
+    ARCH --> |Обновление контрактов| CONTRACTS[📁 02-contracts-and-architecture.md]
+```
+
+### Связь с этапом анализа требований
+
+| Источник данных | Тип информации | Влияние на требования |
+|-----------------|----------------|----------------------|
+| Error Rate по эндпоинтам | Проблемные API | Уточнение ФТ, добавление обработки ошибок |
+| Время отклика | Медленные операции | Новые НФТ производительности |
+| Пользовательская обратная связь | Баги, идеи | Новые User Stories, изменение приоритетов |
+| Конверсия воронки продаж | Проблемы UX | Улучшение интерфейса, новые требования |
+| Гарантийные случаи | Дефекты товаров | Требования к контролю качества |
+
+### Процесс внесения изменений
+
+```yaml
+# .github/workflows/feedback-to-backlog.yml
+name: Feedback to Backlog Integration
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Еженедельно в понедельник
+  workflow_dispatch:
+
+jobs:
+  analyze-metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch metrics from Prometheus
+        run: |
+          # Получение метрик за неделю
+          curl -s "${PROMETHEUS_URL}/api/v1/query" \
+            -d 'query=rate(http_requests_total[7d])' \
+            -o metrics.json
+      
+      - name: Analyze error trends
+        run: |
+          # Анализ ошибок
+          node scripts/analyze-errors.js metrics.json > error-report.md
+      
+      - name: Create issues for critical findings
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('error-report.md', 'utf8');
+            
+            // Создание issue для критических проблем
+            if (report.includes('CRITICAL')) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '[MONITORING] Critical issues detected',
+                body: report,
+                labels: ['monitoring', 'critical', 'needs-triage']
+              });
+            }
+      
+      - name: Update metrics dashboard
+        run: |
+          # Обновление дашборда с трендами
+          node scripts/update-trends.js
+```
+
+### Incident-driven Requirements
+
+Когда инцидент в production приводит к выявлению новых требований:
+
+| Инцидент | Выявленное требование | Действие |
+|----------|----------------------|----------|
+| Время ответа API > 5 сек | НФТ-1.X: Оптимизация запросов | Задача на рефакторинг |
+| Частые 500 ошибки при оплате | ФТ-3.X: Retry механизм | Добавить в бэклог |
+| Потеря данных при сбое | НФТ-2.X: Улучшение backup | Изменить архитектуру |
+| XSS уязвимость | НФТ-3.X: CSP headers | Security fix |
+
+---
+
+## 12.9 Инструменты для анализа
+
+### Выявление узких мест
+
+#### Профилирование производительности
+
+```csharp
+// src/backend/GoldPC.Infrastructure/Profiling/PerformanceProfiler.cs
+public class PerformanceProfiler
+{
+    private readonly IMeter _meter;
+    private readonly ILogger<PerformanceProfiler> _logger;
+    
+    public void ProfileEndpoint(string endpointName, Func<Task> action)
+    {
+        var startTime = DateTime.UtcNow;
+        var stopwatch = Stopwatch.StartNew();
+        
+        try
+        {
+            action().Wait();
+        }
+        finally
+        {
+            stopwatch.Stop();
+            
+            var tags = new TagList
+            {
+                { "endpoint", endpointName },
+                { "status", "success" }
+            };
+            
+            _meter.CreateHistogram<double>("request.duration")
+                .Record(stopwatch.ElapsedMilliseconds, tags);
+            
+            // Логирование медленных запросов
+            if (stopwatch.ElapsedMilliseconds > 1000)
+            {
+                _logger.LogWarning(
+                    "Slow request detected: {Endpoint} took {Duration}ms",
+                    endpointName, stopwatch.ElapsedMilliseconds);
+            }
+        }
+    }
+}
+```
+
+#### Анализ базы данных
+
+```sql
+-- queries/performance-analysis.sql
+
+-- Топ медленных запросов
+SELECT 
+    query,
+    calls,
+    total_time / calls as avg_time_ms,
+    rows,
+    100.0 * shared_blks_hit / nullif(shared_blks_hit + shared_blks_read, 0) AS hit_percent
+FROM pg_stat_statements
+ORDER BY total_time DESC
+LIMIT 20;
+
+-- Неиспользуемые индексы
+SELECT 
+    schemaname || '.' || relname AS table,
+    indexrelname AS index,
+    pg_size_pretty(pg_relation_size(i.indexrelid)) AS index_size,
+    idx_scan as index_scans
+FROM pg_stat_user_indexes ui
+JOIN pg_index i ON ui.indexrelid = i.indexrelid
+WHERE NOT indisunique 
+    AND idx_scan < 50 
+    AND pg_relation_size(i.indexrelid) > 1024 * 1024
+ORDER BY pg_relation_size(i.indexrelid) DESC;
+
+-- Таблицы с блокировками
+SELECT 
+    relname,
+    n_live_tup,
+    n_dead_tup,
+    n_dead_tup::float / nullif(n_live_tup, 0) as dead_ratio
+FROM pg_stat_user_tables
+WHERE n_dead_tup > 10000
+ORDER BY dead_ratio DESC;
+```
+
+#### Инструменты анализа
+
+| Инструмент | Назначение | Применение |
+|------------|------------|------------|
+| **pg_stat_statements** | Анализ SQL запросов | Оптимизация БД |
+| **EXPLAIN ANALYZE** | План выполнения запроса | Поиск медленных запросов |
+| **Jaeger UI** | Визуализация трасс | Поиск задержек в микросервисах |
+| **Grafana Explore** | Анализ логов и метрик | Корреляция событий |
+| **pprof** | CPU/Memory профилирование | Профилирование Go/NET |
+| **dotnet-counters** | Метрики .NET runtime | Мониторинг GC, threads |
+
+### Планирование рефакторинга
+
+```mermaid
+flowchart LR
+    subgraph Signals["Сигналы для рефакторинга"]
+        S1[📈 Рост времени ответа]
+        S2[🐛 Частые баги в модуле]
+        S3[🔄 Высокая сложность кода]
+        S4[📊 Низкое покрытие тестами]
+        S5[💬 Жалобы пользователей]
+    end
+    
+    subgraph Analysis["Анализ"]
+        A1[📋 Code Review]
+        A2[📊 Метрики кода]
+        A3[🔍 Static Analysis]
+        A4[👨‍💻 Архитектор]
+    end
+    
+    subgraph Decision["Решение"]
+        D1[🔧 Рефакторинг]
+        D2[📝 Technical Debt Ticket]
+        D3[🚫 Отклонено]
+    end
+    
+    S1 & S2 & S3 & S4 & S5 --> A1 & A2 & A3 --> A4
+    A4 --> D1 & D2 & D3
+    D2 --> |Спринт N| BACKLOG[📥 Бэклог]
+```
+
+#### Технический долг и рефакторинг
+
+```markdown
+## Шаблон Technical Debt Ticket
+
+### Источник
+- Метрика: [ссылка на Grafana dashboard]
+- Инцидент: [ссылка на incident report]
+- Code Smell: [ссылка на SonarQube issue]
+
+### Анализ
+- Текущее состояние: [описание]
+- Желаемое состояние: [описание]
+- Влияние на систему: [оценка]
+
+### План
+- [ ] Шаг 1: ...
+- [ ] Шаг 2: ...
+- [ ] Тесты: ...
+
+### Риски
+- Риск 1: ... -> Митигация: ...
+- Риск 2: ... -> Митигация: ...
+
+### Оценка
+- Сложность: Low/Medium/High
+- Время: X часов
+- Приоритет: по сравнению с feature work
+```
+
+---
+
+## 12.10 Мониторинг канареечных релизов
+
+### Интеграция с deployment стратегиями
+
+При использовании Canary deployment (см. [11-deployment.md](./11-deployment.md)) критически важно отслеживать метрики новой версии перед полным развёртыванием.
+
+```mermaid
+flowchart TD
+    subgraph Canary["Canary Release Monitoring"]
+        direction TB
+        
+        DEPLOY[🚀 Deploy Canary 10%]
+        
+        subgraph Metrics["Ключевые метрики"]
+            M1[📊 Error Rate]
+            M2[⏱️ Latency p95/p99]
+            M3[💾 Memory Usage]
+            M4[🔗 Dependency Errors]
+            M5[💰 Business Metrics]
+        end
+        
+        COMPARE[🔄 Сравнение с Baseline]
+        
+        DECISION{✅ Метрики OK?}
+        
+        SCALE_UP[📈 Scale to 25%]
+        SCALE_FULL[🚀 Full Rollout]
+        ROLLBACK[⏪ Rollback]
+        
+        DEPLOY --> M1 & M2 & M3 & M4 & M5
+        M1 & M2 & M3 & M4 & M5 --> COMPARE
+        COMPARE --> DECISION
+        
+        DECISION -- Да --> SCALE_UP
+        SCALE_UP --> COMPARE
+        
+        DECISION -- Да: 100% --> SCALE_FULL
+        DECISION -- Нет --> ROLLBACK
+    end
+```
+
+### Канареечные метрики
+
+| Метрика | Порог для отката | Время наблюдения |
+|---------|------------------|------------------|
+| Error Rate Canary vs Baseline | > 0.5% разницы | 5 минут |
+| Latency p95 Canary vs Baseline | > 20% деградации | 5 минут |
+| Memory Leaks | > 10% рост за час | 30 минут |
+| Failed Health Checks | > 3 подряд | 1 минута |
+| Business Conversion Rate | > 10% падение | 15 минут |
+
+### Автоматический откат по метрикам
+
+```yaml
+# infrastructure/monitoring/prometheus/rules/canary.yml
+groups:
+  - name: canary-rollout
+    rules:
+      - alert: CanaryHighErrorRate
+        expr: |
+          (
+            rate(http_requests_total{version="canary",status=~"5.."}[5m])
+            /
+            rate(http_requests_total{version="canary"}[5m])
+          )
+          -
+          (
+            rate(http_requests_total{version="stable",status=~"5.."}[5m])
+            /
+            rate(http_requests_total{version="stable"}[5m])
+          ) > 0.005
+        for: 3m
+        labels:
+          severity: critical
+          action: rollback
+        annotations:
+          summary: "Canary error rate exceeds baseline"
+          description: "Canary error rate is {{ $value | humanizePercentage }} higher than stable version"
+
+      - alert: CanaryHighLatency
+        expr: |
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{version="canary"}[5m]))
+          /
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{version="stable"}[5m]))
+          > 1.2
+        for: 3m
+        labels:
+          severity: warning
+          action: investigate
+        annotations:
+          summary: "Canary latency degraded"
+          description: "Canary p95 latency is {{ $value | humanize }}x of stable version"
+```
+
+### Интеграция с ArgoCD Rollouts
+
+```yaml
+# infrastructure/kubernetes/rollout.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: goldpc-backend
+spec:
+  replicas: 4
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: {duration: 5m}
+        - setWeight: 25
+        - pause: {duration: 5m}
+        - setWeight: 50
+        - pause: {duration: 5m}
+        - setWeight: 75
+        - pause: {duration: 5m}
+      analysis:
+        templates:
+          - templateName: success-rate
+        startingStep: 1
+        args:
+          - name: service-name
+            value: goldpc-backend-canary
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: success-rate
+spec:
+  args:
+    - name: service-name
+  metrics:
+    - name: success-rate
+      interval: 1m
+      successCondition: result[0] >= 0.99
+      provider:
+        prometheus:
+          address: http://prometheus:9090
+          query: |
+            sum(rate(http_requests_total{service="{{args.service-name}}",status!~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{service="{{args.service-name}}"}[5m]))
+```
+
+---
+
+## 12.11 Continuous Improvement
 
 ```mermaid
 flowchart LR
@@ -1001,8 +1430,11 @@ flowchart LR
 ## Связанные документы
 
 - [README.md](./README.md) — Обзор плана
-- [11-deployment.md](./11-deployment.md) — Деплой
+- [01-requirements-analysis.md](./01-requirements-analysis.md) — Анализ требований (обратная связь в процесс)
+- [02-contracts-and-architecture.md](./02-contracts-and-architecture.md) — Архитектура и контракты
 - [07-security.md](./07-security.md) — Безопасность
+- [10-e2e-and-load-testing.md](./10-e2e-and-load-testing.md) — Нагрузочное тестирование
+- [11-deployment.md](./11-deployment.md) — Деплой (канареечные релизы)
 
 ---
 

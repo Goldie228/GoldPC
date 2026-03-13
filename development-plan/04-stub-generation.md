@@ -10,7 +10,7 @@
 
 ## Цель этапа
 
-Создать умные заглушки (Smart Stubs) для всех API-контрактов, настроить генерацию тестовых данных (Faker), реализовать Chaos Engineering для тестирования отказоустойчивости.
+Создать умные заглушки (Smart Stubs) для всех API-контрактов на основе OpenAPI спецификаций, настроить генерацию тестовых данных (Faker), реализовать Chaos Engineering для тестирования отказоустойчивости, обеспечить версионирование заглушек и их интеграцию в тестовые среды.
 
 ---
 
@@ -21,12 +21,234 @@
 | OpenAPI спецификации | [02-contracts-and-architecture.md](./02-contracts-and-architecture.md) |
 | Pact контракты | Этап 2 |
 | Среда разработки | [03-environment-setup.md](./03-environment-setup.md) |
+| Технологический стек | [Инструменты_для_разработки.md](./appendices/Инструменты_для_разработки.md) |
 
 ---
 
 ## Подробное описание действий
 
-### 4.1 Генерация Faker данных (День 1-2)
+### 4.1 Генерация заглушек на основе контрактов (День 1-2)
+
+#### Действия:
+
+1. **Инструменты генерации заглушек**
+
+| Инструмент | Назначение | Формат | Применение |
+|------------|------------|--------|------------|
+| **OpenAPI Generator** | Генерация клиентских SDK и заглушек | OpenAPI 3.x | Backend клиенты |
+| **Swagger Codegen** | Генерация серверных заглушек | OpenAPI 2.x/3.x | Mock серверы |
+| **Prism** | Mock сервер с валидацией | OpenAPI 3.x | Фронтенд разработка |
+| **WireMock** | Гибкие HTTP заглушки | JSON/Standalone | Интеграционные тесты |
+| **JSON Server** | Быстрые REST заглушки | JSON | Прототипирование |
+
+2. **Генерация с помощью OpenAPI Generator**
+
+```bash
+# Установка
+npm install @openapitools/openapi-generator-cli -g
+
+# Генерация TypeScript клиента для Frontend
+openapi-generator-cli generate \
+  -i docs/api/openapi/catalog.yaml \
+  -g typescript-axios \
+  -o src/frontend/src/api/generated/catalog \
+  --additional-properties=npmName=@goldpc/api-catalog
+
+# Генерация C# клиента для Backend
+openapi-generator-cli generate \
+  -i docs/api/openapi/payment.yaml \
+  -g csharp-netcore \
+  -o src/backend/GoldPC.Clients.Payment \
+  --additional-properties=targetFramework=net8.0
+
+# Генерация серверной заглушки
+openapi-generator-cli generate \
+  -i docs/api/openapi/orders.yaml \
+  -g aspnetcore \
+  -o stubs/orders-mock-server \
+  --additional-properties=aspnetCoreVersion=8.0
+```
+
+3. **Настройка Prism Mock Server**
+
+```bash
+# Установка
+npm install @stoplight/prism-cli -g
+
+# Запуск mock сервера с валидацией
+prism mock docs/api/openapi/catalog.yaml \
+  --host 0.0.0.0 \
+  --port 4010 \
+  --validate-request \
+  --validate-response
+
+# Docker запуск
+docker run -it --rm \
+  -v $(pwd)/docs/api/openapi:/specs \
+  -p 4010:4010 \
+  stoplight/prism:latest \
+  mock -h 0.0.0.0 /specs/catalog.yaml
+```
+
+```yaml
+# docker-compose.stubs.yml
+version: '3.8'
+services:
+  catalog-mock:
+    image: stoplight/prism:latest
+    command: mock -h 0.0.0.0 /specs/catalog.yaml
+    volumes:
+      - ./docs/api/openapi:/specs
+    ports:
+      - "4010:4010"
+
+  orders-mock:
+    image: stoplight/prism:latest
+    command: mock -h 0.0.0.0 /specs/orders.yaml
+    volumes:
+      - ./docs/api/openapi:/specs
+    ports:
+      - "4011:4010"
+
+  wiremock:
+    image: wiremock/wiremock:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./stubs/wiremock:/home/wiremock
+```
+
+4. **WireMock для сложных сценариев**
+
+```java
+// stubs/wiremock/mappings/order-created.json
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/v1/orders",
+    "headers": {
+      "Content-Type": {
+        "equalTo": "application/json"
+      }
+    }
+  },
+  "response": {
+    "status": 201,
+    "jsonBody": {
+      "id": "{{randomValue type='UUID'}}",
+      "orderNumber": "ORD-{{randomNumber}}",
+      "status": "New",
+      "createdAt": "{{now}}"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"]
+  }
+}
+
+// stubs/wiremock/mappings/payment-failure.json
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/api/v1/payments",
+    "bodyPatterns": [
+      {
+        "matchesJsonPath": "$.amount",
+        "equalTo": "999999"
+      }
+    ]
+  },
+  "response": {
+    "status": 400,
+    "jsonBody": {
+      "error": "PAYMENT_FAILED",
+      "message": "Превышен лимит транзакции"
+    }
+  }
+}
+```
+
+```csharp
+// Интеграция WireMock в тесты
+public class WireMockFixture : IDisposable
+{
+    public WireMockServer Server { get; }
+    public string Url => Server.Urls[0];
+
+    public WireMockFixture()
+    {
+        Server = WireMockServer.Start();
+        SetupDefaultStubs();
+    }
+
+    private void SetupDefaultStubs()
+    {
+        Server.Given(Request.Create()
+            .WithPath("/api/v1/products")
+            .UsingGet())
+        .RespondWith(Response.Create()
+            .WithStatusCode(200)
+            .WithHeader("Content-Type", "application/json")
+            .WithBodyAsJson(new[]
+            {
+                new { id = Guid.NewGuid(), name = "Product 1", price = 100 },
+                new { id = Guid.NewGuid(), name = "Product 2", price = 200 }
+            }));
+    }
+
+    public void Dispose()
+    {
+        Server?.Stop();
+        Server?.Dispose();
+    }
+}
+```
+
+5. **JSON Server для быстрого прототипирования**
+
+```bash
+# Установка
+npm install json-server -g
+
+# Запуск
+json-server --watch stubs/db.json --port 3001 --routes stubs/routes.json
+```
+
+```json
+// stubs/db.json
+{
+  "products": [
+    { "id": 1, "name": "AMD Ryzen 9 7950X", "price": 59999, "stock": 10 },
+    { "id": 2, "name": "Intel Core i9-14900K", "price": 54999, "stock": 5 }
+  ],
+  "categories": [
+    { "id": "cpu", "name": "Процессоры" },
+    { "id": "gpu", "name": "Видеокарты" }
+  ],
+  "orders": []
+}
+
+// stubs/routes.json
+{
+  "/api/v1/products": "/products",
+  "/api/v1/products/:id": "/products/:id",
+  "/api/v1/categories": "/categories"
+}
+```
+
+#### Ответственный:
+- 🥇 TIER-1 Архитектор
+
+#### Инструменты:
+- OpenAPI Generator
+- Prism Mock Server
+- WireMock
+- JSON Server
+
+---
+
+### 4.2 Генерация Faker данных (День 2-3)
 
 #### Действия:
 

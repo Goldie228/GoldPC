@@ -2,15 +2,15 @@
 
 ## 🔐 SECURITY FIRST
 
-**Версия документа:** 1.0  
+**Версия документа:** 1.1  
 **Длительность этапа:** Постоянно (интегрировано в разработку)  
-**Ответственный:** TIER-1 Архитектор, Security Engineer
+**Ответственный:** TIER-1 Архитектор, Security Engineer, DevOps
 
 ---
 
 ## Цель этапа
 
-Обеспечить безопасность системы на всех уровнях: аутентификация, авторизация, защита данных, защита от атак.
+Обеспечить комплексную безопасность системы на всех этапах жизненного цикла разработки: от статического анализа кода до защиты инфраструктуры. Документ описывает процессы SAST, сканирования зависимостей, управления секретами, валидации данных, аутентификации/авторизации и безопасности контейнеров.
 
 ---
 
@@ -19,629 +19,617 @@
 | Данные | Источник |
 |--------|----------|
 | STRIDE анализ | [02-contracts-and-architecture.md](./02-contracts-and-architecture.md) |
-| Требования безопасности | ТЗ (НФТ-3.x) |
+| Требования безопасности (НФТ-3.x) | [ТЗ_GoldPC.md](./appendices/ТЗ_GoldPC.md) |
 | Исходный код | [05-parallel-development.md](./05-parallel-development.md) |
+| Настройка среды | [03-environment-setup.md](./03-environment-setup.md) |
+| Контракты API | [02-contracts-and-architecture.md](./02-contracts-and-architecture.md) |
 
 ---
 
-## Обзор безопасности
+## Введение: Важность безопасности
+
+### Соответствие требованиям НФТ
+
+Согласно ТЗ, система должна соответствовать следующим нефункциональным требованиям безопасности:
+
+| Код | Требование | Реализация |
+|-----|------------|------------|
+| НФТ-3.1 | Хэширование паролей (bcrypt/Argon2) | Password Service с cost factor 12+ |
+| НФТ-3.2 | HTTPS (TLS 1.2+) для всего трафика | Nginx + SSL сертификаты |
+| НФТ-3.3 | Защита от SQL-инъекций | Параметризованные запросы EF Core |
+| НФТ-3.4 | Защита от XSS | CSP, экранирование, DOMPurify |
+| НФТ-3.5 | CSRF-токены | Anti-forgery middleware |
+| НФТ-3.6 | Обязательная аутентификация для защищённых операций | JWT + Authorization middleware |
+| НФТ-3.7 | Проверка прав на каждый запрос | RBAC + Resource-based авторизация |
+| НФТ-3.8 | Аудит критических операций | Audit Logging Service |
+| НФТ-3.9 | Шифрование PII данных | AES-256-GCM |
+| НФТ-3.10 | Ограничение попыток входа | Rate Limiting (5 попыток → блокировка 15 мин) |
+
+### Обзор системы безопасности
 
 ```mermaid
 mindmap
   root((Security))
+    SAST
+      SonarQube
+      Semgrep
+      Checkmarx
+      ESLint Security
+    Dependency Scanning
+      Snyk
+      OWASP Dep Check
+      npm audit
+      Dependabot
+    Secrets Management
+      git-secrets
+      HashiCorp Vault
+      GitHub Secrets
+      Pre-commit hooks
+    Input Validation
+      OpenAPI schemas
+      FluentValidation
+      SQL Injection protection
+      XSS protection
     Authentication
       JWT Tokens
-      Refresh Tokens
+      OAuth2 Ready
       Password Hashing
-      MFA
+      Rate Limiting
     Authorization
       RBAC
       Resource-based
       Claims-based
-    Data Protection
-      Encryption at Rest
-      Encryption in Transit
-      PII Handling
-      Backup
-    Network Security
-      HTTPS
-      CORS
-      Rate Limiting
+    Container Security
+      Trivy scanning
+      Non-root user
+      Read-only filesystem
+    Infrastructure
+      Network Policies
+      TLS/mTLS
       WAF
-    Input Validation
-      SQL Injection
-      XSS
-      CSRF
-      Validation
-    Audit
-      Logging
-      Monitoring
-      Alerts
-      Compliance
+      Firewalls
 ```
 
 ---
 
-## 7.1 Аутентификация
+## 1. SAST (Static Application Security Testing)
 
-### JWT Token Implementation
+### 1.1 Инструменты SAST
 
-```csharp
-// src/backend/GoldPC.Core/Services/TokenService.cs
-public class TokenService : ITokenService
+| Инструмент | Язык | Назначение | Интеграция |
+|------------|------|------------|------------|
+| **SonarQube** | C#, TypeScript | Комплексный анализ качества и безопасности | CI/CD, IDE |
+| **Semgrep** | C#, TypeScript, JS | Быстрый статический анализ по правилам | CI/CD, Pre-commit |
+| **Checkmarx** | C#, TypeScript | Enterprise SAST решение | CI/CD |
+| **ESLint Security Plugins** | TypeScript, JS | Клиентская безопасность | npm scripts |
+| **Roslyn Security Analyzers** | C# | .NET Security правила | Build process |
+| **CodeQL** | C#, JavaScript | Семантический анализ GitHub | GitHub Actions |
+
+### 1.2 SonarQube Configuration
+
+```properties
+# sonar-project.properties
+sonar.projectKey=goldpc
+sonar.projectName=GoldPC
+sonar.sources=src/backend,src/frontend/src
+
+# Security-focused rules
+sonar.security.hotspots.review=true
+sonar.security.sensitive.data.exposure=true
+sonar.security.sql.injection=true
+sonar.security.xss=true
+sonar.security.csrf=true
+
+# Exclusions
+sonar.exclusions=**/node_modules/**,**/dist/**,**/Migrations/**
+
+# Quality Gate
+sonar.qualitygate.wait=true
+sonar.qualitygate.timeout=300
+```
+
+### 1.3 Semgrep Rules
+
+```yaml
+# .semgrep.yml
+rules:
+  # Detect hardcoded secrets
+  - id: hardcoded-secret
+    patterns:
+      - pattern-either:
+          - pattern: password = "..."
+          - pattern: api_key = "..."
+          - pattern: secret = "..."
+    message: "Обнаружен захардкоженный секрет"
+    severity: ERROR
+    languages: [csharp, typescript]
+  
+  # SQL Injection detection
+  - id: sql-injection
+    patterns:
+      - pattern: $DB.Execute($QUERY + $VAR)
+      - pattern: $DB.Execute($"...{$VAR}...")
+    message: "Потенциальная SQL-инъекция"
+    severity: ERROR
+    languages: [csharp]
+  
+  # XSS detection
+  - id: xss-vulnerability
+    patterns:
+      - pattern: innerHTML = $VAR
+      - pattern: dangerouslySetInnerHTML = { __html: $VAR }
+    message: "Потенциальная XSS уязвимость"
+    severity: WARNING
+    languages: [typescript]
+  
+  # Weak cryptography
+  - id: weak-crypto
+    patterns:
+      - pattern: MD5.Create()
+      - pattern: SHA1.Create()
+      - pattern: DESCryptoServiceProvider
+    message: "Использование слабого криптографического алгоритма"
+    severity: ERROR
+    languages: [csharp]
+```
+
+### 1.4 ESLint Security Plugins
+
+```javascript
+// .eslintrc.cjs (security section)
+module.exports = {
+  plugins: [
+    'security',
+    '@typescript-eslint/security'
+  ],
+  extends: [
+    'plugin:security/recommended',
+    'plugin:@typescript-eslint/security/recommended'
+  ],
+  rules: {
+    // Security rules
+    'security/detect-buffer-unsafe-rendering': 'error',
+    'security/detect-child-process': 'warn',
+    'security/detect-disable-mustache-escape': 'error',
+    'security/detect-eval-with-expression': 'error',
+    'security/detect-new-buffer': 'error',
+    'security/detect-no-csrf-before-method-override': 'error',
+    'security/detect-non-literal-fs-filename': 'warn',
+    'security/detect-non-literal-regexp': 'warn',
+    'security/detect-non-literal-require': 'warn',
+    'security/detect-object-injection': 'warn',
+    'security/detect-possible-timing-attacks': 'error',
+    'security/detect-pseudoRandomBytes': 'error',
+    'security/detect-unsafe-regex': 'error',
+    
+    // TypeScript security
+    '@typescript-eslint/security/detect-unsafe-deserialization': 'error',
+    '@typescript-eslint/security/no-unsafe-assignment': 'error'
+  }
+};
+```
+
+### 1.5 Интеграция SAST в CI
+
+```yaml
+# .github/workflows/sast.yml
+name: SAST Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  sonarqube:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Build
+        run: dotnet build --configuration Release
+      
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      
+      - name: Quality Gate
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Semgrep Scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: .semgrep.yml
+          severity: ERROR
+
+  codeql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: csharp, javascript
+          queries: security-extended
+      
+      - name: Build
+        run: dotnet build --configuration Release
+      
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+```
+
+### 1.6 Пороговые значения SAST
+
+| Уровень уязвимости | Действие при PR | Автоматический мерж |
+|--------------------|-----------------|---------------------|
+| **Critical** | ❌ Блокировка | Запрещён |
+| **High** | ❌ Блокировка | Запрещён |
+| **Medium** | ⚠️ Предупреждение | Требует подтверждения |
+| **Low** | ℹ️ Информирование | Разрешён |
+| **Info** | ℹ️ Логирование | Разрешён |
+
+---
+
+## 2. Сканирование зависимостей
+
+### 2.1 Инструменты сканирования
+
+| Инструмент | Экосистема | Назначение | Автоматизация |
+|------------|------------|------------|---------------|
+| **Snyk** | NuGet, npm | Комплексный мониторинг | CI/CD, Dashboard |
+| **OWASP Dependency Check** | Все | OWASP Top 10 проверка | CI/CD |
+| **npm audit** | npm | Проверка Node.js пакетов | npm scripts |
+| **dotnet list package --vulnerable** | NuGet | Проверка .NET пакетов | CLI |
+| **Trivy** | Docker images | Сканирование образов | CI/CD |
+
+### 2.2 Snyk Configuration
+
+```yaml
+# .snyk
+# Snyk configuration file
+language:
+  dotnet: 8.0
+  node: 20
+
+# Ignore specific vulnerabilities (with justification)
+ignore:
+  SNYK-DEP-12345:
+    - '*':
+        reason: 'No fix available, accepted risk'
+        expires: '2026-06-01'
+
+# Severity threshold
+severity-threshold: high
+
+# Fail on vulnerabilities
+fail-on: upgradable
+```
+
+### 2.3 npm audit Configuration
+
+```json
+// package.json
 {
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<TokenService> _logger;
-
-    public string GenerateAccessToken(User user)
-    {
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role.ToString()),
-            new Claim("firstName", user.FirstName),
-            new Claim("lastName", user.LastName),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
-            claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(15), // Короткий срок!
-            signingCredentials: credentials
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    public string GenerateRefreshToken()
-    {
-        // Криптографически стойкий random
-        var randomBytes = new byte[64];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomBytes);
-        return Convert.ToBase64String(randomBytes);
-    }
-
-    public ClaimsPrincipal? ValidateToken(string token)
-    {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!);
-
-        try
-        {
-            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = _configuration["Jwt:Issuer"],
-                ValidAudience = _configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ClockSkew = TimeSpan.Zero // Нет допуска по времени
-            }, out _);
-
-            return principal;
-        }
-        catch (SecurityTokenException ex)
-        {
-            _logger.LogWarning(ex, "Invalid token validation attempt");
-            return null;
-        }
-    }
+  "scripts": {
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix",
+    "audit:ci": "npm audit --audit-level=high --json > audit-report.json || exit 0"
+  }
 }
 ```
 
-### Password Hashing
+### 2.4 Dependabot Configuration
 
-```csharp
-// src/backend/GoldPC.Core/Services/PasswordService.cs
-public class PasswordService : IPasswordService
+```yaml
+# .github/dependabot.yml
+version: 2
+updates:
+  # Backend (.NET)
+  - package-ecosystem: "nuget"
+    directory: "/packages/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "backend"
+    reviewers:
+      - "backend-team"
+    commit-message:
+      prefix: "deps"
+    groups:
+      microsoft-packages:
+        patterns:
+          - "Microsoft.*"
+          - "System.*"
+      ef-core:
+        patterns:
+          - "Microsoft.EntityFrameworkCore.*"
+  
+  # Frontend (npm)
+  - package-ecosystem: "npm"
+    directory: "/packages/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "frontend"
+    reviewers:
+      - "frontend-team"
+    commit-message:
+      prefix: "deps"
+    groups:
+      react-packages:
+        patterns:
+          - "react*"
+          - "@types/react*"
+      material-ui:
+        patterns:
+          - "@mui/*"
+  
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "docker"
+      - "dependencies"
+  
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "github-actions"
+      - "dependencies"
+```
+
+### 2.5 Renovate Configuration (альтернатива Dependabot)
+
+```json
+// renovate.json
 {
-    private const int WorkFactor = 12; // bcrypt cost factor
-
-    public string HashPassword(string password)
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "schedule": ["before 9am on Monday"],
+  "labels": ["dependencies"],
+  "packageRules": [
     {
-        return BCrypt.Net.BCrypt.HashPassword(password, WorkFactor);
-    }
-
-    public bool VerifyPassword(string password, string hash)
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "non-major dependencies",
+      "groupSlug": "all-minor-patch"
+    },
     {
-        return BCrypt.Net.BCrypt.Verify(password, hash);
-    }
-
-    public bool NeedsRehash(string hash)
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["major"],
+      "addLabels": ["major-update"]
+    },
     {
-        return BCrypt.Net.BCrypt.PasswordNeedsRehash(hash, WorkFactor);
+      "matchManagers": ["nuget"],
+      "rangeStrategy": "bump"
+    },
+    {
+      "matchPackagePatterns": ["Microsoft.*"],
+      "groupName": "Microsoft packages"
     }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "assignees": ["security-team"]
+  }
 }
 ```
 
-### Refresh Token Flow
+### 2.6 Политика обработки уязвимостей
 
 ```mermaid
-sequenceDiagram
-    participant C as Client
-    participant A as Auth Service
-    participant R as Redis
-    participant D as Database
+flowchart TD
+    V[Обнаружена уязвимость] --> S{Серьёзность}
+    S -->|Critical| C1[🔴 Критическая]
+    S -->|High| C2[🟠 Высокая]
+    S -->|Medium| C3[🟡 Средняя]
+    S -->|Low| C4[🟢 Низкая]
     
-    C->>A: Login (email, password)
-    A->>D: Verify credentials
-    D->>A: User verified
-    A->>A: Generate Access Token (15 min)
-    A->>A: Generate Refresh Token (7 days)
-    A->>R: Store Refresh Token (hashed)
-    A->>C: Return both tokens
-    C->>C: Store tokens securely
+    C1 --> A1[Немедленное исправление<br/>в течение 24 часов]
+    C2 --> A2[Исправление в течение<br/>7 дней]
+    C3 --> A3[Исправление в следующем<br/>спринте]
+    C4 --> A4[Добавление в бэклог]
     
-    Note over C: 15 minutes later...
+    A1 --> R[Release с исправлением]
+    A2 --> R
+    A3 --> N[Следующий релиз]
+    A4 --> N
     
-    C->>A: API Request + Access Token
-    A->>A: Validate token (expired!)
-    A->>C: 401 Unauthorized
-    
-    C->>A: Refresh (Access Token, Refresh Token)
-    A->>R: Validate Refresh Token
-    R->>A: Valid
-    A->>A: Generate new Access Token
-    A->>A: Rotate Refresh Token
-    A->>R: Store new Refresh Token
-    A->>C: Return new tokens
+    C1 --> E[Экстренное совещание<br/>security-команды]
+    C2 --> N2[Уведомление<br/>security-team]
+```
+
+| Уровень | Срок исправления | Ответственный | Процесс |
+|---------|-----------------|---------------|---------|
+| **Critical** | 24 часа | Security Team + Lead | Hotfix процесс |
+| **High** | 7 дней | Security Team + Developer | Patch release |
+| **Medium** | 30 дней | Developer | В рамках спринта |
+| **Low** | 90 дней | Developer | По возможности |
+
+### 2.7 CI/CD для сканирования зависимостей
+
+```yaml
+# .github/workflows/dependency-scan.yml
+name: Dependency Scanning
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 6 * * 1'  # Еженедельно
+
+jobs:
+  snyk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install Snyk
+        run: npm install -g snyk
+      
+      - name: Snyk Auth
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+      
+      - name: Snyk Test (Backend)
+        working-directory: packages/backend
+        run: snyk test --severity-threshold=high --fail-on=upgradable
+      
+      - name: Snyk Test (Frontend)
+        working-directory: packages/frontend
+        run: snyk test --severity-threshold=high --fail-on=upgradable
+      
+      - name: Snyk Monitor
+        if: github.ref == 'refs/heads/main'
+        run: snyk monitor
+
+  npm-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        working-directory: packages/frontend
+        run: npm ci
+      
+      - name: Run npm audit
+        working-directory: packages/frontend
+        run: npm audit --audit-level=high
+
+  dotnet-vulnerable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Restore packages
+        working-directory: packages/backend
+        run: dotnet restore
+      
+      - name: Check for vulnerable packages
+        working-directory: packages/backend
+        run: dotnet list package --vulnerable --include-transitive
 ```
 
 ---
 
-## 7.2 Авторизация
+## 3. Управление секретами
 
-### RBAC Implementation
+### 3.1 Запрет на хранение секретов в коде
 
-```csharp
-// src/backend/GoldPC.Core/Entities/User.cs
-public enum UserRole
-{
-    Client = 0,      // Обычный клиент
-    Manager = 1,     // Менеджер продаж
-    Master = 2,      // Мастер сервиса
-    Admin = 3,       // Администратор
-    Accountant = 4   // Бухгалтер
-}
+#### git-secrets Setup
 
-// src/backend/GoldPC.Infrastructure/Authorization/RoleAuthorizationHandler.cs
-public class RoleAuthorizationHandler : AuthorizationHandler<RoleRequirement>
-{
-    protected override Task HandleRequirementAsync(
-        AuthorizationHandlerContext context,
-        RoleRequirement requirement)
-    {
-        var userRole = context.User.FindFirst(ClaimTypes.Role)?.Value;
-        
-        if (userRole != null && requirement.AllowedRoles.Contains(userRole))
-        {
-            context.Succeed(requirement);
-        }
-        
-        return Task.CompletedTask;
-    }
-}
+```bash
+# Установка git-secrets
+# macOS
+brew install git-secrets
 
-// Атрибут для использования
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-public class AuthorizeRolesAttribute : AuthorizeAttribute
-{
-    public AuthorizeRolesAttribute(params UserRole[] roles)
-    {
-        Roles = string.Join(",", roles.Select(r => r.ToString()));
-    }
-}
+# Linux
+wget https://raw.githubusercontent.com/awslabs/git-secrets/master/git-secrets
+sudo install git-secrets /usr/local/bin
 
-// Использование в контроллерах
-[ApiController]
-[Route("api/v1/admin")]
-[AuthorizeRoles(UserRole.Admin)]
-public class AdminController : ControllerBase
-{
-    [HttpGet("users")]
-    public async Task<IActionResult> GetUsers()
-    {
-        // Только Admin имеет доступ
-    }
-}
+# Настройка в репозитории
+cd goldpc
+git secrets --install
+git secrets --register-aws
 
-[ApiController]
-[Route("api/v1/orders")]
-public class OrdersController : ControllerBase
-{
-    [HttpGet]
-    [AuthorizeRoles(UserRole.Client, UserRole.Manager, UserRole.Admin)]
-    public async Task<IActionResult> GetOrders()
-    {
-        // Клиент видит свои заказы, Manager/Admin - все
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
-        
-        if (role == "Client")
-        {
-            return Ok(await _orderService.GetUserOrdersAsync(Guid.Parse(userId)));
-        }
-        
-        return Ok(await _orderService.GetAllOrdersAsync());
-    }
-}
+# Добавление пользовательских паттернов
+git secrets --add 'password\s*=\s*["\'][^"\']+["\']'
+git secrets --add 'api_key\s*=\s*["\'][^"\']+["\']'
+git secrets --add 'secret\s*=\s*["\'][^"\']+["\']'
+git secrets --add 'token\s*=\s*["\'][^"\']+["\']'
+git secrets --add 'JWT_SECRET\s*=\s*["\'][^"\']+["\']'
+
+# Сканирование истории
+git secrets --scan-history
 ```
 
-### Resource-based Authorization
+#### Pre-commit Hooks
 
-```csharp
-// src/backend/GoldPC.Infrastructure/Authorization/ResourceAuthorizationHandler.cs
-public class OrderAuthorizationHandler : AuthorizationHandler<OrderOperationRequirement, Order>
-{
-    protected override Task HandleRequirementAsync(
-        AuthorizationHandlerContext context,
-        OrderOperationRequirement requirement,
-        Order resource)
-    {
-        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var role = context.User.FindFirst(ClaimTypes.Role)?.Value;
-
-        // Admin имеет полный доступ
-        if (role == UserRole.Admin.ToString())
-        {
-            context.Succeed(requirement);
-            return Task.CompletedTask;
-        }
-
-        // Проверка владения ресурсом
-        switch (requirement.Operation)
-        {
-            case OrderOperation.Read:
-            case OrderOperation.Update:
-            case OrderOperation.Cancel:
-                if (resource.UserId.ToString() == userId)
-                {
-                    context.Succeed(requirement);
-                }
-                break;
-            
-            case OrderOperation.Process:
-                if (role == UserRole.Manager.ToString())
-                {
-                    context.Succeed(requirement);
-                }
-                break;
-        }
-
-        return Task.CompletedTask;
-    }
-}
-
-public record OrderOperationRequirement(OrderOperation Operation);
-
-public enum OrderOperation
-{
-    Read,
-    Update,
-    Cancel,
-    Process
-}
-
-// Использование
-[HttpGet("{id}")]
-public async Task<IActionResult> GetOrder(Guid id)
-{
-    var order = await _orderService.GetByIdAsync(id);
-    
-    var result = await _authorizationService.AuthorizeAsync(
-        User, order, new OrderOperationRequirement(OrderOperation.Read));
-    
-    if (!result.Succeeded)
-    {
-        return Forbid();
-    }
-    
-    return Ok(order);
-}
-```
-
----
-
-## 7.3 Защита данных
-
-### Encryption at Rest
-
-```csharp
-// src/backend/GoldPC.Infrastructure/Encryption/DataEncryptionService.cs
-public class DataEncryptionService : IDataEncryptionService
-{
-    private readonly byte[] _key;
-    private readonly ILogger<DataEncryptionService> _logger;
-
-    public DataEncryptionService(IConfiguration configuration)
-    {
-        _key = Convert.FromBase64String(configuration["Encryption:Key"]!);
-    }
-
-    public string Encrypt(string plainText)
-    {
-        using var aes = Aes.Create();
-        aes.Key = _key;
-        aes.GenerateIV();
-        
-        using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-        using var msEncrypt = new MemoryStream();
-        using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-        using (var swEncrypt = new StreamWriter(csEncrypt))
-        {
-            swEncrypt.Write(plainText);
-        }
-        
-        var encrypted = msEncrypt.ToArray();
-        var result = new byte[aes.IV.Length + encrypted.Length];
-        Buffer.BlockCopy(aes.IV, 0, result, 0, aes.IV.Length);
-        Buffer.BlockCopy(encrypted, 0, result, aes.IV.Length, encrypted.Length);
-        
-        return Convert.ToBase64String(result);
-    }
-
-    public string Decrypt(string cipherText)
-    {
-        var fullCipher = Convert.FromBase64String(cipherText);
-        
-        using var aes = Aes.Create();
-        aes.Key = _key;
-        
-        var iv = new byte[16];
-        var cipher = new byte[fullCipher.Length - 16];
-        Buffer.BlockCopy(fullCipher, 0, iv, 0, 16);
-        Buffer.BlockCopy(fullCipher, 16, cipher, 0, cipher.Length);
-        
-        aes.IV = iv;
-        
-        using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-        using var msDecrypt = new MemoryStream(cipher);
-        using var csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read);
-        using var srDecrypt = new StreamReader(csDecrypt);
-        
-        return srDecrypt.ReadToEnd();
-    }
-}
-
-// Использование для PII
-public class User
-{
-    public Guid Id { get; set; }
-    
-    [Encrypted]
-    public string? PassportNumber { get; set; }
-    
-    [Encrypted]
-    public string? Address { get; set; }
-}
-```
-
-### HTTPS Enforcement
-
-```csharp
-// Program.cs
-var builder = WebApplication.CreateBuilder(args);
-
-// Принудительный HTTPS в production
-if (!builder.Environment.IsDevelopment())
-{
-    builder.Services.AddHsts(options =>
-    {
-        options.Preload = true;
-        options.IncludeSubDomains = true;
-        options.MaxAge = TimeSpan.FromDays(365);
-    });
-}
-
-var app = builder.Build();
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHsts();
-    app.UseHttpsRedirection();
-}
-```
-
----
-
-## 7.4 Защита от атак
-
-### SQL Injection Prevention
-
-```csharp
-// ✅ Правильно - параметризованные запросы
-public class ProductRepository : Repository<Product>, IProductRepository
-{
-    public async Task<IEnumerable<Product>> SearchAsync(string searchTerm)
-    {
-        // EF Core автоматически параметризует запросы
-        return await _db.Products
-            .Where(p => p.Name.Contains(searchTerm) || 
-                        p.Description.Contains(searchTerm))
-            .ToListAsync();
-    }
-    
-    // Для raw SQL используем параметры
-    public async Task<IEnumerable<Product>> GetByCategoryRawAsync(string category)
-    {
-        return await _db.Products
-            .FromSqlRaw("SELECT * FROM Products WHERE Category = {0}", category)
-            .ToListAsync();
-    }
-}
-```
-
-### XSS Prevention
-
-```typescript
-// src/frontend/src/utils/sanitize.ts
-import DOMPurify from 'dompurify';
-
-export const sanitizeHtml = (html: string): string => {
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br'],
-    ALLOWED_ATTR: ['href', 'title'],
-    ALLOW_DATA_ATTR: false
-  });
-};
-
-// Использование
-const UserComment: React.FC<{ content: string }> = ({ content }) => {
-  return (
-    <div 
-      dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
-    />
-  );
-};
-```
-
-### CSRF Protection
-
-```csharp
-// Program.cs
-builder.Services.AddAntiforgery(options =>
-{
-    options.HeaderName = "X-XSRF-TOKEN";
-    options.Cookie = new CookieBuilder
-    {
-        HttpOnly = false, // JavaScript должен иметь доступ
-        SecurePolicy = CookieSecurePolicy.Always,
-        SameSite = SameSiteMode.Strict
-    };
-});
-
-// Middleware
-app.UseAntiforgery();
-
-// В контроллерах
-[AutoValidateAntiforgeryToken]
-public class AccountController : ControllerBase
-{
-    [HttpPost("change-password")]
-    public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
-    {
-        // CSRF токен автоматически проверяется
-    }
-}
-```
-
-### Rate Limiting
-
-```csharp
-// Program.cs
-builder.Services.AddRateLimiter(options =>
-{
-    // Глобальный лимит
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-    {
-        return RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.User.Identity?.Name ?? context.Request.Headers.Host.ToString(),
-            factory: partition => new FixedWindowRateLimiterOptions
-            {
-                AutoReplenishment = true,
-                PermitLimit = 100,
-                Window = TimeSpan.FromMinutes(1)
-            });
-    });
-    
-    // Лимит для аутентификации
-    options.AddPolicy("Auth", context =>
-    {
-        return RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                AutoReplenishment = true,
-                PermitLimit = 5, // Только 5 попыток в минуту
-                Window = TimeSpan.FromMinutes(1)
-            });
-    });
-    
-    options.OnRejected = async (context, token) =>
-    {
-        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        context.HttpContext.Response.Headers["Retry-After"] = "60";
-        
-        await context.HttpContext.Response.WriteAsJsonAsync(new
-        {
-            Error = "Too many requests",
-            Message = "Please try again later"
-        }, token);
-    };
-});
-
-// Использование в endpoints
-app.MapPost("/api/v1/auth/login", Login)
-   .RequireRateLimiting("Auth");
-```
-
----
-
-## 7.5 Input Validation
-
-### FluentValidation
-
-```csharp
-// src/backend/GoldPC.Core/Validators/RegisterRequestValidator.cs
-public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
-{
-    public RegisterRequestValidator()
-    {
-        RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email обязателен")
-            .EmailAddress().WithMessage("Некорректный формат email")
-            .MaximumLength(255).WithMessage("Email слишком длинный");
-
-        RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Пароль обязателен")
-            .MinimumLength(8).WithMessage("Пароль должен быть не менее 8 символов")
-            .MaximumLength(128).WithMessage("Пароль слишком длинный")
-            .Matches(@"[A-Z]").WithMessage("Пароль должен содержать заглавную букву")
-            .Matches(@"[a-z]").WithMessage("Пароль должен содержать строчную букву")
-            .Matches(@"[0-9]").WithMessage("Пароль должен содержать цифру")
-            .Matches(@"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>/?]")
-            .WithMessage("Пароль должен содержать специальный символ");
-
-        RuleFor(x => x.FirstName)
-            .NotEmpty().WithMessage("Имя обязательно")
-            .MinimumLength(2).WithMessage("Имя слишком короткое")
-            .MaximumLength(100).WithMessage("Имя слишком длинное")
-            .Matches(@"^[a-zA-Zа-яА-ЯёЁ\s\-]+$")
-            .WithMessage("Имя может содержать только буквы, пробелы и дефис");
-
-        RuleFor(x => x.Phone)
-            .NotEmpty().WithMessage("Телефон обязателен")
-            .Matches(@"^\+375\d{9}$").WithMessage("Формат: +375XXXXXXXXX");
-    }
-}
-
-// Регистрация
-builder.Services.AddValidatorsFromAssembly(typeof(RegisterRequestValidator).Assembly);
-builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-```
-
-### Frontend Validation
-
-```typescript
-// src/frontend/src/validators/auth.ts
-import * as yup from 'yup';
-
-export const registerSchema = yup.object().shape({
-  email: yup.string()
-    .required('Email обязателен')
-    .email('Некорректный формат email')
-    .max(255, 'Email слишком длинный'),
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: detect-private-key
+      - id: detect-aws-credentials
+        args: ['--allow-missing-credentials']
   
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+  
+  - repo: local
+    hooks:
+      - id: git-secrets
+        name: git-secrets
+        entry: git secrets --scan
+        language: system
+        stages: [commit]
+```
+
+### 3.2 Использование HashiCorp Vault
+
+```yaml
   password: yup.string()
     .required('Пароль обязателен')
     .min(8, 'Пароль должен быть не менее 8 символов')
