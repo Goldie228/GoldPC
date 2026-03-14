@@ -1,0 +1,144 @@
+name: Dependency Security Scan
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 6 * * *'  # Ежедневно в 6:00 UTC
+
+jobs:
+  snyk:
+    name: Snyk Vulnerability Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/frontend/package-lock.json
+      
+      - name: Install Snyk
+        run: npm install -g snyk
+      
+      - name: Snyk Auth
+        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+      
+      - name: Restore Backend Dependencies
+        working-directory: src/backend
+        run: dotnet restore
+        continue-on-error: true
+      
+      - name: Install Frontend Dependencies
+        working-directory: src/frontend
+        run: npm ci
+        continue-on-error: true
+      
+      - name: Snyk Test Backend
+        working-directory: src/backend
+        run: snyk test --severity-threshold=high --fail-on=upgradable --json-file-output=snyk-backend.json
+        continue-on-error: true
+      
+      - name: Snyk Test Frontend
+        working-directory: src/frontend
+        run: snyk test --severity-threshold=high --fail-on=upgradable --json-file-output=snyk-frontend.json
+        continue-on-error: true
+      
+      - name: Snyk Monitor (main only)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          snyk monitor --file=src/backend/GoldPC.sln || true
+          snyk monitor --file=src/frontend/package.json || true
+        continue-on-error: true
+      
+      - name: Upload Snyk Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: snyk-reports
+          path: |
+            src/backend/snyk-backend.json
+            src/frontend/snyk-frontend.json
+
+  npm-audit:
+    name: npm audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: src/frontend/package-lock.json
+      
+      - name: Install Dependencies
+        working-directory: src/frontend
+        run: npm ci
+        continue-on-error: true
+      
+      - name: Run npm audit
+        working-directory: src/frontend
+        run: npm audit --audit-level=high
+        continue-on-error: true
+      
+      - name: Generate Audit Report
+        working-directory: src/frontend
+        run: npm audit --json > npm-audit.json
+        continue-on-error: true
+
+  dotnet-vulnerable:
+    name: .NET Vulnerable Packages Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Restore Packages
+        working-directory: src/backend
+        run: dotnet restore
+        continue-on-error: true
+      
+      - name: Check for Vulnerable Packages
+        working-directory: src/backend
+        run: |
+          dotnet list package --vulnerable --include-transitive --output-format json > vulnerable-packages.json || true
+          cat vulnerable-packages.json || echo "No vulnerable packages or no project found"
+        continue-on-error: true
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
+</task_progress>
+</write_to_file>

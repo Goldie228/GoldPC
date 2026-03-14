@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: goldpc-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: goldpc_catalog
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - goldpc-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: goldpc-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - goldpc-network
+
+  # Catalog Service
+  catalog-service:
+    build:
+      context: ../src
+      dockerfile: ../docker/Dockerfile.CatalogService
+    container_name: goldpc-catalog
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__PostgreSQL=Host=postgres;Database=goldpc_catalog;Username=postgres;Password=postgres
+      - ConnectionStrings__Redis=redis:6379
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - goldpc-network
+
+  # PCBuilder Service
+  pcbuilder-service:
+    build:
+      context: ../src
+      dockerfile: ../docker/Dockerfile.PCBuilderService
+    container_name: goldpc-pcbuilder
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CatalogService__Url=http://catalog-service:5001
+    ports:
+      - "5002:5002"
+    depends_on:
+      - catalog-service
+    networks:
+      - goldpc-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  goldpc-network:
+    driver: bridge

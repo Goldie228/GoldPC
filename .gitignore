@@ -1,0 +1,156 @@
+# ==================================================
+# GoldPC .gitignore
+# ==================================================
+
+# ==================================================
+# SECRETS - NEVER COMMIT THESE
+# ==================================================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+credentials.json
+service-account.json
+
+# ==================================================
+# IDE and Editor
+# ==================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# ==================================================
+# Node.js
+# ==================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+.pnp.*
+dist/
+build/
+.cache/
+.parcel-cache/
+
+# ==================================================
+# .NET
+# ==================================================
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+*.user
+*.suo
+*.cache
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+_ReSharper*/
+*.DotSettings
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ==================================================
+# Test Coverage
+# ==================================================
+coverage/
+.nyc_output/
+*.coverage
+*.coveragexml
+TestResults/
+*.trx
+
+# ==================================================
+# Docker
+# ==================================================
+.docker/
+
+# ==================================================
+# Kubernetes
+# ==================================================
+*.kubeconfig
+kubeconfig
+
+# ==================================================
+# Terraform
+# ==================================================
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+.terraform.lock.hcl
+
+# ==================================================
+# Logs
+# ==================================================
+logs/
+*.log
+*.txt
+
+# ==================================================
+# OS Files
+# ==================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==================================================
+# Build outputs
+# ==================================================
+out/
+target/
+*.class
+*.jar
+*.war
+
+# ==================================================
+# Temporary files
+# ==================================================
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ==================================================
+# Security scan reports
+# ==================================================
+*.sarif
+snyk-*.json
+trivy-*.json
+semgrep-*.json
+npm-audit.json
+vulnerable-packages.json
+
+# ==================================================
+# Documentation builds
+# ==================================================
+site/
+_site/
+</task_progress>
+</write_to_file>

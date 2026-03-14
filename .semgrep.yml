@@ -1,0 +1,215 @@
+rules:
+  # === HARDCODED SECRETS ===
+  - id: hardcoded-password
+    patterns:
+      - pattern-either:
+          - pattern: password = "..."
+          - pattern: Password = "..."
+          - pattern: const string Password = "..."
+    message: "Обнаружен захардкоженный пароль"
+    severity: ERROR
+    languages: [csharp]
+    metadata:
+      category: security
+      cwe: "CWE-798"
+  
+  - id: hardcoded-api-key
+    patterns:
+      - pattern-either:
+          - pattern: api_key = "..."
+          - pattern: ApiKey = "..."
+          - pattern: X-Api-Key = "..."
+    message: "Обнаружен захардкоженный API ключ"
+    severity: ERROR
+    languages: [csharp, typescript]
+  
+  - id: hardcoded-jwt-secret
+    patterns:
+      - pattern: JWT_SECRET = "..."
+      - pattern: JwtSecret = "..."
+    message: "JWT секрет не должен быть захардкожен"
+    severity: ERROR
+    languages: [csharp, javascript]
+
+  - id: hardcoded-connection-string
+    patterns:
+      - pattern: ConnectionString = "..."
+      - pattern: connection_string = "..."
+    message: "Строка подключения не должна быть захардкожена"
+    severity: ERROR
+    languages: [csharp, javascript]
+
+  # === SQL INJECTION ===
+  - id: sql-injection-string-concat
+    patterns:
+      - pattern: $DB.Execute($"...{$VAR}...")
+      - pattern: $DB.Query<$T>($"...{$VAR}...")
+    message: "Потенциальная SQL-инъекция через интерполяцию строк"
+    severity: ERROR
+    languages: [csharp]
+    metadata:
+      category: security
+      cwe: "CWE-89"
+  
+  - id: sql-injection-raw
+    patterns:
+      - pattern: FromSqlRaw($"SELECT ... { $VAR }")
+    message: "Используйте параметризованные запросы"
+    severity: ERROR
+    languages: [csharp]
+
+  - id: sql-injection-concat
+    patterns:
+      - pattern: $DB.Execute($VAR + "...")
+      - pattern: $DB.Execute("..." + $VAR)
+    message: "Конкатенация строк в SQL запросе - потенциальная SQL-инъекция"
+    severity: ERROR
+    languages: [csharp]
+
+  # === XSS ===
+  - id: xss-innerHTML
+    patterns:
+      - pattern: element.innerHTML = $VAR
+      - pattern: $EL.innerHTML = $INPUT
+    message: "Потенциальная XSS через innerHTML"
+    severity: WARNING
+    languages: [javascript, typescript]
+  
+  - id: xss-dangerouslySetInnerHTML
+    patterns:
+      - pattern: dangerouslySetInnerHTML = { __html: $VAR }
+    message: "Используйте DOMPurify для санитизации HTML"
+    severity: WARNING
+    languages: [typescript]
+
+  - id: xss-document-write
+    patterns:
+      - pattern: document.write($VAR)
+    message: "document.write может привести к XSS"
+    severity: WARNING
+    languages: [javascript, typescript]
+
+  # === WEAK CRYPTOGRAPHY ===
+  - id: weak-hash-md5
+    patterns:
+      - pattern: MD5.Create()
+      - pattern: System.Security.Cryptography.MD5
+    message: "MD5 не подходит для хэширования паролей или подписей"
+    severity: ERROR
+    languages: [csharp]
+  
+  - id: weak-hash-sha1
+    patterns:
+      - pattern: SHA1.Create()
+    message: "SHA1 криптографически сломан"
+    severity: WARNING
+    languages: [csharp]
+  
+  - id: weak-encryption-des
+    patterns:
+      - pattern: DESCryptoServiceProvider
+      - pattern: TripleDESCryptoServiceProvider
+    message: "DES устарел, используйте AES"
+    severity: ERROR
+    languages: [csharp]
+
+  - id: weak-random
+    patterns:
+      - pattern: new Random()
+    message: "Для криптографических целей используйте RandomNumberGenerator"
+    severity: WARNING
+    languages: [csharp]
+
+  # === AUTHENTICATION ===
+  - id: jwt-validation-none
+    patterns:
+      - pattern: ValidateAudience = false
+      - pattern: ValidateIssuer = false
+    message: "Отключена валидация JWT токенов"
+    severity: WARNING
+    languages: [csharp]
+  
+  - id: cookie-without-secure
+    patterns:
+      - pattern: Secure = false
+    message: "Cookie должна иметь флаг Secure"
+    severity: WARNING
+    languages: [csharp]
+
+  - id: cookie-without-httponly
+    patterns:
+      - pattern: HttpOnly = false
+    message: "Cookie должна иметь флаг HttpOnly для защиты от XSS"
+    severity: WARNING
+    languages: [csharp]
+
+  # === AUTHORIZATION ===
+  - id: allow-anonymous
+    patterns:
+      - pattern: [AllowAnonymous]
+    message: "Проверьте, что AllowAnonymous используется обоснованно"
+    severity: INFO
+    languages: [csharp]
+
+  # === LOGGING ===
+  - id: sensitive-data-logging
+    patterns:
+      - pattern: logger.LogInformation($"...password...")
+      - pattern: logger.LogInformation($"...token...")
+      - pattern: logger.LogInformation($"...secret...")
+      - pattern: Console.WriteLine($"...password...")
+    message: "Не логируйте чувствительные данные"
+    severity: WARNING
+    languages: [csharp]
+
+  # === EXCEPTION HANDLING ===
+  - id: catch-all-empty
+    patterns:
+      - pattern: |
+          catch {
+          }
+    message: "Пустой catch блок скрывает ошибки"
+    severity: WARNING
+    languages: [csharp]
+
+  - id: catch-exception-silent
+    patterns:
+      - pattern: |
+          catch (Exception $E) {
+          }
+    message: "Catch блок должен обрабатывать или логировать исключение"
+    severity: WARNING
+    languages: [csharp]
+
+  # === NEUROSLOP DETECTION ===
+  - id: obvious-comment
+    patterns:
+      - pattern: // Get the $VAR
+      - pattern: // Set the $VAR
+      - pattern: // Return $VAR
+      - pattern: // Constructor
+      - pattern: // This function $VAR
+    message: "Очевидный комментарий - возможный нейрослоп"
+    severity: INFO
+    languages: [csharp, javascript, typescript]
+
+  - id: generic-factory
+    patterns:
+      - pattern: |
+          class $CLASSFactory {
+            create() {
+              return new $CLASS();
+            }
+          }
+    message: "Тривиальная фабрика - возможный over-engineering"
+    severity: INFO
+    languages: [csharp, javascript, typescript]
+
+  - id: empty-interface
+    patterns:
+      - pattern: interface $NAME { }
+    message: "Пустой интерфейс - возможный нейрослоп"
+    severity: INFO
+    languages: [csharp, typescript]
+</task_progress>
+</write_to_file>

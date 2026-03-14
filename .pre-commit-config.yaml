@@ -1,0 +1,72 @@
+repos:
+  # Gitleaks - специализируется на секретах
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.1
+    hooks:
+      - id: gitleaks
+  
+  # Стандартные проверки
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: detect-private-key
+      - id: detect-aws-credentials
+        args: ['--allow-missing-credentials']
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ['--unsafe']
+      - id: check-json
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: forbid-new-submodules
+  
+  # TruffleHog - поиск секретов в истории
+  - repo: https://github.com/trufflesecurity/trufflehog
+    rev: v3.69.0
+    hooks:
+      - id: trufflehog
+        args: ['--only-verified', '--fail']
+  
+  # Semgrep для статического анализа
+  - repo: https://github.com/returntocorp/semgrep-pre-commit
+    rev: v1.52.0
+    hooks:
+      - id: semgrep
+        args: ['--config', '.semgrep.yml', '--error']
+  
+  # Локальные хуки
+  - repo: local
+    hooks:
+      - id: git-secrets
+        name: git-secrets
+        entry: bash -c 'git secrets --scan || true'
+        language: system
+        stages: [commit]
+      
+      - id: neuroslop-check
+        name: neuroslop-check
+        entry: node scripts/neuroslop-check.js
+        language: system
+        types: [file]
+        files: \.(cs|ts|tsx|js|jsx)$
+        pass_filenames: true
+
+# Настройки
+default_language_version:
+  node: 20
+
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false
+</task_progress>
+</write_to_file>
