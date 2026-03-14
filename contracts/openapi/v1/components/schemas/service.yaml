@@ -1,0 +1,367 @@
+# Схемы данных услуг сервисного центра
+# Версия: 1.0.0
+
+components:
+  schemas:
+    # === Заявка на услугу ===
+    ServiceRequest:
+      type: object
+      required: [id, requestNumber, status, clientId, serviceTypeId, createdAt]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        requestNumber:
+          type: string
+          pattern: '^SRV-\d{6}-\d{4}$'
+          description: Уникальный номер заявки
+          example: "SRV-000001-0001"
+        clientId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        client:
+          $ref: './user.yaml#/components/schemas/UserSummary'
+        masterId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        master:
+          $ref: './user.yaml#/components/schemas/UserSummary'
+        serviceTypeId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        serviceType:
+          $ref: '#/components/schemas/ServiceTypeEntity'
+        status:
+          $ref: './common.yaml#/components/schemas/ServiceRequestStatus'
+        deviceType:
+          type: string
+          maxLength: 100
+          description: Тип устройства
+          example: "Персональный компьютер"
+        deviceModel:
+          type: string
+          maxLength: 200
+          description: Модель устройства
+          example: "Custom Gaming PC"
+        serialNumber:
+          type: string
+          maxLength: 100
+          description: Серийный номер
+        problemDescription:
+          type: string
+          maxLength: 2000
+          description: Описание проблемы от клиента
+          example: "Компьютер не включается, индикаторы не горят"
+        diagnosisResult:
+          type: string
+          maxLength: 2000
+          description: Результат диагностики
+        workDescription:
+          type: string
+          maxLength: 2000
+          description: Описание выполненных работ
+        estimatedCost:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Ориентировочная стоимость
+        laborCost:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Стоимость работ
+        partsCost:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Стоимость запчастей
+        totalCost:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Итоговая стоимость
+        usedParts:
+          type: array
+          items:
+            $ref: '#/components/schemas/UsedPart'
+          description: Использованные запчасти
+        photos:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: URL фотографий устройства
+        warrantyId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+          description: Связанный гарантийный талон
+        orderId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+          description: Связанный заказ
+        history:
+          type: array
+          items:
+            $ref: './common.yaml#/components/schemas/HistoryEntry'
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        updatedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        completedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        closedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    ServiceRequestSummary:
+      type: object
+      required: [id, requestNumber, status, serviceType, createdAt]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        requestNumber:
+          type: string
+          example: "SRV-000001-0001"
+        status:
+          $ref: './common.yaml#/components/schemas/ServiceRequestStatus'
+        serviceType:
+          $ref: '#/components/schemas/ServiceTypeEntity'
+        deviceType:
+          type: string
+          example: "Персональный компьютер"
+        estimatedCost:
+          $ref: './common.yaml#/components/schemas/Price'
+        clientName:
+          type: string
+        masterName:
+          type: string
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    # === Тип услуги ===
+    ServiceTypeEntity:
+      type: object
+      required: [id, name, code]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 100
+          description: Название услуги
+          example: "Диагностика ПК"
+        code:
+          $ref: './common.yaml#/components/schemas/ServiceType'
+        description:
+          type: string
+          maxLength: 500
+          description: Описание услуги
+        basePrice:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Базовая стоимость
+        estimatedDuration:
+          type: integer
+          description: Примерное время выполнения (минуты)
+          example: 60
+        isActive:
+          type: boolean
+          description: Активна ли услуга
+
+    # === Использованные запчасти ===
+    UsedPart:
+      type: object
+      required: [name, quantity, price]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        productId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        productName:
+          type: string
+          description: Название запчасти
+          example: "Термопаста Arctic MX-4"
+        productSku:
+          type: string
+          description: SKU товара
+        quantity:
+          type: integer
+          minimum: 1
+          example: 1
+        price:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Цена за единицу
+        totalPrice:
+          $ref: './common.yaml#/components/schemas/Price'
+
+    # === Запросы ===
+    CreateServiceRequestRequest:
+      type: object
+      required: [serviceType, problemDescription]
+      properties:
+        serviceType:
+          $ref: './common.yaml#/components/schemas/ServiceType'
+        deviceType:
+          type: string
+          maxLength: 100
+          description: Тип устройства
+        deviceModel:
+          type: string
+          maxLength: 200
+          description: Модель устройства
+        serialNumber:
+          type: string
+          maxLength: 100
+          description: Серийный номер
+        problemDescription:
+          type: string
+          maxLength: 2000
+          description: Описание проблемы
+        photos:
+          type: array
+          items:
+            type: string
+            format: binary
+          description: Фотографии устройства
+        warrantyId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+          description: ID гарантийного талона (если есть)
+
+    UpdateServiceRequestRequest:
+      type: object
+      properties:
+        deviceType:
+          type: string
+          maxLength: 100
+        deviceModel:
+          type: string
+          maxLength: 200
+        serialNumber:
+          type: string
+          maxLength: 100
+        problemDescription:
+          type: string
+          maxLength: 2000
+
+    AssignMasterRequest:
+      type: object
+      required: [masterId]
+      properties:
+        masterId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+
+    UpdateServiceStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: './common.yaml#/components/schemas/ServiceRequestStatus'
+        diagnosisResult:
+          type: string
+          maxLength: 2000
+          description: Результат диагностики
+        estimatedCost:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Ориентировочная стоимость
+
+    CompleteServiceRequestRequest:
+      type: object
+      required: [workDescription, laborCost]
+      properties:
+        workDescription:
+          type: string
+          maxLength: 2000
+          description: Описание выполненных работ
+        laborCost:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Стоимость работ
+        usedParts:
+          type: array
+          items:
+            $ref: '#/components/schemas/UsedPart'
+          description: Использованные запчасти
+        notes:
+          type: string
+          maxLength: 500
+          description: Примечания
+
+    # === Фильтры ===
+    ServiceRequestFilter:
+      type: object
+      properties:
+        status:
+          $ref: './common.yaml#/components/schemas/ServiceRequestStatus'
+        serviceType:
+          $ref: './common.yaml#/components/schemas/ServiceType'
+        clientId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        masterId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        dateFrom:
+          $ref: './common.yaml#/components/schemas/Date'
+        dateTo:
+          $ref: './common.yaml#/components/schemas/Date'
+        search:
+          type: string
+          maxLength: 50
+          description: Поиск по номеру заявки
+
+    ServiceRequestListResponse:
+      allOf:
+        - $ref: './common.yaml#/components/schemas/PagedResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ServiceRequestSummary'
+
+    # === Статистика мастера ===
+    MasterStatistics:
+      type: object
+      properties:
+        activeRequestsCount:
+          type: integer
+          description: Количество активных заявок
+        completedTodayCount:
+          type: integer
+          description: Выполнено сегодня
+        completedThisMonthCount:
+          type: integer
+          description: Выполнено за месяц
+        averageCompletionTime:
+          type: integer
+          description: Среднее время выполнения (минуты)
+        totalRevenue:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Выручка за месяц
+
+    # === Управление типами услуг (Admin) ===
+    CreateServiceTypeRequest:
+      type: object
+      required: [name, code, basePrice]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        code:
+          $ref: './common.yaml#/components/schemas/ServiceType'
+        description:
+          type: string
+          maxLength: 500
+        basePrice:
+          $ref: './common.yaml#/components/schemas/Price'
+        estimatedDuration:
+          type: integer
+          minimum: 5
+        isActive:
+          type: boolean
+
+    UpdateServiceTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        basePrice:
+          $ref: './common.yaml#/components/schemas/Price'
+        estimatedDuration:
+          type: integer
+        isActive:
+          type: boolean
+
+    ServiceTypeListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceTypeEntity'

@@ -1,0 +1,270 @@
+# Схемы данных пользователя
+# Версия: 1.0.0
+
+components:
+  schemas:
+    # === Пользователь ===
+    User:
+      type: object
+      required: [id, email, role, firstName, lastName, isActive]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        email:
+          type: string
+          format: email
+          description: Email пользователя
+          example: "user@example.com"
+        role:
+          $ref: './common.yaml#/components/schemas/UserRole'
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: Имя
+          example: "Иван"
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: Фамилия
+          example: "Иванов"
+        phone:
+          type: string
+          pattern: '^\+375\d{9}$'
+          description: Телефон
+          example: "+375291234567"
+        address:
+          $ref: './common.yaml#/components/schemas/Address'
+        isActive:
+          type: boolean
+          description: Активен ли пользователь
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        updatedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    UserSummary:
+      type: object
+      required: [id, email, role, firstName, lastName]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        role:
+          $ref: './common.yaml#/components/schemas/UserRole'
+        firstName:
+          type: string
+          example: "Иван"
+        lastName:
+          type: string
+          example: "Иванов"
+
+    # === Запросы аутентификации ===
+    RegisterRequest:
+      type: object
+      required: [email, password, firstName, lastName, phone]
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email пользователя
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          description: Пароль (минимум 8 символов, буквы и цифры)
+          example: "P@ssw0rd!"
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: Имя
+          example: "Иван"
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: Фамилия
+          example: "Иванов"
+        phone:
+          type: string
+          pattern: '^\+375\d{9}$'
+          description: Телефон в формате +375XXXXXXXXX
+          example: "+375291234567"
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email пользователя
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          description: Пароль
+          example: "P@ssw0rd!"
+
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh token
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    # === Ответы аутентификации ===
+    AuthResponse:
+      type: object
+      required: [accessToken, refreshToken, expiresIn, user]
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (15 минут)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          description: Refresh token (7 дней)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expiresIn:
+          type: integer
+          description: Время жизни access token в секундах
+          example: 900
+        tokenType:
+          type: string
+          default: "Bearer"
+        user:
+          $ref: '#/components/schemas/User'
+
+    # === Управление пользователем ===
+    UpdateUserRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: Имя
+          example: "Иван"
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: Фамилия
+          example: "Иванов"
+        phone:
+          type: string
+          pattern: '^\+375\d{9}$'
+          description: Телефон
+          example: "+375291234567"
+        address:
+          $ref: './common.yaml#/components/schemas/Address'
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+          format: password
+          description: Текущий пароль
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          description: Новый пароль
+          example: "NewP@ssw0rd!"
+
+    ResetPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email для восстановления пароля
+          example: "user@example.com"
+
+    ResetPasswordConfirmRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token:
+          type: string
+          description: Токен восстановления пароля
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          description: Новый пароль
+          example: "NewP@ssw0rd!"
+
+    # === Создание пользователя (Admin) ===
+    CreateUserRequest:
+      type: object
+      required: [email, password, firstName, lastName, role]
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email
+          example: "manager@goldpc.by"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          description: Пароль
+          example: "P@ssw0rd!"
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: Имя
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 50
+          description: Фамилия
+        phone:
+          type: string
+          pattern: '^\+375\d{9}$'
+          description: Телефон
+        role:
+          $ref: './common.yaml#/components/schemas/UserRole'
+
+    # === Список пользователей ===
+    UserListFilter:
+      type: object
+      properties:
+        role:
+          $ref: './common.yaml#/components/schemas/UserRole'
+        isActive:
+          type: boolean
+          description: Фильтр по активности
+        search:
+          type: string
+          maxLength: 100
+          description: Поиск по имени или email
+          example: "Иван"
+
+    UserListResponse:
+      allOf:
+        - $ref: './common.yaml#/components/schemas/PagedResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'

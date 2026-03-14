@@ -1,0 +1,413 @@
+# Схемы данных конструктора ПК
+# Версия: 1.0.0
+
+components:
+  schemas:
+    # === Конфигурация ПК ===
+    PCConfiguration:
+      type: object
+      required: [id, name, components, totalPrice, createdAt]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 100
+          description: Название конфигурации
+          example: "Игровой ПК 2026"
+        userId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+          description: ID пользователя (если сохранена)
+        purpose:
+          $ref: '#/components/schemas/PCPurpose'
+        components:
+          $ref: '#/components/schemas/PCComponents'
+        compatibilityResult:
+          $ref: '#/components/schemas/CompatibilityResult'
+        totalPrice:
+          $ref: './common.yaml#/components/schemas/Price'
+        totalPower:
+          type: integer
+          description: Общее потребление мощности (Вт)
+          example: 450
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompatibilityRecommendation'
+        isSaved:
+          type: boolean
+          description: Сохранена ли конфигурация
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        updatedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    PCConfigurationSummary:
+      type: object
+      required: [id, name, totalPrice, createdAt]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        name:
+          type: string
+          example: "Игровой ПК 2026"
+        purpose:
+          $ref: '#/components/schemas/PCPurpose'
+        totalPrice:
+          $ref: './common.yaml#/components/schemas/Price'
+        mainComponents:
+          type: object
+          properties:
+            cpu:
+              type: string
+              description: Название процессора
+            gpu:
+              type: string
+              description: Название видеокарты
+            ram:
+              type: string
+              description: Описание памяти
+        isCompatible:
+          type: boolean
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    # === Назначение ПК ===
+    PCPurpose:
+      type: string
+      enum:
+        - Gaming
+        - Office
+        - Workstation
+        - Server
+        - Home
+      description: |
+        Назначение ПК:
+        - Gaming — Игровой
+        - Office — Офисный
+        - Workstation — Рабочая станция
+        - Server — Сервер
+        - Home — Домашний
+
+    # === Компоненты ПК ===
+    PCComponents:
+      type: object
+      properties:
+        cpu:
+          $ref: '#/components/schemas/SelectedComponent'
+        motherboard:
+          $ref: '#/components/schemas/SelectedComponent'
+        gpu:
+          $ref: '#/components/schemas/SelectedComponent'
+        ram:
+          $ref: '#/components/schemas/SelectedComponent'
+        psu:
+          $ref: '#/components/schemas/SelectedComponent'
+        storage:
+          type: array
+          items:
+            $ref: '#/components/schemas/SelectedComponent'
+          description: Накопители (может быть несколько)
+        case:
+          $ref: '#/components/schemas/SelectedComponent'
+        cooling:
+          $ref: '#/components/schemas/SelectedComponent'
+        monitor:
+          type: array
+          items:
+            $ref: '#/components/schemas/SelectedComponent'
+          description: Мониторы (может быть несколько)
+        periphery:
+          type: array
+          items:
+            $ref: '#/components/schemas/SelectedComponent'
+          description: Периферия
+
+    SelectedComponent:
+      type: object
+      required: [productId, name, price]
+      properties:
+        productId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        name:
+          type: string
+          description: Название компонента
+          example: "AMD Ryzen 7 7800X3D"
+        sku:
+          type: string
+          description: Артикул
+        category:
+          $ref: './common.yaml#/components/schemas/ProductCategory'
+        price:
+          $ref: './common.yaml#/components/schemas/Price'
+        quantity:
+          type: integer
+          minimum: 1
+          default: 1
+        specifications:
+          type: object
+          additionalProperties: true
+          description: Спецификации компонента
+        isAvailable:
+          type: boolean
+          description: Доступен ли в наличии
+        image:
+          type: string
+          format: uri
+          description: URL изображения
+
+    # === Результат проверки совместимости ===
+    CompatibilityResult:
+      type: object
+      required: [isCompatible]
+      properties:
+        isCompatible:
+          type: boolean
+          description: Совместимы ли все компоненты
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompatibilityIssue'
+          description: Проблемы совместимости
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompatibilityWarning'
+          description: Предупреждения
+
+    CompatibilityIssue:
+      type: object
+      required: [severity, component1, component2, message]
+      properties:
+        severity:
+          type: string
+          enum: [Error, Warning, Info]
+          description: Критичность
+        component1:
+          type: string
+          description: Первый компонент
+        component2:
+          type: string
+          description: Второй компонент
+        message:
+          type: string
+          description: Описание проблемы
+          example: "Процессор AMD Ryzen 7 7800X3D (сокет AM5) несовместим с материнской платой ASUS TUF Gaming B550 (сокет AM4)"
+        suggestion:
+          type: string
+          description: Рекомендация по исправлению
+          example: "Выберите материнскую плату с сокетом AM5"
+
+    CompatibilityWarning:
+      type: object
+      required: [severity, component, message]
+      properties:
+        severity:
+          type: string
+          enum: [Warning, Info]
+        component:
+          type: string
+          description: Компонент
+        message:
+          type: string
+          description: Предупреждение
+          example: "Мощность блока питания 550Вт может быть недостаточной для видеокарты RTX 4070"
+        suggestion:
+          type: string
+
+    CompatibilityRecommendation:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [Bottleneck, Upgrade, Alternative]
+          description: Тип рекомендации
+        component:
+          type: string
+          description: Компонент
+        message:
+          type: string
+          description: Рекомендация
+        suggestedProductId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        suggestedProductName:
+          type: string
+
+    # === Проверка совместимости ===
+    CompatibilityCheckRequest:
+      type: object
+      required: [components]
+      properties:
+        components:
+          $ref: '#/components/schemas/PCComponents'
+        purpose:
+          $ref: '#/components/schemas/PCPurpose'
+
+    CompatibilityCheckResponse:
+      type: object
+      required: [result]
+      properties:
+        result:
+          $ref: '#/components/schemas/CompatibilityResult'
+        powerConsumption:
+          type: integer
+          description: Общее потребление мощности (Вт)
+        recommendedPSU:
+          type: integer
+          description: Рекомендуемая мощность БП (Вт)
+
+    # === Сохранение конфигурации ===
+    SaveConfigurationRequest:
+      type: object
+      required: [name, components]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Название конфигурации
+        components:
+          $ref: '#/components/schemas/PCComponents'
+        purpose:
+          $ref: '#/components/schemas/PCPurpose'
+
+    UpdateConfigurationRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        components:
+          $ref: '#/components/schemas/PCComponents'
+        purpose:
+          $ref: '#/components/schemas/PCPurpose'
+
+    # === Добавление в корзину ===
+    AddConfigurationToCartRequest:
+      type: object
+      required: [configurationId]
+      properties:
+        configurationId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        addAssemblyService:
+          type: boolean
+          default: true
+          description: Добавить услугу сборки
+
+    # === Подбор компонентов ===
+    ComponentFilterRequest:
+      type: object
+      properties:
+        category:
+          $ref: './common.yaml#/components/schemas/ProductCategory'
+        purpose:
+          $ref: '#/components/schemas/PCPurpose'
+        existingComponents:
+          $ref: '#/components/schemas/PCComponents'
+          description: Уже выбранные компоненты для фильтрации совместимых
+        budgetRange:
+          $ref: './common.yaml#/components/schemas/PriceRange'
+        specifications:
+          type: object
+          additionalProperties: true
+          description: Фильтр по спецификациям
+
+    CompatibleComponentsResponse:
+      type: object
+      required: [components]
+      properties:
+        components:
+          type: array
+          items:
+            $ref: './product.yaml#/components/schemas/ProductSummary'
+        total:
+          type: integer
+          description: Всего найдено
+
+    # === Рекомендации ===
+    BuildRecommendation:
+      type: object
+      required: [name, purpose, totalPrice]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        name:
+          type: string
+          description: Название сборки
+          example: "Игровой ПК начального уровня"
+        purpose:
+          $ref: '#/components/schemas/PCPurpose'
+        totalPrice:
+          $ref: './common.yaml#/components/schemas/Price'
+        components:
+          $ref: '#/components/schemas/PCComponents'
+        description:
+          type: string
+          description: Описание сборки
+        performanceScore:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Оценка производительности
+        gamingScore:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Оценка для игр
+        workstationScore:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Оценка для работы
+
+    RecommendationRequest:
+      type: object
+      required: [purpose]
+      properties:
+        purpose:
+          $ref: '#/components/schemas/PCPurpose'
+        budget:
+          $ref: './common.yaml#/components/schemas/PriceRange'
+        preferences:
+          type: object
+          properties:
+            cpuBrand:
+              type: string
+              enum: [AMD, Intel]
+            gpuBrand:
+              type: string
+              enum: [AMD, NVIDIA]
+            ramCapacity:
+              type: integer
+              description: Минимальный объём RAM (GB)
+            storageType:
+              type: string
+              enum: [SSD, NVMe, HDD]
+
+    # === Список конфигураций ===
+    ConfigurationListResponse:
+      allOf:
+        - $ref: './common.yaml#/components/schemas/PagedResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/PCConfigurationSummary'
+
+    # === Статистика ===
+    BuilderStatistics:
+      type: object
+      properties:
+        totalConfigurations:
+          type: integer
+          description: Всего конфигураций
+        avgPrice:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Средняя цена конфигурации
+        popularComponents:
+          type: array
+          items:
+            $ref: './product.yaml#/components/schemas/ProductSummary'
+          description: Популярные компоненты

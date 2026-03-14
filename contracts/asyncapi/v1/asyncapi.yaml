@@ -1,0 +1,778 @@
+asyncapi: '2.6.0'
+info:
+  title: GoldPC Event API
+  description: |
+    Спецификация событийного взаимодействия для системы GoldPC.
+    
+    ## Каналы связи
+    - **WebSocket** — для уведомлений клиентов в реальном времени
+    - **Message Queue** — для асинхронной обработки между сервисами
+    
+    ## Типы событий
+    - **Order Events** — события заказов
+    - **Service Events** — события услуг сервисного центра
+    - **Warranty Events** — события гарантии
+    - **Notification Events** — уведомления пользователям
+  version: 1.0.0
+  contact:
+    name: GoldPC Team
+    email: api@goldpc.by
+
+servers:
+  websocket:
+    url: wss://api.goldpc.by/ws
+    protocol: websocket
+    description: WebSocket сервер для уведомлений
+  rabbitmq:
+    url: amqp://rabbitmq.goldpc.by
+    protocol: amqp
+    description: RabbitMQ для межсервисного взаимодействия
+
+defaultContentType: application/json
+
+channels:
+  # === События заказов ===
+  order.created:
+    description: Событие создания нового заказа
+    subscribe:
+      summary: Подписка на новые заказы (для Manager)
+      message:
+        $ref: '#/components/messages/OrderCreated'
+    publish:
+      summary: Публикация при создании заказа
+      message:
+        $ref: '#/components/messages/OrderCreated'
+
+  order.status_changed:
+    description: Событие изменения статуса заказа
+    subscribe:
+      summary: Подписка на изменение статуса
+      message:
+        $ref: '#/components/messages/OrderStatusChanged'
+
+  order.cancelled:
+    description: Событие отмены заказа
+    subscribe:
+      summary: Подписка на отмену заказов
+      message:
+        $ref: '#/components/messages/OrderCancelled'
+
+  # === События услуг ===
+  service_request.created:
+    description: Событие создания заявки на услугу
+    subscribe:
+      summary: Подписка на новые заявки (для Manager, Master)
+      message:
+        $ref: '#/components/messages/ServiceRequestCreated'
+
+  service_request.assigned:
+    description: Событие назначения мастера
+    subscribe:
+      summary: Подписка на назначение мастера
+      message:
+        $ref: '#/components/messages/ServiceRequestAssigned'
+
+  service_request.status_changed:
+    description: Событие изменения статуса заявки
+    subscribe:
+      summary: Подписка на изменение статуса заявки
+      message:
+        $ref: '#/components/messages/ServiceRequestStatusChanged'
+
+  service_request.completed:
+    description: Событие завершения заявки
+    subscribe:
+      summary: Подписка на завершение заявки
+      message:
+        $ref: '#/components/messages/ServiceRequestCompleted'
+
+  # === События гарантии ===
+  warranty.created:
+    description: Событие создания гарантийного талона
+    subscribe:
+      summary: Подписка на создание гарантии
+      message:
+        $ref: '#/components/messages/WarrantyCreated'
+
+  warranty.expiring:
+    description: Событие истечения гарантии
+    subscribe:
+      summary: Подписка на уведомления об истечении гарантии
+      message:
+        $ref: '#/components/messages/WarrantyExpiring'
+
+  warranty.annulled:
+    description: Событие аннулирования гарантии
+    subscribe:
+      summary: Подписка на аннулирование гарантии
+      message:
+        $ref: '#/components/messages/WarrantyAnnulled'
+
+  # === Уведомления ===
+  notifications.user:
+    description: Персональные уведомления пользователя
+    parameters:
+      userId:
+        $ref: '#/components/parameters/userId'
+    subscribe:
+      summary: WebSocket канал для уведомлений пользователя
+      message:
+        oneOf:
+          - $ref: '#/components/messages/OrderNotification'
+          - $ref: '#/components/messages/ServiceNotification'
+          - $ref: '#/components/messages/WarrantyNotification'
+          - $ref: '#/components/messages/SystemNotification'
+
+  notifications.broadcast:
+    description: Широковещательные уведомления
+    subscribe:
+      summary: WebSocket канал для системных уведомлений
+      message:
+        $ref: '#/components/messages/SystemNotification'
+
+  # === События склада ===
+  inventory.low_stock:
+    description: Событие низкого остатка товара
+    subscribe:
+      summary: Подписка для менеджеров на низкий остаток
+      message:
+        $ref: '#/components/messages/LowStockAlert'
+
+  inventory.updated:
+    description: Событие обновления остатков
+    subscribe:
+      summary: Подписка на обновление остатков
+      message:
+        $ref: '#/components/messages/InventoryUpdated'
+
+components:
+  parameters:
+    userId:
+      description: ID пользователя для персонального канала
+      schema:
+        type: string
+        format: uuid
+
+  messages:
+    # === Сообщения заказов ===
+    OrderCreated:
+      name: OrderCreated
+      title: Заказ создан
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+            description: Уникальный ID события
+          eventType:
+            type: string
+            enum: [OrderCreated]
+          timestamp:
+            type: string
+            format: date-time
+            description: Время события
+          data:
+            type: object
+            required: [orderId, orderNumber, userId, total]
+            properties:
+              orderId:
+                type: string
+                format: uuid
+              orderNumber:
+                type: string
+                example: "ORD-000001-0001"
+              userId:
+                type: string
+                format: uuid
+              userEmail:
+                type: string
+                format: email
+              total:
+                type: number
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    productId:
+                      type: string
+                      format: uuid
+                    productName:
+                      type: string
+                    quantity:
+                      type: integer
+                    price:
+                      type: number
+          metadata:
+            type: object
+            properties:
+              source:
+                type: string
+                example: "OrdersService"
+              version:
+                type: string
+                example: "1.0"
+
+    OrderStatusChanged:
+      name: OrderStatusChanged
+      title: Статус заказа изменён
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            enum: [OrderStatusChanged]
+          timestamp:
+            type: string
+            format: date-time
+          data:
+            type: object
+            required: [orderId, oldStatus, newStatus]
+            properties:
+              orderId:
+                type: string
+                format: uuid
+              orderNumber:
+                type: string
+              userId:
+                type: string
+                format: uuid
+              oldStatus:
+                type: string
+                enum: [New, Processing, Paid, InAssembly, Ready, Completed, Cancelled]
+              newStatus:
+                type: string
+                enum: [New, Processing, Paid, InAssembly, Ready, Completed, Cancelled]
+              changedBy:
+                type: string
+                format: uuid
+              comment:
+                type: string
+
+    OrderCancelled:
+      name: OrderCancelled
+      title: Заказ отменён
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            enum: [OrderCancelled]
+          timestamp:
+            type: string
+            format: date-time
+          data:
+            type: object
+            required: [orderId, reason]
+            properties:
+              orderId:
+                type: string
+                format: uuid
+              orderNumber:
+                type: string
+              userId:
+                type: string
+                format: uuid
+              reason:
+                type: string
+              cancelledBy:
+                type: string
+                format: uuid
+
+    # === Сообщения услуг ===
+    ServiceRequestCreated:
+      name: ServiceRequestCreated
+      title: Заявка на услугу создана
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            enum: [ServiceRequestCreated]
+          timestamp:
+            type: string
+            format: date-time
+          data:
+            type: object
+            required: [serviceRequestId, serviceType, clientId]
+            properties:
+              serviceRequestId:
+                type: string
+                format: uuid
+              requestNumber:
+                type: string
+                example: "SRV-000001-0001"
+              serviceType:
+                type: string
+                enum: [Diagnostics, Repair, Assembly, Cleaning, Prevention]
+              clientId:
+                type: string
+                format: uuid
+              clientName:
+                type: string
+              deviceType:
+                type: string
+              problemDescription:
+                type: string
+
+    ServiceRequestAssigned:
+      name: ServiceRequestAssigned
+      title: Мастер назначен
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            enum: [ServiceRequestAssigned]
+          timestamp:
+            type: string
+            format: date-time
+          data:
+            type: object
+            required: [serviceRequestId, masterId]
+            properties:
+              serviceRequestId:
+                type: string
+                format: uuid
+              requestNumber:
+                type: string
+              masterId:
+                type: string
+                format: uuid
+              masterName:
+                type: string
+              assignedBy:
+                type: string
+                format: uuid
+
+    ServiceRequestStatusChanged:
+      name: ServiceRequestStatusChanged
+      title: Статус заявки изменён
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            enum: [ServiceRequestStatusChanged]
+          timestamp:
+            type: string
+            format: date-time
+          data:
+            type: object
+            required: [serviceRequestId, oldStatus, newStatus]
+            properties:
+              serviceRequestId:
+                type: string
+                format: uuid
+              requestNumber:
+                type: string
+              oldStatus:
+                type: string
+                enum: [New, Accepted, InProgress, Completed, Closed]
+              newStatus:
+                type: string
+                enum: [New, Accepted, InProgress, Completed, Closed]
+              masterId:
+                type: string
+                format: uuid
+
+    ServiceRequestCompleted:
+      name: ServiceRequestCompleted
+      title: Заявка завершена
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            enum: [ServiceRequestCompleted]
+          timestamp:
+            type: string
+            format: date-time
+          data:
+            type: object
+            required: [serviceRequestId, totalCost]
+            properties:
+              serviceRequestId:
+                type: string
+                format: uuid
+              requestNumber:
+                type: string
+              clientId:
+                type: string
+                format: uuid
+              masterId:
+                type: string
+                format: uuid
+              workDescription:
+                type: string
+              laborCost:
+                type: number
+              partsCost:
+                type: number
+              totalCost:
+                type: number
+              warrantyCreated:
+                type: boolean
+
+    # === Сообщения гарантии ===
+    WarrantyCreated:
+      name: WarrantyCreated
+      title: Гарантийный талон создан
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            enum: [WarrantyCreated]
+          timestamp:
+            type: string
+            format: date-time
+          data:
+            type: object
+            required: [warrantyId, productId, clientId, endDate]
+            properties:
+              warrantyId:
+                type: string
+                format: uuid
+              warrantyNumber:
+                type: string
+                example: "WAR-000001-0001"
+              productId:
+                type: string
+                format: uuid
+              productName:
+                type: string
+              clientId:
+                type: string
+                format: uuid
+              warrantyType:
+                type: string
+                enum: [Product, Service]
+              warrantyMonths:
+                type: integer
+              startDate:
+                type: string
+                format: date
+              endDate:
+                type: string
+                format: date
+              orderId:
+                type: string
+                format: uuid
+              serviceRequestId:
+                type: string
+                format: uuid
+
+    WarrantyExpiring:
+      name: WarrantyExpiring
+      title: Гарантия скоро истечёт
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            enum: [WarrantyExpiring]
+          timestamp:
+            type: string
+            format: date-time
+          data:
+            type: object
+            required: [warrantyId, clientId, daysRemaining]
+            properties:
+              warrantyId:
+                type: string
+                format: uuid
+              warrantyNumber:
+                type: string
+              clientId:
+                type: string
+                format: uuid
+              clientEmail:
+                type: string
+              productName:
+                type: string
+              endDate:
+                type: string
+                format: date
+              daysRemaining:
+                type: integer
+                description: Дней до окончания гарантии
+
+    WarrantyAnnulled:
+      name: WarrantyAnnulled
+      title: Гарантия аннулирована
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            enum: [WarrantyAnnulled]
+          timestamp:
+            type: string
+            format: date-time
+          data:
+            type: object
+            required: [warrantyId, reason]
+            properties:
+              warrantyId:
+                type: string
+                format: uuid
+              warrantyNumber:
+                type: string
+              clientId:
+                type: string
+                format: uuid
+              reason:
+                type: string
+              annulledBy:
+                type: string
+                format: uuid
+
+    # === Уведомления ===
+    OrderNotification:
+      name: OrderNotification
+      title: Уведомление о заказе
+      contentType: application/json
+      payload:
+        type: object
+        required: [notificationId, type, userId, title, message]
+        properties:
+          notificationId:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum: [OrderCreated, OrderStatusChanged, OrderCancelled, OrderReady]
+          userId:
+            type: string
+            format: uuid
+          title:
+            type: string
+            example: "Заказ готов"
+          message:
+            type: string
+            example: "Ваш заказ ORD-000001-0001 готов к выдаче"
+          orderId:
+            type: string
+            format: uuid
+          orderNumber:
+            type: string
+          createdAt:
+            type: string
+            format: date-time
+
+    ServiceNotification:
+      name: ServiceNotification
+      title: Уведомление об услуге
+      contentType: application/json
+      payload:
+        type: object
+        required: [notificationId, type, userId, title, message]
+        properties:
+          notificationId:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum: [ServiceCreated, ServiceAssigned, ServiceInProgress, ServiceCompleted]
+          userId:
+            type: string
+            format: uuid
+          title:
+            type: string
+            example: "Ремонт завершён"
+          message:
+            type: string
+            example: "Ваше оборудование готово к выдаче"
+          serviceRequestId:
+            type: string
+            format: uuid
+          requestNumber:
+            type: string
+          createdAt:
+            type: string
+            format: date-time
+
+    WarrantyNotification:
+      name: WarrantyNotification
+      title: Уведомление о гарантии
+      contentType: application/json
+      payload:
+        type: object
+        required: [notificationId, type, userId, title, message]
+        properties:
+          notificationId:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum: [WarrantyCreated, WarrantyExpiring, WarrantyAnnulled]
+          userId:
+            type: string
+            format: uuid
+          title:
+            type: string
+            example: "Гарантия скоро истечёт"
+          message:
+            type: string
+            example: "Гарантия на AMD Ryzen 7 7800X3D истекает через 30 дней"
+          warrantyId:
+            type: string
+            format: uuid
+          warrantyNumber:
+            type: string
+          createdAt:
+            type: string
+            format: date-time
+
+    SystemNotification:
+      name: SystemNotification
+      title: Системное уведомление
+      contentType: application/json
+      payload:
+        type: object
+        required: [notificationId, type, title, message]
+        properties:
+          notificationId:
+            type: string
+            format: uuid
+          type:
+            type: string
+            enum: [Maintenance, Update, Alert, Info]
+          userId:
+            type: string
+            format: uuid
+            description: null для широковещательных
+          title:
+            type: string
+            example: "Техническое обслуживание"
+          message:
+            type: string
+            example: "Система будет недоступна 15.03.2026 с 02:00 до 04:00"
+          priority:
+            type: string
+            enum: [Low, Medium, High, Critical]
+          createdAt:
+            type: string
+            format: date-time
+
+    # === Сообщения склада ===
+    LowStockAlert:
+      name: LowStockAlert
+      title: Предупреждение о низком остатке
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            enum: [LowStockAlert]
+          timestamp:
+            type: string
+            format: date-time
+          data:
+            type: object
+            required: [productId, currentStock, threshold]
+            properties:
+              productId:
+                type: string
+                format: uuid
+              productName:
+                type: string
+              productSku:
+                type: string
+              currentStock:
+                type: integer
+              threshold:
+                type: integer
+              category:
+                type: string
+
+    InventoryUpdated:
+      name: InventoryUpdated
+      title: Остатки обновлены
+      contentType: application/json
+      payload:
+        type: object
+        required: [eventId, eventType, timestamp, data]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          eventType:
+            type: string
+            enum: [InventoryUpdated]
+          timestamp:
+            type: string
+            format: date-time
+          data:
+            type: object
+            required: [productId, oldStock, newStock]
+            properties:
+              productId:
+                type: string
+                format: uuid
+              productName:
+                type: string
+              oldStock:
+                type: integer
+              newStock:
+                type: integer
+              reason:
+                type: string
+                enum: [Order, Restock, Adjustment, Return]
+              orderId:
+                type: string
+                format: uuid

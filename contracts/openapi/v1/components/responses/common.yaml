@@ -1,0 +1,193 @@
+# Общие ответы API
+# Версия: 1.0.0
+
+components:
+  responses:
+    # === Успешные ответы ===
+    NoContent:
+      description: Успешное выполнение без содержимого
+      content:
+        application/json:
+          schema:
+            type: object
+
+    Created:
+      description: Ресурс успешно создан
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: ID созданного ресурса
+
+    # === Ошибки ===
+    BadRequest:
+      description: Некорректный запрос
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "VALIDATION_ERROR"
+            message: "Некорректные данные запроса"
+            details:
+              - field: "email"
+                message: "Некорректный формат email"
+
+    Unauthorized:
+      description: Неавторизован
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "UNAUTHORIZED"
+            message: "Требуется авторизация"
+
+    Forbidden:
+      description: Доступ запрещён
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "FORBIDDEN"
+            message: "У вас нет прав для выполнения этого действия"
+
+    NotFound:
+      description: Ресурс не найден
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "NOT_FOUND"
+            message: "Запрашиваемый ресурс не найден"
+
+    Conflict:
+      description: Конфликт (ресурс уже существует)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "CONFLICT"
+            message: "Пользователь с таким email уже существует"
+
+    ValidationError:
+      description: Ошибка валидации данных
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "VALIDATION_ERROR"
+            message: "Ошибка валидации данных"
+            details:
+              - field: "password"
+                message: "Пароль должен содержать минимум 8 символов"
+                code: "MIN_LENGTH"
+              - field: "phone"
+                message: "Некорректный формат телефона"
+                code: "INVALID_FORMAT"
+
+    InternalServerError:
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "INTERNAL_ERROR"
+            message: "Внутренняя ошибка сервера. Попробуйте позже."
+            traceId: "0HN4J8Q9H7R6T"
+
+    ServiceUnavailable:
+      description: Сервис недоступен
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "SERVICE_UNAVAILABLE"
+            message: "Сервис временно недоступен. Попробуйте позже."
+
+    RateLimitExceeded:
+      description: Превышен лимит запросов
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Максимальное количество запросов
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Оставшиеся запросы
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Время до сброса лимита (Unix timestamp)
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "RATE_LIMIT_EXCEEDED"
+            message: "Превышен лимит запросов. Попробуйте позже."
+
+    # === Специфичные ошибки ===
+    InsufficientStock:
+      description: Недостаточно товара на складе
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "INSUFFICIENT_STOCK"
+            message: "Недостаточно товара на складе"
+            details:
+              - field: "productId"
+                message: "Доступно: 2, запрошено: 5"
+
+    PaymentFailed:
+      description: Ошибка оплаты
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "PAYMENT_FAILED"
+            message: "Ошибка при обработке платежа"
+
+    OrderAlreadyCompleted:
+      description: Заказ уже завершён
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "ORDER_ALREADY_COMPLETED"
+            message: "Невозможно изменить завершённый заказ"
+
+    WarrantyExpired:
+      description: Гарантия истекла
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "WARRANTY_EXPIRED"
+            message: "Срок гарантии истёк"
+
+    IncompatibleComponents:
+      description: Несовместимые компоненты ПК
+      content:
+        application/json:
+          schema:
+            $ref: '../schemas/common.yaml#/components/schemas/Error'
+          example:
+            code: "INCOMPATIBLE_COMPONENTS"
+            message: "Выбранные компоненты несовместимы"

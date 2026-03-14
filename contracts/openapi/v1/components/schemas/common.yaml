@@ -1,0 +1,430 @@
+# Общие схемы данных для API GoldPC
+# Версия: 1.0.0
+
+components:
+  schemas:
+    # === Базовые схемы ===
+    Uuid:
+      type: string
+      format: uuid
+      description: Уникальный идентификатор (UUID)
+      example: "550e8400-e29b-41d4-a716-446655440000"
+
+    DateTime:
+      type: string
+      format: date-time
+      description: Дата и время в формате ISO 8601 (UTC)
+      example: "2026-03-15T10:30:00Z"
+
+    Date:
+      type: string
+      format: date
+      description: Дата в формате ISO 8601 (YYYY-MM-DD)
+      example: "2026-03-15"
+
+    # === Пагинация ===
+    PaginationRequest:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          default: 1
+          description: Номер страницы
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+          description: Количество элементов на странице
+
+    PaginationMeta:
+      type: object
+      required: [page, pageSize, totalPages, totalItems]
+      properties:
+        page:
+          type: integer
+          description: Текущая страница
+        pageSize:
+          type: integer
+          description: Размер страницы
+        totalPages:
+          type: integer
+          description: Всего страниц
+        totalItems:
+          type: integer
+          description: Всего элементов
+        hasNextPage:
+          type: boolean
+          description: Есть ли следующая страница
+        hasPrevPage:
+          type: boolean
+          description: Есть ли предыдущая страница
+
+    PagedResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items: {}
+          description: Массив элементов
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # === Ошибки ===
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Код ошибки
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Сообщение об ошибке
+          example: "Некорректный формат email"
+        details:
+          type: array
+          description: Детали ошибок валидации
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+        traceId:
+          type: string
+          description: Идентификатор запроса для отладки
+          example: "0HN4J8Q9H7R6T"
+
+    ErrorDetail:
+      type: object
+      required: [field, message]
+      properties:
+        field:
+          type: string
+          description: Поле с ошибкой
+          example: "email"
+        message:
+          type: string
+          description: Сообщение об ошибке
+          example: "Некорректный формат email"
+        code:
+          type: string
+          description: Код ошибки поля
+          example: "INVALID_FORMAT"
+
+    # === Деньги ===
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Сумма
+          example: 19999.99
+        currency:
+          type: string
+          enum: [BYN, USD, EUR, RUB]
+          default: BYN
+          description: Валюта
+
+    Price:
+      type: number
+      format: decimal
+      minimum: 0
+      description: Цена в BYN
+      example: 19999.99
+
+    # === Статусы ===
+    OrderStatus:
+      type: string
+      enum:
+        - New
+        - Processing
+        - Paid
+        - InAssembly
+        - Ready
+        - Completed
+        - Cancelled
+      description: |
+        Статус заказа:
+        - New — Новый
+        - Processing — В обработке
+        - Paid — Оплачен
+        - InAssembly — Передан в сборку/ремонт
+        - Ready — Готов
+        - Completed — Выдан
+        - Cancelled — Отменён
+
+    ServiceRequestStatus:
+      type: string
+      enum:
+        - New
+        - Accepted
+        - InProgress
+        - Completed
+        - Closed
+      description: |
+        Статус заявки на услугу:
+        - New — Новая
+        - Accepted — Принята
+        - InProgress — В работе
+        - Completed — Выполнена
+        - Closed — Выдана/Закрыта
+
+    WarrantyStatus:
+      type: string
+      enum:
+        - Active
+        - Expired
+        - Annulled
+      description: |
+        Статус гарантии:
+        - Active — Действует
+        - Expired — Истекла
+        - Annulled — Аннулирована
+
+    # === Роли пользователей ===
+    UserRole:
+      type: string
+      enum:
+        - Client
+        - Manager
+        - Master
+        - Admin
+        - Accountant
+      description: |
+        Роль пользователя:
+        - Client — Клиент
+        - Manager — Менеджер
+        - Master — Мастер
+        - Admin — Администратор
+        - Accountant — Бухгалтер
+
+    # === Способы доставки и оплаты ===
+    DeliveryMethod:
+      type: string
+      enum:
+        - Pickup
+        - Delivery
+      description: |
+        Способ получения:
+        - Pickup — Самовывоз
+        - Delivery — Доставка
+
+    PaymentMethod:
+      type: string
+      enum:
+        - Online
+        - OnReceipt
+      description: |
+        Способ оплаты:
+        - Online — Онлайн
+        - OnReceipt — При получении
+
+    PaymentStatus:
+      type: string
+      enum:
+        - Pending
+        - Completed
+        - Failed
+        - Refunded
+      description: |
+        Статус оплаты:
+        - Pending — Ожидает
+        - Completed — Завершена
+        - Failed — Ошибка
+        - Refunded — Возврат
+
+    # === Типы услуг ===
+    ServiceType:
+      type: string
+      enum:
+        - Diagnostics
+        - Repair
+        - Assembly
+        - Cleaning
+        - Prevention
+      description: |
+        Тип услуги:
+        - Diagnostics — Диагностика
+        - Repair — Ремонт
+        - Assembly — Сборка ПК
+        - Cleaning — Чистка
+        - Prevention — Профилактика
+
+    # === Категории товаров ===
+    ProductCategory:
+      type: string
+      enum:
+        - CPU
+        - GPU
+        - Motherboard
+        - RAM
+        - PSU
+        - Storage
+        - Case
+        - Periphery
+        - Monitor
+        - Accessories
+      description: |
+        Категория товара:
+        - CPU — Процессор
+        - GPU — Видеокарта
+        - Motherboard — Материнская плата
+        - RAM — Оперативная память
+        - PSU — Блок питания
+        - Storage — Накопитель
+        - Case — Корпус
+        - Periphery — Периферия
+        - Monitor — Монитор
+        - Accessories — Аксессуары
+
+    # === Адрес ===
+    Address:
+      type: object
+      properties:
+        city:
+          type: string
+          maxLength: 100
+          description: Город
+          example: "Минск"
+        street:
+          type: string
+          maxLength: 200
+          description: Улица
+          example: "ул. Независимости"
+        house:
+          type: string
+          maxLength: 20
+          description: Дом
+          example: "150"
+        apartment:
+          type: string
+          maxLength: 20
+          description: Квартира/офис
+          example: "42"
+        postalCode:
+          type: string
+          maxLength: 20
+          description: Почтовый индекс
+          example: "220000"
+
+    # === Контактная информация ===
+    ContactInfo:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          pattern: '^\+375\d{9}$'
+          description: Телефон в формате +375XXXXXXXXX
+          example: "+375291234567"
+        email:
+          type: string
+          format: email
+          description: Email
+          example: "user@example.com"
+
+    # === Совместимость компонентов ===
+    CompatibilitySocket:
+      type: string
+      description: Сокет процессора/материнской платы
+      enum:
+        - AM4
+        - AM5
+        - LGA1200
+        - LGA1700
+        - LGA1851
+      example: "AM5"
+
+    CompatibilityMemoryType:
+      type: string
+      description: Тип оперативной памяти
+      enum:
+        - DDR4
+        - DDR5
+      example: "DDR5"
+
+    CompatibilityFormFactor:
+      type: string
+      description: Форм-фактор
+      enum:
+        - ATX
+        - MicroATX
+        - MiniITX
+        - EATX
+      example: "ATX"
+
+    # === Рейтинг ===
+    Rating:
+      type: object
+      properties:
+        average:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          description: Средний рейтинг
+          example: 4.5
+        count:
+          type: integer
+          minimum: 0
+          description: Количество оценок
+          example: 128
+
+    # === История изменений ===
+    HistoryEntry:
+      type: object
+      required: [timestamp, action, userId]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        timestamp:
+          $ref: '#/components/schemas/DateTime'
+        action:
+          type: string
+          description: Действие
+          example: "StatusChanged"
+        userId:
+          $ref: '#/components/schemas/Uuid'
+        userName:
+          type: string
+          description: Имя пользователя
+        oldValue:
+          type: string
+          description: Старое значение
+        newValue:
+          type: string
+          description: Новое значение
+        comment:
+          type: string
+          description: Комментарий
+
+    # === Фильтры ===
+    PriceRange:
+      type: object
+      properties:
+        min:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Минимальная цена
+        max:
+          type: number
+          format: decimal
+          minimum: 0
+          description: Максимальная цена
+
+    SortOptions:
+      type: object
+      properties:
+        sortBy:
+          type: string
+          enum: [name, price, rating, createdAt]
+          default: createdAt
+        sortOrder:
+          type: string
+          enum: [asc, desc]
+          default: desc

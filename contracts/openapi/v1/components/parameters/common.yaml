@@ -1,0 +1,223 @@
+# Общие параметры API
+# Версия: 1.0.0
+
+components:
+  parameters:
+    # === Пагинация ===
+    Page:
+      name: page
+      in: query
+      description: Номер страницы
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    PageSize:
+      name: pageSize
+      in: query
+      description: Количество элементов на странице
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+    # === Идентификаторы ===
+    Id:
+      name: id
+      in: path
+      description: Уникальный идентификатор
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ProductId:
+      name: productId
+      in: path
+      description: ID товара
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    OrderId:
+      name: orderId
+      in: path
+      description: ID заказа
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ServiceRequestId:
+      name: serviceRequestId
+      in: path
+      description: ID заявки на услугу
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    WarrantyId:
+      name: warrantyId
+      in: path
+      description: ID гарантийного талона
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ConfigurationId:
+      name: configurationId
+      in: path
+      description: ID конфигурации ПК
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    UserId:
+      name: userId
+      in: path
+      description: ID пользователя
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    CategoryId:
+      name: categoryId
+      in: path
+      description: ID категории
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    ManufacturerId:
+      name: manufacturerId
+      in: path
+      description: ID производителя
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    # === Фильтрация ===
+    Status:
+      name: status
+      in: query
+      description: Фильтр по статусу
+      required: false
+      schema:
+        type: string
+
+    Search:
+      name: search
+      in: query
+      description: Поиск по строке
+      required: false
+      schema:
+        type: string
+        maxLength: 200
+
+    Category:
+      name: category
+      in: query
+      description: Фильтр по категории
+      required: false
+      schema:
+        type: string
+
+    Manufacturer:
+      name: manufacturer
+      in: query
+      description: Фильтр по производителю
+      required: false
+      schema:
+        type: string
+
+    PriceMin:
+      name: priceMin
+      in: query
+      description: Минимальная цена
+      required: false
+      schema:
+        type: number
+
+    PriceMax:
+      name: priceMax
+      in: query
+      description: Максимальная цена
+      required: false
+      schema:
+        type: number
+
+    InStock:
+      name: inStock
+      in: query
+      description: Только в наличии
+      required: false
+      schema:
+        type: boolean
+
+    DateFrom:
+      name: dateFrom
+      in: query
+      description: Дата с (ISO 8601)
+      required: false
+      schema:
+        type: string
+        format: date
+
+    DateTo:
+      name: dateTo
+      in: query
+      description: Дата по (ISO 8601)
+      required: false
+      schema:
+        type: string
+        format: date
+
+    # === Сортировка ===
+    SortBy:
+      name: sortBy
+      in: query
+      description: Поле для сортировки
+      required: false
+      schema:
+        type: string
+        enum: [name, price, rating, createdAt, updatedAt]
+
+    SortOrder:
+      name: sortOrder
+      in: query
+      description: Порядок сортировки
+      required: false
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+
+    # === Специфичные параметры ===
+    IncludeInactive:
+      name: includeInactive
+      in: query
+      description: Включить неактивные записи
+      required: false
+      schema:
+        type: boolean
+        default: false
+
+    IncludeHistory:
+      name: includeHistory
+      in: query
+      description: Включить историю изменений
+      required: false
+      schema:
+        type: boolean
+        default: false

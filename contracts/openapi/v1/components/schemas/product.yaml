@@ -1,0 +1,620 @@
+# Схемы данных продукта (каталог)
+# Версия: 1.0.0
+
+components:
+  schemas:
+    # === Продукт ===
+    Product:
+      type: object
+      required: [id, name, sku, category, price, stock, isActive]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        name:
+          type: string
+          minLength: 2
+          maxLength: 200
+          description: Название товара
+          example: "AMD Ryzen 7 7800X3D"
+        sku:
+          type: string
+          minLength: 3
+          maxLength: 50
+          description: Артикул (SKU)
+          example: "CPU-AMD-7800X3D"
+        category:
+          $ref: './common.yaml#/components/schemas/ProductCategory'
+        manufacturerId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        manufacturer:
+          $ref: '#/components/schemas/Manufacturer'
+        price:
+          $ref: './common.yaml#/components/schemas/Price'
+        oldPrice:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Старая цена (для отображения скидки)
+        stock:
+          type: integer
+          minimum: 0
+          description: Остаток на складе
+          example: 15
+        warrantyMonths:
+          type: integer
+          minimum: 0
+          maximum: 60
+          description: Гарантийный срок в месяцах
+          example: 36
+        description:
+          type: string
+          maxLength: 5000
+          description: Описание товара
+          example: "Процессор AMD Ryzen 7 7800X3D с 3D V-Cache технологией..."
+        specifications:
+          $ref: '#/components/schemas/ProductSpecifications'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductImage'
+        rating:
+          $ref: './common.yaml#/components/schemas/Rating'
+        isActive:
+          type: boolean
+          description: Активен ли товар
+        isFeatured:
+          type: boolean
+          description: Рекомендуемый товар
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        updatedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    ProductSummary:
+      type: object
+      required: [id, name, sku, category, price, stock]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        name:
+          type: string
+          example: "AMD Ryzen 7 7800X3D"
+        sku:
+          type: string
+          example: "CPU-AMD-7800X3D"
+        category:
+          $ref: './common.yaml#/components/schemas/ProductCategory'
+        manufacturer:
+          $ref: '#/components/schemas/Manufacturer'
+        price:
+          $ref: './common.yaml#/components/schemas/Price'
+        oldPrice:
+          $ref: './common.yaml#/components/schemas/Price'
+        stock:
+          type: integer
+          example: 15
+        mainImage:
+          $ref: '#/components/schemas/ProductImage'
+        rating:
+          $ref: './common.yaml#/components/schemas/Rating'
+        isActive:
+          type: boolean
+
+    # === Производитель ===
+    Manufacturer:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 100
+          description: Название производителя
+          example: "AMD"
+        logo:
+          type: string
+          format: uri
+          description: URL логотипа
+          example: "https://cdn.goldpc.by/manufacturers/amd.png"
+        country:
+          type: string
+          maxLength: 50
+          description: Страна
+          example: "США"
+        description:
+          type: string
+          maxLength: 1000
+          description: Описание
+
+    # === Спецификации товара ===
+    ProductSpecifications:
+      type: object
+      description: Технические характеристики товара (зависят от категории)
+      additionalProperties: true
+      example:
+        socket: "AM5"
+        cores: 8
+        threads: 16
+        baseClock: 4.2
+        boostClock: 5.0
+        tdp: 120
+        cacheL3: 96
+
+    CPUSpecifications:
+      type: object
+      properties:
+        socket:
+          $ref: './common.yaml#/components/schemas/CompatibilitySocket'
+        cores:
+          type: integer
+          description: Количество ядер
+        threads:
+          type: integer
+          description: Количество потоков
+        baseClock:
+          type: number
+          format: float
+          description: Базовая частота (GHz)
+        boostClock:
+          type: number
+          format: float
+          description: Турбо-частота (GHz)
+        tdp:
+          type: integer
+          description: TDP (Вт)
+        cacheL3:
+          type: integer
+          description: L3 кэш (MB)
+        integratedGraphics:
+          type: string
+          description: Интегрированная графика
+
+    GPUSpecifications:
+      type: object
+      properties:
+        gpuChip:
+          type: string
+          description: Графический чип
+        vram:
+          type: integer
+          description: Объем видеопамяти (GB)
+        vramType:
+          type: string
+          enum: [GDDR5, GDDR6, GDDR6X]
+        memoryBus:
+          type: integer
+          description: Шина памяти (bit)
+        baseClock:
+          type: integer
+          description: Базовая частота (MHz)
+        boostClock:
+          type: integer
+          description: Турбо-частота (MHz)
+        tdp:
+          type: integer
+          description: TDP (Вт)
+        powerConnectors:
+          type: array
+          items:
+            type: string
+          description: Разъёмы питания
+        recommendedPSU:
+          type: integer
+          description: Рекомендуемый БП (Вт)
+        length:
+          type: integer
+          description: Длина карты (mm)
+
+    MotherboardSpecifications:
+      type: object
+      properties:
+        socket:
+          $ref: './common.yaml#/components/schemas/CompatibilitySocket'
+        chipset:
+          type: string
+          description: Чипсет
+        formFactor:
+          $ref: './common.yaml#/components/schemas/CompatibilityFormFactor'
+        memorySlots:
+          type: integer
+          description: Количество слотов RAM
+        memoryType:
+          $ref: './common.yaml#/components/schemas/CompatibilityMemoryType'
+        maxMemoryFrequency:
+          type: integer
+          description: Максимальная частота RAM (MHz)
+        maxMemoryCapacity:
+          type: integer
+          description: Максимальный объём RAM (GB)
+        pcieSlots:
+          type: integer
+          description: Количество PCIe x16 слотов
+        m2Slots:
+          type: integer
+          description: Количество M.2 слотов
+        sataConnectors:
+          type: integer
+          description: Количество SATA разъёмов
+        usbPorts:
+          type: object
+          properties:
+            usb2:
+              type: integer
+            usb3:
+              type: integer
+            usb31:
+              type: integer
+            usb32:
+              type: integer
+
+    RAMSpecifications:
+      type: object
+      properties:
+        type:
+          $ref: './common.yaml#/components/schemas/CompatibilityMemoryType'
+        capacity:
+          type: integer
+          description: Объём одного модуля (GB)
+        kitSize:
+          type: integer
+          description: Количество модулей в комплекте
+        frequency:
+          type: integer
+          description: Частота (MHz)
+        timings:
+          type: string
+          description: Тайминги
+          example: "CL36-36-36-76"
+        voltage:
+          type: number
+          format: float
+          description: Напряжение (V)
+        heatsink:
+          type: boolean
+          description: Наличие радиатора
+        rgb:
+          type: boolean
+          description: Наличие RGB подсветки
+
+    PSUSpecifications:
+      type: object
+      properties:
+        power:
+          type: integer
+          description: Мощность (Вт)
+        efficiency:
+          type: string
+          enum: [80Plus, Bronze, Silver, Gold, Platinum, Titanium]
+        modular:
+          type: string
+          enum: [NonModular, SemiModular, FullModular]
+        fanSize:
+          type: integer
+          description: Размер вентилятора (mm)
+        connectors:
+          type: object
+          properties:
+            motherboard24pin:
+              type: integer
+            cpu8pin:
+              type: integer
+            pcie8pin:
+              type: integer
+            pcie6pin:
+              type: integer
+            sata:
+              type: integer
+            molex:
+              type: integer
+
+    StorageSpecifications:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [HDD, SSD, M2NVMe, M2SATA]
+        capacity:
+          type: integer
+          description: Объём (GB)
+        interface:
+          type: string
+          enum: [SATA3, PCIe3, PCIe4, PCIe5]
+        readSpeed:
+          type: integer
+          description: Скорость чтения (MB/s)
+        writeSpeed:
+          type: integer
+          description: Скорость записи (MB/s)
+        formFactor:
+          type: string
+          enum: ["2.5", "3.5", M2_2280, M2_2242]
+        cache:
+          type: integer
+          description: Объём кэша (MB)
+
+    CaseSpecifications:
+      type: object
+      properties:
+        formFactor:
+          type: array
+          items:
+            $ref: './common.yaml#/components/schemas/CompatibilityFormFactor'
+          description: Поддерживаемые форм-факторы материнских плат
+        maxGPULength:
+          type: integer
+          description: Максимальная длина видеокарты (mm)
+        maxGPUHeight:
+          type: integer
+          description: Максимальная высота видеокарты (mm)
+        maxCoolerHeight:
+          type: integer
+          description: Максимальная высота кулера (mm)
+        maxPSULength:
+          type: integer
+          description: Максимальная длина БП (mm)
+        driveBays:
+          type: object
+          properties:
+            internal35:
+              type: integer
+            internal25:
+              type: integer
+            external25:
+              type: integer
+        fans:
+          type: object
+          properties:
+            front:
+              type: integer
+            rear:
+              type: integer
+            top:
+              type: integer
+            side:
+              type: integer
+        material:
+          type: string
+          enum: [Steel, Aluminum, TemperedGlass, Plastic]
+        sidePanel:
+          type: string
+          enum: [None, Acrylic, TemperedGlass]
+
+    # === Изображение товара ===
+    ProductImage:
+      type: object
+      required: [id, url]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        url:
+          type: string
+          format: uri
+          description: URL изображения
+          example: "https://cdn.goldpc.by/products/cpu-1.jpg"
+        alt:
+          type: string
+          description: Alt текст
+          example: "AMD Ryzen 7 7800X3D"
+        isMain:
+          type: boolean
+          description: Главное изображение
+        order:
+          type: integer
+          description: Порядок отображения
+
+    # === Отзыв ===
+    Review:
+      type: object
+      required: [id, productId, userId, rating, createdAt]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        productId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        userId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        userName:
+          type: string
+          description: Имя пользователя
+          example: "Иван И."
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Оценка от 1 до 5
+        title:
+          type: string
+          maxLength: 100
+          description: Заголовок отзыва
+        comment:
+          type: string
+          maxLength: 2000
+          description: Текст отзыва
+        pros:
+          type: string
+          maxLength: 500
+          description: Достоинства
+        cons:
+          type: string
+          maxLength: 500
+          description: Недостатки
+        isVerified:
+          type: boolean
+          description: Подтверждённая покупка
+        isApproved:
+          type: boolean
+          description: Одобрен модератором
+        helpful:
+          type: integer
+          description: Количество полезных оценок
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    CreateReviewRequest:
+      type: object
+      required: [rating]
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Оценка от 1 до 5
+        title:
+          type: string
+          maxLength: 100
+          description: Заголовок отзыва
+        comment:
+          type: string
+          maxLength: 2000
+          description: Текст отзыва
+        pros:
+          type: string
+          maxLength: 500
+          description: Достоинства
+        cons:
+          type: string
+          maxLength: 500
+          description: Недостатки
+
+    # === Категория ===
+    Category:
+      type: object
+      required: [id, name, slug]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        name:
+          type: string
+          maxLength: 100
+          description: Название категории
+          example: "Процессоры"
+        slug:
+          type: string
+          maxLength: 100
+          description: URL-слаг
+          example: "cpu"
+        parentId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        parent:
+          $ref: '#/components/schemas/Category'
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        icon:
+          type: string
+          description: Иконка
+        description:
+          type: string
+          maxLength: 500
+        productCount:
+          type: integer
+          description: Количество товаров в категории
+        order:
+          type: integer
+          description: Порядок отображения
+
+    # === Фильтры каталога ===
+    ProductFilter:
+      type: object
+      properties:
+        category:
+          $ref: './common.yaml#/components/schemas/ProductCategory'
+        manufacturerId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        priceRange:
+          $ref: './common.yaml#/components/schemas/PriceRange'
+        inStock:
+          type: boolean
+          description: Только в наличии
+        isFeatured:
+          type: boolean
+          description: Только рекомендуемые
+        search:
+          type: string
+          maxLength: 200
+          description: Поиск по названию и описанию
+        specifications:
+          type: object
+          additionalProperties: true
+          description: Фильтр по спецификациям
+          example:
+            socket: "AM5"
+            cores: 8
+
+    ProductListResponse:
+      allOf:
+        - $ref: './common.yaml#/components/schemas/PagedResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProductSummary'
+
+    # === Создание/обновление товара ===
+    CreateProductRequest:
+      type: object
+      required: [name, sku, category, price, stock]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 200
+        sku:
+          type: string
+          minLength: 3
+          maxLength: 50
+        category:
+          $ref: './common.yaml#/components/schemas/ProductCategory'
+        manufacturerId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        price:
+          $ref: './common.yaml#/components/schemas/Price'
+        oldPrice:
+          $ref: './common.yaml#/components/schemas/Price'
+        stock:
+          type: integer
+          minimum: 0
+        warrantyMonths:
+          type: integer
+          minimum: 0
+          maximum: 60
+        description:
+          type: string
+          maxLength: 5000
+        specifications:
+          $ref: '#/components/schemas/ProductSpecifications'
+        isActive:
+          type: boolean
+        isFeatured:
+          type: boolean
+
+    UpdateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 200
+        manufacturerId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        price:
+          $ref: './common.yaml#/components/schemas/Price'
+        oldPrice:
+          $ref: './common.yaml#/components/schemas/Price'
+        stock:
+          type: integer
+          minimum: 0
+        warrantyMonths:
+          type: integer
+          minimum: 0
+          maximum: 60
+        description:
+          type: string
+          maxLength: 5000
+        specifications:
+          $ref: '#/components/schemas/ProductSpecifications'
+        isActive:
+          type: boolean
+        isFeatured:
+          type: boolean

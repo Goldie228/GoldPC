@@ -1,0 +1,118 @@
+{
+  "consumer": {
+    "name": "GoldPC-Frontend",
+    "version": "1.0.0"
+  },
+  "provider": {
+    "name": "GoldPC-Catalog-API",
+    "version": "1.0.0"
+  },
+  "interactions": [
+    {
+      "description": "Получение списка товаров",
+      "providerState": "товары существуют в каталоге",
+      "request": {
+        "method": "GET",
+        "path": "/v1/catalog/products",
+        "query": "page=1&pageSize=20",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "data": [
+            {
+              "id": "550e8400-e29b-41d4-a716-446655440000",
+              "name": "AMD Ryzen 7 7800X3D",
+              "sku": "CPU-AMD-7800X3D",
+              "category": "CPU",
+              "price": 1599.99,
+              "stock": 15
+            }
+          ],
+          "meta": {
+            "page": 1,
+            "pageSize": 20,
+            "totalPages": 1,
+            "totalItems": 1,
+            "hasNextPage": false,
+            "hasPrevPage": false
+          }
+        }
+      }
+    },
+    {
+      "description": "Получение товара по ID",
+      "providerState": "товар с ID существует",
+      "request": {
+        "method": "GET",
+        "path": "/v1/catalog/products/550e8400-e29b-41d4-a716-446655440000",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "550e8400-e29b-41d4-a716-446655440000",
+          "name": "AMD Ryzen 7 7800X3D",
+          "sku": "CPU-AMD-7800X3D",
+          "category": "CPU",
+          "price": 1599.99,
+          "stock": 15,
+          "warrantyMonths": 36,
+          "description": "Процессор AMD Ryzen 7 7800X3D с 3D V-Cache технологией",
+          "specifications": {
+            "socket": "AM5",
+            "cores": 8,
+            "threads": 16
+          },
+          "isActive": true
+        }
+      }
+    },
+    {
+      "description": "Получение категорий",
+      "request": {
+        "method": "GET",
+        "path": "/v1/catalog/categories",
+        "headers": {
+          "Accept": "application/json"
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "data": [
+            {
+              "id": "550e8400-e29b-41d4-a716-446655440001",
+              "name": "Процессоры",
+              "slug": "cpu",
+              "productCount": 50
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    },
+    "pactJwt": {
+      "pacticipant": "GoldPC-Frontend",
+      "version": "1.0.0"
+    }
+  }
+}

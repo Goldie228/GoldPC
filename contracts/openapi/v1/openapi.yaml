@@ -1,0 +1,1191 @@
+openapi: 3.0.3
+info:
+  title: GoldPC API
+  description: |
+    REST API для веб-приложения компьютерного магазина GoldPC с сервисным центром.
+    
+    ## Аутентификация
+    API использует JWT-токены для аутентификации. Включите токен в заголовок:
+    ```
+    Authorization: Bearer <token>
+    ```
+    
+    ## Версионирование
+    Текущая версия API: v1. Версионирование через URL путь (/api/v1/...).
+    
+    ## Формат дат
+    Все даты и время в формате ISO 8601 (UTC).
+    
+    ## Коды ошибок
+    - `400` - Некорректный запрос
+    - `401` - Неавторизован
+    - `403` - Доступ запрещён
+    - `404` - Ресурс не найден
+    - `409` - Конфликт
+    - `422` - Ошибка валидации
+    - `429` - Превышен лимит запросов
+    - `500` - Внутренняя ошибка сервера
+    
+    ## Роли пользователей
+    - **Client** — Клиент (оформление заказов, просмотр каталога)
+    - **Manager** — Менеджер (обработка заказов, управление товарами)
+    - **Master** — Мастер (выполнение услуг сервисного центра)
+    - **Admin** — Администратор (полный доступ)
+    - **Accountant** — Бухгалтер (финансовые отчёты)
+  version: 1.0.0
+  contact:
+    name: GoldPC API Support
+    email: api@goldpc.by
+    url: https://goldpc.by/api-docs
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.goldpc.by/v1
+    description: Production server
+  - url: https://api-staging.goldpc.by/v1
+    description: Staging server
+  - url: http://localhost:5000/v1
+    description: Development server
+
+tags:
+  - name: Auth
+    description: Аутентификация и авторизация
+  - name: Catalog
+    description: Каталог товаров
+  - name: PCBuilder
+    description: Конструктор ПК
+  - name: Orders
+    description: Заказы и корзина
+  - name: Services
+    description: Услуги сервисного центра
+  - name: Warranty
+    description: Гарантийное обслуживание
+  - name: Admin
+    description: Администрирование
+  - name: Users
+    description: Управление пользователями
+
+security:
+  - bearerAuth: []
+
+paths:
+  # === AUTH ===
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Регистрация нового пользователя
+      description: Создаёт новую учётную запись клиента
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/user.yaml#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/user.yaml#/components/schemas/AuthResponse'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+        '409':
+          $ref: './components/responses/common.yaml#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Аутентификация пользователя
+      description: Возвращает JWT токены при успешной аутентификации
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/user.yaml#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/user.yaml#/components/schemas/AuthResponse'
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+        '429':
+          $ref: './components/responses/common.yaml#/components/responses/RateLimitExceeded'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Обновление токена
+      description: Обновляет access token с помощью refresh token
+      operationId: refreshToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/user.yaml#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Токен успешно обновлён
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/user.yaml#/components/schemas/AuthResponse'
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Выход из системы
+      description: Инвалидирует refresh token
+      operationId: logout
+      responses:
+        '204':
+          description: Успешный выход
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+
+  /auth/password/reset:
+    post:
+      tags: [Auth]
+      summary: Запрос сброса пароля
+      description: Отправляет письмо со ссылкой для сброса пароля
+      operationId: resetPassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/user.yaml#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Письмо отправлено
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+  /auth/password/change:
+    post:
+      tags: [Auth]
+      summary: Смена пароля
+      description: Изменяет пароль текущего пользователя
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/user.yaml#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Пароль успешно изменён
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+
+  # === USERS ===
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Получить профиль текущего пользователя
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/user.yaml#/components/schemas/User'
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+
+    put:
+      tags: [Users]
+      summary: Обновить профиль
+      operationId: updateCurrentUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/user.yaml#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Профиль обновлён
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/user.yaml#/components/schemas/User'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+
+  # === CATALOG ===
+  /catalog/products:
+    get:
+      tags: [Catalog]
+      summary: Получить список товаров
+      description: Возвращает список товаров с пагинацией и фильтрацией
+      operationId: getProducts
+      security: []
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/Page'
+        - $ref: './components/parameters/common.yaml#/components/parameters/PageSize'
+        - $ref: './components/parameters/common.yaml#/components/parameters/Category'
+        - $ref: './components/parameters/common.yaml#/components/parameters/Manufacturer'
+        - $ref: './components/parameters/common.yaml#/components/parameters/PriceMin'
+        - $ref: './components/parameters/common.yaml#/components/parameters/PriceMax'
+        - $ref: './components/parameters/common.yaml#/components/parameters/Search'
+        - $ref: './components/parameters/common.yaml#/components/parameters/SortBy'
+        - $ref: './components/parameters/common.yaml#/components/parameters/SortOrder'
+        - name: inStock
+          in: query
+          schema:
+            type: boolean
+          description: Только в наличии
+        - name: isFeatured
+          in: query
+          schema:
+            type: boolean
+          description: Только рекомендуемые
+      responses:
+        '200':
+          description: Список товаров
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/product.yaml#/components/schemas/ProductListResponse'
+
+  /catalog/products/{productId}:
+    get:
+      tags: [Catalog]
+      summary: Получить товар по ID
+      operationId: getProduct
+      security: []
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ProductId'
+      responses:
+        '200':
+          description: Детали товара
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/product.yaml#/components/schemas/Product'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+  /catalog/products/{productId}/reviews:
+    get:
+      tags: [Catalog]
+      summary: Получить отзывы о товаре
+      operationId: getProductReviews
+      security: []
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ProductId'
+        - $ref: './components/parameters/common.yaml#/components/parameters/Page'
+        - $ref: './components/parameters/common.yaml#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Список отзывов
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './components/schemas/product.yaml#/components/schemas/Review'
+                  meta:
+                    $ref: './components/schemas/common.yaml#/components/schemas/PaginationMeta'
+
+    post:
+      tags: [Catalog]
+      summary: Добавить отзыв
+      operationId: addProductReview
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/product.yaml#/components/schemas/CreateReviewRequest'
+      responses:
+        '201':
+          description: Отзыв добавлен
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+
+  /catalog/categories:
+    get:
+      tags: [Catalog]
+      summary: Получить категории товаров
+      operationId: getCategories
+      security: []
+      responses:
+        '200':
+          description: Дерево категорий
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './components/schemas/product.yaml#/components/schemas/Category'
+
+  /catalog/manufacturers:
+    get:
+      tags: [Catalog]
+      summary: Получить список производителей
+      operationId: getManufacturers
+      security: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Фильтр по категории
+      responses:
+        '200':
+          description: Список производителей
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './components/schemas/product.yaml#/components/schemas/Manufacturer'
+
+  # === PC BUILDER ===
+  /pcbuilder/check-compatibility:
+    post:
+      tags: [PCBuilder]
+      summary: Проверка совместимости компонентов
+      description: Проверяет совместимость выбранных компонентов ПК
+      operationId: checkCompatibility
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/pcbuilder.yaml#/components/schemas/CompatibilityCheckRequest'
+      responses:
+        '200':
+          description: Результат проверки совместимости
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/pcbuilder.yaml#/components/schemas/CompatibilityCheckResponse'
+
+  /pcbuilder/configurations:
+    get:
+      tags: [PCBuilder]
+      summary: Получить сохранённые конфигурации
+      operationId: getConfigurations
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/Page'
+        - $ref: './components/parameters/common.yaml#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Список конфигураций
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/pcbuilder.yaml#/components/schemas/ConfigurationListResponse'
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+
+    post:
+      tags: [PCBuilder]
+      summary: Сохранить конфигурацию
+      operationId: saveConfiguration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/pcbuilder.yaml#/components/schemas/SaveConfigurationRequest'
+      responses:
+        '201':
+          description: Конфигурация сохранена
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/pcbuilder.yaml#/components/schemas/PCConfiguration'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+
+  /pcbuilder/configurations/{configurationId}:
+    get:
+      tags: [PCBuilder]
+      summary: Получить конфигурацию по ID
+      operationId: getConfiguration
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ConfigurationId'
+      responses:
+        '200':
+          description: Детали конфигурации
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/pcbuilder.yaml#/components/schemas/PCConfiguration'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+    put:
+      tags: [PCBuilder]
+      summary: Обновить конфигурацию
+      operationId: updateConfiguration
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ConfigurationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/pcbuilder.yaml#/components/schemas/UpdateConfigurationRequest'
+      responses:
+        '200':
+          description: Конфигурация обновлена
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/pcbuilder.yaml#/components/schemas/PCConfiguration'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+    delete:
+      tags: [PCBuilder]
+      summary: Удалить конфигурацию
+      operationId: deleteConfiguration
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ConfigurationId'
+      responses:
+        '204':
+          description: Конфигурация удалена
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+  /pcbuilder/recommendations:
+    get:
+      tags: [PCBuilder]
+      summary: Получить рекомендуемые сборки
+      operationId: getRecommendations
+      security: []
+      parameters:
+        - name: purpose
+          in: query
+          schema:
+            $ref: './components/schemas/pcbuilder.yaml#/components/schemas/PCPurpose'
+        - name: budgetMin
+          in: query
+          schema:
+            type: number
+        - name: budgetMax
+          in: query
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Список рекомендуемых сборок
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './components/schemas/pcbuilder.yaml#/components/schemas/BuildRecommendation'
+
+  /pcbuilder/components/compatible:
+    get:
+      tags: [PCBuilder]
+      summary: Получить совместимые компоненты
+      description: Возвращает список компонентов, совместимых с выбранными
+      operationId: getCompatibleComponents
+      security: []
+      parameters:
+        - name: category
+          in: query
+          required: true
+          schema:
+            $ref: './components/schemas/common.yaml#/components/schemas/ProductCategory'
+        - name: purpose
+          in: query
+          schema:
+            $ref: './components/schemas/pcbuilder.yaml#/components/schemas/PCPurpose'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/pcbuilder.yaml#/components/schemas/ComponentFilterRequest'
+      responses:
+        '200':
+          description: Список совместимых компонентов
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/pcbuilder.yaml#/components/schemas/CompatibleComponentsResponse'
+
+  # === ORDERS ===
+  /orders/cart:
+    get:
+      tags: [Orders]
+      summary: Получить корзину
+      operationId: getCart
+      responses:
+        '200':
+          description: Корзина пользователя
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/order.yaml#/components/schemas/Cart'
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+
+    post:
+      tags: [Orders]
+      summary: Добавить товар в корзину
+      operationId: addToCart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/order.yaml#/components/schemas/AddToCartRequest'
+      responses:
+        '200':
+          description: Товар добавлен в корзину
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/order.yaml#/components/schemas/Cart'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+        '401':
+          $ref: './components/responses/common.yaml#/components/responses/Unauthorized'
+
+  /orders/cart/items/{itemId}:
+    put:
+      tags: [Orders]
+      summary: Обновить количество товара в корзине
+      operationId: updateCartItem
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/order.yaml#/components/schemas/UpdateCartItemRequest'
+      responses:
+        '200':
+          description: Корзина обновлена
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/order.yaml#/components/schemas/Cart'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+    delete:
+      tags: [Orders]
+      summary: Удалить товар из корзины
+      operationId: removeCartItem
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Товар удалён из корзины
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/order.yaml#/components/schemas/Cart'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+  /orders/cart/clear:
+    delete:
+      tags: [Orders]
+      summary: Очистить корзину
+      operationId: clearCart
+      responses:
+        '204':
+          description: Корзина очищена
+
+  /orders:
+    get:
+      tags: [Orders]
+      summary: Получить список заказов
+      operationId: getOrders
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/Page'
+        - $ref: './components/parameters/common.yaml#/components/parameters/PageSize'
+        - $ref: './components/parameters/common.yaml#/components/parameters/Status'
+        - $ref: './components/parameters/common.yaml#/components/parameters/DateFrom'
+        - $ref: './components/parameters/common.yaml#/components/parameters/DateTo'
+        - $ref: './components/parameters/common.yaml#/components/parameters/Search'
+      responses:
+        '200':
+          description: Список заказов
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/order.yaml#/components/schemas/OrderListResponse'
+
+    post:
+      tags: [Orders]
+      summary: Создать заказ
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/order.yaml#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Заказ создан
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/order.yaml#/components/schemas/Order'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+
+  /orders/{orderId}:
+    get:
+      tags: [Orders]
+      summary: Получить заказ по ID
+      operationId: getOrder
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Детали заказа
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/order.yaml#/components/schemas/Order'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+  /orders/{orderId}/cancel:
+    post:
+      tags: [Orders]
+      summary: Отменить заказ
+      operationId: cancelOrder
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/OrderId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/order.yaml#/components/schemas/CancelOrderRequest'
+      responses:
+        '200':
+          description: Заказ отменён
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/order.yaml#/components/schemas/Order'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/BadRequest'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+  /orders/{orderId}/status:
+    put:
+      tags: [Orders]
+      summary: Обновить статус заказа (Manager+)
+      operationId: updateOrderStatus
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/OrderId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/order.yaml#/components/schemas/UpdateOrderStatusRequest'
+      responses:
+        '200':
+          description: Статус обновлён
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/order.yaml#/components/schemas/Order'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/BadRequest'
+        '403':
+          $ref: './components/responses/common.yaml#/components/responses/Forbidden'
+
+  /orders/promocode/validate:
+    post:
+      tags: [Orders]
+      summary: Проверить промокод
+      operationId: validatePromoCode
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/order.yaml#/components/schemas/ValidatePromoCodeRequest'
+      responses:
+        '200':
+          description: Результат проверки
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/order.yaml#/components/schemas/ValidatePromoCodeResponse'
+
+  # === SERVICES ===
+  /services:
+    get:
+      tags: [Services]
+      summary: Получить список услуг
+      operationId: getServiceRequests
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/Page'
+        - $ref: './components/parameters/common.yaml#/components/parameters/PageSize'
+        - $ref: './components/parameters/common.yaml#/components/parameters/Status'
+        - name: serviceType
+          in: query
+          schema:
+            $ref: './components/schemas/common.yaml#/components/schemas/ServiceType'
+      responses:
+        '200':
+          description: Список заявок
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/service.yaml#/components/schemas/ServiceRequestListResponse'
+
+    post:
+      tags: [Services]
+      summary: Создать заявку на услугу
+      operationId: createServiceRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/service.yaml#/components/schemas/CreateServiceRequestRequest'
+      responses:
+        '201':
+          description: Заявка создана
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/service.yaml#/components/schemas/ServiceRequest'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+
+  /services/types:
+    get:
+      tags: [Services]
+      summary: Получить типы услуг
+      operationId: getServiceTypes
+      security: []
+      responses:
+        '200':
+          description: Список типов услуг
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/service.yaml#/components/schemas/ServiceTypeListResponse'
+
+  /services/{serviceRequestId}:
+    get:
+      tags: [Services]
+      summary: Получить заявку по ID
+      operationId: getServiceRequest
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ServiceRequestId'
+      responses:
+        '200':
+          description: Детали заявки
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/service.yaml#/components/schemas/ServiceRequest'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+  /services/{serviceRequestId}/assign:
+    put:
+      tags: [Services]
+      summary: Назначить мастера (Manager+)
+      operationId: assignMaster
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ServiceRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/service.yaml#/components/schemas/AssignMasterRequest'
+      responses:
+        '200':
+          description: Мастер назначен
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/service.yaml#/components/schemas/ServiceRequest'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/BadRequest'
+        '403':
+          $ref: './components/responses/common.yaml#/components/responses/Forbidden'
+
+  /services/{serviceRequestId}/status:
+    put:
+      tags: [Services]
+      summary: Обновить статус заявки
+      operationId: updateServiceStatus
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ServiceRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/service.yaml#/components/schemas/UpdateServiceStatusRequest'
+      responses:
+        '200':
+          description: Статус обновлён
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/service.yaml#/components/schemas/ServiceRequest'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/BadRequest'
+
+  /services/{serviceRequestId}/complete:
+    post:
+      tags: [Services]
+      summary: Завершить заявку (Master)
+      operationId: completeServiceRequest
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ServiceRequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/service.yaml#/components/schemas/CompleteServiceRequestRequest'
+      responses:
+        '200':
+          description: Заявка завершена
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/service.yaml#/components/schemas/ServiceRequest'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/BadRequest'
+
+  # === WARRANTY ===
+  /warranties:
+    get:
+      tags: [Warranty]
+      summary: Получить гарантийные талоны
+      operationId: getWarranties
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/Page'
+        - $ref: './components/parameters/common.yaml#/components/parameters/PageSize'
+        - $ref: './components/parameters/common.yaml#/components/parameters/Status'
+        - name: expiringInDays
+          in: query
+          schema:
+            type: integer
+          description: Истекает в течение N дней
+      responses:
+        '200':
+          description: Список гарантий
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/warranty.yaml#/components/schemas/WarrantyListResponse'
+
+  /warranties/check:
+    post:
+      tags: [Warranty]
+      summary: Проверить гарантию
+      description: Проверка гарантии по номеру без авторизации
+      operationId: checkWarranty
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/warranty.yaml#/components/schemas/CheckWarrantyRequest'
+      responses:
+        '200':
+          description: Результат проверки
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/warranty.yaml#/components/schemas/CheckWarrantyResponse'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+  /warranties/{warrantyId}:
+    get:
+      tags: [Warranty]
+      summary: Получить гарантию по ID
+      operationId: getWarranty
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/WarrantyId'
+      responses:
+        '200':
+          description: Детали гарантии
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/warranty.yaml#/components/schemas/Warranty'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+  /warranties/{warrantyId}/annul:
+    post:
+      tags: [Warranty]
+      summary: Аннулировать гарантию (Admin)
+      operationId: annulWarranty
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/WarrantyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/warranty.yaml#/components/schemas/AnnulWarrantyRequest'
+      responses:
+        '200':
+          description: Гарантия аннулирована
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/warranty.yaml#/components/schemas/Warranty'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/BadRequest'
+        '403':
+          $ref: './components/responses/common.yaml#/components/responses/Forbidden'
+
+  # === ADMIN ===
+  /admin/users:
+    get:
+      tags: [Admin]
+      summary: Получить список пользователей (Admin)
+      operationId: getUsers
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/Page'
+        - $ref: './components/parameters/common.yaml#/components/parameters/PageSize'
+        - name: role
+          in: query
+          schema:
+            $ref: './components/schemas/common.yaml#/components/schemas/UserRole'
+        - $ref: './components/parameters/common.yaml#/components/parameters/Search'
+        - $ref: './components/parameters/common.yaml#/components/parameters/IncludeInactive'
+      responses:
+        '200':
+          description: Список пользователей
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/user.yaml#/components/schemas/UserListResponse'
+        '403':
+          $ref: './components/responses/common.yaml#/components/responses/Forbidden'
+
+    post:
+      tags: [Admin]
+      summary: Создать пользователя (Admin)
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/user.yaml#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/user.yaml#/components/schemas/User'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+        '403':
+          $ref: './components/responses/common.yaml#/components/responses/Forbidden'
+
+  /admin/users/{userId}:
+    get:
+      tags: [Admin]
+      summary: Получить пользователя по ID (Admin)
+      operationId: getUser
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Данные пользователя
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/user.yaml#/components/schemas/User'
+        '403':
+          $ref: './components/responses/common.yaml#/components/responses/Forbidden'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+    put:
+      tags: [Admin]
+      summary: Обновить пользователя (Admin)
+      operationId: updateUser
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/user.yaml#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Пользователь обновлён
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/user.yaml#/components/schemas/User'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+        '403':
+          $ref: './components/responses/common.yaml#/components/responses/Forbidden'
+
+  /admin/users/{userId}/block:
+    post:
+      tags: [Admin]
+      summary: Заблокировать пользователя (Admin)
+      operationId: blockUser
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Пользователь заблокирован
+        '403':
+          $ref: './components/responses/common.yaml#/components/responses/Forbidden'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+  /admin/products:
+    post:
+      tags: [Admin]
+      summary: Создать товар (Manager+)
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/product.yaml#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Товар создан
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/product.yaml#/components/schemas/Product'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+        '403':
+          $ref: './components/responses/common.yaml#/components/responses/Forbidden'
+
+  /admin/products/{productId}:
+    put:
+      tags: [Admin]
+      summary: Обновить товар (Manager+)
+      operationId: updateProduct
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ProductId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './components/schemas/product.yaml#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Товар обновлён
+          content:
+            application/json:
+              schema:
+                $ref: './components/schemas/product.yaml#/components/schemas/Product'
+        '400':
+          $ref: './components/responses/common.yaml#/components/responses/ValidationError'
+        '403':
+          $ref: './components/responses/common.yaml#/components/responses/Forbidden'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+    delete:
+      tags: [Admin]
+      summary: Удалить товар (Admin)
+      operationId: deleteProduct
+      parameters:
+        - $ref: './components/parameters/common.yaml#/components/parameters/ProductId'
+      responses:
+        '204':
+          description: Товар удалён
+        '403':
+          $ref: './components/responses/common.yaml#/components/responses/Forbidden'
+        '404':
+          $ref: './components/responses/common.yaml#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT токен авторизации

@@ -1,0 +1,267 @@
+# Схемы данных гарантии
+# Версия: 1.0.0
+
+components:
+  schemas:
+    # === Гарантийный талон ===
+    Warranty:
+      type: object
+      required: [id, warrantyNumber, status, startDate, endDate, createdAt]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        warrantyNumber:
+          type: string
+          pattern: '^WAR-\d{6}-\d{4}$'
+          description: Уникальный номер гарантийного талона
+          example: "WAR-000001-0001"
+        orderId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+          description: ID связанного заказа
+        order:
+          $ref: './order.yaml#/components/schemas/OrderSummary'
+        serviceRequestId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+          description: ID связанной заявки на услугу
+        serviceRequest:
+          $ref: './service.yaml#/components/schemas/ServiceRequestSummary'
+        productId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        product:
+          $ref: './product.yaml#/components/schemas/ProductSummary'
+        productName:
+          type: string
+          description: Название товара (snapshot)
+          example: "AMD Ryzen 7 7800X3D"
+        productSku:
+          type: string
+          description: SKU товара (snapshot)
+        serialNumber:
+          type: string
+          maxLength: 100
+          description: Серийный номер товара
+        clientId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        client:
+          $ref: './user.yaml#/components/schemas/UserSummary'
+        status:
+          $ref: './common.yaml#/components/schemas/WarrantyStatus'
+        warrantyType:
+          $ref: '#/components/schemas/WarrantyType'
+        warrantyMonths:
+          type: integer
+          minimum: 1
+          maximum: 60
+          description: Срок гарантии в месяцах
+          example: 36
+        startDate:
+          $ref: './common.yaml#/components/schemas/Date'
+          description: Дата начала гарантии
+        endDate:
+          $ref: './common.yaml#/components/schemas/Date'
+          description: Дата окончания гарантии
+        annulationReason:
+          type: string
+          maxLength: 500
+          description: Причина аннулирования
+        annulatedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        annulatedBy:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        notes:
+          type: string
+          maxLength: 1000
+          description: Примечания
+        history:
+          type: array
+          items:
+            $ref: './common.yaml#/components/schemas/HistoryEntry'
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        updatedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    WarrantySummary:
+      type: object
+      required: [id, warrantyNumber, status, productName, endDate]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        warrantyNumber:
+          type: string
+          example: "WAR-000001-0001"
+        productName:
+          type: string
+          example: "AMD Ryzen 7 7800X3D"
+        status:
+          $ref: './common.yaml#/components/schemas/WarrantyStatus'
+        startDate:
+          $ref: './common.yaml#/components/schemas/Date'
+        endDate:
+          $ref: './common.yaml#/components/schemas/Date'
+        warrantyMonths:
+          type: integer
+          example: 36
+
+    # === Тип гарантии ===
+    WarrantyType:
+      type: string
+      enum:
+        - Product
+        - Service
+      description: |
+        Тип гарантии:
+        - Product — На товар (от производителя, 12-36 месяцев)
+        - Service — На услугу (14 дней)
+
+    # === Гарантийный случай ===
+    WarrantyClaim:
+      type: object
+      required: [id, warrantyId, description, status, createdAt]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        warrantyId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        claimNumber:
+          type: string
+          pattern: '^WCL-\d{6}-\d{4}$'
+          example: "WCL-000001-0001"
+        description:
+          type: string
+          maxLength: 2000
+          description: Описание проблемы
+        resolution:
+          type: string
+          maxLength: 2000
+          description: Решение по обращению
+        status:
+          $ref: '#/components/schemas/WarrantyClaimStatus'
+        serviceRequestId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+          description: Связанная заявка на ремонт
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        resolvedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        resolvedBy:
+          $ref: './common.yaml#/components/schemas/Uuid'
+
+    WarrantyClaimStatus:
+      type: string
+      enum:
+        - New
+        - InReview
+        - Approved
+        - Rejected
+        - Completed
+      description: |
+        Статус гарантийного случая:
+        - New — Новое
+        - InReview — На рассмотрении
+        - Approved — Одобрено
+        - Rejected — Отклонено
+        - Completed — Выполнено
+
+    # === Запросы ===
+    CreateWarrantyFromOrderRequest:
+      type: object
+      required: [orderId]
+      properties:
+        orderId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+          description: ID заказа для создания гарантийных талонов
+
+    AnnulWarrantyRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+          description: Причина аннулирования
+
+    CheckWarrantyRequest:
+      type: object
+      required: [warrantyNumber]
+      properties:
+        warrantyNumber:
+          type: string
+          description: Номер гарантийного талона
+          example: "WAR-000001-0001"
+        serialNumber:
+          type: string
+          description: Серийный номер товара (опционально)
+
+    CheckWarrantyResponse:
+      type: object
+      required: [valid, warranty]
+      properties:
+        valid:
+          type: boolean
+          description: Действительна ли гарантия
+        warranty:
+          $ref: '#/components/schemas/WarrantySummary'
+        message:
+          type: string
+          description: Сообщение о статусе гарантии
+        daysRemaining:
+          type: integer
+          description: Дней до окончания гарантии
+
+    # === Фильтры ===
+    WarrantyFilter:
+      type: object
+      properties:
+        status:
+          $ref: './common.yaml#/components/schemas/WarrantyStatus'
+        warrantyType:
+          $ref: '#/components/schemas/WarrantyType'
+        clientId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        productId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        orderId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        expiringInDays:
+          type: integer
+          minimum: 1
+          maximum: 365
+          description: Истекает в течение N дней
+        dateFrom:
+          $ref: './common.yaml#/components/schemas/Date'
+        dateTo:
+          $ref: './common.yaml#/components/schemas/Date'
+        search:
+          type: string
+          maxLength: 50
+          description: Поиск по номеру гарантии
+
+    WarrantyListResponse:
+      allOf:
+        - $ref: './common.yaml#/components/schemas/PagedResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/WarrantySummary'
+
+    # === Уведомления о гарантии ===
+    ExpiringWarrantiesNotification:
+      type: object
+      required: [warranties, daysBeforeExpiry]
+      properties:
+        warranties:
+          type: array
+          items:
+            $ref: '#/components/schemas/WarrantySummary'
+        daysBeforeExpiry:
+          type: integer
+          description: За сколько дней до окончания
+        sentAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        notificationType:
+          type: string
+          enum: [Email, SMS, Both]

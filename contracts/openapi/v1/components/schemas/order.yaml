@@ -1,0 +1,376 @@
+# Схемы данных заказа
+# Версия: 1.0.0
+
+components:
+  schemas:
+    # === Заказ ===
+    Order:
+      type: object
+      required: [id, orderNumber, status, total, createdAt]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        orderNumber:
+          type: string
+          pattern: '^ORD-\d{6}-\d{4}$'
+          description: Уникальный номер заказа
+          example: "ORD-000001-0001"
+        userId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        user:
+          $ref: './user.yaml#/components/schemas/UserSummary'
+        status:
+          $ref: './common.yaml#/components/schemas/OrderStatus'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        subtotal:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Сумма товаров
+        discount:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Скидка
+        deliveryCost:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Стоимость доставки
+        total:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Итого к оплате
+        deliveryMethod:
+          $ref: './common.yaml#/components/schemas/DeliveryMethod'
+        deliveryAddress:
+          $ref: './common.yaml#/components/schemas/Address'
+        paymentMethod:
+          $ref: './common.yaml#/components/schemas/PaymentMethod'
+        paymentStatus:
+          $ref: './common.yaml#/components/schemas/PaymentStatus'
+        paymentId:
+          type: string
+          description: ID платежа во внешней системе
+        contactPhone:
+          type: string
+          pattern: '^\+375\d{9}$'
+          description: Контактный телефон
+          example: "+375291234567"
+        notes:
+          type: string
+          maxLength: 1000
+          description: Примечание к заказу
+        history:
+          type: array
+          items:
+            $ref: './common.yaml#/components/schemas/HistoryEntry'
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        updatedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        completedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    OrderSummary:
+      type: object
+      required: [id, orderNumber, status, total, createdAt]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        orderNumber:
+          type: string
+          example: "ORD-000001-0001"
+        status:
+          $ref: './common.yaml#/components/schemas/OrderStatus'
+        total:
+          $ref: './common.yaml#/components/schemas/Price'
+        itemsCount:
+          type: integer
+          description: Количество позиций
+        paymentStatus:
+          $ref: './common.yaml#/components/schemas/PaymentStatus'
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    # === Позиция заказа ===
+    OrderItem:
+      type: object
+      required: [id, productId, quantity, price]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        productId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        product:
+          $ref: './product.yaml#/components/schemas/ProductSummary'
+        productName:
+          type: string
+          description: Название товара (snapshot)
+          example: "AMD Ryzen 7 7800X3D"
+        productSku:
+          type: string
+          description: SKU товара (snapshot)
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Количество (максимум 5)
+          example: 1
+        price:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Цена на момент заказа
+        totalPrice:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Сумма позиции
+        isAssemblyService:
+          type: boolean
+          description: Услуга сборки ПК
+        assemblyServicePrice:
+          $ref: './common.yaml#/components/schemas/Price'
+          description: Стоимость услуги сборки
+
+    # === Корзина ===
+    Cart:
+      type: object
+      required: [items, total]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        userId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        subtotal:
+          $ref: './common.yaml#/components/schemas/Price'
+        discount:
+          $ref: './common.yaml#/components/schemas/Price'
+        total:
+          $ref: './common.yaml#/components/schemas/Price'
+        itemsCount:
+          type: integer
+          description: Количество позиций
+        updatedAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    CartItem:
+      type: object
+      required: [productId, quantity]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        productId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        product:
+          $ref: './product.yaml#/components/schemas/ProductSummary'
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 1
+        price:
+          $ref: './common.yaml#/components/schemas/Price'
+        totalPrice:
+          $ref: './common.yaml#/components/schemas/Price'
+        isAvailable:
+          type: boolean
+          description: Доступен ли товар
+        isAssemblyService:
+          type: boolean
+          description: Добавить услугу сборки
+
+    # === Запросы ===
+    AddToCartRequest:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 5
+          default: 1
+        addAssemblyService:
+          type: boolean
+          default: false
+          description: Добавить услугу сборки (для конфигураций ПК)
+
+    UpdateCartItemRequest:
+      type: object
+      required: [quantity]
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 5
+
+    CreateOrderRequest:
+      type: object
+      required: [deliveryMethod, paymentMethod, contactPhone]
+      properties:
+        deliveryMethod:
+          $ref: './common.yaml#/components/schemas/DeliveryMethod'
+        deliveryAddress:
+          $ref: './common.yaml#/components/schemas/Address'
+        paymentMethod:
+          $ref: './common.yaml#/components/schemas/PaymentMethod'
+        contactPhone:
+          type: string
+          pattern: '^\+375\d{9}$'
+          description: Контактный телефон
+          example: "+375291234567"
+        notes:
+          type: string
+          maxLength: 1000
+          description: Примечание к заказу
+        useLoyaltyPoints:
+          type: boolean
+          default: false
+          description: Использовать бонусные баллы
+        promoCode:
+          type: string
+          maxLength: 50
+          description: Промокод
+
+    UpdateOrderStatusRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: './common.yaml#/components/schemas/OrderStatus'
+        comment:
+          type: string
+          maxLength: 500
+          description: Комментарий к изменению статуса
+
+    CancelOrderRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+          description: Причина отмены
+
+    # === Фильтры ===
+    OrderFilter:
+      type: object
+      properties:
+        status:
+          $ref: './common.yaml#/components/schemas/OrderStatus'
+        paymentStatus:
+          $ref: './common.yaml#/components/schemas/PaymentStatus'
+        userId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        dateFrom:
+          $ref: './common.yaml#/components/schemas/Date'
+        dateTo:
+          $ref: './common.yaml#/components/schemas/Date'
+        search:
+          type: string
+          maxLength: 50
+          description: Поиск по номеру заказа
+
+    OrderListResponse:
+      allOf:
+        - $ref: './common.yaml#/components/schemas/PagedResponse'
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderSummary'
+
+    # === Платёж ===
+    Payment:
+      type: object
+      required: [id, orderId, amount, status, createdAt]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        orderId:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        externalPaymentId:
+          type: string
+          description: ID платежа во внешней системе
+        amount:
+          $ref: './common.yaml#/components/schemas/Price'
+        status:
+          $ref: './common.yaml#/components/schemas/PaymentStatus'
+        paymentMethod:
+          $ref: './common.yaml#/components/schemas/PaymentMethod'
+        paymentUrl:
+          type: string
+          format: uri
+          description: URL для оплаты
+        paidAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+        createdAt:
+          $ref: './common.yaml#/components/schemas/DateTime'
+
+    PaymentCallbackRequest:
+      type: object
+      description: Вебхук от платёжной системы
+      additionalProperties: true
+      properties:
+        paymentId:
+          type: string
+        status:
+          type: string
+        amount:
+          type: number
+        orderId:
+          type: string
+
+    # === Промокод ===
+    PromoCode:
+      type: object
+      required: [code, discountType, discountValue]
+      properties:
+        id:
+          $ref: './common.yaml#/components/schemas/Uuid'
+        code:
+          type: string
+          maxLength: 50
+          example: "SALE10"
+        discountType:
+          type: string
+          enum: [Percentage, Fixed]
+        discountValue:
+          type: number
+          description: Размер скидки (процент или фиксированная сумма)
+        minOrderAmount:
+          $ref: './common.yaml#/components/schemas/Price'
+        maxDiscount:
+          $ref: './common.yaml#/components/schemas/Price'
+        validFrom:
+          $ref: './common.yaml#/components/schemas/Date'
+        validTo:
+          $ref: './common.yaml#/components/schemas/Date'
+        isActive:
+          type: boolean
+        usageLimit:
+          type: integer
+        usageCount:
+          type: integer
+
+    ValidatePromoCodeRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          maxLength: 50
+        orderAmount:
+          $ref: './common.yaml#/components/schemas/Price'
+
+    ValidatePromoCodeResponse:
+      type: object
+      required: [valid, code]
+      properties:
+        valid:
+          type: boolean
+        code:
+          type: string
+        discountAmount:
+          $ref: './common.yaml#/components/schemas/Price'
+        message:
+          type: string

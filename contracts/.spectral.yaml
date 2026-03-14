@@ -1,0 +1,237 @@
+extends: [[spectral:oas, all]]
+
+rules:
+  # === Обязательные поля ===
+  info-contact:
+    description: API должен содержать контактную информацию
+    severity: error
+    given: $.info
+    then:
+      field: contact
+      function: truthy
+
+  info-description:
+    description: API должен иметь описание
+    severity: error
+    given: $.info
+    then:
+      field: description
+      function: truthy
+
+  info-license:
+    description: API должен иметь лицензию
+    severity: warn
+    given: $.info
+    then:
+      field: license
+      function: truthy
+
+  # === Соглашения по именованию ===
+  paths-kebab-case:
+    description: Пути должны использовать kebab-case
+    severity: error
+    type: style
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^(/[a-z0-9-{}]+)+$"
+
+  path-version-in-path:
+    description: API версия должна быть в пути
+    severity: error
+    type: style
+    given: "$.paths"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^/v[0-9]+/"
+
+  operation-operationId-valid-in-url:
+    description: operationId должен быть валидным для URL
+    severity: error
+    given: "$.paths[*][*]"
+    then:
+      field: operationId
+      function: pattern
+      functionOptions:
+        match: "^[a-z][a-z0-9_]*$"
+
+  # === Операции ===
+  operation-summary:
+    description: Каждая операция должна иметь summary
+    severity: warn
+    given: "$.paths[*][*]"
+    then:
+      field: summary
+      function: truthy
+
+  operation-description:
+    description: Каждая операция должна иметь описание
+    severity: warn
+    given: "$.paths[*][*]"
+    then:
+      field: description
+      function: truthy
+
+  operation-tags:
+    description: Каждая операция должна иметь теги
+    severity: warn
+    given: "$.paths[*][*]"
+    then:
+      field: tags
+      function: truthy
+
+  operation-4xx-response:
+    description: Операции должны иметь 4xx ответы
+    severity: warn
+    given: "$.paths[*][*].responses"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["400"]
+          properties:
+            "400":
+              type: object
+
+  operation-security-defined:
+    description: Операции должны иметь security (кроме публичных)
+    severity: warn
+    given: "$.paths[*][*]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          anyOf:
+            - required: ["security"]
+            - properties:
+                security:
+                  type: array
+
+  # === Параметры ===
+  parameter-description:
+    description: Параметры должны иметь описание
+    severity: warn
+    given: "$.paths[*].parameters[*]"
+    then:
+      field: description
+      function: truthy
+
+  # === Схемы ===
+  schema-description:
+    description: Схемы должны иметь описание
+    severity: warn
+    given: "$.components.schemas[*]"
+    then:
+      field: description
+      function: truthy
+
+  schema-properties-description:
+    description: Свойства схем должны иметь описание
+    severity: info
+    given: "$.components.schemas[*].properties[*]"
+    then:
+      field: description
+      function: truthy
+
+  # === Ответы ===
+  response-content-type:
+    description: Ответы должны определять content-type
+    severity: error
+    given: "$.paths[*][*].responses[*]"
+    then:
+      field: content.application/json
+      function: truthy
+
+  error-response-schema:
+    description: Ошибки должны использовать стандартную схему Error
+    severity: warn
+    given: "$.paths[*][*].responses[?(@property >= 400 && @property < 500)].content.application/json.schema"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          $ref: "#/components/schemas/Error"
+
+  # === Безопасность ===
+  security-schemes-http-bearer:
+    description: Использовать Bearer токены для авторизации
+    severity: warn
+    given: "$.components.securitySchemes[*]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: ["type", "scheme"]
+          properties:
+            type:
+              enum: ["http", "oauth2", "openIdConnect"]
+            scheme:
+              enum: ["bearer"]
+
+  # === Версионирование ===
+  no-path-trailing-slash:
+    description: Пути не должны заканчиваться слэшем
+    severity: error
+    given: "$.paths[*]~"
+    then:
+      function: pattern
+      functionOptions:
+        match: "^[^/]*[^/]$|^[^/]*$"
+
+  # === Специфичные правила GoldPC ===
+  goldpc-uuid-format:
+    description: ID должны быть в формате UUID
+    severity: error
+    given: "$.components.schemas[*].properties[?(@property == 'id' || @property == 'userId' || @property == 'orderId')]"
+    then:
+      field: format
+      function: pattern
+      functionOptions:
+        match: "^uuid$"
+
+  goldpc-date-format:
+    description: Даты должны быть в ISO 8601 формате
+    severity: error
+    given: "$.components.schemas[*].properties[*]"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          properties:
+            type:
+              enum: ["string"]
+            format:
+              anyOf:
+                - const: "date-time"
+                - const: "date"
+                - const: "time"
+
+  goldpc-pagination-response:
+    description: Пагинированные ответы должны содержать meta
+    severity: warn
+    given: "$.paths[*][*].responses[*].content.application/json.schema"
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          anyOf:
+            - properties:
+                meta:
+                  type: object
+                  required: ["page", "pageSize", "totalItems"]
+            - properties:
+                data:
+                  type: array
+
+  # === Производительность ===
+  response-limit-success:
+    description: Успешные ответы должны иметь примеры
+    severity: info
+    given: "$.paths[*][*].responses[?(@property >= 200 && @property < 300)].content.application/json"
+    then:
+      field: example
+      function: truthy

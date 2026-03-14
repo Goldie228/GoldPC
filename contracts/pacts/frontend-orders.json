@@ -1,0 +1,181 @@
+{
+  "consumer": {
+    "name": "GoldPC-Frontend",
+    "version": "1.0.0"
+  },
+  "provider": {
+    "name": "GoldPC-Orders-API",
+    "version": "1.0.0"
+  },
+  "interactions": [
+    {
+      "description": "Получение корзины пользователя",
+      "providerState": "пользователь авторизован и имеет товары в корзине",
+      "request": {
+        "method": "GET",
+        "path": "/v1/orders/cart",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "550e8400-e29b-41d4-a716-446655440010",
+          "userId": "550e8400-e29b-41d4-a716-446655440020",
+          "items": [
+            {
+              "id": "550e8400-e29b-41d4-a716-446655440011",
+              "productId": "550e8400-e29b-41d4-a716-446655440000",
+              "productName": "AMD Ryzen 7 7800X3D",
+              "quantity": 1,
+              "unitPrice": 1599.99,
+              "totalPrice": 1599.99
+            }
+          ],
+          "subtotal": 1599.99,
+          "discount": 0,
+          "total": 1599.99,
+          "itemsCount": 1
+        }
+      }
+    },
+    {
+      "description": "Добавление товара в корзину",
+      "providerState": "пользователь авторизован",
+      "request": {
+        "method": "POST",
+        "path": "/v1/orders/cart",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        },
+        "body": {
+          "productId": "550e8400-e29b-41d4-a716-446655440000",
+          "quantity": 1
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "550e8400-e29b-41d4-a716-446655440010",
+          "userId": "550e8400-e29b-41d4-a716-446655440020",
+          "items": [
+            {
+              "id": "550e8400-e29b-41d4-a716-446655440011",
+              "productId": "550e8400-e29b-41d4-a716-446655440000",
+              "productName": "AMD Ryzen 7 7800X3D",
+              "quantity": 1,
+              "unitPrice": 1599.99,
+              "totalPrice": 1599.99
+            }
+          ],
+          "subtotal": 1599.99,
+          "total": 1599.99,
+          "itemsCount": 1
+        }
+      }
+    },
+    {
+      "description": "Создание заказа",
+      "providerState": "пользователь авторизован и корзина не пуста",
+      "request": {
+        "method": "POST",
+        "path": "/v1/orders",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        },
+        "body": {
+          "paymentMethod": "Card",
+          "shippingAddress": {
+            "region": "Минская область",
+            "city": "Минск",
+            "address": "ул. Примерная, д. 1, кв. 1"
+          }
+        }
+      },
+      "response": {
+        "status": 201,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "550e8400-e29b-41d4-a716-446655440030",
+          "orderNumber": "ORD-000001-0001",
+          "userId": "550e8400-e29b-41d4-a716-446655440020",
+          "status": "New",
+          "items": [
+            {
+              "id": "550e8400-e29b-41d4-a716-446655440031",
+              "productId": "550e8400-e29b-41d4-a716-446655440000",
+              "productName": "AMD Ryzen 7 7800X3D",
+              "quantity": 1,
+              "unitPrice": 1599.99,
+              "totalPrice": 1599.99
+            }
+          ],
+          "subtotal": 1599.99,
+          "total": 1599.99,
+          "paymentMethod": "Card",
+          "paymentStatus": "Pending",
+          "shippingAddress": {
+            "region": "Минская область",
+            "city": "Минск",
+            "address": "ул. Примерная, д. 1, кв. 1"
+          },
+          "createdAt": "2026-03-14T10:00:00Z"
+        }
+      }
+    },
+    {
+      "description": "Получение списка заказов пользователя",
+      "providerState": "пользователь имеет заказы",
+      "request": {
+        "method": "GET",
+        "path": "/v1/orders",
+        "query": "page=1&pageSize=10",
+        "headers": {
+          "Accept": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "data": [
+            {
+              "id": "550e8400-e29b-41d4-a716-446655440030",
+              "orderNumber": "ORD-000001-0001",
+              "status": "Completed",
+              "total": 1599.99,
+              "itemsCount": 1,
+              "createdAt": "2026-03-14T10:00:00Z"
+            }
+          ],
+          "meta": {
+            "page": 1,
+            "pageSize": 10,
+            "totalPages": 1,
+            "totalItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "pactSpecification": {
+      "version": "2.0.0"
+    }
+  }
+}
