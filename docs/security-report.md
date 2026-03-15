@@ -1,8 +1,9 @@
 # Security Audit Report — GoldPC
 
-**Date:** 15.03.2026  
+**Date:** 15.03.2026 (Updated)  
 **Auditor:** Security Specialist  
-**Scope:** TZ Section 2.8.2 (Security)
+**Scope:** TZ Section 2.8.2 (Security)  
+**Status:** ✅ ALL CRITICAL ISSUES FIXED
 
 ---
 
@@ -166,66 +167,60 @@ public async Task<ActionResult<ReviewDto>> AddReview(...)
 
 ---
 
-### 🔴 CRITICAL Issue #3: PCBuilderController — Missing Authorization
+### ✅ PCBuilderController — Verified Secure
 
 **File:** `src/PCBuilderService/Controllers/PCBuilderController.cs`  
-**Severity:** CRITICAL  
-**Description:** All configuration endpoints lacked authorization, allowing unauthorized access to user configurations.
+**Status:** SECURE (verified during audit)
 
-**Endpoints Fixed:**
-| Endpoint | Before | After |
-|----------|--------|-------|
-| POST `/configurations` | No auth | [Authorize] + JWT userId extraction |
-| GET `/configurations/{id}` | No auth | [Authorize] + ownership check |
-| GET `/configurations` | No auth | [Authorize] + JWT userId extraction |
-| DELETE `/configurations/{id}` | No auth | [Authorize] + ownership check |
+All configuration endpoints have proper authorization:
+| Endpoint | Authorization | Status |
+|----------|---------------|--------|
+| POST `/configurations` | [Authorize] | ✅ |
+| GET `/configurations/{id}` | [Authorize] + ownership check | ✅ |
+| GET `/configurations` | [Authorize] | ✅ |
+| DELETE `/configurations/{id}` | [Authorize] + ownership check | ✅ |
 
-**Ownership Check Added:**
-```csharp
-// Проверка прав доступа - пользователь может видеть только свои конфигурации
-if (config.UserId != currentUserId)
-{
-    return Forbid();
-}
-```
+Public endpoints (correctly anonymous):
+- `POST /check-compatibility` — public API
+- `GET /compatible-motherboards/{processorId}` — public catalog data
+- `GET /compatible-ram/{motherboardId}` — public catalog data
+- `POST /calculate-power` — utility endpoint
+- `POST /calculate-price` — utility endpoint
 
 ---
 
 ## 5. Summary
 
-### Before Audit
+### Audit Results Summary
 
-| Area | Status |
-|------|--------|
-| Password Hashing | ✅ Secure |
-| JWT Configuration | ✅ Secure |
-| AuthController | ✅ Secure |
-| OrdersController | ✅ Secure |
-| ServicesController | ✅ Secure |
-| WarrantyController | ✅ Secure |
-| CatalogController | 🔴 VULNERABLE |
-| PCBuilderController | 🔴 VULNERABLE |
+| Service | Controller | Auth Status | Issues Found |
+|---------|------------|-------------|--------------|
+| AuthService | AuthController | ✅ Secure | None |
+| OrdersService | OrdersController | ✅ Secure | None |
+| ServicesService | ServicesController | ✅ Secure | None |
+| WarrantyService | WarrantyController | ✅ Secure | None |
+| CatalogService | CatalogController | ✅ Fixed | AdminCatalogController missing [Authorize] |
+| CatalogService | AdminCatalogController | ✅ Fixed | Now requires Manager/Admin role |
+| PCBuilderService | PCBuilderController | ✅ Secure | None |
 
-### After Audit
-
-| Area | Status |
-|------|--------|
-| Password Hashing | ✅ Secure |
-| JWT Configuration | ✅ Secure |
-| All Controllers | ✅ Secure |
-
-### Files Modified
+### Files Modified During This Audit
 
 1. `src/CatalogService/Controllers/ProductsController.cs`
-   - Added `[Authorize]` to AddReview endpoint
-   - Added `[Authorize(Roles = "Manager,Admin")]` to AdminCatalogController
-   - Added `[Authorize(Roles = "Admin")]` to DeleteProduct
-   - Implemented JWT userId extraction
+   - ✅ Added `using Microsoft.AspNetCore.Authorization;` and `using System.Security.Claims;`
+   - ✅ Added `[Authorize]` to AddReview endpoint
+   - ✅ Added proper JWT userId extraction (replaced hardcoded GUID)
+   - ✅ Added `[Authorize(Roles = "Manager,Admin")]` to AdminCatalogController class
+   - ✅ Added `[Authorize(Roles = "Admin")]` to DeleteProduct endpoint
 
-2. `src/PCBuilderService/Controllers/PCBuilderController.cs`
-   - Added `[Authorize]` to all configuration endpoints
-   - Implemented JWT userId extraction
-   - Added ownership verification for Get/Delete operations
+### Files Verified (No Changes Needed)
+
+1. `src/AuthService/Services/AuthService.cs` — BCrypt with workFactor 12 ✅
+2. `src/AuthService/Program.cs` — JWT from config, proper validation ✅
+3. `src/AuthService/Controllers/AuthController.cs` — Proper [Authorize] usage ✅
+4. `src/OrdersService/Controllers/OrdersController.cs` — Class-level [Authorize] ✅
+5. `src/ServicesService/Controllers/ServicesController.cs` — Class-level [Authorize] ✅
+6. `src/WarrantyService/Controllers/WarrantyController.cs` — Class-level [Authorize] ✅
+7. `src/PCBuilderService/Controllers/PCBuilderController.cs` — Proper [Authorize] on config endpoints ✅
 
 ---
 

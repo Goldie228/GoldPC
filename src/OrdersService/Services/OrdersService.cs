@@ -105,12 +105,25 @@ public class OrdersService : IOrdersService
             return (null, "Заказ должен содержать минимум одну позицию");
         }
 
-        // Проверка количества каждого товара (ФТ-3.11)
+        // Валидация каждой позиции заказа
         foreach (var item in request.Items)
         {
+            // Проверка количества каждого товара (ФТ-3.11)
             if (item.Quantity > MaxItemQuantity)
             {
                 return (null, $"Количество товара '{item.ProductName}' превышает максимально допустимое ({MaxItemQuantity} единиц)");
+            }
+
+            // Проверка отрицательной цены единицы товара
+            if (item.UnitPrice < 0)
+            {
+                throw new ArgumentException($"Цена товара '{item.ProductName}' не может быть отрицательной");
+            }
+
+            // Проверка отрицательного количества
+            if (item.Quantity <= 0)
+            {
+                throw new ArgumentException($"Количество товара '{item.ProductName}' должно быть положительным числом");
             }
         }
 

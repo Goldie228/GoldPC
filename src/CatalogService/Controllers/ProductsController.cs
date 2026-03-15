@@ -1,6 +1,8 @@
 using CatalogService.DTOs;
 using CatalogService.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CatalogService.Controllers;
 
@@ -80,12 +82,17 @@ public class CatalogController : ControllerBase
     /// Добавить отзыв к товару
     /// </summary>
     [HttpPost("products/{productId:guid}/reviews")]
+    [Authorize]
     [ProducesResponseType(typeof(ReviewDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ReviewDto>> AddReview(Guid productId, [FromBody] CreateReviewDto dto)
     {
-        // TODO: Получить userId из JWT токена после интеграции с Auth сервисом
-        var userId = Guid.Parse("00000000-0000-0000-0000-000000000000"); // Заглушка
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { error = "Пользователь не авторизован" });
+        }
         
         try
         {
@@ -152,6 +159,7 @@ public record ManufacturersResponse
 /// </summary>
 [ApiController]
 [Route("api/v1/admin")]
+[Authorize(Roles = "Manager,Admin")]
 public class AdminCatalogController : ControllerBase
 {
     private readonly ICatalogService _catalogService;
@@ -202,6 +210,7 @@ public class AdminCatalogController : ControllerBase
     /// Удалить товар (мягкое удаление, требуются права админа)
     /// </summary>
     [HttpDelete("products/{productId:guid}")]
+    [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteProduct(Guid productId)

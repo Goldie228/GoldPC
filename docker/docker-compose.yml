@@ -47,6 +47,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5001
       - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc;User Id=postgres;Password=admin
+      - ConnectionStrings__PostgreSQL=Server=postgres;Database=goldpc;User Id=postgres;Password=admin
       - ConnectionStrings__Redis=redis:6379
       - Redis__Host=redis
       - Redis__Port=6379
@@ -57,6 +58,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     networks:
       - goldpc-net
     restart: on-failure
@@ -81,7 +88,13 @@ services:
       redis:
         condition: service_healthy
       catalogservice:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     networks:
       - goldpc-net
     restart: on-failure
@@ -106,6 +119,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     networks:
       - goldpc-net
     restart: on-failure
@@ -119,9 +138,12 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - catalogservice
-      - pcbuilderservice
-      - authservice
+      catalogservice:
+        condition: service_healthy
+      pcbuilderservice:
+        condition: service_healthy
+      authservice:
+        condition: service_healthy
     networks:
       - goldpc-net
     restart: on-failure

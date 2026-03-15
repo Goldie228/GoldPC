@@ -2,6 +2,7 @@ using FluentAssertions;
 using Moq;
 using Xunit;
 using GoldPC.UnitTests.Fakers;
+using Microsoft.Extensions.Logging;
 
 namespace GoldPC.UnitTests.Services;
 
