@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api';
+import axios from 'axios';
 import type { LoginRequest, AuthResponse } from '../../api/types';
 import styles from './LoginPage.module.css';
 
@@ -13,16 +13,14 @@ export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
 
     try {
       const credentials: LoginRequest = { email, password };
-      const response = await api.post<AuthResponse>('/auth/login', credentials);
+      const response = await axios.post<AuthResponse>('/api/auth/login', credentials);
       
       const { accessToken, refreshToken } = response.data;
       
@@ -31,7 +29,7 @@ export function LoginPage() {
       
       navigate('/');
     } catch (err) {
-      setError('Неверный email или пароль');
+      alert('Login failed');
       console.error('Login failed:', err);
     } finally {
       setLoading(false);
@@ -47,12 +45,6 @@ export function LoginPage() {
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>
-          {error && (
-            <div className={styles.error}>
-              {error}
-            </div>
-          )}
-
           <div className={styles.field}>
             <label className={styles.label} htmlFor="email">
               Email

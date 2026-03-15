@@ -3,6 +3,7 @@ using Moq;
 using Xunit;
 using AutoFixture;
 using GoldPC.UnitTests.Fakers;
+using Microsoft.Extensions.Logging;
 
 namespace GoldPC.UnitTests.Services;
 

@@ -69,7 +69,11 @@ builder.Services.AddHealthChecks()
 var app = builder.Build();
 
 // Применение миграций при запуске с использованием extension метода
-app.ApplyMigrations<CatalogDbContext>();
+// Пропускаем миграции в среде Testing (для WebApplicationFactory)
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.ApplyMigrations<CatalogDbContext>();
+}
 
 // Настройка pipeline
 if (app.Environment.IsDevelopment())
@@ -90,3 +94,8 @@ Log.Information("Catalog Service запущен на порту {Port}",
     app.Services.GetRequiredService<IConfiguration>()["ASPNETCORE_URLS"] ?? "5000");
 
 app.Run();
+
+/// <summary>
+/// Partial класс для обеспечения доступа к Program из тестов (WebApplicationFactory)
+/// </summary>
+public partial class Program { }

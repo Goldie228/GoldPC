@@ -486,8 +486,8 @@ public class CompatibilityService : ICompatibilityService
                 Severity = "Error",
                 Component1 = cpu.Name,
                 Component2 = motherboard.Name,
-                Message = $"Процессор {cpu.Name} (сокет {cpu.Socket}) несовместим с материнской платой {motherboard.Name} (сокет {motherboard.Socket})",
-                Suggestion = $"Выберите материнскую плату с сокетом {cpu.Socket} или процессор с сокетом {motherboard.Socket}"
+                Message = "Incompatible Socket",
+                Suggestion = $"CPU socket: {cpu.Socket}, Motherboard socket: {motherboard.Socket}. Choose a motherboard with {cpu.Socket} socket or a CPU with {motherboard.Socket} socket."
             });
         }
         else
@@ -499,6 +499,7 @@ public class CompatibilityService : ICompatibilityService
     /// <summary>
     /// Проверка совместимости типа памяти
     /// FT-2.4: RAM generation matching (Motherboard vs RAM)
+    /// Requirement: If Motherboard supports DDR4 and RAM is DDR5, return error
     /// </summary>
     private void CheckRamCompatibility(MotherboardSpecification motherboard, RamSpecification ram, CompatibilityResultDto result)
     {
@@ -506,6 +507,7 @@ public class CompatibilityService : ICompatibilityService
         if (string.IsNullOrEmpty(motherboard.RamType) || string.IsNullOrEmpty(ram.Type))
             return;
 
+        // Проверка несовпадения типа памяти
         if (!string.Equals(motherboard.RamType, ram.Type, StringComparison.OrdinalIgnoreCase))
         {
             result.IsCompatible = false;
@@ -514,8 +516,8 @@ public class CompatibilityService : ICompatibilityService
                 Severity = "Error",
                 Component1 = ram.Name,
                 Component2 = motherboard.Name,
-                Message = $"Память {ram.Name} ({ram.Type}) несовместима с материнской платой {motherboard.Name} (поддерживает {motherboard.RamType})",
-                Suggestion = $"Выберите память типа {motherboard.RamType} или материнскую плату с поддержкой {ram.Type}"
+                Message = $"Incompatible RAM Generation: Motherboard supports {motherboard.RamType}, but RAM is {ram.Type}",
+                Suggestion = $"Choose {motherboard.RamType} RAM or a motherboard that supports {ram.Type}"
             });
         }
         else
@@ -550,7 +552,8 @@ public class CompatibilityService : ICompatibilityService
 
     /// <summary>
     /// Проверка достаточности мощности блока питания
-    /// FT-2.4: PSU wattage sufficiency (Sum of CPU + GPU TDP + buffer)
+    /// FT-2.4: PSU wattage sufficiency (Sum of CPU + GPU TDP + 50W system)
+    /// Requirement: Calculate TDP_CPU + TDP_GPU + 50W (system). If PSU wattage < Total, return error "Insufficient Power Supply"
     /// </summary>
     private void CheckPsuCompatibility(PsuSpecification psu, int totalTdp, CompatibilityResultDto result)
     {
@@ -559,18 +562,18 @@ public class CompatibilityService : ICompatibilityService
             return;
 
         var recommendedPsu = CalculateRecommendedPsu(totalTdp);
-        var minRequiredPsu = (int)(totalTdp * (1 + PSU_MIN_BUFFER_PERCENT));
 
-        if (psu.Wattage < minRequiredPsu)
+        // Проверка: PSU wattage < Total TDP -> Error "Insufficient Power Supply"
+        if (psu.Wattage < totalTdp)
         {
             result.IsCompatible = false;
             result.Issues.Add(new CompatibilityIssueDto
             {
                 Severity = "Error",
                 Component1 = psu.Name,
-                Component2 = "Система",
-                Message = $"Мощность блока питания {psu.Name} ({psu.Wattage} Вт) недостаточна. Потребление системы: {totalTdp} Вт, минимум с запасом: {minRequiredPsu} Вт",
-                Suggestion = $"Рекомендуется блок питания мощностью не менее {recommendedPsu} Вт"
+                Component2 = "System",
+                Message = "Insufficient Power Supply",
+                Suggestion = $"PSU wattage: {psu.Wattage}W, Total required: {totalTdp}W (CPU + GPU + 50W system). Recommended: {recommendedPsu}W"
             });
         }
         else if (psu.Wattage < recommendedPsu)
@@ -579,8 +582,8 @@ public class CompatibilityService : ICompatibilityService
             {
                 Severity = "Warning",
                 Component = psu.Name,
-                Message = $"Мощность блока питания {psu.Wattage} Вт соответствует минимальным требованиям, но для оптимальной работы рекомендуется {recommendedPsu} Вт",
-                Suggestion = $"Рассмотрите блок питания мощностью {recommendedPsu} Вт или выше"
+                Message = $"PSU wattage ({psu.Wattage}W) meets minimum requirements, but {recommendedPsu}W is recommended for optimal performance",
+                Suggestion = $"Consider a PSU with {recommendedPsu}W or higher"
             });
         }
 

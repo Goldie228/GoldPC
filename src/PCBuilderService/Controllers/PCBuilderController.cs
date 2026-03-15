@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PCBuilderService.DTOs;
 using PCBuilderService.Models;
 using PCBuilderService.Services;
+using System.Security.Claims;
 
 namespace PCBuilderService.Controllers;
 
@@ -119,11 +121,16 @@ public class PCBuilderController : ControllerBase
     /// Сохранить конфигурацию (для авторизованных пользователей)
     /// </summary>
     [HttpPost("configurations")]
+    [Authorize]
     [ProducesResponseType(typeof(PCConfigurationDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<PCConfigurationDto>> SaveConfiguration([FromBody] PCConfigurationDto dto)
     {
-        // TODO: Получить userId из JWT токена после интеграции с Auth
-        var userId = Guid.Parse("00000000-0000-0000-0000-000000000000"); // Заглушка
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { error = "Пользователь не авторизован" });
+        }
         
         var config = MapToConfiguration(dto);
         config.UserId = userId;
@@ -141,15 +148,30 @@ public class PCBuilderController : ControllerBase
     /// Получить сохранённую конфигурацию
     /// </summary>
     [HttpGet("configurations/{id:guid}")]
+    [Authorize]
     [ProducesResponseType(typeof(PCConfigurationDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<PCConfigurationDto>> GetConfiguration(Guid id)
     {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var currentUserId))
+        {
+            return Unauthorized(new { error = "Пользователь не авторизован" });
+        }
+        
         var config = await _configurationService.GetConfigurationAsync(id);
         if (config == null)
         {
             return NotFound(new { error = "Конфигурация не найдена", id });
         }
+        
+        // Проверка прав доступа - пользователь может видеть только свои конфигурации
+        if (config.UserId != currentUserId)
+        {
+            return Forbid();
+        }
+        
         return Ok(MapToDto(config));
     }
 
@@ -157,11 +179,16 @@ public class PCBuilderController : ControllerBase
     /// Получить конфигурации пользователя
     /// </summary>
     [HttpGet("configurations")]
+    [Authorize]
     [ProducesResponseType(typeof(IEnumerable<PCConfigurationDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<IEnumerable<PCConfigurationDto>>> GetUserConfigurations()
     {
-        // TODO: Получить userId из JWT токена
-        var userId = Guid.Parse("00000000-0000-0000-0000-000000000000"); // Заглушка
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { error = "Пользователь не авторизован" });
+        }
         
         var configurations = await _configurationService.GetUserConfigurationsAsync(userId);
         return Ok(configurations.Select(MapToDto));
@@ -171,10 +198,30 @@ public class PCBuilderController : ControllerBase
     /// Удалить конфигурацию
     /// </summary>
     [HttpDelete("configurations/{id:guid}")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteConfiguration(Guid id)
     {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var currentUserId))
+        {
+            return Unauthorized(new { error = "Пользователь не авторизован" });
+        }
+        
+        var config = await _configurationService.GetConfigurationAsync(id);
+        if (config == null)
+        {
+            return NotFound(new { error = "Конфигурация не найдена", id });
+        }
+        
+        // Проверка прав доступа - пользователь может удалять только свои конфигурации
+        if (config.UserId != currentUserId)
+        {
+            return Forbid();
+        }
+        
         var deleted = await _configurationService.DeleteConfigurationAsync(id);
         if (!deleted)
         {

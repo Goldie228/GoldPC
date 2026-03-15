@@ -133,9 +133,10 @@ public class OrdersService : IOrdersService
         }
 
         // Генерация уникального номера заказа (ФТ-3.5)
+        // Формат: ORD-YYYY-XXXX (например, ORD-2026-0001)
         var year = DateTime.UtcNow.Year;
         var lastOrder = await _context.Orders
-            .Where(o => o.OrderNumber.StartsWith($"GP-{year}-"))
+            .Where(o => o.OrderNumber.StartsWith($"ORD-{year}-"))
             .OrderByDescending(o => o.OrderNumber)
             .FirstOrDefaultAsync();
         
@@ -143,10 +144,16 @@ public class OrdersService : IOrdersService
             ? int.Parse(lastOrder.OrderNumber.Split('-')[2]) + 1 
             : 1;
         
-        var orderNumber = $"GP-{year}-{nextNumber:D6}";
+        var orderNumber = $"ORD-{year}-{nextNumber:D4}";
 
         // Расчёт общей стоимости (ФТ-3.13)
         var total = request.Items.Sum(i => i.Quantity * i.UnitPrice);
+        
+        // Валидация общей стоимости
+        if (total < 0)
+        {
+            throw new ArgumentException("Общая стоимость заказа не может быть отрицательной");
+        }
 
         var order = new Order
         {

@@ -18,7 +18,7 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - goldpc-network
+      - goldpc-net
 
   # Redis Cache
   redis:
@@ -35,7 +35,7 @@ services:
       retries: 5
       start_period: 5s
     networks:
-      - goldpc-network
+      - goldpc-net
 
   # Catalog Service
   catalogservice:
@@ -58,7 +58,32 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - goldpc-network
+      - goldpc-net
+    restart: on-failure
+
+  # PC Builder Service
+  pcbuilderservice:
+    build:
+      context: ../src
+      dockerfile: ../docker/Dockerfile.PCBuilderService
+    container_name: goldpc-pcbuilder
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5002
+      - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc;User Id=postgres;Password=admin
+      - ConnectionStrings__Redis=redis:6379
+      - CatalogService__Url=http://catalogservice:5001
+    ports:
+      - "5002:5002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      catalogservice:
+        condition: service_started
+    networks:
+      - goldpc-net
     restart: on-failure
 
   # Auth Service
@@ -82,7 +107,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - goldpc-network
+      - goldpc-net
     restart: on-failure
 
   # Frontend (Nginx + React)
@@ -95,9 +120,10 @@ services:
       - "8080:8080"
     depends_on:
       - catalogservice
+      - pcbuilderservice
       - authservice
     networks:
-      - goldpc-network
+      - goldpc-net
     restart: on-failure
 
 volumes:
@@ -105,5 +131,5 @@ volumes:
   redis_data:
 
 networks:
-  goldpc-network:
+  goldpc-net:
     driver: bridge

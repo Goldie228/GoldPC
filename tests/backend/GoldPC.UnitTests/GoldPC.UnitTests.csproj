@@ -28,8 +28,8 @@
 
   <ItemGroup>
     <!-- Ссылки на проекты приложения -->
-    <!-- <ProjectReference Include="..\..\src\backend\GoldPC.Domain\GoldPC.Domain.csproj" /> -->
-    <!-- <ProjectReference Include="..\..\src\backend\GoldPC.Application\GoldPC.Application.csproj" /> -->
+    <ProjectReference Include="..\..\..\src\PCBuilderService\PCBuilderService.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
   </ItemGroup>
 
 </Project>

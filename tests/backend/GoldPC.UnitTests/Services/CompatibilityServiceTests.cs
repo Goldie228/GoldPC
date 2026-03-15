@@ -1,1084 +1,461 @@
 using FluentAssertions;
 using Moq;
 using Xunit;
-using System.Net;
-using System.Text.Json;
+using PCBuilderService.Services;
+using PCBuilderService.DTOs;
+using Microsoft.Extensions.Logging;
 
 namespace GoldPC.UnitTests.Services;
 
 /// <summary>
 /// Модульные тесты для сервиса проверки совместимости компонентов ПК
+/// Покрывают три основных сценария:
+/// 1. Socket Check - проверка совместимости сокетов CPU и Motherboard
+/// 2. RAM Generation - проверка совместимости типа памяти
+/// 3. PSU Power - проверка достаточности мощности блока питания
 /// </summary>
 public class CompatibilityServiceTests
 {
-    private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
     private readonly Mock<ILogger<CompatibilityService>> _loggerMock;
     private readonly HttpClient _httpClient;
     private readonly CompatibilityService _sut;
 
     public CompatibilityServiceTests()
     {
-        _httpMessageHandlerMock = new Mock<HttpMessageHandler>();
         _loggerMock = new Mock<ILogger<CompatibilityService>>();
-        _httpClient = new HttpClient(_httpMessageHandlerMock.Object)
+        _httpClient = new HttpClient
         {
             BaseAddress = new Uri("http://localhost:5000")
         };
         _sut = new CompatibilityService(_httpClient, _loggerMock.Object);
     }
 
-    #region Socket Compatibility Tests
+    #region Test 1: Socket Compatibility
 
     [Fact]
-    public async Task CheckCompatibility_WhenIncompatibleSocket_ReturnsFailureResult()
+    public async Task CheckCompatibility_WhenCpuSocketDoesNotMatchMotherboardSocket_ReturnsIncompatibleSocketError()
     {
         // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            ProcessorId = Guid.NewGuid(),
-            MotherboardId = Guid.NewGuid()
-        };
-
-        // Настраиваем мок для возврата спецификаций с несовместимым сокетом
-        SetupProductSpecs("processor", config.ProcessorId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["tdp"] = 65,
-            ["performanceScore"] = 100
-        });
-
-        SetupProductSpecs("motherboard", config.MotherboardId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "LGA1700", // Несовместимый сокет!
-            ["ramType"] = "DDR5",
-            ["formFactor"] = "ATX"
-        });
+        // CPU has AM5 socket, Motherboard has LGA1700 socket - incompatible!
+        var request = CreateRequest(
+            cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
+            {
+                ["socket"] = "AM5",
+                ["tdp"] = 120
+            }),
+            motherboard: CreateMotherboardComponent("ASUS ROG Maximus Z790", new Dictionary<string, object>
+            {
+                ["socket"] = "LGA1700",  // Incompatible with AM5!
+                ["ramType"] = "DDR5",
+                ["formFactor"] = "ATX"
+            })
+        );
 
         // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
+        var response = await _sut.CheckCompatibilityAsync(request);
 
         // Assert
-        result.Should().NotBeNull();
-        result.IsCompatible.Should().BeFalse();
-        result.Issues.Should().Contain(i => 
-            i.ComponentType == "Processor/Motherboard" && 
-            i.Message.Contains("сокет", StringComparison.OrdinalIgnoreCase));
-        result.Issues.Should().Contain(i => 
-            i.Details.Contains("AM5") && 
-            i.Details.Contains("LGA1700"));
+        response.Should().NotBeNull();
+        response.Result.IsCompatible.Should().BeFalse("sockets are incompatible");
+        response.Result.Issues.Should().ContainSingle(i => i.Message == "Incompatible Socket");
     }
 
     [Fact]
-    public async Task CheckCompatibility_WhenCompatibleSocket_ReturnsSuccessResult()
+    public async Task CheckCompatibility_WhenCpuSocketMatchesMotherboardSocket_ReturnsCompatible()
     {
         // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            ProcessorId = Guid.NewGuid(),
-            MotherboardId = Guid.NewGuid()
-        };
-
-        SetupProductSpecs("processor", config.ProcessorId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["tdp"] = 65,
-            ["performanceScore"] = 100
-        });
-
-        SetupProductSpecs("motherboard", config.MotherboardId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5", // Совместимый сокет
-            ["ramType"] = "DDR5",
-            ["formFactor"] = "ATX"
-        });
+        // Both CPU and Motherboard have AM5 socket - compatible!
+        var request = CreateRequest(
+            cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
+            {
+                ["socket"] = "AM5",
+                ["tdp"] = 120
+            }),
+            motherboard: CreateMotherboardComponent("ASUS ROG Crosshair X670E", new Dictionary<string, object>
+            {
+                ["socket"] = "AM5",  // Compatible!
+                ["ramType"] = "DDR5",
+                ["formFactor"] = "ATX"
+            })
+        );
 
         // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
+        var response = await _sut.CheckCompatibilityAsync(request);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Issues.Should().NotContain(i => i.ComponentType == "Processor/Motherboard");
+        response.Should().NotBeNull();
+        response.Result.Issues.Should().NotContain(i => i.Message == "Incompatible Socket");
     }
 
     #endregion
 
-    #region PSU Wattage Tests
+    #region Test 2: RAM Generation Compatibility
 
     [Fact]
-    public async Task CheckCompatibility_WhenInsufficientPsuWattage_ReturnsFailureResult()
+    public async Task CheckCompatibility_WhenMotherboardSupportsDDR4_AndRamIsDDR5_ReturnsIncompatibleRamError()
     {
         // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            ProcessorId = Guid.NewGuid(),
-            GpuId = Guid.NewGuid(),
-            PsuId = Guid.NewGuid()
-        };
-
-        // Мощный процессор и видеокарта
-        SetupProductSpecs("processor", config.ProcessorId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["tdp"] = 170, // Ryzen 9 7950X
-            ["performanceScore"] = 200
-        });
-
-        SetupProductSpecs("gpu", config.GpuId!.Value, new Dictionary<string, object>
-        {
-            ["length"] = 330,
-            ["tdp"] = 450, // RTX 4090
-            ["performanceScore"] = 300
-        });
-
-        // Слабый блок питания (170+450+50=670Вт, нужно минимум 670, есть 550)
-        SetupProductSpecs("psu", config.PsuId!.Value, new Dictionary<string, object>
-        {
-            ["wattage"] = 550 // Недостаточно для такой системы!
-        });
+        // Motherboard supports DDR4, but RAM is DDR5 - incompatible!
+        var request = CreateRequest(
+            motherboard: CreateMotherboardComponent("ASUS TUF B660M", new Dictionary<string, object>
+            {
+                ["socket"] = "LGA1700",
+                ["ramType"] = "DDR4",  // Motherboard supports DDR4
+                ["formFactor"] = "mATX"
+            }),
+            ram: CreateRamComponent("Kingston FURY DDR5", new Dictionary<string, object>
+            {
+                ["type"] = "DDR5",  // RAM is DDR5 - incompatible with DDR4 motherboard!
+                ["speed"] = 5600,
+                ["capacity"] = 32
+            })
+        );
 
         // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
+        var response = await _sut.CheckCompatibilityAsync(request);
 
         // Assert
-        result.Should().NotBeNull();
-        result.IsCompatible.Should().BeFalse();
-        result.Issues.Should().Contain(i => i.ComponentType == "PSU");
+        response.Should().NotBeNull();
+        response.Result.IsCompatible.Should().BeFalse("RAM generation is incompatible");
+        response.Result.Issues.Should().ContainSingle(i => 
+            i.Message.Contains("Incompatible RAM Generation") && 
+            i.Message.Contains("DDR4") && 
+            i.Message.Contains("DDR5"));
     }
 
     [Fact]
-    public async Task CheckCompatibility_WhenPsuWattageWithLowMargin_ReturnsWarning()
+    public async Task CheckCompatibility_WhenRamTypeMatchesMotherboard_ReturnsCompatible()
     {
         // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            ProcessorId = Guid.NewGuid(),
-            GpuId = Guid.NewGuid(),
-            PsuId = Guid.NewGuid()
-        };
-
-        SetupProductSpecs("processor", config.ProcessorId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["tdp"] = 65,
-            ["performanceScore"] = 100
-        });
-
-        SetupProductSpecs("gpu", config.GpuId!.Value, new Dictionary<string, object>
-        {
-            ["length"] = 300,
-            ["tdp"] = 200,
-            ["performanceScore"] = 150
-        });
-
-        // БП с минимальным запасом (65 + 200 + 50 = 315 * 1.3 = 409Вт, выбрано 400Вт - мало для запаса)
-        // 400 >= 315 (нет ошибки), но 400 < 409 (есть warning)
-        SetupProductSpecs("psu", config.PsuId!.Value, new Dictionary<string, object>
-        {
-            ["wattage"] = 400
-        });
+        // Both Motherboard and RAM are DDR5 - compatible!
+        var request = CreateRequest(
+            motherboard: CreateMotherboardComponent("ASUS ROG Crosshair X670E", new Dictionary<string, object>
+            {
+                ["socket"] = "AM5",
+                ["ramType"] = "DDR5",  // Motherboard supports DDR5
+                ["formFactor"] = "ATX"
+            }),
+            ram: CreateRamComponent("Kingston FURY DDR5", new Dictionary<string, object>
+            {
+                ["type"] = "DDR5",  // RAM is DDR5 - compatible!
+                ["speed"] = 6000,
+                ["capacity"] = 32
+            })
+        );
 
         // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
+        var response = await _sut.CheckCompatibilityAsync(request);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Warnings.Should().Contain(w => w.ComponentType == "PSU");
-    }
-
-    [Fact]
-    public async Task CheckCompatibility_WhenSufficientPsuWattage_ReturnsNoIssues()
-    {
-        // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            ProcessorId = Guid.NewGuid(),
-            GpuId = Guid.NewGuid(),
-            PsuId = Guid.NewGuid()
-        };
-
-        SetupProductSpecs("processor", config.ProcessorId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["tdp"] = 65,
-            ["performanceScore"] = 100
-        });
-
-        SetupProductSpecs("gpu", config.GpuId!.Value, new Dictionary<string, object>
-        {
-            ["length"] = 300,
-            ["tdp"] = 200,
-            ["performanceScore"] = 150
-        });
-
-        // Достаточный БП (65 + 200 + 50 = 315 * 1.5 = 472Вт, выбрано 750Вт)
-        SetupProductSpecs("psu", config.PsuId!.Value, new Dictionary<string, object>
-        {
-            ["wattage"] = 750
-        });
-
-        // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Issues.Should().NotContain(i => i.ComponentType == "PSU");
+        response.Should().NotBeNull();
+        response.Result.Issues.Should().NotContain(i => i.Message.Contains("Incompatible RAM Generation"));
     }
 
     #endregion
 
-    #region RAM Compatibility Tests
+    #region Test 3: PSU Power Sufficiency
 
     [Fact]
-    public async Task CheckCompatibility_WhenIncompatibleRamType_ReturnsFailureResult()
+    public async Task CheckCompatibility_WhenPsuWattageLessThanTotalTdp_ReturnsInsufficientPowerSupplyError()
     {
         // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            MotherboardId = Guid.NewGuid(),
-            RamId = Guid.NewGuid()
-        };
-
-        SetupProductSpecs("motherboard", config.MotherboardId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["ramType"] = "DDR5",
-            ["formFactor"] = "ATX"
-        });
-
-        SetupProductSpecs("ram", config.RamId!.Value, new Dictionary<string, object>
-        {
-            ["type"] = "DDR4", // Несовместимо с DDR5 материнской платой!
-            ["speed"] = 3200,
-            ["capacity"] = 32
-        });
+        // CPU TDP: 170W, GPU TDP: 450W, System: 50W (with 10% buffer = 737W total)
+        // PSU: 650W - insufficient!
+        var request = CreateRequest(
+            cpu: CreateCpuComponent("AMD Ryzen 9 7950X", new Dictionary<string, object>
+            {
+                ["socket"] = "AM5",
+                ["tdp"] = 170  // High TDP CPU
+            }),
+            gpu: CreateGpuComponent("NVIDIA RTX 4090", new Dictionary<string, object>
+            {
+                ["tdp"] = 450,  // High TDP GPU
+                ["length"] = 340
+            }),
+            psu: CreatePsuComponent("Corsair RM650x", new Dictionary<string, object>
+            {
+                ["wattage"] = 650  // Insufficient! (170 + 450 + 50) * 1.1 = 737W needed
+            })
+        );
 
         // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
+        var response = await _sut.CheckCompatibilityAsync(request);
 
         // Assert
-        result.Should().NotBeNull();
-        result.IsCompatible.Should().BeFalse();
-        result.Issues.Should().Contain(i => i.ComponentType == "RAM/Motherboard");
+        response.Should().NotBeNull();
+        response.Result.IsCompatible.Should().BeFalse("PSU wattage is insufficient");
+        response.Result.Issues.Should().ContainSingle(i => i.Message == "Insufficient Power Supply");
     }
 
     [Fact]
-    public async Task CheckCompatibility_WhenCompatibleRamType_ReturnsNoIssues()
+    public async Task CheckCompatibility_WhenPsuWattageEqualsTotalTdp_ReturnsCompatible()
     {
         // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            MotherboardId = Guid.NewGuid(),
-            RamId = Guid.NewGuid()
-        };
-
-        SetupProductSpecs("motherboard", config.MotherboardId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["ramType"] = "DDR5",
-            ["formFactor"] = "ATX"
-        });
-
-        SetupProductSpecs("ram", config.RamId!.Value, new Dictionary<string, object>
-        {
-            ["type"] = "DDR5",
-            ["speed"] = 5600,
-            ["capacity"] = 32
-        });
+        // CPU TDP: 65W, GPU TDP: 200W, System: 50W (with 10% buffer = 346.5W total)
+        // PSU: 350W - just enough!
+        var request = CreateRequest(
+            cpu: CreateCpuComponent("AMD Ryzen 5 7600", new Dictionary<string, object>
+            {
+                ["socket"] = "AM5",
+                ["tdp"] = 65
+            }),
+            gpu: CreateGpuComponent("NVIDIA RTX 4060", new Dictionary<string, object>
+            {
+                ["tdp"] = 200,
+                ["length"] = 280
+            }),
+            psu: CreatePsuComponent("Corsair RM350x", new Dictionary<string, object>
+            {
+                ["wattage"] = 350  // Just enough (65 + 200 + 50) * 1.1 = 346.5W
+            })
+        );
 
         // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
+        var response = await _sut.CheckCompatibilityAsync(request);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Issues.Should().NotContain(i => i.ComponentType == "RAM/Motherboard");
-    }
-
-    #endregion
-
-    #region GPU/Case Compatibility Tests
-
-    [Fact]
-    public async Task CheckCompatibility_WhenGpuTooLongForCase_ReturnsFailureResult()
-    {
-        // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            GpuId = Guid.NewGuid(),
-            CaseId = Guid.NewGuid()
-        };
-
-        SetupProductSpecs("gpu", config.GpuId!.Value, new Dictionary<string, object>
-        {
-            ["length"] = 358, // RTX 4090 очень длинная
-            ["tdp"] = 450,
-            ["performanceScore"] = 300
-        });
-
-        SetupProductSpecs("case", config.CaseId!.Value, new Dictionary<string, object>
-        {
-            ["maxGpuLength"] = 320, // Корпус не вмещает такую длинную карту
-            ["supportedMotherboards"] = new List<string> { "ATX", "mATX" }
-        });
-
-        // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.IsCompatible.Should().BeFalse();
-        result.Issues.Should().Contain(i => 
-            i.ComponentType == "GPU/Case" && 
-            i.Message.Contains("не поместится", StringComparison.OrdinalIgnoreCase));
+        response.Should().NotBeNull();
+        response.Result.Issues.Should().NotContain(i => i.Message == "Insufficient Power Supply");
     }
 
     [Fact]
-    public async Task CheckCompatibility_WhenGpuFitsCase_ReturnsNoIssues()
+    public async Task CheckCompatibility_WhenPsuWattageExceedsTotalTdp_ReturnsCompatible()
     {
         // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            GpuId = Guid.NewGuid(),
-            CaseId = Guid.NewGuid()
-        };
-
-        SetupProductSpecs("gpu", config.GpuId!.Value, new Dictionary<string, object>
-        {
-            ["length"] = 280,
-            ["tdp"] = 200,
-            ["performanceScore"] = 150
-        });
-
-        SetupProductSpecs("case", config.CaseId!.Value, new Dictionary<string, object>
-        {
-            ["maxGpuLength"] = 350,
-            ["supportedMotherboards"] = new List<string> { "ATX", "mATX", "ITX" }
-        });
+        // CPU TDP: 120W, GPU TDP: 300W, System: 50W (with 10% buffer = 517W total)
+        // PSU: 750W - plenty of power!
+        var request = CreateRequest(
+            cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
+            {
+                ["socket"] = "AM5",
+                ["tdp"] = 120
+            }),
+            gpu: CreateGpuComponent("NVIDIA RTX 4080", new Dictionary<string, object>
+            {
+                ["tdp"] = 300,
+                ["length"] = 320
+            }),
+            psu: CreatePsuComponent("Corsair RM750x", new Dictionary<string, object>
+            {
+                ["wattage"] = 750  // Plenty of power (120 + 300 + 50) * 1.1 = 517W
+            })
+        );
 
         // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
+        var response = await _sut.CheckCompatibilityAsync(request);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Issues.Should().NotContain(i => i.ComponentType == "GPU/Case");
+        response.Should().NotBeNull();
+        response.Result.Issues.Should().NotContain(i => i.Message == "Insufficient Power Supply");
+    }
+
+    [Fact]
+    public async Task CheckCompatibility_CalculatesCorrectPowerConsumption()
+    {
+        // Arrange
+        // CPU TDP: 100W, GPU TDP: 200W, System: 50W
+        // Total = (100 + 200 + 50) * 1.1 = 385W
+        var request = CreateRequest(
+            cpu: CreateCpuComponent("Test CPU", new Dictionary<string, object>
+            {
+                ["socket"] = "AM5",
+                ["tdp"] = 100
+            }),
+            gpu: CreateGpuComponent("Test GPU", new Dictionary<string, object>
+            {
+                ["tdp"] = 200,
+                ["length"] = 300
+            }),
+            psu: CreatePsuComponent("Test PSU", new Dictionary<string, object>
+            {
+                ["wattage"] = 500
+            })
+        );
+
+        // Act
+        var response = await _sut.CheckCompatibilityAsync(request);
+
+        // Assert
+        response.PowerConsumption.Should().Be(385); // (100 + 200 + 50) * 1.1 = 385W
     }
 
     #endregion
 
-    #region Motherboard/Case Form Factor Tests
+    #region Combined Tests
 
     [Fact]
-    public async Task CheckCompatibility_WhenMotherboardFormFactorNotSupported_ReturnsFailureResult()
+    public async Task CheckCompatibility_WhenAllComponentsCompatible_ReturnsCompatibleResult()
     {
-        // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            MotherboardId = Guid.NewGuid(),
-            CaseId = Guid.NewGuid()
-        };
-
-        SetupProductSpecs("motherboard", config.MotherboardId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["ramType"] = "DDR5",
-            ["formFactor"] = "E-ATX" // Большая материнская плата
-        });
-
-        SetupProductSpecs("case", config.CaseId!.Value, new Dictionary<string, object>
-        {
-            ["maxGpuLength"] = 350,
-            ["supportedMotherboards"] = new List<string> { "ATX", "mATX", "ITX" } // Нет E-ATX!
-        });
+        // Arrange - All compatible components
+        var request = CreateRequest(
+            cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
+            {
+                ["socket"] = "AM5",
+                ["tdp"] = 120
+            }),
+            motherboard: CreateMotherboardComponent("ASUS ROG Crosshair X670E", new Dictionary<string, object>
+            {
+                ["socket"] = "AM5",
+                ["ramType"] = "DDR5",
+                ["formFactor"] = "ATX"
+            }),
+            ram: CreateRamComponent("Kingston FURY DDR5", new Dictionary<string, object>
+            {
+                ["type"] = "DDR5",
+                ["speed"] = 6000,
+                ["capacity"] = 32
+            }),
+            gpu: CreateGpuComponent("NVIDIA RTX 4080", new Dictionary<string, object>
+            {
+                ["tdp"] = 300,
+                ["length"] = 320
+            }),
+            psu: CreatePsuComponent("Corsair RM850x", new Dictionary<string, object>
+            {
+                ["wattage"] = 850
+            })
+        );
 
         // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
+        var response = await _sut.CheckCompatibilityAsync(request);
 
         // Assert
-        result.Should().NotBeNull();
-        result.IsCompatible.Should().BeFalse();
-        result.Issues.Should().Contain(i => 
-            i.ComponentType == "Motherboard/Case" && 
-            i.Message.Contains("Форм-фактор", StringComparison.OrdinalIgnoreCase));
-    }
-
-    #endregion
-
-    #region Performance Balance Tests
-
-    [Fact]
-    public async Task CheckCompatibility_WhenCpuBottlenecksGpu_ReturnsWarning()
-    {
-        // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            ProcessorId = Guid.NewGuid(),
-            GpuId = Guid.NewGuid()
-        };
-
-        // Слабый процессор
-        SetupProductSpecs("processor", config.ProcessorId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["tdp"] = 65,
-            ["performanceScore"] = 50
-        });
-
-        // Мощная видеокарта
-        SetupProductSpecs("gpu", config.GpuId!.Value, new Dictionary<string, object>
-        {
-            ["length"] = 300,
-            ["tdp"] = 350,
-            ["performanceScore"] = 200
-        });
-
-        // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Warnings.Should().Contain(w => 
-            w.ComponentType == "Processor/GPU" && 
-            w.Message.Contains("Дисбаланс", StringComparison.OrdinalIgnoreCase) &&
-            w.Recommendation.Contains("процессор", StringComparison.OrdinalIgnoreCase));
+        response.Should().NotBeNull();
+        response.Result.IsCompatible.Should().BeTrue();
+        response.Result.Issues.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task CheckCompatibility_WhenGpuBottlenecksCpu_ReturnsWarning()
+    public async Task CheckCompatibility_WhenMultipleIncompatibilities_ReturnsAllErrors()
     {
-        // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            ProcessorId = Guid.NewGuid(),
-            GpuId = Guid.NewGuid()
-        };
-
-        // Мощный процессор
-        SetupProductSpecs("processor", config.ProcessorId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["tdp"] = 170,
-            ["performanceScore"] = 200
-        });
-
-        // Слабая видеокарта (ratio = 200/50 = 4.0 > 2.0)
-        SetupProductSpecs("gpu", config.GpuId!.Value, new Dictionary<string, object>
-        {
-            ["length"] = 200,
-            ["tdp"] = 75,
-            ["performanceScore"] = 50
-        });
+        // Arrange - Multiple incompatibilities
+        var request = CreateRequest(
+            cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
+            {
+                ["socket"] = "AM5",
+                ["tdp"] = 170
+            }),
+            motherboard: CreateMotherboardComponent("ASUS ROG Maximus Z790", new Dictionary<string, object>
+            {
+                ["socket"] = "LGA1700",  // Incompatible socket!
+                ["ramType"] = "DDR4",
+                ["formFactor"] = "ATX"
+            }),
+            ram: CreateRamComponent("Kingston FURY DDR5", new Dictionary<string, object>
+            {
+                ["type"] = "DDR5",  // Incompatible with DDR4 motherboard!
+                ["speed"] = 6000,
+                ["capacity"] = 32
+            }),
+            gpu: CreateGpuComponent("NVIDIA RTX 4090", new Dictionary<string, object>
+            {
+                ["tdp"] = 450,
+                ["length"] = 340
+            }),
+            psu: CreatePsuComponent("Corsair RM550x", new Dictionary<string, object>
+            {
+                ["wattage"] = 550  // Insufficient power!
+            })
+        );
 
         // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
+        var response = await _sut.CheckCompatibilityAsync(request);
 
         // Assert
-        result.Should().NotBeNull();
-        result.Warnings.Should().Contain(w => w.ComponentType == "Processor/GPU");
-    }
-
-    #endregion
-
-    #region Cooler Compatibility Tests
-
-    [Fact]
-    public async Task CheckCompatibility_WhenCoolerInsufficientTdp_ReturnsWarning()
-    {
-        // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            ProcessorId = Guid.NewGuid(),
-            CoolerId = Guid.NewGuid()
-        };
-
-        SetupProductSpecs("processor", config.ProcessorId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["tdp"] = 170, // Горячий процессор
-            ["performanceScore"] = 200
-        });
-
-        SetupProductSpecs("cooler", config.CoolerId!.Value, new Dictionary<string, object>
-        {
-            ["tdp"] = 120, // Кулер не справится
-            ["supportedSockets"] = new List<string> { "AM5", "LGA1700" }
-        });
-
-        // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Warnings.Should().Contain(w => 
-            w.ComponentType == "Cooler" && 
-            w.Message.Contains("охлаждением", StringComparison.OrdinalIgnoreCase));
-    }
-
-    [Fact]
-    public async Task CheckCompatibility_WhenCoolerSocketNotSupported_ReturnsFailureResult()
-    {
-        // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Test Gaming PC",
-            UserId = Guid.NewGuid(),
-            ProcessorId = Guid.NewGuid(),
-            CoolerId = Guid.NewGuid()
-        };
-
-        SetupProductSpecs("processor", config.ProcessorId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["tdp"] = 65,
-            ["performanceScore"] = 100
-        });
-
-        SetupProductSpecs("cooler", config.CoolerId!.Value, new Dictionary<string, object>
-        {
-            ["tdp"] = 150,
-            ["supportedSockets"] = new List<string> { "LGA1700", "LGA1200" } // Нет AM5!
-        });
-
-        // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.IsCompatible.Should().BeFalse();
-        result.Issues.Should().Contain(i => 
-            i.ComponentType == "Cooler/Processor" && 
-            i.Message.Contains("сокет", StringComparison.OrdinalIgnoreCase));
-    }
-
-    #endregion
-
-    #region Full Configuration Tests
-
-    [Fact]
-    public async Task CheckCompatibility_WhenAllComponentsCompatible_ReturnsSuccessResult()
-    {
-        // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            Name = "Balanced Gaming PC",
-            UserId = Guid.NewGuid(),
-            ProcessorId = Guid.NewGuid(),
-            MotherboardId = Guid.NewGuid(),
-            RamId = Guid.NewGuid(),
-            GpuId = Guid.NewGuid(),
-            PsuId = Guid.NewGuid(),
-            CaseId = Guid.NewGuid(),
-            CoolerId = Guid.NewGuid()
-        };
-
-        // AMD Ryzen 7 7800X3D
-        SetupProductSpecs("processor", config.ProcessorId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["tdp"] = 120,
-            ["performanceScore"] = 150
-        });
-
-        // Совместимая материнская плата
-        SetupProductSpecs("motherboard", config.MotherboardId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["ramType"] = "DDR5",
-            ["formFactor"] = "ATX"
-        });
-
-        // DDR5 память
-        SetupProductSpecs("ram", config.RamId!.Value, new Dictionary<string, object>
-        {
-            ["type"] = "DDR5",
-            ["speed"] = 6000,
-            ["capacity"] = 32
-        });
-
-        // RTX 4070
-        SetupProductSpecs("gpu", config.GpuId!.Value, new Dictionary<string, object>
-        {
-            ["length"] = 280,
-            ["tdp"] = 200,
-            ["performanceScore"] = 150
-        });
-
-        // Достаточный БП
-        SetupProductSpecs("psu", config.PsuId!.Value, new Dictionary<string, object>
-        {
-            ["wattage"] = 750
-        });
-
-        // Совместимый корпус
-        SetupProductSpecs("case", config.CaseId!.Value, new Dictionary<string, object>
-        {
-            ["maxGpuLength"] = 350,
-            ["supportedMotherboards"] = new List<string> { "ATX", "mATX", "ITX" }
-        });
-
-        // Достаточный кулер
-        SetupProductSpecs("cooler", config.CoolerId!.Value, new Dictionary<string, object>
-        {
-            ["tdp"] = 180,
-            ["supportedSockets"] = new List<string> { "AM5", "LGA1700" }
-        });
-
-        // Act
-        var result = await _sut.CheckCompatibilityAsync(config);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.IsCompatible.Should().BeTrue();
-        result.Issues.Should().BeEmpty();
-    }
-
-    #endregion
-
-    #region Power Consumption Calculation Tests
-
-    [Fact]
-    public async Task CalculateTotalPowerConsumption_ReturnsCorrectValue()
-    {
-        // Arrange
-        var config = new PCConfiguration
-        {
-            Id = Guid.NewGuid(),
-            ProcessorId = Guid.NewGuid(),
-            GpuId = Guid.NewGuid()
-        };
-
-        SetupProductSpecs("processor", config.ProcessorId!.Value, new Dictionary<string, object>
-        {
-            ["socket"] = "AM5",
-            ["tdp"] = 65,
-            ["performanceScore"] = 100
-        });
-
-        SetupProductSpecs("gpu", config.GpuId!.Value, new Dictionary<string, object>
-        {
-            ["length"] = 300,
-            ["tdp"] = 200,
-            ["performanceScore"] = 150
-        });
-
-        // Act
-        var result = await _sut.CalculateTotalPowerConsumptionAsync(config);
-
-        // Assert: (65 + 200 + 50) * 1.2 = 378Вт
-        result.Should().Be(378);
+        response.Should().NotBeNull();
+        response.Result.IsCompatible.Should().BeFalse();
+        response.Result.Issues.Should().Contain(i => i.Message == "Incompatible Socket");
+        response.Result.Issues.Should().Contain(i => i.Message.Contains("Incompatible RAM Generation"));
+        response.Result.Issues.Should().Contain(i => i.Message == "Insufficient Power Supply");
     }
 
     #endregion
 
     #region Helper Methods
 
-    private void SetupProductSpecs(string componentType, Guid productId, Dictionary<string, object> specs)
+    private static CompatibilityCheckRequest CreateRequest(
+        SelectedComponentDto? cpu = null,
+        SelectedComponentDto? motherboard = null,
+        SelectedComponentDto? ram = null,
+        SelectedComponentDto? gpu = null,
+        SelectedComponentDto? psu = null,
+        SelectedComponentDto? @case = null,
+        SelectedComponentDto? cooling = null)
     {
-        _sut.SetProductSpecs(productId, specs);
+        return new CompatibilityCheckRequest
+        {
+            Components = new PCComponentsDto
+            {
+                Cpu = cpu,
+                Motherboard = motherboard,
+                Ram = ram,
+                Gpu = gpu,
+                Psu = psu,
+                Case = @case,
+                Cooling = cooling
+            }
+        };
+    }
+
+    private static SelectedComponentDto CreateCpuComponent(string name, Dictionary<string, object> specs)
+    {
+        return new SelectedComponentDto
+        {
+            ProductId = Guid.NewGuid(),
+            Name = name,
+            Specifications = specs
+        };
+    }
+
+    private static SelectedComponentDto CreateMotherboardComponent(string name, Dictionary<string, object> specs)
+    {
+        return new SelectedComponentDto
+        {
+            ProductId = Guid.NewGuid(),
+            Name = name,
+            Specifications = specs
+        };
+    }
+
+    private static SelectedComponentDto CreateRamComponent(string name, Dictionary<string, object> specs)
+    {
+        return new SelectedComponentDto
+        {
+            ProductId = Guid.NewGuid(),
+            Name = name,
+            Specifications = specs
+        };
+    }
+
+    private static SelectedComponentDto CreateGpuComponent(string name, Dictionary<string, object> specs)
+    {
+        return new SelectedComponentDto
+        {
+            ProductId = Guid.NewGuid(),
+            Name = name,
+            Specifications = specs
+        };
+    }
+
+    private static SelectedComponentDto CreatePsuComponent(string name, Dictionary<string, object> specs)
+    {
+        return new SelectedComponentDto
+        {
+            ProductId = Guid.NewGuid(),
+            Name = name,
+            Specifications = specs
+        };
+    }
+
+    private static SelectedComponentDto CreateCaseComponent(string name, Dictionary<string, object> specs)
+    {
+        return new SelectedComponentDto
+        {
+            ProductId = Guid.NewGuid(),
+            Name = name,
+            Specifications = specs
+        };
     }
 
     #endregion
 }
-
-#region Test Models
-
-public class PCConfiguration
-{
-    public Guid Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public Guid UserId { get; set; }
-    public string Purpose { get; set; } = "gaming";
-    public Guid? ProcessorId { get; set; }
-    public Guid? MotherboardId { get; set; }
-    public Guid? RamId { get; set; }
-    public Guid? GpuId { get; set; }
-    public Guid? PsuId { get; set; }
-    public Guid? StorageId { get; set; }
-    public Guid? CaseId { get; set; }
-    public Guid? CoolerId { get; set; }
-    public decimal TotalPrice { get; set; }
-    public bool IsCompatible { get; set; }
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? UpdatedAt { get; set; }
-}
-
-public class CompatibilityResult
-{
-    public bool IsCompatible { get; set; } = true;
-    public List<CompatibilityIssue> Issues { get; set; } = new();
-    public List<CompatibilityWarning> Warnings { get; set; } = new();
-}
-
-public class CompatibilityIssue
-{
-    public string ComponentType { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public string Details { get; set; } = string.Empty;
-    public string? Suggestion { get; set; }
-}
-
-public class CompatibilityWarning
-{
-    public string ComponentType { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public string Recommendation { get; set; } = string.Empty;
-    public string? Suggestion { get; set; }
-}
-
-public class CompatibilityCheckRequest
-{
-    public PCComponentsDto Components { get; set; } = new();
-}
-
-public class PCComponentsDto
-{
-    public SelectedComponentDto? Cpu { get; set; }
-    public SelectedComponentDto? Motherboard { get; set; }
-    public SelectedComponentDto? Ram { get; set; }
-    public SelectedComponentDto? Gpu { get; set; }
-    public SelectedComponentDto? Psu { get; set; }
-    public SelectedComponentDto? Case { get; set; }
-    public SelectedComponentDto? Cooling { get; set; }
-    public SelectedComponentDto? Storage { get; set; }
-}
-
-public class SelectedComponentDto
-{
-    public Guid ProductId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public Dictionary<string, object> Specifications { get; set; } = new();
-}
-
-public class CompatibilityCheckResponse
-{
-    public CompatibilityResultDto Result { get; set; } = new();
-    public int PowerConsumption { get; set; }
-    public int RecommendedPsu { get; set; }
-}
-
-public class CompatibilityResultDto
-{
-    public bool IsCompatible { get; set; } = true;
-    public List<CompatibilityIssueDto> Issues { get; set; } = new();
-    public List<CompatibilityWarningDto> Warnings { get; set; } = new();
-}
-
-public class CompatibilityIssueDto
-{
-    public string Component1 { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public string? Suggestion { get; set; }
-}
-
-public class CompatibilityWarningDto
-{
-    public string Component { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public string? Suggestion { get; set; }
-}
-
-public interface ILogger<T> { }
-
-/// <summary>
-/// Сервис проверки совместимости для тестов
-/// </summary>
-public class CompatibilityService
-{
-    private readonly HttpClient _catalogClient;
-    private readonly ILogger<CompatibilityService> _logger;
-    private readonly Dictionary<Guid, Dictionary<string, object>> _productSpecs = new();
-
-    public CompatibilityService(HttpClient catalogClient, ILogger<CompatibilityService> logger)
-    {
-        _catalogClient = catalogClient;
-        _logger = logger;
-    }
-
-    public void SetProductSpecs(Guid productId, Dictionary<string, object> specs)
-    {
-        _productSpecs[productId] = specs;
-    }
-
-    public async Task<CompatibilityResult> CheckCompatibilityAsync(PCConfiguration config)
-    {
-        await Task.Delay(1);
-        var result = new CompatibilityResult { IsCompatible = true };
-
-        // Проверка сокета CPU и материнской платы
-        if (config.ProcessorId.HasValue && config.MotherboardId.HasValue)
-        {
-            var cpuSpecs = GetSpecs(config.ProcessorId.Value);
-            var mbSpecs = GetSpecs(config.MotherboardId.Value);
-            
-            var cpuSocket = GetStringValue(cpuSpecs, "socket");
-            var mbSocket = GetStringValue(mbSpecs, "socket");
-            
-            if (!string.IsNullOrEmpty(cpuSocket) && !string.IsNullOrEmpty(mbSocket) &&
-                !string.Equals(cpuSocket, mbSocket, StringComparison.OrdinalIgnoreCase))
-            {
-                result.IsCompatible = false;
-                result.Issues.Add(new CompatibilityIssue
-                {
-                    ComponentType = "Processor/Motherboard",
-                    Message = $"Процессор (сокет {cpuSocket}) несовместим с материнской платой (сокет {mbSocket})",
-                    Details = $"Сокеты: {cpuSocket} vs {mbSocket}"
-                });
-            }
-        }
-
-        // Проверка типа RAM
-        if (config.MotherboardId.HasValue && config.RamId.HasValue)
-        {
-            var mbSpecs = GetSpecs(config.MotherboardId.Value);
-            var ramSpecs = GetSpecs(config.RamId.Value);
-            
-            var mbRamType = GetStringValue(mbSpecs, "ramType");
-            var ramType = GetStringValue(ramSpecs, "type");
-            
-            if (!string.IsNullOrEmpty(mbRamType) && !string.IsNullOrEmpty(ramType) &&
-                !string.Equals(mbRamType, ramType, StringComparison.OrdinalIgnoreCase))
-            {
-                result.IsCompatible = false;
-                result.Issues.Add(new CompatibilityIssue
-                {
-                    ComponentType = "RAM/Motherboard",
-                    Message = $"Память ({ramType}) несовместима с материнской платой (поддерживает {mbRamType})",
-                    Details = $"Типы: {ramType} vs {mbRamType}"
-                });
-            }
-        }
-
-        // Проверка мощности БП
-        if (config.PsuId.HasValue)
-        {
-            var cpuSpecs = config.ProcessorId.HasValue ? GetSpecs(config.ProcessorId.Value) : new();
-            var gpuSpecs = config.GpuId.HasValue ? GetSpecs(config.GpuId.Value) : new();
-            var psuSpecs = GetSpecs(config.PsuId.Value);
-            
-            var cpuTdp = GetIntValue(cpuSpecs, "tdp", 0);
-            var gpuTdp = GetIntValue(gpuSpecs, "tdp", 0);
-            var psuWattage = GetIntValue(psuSpecs, "wattage", 0);
-            
-            var totalTdp = cpuTdp + gpuTdp + 50;
-            var recommendedPsu = (int)(totalTdp * 1.3);
-            
-            if (psuWattage < totalTdp)
-            {
-                result.IsCompatible = false;
-                result.Issues.Add(new CompatibilityIssue
-                {
-                    ComponentType = "PSU",
-                    Message = $"Недостаточная мощность блока питания: {psuWattage}Вт",
-                    Details = $"Рекомендуется минимум {recommendedPsu}Вт"
-                });
-            }
-            else if (psuWattage < recommendedPsu)
-            {
-                result.Warnings.Add(new CompatibilityWarning
-                {
-                    ComponentType = "PSU",
-                    Message = "Малый запас мощности блока питания",
-                    Recommendation = $"Рекомендуется БП от {recommendedPsu}Вт для запаса"
-                });
-            }
-        }
-
-        // Проверка габаритов GPU и корпуса
-        if (config.GpuId.HasValue && config.CaseId.HasValue)
-        {
-            var gpuSpecs = GetSpecs(config.GpuId.Value);
-            var caseSpecs = GetSpecs(config.CaseId.Value);
-            
-            var gpuLength = GetIntValue(gpuSpecs, "length", 0);
-            var maxGpuLength = GetIntValue(caseSpecs, "maxGpuLength", int.MaxValue);
-            
-            if (gpuLength > maxGpuLength)
-            {
-                result.IsCompatible = false;
-                result.Issues.Add(new CompatibilityIssue
-                {
-                    ComponentType = "GPU/Case",
-                    Message = "Видеокарта не поместится в корпус",
-                    Details = $"Длина GPU: {gpuLength}мм, макс. в корпусе: {maxGpuLength}мм"
-                });
-            }
-        }
-
-        // Проверка форм-фактора материнской платы
-        if (config.MotherboardId.HasValue && config.CaseId.HasValue)
-        {
-            var mbSpecs = GetSpecs(config.MotherboardId.Value);
-            var caseSpecs = GetSpecs(config.CaseId.Value);
-            
-            var mbFormFactor = GetStringValue(mbSpecs, "formFactor");
-            var supportedFormFactors = GetStringValue(caseSpecs, "supportedMotherboards");
-            
-            if (!string.IsNullOrEmpty(mbFormFactor) && !string.IsNullOrEmpty(supportedFormFactors))
-            {
-                var supportedList = supportedFormFactors.Split(',').Select(f => f.Trim()).ToList();
-                if (!supportedList.Contains(mbFormFactor, StringComparer.OrdinalIgnoreCase))
-                {
-                    result.IsCompatible = false;
-                    result.Issues.Add(new CompatibilityIssue
-                    {
-                        ComponentType = "Motherboard/Case",
-                        Message = $"Форм-фактор материнской платы ({mbFormFactor}) не поддерживается корпусом",
-                        Details = $"Поддерживаемые: {supportedFormFactors}"
-                    });
-                }
-            }
-        }
-
-        // Проверка кулера
-        if (config.ProcessorId.HasValue && config.CoolerId.HasValue)
-        {
-            var cpuSpecs = GetSpecs(config.ProcessorId.Value);
-            var coolerSpecs = GetSpecs(config.CoolerId.Value);
-            
-            var cpuTdp = GetIntValue(cpuSpecs, "tdp", 0);
-            var cpuSocket = GetStringValue(cpuSpecs, "socket");
-            var coolerMaxTdp = GetIntValue(coolerSpecs, "tdp", int.MaxValue);
-            var supportedSockets = GetStringValue(coolerSpecs, "supportedSockets");
-            
-            // Проверка TDP
-            if (coolerMaxTdp < cpuTdp)
-            {
-                result.Warnings.Add(new CompatibilityWarning
-                {
-                    ComponentType = "Cooler",
-                    Message = "Кулер может не справиться с охлаждением процессора",
-                    Recommendation = $"TDP процессора: {cpuTdp}Вт, максимум кулера: {coolerMaxTdp}Вт"
-                });
-            }
-            
-            // Проверка сокета
-            if (!string.IsNullOrEmpty(cpuSocket) && !string.IsNullOrEmpty(supportedSockets))
-            {
-                var socketList = supportedSockets.Split(',').Select(s => s.Trim()).ToList();
-                if (!socketList.Contains(cpuSocket, StringComparer.OrdinalIgnoreCase))
-                {
-                    result.IsCompatible = false;
-                    result.Issues.Add(new CompatibilityIssue
-                    {
-                        ComponentType = "Cooler/Processor",
-                        Message = "Кулер не поддерживает сокет процессора",
-                        Details = $"Сокет CPU: {cpuSocket}, поддерживаемые: {supportedSockets}"
-                    });
-                }
-            }
-        }
-
-        // Проверка баланса CPU/GPU
-        if (config.ProcessorId.HasValue && config.GpuId.HasValue)
-        {
-            var cpuSpecs = GetSpecs(config.ProcessorId.Value);
-            var gpuSpecs = GetSpecs(config.GpuId.Value);
-            
-            var cpuPerf = GetIntValue(cpuSpecs, "performanceScore", 100);
-            var gpuPerf = GetIntValue(gpuSpecs, "performanceScore", 100);
-            
-            var ratio = (double)cpuPerf / gpuPerf;
-            
-            if (ratio < 0.5)
-            {
-                result.Warnings.Add(new CompatibilityWarning
-                {
-                    ComponentType = "Processor/GPU",
-                    Message = "Дисбаланс производительности: слабый процессор ограничивает видеокарту",
-                    Recommendation = "Рекомендуется более мощный процессор"
-                });
-            }
-            else if (ratio > 2.0)
-            {
-                result.Warnings.Add(new CompatibilityWarning
-                {
-                    ComponentType = "Processor/GPU",
-                    Message = "Дисбаланс производительности: слабая видеокарта ограничивает процессор",
-                    Recommendation = "Рекомендуется более мощная видеокарта"
-                });
-            }
-        }
-
-        return result;
-    }
-
-    public async Task<int> CalculateTotalPowerConsumptionAsync(PCConfiguration config)
-    {
-        await Task.Delay(1);
-        var cpuSpecs = config.ProcessorId.HasValue ? GetSpecs(config.ProcessorId.Value) : new();
-        var gpuSpecs = config.GpuId.HasValue ? GetSpecs(config.GpuId.Value) : new();
-        
-        var cpuTdp = GetIntValue(cpuSpecs, "tdp", 0);
-        var gpuTdp = GetIntValue(gpuSpecs, "tdp", 0);
-        
-        return (int)((cpuTdp + gpuTdp + 50) * 1.2);
-    }
-
-    private Dictionary<string, object> GetSpecs(Guid productId)
-    {
-        return _productSpecs.TryGetValue(productId, out var specs) ? specs : new();
-    }
-
-    private static string GetStringValue(Dictionary<string, object> specs, string key)
-    {
-        if (specs.TryGetValue(key, out var value))
-        {
-            if (value is List<string> list)
-                return string.Join(",", list);
-            return value?.ToString() ?? "";
-        }
-        return "";
-    }
-
-    private static int GetIntValue(Dictionary<string, object> specs, string key, int defaultValue)
-    {
-        if (specs.TryGetValue(key, out var value))
-        {
-            if (value is int intValue) return intValue;
-            if (value is long longValue) return (int)longValue;
-            if (int.TryParse(value?.ToString(), out var parsed)) return parsed;
-        }
-        return defaultValue;
-    }
-}
-
-#endregion
