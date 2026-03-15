@@ -1,0 +1,272 @@
+# ==================================================
+# HashiCorp Vault Configuration for GoldPC
+# ==================================================
+# This file defines the structure for secrets management
+# in production environment.
+# 
+# IMPORTANT: This is a TEMPLATE - do not store actual secrets here!
+# Actual secrets should be injected via:
+# - Vault UI
+# - Vault CLI
+# - CI/CD pipeline
+# - Kubernetes external-secrets operator
+# ==================================================
+
+# ==================================================
+# VAULT SERVER CONFIGURATION
+# ==================================================
+server:
+  # Listener configuration
+  listener:
+    tcp:
+      address: "0.0.0.0:8200"
+      tls_disable: false
+      tls_cert_file: "/vault/tls/tls.crt"
+      tls_key_file: "/vault/tls/tls.key"
+  
+  # Storage backend
+  storage:
+    raft:
+      path: "/vault/data"
+      node_id: "goldpc-vault-1"
+  
+  # High availability
+  api_addr: "https://vault.goldpc.local:8200"
+  cluster_addr: "https://vault.goldpc.local:8201"
+  
+  # UI
+  ui: true
+  disable_mlock: false
+
+# ==================================================
+# SECRETS ENGINES CONFIGURATION
+# ==================================================
+secrets:
+  # --------------------------------------------------
+  # Database Secrets (PostgreSQL)
+  # --------------------------------------------------
+  database:
+    path: "secret/data/goldpc/database"
+    description: "PostgreSQL database credentials"
+    keys:
+      - name: "host"
+        value: "<PLACEHOLDER: Database host, e.g., postgres.goldpc.svc.cluster.local>"
+      - name: "port"
+        value: "<PLACEHOLDER: Database port, e.g., 5432>"
+      - name: "name"
+        value: "<PLACEHOLDER: Database name, e.g., goldpc_production>"
+      - name: "user"
+        value: "<PLACEHOLDER: Database username>"
+      - name: "password"
+        value: "<PLACEHOLDER: Database password - USE VAULT CLI TO SET>"
+    # Dynamic database credentials
+    dynamic:
+      enabled: true
+      plugin_name: "postgresql-database-plugin"
+      allowed_roles: ["goldpc-app"]
+      default_ttl: "1h"
+      max_ttl: "24h"
+
+  # --------------------------------------------------
+  # JWT Secrets
+  # --------------------------------------------------
+  jwt:
+    path: "secret/data/goldpc/jwt"
+    description: "JWT signing keys and configuration"
+    keys:
+      - name: "secret"
+        value: "<PLACEHOLDER: JWT signing secret - MIN 32 CHARS - USE VAULT CLI TO SET>"
+      - name: "issuer"
+        value: "GoldPC"
+      - name: "audience"
+        value: "GoldPC"
+      - name: "access_token_expiration_minutes"
+        value: "15"
+      - name: "refresh_token_expiration_days"
+        value: "7"
+
+  # --------------------------------------------------
+  # Redis Secrets
+  # --------------------------------------------------
+  redis:
+    path: "secret/data/goldpc/redis"
+    description: "Redis connection credentials"
+    keys:
+      - name: "host"
+        value: "<PLACEHOLDER: Redis host>"
+      - name: "port"
+        value: "6379"
+      - name: "password"
+        value: "<PLACEHOLDER: Redis password - USE VAULT CLI TO SET>"
+      - name: "instance"
+        value: "goldpc"
+
+  # --------------------------------------------------
+  # Encryption Keys (AES-256)
+  # --------------------------------------------------
+  encryption:
+    path: "secret/data/goldpc/encryption"
+    description: "Data encryption keys"
+    keys:
+      - name: "aes256_key"
+        value: "<PLACEHOLDER: Base64-encoded 32-byte key - USE VAULT CLI TO SET>"
+      - name: "rotation_days"
+        value: "90"
+
+  # --------------------------------------------------
+  # External Services Secrets
+  # --------------------------------------------------
+  external:
+    path: "secret/data/goldpc/external"
+    description: "External API keys and credentials"
+    keys:
+      # SMS Gateway
+      - name: "sms_api_key"
+        value: "<PLACEHOLDER: SMS API key - USE VAULT CLI TO SET>"
+      - name: "sms_api_url"
+        value: "https://api.sms.ru"
+      
+      # Email SMTP
+      - name: "email_smtp_host"
+        value: "<PLACEHOLDER: SMTP host>"
+      - name: "email_smtp_port"
+        value: "587"
+      - name: "email_smtp_user"
+        value: "<PLACEHOLDER: SMTP username>"
+      - name: "email_smtp_password"
+        value: "<PLACEHOLDER: SMTP password - USE VAULT CLI TO SET>"
+      
+      # Payment Gateway
+      - name: "payment_shop_id"
+        value: "<PLACEHOLDER: Payment shop ID>"
+      - name: "payment_api_key"
+        value: "<PLACEHOLDER: Payment API key - USE VAULT CLI TO SET>"
+      - name: "payment_webhook_secret"
+        value: "<PLACEHOLDER: Webhook secret - USE VAULT CLI TO SET>"
+
+  # --------------------------------------------------
+  # Monitoring Secrets
+  # --------------------------------------------------
+  monitoring:
+    path: "secret/data/goldpc/monitoring"
+    description: "Monitoring and observability credentials"
+    keys:
+      - name: "sentry_dsn"
+        value: "<PLACEHOLDER: Sentry DSN - USE VAULT CLI TO SET>"
+      - name: "appinsights_connection_string"
+        value: "<PLACEHOLDER: Application Insights connection string - USE VAULT CLI TO SET>"
+
+# ==================================================
+# AUTHENTICATION METHODS
+# ==================================================
+auth:
+  # Kubernetes authentication
+  kubernetes:
+    enabled: true
+    path: "auth/kubernetes"
+    config:
+      kubernetes_host: "https://kubernetes.default.svc:443"
+      kubernetes_ca_cert: "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+      token_reviewer_jwt: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    roles:
+      - name: "goldpc-app"
+        bound_service_account_names: ["goldpc-backend", "goldpc-frontend"]
+        bound_service_account_namespaces: ["goldpc"]
+        policies: ["goldpc-app"]
+        ttl: "1h"
+
+  # AppRole authentication (for CI/CD)
+  approle:
+    enabled: true
+    path: "auth/approle"
+    roles:
+      - name: "goldpc-ci"
+        policies: ["goldpc-app"]
+        secret_id_ttl: "0"
+        token_ttl: "1h"
+        token_max_ttl: "4h"
+
+# ==================================================
+# PKI (Public Key Infrastructure) for mTLS
+# ==================================================
+pki:
+  root:
+    path: "pki"
+    common_name: "GoldPC Root CA"
+    ttl: "87600h"  # 10 years
+  intermediate:
+    path: "pki_int"
+    common_name: "GoldPC Intermediate CA"
+    ttl: "43800h"  # 5 years
+  roles:
+    - name: "goldpc"
+      allowed_domains: ["goldpc.svc.cluster.local", "goldpc.local"]
+      allow_subdomains: true
+      max_ttl: "720h"  # 30 days
+
+# ==================================================
+# AUDIT LOGGING
+# ==================================================
+audit:
+  - type: "file"
+    path: "/vault/audit/audit.log"
+    options:
+      log_raw: false
+      hmac_accessor: true
+  - type: "syslog"
+    options:
+      facility: "LOG_LOCAL0"
+      tag: "vault"
+
+# ==================================================
+# POLICIES
+# ==================================================
+policies:
+  - name: "goldpc-app"
+    file: "../policies/goldpc-app.hcl"
+  
+  - name: "goldpc-admin"
+    rules: |
+      # Full access to goldpc secrets
+      path "secret/data/goldpc/*" {
+        capabilities = ["create", "read", "update", "delete", "list"]
+      }
+      
+      # Manage PKI
+      path "pki/*" {
+        capabilities = ["create", "read", "update", "delete", "list"]
+      }
+      
+      # Manage database secrets engine
+      path "database/*" {
+        capabilities = ["create", "read", "update", "delete", "list"]
+      }
+
+# ==================================================
+# SEAL CONFIGURATION (Auto-unseal with Cloud KMS)
+# ==================================================
+seal:
+  # Azure Key Vault (example)
+  # azurekeyvault:
+  #   vault_name: "goldpc-vault"
+  #   key_name: "vault-seal-key"
+  
+  # AWS KMS (example)
+  # awskms:
+  #   region: "eu-central-1"
+  #   kms_key_id: "alias/goldpc-vault-seal"
+  
+  # GCP KMS (example)
+  # gcpckms:
+  #   project: "goldpc-production"
+  #   region: "europe-west1"
+  #   key_ring: "vault"
+  #   crypto_key: "seal-key"
+
+# ==================================================
+# TELEMETRY
+# ==================================================
+telemetry:
+  statsd_address: "prometheus:9125"
+  disable_hostname: true
+  enable_host_metrics: true

@@ -1,0 +1,50 @@
+{
+  "name": "goldpc-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GoldPC - Computer store with PC builder functionality",
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "dev": "turbo run dev",
+    "clean": "turbo run clean",
+    "lint:frontend": "npm run lint --workspace=src/frontend",
+    "lint:frontend:fix": "npm run lint:fix --workspace=src/frontend",
+    "lint:backend": "dotnet format src/GoldPC.sln verify --no-restore --severity warn",
+    "lint:backend:fix": "dotnet format src/GoldPC.sln --no-restore",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
+    "dev:frontend": "npm run dev --workspace=src/frontend",
+    "build:frontend": "turbo run build --filter=frontend",
+    "build:backend": "dotnet build src/GoldPC.sln --configuration Release",
+    "test:frontend": "turbo run test --filter=frontend",
+    "test:backend": "dotnet test src/GoldPC.sln --configuration Release"
+  },
+  "workspaces": [
+    "src/frontend"
+  ],
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "turbo": "^2.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "packageManager": "npm@10.0.0",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "keywords": [
+    "goldpc",
+    "computer-store",
+    "pc-builder",
+    "react",
+    "dotnet",
+    "microservices"
+  ],
+  "author": "",
+  "license": "ISC"
+}
