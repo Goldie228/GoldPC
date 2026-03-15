@@ -1,0 +1,48 @@
+services:
+  # Prism Mock Server - OpenAPI-based mock with validation
+  # Used for frontend development and API contract testing
+  prism-mock:
+    image: stoplight/prism:latest
+    container_name: goldpc-prism-mock
+    command: mock -h 0.0.0.0 /specs/openapi.yaml
+    volumes:
+      - ../contracts/openapi/v1:/specs:ro
+    ports:
+      - "4010:4010"
+    networks:
+      - goldpc-network
+    profiles:
+      - stubs
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4010/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: on-failure
+
+  # WireMock - Flexible HTTP mock server
+  # Used for integration tests and complex mock scenarios
+  wiremock:
+    image: wiremock/wiremock:latest
+    container_name: goldpc-wiremock
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../stubs/wiremock:/home/wiremock
+    networks:
+      - goldpc-network
+    profiles:
+      - stubs
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/__admin/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: on-failure
+
+networks:
+  goldpc-network:
+    external: true
+    name: kursovaya_goldpc-network

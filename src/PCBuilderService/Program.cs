@@ -2,6 +2,7 @@ using PCBuilderService.Controllers;
 using PCBuilderService.Services;
 using Serilog;
 using Serilog.Events;
+using Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,6 +56,12 @@ builder.Services.AddCors(options =>
 // Health checks
 builder.Services.AddHealthChecks();
 
+// Chaos Middleware (только в Development)
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddChaosMiddleware(builder.Configuration);
+}
+
 var app = builder.Build();
 
 // Настройка pipeline
@@ -65,6 +72,9 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "PCBuilder Service v1");
     });
+    
+    // Включаем Chaos Middleware только в Development
+    app.UseChaosMiddleware();
 }
 
 app.UseCors();

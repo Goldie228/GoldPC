@@ -1,6 +1,8 @@
 using System.Text;
 using GoldPC.OrdersService.Data;
 using GoldPC.OrdersService.Services;
+using GoldPC.Shared.Services.Interfaces;
+using GoldPC.Shared.Services.Mocks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -24,7 +26,40 @@ builder.Services.AddDbContext<OrdersDbContext>(options =>
 
 // Services
 builder.Services.AddScoped<IOrdersService, OrdersService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+// Payment Service - используем Mock в Development окружении
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSingleton<IPaymentService>(sp =>
+    {
+        var logger = sp.GetRequiredService<ILogger<PaymentServiceMock>>();
+        return new PaymentServiceMock(logger)
+        {
+            SuccessRate = 0.95,  // 95% успех, 5% неудача
+            MinDelayMs = 100,
+            MaxDelayMs = 1000,
+            EnableDelay = true
+        };
+    });
+    
+    // Notification Service Mock
+    builder.Services.AddSingleton<INotificationService>(sp =>
+    {
+        var logger = sp.GetRequiredService<ILogger<NotificationServiceMock>>();
+        return new NotificationServiceMock(logger)
+        {
+            EnableConsoleLogging = true,
+            SimulatedDelayMs = 50
+        };
+    });
+    
+    Log.Information("Running in Development mode - using Mock services");
+}
+else
+{
+    builder.Services.AddScoped<IPaymentService, PaymentService>();
+    // В production здесь будет реальная реализация INotificationService
+}
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");

@@ -29,7 +29,8 @@
   <ItemGroup>
     <!-- Ссылки на проекты приложения -->
     <ProjectReference Include="..\..\..\src\PCBuilderService\PCBuilderService.csproj" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+    <ProjectReference Include="..\..\..\src\SharedKernel\SharedKernel.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
   </ItemGroup>
 
 </Project>

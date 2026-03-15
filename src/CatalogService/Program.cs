@@ -6,6 +6,7 @@ using CatalogService.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Shared.Data;
+using Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +67,12 @@ builder.Services.AddCors(options =>
 builder.Services.AddHealthChecks()
     .AddNpgSql(connectionString);
 
+// Chaos Middleware (только в Development)
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddChaosMiddleware(builder.Configuration);
+}
+
 var app = builder.Build();
 
 // Применение миграций при запуске с использованием extension метода
@@ -76,6 +83,7 @@ if (!app.Environment.IsEnvironment("Testing"))
 }
 
 // Настройка pipeline
+// Chaos Middleware должен быть добавлен в начале pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -83,6 +91,9 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Catalog Service v1");
     });
+    
+    // Включаем Chaos Middleware только в Development
+    app.UseChaosMiddleware();
 }
 
 app.UseCors();

@@ -1,0 +1,51 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/api/v1/products",
+    "headers": {
+      "Content-Type": {
+        "equalTo": "application/json"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "data": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440001",
+          "name": "AMD Ryzen 9 7950X",
+          "sku": "AMD-R9-7950X",
+          "price": 59999.00,
+          "stock": 10,
+          "category": "cpu"
+        },
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440002",
+          "name": "Intel Core i9-14900K",
+          "sku": "INT-I9-14900K",
+          "price": 54999.00,
+          "stock": 5,
+          "category": "cpu"
+        },
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440003",
+          "name": "NVIDIA RTX 4090",
+          "sku": "NV-RTX4090",
+          "price": 189999.00,
+          "stock": 3,
+          "category": "gpu"
+        }
+      ],
+      "pagination": {
+        "page": 1,
+        "limit": 20,
+        "total": 3,
+        "totalPages": 1
+      }
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

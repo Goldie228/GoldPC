@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { CatalogPage } from './pages/CatalogPage/CatalogPage';
 import { LoginPage } from './pages/LoginPage/LoginPage';
+import { StubManager } from './components/admin';
 import './App.css';
 
 /**
@@ -21,6 +22,9 @@ function App() {
               <Link to="/" className="nav-link">
                 Каталог
               </Link>
+              <Link to="/admin/stubs" className="nav-link nav-link--admin">
+                🎛️ Stubs
+              </Link>
               <Link to="/login" className="nav-link">
                 Войти
               </Link>
@@ -32,6 +36,7 @@ function App() {
           <Routes>
             <Route path="/" element={<CatalogPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin/stubs" element={<StubManager />} />
           </Routes>
         </main>
 

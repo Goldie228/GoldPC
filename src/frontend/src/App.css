@@ -80,6 +80,16 @@ body {
   color: #212529;
 }
 
+.nav-link--admin {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.nav-link--admin:hover {
+  background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+  color: #fff;
+}
+
 /* Main */
 .app-main {
   flex: 1;
