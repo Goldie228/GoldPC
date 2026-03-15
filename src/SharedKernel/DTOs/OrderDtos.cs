@@ -50,6 +50,34 @@ public class CreateOrderRequest
     
     [MaxLength(1000, ErrorMessage = "Комментарий не должен превышать 1000 символов")]
     public string? Comment { get; set; }
+    
+    /// <summary>
+    /// Позиции заказа
+    /// </summary>
+    [Required(ErrorMessage = "Заказ должен содержать минимум одну позицию")]
+    [MinLength(1, ErrorMessage = "Заказ должен содержать минимум одну позицию")]
+    public List<CreateOrderItemRequest> Items { get; set; } = new();
+}
+
+/// <summary>
+/// DTO для добавления позиции заказа
+/// </summary>
+public class CreateOrderItemRequest
+{
+    [Required(ErrorMessage = "ID товара обязателен")]
+    public Guid ProductId { get; set; }
+    
+    [Required(ErrorMessage = "Название товара обязательно")]
+    [MaxLength(255, ErrorMessage = "Название товара не должно превышать 255 символов")]
+    public string ProductName { get; set; } = string.Empty;
+    
+    [Required(ErrorMessage = "Количество обязательно")]
+    [Range(1, 5, ErrorMessage = "Количество должно быть от 1 до 5 (ФТ-3.11)")]
+    public int Quantity { get; set; }
+    
+    [Required(ErrorMessage = "Цена обязательна")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "Цена должна быть больше 0")]
+    public decimal UnitPrice { get; set; }
 }
 
 /// <summary>

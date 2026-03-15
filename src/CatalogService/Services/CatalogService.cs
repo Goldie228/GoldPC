@@ -36,12 +36,20 @@ public class CatalogService : ICatalogService
     {
         var result = await _productRepository.GetFilteredAsync(filter);
         
+        var totalPages = (int)Math.Ceiling(result.TotalCount / (double)result.PageSize);
+        
         return new PagedResult<ProductListDto>
         {
-            Items = result.Items.Select(MapToListDto).ToList(),
-            TotalCount = result.TotalCount,
-            Page = result.Page,
-            PageSize = result.PageSize
+            Data = result.Items.Select(MapToListDto).ToList(),
+            Meta = new PaginationMeta
+            {
+                Page = result.Page,
+                PageSize = result.PageSize,
+                TotalPages = totalPages,
+                TotalItems = result.TotalCount,
+                HasNextPage = result.Page < totalPages,
+                HasPrevPage = result.Page > 1
+            }
         };
     }
 
@@ -68,17 +76,46 @@ public class CatalogService : ICatalogService
             throw new InvalidOperationException($"Товар с артикулом {dto.Sku} уже существует");
         }
 
+        // Определяем CategoryId: либо передан напрямую, либо ищем по slug/названию
+        Guid categoryId;
+        if (dto.CategoryId.HasValue)
+        {
+            categoryId = dto.CategoryId.Value;
+        }
+        else if (!string.IsNullOrEmpty(dto.Category))
+        {
+            var category = await _categoryRepository.GetBySlugAsync(dto.Category);
+            if (category == null)
+            {
+                // Пробуем найти по названию
+                var allCategories = await _categoryRepository.GetAllAsync();
+                category = allCategories.FirstOrDefault(c => 
+                    c.Name.Equals(dto.Category, StringComparison.OrdinalIgnoreCase));
+            }
+            if (category == null)
+            {
+                throw new InvalidOperationException($"Категория '{dto.Category}' не найдена");
+            }
+            categoryId = category.Id;
+        }
+        else
+        {
+            throw new InvalidOperationException("Необходимо указать CategoryId или Category");
+        }
+
         var product = new Product
         {
             Name = dto.Name,
             Sku = dto.Sku,
             Description = dto.Description,
-            CategoryId = dto.CategoryId,
+            CategoryId = categoryId,
             ManufacturerId = dto.ManufacturerId,
             Price = dto.Price,
             Stock = dto.Stock,
             WarrantyMonths = dto.WarrantyMonths,
-            Specifications = dto.Specifications
+            Specifications = dto.Specifications,
+            IsActive = dto.IsActive,
+            IsFeatured = dto.IsFeatured
         };
 
         var created = await _productRepository.CreateAsync(product);
@@ -90,13 +127,28 @@ public class CatalogService : ICatalogService
         var product = await _productRepository.GetByIdAsync(id);
         if (product == null) return null;
 
-        product.Name = dto.Name;
-        product.Description = dto.Description;
-        product.Price = dto.Price;
-        product.Stock = dto.Stock;
-        product.WarrantyMonths = dto.WarrantyMonths;
-        product.Specifications = dto.Specifications;
-        product.IsActive = dto.IsActive;
+        if (dto.Name != null)
+            product.Name = dto.Name;
+        if (dto.Description != null)
+            product.Description = dto.Description;
+        if (dto.Price.HasValue)
+            product.Price = dto.Price.Value;
+        if (dto.Stock.HasValue)
+            product.Stock = dto.Stock.Value;
+        if (dto.WarrantyMonths.HasValue)
+            product.WarrantyMonths = dto.WarrantyMonths.Value;
+        if (dto.Specifications != null)
+            product.Specifications = dto.Specifications;
+        if (dto.IsActive.HasValue)
+            product.IsActive = dto.IsActive.Value;
+        if (dto.IsFeatured.HasValue)
+            product.IsFeatured = dto.IsFeatured.Value;
+        if (dto.ManufacturerId.HasValue)
+            product.ManufacturerId = dto.ManufacturerId;
+        if (dto.OldPrice.HasValue)
+            product.OldPrice = dto.OldPrice;
+
+        product.UpdatedAt = DateTime.UtcNow;
 
         await _productRepository.UpdateAsync(product);
         return await GetProductByIdAsync(id);
@@ -154,6 +206,28 @@ public class CatalogService : ICatalogService
     {
         var manufacturers = await _manufacturerRepository.GetAllAsync();
         return manufacturers.Select(MapToManufacturerDto);
+    }
+
+    public async Task<IEnumerable<ManufacturerDto>> GetManufacturersByCategoryAsync(string categorySlug)
+    {
+        // Получаем категорию по slug
+        var category = await _categoryRepository.GetBySlugAsync(categorySlug);
+        if (category == null)
+        {
+            return Enumerable.Empty<ManufacturerDto>();
+        }
+
+        // Получаем производителей, у которых есть товары в этой категории
+        var products = await _productRepository.GetByCategoryAsync(category.Id);
+        var manufacturerIds = products
+            .Where(p => p.ManufacturerId.HasValue)
+            .Select(p => p.ManufacturerId!.Value)
+            .Distinct();
+
+        var manufacturers = await _manufacturerRepository.GetAllAsync();
+        return manufacturers
+            .Where(m => manufacturerIds.Contains(m.Id))
+            .Select(MapToManufacturerDto);
     }
 
     public async Task<ManufacturerDto> CreateManufacturerAsync(CreateManufacturerDto dto)
@@ -232,13 +306,15 @@ public class CatalogService : ICatalogService
             Id = product.Id,
             Name = product.Name,
             Sku = product.Sku,
+            Category = product.Category?.Name ?? string.Empty,
             Price = product.Price,
+            OldPrice = product.OldPrice,
             Stock = product.Stock,
-            PrimaryImageUrl = product.Images.FirstOrDefault(i => i.IsPrimary)?.Url ?? product.Images.FirstOrDefault()?.Url,
-            CategoryName = product.Category?.Name ?? string.Empty,
-            ManufacturerName = product.Manufacturer?.Name ?? string.Empty,
-            Rating = product.Rating,
-            ReviewCount = product.ReviewCount
+            Manufacturer = product.Manufacturer != null ? MapToManufacturerDto(product.Manufacturer) : null,
+            MainImage = product.Images.Where(i => i.IsPrimary).Select(MapToImageDto).FirstOrDefault()
+                ?? product.Images.Select(MapToImageDto).FirstOrDefault(),
+            Rating = product.Rating > 0 ? new RatingDto { Average = product.Rating, Count = product.ReviewCount } : null,
+            IsActive = product.IsActive
         };
     }
 
@@ -249,17 +325,21 @@ public class CatalogService : ICatalogService
             Id = product.Id,
             Name = product.Name,
             Sku = product.Sku,
-            Description = product.Description,
+            Category = product.Category?.Name ?? string.Empty,
+            ManufacturerId = product.ManufacturerId,
+            Manufacturer = product.Manufacturer != null ? MapToManufacturerDto(product.Manufacturer) : null,
             Price = product.Price,
+            OldPrice = product.OldPrice,
             Stock = product.Stock,
             WarrantyMonths = product.WarrantyMonths,
-            Rating = product.Rating,
-            ReviewCount = product.ReviewCount,
-            Category = product.Category != null ? MapToCategoryDto(product.Category) : null!,
-            Manufacturer = product.Manufacturer != null ? MapToManufacturerDto(product.Manufacturer) : null!,
+            Description = product.Description,
             Specifications = product.Specifications,
             Images = product.Images.Select(MapToImageDto).ToList(),
-            Reviews = product.Reviews.Select(MapToReviewDto).ToList()
+            Rating = product.Rating > 0 ? new RatingDto { Average = product.Rating, Count = product.ReviewCount } : null,
+            IsActive = product.IsActive,
+            IsFeatured = product.IsFeatured,
+            CreatedAt = product.CreatedAt,
+            UpdatedAt = product.UpdatedAt
         };
     }
 
@@ -272,7 +352,8 @@ public class CatalogService : ICatalogService
             Slug = category.Slug,
             Description = category.Description,
             ParentId = category.ParentId,
-            ComponentType = category.ComponentType,
+            Icon = category.Icon,
+            Order = category.Order,
             Children = category.Children?.Select(MapToCategoryDto).ToList() ?? new List<CategoryDto>()
         };
     }
@@ -284,7 +365,8 @@ public class CatalogService : ICatalogService
             Id = manufacturer.Id,
             Name = manufacturer.Name,
             Country = manufacturer.Country,
-            LogoUrl = manufacturer.LogoUrl
+            Logo = manufacturer.LogoUrl,
+            Description = manufacturer.Description
         };
     }
 
@@ -294,8 +376,9 @@ public class CatalogService : ICatalogService
         {
             Id = image.Id,
             Url = image.Url,
-            AltText = image.AltText,
-            IsPrimary = image.IsPrimary
+            Alt = image.AltText,
+            IsMain = image.IsPrimary,
+            Order = image.SortOrder
         };
     }
 
@@ -304,14 +387,18 @@ public class CatalogService : ICatalogService
         return new ReviewDto
         {
             Id = review.Id,
+            ProductId = review.ProductId,
             UserId = review.UserId,
             UserName = review.UserName,
             Rating = review.Rating,
+            Title = review.Title,
             Comment = review.Comment,
             Pros = review.Pros,
             Cons = review.Cons,
-            CreatedAt = review.CreatedAt,
-            IsVerified = review.IsVerified
+            IsVerified = review.IsVerified,
+            IsApproved = review.IsApproved,
+            Helpful = review.Helpful,
+            CreatedAt = review.CreatedAt
         };
     }
 

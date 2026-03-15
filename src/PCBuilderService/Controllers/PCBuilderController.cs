@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PCBuilderService.DTOs;
 using PCBuilderService.Models;
 using PCBuilderService.Services;
 
@@ -26,14 +27,48 @@ public class PCBuilderController : ControllerBase
     }
 
     /// <summary>
-    /// Проверить совместимость конфигурации
+    /// Проверить совместимость компонентов конфигурации (новый endpoint по OpenAPI контракту)
     /// </summary>
     /// <remarks>
-    /// Проверяет совместимость выбранных компонентов и возвращает список проблем и предупреждений
+    /// Принимает список компонентов с их спецификациями и возвращает детальный результат проверки совместимости.
+    /// Соответствует OpenAPI спецификации: POST /api/v1/pcbuilder/check-compatibility
     /// </remarks>
+    /// <param name="request">Запрос с компонентами конфигурации</param>
+    /// <returns>Результат проверки совместимости с проблемами, предупреждениями и расчётом мощности</returns>
     [HttpPost("check-compatibility")]
+    [ProducesResponseType(typeof(CompatibilityCheckResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<CompatibilityCheckResponse>> CheckCompatibility([FromBody] CompatibilityCheckRequest request)
+    {
+        if (request?.Components == null)
+        {
+            return BadRequest(new ValidationProblemDetails
+            {
+                Title = "Некорректный запрос",
+                Detail = "Компоненты конфигурации не указаны"
+            });
+        }
+
+        _logger.LogInformation("Проверка совместимости конфигурации");
+        
+        var result = await _compatibilityService.CheckCompatibilityAsync(request);
+        
+        _logger.LogInformation("Результат проверки: IsCompatible={IsCompatible}, Issues={IssueCount}, Warnings={WarningCount}",
+            result.Result.IsCompatible, result.Result.Issues.Count, result.Result.Warnings.Count);
+        
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Проверить совместимость конфигурации (старый endpoint для обратной совместимости)
+    /// </summary>
+    /// <remarks>
+    /// Устаревший endpoint. Используйте POST check-compatibility с новым форматом запроса.
+    /// </remarks>
+    [Obsolete("Используйте POST check-compatibility с CompatibilityCheckRequest")]
+    [HttpPost("check-compatibility-legacy")]
     [ProducesResponseType(typeof(CompatibilityResult), StatusCodes.Status200OK)]
-    public async Task<ActionResult<CompatibilityResult>> CheckCompatibility([FromBody] PCConfigurationDto dto)
+    public async Task<ActionResult<CompatibilityResult>> CheckCompatibilityLegacy([FromBody] PCConfigurationDto dto)
     {
         var config = MapToConfiguration(dto);
         var result = await _compatibilityService.CheckCompatibilityAsync(config);

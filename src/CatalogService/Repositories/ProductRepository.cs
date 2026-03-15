@@ -7,6 +7,17 @@ using Microsoft.EntityFrameworkCore;
 namespace CatalogService.Repositories;
 
 /// <summary>
+/// Внутренний результат пагинации для репозитория
+/// </summary>
+public class RepositoryPagedResult<T>
+{
+    public List<T> Items { get; init; } = new();
+    public int TotalCount { get; init; }
+    public int Page { get; init; }
+    public int PageSize { get; init; }
+}
+
+/// <summary>
 /// Реализация репозитория товаров
 /// </summary>
 public class ProductRepository : IProductRepository
@@ -42,17 +53,24 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
     }
 
-    public async Task<PagedResult<Product>> GetFilteredAsync(ProductFilterDto filter)
+    public async Task<RepositoryPagedResult<Product>> GetFilteredAsync(ProductFilterDto filter)
     {
         var query = _context.Products
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
+            .Include(p => p.Images.Where(i => i.IsPrimary))
             .Where(p => p.IsActive);
 
-        // Фильтрация по категории
+        // Фильтрация по ID категории
         if (filter.CategoryId.HasValue)
         {
             query = query.Where(p => p.CategoryId == filter.CategoryId.Value);
+        }
+        // Фильтрация по slug категории
+        else if (!string.IsNullOrWhiteSpace(filter.Category))
+        {
+            var categorySlug = filter.Category.ToLower();
+            query = query.Where(p => p.Category != null && p.Category.Slug.ToLower() == categorySlug);
         }
 
         // Фильтрация по производителю
@@ -73,12 +91,18 @@ public class ProductRepository : IProductRepository
         }
 
         // Фильтрация по наличию
-        if (filter.InStockOnly == true)
+        if (filter.InStock == true)
         {
             query = query.Where(p => p.Stock > 0);
         }
 
-        // Поиск по названию
+        // Фильтрация по рекомендуемым
+        if (filter.IsFeatured == true)
+        {
+            query = query.Where(p => p.IsFeatured);
+        }
+
+        // Поиск по названию и описанию
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var searchTerm = filter.Search.ToLower();
@@ -92,7 +116,8 @@ public class ProductRepository : IProductRepository
         var totalCount = await query.CountAsync();
 
         // Сортировка
-        query = ApplySorting(query, filter.SortBy, filter.SortDesc);
+        var sortDesc = filter.SortOrder?.ToLower() == "desc";
+        query = ApplySorting(query, filter.SortBy, sortDesc);
 
         // Пагинация
         var items = await query
@@ -100,7 +125,7 @@ public class ProductRepository : IProductRepository
             .Take(filter.PageSize)
             .ToListAsync();
 
-        return new PagedResult<Product>
+        return new RepositoryPagedResult<Product>
         {
             Items = items,
             TotalCount = totalCount,
@@ -115,9 +140,10 @@ public class ProductRepository : IProductRepository
         {
             "price" => sortDesc ? query.OrderByDescending(p => p.Price) : query.OrderBy(p => p.Price),
             "rating" => sortDesc ? query.OrderByDescending(p => p.Rating) : query.OrderBy(p => p.Rating),
-            "created" => sortDesc ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
+            "createdat" or "created" => sortDesc ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
+            "name" => sortDesc ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name),
             "stock" => sortDesc ? query.OrderByDescending(p => p.Stock) : query.OrderBy(p => p.Stock),
-            _ => sortDesc ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name)
+            _ => sortDesc ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt)
         };
     }
 

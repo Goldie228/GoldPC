@@ -7,10 +7,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GoldPC.OrdersService.Services;
 
+/// <summary>
+/// Сервис управления заказами
+/// Реализует бизнес-логику модуля "Заказы" (ФТ-3.1 - ФТ-3.13)
+/// </summary>
 public class OrdersService : IOrdersService
 {
     private readonly OrdersDbContext _context;
     private readonly ILogger<OrdersService> _logger;
+    
+    /// <summary>
+    /// Максимальное количество единиц одного товара в заказе (ФТ-3.11)
+    /// </summary>
+    private const int MaxItemQuantity = 5;
 
     public OrdersService(OrdersDbContext context, ILogger<OrdersService> logger)
     {
@@ -90,7 +99,40 @@ public class OrdersService : IOrdersService
 
     public async Task<(OrderDto? Order, string? Error)> CreateAsync(Guid userId, CreateOrderRequest request)
     {
-        // Генерация номера заказа
+        // Валидация позиций заказа (ФТ-3.11 - ограничение количества до 5 единиц)
+        if (request.Items == null || request.Items.Count == 0)
+        {
+            return (null, "Заказ должен содержать минимум одну позицию");
+        }
+
+        // Проверка количества каждого товара (ФТ-3.11)
+        foreach (var item in request.Items)
+        {
+            if (item.Quantity > MaxItemQuantity)
+            {
+                return (null, $"Количество товара '{item.ProductName}' превышает максимально допустимое ({MaxItemQuantity} единиц)");
+            }
+        }
+
+        // Валидация способа доставки (ФТ-3.3)
+        if (request.DeliveryMethod != "Pickup" && request.DeliveryMethod != "Delivery")
+        {
+            return (null, "Неверный способ получения. Допустимые значения: Pickup, Delivery");
+        }
+
+        // Если доставка - адрес обязателен
+        if (request.DeliveryMethod == "Delivery" && string.IsNullOrWhiteSpace(request.Address))
+        {
+            return (null, "При доставке необходимо указать адрес");
+        }
+
+        // Валидация способа оплаты (ФТ-3.2)
+        if (request.PaymentMethod != "Online" && request.PaymentMethod != "OnReceipt")
+        {
+            return (null, "Неверный способ оплаты. Допустимые значения: Online, OnReceipt");
+        }
+
+        // Генерация уникального номера заказа (ФТ-3.5)
         var year = DateTime.UtcNow.Year;
         var lastOrder = await _context.Orders
             .Where(o => o.OrderNumber.StartsWith($"GP-{year}-"))
@@ -103,6 +145,9 @@ public class OrdersService : IOrdersService
         
         var orderNumber = $"GP-{year}-{nextNumber:D6}";
 
+        // Расчёт общей стоимости (ФТ-3.13)
+        var total = request.Items.Sum(i => i.Quantity * i.UnitPrice);
+
         var order = new Order
         {
             Id = Guid.NewGuid(),
@@ -113,12 +158,28 @@ public class OrdersService : IOrdersService
             PaymentMethod = request.PaymentMethod,
             Address = request.Address,
             Comment = request.Comment,
+            Total = total,
             CreatedAt = DateTime.UtcNow
         };
 
         _context.Orders.Add(order);
 
-        // Добавляем запись в историю
+        // Добавление позиций заказа
+        foreach (var itemRequest in request.Items)
+        {
+            var orderItem = new OrderItem
+            {
+                Id = Guid.NewGuid(),
+                OrderId = order.Id,
+                ProductId = itemRequest.ProductId,
+                ProductName = itemRequest.ProductName,
+                Quantity = itemRequest.Quantity,
+                UnitPrice = itemRequest.UnitPrice
+            };
+            _context.OrderItems.Add(orderItem);
+        }
+
+        // Добавляем запись в историю (ФТ-3.12 - ведение истории)
         var history = new OrderHistory
         {
             Id = Guid.NewGuid(),
@@ -133,7 +194,11 @@ public class OrdersService : IOrdersService
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Order created: {OrderNumber} for user {UserId}", orderNumber, userId);
+        _logger.LogInformation("Order created: {OrderNumber} for user {UserId} with {ItemCount} items, total: {Total}", 
+            orderNumber, userId, request.Items.Count, total);
+
+        // Загружаем позиции для маппинга
+        order.Items = await _context.OrderItems.Where(oi => oi.OrderId == order.Id).ToListAsync();
 
         return (MapToDto(order), null);
     }

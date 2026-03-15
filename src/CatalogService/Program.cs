@@ -5,6 +5,7 @@ using CatalogService.Services;
 using CatalogService.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Shared.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,27 +68,8 @@ builder.Services.AddHealthChecks()
 
 var app = builder.Build();
 
-// Применение миграций при запуске
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
-    try
-    {
-        // В production используем миграции, для разработки создаём БД
-        if (app.Environment.IsDevelopment())
-        {
-            dbContext.Database.EnsureCreated();
-        }
-        else
-        {
-            dbContext.Database.Migrate();
-        }
-    }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "Ошибка при инициализации базы данных");
-    }
-}
+// Применение миграций при запуске с использованием extension метода
+app.ApplyMigrations<CatalogDbContext>();
 
 // Настройка pipeline
 if (app.Environment.IsDevelopment())

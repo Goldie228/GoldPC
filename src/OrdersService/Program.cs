@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Shared.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,11 +95,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<OrdersDbContext>();
-    dbContext.Database.EnsureCreated();
-}
+// Применение миграций при запуске с использованием extension метода
+app.ApplyMigrations<OrdersDbContext>();
 
 if (app.Environment.IsDevelopment())
 {

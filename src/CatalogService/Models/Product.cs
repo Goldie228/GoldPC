@@ -23,13 +23,16 @@ public class Product
     public Category Category { get; set; } = null!;
     
     /// <summary>ID производителя</summary>
-    public Guid ManufacturerId { get; set; }
+    public Guid? ManufacturerId { get; set; }
     
     /// <summary>Производитель</summary>
-    public Manufacturer Manufacturer { get; set; } = null!;
+    public Manufacturer? Manufacturer { get; set; }
     
     /// <summary>Цена в BYN</summary>
     public decimal Price { get; set; }
+    
+    /// <summary>Старая цена (для отображения скидки)</summary>
+    public decimal? OldPrice { get; set; }
     
     /// <summary>Остаток на складе</summary>
     public int Stock { get; set; }
@@ -48,6 +51,9 @@ public class Product
     
     /// <summary>Признак активности</summary>
     public bool IsActive { get; set; } = true;
+    
+    /// <summary>Рекомендуемый товар</summary>
+    public bool IsFeatured { get; set; } = false;
     
     /// <summary>Дата создания</summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -87,8 +93,14 @@ public class Category
     /// <summary>Подкатегории</summary>
     public ICollection<Category> Children { get; set; } = new List<Category>();
     
+    /// <summary>Иконка</summary>
+    public string? Icon { get; set; }
+    
     /// <summary>Тип компонента для конструктора ПК</summary>
     public ComponentType? ComponentType { get; set; }
+    
+    /// <summary>Порядок отображения</summary>
+    public int Order { get; set; }
     
     /// <summary>Товары категории</summary>
     public ICollection<Product> Products { get; set; } = new List<Product>();
@@ -99,15 +111,17 @@ public class Category
 /// </summary>
 public enum ComponentType
 {
-    Processor = 1,      // Процессор
+    Processor = 1,      // Процессор (CPU)
     Motherboard = 2,    // Материнская плата
-    Ram = 3,           // Оперативная память
-    Gpu = 4,           // Видеокарта
-    Psu = 5,           // Блок питания
+    Ram = 3,           // Оперативная память (RAM)
+    Gpu = 4,           // Видеокарта (GPU)
+    Psu = 5,           // Блок питания (PSU)
     Storage = 6,       // Накопитель (SSD/HDD)
     Case = 7,          // Корпус
     Cooler = 8,        // Охлаждение
-    Periphery = 9      // Периферия
+    Periphery = 9,     // Периферия
+    Monitor = 10,      // Монитор
+    Accessories = 11   // Аксессуары
 }
 
 /// <summary>
@@ -142,16 +156,19 @@ public class ProductImage
     
     public Guid ProductId { get; set; }
     
+    /// <summary>Товар</summary>
+    public Product Product { get; set; } = null!;
+    
     /// <summary>URL изображения</summary>
     public string Url { get; set; } = string.Empty;
     
     /// <summary>Альтернативный текст</summary>
     public string? AltText { get; set; }
     
-    /// <summary>Является основным изображением</summary>
+    /// <summary>Является главным изображением</summary>
     public bool IsPrimary { get; set; }
     
-    /// <summary>Порядок сортировки</summary>
+    /// <summary>Порядок отображения</summary>
     public int SortOrder { get; set; }
 }
 
@@ -174,6 +191,9 @@ public class Review
     /// <summary>Оценка (1-5)</summary>
     public int Rating { get; set; }
     
+    /// <summary>Заголовок отзыва</summary>
+    public string? Title { get; set; }
+    
     /// <summary>Текст отзыва</summary>
     public string? Comment { get; set; }
     
@@ -186,6 +206,14 @@ public class Review
     /// <summary>Дата создания</summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
-    /// <summary>Проверен модератором</summary>
+    /// <summary>Подтверждённая покупка</summary>
     public bool IsVerified { get; set; }
+    
+    /// <summary>Одобрен модератором</summary>
+    public bool IsApproved { get; set; }
+    
+    /// <summary>Количество полезных оценок</summary>
+    public int Helpful { get; set; }
+
 }
+

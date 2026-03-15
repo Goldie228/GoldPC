@@ -145,18 +145,13 @@ public class CatalogServiceTests
     {
         // Arrange
         var category = Enum.Parse<ProductCategory>(categoryName, ignoreCase: true);
-        var allProducts = new ProductFaker()
-            .Generate(30);
-        
-        // Устанавливаем категорию для части товаров
-        for (int i = 0; i < expectedCount && i < allProducts.Count; i++)
-        {
-            allProducts[i].Category = category;
-        }
+        var categoryProducts = new ProductFaker()
+            .WithCategory(category)
+            .Generate(expectedCount);
 
         _repositoryMock
             .Setup(r => r.GetByCategoryAsync(category))
-            .ReturnsAsync(allProducts.Where(p => p.Category == category).ToList());
+            .ReturnsAsync(categoryProducts);
 
         // Act
         var result = await _sut.GetProductsByCategoryAsync(category);
@@ -415,7 +410,7 @@ public interface ICacheService
     Task RemoveAsync(string key);
 }
 
-public interface ILogger<T> { }
+// ILogger определён в CompatibilityServiceTests.cs
 
 public class CatalogService
 {

@@ -1,5 +1,6 @@
 using CatalogService.DTOs;
 using CatalogService.Models;
+using CatalogService.Repositories;
 
 namespace CatalogService.Repositories.Interfaces;
 
@@ -11,7 +12,7 @@ public interface IProductRepository
     Task<Product?> GetByIdAsync(Guid id);
     Task<Product?> GetBySkuAsync(string sku);
     Task<Product?> GetDetailByIdAsync(Guid id);
-    Task<PagedResult<Product>> GetFilteredAsync(ProductFilterDto filter);
+    Task<RepositoryPagedResult<Product>> GetFilteredAsync(ProductFilterDto filter);
     Task<IEnumerable<Product>> GetByIdsAsync(IEnumerable<Guid> ids);
     Task<IEnumerable<Product>> GetByCategoryAsync(Guid categoryId);
     Task<Product> CreateAsync(Product product);

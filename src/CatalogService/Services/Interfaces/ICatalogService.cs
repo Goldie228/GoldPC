@@ -1,4 +1,5 @@
 using CatalogService.DTOs;
+using CatalogService.Models;
 
 namespace CatalogService.Services.Interfaces;
 
@@ -23,6 +24,7 @@ public interface ICatalogService
     
     // Производители
     Task<IEnumerable<ManufacturerDto>> GetManufacturersAsync();
+    Task<IEnumerable<ManufacturerDto>> GetManufacturersByCategoryAsync(string categorySlug);
     Task<ManufacturerDto> CreateManufacturerAsync(CreateManufacturerDto dto);
     
     // Отзывы

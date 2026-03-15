@@ -219,7 +219,7 @@ public class AuthService : IAuthService
         return (true, null);
     }
 
-    private async Task<RefreshToken> CreateRefreshTokenAsync(Guid userId, string? ipAddress)
+    private Task<RefreshToken> CreateRefreshTokenAsync(Guid userId, string? ipAddress)
     {
         var refreshToken = new RefreshToken
         {
@@ -232,7 +232,7 @@ public class AuthService : IAuthService
         };
 
         _context.RefreshTokens.Add(refreshToken);
-        return refreshToken;
+        return Task.FromResult(refreshToken);
     }
 
     private static UserDto MapToUserDto(User user)

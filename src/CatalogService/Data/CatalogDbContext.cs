@@ -73,7 +73,7 @@ public class CatalogDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
                 
             entity.HasMany(e => e.Images)
-                .WithOne(i => i.Product!)
+                .WithOne(i => i.Product)
                 .HasForeignKey(i => i.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
                 

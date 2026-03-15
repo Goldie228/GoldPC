@@ -128,6 +128,29 @@ public class ServicesController : ControllerBase
         return Ok(ApiResponse.Ok("Заявка отменена"));
     }
 
+    /// <summary>
+    /// Выдача оборудования клиенту (ФТ-4.10)
+    /// </summary>
+    [HttpPost("{id}/close")]
+    [Authorize(Roles = "Manager,Admin,Master")]
+    public async Task<IActionResult> Close(Guid id, [FromBody] CloseServiceRequestRequest? request = null)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var (result, error) = await _servicesService.UpdateStatusAsync(
+            id, 
+            ServiceRequestStatus.Closed, 
+            userId.Value, 
+            request?.Comment ?? "Оборудование выдано клиенту");
+        
+        if (error != null)
+            return BadRequest(ApiResponse.Fail(error));
+
+        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Оборудование выдано клиенту"));
+    }
+
     private Guid? GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;

@@ -1,0 +1,37 @@
+# Dockerfile для AuthService
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 5003
+ENV ASPNETCORE_URLS=http://+:5003
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy csproj files and restore
+COPY ["AuthService/AuthService.csproj", "AuthService/"]
+COPY ["SharedKernel/SharedKernel.csproj", "SharedKernel/"]
+RUN dotnet restore "AuthService/AuthService.csproj"
+
+# Copy source code
+COPY AuthService/ AuthService/
+COPY SharedKernel/ SharedKernel/
+
+# Build and publish
+WORKDIR "/src/AuthService"
+RUN dotnet publish "AuthService.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+
+# Create non-root user for security
+RUN addgroup -g 1000 -S appgroup && \
+    adduser -u 1000 -S appuser -G appgroup && \
+    chown -R appuser:appgroup /app
+USER appuser
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:5003/health || exit 1
+
+ENTRYPOINT ["dotnet", "AuthService.dll"]

@@ -1,14 +1,17 @@
 using PCBuilderService.Controllers;
 using PCBuilderService.Services;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Настройка Serilog
-Serilog.Log.Logger = new Serilog.LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
     .WriteTo.Console()
-    .WriteTo.File("logs/pcbuilder-service-.log", rollingInterval: Serilog.RollingInterval.Day)
+    .WriteTo.File("logs/pcbuilder-service-.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -69,7 +72,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-Serilog.Log.Information("PCBuilder Service запущен");
+Log.Information("PCBuilder Service запущен");
 
 app.Run();
 

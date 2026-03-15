@@ -1,3 +1,4 @@
+using PCBuilderService.DTOs;
 using PCBuilderService.Models;
 
 namespace PCBuilderService.Services;
@@ -8,9 +9,14 @@ namespace PCBuilderService.Services;
 public interface ICompatibilityService
 {
     /// <summary>
-    /// Проверить совместимость конфигурации
+    /// Проверить совместимость конфигурации (старый метод для обратной совместимости)
     /// </summary>
     Task<CompatibilityResult> CheckCompatibilityAsync(PCConfiguration config);
+    
+    /// <summary>
+    /// Проверить совместимость компонентов по DTO
+    /// </summary>
+    Task<CompatibilityCheckResponse> CheckCompatibilityAsync(CompatibilityCheckRequest request);
     
     /// <summary>
     /// Получить совместимые материнские платы для процессора
@@ -36,149 +42,66 @@ public class CompatibilityService : ICompatibilityService
     private readonly HttpClient _catalogClient;
     private readonly ILogger<CompatibilityService> _logger;
 
+    // Константы для расчёта мощности
+    private const int BASE_SYSTEM_POWER = 50; // Базовое потребление системы (RAM, SSD, вентиляторы)
+    private const double PSU_BUFFER_PERCENT = 0.3; // 30% запас мощности
+    private const double PSU_MIN_BUFFER_PERCENT = 0.2; // 20% минимальный запас
+
     public CompatibilityService(HttpClient catalogClient, ILogger<CompatibilityService> logger)
     {
         _catalogClient = catalogClient;
         _logger = logger;
     }
 
-    public async Task<CompatibilityResult> CheckCompatibilityAsync(PCConfiguration config)
+    /// <summary>
+    /// Проверка совместимости по DTO (новый метод)
+    /// </summary>
+    public async Task<CompatibilityCheckResponse> CheckCompatibilityAsync(CompatibilityCheckRequest request)
     {
-        var result = new CompatibilityResult { IsCompatible = true };
+        var result = new CompatibilityCheckResponse
+        {
+            Result = new CompatibilityResultDto { IsCompatible = true }
+        };
 
         try
         {
-            // Получаем спецификации всех выбранных компонентов
-            var specs = await GetConfigurationSpecsAsync(config);
+            var components = request.Components;
+
+            // Извлекаем спецификации из DTO
+            var cpuSpecs = ExtractCpuSpecs(components.Cpu);
+            var motherboardSpecs = ExtractMotherboardSpecs(components.Motherboard);
+            var ramSpecs = ExtractRamSpecs(components.Ram);
+            var gpuSpecs = ExtractGpuSpecs(components.Gpu);
+            var psuSpecs = ExtractPsuSpecs(components.Psu);
+            var caseSpecs = ExtractCaseSpecs(components.Case);
+            var coolerSpecs = ExtractCoolerSpecs(components.Cooling);
 
             // 1. Проверка сокета процессор-материнская плата
-            if (specs.Processor != null && specs.Motherboard != null)
-            {
-                if (!string.Equals(specs.Processor.Socket, specs.Motherboard.Socket, StringComparison.OrdinalIgnoreCase))
-                {
-                    result.Issues.Add(new CompatibilityIssue
-                    {
-                        ComponentType = "Processor/Motherboard",
-                        Message = "Несовместимый сокет",
-                        Details = $"Процессор ({specs.Processor.Socket}) не совместим с материнской платой ({specs.Motherboard.Socket})"
-                    });
-                    result.IsCompatible = false;
-                }
-            }
+            CheckSocketCompatibility(cpuSpecs, motherboardSpecs, result.Result);
 
-            // 2. Проверка типа памяти
-            if (specs.Motherboard != null && specs.Ram != null)
-            {
-                if (!string.Equals(specs.Motherboard.RamType, specs.Ram.Type, StringComparison.OrdinalIgnoreCase))
-                {
-                    result.Issues.Add(new CompatibilityIssue
-                    {
-                        ComponentType = "RAM/Motherboard",
-                        Message = "Несовместимый тип памяти",
-                        Details = $"Материнская плата поддерживает {specs.Motherboard.RamType}, выбрано {specs.Ram.Type}"
-                    });
-                    result.IsCompatible = false;
-                }
-            }
+            // 2. Проверка типа памяти (RAM generation matching)
+            CheckRamCompatibility(motherboardSpecs, ramSpecs, result.Result);
 
             // 3. Проверка мощности блока питания
-            if (specs.Psu != null)
-            {
-                var totalTdp = CalculateTotalTdp(specs);
-                var recommendedPsu = (int)(totalTdp * 1.5); // 50% запас
+            var totalTdp = CalculateTotalTdp(cpuSpecs, gpuSpecs);
+            result.PowerConsumption = totalTdp;
+            result.RecommendedPsu = CalculateRecommendedPsu(totalTdp);
+            CheckPsuCompatibility(psuSpecs, totalTdp, result.Result);
 
-                if (specs.Psu.Wattage < recommendedPsu)
-                {
-                    result.Issues.Add(new CompatibilityIssue
-                    {
-                        ComponentType = "PSU",
-                        Message = "Недостаточная мощность блока питания",
-                        Details = $"Рекомендуется минимум {recommendedPsu}Вт, выбрано {specs.Psu.Wattage}Вт"
-                    });
-                    result.IsCompatible = false;
-                }
-                else if (specs.Psu.Wattage < recommendedPsu * 1.1)
-                {
-                    result.Warnings.Add(new CompatibilityWarning
-                    {
-                        ComponentType = "PSU",
-                        Message = "Малый запас мощности БП",
-                        Recommendation = $"Рекомендуется БП мощностью от {(int)(totalTdp * 1.6)}Вт для запаса на апгрейд"
-                    });
-                }
-            }
+            // 4. Проверка форм-фактора материнской платы и корпуса
+            CheckFormFactorCompatibility(motherboardSpecs, caseSpecs, result.Result);
 
-            // 4. Проверка габаритов видеокарты и корпуса
-            if (specs.Gpu != null && specs.Case != null)
-            {
-                if (specs.Gpu.Length > specs.Case.MaxGpuLength)
-                {
-                    result.Issues.Add(new CompatibilityIssue
-                    {
-                        ComponentType = "GPU/Case",
-                        Message = "Видеокарта не поместится в корпус",
-                        Details = $"Длина видеокарты {specs.Gpu.Length}мм превышает максимально допустимую {specs.Case.MaxGpuLength}мм"
-                    });
-                    result.IsCompatible = false;
-                }
-            }
+            // 5. Проверка габаритов видеокарты и корпуса
+            CheckGpuDimensions(gpuSpecs, caseSpecs, result.Result);
 
-            // 5. Проверка форм-фактора материнской платы и корпуса
-            if (specs.Motherboard != null && specs.Case != null)
-            {
-                if (!specs.Case.SupportedMotherboards.Contains(specs.Motherboard.FormFactor, StringComparer.OrdinalIgnoreCase))
-                {
-                    result.Issues.Add(new CompatibilityIssue
-                    {
-                        ComponentType = "Motherboard/Case",
-                        Message = "Форм-фактор материнской платы не поддерживается корпусом",
-                        Details = $"Корпус поддерживает: {string.Join(", ", specs.Case.SupportedMotherboards)}, выбрано: {specs.Motherboard.FormFactor}"
-                    });
-                    result.IsCompatible = false;
-                }
-            }
+            // 6. Проверка системы охлаждения
+            CheckCoolerCompatibility(cpuSpecs, coolerSpecs, result.Result);
 
-            // 6. Проверка баланса производительности (процессор-видеокарта)
-            if (specs.Processor != null && specs.Gpu != null)
-            {
-                var balanceRatio = (double)specs.Processor.PerformanceScore / specs.Gpu.PerformanceScore;
-                if (balanceRatio < 0.5 || balanceRatio > 2.0)
-                {
-                    result.Warnings.Add(new CompatibilityWarning
-                    {
-                        ComponentType = "Processor/GPU",
-                        Message = "Дисбаланс производительности",
-                        Recommendation = balanceRatio < 0.5 
-                            ? "Процессор может ограничивать производительность видеокарты. Рассмотрите более мощный процессор."
-                            : "Видеокарта может ограничивать производительность процессора. Рассмотрите более мощную видеокарту."
-                    });
-                }
-            }
+            // 7. Проверка высоты кулера и корпуса
+            CheckCoolerHeight(coolerSpecs, caseSpecs, result.Result);
 
-            // 7. Проверка системы охлаждения
-            if (specs.Processor != null && specs.Cooler != null)
-            {
-                if (specs.Cooler.Tdp < specs.Processor.Tdp)
-                {
-                    result.Warnings.Add(new CompatibilityWarning
-                    {
-                        ComponentType = "Cooler",
-                        Message = "Кулер может не справиться с охлаждением",
-                        Recommendation = $"TDP процессора {specs.Processor.Tdp}Вт, макс. TDP кулера {specs.Cooler.Tdp}Вт"
-                    });
-                }
-                
-                if (!specs.Cooler.SupportedSockets.Contains(specs.Processor.Socket, StringComparer.OrdinalIgnoreCase))
-                {
-                    result.Issues.Add(new CompatibilityIssue
-                    {
-                        ComponentType = "Cooler/Processor",
-                        Message = "Кулер не поддерживает сокет процессора",
-                        Details = $"Кулер поддерживает: {string.Join(", ", specs.Cooler.SupportedSockets)}, сокет процессора: {specs.Processor.Socket}"
-                    });
-                    result.IsCompatible = false;
-                }
-            }
+            // 8. Дополнительные предупреждения
+            AddPerformanceWarnings(cpuSpecs, gpuSpecs, ramSpecs, result.Result);
 
             return result;
         }
@@ -187,6 +110,75 @@ public class CompatibilityService : ICompatibilityService
             _logger.LogError(ex, "Ошибка при проверке совместимости");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Старый метод для обратной совместимости
+    /// </summary>
+    public async Task<CompatibilityResult> CheckCompatibilityAsync(PCConfiguration config)
+    {
+        // Конвертируем старый формат в новый
+        var request = new CompatibilityCheckRequest
+        {
+            Components = new PCComponentsDto
+            {
+                Cpu = config.ProcessorId.HasValue ? new SelectedComponentDto 
+                { 
+                    ProductId = config.ProcessorId.Value, 
+                    Name = "CPU" 
+                } : null,
+                Motherboard = config.MotherboardId.HasValue ? new SelectedComponentDto 
+                { 
+                    ProductId = config.MotherboardId.Value, 
+                    Name = "Motherboard" 
+                } : null,
+                Ram = config.RamId.HasValue ? new SelectedComponentDto 
+                { 
+                    ProductId = config.RamId.Value, 
+                    Name = "RAM" 
+                } : null,
+                Gpu = config.GpuId.HasValue ? new SelectedComponentDto 
+                { 
+                    ProductId = config.GpuId.Value, 
+                    Name = "GPU" 
+                } : null,
+                Psu = config.PsuId.HasValue ? new SelectedComponentDto 
+                { 
+                    ProductId = config.PsuId.Value, 
+                    Name = "PSU" 
+                } : null,
+                Case = config.CaseId.HasValue ? new SelectedComponentDto 
+                { 
+                    ProductId = config.CaseId.Value, 
+                    Name = "Case" 
+                } : null,
+                Cooling = config.CoolerId.HasValue ? new SelectedComponentDto 
+                { 
+                    ProductId = config.CoolerId.Value, 
+                    Name = "Cooler" 
+                } : null
+            }
+        };
+
+        var response = await CheckCompatibilityAsync(request);
+
+        // Конвертируем результат
+        return new CompatibilityResult
+        {
+            IsCompatible = response.Result.IsCompatible,
+            Issues = response.Result.Issues.Select(i => new CompatibilityIssue
+            {
+                ComponentType = i.Component1,
+                Message = i.Message,
+                Details = i.Suggestion ?? ""
+            }).ToList(),
+            Warnings = response.Result.Warnings.Select(w => new CompatibilityWarning
+            {
+                ComponentType = w.Component,
+                Message = w.Message,
+                Recommendation = w.Suggestion ?? ""
+            }).ToList()
+        };
     }
 
     public async Task<IEnumerable<Guid>> GetCompatibleMotherboardsAsync(Guid processorId)
@@ -204,87 +196,628 @@ public class CompatibilityService : ICompatibilityService
 
     public async Task<int> CalculateTotalPowerConsumptionAsync(PCConfiguration config)
     {
-        // Упрощённый расчёт: TDP процессора + TDP видеокарты + 50Вт (остальное) + 20% запас
-        var specs = await GetConfigurationSpecsAsync(config);
-        var totalTdp = CalculateTotalTdp(specs);
-        return (int)(totalTdp * 1.2);
+        var request = new CompatibilityCheckRequest
+        {
+            Components = new PCComponentsDto
+            {
+                Cpu = config.ProcessorId.HasValue ? new SelectedComponentDto 
+                { 
+                    ProductId = config.ProcessorId.Value, 
+                    Name = "CPU" 
+                } : null,
+                Gpu = config.GpuId.HasValue ? new SelectedComponentDto 
+                { 
+                    ProductId = config.GpuId.Value, 
+                    Name = "GPU" 
+                } : null
+            }
+        };
+
+        var cpuSpecs = ExtractCpuSpecs(request.Components.Cpu);
+        var gpuSpecs = ExtractGpuSpecs(request.Components.Gpu);
+        
+        return CalculateTotalTdp(cpuSpecs, gpuSpecs);
     }
 
-    private static int CalculateTotalTdp(ConfigurationSpecs specs)
+    #region Спецификации компонентов
+
+    /// <summary>
+    /// Спецификации процессора для проверки совместимости
+    /// </summary>
+    private class CpuSpecification
     {
-        int total = 0;
-        if (specs.Processor != null) total += specs.Processor.Tdp;
-        if (specs.Gpu != null) total += specs.Gpu.Tdp;
-        total += 50; // Память, накопители, вентиляторы
+        public string Name { get; set; } = "";
+        public string Socket { get; set; } = "";
+        public int Tdp { get; set; }
+        public int PerformanceScore { get; set; }
+    }
+
+    /// <summary>
+    /// Спецификации материнской платы
+    /// </summary>
+    private class MotherboardSpecification
+    {
+        public string Name { get; set; } = "";
+        public string Socket { get; set; } = "";
+        public string RamType { get; set; } = "";
+        public int RamSlots { get; set; }
+        public int MaxRamSpeed { get; set; }
+        public string FormFactor { get; set; } = "";
+    }
+
+    /// <summary>
+    /// Спецификации оперативной памяти
+    /// </summary>
+    private class RamSpecification
+    {
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "";
+        public int Speed { get; set; }
+        public int Capacity { get; set; }
+        public int Modules { get; set; }
+    }
+
+    /// <summary>
+    /// Спецификации видеокарты
+    /// </summary>
+    private class GpuSpecification
+    {
+        public string Name { get; set; } = "";
+        public int Length { get; set; }
+        public int Tdp { get; set; }
+        public int RecommendedPsu { get; set; }
+        public int PerformanceScore { get; set; }
+    }
+
+    /// <summary>
+    /// Спецификации блока питания
+    /// </summary>
+    private class PsuSpecification
+    {
+        public string Name { get; set; } = "";
+        public int Wattage { get; set; }
+        public string Certification { get; set; } = "";
+        public bool Modular { get; set; }
+    }
+
+    /// <summary>
+    /// Спецификации корпуса
+    /// </summary>
+    private class CaseSpecification
+    {
+        public string Name { get; set; } = "";
+        public int MaxGpuLength { get; set; }
+        public int MaxCoolerHeight { get; set; }
+        public List<string> SupportedFormFactors { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Спецификации системы охлаждения
+    /// </summary>
+    private class CoolerSpecification
+    {
+        public string Name { get; set; } = "";
+        public string Type { get; set; } = "";
+        public int Height { get; set; }
+        public int MaxTdp { get; set; }
+        public List<string> SupportedSockets { get; set; } = new();
+    }
+
+    #endregion
+
+    #region Извлечение спецификаций из DTO
+
+    private CpuSpecification ExtractCpuSpecs(SelectedComponentDto? cpu)
+    {
+        if (cpu == null)
+            return new CpuSpecification();
+
+        var specs = cpu.Specifications;
+        return new CpuSpecification
+        {
+            Name = cpu.Name,
+            Socket = GetSpecValue(specs, "socket", ""),
+            Tdp = GetSpecValueInt(specs, "tdp", 65),
+            PerformanceScore = GetSpecValueInt(specs, "performanceScore", 0)
+        };
+    }
+
+    private MotherboardSpecification ExtractMotherboardSpecs(SelectedComponentDto? motherboard)
+    {
+        if (motherboard == null)
+            return new MotherboardSpecification();
+
+        var specs = motherboard.Specifications;
+        return new MotherboardSpecification
+        {
+            Name = motherboard.Name,
+            Socket = GetSpecValue(specs, "socket", ""),
+            RamType = GetSpecValue(specs, "ramType", ""),
+            RamSlots = GetSpecValueInt(specs, "ramSlots", 4),
+            MaxRamSpeed = GetSpecValueInt(specs, "maxRamSpeed", 3200),
+            FormFactor = GetSpecValue(specs, "formFactor", "ATX")
+        };
+    }
+
+    private RamSpecification ExtractRamSpecs(SelectedComponentDto? ram)
+    {
+        if (ram == null)
+            return new RamSpecification();
+
+        var specs = ram.Specifications;
+        return new RamSpecification
+        {
+            Name = ram.Name,
+            Type = GetSpecValue(specs, "type", ""),
+            Speed = GetSpecValueInt(specs, "speed", 3200),
+            Capacity = GetSpecValueInt(specs, "capacity", 16),
+            Modules = GetSpecValueInt(specs, "modules", 1)
+        };
+    }
+
+    private GpuSpecification ExtractGpuSpecs(SelectedComponentDto? gpu)
+    {
+        if (gpu == null)
+            return new GpuSpecification();
+
+        var specs = gpu.Specifications;
+        return new GpuSpecification
+        {
+            Name = gpu.Name,
+            Length = GetSpecValueInt(specs, "length", 300),
+            Tdp = GetSpecValueInt(specs, "tdp", 200),
+            RecommendedPsu = GetSpecValueInt(specs, "recommendedPsu", 550),
+            PerformanceScore = GetSpecValueInt(specs, "performanceScore", 0)
+        };
+    }
+
+    private PsuSpecification ExtractPsuSpecs(SelectedComponentDto? psu)
+    {
+        if (psu == null)
+            return new PsuSpecification();
+
+        var specs = psu.Specifications;
+        return new PsuSpecification
+        {
+            Name = psu.Name,
+            Wattage = GetSpecValueInt(specs, "wattage", 550),
+            Certification = GetSpecValue(specs, "certification", "80+ Bronze"),
+            Modular = GetSpecValueBool(specs, "modular", false)
+        };
+    }
+
+    private CaseSpecification ExtractCaseSpecs(SelectedComponentDto? caseComponent)
+    {
+        if (caseComponent == null)
+            return new CaseSpecification();
+
+        var specs = caseComponent.Specifications;
+        var supportedFormFactors = GetSpecValue(specs, "supportedFormFactors", "ATX,mATX,ITX")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+
+        return new CaseSpecification
+        {
+            Name = caseComponent.Name,
+            MaxGpuLength = GetSpecValueInt(specs, "maxGpuLength", 320),
+            MaxCoolerHeight = GetSpecValueInt(specs, "maxCoolerHeight", 160),
+            SupportedFormFactors = supportedFormFactors
+        };
+    }
+
+    private CoolerSpecification ExtractCoolerSpecs(SelectedComponentDto? cooler)
+    {
+        if (cooler == null)
+            return new CoolerSpecification();
+
+        var specs = cooler.Specifications;
+        var supportedSockets = GetSpecValue(specs, "supportedSockets", "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+
+        return new CoolerSpecification
+        {
+            Name = cooler.Name,
+            Type = GetSpecValue(specs, "type", "Air"),
+            Height = GetSpecValueInt(specs, "height", 160),
+            MaxTdp = GetSpecValueInt(specs, "maxTdp", 150),
+            SupportedSockets = supportedSockets
+        };
+    }
+
+    private static string GetSpecValue(Dictionary<string, object>? specs, string key, string defaultValue)
+    {
+        if (specs == null || !specs.TryGetValue(key, out var value))
+            return defaultValue;
+        
+        return value?.ToString() ?? defaultValue;
+    }
+
+    private static int GetSpecValueInt(Dictionary<string, object>? specs, string key, int defaultValue)
+    {
+        if (specs == null || !specs.TryGetValue(key, out var value))
+            return defaultValue;
+
+        if (value is int intValue)
+            return intValue;
+        
+        if (value is long longValue)
+            return (int)longValue;
+        
+        if (int.TryParse(value?.ToString(), out var parsed))
+            return parsed;
+
+        return defaultValue;
+    }
+
+    private static bool GetSpecValueBool(Dictionary<string, object>? specs, string key, bool defaultValue)
+    {
+        if (specs == null || !specs.TryGetValue(key, out var value))
+            return defaultValue;
+
+        if (value is bool boolValue)
+            return boolValue;
+
+        if (bool.TryParse(value?.ToString(), out var parsed))
+            return parsed;
+
+        return defaultValue;
+    }
+
+    #endregion
+
+    #region Проверки совместимости
+
+    /// <summary>
+    /// Проверка совместимости сокета CPU и материнской платы
+    /// FT-2.4: Socket matching (CPU vs Motherboard)
+    /// </summary>
+    private void CheckSocketCompatibility(CpuSpecification cpu, MotherboardSpecification motherboard, CompatibilityResultDto result)
+    {
+        // Если один из компонентов не выбран - пропускаем проверку
+        if (string.IsNullOrEmpty(cpu.Socket) || string.IsNullOrEmpty(motherboard.Socket))
+            return;
+
+        if (!string.Equals(cpu.Socket, motherboard.Socket, StringComparison.OrdinalIgnoreCase))
+        {
+            result.IsCompatible = false;
+            result.Issues.Add(new CompatibilityIssueDto
+            {
+                Severity = "Error",
+                Component1 = cpu.Name,
+                Component2 = motherboard.Name,
+                Message = $"Процессор {cpu.Name} (сокет {cpu.Socket}) несовместим с материнской платой {motherboard.Name} (сокет {motherboard.Socket})",
+                Suggestion = $"Выберите материнскую плату с сокетом {cpu.Socket} или процессор с сокетом {motherboard.Socket}"
+            });
+        }
+        else
+        {
+            _logger.LogDebug("Сокет совместим: CPU={CpuSocket}, MB={MbSocket}", cpu.Socket, motherboard.Socket);
+        }
+    }
+
+    /// <summary>
+    /// Проверка совместимости типа памяти
+    /// FT-2.4: RAM generation matching (Motherboard vs RAM)
+    /// </summary>
+    private void CheckRamCompatibility(MotherboardSpecification motherboard, RamSpecification ram, CompatibilityResultDto result)
+    {
+        // Если один из компонентов не выбран - пропускаем проверку
+        if (string.IsNullOrEmpty(motherboard.RamType) || string.IsNullOrEmpty(ram.Type))
+            return;
+
+        if (!string.Equals(motherboard.RamType, ram.Type, StringComparison.OrdinalIgnoreCase))
+        {
+            result.IsCompatible = false;
+            result.Issues.Add(new CompatibilityIssueDto
+            {
+                Severity = "Error",
+                Component1 = ram.Name,
+                Component2 = motherboard.Name,
+                Message = $"Память {ram.Name} ({ram.Type}) несовместима с материнской платой {motherboard.Name} (поддерживает {motherboard.RamType})",
+                Suggestion = $"Выберите память типа {motherboard.RamType} или материнскую плату с поддержкой {ram.Type}"
+            });
+        }
+        else
+        {
+            // Проверка на соответствие скорости памяти поддерживаемой материнской платой
+            if (ram.Speed > motherboard.MaxRamSpeed)
+            {
+                result.Warnings.Add(new CompatibilityWarningDto
+                {
+                    Severity = "Warning",
+                    Component = ram.Name,
+                    Message = $"Скорость памяти {ram.Speed} МГц превышает максимальную поддерживаемую {motherboard.MaxRamSpeed} МГц. Память будет работать на пониженной частоте.",
+                    Suggestion = $"Для полной реализации потенциала памяти выберите материнскую плату с поддержкой {ram.Speed} МГц"
+                });
+            }
+
+            // Проверка количества модулей
+            if (ram.Modules > motherboard.RamSlots)
+            {
+                result.IsCompatible = false;
+                result.Issues.Add(new CompatibilityIssueDto
+                {
+                    Severity = "Error",
+                    Component1 = ram.Name,
+                    Component2 = motherboard.Name,
+                    Message = $"Невозможно установить {ram.Modules} модулей памяти в материнскую плату с {motherboard.RamSlots} слотами",
+                    Suggestion = $"Выберите набор памяти с количеством модулей не более {motherboard.RamSlots}"
+                });
+            }
+        }
+    }
+
+    /// <summary>
+    /// Проверка достаточности мощности блока питания
+    /// FT-2.4: PSU wattage sufficiency (Sum of CPU + GPU TDP + buffer)
+    /// </summary>
+    private void CheckPsuCompatibility(PsuSpecification psu, int totalTdp, CompatibilityResultDto result)
+    {
+        // Если БП не выбран - пропускаем проверку
+        if (psu.Wattage == 0)
+            return;
+
+        var recommendedPsu = CalculateRecommendedPsu(totalTdp);
+        var minRequiredPsu = (int)(totalTdp * (1 + PSU_MIN_BUFFER_PERCENT));
+
+        if (psu.Wattage < minRequiredPsu)
+        {
+            result.IsCompatible = false;
+            result.Issues.Add(new CompatibilityIssueDto
+            {
+                Severity = "Error",
+                Component1 = psu.Name,
+                Component2 = "Система",
+                Message = $"Мощность блока питания {psu.Name} ({psu.Wattage} Вт) недостаточна. Потребление системы: {totalTdp} Вт, минимум с запасом: {minRequiredPsu} Вт",
+                Suggestion = $"Рекомендуется блок питания мощностью не менее {recommendedPsu} Вт"
+            });
+        }
+        else if (psu.Wattage < recommendedPsu)
+        {
+            result.Warnings.Add(new CompatibilityWarningDto
+            {
+                Severity = "Warning",
+                Component = psu.Name,
+                Message = $"Мощность блока питания {psu.Wattage} Вт соответствует минимальным требованиям, но для оптимальной работы рекомендуется {recommendedPsu} Вт",
+                Suggestion = $"Рассмотрите блок питания мощностью {recommendedPsu} Вт или выше"
+            });
+        }
+
+        // Информация о сертификации
+        if (!string.IsNullOrEmpty(psu.Certification))
+        {
+            var lowerTierCertifications = new[] { "80+", "80+ White" };
+            if (lowerTierCertifications.Any(c => string.Equals(psu.Certification, c, StringComparison.OrdinalIgnoreCase)) && totalTdp > 400)
+            {
+                result.Warnings.Add(new CompatibilityWarningDto
+                {
+                    Severity = "Info",
+                    Component = psu.Name,
+                    Message = $"Блок питания с сертификацией {psu.Certification} может иметь низкий КПД при высокой нагрузке",
+                    Suggestion = "Рассмотрите блок питания с сертификатом 80+ Bronze или выше"
+                });
+            }
+        }
+    }
+
+    /// <summary>
+    /// Проверка совместимости форм-фактора материнской платы и корпуса
+    /// FT-2.4: Form-factor compatibility (Motherboard vs Case)
+    /// </summary>
+    private void CheckFormFactorCompatibility(MotherboardSpecification motherboard, CaseSpecification caseSpec, CompatibilityResultDto result)
+    {
+        // Если один из компонентов не выбран - пропускаем проверку
+        if (string.IsNullOrEmpty(motherboard.FormFactor) || caseSpec.SupportedFormFactors.Count == 0)
+            return;
+
+        // Нормализация форм-фактора материнской платы
+        var mbFormFactor = NormalizeFormFactor(motherboard.FormFactor);
+        var supportedFormFactors = caseSpec.SupportedFormFactors.Select(NormalizeFormFactor).ToList();
+
+        if (!supportedFormFactors.Contains(mbFormFactor, StringComparer.OrdinalIgnoreCase))
+        {
+            result.IsCompatible = false;
+            result.Issues.Add(new CompatibilityIssueDto
+            {
+                Severity = "Error",
+                Component1 = motherboard.Name,
+                Component2 = caseSpec.Name,
+                Message = $"Материнская плата форм-фактора {motherboard.FormFactor} не подходит для корпуса {caseSpec.Name}. Поддерживаемые форм-факторы: {string.Join(", ", caseSpec.SupportedFormFactors)}",
+                Suggestion = $"Выберите материнскую плату форм-фактора {string.Join(" или ", caseSpec.SupportedFormFactors)} или другой корпус"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Проверка габаритов видеокарты и корпуса
+    /// </summary>
+    private void CheckGpuDimensions(GpuSpecification gpu, CaseSpecification caseSpec, CompatibilityResultDto result)
+    {
+        // Если один из компонентов не выбран - пропускаем проверку
+        if (gpu.Length == 0 || caseSpec.MaxGpuLength == 0)
+            return;
+
+        if (gpu.Length > caseSpec.MaxGpuLength)
+        {
+            result.IsCompatible = false;
+            result.Issues.Add(new CompatibilityIssueDto
+            {
+                Severity = "Error",
+                Component1 = gpu.Name,
+                Component2 = caseSpec.Name,
+                Message = $"Видеокарта {gpu.Name} (длина {gpu.Length} мм) не поместится в корпус {caseSpec.Name} (макс. длина {caseSpec.MaxGpuLength} мм)",
+                Suggestion = $"Выберите видеокарту короче {caseSpec.MaxGpuLength} мм или корпус с большим пространством для видеокарты"
+            });
+        }
+        else if (gpu.Length > caseSpec.MaxGpuLength - 20)
+        {
+            result.Warnings.Add(new CompatibilityWarningDto
+            {
+                Severity = "Warning",
+                Component = gpu.Name,
+                Message = $"Видеокарта {gpu.Name} ({gpu.Length} мм) почти касается передней стенки корпуса (макс. {caseSpec.MaxGpuLength} мм). Это может затруднить установку и ухудшить охлаждение.",
+                Suggestion = "Рассмотрите корпус с большим пространством для видеокарты"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Проверка совместимости кулера с процессором (по сокету и TDP)
+    /// </summary>
+    private void CheckCoolerCompatibility(CpuSpecification cpu, CoolerSpecification cooler, CompatibilityResultDto result)
+    {
+        // Если один из компонентов не выбран - пропускаем проверку
+        if (string.IsNullOrEmpty(cpu.Socket) || cooler.SupportedSockets.Count == 0)
+            return;
+
+        // Проверка поддержки сокета
+        if (!cooler.SupportedSockets.Contains(cpu.Socket, StringComparer.OrdinalIgnoreCase))
+        {
+            result.IsCompatible = false;
+            result.Issues.Add(new CompatibilityIssueDto
+            {
+                Severity = "Error",
+                Component1 = cooler.Name,
+                Component2 = cpu.Name,
+                Message = $"Кулер {cooler.Name} не поддерживает сокет {cpu.Socket}",
+                Suggestion = $"Выберите кулер с поддержкой сокета {cpu.Socket}"
+            });
+            return;
+        }
+
+        // Проверка TDP охлаждения
+        if (cooler.MaxTdp > 0 && cpu.Tdp > cooler.MaxTdp)
+        {
+            result.Warnings.Add(new CompatibilityWarningDto
+            {
+                Severity = "Warning",
+                Component = cooler.Name,
+                Message = $"Кулер {cooler.Name} (макс. TDP {cooler.MaxTdp} Вт) может быть недостаточен для процессора {cpu.Name} (TDP {cpu.Tdp} Вт)",
+                Suggestion = $"Рекомендуется кулер с TDP охлаждения не менее {cpu.Tdp} Вт"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Проверка высоты кулера и корпуса
+    /// </summary>
+    private void CheckCoolerHeight(CoolerSpecification cooler, CaseSpecification caseSpec, CompatibilityResultDto result)
+    {
+        // Если один из компонентов не выбран - пропускаем проверку
+        if (cooler.Height == 0 || caseSpec.MaxCoolerHeight == 0)
+            return;
+
+        // Только для воздушных кулеров
+        if (!string.Equals(cooler.Type, "Air", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        if (cooler.Height > caseSpec.MaxCoolerHeight)
+        {
+            result.IsCompatible = false;
+            result.Issues.Add(new CompatibilityIssueDto
+            {
+                Severity = "Error",
+                Component1 = cooler.Name,
+                Component2 = caseSpec.Name,
+                Message = $"Кулер {cooler.Name} (высота {cooler.Height} мм) не поместится в корпус {caseSpec.Name} (макс. высота кулера {caseSpec.MaxCoolerHeight} мм)",
+                Suggestion = $"Выберите кулер высотой не более {caseSpec.MaxCoolerHeight} мм, систему водяного охлаждения или другой корпус"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Добавление предупреждений о балансе производительности
+    /// </summary>
+    private void AddPerformanceWarnings(CpuSpecification cpu, GpuSpecification gpu, RamSpecification ram, CompatibilityResultDto result)
+    {
+        // Предупреждение о балансе CPU и GPU (bottleneck)
+        if (cpu.PerformanceScore > 0 && gpu.PerformanceScore > 0)
+        {
+            var ratio = (double)cpu.PerformanceScore / gpu.PerformanceScore;
+            
+            if (ratio < 0.7)
+            {
+                result.Warnings.Add(new CompatibilityWarningDto
+                {
+                    Severity = "Info",
+                    Component = cpu.Name,
+                    Message = $"Процессор {cpu.Name} может ограничивать производительность видеокарты {gpu.Name}",
+                    Suggestion = "Рассмотрите более мощный процессор для полной реализации потенциала видеокарты"
+                });
+            }
+            else if (ratio > 1.4)
+            {
+                result.Warnings.Add(new CompatibilityWarningDto
+                {
+                    Severity = "Info",
+                    Component = gpu.Name,
+                    Message = $"Видеокарта {gpu.Name} может ограничивать производительность процессора {cpu.Name}",
+                    Suggestion = "Рассмотрите более мощную видеокарту для игр, или эта конфигурация отлично подойдёт для рабочих задач"
+                });
+            }
+        }
+
+        // Предупреждение об объёме памяти
+        if (ram.Capacity > 0)
+        {
+            if (ram.Capacity < 16)
+            {
+                result.Warnings.Add(new CompatibilityWarningDto
+                {
+                    Severity = "Info",
+                    Component = ram.Name,
+                    Message = $"Объём памяти {ram.Capacity} ГБ может быть недостаточен для современных игр и приложений",
+                    Suggestion = "Рекомендуется минимум 16 ГБ памяти для комфортной работы"
+                });
+            }
+        }
+    }
+
+    #endregion
+
+    #region Расчёт мощности
+
+    /// <summary>
+    /// Расчёт общего TDP системы
+    /// </summary>
+    private int CalculateTotalTdp(CpuSpecification cpu, GpuSpecification gpu)
+    {
+        var total = BASE_SYSTEM_POWER; // Базовое потребление
+        
+        total += cpu.Tdp;
+        total += gpu.Tdp;
+
+        // Добавляем запас на пиковые нагрузки
+        total = (int)(total * 1.1);
+
         return total;
     }
 
-    private async Task<ConfigurationSpecs> GetConfigurationSpecsAsync(PCConfiguration config)
+    /// <summary>
+    /// Расчёт рекомендуемой мощности БП
+    /// </summary>
+    private int CalculateRecommendedPsu(int totalTdp)
     {
-        // В реальности будет запрос к Catalog Service для получения спецификаций
-        // Здесь заглушка с примерными данными
-        return new ConfigurationSpecs
+        var recommended = totalTdp * (1 + PSU_BUFFER_PERCENT);
+        // Округляем до ближайших 50 Вт вверх
+        return ((int)Math.Ceiling(recommended / 50.0)) * 50;
+    }
+
+    /// <summary>
+    /// Нормализация форм-фактора для сравнения
+    /// </summary>
+    private static string NormalizeFormFactor(string formFactor)
+    {
+        return formFactor.ToUpperInvariant() switch
         {
-            Processor = config.ProcessorId.HasValue ? new ProcessorSpecs 
-            { 
-                ProductId = config.ProcessorId.Value,
-                Socket = "AM5",
-                Tdp = 65,
-                PerformanceScore = 100
-            } : null,
-            Motherboard = config.MotherboardId.HasValue ? new MotherboardSpecs
-            {
-                ProductId = config.MotherboardId.Value,
-                Socket = "AM5",
-                RamType = "DDR5",
-                FormFactor = "ATX",
-                SupportedMotherboards = new List<string> { "ATX", "mATX" }
-            } : null,
-            Ram = config.RamId.HasValue ? new RamSpecs
-            {
-                ProductId = config.RamId.Value,
-                Type = "DDR5",
-                Speed = 5600,
-                Capacity = 32
-            } : null,
-            Gpu = config.GpuId.HasValue ? new GpuSpecs
-            {
-                ProductId = config.GpuId.Value,
-                Length = 300,
-                Tdp = 250,
-                PerformanceScore = 150
-            } : null,
-            Psu = config.PsuId.HasValue ? new PsuSpecs
-            {
-                ProductId = config.PsuId.Value,
-                Wattage = 750
-            } : null,
-            Case = config.CaseId.HasValue ? new CaseSpecs
-            {
-                ProductId = config.CaseId.Value,
-                MaxGpuLength = 350,
-                SupportedMotherboards = new List<string> { "ATX", "mATX", "ITX" }
-            } : null,
-            Cooler = config.CoolerId.HasValue ? new CoolerSpecs
-            {
-                ProductId = config.CoolerId.Value,
-                Tdp = 150,
-                SupportedSockets = new List<string> { "AM5", "LGA1700" }
-            } : null
+            "ATX" or "STANDARD-ATX" => "ATX",
+            "MATX" or "MICRO-ATX" or "M-ATX" or "M ATX" => "mATX",
+            "ITX" or "MINI-ITX" or "MINI ITX" => "ITX",
+            "EATX" or "EXTENDED-ATX" => "EATX",
+            _ => formFactor.ToUpperInvariant()
         };
     }
-}
 
-/// <summary>
-/// Вспомогательный класс для хранения спецификаций конфигурации
-/// </summary>
-internal class ConfigurationSpecs
-{
-    public ProcessorSpecs? Processor { get; set; }
-    public MotherboardSpecs? Motherboard { get; set; }
-    public RamSpecs? Ram { get; set; }
-    public GpuSpecs? Gpu { get; set; }
-    public PsuSpecs? Psu { get; set; }
-    public CaseSpecs? Case { get; set; }
-    public CoolerSpecs? Cooler { get; set; }
+    #endregion
 }

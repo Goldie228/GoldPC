@@ -21,10 +21,18 @@ public interface IServicesService
     Task<List<ServiceTypeDto>> GetServiceTypesAsync();
 }
 
+/// <summary>
+/// Сервис управления заявками на услуги
+/// Реализует бизнес-логику модуля "Услуги" (ФТ-4.1 - ФТ-4.11)
+/// </summary>
 public class ServicesService : IServicesService
 {
     private readonly ServicesDbContext _context;
     private readonly ILogger<ServicesService> _logger;
+    
+    /// <summary>
+    /// Максимальное количество активных заявок у одного мастера (ФТ-4.6)
+    /// </summary>
     private const int MaxActiveRequestsPerMaster = 3;
 
     public ServicesService(ServicesDbContext context, ILogger<ServicesService> logger)
@@ -195,6 +203,13 @@ public class ServicesService : IServicesService
             return (null, "Заявка не найдена");
 
         var previousStatus = request.Status;
+        
+        // Валидация перехода статуса (state machine)
+        if (!IsValidStatusTransition(previousStatus, newStatus))
+        {
+            return (null, $"Невозможно изменить статус с {GetStatusName(previousStatus)} на {GetStatusName(newStatus)}");
+        }
+
         request.Status = newStatus;
         request.UpdatedAt = DateTime.UtcNow;
 
@@ -212,30 +227,40 @@ public class ServicesService : IServicesService
 
         await _context.SaveChangesAsync();
 
+        _logger.LogInformation("Service request {RequestId} status changed: {PreviousStatus} -> {NewStatus}", 
+            id, previousStatus, newStatus);
+
         return (MapToDto(request), null);
     }
 
     public async Task<(ServiceRequestDto? Request, string? Error)> CompleteAsync(Guid id, Guid masterId, UpdateServiceRequestRequest request)
     {
-        var serviceRequest = await _context.ServiceRequests.FindAsync(id);
+        var serviceRequest = await _context.ServiceRequests
+            .Include(sr => sr.ServiceType)
+            .FirstOrDefaultAsync(sr => sr.Id == id);
+            
         if (serviceRequest == null)
             return (null, "Заявка не найдена");
 
         if (serviceRequest.MasterId != masterId)
             return (null, "Вы не назначены на эту заявку");
 
+        // Проверка что заявка в статусе "В работе"
+        if (serviceRequest.Status != ServiceRequestStatus.InProgress)
+            return (null, $"Невозможно завершить заявку в статусе '{GetStatusName(serviceRequest.Status)}'");
+
         var previousStatus = serviceRequest.Status;
-        serviceRequest.Status = ServiceRequestStatus.Completed;
         serviceRequest.MasterComment = request.MasterComment;
-        serviceRequest.ActualCost = request.ActualCost ?? serviceRequest.EstimatedCost;
         serviceRequest.CompletedAt = DateTime.UtcNow;
         serviceRequest.UpdatedAt = DateTime.UtcNow;
 
-        if (request.UsedParts != null)
+        // Добавление использованных запчастей (ФТ-4.8)
+        decimal partsTotal = 0;
+        if (request.UsedParts != null && request.UsedParts.Any())
         {
             foreach (var part in request.UsedParts)
             {
-                _context.UsedParts.Add(new UsedPart
+                var usedPart = new UsedPart
                 {
                     Id = Guid.NewGuid(),
                     ServiceRequestId = serviceRequest.Id,
@@ -243,9 +268,16 @@ public class ServicesService : IServicesService
                     ProductName = part.ProductName,
                     Quantity = part.Quantity,
                     UnitPrice = part.UnitPrice
-                });
+                };
+                _context.UsedParts.Add(usedPart);
+                partsTotal += part.Quantity * part.UnitPrice;
             }
         }
+
+        // Расчёт итоговой стоимости: работа + запчасти (ФТ-4.9)
+        var laborCost = request.ActualCost ?? serviceRequest.EstimatedCost;
+        serviceRequest.ActualCost = laborCost + partsTotal;
+        serviceRequest.Status = ServiceRequestStatus.Completed;
 
         var history = new ServiceHistory
         {
@@ -253,13 +285,16 @@ public class ServicesService : IServicesService
             ServiceRequestId = serviceRequest.Id,
             PreviousStatus = previousStatus,
             NewStatus = ServiceRequestStatus.Completed,
-            Comment = "Работа выполнена",
+            Comment = $"Работа выполнена. Стоимость: {serviceRequest.ActualCost:C} (работа: {laborCost:C}, запчасти: {partsTotal:C})",
             ChangedBy = masterId,
             ChangedAt = DateTime.UtcNow
         };
         _context.ServiceHistory.Add(history);
 
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Service request {RequestId} completed. Total cost: {TotalCost} (labor: {LaborCost}, parts: {PartsCost})", 
+            id, serviceRequest.ActualCost, laborCost, partsTotal);
 
         return (MapToDto(serviceRequest), null);
     }
@@ -337,6 +372,43 @@ public class ServicesService : IServicesService
                 ChangedBy = h.ChangedBy,
                 ChangedAt = h.ChangedAt
             }).ToList() ?? new List<ServiceHistoryDto>()
+        };
+    }
+
+    /// <summary>
+    /// Проверка валидности перехода статуса (state machine)
+    /// Статусы: Принята -> В работе -> Выполнена -> Выдана (ФТ-4.4)
+    /// </summary>
+    private static bool IsValidStatusTransition(ServiceRequestStatus from, ServiceRequestStatus to)
+    {
+        // Можно отменить только из New
+        if (to == ServiceRequestStatus.Cancelled)
+            return from == ServiceRequestStatus.New;
+
+        return from switch
+        {
+            ServiceRequestStatus.New => to == ServiceRequestStatus.InProgress,
+            ServiceRequestStatus.InProgress => to == ServiceRequestStatus.Completed,
+            ServiceRequestStatus.Completed => to == ServiceRequestStatus.Closed,
+            ServiceRequestStatus.Closed => false, // Финальный статус
+            ServiceRequestStatus.Cancelled => false, // Финальный статус
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Получение читаемого названия статуса
+    /// </summary>
+    private static string GetStatusName(ServiceRequestStatus status)
+    {
+        return status switch
+        {
+            ServiceRequestStatus.New => "Принята",
+            ServiceRequestStatus.InProgress => "В работе",
+            ServiceRequestStatus.Completed => "Выполнена",
+            ServiceRequestStatus.Closed => "Выдана",
+            ServiceRequestStatus.Cancelled => "Отменена",
+            _ => status.ToString()
         };
     }
 }

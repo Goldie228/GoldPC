@@ -444,9 +444,9 @@ public class OrderServiceTests
             .Generate(5);
         orders.ForEach(o => o.UserId = userId);
 
-        _orderRepositoryMock
-            .Setup(r => r.GetByUserIdAsync(userId))
-            .ReturnsAsync(orders);
+    _orderRepositoryMock
+        .Setup(r => r.GetByUserIdAsync(userId, It.IsAny<OrderStatus?>()))
+        .ReturnsAsync(orders);
 
         // Act
         var result = await _sut.GetUserOrdersAsync(userId);
@@ -519,7 +519,7 @@ public interface IInventoryService
     Task RestoreStockAsync(Dictionary<Guid, int> items);
 }
 
-public interface ILogger<T> { }
+// ILogger определён в CompatibilityServiceTests.cs
 
 public class OrderService
 {

@@ -1,22 +1,40 @@
+# Generic Dockerfile for .NET backend services
+# Usage: Build with specific service context
+# Example: docker build -f docker/backend/Dockerfile --build-arg SERVICE_NAME=CatalogService -t goldpc-catalog .
+
+ARG SERVICE_NAME=CatalogService
+ARG SERVICE_PORT=5001
+
 # Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG SERVICE_NAME
 WORKDIR /src
 
-# Copy solution and restore
+# Copy solution file
 COPY ["GoldPC.sln", "./"]
-COPY ["src/backend/GoldPC.Api/GoldPC.Api.csproj", "src/backend/GoldPC.Api/"]
-COPY ["src/backend/GoldPC.Core/GoldPC.Core.csproj", "src/backend/GoldPC.Core/"]
-COPY ["src/backend/GoldPC.Infrastructure/GoldPC.Infrastructure.csproj", "src/backend/GoldPC.Infrastructure/"]
 
-RUN dotnet restore "GoldPC.sln"
+# Copy all csproj files for restore
+COPY ["src/CatalogService/CatalogService.csproj", "CatalogService/"]
+COPY ["src/AuthService/AuthService.csproj", "AuthService/"]
+COPY ["src/SharedKernel/SharedKernel.csproj", "SharedKernel/"]
+COPY ["src/Shared/Shared.csproj", "Shared/"]
 
-# Copy source and build
-COPY src/backend/. ./src/backend/
-WORKDIR "/src/src/backend/GoldPC.Api"
-RUN dotnet publish "GoldPC.Api.csproj" -c Release -o /app/publish --no-restore
+# Restore dependencies
+RUN dotnet restore
+
+# Copy all source code
+COPY src/CatalogService/ CatalogService/
+COPY src/AuthService/ AuthService/
+COPY src/SharedKernel/ SharedKernel/
+COPY src/Shared/ Shared/
+
+# Build and publish the specified service
+WORKDIR "/src/${SERVICE_NAME}"
+RUN dotnet publish "${SERVICE_NAME}.csproj" -c Release -o /app/publish --no-restore
 
 # Stage 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+ARG SERVICE_PORT
 
 # Security: Create non-root user
 RUN addgroup -g 1000 -S appgroup && \
@@ -28,7 +46,7 @@ RUN apk add --no-cache ca-certificates tzdata && \
 
 WORKDIR /app
 
-# Security: Copy only necessary files
+# Copy published application
 COPY --from=build /app/publish .
 
 # Security: Set ownership
@@ -37,20 +55,13 @@ RUN chown -R appuser:appgroup /app
 # Security: Run as non-root user
 USER appuser
 
-# Security: Read-only root filesystem (Kubernetes will enforce)
-# Security: No new privileges
-# Security: Drop all capabilities, add only needed
+EXPOSE ${SERVICE_PORT}
 
-EXPOSE 8080
-EXPOSE 8443
-
-ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_URLS=http://+:${SERVICE_PORT}
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:${SERVICE_PORT}/health || exit 1
 
-ENTRYPOINT ["dotnet", "GoldPC.Api.dll"]
-</task_progress>
-</write_to_file>
+ENTRYPOINT ["dotnet", "CatalogService.dll"]
