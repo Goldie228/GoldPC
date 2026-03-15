@@ -1,0 +1,1 @@
+export { CatalogManagementPage } from './CatalogManagementPage';

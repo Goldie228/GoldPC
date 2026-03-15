@@ -1,0 +1,393 @@
+# Knowledge Injection Configuration
+# Конфигурация внедрения базы знаний в контекст ИИ-агентов
+# Проект GoldPC
+
+version: "1.0"
+last_updated: "2026-03-15"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# АГЕНТЫ
+# ═══════════════════════════════════════════════════════════════════════════════
+
+agents:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # АГЕНТ A: Frontend Developer
+  # ─────────────────────────────────────────────────────────────────────────────
+  agent_a:
+    role: "Frontend Developer"
+    tier: "TIER-2"
+    description: "Разработчик пользовательского интерфейса на React + TypeScript"
+    
+    modules:
+      - "catalog-ui"
+      - "pc-builder-ui"
+      - "orders-ui"
+      - "services-ui"
+      - "admin-ui"
+    
+    responsibilities:
+      - "Разработка React компонентов"
+      - "Интеграция с Backend API"
+      - "Управление состоянием приложения"
+      - "E2E тестирование UI"
+    
+    injected_knowledge:
+      patterns:
+        - path: "patterns/react-best-practices.md"
+          priority: "high"
+          description: "React hooks и компоненты: правила использования"
+        - path: "patterns/mui-components.md"
+          priority: "medium"
+          description: "Material UI компоненты и стилизация"
+      contracts:
+        - path: "contracts/openapi/catalog.yaml"
+          priority: "high"
+          description: "Catalog API спецификация"
+        - path: "contracts/openapi/orders.yaml"
+          priority: "high"
+          description: "Orders API спецификация"
+        - path: "contracts/openapi/auth.yaml"
+          priority: "high"
+          description: "Auth API спецификация"
+        - path: "contracts/openapi/pc-builder.yaml"
+          priority: "medium"
+          description: "PC Builder API спецификация"
+      lessons_learned:
+        path: "lessons-learned/frontend/"
+        auto_inject: true
+    
+    context_limits:
+      max_tokens: 15000
+      priority_order:
+        - "contracts"
+        - "patterns"
+        - "lessons_learned"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # АГЕНТ B: Backend Core Developer
+  # ─────────────────────────────────────────────────────────────────────────────
+  agent_b:
+    role: "Backend Core Developer"
+    tier: "TIER-2"
+    description: "Разработчик core-сервисов на C# / ASP.NET Core"
+    
+    modules:
+      - "auth"
+      - "catalog"
+      - "pc-builder"
+      - "admin"
+    
+    responsibilities:
+      - "Разработка Auth API"
+      - "Разработка Catalog API"
+      - "Разработка PC Builder API"
+      - "Безопасность и авторизация"
+      - "Code review backend компонентов"
+    
+    injected_knowledge:
+      patterns:
+        - path: "patterns/repository-pattern.md"
+          priority: "high"
+          description: "Generic Repository pattern для доступа к данным"
+        - path: "patterns/cqrs.md"
+          priority: "medium"
+          description: "CQRS паттерн для разделения read/write операций"
+        - path: "patterns/domain-events.md"
+          priority: "medium"
+          description: "Domain Events для слабосвязанной коммуникации"
+      contracts:
+        - path: "contracts/openapi/auth.yaml"
+          priority: "high"
+          description: "Auth API спецификация (owner)"
+        - path: "contracts/openapi/catalog.yaml"
+          priority: "high"
+          description: "Catalog API спецификация (owner)"
+        - path: "contracts/openapi/pc-builder.yaml"
+          priority: "high"
+          description: "PC Builder API спецификация (owner)"
+      lessons_learned:
+        path: "lessons-learned/backend/"
+        auto_inject: true
+    
+    context_limits:
+      max_tokens: 20000
+      priority_order:
+        - "contracts"
+        - "patterns"
+        - "lessons_learned"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # АГЕНТ C: Backend Services Developer
+  # ─────────────────────────────────────────────────────────────────────────────
+  agent_c:
+    role: "Backend Services Developer"
+    tier: "TIER-2"
+    description: "Разработчик бизнес-сервисов и доменной логики"
+    
+    modules:
+      - "orders"
+      - "services"
+      - "warranty"
+    
+    responsibilities:
+      - "Разработка Orders API"
+      - "Разработка Services API"
+      - "Разработка Warranty API"
+      - "Бизнес-логика заказов"
+      - "Domain Events публикация"
+    
+    injected_knowledge:
+      patterns:
+        - path: "patterns/repository-pattern.md"
+          priority: "high"
+          description: "Generic Repository pattern для доступа к данным"
+        - path: "patterns/domain-events.md"
+          priority: "high"
+          description: "Domain Events — основной механизм коммуникации"
+        - path: "patterns/saga.md"
+          priority: "high"
+          description: "Saga паттерн для распределённых транзакций"
+        - path: "patterns/outbox.md"
+          priority: "medium"
+          description: "Outbox pattern для надёжной доставки событий"
+      contracts:
+        - path: "contracts/openapi/orders.yaml"
+          priority: "high"
+          description: "Orders API спецификация (owner)"
+        - path: "contracts/openapi/services.yaml"
+          priority: "high"
+          description: "Services API спецификация (owner)"
+        - path: "contracts/asyncapi/events.yaml"
+          priority: "high"
+          description: "AsyncAPI спецификация событий"
+      lessons_learned:
+        path: "lessons-learned/backend/"
+        auto_inject: true
+    
+    context_limits:
+      max_tokens: 20000
+      priority_order:
+        - "contracts"
+        - "patterns"
+        - "lessons_learned"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # АГЕНТ D: QA Engineer
+  # ─────────────────────────────────────────────────────────────────────────────
+  agent_d:
+    role: "QA Engineer"
+    tier: "TIER-3"
+    description: "Инженер по тестированию и обеспечению качества"
+    
+    modules:
+      - "tests"
+      - "integration"
+      - "e2e"
+    
+    responsibilities:
+      - "Unit тесты для всех модулей"
+      - "Integration тесты"
+      - "E2E тесты (Playwright)"
+      - "Нагрузочные тесты"
+      - "Pact контрактные тесты"
+    
+    injected_knowledge:
+      patterns:
+        - path: "patterns/testing-strategies.md"
+          priority: "high"
+          description: "Стратегии тестирования для микросервисов"
+        - path: "patterns/pact-testing.md"
+          priority: "high"
+          description: "Pact контрактное тестирование"
+        - path: "patterns/react-best-practices.md"
+          priority: "medium"
+          description: "Тестирование React компонентов"
+        - path: "patterns/repository-pattern.md"
+          priority: "medium"
+          description: "Тестирование репозиториев (mocking)"
+      contracts:
+        - path: "contracts/openapi/"
+          priority: "high"
+          description: "Все OpenAPI спецификации"
+        - path: "contracts/pacts/"
+          priority: "high"
+          description: "Pact контракты"
+      lessons_learned:
+        path: "lessons-learned/testing/"
+        auto_inject: true
+    
+    context_limits:
+      max_tokens: 15000
+      priority_order:
+        - "contracts"
+        - "patterns"
+        - "lessons_learned"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # КООРДИНАТОР: Agent Coordinator
+  # ─────────────────────────────────────────────────────────────────────────────
+  coordinator:
+    role: "Agent Coordinator"
+    tier: "TIER-1"
+    description: "Координатор команды агентов, архитектор"
+    
+    modules:
+      - "all"
+    
+    responsibilities:
+      - "Координация работы агентов"
+      - "Архитектурные ревью"
+      - "Разрешение конфликтов"
+      - "Управление контрактами"
+      - "Code review"
+    
+    injected_knowledge:
+      patterns:
+        - path: "patterns/repository-pattern.md"
+          priority: "medium"
+        - path: "patterns/react-best-practices.md"
+          priority: "medium"
+        - path: "patterns/cqrs.md"
+          priority: "medium"
+        - path: "patterns/domain-events.md"
+          priority: "medium"
+        - path: "patterns/saga.md"
+          priority: "medium"
+      contracts:
+        - path: "contracts/openapi/"
+          priority: "high"
+        - path: "contracts/asyncapi/"
+          priority: "high"
+      architecture:
+        - path: "architecture/c4/"
+          priority: "high"
+        - path: "architecture/adr/"
+          priority: "high"
+      lessons_learned:
+        path: "lessons-learned/"
+        auto_inject: true
+    
+    context_limits:
+      max_tokens: 30000
+      priority_order:
+        - "architecture"
+        - "contracts"
+        - "patterns"
+        - "lessons_learned"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# КОНФИГУРАЦИЯ БАЗЫ ЗНАНИЙ
+# ═══════════════════════════════════════════════════════════════════════════════
+
+knowledge_base:
+  root_path: "knowledge-base/"
+  
+  categories:
+    patterns:
+      path: "patterns/"
+      description: "Паттерны проектирования и best practices"
+      file_types:
+        - "*.md"
+    
+    contracts:
+      path: "contracts/"
+      description: "API контракты (OpenAPI, AsyncAPI, Pact)"
+      file_types:
+        - "*.yaml"
+        - "*.json"
+    
+    lessons_learned:
+      path: "lessons-learned/"
+      description: "Уроки, извлечённые из разработки"
+      file_types:
+        - "*.md"
+      structure:
+        - "frontend/"
+        - "backend/"
+        - "testing/"
+        - "devops/"
+    
+    architecture:
+      path: "architecture/"
+      description: "Архитектурные документы"
+      file_types:
+        - "*.md"
+        - "*.mmd"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# НАСТРОЙКИ ИНЪЕКЦИИ
+# ═══════════════════════════════════════════════════════════════════════════════
+
+injection_settings:
+  # Автоматическое обновление при изменении файлов
+  auto_reload: true
+  
+  # Кэширование загруженных документов
+  cache_enabled: true
+  cache_ttl_minutes: 60
+  
+  # Приоритет внедрения при превышении лимита токенов
+  overflow_strategy: "priority_cutoff"
+  
+  # Формат внедрения
+  format:
+    include_metadata: true
+    include_toc: true
+    highlight_critical_sections: true
+  
+  # Метаданные для каждого документа
+  metadata_template: |
+    ---
+    Document: {filename}
+    Category: {category}
+    Priority: {priority}
+    Last Updated: {last_updated}
+    Injected to: {agent_id}
+    ---
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ПРАВИЛА ОБНОВЛЕНИЯ
+# ═══════════════════════════════════════════════════════════════════════════════
+
+update_rules:
+  # При обновлении контракта
+  on_contract_change:
+    notify_agents:
+      - "{all_dependent_agents}"
+    action: "reload_context"
+    priority: "immediate"
+  
+  # При добавлении нового урока
+  on_lesson_learned:
+    notify_agents:
+      - "{agents_in_category}"
+    action: "append_to_context"
+    priority: "next_session"
+  
+  # При обновлении паттерна
+  on_pattern_update:
+    notify_agents:
+      - "{all_agents}"
+    action: "reload_context"
+    priority: "high"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ВАЛИДАЦИЯ
+# ═══════════════════════════════════════════════════════════════════════════════
+
+validation:
+  # Проверка существования файлов перед внедрением
+  check_file_exists: true
+  
+  # Проверка формата документов
+  validate_format: true
+  
+  # Максимальный размер файла (KB)
+  max_file_size_kb: 500
+  
+  # Поддерживаемые форматы
+  supported_formats:
+    - ".md"
+    - ".yaml"
+    - ".json"
+    - ".mmd"

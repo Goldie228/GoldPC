@@ -1,7 +1,10 @@
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, NavLink } from 'react-router-dom';
 import { CatalogPage } from './pages/CatalogPage/CatalogPage';
 import { LoginPage } from './pages/LoginPage/LoginPage';
 import { StubManager } from './components/admin';
+import { CoordinatorDashboard } from './pages/admin/CoordinatorDashboard';
+import { UserManagementPage } from './pages/admin/UserManagementPage';
+import { CatalogManagementPage } from './pages/admin/CatalogManagementPage';
 import './App.css';
 
 /**
@@ -19,15 +22,24 @@ function App() {
             </Link>
             
             <nav className="nav">
-              <Link to="/" className="nav-link">
+              <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`}>
                 Каталог
-              </Link>
-              <Link to="/admin/stubs" className="nav-link nav-link--admin">
+              </NavLink>
+              <NavLink to="/admin/users" className={({ isActive }) => `nav-link nav-link--admin ${isActive ? 'nav-link--active' : ''}`}>
+                👥 Пользователи
+              </NavLink>
+              <NavLink to="/admin/catalog" className={({ isActive }) => `nav-link nav-link--admin ${isActive ? 'nav-link--active' : ''}`}>
+                📦 Каталог
+              </NavLink>
+              <NavLink to="/admin/coordinator" className={({ isActive }) => `nav-link nav-link--admin ${isActive ? 'nav-link--active' : ''}`}>
+                📊 Dashboard
+              </NavLink>
+              <NavLink to="/admin/stubs" className={({ isActive }) => `nav-link nav-link--admin ${isActive ? 'nav-link--active' : ''}`}>
                 🎛️ Stubs
-              </Link>
-              <Link to="/login" className="nav-link">
+              </NavLink>
+              <NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`}>
                 Войти
-              </Link>
+              </NavLink>
             </nav>
           </div>
         </header>
@@ -36,6 +48,9 @@ function App() {
           <Routes>
             <Route path="/" element={<CatalogPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin/users" element={<UserManagementPage />} />
+            <Route path="/admin/catalog" element={<CatalogManagementPage />} />
+            <Route path="/admin/coordinator" element={<CoordinatorDashboard />} />
             <Route path="/admin/stubs" element={<StubManager />} />
           </Routes>
         </main>

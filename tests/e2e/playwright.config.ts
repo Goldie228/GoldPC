@@ -32,8 +32,8 @@ export default defineConfig({
   
   // Общие настройки
   use: {
-    // Базовый URL
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    // Базовый URL (Vite dev server default port)
+    baseURL: process.env.BASE_URL || 'http://localhost:5173',
     
     // API URL
     extraHTTPHeaders: {
@@ -79,10 +79,10 @@ export default defineConfig({
     },
   ],
 
-  // Веб-сервер для автозапуска
+  // Веб-сервер для автозапуска (Vite dev server)
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: 'npm run dev:frontend',
+    url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },
