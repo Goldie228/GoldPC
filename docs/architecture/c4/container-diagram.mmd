@@ -1,0 +1,82 @@
+%% C4 Model - Level 2: Container Diagram
+%% GoldPC - Диаграмма контейнеров
+%% Показывает высокоуровневую архитектуру системы
+
+graph TB
+    subgraph "Клиенты"
+        Browser[🌐 Веб-браузер<br/>Chrome, Firefox, Safari, Edge]
+    end
+    
+    subgraph "Frontend Container"
+        ReactApp[⚛️ React Application<br/><br/>Технологии:<br/>• React 18<br/>• TypeScript 5<br/>• Material-UI<br/>• Tailwind CSS<br/>• Redux Toolkit<br/><br/>Функции:<br/>• SPA интерфейс<br/>• Состояние приложения<br/>• API клиент]
+    end
+    
+    subgraph "Backend Containers"
+        subgraph "API Services"
+            CatalogAPI[📦 CatalogService<br/><br/>ASP.NET Core 8<br/>REST API<br/><br/>• Управление товарами<br/>• Категории<br/>• Поиск]
+            
+            OrdersAPI[🛒 OrdersService<br/><br/>ASP.NET Core 8<br/>REST API<br/><br/>• Заказы<br/>• Корзина<br/>• Оплата]
+            
+            AuthAPI[🔐 AuthService<br/><br/>ASP.NET Core 8<br/>REST API<br/><br/>• Аутентификация<br/>• Авторизация<br/>• JWT токены]
+            
+            PCBuilderAPI[🖥️ PCBuilderService<br/><br/>ASP.NET Core 8<br/>REST API<br/><br/>• Конструктор ПК<br/>• Проверка совместимости<br/>• Рекомендации]
+            
+            ServicesAPI[🔧 ServicesService<br/><br/>ASP.NET Core 8<br/>REST API<br/><br/>• Сервисные заявки<br/>• Статусы ремонта<br/>• Мастера]
+            
+            WarrantyAPI[📋 WarrantyService<br/><br/>ASP.NET Core 8<br/>REST API<br/><br/>• Гарантийные талоны<br/>• История обращений]
+        end
+        
+        subgraph "Background Services"
+            BackgroundServices[⚙️ Background Services<br/><br/>Hangfire<br/><br/>• Отправка Email<br/>• Отправка SMS<br/>• Очистка данных<br/>• Отчёты]
+        end
+    end
+    
+    subgraph "Data Containers"
+        PostgreSQL[(🗄️ PostgreSQL 16<br/><br/>Основная БД<br/><br/>• Пользователи<br/>• Товары<br/>• Заказы<br/>• Заявки<br/>• Гарантии)]
+        
+        Redis[(⚡ Redis 7<br/><br/>Кэш и сессии<br/><br/>• Кэш каталога<br/>• Сессии пользователей<br/>• Refresh токены<br/>• Rate limiting)]
+    end
+    
+    subgraph "External Systems"
+        Payment[💳 ЮKassa API<br/>Платёжная система]
+        SMS[📱 SMS.ru API<br/>SMS-шлюз]
+        Email[📧 SMTP Server<br/>Email-сервер]
+    end
+    
+    %% Client connections
+    Browser -->|HTTPS| ReactApp
+    
+    %% Frontend to Backend
+    ReactApp -->|HTTPS/JSON<br/>REST API| CatalogAPI
+    ReactApp -->|HTTPS/JSON<br/>REST API| OrdersAPI
+    ReactApp -->|HTTPS/JSON<br/>REST API| AuthAPI
+    ReactApp -->|HTTPS/JSON<br/>REST API| PCBuilderAPI
+    ReactApp -->|HTTPS/JSON<br/>REST API| ServicesAPI
+    ReactApp -->|HTTPS/JSON<br/>REST API| WarrantyAPI
+    
+    %% Backend internal connections
+    OrdersAPI -.->|HTTP/JSON| CatalogAPI
+    OrdersAPI -.->|HTTP/JSON| WarrantyAPI
+    PCBuilderAPI -.->|HTTP/JSON| CatalogAPI
+    ServicesAPI -.->|HTTP/JSON| WarrantyAPI
+    
+    %% Backend to Database
+    CatalogAPI -->|TCP/SQL<br/>Entity Framework Core| PostgreSQL
+    OrdersAPI -->|TCP/SQL<br/>Entity Framework Core| PostgreSQL
+    AuthAPI -->|TCP/SQL<br/>Entity Framework Core| PostgreSQL
+    PCBuilderAPI -->|TCP/SQL<br/>Entity Framework Core| PostgreSQL
+    ServicesAPI -->|TCP/SQL<br/>Entity Framework Core| PostgreSQL
+    WarrantyAPI -->|TCP/SQL<br/>Entity Framework Core| PostgreSQL
+    
+    %% Backend to Redis
+    CatalogAPI -->|TCP<br/>StackExchange.Redis| Redis
+    AuthAPI -->|TCP<br/>StackExchange.Redis| Redis
+    OrdersAPI -->|TCP<br/>StackExchange.Redis| Redis
+    
+    %% Background Services
+    BackgroundServices -->|TCP/SQL| PostgreSQL
+    BackgroundServices -->|HTTPS/API| SMS
+    BackgroundServices -->|SMTP| Email
+    
+    %% External API connections
+    OrdersAPI -->|HTTPS/REST API<br/>Оплата заказов| Payment

@@ -1,0 +1,330 @@
+```mermaid
+erDiagram
+    %% ==========================================
+    %% GoldPC Database ER Diagram
+    %% Version: 1.0
+    %% Date: 2026-03-15
+    %% ==========================================
+
+    %% ==========================================
+    %% USER & AUTHENTICATION
+    %% ==========================================
+    User {
+        uuid id PK
+        string email UK "Логин"
+        string password_hash "bcrypt"
+        string role "Client|Manager|Master|Admin|Accountant"
+        string first_name "Имя"
+        string last_name "Фамилия"
+        string phone "Телефон +375XXXXXXXXX"
+        bool is_active "Активность"
+        int failed_login_attempts
+        datetime locked_until
+        datetime created_at
+        datetime updated_at
+    }
+
+    RefreshToken {
+        uuid id PK
+        uuid user_id FK
+        string token UK
+        datetime expires_at
+        bool is_revoked
+        datetime created_at
+    }
+
+    %% ==========================================
+    %% CATALOG
+    %% ==========================================
+    Category {
+        uuid id PK
+        string name "Название"
+        string slug UK "URL-slug"
+        string description
+        uuid parent_id FK "Родительская категория"
+        string icon
+        int component_type "Тип для конструктора ПК"
+        int order "Порядок отображения"
+    }
+
+    Manufacturer {
+        uuid id PK
+        string name "Название"
+        string country "Страна"
+        string logo_url "URL логотипа"
+        string description
+    }
+
+    Product {
+        uuid id PK
+        string name "Название"
+        string sku UK "Артикул"
+        string description
+        uuid category_id FK
+        uuid manufacturer_id FK
+        decimal price "Цена BYN"
+        decimal old_price "Старая цена"
+        int stock "Остаток"
+        json specifications "Характеристики"
+        int warranty_months "Гарантия"
+        double rating "Рейтинг 0-5"
+        int review_count
+        bool is_active
+        bool is_featured "Рекомендуемый"
+        datetime created_at
+        datetime updated_at
+    }
+
+    ProductImage {
+        uuid id PK
+        uuid product_id FK
+        string url "URL изображения"
+        string alt_text
+        bool is_primary "Главное"
+        int sort_order
+    }
+
+    Review {
+        uuid id PK
+        uuid product_id FK
+        uuid user_id FK
+        string user_name
+        int rating "Оценка 1-5"
+        string title
+        string comment
+        string pros "Плюсы"
+        string cons "Минусы"
+        bool is_verified "Подтверждённая покупка"
+        bool is_approved "Одобрен"
+        int helpful "Полезные оценки"
+        datetime created_at
+    }
+
+    %% ==========================================
+    %% ORDERS
+    %% ==========================================
+    Order {
+        uuid id PK
+        string order_number UK "GP-2024-000001"
+        uuid user_id FK
+        string status "New|Processing|Paid|Ready|Completed|Cancelled"
+        decimal total "Сумма заказа"
+        string delivery_method "Pickup|Delivery"
+        string payment_method "Online|OnReceipt"
+        string address "Адрес доставки"
+        string comment
+        bool is_paid
+        datetime paid_at
+        string payment_id "ID от платёжной системы"
+        datetime created_at
+        datetime updated_at
+    }
+
+    OrderItem {
+        uuid id PK
+        uuid order_id FK
+        uuid product_id FK
+        string product_name "На момент заказа"
+        int quantity
+        decimal unit_price "Цена на момент заказа"
+    }
+
+    OrderHistory {
+        uuid id PK
+        uuid order_id FK
+        string previous_status
+        string new_status
+        string comment
+        uuid changed_by FK
+        datetime changed_at
+    }
+
+    %% ==========================================
+    %% SERVICES (Сервисный центр)
+    %% ==========================================
+    ServiceType {
+        uuid id PK
+        string name "Название услуги"
+        string description
+        decimal base_price "Базовая цена"
+        int estimated_duration_minutes
+        bool is_active
+    }
+
+    ServiceRequest {
+        uuid id PK
+        string request_number UK
+        uuid client_id FK
+        uuid master_id FK
+        uuid service_type_id FK
+        string status "New|InProgress|Completed|Closed"
+        string description
+        string device_model
+        string serial_number
+        decimal estimated_cost
+        decimal actual_cost
+        string master_comment
+        datetime completed_at
+        datetime created_at
+        datetime updated_at
+    }
+
+    UsedPart {
+        uuid id PK
+        uuid service_request_id FK
+        uuid product_id FK
+        string product_name
+        int quantity
+        decimal unit_price
+    }
+
+    ServiceHistory {
+        uuid id PK
+        uuid service_request_id FK
+        string previous_status
+        string new_status
+        string comment
+        uuid changed_by FK
+        datetime changed_at
+    }
+
+    %% ==========================================
+    %% WARRANTY
+    %% ==========================================
+    WarrantyClaim {
+        uuid id PK
+        string claim_number UK
+        uuid order_id FK
+        uuid user_id FK
+        uuid product_id FK
+        string product_name
+        string status "New|InProgress|Resolved|Rejected"
+        string description
+        string master_comment
+        datetime purchase_date
+        int warranty_period_months
+        datetime warranty_end_date
+        uuid assigned_to FK "Мастер"
+        datetime resolved_at
+        string resolution
+        datetime created_at
+        datetime updated_at
+    }
+
+    WarrantyHistory {
+        uuid id PK
+        uuid warranty_claim_id FK
+        string previous_status
+        string new_status
+        string comment
+        uuid changed_by FK
+        datetime changed_at
+    }
+
+    %% ==========================================
+    %% RELATIONSHIPS
+    %% ==========================================
+
+    %% User Relationships
+    User ||--o{ Order : creates
+    User ||--o{ ServiceRequest : submits
+    User ||--o{ WarrantyClaim : requests
+    User ||--o{ Review : writes
+    User ||--o{ RefreshToken : has
+    User ||--o{ OrderHistory : changes
+    User ||--o{ ServiceHistory : changes
+    User ||--o{ WarrantyHistory : changes
+
+    %% Auth Relationships
+    RefreshToken }o--|| User : "belongs to"
+
+    %% Order Relationships
+    Order }o--|| User : "belongs to"
+    Order ||--|{ OrderItem : contains
+    Order ||--o{ OrderHistory : tracks
+    Order ||--o{ WarrantyClaim : "generates"
+
+    %% OrderItem Relationships
+    OrderItem }o--|| Order : "part of"
+    OrderItem }o--o| Product : references
+
+    %% Product Relationships
+    Product }o--|| Category : "belongs to"
+    Product }o--o| Manufacturer : "made by"
+    Product ||--o{ ProductImage : has
+    Product ||--o{ Review : receives
+    Product ||--o{ OrderItem : "ordered in"
+    Product ||--o{ UsedPart : "used as"
+
+    %% Category Relationships (Self-referencing for hierarchy)
+    Category ||--o{ Category : "has subcategories"
+    Category ||--o{ Product : contains
+
+    %% Manufacturer Relationships
+    Manufacturer ||--o{ Product : produces
+
+    %% Service Relationships
+    ServiceType ||--o{ ServiceRequest : defines
+    ServiceRequest }o--|| User : "client"
+    ServiceRequest }o--o| User : "master assigned"
+    ServiceRequest }o--|| ServiceType : "type of"
+    ServiceRequest ||--o{ UsedPart : uses
+    ServiceRequest ||--o{ ServiceHistory : tracks
+    ServiceRequest ||--o{ WarrantyClaim : "may generate"
+
+    %% Warranty Relationships
+    WarrantyClaim }o--|| Order : "from order"
+    WarrantyClaim }o--|| User : "owner"
+    WarrantyClaim }o--o| User : "assigned master"
+    WarrantyClaim }o--|| Product : "for product"
+    WarrantyClaim ||--o{ WarrantyHistory : tracks
+
+    %% UsedPart Relationships
+    UsedPart }o--|| ServiceRequest : "used in"
+    UsedPart }o--o| Product : references
+
+    %% History Relationships
+    OrderHistory }o--|| Order : tracks
+    ServiceHistory }o--|| ServiceRequest : tracks
+    WarrantyHistory }o--|| WarrantyClaim : tracks
+```
+
+---
+
+## Описание диаграммы
+
+### Основные субъекты данных
+
+| Область | Сущности | Описание |
+|---------|----------|----------|
+| **Auth** | User, RefreshToken | Аутентификация и авторизация пользователей |
+| **Catalog** | Product, Category, Manufacturer, ProductImage, Review | Каталог товаров с иерархией категорий |
+| **Orders** | Order, OrderItem, OrderHistory | Заказы и их позиции |
+| **Services** | ServiceRequest, ServiceType, UsedPart, ServiceHistory | Заявки сервисного центра |
+| **Warranty** | WarrantyClaim, WarrantyHistory | Гарантийные обращения |
+
+### Ключевые связи
+
+1. **User → Orders, ServiceRequests, WarrantyClaims** — один пользователь может иметь множество заказов, заявок на услуги и гарантийных обращений
+
+2. **Order → OrderItems** — заказ содержит несколько позиций (товаров)
+
+3. **Product → Category, Manufacturer** — каждый товар принадлежит категории и имеет производителя
+
+4. **WarrantyClaim → Order, Product** — гарантийное обращение создаётся на основе заказа и конкретного товара
+
+### Статусы сущностей
+
+| Сущность | Возможные статусы |
+|----------|-------------------|
+| Order | New, Processing, Paid, Ready, Completed, Cancelled |
+| ServiceRequest | New, InProgress, Completed, Closed |
+| WarrantyClaim | New, InProgress, Resolved, Rejected |
+
+### Типы пользователей (UserRole)
+
+- **Client** — клиент магазина
+- **Manager** — менеджер по продажам
+- **Master** — мастер сервисного центра
+- **Admin** — администратор системы
+- **Accountant** — бухгалтер

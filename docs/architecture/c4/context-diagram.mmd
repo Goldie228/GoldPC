@@ -1,0 +1,37 @@
+%% C4 Model - Level 1: Context Diagram
+%% GoldPC - Компьютерный магазин с сервисным центром
+%% Диаграмма показывает систему в контексте внешних сущностей
+
+graph TB
+    subgraph "Внешние пользователи"
+        Client[👤 Клиент<br/>Веб-браузер]
+        Manager[👔 Менеджер<br/>Веб-браузер]
+        Master[🔧 Мастер<br/>Веб-браузер]
+        Admin[⚙️ Администратор<br/>Веб-браузер]
+        Accountant[📊 Бухгалтер<br/>Веб-браузер]
+    end
+    
+    subgraph "Система GoldPC"
+        System[🖥️ GoldPC System<br/><br/>Веб-приложение для компьютерного<br/>магазина с сервисным центром<br/><br/>Функции:<br/>• Каталог товаров<br/>• Конструктор ПК<br/>• Заказы и оплата<br/>• Сервисный центр<br/>• Гарантийное обслуживание]
+    end
+    
+    subgraph "Внешние системы"
+        Payment[💳 Платёжная система<br/>ЮKassa]
+        SMS[📱 SMS-шлюз<br/>SMS.ru]
+        Email[📧 Email-сервер<br/>SMTP]
+        Backup[💾 Резервное копирование<br/>S3/NAS]
+    end
+    
+    Client -->|HTTPS/JSON<br/>Просмотр каталога<br/>Оформление заказов| System
+    Manager -->|HTTPS/JSON<br/>Управление заказами<br/>Управление каталогом| System
+    Master -->|HTTPS/JSON<br/>Управление заявками<br/>Ремонт техники| System
+    Admin -->|HTTPS/JSON<br/>Управление пользователями<br/>Мониторинг системы| System
+    Accountant -->|HTTPS/JSON<br/>Финансовые отчёты| System
+    
+    System -->|HTTPS/REST API<br/>Оплата заказов| Payment
+    System -->|HTTPS/REST API<br/>SMS-уведомления| SMS
+    System -->|SMTP<br/>Email-уведомления| Email
+    System -->|HTTPS/S3 API<br/>Резервные копии| Backup
+    
+    System -->[(🗄️ PostgreSQL<br/>База данных<br/><br/>Хранение всех данных<br/>системы)]
+    System -->[(⚡ Redis<br/>Кэш<br/><br/>Кэширование данных<br/>Хранение сессий)]

@@ -1,0 +1,81 @@
+{
+  "forbidden": [
+    {
+      "name": "no-circular",
+      "severity": "error",
+      "comment": "Циклические зависимости замедляют сборку и усложняют понимание кода. Рассмотрите возможность рефакторинга для разрыва цикла.",
+      "from": {},
+      "to": {
+        "circular": true
+      }
+    },
+    {
+      "name": "components-not-from-pages",
+      "severity": "error",
+      "comment": "Компоненты не должны импортировать из страниц. Страницы являются потребительями компонентов, а не наоборот.",
+      "from": {
+        "path": "^src/components/"
+      },
+      "to": {
+        "path": "^src/pages/"
+      }
+    },
+    {
+      "name": "api-not-from-ui",
+      "severity": "error",
+      "comment": "API слой не должен импортировать UI компоненты, страницы или хуки. API должен предоставлять данные, а UI их потреблять.",
+      "from": {
+        "path": "^src/api/"
+      },
+      "to": {
+        "path": ["^src/components/", "^src/pages/", "^src/hooks/"]
+      }
+    },
+    {
+      "name": "pages-not-from-pages",
+      "severity": "error",
+      "comment": "Страницы не должны импортировать другие страницы напрямую. Используйте React Router для навигации.",
+      "from": {
+        "path": "^src/pages/([^/]+)/"
+      },
+      "to": {
+        "path": "^src/pages/(?!\\1)"
+      }
+    },
+    {
+      "name": "no-direct-store-import",
+      "severity": "warn",
+      "comment": "Рекомендуется использовать hooks для доступа к store, а не импортировать store напрямую.",
+      "from": {
+        "path": "^src/components/"
+      },
+      "to": {
+        "path": "^src/store/"
+      }
+    },
+    {
+      "name": "layer-hierarchy",
+      "severity": "error",
+      "comment": "Нарушение иерархии слоёв. Разрешённые зависимости: pages -> components, api, hooks, store, utils; components -> api, hooks, store, utils; api -> utils, types",
+      "from": {
+        "path": "^src/(api|store|hooks|utils)/"
+      },
+      "to": {
+        "path": ["^src/pages/", "^src/components/"]
+      }
+    }
+  ],
+  "options": {
+    "doNotFollow": {
+      "path": "node_modules"
+    },
+    "tsPreCompilationOption": {
+      "tsConfig": "./tsconfig.json"
+    },
+    "reporterOptions": {
+      "dot": {
+        "collapsePattern": "node_modules/[^/]+"
+      }
+    }
+  }
+}

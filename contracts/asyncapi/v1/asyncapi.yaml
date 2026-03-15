@@ -9,10 +9,18 @@ info:
     - **Message Queue** — для асинхронной обработки между сервисами
     
     ## Типы событий
-    - **Order Events** — события заказов
-    - **Service Events** — события услуг сервисного центра
-    - **Warranty Events** — события гарантии
+    - **Order Events** — события заказов (публикуются OrdersService)
+    - **Service Events** — события услуг сервисного центра (публикуются ServicesService)
+    - **Warranty Events** — события гарантии (публикуются WarrantyService)
     - **Notification Events** — уведомления пользователям
+    
+    ## Сервисы-издатели событий
+    | Сервис | События |
+    |--------|---------|
+    | OrdersService | OrderCreated, OrderStatusChanged, OrderCancelled |
+    | ServicesService | ServiceRequestCreated, ServiceRequestAssigned, ServiceRequestStatusChanged, ServiceRequestCompleted |
+    | WarrantyService | WarrantyCreated, WarrantyExpiring, WarrantyAnnulled |
+    | CatalogService | LowStockAlert, InventoryUpdated |
   version: 1.0.0
   contact:
     name: GoldPC Team
@@ -46,7 +54,11 @@ channels:
   order.status_changed:
     description: Событие изменения статуса заказа
     subscribe:
-      summary: Подписка на изменение статуса
+      summary: Подписка на изменение статуса (для Manager, Client, WarrantyService)
+      message:
+        $ref: '#/components/messages/OrderStatusChanged'
+    publish:
+      summary: Публикация при изменении статуса заказа
       message:
         $ref: '#/components/messages/OrderStatusChanged'
 
@@ -54,6 +66,10 @@ channels:
     description: Событие отмены заказа
     subscribe:
       summary: Подписка на отмену заказов
+      message:
+        $ref: '#/components/messages/OrderCancelled'
+    publish:
+      summary: Публикация при отмене заказа
       message:
         $ref: '#/components/messages/OrderCancelled'
 
@@ -64,25 +80,41 @@ channels:
       summary: Подписка на новые заявки (для Manager, Master)
       message:
         $ref: '#/components/messages/ServiceRequestCreated'
+    publish:
+      summary: Публикация при создании заявки на услугу
+      message:
+        $ref: '#/components/messages/ServiceRequestCreated'
 
   service_request.assigned:
     description: Событие назначения мастера
     subscribe:
-      summary: Подписка на назначение мастера
+      summary: Подписка на назначение мастера (для Client, Master)
+      message:
+        $ref: '#/components/messages/ServiceRequestAssigned'
+    publish:
+      summary: Публикация при назначении мастера
       message:
         $ref: '#/components/messages/ServiceRequestAssigned'
 
   service_request.status_changed:
     description: Событие изменения статуса заявки
     subscribe:
-      summary: Подписка на изменение статуса заявки
+      summary: Подписка на изменение статуса заявки (для Manager, Client, Master)
+      message:
+        $ref: '#/components/messages/ServiceRequestStatusChanged'
+    publish:
+      summary: Публикация при изменении статуса заявки
       message:
         $ref: '#/components/messages/ServiceRequestStatusChanged'
 
   service_request.completed:
     description: Событие завершения заявки
     subscribe:
-      summary: Подписка на завершение заявки
+      summary: Подписка на завершение заявки (для Manager, Client, WarrantyService)
+      message:
+        $ref: '#/components/messages/ServiceRequestCompleted'
+    publish:
+      summary: Публикация при завершении заявки мастером
       message:
         $ref: '#/components/messages/ServiceRequestCompleted'
 
@@ -159,6 +191,12 @@ components:
       name: OrderCreated
       title: Заказ создан
       contentType: application/json
+      description: |
+        Публикуется сервисом OrdersService при создании нового заказа.
+        Точка публикации: OrdersService.CreateAsync()
+      tags:
+        - name: OrdersService
+        - name: business-event
       payload:
         type: object
         required: [eventId, eventType, timestamp, data]
@@ -166,46 +204,89 @@ components:
           eventId:
             type: string
             format: uuid
-            description: Уникальный ID события
+            description: Уникальный ID события (GUID)
           eventType:
             type: string
             enum: [OrderCreated]
+            description: Тип события
           timestamp:
             type: string
             format: date-time
-            description: Время события
+            description: Время события (UTC)
           data:
             type: object
-            required: [orderId, orderNumber, userId, total]
+            required: [orderId, orderNumber, userId, status, total, deliveryMethod, paymentMethod]
             properties:
               orderId:
                 type: string
                 format: uuid
+                description: ID заказа
               orderNumber:
                 type: string
-                example: "ORD-000001-0001"
+                pattern: '^ORD-\d{4}-\d{4}$'
+                example: "ORD-2026-0001"
+                description: Номер заказа (формат ORD-YYYY-NNNN)
               userId:
                 type: string
                 format: uuid
-              userEmail:
+                description: ID пользователя (клиента)
+              status:
                 type: string
-                format: email
+                enum: [New]
+                description: Статус (всегда New при создании)
               total:
                 type: number
+                minimum: 0
+                description: Общая сумма заказа
+              deliveryMethod:
+                type: string
+                enum: [Pickup, Delivery]
+                description: Способ получения
+              paymentMethod:
+                type: string
+                enum: [Online, OnReceipt]
+                description: Способ оплаты
+              address:
+                type: string
+                maxLength: 500
+                description: Адрес доставки (обязателен при Delivery)
+              comment:
+                type: string
+                maxLength: 1000
+                description: Комментарий к заказу
               items:
                 type: array
+                minItems: 1
+                description: Позиции заказа (минимум 1, максимум 5 единиц каждого товара по ФТ-3.11)
                 items:
                   type: object
+                  required: [productId, productName, quantity, unitPrice]
                   properties:
                     productId:
                       type: string
                       format: uuid
+                      description: ID товара
                     productName:
                       type: string
+                      maxLength: 255
+                      description: Название товара
                     quantity:
                       type: integer
-                    price:
+                      minimum: 1
+                      maximum: 5
+                      description: Количество (макс. 5 по ФТ-3.11)
+                    unitPrice:
                       type: number
+                      minimum: 0
+                      description: Цена за единицу
+                    totalPrice:
+                      type: number
+                      minimum: 0
+                      description: Общая стоимость позиции (quantity * unitPrice)
+              createdAt:
+                type: string
+                format: date-time
+                description: Дата создания заказа
           metadata:
             type: object
             properties:
@@ -215,11 +296,30 @@ components:
               version:
                 type: string
                 example: "1.0"
+              correlationId:
+                type: string
+                format: uuid
+                description: ID для трассировки запроса
 
     OrderStatusChanged:
       name: OrderStatusChanged
       title: Статус заказа изменён
       contentType: application/json
+      description: |
+        Публикуется сервисом OrdersService при изменении статуса заказа.
+        Точка публикации: OrdersService.UpdateStatusAsync()
+        
+        ## Машина состояний (State Machine)
+        - New → Processing, Cancelled
+        - Processing → Paid, Cancelled
+        - Paid → InProgress, Cancelled
+        - InProgress → Ready
+        - Ready → Completed
+        - Completed → (финальный)
+        - Cancelled → (финальный)
+      tags:
+        - name: OrdersService
+        - name: business-event
       payload:
         type: object
         required: [eventId, eventType, timestamp, data]
@@ -227,35 +327,68 @@ components:
           eventId:
             type: string
             format: uuid
+            description: Уникальный ID события (GUID)
           eventType:
             type: string
             enum: [OrderStatusChanged]
+            description: Тип события
           timestamp:
             type: string
             format: date-time
+            description: Время события (UTC)
           data:
             type: object
-            required: [orderId, oldStatus, newStatus]
+            required: [orderId, orderNumber, userId, oldStatus, newStatus, changedBy]
             properties:
               orderId:
                 type: string
                 format: uuid
+                description: ID заказа
               orderNumber:
                 type: string
+                pattern: '^ORD-\d{4}-\d{4}$'
+                example: "ORD-2026-0001"
+                description: Номер заказа
               userId:
                 type: string
                 format: uuid
+                description: ID пользователя (клиента)
               oldStatus:
                 type: string
-                enum: [New, Processing, Paid, InAssembly, Ready, Completed, Cancelled]
+                enum: [New, Processing, Paid, InProgress, Ready, Completed, Cancelled]
+                description: Предыдущий статус заказа
               newStatus:
                 type: string
-                enum: [New, Processing, Paid, InAssembly, Ready, Completed, Cancelled]
+                enum: [New, Processing, Paid, InProgress, Ready, Completed, Cancelled]
+                description: Новый статус заказа
               changedBy:
                 type: string
                 format: uuid
+                description: ID пользователя, изменившего статус
               comment:
                 type: string
+                maxLength: 500
+                description: Комментарий к изменению статуса
+              isPaid:
+                type: boolean
+                description: Признак оплаты (true при статусе Paid)
+              paidAt:
+                type: string
+                format: date-time
+                description: Дата оплаты (при статусе Paid)
+          metadata:
+            type: object
+            properties:
+              source:
+                type: string
+                example: "OrdersService"
+              version:
+                type: string
+                example: "1.0"
+              correlationId:
+                type: string
+                format: uuid
+                description: ID для трассировки запроса
 
     OrderCancelled:
       name: OrderCancelled
@@ -297,6 +430,19 @@ components:
       name: ServiceRequestCreated
       title: Заявка на услугу создана
       contentType: application/json
+      description: |
+        Публикуется сервисом ServicesService при создании заявки на услугу.
+        Точка публикации: ServicesService.CreateAsync()
+        
+        ## Типы услуг
+        - Diagnostics — Диагностика
+        - Repair — Ремонт
+        - Assembly — Сборка ПК
+        - Cleaning — Чистка
+        - Prevention — Профилактика
+      tags:
+        - name: ServicesService
+        - name: business-event
       payload:
         type: object
         required: [eventId, eventType, timestamp, data]
@@ -304,34 +450,77 @@ components:
           eventId:
             type: string
             format: uuid
+            description: Уникальный ID события (GUID)
           eventType:
             type: string
             enum: [ServiceRequestCreated]
+            description: Тип события
           timestamp:
             type: string
             format: date-time
+            description: Время события (UTC)
           data:
             type: object
-            required: [serviceRequestId, serviceType, clientId]
+            required: [serviceRequestId, requestNumber, clientId, serviceTypeId, status]
             properties:
               serviceRequestId:
                 type: string
                 format: uuid
+                description: ID заявки
               requestNumber:
                 type: string
-                example: "SRV-000001-0001"
-              serviceType:
-                type: string
-                enum: [Diagnostics, Repair, Assembly, Cleaning, Prevention]
+                pattern: '^SR-\d{4}-\d{6}$'
+                example: "SR-2026-000001"
+                description: Номер заявки (формат SR-YYYY-NNNNNN)
               clientId:
                 type: string
                 format: uuid
-              clientName:
+                description: ID клиента
+              serviceTypeId:
                 type: string
-              deviceType:
+                format: uuid
+                description: ID типа услуги
+              serviceTypeName:
                 type: string
-              problemDescription:
+                description: Название типа услуги
+              status:
                 type: string
+                enum: [New]
+                description: Статус (всегда New при создании)
+              description:
+                type: string
+                minLength: 10
+                maxLength: 2000
+                description: Описание проблемы
+              deviceModel:
+                type: string
+                maxLength: 100
+                description: Модель устройства
+              serialNumber:
+                type: string
+                maxLength: 50
+                description: Серийный номер устройства
+              estimatedCost:
+                type: number
+                minimum: 0
+                description: Ориентировочная стоимость (BasePrice типа услуги)
+              createdAt:
+                type: string
+                format: date-time
+                description: Дата создания заявки
+          metadata:
+            type: object
+            properties:
+              source:
+                type: string
+                example: "ServicesService"
+              version:
+                type: string
+                example: "1.0"
+              correlationId:
+                type: string
+                format: uuid
+                description: ID для трассировки запроса
 
     ServiceRequestAssigned:
       name: ServiceRequestAssigned
@@ -372,6 +561,19 @@ components:
       name: ServiceRequestStatusChanged
       title: Статус заявки изменён
       contentType: application/json
+      description: |
+        Публикуется сервисом ServicesService при изменении статуса заявки.
+        Точка публикации: ServicesService.UpdateStatusAsync()
+        
+        ## Машина состояний (State Machine)
+        - New → InProgress (при назначении мастера), Cancelled
+        - InProgress → Completed
+        - Completed → Closed
+        - Closed → (финальный)
+        - Cancelled → (финальный)
+      tags:
+        - name: ServicesService
+        - name: business-event
       payload:
         type: object
         required: [eventId, eventType, timestamp, data]
@@ -379,30 +581,65 @@ components:
           eventId:
             type: string
             format: uuid
+            description: Уникальный ID события (GUID)
           eventType:
             type: string
             enum: [ServiceRequestStatusChanged]
+            description: Тип события
           timestamp:
             type: string
             format: date-time
+            description: Время события (UTC)
           data:
             type: object
-            required: [serviceRequestId, oldStatus, newStatus]
+            required: [serviceRequestId, requestNumber, oldStatus, newStatus, changedBy]
             properties:
               serviceRequestId:
                 type: string
                 format: uuid
+                description: ID заявки
               requestNumber:
                 type: string
-              oldStatus:
+                pattern: '^SR-\d{4}-\d{6}$'
+                example: "SR-2026-000001"
+                description: Номер заявки
+              clientId:
                 type: string
-                enum: [New, Accepted, InProgress, Completed, Closed]
-              newStatus:
-                type: string
-                enum: [New, Accepted, InProgress, Completed, Closed]
+                format: uuid
+                description: ID клиента
               masterId:
                 type: string
                 format: uuid
+                description: ID мастера (если назначен)
+              oldStatus:
+                type: string
+                enum: [New, InProgress, Completed, Closed, Cancelled]
+                description: Предыдущий статус заявки
+              newStatus:
+                type: string
+                enum: [New, InProgress, Completed, Closed, Cancelled]
+                description: Новый статус заявки
+              changedBy:
+                type: string
+                format: uuid
+                description: ID пользователя, изменившего статус
+              comment:
+                type: string
+                maxLength: 500
+                description: Комментарий к изменению статуса
+          metadata:
+            type: object
+            properties:
+              source:
+                type: string
+                example: "ServicesService"
+              version:
+                type: string
+                example: "1.0"
+              correlationId:
+                type: string
+                format: uuid
+                description: ID для трассировки запроса
 
     ServiceRequestCompleted:
       name: ServiceRequestCompleted

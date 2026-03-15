@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PCBuilderService", "PCBuild
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{195D8794-CB8C-42B7-892C-3065D0B48F8C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArchitectureTests", "..\tests\ArchitectureTests\ArchitectureTests.csproj", "{7F2B578C-D038-4201-9758-E0C7A0A047AF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,5 +58,9 @@ Global
 		{195D8794-CB8C-42B7-892C-3065D0B48F8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{195D8794-CB8C-42B7-892C-3065D0B48F8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{195D8794-CB8C-42B7-892C-3065D0B48F8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F2B578C-D038-4201-9758-E0C7A0A047AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F2B578C-D038-4201-9758-E0C7A0A047AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F2B578C-D038-4201-9758-E0C7A0A047AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F2B578C-D038-4201-9758-E0C7A0A047AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

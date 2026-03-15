@@ -1,0 +1,112 @@
+%% C4 Model - Level 3: Component Diagram
+%% CatalogService - Диаграмма компонентов
+%% Показывает внутреннюю структуру сервиса каталога
+
+graph TB
+    subgraph "Frontend Layer"
+        CatalogUI[📦 CatalogUI<br/><br/>React Components<br/><br/>• ProductList<br/>• ProductDetails<br/>• CategoryTree<br/>• SearchBar<br/>• FilterPanel]
+        
+        CatalogState[📊 CatalogState<br/><br/>Redux Toolkit Slice<br/><br/>• products<br/>• categories<br/>• filters<br/>• pagination<br/>• loading state]
+    end
+    
+    subgraph "API Layer - CatalogService"
+        subgraph "Controllers"
+            ProductsController[📊 ProductsController<br/><br/>ASP.NET Core Controller<br/><br/>Endpoints:<br/>• GET /api/products<br/>• GET /api/products/:id<br/>• POST /api/products<br/>• PUT /api/products/:id<br/>• DELETE /api/products/:id<br/>• GET /api/products/search]
+            
+            CategoriesController[📁 CategoriesController<br/><br/>ASP.NET Core Controller<br/><br/>Endpoints:<br/>• GET /api/categories<br/>• GET /api/categories/:id<br/>• POST /api/categories<br/>• PUT /api/categories/:id<br/>• DELETE /api/categories/:id]
+            
+            ManufacturersController[🏭 ManufacturersController<br/><br/>ASP.NET Core Controller<br/><br/>Endpoints:<br/>• GET /api/manufacturers<br/>• GET /api/manufacturers/:id<br/>• POST /api/manufacturers]
+        end
+        
+        subgraph "Services"
+            ProductService[💼 ProductService<br/><br/>Domain Logic<br/><br/>Методы:<br/>• GetProductsAsync<br/>• GetProductByIdAsync<br/>• CreateProductAsync<br/>• UpdateProductAsync<br/>• DeleteProductAsync<br/>• SearchProductsAsync<br/>• GetProductsByCategory]
+            
+            CategoryService[📁 CategoryService<br/><br/>Domain Logic<br/><br/>Методы:<br/>• GetCategoriesAsync<br/>• GetCategoryTreeAsync<br/>• CreateCategoryAsync<br/>• UpdateCategoryAsync]
+            
+            ManufacturerService[🏭 ManufacturerService<br/><br/>Domain Logic<br/><br/>Методы:<br/>• GetManufacturersAsync<br/>• GetManufacturerProductsAsync]
+            
+            CacheService[⚡ CatalogCacheService<br/><br/>Cache Layer<br/><br/>Методы:<br/>• GetCachedProducts<br/>• CacheProducts<br/>• InvalidateCache<br/>• GetCachedCategories]
+        end
+        
+        subgraph "Repositories"
+            ProductRepository[📦 ProductRepository<br/><br/>IRepository<Product><br/><br/>Методы:<br/>• GetByIdAsync<br/>• GetAllAsync<br/>• FindAsync<br/>• AddAsync<br/>• UpdateAsync<br/>• DeleteAsync]
+            
+            CategoryRepository[📁 CategoryRepository<br/><br/>IRepository<Category><br/><br/>Методы:<br/>• GetByIdAsync<br/>• GetTreeAsync<br/>• AddAsync<br/>• UpdateAsync]
+            
+            ManufacturerRepository[🏭 ManufacturerRepository<br/><br/>IRepository<Manufacturer><br/><br/>Методы:<br/>• GetByIdAsync<br/>• GetAllAsync<br/>• AddAsync]
+        end
+        
+        subgraph "Domain Models"
+            ProductEntity[🎯 Product Entity<br/><br/>Сущность товара<br/><br/>Свойства:<br/>• Id: Guid<br/>• Name: string<br/>• SKU: string<br/>• Price: decimal<br/>• Stock: int<br/>• CategoryId: Guid<br/>• ManufacturerId: Guid<br/>• Specifications: Json<br/>• Description: string]
+            
+            CategoryEntity[📁 Category Entity<br/><br/>Сущность категории<br/><br/>Свойства:<br/>• Id: Guid<br/>• Name: string<br/>• ParentId: Guid?<br/>• Children: List<br/>• Products: List]
+            
+            ManufacturerEntity[🏭 Manufacturer Entity<br/><br/>Сущность производителя<br/><br/>Свойства:<br/>• Id: Guid<br/>• Name: string<br/>• Country: string<br/>• Website: string]
+        end
+    end
+    
+    subgraph "Data Layer"
+        DbContext[🗄️ ApplicationDbContext<br/><br/>EF Core DbContext<br/><br/>DbSets:<br/>• Products<br/>• Categories<br/>• Manufacturers<br/>• ProductImages<br/>• InventoryLogs]
+        
+        PostgreSQL[(🗄️ PostgreSQL 16<br/><br/>Таблицы:<br/>• products<br/>• categories<br/>• manufacturers<br/>• product_images<br/>• inventory_logs)]
+        
+        Redis[(⚡ Redis 7<br/><br/>Ключи кэша:<br/>• products:all<br/>• products:{id}<br/>• categories:tree<br/>• categories:{id}<br/>• search:{query})]
+    end
+    
+    subgraph "Cross-cutting Concerns"
+        LoggingMiddleware[📋 LoggingMiddleware<br/>Serilog<br/>Логирование запросов]
+        
+        ExceptionMiddleware[⚠️ ExceptionMiddleware<br/>Глобальная обработка ошибок]
+        
+        ValidationMiddleware[✅ ValidationMiddleware<br/>FluentValidation<br/>Валидация DTO]
+        
+        AuthMiddleware[🔐 AuthorizationMiddleware<br/>JWT Bearer<br/>Авторизация]
+    end
+    
+    %% Frontend connections
+    CatalogUI --> CatalogState
+    CatalogState -->|HTTP/JSON<br/>GET /api/products| ProductsController
+    CatalogState -->|HTTP/JSON<br/>GET /api/categories| CategoriesController
+    CatalogState -->|HTTP/JSON<br/>GET /api/manufacturers| ManufacturersController
+    
+    %% Controller to Service
+    ProductsController --> ProductService
+    CategoriesController --> CategoryService
+    ManufacturersController --> ManufacturerService
+    
+    %% Service to Repository
+    ProductService --> ProductRepository
+    ProductService --> CacheService
+    CategoryService --> CategoryRepository
+    CategoryService --> CacheService
+    ManufacturerService --> ManufacturerRepository
+    
+    %% Service to Domain
+    ProductService -.-> ProductEntity
+    CategoryService -.-> CategoryEntity
+    ManufacturerService -.-> ManufacturerEntity
+    
+    %% Repository to DbContext
+    ProductRepository --> DbContext
+    CategoryRepository --> DbContext
+    ManufacturerRepository --> DbContext
+    
+    %% DbContext to Database
+    DbContext --> PostgreSQL
+    
+    %% Cache Service to Redis
+    CacheService --> Redis
+    
+    %% Middleware pipeline (all controllers go through middleware)
+    LoggingMiddleware -.-> ProductsController
+    LoggingMiddleware -.-> CategoriesController
+    LoggingMiddleware -.-> ManufacturersController
+    ExceptionMiddleware -.-> ProductsController
+    ExceptionMiddleware -.-> CategoriesController
+    ExceptionMiddleware -.-> ManufacturersController
+    ValidationMiddleware -.-> ProductsController
+    ValidationMiddleware -.-> CategoriesController
+    ValidationMiddleware -.-> ManufacturersController
+    AuthMiddleware -.-> ProductsController
+    AuthMiddleware -.-> CategoriesController
+    AuthMiddleware -.-> ManufacturersController
