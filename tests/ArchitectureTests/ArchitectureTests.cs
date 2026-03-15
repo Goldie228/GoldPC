@@ -8,6 +8,7 @@ namespace GoldPC.ArchitectureTests;
 /// <summary>
 /// Архитектурные тесты для обеспечения чистой архитектуры проекта GoldPC
 /// Используют NetArchTest.Rules для проверки зависимостей и структуры кода
+/// Согласно разделу 5.1 и 5.2 документа 06-quality-checks.md
 /// </summary>
 public class ArchitectureTests
 {
@@ -46,6 +47,116 @@ public class ArchitectureTests
 
         return assemblies.ToArray();
     }
+
+    #region Test: Circular Dependencies (Section 5.1)
+
+    /// <summary>
+    /// Тест: Проверка отсутствия циклических зависимостей между сборками.
+    /// Циклические зависимости усложняют архитектуру и могут привести к проблемам при развёртывании.
+    /// Раздел 5.1 документа 06-quality-checks.md
+    /// </summary>
+    [Fact]
+    public void Should_Not_Have_Circular_Dependencies()
+    {
+        // Arrange & Act
+        var result = Types.InAssemblies(Assemblies)
+            .Should()
+            .NotHaveCircularDependencies()
+            .GetResult();
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue(
+            because: "циклические зависимости между сборками запрещены. " +
+                     "Они усложняют архитектуру и могут привести к проблемам при развёртывании. " +
+                     $"Нарушения обнаружены в: {(result.FailingTypes != null ? string.Join(", ", result.FailingTypes.Select(t => t.Name)) : "нет")}");
+    }
+
+    #endregion
+
+    #region Test: Core Should Not Depend On Infrastructure (Section 5.1)
+
+    /// <summary>
+    /// Тест: Core слой (Models/Entities) не должен зависеть от Infrastructure слоя (Repositories/Data).
+    /// Это ключевое правило Clean Architecture - зависимости должны направляться внутрь.
+    /// Раздел 5.1 документа 06-quality-checks.md
+    /// </summary>
+    [Fact]
+    public void Core_Should_Not_Depend_On_Infrastructure()
+    {
+        // Arrange - получаем все типы в namespace с Repositories
+        var repositoryNamespaces = Types.InAssemblies(Assemblies)
+            .That()
+            .ResideInNamespaceContaining(".Repositories")
+            .GetTypes()
+            .Select(t => t.Namespace)
+            .Where(t => t != null)
+            .Distinct()
+            .Cast<string>()
+            .ToList();
+
+        // Также проверяем зависимость от Entity Framework
+        var infrastructureDependencies = new List<string> { "Microsoft.EntityFrameworkCore" };
+        infrastructureDependencies.AddRange(repositoryNamespaces);
+
+        // Act - проверяем, что Models/Entities не зависят от Infrastructure
+        var result = Types.InAssemblies(Assemblies)
+            .That()
+            .ResideInNamespaceContaining(".Models")
+            .Or()
+            .ResideInNamespaceContaining(".Entities")
+            .Should()
+            .NotHaveDependencyOnAny(infrastructureDependencies.ToArray())
+            .GetResult();
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue(
+            because: "Core слой (Models/Entities) не должен зависеть от Infrastructure. " +
+                     "Это ключевое правило Clean Architecture - зависимости направляются внутрь. " +
+                     $"Нарушения: {(result.FailingTypes != null ? string.Join(", ", result.FailingTypes.Select(t => t.Name)) : "нет")}");
+    }
+
+    #endregion
+
+    #region Test: Controllers Should Not Depend On Repositories (Section 5.1)
+
+    /// <summary>
+    /// Тест: Контроллеры не должны напрямую зависеть от репозиториев.
+    /// API слой должен взаимодействовать только с сервисным слоем.
+    /// Это обеспечивает разделение ответственности и упрощает тестирование.
+    /// Раздел 5.1 документа 06-quality-checks.md
+    /// </summary>
+    [Fact]
+    public void Controllers_Should_Not_Depend_On_Repositories()
+    {
+        // Arrange - получаем все namespace с репозиториями
+        var repositoryNamespaces = Types.InAssemblies(Assemblies)
+            .That()
+            .ResideInNamespaceContaining(".Repositories")
+            .GetTypes()
+            .Select(t => t.Namespace)
+            .Where(t => t != null)
+            .Distinct()
+            .Cast<string>()
+            .ToList();
+
+        // Act - проверяем контроллеры
+        var result = Types.InAssemblies(Assemblies)
+            .That()
+            .ResideInNamespaceContaining(".Controllers")
+            .And()
+            .HaveNameEndingWith("Controller")
+            .Should()
+            .NotHaveDependencyOnAny(repositoryNamespaces.ToArray())
+            .GetResult();
+
+        // Assert
+        result.IsSuccessful.Should().BeTrue(
+            because: "контроллеры не должны напрямую зависеть от репозиториев. " +
+                     "Используйте сервисы для инкапсуляции бизнес-логики. " +
+                     $"Нарушения: {(result.FailingTypes != null ? string.Join(", ", result.FailingTypes.Select(t => t.Name)) : "нет")}");
+    }
+
+    #endregion
 
     #region Test 1: Controllers Should Not Reference Repositories
     

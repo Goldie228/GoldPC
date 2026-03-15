@@ -333,6 +333,54 @@ module.exports = { detectNeuroslop };
 
 ### 2.2 Детекция галлюцинаций ИИ
 
+#### Скрипт валидации зависимостей
+
+Для проверки существования всех зависимостей в реестрах используется скрипт:
+
+```bash
+# Проверить все зависимости проекта
+node scripts/validate-all-dependencies.js
+
+# Опции:
+#   --verbose, -v   Показать все пакеты (включая валидные)
+#   --json          Вывод в формате JSON
+#   --quiet         Показывать только ошибки
+#   --help, -h      Справка
+```
+
+**Коды возврата:**
+- `0` — Все пакеты валидны
+- `1` — Найдены несуществующие пакеты (галлюцинации)
+- `2` — Произошли сетевые ошибки
+
+**Пример вывода:**
+
+```
+🔍 Validating dependencies...
+📁 Project root: /path/to/project
+
+📦 Checking 45 unique NPM packages across 2 package.json files...
+
+📦 Checking 23 unique NuGet packages across 5 .csproj files...
+
+═══════════════════════════════════════════════════════════════════════
+             📦 DEPENDENCY VALIDATION REPORT  📦
+═══════════════════════════════════════════════════════════════════════
+
+📊 Statistics:
+   Total checked:  68
+   ✅ Valid:       68
+   ❌ Invalid:     0
+   ⚠️  Skipped:     0
+   ⏱️  Duration:    15234ms
+
+═══════════════════════════════════════════════════════════════════════
+✅ PASS: All checked packages are valid.
+═══════════════════════════════════════════════════════════════════════
+```
+
+#### CI/CD интеграция
+
 ```yaml
 # .github/workflows/hallucination-check.yml
 name: Hallucination Check
@@ -345,30 +393,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Check NuGet packages exist
-        run: |
-          dotnet restore
-          dotnet list package --include-transitive --outdated > packages.txt || true
-          
-          while IFS= read -r line; do
-            if [[ $line =~ ^([A-Za-z0-9.]+) ]]; then
-              pkg="${BASH_REMATCH[1]}"
-              response=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3/registration5-semver1/${pkg,,}/index.json")
-              if [ "$response" != "200" ]; then
-                echo "⚠️ Package '$pkg' not found in NuGet (possible hallucination)"
-              fi
-            fi
-          done < <(grep -E "^\s+→" packages.txt || true)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       
-      - name: Check npm packages exist
-        working-directory: src/frontend
+      - name: Validate all dependencies
+        run: node scripts/validate-all-dependencies.js
+        
+      # Альтернативно можно использовать --json для парсинга результатов
+      - name: Validate dependencies (JSON output)
         run: |
-          npm ls --json --depth=0 2>/dev/null | jq -r '.dependencies | keys[]' | while read pkg; do
-            response=$(curl -s -o /dev/null -w "%{http_code}" "https://registry.npmjs.org/${pkg}")
-            if [ "$response" != "200" ]; then
-              echo "⚠️ Package '$pkg' not found in npm (possible hallucination)"
-            fi
-          done
+          result=$(node scripts/validate-all-dependencies.js --json)
+          invalid=$(echo "$result" | jq '.stats.invalid')
+          if [ "$invalid" -gt 0 ]; then
+            echo "🚨 Found $invalid hallucinated packages!"
+            echo "$result" | jq '.npm.invalid, .nuget.invalid'
+            exit 1
+          fi
+```
+
+#### Ручная проверка через curl
+
+Для быстрой проверки отдельных пакетов:
+
+```bash
+# Проверка NPM пакета
+curl -s -o /dev/null -w "%{http_code}" "https://registry.npmjs.org/react"
+# 200 = существует, 404 = не существует
+
+# Проверка NuGet пакета
+curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3/registration5-semver1/microsoft.entityframeworkcore/index.json"
+# 200 = существует, 404 = не существует
 ```
 
 ### 2.3 Проверка несоответствий
