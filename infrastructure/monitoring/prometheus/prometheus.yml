@@ -1,0 +1,112 @@
+# GoldPC Prometheus Configuration
+# Metrics collection and alerting configuration
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'goldpc-production'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+      timeout: 10s
+      api_version: v2
+
+# Alert rules files
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+    scheme: http
+
+  # GoldPC Backend Services (Blue-Green Deployment)
+  - job_name: 'goldpc-backend'
+    static_configs:
+      - targets:
+          - 'backend-blue:8080'
+          - 'backend-green:8080'
+        labels:
+          environment: 'production'
+    metrics_path: /metrics
+    scheme: http
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '([^:]+):\d+'
+        target_label: deployment_slot
+        replacement: '${1}'
+
+  # Catalog Service detailed
+  - job_name: 'catalog-service'
+    static_configs:
+      - targets: ['catalogservice:5001']
+    metrics_path: /metrics
+    scheme: http
+
+  # PC Builder Service detailed
+  - job_name: 'pcbuilder-service'
+    static_configs:
+      - targets: ['pcbuilderservice:5002']
+    metrics_path: /metrics
+    scheme: http
+
+  # Auth Service detailed
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['authservice:5003']
+    metrics_path: /metrics
+    scheme: http
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    metrics_path: /metrics
+    scheme: http
+    relabel_configs:
+      - target_label: database
+        replacement: 'goldpc'
+
+  # Redis Exporter
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    metrics_path: /metrics
+    scheme: http
+
+  # Node Exporter - Host metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    metrics_path: /metrics
+    scheme: http
+
+  # Jaeger metrics (if available)
+  - job_name: 'jaeger'
+    static_configs:
+      - targets: ['jaeger:14269']
+    metrics_path: /metrics
+    scheme: http
+
+# Remote write configuration (optional - for long-term storage)
+# remote_write:
+#   - url: "http://remote-storage:9090/api/v1/write"
+#     queue_config:
+#       max_samples_per_send: 1000
+#       max_shards: 200
+#       capacity: 2500
+
+# Remote read configuration (optional)
+# remote_read:
+#   - url: "http://remote-storage:9090/api/v1/read"
+#     read_recent: true

@@ -1,0 +1,18 @@
+# Grafana Dashboard Provisioning
+# This file configures automatic dashboard loading
+
+apiVersion: 1
+
+providers:
+  # GoldPC Dashboards
+  - name: 'GoldPC'
+    orgId: 1
+    folder: 'GoldPC'
+    folderUid: 'goldpc-folder'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: false

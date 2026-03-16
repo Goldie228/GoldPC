@@ -9,14 +9,25 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Serilog.Formatting.Json;
 using Shared.Middleware;
 using GoldPC.Shared.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Настройка Serilog
+// Настройка Serilog с разделением форматов для Development/Production
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "GoldPC")
+    .Enrich.WithProperty("Service", "AuthService")
+    .WriteTo.Console(
+        outputTemplate: builder.Environment.IsProduction()
+            ? null // Используем JsonFormatter для Production
+            : "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
+        formatter: builder.Environment.IsProduction()
+            ? new JsonFormatter()
+            : null)
     .WriteTo.File("logs/auth-service-.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 

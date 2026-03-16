@@ -1,0 +1,82 @@
+groups:
+  - name: goldpc-critical
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High latency detected"
+          description: "p95 latency is {{ $value | humanizeDuration }}"
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.instance }} has been down for more than 1 minute"
+
+      - alert: DatabaseConnectionsExhausted
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connections near limit"
+          description: "{{ $value | humanizePercentage }} of connections used"
+
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space low"
+          description: "Only {{ $value | humanizePercentage }} disk space remaining"
+
+      - alert: MemoryUsageHigh
+        expr: |
+          (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+  - name: goldpc-business
+    rules:
+      - alert: NoOrdersCreated
+        expr: |
+          rate(orders_created_total[1h]) == 0
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No orders in the last 30 minutes"
+          description: "This might indicate a problem with the checkout process"
+
+      - alert: HighCancellationRate
+        expr: |
+          rate(orders_cancelled_total[1h]) / rate(orders_created_total[1h]) > 0.1
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "High order cancellation rate"
+          description: "{{ $value | humanizePercentage }} of orders are being cancelled"

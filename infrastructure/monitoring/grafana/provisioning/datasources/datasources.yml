@@ -1,0 +1,76 @@
+# Grafana Datasources Provisioning
+# This file configures data sources for Grafana
+
+apiVersion: 1
+
+# Delete data sources that are not defined in this file
+deleteDatasources:
+  - name: Prometheus-Old
+    orgId: 1
+
+datasources:
+  # Prometheus - Primary metrics data source
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    orgId: 1
+    url: http://prometheus:9090
+    basicAuth: false
+    isDefault: true
+    version: 1
+    editable: false
+    jsonData:
+      httpMethod: POST
+      manageAlerts: true
+      prometheusType: Prometheus
+      prometheusVersion: "2.48.0"
+      cacheLevel: 'High'
+      incrementalQuerying: true
+      incrementalQueryOverlapWindow: 10m
+      disableRecordingRules: false
+      exemplarTraceIdDestinations:
+        - name: traceID
+          datasourceUid: jaeger
+    uid: prometheus
+
+  # Jaeger - Distributed tracing data source
+  - name: Jaeger
+    type: jaeger
+    access: proxy
+    orgId: 1
+    url: http://jaeger:16686
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: 'loki'
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: true
+        filterBySpanID: true
+        customQuery: true
+        query: '{service="$service"} |= `$${__span.traceId}`'
+      nodeGraph:
+        enabled: true
+      traceQuery:
+        timeShiftEnabled: true
+        startTimeShift: '-1h'
+        endTimeShift: '1h'
+    uid: jaeger
+
+  # Alertmanager - For alert annotations
+  - name: Alertmanager
+    type: alertmanager
+    access: proxy
+    orgId: 1
+    url: http://alertmanager:9093
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: false
+    jsonData:
+      implementation: prometheus
+      handleGrafanaManagedAlerts: true
+    uid: alertmanager
