@@ -1,11 +1,16 @@
 using System.Text;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using GoldPC.AuthService.Data;
 using GoldPC.AuthService.Services;
+using GoldPC.AuthService.Validators;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Shared.Middleware;
+using GoldPC.Shared.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,10 +54,18 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddPermissionBasedAuthorization();
 
-// Настройка контроллеров
-builder.Services.AddControllers();
+// Настройка контроллеров с FluentValidation
+builder.Services.AddControllers()
+    .AddFluentValidation(fv =>
+    {
+        fv.RegisterValidatorsFromAssemblyContaining<RegisterRequestValidator>();
+        fv.DisableDataAnnotationsValidation = false; // Сохраняем DataAnnotations как fallback
+    });
+
+// Регистрация валидаторов
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
 
 // Настройка Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -102,6 +115,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Security Headers Middleware - должен быть в начале pipeline
+app.UseSecurityHeaders();
 
 // Автоматическое применение миграций
 using (var scope = app.Services.CreateScope())

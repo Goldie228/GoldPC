@@ -1,0 +1,117 @@
+---
+# Allow backend to communicate with PostgreSQL database
+# Zero Trust: Only backend pods can connect to PostgreSQL on port 5432
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-to-postgresql
+  namespace: goldpc
+  labels:
+    app.kubernetes.io/name: goldpc
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: security
+spec:
+  podSelector:
+    matchLabels:
+      app: goldpc-backend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgresql
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+# Allow backend to communicate with Redis cache
+# Zero Trust: Only backend pods can connect to Redis on port 6379
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-to-redis
+  namespace: goldpc
+  labels:
+    app.kubernetes.io/name: goldpc
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: security
+spec:
+  podSelector:
+    matchLabels:
+      app: goldpc-backend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+---
+# Allow microservices to communicate with each other
+# Internal service mesh communication
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-internal-services
+  namespace: goldpc
+  labels:
+    app.kubernetes.io/name: goldpc
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: security
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: goldpc
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: goldpc
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: goldpc
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+# Allow backend to call external APIs (payment gateway, SMS, etc.)
+# This is tightly controlled and limited to specific external services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-external-apis
+  namespace: goldpc
+  labels:
+    app.kubernetes.io/name: goldpc
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: security
+spec:
+  podSelector:
+    matchLabels:
+      app: goldpc-backend
+  policyTypes:
+    - Egress
+  egress:
+    # Allow HTTPS traffic to external services
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8      # Private network
+              - 172.16.0.0/12   # Private network
+              - 192.168.0.0/16  # Private network
+      ports:
+        - protocol: TCP
+          port: 443

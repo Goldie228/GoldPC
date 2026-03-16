@@ -1,0 +1,63 @@
+---
+# Allow ingress traffic from ingress controller to backend
+# This policy allows the NGINX Ingress Controller to route traffic to the backend service
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-ingress
+  namespace: goldpc
+  labels:
+    app.kubernetes.io/name: goldpc
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: security
+spec:
+  podSelector:
+    matchLabels:
+      app: goldpc-backend
+  policyTypes:
+    - Ingress
+  ingress:
+    # Allow traffic from ingress-nginx namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+          endPort: 8080
+---
+# Allow ingress traffic to frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-ingress-frontend
+  namespace: goldpc
+  labels:
+    app.kubernetes.io/name: goldpc
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: security
+spec:
+  podSelector:
+    matchLabels:
+      app: goldpc-frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 80
+          endPort: 80
+</Content>
+<task_progress>- [x] Изучить требования из 07-security.md
+- [x] Проверить существующие network policies
+- [x] Создать allow-from-ingress.yaml
+- [ ] Создать backend-to-database.yaml
+- [ ] Добавить DNS policy
+- [ ] Удалить устаревший allow-rules.yaml
+- [ ] Проверить конфигурацию</task_progress>
+</write_to_file>

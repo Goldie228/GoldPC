@@ -1,12 +1,31 @@
+---
+# Default Deny All Network Policy
+# Zero Trust: Deny all ingress and egress traffic by default
+# This is the foundation of network security - all traffic must be explicitly allowed
+#
+# IMPORTANT: Apply this policy FIRST, then apply allow policies
+# Order of application:
+#   1. kubectl apply -f default-deny.yaml
+#   2. kubectl apply -f allow-dns.yaml
+#   3. kubectl apply -f allow-from-ingress.yaml
+#   4. kubectl apply -f backend-to-database.yaml
+#
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-all
   namespace: goldpc
+  labels:
+    app.kubernetes.io/name: goldpc
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: security
+    security.goldpc.io/policy-type: zero-trust
+    security.goldpc.io/priority: critical
+  annotations:
+    description: "Default deny all ingress and egress traffic. Zero Trust baseline."
+    security.goldpc.io/impact: "All traffic must be explicitly allowed by other policies"
 spec:
   podSelector: {}
   policyTypes:
     - Ingress
     - Egress
-</task_progress>
-</write_to_file>

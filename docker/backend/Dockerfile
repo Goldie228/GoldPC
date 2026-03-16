@@ -63,9 +63,9 @@ ARG SERVICE_PORT
 
 # Security: Install required packages
 # - ca-certificates: For TLS/SSL connections
-# - curl: For health checks
+# - wget: For health checks (lighter than curl)
 # - tzdata: For timezone support
-RUN apk add --no-cache ca-certificates curl tzdata && \
+RUN apk add --no-cache ca-certificates wget tzdata && \
     update-ca-certificates
 
 # Security: Create non-root user and group
@@ -90,9 +90,9 @@ ENV ASPNETCORE_URLS=http://+:${SERVICE_PORT}
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
-# Health check using curl
+# Health check using wget
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:${SERVICE_PORT}/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:${SERVICE_PORT}/health || exit 1
 
 # Entry point - use shell form to expand SERVICE_NAME
 CMD ["sh", "-c", "dotnet ${SERVICE_NAME}.dll"]

@@ -64,6 +64,9 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
+// Security Headers Middleware - должен быть в начале pipeline
+app.UseSecurityHeaders();
+
 // Настройка pipeline
 if (app.Environment.IsDevelopment())
 {

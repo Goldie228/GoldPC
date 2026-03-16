@@ -19,7 +19,9 @@
     "clean": "rm -rf dist coverage node_modules/.vite"
   },
   "dependencies": {
+    "@types/dompurify": "^3.0.5",
     "axios": "^1.13.6",
+    "dompurify": "^3.3.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.1"

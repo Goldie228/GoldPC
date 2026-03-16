@@ -75,6 +75,9 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
+// Security Headers Middleware - должен быть в начале pipeline
+app.UseSecurityHeaders();
+
 // Применение миграций при запуске с использованием extension метода
 // Пропускаем миграции в среде Testing (для WebApplicationFactory)
 if (!app.Environment.IsEnvironment("Testing"))

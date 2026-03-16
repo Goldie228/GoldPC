@@ -1,0 +1,57 @@
+---
+# Allow DNS resolution for all pods in the namespace
+# Required for service discovery and external API calls
+# Without this, pods cannot resolve any hostnames
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: goldpc
+  labels:
+    app.kubernetes.io/name: goldpc
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: security
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # Allow DNS traffic to kube-dns in kube-system namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# Alternative DNS policy using IP block for CoreDNS
+# Use this if namespace selector doesn't work in your cluster
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns-clusterip
+  namespace: goldpc
+  labels:
+    app.kubernetes.io/name: goldpc
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: security
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # Allow DNS to cluster IP range (adjust for your cluster)
+    - to:
+        - ipBlock:
+            cidr: 10.96.0.0/12  # Common Kubernetes service CIDR
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
