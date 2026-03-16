@@ -1,0 +1,207 @@
+# Docker Compose для E2E и нагрузочного тестирования
+# Запуск: docker-compose -f docker-compose.test.yml up -d
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database (Test)
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: goldpc-postgres-test
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: goldpc_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d goldpc_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - goldpc-test-network
+
+  # Redis Cache (Test)
+  redis-test:
+    image: redis:7-alpine
+    container_name: goldpc-redis-test
+    ports:
+      - "6380:6379"
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    networks:
+      - goldpc-test-network
+
+  # Catalog Service (Test)
+  catalogservice-test:
+    build:
+      context: ../src
+      dockerfile: ../docker/Dockerfile.CatalogService
+    container_name: goldpc-catalog-test
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Testing
+      - ASPNETCORE_URLS=http://+:5001
+      - ConnectionStrings__DefaultConnection=Server=postgres-test;Port=5432;Database=goldpc_test;User Id=test;Password=test
+      - ConnectionStrings__PostgreSQL=Server=postgres-test;Port=5432;Database=goldpc_test;User Id=test;Password=test
+      - ConnectionStrings__Redis=redis-test:6379
+      - Redis__Host=redis-test
+      - Redis__Port=6379
+    ports:
+      - "5001:5001"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - goldpc-test-network
+    restart: on-failure
+
+  # PC Builder Service (Test)
+  pcbuilderservice-test:
+    build:
+      context: ../src
+      dockerfile: ../docker/Dockerfile.PCBuilderService
+    container_name: goldpc-pcbuilder-test
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Testing
+      - ASPNETCORE_URLS=http://+:5002
+      - ConnectionStrings__DefaultConnection=Server=postgres-test;Port=5432;Database=goldpc_test;User Id=test;Password=test
+      - ConnectionStrings__Redis=redis-test:6379
+      - CatalogService__Url=http://catalogservice-test:5001
+    ports:
+      - "5002:5002"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      catalogservice-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - goldpc-test-network
+    restart: on-failure
+
+  # Auth Service (Test)
+  authservice-test:
+    build:
+      context: ../src
+      dockerfile: ../docker/Dockerfile.AuthService
+    container_name: goldpc-auth-test
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Testing
+      - ASPNETCORE_URLS=http://+:5003
+      - ConnectionStrings__PostgreSQL=Server=postgres-test;Port=5432;Database=goldpc_test;User Id=test;Password=test
+      - JwtSettings__Secret=test-super-secret-key-for-testing-min-32-chars!
+      - JwtSettings__Issuer=goldpc
+      - JwtSettings__Audience=goldpc-users
+    ports:
+      - "5003:5003"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - goldpc-test-network
+    restart: on-failure
+
+  # Frontend (Test)
+  frontend-test:
+    build:
+      context: ..
+      dockerfile: docker/frontend/Dockerfile
+      args:
+        - NODE_ENV=test
+    container_name: goldpc-frontend-test
+    environment:
+      - NODE_ENV=test
+    ports:
+      - "3000:8080"
+    depends_on:
+      catalogservice-test:
+        condition: service_healthy
+      pcbuilderservice-test:
+        condition: service_healthy
+      authservice-test:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - goldpc-test-network
+    restart: on-failure
+
+  # Playwright Test Runner
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.40.0-jammy
+    container_name: goldpc-playwright
+    volumes:
+      - ../tests/e2e:/app/tests
+      - ../playwright-report:/app/playwright-report
+    working_dir: /app/tests
+    environment:
+      - BASE_URL=http://frontend-test:8080
+      - CI=true
+    command: npx playwright test --reporter=html
+    depends_on:
+      frontend-test:
+        condition: service_healthy
+      catalogservice-test:
+        condition: service_healthy
+      authservice-test:
+        condition: service_healthy
+    networks:
+      - goldpc-test-network
+
+  # k6 Load Testing
+  k6:
+    image: grafana/k6:latest
+    container_name: goldpc-k6
+    volumes:
+      - ../tests/load:/scripts
+    environment:
+      - BASE_URL=http://catalogservice-test:5001
+    command: run /scripts/k6.config.js
+    depends_on:
+      catalogservice-test:
+        condition: service_healthy
+    networks:
+      - goldpc-test-network
+    profiles:
+      - load
+
+networks:
+  goldpc-test-network:
+    driver: bridge

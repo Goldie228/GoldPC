@@ -13,6 +13,8 @@
     "test:webkit": "playwright test --project=webkit",
     "test:report": "playwright show-report",
     "test:smoke": "playwright test --grep @smoke",
+    "test:cucumber": "cucumber-js",
+    "test:cucumber:html": "cucumber-js --format html:reports/cucumber-report.html",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "typecheck": "tsc --noEmit"
@@ -26,7 +28,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@cucumber/cucumber": "^12.7.0",
     "@playwright/test": "^1.58.2",
-    "@types/node": "^25.5.0"
+    "@types/node": "^25.5.0",
+    "ts-node": "^10.9.2"
   }
 }

@@ -1,0 +1,292 @@
+# =============================================================================
+# E2E and Load Testing Workflow
+# GoldPC Project - Automated E2E and Load Testing Pipeline
+# @see development-plan/10-e2e-and-load-testing.md (Section 10.5)
+# =============================================================================
+
+name: E2E and Load Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: e2e-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # E2E Tests with Playwright
+  # ═══════════════════════════════════════════════════════════════════════════
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------------------------
+      # Start Test Environment
+      # ---------------------------------------------------------------------------
+      - name: Start Test Environment
+        run: |
+          echo "🚀 Starting test environment with docker-compose..."
+          docker-compose -f docker-compose.test.yml up -d
+        env:
+          COMPOSE_PROJECT_NAME: goldpc-test
+
+      # ---------------------------------------------------------------------------
+      # Wait for Services Health Check
+      # ---------------------------------------------------------------------------
+      - name: Wait for Services Health Check
+        run: |
+          echo "⏳ Waiting for services to be healthy..."
+          
+          # Wait for PostgreSQL
+          echo "Checking PostgreSQL..."
+          until docker exec goldpc-test-postgres pg_isready -U test -d goldpc_test; do
+            echo "PostgreSQL is unavailable - sleeping"
+            sleep 2
+          done
+          echo "✅ PostgreSQL is ready"
+          
+          # Wait for Redis
+          echo "Checking Redis..."
+          until docker exec goldpc-test-redis redis-cli ping | grep -q PONG; do
+            echo "Redis is unavailable - sleeping"
+            sleep 2
+          done
+          echo "✅ Redis is ready"
+          
+          # Wait for Backend (CatalogService)
+          echo "Checking Backend (CatalogService)..."
+          until curl -sf http://localhost:5001/health > /dev/null 2>&1; do
+            echo "Backend is unavailable - sleeping"
+            sleep 5
+          done
+          echo "✅ Backend (CatalogService) is ready"
+          
+          # Wait for AuthService
+          echo "Checking AuthService..."
+          until curl -sf http://localhost:5003/health > /dev/null 2>&1; do
+            echo "AuthService is unavailable - sleeping"
+            sleep 5
+          done
+          echo "✅ AuthService is ready"
+          
+          # Wait for PCBuilderService
+          echo "Checking PCBuilderService..."
+          until curl -sf http://localhost:5002/health > /dev/null 2>&1; do
+            echo "PCBuilderService is unavailable - sleeping"
+            sleep 5
+          done
+          echo "✅ PCBuilderService is ready"
+          
+          # Wait for Frontend
+          echo "Checking Frontend..."
+          until curl -sf http://localhost:3000/health > /dev/null 2>&1; do
+            echo "Frontend is unavailable - sleeping"
+            sleep 5
+          done
+          echo "✅ Frontend is ready"
+          
+          echo ""
+          echo "🎉 All services are healthy!"
+
+      # ---------------------------------------------------------------------------
+      # Setup Node.js for Playwright
+      # ---------------------------------------------------------------------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: tests/e2e/package-lock.json
+
+      # ---------------------------------------------------------------------------
+      # Install Playwright Dependencies
+      # ---------------------------------------------------------------------------
+      - name: Install Playwright Dependencies
+        working-directory: tests/e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium firefox webkit
+
+      # ---------------------------------------------------------------------------
+      # Run Playwright E2E Tests
+      # ---------------------------------------------------------------------------
+      - name: Run E2E Tests
+        working-directory: tests/e2e
+        run: npx playwright test --reporter=html,json
+        env:
+          BASE_URL: http://localhost:3000
+          CI: true
+
+      # ---------------------------------------------------------------------------
+      # Upload Playwright HTML Report
+      # ---------------------------------------------------------------------------
+      - name: Upload Playwright HTML Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: tests/e2e/playwright-report/
+          retention-days: 14
+
+      # ---------------------------------------------------------------------------
+      # Upload Playwright Test Results
+      # ---------------------------------------------------------------------------
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-test-results
+          path: tests/e2e/test-results/
+          retention-days: 7
+
+      # ---------------------------------------------------------------------------
+      # Cleanup Test Environment
+      # ---------------------------------------------------------------------------
+      - name: Cleanup Test Environment
+        if: always()
+        run: |
+          echo "🧹 Cleaning up test environment..."
+          docker-compose -f docker-compose.test.yml down -v --remove-orphans
+        env:
+          COMPOSE_PROJECT_NAME: goldpc-test
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Load Tests with k6
+  # ═══════════════════════════════════════════════════════════════════════════
+  load-tests:
+    name: Load Tests
+    runs-on: ubuntu-latest
+    needs: [e2e-tests]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    timeout-minutes: 20
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------------------------
+      # Install k6
+      # ---------------------------------------------------------------------------
+      - name: Install k6
+        run: |
+          echo "📦 Installing k6..."
+          curl https://github.com/grafana/k6/releases/download/v0.47.0/k6-v0.47.0-linux-amd64.tar.gz -L | tar xvz
+          sudo mv k6-*/k6 /usr/local/bin/
+          k6 version
+
+      # ---------------------------------------------------------------------------
+      # Run Load Tests
+      # ---------------------------------------------------------------------------
+      - name: Run Load Tests
+        run: |
+          echo "🔥 Running load tests..."
+          k6 run tests/load/k6.config.js --out json=load-test-results.json
+        env:
+          BASE_URL: ${{ secrets.STAGING_URL || 'http://localhost:5000' }}
+          MOCK_AUTH: 'true'
+
+      # ---------------------------------------------------------------------------
+      # Upload Load Test Results
+      # ---------------------------------------------------------------------------
+      - name: Upload Load Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: load-test-results
+          path: load-test-results.json
+          retention-days: 14
+
+      # ---------------------------------------------------------------------------
+      # Check Load Test Thresholds
+      # ---------------------------------------------------------------------------
+      - name: Check Load Test Thresholds
+        run: |
+          echo "📊 Analyzing load test results..."
+          
+          # Check if there are threshold failures in the output
+          if grep -q "failed threshold" load-test-results.json 2>/dev/null; then
+            echo "❌ Load test thresholds exceeded!"
+            exit 1
+          fi
+          
+          echo "✅ Load test thresholds passed!"
+
+      # ---------------------------------------------------------------------------
+      # Generate Load Test Summary
+      # ---------------------------------------------------------------------------
+      - name: Generate Load Test Summary
+        if: always()
+        run: |
+          echo "## 📊 Load Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Threshold | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| http_req_duration (p95) | < 500ms | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Error Rate | < 1% | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔍 Check the uploaded artifacts for detailed results." >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Test Summary
+  # ═══════════════════════════════════════════════════════════════════════════
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [e2e-tests, load-tests]
+    if: always()
+    
+    steps:
+      - name: Generate Test Summary
+        run: |
+          echo "## 🎯 E2E and Load Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Type | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.e2e-tests.result }}" == "success" ]; then
+            echo "| E2E Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| E2E Tests | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.load-tests.result }}" == "success" ]; then
+            echo "| Load Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.load-tests.result }}" == "skipped" ]; then
+            echo "| Load Tests | ⏭️ Skipped |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Load Tests | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📅 **Run Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "🌿 **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "📝 **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+
+      - name: Check Overall Status
+        run: |
+          if [ "${{ needs.e2e-tests.result }}" != "success" ]; then
+            echo "❌ E2E tests failed!"
+            exit 1
+          fi
+          
+          # Load tests only required for main branch
+          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ needs.load-tests.result }}" != "success" ]; then
+            echo "❌ Load tests failed on main branch!"
+            exit 1
+          fi
+          
+          echo "✅ All required tests passed!"

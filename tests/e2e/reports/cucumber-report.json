@@ -1,0 +1,354 @@
+[
+  {
+    "description": "",
+    "elements": [
+      {
+        "description": "",
+        "id": "конструктор-пк;создание-совместимой-конфигурации",
+        "keyword": "Scenario",
+        "line": 3,
+        "name": "Создание совместимой конфигурации",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 4,
+            "name": "Я на странице конструктора",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:33"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 5,
+            "name": "Я выбираю процессор \"AMD Ryzen 9 7950X\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:69"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 6,
+            "name": "Я выбираю материнскую плату с сокетом \"AM5\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:81"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 7,
+            "name": "Я выбираю оперативную память \"DDR5-6000 32GB\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:88"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 8,
+            "name": "Я выбираю видеокарту \"RTX 4090\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:92"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 9,
+            "name": "Я выбираю блок питания \"850W\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:96"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 10,
+            "name": "Конфигурация должна быть совместимой",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:114"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 11,
+            "name": "Рекомендуемая мощность блока питания должна быть не менее \"750W\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:124"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 12,
+            "name": "Общая цена должна отображаться корректно",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:136"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "конструктор-пк;обнаружение-несовместимости",
+        "keyword": "Scenario",
+        "line": 14,
+        "name": "Обнаружение несовместимости",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 15,
+            "name": "Я на странице конструктора",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:33"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 16,
+            "name": "Я выбираю процессор \"AMD Ryzen 9 7950X\" с сокетом \"AM5\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:73"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 17,
+            "name": "Я выбираю материнскую плату с сокетом \"LGA1700\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:81"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 18,
+            "name": "Должно отобразиться предупреждение о несовместимости",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:145"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 19,
+            "name": "Кнопка \"Сохранить\" должна быть отключена",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:154"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      },
+      {
+        "description": "",
+        "id": "конструктор-пк;сохранение-конфигурации",
+        "keyword": "Scenario",
+        "line": 21,
+        "name": "Сохранение конфигурации",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 22,
+            "name": "Я авторизован как \"user@example.com\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:39"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 23,
+            "name": "Я создал совместимую конфигурацию",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:52"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 24,
+            "name": "Я нажимаю \"Сохранить конфигурацию\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:100"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 25,
+            "name": "Я ввожу название \"Игровой ПК 2024\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:105"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 26,
+            "name": "Конфигурация должна сохраниться в моём профиле",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:159"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 27,
+            "name": "Я должен видеть сообщение \"Конфигурация сохранена\"",
+            "match": {
+              "location": "steps/pc-builder.steps.ts:170"
+            },
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "skipped",
+              "duration": 0
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "конструктор-пк",
+    "line": 1,
+    "keyword": "Feature",
+    "name": "Конструктор ПК",
+    "tags": [],
+    "uri": "features/pc-builder.feature"
+  }
+]
