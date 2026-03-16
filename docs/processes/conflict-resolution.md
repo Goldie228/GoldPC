@@ -1,14 +1,18 @@
 # Протокол разрешения конфликтов
 
-**Версия документа:** 1.0  
-**Последнее обновление:** 2026-03-15  
+**Версия документа:** 1.1  
+**Последнее обновление:** 2026-03-16  
 **Статус:** Активный  
 
 ---
 
 ## Цель документа
 
-Данный документ определяет правила и процедуры разрешения технических разногласий между ИИ-агентами в проекте GoldPC. Это "Закон", которому следуют агенты при возникновении блокеров и конфликтов.
+Данный документ определяет правила и процедуры разрешения:
+1. **Технических разногласий между ИИ-агентами** — Agent Duel Protocol, Architect Decision
+2. **Git merge конфликтов** — стратегии слияния, команды для локального разрешения
+
+Это "Закон", которому следуют агенты при возникновении блокеров и конфликтов.
 
 ---
 
@@ -400,11 +404,311 @@ flowchart TD
 
 ---
 
+## Git Merge Конфликты
+
+### Стратегии слияния
+
+В проекте GoldPC используются различные стратегии слияния в зависимости от типа ветки:
+
+| Стратегия | Когда использовать | Команда | Плюсы | Минусы |
+|-----------|-------------------|---------|-------|--------|
+| **Rebase** | Feature branch → develop | `git rebase develop` | Чистая история, линейный граф | Переписывает историю, сложнее при множестве коммитов |
+| **Merge commit** | develop → main | `git merge --no-ff develop` | Сохраняет историю, явная точка слияния | "Мёртвые" ветки в истории |
+| **Squash** | Мелкие feature branches | `git merge --squash` | Один чистый коммит | Потеря детальной истории |
+
+### Flowchart: Процесс разрешения конфликтов слияния
+
+```mermaid
+flowchart TD
+    subgraph Detection["🔍 Обнаружение конфликта"]
+        A[Попытка слияния] --> B{Конфликт?}
+        B -- Нет --> C[✅ Merge успешен]
+        B -- Да --> D[🚨 Конфликт обнаружен]
+    end
+    
+    subgraph Classification["📊 Классификация конфликта"]
+        D --> E{Тип конфликта?}
+        E -- Комментарии/Форматирование --> F[🔧 Автоматическое разрешение]
+        E -- Код разных модулей --> G[🖥️ Полуавтоматическое в IDE]
+        E -- Код одного модуля --> H[👥 Ручное разрешение]
+        E -- Общие зависимости --> I[📦 Architect Decision]
+    end
+    
+    subgraph Resolution["⚙️ Разрешение"]
+        F --> J[git checkout --ours/--theirs]
+        J --> K[✅ Разрешён]
+        
+        G --> L[Открыть в VS Code / Rider]
+        L --> M[Визуальный выбор изменений]
+        M --> N[Тестирование]
+        N --> K
+        
+        H --> O{Кто автор конфликтующего кода?}
+        O -- Другой агент --> P[Обсуждение в PR]
+        O -- Тот же агент --> Q[Самостоятельное разрешение]
+        P --> R[Agent Duel при необходимости]
+        R --> S[Принятие решения]
+        S --> K
+        Q --> K
+        
+        I --> T[Эскалация архитектору]
+        T --> U[ADR решение]
+        U --> K
+    end
+    
+    subgraph Verification["✅ Верификация"]
+        K --> V[Сборка проекта]
+        V --> W{Build OK?}
+        W -- Нет --> X[Исправление ошибок]
+        X --> V
+        W -- Да --> Y[Запуск тестов]
+        Y --> Z{Tests OK?}
+        Z -- Нет --> X
+        Z -- Да --> AA[Commit разрешения]
+        AA --> AB[Push и продолжение PR]
+    end
+```
+
+### Процедура разрешения конфликта (пошагово)
+
+#### Сценарий 1: Rebase для feature branch
+
+Когда ваша feature branch отстаёт от develop, используйте rebase:
+
+```bash
+# Шаг 1: Получить последние изменения из develop
+git checkout develop
+git pull origin develop
+
+# Шаг 2: Переключиться на feature branch
+git checkout feature/my-feature
+
+# Шаг 3: Выполнить rebase на develop
+git rebase develop
+
+# Шаг 4: При возникновении конфликта Git покажет список конфликтующих файлов
+# CONFLICT (content): Merge conflict in src/Services/CatalogService/Controllers/ProductsController.cs
+# error: could not apply a1b2c3d... feat: add product filtering
+
+# Шаг 5: Проверить статус конфликтов
+git status
+
+# Вывод покажет:
+# Unmerged paths:
+#   (use "git restore --staged <file>..." to unstage)
+#   (use "git add <file>..." to mark resolution)
+#         both modified:   src/Services/CatalogService/Controllers/ProductsController.cs
+
+# Шаг 6: Открыть конфликтующий файл и разрешить конфликт
+# Файл будет содержать маркеры:
+# <<<<<<< HEAD
+#     // Ваши изменения
+# =======
+#     // Изменения из develop
+# >>>>>>> a1b2c3d (feat: upstream changes)
+
+# Шаг 7: После разрешения конфликтов добавить файлы
+git add src/Services/CatalogService/Controllers/ProductsController.cs
+
+# Шаг 8: Продолжить rebase
+git rebase --continue
+
+# Если нужно пропустить текущий коммит:
+# git rebase --skip
+
+# Если нужно отменить rebase:
+# git rebase --abort
+
+# Шаг 9: После успешного rebase - force push (история переписана!)
+git push origin feature/my-feature --force-with-lease
+```
+
+#### Сценарий 2: Merge commit для develop → main
+
+При слиянии develop в main используем merge commit:
+
+```bash
+# Шаг 1: Получить последние изменения
+git checkout main
+git pull origin main
+
+# Шаг 2: Слить develop с явным merge commit
+git merge --no-ff develop
+
+# При конфликте:
+# Auto-merging src/SharedKernel/Entities/BaseEntity.cs
+# CONFLICT (content): Merge conflict in src/SharedKernel/Entities/BaseEntity.cs
+# Automatic merge failed; fix conflicts and then commit the result.
+
+# Шаг 3: Разрешить конфликты
+git status
+# Редактировать конфликтующие файлы
+
+# Шаг 4: Добавить разрешённые файлы
+git add .
+
+# Шаг 5: Завершить merge commit
+git commit -m "Merge develop into main - release v1.2.0"
+
+# Шаг 6: Push в main
+git push origin main
+```
+
+### Команды для локального разрешения конфликтов
+
+#### Просмотр конфликтов
+
+```bash
+# Список конфликтующих файлов
+git diff --name-only --diff-filter=U
+
+# Детальный просмотр конфликта
+git diff src/Services/CatalogService/Controllers/ProductsController.cs
+
+# Просмотр с контекстом (3 строки до/после)
+git diff -U3 src/Services/CatalogService/Controllers/ProductsController.cs
+```
+
+#### Автоматическое разрешение
+
+```bash
+# Принять свою версию (ваши изменения приоритетны)
+git checkout --ours src/path/to/file.cs
+
+# Принять версию из ветки, с которой сливаем
+git checkout --theirs src/path/to/file.cs
+
+# Для бинарных файлов
+git checkout --ours images/logo.png
+git checkout --theirs images/logo.png
+```
+
+#### Использование git mergetool
+
+```bash
+# Запуск визуального инструмента слияния
+git mergetool
+
+# Использование конкретного инструмента
+git mergetool --tool=vscode
+git mergetool --tool=rider
+git mergetool --tool=vimdiff
+
+# Список доступных инструментов
+git mergetool --tool-help
+```
+
+#### Проверка после разрешения
+
+```bash
+# Проверка, все ли конфликты разрешены
+git diff --check
+
+# Поиск оставшихся маркеров конфликта
+grep -r "<<<<<<< HEAD" src/
+
+# Сборка проекта для проверки
+dotnet build
+
+# Запуск тестов
+dotnet test
+```
+
+### Инструменты разрешения конфликтов
+
+| Инструмент | Назначение | Когда использовать |
+|------------|------------|-------------------|
+| **Git CLI** | Базовые операции | Простые конфликты, скрипты |
+| **VS Code** | Визуальное разрешение | Сложные конфликты в коде |
+| **GitHub Web UI** | Простые конфликты | Когда под рукой нет IDE |
+| **IntelliJ IDEA / Rider** | Продвинутое разрешение | C# проекты, рефакторинг |
+
+### Настройка VS Code для разрешения конфликтов
+
+```json
+// .vscode/settings.json
+{
+    "git.mergeEditor": true,
+    "git.openRepositoryInParentFolders": "always",
+    "merge-conflict.autoCheckoutNext": true,
+    "merge-conflict.codeLens.enabled": true
+}
+```
+
+### Типичные сценарии конфликтов
+
+#### Сценарий: Оба агента изменили одну функцию
+
+```csharp
+// Ваши изменения (HEAD)
+<<<<<<< HEAD
+public async Task<IActionResult> GetProducts(int page = 1, int pageSize = 10)
+{
+    var products = await _productService.GetPagedAsync(page, pageSize);
+    return Ok(products);
+}
+// Изменения из develop
+public async Task<IActionResult> GetProducts(ProductFilter filter)
+{
+    var products = await _productService.GetFilteredAsync(filter);
+    return Ok(products);
+}
+>>>>>>> develop
+```
+
+**Решение:** Объединить функциональность:
+
+```csharp
+public async Task<IActionResult> GetProducts([FromQuery] ProductFilter filter, int page = 1, int pageSize = 10)
+{
+    var products = await _productService.GetFilteredPagedAsync(filter, page, pageSize);
+    return Ok(products);
+}
+```
+
+#### Сценарий: Конфликт в lock-файле (package-lock.json)
+
+```bash
+# Обычно принимаем версию из develop и переустанавливаем
+git checkout --theirs package-lock.json
+npm install
+
+# Или регенерируем lock-файл
+rm package-lock.json
+npm install
+```
+
+### Чек-лист разрешения конфликта
+
+```markdown
+## Чек-лист разрешения конфликта слияния
+
+### До разрешения
+- [ ] Понять природу конфликта (какие изменения конфликтуют)
+- [ ] Связаться с автором конфликтующего кода (если возможно)
+- [ ] Определить приоритет: какие изменения важнее
+
+### Во время разрешения
+- [ ] Не удалять код без понимания последствий
+- [ ] Сохранить функциональность обеих сторон если возможно
+- [ ] Следовать coding conventions проекта
+
+### После разрешения
+- [ ] `dotnet build` — сборка без ошибок
+- [ ] `dotnet test` — все тесты проходят
+- [ ] Проверить на наличие оставшихся маркеров `<<<<<<<`
+- [ ] Code review разрешения конфликта (при сложных случаях)
+- [ ] Обновить документацию если необходимо
+```
+
+---
+
 ## Связанные документы
 
 - [RFC Template](../templates/RFC.md) — Шаблон для предложения изменений
 - [ADR Template](../../contracts/adr/template.md) — Шаблон архитектурных решений
 - [Development Plan 5.10](../../development-plan/05-parallel-development.md#510-управление-конфликтами) — Исходный раздел
+- [Development Plan 9.5](../../development-plan/09-code-review-and-integration.md#95-разрешение-конфликтов-слияния) — Раздел о merge конфликтах
 
 ---
 

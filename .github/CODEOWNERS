@@ -1,0 +1,43 @@
+# CODEOWNERS - Автоматическое назначение ревьюверов для GoldPC
+# Подробнее: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# ===========================================
+# Frontend - Agent A (Frontend)
+# ===========================================
+/src/frontend/    @agent-a
+
+# ===========================================
+# Backend - Agent B (Backend)
+# ===========================================
+/src/backend/     @agent-b
+/src/AuthService/ @agent-b
+/src/CatalogService/ @agent-b
+/src/OrdersService/ @agent-b
+/src/PCBuilderService/ @agent-b
+/src/ServicesService/ @agent-b
+/src/WarrantyService/ @agent-b
+
+# ===========================================
+# Infrastructure - Agent E (DevOps)
+# ===========================================
+/infrastructure/  @agent-e
+/docker/          @agent-e
+/kubernetes/      @agent-e
+/vault/           @agent-e
+
+# ===========================================
+# API Documentation - Architect
+# ===========================================
+/docs/api/        @architect
+/contracts/       @architect
+
+# ===========================================
+# Shared modules - требуют внимания архитектора
+# ===========================================
+/src/Shared/      @architect
+/src/SharedKernel/ @architect
+
+# ===========================================
+# Корневые конфигурационные файлы
+# ===========================================
+/.github/         @architect @agent-e

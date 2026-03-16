@@ -1,0 +1,333 @@
+# Auto Merge Workflow
+# Automatically merges PRs when all conditions are met:
+#   - Required number of approvals (1 for develop, 2 for main)
+#   - All CI status checks pass
+#   - No merge conflicts
+#
+# Triggered on: pull_request_review with state 'approved'
+# Merge method: squash
+
+name: Auto Merge
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  statuses: read
+
+jobs:
+  auto-merge:
+    name: 🔄 Auto Merge
+    runs-on: ubuntu-latest
+    # Only run when review is approved
+    if: github.event.review.state == 'approved'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get PR details
+        id: pr-details
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pull_number = context.issue.number;
+            
+            // Get PR details
+            const pr = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number
+            });
+            
+            // Determine required approvals based on target branch
+            const targetBranch = pr.data.base.ref;
+            const requiredApprovals = targetBranch === 'main' ? 2 : 1;
+            
+            core.setOutput('pull_number', pull_number);
+            core.setOutput('base_ref', targetBranch);
+            core.setOutput('head_sha', pr.data.head.sha);
+            core.setOutput('required_approvals', requiredApprovals);
+            core.setOutput('mergeable', pr.data.mergeable);
+            core.setOutput('mergeable_state', pr.data.mergeable_state);
+            core.setOutput('draft', pr.data.draft);
+            
+            console.log(`PR #${pull_number} targeting '${targetBranch}'`);
+            console.log(`Required approvals: ${requiredApprovals}`);
+            console.log(`Mergeable: ${pr.data.mergeable}`);
+            console.log(`Mergeable state: ${pr.data.mergeable_state}`);
+            console.log(`Draft: ${pr.data.draft}`);
+            
+            return {
+              pull_number,
+              base_ref: targetBranch,
+              head_sha: pr.data.head.sha,
+              required_approvals
+            };
+
+      - name: Check if PR is draft
+        if: steps.pr-details.outputs.draft == 'true'
+        run: |
+          echo "ℹ️ PR is a draft. Skipping auto-merge."
+          echo "::notice::PR is a draft - auto-merge skipped"
+
+      - name: Check approvals count
+        id: check-approvals
+        if: steps.pr-details.outputs.draft != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pull_number = context.issue.number;
+            const requiredApprovals = parseInt('${{ steps.pr-details.outputs.required_approvals }}', 10);
+            
+            // Get all reviews
+            const reviews = await github.rest.pulls.listReviews({
+              owner,
+              repo,
+              pull_number
+            });
+            
+            // Count unique approvals (latest review per user)
+            const latestReviews = new Map();
+            for (const review of reviews.data) {
+              const userId = review.user.id;
+              const existingReview = latestReviews.get(userId);
+              
+              // Only keep the latest review from each user
+              if (!existingReview || new Date(review.submitted_at) > new Date(existingReview.submitted_at)) {
+                latestReviews.set(userId, review);
+              }
+            }
+            
+            // Count approvals (excluding dismissed and stale)
+            const approvals = Array.from(latestReviews.values()).filter(r => 
+              r.state === 'APPROVED'
+            );
+            
+            const approvalCount = approvals.length;
+            const hasEnoughApprovals = approvalCount >= requiredApprovals;
+            
+            console.log(`Approval count: ${approvalCount}/${requiredApprovals}`);
+            console.log(`Approvals from: ${approvals.map(a => a.user.login).join(', ')}`);
+            
+            core.setOutput('approval_count', approvalCount);
+            core.setOutput('has_enough_approvals', hasEnoughApprovals);
+            
+            if (!hasEnoughApprovals) {
+              core.setFailed(`Not enough approvals: ${approvalCount}/${requiredApprovals} required`);
+            }
+            
+            return {
+              approval_count: approvalCount,
+              has_enough_approvals: hasEnoughApprovals
+            };
+
+      - name: Check CI status
+        id: check-ci
+        if: |
+          steps.pr-details.outputs.draft != 'true' && 
+          steps.check-approvals.outputs.has_enough_approvals == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const headSha = '${{ steps.pr-details.outputs.head_sha }}';
+            
+            // Get combined status for the PR head commit
+            const combinedStatus = await github.rest.repos.getCombinedStatusForRef({
+              owner,
+              repo,
+              ref: headSha
+            });
+            
+            const overallState = combinedStatus.data.state;
+            const statuses = combinedStatus.data.statuses || [];
+            
+            console.log(`Combined CI status: ${overallState}`);
+            console.log(`Status checks:`);
+            
+            const failedChecks = [];
+            const pendingChecks = [];
+            const successChecks = [];
+            
+            for (const status of statuses) {
+              console.log(`  - ${status.context}: ${status.state}`);
+              if (status.state === 'failure' || status.state === 'error') {
+                failedChecks.push(status.context);
+              } else if (status.state === 'pending') {
+                pendingChecks.push(status.context);
+              } else if (status.state === 'success') {
+                successChecks.push(status.context);
+              }
+            }
+            
+            // Also check check runs (GitHub Actions)
+            const checkRuns = await github.rest.checks.listForRef({
+              owner,
+              repo,
+              ref: headSha
+            });
+            
+            console.log(`Check runs:`);
+            for (const check of checkRuns.data.check_runs) {
+              console.log(`  - ${check.name}: ${check.status}/${check.conclusion || 'running'}`);
+              if (check.status === 'completed') {
+                if (check.conclusion === 'failure' || check.conclusion === 'timed_out' || check.conclusion === 'cancelled') {
+                  failedChecks.push(check.name);
+                } else if (check.conclusion === 'success' || check.conclusion === 'neutral' || check.conclusion === 'skipped') {
+                  successChecks.push(check.name);
+                }
+              } else if (check.status === 'in_progress' || check.status === 'queued') {
+                pendingChecks.push(check.name);
+              }
+            }
+            
+            core.setOutput('overall_state', overallState);
+            core.setOutput('failed_checks', failedChecks.join(', '));
+            core.setOutput('pending_checks', pendingChecks.join(', '));
+            core.setOutput('success_checks', successChecks.join(', '));
+            
+            // Determine if all checks pass
+            const allChecksPass = failedChecks.length === 0 && pendingChecks.length === 0 && 
+              (overallState === 'success' || successChecks.length > 0);
+            
+            core.setOutput('all_checks_pass', allChecksPass);
+            
+            if (pendingChecks.length > 0) {
+              console.log(`⚠️ Pending checks: ${pendingChecks.join(', ')}`);
+              core.setFailed(`CI checks are still running: ${pendingChecks.join(', ')}`);
+            } else if (failedChecks.length > 0) {
+              console.log(`❌ Failed checks: ${failedChecks.join(', ')}`);
+              core.setFailed(`CI checks failed: ${failedChecks.join(', ')}`);
+            }
+            
+            return {
+              all_checks_pass: allChecksPass,
+              failed_checks: failedChecks,
+              pending_checks: pendingChecks
+            };
+
+      - name: Check mergeability
+        id: check-mergeable
+        if: |
+          steps.pr-details.outputs.draft != 'true' && 
+          steps.check-approvals.outputs.has_enough_approvals == 'true' &&
+          steps.check-ci.outputs.all_checks_pass == 'true'
+        run: |
+          mergeable="${{ steps.pr-details.outputs.mergeable }}"
+          mergeable_state="${{ steps.pr-details.outputs.mergeable_state }}"
+          
+          echo "Mergeable: $mergeable"
+          echo "Mergeable state: $mergeable_state"
+          
+          if [[ "$mergeable" == "false" ]]; then
+            echo "❌ PR has merge conflicts that need to be resolved"
+            echo "::error::PR has merge conflicts - cannot auto-merge"
+            exit 1
+          fi
+          
+          if [[ "$mergeable_state" == "dirty" ]]; then
+            echo "❌ PR has merge conflicts (dirty state)"
+            echo "::error::PR is in dirty state - cannot auto-merge"
+            exit 1
+          fi
+          
+          echo "✅ PR is mergeable"
+          echo "mergeable=true" >> $GITHUB_OUTPUT
+
+      - name: Perform squash merge
+        id: merge
+        if: |
+          steps.pr-details.outputs.draft != 'true' && 
+          steps.check-approvals.outputs.has_enough_approvals == 'true' &&
+          steps.check-ci.outputs.all_checks_pass == 'true' &&
+          steps.check-mergeable.outputs.mergeable == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const pull_number = context.issue.number;
+            
+            try {
+              // Perform squash merge
+              const result = await github.rest.pulls.merge({
+                owner,
+                repo,
+                pull_number,
+                merge_method: 'squash',
+                commit_title: `PR #${pull_number}: Auto-merged`,
+                commit_message: `Automatically merged after passing all checks and approvals.`
+              });
+              
+              console.log(`✅ Merge successful!`);
+              console.log(`Merged: ${result.data.merged}`);
+              console.log(`Message: ${result.data.message}`);
+              console.log(`SHA: ${result.data.sha}`);
+              
+              core.setOutput('merged', result.data.merged);
+              core.setOutput('sha', result.data.sha);
+              
+              // Create a comment on the PR
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pull_number,
+                body: `## 🎉 Auto-Merge Successful\n\nThis PR has been automatically merged after passing all required checks:\n\n- ✅ Required approvals obtained\n- ✅ All CI checks passed\n- ✅ No merge conflicts\n\n**Merge commit:** \`${result.data.sha}\``
+              });
+              
+              return { merged: true, sha: result.data.sha };
+              
+            } catch (error) {
+              console.error(`❌ Merge failed: ${error.message}`);
+              
+              // Check if it's because branch protection rules
+              if (error.status === 405) {
+                console.log('Branch protection rules may be preventing merge');
+                core.setFailed(`Merge blocked by branch protection rules: ${error.message}`);
+              } else if (error.status === 409) {
+                console.log('Merge conflict detected');
+                core.setFailed(`Merge conflict: ${error.message}`);
+              } else {
+                core.setFailed(`Merge failed: ${error.message}`);
+              }
+              
+              // Create a comment about the failure
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pull_number,
+                body: `## ⚠️ Auto-Merge Failed\n\nThe automatic merge could not be completed.\n\n**Error:** ${error.message}\n\nPlease resolve the issue manually.`
+              });
+              
+              throw error;
+            }
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Auto-Merge Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Draft | ${{ steps.pr-details.outputs.draft == 'true' && '📄 Yes (skipped)' || '✅ No' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Target Branch | \`${{ steps.pr-details.outputs.base_ref }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Required Approvals | ${{ steps.pr-details.outputs.required_approvals }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Current Approvals | ${{ steps.check-approvals.outputs.approval_count || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Approvals OK | ${{ steps.check-approvals.outputs.has_enough_approvals == 'true' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CI Checks | ${{ steps.check-ci.outputs.all_checks_pass == 'true' && '✅ Passed' || '❌ Failed/Pending' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Mergeable | ${{ steps.check-mergeable.outputs.mergeable == 'true' && '✅ Yes' || '❌ No' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Merged | ${{ steps.merge.outputs.merged == 'true' && '🎉 Success' || '❌ Not merged' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ steps.merge.outputs.merged }}" == "true" ]]; then
+            echo "✅ **Auto-merge completed successfully!**" >> $GITHUB_STEP_SUMMARY
+            echo "Commit SHA: \`${{ steps.merge.outputs.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ Auto-merge was not performed. See details above." >> $GITHUB_STEP_SUMMARY
+          fi

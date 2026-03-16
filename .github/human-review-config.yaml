@@ -1,0 +1,377 @@
+# =============================================================================
+# Human Review Configuration for GoldPC Project
+# =============================================================================
+#
+# ОПИСАНИЕ:
+# Этот файл определяет политику обязательного привлечения человека-ревьювера
+# для определённых типов изменений в репозитории.
+#
+# ИСПОЛЬЗОВАНИЕ:
+# GitHub нативно не поддерживает автоматическое назначение human review без
+# внешних инструментов. Данный конфигурационный файл предназначен для:
+#
+# 1. GitHub Actions Workflow — может парсить этот файл и автоматически
+#    добавлять ревьюверов или блокировать merge при соответствии триггерам.
+#
+# 2. Bot/Script — может использовать эту конфигурацию для принятия решений
+#    о назначении human review (например, review-bot на Node.js/Python).
+#
+# 3. Pre-merge Hook — может проверять условия перед слиянием и требовать
+#    подтверждения от человека.
+#
+# 4. Slack/Teams Notification — бот может уведомлять ответственных людей
+#    о необходимости ревью.
+#
+# ИНТЕГРАЦИЯ:
+# Для активной работы требуется создание GitHub App или использование
+# GitHub Actions с actions/github-script для чтения этого файла.
+# Пример реализации см. в .github/workflows/human-review-check.yml
+#
+# =============================================================================
+
+# Версия конфигурации для обратной совместимости
+version: "1.0"
+
+# Основная секция конфигурации human review
+human_review:
+
+  # ---------------------------------------------------------------------------
+  # ТРИГГЕРЫ ПО ПУТЯМ ФАЙЛОВ (Path-based Triggers)
+  # ---------------------------------------------------------------------------
+  # Автоматически требуют human review при изменении файлов,
+  # соответствующих указанным паттернам.
+  # ---------------------------------------------------------------------------
+  
+  path_triggers:
+    
+    # Security Review — код, связанный с аутентификацией и безопасностью
+    - name: "Security Review"
+      path_pattern: "src/**/Auth*"
+      description: |
+        Изменения в модулях аутентификации требуют обязательного 
+        ревью специалистом по безопасности.
+      reason: "Security-sensitive code"
+      required_reviewers: 1
+      reviewer_teams:
+        - "security-team"
+        - "architect"
+      priority: "high"
+      # Дополнительные проверки для security-кода
+      additional_checks:
+        - "owasp-top-10"
+        - "secrets-scan"
+        - "auth-flow-validation"
+      
+    # Architect Review — изменения API контрактов
+    - name: "Architect Review"
+      path_pattern: "docs/api/**"
+      description: |
+        Изменения в API документации требуют ревью архитектором
+        для обеспечения обратной совместимости и следования стандартам.
+      reason: "API contract changes"
+      required_reviewers: 1
+      reviewer_teams:
+        - "architect"
+        - "tech-lead"
+      priority: "high"
+      additional_checks:
+        - "openapi-lint"
+        - "breaking-change-detection"
+        - "contract-tests"
+    
+    # Shared Code Review — общие модули
+    - name: "Shared Module Review"
+      path_pattern: "src/shared/**"
+      description: |
+        Изменения в общих модулях требуют ревью двумя ревьюверами,
+        так как влияют на все сервисы.
+      reason: "Shared module changes"
+      required_reviewers: 2
+      reviewer_teams:
+        - "architect"
+        - "tech-lead"
+      priority: "critical"
+      additional_checks:
+        - "breaking-change-detection"
+        - "dependency-impact"
+
+    # Frontend UI/UX Review
+    - name: "UI/UX Review"
+      path_pattern: "src/frontend/src/components/**"
+      description: |
+        Изменения в UI компонентах требуют ревью UI/UX специалистом
+        при существенных визуальных изменениях.
+      reason: "UI/UX changes"
+      required_reviewers: 1
+      reviewer_teams:
+        - "frontend-lead"
+        - "ui-ux-team"
+      priority: "medium"
+      conditions:
+        - "files_changed_count > 5"
+        - "has_visual_changes == true"
+
+    # Infrastructure Review
+    - name: "Infrastructure Review"
+      path_pattern: "infrastructure/**"
+      description: |
+        Изменения в инфраструктуре требуют ревью DevOps специалистом.
+      reason: "Infrastructure changes"
+      required_reviewers: 1
+      reviewer_teams:
+        - "devops-team"
+        - "architect"
+      priority: "high"
+
+  # ---------------------------------------------------------------------------
+  # ТРИГГЕРЫ ПО ЛЕЙБЛАМ (Label-based Triggers)
+  # ---------------------------------------------------------------------------
+  # Требуют human review при наличии определённых лейблов на PR.
+  # ---------------------------------------------------------------------------
+  
+  label_triggers:
+    
+    # Breaking Change — критические изменения
+    - label: "breaking-change"
+      name: "Breaking Change Review"
+      description: |
+        PR с лейблом breaking-change требует обязательного ревью
+        архитектором и тех-лидом для оценки влияния.
+      reason: "Breaking change detected"
+      required_reviewers: 2
+      reviewer_teams:
+        - "architect"
+        - "tech-lead"
+      priority: "critical"
+      auto_block_merge: true
+      notification:
+        slack_channel: "#critical-reviews"
+        mention_team: "@architect @tech-lead"
+
+    # Security — изменения, связанные с безопасностью
+    - label: "security"
+      name: "Security Label Review"
+      description: |
+        PR с лейблом security требует ревью security-team.
+      reason: "Security-related change"
+      required_reviewers: 2
+      reviewer_teams:
+        - "security-team"
+        - "architect"
+      priority: "critical"
+      auto_block_merge: true
+      notification:
+        slack_channel: "#security-reviews"
+        mention_team: "@security-team"
+
+    # Architecture — архитектурные изменения
+    - label: "architecture"
+      name: "Architecture Review"
+      description: |
+        PR с лейблом architecture требует ревью архитектором.
+      reason: "Architecture change"
+      required_reviewers: 1
+      reviewer_teams:
+        - "architect"
+      priority: "high"
+      notification:
+        slack_channel: "#architecture-reviews"
+
+    # Needs Discussion — требует обсуждения
+    - label: "needs-discussion"
+      name: "Discussion Required"
+      description: |
+        PR с лейблом needs-discussion требует синхронного обсуждения
+        перед merge.
+      reason: "Discussion needed"
+      required_reviewers: 1
+      reviewer_teams:
+        - "tech-lead"
+      priority: "medium"
+      require_sync_meeting: true
+
+  # ---------------------------------------------------------------------------
+  # ЭСКАЛАЦИЯ (Escalation Rules)
+  # ---------------------------------------------------------------------------
+  # Правила автоматической эскалации при определённых условиях.
+  # ---------------------------------------------------------------------------
+  
+  escalation:
+    
+    # Эскалация при отсутствии победителя в Agent Duel
+    - condition: "agent_duel_no_winner"
+      description: |
+        Когда два ИИ-агента не пришли к консенсусу в процессе ревью,
+        проблема эскалируется техническому лиду.
+      action: "escalate_to_tech_lead"
+      assignee_teams:
+        - "tech-lead"
+      notification:
+        slack_channel: "#escalations"
+        template: "agent-duel-escalation"
+
+    # Эскалация при обнаружении уязвимости
+    - condition: "security_vulnerability_found"
+      description: |
+        При обнаружении уязвимости безопасности (HIGH/CRITICAL)
+        происходит эскалация в security-team.
+      action: "escalate_to_security_team"
+      assignee_teams:
+        - "security-team"
+        - "architect"
+      auto_block_merge: true
+      notification:
+        slack_channel: "#security-alerts"
+        template: "security-vulnerability-escalation"
+        mention_team: "@security-team @architect"
+
+    # Эскалация при большом количестве изменений
+    - condition: "lines_changed > 1000"
+      description: |
+        PR с большим количеством строк кода требуют 
+        дополнительного внимания.
+      action: "require_additional_review"
+      required_reviewers: 2
+      notification:
+        slack_channel: "#large-prs"
+
+    # Эскалация при множественных циклах доработки
+    - condition: "review_cycles > 5"
+      description: |
+        Если PR прошёл более 5 циклов доработки,
+        требуется вмешательство координатора.
+      action: "escalate_to_coordinator"
+      assignee_teams:
+        - "project-coordinator"
+      notification:
+        slack_channel: "#escalations"
+        template: "review-cycle-escalation"
+
+  # ---------------------------------------------------------------------------
+  # НАСТРОЙКИ (Settings)
+  # ---------------------------------------------------------------------------
+  
+  settings:
+    
+    # Автоматическое назначение ревьюверов
+    auto_assign_reviewers: true
+    
+    # Блокировка merge при отсутствии human review
+    block_merge_without_approval: true
+    
+    # Автоматическое добавление лейблов на основе изменений
+    auto_label: true
+    
+    # Уведомления
+    notifications:
+      enabled: true
+      slack_enabled: true
+      email_enabled: false
+      default_channel: "#code-reviews"
+    
+    # Таймауты
+    timeouts:
+      # Максимальное время ожидания ревью (часы)
+      review_timeout_hours: 24
+      # Интервал напоминаний (часы)
+      reminder_interval_hours: 8
+      # Авто-эскалация при превышении таймаута
+      auto_escalate_on_timeout: true
+    
+    # SLA для ревью
+    sla:
+      critical_hours: 4
+      high_hours: 8
+      medium_hours: 24
+      low_hours: 48
+
+# =============================================================================
+# ПРИМЕР ИСПОЛЬЗОВАНИЯ В GITHUB ACTIONS
+# =============================================================================
+#
+# name: Human Review Check
+#
+# on:
+#   pull_request:
+#     types: [opened, synchronize, labeled, ready_for_review]
+#
+# jobs:
+#   check-human-review:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       
+#       - name: Load Human Review Config
+#         id: config
+#         uses: actions/github-script@v7
+#         with:
+#           script: |
+#             const yaml = require('js-yaml');
+#             const fs = require('fs');
+#             const config = yaml.load(fs.readFileSync('.github/human-review-config.yaml', 'utf8'));
+#             return config;
+#       
+#       - name: Check Path Triggers
+#         uses: actions/github-script@v7
+#         with:
+#           script: |
+#             const config = ${{ steps.config.outputs.result }};
+#             const pr = context.payload.pull_request;
+#             
+#             for (const trigger of config.human_review.path_triggers) {
+#               const pattern = new RegExp(trigger.path_pattern.replace(/\*/g, '.*'));
+#               const matches = pr.files.some(file => pattern.test(file.filename));
+#               
+#               if (matches) {
+#                 console.log(`Trigger matched: ${trigger.name}`);
+#                 // Добавить ревьюверов, установить лейблы, отправить уведомления
+#               }
+#             }
+#
+# =============================================================================
+# ПРИМЕР ИСПОЛЬЗОВАНИЯ В BOT/SCRIPT (Node.js)
+# =============================================================================
+#
+# const yaml = require('js-yaml');
+# const fs = require('fs');
+# 
+# class HumanReviewBot {
+#   constructor(configPath) {
+#     this.config = yaml.load(fs.readFileSync(configPath, 'utf8'));
+#   }
+# 
+#   checkPullRequest(pr) {
+#     const reviews = [];
+#     
+#     // Проверка path triggers
+#     for (const trigger of this.config.human_review.path_triggers) {
+#       const pattern = new RegExp(trigger.path_pattern.replace(/\*/g, '.*'));
+#       const matches = pr.files.some(file => pattern.test(file.path));
+#       
+#       if (matches) {
+#         reviews.push({
+#           type: 'path_trigger',
+#           trigger: trigger.name,
+#           required_reviewers: trigger.required_reviewers,
+#           teams: trigger.reviewer_teams
+#         });
+#       }
+#     }
+#     
+#     // Проверка label triggers
+#     for (const trigger of this.config.human_review.label_triggers) {
+#       if (pr.labels.includes(trigger.label)) {
+#         reviews.push({
+#           type: 'label_trigger',
+#           trigger: trigger.name,
+#           required_reviewers: trigger.required_reviewers,
+#           teams: trigger.reviewer_teams
+#         });
+#       }
+#     }
+#     
+#     return reviews;
+#   }
+# }
+#
+# =============================================================================
