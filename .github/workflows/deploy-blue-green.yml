@@ -1,0 +1,762 @@
+name: Blue-Green Deployment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v1.2.3)'
+        required: false
+        default: ''
+      skip_tests:
+        description: 'Skip tests before deployment'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/goldpc
+
+jobs:
+  # ============================================================================
+  # BUILD JOB - Build and push Docker images to GitHub Packages
+  # ============================================================================
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+      short_sha: ${{ steps.meta.outputs.tags }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-catalog
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-pcbuilder
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-auth
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+            type=semver,pattern={{version}},value=${{ inputs.version || 'v0.0.0' }},enable=${{ inputs.version != '' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      # -------------------------------------------------------------------------
+      # Build and push CatalogService
+      # -------------------------------------------------------------------------
+      - name: Build and push CatalogService
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.CatalogService
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-catalog:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-catalog:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-catalog:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+
+      # -------------------------------------------------------------------------
+      # Build and push PCBuilderService
+      # -------------------------------------------------------------------------
+      - name: Build and push PCBuilderService
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.PCBuilderService
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-pcbuilder:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-pcbuilder:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-pcbuilder:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+
+      # -------------------------------------------------------------------------
+      # Build and push AuthService
+      # -------------------------------------------------------------------------
+      - name: Build and push AuthService
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.AuthService
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-auth:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-auth:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-auth:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+
+      # -------------------------------------------------------------------------
+      # Build and push Frontend
+      # -------------------------------------------------------------------------
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+
+      - name: Output build summary
+        run: |
+          echo "### 🐳 Docker Images Built" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Image Tag |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| CatalogService | \`${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-catalog:${{ steps.meta.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| PCBuilderService | \`${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-pcbuilder:${{ steps.meta.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| AuthService | \`${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-auth:${{ steps.meta.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | \`${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend:${{ steps.meta.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # DEPLOY JOB - SSH into server, deploy to inactive slot
+  # ============================================================================
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Production Server
+        id: deploy
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE_TAG: ${{ needs.build.outputs.image_tag }}
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          GITHUB_SHA: ${{ github.sha }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          envs: IMAGE_TAG,REGISTRY,IMAGE_PREFIX,GITHUB_SHA
+          script: |
+            set -e
+            
+            echo "=============================================="
+            echo "🚀 Starting Blue-Green Deployment"
+            echo "=============================================="
+            echo "Image Tag: ${IMAGE_TAG}"
+            echo "Commit SHA: ${GITHUB_SHA}"
+            echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+            
+            cd /opt/goldpc
+            
+            # -------------------------------------------------------------------------
+            # Determine current active environment (Blue or Green)
+            # -------------------------------------------------------------------------
+            echo ""
+            echo "📋 Determining current active environment..."
+            
+            # Check which backend slot is currently receiving traffic via Nginx
+            CURRENT_UPSTREAM=$(grep -E "server.*:5001" /etc/nginx/conf.d/upstream.conf 2>/dev/null | grep -v "#" | head -1 | grep -o "backend-[a-z]*" || echo "backend-blue")
+            CURRENT_SLOT=$(echo "$CURRENT_UPSTREAM" | sed 's/backend-//')
+            
+            if [ "$CURRENT_SLOT" = "blue" ]; then
+              NEW_SLOT="green"
+              OLD_SLOT="blue"
+            else
+              NEW_SLOT="blue"
+              OLD_SLOT="green"
+            fi
+            
+            echo "Current active slot: ${CURRENT_SLOT}"
+            echo "Deploying to inactive slot: ${NEW_SLOT}"
+            
+            # Store for rollback
+            echo "OLD_SLOT=${OLD_SLOT}" >> /tmp/deploy_env
+            echo "NEW_SLOT=${NEW_SLOT}" >> /tmp/deploy_env
+            
+            # -------------------------------------------------------------------------
+            # Pull new Docker images
+            # -------------------------------------------------------------------------
+            echo ""
+            echo "📥 Pulling new Docker images..."
+            
+            docker pull ${REGISTRY}/${IMAGE_PREFIX}-catalog:${GITHUB_SHA}
+            docker pull ${REGISTRY}/${IMAGE_PREFIX}-pcbuilder:${GITHUB_SHA}
+            docker pull ${REGISTRY}/${IMAGE_PREFIX}-auth:${GITHUB_SHA}
+            docker pull ${REGISTRY}/${IMAGE_PREFIX}-frontend:${GITHUB_SHA}
+            
+            # Tag images for the new slot
+            docker tag ${REGISTRY}/${IMAGE_PREFIX}-catalog:${GITHUB_SHA} goldpc-catalog-${NEW_SLOT}:latest
+            docker tag ${REGISTRY}/${IMAGE_PREFIX}-pcbuilder:${GITHUB_SHA} goldpc-pcbuilder-${NEW_SLOT}:latest
+            docker tag ${REGISTRY}/${IMAGE_PREFIX}-auth:${GITHUB_SHA} goldpc-auth-${NEW_SLOT}:latest
+            docker tag ${REGISTRY}/${IMAGE_PREFIX}-frontend:${GITHUB_SHA} goldpc-frontend-${NEW_SLOT}:latest
+            
+            # -------------------------------------------------------------------------
+            # Stop old containers in the new slot (if any)
+            # -------------------------------------------------------------------------
+            echo ""
+            echo "🛑 Stopping old containers in ${NEW_SLOT} slot..."
+            
+            docker-compose -f docker-compose.prod.yml stop catalog-${NEW_SLOT} pcbuilder-${NEW_SLOT} auth-${NEW_SLOT} frontend-${NEW_SLOT} 2>/dev/null || true
+            docker-compose -f docker-compose.prod.yml rm -f catalog-${NEW_SLOT} pcbuilder-${NEW_SLOT} auth-${NEW_SLOT} frontend-${NEW_SLOT} 2>/dev/null || true
+            
+            # -------------------------------------------------------------------------
+            # Start new environment
+            # -------------------------------------------------------------------------
+            echo ""
+            echo "🚀 Starting ${NEW_SLOT} environment..."
+            
+            # Set environment variables for the new slot
+            export SLOT=${NEW_SLOT}
+            export IMAGE_VERSION=${GITHUB_SHA}
+            
+            # Start services in the new slot
+            docker-compose -f docker-compose.prod.yml up -d \
+              catalog-${NEW_SLOT} \
+              pcbuilder-${NEW_SLOT} \
+              auth-${NEW_SLOT} \
+              frontend-${NEW_SLOT}
+            
+            echo "Waiting for containers to start..."
+            sleep 15
+            
+            # -------------------------------------------------------------------------
+            # Health Checks - Verify new environment is healthy
+            # -------------------------------------------------------------------------
+            echo ""
+            echo "🏥 Running health checks on ${NEW_SLOT} environment..."
+            
+            HEALTH_CHECK_FAILURE=0
+            MAX_RETRIES=10
+            RETRY_INTERVAL=10
+            
+            # Health check for CatalogService
+            echo "Checking CatalogService health..."
+            for i in $(seq 1 $MAX_RETRIES); do
+              CATALOG_PORT=$((5001 + $( [ "$NEW_SLOT" = "green" ] && echo 10 || echo 0 )))
+              if curl -sf "http://localhost:${CATALOG_PORT}/health" > /dev/null 2>&1; then
+                echo "✅ CatalogService ${NEW_SLOT} is healthy (attempt $i/$MAX_RETRIES)"
+                break
+              fi
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ CatalogService ${NEW_SLOT} health check failed after $MAX_RETRIES attempts"
+                HEALTH_CHECK_FAILURE=1
+              fi
+              sleep $RETRY_INTERVAL
+            done
+            
+            # Health check for PCBuilderService
+            echo "Checking PCBuilderService health..."
+            for i in $(seq 1 $MAX_RETRIES); do
+              PCBUILDER_PORT=$((5002 + $( [ "$NEW_SLOT" = "green" ] && echo 10 || echo 0 )))
+              if curl -sf "http://localhost:${PCBUILDER_PORT}/health" > /dev/null 2>&1; then
+                echo "✅ PCBuilderService ${NEW_SLOT} is healthy (attempt $i/$MAX_RETRIES)"
+                break
+              fi
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ PCBuilderService ${NEW_SLOT} health check failed after $MAX_RETRIES attempts"
+                HEALTH_CHECK_FAILURE=1
+              fi
+              sleep $RETRY_INTERVAL
+            done
+            
+            # Health check for AuthService
+            echo "Checking AuthService health..."
+            for i in $(seq 1 $MAX_RETRIES); do
+              AUTH_PORT=$((5003 + $( [ "$NEW_SLOT" = "green" ] && echo 10 || echo 0 )))
+              if curl -sf "http://localhost:${AUTH_PORT}/health" > /dev/null 2>&1; then
+                echo "✅ AuthService ${NEW_SLOT} is healthy (attempt $i/$MAX_RETRIES)"
+                break
+              fi
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ AuthService ${NEW_SLOT} health check failed after $MAX_RETRIES attempts"
+                HEALTH_CHECK_FAILURE=1
+              fi
+              sleep $RETRY_INTERVAL
+            done
+            
+            # Health check for Frontend
+            echo "Checking Frontend health..."
+            for i in $(seq 1 $MAX_RETRIES); do
+              FRONTEND_PORT=$((3000 + $( [ "$NEW_SLOT" = "green" ] && echo 1 || echo 0 )))
+              if curl -sf "http://localhost:${FRONTEND_PORT}/health" > /dev/null 2>&1; then
+                echo "✅ Frontend ${NEW_SLOT} is healthy (attempt $i/$MAX_RETRIES)"
+                break
+              fi
+              if [ $i -eq $MAX_RETRIES ]; then
+                echo "❌ Frontend ${NEW_SLOT} health check failed after $MAX_RETRIES attempts"
+                HEALTH_CHECK_FAILURE=1
+              fi
+              sleep $RETRY_INTERVAL
+            done
+            
+            # -------------------------------------------------------------------------
+            # ROLLBACK if health checks failed
+            # -------------------------------------------------------------------------
+            if [ $HEALTH_CHECK_FAILURE -eq 1 ]; then
+              echo ""
+              echo "❌ Health checks failed! Initiating ROLLBACK..."
+              
+              # Stop the new (failed) environment
+              docker-compose -f docker-compose.prod.yml stop \
+                catalog-${NEW_SLOT} \
+                pcbuilder-${NEW_SLOT} \
+                auth-${NEW_SLOT} \
+                frontend-${NEW_SLOT}
+              
+              # Remove failed containers
+              docker-compose -f docker-compose.prod.yml rm -f \
+                catalog-${NEW_SLOT} \
+                pcbuilder-${NEW_SLOT} \
+                auth-${NEW_SLOT} \
+                frontend-${NEW_SLOT}
+              
+              echo "🚨 ROLLBACK COMPLETE - Deployment failed"
+              echo "OLD_SLOT=${OLD_SLOT}" >> $GITHUB_OUTPUT
+              echo "ROLLBACK=true" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            
+            # -------------------------------------------------------------------------
+            # Switch Nginx upstream configuration
+            # -------------------------------------------------------------------------
+            echo ""
+            echo "🔄 Switching traffic to ${NEW_SLOT} environment..."
+            
+            # Update Nginx upstream configuration
+            if [ -f /etc/nginx/conf.d/upstream.conf ]; then
+              # Backup current config
+              cp /etc/nginx/conf.d/upstream.conf /etc/nginx/conf.d/upstream.conf.bak
+              
+              # Calculate ports based on slot
+              if [ "$NEW_SLOT" = "blue" ]; then
+                CATALOG_PORT=5001
+                PCBUILDER_PORT=5002
+                AUTH_PORT=5003
+                FRONTEND_PORT=3000
+              else
+                CATALOG_PORT=5011
+                PCBUILDER_PORT=5012
+                AUTH_PORT=5013
+                FRONTEND_PORT=3001
+              fi
+              
+              # Update upstream configuration
+              cat > /etc/nginx/conf.d/upstream.conf << EOF
+            # Auto-generated by Blue-Green deployment
+            # Slot: ${NEW_SLOT}
+            # Updated: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            # Commit: ${GITHUB_SHA}
+
+            upstream backend_catalog {
+                server catalog-${NEW_SLOT}:${CATALOG_PORT};
+                keepalive 32;
+            }
+
+            upstream backend_pcbuilder {
+                server pcbuilder-${NEW_SLOT}:${PCBUILDER_PORT};
+                keepalive 32;
+            }
+
+            upstream backend_auth {
+                server auth-${NEW_SLOT}:${AUTH_PORT};
+                keepalive 32;
+            }
+
+            upstream frontend_upstream {
+                server frontend-${NEW_SLOT}:${FRONTEND_PORT};
+                keepalive 32;
+            }
+            EOF
+              
+              # Test Nginx configuration
+              nginx -t
+              
+              # Reload Nginx gracefully (zero downtime)
+              nginx -s reload
+              
+              echo "✅ Nginx reconfigured to route traffic to ${NEW_SLOT}"
+            else
+              echo "❌ Nginx upstream config not found!"
+              exit 1
+            fi
+            
+            # -------------------------------------------------------------------------
+            # Verify traffic routing (post-switch validation)
+            # -------------------------------------------------------------------------
+            echo ""
+            echo "🔍 Verifying traffic routing..."
+            sleep 5
+            
+            # Test API endpoints through Nginx
+            VALIDATION_FAILURE=0
+            
+            # Test catalog API
+            if curl -sf "http://localhost/api/v1/catalog/health" > /dev/null 2>&1; then
+              echo "✅ Catalog API accessible through Nginx"
+            else
+              echo "⚠️ Catalog API validation warning"
+            fi
+            
+            # Test auth API
+            if curl -sf "http://localhost/api/v1/auth/health" > /dev/null 2>&1; then
+              echo "✅ Auth API accessible through Nginx"
+            else
+              echo "⚠️ Auth API validation warning"
+            fi
+            
+            # Test frontend
+            if curl -sf "http://localhost/health" > /dev/null 2>&1; then
+              echo "✅ Frontend accessible through Nginx"
+            else
+              echo "⚠️ Frontend validation warning"
+            fi
+            
+            # -------------------------------------------------------------------------
+            # Check error rate before finalizing
+            # -------------------------------------------------------------------------
+            echo ""
+            echo "📊 Monitoring error rate..."
+            sleep 10
+            
+            # Query Prometheus for error rate (if available)
+            if command -v curl &> /dev/null && curl -sf "http://localhost:9090/-/healthy" > /dev/null 2>&1; then
+              ERROR_RATE=$(curl -s 'http://localhost:9090/api/v1/query?query=rate(http_requests_total{status=~"5.."}[1m])/rate(http_requests_total[1m])' | jq -r '.data.result[0].value[1] // "0"' 2>/dev/null || echo "0")
+              
+              echo "Current error rate: ${ERROR_RATE}"
+              
+              # Check if error rate exceeds threshold (1%)
+              if [ "$(echo "${ERROR_RATE} > 0.01" | bc -l 2>/dev/null || echo 0)" -eq 1 ]; then
+                echo "❌ High error rate detected! Rolling back..."
+                
+                # Restore old Nginx config
+                if [ -f /etc/nginx/conf.d/upstream.conf.bak ]; then
+                  cp /etc/nginx/conf.d/upstream.conf.bak /etc/nginx/conf.d/upstream.conf
+                  nginx -s reload
+                fi
+                
+                # Stop new environment
+                docker-compose -f docker-compose.prod.yml stop \
+                  catalog-${NEW_SLOT} \
+                  pcbuilder-${NEW_SLOT} \
+                  auth-${NEW_SLOT} \
+                  frontend-${NEW_SLOT}
+                
+                echo "🚨 ROLLBACK COMPLETE - High error rate"
+                exit 1
+              fi
+            fi
+            
+            # -------------------------------------------------------------------------
+            # Stop old environment
+            # -------------------------------------------------------------------------
+            echo ""
+            echo "🛑 Stopping old ${OLD_SLOT} environment..."
+            
+            # Graceful shutdown with timeout
+            docker-compose -f docker-compose.prod.yml stop \
+              catalog-${OLD_SLOT} \
+              pcbuilder-${OLD_SLOT} \
+              auth-${OLD_SLOT} \
+              frontend-${OLD_SLOT}
+            
+            # Remove old containers
+            docker-compose -f docker-compose.prod.yml rm -f \
+              catalog-${OLD_SLOT} \
+              pcbuilder-${OLD_SLOT} \
+              auth-${OLD_SLOT} \
+              frontend-${OLD_SLOT}
+            
+            # -------------------------------------------------------------------------
+            # Cleanup old images
+            # -------------------------------------------------------------------------
+            echo ""
+            echo "🧹 Cleaning up old images..."
+            docker image prune -f --filter "until=24h"
+            
+            # -------------------------------------------------------------------------
+            # Deployment successful
+            # -------------------------------------------------------------------------
+            echo ""
+            echo "=============================================="
+            echo "✅ Blue-Green Deployment SUCCESSFUL!"
+            echo "=============================================="
+            echo "Active slot: ${NEW_SLOT}"
+            echo "Previous slot: ${OLD_SLOT} (stopped)"
+            echo "Image version: ${GITHUB_SHA}"
+            echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+            
+            # Output for GitHub
+            echo "deployed_slot=${NEW_SLOT}" >> $GITHUB_OUTPUT
+            echo "previous_slot=${OLD_SLOT}" >> $GITHUB_OUTPUT
+
+      - name: Deployment Summary
+        if: always()
+        run: |
+          echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.deploy.outcome }}" = "success" ]; then
+            echo "✅ **Status:** Successful" >> $GITHUB_STEP_SUMMARY
+            echo "- **Image Tag:** \`${{ needs.build.outputs.image_tag }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Environment:** production" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Status:** Failed" >> $GITHUB_STEP_SUMMARY
+            echo "- **Check logs for details**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ============================================================================
+  # ROLLBACK JOB - Manual or automatic rollback
+  # ============================================================================
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Rollback to Previous Version
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            set -e
+            
+            echo "=============================================="
+            echo "🔄 Starting Manual Rollback"
+            echo "=============================================="
+            
+            cd /opt/goldpc
+            
+            # Determine current active slot
+            CURRENT_UPSTREAM=$(grep -E "server.*:5001" /etc/nginx/conf.d/upstream.conf 2>/dev/null | grep -v "#" | head -1 | grep -o "backend-[a-z]*" || echo "backend-blue")
+            CURRENT_SLOT=$(echo "$CURRENT_UPSTREAM" | sed 's/backend-//')
+            
+            if [ "$CURRENT_SLOT" = "blue" ]; then
+              ROLLBACK_SLOT="green"
+            else
+              ROLLBACK_SLOT="blue"
+            fi
+            
+            echo "Current slot: ${CURRENT_SLOT}"
+            echo "Rolling back to: ${ROLLBACK_SLOT}"
+            
+            # Check if rollback slot has containers
+            if ! docker ps --format '{{.Names}}' | grep -q "${ROLLBACK_SLOT}"; then
+              echo "❌ Cannot rollback: ${ROLLBACK_SLOT} slot is not available"
+              echo "Starting ${ROLLBACK_SLOT} slot with latest image..."
+              
+              export SLOT=${ROLLBACK_SLOT}
+              export IMAGE_VERSION=${{ inputs.version || 'latest' }}
+              
+              docker-compose -f docker-compose.prod.yml up -d \
+                catalog-${ROLLBACK_SLOT} \
+                pcbuilder-${ROLLBACK_SLOT} \
+                auth-${ROLLBACK_SLOT} \
+                frontend-${ROLLBACK_SLOT}
+              
+              sleep 30
+            fi
+            
+            # Health check on rollback slot
+            CATALOG_PORT=$((5001 + $( [ "$ROLLBACK_SLOT" = "green" ] && echo 10 || echo 0 )))
+            if ! curl -sf "http://localhost:${CATALOG_PORT}/health" > /dev/null 2>&1; then
+              echo "❌ Rollback slot is not healthy!"
+              exit 1
+            fi
+            
+            # Switch Nginx to rollback slot
+            if [ -f /etc/nginx/conf.d/upstream.conf ]; then
+              cp /etc/nginx/conf.d/upstream.conf /etc/nginx/conf.d/upstream.conf.pre-rollback
+            
+              if [ "$ROLLBACK_SLOT" = "blue" ]; then
+                CATALOG_PORT=5001
+                PCBUILDER_PORT=5002
+                AUTH_PORT=5003
+                FRONTEND_PORT=3000
+              else
+                CATALOG_PORT=5011
+                PCBUILDER_PORT=5012
+                AUTH_PORT=5013
+                FRONTEND_PORT=3001
+              fi
+              
+              cat > /etc/nginx/conf.d/upstream.conf << EOF
+            # Rollback configuration
+            # Slot: ${ROLLBACK_SLOT}
+            # Rolled back at: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+            upstream backend_catalog {
+                server catalog-${ROLLBACK_SLOT}:${CATALOG_PORT};
+                keepalive 32;
+            }
+
+            upstream backend_pcbuilder {
+                server pcbuilder-${ROLLBACK_SLOT}:${PCBUILDER_PORT};
+                keepalive 32;
+            }
+
+            upstream backend_auth {
+                server auth-${ROLLBACK_SLOT}:${AUTH_PORT};
+                keepalive 32;
+            }
+
+            upstream frontend_upstream {
+                server frontend-${ROLLBACK_SLOT}:${FRONTEND_PORT};
+                keepalive 32;
+            }
+            EOF
+              
+              nginx -t
+              nginx -s reload
+            fi
+            
+            # Stop the failed slot
+            docker-compose -f docker-compose.prod.yml stop \
+              catalog-${CURRENT_SLOT} \
+              pcbuilder-${CURRENT_SLOT} \
+              auth-${CURRENT_SLOT} \
+              frontend-${CURRENT_SLOT}
+            
+            echo ""
+            echo "=============================================="
+            echo "✅ Rollback Complete!"
+            echo "=============================================="
+            echo "Active slot: ${ROLLBACK_SLOT}"
+            echo "Stopped slot: ${CURRENT_SLOT}"
+
+      - name: Notify Rollback
+        run: |
+          echo "### 🔄 Rollback Executed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Rollback to previous version completed." >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # NOTIFICATION JOB - Notify team of deployment status
+  # ============================================================================
+  notify:
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Determine deployment status
+        id: status
+        run: |
+          if [ "${{ needs.deploy.result }}" = "success" ]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "emoji=✅" >> $GITHUB_OUTPUT
+            echo "message=Deployment successful!" >> $GITHUB_OUTPUT
+          elif [ "${{ needs.deploy.result }}" = "failure" ]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "emoji=❌" >> $GITHUB_OUTPUT
+            echo "message=Deployment failed! Automatic rollback attempted." >> $GITHUB_OUTPUT
+          else
+            echo "status=${{ needs.deploy.result }}" >> $GITHUB_OUTPUT
+            echo "emoji=⚠️" >> $GITHUB_OUTPUT
+            echo "message=Deployment ${{ needs.deploy.result }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK != ''
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ steps.status.outputs.emoji }} Blue-Green Deployment: ${{ steps.status.outputs.status }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {"type": "mrkdwn", "text": "*Repository:*\n${{ github.repository }}"},
+                    {"type": "mrkdwn", "text": "*Branch:*\n${{ github.ref_name }}"},
+                    {"type": "mrkdwn", "text": "*Commit:*\n<${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}()>"},
+                    {"type": "mrkdwn", "text": "*Author:*\n${{ github.actor }}"}
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "${{ steps.status.outputs.message }}"
+                  }
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "button",
+                      "text": {"type": "plain_text", "text": "View Workflow"},
+                      "url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ]
+                }
+              ]
+            }' \
+            $SLACK_WEBHOOK
+
+      - name: Create deployment record
+        if: needs.deploy.result == 'success'
+        run: |
+          echo "### 📋 Deployment Record" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Author** | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Image Tag** | \`${{ needs.build.outputs.image_tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Timestamp** | $(date -u +"%Y-%m-%d %H:%M:%S UTC") |" >> $GITHUB_STEP_SUMMARY

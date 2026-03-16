@@ -1,0 +1,393 @@
+# =============================================================================
+# Production Docker Compose for Blue-Green Deployment
+# =============================================================================
+# This configuration supports two deployment slots (blue/green) for zero-downtime
+# deployments. Each service has two instances that can be switched via Nginx.
+#
+# Usage:
+#   Blue slot:  docker compose -f docker-compose.prod.yml --profile blue up -d
+#   Green slot: docker compose -f docker-compose.prod.yml --profile green up -d
+#
+# Environment Variables:
+#   - IMAGE_VERSION: Docker image tag (default: latest)
+#   - REGISTRY: Docker registry URL (default: ghcr.io)
+#   - IMAGE_PREFIX: Image prefix (default: goldpc)
+#   - DB_USER: PostgreSQL username
+#   - DB_PASSWORD: PostgreSQL password
+#   - JWT_KEY: JWT signing key
+#   - JWT_ISSUER: JWT issuer
+#   - JWT_AUDIENCE: JWT audience
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # SHARED INFRASTRUCTURE (no blue/green)
+  # ===========================================================================
+  
+  postgres:
+    image: postgres:16-alpine
+    container_name: goldpc-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: goldpc
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d goldpc"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - goldpc-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: goldpc-redis
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - goldpc-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # BLUE SLOT - Primary deployment slot
+  # ===========================================================================
+  
+  catalog-blue:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX:-goldpc}/goldpc-catalog:${IMAGE_VERSION:-latest}
+    container_name: goldpc-catalog-blue
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5001
+      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      ConnectionStrings__Redis: redis:6379
+      Redis__Host: redis
+      Redis__Port: "6379"
+    ports:
+      - "5001:5001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - goldpc-network
+    restart: unless-stopped
+    profiles:
+      - blue
+      - all
+
+  pcbuilder-blue:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX:-goldpc}/goldpc-pcbuilder:${IMAGE_VERSION:-latest}
+    container_name: goldpc-pcbuilder-blue
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5002
+      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      ConnectionStrings__Redis: redis:6379
+      Redis__Host: redis
+      Redis__Port: "6379"
+      CatalogService__Url: http://catalog-blue:5001
+    ports:
+      - "5002:5002"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      catalog-blue:
+        condition: service_healthy
+    networks:
+      - goldpc-network
+    restart: unless-stopped
+    profiles:
+      - blue
+      - all
+
+  auth-blue:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX:-goldpc}/goldpc-auth:${IMAGE_VERSION:-latest}
+    container_name: goldpc-auth-blue
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5003
+      ConnectionStrings__PostgreSQL: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      JwtSettings__Secret: ${JWT_KEY:-your-production-jwt-key-min-32-characters!}
+      JwtSettings__Issuer: ${JWT_ISSUER:-goldpc}
+      JwtSettings__Audience: ${JWT_AUDIENCE:-goldpc-users}
+    ports:
+      - "5003:5003"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - goldpc-network
+    restart: unless-stopped
+    profiles:
+      - blue
+      - all
+
+  frontend-blue:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX:-goldpc}/goldpc-frontend:${IMAGE_VERSION:-latest}
+    container_name: goldpc-frontend-blue
+    environment:
+      API_CATALOG_URL: http://catalog-blue:5001
+      API_PCBUILDER_URL: http://pcbuilder-blue:5002
+      API_AUTH_URL: http://auth-blue:5003
+    ports:
+      - "3000:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      catalog-blue:
+        condition: service_healthy
+      pcbuilder-blue:
+        condition: service_healthy
+      auth-blue:
+        condition: service_healthy
+    networks:
+      - goldpc-network
+    restart: unless-stopped
+    profiles:
+      - blue
+      - all
+
+  # ===========================================================================
+  # GREEN SLOT - Secondary deployment slot (for Blue-Green deployment)
+  # ===========================================================================
+  
+  catalog-green:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX:-goldpc}/goldpc-catalog:${IMAGE_VERSION:-latest}
+    container_name: goldpc-catalog-green
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5011
+      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      ConnectionStrings__Redis: redis:6379
+      Redis__Host: redis
+      Redis__Port: "6379"
+    ports:
+      - "5011:5011"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5011/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - goldpc-network
+    restart: unless-stopped
+    profiles:
+      - green
+      - all
+
+  pcbuilder-green:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX:-goldpc}/goldpc-pcbuilder:${IMAGE_VERSION:-latest}
+    container_name: goldpc-pcbuilder-green
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5012
+      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      ConnectionStrings__Redis: redis:6379
+      Redis__Host: redis
+      Redis__Port: "6379"
+      CatalogService__Url: http://catalog-green:5011
+    ports:
+      - "5012:5012"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5012/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      catalog-green:
+        condition: service_healthy
+    networks:
+      - goldpc-network
+    restart: unless-stopped
+    profiles:
+      - green
+      - all
+
+  auth-green:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX:-goldpc}/goldpc-auth:${IMAGE_VERSION:-latest}
+    container_name: goldpc-auth-green
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:5013
+      ConnectionStrings__PostgreSQL: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      JwtSettings__Secret: ${JWT_KEY:-your-production-jwt-key-min-32-characters!}
+      JwtSettings__Issuer: ${JWT_ISSUER:-goldpc}
+      JwtSettings__Audience: ${JWT_AUDIENCE:-goldpc-users}
+    ports:
+      - "5013:5013"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5013/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - goldpc-network
+    restart: unless-stopped
+    profiles:
+      - green
+      - all
+
+  frontend-green:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_PREFIX:-goldpc}/goldpc-frontend:${IMAGE_VERSION:-latest}
+    container_name: goldpc-frontend-green
+    environment:
+      API_CATALOG_URL: http://catalog-green:5011
+      API_PCBUILDER_URL: http://pcbuilder-green:5012
+      API_AUTH_URL: http://auth-green:5013
+    ports:
+      - "3001:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      catalog-green:
+        condition: service_healthy
+      pcbuilder-green:
+        condition: service_healthy
+      auth-green:
+        condition: service_healthy
+    networks:
+      - goldpc-network
+    restart: unless-stopped
+    profiles:
+      - green
+      - all
+
+  # ===========================================================================
+  # NGINX LOAD BALANCER
+  # ===========================================================================
+  
+  nginx:
+    image: nginx:alpine
+    container_name: goldpc-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - goldpc-network
+    restart: unless-stopped
+
+  # ===========================================================================
+  # MONITORING (Optional)
+  # ===========================================================================
+  
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: goldpc-prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    networks:
+      - goldpc-network
+    profiles:
+      - monitoring
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: goldpc-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3002:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - goldpc-network
+    profiles:
+      - monitoring
+    restart: unless-stopped
+
+networks:
+  goldpc-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  nginx_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local

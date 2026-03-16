@@ -1,0 +1,475 @@
+name: Canary Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      canary_percentage:
+        description: 'Percentage of traffic to route to canary (new version)'
+        required: true
+        default: '10'
+        type: choice
+        options:
+          - '5'
+          - '10'
+          - '25'
+          - '50'
+          - '75'
+          - '100'
+      canary_version:
+        description: 'Docker image tag for canary version (e.g., v1.2.3 or sha-abc123)'
+        required: true
+        type: string
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: goldpc/backend
+  IMAGE_NAME_FRONTEND: goldpc/frontend
+
+jobs:
+  validate:
+    name: Validate Inputs
+    runs-on: ubuntu-latest
+    outputs:
+      canary_percentage: ${{ steps.validate.outputs.canary_percentage }}
+      canary_version: ${{ steps.validate.outputs.canary_version }}
+    
+    steps:
+      - name: Validate canary percentage
+        id: validate
+        run: |
+          CANARY_PCT=${{ inputs.canary_percentage }}
+          CANARY_VERSION=${{ inputs.canary_version }}
+          
+          # Validate percentage is valid
+          if [[ ! "$CANARY_PCT" =~ ^(5|10|25|50|75|100)$ ]]; then
+            echo "::error::Invalid canary percentage: $CANARY_PCT"
+            exit 1
+          fi
+          
+          # Validate version is not empty
+          if [[ -z "$CANARY_VERSION" ]]; then
+            echo "::error::Canary version is required"
+            exit 1
+          fi
+          
+          echo "canary_percentage=$CANARY_PCT" >> $GITHUB_OUTPUT
+          echo "canary_version=$CANARY_VERSION" >> $GITHUB_OUTPUT
+          
+          echo "✅ Validation passed"
+          echo "   Canary Percentage: ${CANARY_PCT}%"
+          echo "   Canary Version: ${CANARY_VERSION}"
+
+  health-check-canary:
+    name: Pre-Deploy Health Check
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Check canary image availability
+        run: |
+          CANARY_VERSION=${{ needs.validate.outputs.canary_version }}
+          
+          echo "Checking if canary image exists: ${REGISTRY}/${IMAGE_NAME_BACKEND}:${CANARY_VERSION}"
+          
+          # Login to registry
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login $REGISTRY -u ${{ github.actor }} --password-stdin
+          
+          # Try to pull the image manifest (without downloading)
+          if docker manifest inspect ${REGISTRY}/${IMAGE_NAME_BACKEND}:${CANARY_VERSION} > /dev/null 2>&1; then
+            echo "✅ Backend canary image exists"
+          else
+            echo "::error::Backend canary image not found: ${REGISTRY}/${IMAGE_NAME_BACKEND}:${CANARY_VERSION}"
+            exit 1
+          fi
+          
+          if docker manifest inspect ${REGISTRY}/${IMAGE_NAME_FRONTEND}:${CANARY_VERSION} > /dev/null 2>&1; then
+            echo "✅ Frontend canary image exists"
+          else
+            echo "::error::Frontend canary image not found: ${REGISTRY}/${IMAGE_NAME_FRONTEND}:${CANARY_VERSION}"
+            exit 1
+          fi
+
+  deploy-canary:
+    name: Deploy Canary Version
+    needs: [validate, health-check-canary]
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+      - name: Deploy and configure canary routing
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            set -e
+            
+            # ============================================
+            # Configuration
+            # ============================================
+            CANARY_PCT="${{ needs.validate.outputs.canary_percentage }}"
+            CANARY_VERSION="${{ needs.validate.outputs.canary_version }}"
+            DEPLOY_DIR="/opt/goldpc"
+            LOG_FILE="/var/log/goldpc/canary-deploy.log"
+            NGINX_CONF_DIR="/etc/nginx/conf.d"
+            TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+            
+            # Create log directory if not exists
+            mkdir -p /var/log/goldpc
+            
+            # Log function
+            log() {
+              echo "[$TIMESTAMP] $1" | tee -a "$LOG_FILE"
+            }
+            
+            log "=========================================="
+            log "Starting Canary Deployment"
+            log "Version: ${CANARY_VERSION}"
+            log "Traffic Percentage: ${CANARY_PCT}%"
+            log "=========================================="
+            
+            cd $DEPLOY_DIR
+            
+            # ============================================
+            # Pull canary images
+            # ============================================
+            log "Pulling canary images..."
+            
+            docker pull ${REGISTRY}/${IMAGE_NAME_BACKEND}:${CANARY_VERSION} || {
+              log "ERROR: Failed to pull backend canary image"
+              exit 1
+            }
+            
+            docker pull ${REGISTRY}/${IMAGE_NAME_FRONTEND}:${CANARY_VERSION} || {
+              log "ERROR: Failed to pull frontend canary image"
+              exit 1
+            }
+            
+            log "✅ Images pulled successfully"
+            
+            # ============================================
+            # Stop existing canary containers (if any)
+            # ============================================
+            log "Stopping existing canary containers..."
+            
+            docker-compose stop backend-canary 2>/dev/null || true
+            docker-compose rm -f backend-canary 2>/dev/null || true
+            docker-compose stop frontend-canary 2>/dev/null || true
+            docker-compose rm -f frontend-canary 2>/dev/null || true
+            
+            # ============================================
+            # Start canary containers
+            # ============================================
+            log "Starting canary containers..."
+            
+            # Set environment for canary
+            export CANARY_VERSION=${CANARY_VERSION}
+            
+            # Start canary backend
+            docker-compose up -d --scale backend-canary=2 backend-canary || {
+              log "ERROR: Failed to start canary backend"
+              exit 1
+            }
+            
+            # Start canary frontend
+            docker-compose up -d frontend-canary || {
+              log "ERROR: Failed to start canary frontend"
+              exit 1
+            }
+            
+            log "✅ Canary containers started"
+            
+            # ============================================
+            # Wait for canary health check
+            # ============================================
+            log "Waiting for canary containers to be healthy..."
+            
+            MAX_RETRIES=30
+            RETRY_INTERVAL=10
+            RETRY_COUNT=0
+            
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              if curl -sf http://localhost:8081/health > /dev/null 2>&1; then
+                log "✅ Canary backend health check passed"
+                break
+              fi
+              
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              log "Waiting for canary health... attempt $RETRY_COUNT/$MAX_RETRIES"
+              sleep $RETRY_INTERVAL
+            done
+            
+            if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+              log "ERROR: Canary health check failed after $MAX_RETRIES attempts"
+              docker-compose stop backend-canary frontend-canary
+              exit 1
+            fi
+            
+            # ============================================
+            # Configure Nginx for canary routing
+            # ============================================
+            log "Configuring Nginx for canary routing..."
+            
+            # Create canary configuration using split_clients
+            cat > ${NGINX_CONF_DIR}/canary-upstream.conf << 'CANARY_UPSTREAM'
+            # Canary upstream definitions
+            upstream backend_blue {
+                server backend-blue:8080;
+            }
+            
+            upstream backend_green {
+                server backend-canary:8080;
+            }
+            
+            upstream frontend_blue {
+                server frontend-blue:3000;
+            }
+            
+            upstream frontend_green {
+                server frontend-canary:3000;
+            }
+CANARY_UPSTREAM
+            
+            # Create split_clients configuration for traffic splitting
+            cat > ${NGINX_CONF_DIR}/canary-routing.conf << CANARY_ROUTING
+            # Traffic splitting based on cookie or random percentage
+            # Uses Nginx split_clients module for canary routing
+            
+            # Route based on user cookie for consistent experience
+            # Users with canary cookie are always routed to canary
+            # Remaining traffic is split by percentage
+            map \$cookie_canary \$backend_canary {
+                default    \$backend_split;
+                "green"     backend_green;
+                "blue"      backend_blue;
+            }
+            
+            # Percentage-based split for users without cookie
+            split_clients "\${remote_addr}\${http_user_agent}" \$backend_split {
+CANARY_ROUTING
+            
+            # Insert the percentage configuration
+            echo "                ${CANARY_PCT}%     backend_green;" >> ${NGINX_CONF_DIR}/canary-routing.conf
+            echo "                *               backend_blue;" >> ${NGINX_CONF_DIR}/canary-routing.conf
+            
+            # Close the split_clients block
+            cat >> ${NGINX_CONF_DIR}/canary-routing.conf << 'CANARY_ROUTING_END'
+            }
+            
+            # Frontend canary routing
+            map $cookie_canary $frontend_canary {
+                default    $frontend_split;
+                "green"     frontend_green;
+                "blue"      frontend_blue;
+            }
+            
+            split_clients "${remote_addr}${http_user_agent}" $frontend_split {
+CANARY_ROUTING_END
+            
+            # Insert the percentage configuration for frontend
+            echo "                ${CANARY_PCT}%     frontend_green;" >> ${NGINX_CONF_DIR}/canary-routing.conf
+            echo "                *               frontend_blue;" >> ${NGINX_CONF_DIR}/canary-routing.conf
+            
+            # Close the split_clients block
+            echo "}" >> ${NGINX_CONF_DIR}/canary-routing.conf
+            
+            log "✅ Canary routing configuration created"
+            
+            # ============================================
+            # Test Nginx configuration
+            # ============================================
+            log "Testing Nginx configuration..."
+            
+            if ! nginx -t 2>&1; then
+              log "ERROR: Invalid Nginx configuration"
+              rm -f ${NGINX_CONF_DIR}/canary-upstream.conf ${NGINX_CONF_DIR}/canary-routing.conf
+              exit 1
+            fi
+            
+            # ============================================
+            # Reload Nginx
+            # ============================================
+            log "Reloading Nginx..."
+            
+            nginx -s reload || {
+              log "ERROR: Failed to reload Nginx"
+              exit 1
+            }
+            
+            log "✅ Nginx reloaded successfully"
+            
+            # ============================================
+            # Log deployment details
+            # ============================================
+            log "=========================================="
+            log "Canary Deployment Complete"
+            log "Timestamp: ${TIMESTAMP}"
+            log "Version: ${CANARY_VERSION}"
+            log "Traffic Split: ${CANARY_PCT}% canary / $((100 - CANARY_PCT))% stable"
+            log "Environment: ${{ inputs.environment }}"
+            log "Deployed by: ${{ github.actor }}"
+            log "Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            log "=========================================="
+            
+            # ============================================
+            # Show current routing status
+            # ============================================
+            log "Current routing status:"
+            docker-compose ps
+            
+            echo ""
+            echo "✅ Canary deployment successful!"
+            echo "   Traffic routing: ${CANARY_PCT}% to canary version"
+            echo "   Monitor metrics at: https://monitoring.goldpc.by"
+            echo "   To promote canary: run deploy-blue-green.yml with canary version"
+            echo "   To rollback: run canary-rollback.yml"
+
+      - name: Log deployment to audit
+        run: |
+          echo "## Canary Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Environment | ${{ inputs.environment }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Canary Version | ${{ needs.validate.outputs.canary_version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Traffic Percentage | ${{ needs.validate.outputs.canary_percentage }}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deployed By | ${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Timestamp | $(date -u '+%Y-%m-%d %H:%M:%S UTC') |" >> $GITHUB_STEP_SUMMARY
+
+  monitor-canary:
+    name: Monitor Canary Health
+    needs: deploy-canary
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    if: inputs.canary_percentage != '100'
+    
+    steps:
+      - name: Initial monitoring period
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script: |
+            set -e
+            
+            CANARY_PCT="${{ needs.validate.outputs.canary_percentage }}"
+            LOG_FILE="/var/log/goldpc/canary-deploy.log"
+            TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+            
+            log() {
+              echo "[$TIMESTAMP] $1" | tee -a "$LOG_FILE"
+            }
+            
+            log "Starting canary monitoring..."
+            
+            # Monitor for 5 minutes
+            MONITOR_DURATION=300
+            INTERVAL=30
+            ITERATIONS=$((MONITOR_DURATION / INTERVAL))
+            
+            for i in $(seq 1 $ITERATIONS); do
+              # Check canary container health
+              CANARY_STATUS=$(docker-compose ps backend-canary 2>/dev/null | grep -c "Up" || echo "0")
+              STABLE_STATUS=$(docker-compose ps backend-blue 2>/dev/null | grep -c "Up" || echo "0")
+              
+              # Check response times
+              CANARY_RESPONSE=$(curl -o /dev/null -s -w '%{http_code}' http://localhost:8081/health || echo "000")
+              STABLE_RESPONSE=$(curl -o /dev/null -s -w '%{http_code}' http://localhost:8080/health || echo "000")
+              
+              log "Health check $i/$ITERATIONS: Canary=$CANARY_RESPONSE ($CANARY_STATUS up), Stable=$STABLE_RESPONSE ($STABLE_STATUS up)"
+              
+              # Alert on issues
+              if [ "$CANARY_STATUS" -eq 0 ] || [ "$CANARY_RESPONSE" != "200" ]; then
+                log "WARNING: Canary appears unhealthy!"
+              fi
+              
+              if [ "$STABLE_STATUS" -eq 0 ] || [ "$STABLE_RESPONSE" != "200" ]; then
+                log "WARNING: Stable version appears unhealthy!"
+              fi
+              
+              sleep $INTERVAL
+            done
+            
+            log "Initial monitoring period complete"
+            
+            # Get current error rate from logs (simplified)
+            ERROR_COUNT=$(docker logs backend-canary --since 5m 2>&1 | grep -ci "error" || echo "0")
+            TOTAL_REQUESTS=$(docker logs backend-canary --since 5m 2>&1 | grep -c "request" || echo "1")
+            
+            log "Canary metrics (last 5 min): Errors=$ERROR_COUNT"
+            
+            # Basic health assessment
+            if [ "$ERROR_COUNT" -gt 10 ]; then
+              log "WARNING: High error count detected in canary. Consider rollback."
+              echo "::warning::High error count ($ERROR_COUNT) in canary deployment"
+            fi
+
+      - name: Post-deployment notification
+        if: always()
+        run: |
+          echo "## Canary Monitoring Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Canary deployment is running with **${{ needs.validate.outputs.canary_percentage }}%** traffic." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitor metrics at your observability dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "- To increase traffic: run this workflow with higher percentage" >> $GITHUB_STEP_SUMMARY
+          echo "- To promote to 100%: run Blue-Green deployment" >> $GITHUB_STEP_SUMMARY
+          echo "- To rollback: run canary-rollback.yml workflow" >> $GITHUB_STEP_SUMMARY
+
+  notify-success:
+    name: Notify on Success
+    needs: [deploy-canary, monitor-canary]
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+      - name: Send success notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'success'
+          text: |
+            ✅ Canary Deployment Successful
+            
+            **Environment:** ${{ inputs.environment }}
+            **Version:** ${{ inputs.canary_version }}
+            **Traffic:** ${{ inputs.canary_percentage }}% → Canary
+            **Deployed by:** ${{ github.actor }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+
+  notify-failure:
+    name: Notify on Failure
+    needs: [deploy-canary, monitor-canary]
+    runs-on: ubuntu-latest
+    if: failure()
+    
+    steps:
+      - name: Send failure notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'failure'
+          text: |
+            🚨 Canary Deployment Failed
+            
+            **Environment:** ${{ inputs.environment }}
+            **Version:** ${{ inputs.canary_version }}
+            **Traffic:** ${{ inputs.canary_percentage }}%
+            **Deployed by:** ${{ github.actor }}
+            
+            Check logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true

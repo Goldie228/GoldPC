@@ -1,0 +1,322 @@
+# =============================================================================
+# GoldPC Production Infrastructure
+# Blue-Green Deployment Configuration
+# =============================================================================
+# Version: 1.0
+# Description: Production-ready Docker Compose configuration with Blue-Green
+#              deployment strategy, SSL termination, resource limits, and
+#              health checks for all services.
+# =============================================================================
+
+version: '3.8'
+
+# =============================================================================
+# Services Configuration
+# =============================================================================
+services:
+  # ---------------------------------------------------------------------------
+  # Nginx Reverse Proxy with SSL Termination
+  # Acts as the entry point for all HTTP/HTTPS traffic
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: goldpc-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+      - nginx_cache:/var/cache/nginx
+    depends_on:
+      backend-blue:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    networks:
+      - goldpc-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.goldpc.service=nginx"
+      - "com.goldpc.environment=production"
+
+  # ---------------------------------------------------------------------------
+  # Backend Blue (Current Stable Version)
+  # This is the active production environment
+  # ---------------------------------------------------------------------------
+  backend-blue:
+    image: ${REGISTRY:-ghcr.io/goldpc}/goldpc-backend:${BLUE_VERSION:-latest}
+    container_name: goldpc-backend-blue
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${DB_NAME:-goldpc};Username=${DB_USER};Password=${DB_PASSWORD}
+      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD:-}
+      - Redis__Host=redis
+      - Redis__Port=6379
+      - Redis__Password=${REDIS_PASSWORD:-}
+      - JwtSettings__Secret=${JWT_KEY}
+      - JwtSettings__Issuer=${JWT_ISSUER:-goldpc}
+      - JwtSettings__Audience=${JWT_AUDIENCE:-goldpc-users}
+      - JwtSettings__AccessTokenExpirationMinutes=${JWT_ACCESS_EXPIRATION:-15}
+      - JwtSettings__RefreshTokenExpirationDays=${JWT_REFRESH_EXPIRATION:-7}
+      - CatalogService__Url=http://catalogservice:5001
+      - AuthService__Url=http://authservice:5003
+    networks:
+      - goldpc-network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    labels:
+      - "com.goldpc.service=backend"
+      - "com.goldpc.environment=blue"
+      - "com.goldpc.version=${BLUE_VERSION:-latest}"
+
+  # ---------------------------------------------------------------------------
+  # Backend Green (Future Version)
+  # Scaled to 0 by default, activated during Blue-Green deployment
+  # ---------------------------------------------------------------------------
+  backend-green:
+    image: ${REGISTRY:-ghcr.io/goldpc}/goldpc-backend:${GREEN_VERSION:-latest}
+    container_name: goldpc-backend-green
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${DB_NAME:-goldpc};Username=${DB_USER};Password=${DB_PASSWORD}
+      - ConnectionStrings__Redis=redis:6379,password=${REDIS_PASSWORD:-}
+      - Redis__Host=redis
+      - Redis__Port=6379
+      - Redis__Password=${REDIS_PASSWORD:-}
+      - JwtSettings__Secret=${JWT_KEY}
+      - JwtSettings__Issuer=${JWT_ISSUER:-goldpc}
+      - JwtSettings__Audience=${JWT_AUDIENCE:-goldpc-users}
+      - JwtSettings__AccessTokenExpirationMinutes=${JWT_ACCESS_EXPIRATION:-15}
+      - JwtSettings__RefreshTokenExpirationDays=${JWT_REFRESH_EXPIRATION:-7}
+      - CatalogService__Url=http://catalogservice:5001
+      - AuthService__Url=http://authservice:5003
+    networks:
+      - goldpc-network
+    deploy:
+      replicas: 0  # Scaled up during deployment
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    labels:
+      - "com.goldpc.service=backend"
+      - "com.goldpc.environment=green"
+      - "com.goldpc.version=${GREEN_VERSION:-latest}"
+
+  # ---------------------------------------------------------------------------
+  # Frontend (React Application served by Nginx)
+  # Static files served by internal nginx
+  # ---------------------------------------------------------------------------
+  frontend:
+    image: ${REGISTRY:-ghcr.io/goldpc}/goldpc-frontend:${FRONTEND_VERSION:-latest}
+    container_name: goldpc-frontend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - API_BASE_URL=${API_BASE_URL:-https://goldpc.by}
+    networks:
+      - goldpc-network
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.goldpc.service=frontend"
+      - "com.goldpc.environment=production"
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16 Database
+  # Primary data store for all services
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: goldpc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-goldpc}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ./postgres/init-scripts:/docker-entrypoint-initdb.d:ro
+    networks:
+      - goldpc-network
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '1'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME:-goldpc}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+    labels:
+      - "com.goldpc.service=postgres"
+      - "com.goldpc.environment=production"
+    shm_size: '256mb'
+
+  # ---------------------------------------------------------------------------
+  # Redis 7 Cache
+  # Used for session storage, caching, and message brokering
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: goldpc-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:-}
+      --save 60 1000
+    volumes:
+      - redis_data:/data
+    networks:
+      - goldpc-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    labels:
+      - "com.goldpc.service=redis"
+      - "com.goldpc.environment=production"
+
+# =============================================================================
+# Networks Configuration
+# =============================================================================
+networks:
+  goldpc-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+    labels:
+      - "com.goldpc.network=production"
+
+# =============================================================================
+# Volumes Configuration
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/goldpc/postgres
+    labels:
+      - "com.goldpc.volume=postgres-data"
+
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/goldpc/redis
+    labels:
+      - "com.goldpc.volume=redis-data"
+
+  nginx_cache:
+    driver: local
+    labels:
+      - "com.goldpc.volume=nginx-cache"
