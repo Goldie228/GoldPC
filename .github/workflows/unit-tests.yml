@@ -1,0 +1,76 @@
+name: Unit Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ═══════════════════════════════════════════════════════════
+  # Модульные тесты бэкенда (.NET)
+  # ═══════════════════════════════════════════════════════════
+  backend-unit-tests:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      
+      - name: Restore dependencies
+        working-directory: tests/backend/GoldPC.UnitTests
+        run: dotnet restore
+      
+      - name: Build
+        working-directory: tests/backend/GoldPC.UnitTests
+        run: dotnet build --no-restore -c Release
+      
+      - name: Run Unit Tests
+        working-directory: tests/backend/GoldPC.UnitTests
+        run: dotnet test -c Release --filter "FullyQualifiedName~UnitTests" --collect:"XPlat Code Coverage" --results-directory ./coverage
+      
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./tests/backend/GoldPC.UnitTests/coverage/*/coverage.cobertura.xml
+          flags: backend-unit
+          fail_ci_if_error: false
+          verbose: true
+
+  # ═══════════════════════════════════════════════════════════
+  # Модульные тесты фронтенда (React/TypeScript)
+  # ═══════════════════════════════════════════════════════════
+  frontend-unit-tests:
+    name: Frontend Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: tests/frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: tests/frontend
+        run: npm ci
+      
+      - name: Run Tests with Coverage
+        working-directory: tests/frontend
+        run: npm run test:coverage
+      
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./tests/frontend/coverage/lcov.info
+          flags: frontend-unit
+          fail_ci_if_error: false
+          verbose: true

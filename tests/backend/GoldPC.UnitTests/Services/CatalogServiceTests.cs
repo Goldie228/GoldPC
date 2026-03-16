@@ -1,89 +1,94 @@
+// <copyright file="CatalogServiceTests.cs" company="GoldPC">
+// Copyright (c) GoldPC. All rights reserved.
+// </copyright>
+
+using AutoFixture;
+using CatalogService.DTOs;
+using CatalogService.Models;
+using CatalogService.Repositories;
+using CatalogService.Repositories.Interfaces;
+using CatalogService.Services;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
-using AutoFixture;
-using GoldPC.UnitTests.Fakers;
-using Microsoft.Extensions.Logging;
 
 namespace GoldPC.UnitTests.Services;
 
 /// <summary>
-/// Модульные тесты для сервиса каталога
+/// Модульные тесты для сервиса каталога.
+/// Тесты следуют принципам FIRST:
+/// - Fast: выполняются быстро без внешних зависимостей
+/// - Independent: каждый тест независим и создаёт свои данные
+/// - Repeatable: одинаковый результат при каждом запуске
+/// - Self-validating: автоматический assert без ручной проверки
+/// - Timely: пишутся вместе с кодом
 /// </summary>
 public class CatalogServiceTests
 {
     private readonly Fixture _fixture = new();
-    private readonly Mock<IProductRepository> _repositoryMock;
-    private readonly Mock<ICacheService> _cacheMock;
+    private readonly Mock<IProductRepository> _productRepositoryMock;
+    private readonly Mock<ICategoryRepository> _categoryRepositoryMock;
+    private readonly Mock<IManufacturerRepository> _manufacturerRepositoryMock;
+    private readonly Mock<IReviewRepository> _reviewRepositoryMock;
     private readonly Mock<ILogger<CatalogService>> _loggerMock;
     private readonly CatalogService _sut; // System Under Test
 
     public CatalogServiceTests()
     {
-        _repositoryMock = new Mock<IProductRepository>();
-        _cacheMock = new Mock<ICacheService>();
+        _productRepositoryMock = new Mock<IProductRepository>();
+        _categoryRepositoryMock = new Mock<ICategoryRepository>();
+        _manufacturerRepositoryMock = new Mock<IManufacturerRepository>();
+        _reviewRepositoryMock = new Mock<IReviewRepository>();
         _loggerMock = new Mock<ILogger<CatalogService>>();
-        
+
         _sut = new CatalogService(
-            _repositoryMock.Object,
-            _cacheMock.Object,
+            _productRepositoryMock.Object,
+            _categoryRepositoryMock.Object,
+            _manufacturerRepositoryMock.Object,
+            _reviewRepositoryMock.Object,
             _loggerMock.Object
         );
+
+        // Настройка AutoFixture для генерации DTO
+        _fixture.Customize<ProductFilterDto>(c => c
+            .With(f => f.Page, 1)
+            .With(f => f.PageSize, 20)
+            .With(f => f.SortBy, "createdAt")
+            .With(f => f.SortOrder, "desc"));
     }
 
     #region GetProductById Tests
 
     [Fact]
-    public async Task GetProductById_WhenProductExists_ReturnsProduct()
+    public async Task GetProductById_WhenProductExists_ReturnsProductDetailDto()
     {
         // Arrange
         var productId = _fixture.Create<Guid>();
-        var expectedProduct = new ProductFaker()
-            .WithCategory(ProductCategory.Cpu)
-            .Generate();
-        expectedProduct.Id = productId;
+        var category = CreateTestCategory();
+        var manufacturer = CreateTestManufacturer();
+        
+        var expectedProduct = CreateTestProduct(productId, category, manufacturer);
 
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(productId))
+        _productRepositoryMock
+            .Setup(r => r.GetDetailByIdAsync(productId))
             .ReturnsAsync(expectedProduct);
 
-        _cacheMock
-            .Setup(c => c.GetAsync<Product>($"product:{productId}"))
-            .ReturnsAsync((Product?)null);
-
         // Act
         var result = await _sut.GetProductByIdAsync(productId);
 
         // Assert
         result.Should().NotBeNull();
-        result.Should().BeEquivalentTo(expectedProduct);
         result!.Id.Should().Be(productId);
+        result.Name.Should().Be(expectedProduct.Name);
+        result.Sku.Should().Be(expectedProduct.Sku);
+        result.Price.Should().Be(expectedProduct.Price);
+        result.Stock.Should().Be(expectedProduct.Stock);
+        result.Category.Should().Be(category.Name);
+        result.Manufacturer.Should().NotBeNull();
+        result.Manufacturer!.Name.Should().Be(manufacturer.Name);
         
-        _repositoryMock.Verify(r => r.GetByIdAsync(productId), Times.Once);
-        _cacheMock.Verify(c => c.SetAsync($"product:{productId}", expectedProduct, It.IsAny<TimeSpan>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task GetProductById_WhenProductCached_ReturnsFromCache()
-    {
-        // Arrange
-        var productId = _fixture.Create<Guid>();
-        var cachedProduct = new ProductFaker().Generate();
-        cachedProduct.Id = productId;
-
-        _cacheMock
-            .Setup(c => c.GetAsync<Product>($"product:{productId}"))
-            .ReturnsAsync(cachedProduct);
-
-        // Act
-        var result = await _sut.GetProductByIdAsync(productId);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Should().BeEquivalentTo(cachedProduct);
-        
-        // Repository не должен вызываться, если товар в кэше
-        _repositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<Guid>()), Times.Never);
+        _productRepositoryMock.Verify(r => r.GetDetailByIdAsync(productId), Times.Once);
     }
 
     [Fact]
@@ -91,13 +96,9 @@ public class CatalogServiceTests
     {
         // Arrange
         var productId = _fixture.Create<Guid>();
-        
-        _cacheMock
-            .Setup(c => c.GetAsync<Product>($"product:{productId}"))
-            .ReturnsAsync((Product?)null);
-            
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(productId))
+
+        _productRepositoryMock
+            .Setup(r => r.GetDetailByIdAsync(productId))
             .ReturnsAsync((Product?)null);
 
         // Act
@@ -105,7 +106,7 @@ public class CatalogServiceTests
 
         // Assert
         result.Should().BeNull();
-        _repositoryMock.Verify(r => r.GetByIdAsync(productId), Times.Once);
+        _productRepositoryMock.Verify(r => r.GetDetailByIdAsync(productId), Times.Once);
     }
 
     [Fact]
@@ -113,17 +114,11 @@ public class CatalogServiceTests
     {
         // Arrange
         var productId = _fixture.Create<Guid>();
-        var inactiveProduct = new ProductFaker()
-            .AsInactive()
-            .Generate();
-        inactiveProduct.Id = productId;
+        var inactiveProduct = CreateTestProduct(productId);
+        inactiveProduct.IsActive = false;
 
-        _cacheMock
-            .Setup(c => c.GetAsync<Product>($"product:{productId}"))
-            .ReturnsAsync((Product?)null);
-            
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(productId))
+        _productRepositoryMock
+            .Setup(r => r.GetDetailByIdAsync(productId))
             .ReturnsAsync(inactiveProduct);
 
         // Act
@@ -133,114 +128,447 @@ public class CatalogServiceTests
         result.Should().BeNull();
     }
 
-    #endregion
-
-    #region GetProducts Tests
-
-    [Theory]
-    [InlineData("cpu", 10)]
-    [InlineData("gpu", 5)]
-    [InlineData("ram", 20)]
-    public async Task GetProductsByCategory_ReturnsFilteredProducts(
-        string categoryName, int expectedCount)
+    [Fact]
+    public async Task GetProductById_WithImages_ReturnsProductWithImages()
     {
         // Arrange
-        var category = Enum.Parse<ProductCategory>(categoryName, ignoreCase: true);
-        var categoryProducts = new ProductFaker()
-            .WithCategory(category)
-            .Generate(expectedCount);
+        var productId = _fixture.Create<Guid>();
+        var product = CreateTestProduct(productId);
+        product.Images.Add(new ProductImage
+        {
+            Id = Guid.NewGuid(),
+            ProductId = productId,
+            Url = "https://example.com/image1.jpg",
+            IsPrimary = true,
+            SortOrder = 0
+        });
+        product.Images.Add(new ProductImage
+        {
+            Id = Guid.NewGuid(),
+            ProductId = productId,
+            Url = "https://example.com/image2.jpg",
+            IsPrimary = false,
+            SortOrder = 1
+        });
 
-        _repositoryMock
-            .Setup(r => r.GetByCategoryAsync(category))
-            .ReturnsAsync(categoryProducts);
+        _productRepositoryMock
+            .Setup(r => r.GetDetailByIdAsync(productId))
+            .ReturnsAsync(product);
 
         // Act
-        var result = await _sut.GetProductsByCategoryAsync(category);
+        var result = await _sut.GetProductByIdAsync(productId);
 
         // Assert
         result.Should().NotBeNull();
-        result.Should().HaveCount(expectedCount);
-        result.All(p => p.Category == category).Should().BeTrue();
+        result!.Images.Should().HaveCount(2);
+        result.Images[0].IsMain.Should().BeTrue();
+        result.Images[0].Url.Should().Be("https://example.com/image1.jpg");
     }
 
     [Fact]
-    public async Task GetProducts_WithPagination_ReturnsCorrectPage()
+    public async Task GetProductById_WithRating_ReturnsProductWithRating()
     {
         // Arrange
-        var page = 2;
-        var limit = 10;
-        var allProducts = new ProductFaker().Generate(50);
+        var productId = _fixture.Create<Guid>();
+        var product = CreateTestProduct(productId);
+        product.Rating = 4.5;
+        product.ReviewCount = 42;
 
-        _repositoryMock
-            .Setup(r => r.GetAllAsync())
-            .ReturnsAsync(allProducts);
-
-        // Act
-        var result = await _sut.GetProductsAsync(page, limit);
-
-        // Assert
-        result.Items.Should().HaveCount(limit);
-        result.TotalCount.Should().Be(50);
-        result.CurrentPage.Should().Be(page);
-        result.TotalPages.Should().Be(5);
-    }
-
-    [Fact]
-    public async Task GetProducts_WhenEmpty_ReturnsEmptyList()
-    {
-        // Arrange
-        _repositoryMock
-            .Setup(r => r.GetAllAsync())
-            .ReturnsAsync(new List<Product>());
+        _productRepositoryMock
+            .Setup(r => r.GetDetailByIdAsync(productId))
+            .ReturnsAsync(product);
 
         // Act
-        var result = await _sut.GetProductsAsync(1, 10);
+        var result = await _sut.GetProductByIdAsync(productId);
 
         // Assert
-        result.Items.Should().BeEmpty();
-        result.TotalCount.Should().Be(0);
+        result.Should().NotBeNull();
+        result!.Rating.Should().NotBeNull();
+        result.Rating!.Average.Should().Be(4.5);
+        result.Rating.Count.Should().Be(42);
     }
 
     #endregion
 
-    #region SearchProducts Tests
+    #region GetProducts (Filtering) Tests
 
-    [Fact]
-    public async Task SearchProducts_WithValidQuery_ReturnsMatchingProducts()
+    [Theory]
+    [InlineData("cpu", 1, 10, 5)]
+    [InlineData("gpu", 1, 20, 3)]
+    [InlineData("ram", 2, 15, 8)]
+    public async Task GetProducts_WithCategoryFilter_ReturnsFilteredProducts(
+        string categorySlug, int page, int pageSize, int expectedCount)
     {
         // Arrange
-        var searchQuery = "Ryzen";
-        var products = new List<Product>
+        var categoryId = Guid.NewGuid();
+        var category = new Category
         {
-            new() { Id = Guid.NewGuid(), Name = "AMD Ryzen 9 7950X", IsActive = true },
-            new() { Id = Guid.NewGuid(), Name = "AMD Ryzen 7 7800X3D", IsActive = true },
-            new() { Id = Guid.NewGuid(), Name = "Intel Core i9-14900K", IsActive = true },
+            Id = categoryId,
+            Name = categorySlug.ToUpper(),
+            Slug = categorySlug
         };
 
-        _repositoryMock
-            .Setup(r => r.SearchAsync(searchQuery))
-            .ReturnsAsync(products.Where(p => p.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)).ToList());
+        var products = Enumerable.Range(0, expectedCount)
+            .Select(_ => CreateTestProduct(Guid.NewGuid(), category))
+            .ToList();
+
+        var filter = new ProductFilterDto
+        {
+            Category = categorySlug,
+            Page = page,
+            PageSize = pageSize
+        };
+
+        _productRepositoryMock
+            .Setup(r => r.GetFilteredAsync(filter))
+            .ReturnsAsync(new RepositoryPagedResult<Product>
+            {
+                Items = products,
+                TotalCount = expectedCount,
+                Page = page,
+                PageSize = pageSize
+            });
 
         // Act
-        var result = await _sut.SearchProductsAsync(searchQuery);
+        var result = await _sut.GetProductsAsync(filter);
 
         // Assert
-        result.Should().HaveCount(2);
-        result.All(p => p.Name.Contains("Ryzen")).Should().BeTrue();
+        result.Should().NotBeNull();
+        result.Data.Should().HaveCount(expectedCount);
+        result.Meta.Page.Should().Be(page);
+        result.Meta.PageSize.Should().Be(pageSize);
+        result.Meta.TotalItems.Should().Be(expectedCount);
     }
 
     [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData(null)]
-    public async Task SearchProducts_WithInvalidQuery_ReturnsEmptyList(string? query)
+    [InlineData(100, 500, 7)]
+    [InlineData(500, 1000, 5)]
+    [InlineData(1000, 5000, 3)]
+    public async Task GetProducts_WithPriceRangeFilter_ReturnsFilteredProducts(
+        decimal minPrice, decimal maxPrice, int expectedCount)
     {
+        // Arrange
+        var products = Enumerable.Range(0, expectedCount)
+            .Select(i => CreateTestProduct(Guid.NewGuid()))
+            .ToList();
+
+        var filter = new ProductFilterDto
+        {
+            MinPrice = minPrice,
+            MaxPrice = maxPrice,
+            Page = 1,
+            PageSize = 20
+        };
+
+        _productRepositoryMock
+            .Setup(r => r.GetFilteredAsync(filter))
+            .ReturnsAsync(new RepositoryPagedResult<Product>
+            {
+                Items = products,
+                TotalCount = expectedCount,
+                Page = 1,
+                PageSize = 20
+            });
+
         // Act
-        var result = await _sut.SearchProductsAsync(query!);
+        var result = await _sut.GetProductsAsync(filter);
 
         // Assert
-        result.Should().BeEmpty();
-        _repositoryMock.Verify(r => r.SearchAsync(It.IsAny<string>()), Times.Never);
+        result.Data.Should().HaveCount(expectedCount);
+        _productRepositoryMock.Verify(r => r.GetFilteredAsync(
+            It.Is<ProductFilterDto>(f => f.MinPrice == minPrice && f.MaxPrice == maxPrice)), 
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData(true, 5)]
+    [InlineData(false, 10)]
+    public async Task GetProducts_WithInStockFilter_ReturnsFilteredProducts(
+        bool inStockOnly, int expectedCount)
+    {
+        // Arrange
+        var products = Enumerable.Range(0, expectedCount)
+            .Select(i => 
+            {
+                var product = CreateTestProduct(Guid.NewGuid());
+                product.Stock = inStockOnly ? 10 : 0;
+                return product;
+            })
+            .ToList();
+
+        var filter = new ProductFilterDto
+        {
+            InStock = inStockOnly,
+            Page = 1,
+            PageSize = 20
+        };
+
+        _productRepositoryMock
+            .Setup(r => r.GetFilteredAsync(filter))
+            .ReturnsAsync(new RepositoryPagedResult<Product>
+            {
+                Items = products,
+                TotalCount = expectedCount,
+                Page = 1,
+                PageSize = 20
+            });
+
+        // Act
+        var result = await _sut.GetProductsAsync(filter);
+
+        // Assert
+        result.Data.Should().HaveCount(expectedCount);
+        _productRepositoryMock.Verify(r => r.GetFilteredAsync(
+            It.Is<ProductFilterDto>(f => f.InStock == inStockOnly)), 
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData("Ryzen", 3)]
+    [InlineData("RTX", 5)]
+    [InlineData("DDR5", 2)]
+    public async Task GetProducts_WithSearchQuery_ReturnsMatchingProducts(
+        string searchQuery, int expectedCount)
+    {
+        // Arrange
+        var products = Enumerable.Range(0, expectedCount)
+            .Select(_ => CreateTestProduct(Guid.NewGuid()))
+            .ToList();
+
+        var filter = new ProductFilterDto
+        {
+            Search = searchQuery,
+            Page = 1,
+            PageSize = 20
+        };
+
+        _productRepositoryMock
+            .Setup(r => r.GetFilteredAsync(filter))
+            .ReturnsAsync(new RepositoryPagedResult<Product>
+            {
+                Items = products,
+                TotalCount = expectedCount,
+                Page = 1,
+                PageSize = 20
+            });
+
+        // Act
+        var result = await _sut.GetProductsAsync(filter);
+
+        // Assert
+        result.Data.Should().HaveCount(expectedCount);
+        _productRepositoryMock.Verify(r => r.GetFilteredAsync(
+            It.Is<ProductFilterDto>(f => f.Search == searchQuery)), 
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData(true, 4)]
+    [InlineData(false, 10)]
+    public async Task GetProducts_WithFeaturedFilter_ReturnsFilteredProducts(
+        bool featuredOnly, int expectedCount)
+    {
+        // Arrange
+        var products = Enumerable.Range(0, expectedCount)
+            .Select(i => 
+            {
+                var product = CreateTestProduct(Guid.NewGuid());
+                product.IsFeatured = featuredOnly;
+                return product;
+            })
+            .ToList();
+
+        var filter = new ProductFilterDto
+        {
+            IsFeatured = featuredOnly,
+            Page = 1,
+            PageSize = 20
+        };
+
+        _productRepositoryMock
+            .Setup(r => r.GetFilteredAsync(filter))
+            .ReturnsAsync(new RepositoryPagedResult<Product>
+            {
+                Items = products,
+                TotalCount = expectedCount,
+                Page = 1,
+                PageSize = 20
+            });
+
+        // Act
+        var result = await _sut.GetProductsAsync(filter);
+
+        // Assert
+        result.Data.Should().HaveCount(expectedCount);
+        _productRepositoryMock.Verify(r => r.GetFilteredAsync(
+            It.Is<ProductFilterDto>(f => f.IsFeatured == featuredOnly)), 
+            Times.Once);
+    }
+
+    [Theory]
+    [InlineData(1, 10, 50, 5)]
+    [InlineData(2, 20, 100, 5)]
+    [InlineData(3, 15, 45, 3)]
+    public async Task GetProducts_WithPagination_ReturnsCorrectPagedResult(
+        int page, int pageSize, int totalCount, int expectedTotalPages)
+    {
+        // Arrange
+        var products = Enumerable.Range(0, pageSize)
+            .Select(_ => CreateTestProduct(Guid.NewGuid()))
+            .ToList();
+
+        var filter = new ProductFilterDto
+        {
+            Page = page,
+            PageSize = pageSize
+        };
+
+        _productRepositoryMock
+            .Setup(r => r.GetFilteredAsync(filter))
+            .ReturnsAsync(new RepositoryPagedResult<Product>
+            {
+                Items = products,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            });
+
+        // Act
+        var result = await _sut.GetProductsAsync(filter);
+
+        // Assert
+        result.Data.Should().HaveCount(pageSize);
+        result.Meta.Page.Should().Be(page);
+        result.Meta.PageSize.Should().Be(pageSize);
+        result.Meta.TotalItems.Should().Be(totalCount);
+        result.Meta.TotalPages.Should().Be(expectedTotalPages);
+        result.Meta.HasNextPage.Should().Be(page < expectedTotalPages);
+        result.Meta.HasPrevPage.Should().Be(page > 1);
+    }
+
+    [Fact]
+    public async Task GetProducts_WithManufacturerFilter_ReturnsFilteredProducts()
+    {
+        // Arrange
+        var manufacturerId = Guid.NewGuid();
+        var expectedCount = 5;
+        var manufacturer = new Manufacturer
+        {
+            Id = manufacturerId,
+            Name = "AMD",
+            Country = "USA"
+        };
+
+        var products = Enumerable.Range(0, expectedCount)
+            .Select(_ => 
+            {
+                var product = CreateTestProduct(Guid.NewGuid());
+                product.ManufacturerId = manufacturerId;
+                product.Manufacturer = manufacturer;
+                return product;
+            })
+            .ToList();
+
+        var filter = new ProductFilterDto
+        {
+            ManufacturerId = manufacturerId,
+            Page = 1,
+            PageSize = 20
+        };
+
+        _productRepositoryMock
+            .Setup(r => r.GetFilteredAsync(filter))
+            .ReturnsAsync(new RepositoryPagedResult<Product>
+            {
+                Items = products,
+                TotalCount = expectedCount,
+                Page = 1,
+                PageSize = 20
+            });
+
+        // Act
+        var result = await _sut.GetProductsAsync(filter);
+
+        // Assert
+        result.Data.Should().HaveCount(expectedCount);
+        _productRepositoryMock.Verify(r => r.GetFilteredAsync(
+            It.Is<ProductFilterDto>(f => f.ManufacturerId == manufacturerId)), 
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetProducts_WhenEmpty_ReturnsEmptyPagedResult()
+    {
+        // Arrange
+        var filter = new ProductFilterDto
+        {
+            Page = 1,
+            PageSize = 20
+        };
+
+        _productRepositoryMock
+            .Setup(r => r.GetFilteredAsync(filter))
+            .ReturnsAsync(new RepositoryPagedResult<Product>
+            {
+                Items = new List<Product>(),
+                TotalCount = 0,
+                Page = 1,
+                PageSize = 20
+            });
+
+        // Act
+        var result = await _sut.GetProductsAsync(filter);
+
+        // Assert
+        result.Data.Should().BeEmpty();
+        result.Meta.TotalItems.Should().Be(0);
+        result.Meta.TotalPages.Should().Be(0);
+    }
+
+    #endregion
+
+    #region GetProductBySku Tests
+
+    [Fact]
+    public async Task GetProductBySku_WhenProductExists_ReturnsProduct()
+    {
+        // Arrange
+        var sku = "SKU-12345";
+        var productId = Guid.NewGuid();
+        var category = CreateTestCategory();
+        var product = CreateTestProduct(productId, category);
+
+        _productRepositoryMock
+            .Setup(r => r.GetBySkuAsync(sku))
+            .ReturnsAsync(product);
+
+        _productRepositoryMock
+            .Setup(r => r.GetDetailByIdAsync(productId))
+            .ReturnsAsync(product);
+
+        // Act
+        var result = await _sut.GetProductBySkuAsync(sku);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Sku.Should().Be(product.Sku);
+    }
+
+    [Fact]
+    public async Task GetProductBySku_WhenProductNotFound_ReturnsNull()
+    {
+        // Arrange
+        var sku = "NONEXISTENT-SKU";
+
+        _productRepositoryMock
+            .Setup(r => r.GetBySkuAsync(sku))
+            .ReturnsAsync((Product?)null);
+
+        // Act
+        var result = await _sut.GetProductBySkuAsync(sku);
+
+        // Assert
+        result.Should().BeNull();
     }
 
     #endregion
@@ -251,277 +579,287 @@ public class CatalogServiceTests
     public async Task CreateProduct_WithValidData_ReturnsCreatedProduct()
     {
         // Arrange
-        var productData = new CreateProductDto
+        var categoryId = Guid.NewGuid();
+        var category = new Category
+        {
+            Id = categoryId,
+            Name = "Процессоры",
+            Slug = "cpu"
+        };
+
+        var createDto = new CreateProductDto
         {
             Name = "AMD Ryzen 9 7950X",
-            Price = 59999,
-            Category = ProductCategory.Cpu,
+            Sku = "RYZEN-7950X",
+            CategoryId = categoryId,
+            Price = 59999m,
             Stock = 10,
-            Manufacturer = "AMD",
+            WarrantyMonths = 36,
+            Description = "Топовый процессор AMD",
             Specifications = new Dictionary<string, object>
             {
-                ["socket"] = "AM5",
-                ["cores"] = 16
+                ["cores"] = 16,
+                ["threads"] = 32,
+                ["socket"] = "AM5"
             }
         };
 
-        _repositoryMock
+        _productRepositoryMock
+            .Setup(r => r.SkuExistsAsync(createDto.Sku))
+            .ReturnsAsync(false);
+
+        _productRepositoryMock
             .Setup(r => r.CreateAsync(It.IsAny<Product>()))
-            .ReturnsAsync((Product p) => p);
+            .ReturnsAsync((Product p) =>
+            {
+                p.Id = Guid.NewGuid();
+                return p;
+            });
+
+        _productRepositoryMock
+            .Setup(r => r.GetDetailByIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((Guid id) =>
+            {
+                var product = CreateTestProduct(id, category);
+                product.Name = createDto.Name;
+                product.Sku = createDto.Sku;
+                product.Price = createDto.Price;
+                product.Stock = createDto.Stock;
+                product.WarrantyMonths = createDto.WarrantyMonths;
+                product.Description = createDto.Description;
+                product.Specifications = createDto.Specifications;
+                return product;
+            });
 
         // Act
-        var result = await _sut.CreateProductAsync(productData);
+        var result = await _sut.CreateProductAsync(createDto);
 
         // Assert
         result.Should().NotBeNull();
-        result.Name.Should().Be(productData.Name);
-        result.Price.Should().Be(productData.Price);
-        result.IsActive.Should().BeTrue();
-        result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        result.Name.Should().Be(createDto.Name);
+        result.Sku.Should().Be(createDto.Sku);
+        result.Price.Should().Be(createDto.Price);
+        result.Stock.Should().Be(createDto.Stock);
         
-        _repositoryMock.Verify(r => r.CreateAsync(It.IsAny<Product>()), Times.Once);
+        _productRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Product>()), Times.Once);
     }
 
     [Fact]
-    public async Task CreateProduct_WithInvalidPrice_ThrowsValidationException()
+    public async Task CreateProduct_WithDuplicateSku_ThrowsInvalidOperationException()
     {
         // Arrange
-        var productData = new CreateProductDto
+        var createDto = new CreateProductDto
         {
-            Name = "Invalid Product",
-            Price = -100, // Отрицательная цена
-            Category = ProductCategory.Cpu,
-            Stock = 10
+            Name = "Test Product",
+            Sku = "EXISTING-SKU",
+            CategoryId = Guid.NewGuid(),
+            Price = 1000m,
+            Stock = 5
         };
 
-        // Act
-        var act = async () => await _sut.CreateProductAsync(productData);
-
-        // Assert
-        await act.Should().ThrowAsync<ValidationException>()
-            .WithMessage("*цена*должна быть больше нуля*");
-    }
-
-    [Fact]
-    public async Task CreateProduct_WithEmptyName_ThrowsValidationException()
-    {
-        // Arrange
-        var productData = new CreateProductDto
-        {
-            Name = "",
-            Price = 1000,
-            Category = ProductCategory.Cpu,
-            Stock = 10
-        };
+        _productRepositoryMock
+            .Setup(r => r.SkuExistsAsync(createDto.Sku))
+            .ReturnsAsync(true);
 
         // Act
-        var act = async () => await _sut.CreateProductAsync(productData);
+        var act = async () => await _sut.CreateProductAsync(createDto);
 
         // Assert
-        await act.Should().ThrowAsync<ValidationException>()
-            .WithMessage("*название*обязательно*");
-    }
-
-    #endregion
-
-    #region UpdateStock Tests
-
-    [Fact]
-    public async Task UpdateStock_WhenProductExists_UpdatesStock()
-    {
-        // Arrange
-        var productId = Guid.NewGuid();
-        var newStock = 50;
-        var product = new ProductFaker().Generate();
-        product.Id = productId;
-
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(productId))
-            .ReturnsAsync(product);
-
-        _repositoryMock
-            .Setup(r => r.UpdateAsync(It.IsAny<Product>()))
-            .ReturnsAsync((Product p) => p);
-
-        // Act
-        var result = await _sut.UpdateStockAsync(productId, newStock);
-
-        // Assert
-        result.Should().NotBeNull();
-        result!.Stock.Should().Be(newStock);
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage($"*{createDto.Sku}*");
         
-        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Product>()), Times.Once);
-        _cacheMock.Verify(c => c.RemoveAsync($"product:{productId}"), Times.Once);
+        _productRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Product>()), Times.Never);
     }
 
     [Fact]
-    public async Task UpdateStock_WhenProductNotFound_ReturnsNull()
+    public async Task CreateProduct_WithCategorySlug_ResolvesCategory()
     {
         // Arrange
-        var productId = Guid.NewGuid();
-
-        _repositoryMock
-            .Setup(r => r.GetByIdAsync(productId))
-            .ReturnsAsync((Product?)null);
-
-        // Act
-        var result = await _sut.UpdateStockAsync(productId, 50);
-
-        // Assert
-        result.Should().BeNull();
-        _repositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Product>()), Times.Never);
-    }
-
-    [Theory]
-    [InlineData(-1)]
-    [InlineData(-100)]
-    public async Task UpdateStock_WithNegativeValue_ThrowsValidationException(int negativeStock)
-    {
-        // Arrange
-        var productId = Guid.NewGuid();
-
-        // Act
-        var act = async () => await _sut.UpdateStockAsync(productId, negativeStock);
-
-        // Assert
-        await act.Should().ThrowAsync<ValidationException>()
-            .WithMessage("*количество*не может быть отрицательным*");
-    }
-
-    #endregion
-}
-
-#region Interfaces and DTOs (Stubs)
-
-public interface IProductRepository
-{
-    Task<Product?> GetByIdAsync(Guid id);
-    Task<List<Product>> GetAllAsync();
-    Task<List<Product>> GetByCategoryAsync(ProductCategory category);
-    Task<List<Product>> SearchAsync(string query);
-    Task<Product> CreateAsync(Product product);
-    Task<Product> UpdateAsync(Product product);
-    Task DeleteAsync(Guid id);
-}
-
-public interface ICacheService
-{
-    Task<T?> GetAsync<T>(string key);
-    Task SetAsync<T>(string key, T value, TimeSpan? expiration = null);
-    Task RemoveAsync(string key);
-}
-
-// ILogger определён в CompatibilityServiceTests.cs
-
-public class CatalogService
-{
-    private readonly IProductRepository _repository;
-    private readonly ICacheService _cache;
-    private readonly ILogger<CatalogService> _logger;
-
-    public CatalogService(IProductRepository repository, ICacheService cache, ILogger<CatalogService> logger)
-    {
-        _repository = repository;
-        _cache = cache;
-        _logger = logger;
-    }
-
-    public async Task<Product?> GetProductByIdAsync(Guid id)
-    {
-        var cached = await _cache.GetAsync<Product>($"product:{id}");
-        if (cached != null) return cached;
-
-        var product = await _repository.GetByIdAsync(id);
-        if (product == null || !product.IsActive) return null;
-
-        await _cache.SetAsync($"product:{id}", product, TimeSpan.FromMinutes(10));
-        return product;
-    }
-
-    public async Task<List<Product>> GetProductsByCategoryAsync(ProductCategory category)
-    {
-        return await _repository.GetByCategoryAsync(category);
-    }
-
-    public async Task<PagedResult<Product>> GetProductsAsync(int page, int limit)
-    {
-        var all = await _repository.GetAllAsync();
-        var items = all.Skip((page - 1) * limit).Take(limit).ToList();
-        return new PagedResult<Product>
-        {
-            Items = items,
-            TotalCount = all.Count,
-            CurrentPage = page,
-            TotalPages = (int)Math.Ceiling(all.Count / (double)limit)
-        };
-    }
-
-    public async Task<List<Product>> SearchProductsAsync(string query)
-    {
-        if (string.IsNullOrWhiteSpace(query)) return new List<Product>();
-        return await _repository.SearchAsync(query);
-    }
-
-    public async Task<Product> CreateProductAsync(CreateProductDto dto)
-    {
-        if (string.IsNullOrWhiteSpace(dto.Name))
-            throw new ValidationException("Название товара обязательно");
-        if (dto.Price <= 0)
-            throw new ValidationException("Цена должна быть больше нуля");
-
-        var product = new Product
+        var category = new Category
         {
             Id = Guid.NewGuid(),
-            Name = dto.Name,
-            Price = dto.Price,
-            Category = dto.Category,
-            Stock = dto.Stock,
-            Manufacturer = dto.Manufacturer,
-            Specifications = dto.Specifications,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            Name = "Процессоры",
+            Slug = "cpu"
         };
 
-        return await _repository.CreateAsync(product);
+        var createDto = new CreateProductDto
+        {
+            Name = "Test Product",
+            Sku = "TEST-SKU",
+            Category = "cpu",
+            Price = 1000m,
+            Stock = 5
+        };
+
+        _productRepositoryMock
+            .Setup(r => r.SkuExistsAsync(createDto.Sku))
+            .ReturnsAsync(false);
+
+        _categoryRepositoryMock
+            .Setup(r => r.GetBySlugAsync("cpu"))
+            .ReturnsAsync(category);
+
+        _productRepositoryMock
+            .Setup(r => r.CreateAsync(It.IsAny<Product>()))
+            .ReturnsAsync((Product p) =>
+            {
+                p.Id = Guid.NewGuid();
+                return p;
+            });
+
+        _productRepositoryMock
+            .Setup(r => r.GetDetailByIdAsync(It.IsAny<Guid>()))
+            .ReturnsAsync((Guid id) => CreateTestProduct(id, category));
+
+        // Act
+        var result = await _sut.CreateProductAsync(createDto);
+
+        // Assert
+        result.Should().NotBeNull();
+        _categoryRepositoryMock.Verify(r => r.GetBySlugAsync("cpu"), Times.Once);
     }
 
-    public async Task<Product?> UpdateStockAsync(Guid productId, int newStock)
+    #endregion
+
+    #region DeleteProduct Tests
+
+    [Fact]
+    public async Task DeleteProduct_WhenProductExists_ReturnsTrue()
     {
-        if (newStock < 0)
-            throw new ValidationException("Количество не может быть отрицательным");
+        // Arrange
+        var productId = Guid.NewGuid();
 
-        var product = await _repository.GetByIdAsync(productId);
-        if (product == null) return null;
+        _productRepositoryMock
+            .Setup(r => r.ExistsAsync(productId))
+            .ReturnsAsync(true);
 
-        product.Stock = newStock;
-        await _repository.UpdateAsync(product);
-        await _cache.RemoveAsync($"product:{productId}");
+        _productRepositoryMock
+            .Setup(r => r.DeleteAsync(productId))
+            .Returns(Task.CompletedTask);
 
-        return product;
+        // Act
+        var result = await _sut.DeleteProductAsync(productId);
+
+        // Assert
+        result.Should().BeTrue();
+        _productRepositoryMock.Verify(r => r.DeleteAsync(productId), Times.Once);
     }
-}
 
-public class CreateProductDto
-{
-    public string Name { get; set; } = string.Empty;
-    public decimal Price { get; set; }
-    public ProductCategory Category { get; set; }
-    public int Stock { get; set; }
-    public string Manufacturer { get; set; } = string.Empty;
-    public Dictionary<string, object> Specifications { get; set; } = new();
-}
+    [Fact]
+    public async Task DeleteProduct_WhenProductNotFound_ReturnsFalse()
+    {
+        // Arrange
+        var productId = Guid.NewGuid();
 
-public class PagedResult<T>
-{
-    public List<T> Items { get; set; } = new();
-    public int TotalCount { get; set; }
-    public int CurrentPage { get; set; }
-    public int TotalPages { get; set; }
-}
+        _productRepositoryMock
+            .Setup(r => r.ExistsAsync(productId))
+            .ReturnsAsync(false);
 
-public class ValidationException : Exception
-{
-    public ValidationException(string message) : base(message) { }
-}
+        // Act
+        var result = await _sut.DeleteProductAsync(productId);
 
-#endregion
+        // Assert
+        result.Should().BeFalse();
+        _productRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Guid>()), Times.Never);
+    }
+
+    #endregion
+
+    #region GetProductsByIds Tests
+
+    [Fact]
+    public async Task GetProductsByIds_WithValidIds_ReturnsProducts()
+    {
+        // Arrange
+        var ids = new List<Guid> { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+        var products = ids.Select(id => CreateTestProduct(id)).ToList();
+
+        _productRepositoryMock
+            .Setup(r => r.GetByIdsAsync(ids))
+            .ReturnsAsync(products);
+
+        // Act
+        var result = await _sut.GetProductsByIdsAsync(ids);
+
+        // Assert
+        result.Should().HaveCount(3);
+        result.Select(p => p.Id).Should().BeEquivalentTo(ids);
+    }
+
+    [Fact]
+    public async Task GetProductsByIds_WithEmptyIds_ReturnsEmptyCollection()
+    {
+        // Arrange
+        var ids = new List<Guid>();
+
+        _productRepositoryMock
+            .Setup(r => r.GetByIdsAsync(ids))
+            .ReturnsAsync(new List<Product>());
+
+        // Act
+        var result = await _sut.GetProductsByIdsAsync(ids);
+
+        // Assert
+        result.Should().BeEmpty();
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    private static Product CreateTestProduct(Guid id, Category? category = null, Manufacturer? manufacturer = null)
+    {
+        return new Product
+        {
+            Id = id,
+            Name = $"Test Product {id:N}",
+            Sku = $"SKU-{id:N}"[..13],
+            Description = "Test product description",
+            Price = 1000m + Random.Shared.Next(100, 5000),
+            OldPrice = null,
+            Stock = Random.Shared.Next(0, 100),
+            CategoryId = category?.Id ?? Guid.NewGuid(),
+            Category = category ?? CreateTestCategory(),
+            ManufacturerId = manufacturer?.Id ?? Guid.NewGuid(),
+            Manufacturer = manufacturer ?? CreateTestManufacturer(),
+            WarrantyMonths = 12,
+            Rating = 4.5,
+            ReviewCount = 10,
+            IsActive = true,
+            IsFeatured = false,
+            Specifications = new Dictionary<string, object>
+            {
+                ["test_spec"] = "test_value"
+            },
+            Images = new List<ProductImage>(),
+            Reviews = new List<Review>(),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = null
+        };
+    }
+
+    private static Category CreateTestCategory()
+    {
+        return new Category
+        {
+            Id = Guid.NewGuid(),
+            Name = "Процессоры",
+            Slug = "cpu",
+            Description = "Процессоры для ПК",
+            Order = 1
+        };
+    }
+
+    private static Manufacturer CreateTestManufacturer()
+    {
+        return new Manufacturer
+        {
+            Id = Guid.NewGuid(),
+            Name = "AMD",
+            Country = "USA",
+            Description = "Advanced Micro Devices"
+        };
+    }
+
+    #endregion
+}

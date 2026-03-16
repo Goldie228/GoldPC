@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <!-- Ссылки на проекты приложения -->
+    <ProjectReference Include="..\..\..\src\CatalogService\CatalogService.csproj" />
     <ProjectReference Include="..\..\..\src\PCBuilderService\PCBuilderService.csproj" />
     <ProjectReference Include="..\..\..\src\SharedKernel\SharedKernel.csproj" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />

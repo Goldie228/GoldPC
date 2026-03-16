@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-net/master/stryker-config.schema.json",
+  "solution": "src/GoldPC.sln",
+  "project": "CatalogService.csproj",
+  "test-project": "tests/CatalogService.Tests/CatalogService.Tests.csproj",
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": 50
+  },
+  "mutate": [
+    "src/CatalogService/**/*.cs",
+    "!src/CatalogService/Migrations/**/*.cs",
+    "!src/CatalogService/Program.cs"
+  ],
+  "reporters": [
+    "console",
+    "html",
+    "json"
+  ],
+  "coverage-analysis": "perTest",
+  "abort-test-on-fail": true,
+  "concurrency": 4,
+  "verbosity": "info"
+}
