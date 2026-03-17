@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoldPC — Tech Store</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --radius: 4px;
+      --radius-lg: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      overflow-x: hidden;
+      font-feature-settings: 'ss01' on;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--fg-dim);
+      border-radius: 3px;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .nav {
+      display: flex;
+      gap: 32px;
+    }
+
+    .nav a {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: color 0.2s;
+    }
+
+    .nav a:hover {
+      color: var(--fg);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-accent);
+      color: var(--accent);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 16px;
+      height: 16px;
+      background: var(--accent);
+      color: var(--bg);
+      font-size: 9px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding: 120px 24px 80px;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .grid-pattern {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+    }
+
+    .glow-1 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 60%);
+      top: -200px;
+      right: -100px;
+      filter: blur(60px);
+    }
+
+    .glow-2 {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+      bottom: 10%;
+      left: 10%;
+      filter: blur(80px);
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 24px;
+    }
+
+    .hero-tag::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hero-title {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+    }
+
+    .hero-title .accent {
+      color: var(--accent);
+    }
+
+    .hero-desc {
+      font-size: 1rem;
+      color: var(--fg-muted);
+      max-width: 480px;
+      margin-bottom: 40px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 24px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.2s;
+    }
+
+    .btn-primary:hover svg {
+      transform: translateX(4px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--fg-dim);
+      background: var(--bg-card);
+    }
+
+    /* Hero Stats */
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--fg);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Hero Visual */
+    .hero-visual {
+      position: relative;
+    }
+
+    .hero-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 24px;
+      position: relative;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .card-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      padding: 4px 8px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--border-accent);
+    }
+
+    .build-preview {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .build-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .build-item:hover {
+      border-color: var(--border-accent);
+    }
+
+    .build-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+      color: var(--fg-dim);
+    }
+
+    .build-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .build-info {
+      flex: 1;
+    }
+
+    .build-name {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .build-spec {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+    }
+
+    .build-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+
+    .build-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 20px;
+      margin-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .total-label {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+
+    .total-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 500;
+    }
+
+    .total-value span {
+      color: var(--accent);
+    }
+
+    /* ===== CATEGORIES ===== */
+    .categories {
+      padding: 100px 24px;
+      background: var(--bg-elevated);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 48px;
+    }
+
+    .section-title {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .section-subtitle {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      margin-top: 8px;
+    }
+
+    .view-all {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fg-dim);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+
+    .view-all:hover {
+      color: var(--accent);
+    }
+
+    .view-all svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .category-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 24px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .category-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s;
+    }
+
+    .category-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-4px);
+    }
+
+    .category-card:hover::after {
+      transform: scaleX(1);
+    }
+
+    .category-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-elevated);
+      margin-bottom: 16px;
+      color: var(--fg-dim);
+    }
+
+    .category-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .category-card:hover .category-icon {
+      color: var(--accent);
+    }
+
+    .category-name {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .category-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+    }
+
+    /* ===== PRODUCTS ===== */
+    .products {
+      padding: 100px 24px;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .product-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .product-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-4px);
+    }
+
+    .product-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      padding: 4px 8px;
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 500;
+      z-index: 1;
+    }
+
+    .product-image {
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-card) 100%);
+    }
+
+    .product-image svg {
+      max-width: 120px;
+      max-height: 100px;
+      transition: transform 0.3s;
+    }
+
+    .product-card:hover .product-image svg {
+      transform: scale(1.05);
+    }
+
+    .product-info {
+      padding: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .product-category {
+      font-size: 0.65rem;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+
+    .product-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.4;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .product-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--accent);
+    }
+
+    .product-action {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .product-action:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+
+    .product-action svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ===== FEATURES ===== */
+    .features {
+      padding: 100px 24px;
+      background: var(--bg-elevated);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feature-card {
+      padding: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-accent);
+    }
+
+    .feature-number {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+      margin-bottom: 20px;
+    }
+
+    .feature-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .feature-desc {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      line-height: 1.6;
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      padding: 80px 24px 40px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 60px;
+      margin-bottom: 60px;
+    }
+
+    .footer-brand p {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      line-height: 1.7;
+      margin-top: 16px;
+      max-width: 300px;
+    }
+
+    .footer-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 20px;
+      color: var(--fg-dim);
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .footer-links a {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--fg);
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 40px;
+      border-top: 1px solid var(--border);
+    }
+
+    .copyright {
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+    }
+
+    .social-links {
+      display: flex;
+      gap: 8px;
+    }
+
+    .social-link {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-dim);
+      transition: all 0.2s;
+    }
+
+    .social-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .social-link svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .hero-content {
+        grid-template-columns: 1fr;
+        gap: 60px;
+      }
+
+      .hero-visual {
+        max-width: 500px;
+      }
+
+      .categories-grid,
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 100px;
+      }
+
+      .hero-stats {
+        gap: 24px;
+      }
+
+      .categories-grid,
+      .products-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+      }
+    }
+
+    /* ===== ANIMATIONS ===== */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .delay-1 { transition-delay: 0.1s; }
+    .delay-2 { transition-delay: 0.2s; }
+    .delay-3 { transition-delay: 0.3s; }
+    .delay-4 { transition-delay: 0.4s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+
+    <nav class="nav">
+      <a href="#">Каталог</a>
+      <a href="#">Конструктор</a>
+      <a href="#">Сервис</a>
+      <a href="#">О нас</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Поиск">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </button>
+      <button class="icon-btn" aria-label="Корзина">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+        </svg>
+        <span class="cart-badge">2</span>
+      </button>
+      <button class="icon-btn" aria-label="Профиль">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="grid-pattern"></div>
+      <div class="glow-1"></div>
+      <div class="glow-2"></div>
+    </div>
+
+    <div class="hero-content">
+      <div class="hero-text">
+        <div class="hero-tag">PC Builder v2.0</div>
+        <h1 class="hero-title">
+          Собери свой<br>
+          <span class="accent">идеальный</span> ПК
+        </h1>
+        <p class="hero-desc">
+          Интеллектуальный конфигуратор с проверкой совместимости в реальном времени. 
+          Профессиональная сборка за 24 часа.
+        </p>
+        <div class="hero-actions">
+          <a href="#" class="btn btn-primary">
+            Начать сборку
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </a>
+          <a href="#" class="btn btn-ghost">Каталог</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <span class="stat-value">12K+</span>
+            <span class="stat-label">Сборок</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">98%</span>
+            <span class="stat-label">Совместимость</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">24ч</span>
+            <span class="stat-label">Сборка</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-card">
+          <div class="card-header">
+            <span class="card-title">Текущая сборка</span>
+            <span class="card-badge">LIVE</span>
+          </div>
+          <div class="build-preview">
+            <div class="build-item">
+              <div class="build-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <rect x="9" y="9" width="6" height="6"/>
+                </svg>
+              </div>
+              <div class="build-info">
+                <div class="build-name">AMD Ryzen 7 7800X3D</div>
+                <div class="build-spec">8C / 16T / 4.2GHz</div>
+              </div>
+              <div class="build-price">1 450 BYN</div>
+            </div>
+            <div class="build-item">
+              <div class="build-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="6" width="20" height="12" rx="2"/>
+                  <path d="M6 10h4v4H6z"/>
+                </svg>
+              </div>
+              <div class="build-info">
+                <div class="build-name">RTX 4070 Ti Super</div>
+                <div class="build-spec">16GB GDDR6X</div>
+              </div>
+              <div class="build-price">3 200 BYN</div>
+            </div>
+            <div class="build-item">
+              <div class="build-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="8" width="20" height="8" rx="1"/>
+                  <path d="M6 8V6M10 8V6M14 8V6M18 8V6"/>
+                </svg>
+              </div>
+              <div class="build-info">
+                <div class="build-name">G.Skill Trident Z5 32GB</div>
+                <div class="build-spec">DDR5-6000 CL30</div>
+              </div>
+              <div class="build-price">650 BYN</div>
+            </div>
+          </div>
+          <div class="build-total">
+            <span class="total-label">Итого</span>
+            <span class="total-value"><span>5 300</span> BYN</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories -->
+  <section class="categories">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Категории</h2>
+          <p class="section-subtitle">Выберите компонент</p>
+        </div>
+        <a href="#" class="view-all">
+          Все категории
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </a>
+      </div>
+
+      <div class="categories-grid">
+        <div class="category-card fade-up">
+          <div class="category-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+              <rect x="9" y="9" width="6" height="6"/>
+            </svg>
+          </div>
+          <div class="category-name">Процессоры</div>
+          <div class="category-count">124 товара</div>
+        </div>
+
+        <div class="category-card fade-up delay-1">
+          <div class="category-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="6" width="20" height="12" rx="2"/>
+              <path d="M6 10h4v4H6z"/>
+            </svg>
+          </div>
+          <div class="category-name">Видеокарты</div>
+          <div class="category-count">86 товаров</div>
+        </div>
+
+        <div class="category-card fade-up delay-2">
+          <div class="category-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="20" rx="2"/>
+              <rect x="5" y="5" width="6" height="4"/>
+              <circle cx="8" cy="14" r="2"/>
+            </svg>
+          </div>
+          <div class="category-name">Мат. платы</div>
+          <div class="category-count">72 товара</div>
+        </div>
+
+        <div class="category-card fade-up delay-3">
+          <div class="category-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="8" width="20" height="8" rx="1"/>
+              <path d="M6 8V6M10 8V6M14 8V6M18 8V6"/>
+            </svg>
+          </div>
+          <div class="category-name">Память</div>
+          <div class="category-count">98 товаров</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products -->
+  <section class="products">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Популярное</h2>
+          <p class="section-subtitle">Выбор недели</p>
+        </div>
+        <a href="#" class="view-all">
+          Смотреть все
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </a>
+      </div>
+
+      <div class="products-grid">
+        <article class="product-card fade-up">
+          <span class="product-badge">TOP</span>
+          <div class="product-image">
+            <svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="100" height="60" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
+              <rect x="20" y="20" width="35" height="35" rx="2" fill="#121214"/>
+              <rect x="65" y="22" width="35" height="6" rx="1" fill="#2a2a2e"/>
+              <rect x="65" y="34" width="25" height="6" rx="1" fill="#2a2a2e"/>
+              <circle cx="37" cy="37" r="10" stroke="#d4a574" stroke-width="1" fill="none"/>
+            </svg>
+          </div>
+          <div class="product-info">
+            <div class="product-category">Видеокарта</div>
+            <h3 class="product-name">NVIDIA RTX 4070 Ti Super 16GB</h3>
+            <div class="product-meta">
+              <span class="product-price">3 200 BYN</span>
+              <button class="product-action" aria-label="В корзину">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card fade-up delay-1">
+          <div class="product-image">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
+              <rect x="30" y="30" width="40" height="40" rx="2" fill="#121214"/>
+              <text x="50" y="55" text-anchor="middle" fill="#d4a574" font-size="12">CPU</text>
+            </svg>
+          </div>
+          <div class="product-info">
+            <div class="product-category">Процессор</div>
+            <h3 class="product-name">AMD Ryzen 7 7800X3D</h3>
+            <div class="product-meta">
+              <span class="product-price">1 450 BYN</span>
+              <button class="product-action" aria-label="В корзину">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card fade-up delay-2">
+          <span class="product-badge">NEW</span>
+          <div class="product-image">
+            <svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="100" height="40" rx="2" fill="#1a1a1e" stroke="#3a3a3e"/>
+              <rect x="20" y="18" width="15" height="24" rx="1" fill="#121214"/>
+              <rect x="40" y="18" width="15" height="24" rx="1" fill="#121214"/>
+              <rect x="60" y="18" width="15" height="24" rx="1" fill="#121214"/>
+              <rect x="80" y="18" width="15" height="24" rx="1" fill="#121214"/>
+            </svg>
+          </div>
+          <div class="product-info">
+            <div class="product-category">Память</div>
+            <h3 class="product-name">G.Skill Trident Z5 32GB DDR5</h3>
+            <div class="product-meta">
+              <span class="product-price">650 BYN</span>
+              <button class="product-action" aria-label="В корзину">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="product-card fade-up delay-3">
+          <div class="product-image">
+            <svg viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="80" height="40" rx="2" fill="#1a1a1e" stroke="#3a3a3e"/>
+              <rect x="20" y="18" width="30" height="24" rx="2" fill="#121214"/>
+              <circle cx="35" cy="30" r="8" stroke="#d4a574" stroke-width="1" fill="none"/>
+            </svg>
+          </div>
+          <div class="product-info">
+            <div class="product-category">SSD</div>
+            <h3 class="product-name">Samsung 990 Pro 2TB NVMe</h3>
+            <div class="product-meta">
+              <span class="product-price">380 BYN</span>
+              <button class="product-action" aria-label="В корзину">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Почему мы</h2>
+        </div>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card fade-up">
+          <div class="feature-number">01</div>
+          <h3 class="feature-title">Умная сборка</h3>
+          <p class="feature-desc">Автоматическая проверка совместимости всех компонентов в реальном времени с базой из 10000+ позиций.</p>
+        </div>
+
+        <div class="feature-card fade-up delay-1">
+          <div class="feature-number">02</div>
+          <h3 class="feature-title">Быстрая доставка</h3>
+          <p class="feature-desc">Доставка по Минску в день заказа. По Беларуси — от 1 до 3 дней. Бесплатно при заказе от 500 BYN.</p>
+        </div>
+
+        <div class="feature-card fade-up delay-2">
+          <div class="feature-number">03</div>
+          <h3 class="feature-title">Гарантия 36 мес</h3>
+          <p class="feature-desc">Расширенная гарантия на все комплектующие. Бесплатный сервис и техническая поддержка 24/7.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="logo">
+            <div class="logo-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                <polyline points="2 17 12 22 22 17"/>
+                <polyline points="2 12 12 17 22 12"/>
+              </svg>
+            </div>
+            <span class="logo-text">Gold<span>PC</span></span>
+          </a>
+          <p>Премиальный магазин компьютерных компонентов с профессиональной сборкой и гарантией качества.</p>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Каталог</h4>
+          <ul class="footer-links">
+            <li><a href="#">Процессоры</a></li>
+            <li><a href="#">Видеокарты</a></li>
+            <li><a href="#">Материнские платы</a></li>
+            <li><a href="#">Память</a></li>
+            <li><a href="#">Накопители</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Сервис</h4>
+          <ul class="footer-links">
+            <li><a href="#">Конструктор ПК</a></li>
+            <li><a href="#">Сборка</a></li>
+            <li><a href="#">Доставка</a></li>
+            <li><a href="#">Гарантия</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="footer-title">Контакты</h4>
+          <ul class="footer-links">
+            <li><a href="tel:+375291234567">+375 (29) 123-45-67</a></li>
+            <li><a href="mailto:hi@goldpc.by">hi@goldpc.by</a></li>
+            <li><a href="#">Минск, ул. Примерная, 1</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span class="copyright">2025 GoldPC. All rights reserved.</span>
+        <div class="social-links">
+          <a href="#" class="social-link" aria-label="Telegram">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+            </svg>
+          </a>
+          <a href="#" class="social-link" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="20" rx="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll reveal
+    const reveals = document.querySelectorAll('.fade-up');
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -40px 0px'
+    });
+
+    reveals.forEach(el => observer.observe(el));
+
+    // Header background on scroll
+    const header = document.querySelector('.header');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        header.style.background = 'rgba(9, 9, 11, 0.95)';
+      } else {
+        header.style.background = 'rgba(9, 9, 11, 0.8)';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+# =============================================================================
+# Multi-stage Dockerfile for CatalogService
+# Security: Non-root user, Alpine runtime, Health checks
+# Optimization: Layer caching for dependencies
+# =============================================================================
+
+# =============================================================================
+# Stage 1: Build - Compile
+# =============================================================================
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Optimization: Copy .csproj files first for layer caching
+COPY ["src/SharedKernel/SharedKernel.csproj", "SharedKernel/"]
+COPY ["src/Shared/Shared.csproj", "Shared/"]
+COPY ["src/CatalogService/CatalogService.csproj", "CatalogService/"]
+
+# Restore dependencies - cached layer
+RUN dotnet restore "CatalogService/CatalogService.csproj"
+
+# Copy source code (after restore for better caching)
+COPY src/SharedKernel/ SharedKernel/
+COPY src/Shared/ Shared/
+COPY src/CatalogService/ CatalogService/
+
+# Build the service
+WORKDIR "/src/CatalogService"
+RUN dotnet build "CatalogService.csproj" -c Release --no-restore
+
+# =============================================================================
+# Stage 2: Publish - Create deployment artifacts
+# =============================================================================
+FROM build AS publish
+WORKDIR "/src/CatalogService"
+RUN dotnet publish "CatalogService.csproj" -c Release -o /app/publish --no-restore /p:UseAppHost=false
+
+# =============================================================================
+# Stage 3: Runtime - Minimal secure image
+# =============================================================================
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+
+# Security: Install required packages
+# - ca-certificates: For TLS/SSL connections
+# - curl: For health checks
+# - tzdata: For timezone support
+RUN apk add --no-cache ca-certificates curl tzdata && \
+    update-ca-certificates
+
+# Security: Create non-root user and group
+RUN addgroup -g 1000 -S appgroup && \
+    adduser -u 1000 -S appuser -G appgroup -h /app
+
+WORKDIR /app
+
+# Copy published application from publish stage
+COPY --from=publish /app/publish .
+
+# Security: Set proper ownership
+RUN chown -R appuser:appgroup /app
+
+# Security: Switch to non-root user
+USER appuser
+
+# Configure service
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+
+# Health check using curl
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+ENTRYPOINT ["dotnet", "CatalogService.dll"]

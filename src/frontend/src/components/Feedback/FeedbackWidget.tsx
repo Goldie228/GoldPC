@@ -78,10 +78,6 @@ export function FeedbackWidget() {
     setIsSuccess(false);
   };
 
-  const getTypeLabel = (feedbackType: FeedbackType): string => {
-    return feedbackType === 'bug' ? '🐛 Баг' : '💡 Идея';
-  };
-
   const getTypeDescription = (feedbackType: FeedbackType): string => {
     return feedbackType === 'bug' 
       ? 'Сообщите о проблеме или ошибке' 

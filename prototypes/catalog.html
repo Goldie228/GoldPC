@@ -1,0 +1,1757 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Каталог — GoldPC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-dim: rgba(212, 165, 116, 0.15);
+      --success: #4ade80;
+      --success-dim: rgba(74, 222, 128, 0.1);
+      --warning: #fbbf24;
+      --warning-dim: rgba(251, 191, 36, 0.1);
+      --error: #f87171;
+      --error-dim: rgba(248, 113, 113, 0.1);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(255, 255, 255, 0.12);
+      --border-accent: rgba(212, 165, 116, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--fg-dim);
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(9, 9, 11, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+    }
+
+    .header__container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .header__nav {
+      display: flex;
+      gap: 32px;
+    }
+
+    .header__nav a {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: color 0.2s;
+    }
+
+    .header__nav a:hover {
+      color: var(--fg);
+    }
+
+    .header__cart {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .header__cart:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .header__cart svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      background: var(--accent);
+      color: var(--bg);
+      font-size: 9px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ===== LAYOUT ===== */
+    .catalog-layout {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    @media (min-width: 768px) {
+      .catalog-layout {
+        grid-template-columns: 260px 1fr;
+        padding: 32px;
+      }
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      position: sticky;
+      top: 80px;
+      height: fit-content;
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 20px;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--fg-dim);
+    }
+
+    .sidebar__title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar__title svg {
+      width: 16px;
+      height: 16px;
+      color: var(--accent);
+    }
+
+    /* Filter Group */
+    .filter-group {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .filter-group:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .filter-header {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 8px 0;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+
+    .filter-header:hover {
+      color: var(--fg-muted);
+    }
+
+    .filter-header__icon {
+      width: 14px;
+      height: 14px;
+      margin-right: 8px;
+    }
+
+    .filter-header__title {
+      flex: 1;
+    }
+
+    .filter-header__chevron {
+      width: 14px;
+      height: 14px;
+      color: var(--fg-dim);
+      transition: transform 0.2s;
+    }
+
+    .filter-header[aria-expanded="false"] .filter-header__chevron {
+      transform: rotate(-90deg);
+    }
+
+    .filter-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+
+    .filter-content.open {
+      max-height: 500px;
+      padding-top: 12px;
+    }
+
+    /* Category List */
+    .category-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .category-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 10px 12px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .category-item:hover {
+      background: var(--bg-elevated);
+      color: var(--fg);
+    }
+
+    .category-item.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .category-item__name {
+      flex: 1;
+    }
+
+    .category-item__count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--fg-dim);
+    }
+
+    /* Price Filter */
+    .price-inputs {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .input-group {
+      flex: 1;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.6rem;
+      font-weight: 500;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+
+    .price-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      transition: border-color 0.2s;
+    }
+
+    .price-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .price-input::placeholder {
+      color: var(--fg-dim);
+    }
+
+    .price-separator {
+      font-size: 0.8rem;
+      color: var(--fg-dim);
+      margin-bottom: 10px;
+    }
+
+    /* Manufacturer Filter */
+    .manufacturer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .manufacturer-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .manufacturer-item:hover {
+      background: var(--bg-elevated);
+    }
+
+    .checkbox {
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--fg-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .checkbox.checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .checkbox svg {
+      width: 10px;
+      height: 10px;
+      color: var(--bg);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .checkbox.checked svg {
+      opacity: 1;
+    }
+
+    .manufacturer-name {
+      flex: 1;
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+
+    .manufacturer-item:hover .manufacturer-name {
+      color: var(--fg);
+    }
+
+    .count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--fg-dim);
+    }
+
+    /* Stock Filter */
+    .stock-options {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stock-option {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .stock-option:hover {
+      background: var(--bg-elevated);
+    }
+
+    .stock-option__radio {
+      width: 16px;
+      height: 16px;
+      border: 1px solid var(--fg-dim);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      transition: border-color 0.2s;
+      flex-shrink: 0;
+    }
+
+    .stock-option.checked .stock-option__radio {
+      border-color: var(--accent);
+    }
+
+    .stock-option.checked .stock-option__radio::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .stock-option__label {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+
+    .stock-option:hover .stock-option__label {
+      color: var(--fg);
+    }
+
+    /* Reset Button */
+    .reset-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      margin-top: 16px;
+      background: var(--error-dim);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      color: var(--error);
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .reset-btn:hover {
+      background: rgba(248, 113, 113, 0.15);
+      border-color: var(--error);
+    }
+
+    .reset-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      min-width: 0;
+    }
+
+    /* Page Header */
+    .page-header {
+      margin-bottom: 24px;
+    }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+      margin-bottom: 8px;
+    }
+
+    .breadcrumb a {
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .breadcrumb a:hover {
+      color: var(--accent);
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .page-stats {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+
+    .toolbar__left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mobile-filter-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--accent);
+      border: none;
+      color: var(--bg);
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .mobile-filter-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    @media (min-width: 768px) {
+      .mobile-filter-btn {
+        display: none;
+      }
+    }
+
+    .view-toggle {
+      display: flex;
+      background: var(--bg-elevated);
+    }
+
+    .view-toggle__btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--fg-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .view-toggle__btn:hover {
+      color: var(--fg);
+    }
+
+    .view-toggle__btn.active {
+      background: var(--bg-card);
+      color: var(--accent);
+    }
+
+    .view-toggle__btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .sort-select {
+      padding: 10px 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .sort-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    /* ===== PRODUCT GRID ===== */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    @media (min-width: 640px) {
+      .product-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .product-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    /* ===== PRODUCT CARD ===== */
+    .product-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .product-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+    }
+
+    .product-card__image-area {
+      position: relative;
+      aspect-ratio: 1;
+      background: var(--bg-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .product-card__image-area svg {
+      max-width: 80%;
+      max-height: 80%;
+      transition: transform 0.3s;
+    }
+
+    .product-card:hover .product-card__image-area svg {
+      transform: scale(1.05);
+    }
+
+    /* Badges */
+    .product-card__badges {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge--new {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .badge--sale {
+      background: var(--error);
+      color: var(--bg);
+    }
+
+    .badge--hit {
+      background: var(--warning);
+      color: var(--bg);
+    }
+
+    .badge--low {
+      background: var(--warning-dim);
+      color: var(--warning);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .badge--out {
+      background: var(--bg-elevated);
+      color: var(--fg-dim);
+    }
+
+    /* Favorite Button */
+    .product-card__favorite {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--fg-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .product-card__favorite:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .product-card__favorite.active {
+      background: var(--error-dim);
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    .product-card__favorite svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Card Content */
+    .product-card__content {
+      padding: 16px;
+    }
+
+    .product-card__manufacturer {
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
+    }
+
+    .product-card__name {
+      font-size: 0.85rem;
+      font-weight: 500;
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+
+    .product-card__name a {
+      color: var(--fg);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .product-card__name a:hover {
+      color: var(--accent);
+    }
+
+    /* Stock Status */
+    .product-card__stock {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      margin-bottom: 12px;
+    }
+
+    .stock-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .product-card__stock--in {
+      color: var(--success);
+    }
+
+    .product-card__stock--in .stock-dot {
+      background: var(--success);
+    }
+
+    .product-card__stock--low {
+      color: var(--warning);
+    }
+
+    .product-card__stock--low .stock-dot {
+      background: var(--warning);
+    }
+
+    .product-card__stock--out {
+      color: var(--fg-dim);
+    }
+
+    .product-card__stock--out .stock-dot {
+      background: var(--fg-dim);
+    }
+
+    /* Price */
+    .product-card__price-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .price-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .current-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .old-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+      text-decoration: line-through;
+    }
+
+    /* Add to Cart */
+    .add-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border-accent);
+      color: var(--accent);
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .add-btn:hover {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .add-btn:disabled {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--fg-dim);
+      cursor: not-allowed;
+    }
+
+    .add-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ===== LOAD MORE ===== */
+    .load-more {
+      display: flex;
+      justify-content: center;
+      padding: 48px 0;
+    }
+
+    .load-more__btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .load-more__btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .load-more__btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ===== MOBILE SIDEBAR ===== */
+    @media (max-width: 767px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 280px;
+        height: 100vh;
+        max-height: 100vh;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .sidebar__close {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        color: var(--fg-muted);
+        cursor: pointer;
+      }
+
+      .sidebar__close svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+
+      .sidebar-backdrop.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .sidebar__header {
+        display: none;
+      }
+
+      .sidebar-backdrop {
+        display: none;
+      }
+    }
+
+    /* ===== ACCESSIBILITY ===== */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header__container">
+      <a href="/" class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+          </svg>
+        </div>
+        <span class="logo-text">Gold<span>PC</span></span>
+      </a>
+
+      <nav class="header__nav">
+        <a href="#">Каталог</a>
+        <a href="#">Конструктор</a>
+        <a href="#">Сервис</a>
+      </nav>
+
+      <button class="header__cart" aria-label="Корзина">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+        </svg>
+        <span class="cart-badge">3</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <main class="catalog-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="filters">
+      <div class="sidebar__header">
+        <span class="sidebar__title">Фильтры</span>
+        <button class="sidebar__close" aria-label="Закрыть">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Categories -->
+      <div class="filter-group">
+        <button class="filter-header" aria-expanded="true">
+          <svg class="filter-header__icon" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          <span class="filter-header__title">Категории</span>
+          <svg class="filter-header__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="filter-content open">
+          <div class="category-list">
+            <button class="category-item active">
+              <span class="category-item__name">Все товары</span>
+              <span class="category-item__count">225</span>
+            </button>
+            <button class="category-item">
+              <span class="category-item__name">Процессоры</span>
+              <span class="category-item__count">42</span>
+            </button>
+            <button class="category-item">
+              <span class="category-item__name">Видеокарты</span>
+              <span class="category-item__count">38</span>
+            </button>
+            <button class="category-item">
+              <span class="category-item__name">Мат. платы</span>
+              <span class="category-item__count">56</span>
+            </button>
+            <button class="category-item">
+              <span class="category-item__name">Память</span>
+              <span class="category-item__count">89</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Price -->
+      <div class="filter-group">
+        <button class="filter-header" aria-expanded="true">
+          <svg class="filter-header__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          <span class="filter-header__title">Цена</span>
+          <svg class="filter-header__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="filter-content open">
+          <div class="price-inputs">
+            <div class="input-group">
+              <label class="input-label">От</label>
+              <input type="number" class="price-input" value="1000" placeholder="Мин">
+            </div>
+            <span class="price-separator">—</span>
+            <div class="input-group">
+              <label class="input-label">До</label>
+              <input type="number" class="price-input" value="15000" placeholder="Макс">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manufacturer -->
+      <div class="filter-group">
+        <button class="filter-header" aria-expanded="true">
+          <svg class="filter-header__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+          <span class="filter-header__title">Производители</span>
+          <svg class="filter-header__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="filter-content open">
+          <div class="manufacturer-list">
+            <label class="manufacturer-item">
+              <input type="checkbox" class="sr-only" checked>
+              <span class="checkbox checked">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span class="manufacturer-name">AMD</span>
+              <span class="count">24</span>
+            </label>
+            <label class="manufacturer-item">
+              <input type="checkbox" class="sr-only">
+              <span class="checkbox">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span class="manufacturer-name">Intel</span>
+              <span class="count">32</span>
+            </label>
+            <label class="manufacturer-item">
+              <input type="checkbox" class="sr-only" checked>
+              <span class="checkbox checked">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span class="manufacturer-name">NVIDIA</span>
+              <span class="count">18</span>
+            </label>
+            <label class="manufacturer-item">
+              <input type="checkbox" class="sr-only">
+              <span class="checkbox">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span class="manufacturer-name">ASUS</span>
+              <span class="count">45</span>
+            </label>
+            <label class="manufacturer-item">
+              <input type="checkbox" class="sr-only">
+              <span class="checkbox">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span class="manufacturer-name">MSI</span>
+              <span class="count">28</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stock -->
+      <div class="filter-group">
+        <button class="filter-header" aria-expanded="true">
+          <svg class="filter-header__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <span class="filter-header__title">Наличие</span>
+          <svg class="filter-header__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="filter-content open">
+          <div class="stock-options">
+            <label class="stock-option checked">
+              <input type="radio" name="stock" class="sr-only" checked>
+              <span class="stock-option__radio"></span>
+              <span class="stock-option__label">В наличии</span>
+            </label>
+            <label class="stock-option">
+              <input type="radio" name="stock" class="sr-only">
+              <span class="stock-option__radio"></span>
+              <span class="stock-option__label">Под заказ</span>
+            </label>
+            <label class="stock-option">
+              <input type="radio" name="stock" class="sr-only">
+              <span class="stock-option__radio"></span>
+              <span class="stock-option__label">Все</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button class="reset-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+        </svg>
+        Сбросить фильтры
+      </button>
+    </aside>
+
+    <div class="sidebar-backdrop"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <header class="page-header">
+        <nav class="breadcrumb">
+          <a href="#">Главная</a>
+          <span>/</span>
+          <span>Каталог</span>
+        </nav>
+        <h1 class="page-title">Каталог комплектующих</h1>
+        <p class="page-stats">Найдено 225 товаров</p>
+      </header>
+
+      <div class="toolbar">
+        <div class="toolbar__left">
+          <button class="mobile-filter-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="4" y1="21" x2="4" y2="14"/>
+              <line x1="4" y1="10" x2="4" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12" y2="3"/>
+              <line x1="20" y1="21" x2="20" y2="16"/>
+              <line x1="20" y1="12" x2="20" y2="3"/>
+            </svg>
+            Фильтры
+          </button>
+          <div class="view-toggle">
+            <button class="view-toggle__btn active" aria-label="Сетка">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+              </svg>
+            </button>
+            <button class="view-toggle__btn" aria-label="Список">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <rect x="3" y="4" width="18" height="4"/>
+                <rect x="3" y="10" width="18" height="4"/>
+                <rect x="3" y="16" width="18" height="4"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <select class="sort-select">
+          <option>По популярности</option>
+          <option>Сначала дешевле</option>
+          <option>Сначала дороже</option>
+          <option>По названию</option>
+        </select>
+      </div>
+
+      <!-- Product Grid -->
+      <div class="product-grid">
+        <!-- Product 1 -->
+        <article class="product-card">
+          <div class="product-card__image-area">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="20" y="20" width="60" height="60" rx="4" fill="#1a1a1e" stroke="#d4a574" stroke-width="1"/>
+              <rect x="35" y="35" width="30" height="30" rx="2" fill="#121214"/>
+              <text x="50" y="55" text-anchor="middle" fill="#d4a574" font-size="10">CPU</text>
+            </svg>
+            <div class="product-card__badges">
+              <span class="badge badge--new">NEW</span>
+              <span class="badge badge--sale">-15%</span>
+            </div>
+            <button class="product-card__favorite" aria-label="В избранное">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="product-card__content">
+            <span class="product-card__manufacturer">AMD</span>
+            <h3 class="product-card__name">
+              <a href="#">AMD Ryzen 7 7800X3D</a>
+            </h3>
+            <div class="product-card__stock product-card__stock--in">
+              <span class="stock-dot"></span>
+              В наличии (24 шт)
+            </div>
+            <div class="product-card__price-row">
+              <div class="price-container">
+                <span class="current-price">1 450 BYN</span>
+                <span class="old-price">1 695 BYN</span>
+              </div>
+              <button class="add-btn" aria-label="В корзину">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Product 2 -->
+        <article class="product-card">
+          <div class="product-card__image-area">
+            <svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="100" height="60" rx="4" fill="#1a1a1e" stroke="#d4a574" stroke-width="1"/>
+              <rect x="20" y="20" width="35" height="35" rx="2" fill="#121214"/>
+              <rect x="65" y="22" width="35" height="6" rx="1" fill="#2a2a2e"/>
+              <rect x="65" y="34" width="25" height="6" rx="1" fill="#2a2a2e"/>
+              <circle cx="37" cy="37" r="10" stroke="#d4a574" stroke-width="1" fill="none"/>
+            </svg>
+            <span class="badge badge--hit">HIT</span>
+            <button class="product-card__favorite active" aria-label="В избранном">
+              <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="product-card__content">
+            <span class="product-card__manufacturer">NVIDIA</span>
+            <h3 class="product-card__name">
+              <a href="#">NVIDIA RTX 4070 Ti Super 16GB</a>
+            </h3>
+            <div class="product-card__stock product-card__stock--in">
+              <span class="stock-dot"></span>
+              В наличии (15 шт)
+            </div>
+            <div class="product-card__price-row">
+              <div class="price-container">
+                <span class="current-price">3 200 BYN</span>
+              </div>
+              <button class="add-btn" aria-label="В корзину">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Product 3 -->
+        <article class="product-card">
+          <div class="product-card__image-area">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e" stroke-width="1"/>
+              <rect x="25" y="25" width="20" height="15" rx="2" fill="#2a2a2e"/>
+              <rect x="55" y="25" width="15" height="30" rx="2" fill="#2a2a2e"/>
+              <circle cx="35" cy="60" r="8" stroke="#3a3a3e" stroke-width="1" fill="none"/>
+              <rect x="25" y="72" width="15" height="8" rx="1" fill="#2a2a2e"/>
+            </svg>
+            <span class="badge badge--low">Мало</span>
+            <button class="product-card__favorite" aria-label="В избранное">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="product-card__content">
+            <span class="product-card__manufacturer">ASUS</span>
+            <h3 class="product-card__name">
+              <a href="#">ASUS ROG Strix B650E-F WiFi</a>
+            </h3>
+            <div class="product-card__stock product-card__stock--low">
+              <span class="stock-dot"></span>
+              Мало (2 шт)
+            </div>
+            <div class="product-card__price-row">
+              <div class="price-container">
+                <span class="current-price">850 BYN</span>
+              </div>
+              <button class="add-btn" aria-label="В корзину">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Product 4 -->
+        <article class="product-card">
+          <div class="product-card__image-area">
+            <svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="100" height="40" rx="2" fill="#1a1a1e" stroke="#d4a574" stroke-width="1"/>
+              <rect x="20" y="18" width="15" height="24" rx="1" fill="#121214"/>
+              <rect x="40" y="18" width="15" height="24" rx="1" fill="#121214"/>
+              <rect x="60" y="18" width="15" height="24" rx="1" fill="#121214"/>
+              <rect x="80" y="18" width="15" height="24" rx="1" fill="#121214"/>
+            </svg>
+            <button class="product-card__favorite" aria-label="В избранное">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="product-card__content">
+            <span class="product-card__manufacturer">G.Skill</span>
+            <h3 class="product-card__name">
+              <a href="#">G.Skill Trident Z5 32GB DDR5</a>
+            </h3>
+            <div class="product-card__stock product-card__stock--in">
+              <span class="stock-dot"></span>
+              В наличии (89 шт)
+            </div>
+            <div class="product-card__price-row">
+              <div class="price-container">
+                <span class="current-price">650 BYN</span>
+              </div>
+              <button class="add-btn" aria-label="В корзину">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Product 5 -->
+        <article class="product-card">
+          <div class="product-card__image-area">
+            <svg viewBox="0 0 100 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="80" height="40" rx="2" fill="#1a1a1e" stroke="#3a3a3e" stroke-width="1"/>
+              <rect x="20" y="18" width="30" height="24" rx="2" fill="#121214"/>
+              <circle cx="35" cy="30" r="8" stroke="#3a3a3e" stroke-width="1" fill="none"/>
+            </svg>
+            <span class="badge badge--out">Нет</span>
+            <button class="product-card__favorite" aria-label="В избранное">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="product-card__content">
+            <span class="product-card__manufacturer">Samsung</span>
+            <h3 class="product-card__name">
+              <a href="#">Samsung 990 Pro 2TB NVMe</a>
+            </h3>
+            <div class="product-card__stock product-card__stock--out">
+              <span class="stock-dot"></span>
+              Нет в наличии
+            </div>
+            <div class="product-card__price-row">
+              <div class="price-container">
+                <span class="current-price">380 BYN</span>
+              </div>
+              <button class="add-btn" disabled aria-label="Нет в наличии">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Product 6 -->
+        <article class="product-card">
+          <div class="product-card__image-area">
+            <svg viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="60" height="80" rx="4" fill="#1a1a1e" stroke="#d4a574" stroke-width="1"/>
+              <rect x="20" y="20" width="40" height="30" rx="2" fill="#121214"/>
+              <circle cx="25" cy="65" r="4" fill="#2a2a2e"/>
+              <circle cx="40" cy="65" r="4" fill="#2a2a2e"/>
+              <rect x="50" y="62" width="8" height="8" fill="#2a2a2e"/>
+            </svg>
+            <span class="badge badge--new">NEW</span>
+            <button class="product-card__favorite" aria-label="В избранное">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="product-card__content">
+            <span class="product-card__manufacturer">Lian Li</span>
+            <h3 class="product-card__name">
+              <a href="#">Lian Li O11 Dynamic EVO</a>
+            </h3>
+            <div class="product-card__stock product-card__stock--in">
+              <span class="stock-dot"></span>
+              В наличии (12 шт)
+            </div>
+            <div class="product-card__price-row">
+              <div class="price-container">
+                <span class="current-price">520 BYN</span>
+              </div>
+              <button class="add-btn" aria-label="В корзину">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Product 7 -->
+        <article class="product-card">
+          <div class="product-card__image-area">
+            <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="80" height="60" rx="4" fill="#1a1a1e" stroke="#d4a574" stroke-width="1"/>
+              <circle cx="50" cy="40" r="20" stroke="#d4a574" stroke-width="1" fill="none"/>
+              <circle cx="50" cy="40" r="8" fill="#121214"/>
+              <path d="M50 20v8M50 52v8M30 40h8M62 40h8" stroke="#d4a574" stroke-width="1"/>
+            </svg>
+            <button class="product-card__favorite" aria-label="В избранное">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="product-card__content">
+            <span class="product-card__manufacturer">NZXT</span>
+            <h3 class="product-card__name">
+              <a href="#">NZXT Kraken X73 RGB 360mm</a>
+            </h3>
+            <div class="product-card__stock product-card__stock--in">
+              <span class="stock-dot"></span>
+              В наличии (8 шт)
+            </div>
+            <div class="product-card__price-row">
+              <div class="price-container">
+                <span class="current-price">480 BYN</span>
+              </div>
+              <button class="add-btn" aria-label="В корзину">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- Product 8 -->
+        <article class="product-card">
+          <div class="product-card__image-area">
+            <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="15" width="80" height="50" rx="4" fill="#1a1a1e" stroke="#d4a574" stroke-width="1"/>
+              <circle cx="30" cy="40" r="12" stroke="#d4a574" stroke-width="1" fill="none"/>
+              <rect x="50" y="28" width="30" height="6" rx="1" fill="#2a2a2e"/>
+              <rect x="50" y="40" width="25" height="6" rx="1" fill="#2a2a2e"/>
+              <rect x="50" y="52" width="30" height="6" rx="1" fill="#2a2a2e"/>
+              <path d="M30 32v16M22 40h16" stroke="#d4a574" stroke-width="1"/>
+            </svg>
+            <span class="badge badge--hit">HIT</span>
+            <button class="product-card__favorite" aria-label="В избранное">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="product-card__content">
+            <span class="product-card__manufacturer">Corsair</span>
+            <h3 class="product-card__name">
+              <a href="#">Corsair RM1000x 1000W 80+ Gold</a>
+            </h3>
+            <div class="product-card__stock product-card__stock--in">
+              <span class="stock-dot"></span>
+              В наличии (31 шт)
+            </div>
+            <div class="product-card__price-row">
+              <div class="price-container">
+                <span class="current-price">520 BYN</span>
+              </div>
+              <button class="add-btn" aria-label="В корзину">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- Load More -->
+      <div class="load-more">
+        <button class="load-more__btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          Загрузить ещё
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Mobile sidebar toggle
+    const mobileFilterBtn = document.querySelector('.mobile-filter-btn');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarBackdrop = document.querySelector('.sidebar-backdrop');
+    const sidebarClose = document.querySelector('.sidebar__close');
+
+    function openSidebar() {
+      sidebar.classList.add('open');
+      sidebarBackdrop.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      sidebarBackdrop.classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+
+    if (mobileFilterBtn) {
+      mobileFilterBtn.addEventListener('click', openSidebar);
+    }
+
+    if (sidebarClose) {
+      sidebarClose.addEventListener('click', closeSidebar);
+    }
+
+    if (sidebarBackdrop) {
+      sidebarBackdrop.addEventListener('click', closeSidebar);
+    }
+
+    // Filter accordion
+    document.querySelectorAll('.filter-header').forEach(header => {
+      header.addEventListener('click', function() {
+        const content = this.nextElementSibling;
+        const isOpen = content.classList.contains('open');
+        this.setAttribute('aria-expanded', !isOpen);
+        content.classList.toggle('open');
+      });
+    });
+
+    // Category selection
+    document.querySelectorAll('.category-item').forEach(item => {
+      item.addEventListener('click', function() {
+        document.querySelectorAll('.category-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Checkbox toggle
+    document.querySelectorAll('.manufacturer-item input[type="checkbox"]').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        const checkSpan = this.parentElement.querySelector('.checkbox');
+        checkSpan.classList.toggle('checked', this.checked);
+      });
+    });
+
+    // Radio toggle
+    document.querySelectorAll('.stock-option input[type="radio"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        document.querySelectorAll('.stock-option').forEach(opt => opt.classList.remove('checked'));
+        this.closest('.stock-option').classList.add('checked');
+      });
+    });
+
+    // Favorite toggle
+    document.querySelectorAll('.product-card__favorite').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        this.classList.toggle('active');
+        const isActive = this.classList.contains('active');
+        this.setAttribute('aria-label', isActive ? 'В избранном' : 'В избранное');
+      });
+    });
+
+    // View toggle
+    document.querySelectorAll('.view-toggle__btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.view-toggle__btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

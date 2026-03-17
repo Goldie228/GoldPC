@@ -13,7 +13,7 @@ WORKDIR /app
 
 # Install dependencies first (better layer caching)
 COPY src/frontend/package*.json ./
-RUN npm ci --include=dev
+RUN npm install
 
 # Copy source code
 COPY src/frontend/. .
@@ -57,15 +57,13 @@ RUN mkdir -p /var/lib/nginx/tmp /var/cache/nginx /var/log/nginx && \
 # Security: Run as non-root user (nginx user, UID 101)
 USER nginx
 
-# Expose port 80 (non-privileged port)
-EXPOSE 80
+# Expose port 3000 (non-privileged port)
+EXPOSE 3000
 
 # Security: Health check for container orchestration
 # Checks /health endpoint defined in nginx.conf
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
 # Start nginx in foreground
 CMD ["nginx", "-g", "daemon off;"]
-</task_progress>
-</write_to_file>

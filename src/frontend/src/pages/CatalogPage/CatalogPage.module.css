@@ -1,25 +1,108 @@
+/* ========================================
+   CatalogPage Styles - Dark Gold Theme
+   ======================================== */
+
 .container {
   display: flex;
-  gap: 24px;
+  gap: 32px;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 32px 24px;
   min-height: calc(100vh - 200px);
+  background: #09090B;
 }
 
-/* Sidebar */
+/* ========================================
+   Mobile Filter Toggle
+   ======================================== */
+
+.mobileFilterToggle {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #1F1F1F;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  color: #D4AF37;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobileFilterToggle:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+/* ========================================
+   Mobile Overlay & Sidebar
+   ======================================== */
+
+.mobileOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+}
+
+.mobileSidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 280px;
+  background: #141414;
+  border-right: 1px solid rgba(212, 175, 55, 0.2);
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.mobileSidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #A1A1AA;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+  color: #D4AF37;
+}
+
+/* ========================================
+   Sidebar
+   ======================================== */
+
 .sidebar {
-  width: 240px;
+  width: 260px;
   flex-shrink: 0;
 }
 
 .sidebarTitle {
+  font-family: 'Playfair Display', Georgia, serif;
   font-size: 18px;
   font-weight: 600;
-  color: #212529;
-  margin: 0 0 16px 0;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #0d6efd;
+  color: #FAFAFA;
+  margin: 0 0 20px 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #D4AF37;
 }
 
 .categoryList {
@@ -33,29 +116,52 @@
 }
 
 .categoryBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   width: 100%;
   text-align: left;
-  padding: 10px 16px;
+  padding: 12px 16px;
   background: transparent;
-  border: none;
-  border-radius: 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
   font-size: 14px;
-  color: #495057;
+  color: #A1A1AA;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+}
+
+.categoryBtn svg {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
 }
 
 .categoryBtn:hover {
-  background: #e9ecef;
-  color: #212529;
+  background: rgba(212, 175, 55, 0.08);
+  border-color: rgba(212, 175, 55, 0.2);
+  color: #FAFAFA;
+}
+
+.categoryBtn:hover svg {
+  opacity: 1;
+  color: #D4AF37;
 }
 
 .categoryBtn.active {
-  background: #0d6efd;
-  color: #fff;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(191, 149, 63, 0.1) 100%);
+  border-color: rgba(212, 175, 55, 0.3);
+  color: #D4AF37;
 }
 
-/* Main content */
+.categoryBtn.active svg {
+  opacity: 1;
+  color: #D4AF37;
+}
+
+/* ========================================
+   Main Content
+   ======================================== */
+
 .main {
   flex: 1;
 }
@@ -64,192 +170,378 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 20px;
 }
 
 .title {
-  font-size: 28px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 32px;
   font-weight: 700;
-  color: #212529;
+  color: #FAFAFA;
   margin: 0;
 }
 
-/* Search */
+/* ========================================
+   Search Form
+   ======================================== */
+
 .searchForm {
   display: flex;
-  gap: 8px;
+  gap: 12px;
+}
+
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  color: #71717A;
+  pointer-events: none;
 }
 
 .searchInput {
-  padding: 10px 16px;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
+  padding: 12px 16px 12px 44px;
+  width: 300px;
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
   font-size: 14px;
-  width: 280px;
-  transition: border-color 0.2s;
+  color: #FAFAFA;
+  transition: all 0.2s ease;
+}
+
+.searchInput::placeholder {
+  color: #71717A;
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: #0d6efd;
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
 }
 
 .searchBtn {
-  padding: 10px 16px;
-  background: #0d6efd;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #BF953F 0%, #FCF6BA 25%, #B38728 50%, #FBF5B7 75%, #AA771C 100%);
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A1A;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
 .searchBtn:hover {
-  background: #0b5ed7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
 }
 
-/* Grid */
+/* ========================================
+   Product Grid
+   ======================================== */
+
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
 }
 
-/* Loading */
+.productCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.productName {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #FAFAFA;
+  margin: 0 0 8px 0;
+}
+
+.productManufacturer {
+  font-size: 13px;
+  color: #71717A;
+  margin: 0 0 12px 0;
+}
+
+.productRating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ratingStars {
+  color: #D4AF37;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.ratingCount {
+  font-size: 12px;
+  color: #71717A;
+}
+
+.productPriceRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.productPrice {
+  font-size: 20px;
+  font-weight: 700;
+  color: #D4AF37;
+}
+
+.productOldPrice {
+  font-size: 14px;
+  color: #71717A;
+  text-decoration: line-through;
+}
+
+.addToCartBtn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 10px;
+  color: #D4AF37;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addToCartBtn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: #D4AF37;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+}
+
+/* ========================================
+   Loading State
+   ======================================== */
+
 .loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  color: #6c757d;
+  padding: 80px 20px;
+  color: #71717A;
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #e9ecef;
-  border-top-color: #0d6efd;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 20px;
+}
+
+.spinnerIcon {
+  animation: spin 1.5s linear infinite;
+  color: #D4AF37;
 }
 
 @keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
   to {
     transform: rotate(360deg);
   }
 }
 
-/* Error */
+.loading p {
+  font-size: 16px;
+}
+
+/* ========================================
+   Error State
+   ======================================== */
+
 .error {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  color: #dc3545;
+  padding: 80px 20px;
 }
 
 .error p {
-  margin: 0 0 16px 0;
+  margin: 0 0 24px 0;
   font-size: 16px;
+  color: #EF4444;
 }
 
 .retryBtn {
-  padding: 10px 24px;
-  background: #dc3545;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 10px;
+  color: #EF4444;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
 .retryBtn:hover {
-  background: #bb2d3b;
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
 }
 
-/* Empty */
+/* ========================================
+   Empty State
+   ======================================== */
+
 .empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  color: #6c757d;
+  padding: 80px 20px;
+  color: #71717A;
+}
+
+.emptyIcon {
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty p {
   font-size: 16px;
 }
 
-/* Pagination */
+/* ========================================
+   Pagination
+   ======================================== */
+
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 16px;
-  margin-top: 32px;
-  padding-top: 24px;
-  border-top: 1px solid #e9ecef;
+  gap: 20px;
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .pageBtn {
-  padding: 10px 20px;
-  background: #0d6efd;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  color: #FAFAFA;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
 .pageBtn:hover:not(:disabled) {
-  background: #0b5ed7;
+  border-color: rgba(212, 175, 55, 0.3);
+  color: #D4AF37;
 }
 
 .pageBtn:disabled {
-  background: #e9ecef;
-  color: #adb5bd;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .pageInfo {
   font-size: 14px;
-  color: #495057;
+  color: #71717A;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
+/* ========================================
+   Responsive
+   ======================================== */
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+  }
+
+  .searchInput {
+    width: 240px;
+  }
+}
+
+@media (max-width: 768px) {
   .container {
     flex-direction: column;
+    padding: 24px 16px;
+    gap: 20px;
+  }
+
+  .mobileFilterToggle {
+    display: flex;
+  }
+
+  .mobileOverlay {
+    display: block;
   }
 
   .sidebar {
-    width: 100%;
-  }
-
-  .categoryList {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .categoryList li {
-    margin-bottom: 0;
-  }
-
-  .categoryBtn {
-    width: auto;
+    display: none;
   }
 
   .header {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .searchForm {
+    flex-direction: column;
   }
 
   .searchInput {
     width: 100%;
+  }
+
+  .searchBtn {
+    justify-content: center;
+  }
+
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pageBtn {
+    width: 100%;
+    justify-content: center;
   }
 }

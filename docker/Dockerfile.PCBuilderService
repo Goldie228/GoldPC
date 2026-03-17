@@ -10,13 +10,17 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Optimization: Copy .csproj file first for layer caching
+# Optimization: Copy .csproj files first for layer caching
+COPY ["src/SharedKernel/SharedKernel.csproj", "SharedKernel/"]
+COPY ["src/Shared/Shared.csproj", "Shared/"]
 COPY ["src/PCBuilderService/PCBuilderService.csproj", "PCBuilderService/"]
 
 # Restore dependencies - cached layer
 RUN dotnet restore "PCBuilderService/PCBuilderService.csproj"
 
 # Copy source code (after restore for better caching)
+COPY src/SharedKernel/ SharedKernel/
+COPY src/Shared/ Shared/
 COPY src/PCBuilderService/ PCBuilderService/
 
 # Build the service

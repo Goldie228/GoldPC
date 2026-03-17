@@ -1,53 +1,51 @@
-import { BrowserRouter, Routes, Route, Link, NavLink } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HomePage } from './pages/HomePage/HomePage';
 import { CatalogPage } from './pages/CatalogPage/CatalogPage';
+import { ProductPage } from './pages/ProductPage/ProductPage';
+import { PCBuilderPage } from './pages/PCBuilderPage/PCBuilderPage';
+import { CartPage } from './pages/CartPage/CartPage';
+import { AccountPage } from './pages/AccountPage/AccountPage';
 import { LoginPage } from './pages/LoginPage/LoginPage';
 import { StubManager } from './components/admin';
 import { CoordinatorDashboard } from './pages/admin/CoordinatorDashboard';
 import { UserManagementPage } from './pages/admin/UserManagementPage';
 import { CatalogManagementPage } from './pages/admin/CatalogManagementPage';
+import { Header } from './components/layout/Header';
+import { Footer } from './components/layout/Footer';
 import './App.css';
 
 /**
  * Главный компонент приложения GoldPC
+ * 
+ * Структура страниц:
+ * - /                     -> HomePage (Hero, Featured Builds, Categories)
+ * - /catalog              -> CatalogPage (Filters, Product Grid)
+ * - /product/:id          -> ProductPage (Gallery, Specs, Add to Cart)
+ * - /builder              -> PCBuilderPage (Component Slots, Compatibility)
+ * - /cart                 -> CartPage (Cart Items, Checkout)
+ * - /account              -> AccountPage (Profile, Orders, Wishlist)
+ * - /login                -> LoginPage (Auth Form)
+ * - /admin/*              -> Admin Pages
  */
 function App() {
   return (
     <BrowserRouter>
       <div className="app">
-        <header className="app-header">
-          <div className="header-content">
-            <Link to="/" className="logo">
-              <span className="logo-icon">🖥️</span>
-              <span className="logo-text">GoldPC</span>
-            </Link>
-            
-            <nav className="nav">
-              <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`}>
-                Каталог
-              </NavLink>
-              <NavLink to="/admin/users" className={({ isActive }) => `nav-link nav-link--admin ${isActive ? 'nav-link--active' : ''}`}>
-                👥 Пользователи
-              </NavLink>
-              <NavLink to="/admin/catalog" className={({ isActive }) => `nav-link nav-link--admin ${isActive ? 'nav-link--active' : ''}`}>
-                📦 Каталог
-              </NavLink>
-              <NavLink to="/admin/coordinator" className={({ isActive }) => `nav-link nav-link--admin ${isActive ? 'nav-link--active' : ''}`}>
-                📊 Dashboard
-              </NavLink>
-              <NavLink to="/admin/stubs" className={({ isActive }) => `nav-link nav-link--admin ${isActive ? 'nav-link--active' : ''}`}>
-                🎛️ Stubs
-              </NavLink>
-              <NavLink to="/login" className={({ isActive }) => `nav-link ${isActive ? 'nav-link--active' : ''}`}>
-                Войти
-              </NavLink>
-            </nav>
-          </div>
-        </header>
-
+        <Header />
+        
         <main className="app-main">
           <Routes>
-            <Route path="/" element={<CatalogPage />} />
+            {/* Public Routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/catalog/:category" element={<CatalogPage />} />
+            <Route path="/product/:id" element={<ProductPage />} />
+            <Route path="/builder" element={<PCBuilderPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/account" element={<AccountPage />} />
             <Route path="/login" element={<LoginPage />} />
+            
+            {/* Admin Routes */}
             <Route path="/admin/users" element={<UserManagementPage />} />
             <Route path="/admin/catalog" element={<CatalogManagementPage />} />
             <Route path="/admin/coordinator" element={<CoordinatorDashboard />} />
@@ -55,11 +53,7 @@ function App() {
           </Routes>
         </main>
 
-        <footer className="app-footer">
-          <div className="footer-content">
-            <p>© 2024 GoldPC. Все права защищены.</p>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </BrowserRouter>
   );

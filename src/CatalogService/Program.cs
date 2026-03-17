@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using CatalogService.Data;
 using CatalogService.Repositories;
 using CatalogService.Repositories.Interfaces;
@@ -19,20 +20,23 @@ using Shared.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 
 // Настройка Serilog с разделением форматов для Development/Production
-Log.Logger = new LoggerConfiguration()
+var loggerConfiguration = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
     .Enrich.WithProperty("Application", "GoldPC")
-    .Enrich.WithProperty("Service", "CatalogService")
-    .WriteTo.Console(
-        outputTemplate: builder.Environment.IsProduction()
-            ? null // Используем JsonFormatter для Production
-            : "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
-        formatter: builder.Environment.IsProduction()
-            ? new JsonFormatter()
-            : null)
-    .WriteTo.File("logs/catalog-service-.log", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
+    .Enrich.WithProperty("Service", "CatalogService");
+
+if (builder.Environment.IsProduction())
+{
+    loggerConfiguration.WriteTo.Console(new JsonFormatter());
+}
+else
+{
+    loggerConfiguration.WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+}
+
+loggerConfiguration.WriteTo.File("logs/catalog-service-.log", rollingInterval: RollingInterval.Day);
+Log.Logger = loggerConfiguration.CreateLogger();
 
 builder.Host.UseSerilog();
 

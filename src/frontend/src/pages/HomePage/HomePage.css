@@ -1,0 +1,531 @@
+/* ========================================
+   HomePage Styles - Dark Gold Theme
+   ======================================== */
+
+.homePage {
+  min-height: 100vh;
+  padding-top: 0;
+  background: #09090B;
+}
+
+/* ========================================
+   Navigation Bar
+   ======================================== */
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: rgba(9, 9, 11, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.navbarContainer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px 24px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.logoGold {
+  background: linear-gradient(135deg, #BF953F 0%, #FCF6BA 25%, #B38728 50%, #FBF5B7 75%, #AA771C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.logoWhite {
+  color: #FAFAFA;
+}
+
+.searchBar {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  color: #71717A;
+  pointer-events: none;
+}
+
+.searchInput {
+  padding: 10px 16px 10px 42px;
+  width: 360px;
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 14px;
+  color: #FAFAFA;
+  transition: all 0.2s ease;
+}
+
+.searchInput::placeholder {
+  color: #71717A;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.navActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.navAction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #A1A1AA;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.navAction:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+  color: #D4AF37;
+}
+
+/* ========================================
+   Hero Section
+   ======================================== */
+
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #000;
+}
+
+.heroBackground {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0A0A0A 0%, #141414 50%, #0A0A0A 100%);
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 120px 24px 80px;
+  max-width: 900px;
+}
+
+.heroTitle {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 24px;
+}
+
+.heroTitleGold {
+  background: linear-gradient(135deg, #BF953F 0%, #FCF6BA 25%, #B38728 50%, #FBF5B7 75%, #AA771C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroTitleWhite {
+  color: #FAFAFA;
+}
+
+.heroSubtitle {
+  font-size: 1.25rem;
+  color: #E5E5E5;
+  margin-bottom: 40px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+.heroCta {
+  margin-bottom: 60px;
+}
+
+.heroCtaBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 36px;
+  background: linear-gradient(135deg, #BF953F 0%, #FCF6BA 25%, #B38728 50%, #FBF5B7 75%, #AA771C 100%);
+  color: #1A1A1A;
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 14px;
+  transition: all 0.3s ease;
+}
+
+.heroCtaBtn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(212, 175, 55, 0.35), 0 0 50px rgba(212, 175, 55, 0.2);
+}
+
+.heroFeatures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.heroFeature {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(31, 31, 31, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.heroFeature:hover {
+  border-color: rgba(212, 175, 55, 0.2);
+  background: rgba(31, 31, 31, 0.8);
+}
+
+.heroFeatureIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(191, 149, 63, 0.1) 100%);
+  border-radius: 12px;
+  color: #D4AF37;
+  flex-shrink: 0;
+}
+
+.heroFeatureContent h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #FAFAFA;
+  margin: 0 0 6px 0;
+}
+
+.heroFeatureContent p {
+  font-size: 0.875rem;
+  color: #A1A1AA;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ========================================
+   Featured Builds Section
+   ======================================== */
+
+.featuredBuilds {
+  padding: 100px 24px;
+  background: #0A0A0A;
+}
+
+.featuredBuildsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1400px;
+  margin: 0 auto 48px;
+}
+
+.featuredBuildsTitle {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #FAFAFA;
+}
+
+.featuredBuildsNav {
+  display: flex;
+  gap: 12px;
+}
+
+.featuredBuildsNavBtn {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  color: #FAFAFA;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.featuredBuildsNavBtn:hover {
+  border-color: #D4AF37;
+  color: #D4AF37;
+}
+
+.featuredBuildsCarousel {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Build Card */
+.buildCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.buildCardName {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #FAFAFA;
+  margin: 0 0 4px 0;
+}
+
+.buildCardType {
+  font-size: 0.875rem;
+  color: #A1A1AA;
+  margin: 0 0 12px 0;
+}
+
+.buildCardRating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.buildCardStars {
+  color: #D4AF37;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.buildCardReviews {
+  font-size: 12px;
+  color: #71717A;
+}
+
+.buildCardPrice {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #D4AF37;
+  margin: 0 0 4px 0;
+}
+
+.buildCardOldPrice {
+  font-size: 0.875rem;
+  color: #71717A;
+  text-decoration: line-through;
+  margin: 0 0 16px 0;
+}
+
+.buildCardBtn {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 10px;
+  color: #D4AF37;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: auto;
+}
+
+.buildCardBtn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: #D4AF37;
+}
+
+/* ========================================
+   Categories Section
+   ======================================== */
+
+.categories {
+  padding: 100px 24px;
+  background: #000;
+}
+
+.categoriesTitle {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #FAFAFA;
+  text-align: center;
+  margin: 0 0 48px 0;
+}
+
+.categoriesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Category Card */
+.categoryCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 24px;
+  background: #1F1F1F;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.categoryCard:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.15);
+  transform: translateY(-6px);
+}
+
+.categoryCardIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  color: #D4AF37;
+  transition: all 0.3s ease;
+}
+
+.categoryCard:hover .categoryCardIcon {
+  filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.5));
+}
+
+.categoryCardName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #FAFAFA;
+  margin-bottom: 8px;
+}
+
+.categoryCardCount {
+  font-size: 0.875rem;
+  color: #71717A;
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
+
+@media (max-width: 1024px) {
+  .searchInput {
+    width: 280px;
+  }
+
+  .featuredBuildsCarousel {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .navbarContainer {
+    padding: 12px 16px;
+  }
+
+  .searchBar {
+    display: none;
+  }
+
+  .heroContent {
+    padding: 100px 16px 60px;
+  }
+
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+
+  .heroSubtitle {
+    font-size: 1rem;
+  }
+
+  .heroFeatures {
+    grid-template-columns: 1fr;
+  }
+
+  .featuredBuilds {
+    padding: 60px 16px;
+  }
+
+  .featuredBuildsHeader {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .featuredBuildsTitle {
+    font-size: 1.75rem;
+  }
+
+  .featuredBuildsCarousel {
+    grid-template-columns: 1fr;
+  }
+
+  .categories {
+    padding: 60px 16px;
+  }
+
+  .categoriesTitle {
+    font-size: 1.75rem;
+    margin-bottom: 32px;
+  }
+
+  .categoriesGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .categoryCard {
+    padding: 24px 16px;
+  }
+
+  .categoryCardIcon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+  }
+}

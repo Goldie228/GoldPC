@@ -11,15 +11,17 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Optimization: Copy .csproj files first for layer caching
-COPY ["src/AuthService/AuthService.csproj", "AuthService/"]
 COPY ["src/SharedKernel/SharedKernel.csproj", "SharedKernel/"]
+COPY ["src/Shared/Shared.csproj", "Shared/"]
+COPY ["src/AuthService/AuthService.csproj", "AuthService/"]
 
 # Restore dependencies - cached layer
 RUN dotnet restore "AuthService/AuthService.csproj"
 
 # Copy source code (after restore for better caching)
-COPY src/AuthService/ AuthService/
 COPY src/SharedKernel/ SharedKernel/
+COPY src/Shared/ Shared/
+COPY src/AuthService/ AuthService/
 
 # Build the service
 WORKDIR "/src/AuthService"

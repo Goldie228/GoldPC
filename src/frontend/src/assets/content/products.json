@@ -1,0 +1,370 @@
+{
+  "products": [
+    {
+      "id": "aurora-x1",
+      "name": "Aurora X1",
+      "sku": "AUR-X1-001",
+      "category": "gpu",
+      "price": 289990,
+      "oldPrice": 329990,
+      "stock": 5,
+      "manufacturer": {
+        "id": "nvidia-partner",
+        "name": "NVIDIA",
+        "country": "США"
+      },
+      "description": "Флагманская видеокарта Aurora X1 с архитектурой следующего поколения. Непревзойденная производительность для 4K гейминга и профессионального контента.",
+      "specifications": {
+        "chip": "RTX 4090 Ti",
+        "memory": "24 ГБ GDDR6X",
+        "baseFrequency": "2235 МГц",
+        "boostFrequency": "2520 МГц",
+        "tdp": "450 Вт",
+        "ports": "3x DisplayPort 2.1, 1x HDMI 2.1",
+        "cooling": "Тройной радиатор с RGB подсветкой"
+      },
+      "warrantyMonths": 36,
+      "isFeatured": true,
+      "rating": {
+        "average": 4.9,
+        "count": 127
+      }
+    },
+    {
+      "id": "titan-gold-edition",
+      "name": "Titan Gold Edition",
+      "sku": "TIT-GE-002",
+      "category": "cpu",
+      "price": 189990,
+      "stock": 3,
+      "manufacturer": {
+        "id": "intel",
+        "name": "Intel",
+        "country": "США"
+      },
+      "description": "Процессор Titan Gold Edition — абсолютная вершина производительности для энтузиастов и профессионалов. 24 ядра, разгон до 6.0 ГГц.",
+      "specifications": {
+        "socket": "LGA1700",
+        "cores": 24,
+        "threads": 32,
+        "baseFrequency": "3500 МГц",
+        "boostFrequency": "6000 МГц",
+        "tdp": "250 Вт",
+        "cache": "36 МБ L3",
+        "architecture": "Raptor Lake Refresh"
+      },
+      "warrantyMonths": 36,
+      "isFeatured": true,
+      "rating": {
+        "average": 4.8,
+        "count": 89
+      }
+    },
+    {
+      "id": "sovereign-rtx",
+      "name": "Sovereign RTX",
+      "sku": "SOV-RTX-003",
+      "category": "gpu",
+      "price": 249990,
+      "oldPrice": 279990,
+      "stock": 8,
+      "manufacturer": {
+        "id": "asus",
+        "name": "ASUS ROG",
+        "country": "Тайвань"
+      },
+      "description": "Видеокарта Sovereign RTX создана для истинных ценителей качества. Премиальный дизайн, максимальная производительность.",
+      "specifications": {
+        "chip": "RTX 4090",
+        "memory": "24 ГБ GDDR6X",
+        "baseFrequency": "2100 МГц",
+        "boostFrequency": "2430 МГц",
+        "tdp": "420 Вт",
+        "ports": "3x DisplayPort 1.4a, 1x HDMI 2.1",
+        "cooling": "ROG Matrix с жидкостным охлаждением"
+      },
+      "warrantyMonths": 36,
+      "isFeatured": true,
+      "rating": {
+        "average": 4.9,
+        "count": 203
+      }
+    },
+    {
+      "id": "monarch-pro",
+      "name": "Monarch Pro",
+      "sku": "MON-PRO-004",
+      "category": "cpu",
+      "price": 149990,
+      "stock": 12,
+      "manufacturer": {
+        "id": "amd",
+        "name": "AMD",
+        "country": "США"
+      },
+      "description": "Процессор Monarch Pro на архитектуре Zen 5. 16 ядер для игр и профессиональных задач.",
+      "specifications": {
+        "socket": "AM5",
+        "cores": 16,
+        "threads": 32,
+        "baseFrequency": "3800 МГц",
+        "boostFrequency": "5500 МГц",
+        "tdp": "170 Вт",
+        "cache": "64 МБ L3",
+        "architecture": "Zen 5"
+      },
+      "warrantyMonths": 36,
+      "isFeatured": false,
+      "rating": {
+        "average": 4.7,
+        "count": 156
+      }
+    },
+    {
+      "id": "emperor-ddr5",
+      "name": "Emperor DDR5",
+      "sku": "EMP-DDR5-005",
+      "category": "ram",
+      "price": 45990,
+      "stock": 25,
+      "manufacturer": {
+        "id": "corsair",
+        "name": "Corsair",
+        "country": "США"
+      },
+      "description": "Оперативная память Emperor DDR5 — королевский стандарт для энтузиастов. Частота 6400 МГц, латентность CL32.",
+      "specifications": {
+        "type": "DDR5",
+        "capacity": "64 ГБ (2x32 ГБ)",
+        "frequency": "6400 МГц",
+        "latency": "CL32-38-38-84",
+        "voltage": "1.40 В",
+        "modules": "2 модуля",
+        "cooling": "Алюминиевый радиатор с RGB"
+      },
+      "warrantyMonths": 48,
+      "isFeatured": true,
+      "rating": {
+        "average": 4.8,
+        "count": 78
+      }
+    },
+    {
+      "id": "supreme-nvme",
+      "name": "Supreme NVMe",
+      "sku": "SUP-NVME-006",
+      "category": "storage",
+      "price": 52990,
+      "stock": 18,
+      "manufacturer": {
+        "id": "samsung",
+        "name": "Samsung",
+        "country": "Южная Корея"
+      },
+      "description": "SSD накопитель Supreme NVMe с интерфейсом PCIe 5.0. Скорость чтения до 12000 МБ/с для мгновенной загрузки.",
+      "specifications": {
+        "type": "NVMe SSD",
+        "capacity": "4 ТБ",
+        "interface": "PCIe 5.0 x4",
+        "readSpeed": "12000 МБ/с",
+        "writeSpeed": "10000 МБ/с",
+        "tbw": "2400 ТБ",
+        "cache": "4 ГБ DRAM"
+      },
+      "warrantyMonths": 60,
+      "isFeatured": true,
+      "rating": {
+        "average": 4.9,
+        "count": 92
+      }
+    },
+    {
+      "id": "phoenix-psu",
+      "name": "Phoenix PSU",
+      "sku": "PHO-PSU-007",
+      "category": "psu",
+      "price": 38990,
+      "stock": 15,
+      "manufacturer": {
+        "id": "seasonic",
+        "name": "Seasonic",
+        "country": "Тайвань"
+      },
+      "description": "Блок питания Phoenix PSU — возрождается из пепла. Мощность 1200 Вт, сертификат 80+ Titanium.",
+      "specifications": {
+        "power": "1200 Вт",
+        "efficiency": "80+ Titanium (94%)",
+        "modular": "Полностью модульный",
+        "fanSize": "135 мм FDB",
+        "noise": "До 12 дБА (фанлесс до 50%)",
+        "rails": "Одноигольчатый +12В",
+        "protections": "OVP, UVP, OCP, OTP, SCP"
+      },
+      "warrantyMonths": 60,
+      "isFeatured": false,
+      "rating": {
+        "average": 4.9,
+        "count": 134
+      }
+    },
+    {
+      "id": "royal-tower",
+      "name": "Royal Tower",
+      "sku": "ROY-TOW-008",
+      "category": "case",
+      "price": 67990,
+      "stock": 7,
+      "manufacturer": {
+        "id": "fractal-design",
+        "name": "Fractal Design",
+        "country": "Швеция"
+      },
+      "description": "Корпус Royal Tower — истинный король среди корпусов. Алюминий ручной полировки, закаленное стекло.",
+      "specifications": {
+        "formFactor": "E-ATX / ATX",
+        "material": "Анодированный алюминий, стекло",
+        "gpuLength": "до 450 мм",
+        "cpuCoolerHeight": "до 190 мм",
+        "fans": "6x 140 мм Aura Pro предустановленных",
+        "watercooling": "Поддержка 420 мм радиатора",
+        "driveBays": "4x 3.5\", 6x 2.5\" скрытых"
+      },
+      "warrantyMonths": 24,
+      "isFeatured": true,
+      "rating": {
+        "average": 4.7,
+        "count": 45
+      }
+    },
+    {
+      "id": "arctic-emperor",
+      "name": "Arctic Emperor",
+      "sku": "ARC-EMP-009",
+      "category": "cooling",
+      "price": 32990,
+      "stock": 10,
+      "manufacturer": {
+        "id": "noctua",
+        "name": "Noctua",
+        "country": "Австрия"
+      },
+      "description": "Система охлаждения Arctic Emperor для процессоров с TDP до 400 Вт. 420 мм AIO с премиальными вентиляторами.",
+      "specifications": {
+        "type": "Жидкостное (AIO)",
+        "radiatorSize": "420 мм (3x 140 мм)",
+        "fans": "Noctua A14 iPPC-3000 PWM x3",
+        "tdp": "до 400 Вт",
+        "noise": "15-36 дБА",
+        "socket": "LGA1700, AM5, LGA1851",
+        "material": "Медное основание, нейлоновые трубки"
+      },
+      "warrantyMonths": 72,
+      "isFeatured": false,
+      "rating": {
+        "average": 4.9,
+        "count": 67
+      }
+    },
+    {
+      "id": "crown-monitor",
+      "name": "Crown Monitor",
+      "sku": "CRO-MON-010",
+      "category": "monitor",
+      "price": 199990,
+      "oldPrice": 229990,
+      "stock": 4,
+      "manufacturer": {
+        "id": "samsung",
+        "name": "Samsung",
+        "country": "Южная Корея"
+      },
+      "description": "Монитор Crown Monitor с OLED матрицей. 32 дюйма, 4K, 240 Гц для идеального изображения.",
+      "specifications": {
+        "diagonal": "32\"",
+        "resolution": "3840x2160 (4K UHD)",
+        "refreshRate": "240 Гц",
+        "panelType": "OLED QD",
+        "responseTime": "0.03 мс",
+        "hdr": "DisplayHDR True Black 400",
+        "colorGamut": "99% DCI-P3, 100% sRGB",
+        "ports": "2x HDMI 2.1, 1x DisplayPort 2.1, USB-C"
+      },
+      "warrantyMonths": 36,
+      "isFeatured": true,
+      "rating": {
+        "average": 4.8,
+        "count": 31
+      }
+    }
+  ],
+  "categories": [
+    {
+      "id": "gpu",
+      "name": "Видеокарты",
+      "slug": "videokarty",
+      "icon": "gpu",
+      "productCount": 3
+    },
+    {
+      "id": "cpu",
+      "name": "Процессоры",
+      "slug": "protsessory",
+      "icon": "cpu",
+      "productCount": 2
+    },
+    {
+      "id": "ram",
+      "name": "Оперативная память",
+      "slug": "operativnaya-pamyat",
+      "icon": "memory",
+      "productCount": 1
+    },
+    {
+      "id": "storage",
+      "name": "Накопители",
+      "slug": "nositeli",
+      "icon": "storage",
+      "productCount": 1
+    },
+    {
+      "id": "psu",
+      "name": "Блоки питания",
+      "slug": "bloki-pitaniya",
+      "icon": "power",
+      "productCount": 1
+    },
+    {
+      "id": "case",
+      "name": "Корпуса",
+      "slug": "korpusa",
+      "icon": "case",
+      "productCount": 1
+    },
+    {
+      "id": "cooling",
+      "name": "Охлаждение",
+      "slug": "okhlazhdenie",
+      "icon": "cooling",
+      "productCount": 1
+    },
+    {
+      "id": "monitor",
+      "name": "Мониторы",
+      "slug": "monitory",
+      "icon": "monitor",
+      "productCount": 1
+    }
+  ],
+  "_meta": {
+    "version": "1.0.0",
+    "lastUpdated": "2025-03-16",
+    "language": "ru",
+    "author": "GoldPC Content Team",
+    "currency": "RUB",
+    "priceRange": {
+      "min": 38990,
+      "max": 289990
+    },
+    "totalProducts": 10
+  }
+}

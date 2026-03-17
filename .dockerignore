@@ -1,0 +1,16 @@
+# Build outputs
+**/bin
+**/obj
+
+# Dependencies
+**/node_modules
+
+# IDE and version control
+.git
+.idea
+
+# Docker files (avoid recursive context issues)
+docker-compose.yml
+
+# Documentation
+*.md

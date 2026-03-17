@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: goldpc
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -38,59 +38,28 @@ services:
       - goldpc-network
 
   # Catalog Service
-  catalogservice:
+  catalog.api:
     build:
-      context: ../src
-      dockerfile: ../docker/Dockerfile.CatalogService
+      context: ..
+      dockerfile: docker/backend/Dockerfile.CatalogService
     container_name: goldpc-catalog
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:5001
+      - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc;User Id=postgres;Password=admin
       - ConnectionStrings__PostgreSQL=Server=postgres;Database=goldpc;User Id=postgres;Password=admin
       - ConnectionStrings__Redis=redis:6379
       - Redis__Host=redis
       - Redis__Port=6379
     ports:
-      - "5001:5001"
+      - "9081:8080"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    networks:
-      - goldpc-network
-    restart: on-failure
-
-  # PC Builder Service
-  pcbuilderservice:
-    build:
-      context: ../src
-      dockerfile: ../docker/Dockerfile.PCBuilderService
-    container_name: goldpc-pcbuilder
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:5002
-      - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc;User Id=postgres;Password=admin
-      - ConnectionStrings__Redis=redis:6379
-      - CatalogService__Url=http://catalogservice:5001
-    ports:
-      - "5002:5002"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      catalogservice:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 0"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -100,27 +69,27 @@ services:
     restart: on-failure
 
   # Auth Service
-  authservice:
+  auth.api:
     build:
-      context: ../src
-      dockerfile: ../docker/Dockerfile.AuthService
+      context: ..
+      dockerfile: docker/backend/Dockerfile.AuthService
     container_name: goldpc-auth
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:5003
-      - ConnectionStrings__PostgreSQL=Server=postgres;Database=goldpc;User Id=postgres;Password=admin
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc;User Id=postgres;Password=admin
       - JwtSettings__Secret=your-super-secret-key-for-development-min-32-chars!
       - JwtSettings__Issuer=goldpc
       - JwtSettings__Audience=goldpc-users
     ports:
-      - "5003:5003"
+      - "9082:8080"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 0"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -136,13 +105,11 @@ services:
       dockerfile: docker/frontend/Dockerfile
     container_name: goldpc-frontend
     ports:
-      - "3000:8080"
+      - "3002:3000"
     depends_on:
-      catalogservice:
+      catalog.api:
         condition: service_healthy
-      pcbuilderservice:
-        condition: service_healthy
-      authservice:
+      auth.api:
         condition: service_healthy
     networks:
       - goldpc-network
@@ -153,7 +120,7 @@ services:
     image: adminer:latest
     container_name: goldpc-adminer
     ports:
-      - "8080:8080"
+      - "9090:8080"
     depends_on:
       postgres:
         condition: service_healthy

@@ -16,20 +16,23 @@ using GoldPC.Shared.Authorization;
 var builder = WebApplication.CreateBuilder(args);
 
 // Настройка Serilog с разделением форматов для Development/Production
-Log.Logger = new LoggerConfiguration()
+var loggerConfiguration = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
     .Enrich.WithProperty("Application", "GoldPC")
-    .Enrich.WithProperty("Service", "AuthService")
-    .WriteTo.Console(
-        outputTemplate: builder.Environment.IsProduction()
-            ? null // Используем JsonFormatter для Production
-            : "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
-        formatter: builder.Environment.IsProduction()
-            ? new JsonFormatter()
-            : null)
-    .WriteTo.File("logs/auth-service-.log", rollingInterval: RollingInterval.Day)
-    .CreateLogger();
+    .Enrich.WithProperty("Service", "AuthService");
+
+if (builder.Environment.IsProduction())
+{
+    loggerConfiguration.WriteTo.Console(new JsonFormatter());
+}
+else
+{
+    loggerConfiguration.WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}");
+}
+
+loggerConfiguration.WriteTo.File("logs/auth-service-.log", rollingInterval: RollingInterval.Day);
+Log.Logger = loggerConfiguration.CreateLogger();
 
 builder.Host.UseSerilog();
 

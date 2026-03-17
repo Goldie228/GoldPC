@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PC Builder — GoldPC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-dim: rgba(212, 165, 116, 0.15);
+      --success: #4ade80;
+      --success-dim: rgba(74, 222, 128, 0.1);
+      --warning: #fbbf24;
+      --warning-dim: rgba(251, 191, 36, 0.1);
+      --error: #f87171;
+      --error-dim: rgba(248, 113, 113, 0.1);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(255, 255, 255, 0.12);
+      --border-accent: rgba(212, 165, 116, 0.2);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 100px;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(9, 9, 11, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+    }
+
+    .header__container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .total-price {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .total-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .total-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    /* ===== MAIN ===== */
+    .main {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: var(--success-dim);
+      border: 1px solid rgba(74, 222, 128, 0.2);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--success);
+    }
+
+    .status-badge--warning {
+      background: var(--warning-dim);
+      border-color: rgba(251, 191, 36, 0.2);
+      color: var(--warning);
+    }
+
+    .status-badge svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ===== COMPONENT LIST ===== */
+    .component-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .component-slot {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 20px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .component-slot:hover {
+      border-color: var(--border-hover);
+    }
+
+    /* Selected state */
+    .component-slot--selected {
+      border-color: var(--border-accent);
+      background: linear-gradient(135deg, var(--accent-dim) 0%, var(--bg-card) 100%);
+    }
+
+    .component-slot--selected::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .component-slot--selected:hover {
+      border-color: var(--accent);
+    }
+
+    /* Incompatible state */
+    .component-slot--incompatible {
+      border-color: rgba(248, 113, 113, 0.3);
+      background: linear-gradient(135deg, var(--error-dim) 0%, var(--bg-card) 100%);
+    }
+
+    .component-slot--incompatible::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+      background: var(--error);
+    }
+
+    .component-slot__inner {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* Icon */
+    .component-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-elevated);
+      color: var(--fg-dim);
+      flex-shrink: 0;
+    }
+
+    .component-slot--selected .component-icon {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .component-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Info */
+    .component-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .component-type {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 4px;
+    }
+
+    .component-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .component-slot--empty .component-name {
+      color: var(--fg-muted);
+      font-weight: 400;
+    }
+
+    .component-specs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--fg-muted);
+    }
+
+    .spec-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .spec-item::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      background: var(--fg-dim);
+      border-radius: 50%;
+    }
+
+    .spec-item:first-child::before {
+      display: none;
+    }
+
+    /* Warning */
+    .warning-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 10px 12px;
+      background: var(--error-dim);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      font-size: 0.75rem;
+      color: var(--error);
+    }
+
+    .warning-badge svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    /* Price */
+    .component-price {
+      text-align: right;
+      min-width: 100px;
+    }
+
+    .component-price__value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .component-price__empty {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--fg-dim);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--fg);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-elevated);
+    }
+
+    .btn--primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn--primary:hover {
+      background: #e0b68a;
+      border-color: #e0b68a;
+    }
+
+    .btn--ghost {
+      color: var(--fg-muted);
+    }
+
+    .btn--ghost:hover {
+      color: var(--accent);
+      border-color: var(--border-accent);
+    }
+
+    /* ===== CHECKOUT BAR ===== */
+    .checkout-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding: 16px 24px;
+    }
+
+    .checkout-bar__container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .checkout-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .checkout-count {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+
+    .checkout-count strong {
+      color: var(--fg);
+      font-weight: 500;
+    }
+
+    .checkout-warning {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      color: var(--warning);
+    }
+
+    .checkout-warning svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .checkout-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 28px;
+      background: var(--accent);
+      border: none;
+      color: var(--bg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .checkout-btn:hover {
+      background: #e0b68a;
+      transform: translateY(-2px);
+    }
+
+    .checkout-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .checkout-price {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .header {
+        padding: 12px 16px;
+      }
+
+      .total-value {
+        font-size: 1.25rem;
+      }
+
+      .main {
+        padding: 16px;
+      }
+
+      .component-slot__inner {
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .component-icon {
+        width: 40px;
+        height: 40px;
+      }
+
+      .component-icon svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .component-info {
+        flex: 1 1 calc(100% - 60px);
+      }
+
+      .component-price {
+        text-align: left;
+        margin-top: 8px;
+        width: 100%;
+      }
+
+      .btn {
+        margin-top: 12px;
+        width: 100%;
+      }
+
+      .checkout-bar {
+        padding: 12px 16px;
+      }
+
+      .checkout-bar__container {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .checkout-info {
+        width: 100%;
+        text-align: center;
+        align-items: center;
+      }
+
+      .checkout-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    /* ===== ACCESSIBILITY ===== */
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header__container">
+      <a href="/" class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+            <polyline points="2 17 12 22 22 17"/>
+            <polyline points="2 12 12 17 22 12"/>
+          </svg>
+        </div>
+        <span class="logo-text">PC<span>Builder</span></span>
+      </a>
+      <div class="total-price">
+        <span class="total-label">Итого</span>
+        <span class="total-value">8,450 BYN</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="section-header">
+      <h1 class="section-title">Комплектующие</h1>
+      <div class="status-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Совместимо
+      </div>
+    </div>
+
+    <div class="component-list">
+      <!-- CPU - Selected -->
+      <div class="component-slot component-slot--selected">
+        <div class="component-slot__inner">
+          <div class="component-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="4" y="4" width="16" height="16" rx="2"/>
+              <rect x="9" y="9" width="6" height="6"/>
+              <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>
+            </svg>
+          </div>
+          <div class="component-info">
+            <span class="component-type">Процессор</span>
+            <div class="component-name">AMD Ryzen 7 7800X3D</div>
+            <div class="component-specs">
+              <span class="spec-item">8C / 16T</span>
+              <span class="spec-item">4.2 GHz</span>
+              <span class="spec-item">96MB L3</span>
+            </div>
+          </div>
+          <div class="component-price">
+            <div class="component-price__value">1,450 BYN</div>
+          </div>
+          <button class="btn btn--ghost">Изменить</button>
+        </div>
+      </div>
+
+      <!-- GPU - Selected -->
+      <div class="component-slot component-slot--selected">
+        <div class="component-slot__inner">
+          <div class="component-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="6" width="20" height="12" rx="2"/>
+              <path d="M6 10h4v4H6z"/>
+              <path d="M14 10h4M14 14h4M18 6V4M6 6V4"/>
+            </svg>
+          </div>
+          <div class="component-info">
+            <span class="component-type">Видеокарта</span>
+            <div class="component-name">NVIDIA GeForce RTX 4070 Ti Super</div>
+            <div class="component-specs">
+              <span class="spec-item">16GB GDDR6X</span>
+              <span class="spec-item">2652 MHz</span>
+              <span class="spec-item">285W TDP</span>
+            </div>
+          </div>
+          <div class="component-price">
+            <div class="component-price__value">3,200 BYN</div>
+          </div>
+          <button class="btn btn--ghost">Изменить</button>
+        </div>
+      </div>
+
+      <!-- Motherboard - Selected -->
+      <div class="component-slot component-slot--selected">
+        <div class="component-slot__inner">
+          <div class="component-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="2" width="20" height="20" rx="2"/>
+              <rect x="5" y="5" width="6" height="4"/>
+              <rect x="13" y="5" width="4" height="8"/>
+              <circle cx="8" cy="14" r="2"/>
+              <rect x="5" y="17" width="4" height="3"/>
+            </svg>
+          </div>
+          <div class="component-info">
+            <span class="component-type">Материнская плата</span>
+            <div class="component-name">ASUS ROG Strix B650E-F Gaming WiFi</div>
+            <div class="component-specs">
+              <span class="spec-item">AM5</span>
+              <span class="spec-item">DDR5</span>
+              <span class="spec-item">PCIe 5.0</span>
+            </div>
+          </div>
+          <div class="component-price">
+            <div class="component-price__value">850 BYN</div>
+          </div>
+          <button class="btn btn--ghost">Изменить</button>
+        </div>
+      </div>
+
+      <!-- RAM - Selected -->
+      <div class="component-slot component-slot--selected">
+        <div class="component-slot__inner">
+          <div class="component-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="8" width="20" height="8" rx="1"/>
+              <path d="M6 8V6M10 8V6M14 8V6M18 8V6"/>
+              <rect x="5" y="11" width="3" height="2"/>
+              <rect x="10" y="11" width="3" height="2"/>
+              <rect x="15" y="11" width="3" height="2"/>
+            </svg>
+          </div>
+          <div class="component-info">
+            <span class="component-type">Оперативная память</span>
+            <div class="component-name">G.Skill Trident Z5 RGB 32GB (2×16GB)</div>
+            <div class="component-specs">
+              <span class="spec-item">DDR5-6000</span>
+              <span class="spec-item">CL30</span>
+              <span class="spec-item">1.35V</span>
+            </div>
+          </div>
+          <div class="component-price">
+            <div class="component-price__value">650 BYN</div>
+          </div>
+          <button class="btn btn--ghost">Изменить</button>
+        </div>
+      </div>
+
+      <!-- Storage - Incompatible -->
+      <div class="component-slot component-slot--incompatible">
+        <div class="component-slot__inner">
+          <div class="component-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="6" width="18" height="12" rx="2"/>
+              <circle cx="7" cy="12" r="1"/>
+              <circle cx="12" cy="12" r="1"/>
+              <circle cx="17" cy="12" r="1"/>
+            </svg>
+          </div>
+          <div class="component-info">
+            <span class="component-type">Накопитель</span>
+            <div class="component-name">Samsung 990 Pro 2TB NVMe SSD</div>
+            <div class="component-specs">
+              <span class="spec-item">PCIe 4.0 x4</span>
+              <span class="spec-item">7450 MB/s</span>
+            </div>
+            <div class="warning-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              Слот M.2 занят (требуется адаптер)
+            </div>
+          </div>
+          <div class="component-price">
+            <div class="component-price__value">380 BYN</div>
+          </div>
+          <button class="btn">Выбрать другой</button>
+        </div>
+      </div>
+
+      <!-- PSU - Selected -->
+      <div class="component-slot component-slot--selected">
+        <div class="component-slot__inner">
+          <div class="component-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="4" width="18" height="16" rx="2"/>
+              <circle cx="8" cy="10" r="2"/>
+              <path d="M7 15h2M12 15h2M17 15h2M14 8h4M16 6v4"/>
+            </svg>
+          </div>
+          <div class="component-info">
+            <span class="component-type">Блок питания</span>
+            <div class="component-name">Corsair RM1000x (2021) 1000W</div>
+            <div class="component-specs">
+              <span class="spec-item">80+ Gold</span>
+              <span class="spec-item">Модульный</span>
+              <span class="spec-item">140mm Fan</span>
+            </div>
+          </div>
+          <div class="component-price">
+            <div class="component-price__value">520 BYN</div>
+          </div>
+          <button class="btn btn--ghost">Изменить</button>
+        </div>
+      </div>
+
+      <!-- Case - Empty -->
+      <div class="component-slot component-slot--empty">
+        <div class="component-slot__inner">
+          <div class="component-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="4" y="2" width="16" height="20" rx="2"/>
+              <rect x="7" y="5" width="10" height="6" rx="1"/>
+              <circle cx="8" cy="15" r="1"/>
+              <circle cx="12" cy="15" r="1"/>
+              <path d="M15 14h2v2h-2z"/>
+            </svg>
+          </div>
+          <div class="component-info">
+            <span class="component-type">Корпус</span>
+            <div class="component-name">Выберите корпус</div>
+            <div class="component-specs">
+              <span class="spec-item">Mid Tower</span>
+              <span class="spec-item">ATX</span>
+            </div>
+          </div>
+          <div class="component-price">
+            <div class="component-price__empty">—</div>
+          </div>
+          <button class="btn btn--primary">Выбрать</button>
+        </div>
+      </div>
+
+      <!-- Cooler - Empty -->
+      <div class="component-slot component-slot--empty">
+        <div class="component-slot__inner">
+          <div class="component-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+            </svg>
+          </div>
+          <div class="component-info">
+            <span class="component-type">Охлаждение</span>
+            <div class="component-name">Выберите систему охлаждения</div>
+            <div class="component-specs">
+              <span class="spec-item">240mm AIO</span>
+              <span class="spec-item">или Air Cooler</span>
+            </div>
+          </div>
+          <div class="component-price">
+            <div class="component-price__empty">—</div>
+          </div>
+          <button class="btn btn--primary">Выбрать</button>
+        </div>
+      </div>
+
+      <!-- Fans - Empty -->
+      <div class="component-slot component-slot--empty">
+        <div class="component-slot__inner">
+          <div class="component-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="9"/>
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 9l-2-6M12 9l2-6M12 15l2 6M12 15l-2 6"/>
+            </svg>
+          </div>
+          <div class="component-info">
+            <span class="component-type">Вентиляторы</span>
+            <div class="component-name">Добавьте вентиляторы</div>
+            <div class="component-specs">
+              <span class="spec-item">3×120mm</span>
+              <span class="spec-item">Опционально</span>
+            </div>
+          </div>
+          <div class="component-price">
+            <div class="component-price__empty">—</div>
+          </div>
+          <button class="btn btn--ghost">Пропустить</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Checkout Bar -->
+  <div class="checkout-bar">
+    <div class="checkout-bar__container">
+      <div class="checkout-info">
+        <div class="checkout-count">Выбрано <strong>6 из 8</strong> компонентов</div>
+        <div class="checkout-warning">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Есть проблемы совместимости (1)
+        </div>
+      </div>
+      <button class="checkout-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+        </svg>
+        <span>Оформить</span>
+        <span class="checkout-price">8,450 BYN</span>
+      </button>
+    </div>
+  </div>
+</body>
+</html>
