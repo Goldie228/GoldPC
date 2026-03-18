@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Личный кабинет — GoldPC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --radius: 4px;
+      --radius-lg: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      overflow-x: hidden;
+      font-feature-settings: 'ss01' on;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--fg-dim);
+      border-radius: 3px;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .nav {
+      display: flex;
+      gap: 32px;
+    }
+
+    .nav a {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: color 0.2s;
+    }
+
+    .nav a:hover {
+      color: var(--fg);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-accent);
+      color: var(--accent);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 16px;
+      height: 16px;
+      background: var(--accent);
+      color: var(--bg);
+      font-size: 9px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ===== LAYOUT ===== */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      padding-top: 72px;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: 260px;
+      background: var(--bg-elevated);
+      border-right: 1px solid var(--border);
+      padding: 32px 0;
+      position: fixed;
+      top: 72px;
+      left: 0;
+      bottom: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-profile {
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .profile-avatar {
+      width: 64px;
+      height: 64px;
+      background: var(--bg-card);
+      border: 2px solid var(--border-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      color: var(--accent);
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .profile-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .profile-email {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+    }
+
+    .sidebar-nav-item {
+      margin-bottom: 4px;
+    }
+
+    .sidebar-nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      color: var(--fg-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav-link:hover {
+      color: var(--fg);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .sidebar-nav-link.active {
+      color: var(--accent);
+      background: var(--accent-glow);
+      border-left-color: var(--accent);
+    }
+
+    .sidebar-nav-link svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .sidebar-section {
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sidebar-section-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--fg-dim);
+      padding: 0 24px;
+      margin-bottom: 12px;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main {
+      flex: 1;
+      margin-left: 260px;
+      padding: 32px 40px;
+      background: var(--bg);
+    }
+
+    .page-header {
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      font-size: 0.9rem;
+      color: var(--fg-muted);
+    }
+
+    /* ===== WELCOME CARD ===== */
+    .welcome-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 32px;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .welcome-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .welcome-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .welcome-title span {
+      color: var(--accent);
+    }
+
+    .welcome-text {
+      color: var(--fg-muted);
+      font-size: 0.9rem;
+    }
+
+    .welcome-stats {
+      display: flex;
+      gap: 40px;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .welcome-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .welcome-stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--fg);
+    }
+
+    .welcome-stat-label {
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ===== RECENT ORDERS ===== */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .view-all {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fg-dim);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+
+    .view-all:hover {
+      color: var(--accent);
+    }
+
+    .view-all svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ===== TABLE ===== */
+    .table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table th {
+      text-align: left;
+      padding: 16px 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--fg-dim);
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table td {
+      padding: 16px 20px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--fg);
+    }
+
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .order-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+    }
+
+    .order-items {
+      color: var(--fg-muted);
+      max-width: 300px;
+    }
+
+    .order-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+
+    .order-total {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-radius: var(--radius);
+    }
+
+    .status-badge.delivered {
+      background: rgba(212, 165, 116, 0.15);
+      color: var(--accent);
+    }
+
+    .status-badge.processing {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+    }
+
+    .status-badge.shipped {
+      background: rgba(34, 197, 94, 0.15);
+      color: #4ade80;
+    }
+
+    .status-badge.pending {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: 220px;
+      }
+
+      .main {
+        margin-left: 220px;
+        padding: 24px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav {
+        display: none;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: -260px;
+        transition: left 0.3s;
+      }
+
+      .sidebar.open {
+        left: 0;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 20px;
+      }
+
+      .welcome-stats {
+        flex-wrap: wrap;
+        gap: 24px;
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+
+    <nav class="nav">
+      <a href="#">Каталог</a>
+      <a href="#">Конструктор</a>
+      <a href="#">Сервис</a>
+      <a href="#">О нас</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Поиск">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </button>
+      <button class="icon-btn" aria-label="Корзина">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+        </svg>
+        <span class="cart-badge">2</span>
+      </button>
+      <button class="icon-btn" aria-label="Профиль">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Layout -->
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-profile">
+        <div class="profile-avatar">АИ</div>
+        <div class="profile-name">Александр Иванов</div>
+        <div class="profile-email">alex.ivanov@email.com</div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-item">
+          <a href="account.html" class="sidebar-nav-link active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Обзор
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="account-profile.html" class="sidebar-nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Профиль
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="account-orders.html" class="sidebar-nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+            Заказы
+          </a>
+        </li>
+        <li class="sidebar-nav-item">
+          <a href="#" class="sidebar-nav-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            Избранное
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Настройки</div>
+        <ul class="sidebar-nav">
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+              Настройки
+            </a>
+          </li>
+          <li class="sidebar-nav-item">
+            <a href="#" class="sidebar-nav-link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Выйти
+            </a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <div class="page-header">
+        <h1 class="page-title">Личный кабинет</h1>
+        <p class="page-subtitle">Управляйте своим аккаунтом и заказами</p>
+      </div>
+
+      <!-- Welcome Card -->
+      <div class="welcome-card">
+        <h2 class="welcome-title">Добро пожаловать, <span>Александр</span>!</h2>
+        <p class="welcome-text">Рады видеть вас в GoldPC. Здесь вы можете отслеживать заказы, управлять профилем и просматривать избранные товары.</p>
+        <div class="welcome-stats">
+          <div class="welcome-stat">
+            <span class="welcome-stat-value">12</span>
+            <span class="welcome-stat-label">Заказов</span>
+          </div>
+          <div class="welcome-stat">
+            <span class="welcome-stat-value">8</span>
+            <span class="welcome-stat-label">Избранное</span>
+          </div>
+          <div class="welcome-stat">
+            <span class="welcome-stat-value">4 580</span>
+            <span class="welcome-stat-label">Бонусов</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <section class="recent-orders">
+        <div class="section-header">
+          <h2 class="section-title">Последние заказы</h2>
+          <a href="account-orders.html" class="view-all">
+            Все заказы
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </a>
+        </div>
+
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Заказ</th>
+                <th>Товары</th>
+                <th>Дата</th>
+                <th>Сумма</th>
+                <th>Статус</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="order-id">#ORD-2025-0847</span></td>
+                <td class="order-items">RTX 4070 Ti Super, AMD Ryzen 7 7800X3D</td>
+                <td class="order-date">15.03.2026</td>
+                <td class="order-total">4 650 BYN</td>
+                <td><span class="status-badge delivered"><span class="status-dot"></span>Доставлен</span></td>
+              </tr>
+              <tr>
+                <td><span class="order-id">#ORD-2025-0712</span></td>
+                <td class="order-items">G.Skill Trident Z5 32GB DDR5</td>
+                <td class="order-date">02.03.2026</td>
+                <td class="order-total">650 BYN</td>
+                <td><span class="status-badge delivered"><span class="status-dot"></span>Доставлен</span></td>
+              </tr>
+              <tr>
+                <td><span class="order-id">#ORD-2025-0698</span></td>
+                <td class="order-items">Samsung 990 Pro 2TB, Corsair RM850x</td>
+                <td class="order-date">24.02.2026</td>
+                <td class="order-total">680 BYN</td>
+                <td><span class="status-badge shipped"><span class="status-dot"></span>В пути</span></td>
+              </tr>
+              <tr>
+                <td><span class="order-id">#ORD-2025-0543</span></td>
+                <td class="order-items">ASUS ROG Strix B650E-F</td>
+                <td class="order-date">10.02.2026</td>
+                <td class="order-total">520 BYN</td>
+                <td><span class="status-badge processing"><span class="status-dot"></span>В обработке</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,113 @@
+/* ========================================
+   Button Component Styles
+   Source: prototypes/home.html
+   ======================================== */
+
+/* Base Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   Primary Button (Gold)
+   ======================================== */
+
+.primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--accent-bright);
+  transform: translateY(-2px);
+}
+
+.primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Icon animation on hover */
+.primary .icon {
+  transition: transform var(--transition-base);
+}
+
+.primary:hover:not(:disabled) .icon {
+  transform: translateX(4px);
+}
+
+/* ========================================
+   Ghost Button (Transparent)
+   ======================================== */
+
+.ghost {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+.ghost:hover:not(:disabled) {
+  border-color: var(--fg-dim);
+  background: var(--bg-card);
+}
+
+.ghost:active:not(:disabled) {
+  background: var(--bg-elevated);
+}
+
+/* ========================================
+   Icon Styles
+   ======================================== */
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ========================================
+   Focus State (Accessibility)
+   ======================================== */
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   Reduced Motion
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+
+  .btn:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .primary:hover:not(:disabled) .icon {
+    transform: none;
+  }
+}

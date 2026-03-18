@@ -9,6 +9,22 @@ import type { User, Product, PagedResponse } from './types';
 
 export type UserRole = 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant';
 
+// === Типы для статистики дашборда ===
+
+export interface DashboardStats {
+  totalUsers: number;
+  totalOrders: number;
+  revenue: number;
+  usersChange: number;
+  ordersChange: number;
+  revenueChange: number;
+}
+
+export interface StatsResponse {
+  stats: DashboardStats;
+  lastUpdated: string;
+}
+
 export interface UpdateUserRoleRequest {
   role: UserRole;
 }
@@ -29,7 +45,7 @@ export interface GetUsersParams {
   isActive?: boolean;
 }
 
-export interface UserListResponse extends PagedResponse<User> {}
+export type UserListResponse = PagedResponse<User>;
 
 /**
  * API администрирования пользователей
@@ -117,6 +133,19 @@ export const catalogAdminApi = {
    */
   async createProduct(data: Partial<Product>): Promise<Product> {
     const response = await api.post<Product>('/admin/products', data);
+    return response.data;
+  },
+};
+
+/**
+ * API статистики дашборда
+ */
+export const statsApi = {
+  /**
+   * Получить статистику для административной панели
+   */
+  async getStats(): Promise<StatsResponse> {
+    const response = await api.get<StatsResponse>('/admin/stats');
     return response.data;
   },
 };

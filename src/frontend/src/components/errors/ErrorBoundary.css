@@ -1,0 +1,115 @@
+/* ========================================
+   ErrorBoundary Component Styles
+   GoldPC Design System
+   ======================================== */
+
+.error-boundary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  background: var(--bg);
+}
+
+.error-boundary__container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 480px;
+  padding: 3rem;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.error-boundary__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1.5rem;
+  color: var(--accent);
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: 50%;
+}
+
+.error-boundary__icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.error-boundary__title {
+  margin: 0 0 1rem;
+  font-family: var(--font-sans);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.02em;
+}
+
+.error-boundary__message {
+  margin: 0 0 2rem;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--fg-dim);
+}
+
+.error-boundary__details {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.error-boundary__details summary {
+  padding: 0.75rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fg-dim);
+  cursor: pointer;
+}
+
+.error-boundary__details summary:hover {
+  color: var(--fg);
+}
+
+.error-boundary__details pre {
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--fg-dim);
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+/* ========================================
+   Responsive Styles
+   ======================================== */
+
+@media (max-width: 480px) {
+  .error-boundary {
+    padding: 1rem;
+  }
+
+  .error-boundary__container {
+    padding: 2rem 1.5rem;
+  }
+
+  .error-boundary__title {
+    font-size: 1.5rem;
+  }
+
+  .error-boundary__message {
+    font-size: 0.9rem;
+  }
+}

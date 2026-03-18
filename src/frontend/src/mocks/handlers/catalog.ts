@@ -14,7 +14,7 @@ import type {
   PaginationMeta,
 } from '../../api/types';
 
-// === Генераторы данных ===
+// === Категории ===
 
 const categories: ProductCategory[] = [
   'cpu',
@@ -42,137 +42,473 @@ const categoryNames: Record<ProductCategory, string> = {
   peripherals: 'Периферия',
 };
 
-const generateProductSummary = (): ProductSummary => {
-  const category = faker.helpers.arrayElement(categories);
-  const price = parseFloat(
-    faker.commerce.price({ min: 1000, max: 200000 })
-  );
-  const hasDiscount = faker.datatype.boolean({ probability: 0.3 });
-  
-  return {
-    id: faker.string.uuid(),
-    name: faker.commerce.productName(),
-    sku: faker.string.alphanumeric({ length: 10 }).toUpperCase(),
-    category,
+// === Реалистичные продукты для разработки ===
+
+interface RealisticProduct extends Product {
+  specifications: Record<string, string | number | boolean>;
+}
+
+const REALISTIC_PRODUCTS: RealisticProduct[] = [
+  // === ПРОЦЕССОРЫ (CPU) ===
+  {
+    id: 'cpu-001',
+    name: 'AMD Ryzen 9 7950X',
+    sku: 'CPU-AMD-7950X',
+    category: 'cpu',
     manufacturer: {
-      id: faker.string.uuid(),
-      name: faker.company.name(),
-      country: faker.location.country(),
+      id: 'mfr-amd',
+      name: 'AMD',
+      country: 'США',
     },
-    price,
-    oldPrice: hasDiscount ? price * faker.number.float({ min: 1.1, max: 1.3 }) : undefined,
-    stock: faker.number.int({ min: 0, max: 50 }),
+    price: 54990,
+    oldPrice: 62990,
+    stock: 15,
     mainImage: {
-      id: faker.string.uuid(),
-      url: `https://picsum.photos/seed/${faker.string.uuid()}/400/300`,
-      alt: faker.commerce.productDescription(),
+      id: 'img-cpu-001',
+      url: 'https://placehold.co/400x400/1a1a2e/e7352c?text=AMD+Ryzen+9+7950X',
+      alt: 'AMD Ryzen 9 7950X',
       isMain: true,
     },
-    rating: faker.number.float({ min: 3, max: 5, fractionDigits: 1 }),
-    isActive: faker.datatype.boolean({ probability: 0.95 }),
-  };
-};
+    rating: 4.9,
+    isActive: true,
+    warrantyMonths: 36,
+    description: 'Флагманский процессор AMD Ryzen 9 7950X на архитектуре Zen 4. 16 ядер, 32 потока, идеально для игр и профессиональных задач.',
+    specifications: {
+      socket: 'AM5',
+      cores: 16,
+      threads: 32,
+      baseFrequency: '4500 МГц',
+      turboFrequency: '5700 МГц',
+      tdp: '170 Вт',
+      cache: '64 МБ L3',
+      architecture: 'Zen 4',
+      lithography: '5 нм',
+      unlocked: true,
+    },
+    images: [],
+    isFeatured: true,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-12-01T12:00:00Z',
+  },
+  {
+    id: 'cpu-002',
+    name: 'Intel Core i9-14900K',
+    sku: 'CPU-INT-14900K',
+    category: 'cpu',
+    manufacturer: {
+      id: 'mfr-intel',
+      name: 'Intel',
+      country: 'США',
+    },
+    price: 58990,
+    oldPrice: 64990,
+    stock: 8,
+    mainImage: {
+      id: 'img-cpu-002',
+      url: 'https://placehold.co/400x400/0071c5/ffffff?text=Intel+i9-14900K',
+      alt: 'Intel Core i9-14900K',
+      isMain: true,
+    },
+    rating: 4.8,
+    isActive: true,
+    warrantyMonths: 36,
+    description: 'Мощнейший процессор Intel 14-го поколения. 24 ядра, частота до 6.0 ГГц, поддержка DDR5 и PCIe 5.0.',
+    specifications: {
+      socket: 'LGA1700',
+      cores: 24,
+      threads: 32,
+      baseFrequency: '3600 МГц',
+      turboFrequency: '6000 МГц',
+      tdp: '125 Вт',
+      maxTdp: '253 Вт',
+      cache: '36 МБ L3',
+      architecture: 'Raptor Lake Refresh',
+      lithography: 'Intel 7',
+    },
+    images: [],
+    isFeatured: true,
+    createdAt: '2024-02-20T10:00:00Z',
+  },
+  {
+    id: 'cpu-003',
+    name: 'AMD Ryzen 7 7800X3D',
+    sku: 'CPU-AMD-7800X3D',
+    category: 'cpu',
+    manufacturer: {
+      id: 'mfr-amd',
+      name: 'AMD',
+      country: 'США',
+    },
+    price: 38990,
+    stock: 22,
+    mainImage: {
+      id: 'img-cpu-003',
+      url: 'https://placehold.co/400x400/1a1a2e/e7352c?text=Ryzen+7+7800X3D',
+      alt: 'AMD Ryzen 7 7800X3D',
+      isMain: true,
+    },
+    rating: 4.9,
+    isActive: true,
+    warrantyMonths: 36,
+    description: 'Лучший игровой процессор с технологией 3D V-Cache. 8 ядер, невероятная производительность в играх.',
+    specifications: {
+      socket: 'AM5',
+      cores: 8,
+      threads: 16,
+      baseFrequency: '4200 МГц',
+      turboFrequency: '5050 МГц',
+      tdp: '120 Вт',
+      cache: '104 МБ (96 МБ 3D V-Cache)',
+      architecture: 'Zen 4',
+      lithography: '5 нм',
+      '3dVCache': true,
+    },
+    images: [],
+    isFeatured: true,
+    createdAt: '2024-03-10T10:00:00Z',
+  },
+  {
+    id: 'cpu-004',
+    name: 'Intel Core i5-14600K',
+    sku: 'CPU-INT-14600K',
+    category: 'cpu',
+    manufacturer: {
+      id: 'mfr-intel',
+      name: 'Intel',
+      country: 'США',
+    },
+    price: 32990,
+    stock: 18,
+    mainImage: {
+      id: 'img-cpu-004',
+      url: 'https://placehold.co/400x400/0071c5/ffffff?text=Intel+i5-14600K',
+      alt: 'Intel Core i5-14600K',
+      isMain: true,
+    },
+    rating: 4.7,
+    isActive: true,
+    warrantyMonths: 36,
+    description: 'Отличный выбор для игрового ПК. 14 ядер, разгон до 5.3 ГГц, отличное соотношение цена/качество.',
+    specifications: {
+      socket: 'LGA1700',
+      cores: 14,
+      threads: 20,
+      baseFrequency: '3500 МГц',
+      turboFrequency: '5300 МГц',
+      tdp: '125 Вт',
+      maxTdp: '181 Вт',
+      cache: '24 МБ L3',
+      architecture: 'Raptor Lake Refresh',
+    },
+    images: [],
+    isFeatured: false,
+    createdAt: '2024-04-05T10:00:00Z',
+  },
+  // === ВИДЕОКАРТЫ (GPU) ===
+  {
+    id: 'gpu-001',
+    name: 'NVIDIA GeForce RTX 4090',
+    sku: 'GPU-NV-RTX4090',
+    category: 'gpu',
+    manufacturer: {
+      id: 'mfr-nvidia',
+      name: 'NVIDIA',
+      country: 'США',
+    },
+    price: 189990,
+    oldPrice: 219990,
+    stock: 5,
+    mainImage: {
+      id: 'img-gpu-001',
+      url: 'https://placehold.co/400x400/76b900/ffffff?text=RTX+4090',
+      alt: 'NVIDIA GeForce RTX 4090',
+      isMain: true,
+    },
+    rating: 4.9,
+    isActive: true,
+    warrantyMonths: 36,
+    description: 'Флагманская видеокарта NVIDIA на архитектуре Ada Lovelace. 24 ГБ GDDR6X, трассировка лучей 3-го поколения, DLSS 3.',
+    specifications: {
+      chip: 'AD102',
+      memory: '24 ГБ',
+      memoryType: 'GDDR6X',
+      memoryBus: '384 бит',
+      baseFrequency: '2235 МГц',
+      boostFrequency: '2520 МГц',
+      tdp: '450 Вт',
+      cudaCores: 16384,
+      rtCores: 3,
+      dlss: 3,
+    },
+    images: [],
+    isFeatured: true,
+    createdAt: '2024-01-05T10:00:00Z',
+    updatedAt: '2024-11-15T12:00:00Z',
+  },
+  {
+    id: 'gpu-002',
+    name: 'AMD Radeon RX 7900 XTX',
+    sku: 'GPU-AMD-RX7900XTX',
+    category: 'gpu',
+    manufacturer: {
+      id: 'mfr-amd',
+      name: 'AMD',
+      country: 'США',
+    },
+    price: 119990,
+    oldPrice: 134990,
+    stock: 7,
+    mainImage: {
+      id: 'img-gpu-002',
+      url: 'https://placehold.co/400x400/e7352c/ffffff?text=RX+7900+XTX',
+      alt: 'AMD Radeon RX 7900 XTX',
+      isMain: true,
+    },
+    rating: 4.8,
+    isActive: true,
+    warrantyMonths: 36,
+    description: 'Топовая видеокарта AMD на архитектуре RDNA 3. 24 ГБ памяти, поддержка DisplayPort 2.1, FSR 3.',
+    specifications: {
+      chip: 'Navi 31',
+      memory: '24 ГБ',
+      memoryType: 'GDDR6',
+      memoryBus: '384 бит',
+      baseFrequency: '1900 МГц',
+      boostFrequency: '2500 МГц',
+      tdp: '355 Вт',
+      streamProcessors: 6144,
+      infinityCache: '96 МБ',
+    },
+    images: [],
+    isFeatured: true,
+    createdAt: '2024-02-15T10:00:00Z',
+  },
+  {
+    id: 'gpu-003',
+    name: 'NVIDIA GeForce RTX 4070 Super',
+    sku: 'GPU-NV-RTX4070S',
+    category: 'gpu',
+    manufacturer: {
+      id: 'mfr-nvidia',
+      name: 'NVIDIA',
+      country: 'США',
+    },
+    price: 64990,
+    stock: 12,
+    mainImage: {
+      id: 'img-gpu-003',
+      url: 'https://placehold.co/400x400/76b900/ffffff?text=RTX+4070+Super',
+      alt: 'NVIDIA GeForce RTX 4070 Super',
+      isMain: true,
+    },
+    rating: 4.7,
+    isActive: true,
+    warrantyMonths: 36,
+    description: 'Отличная видеокарта для 1440p гейминга. 12 ГБ GDDR6X, DLSS 3, трассировка лучей.',
+    specifications: {
+      chip: 'AD104',
+      memory: '12 ГБ',
+      memoryType: 'GDDR6X',
+      memoryBus: '192 бит',
+      baseFrequency: '1980 МГц',
+      boostFrequency: '2475 МГц',
+      tdp: '220 Вт',
+      cudaCores: 7168,
+      dlss: 3,
+    },
+    images: [],
+    isFeatured: false,
+    createdAt: '2024-03-20T10:00:00Z',
+  },
+  // === МАТЕРИНСКИЕ ПЛАТЫ ===
+  {
+    id: 'mb-001',
+    name: 'ASUS ROG Maximus Z790 Hero',
+    sku: 'MB-ASUS-Z790HERO',
+    category: 'motherboard',
+    manufacturer: {
+      id: 'mfr-asus',
+      name: 'ASUS',
+      country: 'Тайвань',
+    },
+    price: 54990,
+    stock: 6,
+    mainImage: {
+      id: 'img-mb-001',
+      url: 'https://placehold.co/400x400/000000/ffffff?text=ASUS+Z790+Hero',
+      alt: 'ASUS ROG Maximus Z790 Hero',
+      isMain: true,
+    },
+    rating: 4.8,
+    isActive: true,
+    warrantyMonths: 36,
+    description: 'Премиальная материнская плата для Intel. Поддержка DDR5, PCIe 5.0, WiFi 6E, премиальный звук.',
+    specifications: {
+      socket: 'LGA1700',
+      chipset: 'Intel Z790',
+      formFactor: 'ATX',
+      memorySlots: 4,
+      maxMemory: '128 ГБ',
+      memoryType: 'DDR5',
+      memorySpeed: '7800+ МГц',
+      pcieSlots: '3x PCIe 5.0 x16',
+      m2Slots: 5,
+      usb: 'USB 3.2 Gen 2x2, USB-C',
+      wifi: 'WiFi 6E',
+      bluetooth: '5.3',
+    },
+    images: [],
+    isFeatured: true,
+    createdAt: '2024-01-25T10:00:00Z',
+  },
+  {
+    id: 'mb-002',
+    name: 'MSI MPG X670E Carbon WiFi',
+    sku: 'MB-MSI-X670ECARBON',
+    category: 'motherboard',
+    manufacturer: {
+      id: 'mfr-msi',
+      name: 'MSI',
+      country: 'Тайвань',
+    },
+    price: 42990,
+    oldPrice: 47990,
+    stock: 9,
+    mainImage: {
+      id: 'img-mb-002',
+      url: 'https://placehold.co/400x400/ff0000/ffffff?text=MSI+X670E+Carbon',
+      alt: 'MSI MPG X670E Carbon WiFi',
+      isMain: true,
+    },
+    rating: 4.7,
+    isActive: true,
+    warrantyMonths: 36,
+    description: 'Высокопроизводительная плата для AMD Ryzen 7000. PCIe 5.0, DDR5, мощная подсистема питания.',
+    specifications: {
+      socket: 'AM5',
+      chipset: 'AMD X670E',
+      formFactor: 'ATX',
+      memorySlots: 4,
+      maxMemory: '128 ГБ',
+      memoryType: 'DDR5',
+      memorySpeed: '6666+ МГц',
+      pcieSlots: '2x PCIe 5.0 x16',
+      m2Slots: 4,
+      usb: 'USB 4.0, USB 3.2 Gen 2',
+      wifi: 'WiFi 6E',
+      bluetooth: '5.3',
+      vrmPhases: 24,
+    },
+    images: [],
+    isFeatured: true,
+    createdAt: '2024-02-10T10:00:00Z',
+  },
+  {
+    id: 'mb-003',
+    name: 'Gigabyte B650 Aorus Elite AX',
+    sku: 'MB-GIG-B650ELITE',
+    category: 'motherboard',
+    manufacturer: {
+      id: 'mfr-gigabyte',
+      name: 'Gigabyte',
+      country: 'Тайвань',
+    },
+    price: 21990,
+    stock: 14,
+    mainImage: {
+      id: 'img-mb-003',
+      url: 'https://placehold.co/400x400/ff6600/ffffff?text=Gigabyte+B650+Aorus',
+      alt: 'Gigabyte B650 Aorus Elite AX',
+      isMain: true,
+    },
+    rating: 4.6,
+    isActive: true,
+    warrantyMonths: 36,
+    description: 'Отличное соотношение цена/качество для AMD Ryzen. DDR5, PCIe 4.0, WiFi 6, RGB-подсветка.',
+    specifications: {
+      socket: 'AM5',
+      chipset: 'AMD B650',
+      formFactor: 'ATX',
+      memorySlots: 4,
+      maxMemory: '128 ГБ',
+      memoryType: 'DDR5',
+      memorySpeed: '6400+ МГц',
+      pcieSlots: '1x PCIe 4.0 x16',
+      m2Slots: 3,
+      usb: 'USB 3.2 Gen 2',
+      wifi: 'WiFi 6',
+      bluetooth: '5.2',
+      vrmPhases: 16,
+    },
+    images: [],
+    isFeatured: false,
+    createdAt: '2024-03-05T10:00:00Z',
+  },
+];
 
-const generateProduct = (summary?: ProductSummary): Product => {
-  const base = summary || generateProductSummary();
-  const specifications: Record<string, string | number | boolean> = {};
+// === Вспомогательные функции ===
+
+function getProductsCache(): ProductSummary[] {
+  return REALISTIC_PRODUCTS.map((p) => ({
+    id: p.id,
+    name: p.name,
+    sku: p.sku,
+    category: p.category,
+    manufacturer: p.manufacturer,
+    price: p.price,
+    oldPrice: p.oldPrice,
+    stock: p.stock,
+    mainImage: p.mainImage,
+    rating: p.rating,
+    isActive: p.isActive,
+    isFeatured: p.isFeatured,
+  }));
+}
+
+function generateProduct(summary: ProductSummary): Product {
+  const base = REALISTIC_PRODUCTS.find((p) => p.id === summary.id);
+  if (base) return base;
   
-  // Генерация спецификаций в зависимости от категории
-  switch (base.category) {
-    case 'cpu':
-      specifications.socket = faker.helpers.arrayElement(['AM5', 'LGA1700', 'AM4', 'LGA1200']);
-      specifications.cores = faker.number.int({ min: 4, max: 24 });
-      specifications.threads = faker.number.int({ min: 8, max: 32 });
-      specifications.baseFrequency = `${faker.number.int({ min: 2800, max: 4500 })} MHz`;
-      specifications.turboFrequency = `${faker.number.int({ min: 4000, max: 5800 })} MHz`;
-      specifications.tdp = `${faker.number.int({ min: 65, max: 250 })} W`;
-      break;
-    case 'gpu':
-      specifications.memory = `${faker.number.int({ min: 8, max: 24 })} GB`;
-      specifications.memoryType = faker.helpers.arrayElement(['GDDR6', 'GDDR6X', 'GDDR7']);
-      specifications.baseClock = `${faker.number.int({ min: 1500, max: 2200 })} MHz`;
-      specifications.boostClock = `${faker.number.int({ min: 2200, max: 3000 })} MHz`;
-      specifications.tdp = `${faker.number.int({ min: 150, max: 450 })} W`;
-      break;
-    case 'ram':
-      specifications.capacity = `${faker.number.int({ min: 8, max: 64 })} GB`;
-      specifications.type = faker.helpers.arrayElement(['DDR4', 'DDR5']);
-      specifications.frequency = `${faker.number.int({ min: 3200, max: 6400 })} MHz`;
-      specifications.cas = faker.number.int({ min: 16, max: 40 });
-      specifications.modules = faker.helpers.arrayElement([1, 2, 4]);
-      break;
-    case 'storage':
-      specifications.capacity = faker.helpers.arrayElement(['256 GB', '512 GB', '1 TB', '2 TB', '4 TB']);
-      specifications.type = faker.helpers.arrayElement(['SSD', 'NVMe', 'HDD']);
-      specifications.interface = faker.helpers.arrayElement(['SATA III', 'PCIe 4.0', 'PCIe 5.0']);
-      specifications.readSpeed = `${faker.number.int({ min: 500, max: 7500 })} MB/s`;
-      specifications.writeSpeed = `${faker.number.int({ min: 400, max: 7000 })} MB/s`;
-      break;
-    default:
-      specifications.spec1 = faker.commerce.productMaterial();
-      specifications.spec2 = faker.commerce.productAdjective();
-      break;
-  }
-
   return {
-    ...base,
-    warrantyMonths: faker.number.int({ min: 12, max: 60 }),
-    description: faker.lorem.paragraphs({ min: 2, max: 4 }),
-    specifications,
-    images: [
-      base.mainImage!,
-      ...Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () => ({
-        id: faker.string.uuid(),
-        url: `https://picsum.photos/seed/${faker.string.uuid()}/400/300`,
-        alt: faker.commerce.productDescription(),
-        isMain: false,
-        order: faker.number.int({ min: 1, max: 10 }),
-      })),
-    ],
-    isFeatured: faker.datatype.boolean({ probability: 0.2 }),
-    createdAt: faker.date.past({ years: 2 }).toISOString(),
-    updatedAt: faker.date.recent({ days: 30 }).toISOString(),
+    ...summary,
+    warrantyMonths: 12,
+    description: faker.commerce.productDescription(),
+    specifications: {},
+    images: summary.mainImage ? [summary.mainImage] : [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
-};
+}
 
-const generateCategory = (index: number): Category => ({
-  id: faker.string.uuid(),
-  name: Object.values(categoryNames)[index],
-  slug: categories[index],
-  icon: `https://picsum.photos/seed/${faker.string.uuid()}/64/64`,
-  description: faker.lorem.sentence(),
-  productCount: faker.number.int({ min: 10, max: 200 }),
-  order: index + 1,
-});
-
-// === Кэш сгенерированных продуктов ===
-let productsCache: ProductSummary[] | null = null;
-
-const getProductsCache = (): ProductSummary[] => {
-  if (!productsCache) {
-    productsCache = Array.from({ length: 100 }, generateProductSummary);
-  }
-  return productsCache;
-};
+function generateCategory(index: number): Category {
+  const category = categories[index];
+  return {
+    id: `cat-${index}`,
+    name: categoryNames[category],
+    slug: category,
+    description: `${categoryNames[category]} для вашего ПК`,
+    productCount: faker.number.int({ min: 10, max: 100 }),
+  };
+}
 
 // === Handlers ===
 
 export const catalogHandlers = [
-  // GET /api/products - список продуктов с пагинацией и фильтрацией
+  // GET /api/products - список продуктов с фильтрацией и пагинацией
   http.get('/api/products', async ({ request }) => {
-    await delay(faker.number.int({ min: 100, max: 300 }));
+    await delay(faker.number.int({ min: 50, max: 200 }));
 
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const pageSize = parseInt(url.searchParams.get('pageSize') || '12');
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
     const category = url.searchParams.get('category') as ProductCategory | null;
     const manufacturerId = url.searchParams.get('manufacturerId');
-    const priceMin = parseFloat(url.searchParams.get('priceMin') || '0');
-    const priceMax = parseFloat(url.searchParams.get('priceMax') || '999999');
+    const priceMin = parseInt(url.searchParams.get('priceMin') || '0', 10);
+    const priceMax = parseInt(url.searchParams.get('priceMax') || '999999', 10);
     const search = url.searchParams.get('search')?.toLowerCase();
-    const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | 'createdAt' | null;
-    const sortOrder = url.searchParams.get('sortOrder') as 'asc' | 'desc' | null;
     const inStock = url.searchParams.get('inStock') === 'true';
+    const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | null;
+    const sortOrder = (url.searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
 
     let products = [...getProductsCache()];
 

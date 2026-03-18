@@ -1,0 +1,136 @@
+/* ========================================
+   GoldPC Modal Component Styles
+   ======================================== */
+
+/* Overlay - dark semi-transparent background */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-md, 24px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-base, 200ms ease-out),
+              visibility var(--transition-base, 200ms ease-out);
+}
+
+.overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Modal container - dark card */
+.modal {
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: var(--radius-lg, 8px);
+  box-shadow: var(--shadow-xl, 0 16px 48px rgba(0, 0, 0, 0.12));
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.95) translateY(10px);
+  transition: transform var(--transition-base, 200ms ease-out);
+}
+
+.overlay.open .modal {
+  transform: scale(1) translateY(0);
+}
+
+/* Modal sizes */
+.modal.small {
+  max-width: 360px;
+}
+
+.modal.large {
+  max-width: 720px;
+}
+
+.modal.fullWidth {
+  max-width: calc(100vw - var(--space-xl, 48px) * 2);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm, 16px) var(--space-md, 24px);
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--fg, #fafafa);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Close button */
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: var(--radius, 4px);
+  color: var(--fg-muted, #71717a);
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms ease-out);
+}
+
+.closeButton:hover {
+  background: var(--bg-elevated, #121214);
+  color: var(--fg, #fafafa);
+  border-color: var(--border-accent, rgba(212, 165, 116, 0.2));
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
+}
+
+/* Content */
+.content {
+  padding: var(--space-md, 24px);
+  overflow-y: auto;
+  flex: 1;
+  color: var(--fg, #fafafa);
+}
+
+/* Footer (optional) */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-xs, 8px);
+  padding: var(--space-sm, 16px) var(--space-md, 24px);
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  flex-shrink: 0;
+}
+
+/* Animation for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .modal,
+  .closeButton {
+    transition: none;
+  }
+  
+  .modal {
+    transform: none;
+  }
+}

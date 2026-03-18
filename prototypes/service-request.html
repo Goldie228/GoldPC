@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Заявка на ремонт — GoldPC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --radius: 4px;
+      --radius-lg: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-accent);
+      color: var(--accent);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Main */
+    .main {
+      padding: 100px 24px 60px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      margin-bottom: 40px;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    .page-subtitle {
+      font-size: 0.95rem;
+      color: var(--fg-muted);
+      line-height: 1.6;
+    }
+
+    /* Card */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title svg {
+      width: 20px;
+      height: 20px;
+      color: var(--accent);
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-label .required {
+      color: #ef4444;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      cursor: pointer;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-hint {
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+      margin-top: 8px;
+    }
+
+    /* Radio Group */
+    .radio-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .radio-item {
+      position: relative;
+    }
+
+    .radio-item input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+    }
+
+    .radio-item input:checked + .radio-label {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .radio-label:hover {
+      border-color: var(--fg-dim);
+    }
+
+    .radio-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--fg-muted);
+    }
+
+    .radio-item input:checked + .radio-label .radio-icon {
+      color: var(--accent);
+    }
+
+    /* Button */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg-muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--fg-dim);
+      color: var(--fg);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Info Box */
+    .info-box {
+      display: flex;
+      gap: 16px;
+      padding: 20px;
+      background: var(--accent-glow);
+      border: 1px solid var(--border-accent);
+      margin-bottom: 24px;
+    }
+
+    .info-box svg {
+      width: 20px;
+      height: 20px;
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .info-box-content {
+      flex: 1;
+    }
+
+    .info-box-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .info-box-text {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .main {
+        padding: 90px 16px 40px;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .radio-group {
+        flex-direction: column;
+      }
+
+      .form-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="home.html" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Корзина">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+        </svg>
+      </button>
+      <button class="icon-btn" aria-label="Профиль">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="page-header">
+      <h1 class="page-title">Заявка на ремонт</h1>
+      <p class="page-subtitle">Опишите проблему с вашим компьютером, и наши специалисты свяжутся с вами для уточнения деталей.</p>
+    </div>
+
+    <div class="info-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="16" x2="12" y2="12"/>
+        <line x1="12" y1="8" x2="12.01" y2="8"/>
+      </svg>
+      <div class="info-box-content">
+        <div class="info-box-title">Бесплатная диагностика</div>
+        <div class="info-box-text">При сдаче техники в ремонт диагностика проводится бесплатно. Срок выполнения работ — от 1 до 5 рабочих дней.</div>
+      </div>
+    </div>
+
+    <form class="card">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        Информация о технике
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Тип техники <span class="required">*</span></label>
+        <div class="radio-group">
+          <div class="radio-item">
+            <input type="radio" name="device_type" id="type-pc" value="pc" checked>
+            <label class="radio-label" for="type-pc">
+              <svg class="radio-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+              </svg>
+              ПК
+            </label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" name="device_type" id="type-laptop" value="laptop">
+            <label class="radio-label" for="type-laptop">
+              <svg class="radio-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="4" width="20" height="12" rx="2"/>
+                <path d="M2 16h20v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2z"/>
+              </svg>
+              Ноутбук
+            </label>
+          </div>
+          <div class="radio-item">
+            <input type="radio" name="device_type" id="type-monitor" value="monitor">
+            <label class="radio-label" for="type-monitor">
+              <svg class="radio-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="14" rx="2"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+              </svg>
+              Монитор
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="brand">Марка/Модель</label>
+          <input type="text" class="form-input" id="brand" placeholder="Например: ASUS ROG Strix">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="serial">Серийный номер</label>
+          <input type="text" class="form-input" id="serial" placeholder="Укажите при наличии">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="problem">Описание проблемы <span class="required">*</span></label>
+        <textarea class="form-textarea" id="problem" placeholder="Опишите подробно, что не работает или какие проблемы вы заметили..."></textarea>
+        <div class="form-hint">Чем подробнее вы опишете проблему, тем быстрее мы сможем её диагностировать</div>
+      </div>
+
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Контактные данные
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="name">Имя <span class="required">*</span></label>
+          <input type="text" class="form-input" id="name" placeholder="Ваше имя">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Телефон <span class="required">*</span></label>
+          <input type="tel" class="form-input" id="phone" placeholder="+375 (__) ___-__-__">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Email</label>
+        <input type="email" class="form-input" id="email" placeholder="email@example.com">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="urgency">Срочность</label>
+        <select class="form-select" id="urgency">
+          <option value="normal">Обычная (3-5 дней)</option>
+          <option value="urgent">Срочная (1-2 дня) +50%</option>
+          <option value="express">Экспресс (в тот же день) +100%</option>
+        </select>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+          Отправить заявку
+        </button>
+        <button type="button" class="btn btn-ghost">Сохранить черновик</button>
+      </div>
+    </form>
+  </main>
+</body>
+</html>
+</task_progress>
+</write_to_file>

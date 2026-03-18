@@ -1,105 +1,182 @@
+import { useState, useEffect, useCallback } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { ShoppingCart, User, Search, Menu, X } from 'lucide-react';
-import { useState } from 'react';
-import './Header.css';
+import { Search, ShoppingCart, User, Menu, X } from 'lucide-react';
+import styles from './Header.module.css';
 
 /**
- * Header Component - Dark Glass Theme
- * 
+ * Header Component
+ *
  * Features:
- * - Sticky navigation with glassmorphism effect
- * - Logo with gold accent
- * - Navigation links
- * - Search, Cart, Profile actions
- * - Mobile hamburger menu
+ * - Fixed positioning with blur backdrop
+ * - Logo "GoldPC" with gold accent on "PC"
+ * - Navigation links (Catalog, Builder, Service, About)
+ * - Action buttons (Search, Cart, Profile)
+ * - Mobile slide-out menu drawer (dark background)
+ * - Responsive padding adaptation
+ *
+ * Source: prototypes/home.html .header
  */
-export function Header() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [cartCount] = useState(3); // TODO: Get from cart context
+
+interface HeaderProps {
+  cartCount?: number;
+}
+
+export function Header({ cartCount = 0 }: HeaderProps) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleMenuToggle = () => {
+    setIsMobileMenuOpen((prev) => !prev);
+  };
+
+  const handleCloseMenu = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
+
+  // Close menu on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileMenuOpen) {
+        handleCloseMenu();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen, handleCloseMenu]);
+
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
+  const navLinks = [
+    { to: '/catalog', label: 'Каталог' },
+    { to: '/builder', label: 'Конструктор' },
+    { to: '/services', label: 'Сервис' },
+    { to: '/about', label: 'О нас' },
+  ];
 
   return (
-    <header className="header">
-      <div className="header__container">
+    <>
+      <header className={styles.header}>
         {/* Logo */}
-        <Link to="/" className="header__logo">
-          <div className="header__logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-              <line x1="8" y1="21" x2="16" y2="21" />
-              <line x1="12" y1="17" x2="12" y2="21" />
+        <Link to="/" className={styles.logo}>
+          <div className={styles.logoIcon}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="12 2 2 7 12 12 22 7 12 2" />
+              <polyline points="2 17 12 22 22 17" />
+              <polyline points="2 12 12 17 22 12" />
             </svg>
           </div>
-          <span className="header__logo-text">Gold<span className="header__logo-accent">PC</span></span>
+          <span className={styles.logoText}>
+            Gold<span className={styles.logoAccent}>PC</span>
+          </span>
         </Link>
 
-        {/* Navigation */}
-        <nav className={`header__nav ${isMenuOpen ? 'header__nav--open' : ''}`}>
-          <NavLink 
-            to="/" 
-            className={({ isActive }) => `header__nav-link ${isActive ? 'header__nav-link--active' : ''}`}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Главная
-          </NavLink>
-          <NavLink 
-            to="/catalog" 
-            className={({ isActive }) => `header__nav-link ${isActive ? 'header__nav-link--active' : ''}`}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Каталог
-          </NavLink>
-          <NavLink 
-            to="/builder" 
-            className={({ isActive }) => `header__nav-link ${isActive ? 'header__nav-link--active' : ''}`}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Конструктор ПК
-          </NavLink>
-          <NavLink 
-            to="/admin/coordinator" 
-            className={({ isActive }) => `header__nav-link header__nav-link--admin ${isActive ? 'header__nav-link--active' : ''}`}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            👥 Admin
-          </NavLink>
+        {/* Desktop Navigation */}
+        <nav className={styles.nav}>
+          {navLinks.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
+              }
+            >
+              {link.label}
+            </NavLink>
+          ))}
         </nav>
 
-        {/* Actions */}
-        <div className="header__actions">
-          <button className="header__action-btn" aria-label="Поиск">
-            <Search size={20} />
+        {/* Action Buttons */}
+        <div className={styles.actions}>
+          {/* Search Button */}
+          <button className={styles.iconBtn} aria-label="Поиск" type="button">
+            <Search />
           </button>
-          
-          <Link to="/cart" className="header__action-btn header__cart-btn" aria-label={`Корзина: ${cartCount} товара`}>
-            <ShoppingCart size={20} />
-            {cartCount > 0 && (
-              <span className="header__cart-badge">{cartCount}</span>
-            )}
-          </Link>
-          
-          <Link to="/account" className="header__action-btn" aria-label="Профиль">
-            <User size={20} />
+
+          {/* Cart Button */}
+          <Link to="/cart" className={styles.iconBtn} aria-label={`Корзина: ${cartCount} товаров`}>
+            <ShoppingCart />
+            {cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
           </Link>
 
-          {/* Mobile Menu Toggle */}
-          <button 
-            className="header__hamburger" 
-            aria-label={isMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+          {/* Profile Button */}
+          <Link to="/account" className={styles.iconBtn} aria-label="Профиль">
+            <User />
+          </Link>
+
+          {/* Mobile Menu Toggle - Hamburger Button */}
+          <button
+            className={styles.menuToggle}
+            aria-label={isMobileMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
+            aria-expanded={isMobileMenuOpen}
+            type="button"
+            onClick={handleMenuToggle}
           >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {isMobileMenuOpen ? <X /> : <Menu />}
           </button>
+        </div>
+      </header>
+
+      {/* Mobile Slide-out Menu Drawer */}
+      <div
+        className={`${styles.mobileDrawer} ${isMobileMenuOpen ? styles.mobileDrawerOpen : ''}`}
+        aria-hidden={!isMobileMenuOpen}
+      >
+        {/* Close Button */}
+        <button
+          className={styles.drawerClose}
+          onClick={handleCloseMenu}
+          aria-label="Закрыть меню"
+          type="button"
+        >
+          <X />
+        </button>
+
+        {/* Mobile Navigation Links */}
+        <nav className={styles.mobileNav}>
+          {navLinks.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                `${styles.mobileNavLink} ${isActive ? styles.mobileNavLinkActive : ''}`
+              }
+              onClick={handleCloseMenu}
+            >
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Mobile Actions */}
+        <div className={styles.mobileActions}>
+          <Link to="/cart" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+            <ShoppingCart />
+            <span>Корзина</span>
+            {cartCount > 0 && <span className={styles.mobileBadge}>{cartCount}</span>}
+          </Link>
+          <Link to="/account" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+            <User />
+            <span>Профиль</span>
+          </Link>
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
-      {isMenuOpen && (
-        <div 
-          className="header__overlay" 
-          onClick={() => setIsMenuOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-    </header>
+      {/* Overlay Background */}
+      <div
+        className={`${styles.overlay} ${isMobileMenuOpen ? styles.overlayVisible : ''}`}
+        onClick={handleCloseMenu}
+        aria-hidden="true"
+      />
+    </>
   );
 }

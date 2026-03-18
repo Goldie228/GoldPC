@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Статус заказа — GoldPC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --radius: 4px;
+      --radius-lg: 8px;
+      --success: #22c55e;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      overflow-x: hidden;
+      font-feature-settings: 'ss01' on;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--fg-dim);
+      border-radius: 3px;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .nav {
+      display: flex;
+      gap: 32px;
+    }
+
+    .nav a {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: color 0.2s;
+    }
+
+    .nav a:hover {
+      color: var(--fg);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-accent);
+      color: var(--accent);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ===== MAIN LAYOUT ===== */
+    .main {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 24px 80px;
+    }
+
+    /* ===== STATUS CARD ===== */
+    .status-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      max-width: 560px;
+      width: 100%;
+      padding: 40px;
+      position: relative;
+    }
+
+    .status-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--accent);
+    }
+
+    .status-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .status-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-glow);
+      border: 1px solid var(--border-accent);
+      border-radius: 50%;
+      animation: pulse-ring 2s ease-out infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        box-shadow: 0 0 0 0 rgba(212, 165, 116, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 20px rgba(212, 165, 116, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(212, 165, 116, 0);
+      }
+    }
+
+    .status-icon svg {
+      width: 32px;
+      height: 32px;
+      color: var(--accent);
+    }
+
+    .status-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .status-subtitle {
+      font-size: 0.9rem;
+      color: var(--fg-muted);
+    }
+
+    /* ===== ORDER INFO ===== */
+    .order-info {
+      display: flex;
+      justify-content: space-between;
+      padding: 20px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      margin-bottom: 32px;
+    }
+
+    .order-info-item {
+      text-align: center;
+    }
+
+    .order-info-label {
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .order-info-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .order-info-value.accent {
+      color: var(--accent);
+    }
+
+    /* ===== TIMELINE ===== */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: 40px;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      position: relative;
+      padding-bottom: 24px;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-marker {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    .timeline-dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      border: 2px solid var(--fg-dim);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .timeline-item.completed .timeline-dot {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .timeline-item.completed .timeline-dot::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      background: var(--bg);
+      border-radius: 50%;
+    }
+
+    .timeline-item.current .timeline-dot {
+      background: var(--accent);
+      border-color: var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+
+    .timeline-line {
+      width: 2px;
+      flex: 1;
+      min-height: 40px;
+      background: var(--border);
+    }
+
+    .timeline-item.completed .timeline-line {
+      background: var(--accent);
+    }
+
+    .timeline-item:last-child .timeline-line {
+      display: none;
+    }
+
+    .timeline-content {
+      flex: 1;
+      padding-top: 0;
+    }
+
+    .timeline-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--fg-muted);
+    }
+
+    .timeline-item.completed .timeline-title,
+    .timeline-item.current .timeline-title {
+      color: var(--fg);
+    }
+
+    .timeline-desc {
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+    }
+
+    .timeline-item.completed .timeline-desc {
+      color: var(--fg-muted);
+    }
+
+    .timeline-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+      margin-top: 6px;
+    }
+
+    /* ===== ACTIONS ===== */
+    .status-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 24px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex: 1;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--fg-dim);
+      background: var(--bg-card);
+    }
+
+    /* ===== HELPER TEXT ===== */
+    .helper-text {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .helper-text p {
+      font-size: 0.8rem;
+      color: var(--fg-dim);
+      margin-bottom: 8px;
+    }
+
+    .helper-text a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    .helper-text a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .nav {
+        display: none;
+      }
+
+      .status-card {
+        padding: 24px;
+      }
+
+      .order-info {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .status-actions {
+        flex-direction: column;
+      }
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="home.html" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+
+    <nav class="nav">
+      <a href="catalog.html">Каталог</a>
+      <a href="pc-builder.html">Конструктор</a>
+      <a href="#">Сервис</a>
+      <a href="#">О нас</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Поиск">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </button>
+      <button class="icon-btn" aria-label="Профиль">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="status-card">
+      <!-- Status Header -->
+      <div class="status-header">
+        <div class="status-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <h1 class="status-title">Заказ оформлен</h1>
+        <p class="status-subtitle">Мы начали обработку вашего заказа</p>
+      </div>
+
+      <!-- Order Info -->
+      <div class="order-info">
+        <div class="order-info-item">
+          <div class="order-info-label">Номер заказа</div>
+          <div class="order-info-value accent">#GP-2026-0317</div>
+        </div>
+        <div class="order-info-item">
+          <div class="order-info-label">Дата</div>
+          <div class="order-info-value">17.03.2026</div>
+        </div>
+        <div class="order-info-item">
+          <div class="order-info-label">Сумма</div>
+          <div class="order-info-value accent">5 950 BYN</div>
+        </div>
+      </div>
+
+      <!-- Status Timeline -->
+      <div class="timeline">
+        <div class="timeline-item completed">
+          <div class="timeline-marker">
+            <div class="timeline-dot"></div>
+            <div class="timeline-line"></div>
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-title">Заказ создан</div>
+            <div class="timeline-desc">Ваш заказ успешно оформлен и принят в обработку</div>
+            <div class="timeline-time">17.03.2026, 20:35</div>
+          </div>
+        </div>
+
+        <div class="timeline-item completed">
+          <div class="timeline-marker">
+            <div class="timeline-dot"></div>
+            <div class="timeline-line"></div>
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-title">Оплата подтверждена</div>
+            <div class="timeline-desc">Платёж успешно проведён</div>
+            <div class="timeline-time">17.03.2026, 20:36</div>
+          </div>
+        </div>
+
+        <div class="timeline-item current">
+          <div class="timeline-marker">
+            <div class="timeline-dot"></div>
+            <div class="timeline-line"></div>
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-title">Комплектация заказа</div>
+            <div class="timeline-desc">Собираем ваш заказ на складе</div>
+            <div class="timeline-time">В процессе</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-marker">
+            <div class="timeline-dot"></div>
+            <div class="timeline-line"></div>
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-title">Передача в доставку</div>
+            <div class="timeline-desc">Курьер заберет заказ и доставит по указанному адресу</div>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-marker">
+            <div class="timeline-dot"></div>
+          </div>
+          <div class="timeline-content">
+            <div class="timeline-title">Заказ доставлен</div>
+            <div class="timeline-desc">Ожидаемая доставка: 18.03.2026</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="status-actions">
+        <a href="catalog.html" class="btn btn-primary">
+          Продолжить покупки
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </a>
+        <button class="btn btn-ghost" onclick="window.print()">
+          Распечатать
+        </button>
+      </div>
+
+      <!-- Helper Text -->
+      <div class="helper-text">
+        <p>Если у вас возникли вопросы, свяжитесь с нами</p>
+        <a href="tel:+375291234567">+375 (29) 123-45-67</a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,266 @@
+/**
+ * ComponentSlot.css - PC Builder Component Slot Styles
+ * Design System: Dark Background + Gold Borders
+ */
+
+/* Base Slot Styles */
+.component-slot {
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  padding: 20px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.component-slot:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Inner Container */
+.component-slot__inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ===== STATE: SELECTED (Gold border) ===== */
+.component-slot--selected {
+  border-color: var(--border-accent, rgba(212, 165, 116, 0.2));
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.15) 0%, var(--bg-card, #18181b) 100%);
+}
+
+.component-slot--selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--accent, #d4a574);
+}
+
+.component-slot--selected:hover {
+  border-color: var(--accent, #d4a574);
+}
+
+/* ===== STATE: INCOMPATIBLE (Red border) ===== */
+.component-slot--incompatible {
+  border-color: rgba(248, 113, 113, 0.3);
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.1) 0%, var(--bg-card, #18181b) 100%);
+}
+
+.component-slot--incompatible::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: #f87171;
+}
+
+.component-slot--incompatible:hover {
+  border-color: #f87171;
+}
+
+/* ===== STATE: EMPTY ===== */
+.component-slot--empty {
+  border-color: var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.component-slot--empty:hover {
+  border-color: var(--border-accent, rgba(212, 165, 116, 0.2));
+}
+
+/* ===== ICON ===== */
+.component-slot__icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated, #121214);
+  color: var(--fg-dim, #52525b);
+  flex-shrink: 0;
+}
+
+.component-slot--selected .component-slot__icon {
+  background: rgba(212, 165, 116, 0.15);
+  color: var(--accent, #d4a574);
+}
+
+.component-slot__icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* ===== INFO ===== */
+.component-slot__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.component-slot__type {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--fg-dim, #52525b);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.component-slot__name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--fg, #fafafa);
+}
+
+.component-slot__name--empty {
+  color: var(--fg-muted, #71717a);
+  font-weight: 400;
+}
+
+/* Specs */
+.component-slot__specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.7rem;
+  color: var(--fg-muted, #71717a);
+}
+
+.component-slot__spec {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.component-slot__spec:not(:first-child)::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: var(--fg-dim, #52525b);
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+/* Warning */
+.component-slot__warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  font-size: 0.75rem;
+  color: #f87171;
+}
+
+.component-slot__warning svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ===== PRICE ===== */
+.component-slot__price {
+  text-align: right;
+  min-width: 100px;
+}
+
+.component-slot__price-value {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent, #d4a574);
+}
+
+.component-slot__price-empty {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.85rem;
+  color: var(--fg-dim, #52525b);
+}
+
+/* ===== BUTTON ===== */
+.component-slot__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  background: transparent;
+  color: var(--fg, #fafafa);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.component-slot__btn:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--bg-elevated, #121214);
+}
+
+/* Primary Button (Gold) */
+.component-slot__btn--primary {
+  background: var(--accent, #d4a574);
+  border-color: var(--accent, #d4a574);
+  color: var(--bg, #09090b);
+}
+
+.component-slot__btn--primary:hover {
+  background: #e0b68a;
+  border-color: #e0b68a;
+}
+
+/* Ghost Button */
+.component-slot__btn--ghost {
+  color: var(--fg-muted, #71717a);
+}
+
+.component-slot__btn--ghost:hover {
+  color: var(--accent, #d4a574);
+  border-color: var(--border-accent, rgba(212, 165, 116, 0.2));
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .component-slot__inner {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .component-slot__icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .component-slot__icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .component-slot__info {
+    flex: 1 1 calc(100% - 60px);
+  }
+
+  .component-slot__price {
+    text-align: left;
+    margin-top: 8px;
+    width: 100%;
+  }
+
+  .component-slot__btn {
+    margin-top: 12px;
+    width: 100%;
+  }
+}

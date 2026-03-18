@@ -1,0 +1,326 @@
+/* ========================================
+   FilterSidebar Styles - Dark Gold Theme
+   ======================================== */
+
+.sidebar {
+  position: sticky;
+  top: 100px;
+  height: fit-content;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  padding: 20px;
+  width: 100%;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: var(--bg, #09090b);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--fg-dim, #52525b);
+}
+
+.sidebarHeader {
+  margin-bottom: 20px;
+}
+
+.sidebarTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fg, #fafafa);
+  margin: 0;
+}
+
+.sidebarTitle svg {
+  color: var(--accent, #d4a574);
+}
+
+/* ========================================
+   Filter Group
+   ======================================== */
+
+.filterGroup {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.filterGroup:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.filterHeader {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--fg-dim, #52525b);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: color 0.2s;
+}
+
+.filterHeader:hover {
+  color: var(--fg-muted, #71717a);
+}
+
+.filterHeaderIcon {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+  color: var(--accent, #d4a574);
+}
+
+.filterHeaderTitle {
+  flex: 1;
+  text-align: left;
+}
+
+.filterHeaderChevron {
+  color: var(--fg-dim, #52525b);
+  transition: transform 0.2s;
+}
+
+.filterHeaderChevron.rotated {
+  transform: rotate(-90deg);
+}
+
+.filterContent {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.filterContent.open {
+  max-height: 500px;
+  padding-top: 12px;
+}
+
+/* ========================================
+   Category List
+   ======================================== */
+
+.categoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.categoryItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--fg-muted, #71717a);
+  text-align: left;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.categoryItem:hover {
+  background: var(--bg-elevated, #121214);
+  color: var(--fg, #fafafa);
+}
+
+.categoryItem.active {
+  background: var(--accent-dim, rgba(212, 165, 116, 0.15));
+  color: var(--accent, #d4a574);
+}
+
+.categoryName {
+  flex: 1;
+}
+
+.categoryCount {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--fg-dim, #52525b);
+}
+
+/* ========================================
+   Price Inputs
+   ======================================== */
+
+.priceInputs {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.inputGroup {
+  flex: 1;
+}
+
+.inputLabel {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: var(--fg-dim, #52525b);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+
+.priceInput {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-elevated, #121214);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  color: var(--fg, #fafafa);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  transition: border-color 0.2s;
+  border-radius: 4px;
+}
+
+.priceInput:focus {
+  outline: none;
+  border-color: var(--accent, #d4a574);
+}
+
+.priceInput::placeholder {
+  color: var(--fg-dim, #52525b);
+}
+
+.priceSeparator {
+  font-size: 0.8rem;
+  color: var(--fg-dim, #52525b);
+  margin-bottom: 10px;
+}
+
+/* ========================================
+   Stock Options
+   ======================================== */
+
+.stockOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stockOption {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: 4px;
+}
+
+.stockOption:hover {
+  background: var(--bg-elevated, #121214);
+}
+
+.stockRadio {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--fg-dim, #52525b);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  transition: border-color 0.2s;
+  flex-shrink: 0;
+}
+
+.stockOption.checked .stockRadio {
+  border-color: var(--accent, #d4a574);
+  background: var(--accent-dim, rgba(212, 165, 116, 0.15));
+}
+
+.checkIcon {
+  opacity: 0;
+  color: var(--accent, #d4a574);
+  transition: opacity 0.2s;
+}
+
+.stockOption.checked .checkIcon {
+  opacity: 1;
+}
+
+.stockLabel {
+  font-size: 0.8rem;
+  color: var(--fg-muted, #71717a);
+}
+
+.stockOption:hover .stockLabel {
+  color: var(--fg, #fafafa);
+}
+
+/* ========================================
+   Reset Button
+   ======================================== */
+
+.resetBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  margin-top: 16px;
+  background: var(--error-dim, rgba(248, 113, 113, 0.1));
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  color: var(--error, #f87171);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.resetBtn:hover {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: var(--error, #f87171);
+}
+
+.resetBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ========================================
+   Mobile Styles
+   ======================================== */
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    max-height: 100vh;
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}

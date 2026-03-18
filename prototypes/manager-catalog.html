@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Управление каталогом — GoldPC Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --radius: 4px;
+      --radius-lg: 8px;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      font-feature-settings: 'ss01' on;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--fg-dim);
+      border-radius: 3px;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 24px;
+    }
+
+    .header-nav a {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .header-nav a:hover,
+    .header-nav a.active {
+      color: var(--accent);
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-name {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--fg-dim);
+    }
+
+    /* ===== MAIN ===== */
+    .main {
+      padding: 100px 24px 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .page-subtitle {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      margin-top: 4px;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-icon {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-dim);
+    }
+
+    .btn-icon:hover {
+      border-color: var(--border-accent);
+      color: var(--accent);
+    }
+
+    .btn-icon.danger:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .btn-icon svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ===== FILTER BAR ===== */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-input {
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      min-width: 200px;
+      transition: border-color 0.2s;
+    }
+
+    .filter-input::placeholder {
+      color: var(--fg-dim);
+    }
+
+    .filter-input:focus {
+      outline: none;
+      border-color: var(--border-accent);
+    }
+
+    .filter-select {
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      min-width: 160px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--border-accent);
+    }
+
+    .filter-select option {
+      background: var(--bg-card);
+      color: var(--fg);
+    }
+
+    /* ===== TABLE ===== */
+    .table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table thead {
+      background: var(--bg-elevated);
+    }
+
+    .data-table th {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+      padding: 14px 16px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .data-table tbody tr {
+      transition: background 0.2s;
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .product-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .product-thumb {
+      width: 48px;
+      height: 48px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .product-thumb svg {
+      width: 24px;
+      height: 24px;
+      color: var(--fg-dim);
+    }
+
+    .product-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .product-name {
+      font-weight: 500;
+    }
+
+    .product-sku {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+    }
+
+    .category-badge {
+      display: inline-flex;
+      padding: 4px 10px;
+      font-size: 0.7rem;
+      background: var(--bg-elevated);
+      color: var(--fg-muted);
+      border: 1px solid var(--border);
+    }
+
+    .product-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .stock-value {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stock-low {
+      color: var(--warning);
+    }
+
+    .stock-ok {
+      color: var(--success);
+    }
+
+    .stock-out {
+      color: var(--danger);
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ===== PAGINATION ===== */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .pagination-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pagination-btn:hover {
+      border-color: var(--border-accent);
+      color: var(--fg);
+    }
+
+    .pagination-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+
+    <nav class="header-nav">
+      <a href="manager-orders.html">Заказы</a>
+      <a href="manager-catalog.html" class="active">Каталог</a>
+      <a href="#">Клиенты</a>
+      <a href="#">Отчёты</a>
+    </nav>
+
+    <div class="header-user">
+      <span class="user-name">Менеджер</span>
+      <div class="user-avatar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Управление каталогом</h1>
+        <p class="page-subtitle">Список всех товаров магазина</p>
+      </div>
+      <button class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Добавить товар
+      </button>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <input type="text" class="filter-input" placeholder="Поиск по названию или SKU...">
+      <select class="filter-select">
+        <option value="">Все категории</option>
+        <option value="cpu">Процессоры</option>
+        <option value="gpu">Видеокарты</option>
+        <option value="mb">Мат. платы</option>
+        <option value="ram">Память</option>
+        <option value="ssd">SSD</option>
+        <option value="psu">Блоки питания</option>
+        <option value="case">Корпуса</option>
+      </select>
+      <select class="filter-select">
+        <option value="">Наличие</option>
+        <option value="in-stock">В наличии</option>
+        <option value="low">Мало</option>
+        <option value="out">Нет в наличии</option>
+      </select>
+    </div>
+
+    <!-- Products Table -->
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Товар</th>
+            <th>Категория</th>
+            <th>Цена</th>
+            <th>Наличие</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="product-cell">
+                <div class="product-thumb">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="4" width="16" height="16" rx="2"/>
+                    <rect x="9" y="9" width="6" height="6"/>
+                  </svg>
+                </div>
+                <div class="product-info">
+                  <span class="product-name">AMD Ryzen 7 7800X3D</span>
+                  <span class="product-sku">CPU-AMD-7800X3D</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="category-badge">Процессоры</span></td>
+            <td><span class="product-price">1 450 BYN</span></td>
+            <td><span class="stock-value stock-ok">24 шт.</span></td>
+            <td>
+              <div class="actions-cell">
+                <button class="btn-icon" aria-label="Редактировать">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon danger" aria-label="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="product-cell">
+                <div class="product-thumb">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="6" width="20" height="12" rx="2"/>
+                    <path d="M6 10h4v4H6z"/>
+                  </svg>
+                </div>
+                <div class="product-info">
+                  <span class="product-name">NVIDIA RTX 4070 Ti Super 16GB</span>
+                  <span class="product-sku">GPU-NV-4070TIS</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="category-badge">Видеокарты</span></td>
+            <td><span class="product-price">3 200 BYN</span></td>
+            <td><span class="stock-value stock-low">3 шт.</span></td>
+            <td>
+              <div class="actions-cell">
+                <button class="btn-icon" aria-label="Редактировать">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon danger" aria-label="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="product-cell">
+                <div class="product-thumb">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="8" width="20" height="8" rx="1"/>
+                    <path d="M6 8V6M10 8V6M14 8V6M18 8V6"/>
+                  </svg>
+                </div>
+                <div class="product-info">
+                  <span class="product-name">G.Skill Trident Z5 32GB DDR5-6000</span>
+                  <span class="product-sku">RAM-GSK-TZ5-32</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="category-badge">Память</span></td>
+            <td><span class="product-price">650 BYN</span></td>
+            <td><span class="stock-value stock-ok">18 шт.</span></td>
+            <td>
+              <div class="actions-cell">
+                <button class="btn-icon" aria-label="Редактировать">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon danger" aria-label="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="product-cell">
+                <div class="product-thumb">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="20" rx="2"/>
+                    <rect x="5" y="5" width="6" height="4"/>
+                    <circle cx="8" cy="14" r="2"/>
+                  </svg>
+                </div>
+                <div class="product-info">
+                  <span class="product-name">ASUS ROG Strix B650E-F Gaming</span>
+                  <span class="product-sku">MB-ASUS-B650EF</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="category-badge">Мат. платы</span></td>
+            <td><span class="product-price">580 BYN</span></td>
+            <td><span class="stock-value stock-ok">12 шт.</span></td>
+            <td>
+              <div class="actions-cell">
+                <button class="btn-icon" aria-label="Редактировать">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon danger" aria-label="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="product-cell">
+                <div class="product-thumb">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="4" width="16" height="16" rx="2"/>
+                    <path d="M9 9h6v6H9z"/>
+                  </svg>
+                </div>
+                <div class="product-info">
+                  <span class="product-name">Samsung 990 Pro 2TB NVMe</span>
+                  <span class="product-sku">SSD-SAM-990P-2T</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="category-badge">SSD</span></td>
+            <td><span class="product-price">380 BYN</span></td>
+            <td><span class="stock-value stock-ok">35 шт.</span></td>
+            <td>
+              <div class="actions-cell">
+                <button class="btn-icon" aria-label="Редактировать">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon danger" aria-label="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="product-cell">
+                <div class="product-thumb">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="6" width="20" height="12" rx="2"/>
+                    <path d="M6 10h4v4H6z"/>
+                  </svg>
+                </div>
+                <div class="product-info">
+                  <span class="product-name">AMD Radeon RX 7900 XTX 24GB</span>
+                  <span class="product-sku">GPU-AMD-7900XTX</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="category-badge">Видеокарты</span></td>
+            <td><span class="product-price">2 850 BYN</span></td>
+            <td><span class="stock-value stock-out">0 шт.</span></td>
+            <td>
+              <div class="actions-cell">
+                <button class="btn-icon" aria-label="Редактировать">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon danger" aria-label="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="product-cell">
+                <div class="product-thumb">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="4" width="16" height="16" rx="2"/>
+                    <rect x="9" y="9" width="6" height="6"/>
+                  </svg>
+                </div>
+                <div class="product-info">
+                  <span class="product-name">Intel Core i9-14900K</span>
+                  <span class="product-sku">CPU-INT-14900K</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="category-badge">Процессоры</span></td>
+            <td><span class="product-price">1 890 BYN</span></td>
+            <td><span class="stock-value stock-low">5 шт.</span></td>
+            <td>
+              <div class="actions-cell">
+                <button class="btn-icon" aria-label="Редактировать">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon danger" aria-label="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="product-cell">
+                <div class="product-thumb">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="6" width="22" height="12" rx="2"/>
+                    <circle cx="6" cy="12" r="2"/>
+                    <circle cx="18" cy="12" r="2"/>
+                  </svg>
+                </div>
+                <div class="product-info">
+                  <span class="product-name">Corsair RM1000x 1000W 80+ Gold</span>
+                  <span class="product-sku">PSU-CRS-RM1000X</span>
+                </div>
+              </div>
+            </td>
+            <td><span class="category-badge">Блоки питания</span></td>
+            <td><span class="product-price">420 BYN</span></td>
+            <td><span class="stock-value stock-ok">28 шт.</span></td>
+            <td>
+              <div class="actions-cell">
+                <button class="btn-icon" aria-label="Редактировать">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="btn-icon danger" aria-label="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <button class="pagination-btn">←</button>
+      <button class="pagination-btn active">1</button>
+      <button class="pagination-btn">2</button>
+      <button class="pagination-btn">3</button>
+      <button class="pagination-btn">→</button>
+    </div>
+  </main>
+</body>
+</html>

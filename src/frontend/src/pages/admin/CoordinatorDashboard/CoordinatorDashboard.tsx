@@ -1,6 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { StatCard } from '../../../components/admin';
+import { statsApi } from '../../../api/admin';
 import './CoordinatorDashboard.css';
 
+// ===== Types =====
 type AgentTier = 'TIER-1' | 'TIER-2' | 'TIER-3';
 type AgentStatusType = 'Active' | 'Idle' | 'Blocked' | 'Review';
 type BlockerImpact = 'Low' | 'Medium' | 'High' | 'Critical';
@@ -52,6 +56,19 @@ interface CoordinatorDashboardData {
   blockers: BlockerInfo[];
   metrics: SprintMetrics;
   lastUpdated: string;
+  stats?: LocalDashboardStats;
+}
+
+// ===== Local Stats Types (для обратной совместимости) =====
+interface LocalDashboardStats {
+  totalSales: number;
+  totalUsers: number;
+  totalOrders: number;
+  serviceTickets: number;
+  salesChange: number;
+  usersChange: number;
+  ordersChange: number;
+  ticketsChange: number;
 }
 
 const STATUS_COLORS: Record<AgentStatusType, string> = {
@@ -82,10 +99,93 @@ const IMPACT_LABELS: Record<BlockerImpact, string> = {
   Critical: 'Критический',
 };
 
-function SprintProgressBar({ metrics }: { metrics: SprintMetrics }) {
-  const daysLeft = Math.ceil(
-    (new Date(metrics.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+// ===== Stats Grid Component with useQuery =====
+function StatsGrid() {
+  // Загрузка статистики через useQuery
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['adminStats'],
+    queryFn: () => statsApi.getStats(),
+    refetchInterval: 60000, // Обновление каждую минуту
+    staleTime: 30000, // Данные считаются свежими 30 секунд
+  });
+
+  // Состояние загрузки
+  if (isLoading) {
+    return (
+      <div className="stats-grid stats-grid--loading">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="stat-card stat-card--skeleton">
+            <div className="stat-card__skeleton-icon" />
+            <div className="stat-card__skeleton-title" />
+            <div className="stat-card__skeleton-value" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // Состояние ошибки - показываем заглушку
+  if (error || !data) {
+    return (
+      <div className="stats-grid stats-grid--error">
+        <div className="stats-grid__error-message">
+          <span>⚠️ Не удалось загрузить статистику</span>
+        </div>
+      </div>
+    );
+  }
+
+  const { stats } = data;
+
+  return (
+    <div className="stats-grid">
+      <StatCard
+        title="Всего пользователей"
+        value={stats.totalUsers.toLocaleString('ru-BY')}
+        change={stats.usersChange}
+        changeLabel="за месяц"
+        icon={
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        }
+      />
+      <StatCard
+        title="Всего заказов"
+        value={stats.totalOrders.toLocaleString('ru-BY')}
+        change={stats.ordersChange}
+        changeLabel="за неделю"
+        icon={
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="9" cy="21" r="1" />
+            <circle cx="20" cy="21" r="1" />
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+          </svg>
+        }
+      />
+      <StatCard
+        title="Выручка (BYN)"
+        value={stats.revenue.toLocaleString('ru-BY')}
+        change={stats.revenueChange}
+        changeLabel="за месяц"
+        icon={
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="12" y1="1" x2="12" y2="23" />
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
+        }
+      />
+    </div>
   );
+}
+
+function SprintProgressBar({ metrics }: { metrics: SprintMetrics }): React.ReactElement {
+  const daysLeft = useMemo(() => Math.ceil(
+    (new Date(metrics.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  ), [metrics.endDate]);
 
   return (
     <div className="sprint-progress">
@@ -378,6 +478,12 @@ export function CoordinatorDashboard() {
           </button>
         </div>
       </header>
+
+      {/* Stats Grid - использует useQuery для загрузки статистики */}
+      <section className="coordinator-dashboard__section coordinator-dashboard__section--stats">
+        <StatsGrid />
+      </section>
+
       <div className="coordinator-dashboard__content">
         <div className="coordinator-dashboard__main">
           <section className="coordinator-dashboard__section">

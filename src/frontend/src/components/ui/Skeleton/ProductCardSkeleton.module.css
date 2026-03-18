@@ -1,0 +1,89 @@
+/* ========================================
+   ProductCardSkeleton Styles - Dark Gold Theme
+   Имитирует структуру ProductCard
+   ======================================== */
+
+.card {
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ========================================
+   Image Container
+   ======================================== */
+
+.imageContainer {
+  position: relative;
+  aspect-ratio: 1;
+  background: var(--bg-elevated, #121214);
+}
+
+/* ========================================
+   Content
+   ======================================== */
+
+.content {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.manufacturer {
+  margin-bottom: 4px;
+}
+
+.name {
+  margin-bottom: 8px;
+}
+
+/* ========================================
+   Rating
+   ======================================== */
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+/* ========================================
+   Stock Status
+   ======================================== */
+
+.stock {
+  margin-bottom: 12px;
+}
+
+/* ========================================
+   Price Row
+   ======================================== */
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.prices {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
+
+@media (max-width: 640px) {
+  .content {
+    padding: 12px;
+  }
+}

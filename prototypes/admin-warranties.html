@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Гарантийные обращения — GoldPC Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --error: #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--fg-dim); border-radius: 3px; }
+
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg { width: 20px; height: 20px; color: var(--bg); }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span { color: var(--accent); }
+
+    .admin-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      padding: 4px 10px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--border-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 16px; }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--fg-muted);
+      font-size: 0.8rem;
+    }
+    .user-name { font-size: 0.85rem; color: var(--fg); }
+
+    .layout { display: flex; padding-top: 68px; min-height: 100vh; }
+
+    .sidebar {
+      width: 240px;
+      background: var(--bg-elevated);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: fixed;
+      top: 68px;
+      bottom: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { margin-bottom: 24px; }
+    .sidebar-title {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0 20px;
+      margin-bottom: 12px;
+    }
+
+    .sidebar-nav { list-style: none; }
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: all 0.2s;
+      border-left: 2px solid transparent;
+    }
+
+    .sidebar-nav a:hover { background: var(--bg-card); color: var(--fg); }
+    .sidebar-nav a.active {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+    .sidebar-nav svg { width: 18px; height: 18px; }
+
+    .main { flex: 1; margin-left: 240px; padding: 32px; }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+    }
+
+    .page-title { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--fg-dim);
+      margin-top: 8px;
+    }
+
+    .breadcrumb a { color: var(--fg-muted); text-decoration: none; transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--accent); }
+    .breadcrumb svg { width: 14px; height: 14px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 20px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 3px;
+      height: 100%;
+    }
+
+    .stat-card.pending::before { background: var(--warning); }
+    .stat-card.in-progress::before { background: var(--info); }
+    .stat-card.completed::before { background: var(--success); }
+    .stat-card.total::before { background: var(--accent); }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.75rem;
+      font-weight: 500;
+    }
+
+    .stat-card.pending .stat-value { color: var(--warning); }
+    .stat-card.in-progress .stat-value { color: var(--info); }
+    .stat-card.completed .stat-value { color: var(--success); }
+    .stat-card.total .stat-value { color: var(--accent); }
+
+    .filters { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .filter-group { display: flex; align-items: center; gap: 8px; }
+    .filter-label { font-size: 0.8rem; color: var(--fg-muted); }
+
+    .filter-select {
+      padding: 8px 32px 8px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+
+    .filter-select:focus { outline: none; border-color: var(--accent); }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      width: 280px;
+    }
+
+    .search-box svg { width: 16px; height: 16px; color: var(--fg-dim); }
+    .search-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+    }
+    .search-box input::placeholder { color: var(--fg-dim); }
+    .search-box input:focus { outline: none; }
+
+    .table-card { background: var(--bg-card); border: 1px solid var(--border); }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 14px 16px; text-align: left; }
+    .table th {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .table td { font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+    .table tr:last-child td { border-bottom: none; }
+    .table tr:hover td { background: var(--bg-elevated); }
+
+    .claim-id { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--accent); }
+
+    .customer-info { display: flex; flex-direction: column; gap: 2px; }
+    .customer-name { font-weight: 500; color: var(--fg); }
+    .customer-email { font-size: 0.75rem; color: var(--fg-dim); }
+
+    .product-info { display: flex; flex-direction: column; gap: 2px; }
+    .product-name { font-weight: 500; color: var(--fg); }
+    .product-serial { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--fg-dim); }
+
+    .issue-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+    }
+    .issue-type svg { width: 14px; height: 14px; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .status-badge.pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .status-badge.in-progress { background: rgba(59, 130, 246, 0.15); color: var(--info); }
+    .status-badge.resolved { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .status-badge.rejected { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+
+    .date { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--fg-muted); }
+
+    .priority-indicator { width: 8px; height: 8px; border-radius: 50%; }
+    .priority-indicator.high { background: var(--error); }
+    .priority-indicator.medium { background: var(--warning); }
+    .priority-indicator.low { background: var(--success); }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .action-btn:hover { border-color: var(--border-accent); color: var(--accent); }
+    .action-btn svg { width: 16px; height: 16px; }
+
+    .pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-top: 1px solid var(--border);
+    }
+    .pagination-info { font-size: 0.8rem; color: var(--fg-dim); }
+    .pagination-pages { display: flex; gap: 4px; }
+
+    .page-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .page-btn:hover { border-color: var(--border-accent); color: var(--accent); }
+    .page-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+
+    @media (max-width: 1400px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 1024px) {
+      .sidebar { width: 200px; }
+      .main { margin-left: 200px; }
+      .filters { flex-direction: column; align-items: stretch; }
+      .search-box { width: 100%; }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .table { display: block; overflow-x: auto; }
+    }
+
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+    <span class="admin-badge">Admin Panel</span>
+    <div class="header-actions">
+      <div class="user-info">
+        <div class="user-avatar">АД</div>
+        <span class="user-name">Администратор</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Управление</div>
+        <ul class="sidebar-nav">
+          <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Dashboard</a></li>
+          <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Пользователи</a></li>
+          <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Заказы</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Каталог</div>
+        <ul class="sidebar-nav">
+          <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Товары</a></li>
+          <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Справочники</a></li>
+          <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Производители</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Сервис</div>
+        <ul class="sidebar-nav">
+          <li><a href="#" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Гарантийные обращения</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Гарантийные обращения</h1>
+          <div class="breadcrumb">
+            <a href="#">Admin</a>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <span>Гарантийные обращения</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card total"><div class="stat-label">Всего</div><div class="stat-value">156</div></div>
+        <div class="stat-card pending"><div class="stat-label">Ожидают</div><div class="stat-value">23</div></div>
+        <div class="stat-card in-progress"><div class="stat-label">В работе</div><div class="stat-value">18</div></div>
+        <div class="stat-card completed"><div class="stat-label">Завершено</div><div class="stat-value">115</div></div>
+      </div>
+
+      <div class="filters">
+        <div class="filter-group">
+          <label class="filter-label">Статус:</label>
+          <select class="filter-select">
+            <option value="">Все</option>
+            <option value="pending">Ожидает</option>
+            <option value="in-progress">В работе</option>
+            <option value="resolved">Решено</option>
+            <option value="rejected">Отклонено</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Тип:</label>
+          <select class="filter-select">
+            <option value="">Все</option>
+            <option value="defect">Дефект</option>
+            <option value="malfunction">Неисправность</option>
+            <option value="damage">Повреждение</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Период:</label>
+          <select class="filter-select">
+            <option value="">Все время</option>
+            <option value="today">Сегодня</option>
+            <option value="week">За неделю</option>
+            <option value="month">За месяц</option>
+          </select>
+        </div>
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" placeholder="Поиск по ID, клиенту...">
+        </div>
+      </div>
+
+      <div class="table-card">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Клиент</th>
+              <th>Товар</th>
+              <th>Тип проблемы</th>
+              <th>Приоритет</th>
+              <th>Статус</th>
+              <th>Дата</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="claim-id">#WR-0156</span></td>
+              <td><div class="customer-info"><span class="customer-name">Алексей Петров</span><span class="customer-email">petrov@mail.ru</span></div></td>
+              <td><div class="product-info"><span class="product-name">RTX 4070 Ti Super</span><span class="product-serial">SN: 9801234567</span></div></td>
+              <td><span class="issue-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Неисправность</span></td>
+              <td><span class="priority-indicator high"></span></td>
+              <td><span class="status-badge pending">Ожидает</span></td>
+              <td><span class="date">17.03.26</span></td>
+              <td><button class="action-btn" title="Подробнее"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="claim-id">#WR-0155</span></td>
+              <td><div class="customer-info"><span class="customer-name">Мария Иванова</span><span class="customer-email">ivanova@gmail.com</span></div></td>
+              <td><div class="product-info"><span class="product-name">AMD Ryzen 7 7800X3D</span><span class="product-serial">SN: 7654321098</span></div></td>
+              <td><span class="issue-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Дефект</span></td>
+              <td><span class="priority-indicator medium"></span></td>
+              <td><span class="status-badge in-progress">В работе</span></td>
+              <td><span class="date">16.03.26</span></td>
+              <td><button class="action-btn" title="Подробнее"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="claim-id">#WR-0154</span></td>
+              <td><div class="customer-info"><span class="customer-name">Дмитрий Сидоров</span><span class="customer-email">sidorov@yandex.by</span></div></td>
+              <td><div class="product-info"><span class="product-name">Samsung 990 Pro 2TB</span><span class="product-serial">SN: 5432109876</span></div></td>
+              <td><span class="issue-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Повреждение</span></td>
+              <td><span class="priority-indicator low"></span></td>
+              <td><span class="status-badge resolved">Решено</span></td>
+              <td><span class="date">15.03.26</span></td>
+              <td><button class="action-btn" title="Подробнее"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="claim-id">#WR-0153</span></td>
+              <td><div class="customer-info"><span class="customer-name">Елена Козлова</span><span class="customer-email">kozlova@tut.by</span></div></td>
+              <td><div class="product-info"><span class="product-name">G.Skill Trident Z5 32GB</span><span class="product-serial">SN: 1098765432</span></div></td>
+              <td><span class="issue-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Неисправность</span></td>
+              <td><span class="priority-indicator high"></span></td>
+              <td><span class="status-badge in-progress">В работе</span></td>
+              <td><span class="date">14.03.26</span></td>
+              <td><button class="action-btn" title="Подробнее"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="claim-id">#WR-0152</span></td>
+              <td><div class="customer-info"><span class="customer-name">Николай Волков</span><span class="customer-email">volkov@gmail.com</span></div></td>
+              <td><div class="product-info"><span class="product-name">ASUS ROG Strix B650E-F</span><span class="product-serial">SN: 3210987654</span></div></td>
+              <td><span class="issue-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Другое</span></td>
+              <td><span class="priority-indicator low"></span></td>
+              <td><span class="status-badge rejected">Отклонено</span></td>
+              <td><span class="date">13.03.26</span></td>
+              <td><button class="action-btn" title="Подробнее"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button></td>
+            </tr>
+            <tr>
+              <td><span class="claim-id">#WR-0151</span></td>
+              <td><div class="customer-info"><span class="customer-name">Анна Смирнова</span><span class="customer-email">smirnova@mail.ru</span></div></td>
+              <td><div class="product-info"><span class="product-name">Corsair RM850x PSU</span><span class="product-serial">SN: 9876543210</span></div></td>
+              <td><span class="issue-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Дефект</span></td>
+              <td><span class="priority-indicator medium"></span></td>
+              <td><span class="status-badge resolved">Решено</span></td>
+              <td><span class="date">12.03.26</span></td>
+              <td><button class="action-btn" title="Подробнее"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pagination">
+          <span class="pagination-info">Показано 1–6 из 156 записей</span>
+          <div class="pagination-pages">
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn">...</button>
+            <button class="page-btn">26</button>
+            <button class="page-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;"><polyline points="9 18 15 12 9 6"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

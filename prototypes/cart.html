@@ -6,7 +6,7 @@
   <title>Корзина — GoldPC</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #09090b;
@@ -16,16 +16,12 @@
       --fg-muted: #71717a;
       --fg-dim: #52525b;
       --accent: #d4a574;
-      --accent-dim: rgba(212, 165, 116, 0.15);
-      --success: #4ade80;
-      --success-dim: rgba(74, 222, 128, 0.1);
-      --warning: #fbbf24;
-      --warning-dim: rgba(251, 191, 36, 0.1);
-      --error: #f87171;
-      --error-dim: rgba(248, 113, 113, 0.1);
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
       --border: rgba(255, 255, 255, 0.06);
-      --border-hover: rgba(255, 255, 255, 0.12);
       --border-accent: rgba(212, 165, 116, 0.2);
+      --radius: 4px;
+      --radius-lg: 8px;
     }
 
     * {
@@ -35,7 +31,6 @@
     }
 
     html {
-      font-size: 16px;
       scroll-behavior: smooth;
     }
 
@@ -44,21 +39,11 @@
       background: var(--bg);
       color: var(--fg);
       line-height: 1.5;
-      min-height: 100vh;
+      overflow-x: hidden;
+      font-feature-settings: 'ss01' on;
     }
 
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: 
-        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
+    /* Scrollbar */
     ::-webkit-scrollbar {
       width: 6px;
     }
@@ -67,31 +52,29 @@
     }
     ::-webkit-scrollbar-thumb {
       background: var(--fg-dim);
+      border-radius: 3px;
     }
 
     /* ===== HEADER ===== */
     .header {
-      position: sticky;
+      position: fixed;
       top: 0;
+      left: 0;
+      right: 0;
       z-index: 100;
-      background: rgba(9, 9, 11, 0.9);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.8);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
-      padding: 16px 24px;
-    }
-
-    .header__container {
-      max-width: 1400px;
-      margin: 0 auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
     }
 
     .logo {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       text-decoration: none;
     }
 
@@ -121,12 +104,12 @@
       color: var(--accent);
     }
 
-    .header__nav {
+    .nav {
       display: flex;
       gap: 32px;
     }
 
-    .header__nav a {
+    .nav a {
       font-size: 0.8rem;
       font-weight: 500;
       color: var(--fg-muted);
@@ -136,13 +119,12 @@
       transition: color 0.2s;
     }
 
-    .header__nav a:hover {
+    .nav a:hover {
       color: var(--fg);
     }
 
-    .header__actions {
+    .header-actions {
       display: flex;
-      align-items: center;
       gap: 8px;
     }
 
@@ -161,7 +143,7 @@
     }
 
     .icon-btn:hover {
-      border-color: var(--accent);
+      border-color: var(--border-accent);
       color: var(--accent);
     }
 
@@ -170,19 +152,12 @@
       height: 18px;
     }
 
-    .icon-btn--active {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: var(--accent-dim);
-    }
-
     .cart-badge {
       position: absolute;
       top: -4px;
       right: -4px;
-      min-width: 16px;
+      width: 16px;
       height: 16px;
-      padding: 0 4px;
       background: var(--accent);
       color: var(--bg);
       font-size: 9px;
@@ -192,1071 +167,577 @@
       justify-content: center;
     }
 
-    /* ===== MAIN ===== */
+    /* ===== MAIN LAYOUT ===== */
     .main {
-      position: relative;
-      z-index: 1;
-      max-width: 1400px;
+      padding: 120px 24px 80px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 24px;
-    }
-
-    @media (min-width: 768px) {
-      .main {
-        padding: 32px;
-      }
-    }
-
-    /* Breadcrumb */
-    .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.7rem;
-      color: var(--fg-dim);
-      margin-bottom: 24px;
-    }
-
-    .breadcrumb a {
-      color: var(--fg-muted);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .breadcrumb a:hover {
-      color: var(--accent);
-    }
-
-    /* Page Header */
-    .page-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 32px;
     }
 
     .page-title {
-      font-size: 1.5rem;
+      font-size: clamp(1.5rem, 3vw, 2rem);
       font-weight: 600;
       letter-spacing: -0.02em;
+      margin-bottom: 40px;
     }
 
-    .page-title span {
-      color: var(--fg-dim);
-      font-weight: 400;
-    }
-
-    .clear-btn {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 16px;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--fg-muted);
-      font-family: inherit;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .clear-btn:hover {
-      border-color: var(--error);
-      color: var(--error);
-    }
-
-    .clear-btn svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    /* ===== CART LAYOUT ===== */
     .cart-layout {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 24px;
-    }
-
-    @media (min-width: 1024px) {
-      .cart-layout {
-        grid-template-columns: 1fr 360px;
-        gap: 32px;
-      }
+      grid-template-columns: 1fr 360px;
+      gap: 40px;
+      align-items: start;
     }
 
     /* ===== CART ITEMS ===== */
     .cart-items {
       display: flex;
       flex-direction: column;
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
+      gap: 16px;
     }
 
     .cart-item {
       display: grid;
-      grid-template-columns: auto 1fr auto;
+      grid-template-columns: 80px 1fr auto;
       gap: 20px;
       padding: 20px;
       background: var(--bg-card);
-      align-items: center;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
     }
 
-    .cart-item__image {
+    .cart-item:hover {
+      border-color: var(--border-accent);
+    }
+
+    .item-image {
       width: 80px;
       height: 80px;
-      background: var(--bg-elevated);
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      background: var(--bg-elevated);
     }
 
-    .cart-item__image svg {
+    .item-image svg {
       max-width: 60px;
       max-height: 60px;
     }
 
-    .cart-item__info {
-      min-width: 0;
+    .item-details {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
     }
 
-    .cart-item__category {
-      font-size: 0.6rem;
-      font-weight: 600;
+    .item-category {
+      font-size: 0.65rem;
       color: var(--fg-dim);
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 4px;
     }
 
-    .cart-item__name {
-      font-size: 0.9rem;
+    .item-name {
+      font-size: 0.95rem;
       font-weight: 500;
-      margin-bottom: 8px;
+      line-height: 1.4;
     }
 
-    .cart-item__name a {
-      color: var(--fg);
-      text-decoration: none;
-      transition: color 0.2s;
+    .item-spec {
+      font-size: 0.75rem;
+      color: var(--fg-muted);
     }
 
-    .cart-item__name a:hover {
-      color: var(--accent);
-    }
-
-    .cart-item__specs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--fg-dim);
-    }
-
-    .cart-item__specs span {
-      padding: 3px 6px;
-      background: var(--bg-elevated);
-    }
-
-    .cart-item__actions {
+    .item-actions {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 12px;
+      justify-content: space-between;
     }
 
-    /* Quantity */
-    .quantity {
-      display: flex;
-      align-items: center;
-      border: 1px solid var(--border);
-    }
-
-    .quantity__btn {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: transparent;
-      border: none;
-      color: var(--fg-muted);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .quantity__btn:hover {
-      color: var(--fg);
-      background: var(--bg-elevated);
-    }
-
-    .quantity__btn:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    .quantity__btn svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    .quantity__value {
-      width: 40px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      color: var(--fg);
-      border-left: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-    }
-
-    /* Price */
-    .cart-item__price {
-      text-align: right;
-    }
-
-    .cart-item__price-current {
+    .item-price {
       font-family: 'JetBrains Mono', monospace;
       font-size: 1rem;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--accent);
     }
 
-    .cart-item__price-old {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--fg-dim);
-      text-decoration: line-through;
-      margin-top: 2px;
-    }
-
-    /* Remove button */
-    .remove-btn {
-      width: 32px;
-      height: 32px;
+    .quantity-controls {
       display: flex;
       align-items: center;
-      justify-content: center;
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--fg-dim);
-      cursor: pointer;
-      transition: all 0.2s;
+      gap: 8px;
     }
 
-    .remove-btn:hover {
-      border-color: var(--error);
-      color: var(--error);
-      background: var(--error-dim);
+    .quantity-controls .icon-btn {
+      width: 32px;
+      height: 32px;
     }
 
-    .remove-btn svg {
+    .quantity-controls .icon-btn svg {
       width: 14px;
       height: 14px;
     }
 
-    /* Mobile layout */
-    @media (max-width: 640px) {
-      .cart-item {
-        grid-template-columns: 60px 1fr;
-        gap: 16px;
-      }
+    .quantity-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      min-width: 32px;
+      text-align: center;
+    }
 
-      .cart-item__image {
-        width: 60px;
-        height: 60px;
-        grid-row: 1 / 3;
-      }
+    .remove-btn {
+      background: transparent;
+      border: none;
+      color: var(--fg-dim);
+      cursor: pointer;
+      padding: 4px;
+      transition: color 0.2s;
+    }
 
-      .cart-item__info {
-        grid-column: 2;
-      }
+    .remove-btn:hover {
+      color: #ef4444;
+    }
 
-      .cart-item__actions {
-        grid-column: 2;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-      }
-
-      .cart-item__price {
-        text-align: left;
-      }
+    .remove-btn svg {
+      width: 16px;
+      height: 16px;
     }
 
     /* ===== CART SUMMARY ===== */
     .cart-summary {
       position: sticky;
-      top: 80px;
-      height: fit-content;
+      top: 100px;
       background: var(--bg-card);
       border: 1px solid var(--border);
+      padding: 24px;
     }
 
-    .cart-summary__header {
-      padding: 20px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .cart-summary__title {
-      font-size: 0.9rem;
+    .summary-title {
+      font-size: 0.8rem;
       font-weight: 600;
-    }
-
-    .cart-summary__content {
-      padding: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
     }
 
     .summary-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
     }
 
-    .summary-row:last-child {
-      border-bottom: none;
-    }
-
-    .summary-row__label {
-      font-size: 0.8rem;
+    .summary-label {
+      font-size: 0.85rem;
       color: var(--fg-muted);
     }
 
-    .summary-row__value {
+    .summary-value {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      color: var(--fg);
-    }
-
-    .summary-row__value--discount {
-      color: var(--success);
-    }
-
-    .summary-row--total {
-      padding-top: 16px;
-      margin-top: 8px;
-      border-top: 1px solid var(--border);
-      border-bottom: none;
-    }
-
-    .summary-row--total .summary-row__label {
       font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--fg);
     }
 
-    .summary-row--total .summary-row__value {
-      font-size: 1.25rem;
+    .summary-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    .summary-total {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .total-label {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .total-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem;
       font-weight: 600;
       color: var(--accent);
     }
 
-    /* Promo code */
-    .promo {
-      padding: 20px;
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 24px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary svg {
+      width: 16px;
+      height: 16px;
+      transition: transform 0.2s;
+    }
+
+    .btn-primary:hover svg {
+      transform: translateX(4px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--border);
+      margin-top: 12px;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--fg-dim);
+      background: var(--bg-card);
+    }
+
+    .promo-code {
+      margin-top: 20px;
+      padding-top: 20px;
       border-top: 1px solid var(--border);
     }
 
-    .promo-code__input {
+    .promo-input {
+      display: flex;
+      gap: 8px;
+    }
+
+    .promo-input input {
       flex: 1;
-      height: 40px;
-      padding: 0 12px;
+      padding: 12px 16px;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       color: var(--fg);
-      font-family: inherit;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 0.8rem;
       transition: border-color 0.2s;
     }
 
-    .promo-code__input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .promo-code__input::placeholder {
+    .promo-input input::placeholder {
       color: var(--fg-dim);
     }
 
-    .promo-code__btn {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--accent);
-      border: none;
-      color: var(--bg);
+    .promo-input input:focus {
+      outline: none;
+      border-color: var(--border-accent);
+    }
+
+    .promo-input button {
+      padding: 12px 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
     }
 
-    .promo-code__btn:hover {
-      background: #e0b68a;
-    }
-
-    .promo-code__btn svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    /* Checkout */
-    .cart-summary__checkout {
-      padding: 20px;
-      border-top: 1px solid var(--border);
-    }
-
-    .checkout-btn {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 16px 24px;
-      background: var(--accent);
-      border: none;
-      color: var(--bg);
-      font-family: inherit;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .checkout-btn:hover {
-      background: #e0b68a;
-    }
-
-    .checkout-btn svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    .checkout-note {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 12px;
-      padding: 12px;
-      background: var(--success-dim);
-      border: 1px solid rgba(74, 222, 128, 0.2);
-      font-size: 0.7rem;
-      color: var(--success);
-    }
-
-    .checkout-note svg {
-      width: 14px;
-      height: 14px;
-      flex-shrink: 0;
+    .promo-input button:hover {
+      border-color: var(--border-accent);
+      color: var(--accent);
     }
 
     /* ===== EMPTY CART ===== */
     .cart-empty {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 80px 20px;
       text-align: center;
+      padding: 80px 20px;
     }
 
-    .cart-empty__icon {
-      width: 80px;
-      height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      margin-bottom: 24px;
+    .cart-empty svg {
+      width: 64px;
+      height: 64px;
       color: var(--fg-dim);
+      margin-bottom: 24px;
     }
 
-    .cart-empty__icon svg {
-      width: 40px;
-      height: 40px;
-    }
-
-    .cart-empty__title {
+    .cart-empty h2 {
       font-size: 1.25rem;
-      font-weight: 600;
       margin-bottom: 8px;
     }
 
-    .cart-empty__text {
-      font-size: 0.9rem;
+    .cart-empty p {
       color: var(--fg-muted);
       margin-bottom: 24px;
-      max-width: 300px;
-    }
-
-    .cart-empty__btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 28px;
-      background: var(--accent);
-      border: none;
-      color: var(--bg);
-      font-family: inherit;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .cart-empty__btn:hover {
-      background: #e0b68a;
-    }
-
-    .cart-empty__btn svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    /* ===== RECOMMENDATIONS ===== */
-    .recommendations {
-      margin-top: 64px;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-
-    .section-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-
-    .section-link {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.8rem;
-      color: var(--accent);
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-
-    .section-link:hover {
-      color: var(--fg);
-    }
-
-    .section-link svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    .products-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-
-    @media (min-width: 640px) {
-      .products-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-      }
-    }
-
-    .product-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      transition: all 0.2s;
-    }
-
-    .product-card:hover {
-      border-color: var(--border-hover);
-    }
-
-    .product-card__image {
-      aspect-ratio: 1;
-      background: var(--bg-elevated);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .product-card__image svg {
-      max-width: 70%;
-      max-height: 70%;
-    }
-
-    .product-card__content {
-      padding: 16px;
-    }
-
-    .product-card__manufacturer {
-      font-size: 0.6rem;
-      font-weight: 600;
-      color: var(--fg-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 4px;
-    }
-
-    .product-card__name {
-      font-size: 0.85rem;
-      font-weight: 500;
-      margin-bottom: 8px;
-    }
-
-    .product-card__name a {
-      color: var(--fg);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .product-card__name a:hover {
-      color: var(--accent);
-    }
-
-    .product-card__price {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--accent);
     }
 
     /* ===== RESPONSIVE ===== */
-    @media (max-width: 1023px) {
+    @media (max-width: 1024px) {
+      .cart-layout {
+        grid-template-columns: 1fr;
+      }
+
       .cart-summary {
         position: static;
       }
     }
 
-    /* ===== ACCESSIBILITY ===== */
+    @media (max-width: 768px) {
+      .nav {
+        display: none;
+      }
+
+      .cart-item {
+        grid-template-columns: 60px 1fr;
+        gap: 16px;
+      }
+
+      .item-image {
+        width: 60px;
+        height: 60px;
+      }
+
+      .item-actions {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+      }
+    }
+
     :focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
-    }
-
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-      }
     }
   </style>
 </head>
 <body>
   <!-- Header -->
   <header class="header">
-    <div class="header__container">
-      <a href="/" class="logo">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-            <polyline points="2 17 12 22 22 17"/>
-            <polyline points="2 12 12 17 22 12"/>
-          </svg>
-        </div>
-        <span class="logo-text">Gold<span>PC</span></span>
-      </a>
-
-      <nav class="header__nav">
-        <a href="#">Каталог</a>
-        <a href="#">Конструктор</a>
-        <a href="#">Сервис</a>
-      </nav>
-
-      <div class="header__actions">
-        <button class="icon-btn" aria-label="Поиск">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="M21 21l-4.35-4.35"/>
-          </svg>
-        </button>
-        <button class="icon-btn icon-btn--active" aria-label="Корзина">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-            <line x1="3" y1="6" x2="21" y2="6"/>
-          </svg>
-          <span class="cart-badge">3</span>
-        </button>
+    <a href="home.html" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
       </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+
+    <nav class="nav">
+      <a href="catalog.html">Каталог</a>
+      <a href="pc-builder.html">Конструктор</a>
+      <a href="#">Сервис</a>
+      <a href="#">О нас</a>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Поиск">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </button>
+      <button class="icon-btn" aria-label="Корзина">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+        </svg>
+        <span class="cart-badge">3</span>
+      </button>
+      <button class="icon-btn" aria-label="Профиль">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
     </div>
   </header>
 
-  <!-- Main -->
+  <!-- Main Content -->
   <main class="main">
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb">
-      <a href="/">Главная</a>
-      <span>/</span>
-      <span>Корзина</span>
-    </nav>
+    <h1 class="page-title">Корзина</h1>
 
-    <!-- Page Header -->
-    <div class="page-header">
-      <h1 class="page-title">Корзина <span>(3 товара)</span></h1>
-      <button class="clear-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-        </svg>
-        Очистить
-      </button>
-    </div>
-
-    <!-- Cart Layout -->
     <div class="cart-layout">
       <!-- Cart Items -->
       <div class="cart-items">
         <!-- Item 1 -->
-        <article class="cart-item">
-          <div class="cart-item__image">
-            <svg viewBox="0 0 100 100" fill="none">
-              <rect x="20" y="20" width="60" height="60" rx="4" fill="#1a1a1e" stroke="#d4a574" stroke-width="1"/>
-              <rect x="35" y="35" width="30" height="30" rx="2" fill="#121214"/>
-              <text x="50" y="55" text-anchor="middle" fill="#d4a574" font-size="10">CPU</text>
-            </svg>
-          </div>
-          <div class="cart-item__info">
-            <span class="cart-item__category">Процессор</span>
-            <h3 class="cart-item__name">
-              <a href="#">AMD Ryzen 7 7800X3D</a>
-            </h3>
-            <div class="cart-item__specs">
-              <span>8C / 16T</span>
-              <span>4.2 GHz</span>
-              <span>96MB L3</span>
-            </div>
-          </div>
-          <div class="cart-item__actions">
-            <div class="quantity">
-              <button class="quantity__btn" aria-label="Уменьшить">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-              </button>
-              <span class="quantity__value">1</span>
-              <button class="quantity__btn" aria-label="Увеличить">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="12" y1="5" x2="12" y2="19"/>
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-              </button>
-            </div>
-            <div class="cart-item__price">
-              <div class="cart-item__price-current">1 450 BYN</div>
-            </div>
-            <button class="remove-btn" aria-label="Удалить">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          </div>
-        </article>
-
-        <!-- Item 2 -->
-        <article class="cart-item">
-          <div class="cart-item__image">
-            <svg viewBox="0 0 120 80" fill="none">
-              <rect x="10" y="10" width="100" height="60" rx="4" fill="#1a1a1e" stroke="#d4a574" stroke-width="1"/>
+        <div class="cart-item">
+          <div class="item-image">
+            <svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="100" height="60" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
               <rect x="20" y="20" width="35" height="35" rx="2" fill="#121214"/>
-              <rect x="65" y="22" width="35" height="6" rx="1" fill="#2a2a2e"/>
-              <rect x="65" y="34" width="25" height="6" rx="1" fill="#2a2a2e"/>
               <circle cx="37" cy="37" r="10" stroke="#d4a574" stroke-width="1" fill="none"/>
             </svg>
           </div>
-          <div class="cart-item__info">
-            <span class="cart-item__category">Видеокарта</span>
-            <h3 class="cart-item__name">
-              <a href="#">NVIDIA GeForce RTX 4070 Ti Super 16GB</a>
-            </h3>
-            <div class="cart-item__specs">
-              <span>16GB GDDR6X</span>
-              <span>2652 MHz</span>
-            </div>
+          <div class="item-details">
+            <span class="item-category">Видеокарта</span>
+            <h3 class="item-name">NVIDIA RTX 4070 Ti Super 16GB</h3>
+            <span class="item-spec">16GB GDDR6X, 2850 MHz</span>
           </div>
-          <div class="cart-item__actions">
-            <div class="quantity">
-              <button class="quantity__btn" aria-label="Уменьшить">
+          <div class="item-actions">
+            <span class="item-price">3 200 BYN</span>
+            <div class="quantity-controls">
+              <button class="icon-btn" aria-label="Уменьшить количество">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
               </button>
-              <span class="quantity__value">1</span>
-              <button class="quantity__btn" aria-label="Увеличить">
+              <span class="quantity-value">1</span>
+              <button class="icon-btn" aria-label="Увеличить количество">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="12" y1="5" x2="12" y2="19"/>
                   <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
               </button>
+              <button class="remove-btn" aria-label="Удалить">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
             </div>
-            <div class="cart-item__price">
-              <div class="cart-item__price-current">3 200 BYN</div>
-            </div>
-            <button class="remove-btn" aria-label="Удалить">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
           </div>
-        </article>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="cart-item">
+          <div class="item-image">
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
+              <rect x="30" y="30" width="40" height="40" rx="2" fill="#121214"/>
+              <text x="50" y="55" text-anchor="middle" fill="#d4a574" font-size="12">CPU</text>
+            </svg>
+          </div>
+          <div class="item-details">
+            <span class="item-category">Процессор</span>
+            <h3 class="item-name">AMD Ryzen 7 7800X3D</h3>
+            <span class="item-spec">8C / 16T / 4.2GHz / 96MB Cache</span>
+          </div>
+          <div class="item-actions">
+            <span class="item-price">1 450 BYN</span>
+            <div class="quantity-controls">
+              <button class="icon-btn" aria-label="Уменьшить количество">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+              <span class="quantity-value">1</span>
+              <button class="icon-btn" aria-label="Увеличить количество">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+              <button class="remove-btn" aria-label="Удалить">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- Item 3 -->
-        <article class="cart-item">
-          <div class="cart-item__image">
-            <svg viewBox="0 0 120 60" fill="none">
-              <rect x="10" y="10" width="100" height="40" rx="2" fill="#1a1a1e" stroke="#d4a574" stroke-width="1"/>
+        <div class="cart-item">
+          <div class="item-image">
+            <svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="10" y="10" width="100" height="40" rx="2" fill="#1a1a1e" stroke="#3a3a3e"/>
               <rect x="20" y="18" width="15" height="24" rx="1" fill="#121214"/>
               <rect x="40" y="18" width="15" height="24" rx="1" fill="#121214"/>
               <rect x="60" y="18" width="15" height="24" rx="1" fill="#121214"/>
               <rect x="80" y="18" width="15" height="24" rx="1" fill="#121214"/>
             </svg>
           </div>
-          <div class="cart-item__info">
-            <span class="cart-item__category">Память</span>
-            <h3 class="cart-item__name">
-              <a href="#">G.Skill Trident Z5 RGB 32GB DDR5-6000</a>
-            </h3>
-            <div class="cart-item__specs">
-              <span>2×16GB</span>
-              <span>CL30</span>
-              <span>DDR5</span>
-            </div>
+          <div class="item-details">
+            <span class="item-category">Память</span>
+            <h3 class="item-name">G.Skill Trident Z5 RGB 32GB DDR5</h3>
+            <span class="item-spec">2x16GB, DDR5-6000, CL30</span>
           </div>
-          <div class="cart-item__actions">
-            <div class="quantity">
-              <button class="quantity__btn" aria-label="Уменьшить">
+          <div class="item-actions">
+            <span class="item-price">650 BYN</span>
+            <div class="quantity-controls">
+              <button class="icon-btn" aria-label="Уменьшить количество">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
               </button>
-              <span class="quantity__value">1</span>
-              <button class="quantity__btn" aria-label="Увеличить">
+              <span class="quantity-value">2</span>
+              <button class="icon-btn" aria-label="Увеличить количество">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="12" y1="5" x2="12" y2="19"/>
                   <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
               </button>
+              <button class="remove-btn" aria-label="Удалить">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
             </div>
-            <div class="cart-item__price">
-              <div class="cart-item__price-current">650 BYN</div>
-              <div class="cart-item__price-old">720 BYN</div>
-            </div>
-            <button class="remove-btn" aria-label="Удалить">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
           </div>
-        </article>
+        </div>
       </div>
 
       <!-- Cart Summary -->
       <aside class="cart-summary">
-        <div class="cart-summary__header">
-          <h2 class="cart-summary__title">Итого</h2>
+        <h2 class="summary-title">Итого</h2>
+
+        <div class="summary-row">
+          <span class="summary-label">Товары (4)</span>
+          <span class="summary-value">5 950 BYN</span>
         </div>
 
-        <div class="cart-summary__content">
-          <div class="summary-row">
-            <span class="summary-row__label">Товары (3)</span>
-            <span class="summary-row__value">5 300 BYN</span>
-          </div>
-          <div class="summary-row">
-            <span class="summary-row__label">Скидка</span>
-            <span class="summary-row__value" style="color: var(--success)">- 70 BYN</span>
-          </div>
-          <div class="summary-row">
-            <span class="summary-row__label">Доставка</span>
-            <span class="summary-row__value" style="color: var(--success)">Бесплатно</span>
-          </div>
-          <div class="summary-row" style="padding-top: 16px; border-top: 1px solid var(--border)">
-            <span class="summary-row__label" style="font-weight: 600; color: var(--fg)">К оплате</span>
-            <span class="summary-row__value" style="font-size: 1.25rem; color: var(--accent)">5 230 BYN</span>
-          </div>
+        <div class="summary-row">
+          <span class="summary-label">Доставка</span>
+          <span class="summary-value" style="color: var(--accent);">Бесплатно</span>
         </div>
 
-        <div class="cart-summary__promo">
-          <form class="promo-code">
-            <input type="text" class="promo-code__input" placeholder="Промокод">
-            <button type="submit" class="promo-code__btn" aria-label="Применить">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </button>
-          </form>
+        <div class="summary-divider"></div>
+
+        <div class="summary-total">
+          <span class="total-label">К оплате</span>
+          <span class="total-value">5 950 BYN</span>
         </div>
 
-        <div class="cart-summary__checkout">
-          <button class="checkout-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-              <line x1="1" y1="10" x2="23" y2="10"/>
-            </svg>
-            Оформить заказ
-          </button>
-          <div class="checkout-note">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            Бесплатная доставка при заказе от 500 BYN
+        <a href="checkout.html" class="btn btn-primary">
+          Оформить заказ
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </a>
+
+        <a href="catalog.html" class="btn btn-ghost">Продолжить покупки</a>
+
+        <div class="promo-code">
+          <div class="promo-input">
+            <input type="text" placeholder="Промокод">
+            <button>Применить</button>
           </div>
         </div>
       </aside>
     </div>
-
-    <!-- Recommendations -->
-    <section class="recommendations">
-      <div class="section-header">
-        <h2 class="section-title">Рекомендуем добавить</h2>
-        <a href="#" class="section-link">
-          Смотреть все
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </a>
-      </div>
-
-      <div class="products-grid">
-        <article class="product-card">
-          <div class="product-card__image">
-            <svg viewBox="0 0 100 100" fill="none">
-              <rect x="15" y="15" width="70" height="70" rx="4" stroke="#3a3a3e" stroke-width="1"/>
-              <rect x="25" y="25" width="20" height="15" rx="2" fill="#2a2a2e"/>
-              <rect x="55" y="25" width="15" height="30" rx="2" fill="#2a2a2e"/>
-              <circle cx="35" cy="60" r="8" stroke="#3a3a3e" stroke-width="1" fill="none"/>
-            </svg>
-          </div>
-          <div class="product-card__content">
-            <span class="product-card__manufacturer">ASUS</span>
-            <h3 class="product-card__name"><a href="#">ASUS ROG Strix B650E-F</a></h3>
-            <span class="product-card__price">850 BYN</span>
-          </div>
-        </article>
-
-        <article class="product-card">
-          <div class="product-card__image">
-            <svg viewBox="0 0 100 80" fill="none">
-              <rect x="10" y="10" width="80" height="60" rx="4" stroke="#3a3a3e" stroke-width="1"/>
-              <circle cx="50" cy="40" r="20" stroke="#d4a574" stroke-width="1" fill="none"/>
-              <circle cx="50" cy="40" r="8" fill="#121214"/>
-            </svg>
-          </div>
-          <div class="product-card__content">
-            <span class="product-card__manufacturer">NZXT</span>
-            <h3 class="product-card__name"><a href="#">NZXT Kraken X73 360mm</a></h3>
-            <span class="product-card__price">480 BYN</span>
-          </div>
-        </article>
-
-        <article class="product-card">
-          <div class="product-card__image">
-            <svg viewBox="0 0 100 80" fill="none">
-              <rect x="10" y="15" width="80" height="50" rx="4" stroke="#d4a574" stroke-width="1"/>
-              <circle cx="30" cy="40" r="12" stroke="#d4a574" stroke-width="1" fill="none"/>
-              <rect x="50" y="28" width="30" height="6" rx="1" fill="#2a2a2e"/>
-              <rect x="50" y="40" width="25" height="6" rx="1" fill="#2a2a2e"/>
-            </svg>
-          </div>
-          <div class="product-card__content">
-            <span class="product-card__manufacturer">Corsair</span>
-            <h3 class="product-card__name"><a href="#">Corsair RM1000x 1000W</a></h3>
-            <span class="product-card__price">520 BYN</span>
-          </div>
-        </article>
-
-        <article class="product-card">
-          <div class="product-card__image">
-            <svg viewBox="0 0 80 100" fill="none">
-              <rect x="10" y="10" width="60" height="80" rx="4" stroke="#d4a574" stroke-width="1"/>
-              <rect x="20" y="20" width="40" height="30" rx="2" fill="#121214"/>
-              <circle cx="25" cy="65" r="4" fill="#2a2a2e"/>
-              <circle cx="40" cy="65" r="4" fill="#2a2a2e"/>
-            </svg>
-          </div>
-          <div class="product-card__content">
-            <span class="product-card__manufacturer">Lian Li</span>
-            <h3 class="product-card__name"><a href="#">Lian Li O11 Dynamic</a></h3>
-            <span class="product-card__price">520 BYN</span>
-          </div>
-        </article>
-      </div>
-    </section>
   </main>
-
-  <script>
-    // Quantity buttons
-    document.querySelectorAll('.quantity__btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const valueEl = this.parentElement.querySelector('.quantity__value');
-        let value = parseInt(valueEl.textContent);
-        
-        if (this.getAttribute('aria-label') === 'Увеличить') {
-          value++;
-        } else if (value > 1) {
-          value--;
-        }
-        
-        valueEl.textContent = value;
-      });
-    });
-
-    // Remove buttons
-    document.querySelectorAll('.remove-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        const item = this.closest('.cart-item');
-        item.style.opacity = '0';
-        item.style.transform = 'translateX(-20px)';
-        item.style.transition = 'all 0.3s';
-        
-        setTimeout(() => {
-          item.remove();
-          updateCartCount();
-        }, 300);
-      });
-    });
-
-    function updateCartCount() {
-      const count = document.querySelectorAll('.cart-item').length;
-      document.querySelector('.cart-badge').textContent = count;
-      document.querySelector('.page-title span').textContent = `(${count} товар${count === 1 ? '' : count > 1 && count < 5 ? 'а' : 'ов'})`;
-    }
-
-    // Promo code
-    document.querySelector('.promo-code').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const input = this.querySelector('.promo-code__input');
-      if (input.value.trim()) {
-        input.style.borderColor = 'var(--success)';
-        setTimeout(() => {
-          input.style.borderColor = 'var(--border)';
-        }, 2000);
-      }
-    });
-  </script>
 </body>
 </html>

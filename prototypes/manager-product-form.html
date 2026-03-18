@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Добавление товара — GoldPC Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --error: #ef4444;
+      --success: #22c55e;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--fg-dim); border-radius: 3px; }
+
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg { width: 20px; height: 20px; color: var(--bg); }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span { color: var(--accent); }
+
+    .manager-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      padding: 4px 10px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--border-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 16px; }
+    .user-info { display: flex; align-items: center; gap: 10px; }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--fg-muted);
+      font-size: 0.8rem;
+    }
+    .user-name { font-size: 0.85rem; color: var(--fg); }
+
+    .layout { display: flex; padding-top: 68px; min-height: 100vh; }
+
+    .sidebar {
+      width: 240px;
+      background: var(--bg-elevated);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: fixed;
+      top: 68px;
+      bottom: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-section { margin-bottom: 24px; }
+    .sidebar-title {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0 20px;
+      margin-bottom: 12px;
+    }
+
+    .sidebar-nav { list-style: none; }
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: all 0.2s;
+      border-left: 2px solid transparent;
+    }
+
+    .sidebar-nav a:hover { background: var(--bg-card); color: var(--fg); }
+    .sidebar-nav a.active {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+    .sidebar-nav svg { width: 18px; height: 18px; }
+
+    .main { flex: 1; margin-left: 240px; padding: 32px; }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+    }
+
+    .page-title { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; }
+
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--fg-dim);
+      margin-top: 8px;
+    }
+
+    .breadcrumb a { color: var(--fg-muted); text-decoration: none; transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--accent); }
+    .breadcrumb svg { width: 14px; height: 14px; }
+
+    .form-container {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+    }
+
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 32px;
+    }
+
+    .form-section { margin-bottom: 32px; }
+    .form-section:last-child { margin-bottom: 0; }
+
+    .form-section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group.full-width { grid-column: 1 / -1; }
+
+    .form-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+    }
+
+    .form-label .required { color: var(--error); margin-left: 2px; }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      padding: 12px 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: var(--bg);
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder { color: var(--fg-dim); }
+
+    .form-select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 40px;
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-hint { font-size: 0.75rem; color: var(--fg-dim); }
+
+    .price-input-group {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .price-input-group .form-input {
+      border-radius: 0;
+    }
+
+    .price-currency {
+      padding: 12px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-left: none;
+      color: var(--fg-muted);
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .specs-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .spec-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .spec-row .form-input { flex: 1; }
+
+    .spec-remove {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .spec-remove:hover {
+      border-color: rgba(239, 68, 68, 0.3);
+      color: var(--error);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .spec-remove svg { width: 16px; height: 16px; }
+
+    .add-spec-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: transparent;
+      border: 1px dashed var(--border);
+      color: var(--fg-muted);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .add-spec-btn:hover {
+      border-color: var(--border-accent);
+      color: var(--accent);
+    }
+
+    .add-spec-btn svg { width: 16px; height: 16px; }
+
+    /* Sidebar Card */
+    .sidebar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 24px;
+      position: sticky;
+      top: 100px;
+    }
+
+    .sidebar-card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .upload-area {
+      border: 1px dashed var(--border);
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 16px;
+    }
+
+    .upload-area:hover {
+      border-color: var(--border-accent);
+      background: var(--bg-elevated);
+    }
+
+    .upload-area svg {
+      width: 32px;
+      height: 32px;
+      color: var(--fg-dim);
+      margin-bottom: 12px;
+    }
+
+    .upload-area-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .upload-area-desc {
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+    }
+
+    .uploaded-images {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .uploaded-image {
+      aspect-ratio: 1;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .uploaded-image svg {
+      width: 24px;
+      height: 24px;
+      color: var(--fg-dim);
+    }
+
+    .uploaded-image .remove-img {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      background: var(--error);
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .uploaded-image:hover .remove-img { opacity: 1; }
+    .uploaded-image .remove-img svg { width: 12px; height: 12px; color: var(--fg); }
+
+    .preview-section {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .preview-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: 16px;
+    }
+
+    .preview-image {
+      height: 120px;
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .preview-image svg {
+      width: 40px;
+      height: 40px;
+      color: var(--fg-dim);
+    }
+
+    .preview-name {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .preview-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--accent);
+    }
+
+    .preview-category {
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 8px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn svg { width: 16px; height: 16px; }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg-muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--fg-dim);
+      color: var(--fg);
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      margin-top: 32px;
+    }
+
+    .status-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .toggle {
+      width: 48px;
+      height: 24px;
+      appearance: none;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .toggle::after {
+      content: '';
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 18px;
+      height: 18px;
+      background: var(--fg-dim);
+      transition: all 0.2s;
+    }
+
+    .toggle:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .toggle:checked::after {
+      left: 26px;
+      background: var(--bg);
+    }
+
+    .toggle-label { font-size: 0.85rem; color: var(--fg); }
+
+    @media (max-width: 1200px) {
+      .form-container {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar-card {
+        position: static;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar { width: 200px; }
+      .main { margin-left: 200px; }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
+
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+    <span class="manager-badge">Manager Panel</span>
+    <div class="header-actions">
+      <div class="user-info">
+        <div class="user-avatar">МН</div>
+        <span class="user-name">Менеджер</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Каталог</div>
+        <ul class="sidebar-nav">
+          <li><a href="#" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Товары</a></li>
+          <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Категории</a></li>
+          <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>Производители</a></li>
+        </ul>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Заказы</div>
+        <ul class="sidebar-nav">
+          <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Все заказы</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Добавление товара</h1>
+          <div class="breadcrumb">
+            <a href="#">Manager</a>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <a href="#">Товары</a>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <span>Новый товар</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-container">
+        <form class="form-card">
+          <!-- Basic Info -->
+          <div class="form-section">
+            <div class="form-section-title">Основная информация</div>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label class="form-label">Название товара <span class="required">*</span></label>
+                <input type="text" class="form-input" placeholder="Например: NVIDIA GeForce RTX 4070 Ti Super 16GB">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Категория <span class="required">*</span></label>
+                <select class="form-select">
+                  <option value="">Выберите категорию</option>
+                  <option value="processors">Процессоры</option>
+                  <option value="graphics-cards" selected>Видеокарты</option>
+                  <option value="motherboards">Материнские платы</option>
+                  <option value="ram">Оперативная память</option>
+                  <option value="ssd">SSD накопители</option>
+                  <option value="psu">Блоки питания</option>
+                  <option value="cases">Корпуса</option>
+                  <option value="cooling">Системы охлаждения</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Производитель <span class="required">*</span></label>
+                <select class="form-select">
+                  <option value="">Выберите производителя</option>
+                  <option value="nvidia" selected>NVIDIA</option>
+                  <option value="amd">AMD</option>
+                  <option value="intel">Intel</option>
+                  <option value="asus">ASUS</option>
+                  <option value="msi">MSI</option>
+                  <option value="gigabyte">Gigabyte</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Артикул (SKU)</label>
+                <input type="text" class="form-input" placeholder="Автоматически или вручную">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Штрих-код</label>
+                <input type="text" class="form-input" placeholder="Например: 4905524912345">
+              </div>
+            </div>
+          </div>
+
+          <!-- Pricing -->
+          <div class="form-section">
+            <div class="form-section-title">Цены и наличие</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Цена <span class="required">*</span></label>
+                <div class="price-input-group">
+                  <input type="number" class="form-input" placeholder="0.00" value="3200.00">
+                  <span class="price-currency">BYN</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Старая цена</label>
+                <div class="price-input-group">
+                  <input type="number" class="form-input" placeholder="Для скидки">
+                  <span class="price-currency">BYN</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Количество на складе</label>
+                <input type="number" class="form-input" value="15" placeholder="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Мин. партия заказа</label>
+                <input type="number" class="form-input" value="1" placeholder="1">
+              </div>
+            </div>
+          </div>
+
+          <!-- Specifications -->
+          <div class="form-section">
+            <div class="form-section-title">Характеристики</div>
+            <div class="specs-container">
+              <div class="spec-row">
+                <input type="text" class="form-input" placeholder="Название" value="GPU">
+                <input type="text" class="form-input" placeholder="Значение" value="AD103">
+                <button type="button" class="spec-remove" title="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <div class="spec-row">
+                <input type="text" class="form-input" placeholder="Название" value="Видеопамять">
+                <input type="text" class="form-input" placeholder="Значение" value="16 GB GDDR6X">
+                <button type="button" class="spec-remove" title="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <div class="spec-row">
+                <input type="text" class="form-input" placeholder="Название" value="Шина памяти">
+                <input type="text" class="form-input" placeholder="Значение" value="256-bit">
+                <button type="button" class="spec-remove" title="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <div class="spec-row">
+                <input type="text" class="form-input" placeholder="Название" value="Boost частота">
+                <input type="text" class="form-input" placeholder="Значение" value="2610 МГц">
+                <button type="button" class="spec-remove" title="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <div class="spec-row">
+                <input type="text" class="form-input" placeholder="Название" value="TDP">
+                <input type="text" class="form-input" placeholder="Значение" value="285 Вт">
+                <button type="button" class="spec-remove" title="Удалить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+              <button type="button" class="add-spec-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Добавить характеристику
+              </button>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="form-section">
+            <div class="form-section-title">Описание</div>
+            <div class="form-group full-width">
+              <label class="form-label">Краткое описание</label>
+              <input type="text" class="form-input" placeholder="Короткое описание для каталога (до 160 символов)">
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label">Полное описание</label>
+              <textarea class="form-textarea" rows="6" placeholder="Подробное описание товара с особенностями и преимуществами..."></textarea>
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="form-section">
+            <div class="form-section-title">Статус</div>
+            <div class="status-toggle">
+              <input type="checkbox" class="toggle" id="active" checked>
+              <label for="active" class="toggle-label">Товар активен и доступен для покупки</label>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button type="button" class="btn btn-ghost">Отмена</button>
+            <button type="button" class="btn btn-ghost">Сохранить черновик</button>
+            <button type="submit" class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Опубликовать
+            </button>
+          </div>
+        </form>
+
+        <!-- Sidebar -->
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Изображения товара</div>
+          
+          <div class="upload-area">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <div class="upload-area-title">Загрузить изображения</div>
+            <div class="upload-area-desc">PNG, JPG до 5MB. Перетащите файлы сюда</div>
+          </div>
+
+          <div class="uploaded-images">
+            <div class="uploaded-image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span class="remove-img">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </span>
+            </div>
+            <div class="uploaded-image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span class="remove-img">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </span>
+            </div>
+            <div class="uploaded-image" style="border-style: dashed; cursor: pointer;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="preview-section">
+            <div class="sidebar-card-title">Превью в каталоге</div>
+            <div class="preview-card">
+              <div class="preview-image">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+              </div>
+              <div class="preview-category">Видеокарта</div>
+              <div class="preview-name">NVIDIA GeForce RTX 4070 Ti...</div>
+              <div class="preview-price">3 200 BYN</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

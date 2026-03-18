@@ -1,0 +1,277 @@
+/**
+ * Manager Orders Page Styles
+ * Стили для страницы управления заказами
+ * Основано на prototypes/manager-orders.html
+ */
+
+/* === Main Container === */
+.manager-orders {
+  padding: 100px 24px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* === Header === */
+.manager-orders__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.manager-orders__title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--fg);
+}
+
+.manager-orders__subtitle {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  margin-top: 4px;
+}
+
+/* === Filter Bar === */
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.filter-input {
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  min-width: 180px;
+  transition: border-color var(--transition-base);
+}
+
+.filter-input::placeholder {
+  color: var(--fg-dim);
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: var(--border-accent);
+}
+
+.filter-select {
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  min-width: 160px;
+  cursor: pointer;
+  transition: border-color var(--transition-base);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--border-accent);
+}
+
+.filter-select option {
+  background: var(--bg-card);
+  color: var(--fg);
+}
+
+/* === Table Container === */
+.table-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+/* === Data Table === */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead {
+  background: var(--bg-elevated);
+}
+
+.data-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+  padding: 16px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.data-table tbody tr {
+  transition: background var(--transition-base);
+}
+
+.data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table__empty {
+  text-align: center;
+  color: var(--fg-muted);
+  padding: 40px 16px !important;
+}
+
+/* === Order ID === */
+.order-id {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--fg);
+}
+
+/* === Customer Info === */
+.customer-name {
+  font-weight: 500;
+}
+
+.customer-email {
+  font-size: 0.75rem;
+  color: var(--fg-dim);
+  margin-top: 2px;
+}
+
+/* === Order Total === */
+.order-total {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* === Status Badge === */
+.status-badge {
+  display: inline-flex;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-badge--pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.status-badge--processing {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.status-badge--shipped {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+}
+
+.status-badge--completed {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.status-badge--cancelled {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* === Action Link === */
+.action-link {
+  color: var(--fg-muted);
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: color var(--transition-base);
+}
+
+.action-link:hover {
+  color: var(--accent);
+}
+
+/* === Pagination === */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.pagination-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: var(--border-accent);
+  color: var(--fg);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .manager-orders {
+    padding: 80px 16px 24px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+  }
+
+  .filter-input,
+  .filter-select {
+    min-width: 100%;
+  }
+
+  .data-table {
+    font-size: 0.85rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 12px 10px;
+  }
+}

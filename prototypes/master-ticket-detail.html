@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Заявка #TKT-1247 — GoldPC Master</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #22c55e;
+      --radius: 4px;
+      --radius-lg: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      font-feature-settings: 'ss01' on;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--fg-dim);
+      border-radius: 3px;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .header-title {
+      font-size: 0.9rem;
+      color: var(--fg-muted);
+    }
+
+    .header-title::before {
+      content: '/';
+      margin: 0 12px;
+      color: var(--fg-dim);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-accent);
+      color: var(--accent);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ===== LAYOUT ===== */
+    .layout {
+      display: flex;
+      padding-top: 72px;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      background: var(--bg-elevated);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: fixed;
+      top: 72px;
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+    }
+
+    .nav-section {
+      margin-bottom: 24px;
+    }
+
+    .nav-title {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--fg-dim);
+      padding: 0 20px;
+      margin-bottom: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 20px;
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: all 0.2s;
+      border-left: 2px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-card);
+      color: var(--fg);
+    }
+
+    .nav-item.active {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main {
+      flex: 1;
+      margin-left: 240px;
+      padding: 24px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+    }
+
+    .page-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--fg-dim);
+      text-decoration: none;
+      margin-bottom: 12px;
+      transition: color 0.2s;
+    }
+
+    .page-back:hover {
+      color: var(--fg);
+    }
+
+    .page-back svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .page-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--fg-dim);
+      background: var(--bg-card);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--danger);
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ===== DETAIL GRID ===== */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    /* ===== INFO GRID ===== */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .info-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--fg-dim);
+    }
+
+    .info-value {
+      font-size: 0.9rem;
+    }
+
+    .info-value.mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .info-value.accent {
+      color: var(--accent);
+    }
+
+    /* Priority */
+    .priority {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .priority-high {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+
+    .priority-medium {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+
+    .priority-low {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+    }
+
+    /* Status */
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-new {
+      background: rgba(212, 165, 116, 0.15);
+      color: var(--accent);
+    }
+
+    .status-progress {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+    }
+
+    .status-waiting {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+
+    .status-done {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+    }
+
+    .status::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: currentColor;
+      border-radius: 50%;
+    }
+
+    /* ===== DEVICE SECTION ===== */
+    .device-section {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .device-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .device-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-elevated);
+      color: var(--fg-dim);
+    }
+
+    .device-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .device-title {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .device-subtitle {
+      font-size: 0.8rem;
+      color: var(--fg-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ===== PROBLEM SECTION ===== */
+    .problem-text {
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--fg-muted);
+    }
+
+    /* ===== TIMELINE ===== */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      position: relative;
+    }
+
+    .timeline-marker {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .timeline-marker svg {
+      width: 14px;
+      height: 14px;
+      color: var(--fg-dim);
+    }
+
+    .timeline-item:first-child .timeline-marker {
+      background: var(--accent-glow);
+      border-color: var(--border-accent);
+    }
+
+    .timeline-item:first-child .timeline-marker svg {
+      color: var(--accent);
+    }
+
+    .timeline-content {
+      flex: 1;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .timeline-item:last-child .timeline-content {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .timeline-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .timeline-desc {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+
+    .timeline-date {
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 4px;
+    }
+
+    /* ===== FORM ===== */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--fg-dim);
+      margin-bottom: 8px;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .form-select {
+      cursor: pointer;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* ===== CUSTOMER CARD ===== */
+    .customer-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+    }
+
+    .customer-avatar {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-glow);
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .customer-info {
+      flex: 1;
+    }
+
+    .customer-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .customer-contact {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .customer-contact a {
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .customer-contact a:hover {
+      color: var(--accent);
+    }
+
+    /* ===== QUICK ACTIONS ===== */
+    .quick-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .quick-action {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .quick-action:hover {
+      border-color: var(--border-accent);
+      color: var(--fg);
+    }
+
+    .quick-action svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+      <span class="header-title">Master</span>
+    </a>
+
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Уведомления">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+      <button class="icon-btn" aria-label="Профиль">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav>
+        <div class="nav-section">
+          <div class="nav-title">Рабочее место</div>
+          <a href="master-tickets.html" class="nav-item active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            Заявки
+            <span class="nav-badge">12</span>
+          </a>
+          <a href="#" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Расписание
+          </a>
+          <a href="#" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Настройки
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-title">Справочники</div>
+          <a href="#" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            Оборудование
+          </a>
+          <a href="#" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Клиенты
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <a href="master-tickets.html" class="page-back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Назад к списку
+          </a>
+          <h1 class="page-title">
+            <span class="accent">#TKT-1247</span>
+            <span class="status status-new">Новая</span>
+          </h1>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            Удалить
+          </button>
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Сохранить
+          </button>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <!-- Left Column -->
+        <div class="detail-main">
+          <!-- Main Info -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Основная информация</span>
+            </div>
+            <div class="card-body">
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">ID заявки</span>
+                  <span class="info-value mono accent">#TKT-1247</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Дата создания</span>
+                  <span class="info-value mono">17.03.2026 14:32</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Приоритет</span>
+                  <span class="info-value">
+                    <span class="priority priority-high">Высокий</span>
+                  </span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Статус</span>
+                  <span class="info-value">
+                    <span class="status status-new">Новая</span>
+                  </span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Назначена</span>
+                  <span class="info-value">Не назначена</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Срок выполнения</span>
+                  <span class="info-value mono" style="color: var(--warning);">20.03.2026</span>
+                </div>
+              </div>
+
+              <!-- Device Section -->
+              <div class="device-section">
+                <div class="device-header">
+                  <div class="device-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="2" y="6" width="20" height="12" rx="2"/>
+                      <path d="M6 10h4v4H6z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="device-title">Gigabyte RTX 4080 Gaming OC</div>
+                    <div class="device-subtitle">SN: GV-N4080G-1792</div>
+                  </div>
+                </div>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">Категория</span>
+                    <span class="info-value">Видеокарта</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Производитель</span>
+                    <span class="info-value">Gigabyte</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Гарантия</span>
+                    <span class="info-value" style="color: var(--success);">До 15.08.2027</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Дата покупки</span>
+                    <span class="info-value mono">15.08.2024</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Problem Description -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Описание проблемы</span>
+            </div>
+            <div class="card-body">
+              <p class="problem-text">
+                Клиент сообщает о появлении артефактов на экране при высокой нагрузке на видеокарту. 
+                Проблема проявляется в 3D-играх и при рендеринге видео. Артефакты представляют собой 
+                цветные полосы и мерцание отдельных участков экрана. В обычном режиме работы (офисные 
+                задачи, просмотр видео) проблема не наблюдается. Температура GPU при нагрузке достигает 
+                78-82°C, что в пределах нормы.
+              </p>
+              <p class="problem-text" style="margin-top: 16px;">
+                <strong>Предварительный диагноз:</strong> Возможен перегрев видеопамяти или повреждение 
+                чипа. Требуется диагностика.
+              </p>
+            </div>
+          </div>
+
+          <!-- Timeline -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">История заявки</span>
+            </div>
+            <div class="card-body">
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-marker">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-title">Заявка создана</div>
+                    <div class="timeline-desc">Заявка создана через сайт клиентом</div>
+                    <div class="timeline-date">17.03.2026 14:32</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-marker">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-title">Приоритет повышен</div>
+                    <div class="timeline-desc">Приоритет изменен с «Средний» на «Высокий»</div>
+                    <div class="timeline-date">17.03.2026 14:45</div>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-marker">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/>
+                    </svg>
+                  </div>
+                  <div class="timeline-content">
+                    <div class="timeline-title">Клиент contacted</div>
+                    <div class="timeline-desc">Клиент подтвердил актуальность проблемы</div>
+                    <div class="timeline-date">17.03.2026 15:10</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="detail-sidebar">
+          <!-- Customer Card -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Клиент</span>
+            </div>
+            <div class="card-body">
+              <div class="customer-card">
+                <div class="customer-avatar">АП</div>
+                <div class="customer-info">
+                  <div class="customer-name">Алексей Петров</div>
+                  <div class="customer-contact">
+                    <a href="tel:+375291234567">+375 29 123-45-67</a>
+                    <a href="mailto:petrov@example.com">petrov@example.com</a>
+                  </div>
+                </div>
+              </div>
+              <div class="quick-actions" style="margin-top: 16px;">
+                <a href="#" class="quick-action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  История обращений (3)
+                </a>
+                <a href="#" class="quick-action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  История покупок
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Update Status Form -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Обновить статус</span>
+            </div>
+            <div class="card-body">
+              <form>
+                <div class="form-group">
+                  <label class="form-label">Статус</label>
+                  <select class="form-select">
+                    <option value="new" selected>Новая</option>
+                    <option value="progress">В работе</option>
+                    <option value="waiting">Ожидание</option>
+                    <option value="done">Выполнено</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Приоритет</label>
+                  <select class="form-select">
+                    <option value="low">Низкий</option>
+                    <option value="medium">Средний</option>
+                    <option value="high" selected>Высокий</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Назначить</label>
+                  <select class="form-select">
+                    <option value="">Не назначена</option>
+                    <option value="1">Иванов Иван (инженер)</option>
+                    <option value="2">Петров Сергей (ст. инженер)</option>
+                    <option value="3">Сидоров Алексей (инженер)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Комментарий</label>
+                  <textarea class="form-textarea" placeholder="Добавьте комментарий к изменению..."></textarea>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Обновить
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Быстрые действия</span>
+            </div>
+            <div class="card-body">
+              <div class="quick-actions">
+                <a href="#" class="quick-action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                  Печать акта приёмки
+                </a>
+                <a href="#" class="quick-action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Экспорт в PDF
+                </a>
+                <a href="#" class="quick-action">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                  </svg>
+                  Создать копию заявки
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

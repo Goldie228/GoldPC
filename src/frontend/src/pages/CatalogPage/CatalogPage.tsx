@@ -2,38 +2,21 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Search, 
-  Cpu, 
-  Monitor, 
-  HardDrive, 
-  MemoryStick, 
-  Zap, 
-  Box, 
-  Fan, 
-  MonitorSpeaker,
-  Keyboard,
-  RefreshCw,
+  RefreshCw, 
+  Box,
   ChevronLeft,
   ChevronRight,
   SlidersHorizontal,
-  X
+  X,
+  LayoutGrid,
+  List
 } from 'lucide-react';
-import { Card, CardImage, CardBody, CardFooter } from '../../components/ui-kit/Card';
+import { FilterSidebar } from '../../components/catalog';
+import { ProductCard } from '../../components/ProductCard';
+import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { catalogApi } from '../../api/catalog';
 import type { ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
 import styles from './CatalogPage.module.css';
-
-const CATEGORY_CONFIG: Record<ProductCategory, { label: string; icon: React.ComponentType<{ size?: number }> }> = {
-  cpu: { label: 'Процессоры', icon: Cpu },
-  gpu: { label: 'Видеокарты', icon: Monitor },
-  motherboard: { label: 'Материнские платы', icon: HardDrive },
-  ram: { label: 'Оперативная память', icon: MemoryStick },
-  storage: { label: 'Накопители', icon: HardDrive },
-  psu: { label: 'Блоки питания', icon: Zap },
-  case: { label: 'Корпуса', icon: Box },
-  cooling: { label: 'Охлаждение', icon: Fan },
-  monitor: { label: 'Мониторы', icon: MonitorSpeaker },
-  peripherals: { label: 'Периферия', icon: Keyboard },
-};
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -57,20 +40,9 @@ const itemVariants = {
   }
 };
 
-const sidebarVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.33, 1, 0.68, 1]
-    }
-  }
-};
-
 /**
  * Страница каталога товаров с Dark Gold темой
+ * Layout: Sidebar (20%) | Product Grid (80%)
  */
 export function CatalogPage() {
   const [products, setProducts] = useState<ProductSummary[]>([]);
@@ -80,11 +52,15 @@ export function CatalogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 0 });
+  const [sortBy, setSortBy] = useState('popular');
 
   useEffect(() => {
     fetchProducts();
-  }, [selectedCategory, page]);
+  }, [selectedCategory, page, sortBy]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -103,10 +79,19 @@ export function CatalogPage() {
       if (searchQuery) {
         params.search = searchQuery;
       }
+
+      if (priceRange.min > 0) {
+        params.priceMin = priceRange.min;
+      }
+
+      if (priceRange.max > 0) {
+        params.priceMax = priceRange.max;
+      }
       
       const response = await catalogApi.getProducts(params);
       setProducts(response.data);
       setTotalPages(response.meta.totalPages);
+      setTotalItems(response.meta.totalItems);
     } catch (err) {
       setError('Не удалось загрузить товары. Попробуйте позже.');
       console.error('Failed to fetch products:', err);
@@ -127,16 +112,21 @@ export function CatalogPage() {
     setMobileFilterOpen(false);
   };
 
+  const handlePriceChange = (range: { min: number; max: number }) => {
+    setPriceRange(range);
+  };
+
+  const handleResetFilters = () => {
+    setSelectedCategory(null);
+    setPriceRange({ min: 0, max: 0 });
+    setPage(1);
+    setSearchQuery('');
+  };
+
   const handleAddToCart = (productId: string) => {
     console.log('Add to cart:', productId);
     // TODO: Implement cart functionality
   };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ru-RU').format(price) + ' ₽';
-  };
-
-  const categories = Object.keys(CATEGORY_CONFIG) as ProductCategory[];
 
   return (
     <div className={styles.container}>
@@ -153,7 +143,7 @@ export function CatalogPage() {
       {/* Mobile Filter Overlay */}
       {mobileFilterOpen && (
         <div className={styles.mobileOverlay} onClick={() => setMobileFilterOpen(false)}>
-          <motion.aside 
+          <motion.div 
             className={styles.mobileSidebar}
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
@@ -161,7 +151,7 @@ export function CatalogPage() {
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             <div className={styles.mobileSidebarHeader}>
-              <h2 className={styles.sidebarTitle}>Категории</h2>
+              <h2 className={styles.mobileSidebarTitle}>Фильтры</h2>
               <button 
                 className={styles.closeBtn}
                 onClick={() => setMobileFilterOpen(false)}
@@ -170,105 +160,104 @@ export function CatalogPage() {
                 <X size={24} />
               </button>
             </div>
-            <ul className={styles.categoryList}>
-              <li>
-                <button
-                  className={`${styles.categoryBtn} ${!selectedCategory ? styles.active : ''}`}
-                  onClick={() => handleCategoryChange(null)}
-                >
-                  <Box size={18} />
-                  <span>Все товары</span>
-                </button>
-              </li>
-              {categories.map((category) => {
-                const Icon = CATEGORY_CONFIG[category].icon;
-                return (
-                  <li key={category}>
-                    <button
-                      className={`${styles.categoryBtn} ${selectedCategory === category ? styles.active : ''}`}
-                      onClick={() => handleCategoryChange(category)}
-                    >
-                      <Icon size={18} />
-                      <span>{CATEGORY_CONFIG[category].label}</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </motion.aside>
+            <FilterSidebar
+              selectedCategory={selectedCategory}
+              onCategoryChange={handleCategoryChange}
+              priceRange={priceRange}
+              onPriceChange={handlePriceChange}
+              onReset={handleResetFilters}
+            />
+          </motion.div>
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      <motion.aside 
-        className={styles.sidebar}
-        variants={sidebarVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <h2 className={styles.sidebarTitle}>Категории</h2>
-        <ul className={styles.categoryList}>
-          <li>
-            <button
-              className={`${styles.categoryBtn} ${!selectedCategory ? styles.active : ''}`}
-              onClick={() => handleCategoryChange(null)}
-            >
-              <Box size={18} />
-              <span>Все товары</span>
-            </button>
-          </li>
-          {categories.map((category) => {
-            const Icon = CATEGORY_CONFIG[category].icon;
-            return (
-              <li key={category}>
-                <button
-                  className={`${styles.categoryBtn} ${selectedCategory === category ? styles.active : ''}`}
-                  onClick={() => handleCategoryChange(category)}
-                >
-                  <Icon size={18} />
-                  <span>{CATEGORY_CONFIG[category].label}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </motion.aside>
+      {/* Desktop Sidebar - 20% width */}
+      <div className={styles.sidebarWrapper}>
+        <FilterSidebar
+          selectedCategory={selectedCategory}
+          onCategoryChange={handleCategoryChange}
+          priceRange={priceRange}
+          onPriceChange={handlePriceChange}
+          onReset={handleResetFilters}
+        />
+      </div>
 
+      {/* Main Content - 80% width */}
       <main className={styles.main}>
+        {/* Page Header */}
         <header className={styles.header}>
-          <h1 className={styles.title}>
-            {selectedCategory 
-              ? CATEGORY_CONFIG[selectedCategory].label 
-              : 'Каталог товаров'}
-          </h1>
-          
-          <form className={styles.searchForm} onSubmit={handleSearch}>
-            <div className={styles.searchWrapper}>
-              <Search size={18} className={styles.searchIcon} />
-              <input
-                type="text"
-                className={styles.searchInput}
-                placeholder="Поиск товаров..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <button type="submit" className={styles.searchBtn}>
-              <Search size={18} />
-              <span>Найти</span>
-            </button>
-          </form>
+          <nav className={styles.breadcrumb}>
+            <a href="/">Главная</a>
+            <span>/</span>
+            <span>Каталог</span>
+          </nav>
+          <h1 className={styles.title}>Каталог комплектующих</h1>
+          <p className={styles.stats}>Найдено {totalItems} товаров</p>
         </header>
 
-        {loading && (
-          <div className={styles.loading}>
-            <div className={styles.spinner}>
-              <RefreshCw size={32} className={styles.spinnerIcon} />
+        {/* Toolbar */}
+        <div className={styles.toolbar}>
+          <div className={styles.toolbarLeft}>
+            <button 
+              className={styles.mobileFilterBtn}
+              onClick={() => setMobileFilterOpen(true)}
+            >
+              <SlidersHorizontal size={16} />
+              Фильтры
+            </button>
+            <div className={styles.viewToggle}>
+              <button 
+                className={`${styles.viewToggleBtn} ${viewMode === 'grid' ? styles.active : ''}`}
+                onClick={() => setViewMode('grid')}
+                aria-label="Сетка"
+              >
+                <LayoutGrid size={16} />
+              </button>
+              <button 
+                className={`${styles.viewToggleBtn} ${viewMode === 'list' ? styles.active : ''}`}
+                onClick={() => setViewMode('list')}
+                aria-label="Список"
+              >
+                <List size={16} />
+              </button>
             </div>
-            <p>Загрузка товаров...</p>
+          </div>
+          <div className={styles.toolbarRight}>
+            <form className={styles.searchForm} onSubmit={handleSearch}>
+              <div className={styles.searchWrapper}>
+                <Search size={18} className={styles.searchIcon} />
+                <input
+                  type="text"
+                  className={styles.searchInput}
+                  placeholder="Поиск товаров..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </form>
+            <select 
+              className={styles.sortSelect}
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="popular">По популярности</option>
+              <option value="price-asc">Сначала дешевле</option>
+              <option value="price-desc">Сначала дороже</option>
+              <option value="name">По названию</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Loading State - Skeleton Grid */}
+        {loading && (
+          <div className={`${styles.grid} ${viewMode === 'list' ? styles.listView : ''}`}>
+            {Array.from({ length: 12 }).map((_, index) => (
+              <ProductCardSkeleton key={index} />
+            ))}
           </div>
         )}
 
+        {/* Error State */}
         {error && (
           <div className={styles.error}>
             <p>{error}</p>
@@ -279,6 +268,7 @@ export function CatalogPage() {
           </div>
         )}
 
+        {/* Empty State */}
         {!loading && !error && products.length === 0 && (
           <div className={styles.empty}>
             <Box size={48} className={styles.emptyIcon} />
@@ -286,59 +276,26 @@ export function CatalogPage() {
           </div>
         )}
 
+        {/* Product Grid - 4 columns */}
         {!loading && !error && products.length > 0 && (
           <>
             <motion.div 
-              className={styles.grid}
+              className={`${styles.grid} ${viewMode === 'list' ? styles.listView : ''}`}
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
               {products.map((product) => (
                 <motion.div key={product.id} variants={itemVariants}>
-                  <Card variant="gold-glass" className={styles.productCard}>
-                    <CardImage 
-                      src={product.mainImage?.url || '/placeholder-product.png'} 
-                      alt={product.mainImage?.alt || product.name}
-                    />
-                    <CardBody>
-                      <h3 className={styles.productName}>{product.name}</h3>
-                      <p className={styles.productManufacturer}>
-                        {product.manufacturer?.name || 'GoldPC'}
-                      </p>
-                      <div className={styles.productRating}>
-                        <span className={styles.ratingStars}>
-                          {'★'.repeat(Math.floor(product.rating || 0))}
-                          {'☆'.repeat(5 - Math.floor(product.rating || 0))}
-                        </span>
-                        <span className={styles.ratingCount}>
-                          ({product.stock} в наличии)
-                        </span>
-                      </div>
-                    </CardBody>
-                    <CardFooter>
-                      <div className={styles.productPriceRow}>
-                        <span className={styles.productPrice}>
-                          {formatPrice(product.price)}
-                        </span>
-                        {product.oldPrice && (
-                          <span className={styles.productOldPrice}>
-                            {formatPrice(product.oldPrice)}
-                          </span>
-                        )}
-                      </div>
-                      <button 
-                        className={styles.addToCartBtn}
-                        onClick={() => handleAddToCart(product.id)}
-                      >
-                        В корзину
-                      </button>
-                    </CardFooter>
-                  </Card>
+                  <ProductCard 
+                    product={product} 
+                    onAddToCart={handleAddToCart}
+                  />
                 </motion.div>
               ))}
             </motion.div>
 
+            {/* Pagination */}
             {totalPages > 1 && (
               <div className={styles.pagination}>
                 <button
@@ -350,9 +307,31 @@ export function CatalogPage() {
                   <ChevronLeft size={20} />
                   <span>Назад</span>
                 </button>
-                <span className={styles.pageInfo}>
-                  Страница {page} из {totalPages}
-                </span>
+                
+                <div className={styles.pageNumbers}>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (page <= 3) {
+                      pageNum = i + 1;
+                    } else if (page >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        className={`${styles.pageNumber} ${page === pageNum ? styles.active : ''}`}
+                        onClick={() => setPage(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                
                 <button
                   className={styles.pageBtn}
                   disabled={page === totalPages}

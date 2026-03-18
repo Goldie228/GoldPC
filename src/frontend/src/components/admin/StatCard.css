@@ -1,0 +1,131 @@
+/**
+ * StatCard Styles
+ * Стили для карточки статистики
+ * Тёмная карта с золотым текстом значения
+ */
+
+.stat-card {
+  background: var(--bg-card, #1a1a1a);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  border-color: var(--border-accent, rgba(212, 175, 55, 0.3));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Акцентная полоса слева (золотая) */
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, #d4af37, #b8860b);
+}
+
+/* Иконка */
+.stat-card__icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated, rgba(255, 255, 255, 0.05));
+  border-radius: 10px;
+  margin-bottom: 16px;
+  color: var(--fg-dim, #9ca3af);
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.stat-card:hover .stat-card__icon {
+  color: var(--accent, #d4af37);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.stat-card__icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Заголовок */
+.stat-card__title {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-dim, #9ca3af);
+  margin-bottom: 8px;
+}
+
+/* Значение - золотой текст в JetBrains Mono */
+.stat-card__value {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--accent, #d4af37);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+}
+
+/* Изменение значения */
+.stat-card__change {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  margin-top: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.stat-card__change--positive {
+  color: #22c55e;
+}
+
+.stat-card__change--negative {
+  color: #ef4444;
+}
+
+.stat-card__change svg {
+  flex-shrink: 0;
+}
+
+.stat-card__change-value {
+  font-weight: 600;
+}
+
+.stat-card__change-label {
+  color: var(--fg-dim, #9ca3af);
+  font-weight: 400;
+}
+
+/* === Адаптивность === */
+@media (max-width: 600px) {
+  .stat-card {
+    padding: 18px;
+  }
+
+  .stat-card__value {
+    font-size: 1.75rem;
+  }
+
+  .stat-card__icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .stat-card__icon svg {
+    width: 20px;
+    height: 20px;
+  }
+}

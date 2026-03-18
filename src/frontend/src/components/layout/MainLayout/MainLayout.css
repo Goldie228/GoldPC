@@ -1,0 +1,20 @@
+/**
+ * MainLayout Styles
+ * 
+ * Обеспечивает прижатие footer к низу страницы
+ * с помощью flexbox и min-height
+ */
+
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-layout__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  /* Минимальная высота для контента: 100vh - header - footer */
+  min-height: calc(100vh - 80px - 300px);
+}

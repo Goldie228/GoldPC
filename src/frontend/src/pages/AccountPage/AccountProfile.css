@@ -1,0 +1,319 @@
+/* AccountProfile.css - Profile Page Styles */
+/* Design System v2.0 - Dark Theme + Gold Accents */
+
+.account-profile {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Page Header */
+.account-profile__header {
+  margin-bottom: 8px;
+}
+
+.account-profile__title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  color: var(--fg, #fafafa);
+}
+
+.account-profile__subtitle {
+  font-size: 0.9rem;
+  color: var(--fg-muted, #71717a);
+}
+
+/* ===== AVATAR SECTION ===== */
+.avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  background: var(--bg-elevated, #121214);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.avatar-section__preview {
+  width: 80px;
+  height: 80px;
+  background: var(--bg-card, #18181b);
+  border: 2px solid var(--border-accent, rgba(212, 165, 116, 0.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent, #d4a574);
+  font-size: 2rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.avatar-section__info {
+  flex: 1;
+}
+
+.avatar-section__title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: var(--fg, #fafafa);
+}
+
+.avatar-section__desc {
+  font-size: 0.8rem;
+  color: var(--fg-muted, #71717a);
+  margin-bottom: 12px;
+}
+
+.avatar-section__actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ===== FORM CARD ===== */
+.form-card {
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  padding: 32px;
+}
+
+.form-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.form-card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg, #fafafa);
+}
+
+.form-card__badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  padding: 4px 8px;
+  background: var(--accent-glow, rgba(212, 165, 116, 0.15));
+  color: var(--accent, #d4a574);
+  border: 1px solid var(--border-accent, rgba(212, 165, 116, 0.2));
+}
+
+/* ===== FORM GRID ===== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group--full {
+  grid-column: 1 / -1;
+}
+
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-dim, #52525b);
+}
+
+/* ===== DARK INPUTS ===== */
+.form-input {
+  padding: 14px 16px;
+  background: var(--bg-elevated, #121214);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  color: var(--fg, #fafafa);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.form-input::placeholder {
+  color: var(--fg-dim, #52525b);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--border-accent, rgba(212, 165, 116, 0.2));
+  background: var(--bg, #09090b);
+}
+
+.form-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.form-input.error {
+  border-color: #ef4444;
+}
+
+/* Date input styling */
+.form-input[type="date"] {
+  color-scheme: dark;
+}
+
+.form-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  cursor: pointer;
+}
+
+/* ===== FORM ACTIONS ===== */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.btn--primary {
+  background: var(--accent, #d4a574);
+  color: var(--bg, #09090b);
+}
+
+.btn--primary:hover {
+  background: var(--accent-bright, #e8c4a0);
+  transform: translateY(-2px);
+}
+
+.btn--secondary {
+  background: transparent;
+  color: var(--fg, #fafafa);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.btn--secondary:hover {
+  border-color: var(--fg-dim, #52525b);
+  background: var(--bg-card, #18181b);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--fg-muted, #71717a);
+  padding: 10px 16px;
+}
+
+.btn--ghost:hover {
+  color: var(--fg, #fafafa);
+}
+
+/* ===== SECURITY LIST ===== */
+.security-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.security-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.security-item:last-child {
+  border-bottom: none;
+}
+
+.security-item__info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.security-item__icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated, #121214);
+  color: var(--fg-dim, #52525b);
+}
+
+.security-item__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.security-item__title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: var(--fg, #fafafa);
+}
+
+.security-item__desc {
+  font-size: 0.8rem;
+  color: var(--fg-muted, #71717a);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .avatar-section {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .avatar-section__actions {
+    justify-content: center;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .security-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+/* Focus states for accessibility */
+.form-input:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
+}

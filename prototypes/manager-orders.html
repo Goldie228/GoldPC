@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Управление заказами — GoldPC Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --radius: 4px;
+      --radius-lg: 8px;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      font-feature-settings: 'ss01' on;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--fg-dim);
+      border-radius: 3px;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 24px;
+    }
+
+    .header-nav a {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .header-nav a:hover,
+    .header-nav a.active {
+      color: var(--accent);
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-name {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--fg-dim);
+    }
+
+    /* ===== MAIN ===== */
+    .main {
+      padding: 100px 24px 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .page-subtitle {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      margin-top: 4px;
+    }
+
+    /* ===== FILTER BAR ===== */
+    .filter-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-input {
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      min-width: 180px;
+      transition: border-color 0.2s;
+    }
+
+    .filter-input::placeholder {
+      color: var(--fg-dim);
+    }
+
+    .filter-input:focus {
+      outline: none;
+      border-color: var(--border-accent);
+    }
+
+    .filter-select {
+      padding: 10px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      min-width: 160px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--border-accent);
+    }
+
+    .filter-select option {
+      background: var(--bg-card);
+      color: var(--fg);
+    }
+
+    /* ===== TABLE ===== */
+    .table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table thead {
+      background: var(--bg-elevated);
+    }
+
+    .data-table th {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+      padding: 16px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .data-table tbody tr {
+      transition: background 0.2s;
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .order-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--fg);
+    }
+
+    .customer-name {
+      font-weight: 500;
+    }
+
+    .customer-email {
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+      margin-top: 2px;
+    }
+
+    .order-total {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      padding: 4px 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+
+    .status-processing {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+    }
+
+    .status-shipped {
+      background: rgba(168, 85, 247, 0.15);
+      color: #a855f7;
+    }
+
+    .status-completed {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+    }
+
+    .status-cancelled {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+
+    .action-link {
+      color: var(--fg-muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      transition: color 0.2s;
+    }
+
+    .action-link:hover {
+      color: var(--accent);
+    }
+
+    /* ===== PAGINATION ===== */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .pagination-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pagination-btn:hover {
+      border-color: var(--border-accent);
+      color: var(--fg);
+    }
+
+    .pagination-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+
+    <nav class="header-nav">
+      <a href="manager-orders.html" class="active">Заказы</a>
+      <a href="manager-catalog.html">Каталог</a>
+      <a href="#">Клиенты</a>
+      <a href="#">Отчёты</a>
+    </nav>
+
+    <div class="header-user">
+      <span class="user-name">Менеджер</span>
+      <div class="user-avatar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Управление заказами</h1>
+        <p class="page-subtitle">Все заказы магазина</p>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <input type="text" class="filter-input" placeholder="Поиск по ID или клиенту...">
+      <select class="filter-select">
+        <option value="">Все статусы</option>
+        <option value="pending">Ожидает</option>
+        <option value="processing">В обработке</option>
+        <option value="shipped">Отправлен</option>
+        <option value="completed">Завершён</option>
+        <option value="cancelled">Отменён</option>
+      </select>
+      <input type="date" class="filter-input">
+      <input type="date" class="filter-input" placeholder="По">
+    </div>
+
+    <!-- Orders Table -->
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID заказа</th>
+            <th>Клиент</th>
+            <th>Сумма</th>
+            <th>Статус</th>
+            <th>Дата</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="order-id">#ORD-2025-001</span></td>
+            <td>
+              <div class="customer-name">Александр Петров</div>
+              <div class="customer-email">alex@example.com</div>
+            </td>
+            <td><span class="order-total">5 430 BYN</span></td>
+            <td><span class="status-badge status-processing">В обработке</span></td>
+            <td>17.03.2025</td>
+            <td><a href="manager-order-detail.html" class="action-link">Подробнее →</a></td>
+          </tr>
+          <tr>
+            <td><span class="order-id">#ORD-2025-002</span></td>
+            <td>
+              <div class="customer-name">Мария Иванова</div>
+              <div class="customer-email">maria@example.com</div>
+            </td>
+            <td><span class="order-total">2 180 BYN</span></td>
+            <td><span class="status-badge status-pending">Ожидает</span></td>
+            <td>17.03.2025</td>
+            <td><a href="manager-order-detail.html" class="action-link">Подробнее →</a></td>
+          </tr>
+          <tr>
+            <td><span class="order-id">#ORD-2025-003</span></td>
+            <td>
+              <div class="customer-name">Дмитрий Сидоров</div>
+              <div class="customer-email">dmitry@example.com</div>
+            </td>
+            <td><span class="order-total">8 920 BYN</span></td>
+            <td><span class="status-badge status-shipped">Отправлен</span></td>
+            <td>16.03.2025</td>
+            <td><a href="manager-order-detail.html" class="action-link">Подробнее →</a></td>
+          </tr>
+          <tr>
+            <td><span class="order-id">#ORD-2025-004</span></td>
+            <td>
+              <div class="customer-name">Елена Козлова</div>
+              <div class="customer-email">elena@example.com</div>
+            </td>
+            <td><span class="order-total">1 450 BYN</span></td>
+            <td><span class="status-badge status-completed">Завершён</span></td>
+            <td>15.03.2025</td>
+            <td><a href="manager-order-detail.html" class="action-link">Подробнее →</a></td>
+          </tr>
+          <tr>
+            <td><span class="order-id">#ORD-2025-005</span></td>
+            <td>
+              <div class="customer-name">Игорь Новик</div>
+              <div class="customer-email">igor@example.com</div>
+            </td>
+            <td><span class="order-total">3 750 BYN</span></td>
+            <td><span class="status-badge status-cancelled">Отменён</span></td>
+            <td>14.03.2025</td>
+            <td><a href="manager-order-detail.html" class="action-link">Подробнее →</a></td>
+          </tr>
+          <tr>
+            <td><span class="order-id">#ORD-2025-006</span></td>
+            <td>
+              <div class="customer-name">Анна Морозова</div>
+              <div class="customer-email">anna@example.com</div>
+            </td>
+            <td><span class="order-total">4 200 BYN</span></td>
+            <td><span class="status-badge status-processing">В обработке</span></td>
+            <td>14.03.2025</td>
+            <td><a href="manager-order-detail.html" class="action-link">Подробнее →</a></td>
+          </tr>
+          <tr>
+            <td><span class="order-id">#ORD-2025-007</span></td>
+            <td>
+              <div class="customer-name">Сергей Волков</div>
+              <div class="customer-email">sergey@example.com</div>
+            </td>
+            <td><span class="order-total">6 100 BYN</span></td>
+            <td><span class="status-badge status-completed">Завершён</span></td>
+            <td>13.03.2025</td>
+            <td><a href="manager-order-detail.html" class="action-link">Подробнее →</a></td>
+          </tr>
+          <tr>
+            <td><span class="order-id">#ORD-2025-008</span></td>
+            <td>
+              <div class="customer-name">Ольга Белова</div>
+              <div class="customer-email">olga@example.com</div>
+            </td>
+            <td><span class="order-total">2 890 BYN</span></td>
+            <td><span class="status-badge status-shipped">Отправлен</span></td>
+            <td>12.03.2025</td>
+            <td><a href="manager-order-detail.html" class="action-link">Подробнее →</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <button class="pagination-btn">←</button>
+      <button class="pagination-btn active">1</button>
+      <button class="pagination-btn">2</button>
+      <button class="pagination-btn">3</button>
+      <button class="pagination-btn">4</button>
+      <button class="pagination-btn">→</button>
+    </div>
+  </main>
+</body>
+</html>

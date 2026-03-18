@@ -1,0 +1,169 @@
+/* AccountLayout.css - Account Dashboard Layout Styles */
+/* Design System v2.0 - Dark Theme + Gold Accents */
+
+.account-layout {
+  display: flex;
+  min-height: calc(100vh - 72px);
+  margin-top: 72px; /* Header height */
+  background: var(--bg, #09090b);
+}
+
+/* ===== SIDEBAR ===== */
+.account-sidebar {
+  width: 260px;
+  background: var(--bg-elevated, #121214);
+  border-right: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  padding: 32px 0;
+  position: fixed;
+  top: 72px;
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+}
+
+/* User Profile Section */
+.account-sidebar__profile {
+  padding: 0 24px 24px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  margin-bottom: 24px;
+}
+
+.account-sidebar__avatar {
+  width: 64px;
+  height: 64px;
+  background: var(--bg-card, #18181b);
+  border: 2px solid var(--border-accent, rgba(212, 165, 116, 0.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  color: var(--accent, #d4a574);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.account-sidebar__name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--fg, #fafafa);
+}
+
+.account-sidebar__email {
+  font-size: 0.8rem;
+  color: var(--fg-muted, #71717a);
+}
+
+/* Navigation */
+.account-sidebar__nav {
+  flex: 1;
+}
+
+.account-sidebar__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.account-sidebar__item {
+  margin-bottom: 4px;
+}
+
+.account-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  color: var(--fg-muted, #71717a);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.account-sidebar__link:hover {
+  color: var(--fg, #fafafa);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.account-sidebar__link--active {
+  color: var(--accent, #d4a574);
+  background: var(--accent-glow, rgba(212, 165, 116, 0.15));
+  border-left-color: var(--accent, #d4a574);
+}
+
+.account-sidebar__icon {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-sidebar__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Settings Section */
+.account-sidebar__section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.account-sidebar__section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-dim, #52525b);
+  padding: 0 24px;
+  margin-bottom: 12px;
+}
+
+/* ===== MAIN CONTENT ===== */
+.account-main {
+  flex: 1;
+  margin-left: 260px;
+  padding: 32px 40px;
+  background: var(--bg, #09090b);
+  min-height: calc(100vh - 72px);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .account-sidebar {
+    width: 220px;
+  }
+
+  .account-main {
+    margin-left: 220px;
+    padding: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .account-sidebar {
+    position: fixed;
+    left: -260px;
+    transition: left 0.3s ease;
+    z-index: 50;
+  }
+
+  .account-sidebar.open {
+    left: 0;
+  }
+
+  .account-main {
+    margin-left: 0;
+    padding: 20px;
+  }
+}
+
+/* Focus states for accessibility */
+.account-sidebar__link:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: -2px;
+}

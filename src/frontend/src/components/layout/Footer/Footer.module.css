@@ -1,0 +1,233 @@
+/* ========================================
+   Footer Component - CSS Modules
+   Based on prototypes/home.html .footer
+   ======================================== */
+
+.footer {
+  padding: 80px 24px 40px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 60px;
+  margin-bottom: 60px;
+}
+
+/* Brand Column */
+.brand {
+  max-width: 300px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logoIcon {
+  width: 36px;
+  height: 36px;
+  background: #d4a574;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoIcon svg {
+  width: 20px;
+  height: 20px;
+  color: #09090b;
+}
+
+.logoText {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #fafafa;
+}
+
+.logoAccent {
+  color: #d4a574;
+}
+
+.description {
+  font-size: 0.85rem;
+  color: #71717a;
+  line-height: 1.7;
+  margin-top: 16px;
+  max-width: 300px;
+}
+
+/* Column Titles */
+.title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 20px;
+  color: #52525b;
+}
+
+/* Links */
+.links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.link {
+  font-size: 0.85rem;
+  color: #71717a;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.link:hover {
+  color: #fafafa;
+}
+
+/* Bottom Section */
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 40px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.copyright {
+  font-size: 0.75rem;
+  color: #52525b;
+}
+
+/* Social Links */
+.socialLinks {
+  display: flex;
+  gap: 8px;
+}
+
+.socialLink {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #52525b;
+  transition: all 0.2s;
+}
+
+.socialLink:hover {
+  border-color: #d4a574;
+  color: #d4a574;
+}
+
+.socialLink svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px;
+  }
+
+  .brand {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 60px 16px 32px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .bottom {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
+  /* Center social links on mobile */
+  .socialLinks {
+    justify-content: center;
+  }
+
+  /* Adjust title spacing on mobile */
+  .title {
+    margin-bottom: 16px;
+  }
+
+  /* Full-width links on mobile */
+  .links {
+    gap: 10px;
+  }
+
+  .link {
+    font-size: 0.9rem;
+    padding: 4px 0;
+  }
+
+  /* Center brand content on mobile */
+  .brand {
+    text-align: center;
+  }
+
+  .logo {
+    justify-content: center;
+  }
+
+  .description {
+    margin: 16px auto 0;
+    text-align: center;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .footer {
+    padding: 48px 12px 24px;
+  }
+
+  .grid {
+    gap: 24px;
+  }
+
+  .description {
+    font-size: 0.8rem;
+  }
+
+  .copyright {
+    font-size: 0.7rem;
+  }
+
+  .socialLink {
+    width: 32px;
+    height: 32px;
+  }
+
+  .socialLink svg {
+    width: 14px;
+    height: 14px;
+  }
+}

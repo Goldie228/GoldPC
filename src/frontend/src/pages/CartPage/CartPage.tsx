@@ -1,4 +1,122 @@
+'use client';
+
+import { useState, type ReactElement, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { useCart } from '../../hooks/useCart';
 import './CartPage.css';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  cpu: 'Процессор',
+  gpu: 'Видеокарта',
+  motherboard: 'Материнская плата',
+  ram: 'Память',
+  storage: 'Накопитель',
+  psu: 'Блок питания',
+  case: 'Корпус',
+  cooling: 'Охлаждение',
+  monitor: 'Монитор',
+  peripherals: 'Периферия',
+};
+
+/**
+ * Получить название категории на русском
+ */
+function getCategoryLabel(category: string): string {
+  return CATEGORY_LABELS[category] ?? category;
+}
+
+/**
+ * Иконка GPU
+ */
+function GpuIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="10" y="10" width="100" height="60" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
+      <rect x="20" y="20" width="35" height="35" rx="2" fill="#121214"/>
+      <circle cx="37" cy="37" r="10" stroke="#d4a574" strokeWidth="1" fill="none"/>
+    </svg>
+  );
+}
+
+/**
+ * Иконка CPU
+ */
+function CpuIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
+      <rect x="30" y="30" width="40" height="40" rx="2" fill="#121214"/>
+      <text x="50" y="55" textAnchor="middle" fill="#d4a574" fontSize="12">CPU</text>
+    </svg>
+  );
+}
+
+/**
+ * Иконка RAM
+ */
+function RamIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="10" y="10" width="100" height="40" rx="2" fill="#1a1a1e" stroke="#3a3a3e"/>
+      <rect x="20" y="18" width="15" height="24" rx="1" fill="#121214"/>
+      <rect x="40" y="18" width="15" height="24" rx="1" fill="#121214"/>
+      <rect x="60" y="18" width="15" height="24" rx="1" fill="#121214"/>
+      <rect x="80" y="18" width="15" height="24" rx="1" fill="#121214"/>
+    </svg>
+  );
+}
+
+/**
+ * Иконка по умолчанию
+ */
+function DefaultIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
+      <text x="50" y="55" textAnchor="middle" fill="#d4a574" fontSize="10">PART</text>
+    </svg>
+  );
+}
+
+/**
+ * Получить иконку для категории
+ */
+function renderProductIcon(category: string): ReactNode {
+  switch (category) {
+    case 'gpu':
+      return <GpuIcon />;
+    case 'cpu':
+      return <CpuIcon />;
+    case 'ram':
+      return <RamIcon />;
+    default:
+      return <DefaultIcon />;
+  }
+}
+
+/**
+ * Пустая корзина
+ */
+function EmptyCart(): ReactElement {
+  return (
+    <div className="cart-page">
+      <div className="cart-page__container">
+        <h1 className="page-title">Корзина</h1>
+        <div className="cart-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+          </svg>
+          <h2>Корзина пуста</h2>
+          <p>Добавьте товары из каталога</p>
+          <Link to="/catalog" className="btn btn-primary">
+            Перейти в каталог
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * CartPage - Shopping Cart Page
@@ -7,123 +125,192 @@ import './CartPage.css';
  * - Cart items list with quantity controls
  * - Order summary with promo code input
  * - Checkout button
+ * - Price displayed in gold color
  */
-export function CartPage() {
-  const cartItems = [
-    {
-      id: 1,
-      name: 'NVIDIA GeForce RTX 4070 Super',
-      price: 58990,
-      quantity: 1,
-      image: '🎮',
-    },
-    {
-      id: 2,
-      name: 'AMD Ryzen 7 7800X3D',
-      price: 38990,
-      quantity: 1,
-      image: '🔲',
-    },
-    {
-      id: 3,
-      name: 'G.Skill Trident Z5 32GB DDR5-6000',
-      price: 12990,
-      quantity: 2,
-      image: '💾',
-    },
-  ];
+export function CartPage(): ReactElement {
+  const {
+    items,
+    isEmpty,
+    totalPrice,
+    itemCount,
+    discountedTotal,
+    discountAmount,
+    promoCode,
+    discount,
+    removeFromCart,
+    changeQuantity,
+    applyPromo,
+    clearPromoCode,
+  } = useCart();
 
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const discount = 5000;
-  const total = subtotal - discount;
+  const [promoInput, setPromoInput] = useState('');
+  const [promoError, setPromoError] = useState(false);
+
+  const handleApplyPromo = (): void => {
+    if (applyPromo(promoInput)) {
+      setPromoError(false);
+      setPromoInput('');
+    } else {
+      setPromoError(true);
+    }
+  };
+
+  const handleRemovePromo = (): void => {
+    clearPromoCode();
+    setPromoError(false);
+  };
+
+  const handlePromoKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Enter') {
+      handleApplyPromo();
+    }
+  };
+
+  if (isEmpty) {
+    return <EmptyCart />;
+  }
 
   return (
     <div className="cart-page">
       <div className="cart-page__container">
-        <h1 className="cart-page__title">🛒 Корзина</h1>
+        <h1 className="page-title">Корзина</h1>
 
-        {cartItems.length === 0 ? (
-          <div className="cart-page__empty">
-            <p>Ваша корзина пуста</p>
-            <a href="/catalog" className="cart-page__continue-link">
-              Перейти к покупкам
-            </a>
-          </div>
-        ) : (
-          <div className="cart-page__content">
-            {/* Cart Items */}
-            <div className="cart-page__items">
-              {cartItems.map((item) => (
-                <div key={item.id} className="cart-item">
-                  <div className="cart-item__image">
-                    {item.image}
-                  </div>
-                  <div className="cart-item__info">
-                    <h3 className="cart-item__name">{item.name}</h3>
-                    <p className="cart-item__price">
-                      {item.price.toLocaleString('ru-RU')} ₽
-                    </p>
-                  </div>
-                  <div className="cart-item__quantity">
-                    <button className="cart-item__qty-btn">−</button>
-                    <span className="cart-item__qty-value">{item.quantity}</span>
-                    <button className="cart-item__qty-btn">+</button>
-                  </div>
-                  <div className="cart-item__total">
-                    {(item.price * item.quantity).toLocaleString('ru-RU')} ₽
-                  </div>
-                  <button className="cart-item__remove">✕</button>
+        <div className="cart-layout">
+          {/* Cart Items */}
+          <div className="cart-items">
+            {items.map((item) => (
+              <div key={item.id} className="cart-item">
+                <div className="item-image">
+                  {item.imageUrl !== undefined ? (
+                    <img src={item.imageUrl} alt={item.name} />
+                  ) : (
+                    renderProductIcon(item.category)
+                  )}
                 </div>
-              ))}
-            </div>
-
-            {/* Order Summary */}
-            <div className="cart-page__summary">
-              <div className="order-summary">
-                <h3 className="order-summary__title">Ваш заказ</h3>
-                
-                <div className="order-summary__row">
-                  <span>Товары ({cartItems.length})</span>
-                  <span>{subtotal.toLocaleString('ru-RU')} ₽</span>
+                <div className="item-details">
+                  <span className="item-category">{getCategoryLabel(item.category)}</span>
+                  <h3 className="item-name">{item.name}</h3>
                 </div>
-
-                {discount > 0 && (
-                  <div className="order-summary__row order-summary__row--discount">
-                    <span>Скидка</span>
-                    <span>−{discount.toLocaleString('ru-RU')} ₽</span>
+                <div className="item-actions">
+                  <span className="item-price">{item.price.toLocaleString('ru-RU')} BYN</span>
+                  <div className="quantity-controls">
+                    <button 
+                      className="icon-btn" 
+                      aria-label="Уменьшить количество"
+                      onClick={() => changeQuantity(item.productId, -1)}
+                      disabled={item.quantity <= 1}
+                      type="button"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                    </button>
+                    <span className="quantity-value">{item.quantity}</span>
+                    <button 
+                      className="icon-btn" 
+                      aria-label="Увеличить количество"
+                      onClick={() => changeQuantity(item.productId, 1)}
+                      type="button"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                    </button>
+                    <button 
+                      className="remove-btn" 
+                      aria-label="Удалить"
+                      onClick={() => removeFromCart(item.productId)}
+                      type="button"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                      </svg>
+                    </button>
                   </div>
-                )}
-
-                <div className="order-summary__divider" />
-
-                <div className="order-summary__total">
-                  <span>Итого:</span>
-                  <span className="order-summary__total-price">
-                    {total.toLocaleString('ru-RU')} ₽
-                  </span>
                 </div>
-
-                {/* Promo Code */}
-                <div className="order-summary__promo">
-                  <input
-                    type="text"
-                    placeholder="Промокод"
-                    className="order-summary__promo-input"
-                  />
-                  <button className="order-summary__promo-btn">Применить</button>
-                </div>
-
-                <button className="btn-gold-shimmer">
-                  Оформить заказ
-                </button>
-
-                <p className="order-summary__note">
-                  Доставка рассчитается на следующем шаге
-                </p>
               </div>
-            </div>
+            ))}
           </div>
-        )}
+
+          {/* Cart Summary */}
+          <aside className="cart-summary">
+            <h2 className="summary-title">Итого</h2>
+
+            <div className="summary-row">
+              <span className="summary-label">Товары ({itemCount})</span>
+              <span className="summary-value">{totalPrice.toLocaleString('ru-RU')} BYN</span>
+            </div>
+
+            <div className="summary-row">
+              <span className="summary-label">Доставка</span>
+              <span className="summary-value summary-value--accent">Бесплатно</span>
+            </div>
+
+            {discount > 0 && (
+              <div className="summary-row summary-row--discount">
+                <span className="summary-label">Скидка ({discount}%)</span>
+                <span className="summary-value">−{discountAmount.toLocaleString('ru-RU')} BYN</span>
+              </div>
+            )}
+
+            <div className="summary-divider"></div>
+
+            <div className="summary-total">
+              <span className="total-label">К оплате</span>
+              <span className="total-value">{discountedTotal.toLocaleString('ru-RU')} BYN</span>
+            </div>
+
+            <Link to="/checkout" className="btn btn-primary">
+              Оформить заказ
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </Link>
+
+            <Link to="/catalog" className="btn btn-ghost">
+              Продолжить покупки
+            </Link>
+
+            <div className="promo-code">
+              {promoCode !== null ? (
+                <div className="promo-applied">
+                  <span className="promo-badge">
+                    {promoCode} (−{discount}%)
+                  </span>
+                  <button 
+                    className="promo-remove" 
+                    onClick={handleRemovePromo}
+                    aria-label="Удалить промокод"
+                    type="button"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <div className="promo-input">
+                  <input 
+                    type="text" 
+                    placeholder="Промокод"
+                    value={promoInput}
+                    onChange={(e) => {
+                      setPromoInput(e.target.value);
+                      setPromoError(false);
+                    }}
+                    onKeyDown={handlePromoKeyDown}
+                    className={promoError ? 'promo-error' : ''}
+                  />
+                  <button onClick={handleApplyPromo} type="button">Применить</button>
+                </div>
+              )}
+              {promoError && (
+                <span className="promo-error-text">Неверный промокод</span>
+              )}
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );

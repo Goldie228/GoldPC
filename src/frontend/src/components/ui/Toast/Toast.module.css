@@ -1,0 +1,118 @@
+/* ========================================
+   Toast Component Styles
+   GoldPC Design System
+   ======================================== */
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-card, #18181b);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  min-width: 300px;
+  max-width: 420px;
+  animation: slideIn 0.3s ease-out;
+}
+
+/* ===== BORDER VARIANTS ===== */
+
+/* Success/Info - Gold border */
+.success,
+.info {
+  border-left: 3px solid var(--accent, #d4a574);
+}
+
+/* Error - Red border */
+.error {
+  border-left: 3px solid #ef4444;
+}
+
+/* ===== ICON ===== */
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.success .icon {
+  background: rgba(212, 165, 116, 0.2);
+  color: var(--accent, #d4a574);
+}
+
+.info .icon {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.error .icon {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* ===== MESSAGE ===== */
+
+.message {
+  flex: 1;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--fg, #fafafa);
+}
+
+/* ===== CLOSE BUTTON ===== */
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--fg-dim, #52525b);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--fg, #fafafa);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
+}
+
+/* ===== ANIMATIONS ===== */
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}

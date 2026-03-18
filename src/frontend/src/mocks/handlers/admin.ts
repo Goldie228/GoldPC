@@ -6,7 +6,7 @@
 import { http, HttpResponse, delay } from 'msw';
 import { faker } from '@faker-js/faker/locale/ru';
 import type { User, Product, ProductCategory, PaginationMeta, PagedResponse } from '../../api/types';
-import type { UserRole, UpdateUserRoleRequest } from '../../api/admin';
+import type { UserRole, UpdateUserRoleRequest, DashboardStats, StatsResponse } from '../../api/admin';
 
 // === Генераторы данных ===
 
@@ -375,6 +375,29 @@ export const adminHandlers = [
 
     products.unshift(newProduct);
     return HttpResponse.json(newProduct, { status: 201 });
+  }),
+
+  // === STATS ===
+
+  // GET /api/v1/admin/stats - статистика дашборда
+  http.get('/api/v1/admin/stats', async () => {
+    await delay(faker.number.int({ min: 100, max: 250 }));
+
+    const stats: DashboardStats = {
+      totalUsers: faker.number.int({ min: 1500, max: 3000 }),
+      totalOrders: faker.number.int({ min: 300, max: 800 }),
+      revenue: faker.number.int({ min: 200000, max: 600000 }),
+      usersChange: faker.number.float({ min: -5, max: 15, fractionDigits: 1 }),
+      ordersChange: faker.number.float({ min: -3, max: 12, fractionDigits: 1 }),
+      revenueChange: faker.number.float({ min: -2, max: 20, fractionDigits: 1 }),
+    };
+
+    const response: StatsResponse = {
+      stats,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    return HttpResponse.json(response);
   }),
 ];
 

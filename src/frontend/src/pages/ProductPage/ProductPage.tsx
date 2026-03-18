@@ -1,37 +1,44 @@
 import { useParams } from 'react-router-dom';
+import { Button } from '../../components/ui/Button';
 import './ProductPage.css';
 
 /**
  * ProductPage - Product Detail Page
  * 
  * Features:
- * - Gallery on the left with thumbnails
- * - Specs on the right with "Add to Cart" button (gold shimmer animation)
- * - Product information, rating, stock status
+ * - Two-column layout: Gallery (left) + Product Info (right)
+ * - Image gallery with placeholder
+ * - Title (H1), Category (muted text)
+ * - Price (Large, Gold, JetBrains Mono font)
+ * - Specs Table (Dark rows)
+ * - "Add to Cart" button using Button component
  */
 export function ProductPage() {
   const { id } = useParams<{ id: string }>();
 
-  // TODO: Fetch product data from API
+  // Mock product data
   const product = {
     id: id || '1',
-    name: 'NVIDIA GeForce RTX 4070 Super',
-    manufacturer: 'NVIDIA',
-    price: 58990,
-    rating: 4.9,
-    reviewCount: 128,
-    inStock: 15,
+    name: 'AMD Ryzen 7 7800X3D',
+    manufacturer: 'AMD',
+    category: 'Процессоры',
+    price: 1450,
+    oldPrice: 1695,
+    discount: 15,
+    rating: 4.8,
+    reviewCount: 42,
+    inStock: 24,
+    article: 'R7-7800X3D',
     specs: [
-      { label: 'GPU Architecture', value: 'Ada Lovelace' },
-      { label: 'Video Memory', value: '12 GB GDDR6X' },
-      { label: 'Memory Bus', value: '192-bit' },
-      { label: 'Base Clock', value: '1980 MHz' },
-      { label: 'Boost Clock', value: '2475 MHz' },
-      { label: 'CUDA Cores', value: '7168' },
-      { label: 'TDP', value: '220 W' },
-      { label: 'Power Connector', value: '1× 8-pin' },
-      { label: 'Recommended PSU', value: '650 W' },
+      { label: 'Ядра / Потоки', value: '8 / 16' },
+      { label: 'Базовая частота', value: '4.2 GHz' },
+      { label: 'Кэш L3', value: '96 MB' },
+      { label: 'TDP', value: '120W' },
     ],
+  };
+
+  const handleAddToCart = () => {
+    console.log('Added to cart:', product.id);
   };
 
   return (
@@ -43,78 +50,96 @@ export function ProductPage() {
           <span className="breadcrumb__separator">/</span>
           <a href="/catalog">Каталог</a>
           <span className="breadcrumb__separator">/</span>
-          <a href="/catalog?category=gpu">Видеокарты</a>
+          <a href="/catalog?category=cpu">Процессоры</a>
           <span className="breadcrumb__separator">/</span>
           <span className="breadcrumb__current">{product.name}</span>
         </nav>
 
-        <div className="product-page__content">
-          {/* Gallery Panel */}
-          <div className="product-gallery">
-            <div className="product-gallery__main">
-              <div className="product-gallery__image">
-                🎮 RTX 4070 Super
-              </div>
+        <div className="product-layout">
+          {/* Left Column - Gallery */}
+          <div className="gallery">
+            <div className="gallery__main">
+              {product.discount > 0 && (
+                <span className="gallery__badge">-{product.discount}%</span>
+              )}
+              <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="gallery__placeholder">
+                <rect x="40" y="40" width="120" height="120" rx="8" fill="#1a1a1e" stroke="#d4a574" strokeWidth="2"/>
+                <rect x="70" y="70" width="60" height="60" rx="4" fill="#121214"/>
+                <text x="100" y="108" textAnchor="middle" fill="#d4a574" fontSize="20" fontWeight="bold">CPU</text>
+                <g stroke="#d4a574" strokeWidth="2">
+                  <path d="M70 30v10M90 30v10M110 30v10M130 30v10"/>
+                  <path d="M70 160v10M90 160v10M110 160v10M130 160v10"/>
+                  <path d="M30 70h10M30 90h10M30 110h10M30 130h10"/>
+                  <path d="M160 70h10M160 90h10M160 110h10M160 130h10"/>
+                </g>
+              </svg>
             </div>
-            <div className="product-gallery__thumbnails">
-              {[1, 2, 3, 4].map((num) => (
+            <div className="gallery__thumbs">
+              {[1, 2, 3].map((num) => (
                 <button 
                   key={num} 
-                  className={`product-gallery__thumb ${num === 1 ? 'product-gallery__thumb--active' : ''}`}
+                  className={`gallery__thumb ${num === 1 ? 'gallery__thumb--active' : ''}`}
                 >
-                  Img {num}
+                  <svg viewBox="0 0 40 40" fill="none">
+                    <rect x="8" y="8" width="24" height="24" rx="2" stroke={num === 1 ? '#d4a574' : '#3a3a3e'} strokeWidth="1"/>
+                    <rect x="14" y="14" width="12" height="12" fill={num === 1 ? '#d4a574' : '#3a3a3e'}/>
+                  </svg>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Specs Panel */}
-          <div className="product-specs">
-            <div className="product-specs__header">
-              <span className="product-specs__manufacturer">{product.manufacturer}</span>
-              <span className="product-specs__badge badge badge--hit">Хит</span>
-            </div>
-            
-            <h1 className="product-specs__name">{product.name}</h1>
-            
-            <div className="product-specs__rating">
-              <span className="product-specs__stars">★★★★★</span>
-              <span className="product-specs__rating-value">{product.rating}</span>
-              <span className="product-specs__review-count">({product.reviewCount} отзывов)</span>
+          {/* Right Column - Product Info */}
+          <div className="product-info">
+            <div className="product-info__header">
+              <span className="product-info__manufacturer">{product.manufacturer}</span>
+              <h1 className="product-info__title">{product.name}</h1>
+              <div className="product-info__meta">
+                <span className="product-info__category">{product.category}</span>
+                <span className="product-info__article">Арт: {product.article}</span>
+              </div>
+              <div className="product-info__stock stock--in">
+                <span className="stock-dot"></span>
+                В наличии ({product.inStock} шт)
+              </div>
             </div>
 
-            <div className="product-specs__divider" />
+            {/* Price Block */}
+            <div className="product-info__price">
+              <div className="price-row">
+                <span className="price-current">{product.price.toLocaleString('ru-RU')} BYN</span>
+                {product.oldPrice && (
+                  <>
+                    <span className="price-old">{product.oldPrice.toLocaleString('ru-RU')} BYN</span>
+                    <span className="price-discount">-{product.discount}%</span>
+                  </>
+                )}
+              </div>
+              <span className="price-note">Цена действительна при заказе через сайт</span>
+            </div>
 
-            <div className="product-specs__specs-list">
-              <h3 className="product-specs__specs-title">Ключевые характеристики:</h3>
-              <dl className="specs-list">
+            {/* Actions */}
+            <div className="product-info__actions">
+              <Button variant="primary" onClick={handleAddToCart}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="btn-icon">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                </svg>
+                В корзину
+              </Button>
+            </div>
+
+            {/* Specs Table */}
+            <div className="specs">
+              <h3 className="specs__title">Ключевые характеристики</h3>
+              <div className="specs__grid">
                 {product.specs.map((spec) => (
-                  <div key={spec.label} className="specs-list__item">
-                    <dt className="specs-list__label">{spec.label}</dt>
-                    <dd className="specs-list__value">{spec.value}</dd>
+                  <div key={spec.label} className="spec-item">
+                    <span className="spec-item__label">{spec.label}</span>
+                    <span className="spec-item__value">{spec.value}</span>
                   </div>
                 ))}
-              </dl>
-            </div>
-
-            <div className="product-specs__divider" />
-
-            <div className="product-specs__price">
-              {product.price.toLocaleString('ru-RU')} ₽
-            </div>
-
-            <div className="product-specs__stock">
-              <span className="product-specs__stock-dot" />
-              В наличии ({product.inStock} шт)
-            </div>
-
-            <button className="btn-gold-shimmer">
-              ✨ Добавить в корзину
-            </button>
-
-            <div className="product-specs__actions">
-              <button className="product-specs__action-btn">♡ В избранное</button>
-              <button className="product-specs__action-btn">📈 Сравнить</button>
+              </div>
             </div>
           </div>
         </div>

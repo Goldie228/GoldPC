@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мои сборки — GoldPC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --radius: 4px;
+      --radius-lg: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-accent);
+      color: var(--accent);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Layout */
+    .layout {
+      display: flex;
+      padding-top: 68px;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 240px;
+      background: var(--bg-elevated);
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: fixed;
+      top: 68px;
+      bottom: 0;
+      left: 0;
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-title {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--fg-dim);
+      padding: 0 20px;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: all 0.2s;
+      border-left: 2px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--fg);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      background: var(--accent-glow);
+      border-left-color: var(--accent);
+    }
+
+    .sidebar-nav svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      margin-left: 240px;
+      padding: 32px;
+    }
+
+    .page-header {
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .page-subtitle {
+      font-size: 0.9rem;
+      color: var(--fg-muted);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+    }
+
+    .btn-primary svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Build Cards */
+    .builds-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .build-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+
+    .build-card:hover {
+      border-color: var(--border-accent);
+    }
+
+    .build-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .build-info {
+      flex: 1;
+    }
+
+    .build-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .build-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+    }
+
+    .build-status {
+      font-size: 0.65rem;
+      padding: 4px 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-draft {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--border-accent);
+    }
+
+    .status-ready {
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .status-ordered {
+      background: rgba(99, 102, 241, 0.1);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .build-components {
+      padding: 16px 20px;
+    }
+
+    .component-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .component-item:last-child {
+      border-bottom: none;
+    }
+
+    .component-icon {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-elevated);
+      color: var(--fg-dim);
+    }
+
+    .component-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .component-name {
+      flex: 1;
+      font-size: 0.8rem;
+    }
+
+    .component-spec {
+      font-size: 0.7rem;
+      color: var(--fg-muted);
+    }
+
+    .component-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+    }
+
+    .build-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-elevated);
+    }
+
+    .build-total-label {
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+    }
+
+    .build-total-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+
+    .build-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg-muted);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      font-size: 0.75rem;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--fg-dim);
+      color: var(--fg);
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar {
+        display: none;
+      }
+      .main {
+        margin-left: 0;
+      }
+      .builds-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .page-header {
+        flex-direction: column;
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="home.html" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Поиск">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+      </button>
+      <button class="icon-btn" aria-label="Корзина">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+        </svg>
+      </button>
+      <button class="icon-btn" aria-label="Профиль">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Аккаунт</div>
+        <ul class="sidebar-nav">
+          <li>
+            <a href="account.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Профиль
+            </a>
+          </li>
+          <li>
+            <a href="account-wishlist.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              Избранное
+            </a>
+          </li>
+          <li>
+            <a href="account-builds.html" class="active">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                <polyline points="2 17 12 22 22 17"/>
+                <polyline points="2 12 12 17 22 12"/>
+              </svg>
+              Сборки
+            </a>
+          </li>
+          <li>
+            <a href="cart.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+              </svg>
+              Заказы
+            </a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Мои сборки</h1>
+          <p class="page-subtitle">Сохранённые конфигурации ПК</p>
+        </div>
+        <a href="pc-builder.html" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Новая сборка
+        </a>
+      </div>
+
+      <div class="builds-grid">
+        <div class="build-card">
+          <div class="build-header">
+            <div class="build-info">
+              <div class="build-name">Gaming Beast</div>
+              <div class="build-date">Обновлено: 15.03.2026</div>
+            </div>
+            <span class="build-status status-ready">Готова</span>
+          </div>
+          <div class="build-components">
+            <div class="component-item">
+              <div class="component-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <rect x="9" y="9" width="6" height="6"/>
+                </svg>
+              </div>
+              <div>
+                <div class="component-name">AMD Ryzen 7 7800X3D</div>
+                <div class="component-spec">8C / 16T / 4.2GHz</div>
+              </div>
+              <span class="component-price">1 450 BYN</span>
+            </div>
+            <div class="component-item">
+              <div class="component-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="6" width="20" height="12" rx="2"/>
+                  <path d="M6 10h4v4H6z"/>
+                </svg>
+              </div>
+              <div>
+                <div class="component-name">RTX 4070 Ti Super</div>
+                <div class="component-spec">16GB GDDR6X</div>
+              </div>
+              <span class="component-price">3 200 BYN</span>
+            </div>
+            <div class="component-item">
+              <div class="component-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="8" width="20" height="8" rx="1"/>
+                </svg>
+              </div>
+              <div>
+                <div class="component-name">G.Skill Trident Z5 32GB</div>
+                <div class="component-spec">DDR5-6000 CL30</div>
+              </div>
+              <span class="component-price">650 BYN</span>
+            </div>
+          </div>
+          <div class="build-footer">
+            <div>
+              <div class="build-total-label">Итого</div>
+              <div class="build-total-value">5 300 BYN</div>
+            </div>
+            <div class="build-actions">
+              <button class="btn btn-ghost">Редактировать</button>
+              <button class="btn btn-ghost">Заказать</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="build-card">
+          <div class="build-header">
+            <div class="build-info">
+              <div class="build-name">Workstation Pro</div>
+              <div class="build-date">Обновлено: 10.03.2026</div>
+            </div>
+            <span class="build-status status-ordered">Заказана</span>
+          </div>
+          <div class="build-components">
+            <div class="component-item">
+              <div class="component-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <rect x="9" y="9" width="6" height="6"/>
+                </svg>
+              </div>
+              <div>
+                <div class="component-name">Intel Core i9-14900K</div>
+                <div class="component-spec">24C / 32T / 3.2GHz</div>
+              </div>
+              <span class="component-price">2 100 BYN</span>
+            </div>
+            <div class="component-item">
+              <div class="component-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="6" width="20" height="12" rx="2"/>
+                  <path d="M6 10h4v4H6z"/>
+                </svg>
+              </div>
+              <div>
+                <div class="component-name">RTX 4090</div>
+                <div class="component-spec">24GB GDDR6X</div>
+              </div>
+              <span class="component-price">6 500 BYN</span>
+            </div>
+            <div class="component-item">
+              <div class="component-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="8" width="20" height="8" rx="1"/>
+                </svg>
+              </div>
+              <div>
+                <div class="component-name">Kingston Fury 64GB</div>
+                <div class="component-spec">DDR5-5600</div>
+              </div>
+              <span class="component-price">1 100 BYN</span>
+            </div>
+          </div>
+          <div class="build-footer">
+            <div>
+              <div class="build-total-label">Итого</div>
+              <div class="build-total-value">9 700 BYN</div>
+            </div>
+            <div class="build-actions">
+              <button class="btn btn-ghost">Дублировать</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="build-card">
+          <div class="build-header">
+            <div class="build-info">
+              <div class="build-name">Office PC</div>
+              <div class="build-date">Обновлено: 05.03.2026</div>
+            </div>
+            <span class="build-status status-draft">Черновик</span>
+          </div>
+          <div class="build-components">
+            <div class="component-item">
+              <div class="component-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="4" width="16" height="16" rx="2"/>
+                  <rect x="9" y="9" width="6" height="6"/>
+                </svg>
+              </div>
+              <div>
+                <div class="component-name">Intel Core i5-13400</div>
+                <div class="component-spec">10C / 16T / 2.5GHz</div>
+              </div>
+              <span class="component-price">650 BYN</span>
+            </div>
+            <div class="component-item">
+              <div class="component-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="8" width="20" height="8" rx="1"/>
+                </svg>
+              </div>
+              <div>
+                <div class="component-name">Kingston Fury 16GB</div>
+                <div class="component-spec">DDR4-3200</div>
+              </div>
+              <span class="component-price">180 BYN</span>
+            </div>
+          </div>
+          <div class="build-footer">
+            <div>
+              <div class="build-total-label">Итого</div>
+              <div class="build-total-value">830 BYN</div>
+            </div>
+            <div class="build-actions">
+              <button class="btn btn-ghost">Редактировать</button>
+              <button class="btn btn-ghost">Удалить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
+</task_progress>
+</write_to_file>

@@ -98,10 +98,10 @@ git clone <repository-url>
 cd kursovaya
 
 # Запуск всех сервисов
-docker-compose -f docker/docker-compose.yml up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # Проверка статуса
-docker-compose -f docker/docker-compose.yml ps
+docker compose -f docker/docker-compose.yml ps
 ```
 
 ### Доступ к сервисам

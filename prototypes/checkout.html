@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Оформление заказа — GoldPC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --radius: 4px;
+      --radius-lg: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      overflow-x: hidden;
+      font-feature-settings: 'ss01' on;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--fg-dim);
+      border-radius: 3px;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--border-accent);
+      color: var(--accent);
+    }
+
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ===== MAIN LAYOUT ===== */
+    .main {
+      padding: 120px 24px 80px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-title {
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 32px;
+    }
+
+    /* ===== STEPS INDICATOR ===== */
+    .steps-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 48px;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .step.active .step-number {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+    }
+
+    .step.completed .step-number {
+      background: var(--accent-glow);
+      border-color: var(--border-accent);
+      color: var(--accent);
+    }
+
+    .step-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--fg-dim);
+      transition: color 0.2s;
+    }
+
+    .step.active .step-label,
+    .step.completed .step-label {
+      color: var(--fg);
+    }
+
+    .step-connector {
+      width: 60px;
+      height: 1px;
+      background: var(--border);
+      margin: 0 16px;
+    }
+
+    .step-connector.completed {
+      background: var(--accent);
+    }
+
+    /* ===== CHECKOUT LAYOUT ===== */
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 48px;
+      align-items: start;
+    }
+
+    /* ===== FORM SECTION ===== */
+    .form-section {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .form-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 24px;
+    }
+
+    .form-card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .form-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-input {
+      padding: 12px 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-input::placeholder {
+      color: var(--fg-dim);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--border-accent);
+    }
+
+    .form-input:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    select.form-input {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 40px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    /* ===== PAYMENT METHODS ===== */
+    .payment-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .payment-method {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .payment-method:hover {
+      border-color: var(--border-accent);
+    }
+
+    .payment-method.selected {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .payment-radio {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--fg-dim);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .payment-method.selected .payment-radio {
+      border-color: var(--accent);
+    }
+
+    .payment-radio::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .payment-method.selected .payment-radio::after {
+      opacity: 1;
+    }
+
+    .payment-info {
+      flex: 1;
+    }
+
+    .payment-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .payment-desc {
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+    }
+
+    .payment-icon {
+      width: 40px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--fg-dim);
+    }
+
+    .payment-icon svg {
+      width: 32px;
+      height: 20px;
+    }
+
+    /* ===== ORDER SUMMARY ===== */
+    .order-summary {
+      position: sticky;
+      top: 100px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 24px;
+    }
+
+    .summary-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .summary-items {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .summary-item {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .summary-item-image {
+      width: 48px;
+      height: 48px;
+      background: var(--bg-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .summary-item-image svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .summary-item-info {
+      flex: 1;
+    }
+
+    .summary-item-name {
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .summary-item-qty {
+      font-size: 0.7rem;
+      color: var(--fg-muted);
+    }
+
+    .summary-item-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+
+    .summary-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .summary-label {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+    }
+
+    .summary-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+    }
+
+    .summary-total {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .total-label {
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .total-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 24px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+      margin-top: 24px;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg-muted);
+      border: none;
+      margin-top: 12px;
+      padding: 12px;
+    }
+
+    .btn-ghost:hover {
+      color: var(--fg);
+    }
+
+    .secure-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+    }
+
+    .secure-badge svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .checkout-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .order-summary {
+        position: static;
+        order: -1;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .steps-indicator {
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .step-connector {
+        display: none;
+      }
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="home.html" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+
+    <div class="header-actions">
+      <button class="icon-btn" aria-label="Профиль">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <h1 class="page-title">Оформление заказа</h1>
+
+    <!-- Steps Indicator -->
+    <div class="steps-indicator">
+      <div class="step completed">
+        <span class="step-number">1</span>
+        <span class="step-label">Доставка</span>
+      </div>
+      <div class="step-connector completed"></div>
+      <div class="step active">
+        <span class="step-number">2</span>
+        <span class="step-label">Оплата</span>
+      </div>
+    </div>
+
+    <div class="checkout-layout">
+      <!-- Form Section -->
+      <div class="form-section">
+        <!-- Shipping Info -->
+        <div class="form-card">
+          <h2 class="form-card-title">Доставка</h2>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label" for="firstName">Имя</label>
+              <input type="text" id="firstName" class="form-input" placeholder="Иван" value="Александр">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="lastName">Фамилия</label>
+              <input type="text" id="lastName" class="form-input" placeholder="Иванов" value="Петров">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="phone">Телефон</label>
+              <input type="tel" id="phone" class="form-input" placeholder="+375 (29) 123-45-67" value="+375 (29) 123-45-67">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="email">Email</label>
+              <input type="email" id="email" class="form-input" placeholder="email@example.com" value="alex@goldpc.by">
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label" for="city">Город</label>
+              <select id="city" class="form-input">
+                <option value="minsk">Минск</option>
+                <option value="brest">Брест</option>
+                <option value="grodno">Гродно</option>
+                <option value="vitebsk">Витебск</option>
+                <option value="gomel">Гомель</option>
+                <option value="mogilev">Могилёв</option>
+              </select>
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label" for="address">Адрес доставки</label>
+              <input type="text" id="address" class="form-input" placeholder="ул. Примерная, д. 1, кв. 1" value="ул. Независимости, д. 50, кв. 123">
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label" for="comment">Комментарий к заказу</label>
+              <input type="text" id="comment" class="form-input" placeholder="Пожелания к доставке (необязательно)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="form-card">
+          <h2 class="form-card-title">Способ оплаты</h2>
+          
+          <div class="payment-methods">
+            <label class="payment-method selected">
+              <input type="radio" name="payment" value="card" checked style="display: none;">
+              <span class="payment-radio"></span>
+              <div class="payment-info">
+                <div class="payment-name">Банковская карта</div>
+                <div class="payment-desc">Visa, Mastercard, МИР</div>
+              </div>
+              <div class="payment-icon">
+                <svg viewBox="0 0 32 20" fill="none">
+                  <rect x="1" y="1" width="30" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                  <rect x="4" y="8" width="8" height="4" rx="1" fill="currentColor" opacity="0.3"/>
+                </svg>
+              </div>
+            </label>
+
+            <label class="payment-method">
+              <input type="radio" name="payment" value="erip" style="display: none;">
+              <span class="payment-radio"></span>
+              <div class="payment-info">
+                <div class="payment-name">ЕРИП</div>
+                <div class="payment-desc">Оплата через систему ЕРИП</div>
+              </div>
+              <div class="payment-icon">
+                <svg viewBox="0 0 32 20" fill="none">
+                  <rect x="1" y="1" width="30" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                  <text x="16" y="13" text-anchor="middle" fill="currentColor" font-size="7">ЕРИП</text>
+                </svg>
+              </div>
+            </label>
+
+            <label class="payment-method">
+              <input type="radio" name="payment" value="cash" style="display: none;">
+              <span class="payment-radio"></span>
+              <div class="payment-info">
+                <div class="payment-name">Наличными при получении</div>
+                <div class="payment-desc">Оплата курьеру или в пункте выдачи</div>
+              </div>
+              <div class="payment-icon">
+                <svg viewBox="0 0 32 20" fill="none">
+                  <rect x="1" y="1" width="30" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                  <circle cx="16" cy="10" r="4" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <aside class="order-summary">
+        <h2 class="summary-title">Ваш заказ</h2>
+
+        <div class="summary-items">
+          <div class="summary-item">
+            <div class="summary-item-image">
+              <svg viewBox="0 0 32 32" fill="none">
+                <rect x="4" y="4" width="24" height="24" rx="2" stroke="#d4a574" stroke-width="1.5"/>
+                <circle cx="16" cy="16" r="6" stroke="#d4a574" stroke-width="1"/>
+              </svg>
+            </div>
+            <div class="summary-item-info">
+              <div class="summary-item-name">NVIDIA RTX 4070 Ti Super 16GB</div>
+              <div class="summary-item-qty">1 шт</div>
+            </div>
+            <span class="summary-item-price">3 200 BYN</span>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-item-image">
+              <svg viewBox="0 0 32 32" fill="none">
+                <rect x="6" y="6" width="20" height="20" rx="2" stroke="#d4a574" stroke-width="1.5"/>
+                <text x="16" y="18" text-anchor="middle" fill="#d4a574" font-size="8">CPU</text>
+              </svg>
+            </div>
+            <div class="summary-item-info">
+              <div class="summary-item-name">AMD Ryzen 7 7800X3D</div>
+              <div class="summary-item-qty">1 шт</div>
+            </div>
+            <span class="summary-item-price">1 450 BYN</span>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-item-image">
+              <svg viewBox="0 0 32 32" fill="none">
+                <rect x="4" y="10" width="24" height="12" rx="1" stroke="#d4a574" stroke-width="1.5"/>
+                <rect x="8" y="13" width="4" height="6" rx="0.5" fill="#d4a574" opacity="0.5"/>
+                <rect x="14" y="13" width="4" height="6" rx="0.5" fill="#d4a574" opacity="0.5"/>
+              </svg>
+            </div>
+            <div class="summary-item-info">
+              <div class="summary-item-name">G.Skill Trident Z5 RGB 32GB DDR5</div>
+              <div class="summary-item-qty">2 шт</div>
+            </div>
+            <span class="summary-item-price">1 300 BYN</span>
+          </div>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-row">
+          <span class="summary-label">Товары (4)</span>
+          <span class="summary-value">5 950 BYN</span>
+        </div>
+
+        <div class="summary-row">
+          <span class="summary-label">Доставка</span>
+          <span class="summary-value" style="color: var(--accent);">Бесплатно</span>
+        </div>
+
+        <div class="summary-total">
+          <span class="total-label">К оплате</span>
+          <span class="total-value">5 950 BYN</span>
+        </div>
+
+        <button class="btn btn-primary" onclick="window.location.href='order-status.html'">
+          Подтвердить заказ
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </button>
+
+        <button class="btn btn-ghost" onclick="window.location.href='cart.html'">
+          ← Вернуться в корзину
+        </button>
+
+        <div class="secure-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          Безопасная оплата по SSL
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    // Payment method selection
+    document.querySelectorAll('.payment-method').forEach(method => {
+      method.addEventListener('click', () => {
+        document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+        method.classList.add('selected');
+        method.querySelector('input[type="radio"]').checked = true;
+      });
+    });
+  </script>
+</body>
+</html>

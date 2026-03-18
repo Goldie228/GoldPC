@@ -1,0 +1,70 @@
+/* ========================================
+   Skeleton Styles - Dark Gold Theme
+   ======================================== */
+
+.skeleton {
+  background: var(--bg-elevated, #121214);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Скругления углов */
+.radiusNone {
+  border-radius: 0;
+}
+
+.radiusSm {
+  border-radius: 4px;
+}
+
+.radiusMd {
+  border-radius: 8px;
+}
+
+.radiusLg {
+  border-radius: 16px;
+}
+
+.radiusFull {
+  border-radius: 9999px;
+}
+
+/* Анимация пульсации */
+.animate {
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Shimmer эффект - дополнительный слой для более красивой анимации */
+.animate::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.03),
+    transparent
+  );
+  animation: skeletonShimmer 2s ease-in-out infinite;
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

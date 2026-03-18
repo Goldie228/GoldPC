@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Заказ #ORD-2025-001 — GoldPC Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --bg-elevated: #121214;
+      --bg-card: #18181b;
+      --fg: #fafafa;
+      --fg-muted: #71717a;
+      --fg-dim: #52525b;
+      --accent: #d4a574;
+      --accent-bright: #e8c4a0;
+      --accent-glow: rgba(212, 165, 116, 0.15);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-accent: rgba(212, 165, 116, 0.2);
+      --radius: 4px;
+      --radius-lg: 8px;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+      font-feature-settings: 'ss01' on;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--fg-dim);
+      border-radius: 3px;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(9, 9, 11, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--bg);
+    }
+
+    .logo-text {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .header-nav {
+      display: flex;
+      gap: 24px;
+    }
+
+    .header-nav a {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .header-nav a:hover,
+    .header-nav a.active {
+      color: var(--accent);
+    }
+
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-name {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--fg-dim);
+    }
+
+    /* ===== MAIN ===== */
+    .main {
+      padding: 100px 24px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      text-decoration: none;
+      margin-bottom: 12px;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: var(--accent);
+    }
+
+    .back-link svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .order-status {
+      margin-top: 8px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-processing {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+    }
+
+    /* ===== CONTENT GRID ===== */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+    }
+
+    /* ===== ORDER INFO CARD ===== */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .info-label {
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .info-value {
+      font-size: 0.9rem;
+      color: var(--fg);
+    }
+
+    .info-value.mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .info-value.accent {
+      color: var(--accent);
+    }
+
+    /* ===== ITEMS TABLE ===== */
+    .items-section {
+      margin-top: 24px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table thead {
+      background: var(--bg-elevated);
+    }
+
+    .data-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+      padding: 14px 16px;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .item-name {
+      font-weight: 500;
+    }
+
+    .item-sku {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--fg-dim);
+      margin-top: 2px;
+    }
+
+    .item-qty {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .item-price {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--fg-muted);
+    }
+
+    .item-total {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .order-summary {
+      padding: 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+    }
+
+    .summary-label {
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+    }
+
+    .summary-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+    }
+
+    .summary-total {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .summary-total .summary-label {
+      font-weight: 600;
+      color: var(--fg);
+    }
+
+    .summary-total .summary-value {
+      font-size: 1.1rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 12px;
+    }
+
+    .timeline-marker {
+      width: 8px;
+      height: 8px;
+      background: var(--fg-dim);
+      border-radius: 50%;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .timeline-item.active .timeline-marker {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .timeline-content {
+      flex: 1;
+    }
+
+    .timeline-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+
+    .timeline-date {
+      font-size: 0.75rem;
+      color: var(--fg-dim);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 20px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-bright);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--border-accent);
+      background: var(--bg-elevated);
+    }
+
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .actions-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="/" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+          <polyline points="2 17 12 22 22 17"/>
+          <polyline points="2 12 12 17 22 12"/>
+        </svg>
+      </div>
+      <span class="logo-text">Gold<span>PC</span></span>
+    </a>
+
+    <nav class="header-nav">
+      <a href="manager-orders.html" class="active">Заказы</a>
+      <a href="manager-catalog.html">Каталог</a>
+      <a href="#">Клиенты</a>
+      <a href="#">Отчёты</a>
+    </nav>
+
+    <div class="header-user">
+      <span class="user-name">Менеджер</span>
+      <div class="user-avatar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <a href="manager-orders.html" class="back-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+          </svg>
+          Назад к заказам
+        </a>
+        <h1 class="page-title">#ORD-2025-001</h1>
+        <div class="order-status">
+          <span class="status-badge status-processing">В обработке</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Order Info Card -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Информация о заказе</span>
+          </div>
+          <div class="card-body">
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Клиент</span>
+                <span class="info-value">Александр Петров</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Email</span>
+                <span class="info-value">alex@example.com</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Телефон</span>
+                <span class="info-value mono">+375 (29) 123-45-67</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Дата заказа</span>
+                <span class="info-value mono">17.03.2025, 14:32</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Способ оплаты</span>
+                <span class="info-value">Картой онлайн</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Доставка</span>
+                <span class="info-value">Курьером по Минску</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Items List -->
+        <div class="card items-section">
+          <div class="card-header">
+            <span class="card-title">Товары в заказе</span>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Товар</th>
+                <th>Кол-во</th>
+                <th>Цена</th>
+                <th>Сумма</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div class="item-name">AMD Ryzen 7 7800X3D</div>
+                  <div class="item-sku">SKU: CPU-AMD-7800X3D</div>
+                </td>
+                <td><span class="item-qty">1</span></td>
+                <td><span class="item-price">1 450 BYN</span></td>
+                <td><span class="item-total">1 450 BYN</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="item-name">NVIDIA RTX 4070 Ti Super 16GB</div>
+                  <div class="item-sku">SKU: GPU-NV-4070TIS</div>
+                </td>
+                <td><span class="item-qty">1</span></td>
+                <td><span class="item-price">3 200 BYN</span></td>
+                <td><span class="item-total">3 200 BYN</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="item-name">G.Skill Trident Z5 32GB DDR5</div>
+                  <div class="item-sku">SKU: RAM-GSK-TZ5-32</div>
+                </td>
+                <td><span class="item-qty">1</span></td>
+                <td><span class="item-price">650 BYN</span></td>
+                <td><span class="item-total">650 BYN</span></td>
+              </tr>
+              <tr>
+                <td>
+                  <div class="item-name">Samsung 990 Pro 2TB NVMe</div>
+                  <div class="item-sku">SKU: SSD-SAM-990P-2T</div>
+                </td>
+                <td><span class="item-qty">1</span></td>
+                <td><span class="item-price">380 BYN</span></td>
+                <td><span class="item-total">380 BYN</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="order-summary">
+            <div class="summary-row">
+              <span class="summary-label">Подытог</span>
+              <span class="summary-value">5 680 BYN</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Доставка</span>
+              <span class="summary-value">0 BYN</span>
+            </div>
+            <div class="summary-row summary-total">
+              <span class="summary-label">Итого</span>
+              <span class="summary-value">5 430 BYN</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- Timeline -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">История статусов</span>
+          </div>
+          <div class="card-body">
+            <div class="timeline">
+              <div class="timeline-item active">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                  <div class="timeline-title">В обработке</div>
+                  <div class="timeline-date">17.03.2025, 14:45</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Оплата подтверждена</div>
+                  <div class="timeline-date">17.03.2025, 14:33</div>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                  <div class="timeline-title">Заказ создан</div>
+                  <div class="timeline-date">17.03.2025, 14:32</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Действия</span>
+          </div>
+          <div class="card-body">
+            <div class="actions-group">
+              <button class="btn btn-primary btn-full">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+                Обработать
+              </button>
+              <button class="btn btn-primary btn-full">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="1" y="3" width="15" height="13"/>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                  <circle cx="5.5" cy="18.5" r="2.5"/>
+                  <circle cx="18.5" cy="18.5" r="2.5"/>
+                </svg>
+                Отправить
+              </button>
+              <button class="btn btn-secondary btn-full">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                Отменить заказ
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delivery Info -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Доставка</span>
+          </div>
+          <div class="card-body">
+            <div class="info-grid" style="grid-template-columns: 1fr;">
+              <div class="info-item">
+                <span class="info-label">Адрес</span>
+                <span class="info-value">г. Минск, ул. Примерная, д. 10, кв. 25</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Комментарий</span>
+                <span class="info-value">Домофон не работает, позвонить за 15 минут</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
