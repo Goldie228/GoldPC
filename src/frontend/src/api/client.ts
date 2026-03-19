@@ -8,9 +8,9 @@ import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axio
 
 /**
  * Базовый URL для API запросов
- * В режиме разработки использует mock backend
+ * В режиме разработки использует относительный путь для MSW
  */
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 /**
  * Экземпляр axios с базовой конфигурацией

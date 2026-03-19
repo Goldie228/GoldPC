@@ -126,7 +126,7 @@ export function HomePage() {
             <div className="heroTag">PC Builder v2.0</div>
             <h1 className="heroTitle">
               Собери свой<br />
-              <span className="heroTitleAccent">идеальный</span> ПК
+              <span className="text-accent">идеальный</span> ПК
             </h1>
             <p className="heroDesc">
               Интеллектуальный конфигуратор с проверкой совместимости в реальном времени. 
@@ -258,7 +258,7 @@ export function HomePage() {
                       <rect x="20" y="20" width="35" height="35" rx="2" fill="#121214"/>
                       <rect x="65" y="22" width="35" height="6" rx="1" fill="#2a2a2e"/>
                       <rect x="65" y="34" width="25" height="6" rx="1" fill="#2a2a2e"/>
-                      <circle cx="37" cy="37" r="10" stroke="#d4a574" stroke-width="1" fill="none"/>
+                      <circle cx="37" cy="37" r="10" stroke="#d4a574" strokeWidth="1" fill="none"/>
                     </svg>
                   </div>
                   <div className="productInfo">

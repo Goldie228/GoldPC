@@ -1,0 +1,357 @@
+/**
+ * ServicesPage Styles
+ * Dark Gold theme для страницы услуг сервисного центра
+ * Основано на прототипе services.html
+ */
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+/* Page Header */
+.pageHeader {
+  margin-bottom: 48px;
+}
+
+.pageTitle {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+}
+
+.pageTitle .accent {
+  color: var(--accent, #d4a574);
+}
+
+.pageDesc {
+  font-size: 1rem;
+  color: var(--fg-muted, #71717a);
+  max-width: 600px;
+  line-height: 1.7;
+}
+
+/* Services Grid */
+.servicesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .servicesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .servicesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Service Card */
+.serviceCard {
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  padding: 32px;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.serviceCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--accent, #d4a574);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+
+.serviceCard:hover {
+  border-color: var(--border-accent, rgba(212, 165, 116, 0.2));
+  transform: translateY(-4px);
+}
+
+.serviceCard:hover::before {
+  transform: scaleX(1);
+}
+
+.serviceIcon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated, #121214);
+  margin-bottom: 24px;
+  color: var(--fg-dim, #52525b);
+  transition: color 0.3s;
+}
+
+.serviceCard:hover .serviceIcon {
+  color: var(--accent, #d4a574);
+}
+
+.serviceName {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+
+.serviceDesc {
+  font-size: 0.9rem;
+  color: var(--fg-muted, #71717a);
+  line-height: 1.6;
+  margin-bottom: 24px;
+  flex-grow: 1;
+}
+
+.serviceMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20px;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.servicePrice {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--fg-dim, #52525b);
+}
+
+.servicePrice span {
+  color: var(--accent, #d4a574);
+  font-weight: 500;
+}
+
+.serviceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--fg-muted, #71717a);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.serviceLink:hover {
+  color: var(--accent, #d4a574);
+}
+
+.serviceLink svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s;
+}
+
+.serviceLink:hover svg {
+  transform: translateX(4px);
+}
+
+/* Benefits */
+.benefits {
+  margin-top: 80px;
+  padding: 48px;
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.benefitsTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 32px;
+  letter-spacing: -0.01em;
+}
+
+.benefitsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+}
+
+@media (max-width: 1024px) {
+  .benefitsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .benefitsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.benefitIcon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-glow, rgba(212, 165, 116, 0.15));
+  border: 1px solid var(--border-accent, rgba(212, 165, 116, 0.2));
+  color: var(--accent, #d4a574);
+  flex-shrink: 0;
+}
+
+.benefitText {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--fg-muted, #71717a);
+}
+
+.benefitText strong {
+  color: var(--fg, #fafafa);
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* CTA */
+.cta {
+  margin-top: 80px;
+  padding: 48px;
+  background: linear-gradient(135deg, var(--bg-card, #18181b) 0%, var(--bg-elevated, #121214) 100%);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, var(--accent-glow, rgba(212, 165, 116, 0.15)) 0%, transparent 70%);
+  filter: blur(60px);
+}
+
+.ctaContent {
+  position: relative;
+  z-index: 1;
+}
+
+.ctaTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.ctaDesc {
+  font-size: 0.9rem;
+  color: var(--fg-muted, #71717a);
+  margin-bottom: 24px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnPrimary {
+  background: var(--accent, #d4a574);
+  color: var(--bg, #09090b);
+}
+
+.btnPrimary:hover {
+  background: var(--accent-bright, #e8c4a0);
+  transform: translateY(-2px);
+}
+
+.btnPrimary svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.loadingSpinner {
+  animation: spin 1s linear infinite;
+  color: var(--accent, #d4a574);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error State */
+.error {
+  text-align: center;
+  padding: 48px;
+  color: var(--fg-muted, #71717a);
+}
+
+.retryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  margin-top: 16px;
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  color: var(--fg, #fafafa);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.retryBtn:hover {
+  border-color: var(--accent, #d4a574);
+  color: var(--accent, #d4a574);
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+  .container {
+    padding: 32px 16px;
+  }
+
+  .benefits {
+    padding: 32px 24px;
+  }
+
+  .cta {
+    padding: 32px 24px;
+  }
+}

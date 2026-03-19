@@ -9,6 +9,7 @@
     "lint": "turbo run lint",
     "dev": "turbo run dev",
     "clean": "turbo run clean",
+    "dev:local": "npm run dev:frontend & dotnet run --project src/CatalogService --urls http://localhost:5000 & dotnet run --project src/AuthService --urls http://localhost:5001 & dotnet run --project src/OrdersService --urls http://localhost:5002 & dotnet run --project src/PCBuilderService --urls http://localhost:5005",
     "lint:frontend": "npm run lint --workspace=src/frontend",
     "lint:frontend:fix": "npm run lint:fix --workspace=src/frontend",
     "lint:backend": "dotnet format src/GoldPC.sln verify --no-restore --severity warn",

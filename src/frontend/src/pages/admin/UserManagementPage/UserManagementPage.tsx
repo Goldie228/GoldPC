@@ -1,9 +1,10 @@
 /**
  * Страница управления пользователями
- * Таблица пользователей с возможностью изменения ролей
+ * Таблица пользователей с возможностью редактирования и удаления
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usersAdminApi, type UserRole, type GetUsersParams } from '../../../api/admin';
 import type { User } from '../../../api/types';
 import styles from './UserManagementPage.module.css';
@@ -18,26 +19,29 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 const ROLE_OPTIONS: UserRole[] = ['Client', 'Manager', 'Master', 'Admin', 'Accountant'];
 
+const STATUS_FILTERS = [
+  { value: '', label: 'Все статусы' },
+  { value: 'true', label: 'Активные' },
+  { value: 'false', label: 'Неактивные' },
+];
+
 /**
  * Страница управления пользователями
  */
 export function UserManagementPage() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | ''>('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [editingUser, setEditingUser] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, [page, roleFilter]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -54,6 +58,10 @@ export function UserManagementPage() {
       if (roleFilter) {
         params.role = roleFilter;
       }
+
+      if (statusFilter) {
+        params.isActive = statusFilter === 'true';
+      }
       
       const response = await usersAdminApi.getUsers(params);
       setUsers(response.data);
@@ -65,7 +73,11 @@ export function UserManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, roleFilter, statusFilter, searchQuery]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,32 +85,25 @@ export function UserManagementPage() {
     fetchUsers();
   };
 
-  const handleRoleChange = async (userId: string, newRole: UserRole) => {
-    setSaving(true);
-    try {
-      const updatedUser = await usersAdminApi.updateUserRole(userId, { role: newRole });
-      setUsers(users.map(u => u.id === userId ? updatedUser : u));
-      setEditingUser(null);
-    } catch (err) {
-      console.error('Failed to update role:', err);
-      alert('Не удалось изменить роль пользователя');
-    } finally {
-      setSaving(false);
-    }
+  const handleEdit = (userId: string) => {
+    navigate(`/admin/users/${userId}/edit`);
   };
 
-  const handleToggleActive = async (user: User) => {
+  const handleDelete = async (user: User) => {
+    if (!window.confirm(`Вы уверены, что хотите удалить пользователя ${user.firstName} ${user.lastName}?\nЭто действие нельзя отменить.`)) {
+      return;
+    }
+
+    setDeleting(user.id);
     try {
-      let updatedUser: User;
-      if (user.isActive) {
-        updatedUser = await usersAdminApi.deactivateUser(user.id);
-      } else {
-        updatedUser = await usersAdminApi.activateUser(user.id);
-      }
-      setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+      await usersAdminApi.deleteUser(user.id);
+      setUsers(users.filter(u => u.id !== user.id));
+      setTotalItems(prev => prev - 1);
     } catch (err) {
-      console.error('Failed to toggle user status:', err);
-      alert('Не удалось изменить статус пользователя');
+      console.error('Failed to delete user:', err);
+      alert('Не удалось удалить пользователя. Попробуйте позже.');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -110,44 +115,117 @@ export function UserManagementPage() {
     });
   };
 
+  const getInitials = (user: User) => {
+    return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Управление пользователями</h1>
-        <p className={styles.subtitle}>
-          Всего пользователей: {totalItems}
-        </p>
+        <div>
+          <h1 className={styles.title}>Пользователи</h1>
+          <p className={styles.subtitle}>
+            Управление пользователями системы
+          </p>
+        </div>
+        <div className={styles.headerActions}>
+          <button 
+            className={styles.exportBtn}
+            onClick={() => {/* TODO: export functionality */}}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Экспорт
+          </button>
+          <button 
+            className={styles.addBtn}
+            onClick={() => navigate('/admin/users/new')}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Добавить пользователя
+          </button>
+        </div>
       </header>
 
+      {/* Stats Bar */}
+      <div className={styles.statsBar}>
+        <div className={styles.statItem}>
+          <span className={styles.statNumber}>{totalItems.toLocaleString('ru-RU')}</span>
+          <span className={styles.statLabel}>Всего пользователей</span>
+        </div>
+        <div className={styles.statItem}>
+          <span className={styles.statNumber}>{users.filter(u => u.isActive).length}</span>
+          <span className={styles.statLabel}>Активных на странице</span>
+        </div>
+        <div className={styles.statItem}>
+          <span className={styles.statNumber}>{users.filter(u => u.role === 'Admin').length}</span>
+          <span className={styles.statLabel}>Администраторов</span>
+        </div>
+      </div>
+
+      {/* Filters */}
       <div className={styles.filters}>
         <form className={styles.searchForm} onSubmit={handleSearch}>
-          <input
-            type="text"
-            className={styles.searchInput}
-            placeholder="Поиск по email или имени..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <div className={styles.searchWrapper}>
+            <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input
+              type="text"
+              className={styles.searchInput}
+              placeholder="Поиск по имени или email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
           <button type="submit" className={styles.searchBtn}>
-            🔍 Найти
+            Найти
           </button>
         </form>
 
-        <select
-          className={styles.roleSelect}
-          value={roleFilter}
-          onChange={(e) => {
-            setRoleFilter(e.target.value as UserRole | '');
-            setPage(1);
-          }}
-        >
-          <option value="">Все роли</option>
-          {ROLE_OPTIONS.map((role) => (
-            <option key={role} value={role}>
-              {ROLE_LABELS[role]}
-            </option>
-          ))}
-        </select>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Роль</label>
+          <select
+            className={styles.filterSelect}
+            value={roleFilter}
+            onChange={(e) => {
+              setRoleFilter(e.target.value as UserRole | '');
+              setPage(1);
+            }}
+          >
+            <option value="">Все роли</option>
+            {ROLE_OPTIONS.map((role) => (
+              <option key={role} value={role}>
+                {ROLE_LABELS[role]}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Статус</label>
+          <select
+            className={styles.filterSelect}
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+          >
+            {STATUS_FILTERS.map((filter) => (
+              <option key={filter.value} value={filter.value}>
+                {filter.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {loading && (
@@ -172,61 +250,70 @@ export function UserManagementPage() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Email</th>
-                  <th>Имя</th>
-                  <th>Телефон</th>
+                  <th>Пользователь</th>
+                  <th>ID</th>
                   <th>Роль</th>
                   <th>Статус</th>
-                  <th>Дата регистрации</th>
-                  <th>Действия</th>
+                  <th>Регистрация</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
                   <tr key={user.id} className={!user.isActive ? styles.inactiveRow : ''}>
-                    <td>{user.email}</td>
-                    <td>{user.firstName} {user.lastName}</td>
-                    <td>{user.phone || '—'}</td>
                     <td>
-                      {editingUser === user.id ? (
-                        <select
-                          className={styles.roleEditSelect}
-                          defaultValue={user.role}
-                          onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
-                          disabled={saving}
-                          autoFocus
-                          onBlur={() => setEditingUser(null)}
-                        >
-                          {ROLE_OPTIONS.map((role) => (
-                            <option key={role} value={role}>
-                              {ROLE_LABELS[role]}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span 
-                          className={styles.roleBadge}
-                          onClick={() => setEditingUser(user.id)}
-                          title="Нажмите для изменения роли"
-                        >
-                          {ROLE_LABELS[user.role]}
-                        </span>
-                      )}
+                      <div className={styles.userCell}>
+                        <div className={styles.userAvatar}>
+                          {getInitials(user)}
+                        </div>
+                        <div className={styles.userInfo}>
+                          <span className={styles.userName}>
+                            {user.firstName} {user.lastName}
+                          </span>
+                          <span className={styles.userEmail}>{user.email}</span>
+                        </div>
+                      </div>
                     </td>
                     <td>
-                      <span className={`${styles.statusBadge} ${user.isActive ? styles.active : styles.inactive}`}>
+                      <span className={styles.userId}>
+                        {user.id.substring(0, 8).toUpperCase()}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`${styles.roleBadge} ${styles[`role${user.role}`]}`}>
+                        {ROLE_LABELS[user.role]}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`${styles.statusBadge} ${user.isActive ? styles.statusActive : styles.statusInactive}`}>
                         {user.isActive ? 'Активен' : 'Неактивен'}
                       </span>
                     </td>
-                    <td>{formatDate(user.createdAt)}</td>
+                    <td>
+                      <span className={styles.date}>{formatDate(user.createdAt)}</span>
+                    </td>
                     <td>
                       <div className={styles.actions}>
                         <button
-                          className={`${styles.actionBtn} ${user.isActive ? styles.deactivate : styles.activate}`}
-                          onClick={() => handleToggleActive(user)}
-                          title={user.isActive ? 'Деактивировать' : 'Активировать'}
+                          className={styles.editBtn}
+                          onClick={() => handleEdit(user.id)}
+                          title="Редактировать"
                         >
-                          {user.isActive ? '🔴' : '🟢'}
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                          </svg>
+                        </button>
+                        <button
+                          className={styles.deleteBtn}
+                          onClick={() => handleDelete(user)}
+                          disabled={deleting === user.id}
+                          title="Удалить"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                          </svg>
                         </button>
                       </div>
                     </td>
@@ -238,29 +325,66 @@ export function UserManagementPage() {
 
           {users.length === 0 && (
             <div className={styles.empty}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
               <p>Пользователи не найдены</p>
+              <button className={styles.clearFiltersBtn} onClick={() => {
+                setSearchQuery('');
+                setRoleFilter('');
+                setStatusFilter('');
+                setPage(1);
+              }}>
+                Сбросить фильтры
+              </button>
             </div>
           )}
 
           {totalPages > 1 && (
             <div className={styles.pagination}>
-              <button
-                className={styles.pageBtn}
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-              >
-                ← Назад
-              </button>
-              <span className={styles.pageInfo}>
-                Страница {page} из {totalPages}
+              <span className={styles.paginationInfo}>
+                Показано {((page - 1) * 10) + 1}-{Math.min(page * 10, totalItems)} из {totalItems} пользователей
               </span>
-              <button
-                className={styles.pageBtn}
-                disabled={page === totalPages}
-                onClick={() => setPage(page + 1)}
-              >
-                Вперёд →
-              </button>
+              <div className={styles.paginationPages}>
+                <button
+                  className={styles.pageBtn}
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                >
+                  ←
+                </button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`${styles.pageBtn} ${page === pageNum ? styles.pageBtnActive : ''}`}
+                      onClick={() => setPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button
+                  className={styles.pageBtn}
+                  disabled={page === totalPages}
+                  onClick={() => setPage(page + 1)}
+                >
+                  →
+                </button>
+              </div>
             </div>
           )}
         </>

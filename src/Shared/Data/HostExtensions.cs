@@ -14,7 +14,7 @@ public static class HostExtensions
 {
     /// <summary>
     /// Применяет миграции базы данных автоматически при запуске приложения.
-    /// В режиме Development использует EnsureCreated(), в Production - Migrate().
+    /// Всегда использует Migrate() для консистентности между Development и Production.
     /// </summary>
     /// <typeparam name="TContext">Тип DbContext</typeparam>
     /// <param name="host">Хост приложения</param>
@@ -32,27 +32,10 @@ public static class HostExtensions
         try
         {
             var dbContext = serviceProvider.GetRequiredService<TContext>();
-            var environment = serviceProvider.GetService<IHostEnvironment>();
             
-            if (environment?.IsDevelopment() == true)
-            {
-                // В режиме разработки создаём БД, если не существует
-                // EnsureCreated не использует миграции, а создаёт БД напрямую
-                if (dbContext.Database.EnsureCreated())
-                {
-                    logger?.LogInformation("База данных создана");
-                }
-                else
-                {
-                    // Если БД уже существует, проверяем есть ли pending миграции
-                    ApplyPendingMigrations(dbContext, logger);
-                }
-            }
-            else
-            {
-                // В Production всегда используем миграции
-                ApplyPendingMigrations(dbContext, logger);
-            }
+            // Всегда используем миграции для консистентности
+            // Это предотвращает рассинхронизацию между EnsureCreated и миграциями
+            ApplyPendingMigrations(dbContext, logger);
             
             // Выполняем seed данных если передан
             seedAction?.Invoke(serviceProvider);
@@ -69,7 +52,8 @@ public static class HostExtensions
     }
 
     /// <summary>
-    /// Применяет миграции с поддержкой нескольких DbContext
+    /// Применяет миграции с поддержкой нескольких DbContext.
+    /// Всегда использует Migrate() для консистентности.
     /// </summary>
     public static IHost ApplyMigrations(
         this IHost host,
@@ -77,20 +61,21 @@ public static class HostExtensions
     {
         using var scope = host.Services.CreateScope();
         var serviceProvider = scope.ServiceProvider;
+        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        var logger = loggerFactory?.CreateLogger("DatabaseMigrations");
         
         foreach (var contextType in contextTypes)
         {
             try
             {
                 var dbContext = (DbContext)serviceProvider.GetRequiredService(contextType);
-                var environment = serviceProvider.GetService<IHostEnvironment>();
                 
-                if (environment?.IsDevelopment() == true)
+                // Всегда используем миграции для консистентности
+                var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
+                if (pendingMigrations.Any())
                 {
-                    dbContext.Database.EnsureCreated();
-                }
-                else
-                {
+                    logger?.LogInformation("Применение {Count} pending миграций для {ContextName}...", 
+                        pendingMigrations.Count, contextType.Name);
                     dbContext.Database.Migrate();
                 }
                 

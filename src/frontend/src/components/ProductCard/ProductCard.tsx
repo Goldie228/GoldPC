@@ -56,22 +56,66 @@ function getStockStatus(stock: number): StockStatus {
 }
 
 /**
+ * SVG-плейсхолдер для отсутствующего изображения (CPU chip icon)
+ */
+function ImagePlaceholder(): ReactElement {
+  return (
+    <svg
+      className={styles.placeholder}
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      {/* Центральный чип */}
+      <rect x="16" y="16" width="32" height="32" rx="4" strokeWidth="2" stroke="currentColor" />
+      {/* Внутренний квадрат */}
+      <rect x="22" y="22" width="20" height="20" rx="2" strokeWidth="1.5" stroke="currentColor" opacity="0.6" />
+      {/* Пины сверху */}
+      <line x1="24" y1="16" x2="24" y2="8" strokeWidth="2" stroke="currentColor" />
+      <line x1="32" y1="16" x2="32" y2="8" strokeWidth="2" stroke="currentColor" />
+      <line x1="40" y1="16" x2="40" y2="8" strokeWidth="2" stroke="currentColor" />
+      {/* Пины снизу */}
+      <line x1="24" y1="48" x2="24" y2="56" strokeWidth="2" stroke="currentColor" />
+      <line x1="32" y1="48" x2="32" y2="56" strokeWidth="2" stroke="currentColor" />
+      <line x1="40" y1="48" x2="40" y2="56" strokeWidth="2" stroke="currentColor" />
+      {/* Пины слева */}
+      <line x1="16" y1="24" x2="8" y2="24" strokeWidth="2" stroke="currentColor" />
+      <line x1="16" y1="32" x2="8" y2="32" strokeWidth="2" stroke="currentColor" />
+      <line x1="16" y1="40" x2="8" y2="40" strokeWidth="2" stroke="currentColor" />
+      {/* Пины справа */}
+      <line x1="48" y1="24" x2="56" y2="24" strokeWidth="2" stroke="currentColor" />
+      <line x1="48" y1="32" x2="56" y2="32" strokeWidth="2" stroke="currentColor" />
+      <line x1="48" y1="40" x2="56" y2="40" strokeWidth="2" stroke="currentColor" />
+      {/* Угловые маркеры */}
+      <circle cx="26" cy="26" r="2" fill="currentColor" opacity="0.4" />
+      <circle cx="38" cy="26" r="2" fill="currentColor" opacity="0.4" />
+      <circle cx="26" cy="38" r="2" fill="currentColor" opacity="0.4" />
+      <circle cx="38" cy="38" r="2" fill="currentColor" opacity="0.4" />
+    </svg>
+  );
+}
+
+/**
  * Контейнер изображения
  */
 function ImageContainer({ product, hasDiscount, discountPercent }: ImageContainerProps): ReactElement {
   return (
     <div className={styles.imageContainer}>
-      {product.mainImage !== undefined ? (
+      {product.mainImage !== undefined && product.mainImage.url.trim() !== '' ? (
         <img
           src={product.mainImage.url}
           alt={product.mainImage.alt ?? product.name}
           className={styles.image}
           onError={(e) => {
-            (e.target as HTMLImageElement).src = '/placeholder.png';
+            (e.target as HTMLImageElement).style.display = 'none';
+            const placeholder = document.createElement('div');
+            placeholder.setAttribute('data-placeholder', 'true');
+            (e.target as HTMLImageElement).parentElement?.appendChild(placeholder);
           }}
         />
       ) : (
-        <div className={styles.placeholder}>📷</div>
+        <ImagePlaceholder />
       )}
       
       {hasDiscount && (

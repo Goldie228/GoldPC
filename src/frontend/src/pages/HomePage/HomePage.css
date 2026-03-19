@@ -29,12 +29,14 @@
 .gridPattern {
   position: absolute;
   inset: 0;
+  z-index: 0;
   background-image: 
     linear-gradient(var(--border) 1px, transparent 1px),
     linear-gradient(90deg, var(--border) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
   -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+  opacity: 0.03;
 }
 
 .glow1 {
@@ -52,7 +54,7 @@
   position: absolute;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(212, 165, 116, 0.06) 0%, transparent 60%);
   bottom: 10%;
   left: 10%;
   filter: blur(80px);
@@ -106,11 +108,12 @@
 }
 
 .heroTitle {
-  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-size: 48px;
   font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.03em;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   margin-bottom: 24px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .heroTitleAccent {
@@ -147,6 +150,7 @@
 
 .statValue {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 1.5rem;
   font-weight: 500;
   color: var(--fg);
@@ -165,20 +169,11 @@
 }
 
 .heroCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(18, 18, 21, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: 3px solid var(--accent);
   padding: 24px;
   position: relative;
-}
-
-.heroCard::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 100%;
-  background: var(--accent);
 }
 
 .cardHeader {
@@ -257,6 +252,7 @@
 
 .buildPrice {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 0.85rem;
   color: var(--accent);
 }
@@ -277,6 +273,7 @@
 
 .totalValue {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 1.25rem;
   font-weight: 500;
 }
@@ -346,10 +343,11 @@
 
 /* Category Card */
 .categoryCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.05);
   padding: 24px;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   text-decoration: none;
@@ -370,7 +368,11 @@
 }
 
 .categoryCard:hover {
-  border-color: var(--border-accent);
+  border-color: rgba(212, 165, 116, 0.2);
+  box-shadow: 
+    0 0 0 1px rgba(212, 165, 116, 0.1),
+    0 8px 24px rgba(212, 165, 116, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.2);
   transform: translateY(-4px);
 }
 
@@ -428,14 +430,19 @@
 
 /* Product Card Styles */
 .productCard {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  transition: all 0.3s;
+  background: var(--bg-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
 }
 
 .productCard:hover {
-  border-color: var(--border-accent);
+  border-color: rgba(212, 165, 116, 0.2);
+  box-shadow: 
+    0 0 0 1px rgba(212, 165, 116, 0.1),
+    0 8px 24px rgba(212, 165, 116, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.2);
   transform: translateY(-4px);
 }
 
@@ -504,6 +511,7 @@
 
 .productPrice {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 1rem;
   font-weight: 500;
   color: var(--accent);

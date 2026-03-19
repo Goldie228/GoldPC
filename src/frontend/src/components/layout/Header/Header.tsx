@@ -58,7 +58,7 @@ export function Header({ cartCount = 0 }: HeaderProps) {
 
   const navLinks = [
     { to: '/catalog', label: 'Каталог' },
-    { to: '/builder', label: 'Конструктор' },
+    { to: '/pc-builder', label: 'Конструктор' },
     { to: '/services', label: 'Сервис' },
     { to: '/about', label: 'О нас' },
   ];

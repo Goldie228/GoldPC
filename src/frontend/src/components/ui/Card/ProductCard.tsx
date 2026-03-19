@@ -59,7 +59,7 @@ export function ProductCard({
           <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
             <rect x="30" y="30" width="40" height="40" rx="2" fill="#121214"/>
-            <circle cx="50" cy="50" r="10" stroke="#d4a574" stroke-width="1" fill="none"/>
+            <circle cx="50" cy="50" r="10" stroke="#d4a574" strokeWidth="1" fill="none"/>
           </svg>
         )}
       </div>

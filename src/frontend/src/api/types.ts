@@ -157,3 +157,64 @@ export interface Cart {
   discount?: number;
   promoCode?: string;
 }
+
+// === Услуги сервисного центра ===
+export type ServiceCategory = 
+  | 'repair'
+  | 'upgrade'
+  | 'diagnostics'
+  | 'assembly'
+  | 'data-recovery'
+  | 'maintenance';
+
+export interface ServicePriceItem {
+  id: Uuid;
+  name: string;
+  description?: string;
+  price: number;
+  priceMax?: number;
+  unit?: string;
+}
+
+export interface Service {
+  id: Uuid;
+  name: string;
+  slug: string;
+  category: ServiceCategory;
+  description: string;
+  shortDescription: string;
+  icon?: string;
+  image?: string;
+  basePrice: number;
+  priceNote?: string;
+  duration: string;
+  warrantyMonths: number;
+  completedCount?: number;
+  isPopular?: boolean;
+  isActive: boolean;
+  priceList?: ServicePriceItem[];
+  features?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ServiceListResponse extends PagedResponse<Service> {}
+
+export interface GetServicesParams {
+  page?: number;
+  pageSize?: number;
+  category?: ServiceCategory;
+  search?: string;
+  isPopular?: boolean;
+}
+
+export interface ServiceRequest {
+  serviceId: Uuid;
+  customerId?: Uuid;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  deviceInfo?: string;
+  problemDescription?: string;
+  preferredDate?: string;
+}

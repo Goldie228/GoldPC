@@ -13,10 +13,10 @@
   --bg-elevated: #121214;
   --bg-card: #18181b;
 
-  /* Foreground Colors */
+  /* Foreground Colors - WCAG AA compliant */
   --fg: #fafafa;
-  --fg-muted: #71717a;
-  --fg-dim: #52525b;
+  --fg-muted: #a1a1aa;      /* Contrast 7.2:1 on dark bg - AA/AAA */
+  --fg-dim: #949494;        /* Contrast 6.3:1 on dark bg - AA compliant */
 
   /* Accent Colors */
   --accent: #d4a574;
@@ -24,7 +24,7 @@
   --accent-glow: rgba(212, 165, 116, 0.15);
 
   /* Border Colors */
-  --border: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.10);   /* Increased visibility on dark backgrounds */
   --border-accent: rgba(212, 165, 116, 0.2);
 
   /* Border Radius */
@@ -131,4 +131,58 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.text-muted {
+  color: var(--fg-muted);
+}
+
+/* ===== TYPOGRAPHY HIERARCHY ===== */
+
+/* Monospace font for numeric data with tabular figures */
+.font-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Headings hierarchy */
+h1, .h1 {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+h2, .h2 {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+h3, .h3 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+/* Responsive heading adjustments */
+@media (max-width: 768px) {
+  h1, .h1 {
+    font-size: 36px;
+  }
+  
+  h2, .h2 {
+    font-size: 28px;
+  }
+  
+  h3, .h3 {
+    font-size: 20px;
+  }
+}
+
+/* Accent text color utility */
+.text-accent {
+  color: var(--accent);
 }

@@ -1,0 +1,128 @@
+/* ========================================
+   ServerErrorPage Styles
+   GoldPC Design System
+   Based on prototypes/error.html
+   ======================================== */
+
+.server-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 68px); /* Account for header */
+  padding: 24px;
+  background: var(--bg);
+}
+
+.server-error__card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 48px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Error Icon with Red Accent */
+.server-error__icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  margin: 0 auto 24px;
+}
+
+.server-error__icon svg {
+  width: 28px;
+  height: 28px;
+  color: #ef4444;
+}
+
+.server-error__title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+
+.server-error__message {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--fg-muted);
+  margin-bottom: 32px;
+}
+
+/* Error ID Code */
+.server-error__code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--fg-dim);
+  padding: 12px 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  margin-bottom: 32px;
+}
+
+.server-error__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.server-error__btn-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* ========================================
+   Responsive Styles
+   ======================================== */
+
+@media (max-width: 480px) {
+  .server-error {
+    padding: 16px;
+  }
+
+  .server-error__card {
+    padding: 32px 24px;
+  }
+
+  .server-error__title {
+    font-size: 1.25rem;
+  }
+
+  .server-error__message {
+    font-size: 0.85rem;
+  }
+}
+
+/* ========================================
+   Animation (subtle entrance)
+   ======================================== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.server-error__card {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .server-error__card {
+    animation: none;
+  }
+}

@@ -42,7 +42,7 @@
   font-weight: 400;
   color: var(--fg, #fafafa);
   background: var(--bg-elevated, #121214);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--border-accent, rgba(212, 165, 116, 0.3));
   border-radius: var(--radius, 4px);
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;

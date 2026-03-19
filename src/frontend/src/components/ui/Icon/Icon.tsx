@@ -71,6 +71,13 @@ import {
   Zap,
   Building2,
   Briefcase,
+  Wrench,
+  TrendingUp,
+  Database,
+  Box,
+  Sun,
+  ShieldCheck,
+  Users,
 } from 'lucide-react';
 import React from 'react';
 import type { CSSProperties } from 'react';
@@ -150,6 +157,14 @@ const iconMap = {
   zap: Zap,
   building: Building2,
   briefcase: Briefcase,
+  // Services
+  wrench: Wrench,
+  'trending-up': TrendingUp,
+  database: Database,
+  box: Box,
+  sun: Sun,
+  'shield-check': ShieldCheck,
+  users: Users,
 } as const;
 
 /** All available icon names */

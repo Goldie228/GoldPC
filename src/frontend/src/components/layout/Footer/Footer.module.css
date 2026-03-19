@@ -5,7 +5,8 @@
 
 .footer {
   padding: 80px 24px 40px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: #09090b;
+  border-top: 1px solid var(--border);
 }
 
 .container {
@@ -95,6 +96,32 @@
 
 .link:hover {
   color: #fafafa;
+}
+
+/* Disabled/placeholder links */
+.disabledLink {
+  font-size: 0.85rem;
+  color: #71717a;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.disabledSocialLink {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #52525b;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.disabledSocialLink svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* Bottom Section */

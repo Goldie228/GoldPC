@@ -16,6 +16,10 @@ export type { Product, Uuid } from './useProduct';
 export { useCategories, categoriesKeys } from './useCategories';
 export type { Category } from './useCategories';
 
+// Services
+export { useServices, useService, useServiceBySlug, servicesKeys, servicesApi } from './useServices';
+export type { ServiceListResponse, GetServicesParams, Service } from './useServices';
+
 // PC Builder
 export { usePCBuilder, PC_BUILDER_SLOTS } from './usePCBuilder';
 export type {

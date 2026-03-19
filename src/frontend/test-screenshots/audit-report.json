@@ -1,0 +1,92 @@
+[
+  {
+    "name": "home",
+    "url": "http://localhost:5180/",
+    "screenshotPath": "/data/C#/1/2/3/4/5/6/7/kursovaya/src/frontend/test-screenshots/home-full.png",
+    "isEmpty": true,
+    "hasContent": false,
+    "textLength": 0,
+    "elementCount": 0,
+    "diagnosis": "⚠️ СТРАНИЦА ПУСТАЯ или почти пустая! MainLayout не загрузился. React не смонтировался (root пустой). Нет дочерних элементов в root. Найдено ошибок: 2.",
+    "errors": [
+      "Request failed: http://localhost:5180/@vite/client - net::ERR_ABORTED",
+      "missing ) after argument list",
+      "Request failed: http://localhost:5180/@vite/client - net::ERR_ABORTED",
+      "missing ) after argument list",
+      "Request failed: http://localhost:5180/@vite/client - net::ERR_ABORTED",
+      "missing ) after argument list",
+      "Request failed: http://localhost:5180/@vite/client - net::ERR_ABORTED",
+      "missing ) after argument list"
+    ],
+    "consoleMessages": [
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "rootContent": "empty"
+  },
+  {
+    "name": "catalog",
+    "url": "http://localhost:5180/catalog",
+    "screenshotPath": "/data/C#/1/2/3/4/5/6/7/kursovaya/src/frontend/test-screenshots/catalog-full.png",
+    "isEmpty": true,
+    "hasContent": false,
+    "textLength": 0,
+    "elementCount": 0,
+    "diagnosis": "⚠️ СТРАНИЦА ПУСТАЯ или почти пустая! MainLayout не загрузился. React не смонтировался (root пустой). Нет дочерних элементов в root. Найдено ошибок: 2.",
+    "errors": [
+      "Request failed: http://localhost:5180/@vite/client - net::ERR_ABORTED",
+      "missing ) after argument list",
+      "Request failed: http://localhost:5180/@vite/client - net::ERR_ABORTED",
+      "missing ) after argument list",
+      "Request failed: http://localhost:5180/@vite/client - net::ERR_ABORTED",
+      "missing ) after argument list"
+    ],
+    "consoleMessages": [
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "rootContent": "empty"
+  },
+  {
+    "name": "login",
+    "url": "http://localhost:5180/login",
+    "screenshotPath": "/data/C#/1/2/3/4/5/6/7/kursovaya/src/frontend/test-screenshots/login-full.png",
+    "isEmpty": true,
+    "hasContent": false,
+    "textLength": 0,
+    "elementCount": 0,
+    "diagnosis": "⚠️ СТРАНИЦА ПУСТАЯ или почти пустая! MainLayout не загрузился. React не смонтировался (root пустой). Нет дочерних элементов в root. Найдено ошибок: 2.",
+    "errors": [
+      "Request failed: http://localhost:5180/@vite/client - net::ERR_ABORTED",
+      "missing ) after argument list",
+      "Request failed: http://localhost:5180/@vite/client - net::ERR_ABORTED",
+      "missing ) after argument list"
+    ],
+    "consoleMessages": [
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "rootContent": "empty"
+  },
+  {
+    "name": "pc-builder",
+    "url": "http://localhost:5180/pc-builder",
+    "screenshotPath": "/data/C#/1/2/3/4/5/6/7/kursovaya/src/frontend/test-screenshots/pc-builder-full.png",
+    "isEmpty": true,
+    "hasContent": false,
+    "textLength": 0,
+    "elementCount": 0,
+    "diagnosis": "⚠️ СТРАНИЦА ПУСТАЯ или почти пустая! MainLayout не загрузился. React не смонтировался (root пустой). Нет дочерних элементов в root. Найдено ошибок: 2.",
+    "errors": [
+      "Request failed: http://localhost:5180/@vite/client - net::ERR_ABORTED",
+      "missing ) after argument list"
+    ],
+    "consoleMessages": [
+      "[error] Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "rootContent": "empty"
+  }
+]

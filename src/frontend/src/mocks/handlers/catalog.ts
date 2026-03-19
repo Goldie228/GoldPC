@@ -494,8 +494,8 @@ function generateCategory(index: number): Category {
 // === Handlers ===
 
 export const catalogHandlers = [
-  // GET /api/products - список продуктов с фильтрацией и пагинацией
-  http.get('/api/products', async ({ request }) => {
+  // GET /api/v1/catalog/products - список продуктов с фильтрацией и пагинацией
+  http.get('/api/v1/catalog/products', async ({ request }) => {
     await delay(faker.number.int({ min: 50, max: 200 }));
 
     const url = new URL(request.url);
@@ -576,8 +576,8 @@ export const catalogHandlers = [
     return HttpResponse.json(response);
   }),
 
-  // GET /api/products/:id - получение продукта по ID
-  http.get('/api/products/:id', async ({ params }) => {
+  // GET /api/v1/catalog/products/:id - получение продукта по ID
+  http.get('/api/v1/catalog/products/:id', async ({ params }) => {
     await delay(faker.number.int({ min: 50, max: 150 }));
 
     const { id } = params;
@@ -595,16 +595,16 @@ export const catalogHandlers = [
     return HttpResponse.json(product);
   }),
 
-  // GET /api/categories - список категорий
-  http.get('/api/categories', async () => {
+  // GET /api/v1/catalog/categories - список категорий
+  http.get('/api/v1/catalog/categories', async () => {
     await delay(faker.number.int({ min: 30, max: 100 }));
 
     const categoriesList = categories.map((_, index) => generateCategory(index));
     return HttpResponse.json(categoriesList);
   }),
 
-  // GET /api/categories/:slug - получение категории по slug
-  http.get('/api/categories/:slug', async ({ params }) => {
+  // GET /api/v1/catalog/categories/:slug - получение категории по slug
+  http.get('/api/v1/catalog/categories/:slug', async ({ params }) => {
     await delay(faker.number.int({ min: 30, max: 100 }));
 
     const { slug } = params;

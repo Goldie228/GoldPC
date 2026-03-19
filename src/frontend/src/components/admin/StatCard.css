@@ -5,19 +5,23 @@
  */
 
 .stat-card {
-  background: var(--bg-card, #1a1a1a);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  background: var(--bg-elevated, #121214);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.05);
   border-radius: 12px;
   padding: 24px;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .stat-card:hover {
-  border-color: var(--border-accent, rgba(212, 175, 55, 0.3));
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border-color: rgba(212, 165, 116, 0.2);
+  box-shadow: 
+    0 0 0 1px rgba(212, 165, 116, 0.1),
+    0 8px 24px rgba(212, 165, 116, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px);
 }
 
 /* Акцентная полоса слева (золотая) */

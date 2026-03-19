@@ -6,7 +6,7 @@
 import { http, HttpResponse, delay } from 'msw';
 import { faker } from '@faker-js/faker/locale/ru';
 import type { User, Product, ProductCategory, PaginationMeta, PagedResponse } from '../../api/types';
-import type { UserRole, UpdateUserRoleRequest, DashboardStats, StatsResponse } from '../../api/admin';
+import type { UserRole, UpdateUserRoleRequest, DashboardStats, StatsResponse, DictionaryCategory, DictionaryManufacturer, DictionaryItem, SiteSettings } from '../../api/admin';
 
 // === Генераторы данных ===
 
@@ -56,6 +56,111 @@ let adminProductsCache: Product[] | null = null;
 const categories: ProductCategory[] = [
   'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'peripherals'
 ];
+
+// === Кэш справочников ===
+let categoriesCache: DictionaryCategory[] | null = null;
+let manufacturersCache: DictionaryManufacturer[] | null = null;
+let attributesCache: DictionaryItem[] | null = null;
+
+const categoryNames = [
+  { name: 'Процессоры', slug: 'processors' },
+  { name: 'Видеокарты', slug: 'graphics-cards' },
+  { name: 'Материнские платы', slug: 'motherboards' },
+  { name: 'Оперативная память', slug: 'ram' },
+  { name: 'Накопители SSD', slug: 'ssd' },
+  { name: 'Блоки питания', slug: 'psu' },
+  { name: 'Корпуса', slug: 'cases' },
+  { name: 'Системы охлаждения', slug: 'cooling' },
+  { name: 'Мониторы', slug: 'monitors' },
+  { name: 'Периферия', slug: 'peripherals' },
+];
+
+const manufacturerNames = [
+  { name: 'AMD', country: 'США' },
+  { name: 'Intel', country: 'США' },
+  { name: 'NVIDIA', country: 'США' },
+  { name: 'ASUS', country: 'Тайвань' },
+  { name: 'MSI', country: 'Тайвань' },
+  { name: 'Gigabyte', country: 'Тайвань' },
+  { name: 'Corsair', country: 'США' },
+  { name: 'Samsung', country: 'Южная Корея' },
+  { name: 'Kingston', country: 'США' },
+  { name: 'Seagate', country: 'США' },
+];
+
+const attributeNames = [
+  { name: 'Тактовая частота', slug: 'clock-frequency' },
+  { name: 'Объем памяти', slug: 'memory-capacity' },
+  { name: 'Интерфейс', slug: 'interface' },
+  { name: 'Форм-фактор', slug: 'form-factor' },
+  { name: 'Мощность', slug: 'power' },
+  { name: 'Тип охлаждения', slug: 'cooling-type' },
+];
+
+const getCategoriesCache = (): DictionaryCategory[] => {
+  if (!categoriesCache) {
+    categoriesCache = categoryNames.map((cat, index) => ({
+      id: faker.string.uuid(),
+      name: cat.name,
+      slug: cat.slug,
+      isActive: index !== 6, // "Корпуса" скрыта
+      productCount: faker.number.int({ min: 20, max: 150 }),
+    }));
+  }
+  return categoriesCache;
+};
+
+const getManufacturersCache = (): DictionaryManufacturer[] => {
+  if (!manufacturersCache) {
+    manufacturersCache = manufacturerNames.map((man) => ({
+      id: faker.string.uuid(),
+      name: man.name,
+      slug: man.name.toLowerCase().replace(/\s+/g, '-'),
+      isActive: true,
+      productCount: faker.number.int({ min: 30, max: 200 }),
+      country: man.country,
+    }));
+  }
+  return manufacturersCache;
+};
+
+const getAttributesCache = (): DictionaryItem[] => {
+  if (!attributesCache) {
+    attributesCache = attributeNames.map((attr) => ({
+      id: faker.string.uuid(),
+      name: attr.name,
+      slug: attr.slug,
+      isActive: true,
+    }));
+  }
+  return attributesCache;
+};
+
+// === Кэш настроек ===
+let settingsCache: SiteSettings | null = null;
+
+const getSettingsCache = (): SiteSettings => {
+  if (!settingsCache) {
+    settingsCache = {
+      siteName: 'GoldPC',
+      adminEmail: 'admin@goldpc.by',
+      storeAddress: 'Минск, ул. Примерная, 1',
+      phone: '+375 (29) 123-45-67',
+      workingHours: 'Пн-Пт: 9:00-20:00, Сб-Вс: 10:00-18:00',
+      freeDeliveryThreshold: 500,
+      deliveryCost: 15,
+      deliveryTime: '1-3',
+      twoFactorRequired: true,
+      auditLogging: true,
+      loginNotifications: false,
+      orderEmailNotifications: true,
+      smsNotifications: true,
+      lowStockNotifications: true,
+      maintenanceMode: false,
+    };
+  }
+  return settingsCache;
+};
 
 const generateAdminProduct = (): Product => {
   const category = faker.helpers.arrayElement(categories);
@@ -243,6 +348,57 @@ export const adminHandlers = [
     return HttpResponse.json(users[userIndex]);
   }),
 
+  // PUT /api/v1/admin/users/:id - полное обновление пользователя
+  http.put('/api/v1/admin/users/:id', async ({ params, request }) => {
+    await delay(faker.number.int({ min: 100, max: 200 }));
+
+    const { id } = params;
+    const body = await request.json() as Partial<User>;
+    const users = getUsersCache();
+    const userIndex = users.findIndex((u) => u.id === id);
+
+    if (userIndex === -1) {
+      return new HttpResponse(
+        JSON.stringify({ error: 'User not found', message: `User with ID ${id} not found` }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Обновляем только переданные поля
+    users[userIndex] = {
+      ...users[userIndex],
+      ...(body.email !== undefined && { email: body.email }),
+      ...(body.firstName !== undefined && { firstName: body.firstName }),
+      ...(body.lastName !== undefined && { lastName: body.lastName }),
+      ...(body.phone !== undefined && { phone: body.phone }),
+      ...(body.role !== undefined && { role: body.role }),
+      ...(body.isActive !== undefined && { isActive: body.isActive }),
+    };
+
+    return HttpResponse.json(users[userIndex]);
+  }),
+
+  // DELETE /api/v1/admin/users/:id - удаление пользователя
+  http.delete('/api/v1/admin/users/:id', async ({ params }) => {
+    await delay(faker.number.int({ min: 100, max: 200 }));
+
+    const { id } = params;
+    const users = getUsersCache();
+    const userIndex = users.findIndex((u) => u.id === id);
+
+    if (userIndex === -1) {
+      return new HttpResponse(
+        JSON.stringify({ error: 'User not found', message: `User with ID ${id} not found` }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Удаляем пользователя из кэша
+    users.splice(userIndex, 1);
+
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   // === CATALOG MANAGEMENT ===
 
   // GET /api/v1/admin/products - список всех продуктов
@@ -398,6 +554,166 @@ export const adminHandlers = [
     };
 
     return HttpResponse.json(response);
+  }),
+
+  // === DICTIONARIES ===
+
+  // GET /api/v1/admin/dictionaries/categories - список категорий
+  http.get('/api/v1/admin/dictionaries/categories', async () => {
+    await delay(faker.number.int({ min: 100, max: 200 }));
+    return HttpResponse.json(getCategoriesCache());
+  }),
+
+  // GET /api/v1/admin/dictionaries/manufacturers - список производителей
+  http.get('/api/v1/admin/dictionaries/manufacturers', async () => {
+    await delay(faker.number.int({ min: 100, max: 200 }));
+    return HttpResponse.json(getManufacturersCache());
+  }),
+
+  // GET /api/v1/admin/dictionaries/attributes - список характеристик
+  http.get('/api/v1/admin/dictionaries/attributes', async () => {
+    await delay(faker.number.int({ min: 100, max: 200 }));
+    return HttpResponse.json(getAttributesCache());
+  }),
+
+  // POST /api/v1/admin/dictionaries/:type - создание записи
+  http.post('/api/v1/admin/dictionaries/:type', async ({ params, request }) => {
+    await delay(faker.number.int({ min: 100, max: 200 }));
+
+    const { type } = params as { type: 'categories' | 'manufacturers' | 'attributes' };
+    const body = await request.json() as { name: string; slug: string };
+
+    const newItem: DictionaryItem = {
+      id: faker.string.uuid(),
+      name: body.name,
+      slug: body.slug || body.name.toLowerCase().replace(/\s+/g, '-'),
+      isActive: true,
+    };
+
+    switch (type) {
+      case 'categories':
+        getCategoriesCache().push({ ...newItem, productCount: 0 } as DictionaryCategory);
+        break;
+      case 'manufacturers':
+        getManufacturersCache().push({ ...newItem, productCount: 0 } as DictionaryManufacturer);
+        break;
+      case 'attributes':
+        getAttributesCache().push(newItem);
+        break;
+    }
+
+    return HttpResponse.json(newItem, { status: 201 });
+  }),
+
+  // PUT /api/v1/admin/dictionaries/:type/:id - обновление записи
+  http.put('/api/v1/admin/dictionaries/:type/:id', async ({ params, request }) => {
+    await delay(faker.number.int({ min: 100, max: 200 }));
+
+    const { type, id } = params as { type: 'categories' | 'manufacturers' | 'attributes'; id: string };
+    const body = await request.json() as Partial<DictionaryItem>;
+
+    let cache: DictionaryItem[];
+    switch (type) {
+      case 'categories':
+        cache = getCategoriesCache();
+        break;
+      case 'manufacturers':
+        cache = getManufacturersCache();
+        break;
+      case 'attributes':
+        cache = getAttributesCache();
+        break;
+    }
+
+    const index = cache.findIndex((item) => item.id === id);
+    if (index === -1) {
+      return new HttpResponse(
+        JSON.stringify({ error: 'Item not found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    cache[index] = { ...cache[index], ...body };
+    return HttpResponse.json(cache[index]);
+  }),
+
+  // DELETE /api/v1/admin/dictionaries/:type/:id - удаление записи
+  http.delete('/api/v1/admin/dictionaries/:type/:id', async ({ params }) => {
+    await delay(faker.number.int({ min: 100, max: 200 }));
+
+    const { type, id } = params as { type: 'categories' | 'manufacturers' | 'attributes'; id: string };
+
+    let cache: DictionaryItem[];
+    switch (type) {
+      case 'categories':
+        cache = getCategoriesCache();
+        break;
+      case 'manufacturers':
+        cache = getManufacturersCache();
+        break;
+      case 'attributes':
+        cache = getAttributesCache();
+        break;
+    }
+
+    const index = cache.findIndex((item) => item.id === id);
+    if (index === -1) {
+      return new HttpResponse(
+        JSON.stringify({ error: 'Item not found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Помечаем как неактивный вместо удаления
+    cache[index].isActive = false;
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // === SETTINGS ===
+
+  // GET /api/v1/admin/settings - получение настроек
+  http.get('/api/v1/admin/settings', async () => {
+    await delay(faker.number.int({ min: 100, max: 200 }));
+    return HttpResponse.json(getSettingsCache());
+  }),
+
+  // PUT /api/v1/admin/settings - обновление настроек
+  http.put('/api/v1/admin/settings', async ({ request }) => {
+    await delay(faker.number.int({ min: 150, max: 250 }));
+
+    const body = await request.json() as Partial<SiteSettings>;
+    const settings = getSettingsCache();
+
+    // Обновляем настройки
+    Object.assign(settings, body);
+
+    return HttpResponse.json(settings);
+  }),
+
+  // POST /api/v1/admin/settings/reset - сброс настроек
+  http.post('/api/v1/admin/settings/reset', async () => {
+    await delay(faker.number.int({ min: 100, max: 200 }));
+
+    // Сбрасываем к значению по умолчанию
+    settingsCache = {
+      siteName: 'GoldPC',
+      adminEmail: 'admin@goldpc.by',
+      storeAddress: 'Минск, ул. Примерная, 1',
+      phone: '+375 (29) 123-45-67',
+      workingHours: 'Пн-Пт: 9:00-20:00, Сб-Вс: 10:00-18:00',
+      freeDeliveryThreshold: 500,
+      deliveryCost: 15,
+      deliveryTime: '1-3',
+      twoFactorRequired: false,
+      auditLogging: true,
+      loginNotifications: false,
+      orderEmailNotifications: true,
+      smsNotifications: true,
+      lowStockNotifications: true,
+      maintenanceMode: false,
+    };
+
+    return HttpResponse.json(settingsCache);
   }),
 ];
 
