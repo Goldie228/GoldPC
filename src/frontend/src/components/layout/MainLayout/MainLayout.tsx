@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom';
 import { Header } from '../Header';
 import { Footer } from '../Footer';
 import { ToastContainer } from '../../ui/Toast';
+import { ScrollToTop } from '../../ui';
 import './MainLayout.css';
 
 /**
@@ -23,6 +24,7 @@ export function MainLayout() {
       </main>
       <Footer />
       <ToastContainer />
+      <ScrollToTop threshold={300} />
     </div>
   );
 }

@@ -24,24 +24,32 @@
 }
 
 /* ========================================
-   Primary Button (Gold)
+   Primary Button (Polished Gold Metal)
    ======================================== */
 
 .btn-primary,
 .primary {
-  background: var(--accent);
-  color: var(--bg);
+  background: linear-gradient(145deg, #d4a574 0%, #b88a58 100%);
+  color: #09090b;
   font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.3), 0 4px 20px rgba(212, 165, 116, 0.15);
 }
 
 .btn-primary:hover:not(:disabled),
 .primary:hover:not(:disabled) {
-  background: var(--accent-bright);
+  background: linear-gradient(145deg, #e6b98b 0%, #c99763 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 3px rgba(255,255,255,0.4), 0 6px 30px rgba(212, 165, 116, 0.35);
   transform: scale(1.02);
 }
 
+.btn-primary:active:not(:disabled),
 .primary:active:not(:disabled) {
-  transform: translateY(0);
+  background: linear-gradient(145deg, #c99763 0%, #a67a4a 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 2px 10px rgba(212, 165, 116, 0.2);
+  transform: translateY(1px);
 }
 
 /* Icon animation on hover */
@@ -59,17 +67,19 @@
 
 .ghost {
   background: transparent;
-  color: var(--fg);
-  border: 1px solid var(--border);
+  color: var(--accent);
+  border: 1px solid rgba(212, 165, 116, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .ghost:hover:not(:disabled) {
-  border-color: var(--fg-dim);
-  background: var(--bg-card);
+  border-color: rgba(212, 165, 116, 0.65);
+  background: rgba(212, 165, 116, 0.08);
+  color: var(--accent-bright);
 }
 
 .ghost:active:not(:disabled) {
-  background: var(--bg-elevated);
+  background: rgba(212, 165, 116, 0.12);
 }
 
 /* ========================================

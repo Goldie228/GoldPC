@@ -80,7 +80,7 @@ export function AccountPage() {
               </div>
               <div className="account-stats__item">
                 <span className="account-stats__value">
-                  {user.totalSpent.toLocaleString('ru-RU')} ₽
+                  {user.totalSpent.toLocaleString('ru-BY')} BYN
                 </span>
                 <span className="account-stats__label">Потрачено</span>
               </div>
@@ -104,7 +104,7 @@ export function AccountPage() {
                       {order.status}
                     </span>
                     <span className="order-item__total">
-                      {order.total.toLocaleString('ru-RU')} ₽
+                      {order.total.toLocaleString('ru-BY')} BYN
                     </span>
                   </div>
                 ))}
@@ -125,7 +125,7 @@ export function AccountPage() {
                       <span className="build-item__date">{build.date}</span>
                     </div>
                     <span className="build-item__price">
-                      {build.price.toLocaleString('ru-RU')} ₽
+                      {build.price.toLocaleString('ru-BY')} BYN
                     </span>
                     <div className="build-item__actions">
                       <button className="build-item__btn">В корзину</button>

@@ -43,6 +43,8 @@ class PerformanceMonitor {
   private metrics: Partial<PerformanceMetrics> = {};
   private isInitialized: boolean = false;
   private analyticsEndpoint: string = '/api/v1/analytics/performance';
+  private shouldLogDev: boolean =
+    import.meta.env.DEV && import.meta.env.VITE_ENABLE_PERFORMANCE_LOGS === 'true';
 
   /**
    * Инициализирует мониторинг производительности
@@ -94,6 +96,16 @@ class PerformanceMonitor {
       userAgent: navigator.userAgent,
     };
 
+    // В дев-режиме отправка в бэкенд может:
+    // - давать шум в консоли (502/5xx, если сервиса нет)
+    // - ломать "премиальное" впечатление логами
+    // Для бюджета нам важны только локальные замеры (LCP/INP/CLS/FCP/TTFB).
+    const shouldSendAnalytics =
+      !import.meta.env.DEV || import.meta.env.VITE_ENABLE_ANALYTICS === 'true';
+    if (!shouldSendAnalytics) {
+      return;
+    }
+
     // Отправка через sendBeacon для надёжности
     if (navigator.sendBeacon) {
       const data = new FormData();
@@ -107,7 +119,7 @@ class PerformanceMonitor {
     }
 
     // Логирование в режиме разработки
-    if (import.meta.env.DEV) {
+    if (this.shouldLogDev) {
       const budget = PERFORMANCE_BUDGETS[name as keyof PerformanceMetrics];
       const status = value <= budget ? '✅' : '⚠️';
       console.log(
@@ -143,7 +155,7 @@ class PerformanceMonitor {
     const passed = violations.length === 0;
 
     // Логирование в режиме разработки
-    if (import.meta.env.DEV) {
+    if (this.shouldLogDev) {
       if (passed) {
         console.log('[PerformanceMonitor] ✅ All performance budgets passed');
       } else {

@@ -27,7 +27,12 @@ export const catalogApi = {
    * Получить дерево категорий
    */
   async getCategories(): Promise<Category[]> {
-    const response = await api.get<{ data: Category[] }>('/catalog/categories');
-    return response.data.data;
+    const response = await api.get<{ data?: Category[]; categories?: Category[] } | Category[]>('/catalog/categories');
+    // Поддержка разных форматов ответа: { data: [...] }, { categories: [...] } или прямой массив
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return data;
+    }
+    return data?.data || data?.categories || [];
   },
 };

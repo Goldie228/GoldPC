@@ -1,6 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ShoppingCart, User, Menu, X, LogOut, ShoppingBag, Heart } from 'lucide-react';
+import { useCartTotalItems } from '../../../store/cartStore';
+import { useWishlistCount } from '../../../store/wishlistStore';
+import { useAuthStore } from '../../../store/authStore';
+import { useAuthModalStore } from '../../../store/authModalStore';
+import { MiniCart } from './MiniCart';
+import { SearchDropdown } from './SearchDropdown';
 import styles from './Header.module.css';
 
 /**
@@ -17,12 +24,35 @@ import styles from './Header.module.css';
  * Source: prototypes/home.html .header
  */
 
-interface HeaderProps {
-  cartCount?: number;
-}
-
-export function Header({ cartCount = 0 }: HeaderProps) {
+export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [cartFlash, setCartFlash] = useState(false);
+  const cartCount = useCartTotalItems();
+  const wishlistCount = useWishlistCount();
+  const prevCartCountRef = useRef(cartCount);
+  const { isAuthenticated, user, logout } = useAuthStore();
+  const { openLoginModal, openRegisterModal } = useAuthModalStore();
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Flash cart icon when items are added
+  useEffect(() => {
+    if (cartCount > prevCartCountRef.current) {
+      setCartFlash(true);
+      const timer = setTimeout(() => setCartFlash(false), 400);
+      return () => clearTimeout(timer);
+    }
+    prevCartCountRef.current = cartCount;
+  }, [cartCount]);
+
+  const handleCartToggle = () => {
+    setIsCartOpen((prev) => !prev);
+  };
+
+  const handleCartClose = useCallback(() => {
+    setIsCartOpen(false);
+  }, []);
 
   const handleMenuToggle = () => {
     setIsMobileMenuOpen((prev) => !prev);
@@ -31,6 +61,51 @@ export function Header({ cartCount = 0 }: HeaderProps) {
   const handleCloseMenu = useCallback(() => {
     setIsMobileMenuOpen(false);
   }, []);
+
+  const handleProfileDropdownToggle = () => {
+    setIsProfileDropdownOpen((prev) => !prev);
+  };
+
+  const handleProfileDropdownClose = useCallback(() => {
+    setIsProfileDropdownOpen(false);
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    handleProfileDropdownClose();
+  }, [logout]);
+
+  // Close profile dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target as Node)
+      ) {
+        handleProfileDropdownClose();
+      }
+    };
+
+    if (isProfileDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProfileDropdownOpen, handleProfileDropdownClose]);
+
+  // Close profile dropdown on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isProfileDropdownOpen) {
+        handleProfileDropdownClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isProfileDropdownOpen, handleProfileDropdownClose]);
 
   // Close menu on Escape key
   useEffect(() => {
@@ -97,21 +172,130 @@ export function Header({ cartCount = 0 }: HeaderProps) {
 
         {/* Action Buttons */}
         <div className={styles.actions}>
-          {/* Search Button */}
-          <button className={styles.iconBtn} aria-label="Поиск" type="button">
-            <Search />
-          </button>
+          {/* Search Dropdown */}
+          <SearchDropdown />
+
+          {/* Wishlist Button */}
+          <Link
+            to="/wishlist"
+            className={styles.iconBtn}
+            aria-label={`Избранное: ${wishlistCount} товаров`}
+            title="Избранное"
+          >
+            <Heart />
+            {wishlistCount > 0 && <span className={styles.cartBadge}>{wishlistCount}</span>}
+          </Link>
 
           {/* Cart Button */}
-          <Link to="/cart" className={styles.iconBtn} aria-label={`Корзина: ${cartCount} товаров`}>
+          <motion.button
+            className={styles.iconBtn}
+            aria-label={`Корзина: ${cartCount} товаров`}
+            onClick={handleCartToggle}
+            type="button"
+            animate={cartFlash ? {
+              scale: [1, 1.2, 1],
+              color: ['#a1a1aa', '#d4a574', '#a1a1aa']
+            } : {}}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+          >
             <ShoppingCart />
             {cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
-          </Link>
+          </motion.button>
 
-          {/* Profile Button */}
-          <Link to="/account" className={styles.iconBtn} aria-label="Профиль">
-            <User />
-          </Link>
+          {/* Profile Button / Auth Dropdown */}
+          <div className={styles.profileWrapper} ref={profileDropdownRef}>
+            <button
+              className={styles.iconBtn}
+              aria-label={isAuthenticated ? 'Профиль' : 'Войти'}
+              onClick={handleProfileDropdownToggle}
+              aria-expanded={isProfileDropdownOpen}
+              type="button"
+            >
+              <User />
+            </button>
+
+            {/* Profile Dropdown */}
+            {isProfileDropdownOpen && (
+              <div className={styles.profileDropdown}>
+                {!isAuthenticated ? (
+                  // Not authenticated: Show Login and Register
+                  <div className={styles.authButtons}>
+                    <button
+                      className={styles.authBtn}
+                      onClick={() => {
+                        openLoginModal();
+                        handleProfileDropdownClose();
+                      }}
+                      type="button"
+                    >
+                      Войти
+                    </button>
+                    <button
+                      className={`${styles.authBtn} ${styles.authBtnPrimary}`}
+                      onClick={() => {
+                        openRegisterModal();
+                        handleProfileDropdownClose();
+                      }}
+                      type="button"
+                    >
+                      Регистрация
+                    </button>
+                  </div>
+                ) : (
+                  // Authenticated: Show user menu
+                  <>
+                    <div className={styles.profileHeader}>
+                      <div className={styles.profileAvatar}>
+                        {user?.firstName?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                      </div>
+                      <div className={styles.profileInfo}>
+                        <span className={styles.profileName}>
+                          {user?.firstName} {user?.lastName}
+                        </span>
+                        <span className={styles.profileEmail}>{user?.email}</span>
+                      </div>
+                    </div>
+                    <div className={styles.profileDivider} />
+                    <nav className={styles.profileNav}>
+                      <Link
+                        to="/account"
+                        className={styles.profileNavLink}
+                        onClick={handleProfileDropdownClose}
+                      >
+                        <User />
+                        <span>Профиль</span>
+                      </Link>
+                      <Link
+                        to="/account/orders"
+                        className={styles.profileNavLink}
+                        onClick={handleProfileDropdownClose}
+                      >
+                        <ShoppingBag />
+                        <span>Заказы</span>
+                      </Link>
+                      <Link
+                        to="/account/wishlist"
+                        className={styles.profileNavLink}
+                        onClick={handleProfileDropdownClose}
+                      >
+                        <Heart />
+                        <span>Избранное</span>
+                      </Link>
+                    </nav>
+                    <div className={styles.profileDivider} />
+                    <button
+                      className={styles.logoutBtn}
+                      onClick={handleLogout}
+                      type="button"
+                    >
+                      <LogOut />
+                      <span>Выйти</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Mobile Menu Toggle - Hamburger Button */}
           <button
@@ -159,6 +343,11 @@ export function Header({ cartCount = 0 }: HeaderProps) {
 
         {/* Mobile Actions */}
         <div className={styles.mobileActions}>
+          <Link to="/wishlist" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+            <Heart />
+            <span>Избранное</span>
+            {wishlistCount > 0 && <span className={styles.mobileBadge}>{wishlistCount}</span>}
+          </Link>
           <Link to="/cart" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
             <ShoppingCart />
             <span>Корзина</span>
@@ -171,12 +360,15 @@ export function Header({ cartCount = 0 }: HeaderProps) {
         </div>
       </div>
 
-      {/* Overlay Background */}
+      {/* Mobile Overlay Background */}
       <div
         className={`${styles.overlay} ${isMobileMenuOpen ? styles.overlayVisible : ''}`}
         onClick={handleCloseMenu}
         aria-hidden="true"
       />
+
+      {/* MiniCart Dropdown */}
+      <MiniCart isOpen={isCartOpen} onClose={handleCartClose} />
     </>
   );
 }

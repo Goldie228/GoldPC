@@ -160,3 +160,6 @@ site/
 _site/
 </task_progress>
 </write_to_file>
+
+*.turbo/
+*.cursor/

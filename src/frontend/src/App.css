@@ -12,6 +12,27 @@
   flex-direction: column;
   background: var(--bg, #09090b);
   color: var(--fg, #fafafa);
+  position: relative;
+  isolation: isolate;
+  overflow-x: hidden;
+}
+
+.app::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Controlled grain/noise overlay (luxury texture, not a flat gradient) */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+}
+
+.app > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Header */

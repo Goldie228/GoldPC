@@ -227,7 +227,7 @@ export function PCBuilderPage() {
           </a>
           <div className="pc-builder__total-price">
             <span className="pc-builder__total-label">Итого</span>
-            <span className="pc-builder__total-value">{totalPrice.toLocaleString('ru-RU')} BYN</span>
+            <span className="pc-builder__total-value">{totalPrice.toLocaleString('ru-BY')} BYN</span>
           </div>
         </div>
       </header>
@@ -312,7 +312,7 @@ export function PCBuilderPage() {
                       <span className="pc-builder__summary-label">{slot.label}</span>
                       <span className="pc-builder__summary-price">
                         {product 
-                          ? `${product.price.toLocaleString('ru-RU')} BYN`
+                          ? `${product.price.toLocaleString('ru-BY')} BYN`
                           : '—'}
                       </span>
                     </div>
@@ -325,7 +325,7 @@ export function PCBuilderPage() {
               <div className="pc-builder__summary-total">
                 <span>Итого:</span>
                 <span className="pc-builder__summary-total-value">
-                  {totalPrice.toLocaleString('ru-RU')} BYN
+                  {totalPrice.toLocaleString('ru-BY')} BYN
                 </span>
               </div>
 
@@ -371,7 +371,7 @@ export function PCBuilderPage() {
               <line x1="3" y1="6" x2="21" y2="6"/>
             </svg>
             <span>Оформить</span>
-            <span className="pc-builder__checkout-price">{totalPrice.toLocaleString('ru-RU')} BYN</span>
+            <span className="pc-builder__checkout-price">{totalPrice.toLocaleString('ru-BY')} BYN</span>
           </button>
         </div>
       </div>
@@ -438,7 +438,7 @@ export function PCBuilderPage() {
                   </div>
                 </div>
                 <div className="pc-builder__modal-product-price">
-                  {product.price.toLocaleString('ru-RU')} BYN
+                  {product.price.toLocaleString('ru-BY')} BYN
                 </div>
               </div>
             ))}

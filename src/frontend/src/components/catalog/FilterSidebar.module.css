@@ -1,63 +1,176 @@
 /* ========================================
-   FilterSidebar Styles - Dark Gold Theme
+   FilterSidebar Styles - Premium Gold Theme
    ======================================== */
 
 .sidebar {
   position: sticky;
   top: 100px;
-  height: fit-content;
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
-  background: var(--bg-card, #18181b);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
-  padding: 20px;
+  height: auto;
+  max-height: none;
+  overflow-y: visible;
+  overflow-x: visible; /* allow RangeSlider thumb/tooltips to overflow premium container */
+  /* Premium glass effect */
+  background: rgba(18, 18, 21, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  /* Elegant border styling */
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  /* Gold accent border-left (transparent by default) */
+  border-left: 2px solid transparent;
+  padding: 20px 16px;
   width: 100%;
+  /* Premium shadow */
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: border-left-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Gold accent on hover/focus within */
+.sidebar:hover,
+.sidebar:focus-within {
+  border-left-color: rgba(212, 165, 116, 0.6);
+  box-shadow: 
+    0 4px 32px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(212, 165, 116, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Premium scrollbar styling */
 .sidebar::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 
 .sidebar::-webkit-scrollbar-track {
-  background: var(--bg, #09090b);
+  background: transparent;
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background: var(--fg-dim, #52525b);
+  background: rgba(212, 165, 116, 0.2);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 165, 116, 0.4);
 }
 
 .sidebarHeader {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+
+/* Gold accent line under header */
+.sidebarHeader::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(212, 165, 116, 0.8) 0%,
+    rgba(212, 165, 116, 0.2) 100%
+  );
+  border-radius: 1px;
 }
 
 .sidebarTitle {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
+  gap: 10px;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--fg, #fafafa);
   margin: 0;
+  letter-spacing: 0.02em;
 }
 
 .sidebarTitle svg {
   color: var(--accent, #d4a574);
+  filter: drop-shadow(0 0 4px rgba(212, 165, 116, 0.3));
 }
 
 /* ========================================
-   Filter Group
+   Filter Group - Premium Dividers & Hover
    ======================================== */
 
 .filterGroup {
   margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  padding: 10px 14px;
+  padding-bottom: 12px;
+  margin-left: -14px;
+  margin-right: -14px;
+  /* Enhanced visual separator line */
+  border-bottom: 1px solid rgba(212, 165, 116, 0.15);
+  /* Gold border accent on hover/focus */
+  border-left: 2px solid transparent;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  transition: all 0.25s ease;
+  position: relative;
+  /* Add subtle spacing between groups */
+  margin-top: 8px;
+}
+
+/* Add a subtle gradient line separator */
+.filterGroup::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(212, 165, 116, 0.3) 20%,
+    rgba(212, 165, 116, 0.3) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Subtle gradient overlay on hover */
+.filterGroup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 165, 116, 0.03) 0%,
+    transparent 50%
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.filterGroup:hover::before,
+.filterGroup:focus-within::before {
+  opacity: 1;
+}
+
+/* Gold accent border on hover/focus */
+.filterGroup:hover,
+.filterGroup:focus-within {
+  border-left-color: rgba(212, 165, 116, 0.4);
+  border-top-color: rgba(255, 255, 255, 0.03);
+  border-right-color: rgba(255, 255, 255, 0.03);
+  background: rgba(212, 165, 116, 0.02);
 }
 
 .filterGroup:last-of-type {
   border-bottom: none;
   margin-bottom: 0;
-  padding-bottom: 0;
+  padding-bottom: 8px;
 }
 
 .filterHeader {
@@ -75,6 +188,18 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   transition: color 0.2s;
+}
+
+.filterHeaderOpen {
+  color: var(--accent, #d4a574);
+}
+
+.filterHeaderOpen .filterHeaderChevron {
+  color: var(--accent, #d4a574);
+}
+
+.filterHeaderOpen .filterHeaderIcon {
+  color: var(--accent, #d4a574);
 }
 
 .filterHeader:hover {
@@ -105,22 +230,24 @@
 .filterContent {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease-out;
+  padding-top: 0;
+  transition: max-height 0.25s ease-out, padding 0.2s ease;
 }
 
 .filterContent.open {
-  max-height: 500px;
+  max-height: 1200px; /* достаточная высота для любого блока фильтров */
+  overflow: visible;
   padding-top: 12px;
 }
 
 /* ========================================
-   Category List
+   Category List - Premium Hover States
    ======================================== */
 
 .categoryList {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
 }
 
 .categoryItem {
@@ -128,25 +255,59 @@
   align-items: center;
   width: 100%;
   padding: 10px 12px;
+  padding-left: 24px;
   background: transparent;
   border: none;
+  border-left: 2px solid transparent;
   cursor: pointer;
   font-family: inherit;
   font-size: 0.8rem;
   color: var(--fg-muted, #71717a);
   text-align: left;
-  transition: all 0.2s;
-  border-radius: 4px;
+  transition: all 0.2s ease;
+  border-radius: 0 4px 4px 0;
+  position: relative;
+}
+
+.categoryItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 0;
+  background: var(--accent, #d4a574);
+  transition: height 0.2s ease;
+  border-radius: 1px;
 }
 
 .categoryItem:hover {
-  background: var(--bg-elevated, #121214);
+  background: rgba(212, 165, 116, 0.05);
   color: var(--fg, #fafafa);
+  padding-left: 16px;
+}
+
+.categoryItem:hover::before {
+  height: 60%;
 }
 
 .categoryItem.active {
-  background: var(--accent-dim, rgba(212, 165, 116, 0.15));
+  background: transparent;
   color: var(--accent, #d4a574);
+  padding-left: 24px;
+  font-weight: 600;
+  border-left: 2px solid var(--accent, #d4a574);
+}
+
+.categoryItem.active::before {
+  height: 100%;
+  box-shadow: 0 0 12px rgba(212, 165, 116, 0.6);
+}
+
+/* Enhanced active state with subtle glow */
+.categoryItem.active .categoryName {
+  text-shadow: 0 0 20px rgba(212, 165, 116, 0.5);
 }
 
 .categoryName {
@@ -157,10 +318,20 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.65rem;
   color: var(--fg-dim, #52525b);
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.categoryItem:hover .categoryCount,
+.categoryItem.active .categoryCount {
+  background: rgba(212, 165, 116, 0.1);
+  color: var(--accent, #d4a574);
 }
 
 /* ========================================
-   Price Inputs
+   Price Inputs - Premium Style
    ======================================== */
 
 .priceInputs {
@@ -171,6 +342,7 @@
 
 .inputGroup {
   flex: 1;
+  position: relative;
 }
 
 .inputLabel {
@@ -181,23 +353,35 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 6px;
+  transition: color 0.2s;
+}
+
+.inputGroup:focus-within .inputLabel {
+  color: rgba(212, 165, 116, 0.7);
 }
 
 .priceInput {
   width: 100%;
   padding: 10px 12px;
-  background: var(--bg-elevated, #121214);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  background: rgba(18, 18, 21, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--fg, #fafafa);
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
   border-radius: 4px;
+}
+
+.priceInput:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(18, 18, 21, 0.8);
 }
 
 .priceInput:focus {
   outline: none;
   border-color: var(--accent, #d4a574);
+  background: rgba(18, 18, 21, 0.9);
+  box-shadow: 0 0 12px rgba(212, 165, 116, 0.15);
 }
 
 .priceInput::placeholder {
@@ -208,29 +392,33 @@
   font-size: 0.8rem;
   color: var(--fg-dim, #52525b);
   margin-bottom: 10px;
+  opacity: 0.5;
 }
 
 /* ========================================
-   Stock Options
+   Stock Options - Premium Style
    ======================================== */
 
 .stockOptions {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .stockOption {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: 10px 12px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
   border-radius: 4px;
+  border-left: 2px solid transparent;
+  position: relative;
 }
 
 .stockOption:hover {
-  background: var(--bg-elevated, #121214);
+  background: rgba(212, 165, 116, 0.05);
+  border-left-color: rgba(212, 165, 116, 0.3);
 }
 
 .stockRadio {
@@ -242,13 +430,18 @@
   align-items: center;
   justify-content: center;
   margin-right: 12px;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
   flex-shrink: 0;
+}
+
+.stockOption:hover .stockRadio {
+  border-color: rgba(212, 165, 116, 0.5);
 }
 
 .stockOption.checked .stockRadio {
   border-color: var(--accent, #d4a574);
   background: var(--accent-dim, rgba(212, 165, 116, 0.15));
+  box-shadow: 0 0 8px rgba(212, 165, 116, 0.3);
 }
 
 .checkIcon {
@@ -264,14 +457,179 @@
 .stockLabel {
   font-size: 0.8rem;
   color: var(--fg-muted, #71717a);
+  transition: color 0.2s;
 }
 
 .stockOption:hover .stockLabel {
   color: var(--fg, #fafafa);
 }
 
+.stockOption.checked .stockLabel {
+  color: var(--accent, #d4a574);
+}
+
 /* ========================================
-   Reset Button
+   Checkbox List - Premium Style
+   ======================================== */
+
+.checkboxList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checkboxItem {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  border-left: 2px solid transparent;
+  position: relative;
+}
+
+.checkboxItem:hover {
+  background: rgba(212, 165, 116, 0.05);
+  border-left-color: rgba(212, 165, 116, 0.3);
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--fg-dim, #52525b);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.checkboxItem:hover .checkbox {
+  border-color: rgba(212, 165, 116, 0.5);
+}
+
+.checkboxItem.checked .checkbox {
+  border-color: var(--accent, #d4a574);
+  background: var(--accent, #d4a574);
+  box-shadow: 0 0 8px rgba(212, 165, 116, 0.3);
+}
+
+.checkIcon {
+  opacity: 0;
+  color: #121215;
+  transition: opacity 0.2s;
+}
+
+.checkboxItem.checked .checkIcon {
+  opacity: 1;
+}
+
+.checkboxLabel {
+  font-size: 0.8rem;
+  color: var(--fg-muted, #71717a);
+  transition: color 0.2s;
+}
+
+.checkboxItem:hover .checkboxLabel {
+  color: var(--fg, #fafafa);
+}
+
+.checkboxItem.checked .checkboxLabel {
+  color: var(--accent, #d4a574);
+}
+
+/* ========================================
+   Rating Options - Premium Style
+   ======================================== */
+
+.ratingOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ratingOption {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  border-left: 2px solid transparent;
+  position: relative;
+}
+
+.ratingOption:hover {
+  background: rgba(212, 165, 116, 0.05);
+  border-left-color: rgba(212, 165, 116, 0.3);
+}
+
+.ratingRadio {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--fg-dim, #52525b);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ratingOption:hover .ratingRadio {
+  border-color: rgba(212, 165, 116, 0.5);
+}
+
+.ratingOption.checked .ratingRadio {
+  border-color: var(--accent, #d4a574);
+  background: var(--accent-dim, rgba(212, 165, 116, 0.15));
+  box-shadow: 0 0 8px rgba(212, 165, 116, 0.3);
+}
+
+.ratingOption .checkIcon {
+  opacity: 0;
+}
+
+.ratingOption.checked .checkIcon {
+  opacity: 1;
+}
+
+.ratingStars {
+  display: flex;
+  gap: 2px;
+  margin-right: 8px;
+}
+
+.starFilled {
+  color: var(--accent, #d4a574);
+  filter: drop-shadow(0 0 2px rgba(212, 165, 116, 0.5));
+}
+
+.starEmpty {
+  color: var(--fg-dim, #52525b);
+  opacity: 0.3;
+}
+
+.ratingLabel {
+  font-size: 0.8rem;
+  color: var(--fg-muted, #71717a);
+  transition: color 0.2s;
+}
+
+.ratingOption:hover .ratingLabel {
+  color: var(--fg, #fafafa);
+}
+
+.ratingOption.checked .ratingLabel {
+  color: var(--accent, #d4a574);
+}
+
+/* ========================================
+   Reset Button - Premium Style
    ======================================== */
 
 .resetBtn {
@@ -280,47 +638,103 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 12px;
+  padding: 10px;
   margin-top: 16px;
-  background: var(--error-dim, rgba(248, 113, 113, 0.1));
-  border: 1px solid rgba(248, 113, 113, 0.2);
-  color: var(--error, #f87171);
+  background: transparent;
+  border: 1px solid rgba(212, 165, 116, 0.3);
+  color: var(--accent, #d4a574);
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-  border-radius: 4px;
+  transition: all 0.25s ease;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Subtle gradient background on hover */
+.resetBtn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 165, 116, 0.08) 0%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 .resetBtn:hover {
-  background: rgba(248, 113, 113, 0.15);
-  border-color: var(--error, #f87171);
+  border-color: rgba(212, 165, 116, 0.4);
+  color: var(--accent, #d4a574);
+}
+
+.resetBtn:hover::before {
+  opacity: 1;
 }
 
 .resetBtn svg {
   width: 14px;
   height: 14px;
+  transition: transform 0.2s ease;
+}
+
+.resetBtn:hover svg {
+  transform: rotate(-90deg);
 }
 
 /* ========================================
-   Mobile Styles
+   Mobile Styles - Premium Panel
    ======================================== */
 
 @media (max-width: 768px) {
   .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 280px;
-    height: 100vh;
-    max-height: 100vh;
-    z-index: 1000;
-    transform: translateX(-100%);
-    transition: transform 0.3s;
+    /* IMPORTANT:
+       On mobile the sidebar is rendered inside CatalogPage's overlay (motion.div).
+       So FilterSidebar must not apply its own translateX(-100%) hidden-state,
+       otherwise it conflicts with the overlay animation and breaks visibility. */
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    z-index: auto;
+    transform: none;
+    transition: none;
+    overflow: visible;
+  }
+  .sidebarHeader {
+    padding-top: 8px;
   }
 
-  .sidebar.open {
-    transform: translateX(0);
+  /* Mobile close button area */
+  .sidebarHeader::before {
+    content: '';
+    position: absolute;
+    top: -24px;
+    left: 0;
+    right: 0;
+    height: 24px;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(18, 18, 21, 0.5) 100%
+    );
   }
 }

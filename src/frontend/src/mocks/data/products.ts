@@ -54,6 +54,7 @@ export interface ProductSummary {
   name: string;
   sku: string;
   category: ProductCategory;
+  brand?: string;
   price: number;
   oldPrice?: number;
   stock: number;
@@ -176,7 +177,8 @@ export const generateManufacturer = (category: ProductCategory): Manufacturer =>
   return {
     id: faker.string.uuid(),
     name,
-    logo: `https://placehold.co/200x80/333/fff?text=${encodeURIComponent(name)}`,
+    // Логотип не используется для избежания внешних зависимостей
+    logo: undefined,
     country: faker.helpers.arrayElement(COUNTRIES),
     description: faker.company.catchPhrase(),
   };
@@ -184,6 +186,7 @@ export const generateManufacturer = (category: ProductCategory): Manufacturer =>
 
 /**
  * Генерация изображения продукта
+ * Использует локальный SVG-плейсхолдер с тёмным circuit board паттерном
  */
 export const generateProductImage = (
   productId: string,
@@ -191,7 +194,8 @@ export const generateProductImage = (
   isMain: boolean = false
 ): ProductImage => ({
   id: faker.string.uuid(),
-  url: `https://placehold.co/400x400/1a1a2e/eee?text=Product+${productId.slice(0, 8)}+${index + 1}`,
+  // Локальный нейтральный SVG-плейсхолдер для тёмной премиальной темы
+  url: '/placeholders/product-circuit.svg',
   alt: `Изображение продукта ${index + 1}`,
   isMain,
   order: index,
@@ -310,20 +314,20 @@ const generateSku = (category: ProductCategory): string => {
 };
 
 /**
- * Генерация цены в зависимости от категории
+ * Генерация цены в зависимости от категории (в BYN)
  */
 const generatePrice = (category: ProductCategory): { price: number; oldPrice?: number } => {
   const priceRanges: Record<ProductCategory, { min: number; max: number }> = {
-    cpu: { min: 8000, max: 80000 },
-    gpu: { min: 15000, max: 300000 },
-    motherboard: { min: 5000, max: 50000 },
-    ram: { min: 2000, max: 30000 },
-    storage: { min: 1500, max: 40000 },
-    psu: { min: 3000, max: 30000 },
-    case: { min: 2000, max: 25000 },
-    cooling: { min: 1000, max: 20000 },
-    monitor: { min: 8000, max: 100000 },
-    peripherals: { min: 500, max: 15000 },
+    cpu: { min: 500, max: 2500 },        // Процессоры: 500-2500 BYN
+    gpu: { min: 1000, max: 6000 },       // Видеокарты: 1000-6000 BYN
+    motherboard: { min: 300, max: 800 }, // Материнские платы: 300-800 BYN
+    ram: { min: 150, max: 400 },         // Оперативная память: 150-400 BYN
+    storage: { min: 150, max: 500 },     // Накопители (SSD): 150-500 BYN
+    psu: { min: 150, max: 600 },         // Блоки питания
+    case: { min: 100, max: 500 },        // Корпуса
+    cooling: { min: 80, max: 400 },      // Охлаждение
+    monitor: { min: 400, max: 2000 },    // Мониторы
+    peripherals: { min: 50, max: 400 },  // Периферия
   };
 
   const range = priceRanges[category];
@@ -353,6 +357,7 @@ export const generateProduct = (overrides?: Partial<ProductSummary>): ProductSum
     name: faker.commerce.productName(),
     sku: generateSku(category),
     category,
+    brand: manufacturer.name,
     price,
     oldPrice,
     stock: faker.number.int({ min: 0, max: 100 }),

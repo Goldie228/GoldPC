@@ -29,3 +29,10 @@ export { Toast, ToastContainer } from './Toast';
 // Skeleton Component
 export { Skeleton, ProductCardSkeleton } from './Skeleton';
 export type { SkeletonProps } from './Skeleton';
+
+// ScrollToTop Component
+export { ScrollToTop } from './ScrollToTop';
+
+// Tabs Component
+export { Tabs, default as TabsDefault } from './Tabs';
+export type { TabsProps, Tab } from './Tabs';

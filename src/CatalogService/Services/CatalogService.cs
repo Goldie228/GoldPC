@@ -174,7 +174,8 @@ public class CatalogService : ICatalogService
     public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
     {
         var categories = await _categoryRepository.GetAllAsync();
-        return categories.Select(MapToCategoryDto);
+        var counts = await _productRepository.GetProductCountsByCategoryAsync();
+        return categories.Select(c => MapToCategoryDto(c, counts.GetValueOrDefault(c.Id, 0)));
     }
 
     public async Task<CategoryDto?> GetCategoryBySlugAsync(string slug)
@@ -343,7 +344,7 @@ public class CatalogService : ICatalogService
         };
     }
 
-    private static CategoryDto MapToCategoryDto(Category category)
+    private static CategoryDto MapToCategoryDto(Category category, int productCount = 0)
     {
         return new CategoryDto
         {
@@ -354,7 +355,8 @@ public class CatalogService : ICatalogService
             ParentId = category.ParentId,
             Icon = category.Icon,
             Order = category.Order,
-            Children = category.Children?.Select(MapToCategoryDto).ToList() ?? new List<CategoryDto>()
+            ProductCount = productCount,
+            Children = category.Children?.Select(c => MapToCategoryDto(c)).ToList() ?? new List<CategoryDto>()
         };
     }
 

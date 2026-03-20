@@ -5,10 +5,12 @@ import {
   Monitor, 
   MemoryStick,
   ArrowRight,
-  ChevronRight,
-  Plus
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { ProductCard } from '../../components/ProductCard';
+import { ProductCardSkeleton } from '../../components/ui/Skeleton/ProductCardSkeleton';
+import { useProducts } from '../../hooks/useProducts';
 import './HomePage.css';
 
 // Dummy build data for hero visual
@@ -36,38 +38,6 @@ const buildItems = [
   },
 ];
 
-// Dummy popular products data
-const popularProducts = [
-  {
-    id: 'rtx-4070-ti',
-    name: 'NVIDIA RTX 4070 Ti Super 16GB',
-    category: 'Видеокарта',
-    price: '3 200 BYN',
-    badge: 'TOP',
-  },
-  {
-    id: 'ryzen-7800x3d',
-    name: 'AMD Ryzen 7 7800X3D',
-    category: 'Процессор',
-    price: '1 450 BYN',
-    badge: null,
-  },
-  {
-    id: 'gskill-trident-z5',
-    name: 'G.Skill Trident Z5 32GB DDR5',
-    category: 'Память',
-    price: '650 BYN',
-    badge: 'NEW',
-  },
-  {
-    id: 'samsung-990-pro',
-    name: 'Samsung 990 Pro 2TB NVMe',
-    category: 'SSD',
-    price: '380 BYN',
-    badge: null,
-  },
-];
-
 // Category data
 const categoriesData = [
   { id: 'cpu', name: 'Процессоры', count: '124 товара', icon: Cpu },
@@ -84,6 +54,14 @@ export function HomePage() {
   // Refs for scroll animations
   const categoriesRef = useRef<HTMLDivElement>(null);
   const productsRef = useRef<HTMLDivElement>(null);
+
+  // Fetch popular products (featured items, limit 8)
+  const { data: productsData, isLoading, isError } = useProducts({
+    pageSize: 8,
+    isFeatured: true,
+    sortBy: 'rating',
+    sortOrder: 'desc',
+  });
 
   // Scroll reveal effect
   useEffect(() => {
@@ -125,8 +103,10 @@ export function HomePage() {
           <div className="heroText">
             <div className="heroTag">PC Builder v2.0</div>
             <h1 className="heroTitle">
-              Собери свой<br />
-              <span className="text-accent">идеальный</span> ПК
+              <span className="heroTitleLine">Собери свой</span>
+              <span className="heroTitleLine heroTitleLine2">
+                <span className="text-accent">идеальный</span>&nbsp;ПК
+              </span>
             </h1>
             <p className="heroDesc">
               Интеллектуальный конфигуратор с проверкой совместимости в реальном времени. 
@@ -244,34 +224,29 @@ export function HomePage() {
           </div>
 
           <div className="productsGrid" ref={productsRef}>
-            {popularProducts.map((product, index) => {
+            {/* Loading state - show skeletons */}
+            {isLoading && (
+              <>
+                {[...Array(4)].map((_, index) => (
+                  <ProductCardSkeleton key={`skeleton-${index}`} />
+                ))}
+              </>
+            )}
+
+            {/* Error state */}
+            {isError && (
+              <div className="productsError">
+                <p>Не удалось загрузить товары. Попробуйте позже.</p>
+              </div>
+            )}
+
+            {/* Success - show products */}
+            {productsData?.data.map((product, index) => {
               const delayClass = index > 0 ? `delay${index}` : '';
               return (
-                <article key={product.id} className={`productCard fadeUp ${delayClass}`}>
-                  {product.badge && (
-                    <span className="productBadge">{product.badge}</span>
-                  )}
-                  <div className="productImage">
-                    {/* Placeholder SVG for product image */}
-                    <svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="10" y="10" width="100" height="60" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
-                      <rect x="20" y="20" width="35" height="35" rx="2" fill="#121214"/>
-                      <rect x="65" y="22" width="35" height="6" rx="1" fill="#2a2a2e"/>
-                      <rect x="65" y="34" width="25" height="6" rx="1" fill="#2a2a2e"/>
-                      <circle cx="37" cy="37" r="10" stroke="#d4a574" strokeWidth="1" fill="none"/>
-                    </svg>
-                  </div>
-                  <div className="productInfo">
-                    <div className="productCategory">{product.category}</div>
-                    <h3 className="productName">{product.name}</h3>
-                    <div className="productMeta">
-                      <span className="productPrice">{product.price}</span>
-                      <button className="productAction" aria-label="В корзину">
-                        <Plus size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </article>
+                <div key={product.id} className={`fadeUp ${delayClass}`}>
+                  <ProductCard product={product} />
+                </div>
               );
             })}
           </div>

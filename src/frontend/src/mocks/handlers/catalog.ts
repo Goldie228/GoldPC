@@ -49,7 +49,7 @@ interface RealisticProduct extends Product {
 }
 
 const REALISTIC_PRODUCTS: RealisticProduct[] = [
-  // === ПРОЦЕССОРЫ (CPU) ===
+  // === ПРОЦЕССОРЫ (CPU) - 500-2500 BYN ===
   {
     id: 'cpu-001',
     name: 'AMD Ryzen 9 7950X',
@@ -60,8 +60,8 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
       name: 'AMD',
       country: 'США',
     },
-    price: 54990,
-    oldPrice: 62990,
+    price: 2350,
+    oldPrice: 2690,
     stock: 15,
     mainImage: {
       id: 'img-cpu-001',
@@ -100,8 +100,8 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
       name: 'Intel',
       country: 'США',
     },
-    price: 58990,
-    oldPrice: 64990,
+    price: 2490,
+    oldPrice: 2790,
     stock: 8,
     mainImage: {
       id: 'img-cpu-002',
@@ -139,7 +139,7 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
       name: 'AMD',
       country: 'США',
     },
-    price: 38990,
+    price: 1650,
     stock: 22,
     mainImage: {
       id: 'img-cpu-003',
@@ -177,7 +177,7 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
       name: 'Intel',
       country: 'США',
     },
-    price: 32990,
+    price: 1350,
     stock: 18,
     mainImage: {
       id: 'img-cpu-004',
@@ -204,7 +204,7 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
     isFeatured: false,
     createdAt: '2024-04-05T10:00:00Z',
   },
-  // === ВИДЕОКАРТЫ (GPU) ===
+  // === ВИДЕОКАРТЫ (GPU) - 1000-6000 BYN ===
   {
     id: 'gpu-001',
     name: 'NVIDIA GeForce RTX 4090',
@@ -215,8 +215,8 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
       name: 'NVIDIA',
       country: 'США',
     },
-    price: 189990,
-    oldPrice: 219990,
+    price: 5890,
+    oldPrice: 6490,
     stock: 5,
     mainImage: {
       id: 'img-gpu-001',
@@ -255,8 +255,8 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
       name: 'AMD',
       country: 'США',
     },
-    price: 119990,
-    oldPrice: 134990,
+    price: 4290,
+    oldPrice: 4690,
     stock: 7,
     mainImage: {
       id: 'img-gpu-002',
@@ -293,7 +293,7 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
       name: 'NVIDIA',
       country: 'США',
     },
-    price: 64990,
+    price: 2190,
     stock: 12,
     mainImage: {
       id: 'img-gpu-003',
@@ -320,7 +320,7 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
     isFeatured: false,
     createdAt: '2024-03-20T10:00:00Z',
   },
-  // === МАТЕРИНСКИЕ ПЛАТЫ ===
+  // === МАТЕРИНСКИЕ ПЛАТЫ - 300-800 BYN ===
   {
     id: 'mb-001',
     name: 'ASUS ROG Maximus Z790 Hero',
@@ -331,7 +331,7 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
       name: 'ASUS',
       country: 'Тайвань',
     },
-    price: 54990,
+    price: 780,
     stock: 6,
     mainImage: {
       id: 'img-mb-001',
@@ -371,8 +371,8 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
       name: 'MSI',
       country: 'Тайвань',
     },
-    price: 42990,
-    oldPrice: 47990,
+    price: 650,
+    oldPrice: 720,
     stock: 9,
     mainImage: {
       id: 'img-mb-002',
@@ -413,7 +413,7 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
       name: 'Gigabyte',
       country: 'Тайвань',
     },
-    price: 21990,
+    price: 380,
     stock: 14,
     mainImage: {
       id: 'img-mb-003',
@@ -491,6 +491,260 @@ function generateCategory(index: number): Category {
   };
 }
 
+// === Генерация дополнительных продуктов для каждой категории ===
+
+function generateAdditionalProducts(): ProductSummary[] {
+  const additionalProducts: ProductSummary[] = [];
+  
+  const manufacturersByCategory: Record<ProductCategory, { name: string; country: string }[]> = {
+    cpu: [
+      { name: 'AMD', country: 'США' },
+      { name: 'Intel', country: 'США' },
+    ],
+    gpu: [
+      { name: 'NVIDIA', country: 'США' },
+      { name: 'AMD', country: 'США' },
+      { name: 'ASUS', country: 'Тайвань' },
+      { name: 'MSI', country: 'Тайвань' },
+      { name: 'Gigabyte', country: 'Тайвань' },
+      { name: 'Palit', country: 'Гонконг' },
+    ],
+    motherboard: [
+      { name: 'ASUS', country: 'Тайвань' },
+      { name: 'MSI', country: 'Тайвань' },
+      { name: 'Gigabyte', country: 'Тайвань' },
+      { name: 'ASRock', country: 'Тайвань' },
+    ],
+    ram: [
+      { name: 'Kingston', country: 'США' },
+      { name: 'Corsair', country: 'США' },
+      { name: 'G.Skill', country: 'Тайвань' },
+      { name: 'Crucial', country: 'США' },
+      { name: 'Samsung', country: 'Южная Корея' },
+    ],
+    storage: [
+      { name: 'Samsung', country: 'Южная Корея' },
+      { name: 'WD', country: 'США' },
+      { name: 'Seagate', country: 'США' },
+      { name: 'Crucial', country: 'США' },
+      { name: 'Kingston', country: 'США' },
+    ],
+    psu: [
+      { name: 'Corsair', country: 'США' },
+      { name: 'Seasonic', country: 'Тайвань' },
+      { name: 'be quiet!', country: 'Германия' },
+      { name: 'EVGA', country: 'США' },
+      { name: 'Deepcool', country: 'Китай' },
+    ],
+    case: [
+      { name: 'NZXT', country: 'США' },
+      { name: 'Corsair', country: 'США' },
+      { name: 'Fractal Design', country: 'Швеция' },
+      { name: 'be quiet!', country: 'Германия' },
+      { name: 'Deepcool', country: 'Китай' },
+    ],
+    cooling: [
+      { name: 'Noctua', country: 'Австрия' },
+      { name: 'be quiet!', country: 'Германия' },
+      { name: 'Corsair', country: 'США' },
+      { name: 'Deepcool', country: 'Китай' },
+      { name: 'ARCTIC', country: 'Германия' },
+    ],
+    monitor: [
+      { name: 'Samsung', country: 'Южная Корея' },
+      { name: 'LG', country: 'Южная Корея' },
+      { name: 'ASUS', country: 'Тайвань' },
+      { name: 'BenQ', country: 'Тайвань' },
+      { name: 'Dell', country: 'США' },
+      { name: 'AOC', country: 'Тайвань' },
+    ],
+    peripherals: [
+      { name: 'Logitech', country: 'Швейцария' },
+      { name: 'Razer', country: 'США' },
+      { name: 'SteelSeries', country: 'Дания' },
+      { name: 'HyperX', country: 'США' },
+      { name: 'Zowie', country: 'Тайвань' },
+    ],
+  };
+
+  const productNamesByCategory: Record<ProductCategory, string[]> = {
+    cpu: [
+      'AMD Ryzen 5 7600X', 'AMD Ryzen 7 7700X', 'AMD Ryzen 9 7900X',
+      'Intel Core i5-13600K', 'Intel Core i7-13700K', 'Intel Core i5-14400',
+      'AMD Ryzen 5 5600X', 'AMD Ryzen 7 5800X3D', 'Intel Core i3-14100',
+    ],
+    gpu: [
+      'NVIDIA RTX 4080 Super', 'NVIDIA RTX 4060 Ti', 'NVIDIA RTX 4060',
+      'AMD RX 7900 XT', 'AMD RX 7800 XT', 'AMD RX 7700 XT',
+      'ASUS TUF RTX 4070', 'MSI Gaming RTX 4060', 'Gigabyte RTX 4060 Ti Eagle',
+      'Palit RTX 4070 Dual', 'AMD RX 7600', 'NVIDIA RTX 3050',
+    ],
+    motherboard: [
+      'ASUS TUF Gaming B650-Plus', 'ASUS Prime Z790-P WiFi',
+      'MSI MAG B650 Tomahawk WiFi', 'MSI PRO Z790-A WiFi',
+      'Gigabyte B650 Aorus Elite AX', 'Gigabyte Z790 Aorus Elite',
+      'ASRock B650M Pro RS', 'ASRock Z790 Pro RS',
+    ],
+    ram: [
+      'Kingston Fury Beast DDR5 32GB', 'Kingston Fury Beast DDR5 16GB',
+      'Corsair Vengeance DDR5 32GB', 'Corsair Vengeance DDR5 16GB',
+      'G.Skill Trident Z5 DDR5 32GB', 'G.Skill Trident Z5 DDR5 16GB',
+      'Crucial DDR5 32GB', 'Crucial DDR5 16GB',
+      'Samsung DDR5 32GB', 'Kingston Fury Beast DDR4 16GB',
+      'Corsair Vengeance DDR4 32GB', 'G.Skill Trident Z DDR4 32GB',
+    ],
+    storage: [
+      'Samsung 990 Pro 2TB', 'Samsung 980 Pro 1TB', 'Samsung 970 EVO Plus 500GB',
+      'WD Black SN850X 2TB', 'WD Blue SN570 1TB',
+      'Seagate Barracuda 2TB HDD', 'Seagate FireCuda 1TB',
+      'Crucial P5 Plus 1TB', 'Kingston KC3000 2TB',
+      'Samsung 870 EVO 1TB SATA', 'WD Red 4TB NAS HDD',
+    ],
+    psu: [
+      'Corsair RM750x 750W', 'Corsair RM850x 850W', 'Corsair HX1000 1000W',
+      'Seasonic Focus GX-750', 'Seasonic Focus GX-850',
+      'be quiet! Pure Power 750W', 'be quiet! Straight Power 850W',
+      'EVGA SuperNOVA 750 G6', 'Deepcool PQ750 750W',
+    ],
+    case: [
+      'NZXT H7 Flow', 'NZXT H510', 'NZXT H710i',
+      'Corsair 4000D Airflow', 'Corsair 5000D Airflow',
+      'Fractal Design Define 7', 'Fractal Design Meshify C',
+      'be quiet! Pure Base 500DX', 'Deepcool CC560',
+    ],
+    cooling: [
+      'Noctua NH-D15', 'Noctua NH-U12S', 'Noctua NH-D12L',
+      'be quiet! Dark Rock Pro 4', 'be quiet! Pure Rock 2',
+      'Corsair iCUE H100i 240mm AIO', 'Corsair iCUE H150i 360mm AIO',
+      'Deepcool AK620', 'ARCTIC Freezer 34',
+    ],
+    monitor: [
+      'Samsung Odyssey G7 27"', 'Samsung Odyssey G5 32"',
+      'LG 27GP950-B 27" 4K', 'LG 27GL850-B 27"',
+      'ASUS ROG Swift PG279Q 27"', 'ASUS TUF VG27AQ 27"',
+      'BenQ MOBIUZ EX2710 27"', 'Dell S2721DGF 27"',
+      'AOC Q27G2U 27" 144Hz', 'Samsung Odyssey Neo G9 49"',
+    ],
+    peripherals: [
+      'Logitech G Pro X Superlight', 'Logitech G502 Lightspeed',
+      'Razer DeathAdder V3 Pro', 'Razer Basilisk V3',
+      'SteelSeries Rival 600', 'SteelSeries Sensei Ten',
+      'HyperX Pulsefire Haste', 'Zowie EC2-C',
+      'Logitech G715 Keyboard', 'Razer BlackWidow V4 Pro',
+      'SteelSeries Apex Pro TKL', 'HyperX Alloy Origins',
+    ],
+  };
+
+  const priceRanges: Record<ProductCategory, { min: number; max: number }> = {
+    cpu: { min: 500, max: 2500 },        // Процессоры: 500-2500 BYN
+    gpu: { min: 1000, max: 6000 },       // Видеокарты: 1000-6000 BYN
+    motherboard: { min: 300, max: 800 }, // Материнские платы: 300-800 BYN
+    ram: { min: 150, max: 400 },         // Оперативная память: 150-400 BYN
+    storage: { min: 150, max: 500 },     // Накопители (SSD): 150-500 BYN
+    psu: { min: 150, max: 600 },         // Блоки питания
+    case: { min: 100, max: 500 },        // Корпуса
+    cooling: { min: 80, max: 400 },      // Охлаждение
+    monitor: { min: 400, max: 2000 },    // Мониторы
+    peripherals: { min: 50, max: 400 },  // Периферия
+  };
+
+  const categoryCounts: Record<ProductCategory, number> = {
+    cpu: 42,
+    gpu: 38,
+    motherboard: 56,
+    ram: 89,
+    storage: 67,
+    psu: 34,
+    case: 28,
+    cooling: 45,
+    monitor: 22,
+    peripherals: 51,
+  };
+
+  categories.forEach((category) => {
+    const existingCount = REALISTIC_PRODUCTS.filter(p => p.category === category).length;
+    const neededCount = categoryCounts[category] - existingCount;
+    const manufacturers = manufacturersByCategory[category];
+    const productNames = productNamesByCategory[category];
+    const priceRange = priceRanges[category];
+
+    for (let i = 0; i < neededCount; i++) {
+      const manufacturer = manufacturers[i % manufacturers.length];
+      const productName = productNames[i % productNames.length];
+      const basePrice = faker.number.int({ min: priceRange.min, max: priceRange.max });
+      const hasDiscount = faker.datatype.boolean({ probability: 0.2 });
+      
+      additionalProducts.push({
+        id: `${category}-${String(existingCount + i + 1).padStart(3, '0')}`,
+        name: `${productName} ${faker.string.alphanumeric(4).toUpperCase()}`,
+        sku: `${category.toUpperCase().slice(0, 3)}-${faker.number.int({ min: 100000, max: 999999 })}`,
+        category,
+        manufacturer: {
+          id: `mfr-${manufacturer.name.toLowerCase()}`,
+          name: manufacturer.name,
+          country: manufacturer.country,
+        },
+        price: basePrice,
+        oldPrice: hasDiscount ? Math.round(basePrice * 1.15) : undefined,
+        stock: faker.number.int({ min: 0, max: 50 }),
+        mainImage: {
+          id: `img-${category}-${i}`,
+          url: `https://placehold.co/400x400/1a1a2e/eee?text=${encodeURIComponent(productName.slice(0, 15))}`,
+          alt: productName,
+          isMain: true,
+        },
+        rating: parseFloat(faker.number.float({ min: 3.5, max: 5, fractionDigits: 1 }).toFixed(1)),
+        isActive: faker.datatype.boolean({ probability: 0.95 }),
+      });
+    }
+  });
+
+  return additionalProducts;
+}
+
+// Кэш всех продуктов
+let allProductsCache: ProductSummary[] | null = null;
+
+function getAllProducts(): ProductSummary[] {
+  if (!allProductsCache) {
+    allProductsCache = [...REALISTIC_PRODUCTS.map(p => ({
+      id: p.id,
+      name: p.name,
+      sku: p.sku,
+      category: p.category,
+      manufacturer: p.manufacturer,
+      price: p.price,
+      oldPrice: p.oldPrice,
+      stock: p.stock,
+      mainImage: p.mainImage,
+      rating: p.rating,
+      isActive: p.isActive,
+    })), ...generateAdditionalProducts()];
+  }
+  return allProductsCache;
+}
+
+// Кэш категорий с количеством продуктов
+let categoriesCache: (Category & { count: number })[] | null = null;
+
+function getCategoriesWithCount(): (Category & { count: number })[] {
+  if (!categoriesCache) {
+    const products = getAllProducts();
+    categoriesCache = categories.map((category, index) => {
+      const count = products.filter(p => p.category === category).length;
+      return {
+        id: `cat-${index}`,
+        name: categoryNames[category],
+        slug: category,
+        description: `${categoryNames[category]} для вашего ПК`,
+        productCount: count,
+        count,
+      };
+    });
+  }
+  return categoriesCache;
+}
+
 // === Handlers ===
 
 export const catalogHandlers = [
@@ -503,9 +757,11 @@ export const catalogHandlers = [
     const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
     const category = url.searchParams.get('category') as ProductCategory | null;
     const manufacturerId = url.searchParams.get('manufacturerId');
+    const brand = url.searchParams.get('brand')?.toLowerCase();
     const priceMin = parseInt(url.searchParams.get('priceMin') || '0', 10);
     const priceMax = parseInt(url.searchParams.get('priceMax') || '999999', 10);
     const search = url.searchParams.get('search')?.toLowerCase();
+    const rating = url.searchParams.get('rating') ? parseFloat(url.searchParams.get('rating')!) : null;
     const inStock = url.searchParams.get('inStock') === 'true';
     const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | null;
     const sortOrder = (url.searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
@@ -521,6 +777,12 @@ export const catalogHandlers = [
       products = products.filter((p) => p.manufacturer?.id === manufacturerId);
     }
 
+    if (brand) {
+      products = products.filter((p) => 
+        p.manufacturer?.name.toLowerCase().includes(brand)
+      );
+    }
+
     products = products.filter(
       (p) => p.price >= priceMin && p.price <= priceMax
     );
@@ -531,6 +793,10 @@ export const catalogHandlers = [
           p.name.toLowerCase().includes(search) ||
           p.manufacturer?.name.toLowerCase().includes(search)
       );
+    }
+
+    if (rating) {
+      products = products.filter((p) => (p.rating ?? 0) >= rating);
     }
 
     if (inStock) {
@@ -599,7 +865,15 @@ export const catalogHandlers = [
   http.get('/api/v1/catalog/categories', async () => {
     await delay(faker.number.int({ min: 30, max: 100 }));
 
-    const categoriesList = categories.map((_, index) => generateCategory(index));
+    // Возвращаем категории с реальными счётчиками продуктов
+    const categoriesWithCount = getCategoriesWithCount();
+    const categoriesList = categoriesWithCount.map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      description: cat.description,
+      productCount: cat.count,
+    }));
     return HttpResponse.json(categoriesList);
   }),
 
@@ -619,4 +893,98 @@ export const catalogHandlers = [
 
     return HttpResponse.json(generateCategory(index));
   }),
-];
+
+  // GET /api/v1/catalog/search - поиск продуктов (отдельный endpoint для поиска)
+  http.get('/api/v1/catalog/search', async ({ request }) => {
+    await delay(faker.number.int({ min: 50, max: 200 }));
+
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
+    const category = url.searchParams.get('category') as ProductCategory | null;
+    const manufacturerId = url.searchParams.get('manufacturerId');
+    const brand = url.searchParams.get('brand')?.toLowerCase();
+    const priceMin = parseInt(url.searchParams.get('priceMin') || '0', 10);
+    const priceMax = parseInt(url.searchParams.get('priceMax') || '999999', 10);
+    const search = url.searchParams.get('search')?.toLowerCase();
+    const rating = url.searchParams.get('rating') ? parseFloat(url.searchParams.get('rating')!) : null;
+    const inStock = url.searchParams.get('inStock') === 'true';
+    const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | null;
+    const sortOrder = (url.searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
+
+    let products = [...getProductsCache()];
+
+    // Фильтрация (идентичная логика с /products)
+    if (category) {
+      products = products.filter((p) => p.category === category);
+    }
+
+    if (manufacturerId) {
+      products = products.filter((p) => p.manufacturer?.id === manufacturerId);
+    }
+
+    if (brand) {
+      products = products.filter((p) => 
+        p.manufacturer?.name.toLowerCase().includes(brand)
+      );
+    }
+
+    products = products.filter(
+      (p) => p.price >= priceMin && p.price <= priceMax
+    );
+
+    if (search) {
+      products = products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(search) ||
+          p.manufacturer?.name.toLowerCase().includes(search)
+      );
+    }
+
+    if (rating) {
+      products = products.filter((p) => (p.rating || 0) >= rating);
+    }
+
+    if (inStock) {
+      products = products.filter((p) => p.stock > 0);
+    }
+
+    // Сортировка
+    if (sortBy) {
+      products.sort((a, b) => {
+        let comparison = 0;
+        switch (sortBy) {
+          case 'name':
+            comparison = a.name.localeCompare(b.name);
+            break;
+          case 'price':
+            comparison = a.price - b.price;
+            break;
+          case 'rating':
+            comparison = (a.rating || 0) - (b.rating || 0);
+            break;
+        }
+        return sortOrder === 'desc' ? -comparison : comparison;
+      });
+    }
+
+    // Пагинация
+    const totalItems = products.length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+    const startIndex = (page - 1) * pageSize;
+    const data = products.slice(startIndex, startIndex + pageSize);
+
+    const meta: PaginationMeta = {
+      page,
+      pageSize,
+      totalPages,
+      totalItems,
+      hasNext: page < totalPages,
+      hasPrevious: page > 1,
+    };
+
+    const response: ProductListResponse = { data, meta };
+
+    return HttpResponse.json(response);
+  }),
+]; 

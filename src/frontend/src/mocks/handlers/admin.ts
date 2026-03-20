@@ -715,6 +715,18 @@ export const adminHandlers = [
 
     return HttpResponse.json(settingsCache);
   }),
+
+  // === ANALYTICS ===
+
+  // GET /api/v1/analytics/performance - метрики производительности
+  http.get('/api/v1/analytics/performance', async () => {
+    await delay(faker.number.int({ min: 50, max: 150 }));
+
+    return HttpResponse.json({
+      fcp: 1000,
+      lcp: 1200,
+    });
+  }),
 ];
 
 export { ROLE_LABELS };

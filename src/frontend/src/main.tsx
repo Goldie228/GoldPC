@@ -1,11 +1,20 @@
-import { StrictMode } from 'react'
+import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import './styles/globals.css'
 import './index.css'
 import App from './App.tsx'
 import { performanceMonitor } from './utils/performance'
+
+// Lazy load React Query DevTools - only in development and only when needed
+const ReactQueryDevtools = lazy(() => 
+  import('@tanstack/react-query-devtools').then(m => ({ default: m.ReactQueryDevtools }))
+)
+
+// DevTools must never "leak" into the premium UI by default.
+// Enable explicitly via Vite env var: VITE_ENABLE_QUERY_DEVTOOLS=true
+const enableReactQueryDevtools =
+  import.meta.env.DEV && import.meta.env.VITE_ENABLE_QUERY_DEVTOOLS === 'true'
 
 // Создаем QueryClient с настройками по умолчанию
 const queryClient = new QueryClient({
@@ -37,7 +46,10 @@ async function enableMocking() {
 // Инициализация мониторинга производительности
 // Монитор автоматически начинает сбор Core Web Vitals при импорте
 // В режиме разработки проверяем бюджеты при загрузке страницы
-if (import.meta.env.DEV) {
+const enablePerformanceBudgetChecks =
+  import.meta.env.DEV && import.meta.env.VITE_ENABLE_PERFORMANCE_BUDGET_CHECKS === 'true'
+
+if (enablePerformanceBudgetChecks) {
   window.addEventListener('load', () => {
     // Даём время на сбор метрик
     setTimeout(() => {
@@ -57,7 +69,11 @@ enableMocking().then(() => {
     <StrictMode>
       <QueryClientProvider client={queryClient}>
         <App />
-        <ReactQueryDevtools initialIsOpen={false} />
+        {enableReactQueryDevtools && (
+          <Suspense fallback={null}>
+            <ReactQueryDevtools initialIsOpen={false} />
+          </Suspense>
+        )}
       </QueryClientProvider>
     </StrictMode>,
   )

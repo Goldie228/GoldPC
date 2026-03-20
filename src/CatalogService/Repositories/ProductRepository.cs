@@ -165,6 +165,15 @@ public class ProductRepository : IProductRepository
             .ToListAsync();
     }
 
+    public async Task<Dictionary<Guid, int>> GetProductCountsByCategoryAsync()
+    {
+        return await _context.Products
+            .Where(p => p.IsActive)
+            .GroupBy(p => p.CategoryId)
+            .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.CategoryId, x => x.Count);
+    }
+
     public async Task<Product> CreateAsync(Product product)
     {
         product.CreatedAt = DateTime.UtcNow;

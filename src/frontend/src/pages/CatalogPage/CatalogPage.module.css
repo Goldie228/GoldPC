@@ -6,18 +6,24 @@
 .container {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: 20px;
   max-width: 1400px;
   margin: 0 auto;
   padding: 24px;
   min-height: calc(100vh - 200px);
   background: var(--bg, #09090b);
+  /* Тонкий градиент для глубины без отвлечения */
+  background-image: radial-gradient(
+    ellipse 80% 50% at 50% 0%,
+    rgba(212, 165, 116, 0.04) 0%,
+    transparent 50%
+  );
 }
 
 @media (min-width: 768px) {
   .container {
     grid-template-columns: 260px 1fr;
-    gap: 32px;
+    gap: 24px;
     padding: 32px;
   }
 }
@@ -47,15 +53,23 @@
 }
 
 /* ========================================
-   Mobile Overlay & Sidebar
+   Mobile Overlay & Sidebar - Premium
    ======================================== */
 
 .mobileOverlay {
   display: block;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .mobileSidebar {
@@ -63,48 +77,81 @@
   left: 0;
   top: 0;
   bottom: 0;
-  width: 280px;
-  background: var(--bg-card, #18181b);
-  border-right: 1px solid var(--border-accent, rgba(212, 165, 116, 0.2));
+  width: 300px;
+  /* Premium glass effect */
+  background: rgba(18, 18, 21, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   padding: 20px;
   overflow-y: auto;
+  box-shadow: 
+    4px 0 30px rgba(0, 0, 0, 0.5),
+    inset -1px 0 0 rgba(255, 255, 255, 0.03);
+  animation: slideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
 .mobileSidebarHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+
+/* Gold accent line under header */
+.mobileSidebarHeader::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(212, 165, 116, 0.8) 0%,
+    rgba(212, 165, 116, 0.2) 100%
+  );
+  border-radius: 1px;
 }
 
 .mobileSidebarTitle {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--fg, #fafafa);
   margin: 0;
+  letter-spacing: 0.02em;
 }
 
 .closeBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: none;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
   color: var(--fg-muted, #71717a);
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .closeBtn:hover {
+  background: rgba(212, 165, 116, 0.1);
+  border-color: rgba(212, 165, 116, 0.3);
   color: var(--accent, #d4a574);
 }
 
 /* ========================================
-   Sidebar Wrapper - 20%
+   Sidebar Wrapper - Premium Integration
    ======================================== */
 
 .sidebarWrapper {
@@ -115,6 +162,26 @@
   .sidebarWrapper {
     display: block;
     width: 100%;
+    position: sticky;
+    top: 80px;
+    align-self: start; /* sticky работает относительно grid row */
+    overflow-y: visible; /* без внутреннего скролла — фильтры в потоке страницы */
+  }
+
+  /* Visual integration - subtle connection to main content */
+  .sidebarWrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -16px;
+    width: 16px;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      rgba(18, 18, 21, 0.3) 0%,
+      transparent 100%
+    );
+    pointer-events: none;
   }
 }
 
@@ -178,9 +245,10 @@
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 24px;
-  padding: 12px 16px;
+  padding: 14px 18px;
   background: var(--bg-card, #18181b);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
 }
 
 .toolbarLeft {
@@ -263,11 +331,13 @@
 
 .searchInput {
   width: 100%;
-  padding: 10px 12px 10px 44px;
+  height: 44px;
+  padding: 0 16px 0 44px;
   background: var(--bg-elevated, #121214);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
   color: var(--fg, #fafafa);
-  font-size: 0.8rem;
+  font-size: 14px;
   transition: border-color 0.2s;
 }
 
@@ -282,13 +352,22 @@
 
 /* Sort Select */
 .sortSelect {
-  padding: 10px 12px;
+  height: 44px;
+  padding: 0 40px 0 16px;
   background: var(--bg-elevated, #121214);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
   color: var(--fg, #fafafa);
-  font-size: 0.8rem;
+  font-size: 14px;
   cursor: pointer;
   transition: border-color 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
 }
 
 .sortSelect:focus {
@@ -296,26 +375,52 @@
   border-color: var(--accent, #d4a574);
 }
 
+.sortSelect:hover {
+  border-color: var(--fg-dim, #52525b);
+}
+
 /* ========================================
-   Product Grid - 4 Columns
+   Product Grid - 4 Columns (Luxury Spacing)
    ======================================== */
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  row-gap: 20px;
+  padding: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.gridItem {
+  min-width: 0;
+  min-height: 0;
 }
 
 @media (min-width: 640px) {
   .grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
+    row-gap: 20px;
   }
 }
 
+/* 3 колонки — чтобы кнопки не вылезали при узких карточках */
 @media (min-width: 1024px) {
   .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    row-gap: 20px;
+  }
+}
+
+/* 4 колонки только при достаточной ширине */
+@media (min-width: 1280px) {
+  .grid {
     grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    row-gap: 20px;
   }
 }
 
@@ -423,6 +528,77 @@
 }
 
 /* ========================================
+   Show More Button
+   ======================================== */
+
+.showMore {
+  display: flex;
+  justify-content: center;
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.showMoreBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 48px;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 165, 116, 0.1) 0%,
+    rgba(212, 165, 116, 0.05) 100%
+  );
+  border: 1px solid rgba(212, 165, 116, 0.3);
+  color: var(--accent, #d4a574);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.showMoreBtn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 165, 116, 0.2) 0%,
+    rgba(212, 165, 116, 0.1) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.showMoreBtn:hover::before {
+  opacity: 1;
+}
+
+.showMoreBtn:hover {
+  border-color: var(--accent, #d4a574);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(212, 165, 116, 0.15);
+}
+
+.showMoreBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.showMoreBtn:disabled:hover::before {
+  opacity: 0;
+}
+
+.showMoreBtn .spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* ========================================
    Pagination
    ======================================== */
 
@@ -510,10 +686,14 @@
   }
 
   .toolbarLeft {
+    display: flex;
+    align-items: center;
     justify-content: center;
   }
 
   .toolbarRight {
+    display: flex;
+    align-items: center;
     flex-direction: column;
   }
 

@@ -431,7 +431,7 @@ export function CheckoutPage() {
                     <div className="summary-item-qty">{item.quantity} шт</div>
                   </div>
                   <span className="summary-item-price">
-                    {(item.price * item.quantity).toLocaleString('ru-RU')} BYN
+                    {(item.price * item.quantity).toLocaleString('ru-BY')} BYN
                   </span>
                 </div>
               ))}
@@ -441,7 +441,7 @@ export function CheckoutPage() {
 
             <div className="summary-row">
               <span className="summary-label">Товары ({totalItems})</span>
-              <span className="summary-value">{subtotal.toLocaleString('ru-RU')} BYN</span>
+              <span className="summary-value">{subtotal.toLocaleString('ru-BY')} BYN</span>
             </div>
 
             <div className="summary-row">
@@ -451,7 +451,7 @@ export function CheckoutPage() {
 
             <div className="summary-total">
               <span className="total-label">К оплате</span>
-              <span className="total-value">{total.toLocaleString('ru-RU')} BYN</span>
+              <span className="total-value">{total.toLocaleString('ru-BY')} BYN</span>
             </div>
 
             {currentStep === 'confirm' && (

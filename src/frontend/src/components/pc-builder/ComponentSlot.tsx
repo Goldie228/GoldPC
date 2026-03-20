@@ -91,7 +91,7 @@ export function ComponentSlot({
         {/* Price */}
         <div className="component-slot__price">
           {price !== null ? (
-            <div className="component-slot__price-value">{price.toLocaleString('ru-RU')} BYN</div>
+            <div className="component-slot__price-value">{price.toLocaleString('ru-BY')} BYN</div>
           ) : (
             <div className="component-slot__price-empty">—</div>
           )}

@@ -4,7 +4,7 @@
    ======================================== */
 
 /* ===== FONTS ===== */
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Fonts are now preloaded in index.html for better FCP/LCP performance */
 
 /* ===== CSS VARIABLES ===== */
 :root {
@@ -21,10 +21,12 @@
   /* Accent Colors */
   --accent: #d4a574;
   --accent-bright: #e8c4a0;
+  --accent-hover: #e6b98b;
+  --accent-active: #c99763;
   --accent-glow: rgba(212, 165, 116, 0.15);
 
   /* Border Colors */
-  --border: rgba(255, 255, 255, 0.10);   /* Increased visibility on dark backgrounds */
+  --border: rgba(255, 255, 255, 0.06);   /* Subtle, architectural borders */
   --border-accent: rgba(212, 165, 116, 0.2);
 
   /* Border Radius */
@@ -135,6 +137,11 @@ body {
 
 .text-muted {
   color: var(--fg-muted);
+}
+
+/* Tabular numbers for aligned price digits */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ===== TYPOGRAPHY HIERARCHY ===== */

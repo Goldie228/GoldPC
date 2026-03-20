@@ -15,6 +15,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  /* Отступ для fixed header (высота header + buffer) */
+  padding-top: 80px;
   /* Минимальная высота для контента: 100vh - header - footer */
   min-height: calc(100vh - 80px - 300px);
 }

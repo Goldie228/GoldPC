@@ -58,6 +58,7 @@ export interface ProductSummary {
   name: string;
   sku: string;
   category: ProductCategory;
+  brand?: string;
   manufacturer?: Manufacturer;
   price: number;
   oldPrice?: number;
@@ -86,9 +87,11 @@ export interface GetProductsParams {
   pageSize?: number;
   category?: ProductCategory;
   manufacturerId?: Uuid;
+  brand?: string;
   priceMin?: number;
   priceMax?: number;
   search?: string;
+  rating?: number;
   sortBy?: 'name' | 'price' | 'rating' | 'createdAt';
   sortOrder?: 'asc' | 'desc';
   inStock?: boolean;

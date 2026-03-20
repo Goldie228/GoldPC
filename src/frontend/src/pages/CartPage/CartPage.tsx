@@ -192,13 +192,12 @@ export function CartPage(): ReactElement {
                   <h3 className="item-name">{item.name}</h3>
                 </div>
                 <div className="item-actions">
-                  <span className="item-price">{item.price.toLocaleString('ru-RU')} BYN</span>
+                  <span className="item-price">{item.price.toLocaleString('ru-BY')} BYN</span>
                   <div className="quantity-controls">
                     <button 
                       className="icon-btn" 
                       aria-label="Уменьшить количество"
                       onClick={() => changeQuantity(item.productId, -1)}
-                      disabled={item.quantity <= 1}
                       type="button"
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -240,7 +239,7 @@ export function CartPage(): ReactElement {
 
             <div className="summary-row">
               <span className="summary-label">Товары ({itemCount})</span>
-              <span className="summary-value">{totalPrice.toLocaleString('ru-RU')} BYN</span>
+              <span className="summary-value">{totalPrice.toLocaleString('ru-BY')} BYN</span>
             </div>
 
             <div className="summary-row">
@@ -251,7 +250,7 @@ export function CartPage(): ReactElement {
             {discount > 0 && (
               <div className="summary-row summary-row--discount">
                 <span className="summary-label">Скидка ({discount}%)</span>
-                <span className="summary-value">−{discountAmount.toLocaleString('ru-RU')} BYN</span>
+                <span className="summary-value">−{discountAmount.toLocaleString('ru-BY')} BYN</span>
               </div>
             )}
 
@@ -259,7 +258,7 @@ export function CartPage(): ReactElement {
 
             <div className="summary-total">
               <span className="total-label">К оплате</span>
-              <span className="total-value">{discountedTotal.toLocaleString('ru-RU')} BYN</span>
+              <span className="total-value">{discountedTotal.toLocaleString('ru-BY')} BYN</span>
             </div>
 
             <Link to="/checkout" className="btn btn-primary">

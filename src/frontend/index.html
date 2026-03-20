@@ -5,7 +5,28 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GoldPC</title>
-    <style>body { background-color: #09090b; }</style>
+    
+    <!-- Preconnect to font origins for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Preload critical fonts with display=swap for FCP optimization -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" /></noscript>
+    
+    <!-- Critical CSS for above-the-fold content -->
+    <style>
+      body { background-color: #09090b; margin: 0; }
+      /* Font fallbacks to reduce FOUT impact */
+      @font-face {
+        font-family: 'Space Grotesk Fallback';
+        src: local('Arial');
+        size-adjust: 103%;
+        ascent-override: 90%;
+        descent-override: 20%;
+        line-gap-override: 0%;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

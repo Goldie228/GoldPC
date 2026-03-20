@@ -1,0 +1,352 @@
+/**
+ * SearchDropdown Styles
+ * Dark premium theme matching GoldPC design system
+ */
+
+.container {
+  position: relative;
+  width: 320px;
+}
+
+/* === Input Wrapper === */
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: all var(--transition-base);
+  overflow: hidden;
+}
+
+.inputWrapperFocused {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  color: var(--fg-muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.input {
+  width: 100%;
+  height: 40px;
+  padding: 0 36px 0 38px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 0.85rem;
+  color: var(--fg);
+  font-family: inherit;
+}
+
+.input::placeholder {
+  color: var(--fg-muted);
+}
+
+.clearBtn {
+  position: absolute;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+}
+
+.clearBtn:hover {
+  color: var(--fg);
+  background: var(--bg-card);
+}
+
+.clearBtn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* === Dropdown === */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 300;
+  overflow: hidden;
+  animation: dropdownOpen 0.15s ease-out;
+}
+
+@keyframes dropdownOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === Loading === */
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 16px;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  animation: spin 0.8s linear infinite;
+  color: var(--accent);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* === Results List === */
+.resultsList {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+}
+
+.resultItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  font-family: inherit;
+}
+
+.resultItem:hover {
+  background: var(--bg-card);
+}
+
+/* === Thumbnail === */
+.thumbnail {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+.thumbnailImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnailPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg-muted);
+}
+
+.thumbnailPlaceholder svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* === Result Info === */
+.resultInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.resultName {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resultBrand {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+}
+
+/* === Highlight === */
+.highlight {
+  background: rgba(212, 175, 55, 0.25);
+  color: var(--accent);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+/* === Result Price === */
+.resultPrice {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.price {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.oldPrice {
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+  text-decoration: line-through;
+}
+
+/* === Footer === */
+.footer {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  font-family: inherit;
+}
+
+.footer:hover {
+  background: rgba(212, 175, 55, 0.08);
+}
+
+/* === Empty State === */
+.emptyState {
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.emptyText {
+  font-size: 0.85rem;
+  color: var(--fg);
+  margin: 0 0 4px;
+}
+
+.emptyHint {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  margin: 0;
+}
+
+/* === Popular Section === */
+.popularSection {
+  padding: 8px 0;
+}
+
+.popularHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.popularHeader svg {
+  width: 14px;
+  height: 14px;
+  color: var(--accent);
+}
+
+.popularList {
+  list-style: none;
+  margin: 0;
+  padding: 0 4px;
+}
+
+.popularItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--fg);
+  border-radius: 6px;
+  transition: background var(--transition-fast);
+  font-family: inherit;
+}
+
+.popularItem:hover {
+  background: var(--bg-card);
+}
+
+.popularIcon {
+  width: 14px;
+  height: 14px;
+  color: var(--fg-muted);
+  flex-shrink: 0;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+  }
+
+  .dropdown {
+    position: fixed;
+    top: 60px;
+    left: 8px;
+    right: 8px;
+    border-radius: var(--radius-lg);
+  }
+}

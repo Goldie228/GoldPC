@@ -116,6 +116,14 @@
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
+.heroTitleLine {
+  display: block;
+}
+
+.heroTitleLine2 {
+  white-space: nowrap; /* keep premium rhythm on line-2 */
+}
+
 .heroTitleAccent {
   color: var(--accent);
 }

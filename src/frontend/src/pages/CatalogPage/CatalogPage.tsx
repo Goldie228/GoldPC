@@ -1,17 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Search, 
   RefreshCw, 
-  Box,
-  ChevronLeft,
-  ChevronRight,
   SlidersHorizontal,
   X,
   LayoutGrid,
-  List
+  List,
+  Loader2
 } from 'lucide-react';
-import { FilterSidebar } from '../../components/catalog';
+import { FilterSidebar, EmptyState } from '../../components/catalog';
 import { ProductCard } from '../../components/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { catalogApi } from '../../api/catalog';
@@ -29,7 +28,7 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 10 },
   visible: {
     opacity: 1,
     y: 0,
@@ -45,30 +44,103 @@ const itemVariants = {
  * Layout: Sidebar (20%) | Product Grid (80%)
  */
 export function CatalogPage() {
+  const PRICE_MIN = 0;
+  const PRICE_MAX = 10000;
+  const clampNumber = (value: number, min: number, max: number): number =>
+    Math.min(max, Math.max(min, value));
+  const normalizePriceRange = (range: { min: number; max: number }) => {
+    const min = clampNumber(range.min, PRICE_MIN, PRICE_MAX);
+    const max = clampNumber(range.max, PRICE_MIN, PRICE_MAX);
+    // Treat `0` as "not set" for our filtering UI.
+    // Otherwise, entering only `min` (e.g. {min: 1000, max: 0}) would swap
+    // and accidentally turn it into {min: 0, max: 1000}.
+    const minUnset = range.min === 0;
+    const maxUnset = range.max === 0;
+    if (minUnset || maxUnset) {
+      return { min: minUnset ? 0 : min, max: maxUnset ? 0 : max };
+    }
+
+    if (min <= max) return { min, max };
+    return { min: max, max: min };
+  };
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Инициализация состояния из URL params
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | null>(
+    () => (searchParams.get('category') as ProductCategory) || null
+  );
+  const [searchQuery, setSearchQuery] = useState(
+    () => searchParams.get('search') || ''
+  );
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 0 });
-  const [sortBy, setSortBy] = useState('popular');
+  const [priceRange, setPriceRange] = useState(() => ({
+    ...normalizePriceRange({
+      min: parseInt(searchParams.get('priceMin') || '0'),
+      max: parseInt(searchParams.get('priceMax') || '0'),
+    }),
+  }));
+  const [sortBy, setSortBy] = useState(
+    () => searchParams.get('sortBy') || 'popular'
+  );
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(
+    () => searchParams.get('brands')?.split(',').filter(Boolean) || []
+  );
+  const [minRating, setMinRating] = useState(
+    () => parseInt(searchParams.get('rating') || '0')
+  );
+  const [selectedAvailability, setSelectedAvailability] = useState<string[]>(
+    () => searchParams.get('availability')?.split(',').filter(Boolean) || []
+  );
 
+  // Синхронизация фильтров с URL
   useEffect(() => {
-    fetchProducts();
-  }, [selectedCategory, page, sortBy]);
+    const params = new URLSearchParams();
+    if (selectedCategory) params.set('category', selectedCategory);
+    if (searchQuery) params.set('search', searchQuery);
+    if (priceRange.min > 0) params.set('priceMin', priceRange.min.toString());
+    if (priceRange.max > 0) params.set('priceMax', priceRange.max.toString());
+    if (sortBy !== 'popular') params.set('sortBy', sortBy);
+    if (selectedBrands.length > 0) params.set('brands', selectedBrands.join(','));
+    if (minRating > 0) params.set('rating', minRating.toString());
+    if (selectedAvailability.length > 0) params.set('availability', selectedAvailability.join(','));
+    setSearchParams(params, { replace: true });
+  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedBrands, minRating, selectedAvailability, setSearchParams]);
 
-  const fetchProducts = async () => {
-    setLoading(true);
+  // Начальная загрузка при изменении фильтров
+  useEffect(() => {
+    setPage(1);
+    fetchProducts(1, true);
+  }, [
+    selectedCategory,
+    searchQuery,
+    priceRange,
+    sortBy,
+    selectedBrands,
+    minRating,
+    selectedAvailability,
+  ]);
+
+  const fetchProducts = async (pageNum: number, replace: boolean = false) => {
+    if (replace) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     setError(null);
     
     try {
       const params: GetProductsParams = {
-        page,
+        page: pageNum,
         pageSize: 12,
       };
       
@@ -87,23 +159,59 @@ export function CatalogPage() {
       if (priceRange.max > 0) {
         params.priceMax = priceRange.max;
       }
+
+      // Маппинг sortBy на API параметры
+      if (sortBy === 'price-asc') {
+        params.sortBy = 'price';
+        params.sortOrder = 'asc';
+      } else if (sortBy === 'price-desc') {
+        params.sortBy = 'price';
+        params.sortOrder = 'desc';
+      } else if (sortBy === 'rating') {
+        params.sortBy = 'rating';
+        params.sortOrder = 'desc';
+      } else if (sortBy === 'newest') {
+        params.sortBy = 'createdAt';
+        params.sortOrder = 'desc';
+      } else if (sortBy === 'name') {
+        params.sortBy = 'name';
+        params.sortOrder = 'asc';
+      }
+
+      // Фильтр по минимальному рейтингу
+      if (minRating > 0) {
+        params.rating = minRating;
+      }
       
       const response = await catalogApi.getProducts(params);
-      setProducts(response.data);
-      setTotalPages(response.meta.totalPages);
+      
+      if (replace) {
+        setProducts(response.data);
+      } else {
+        setProducts(prev => [...prev, ...response.data]);
+      }
+      
+      setHasMore(response.meta.hasNext);
       setTotalItems(response.meta.totalItems);
     } catch (err) {
       setError('Не удалось загрузить товары. Попробуйте позже.');
       console.error('Failed to fetch products:', err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  const handleShowMore = useCallback(() => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(nextPage, false);
+  }, [page]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
-    fetchProducts();
+    fetchProducts(1, true);
   };
 
   const handleCategoryChange = (category: ProductCategory | null) => {
@@ -112,13 +220,22 @@ export function CatalogPage() {
     setMobileFilterOpen(false);
   };
 
-  const handlePriceChange = (range: { min: number; max: number }) => {
-    setPriceRange(range);
-  };
+  const handlePriceChange = useCallback((range: { min: number; max: number }) => {
+    // Prevent feedback loop:
+    // FilterSidebar -> onPriceChange -> CatalogPage -> re-render -> FilterSidebar sync -> ...
+    // If values didn't actually change, don't touch state (keeps references stable).
+    setPriceRange((prev) => {
+      if (prev.min === range.min && prev.max === range.max) return prev;
+      return range;
+    });
+  }, []);
 
   const handleResetFilters = () => {
     setSelectedCategory(null);
     setPriceRange({ min: 0, max: 0 });
+    setSelectedBrands([]);
+    setMinRating(0);
+    setSelectedAvailability([]);
     setPage(1);
     setSearchQuery('');
   };
@@ -165,6 +282,12 @@ export function CatalogPage() {
               onCategoryChange={handleCategoryChange}
               priceRange={priceRange}
               onPriceChange={handlePriceChange}
+              selectedBrands={selectedBrands}
+              onBrandsChange={setSelectedBrands}
+              minRating={minRating}
+              onRatingChange={setMinRating}
+              selectedAvailability={selectedAvailability}
+              onAvailabilityChange={setSelectedAvailability}
               onReset={handleResetFilters}
             />
           </motion.div>
@@ -178,6 +301,12 @@ export function CatalogPage() {
           onCategoryChange={handleCategoryChange}
           priceRange={priceRange}
           onPriceChange={handlePriceChange}
+          selectedBrands={selectedBrands}
+          onBrandsChange={setSelectedBrands}
+          minRating={minRating}
+          onRatingChange={setMinRating}
+          selectedAvailability={selectedAvailability}
+          onAvailabilityChange={setSelectedAvailability}
           onReset={handleResetFilters}
         />
       </div>
@@ -192,7 +321,7 @@ export function CatalogPage() {
             <span>Каталог</span>
           </nav>
           <h1 className={styles.title}>Каталог комплектующих</h1>
-          <p className={styles.stats}>Найдено {totalItems} товаров</p>
+          <p className={styles.stats}>Показано {products.length} из {totalItems} товаров</p>
         </header>
 
         {/* Toolbar */}
@@ -243,6 +372,8 @@ export function CatalogPage() {
               <option value="popular">По популярности</option>
               <option value="price-asc">Сначала дешевле</option>
               <option value="price-desc">Сначала дороже</option>
+              <option value="rating">По рейтингу</option>
+              <option value="newest">По новизне</option>
               <option value="name">По названию</option>
             </select>
           </div>
@@ -261,7 +392,7 @@ export function CatalogPage() {
         {error && (
           <div className={styles.error}>
             <p>{error}</p>
-            <button onClick={fetchProducts} className={styles.retryBtn}>
+            <button onClick={() => fetchProducts(1, true)} className={styles.retryBtn}>
               <RefreshCw size={18} />
               <span>Попробовать снова</span>
             </button>
@@ -270,10 +401,7 @@ export function CatalogPage() {
 
         {/* Empty State */}
         {!loading && !error && products.length === 0 && (
-          <div className={styles.empty}>
-            <Box size={48} className={styles.emptyIcon} />
-            <p>Товары не найдены</p>
-          </div>
+          <EmptyState onReset={handleResetFilters} />
         )}
 
         {/* Product Grid - 4 columns */}
@@ -286,7 +414,7 @@ export function CatalogPage() {
               animate="visible"
             >
               {products.map((product) => (
-                <motion.div key={product.id} variants={itemVariants}>
+                <motion.div key={product.id} variants={itemVariants} className={styles.gridItem}>
                   <ProductCard 
                     product={product} 
                     onAddToCart={handleAddToCart}
@@ -295,51 +423,22 @@ export function CatalogPage() {
               ))}
             </motion.div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className={styles.pagination}>
+            {/* Show More Button */}
+            {hasMore && (
+              <div className={styles.showMore}>
                 <button
-                  className={styles.pageBtn}
-                  disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
-                  aria-label="Предыдущая страница"
+                  className={styles.showMoreBtn}
+                  onClick={handleShowMore}
+                  disabled={loadingMore}
                 >
-                  <ChevronLeft size={20} />
-                  <span>Назад</span>
-                </button>
-                
-                <div className={styles.pageNumbers}>
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (page <= 3) {
-                      pageNum = i + 1;
-                    } else if (page >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = page - 2 + i;
-                    }
-                    return (
-                      <button
-                        key={pageNum}
-                        className={`${styles.pageNumber} ${page === pageNum ? styles.active : ''}`}
-                        onClick={() => setPage(pageNum)}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                </div>
-                
-                <button
-                  className={styles.pageBtn}
-                  disabled={page === totalPages}
-                  onClick={() => setPage(page + 1)}
-                  aria-label="Следующая страница"
-                >
-                  <span>Вперёд</span>
-                  <ChevronRight size={20} />
+                  {loadingMore ? (
+                    <>
+                      <Loader2 size={20} className={styles.spinner} />
+                      <span>Загрузка...</span>
+                    </>
+                  ) : (
+                    <span>Показать ещё</span>
+                  )}
                 </button>
               </div>
             )}

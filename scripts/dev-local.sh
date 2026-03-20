@@ -11,7 +11,7 @@
 #   --help             Show this help message
 # =============================================================================
 # NOTE: This script handles the '#' character in the project path by 
-# copying frontend to /tmp for Vite compatibility.
+# copying frontend to /tmp and using inotifywait to sync changes (HMR works!).
 # =============================================================================
 
 set -e
@@ -127,22 +127,36 @@ start_frontend() {
     
     # Check if path contains '#' - Vite cannot handle this
     if [[ "$FRONTEND_SRC" == *"#"* ]]; then
-        echo -e "${YELLOW}Path contains '#' character. Copying frontend to /tmp...${RESET}"
+        echo -e "${YELLOW}Path contains '#' character. Using rsync + file watcher...${RESET}"
         
-        # Remove old tmp directory
+        # Install inotify-tools if not available
+        if ! command -v inotifywait &> /dev/null; then
+            echo -e "${CYAN}Installing inotify-tools...${RESET}"
+            sudo apt-get update -qq && sudo apt-get install -y -qq inotify-tools
+        fi
+        
+        # Remove old tmp directory if it exists
         rm -rf "$FRONTEND_TMP"
         
         # Copy frontend to tmp (excluding node_modules for speed)
-        cp -r "$FRONTEND_SRC" "$FRONTEND_TMP"
+        echo -e "${CYAN}Copying frontend to /tmp...${RESET}"
+        rsync -a --exclude='node_modules' "$FRONTEND_SRC/" "$FRONTEND_TMP/"
         
-        # Remove old node_modules if exists
-        rm -rf "$FRONTEND_TMP/node_modules"
-        
-        # Always install dependencies in tmp
-        echo -e "${CYAN}Installing dependencies in /tmp...${RESET}"
+        # Install dependencies in tmp
+        echo -e "${CYAN}Installing dependencies...${RESET}"
         cd "$FRONTEND_TMP" && npm install
         
-        # Start from tmp directory
+        # Start file watcher to sync changes (HMR will work!)
+        echo -e "${CYAN}Starting file watcher for auto-sync...${RESET}"
+        (
+            while true; do
+                # Watch for changes and sync
+                inotifywait -r -q -e modify,create,delete,move "$FRONTEND_SRC" --exclude 'node_modules|.git' 2>/dev/null
+                rsync -a --exclude='node_modules' "$FRONTEND_SRC/" "$FRONTEND_TMP/"
+            done
+        ) &
+        
+        # Start Vite from tmp directory
         echo -e "${CYAN}Starting frontend from /tmp...${RESET}"
         cd "$FRONTEND_TMP" && npm run dev &
     else

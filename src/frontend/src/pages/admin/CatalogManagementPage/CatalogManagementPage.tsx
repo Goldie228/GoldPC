@@ -141,7 +141,7 @@ export function CatalogManagementPage() {
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('ru-RU', {
+    return new Intl.NumberFormat('ru-BY', {
       style: 'currency',
       currency: 'BYN',
       minimumFractionDigits: 0,

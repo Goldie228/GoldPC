@@ -82,7 +82,7 @@ export function AccountOverview() {
             <span className="welcome-stat__label">Избранное</span>
           </div>
           <div className="welcome-stat">
-            <span className="welcome-stat__value">{user.stats.bonuses.toLocaleString('ru-RU')}</span>
+            <span className="welcome-stat__value">{user.stats.bonuses.toLocaleString('ru-BY')}</span>
             <span className="welcome-stat__label">Бонусов</span>
           </div>
         </div>

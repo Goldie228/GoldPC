@@ -137,3 +137,7 @@ export const useCartStore = create<CartStore>()(
     }
   )
 );
+
+// Selector для получения общего количества товаров в корзине
+export const useCartTotalItems = () =>
+  useCartStore((state) => state.items.reduce((count, item) => count + item.quantity, 0));

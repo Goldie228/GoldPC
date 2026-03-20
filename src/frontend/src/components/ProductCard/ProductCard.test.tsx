@@ -24,7 +24,8 @@ describe('ProductCard', () => {
 
     it('отображает цену в формате российской валюты', () => {
       render(<ProductCard product={mockProduct} />);
-      expect(screen.getByText(/59\s*999\s*₽/)).toBeInTheDocument();
+      expect(screen.getByText(/59\s*999/)).toBeInTheDocument();
+      expect(screen.getByText(/BYN/)).toBeInTheDocument();
     });
 
     it('отображает производителя, если он указан', () => {
@@ -140,8 +141,8 @@ describe('ProductCard', () => {
       };
 
       render(<ProductCard product={discountedProduct} />);
-      expect(screen.getByText(/49\s*999\s*₽/)).toBeInTheDocument();
-      expect(screen.getByText(/59\s*999\s*₽/)).toBeInTheDocument();
+      expect(screen.getByText(/49\s*999/)).toBeInTheDocument();
+      expect(screen.getByText(/59\s*999/)).toBeInTheDocument();
     });
 
     it('отображает бейдж "Хит" для товаров с рейтингом >= 4.8', () => {
@@ -168,7 +169,7 @@ describe('ProductCard', () => {
       render(<ProductCard product={mockProduct} />);
 
       const productLink = screen.getByRole('link', { name: mockProduct.name });
-      expect(productLink).toHaveAttribute('href', `/products/${mockProduct.id}`);
+      expect(productLink).toHaveAttribute('href', `/product/${mockProduct.id}`);
     });
   });
 });

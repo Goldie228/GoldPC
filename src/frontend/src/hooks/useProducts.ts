@@ -20,10 +20,14 @@ export const productsKeys = {
  * @param params - параметры запроса (пагинация, фильтрация, сортировка)
  * @returns UseQueryResult с данными о продуктах, статусом загрузки и ошибками
  */
-export function useProducts(params?: GetProductsParams): UseQueryResult<ProductListResponse, Error> {
+export function useProducts(
+  params?: GetProductsParams,
+  options?: { enabled?: boolean }
+): UseQueryResult<ProductListResponse, Error> {
   return useQuery({
     queryKey: productsKeys.list(params),
     queryFn: () => catalogApi.getProducts(params),
+    enabled: options?.enabled ?? true,
     staleTime: 5 * 60 * 1000, // 5 минут
   });
 }

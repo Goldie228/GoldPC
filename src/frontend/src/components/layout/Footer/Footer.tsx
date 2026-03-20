@@ -73,7 +73,7 @@ export function Footer() {
 
         {/* Bottom */}
         <div className={styles.bottom}>
-          <span className={styles.copyright}>{currentYear} GoldPC. All rights reserved.</span>
+          <span className={styles.copyright}>© {currentYear} GoldPC. Все права защищены.</span>
           <div className={styles.socialLinks}>
             <span className={styles.disabledSocialLink} aria-label="Telegram (скоро)">
               <svg viewBox="0 0 24 24" fill="currentColor">

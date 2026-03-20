@@ -1,0 +1,14 @@
+// Copyright (c) GoldPC. All rights reserved.
+
+using System.ComponentModel.DataAnnotations;
+
+namespace GoldPC.SharedKernel.DTOs;
+
+/// <summary>
+/// DTO для закрытия заявки (выдача оборудования клиенту).
+/// </summary>
+public class CloseServiceRequestRequest
+{
+    [MaxLength(500, ErrorMessage = "Комментарий не должен превышать 500 символов")]
+    public string? Comment { get; set; }
+}

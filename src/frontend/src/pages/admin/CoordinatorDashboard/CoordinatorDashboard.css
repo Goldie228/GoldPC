@@ -98,12 +98,14 @@
 }
 
 .btn--primary {
-  background: linear-gradient(135deg, #4f8cff, #3b7ae8);
-  color: white;
+  background: var(--accent, #d4a574);
+  color: var(--bg, #09090b);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn--primary:hover {
-  background: linear-gradient(135deg, #6b9fff, #4f8cff);
+  background: var(--accent-bright, #e8c4a0);
+  box-shadow: 0 0 15px rgba(212, 165, 116, 0.3);
   transform: translateY(-1px);
 }
 

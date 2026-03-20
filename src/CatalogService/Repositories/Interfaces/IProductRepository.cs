@@ -15,6 +15,7 @@ public interface IProductRepository
     Task<RepositoryPagedResult<Product>> GetFilteredAsync(ProductFilterDto filter);
     Task<IEnumerable<Product>> GetByIdsAsync(IEnumerable<Guid> ids);
     Task<IEnumerable<Product>> GetByCategoryAsync(Guid categoryId);
+    Task<Dictionary<Guid, int>> GetProductCountsByCategoryAsync();
     Task<Product> CreateAsync(Product product);
     Task<Product> UpdateAsync(Product product);
     Task DeleteAsync(Guid id);
