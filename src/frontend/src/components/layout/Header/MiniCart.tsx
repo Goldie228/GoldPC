@@ -1,6 +1,7 @@
 import { type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../../hooks/useCart';
+import { hasValidProductImage } from '../../../utils/image';
 import styles from './MiniCart.module.css';
 
 interface MiniCartProps {
@@ -78,12 +79,12 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
               {items.map((item) => (
                 <div key={item.id} className={styles.item}>
                   <div className={styles.itemImage}>
-                    {item.imageUrl !== undefined ? (
+                    {hasValidProductImage(item.imageUrl) ? (
                       <img src={item.imageUrl} alt={item.name} />
                     ) : (
                       <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
-                        <text x="50" y="55" textAnchor="middle" fill="#d4a574" fontSize="10">PART</text>
+                        <text x="50" y="55" textAnchor="middle" fill="#d4a574" fontSize="10">Нет фото</text>
                       </svg>
                     )}
                   </div>

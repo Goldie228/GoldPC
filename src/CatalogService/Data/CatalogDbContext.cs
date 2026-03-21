@@ -14,6 +14,7 @@ public class CatalogDbContext : DbContext
 
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<CategoryFilterAttribute> CategoryFilterAttributes => Set<CategoryFilterAttribute>();
     public DbSet<Manufacturer> Manufacturers => Set<Manufacturer>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<Review> Reviews => Set<Review>();
@@ -24,6 +25,7 @@ public class CatalogDbContext : DbContext
 
         ConfigureProduct(modelBuilder);
         ConfigureCategory(modelBuilder);
+        ConfigureCategoryFilterAttribute(modelBuilder);
         ConfigureManufacturer(modelBuilder);
         ConfigureProductImage(modelBuilder);
         ConfigureReview(modelBuilder);
@@ -31,6 +33,7 @@ public class CatalogDbContext : DbContext
         SeedCategories(modelBuilder);
         SeedManufacturers(modelBuilder);
         SeedProducts(modelBuilder);
+        SeedFilterAttributes(modelBuilder);
     }
 
     private void ConfigureProduct(ModelBuilder modelBuilder)
@@ -57,7 +60,11 @@ public class CatalogDbContext : DbContext
                 .HasColumnName("specifications")
                 .HasColumnType("jsonb");
             
+            entity.Property(e => e.SourceUrl).HasColumnName("source_url").HasMaxLength(1000);
+            entity.Property(e => e.ExternalId).HasColumnName("external_id").HasMaxLength(100);
+            
             entity.HasIndex(e => e.Sku).IsUnique();
+            entity.HasIndex(e => e.ExternalId).IsUnique().HasFilter("external_id IS NOT NULL");
             entity.HasIndex(e => e.CategoryId);
             entity.HasIndex(e => e.ManufacturerId);
             entity.HasIndex(e => e.IsActive);
@@ -106,6 +113,29 @@ public class CatalogDbContext : DbContext
                 .WithMany(c => c.Children)
                 .HasForeignKey(e => e.ParentId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasMany(e => e.FilterAttributes)
+                .WithOne(f => f.Category)
+                .HasForeignKey(f => f.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private void ConfigureCategoryFilterAttribute(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<CategoryFilterAttribute>(entity =>
+        {
+            entity.ToTable("category_filter_attributes");
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CategoryId).HasColumnName("category_id");
+            entity.Property(e => e.AttributeKey).HasColumnName("attribute_key").IsRequired().HasMaxLength(50);
+            entity.Property(e => e.DisplayName).HasColumnName("display_name").IsRequired().HasMaxLength(100);
+            entity.Property(e => e.FilterType).HasColumnName("filter_type");
+            entity.Property(e => e.SortOrder).HasColumnName("sort_order");
+            
+            entity.HasIndex(e => e.CategoryId);
         });
     }
 
@@ -179,10 +209,62 @@ public class CatalogDbContext : DbContext
             new Category { Id = Guid.Parse("00000000-0000-0000-0000-000000000006"), Name = "Накопители", Slug = "storage", ComponentType = ComponentType.Storage },
             new Category { Id = Guid.Parse("00000000-0000-0000-0000-000000000007"), Name = "Корпуса", Slug = "cases", ComponentType = ComponentType.Case },
             new Category { Id = Guid.Parse("00000000-0000-0000-0000-000000000008"), Name = "Системы охлаждения", Slug = "coolers", ComponentType = ComponentType.Cooler },
-            new Category { Id = Guid.Parse("00000000-0000-0000-0000-000000000009"), Name = "Периферия", Slug = "periphery", ComponentType = ComponentType.Periphery }
+            new Category { Id = Guid.Parse("00000000-0000-0000-0000-000000000009"), Name = "Периферия", Slug = "periphery", ComponentType = ComponentType.Periphery },
+            new Category { Id = Guid.Parse("00000000-0000-0000-0000-00000000000a"), Name = "Мониторы", Slug = "monitors", ComponentType = ComponentType.Monitor }
         };
 
         modelBuilder.Entity<Category>().HasData(categories);
+    }
+
+    private void SeedFilterAttributes(ModelBuilder modelBuilder)
+    {
+        var gpuId = Guid.Parse("00000000-0000-0000-0000-000000000004");
+        var cpuId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        var mbId = Guid.Parse("00000000-0000-0000-0000-000000000002");
+        var ramId = Guid.Parse("00000000-0000-0000-0000-000000000003");
+        var storageId = Guid.Parse("00000000-0000-0000-0000-000000000006");
+        var psuId = Guid.Parse("00000000-0000-0000-0000-000000000005");
+        var casesId = Guid.Parse("00000000-0000-0000-0000-000000000007");
+        var coolersId = Guid.Parse("00000000-0000-0000-0000-000000000008");
+        var peripheryId = Guid.Parse("00000000-0000-0000-0000-000000000009");
+        var monitorsId = Guid.Parse("00000000-0000-0000-0000-00000000000a");
+
+        var attributes = new[]
+        {
+            // GPU (оригинальные + без изменений)
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000001"), CategoryId = gpuId, AttributeKey = "vram", DisplayName = "Объём видеопамяти", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000002"), CategoryId = gpuId, AttributeKey = "gpu", DisplayName = "Серия GPU", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            // CPU
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000003"), CategoryId = cpuId, AttributeKey = "socket", DisplayName = "Сокет", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000004"), CategoryId = cpuId, AttributeKey = "cores", DisplayName = "Количество ядер", FilterType = FilterAttributeType.Range, SortOrder = 2 },
+            // Motherboards
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000005"), CategoryId = mbId, AttributeKey = "socket", DisplayName = "Сокет", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000006"), CategoryId = mbId, AttributeKey = "chipset", DisplayName = "Чипсет", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            // RAM
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000007"), CategoryId = ramId, AttributeKey = "type", DisplayName = "Тип памяти", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000008"), CategoryId = ramId, AttributeKey = "capacity", DisplayName = "Объём", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            // Storage
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000009"), CategoryId = storageId, AttributeKey = "capacity", DisplayName = "Объём", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            // PSU
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000a"), CategoryId = psuId, AttributeKey = "wattage", DisplayName = "Мощность", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000b"), CategoryId = psuId, AttributeKey = "efficiency", DisplayName = "Сертификат", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            // Cases
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000c"), CategoryId = casesId, AttributeKey = "form_factor", DisplayName = "Форм-фактор", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000d"), CategoryId = casesId, AttributeKey = "color", DisplayName = "Цвет", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            // Coolers
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000e"), CategoryId = coolersId, AttributeKey = "type", DisplayName = "Тип", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000f"), CategoryId = coolersId, AttributeKey = "socket", DisplayName = "Сокет", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000010"), CategoryId = coolersId, AttributeKey = "tdp", DisplayName = "TDP, Вт", FilterType = FilterAttributeType.Range, SortOrder = 3 },
+            // Monitors
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000011"), CategoryId = monitorsId, AttributeKey = "diagonal", DisplayName = "Диагональ", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000012"), CategoryId = monitorsId, AttributeKey = "resolution", DisplayName = "Разрешение", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000013"), CategoryId = monitorsId, AttributeKey = "refresh_rate", DisplayName = "Частота обновления", FilterType = FilterAttributeType.Select, SortOrder = 3 },
+            // Periphery
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000014"), CategoryId = peripheryId, AttributeKey = "type", DisplayName = "Тип устройства", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000015"), CategoryId = peripheryId, AttributeKey = "connection", DisplayName = "Подключение", FilterType = FilterAttributeType.Select, SortOrder = 2 }
+        };
+
+        modelBuilder.Entity<CategoryFilterAttribute>().HasData(attributes);
     }
 
     private void SeedManufacturers(ModelBuilder modelBuilder)

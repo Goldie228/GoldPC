@@ -97,6 +97,10 @@ components:
           $ref: './common.yaml#/components/schemas/Rating'
         isActive:
           type: boolean
+        descriptionShort:
+          type: string
+          maxLength: 350
+          description: Краткое описание для QuickView (первые 300 символов)
 
     # === Производитель ===
     Manufacturer:

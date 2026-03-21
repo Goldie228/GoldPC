@@ -551,6 +551,14 @@
   margin: 0;
 }
 
+.quickViewDescriptionText {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
 .quickViewLink {
   display: inline-flex;
   align-items: center;

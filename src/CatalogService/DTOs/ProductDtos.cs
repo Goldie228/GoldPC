@@ -16,6 +16,8 @@ public record ProductListDto
     public ProductImageDto? MainImage { get; init; }
     public RatingDto? Rating { get; init; }
     public bool IsActive { get; init; }
+    /// <summary>Краткое описание для QuickView (первые 300 символов)</summary>
+    public string? DescriptionShort { get; init; }
 }
 
 /// <summary>
@@ -195,8 +197,8 @@ public record ProductFilterDto
     /// <summary>Поиск по названию и описанию</summary>
     public string? Search { get; init; }
     
-    /// <summary>Фильтр по спецификациям</summary>
-    public Dictionary<string, object>? Specifications { get; init; }
+    /// <summary>Фильтр по спецификациям (ключ → значение для JSONB containment)</summary>
+    public Dictionary<string, string>? Specifications { get; init; }
     
     // Пагинация
     public int Page { get; init; } = 1;
@@ -205,6 +207,19 @@ public record ProductFilterDto
     // Сортировка
     public string SortBy { get; init; } = "createdAt";
     public string SortOrder { get; init; } = "desc";
+}
+
+/// <summary>
+/// DTO атрибута фильтра по характеристикам
+/// </summary>
+public record FilterAttributeDto
+{
+    public string Key { get; init; } = string.Empty;
+    public string DisplayName { get; init; } = string.Empty;
+    public string FilterType { get; init; } = "select"; // select | range
+    public int SortOrder { get; init; }
+    /// <summary>Уникальные значения для select-фильтра (из товаров категории)</summary>
+    public List<string> Values { get; init; } = new();
 }
 
 /// <summary>

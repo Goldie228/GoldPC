@@ -1,0 +1,327 @@
+using System.Text.Json;
+using CatalogService.Data;
+using CatalogService.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace CatalogService.Services;
+
+/// <summary>
+/// Импортёр товаров из JSON, полученного парсером X-Core.by
+/// </summary>
+public class XCoreImporter
+{
+    private readonly CatalogDbContext _context;
+    private readonly ILogger<XCoreImporter> _logger;
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+
+    public XCoreImporter(CatalogDbContext context, ILogger<XCoreImporter> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
+    private static string TruncateSku(string s) => s.Length > 50 ? s[..50] : s;
+
+    /// <summary>URL placeholder'а X-Core.by (логотип "X-core") — не сохраняем.</summary>
+    private static bool IsXCorePlaceholderUrl(string? url) =>
+        !string.IsNullOrEmpty(url) && url.Contains("/upload/CNext/", StringComparison.OrdinalIgnoreCase);
+
+    public async Task<ImportResult> ImportFromFileAsync(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException($"Файл не найден: {filePath}");
+        }
+
+        var json = await File.ReadAllTextAsync(filePath);
+        var data = JsonSerializer.Deserialize<XCoreImportData>(json, JsonOptions)
+            ?? throw new InvalidOperationException("Неверный формат JSON");
+
+        return await ImportAsync(data);
+    }
+
+    public async Task<ImportResult> ImportAsync(XCoreImportData data)
+    {
+        var result = new ImportResult { Total = data.Products?.Count ?? 0 };
+        if (data.Products == null || data.Products.Count == 0)
+        {
+            return result;
+        }
+
+        var categories = await _context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
+        var manufacturersCache = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+        var existingManufacturers = await _context.Manufacturers.ToListAsync();
+        foreach (var m in existingManufacturers)
+        {
+            manufacturersCache[m.Name] = m.Id;
+        }
+
+        var addedSkusInBatch = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var p in data.Products)
+        {
+            try
+            {
+                if (!categories.TryGetValue(p.CategorySlug, out var categoryId))
+                {
+                    _logger.LogWarning("Категория {Slug} не найдена, пропуск товара {Name}", p.CategorySlug, p.Name);
+                    result.Skipped++;
+                    continue;
+                }
+
+                var sku = TruncateSku(p.Sku ?? $"XCORE-{p.ExternalId ?? Guid.NewGuid().ToString("N")}");
+                if (addedSkusInBatch.Contains(sku))
+                {
+                    _logger.LogDebug("Дубликат SKU в батче, пропуск: {Sku}", sku);
+                    result.Skipped++;
+                    continue;
+                }
+
+                var existing = await _context.Products
+                    .FirstOrDefaultAsync(x => x.ExternalId == p.ExternalId || x.Sku == sku);
+
+                Manufacturer? manufacturer = null;
+                if (!string.IsNullOrEmpty(p.Manufacturer))
+                {
+                    if (manufacturersCache.TryGetValue(p.Manufacturer, out var manId))
+                    {
+                        manufacturer = await _context.Manufacturers.FindAsync(manId);
+                    }
+                    else
+                    {
+                        manufacturer = new Manufacturer
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = p.Manufacturer,
+                            Country = null,
+                        };
+                        _context.Manufacturers.Add(manufacturer);
+                        manufacturersCache[p.Manufacturer] = manufacturer.Id;
+                    }
+                }
+
+                var specs = new Dictionary<string, object>();
+                if (p.Specifications != null)
+                {
+                    foreach (var kv in p.Specifications)
+                    {
+                        if (kv.Value == null) continue;
+                        var v = kv.Value;
+                        specs[kv.Key] = v switch
+                        {
+                            JsonElement je when je.ValueKind == JsonValueKind.Number => je.TryGetInt64(out var n) ? n : je.GetDecimal(),
+                            JsonElement je when je.ValueKind == JsonValueKind.True => true,
+                            JsonElement je when je.ValueKind == JsonValueKind.False => false,
+                            JsonElement je => je.GetString() ?? "",
+                            _ => v
+                        };
+                    }
+                }
+
+                if (existing != null)
+                {
+                    existing.Price = (decimal)p.Price;
+                    existing.OldPrice = p.OldPrice.HasValue ? (decimal)p.OldPrice.Value : null;
+                    existing.Stock = p.Stock;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    existing.SourceUrl = p.Url;
+                    existing.Specifications = specs;
+                    _logger.LogDebug("Обновлён товар {Sku}", existing.Sku);
+                    result.Updated++;
+                }
+                else
+                {
+                    addedSkusInBatch.Add(sku);
+                    var product = new Product
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = p.Name,
+                        Sku = sku,
+                        Description = p.Description,
+                        CategoryId = categoryId,
+                        ManufacturerId = manufacturer?.Id,
+                        Price = (decimal)p.Price,
+                        OldPrice = p.OldPrice.HasValue ? (decimal)p.OldPrice.Value : null,
+                        Stock = p.Stock,
+                        WarrantyMonths = p.WarrantyMonths,
+                        Specifications = specs,
+                        SourceUrl = p.Url,
+                        ExternalId = p.ExternalId,
+                        IsActive = true,
+                        IsFeatured = false,
+                        CreatedAt = DateTime.UtcNow,
+                    };
+
+                    _context.Products.Add(product);
+
+                    if (p.Images != null && p.Images.Count > 0)
+                    {
+                        for (var i = 0; i < p.Images.Count; i++)
+                        {
+                            var raw = p.Images[i];
+                            var imgUrl = raw is JsonElement je ? je.GetString() : raw?.ToString();
+                            if (!string.IsNullOrEmpty(imgUrl) && !IsXCorePlaceholderUrl(imgUrl))
+                            {
+                                _context.ProductImages.Add(new ProductImage
+                                {
+                                    Id = Guid.NewGuid(),
+                                    ProductId = product.Id,
+                                    Url = imgUrl.Length > 500 ? imgUrl[..500] : imgUrl,
+                                    AltText = product.Name,
+                                    IsPrimary = i == 0,
+                                    SortOrder = i,
+                                });
+                            }
+                        }
+                    }
+
+                    result.Imported++;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка импорта товара {Name}", p.Name);
+                result.Errors++;
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return result;
+    }
+
+    /// <summary>
+    /// Обновляет изображения товаров из JSON (вывод fetch-product-images.mjs).
+    /// Формат: { "products": [ { "sku": "...", "images": ["url1", "url2"] } ] }
+    /// </summary>
+    public async Task<UpdateImagesResult> UpdateProductImagesFromFileAsync(string filePath)
+    {
+        if (!File.Exists(filePath))
+            throw new FileNotFoundException($"Файл не найден: {filePath}");
+
+        var json = await File.ReadAllTextAsync(filePath);
+        var data = JsonSerializer.Deserialize<XCoreImagesData>(json, JsonOptions)
+            ?? throw new InvalidOperationException("Неверный формат JSON");
+
+        var result = new UpdateImagesResult();
+        if (data.Products == null || data.Products.Count == 0)
+            return result;
+
+        var skusInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in data.Products)
+        {
+            if (string.IsNullOrEmpty(item.Sku))
+                continue;
+
+            skusInFile.Add(item.Sku);
+
+            try
+            {
+                var product = await _context.Products
+                    .Include(p => p.Images)
+                    .FirstOrDefaultAsync(p => p.Sku == item.Sku);
+
+                if (product == null)
+                {
+                    result.NotFound++;
+                    continue;
+                }
+
+                _context.ProductImages.RemoveRange(product.Images);
+
+                var imageUrls = item.Images ?? new List<string>();
+                for (var i = 0; i < imageUrls.Count; i++)
+                {
+                    var url = imageUrls[i]?.ToString();
+                    if (string.IsNullOrEmpty(url) || IsXCorePlaceholderUrl(url)) continue;
+
+                    _context.ProductImages.Add(new ProductImage
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = product.Id,
+                        Url = url.Length > 500 ? url[..500] : url,
+                        AltText = product.Name,
+                        IsPrimary = i == 0,
+                        SortOrder = i,
+                    });
+                }
+
+                result.Updated++;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка обновления изображений для SKU {Sku}", item.Sku);
+                result.Errors++;
+            }
+        }
+
+        // Удалить изображения у товаров, которых нет в xcore-images.json
+        var productsWithImagesNotInFile = await _context.Products
+            .Include(p => p.Images)
+            .Where(p => p.Images.Count > 0 && !skusInFile.Contains(p.Sku))
+            .ToListAsync();
+
+        foreach (var product in productsWithImagesNotInFile)
+        {
+            _context.ProductImages.RemoveRange(product.Images);
+            result.Deleted++;
+        }
+
+        await _context.SaveChangesAsync();
+        return result;
+    }
+}
+
+public class UpdateImagesResult
+{
+    public int Updated { get; set; }
+    public int NotFound { get; set; }
+    public int Errors { get; set; }
+    /// <summary>Количество товаров, у которых удалены изображения (SKU не найден в файле)</summary>
+    public int Deleted { get; set; }
+}
+
+public class XCoreImagesData
+{
+    public List<XCoreImageItem>? Products { get; set; }
+}
+
+public class XCoreImageItem
+{
+    public string? Sku { get; set; }
+    public List<string>? Images { get; set; }
+}
+
+public class ImportResult
+{
+    public int Total { get; set; }
+    public int Imported { get; set; }
+    public int Updated { get; set; }
+    public int Skipped { get; set; }
+    public int Errors { get; set; }
+}
+
+public class XCoreImportData
+{
+    public string? Source { get; set; }
+    public string? ScrapedAt { get; set; }
+    public int ProductCount { get; set; }
+    public List<XCoreProductDto>? Products { get; set; }
+}
+
+public class XCoreProductDto
+{
+    public string? Url { get; set; }
+    public string? ExternalId { get; set; }
+    public string? CategorySlug { get; set; }
+    public string? CategoryPath { get; set; }
+    public string? Name { get; set; }
+    public double Price { get; set; }
+    public double? OldPrice { get; set; }
+    public int Stock { get; set; }
+    public string? Description { get; set; }
+    public Dictionary<string, object?>? Specifications { get; set; }
+    public int WarrantyMonths { get; set; }
+    public string? Manufacturer { get; set; }
+    public List<object>? Images { get; set; }
+    public string? Sku { get; set; }
+}

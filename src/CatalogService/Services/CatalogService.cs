@@ -184,6 +184,28 @@ public class CatalogService : ICatalogService
         return category != null ? MapToCategoryDto(category) : null;
     }
 
+    public async Task<IEnumerable<FilterAttributeDto>> GetFilterAttributesByCategoryAsync(string categorySlug)
+    {
+        var category = await _categoryRepository.GetBySlugAsync(categorySlug);
+        if (category == null)
+            return Array.Empty<FilterAttributeDto>();
+
+        var attributes = await _categoryRepository.GetFilterAttributesByCategorySlugAsync(categorySlug);
+        var selectKeys = attributes.Where(a => a.FilterType == FilterAttributeType.Select).Select(a => a.AttributeKey).ToList();
+        var distinctValues = selectKeys.Count > 0
+            ? await _productRepository.GetDistinctSpecificationValuesAsync(category.Id, selectKeys)
+            : new Dictionary<string, List<string>>();
+
+        return attributes.Select(a => new FilterAttributeDto
+        {
+            Key = a.AttributeKey,
+            DisplayName = a.DisplayName,
+            FilterType = a.FilterType == FilterAttributeType.Range ? "range" : "select",
+            SortOrder = a.SortOrder,
+            Values = distinctValues.GetValueOrDefault(a.AttributeKey, new List<string>())
+        });
+    }
+
     public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto dto)
     {
         var category = new Category
@@ -300,8 +322,16 @@ public class CatalogService : ICatalogService
 
     #region Mapping
 
+    private const int DescriptionShortMaxLength = 300;
+
     private static ProductListDto MapToListDto(Product product)
     {
+        var descShort = !string.IsNullOrEmpty(product.Description)
+            ? (product.Description.Length > DescriptionShortMaxLength
+                ? product.Description[..DescriptionShortMaxLength].TrimEnd() + "…"
+                : product.Description)
+            : null;
+
         return new ProductListDto
         {
             Id = product.Id,
@@ -315,7 +345,8 @@ public class CatalogService : ICatalogService
             MainImage = product.Images.Where(i => i.IsPrimary).Select(MapToImageDto).FirstOrDefault()
                 ?? product.Images.Select(MapToImageDto).FirstOrDefault(),
             Rating = product.Rating > 0 ? new RatingDto { Average = product.Rating, Count = product.ReviewCount } : null,
-            IsActive = product.IsActive
+            IsActive = product.IsActive,
+            DescriptionShort = descShort
         };
     }
 

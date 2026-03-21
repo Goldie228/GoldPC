@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { catalogAdminApi, type UpdateProductRequest } from '../../../api/admin';
+import { hasValidProductImage } from '../../../utils/image';
 import type { Product, ProductCategory } from '../../../api/types';
 import styles from './CatalogManagementPage.module.css';
 
@@ -308,12 +309,17 @@ export function CatalogManagementPage() {
                   <tr key={product.id} className={!product.isActive ? styles.inactiveRow : ''}>
                     <td className={styles.sku}>{product.sku}</td>
                     <td className={styles.productName}>
-                      {product.mainImage && (
+                      {hasValidProductImage(product.mainImage?.url) ? (
                         <img 
                           src={product.mainImage.url} 
                           alt={product.name}
                           className={styles.productImage}
                         />
+                      ) : (
+                        <svg viewBox="0 0 60 60" fill="none" className={styles.productImagePlaceholder}>
+                          <rect x="5" y="5" width="50" height="50" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
+                          <text x="30" y="35" textAnchor="middle" fill="#d4a574" fontSize="10">Нет фото</text>
+                        </svg>
                       )}
                       <span>{product.name}</span>
                     </td>

@@ -61,6 +61,12 @@ public class Product
     /// <summary>Дата обновления</summary>
     public DateTime? UpdatedAt { get; set; }
     
+    /// <summary>URL источника (например x-core.by)</summary>
+    public string? SourceUrl { get; set; }
+    
+    /// <summary>ID товара на источнике (для дедупликации)</summary>
+    public string? ExternalId { get; set; }
+    
     /// <summary>Изображения товара</summary>
     public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
     
@@ -104,6 +110,9 @@ public class Category
     
     /// <summary>Товары категории</summary>
     public ICollection<Product> Products { get; set; } = new List<Product>();
+    
+    /// <summary>Атрибуты фильтрации для категории</summary>
+    public ICollection<CategoryFilterAttribute> FilterAttributes { get; set; } = new List<CategoryFilterAttribute>();
 }
 
 /// <summary>

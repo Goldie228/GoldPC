@@ -1,5 +1,6 @@
 import { type ReactElement } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { hasValidProductImage } from '../../utils/image';
 import { Button } from '../../components/ui/Button';
 import { Tabs, type Tab } from '../../components/ui/Tabs';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -87,7 +88,7 @@ function ProductGallery({ product }: { product: Product }): ReactElement {
         {hasDiscount && (
           <span className="gallery__badge">-{discountPercent}%</span>
         )}
-        {product.mainImage !== undefined && product.mainImage.url !== '' ? (
+        {hasValidProductImage(product.mainImage?.url) ? (
           <img
             src={product.mainImage.url}
             alt={product.mainImage.alt ?? product.name}
@@ -97,7 +98,7 @@ function ProductGallery({ product }: { product: Product }): ReactElement {
           <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="gallery__placeholder">
             <rect x="40" y="40" width="120" height="120" rx="8" fill="#1a1a1e" stroke="#d4a574" strokeWidth="2"/>
             <rect x="70" y="70" width="60" height="60" rx="4" fill="#121214"/>
-            <text x="100" y="108" textAnchor="middle" fill="#d4a574" fontSize="20" fontWeight="bold">CPU</text>
+            <text x="100" y="108" textAnchor="middle" fill="#d4a574" fontSize="20" fontWeight="bold">Нет фото</text>
           </svg>
         )}
       </div>
@@ -208,12 +209,21 @@ function useProductTabs(product: Product): Tab[] {
   const specs = product.specifications as ProductSpecifications | undefined;
   const hasSpecs = specs !== undefined && Object.keys(specs).length > 0;
 
+  const SPEC_LABELS: Record<string, string> = {
+    vram: 'Объём видеопамяти', gpu: 'Графический процессор', interface: 'Интерфейс',
+    socket: 'Сокет', cores: 'Ядра', threads: 'Потоки', chipset: 'Чипсет', form_factor: 'Форм-фактор',
+    type: 'Тип', capacity: 'Объём', frequency: 'Частота', wattage: 'Мощность', efficiency: 'Сертификат',
+    color: 'Цвет', tdp: 'TDP', diagonal: 'Диагональ', resolution: 'Разрешение', refresh_rate: 'Частота обновления',
+    connection: 'Подключение',
+  };
+  const specLabel = (key: string): string => SPEC_LABELS[key.toLowerCase()] ?? key;
+
   const specsContent = (
     <div className="specs-table">
       {hasSpecs ? (
         Object.entries(specs).map(([key, value]) => (
           <div key={key} className="specs-table__row">
-            <span className="specs-table__label">{key}</span>
+            <span className="specs-table__label">{specLabel(key)}</span>
             <span className="specs-table__value">{String(value)}</span>
           </div>
         ))
@@ -225,8 +235,10 @@ function useProductTabs(product: Product): Tab[] {
 
   const descriptionContent = (
     <div className="tab-description">
-      {product.description !== undefined && product.description !== '' ? (
-        <p>{product.description}</p>
+      {product.description !== undefined && product.description.trim() !== '' ? (
+        <div className="tab-description__content" style={{ whiteSpace: 'pre-line' }}>
+          {product.description}
+        </div>
       ) : (
         <p className="tab-description__empty">Описание товара отсутствует.</p>
       )}

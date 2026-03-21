@@ -66,6 +66,8 @@ export interface ProductSummary {
   mainImage?: ProductImage;
   rating?: number;
   isActive: boolean;
+  /** Краткое описание для QuickView (первые 300 символов) */
+  descriptionShort?: string;
 }
 
 export interface Product extends ProductSummary {
@@ -96,6 +98,18 @@ export interface GetProductsParams {
   sortOrder?: 'asc' | 'desc';
   inStock?: boolean;
   isFeatured?: boolean;
+  /** Фильтр по характеристикам (vram, socket, chipset и т.д.) */
+  specifications?: Record<string, string | number>;
+}
+
+// === Атрибут фильтра по характеристикам ===
+export interface FilterAttribute {
+  key: string;
+  displayName: string;
+  filterType: 'select' | 'range';
+  sortOrder: number;
+  /** Уникальные значения для select-фильтра */
+  values?: string[];
 }
 
 // === Категория ===

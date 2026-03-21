@@ -156,12 +156,12 @@ start_frontend() {
             done
         ) &
         
-        # Start Vite from tmp directory
+        # Start Vite from tmp directory (dev:api = реальный API, без MSW)
         echo -e "${CYAN}Starting frontend from /tmp...${RESET}"
-        cd "$FRONTEND_TMP" && npm run dev &
+        cd "$FRONTEND_TMP" && npm run dev:api &
     else
-        # Start directly
-        cd "$FRONTEND_SRC" && npm run dev &
+        # Start directly (dev:api = реальный API, без MSW)
+        cd "$FRONTEND_SRC" && npm run dev:api &
     fi
     
     echo -e "${GREEN}✓ Frontend starting...${RESET}"

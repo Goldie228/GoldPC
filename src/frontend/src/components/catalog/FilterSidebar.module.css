@@ -478,6 +478,28 @@
   gap: 2px;
 }
 
+.specFilterBlock {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.specFilterBlock:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.specFilterLabel {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--fg-dim, #52525b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
 .checkboxItem {
   display: flex;
   align-items: center;

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using CatalogService.Data;
+using Npgsql;
 using CatalogService.Repositories;
 using CatalogService.Repositories.Interfaces;
 using CatalogService.Services;
@@ -53,12 +54,17 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Настройка PostgreSQL
+// Настройка PostgreSQL (EnableDynamicJson для Specifications Dictionary<string, object>)
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQL") 
     ?? "Host=localhost;Database=goldpc_catalog;Username=postgres;Password=postgres";
 
+var npgsqlBuilder = new NpgsqlDataSourceBuilder(connectionString);
+npgsqlBuilder.EnableDynamicJson();
+var dataSource = npgsqlBuilder.Build();
+builder.Services.AddSingleton(dataSource);
+
 builder.Services.AddDbContext<CatalogDbContext>(options =>
-    options.UseNpgsql(connectionString, npgsqlOptions =>
+    options.UseNpgsql(dataSource, npgsqlOptions =>
     {
         npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
     }));
@@ -71,6 +77,7 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 // Регистрация сервисов
 builder.Services.AddScoped<ICatalogService, CatalogService.Services.CatalogService>();
+builder.Services.AddScoped<CatalogService.Services.XCoreImporter>();
 
 // Настройка CORS
 builder.Services.AddCors(options =>
@@ -228,10 +235,87 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions
 // Prometheus metrics endpoint для сбора метрик
 app.MapPrometheusScrapingEndpoint();
 
-Log.Information("Catalog Service запущен на порту {Port}", 
+// CLI: dotnet run -- seed-xcore-images [путь к xcore-images.json]
+if (args is ["seed-xcore-images"] or ["seed-xcore-images", _])
+{
+    var jsonPath = args.Length == 2 ? args[1] : null;
+    if (string.IsNullOrEmpty(jsonPath))
+    {
+        var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        jsonPath = Path.Combine(repoRoot, "scripts", "scraper", "data", "xcore-images.json");
+    }
+    else if (!Path.IsPathRooted(jsonPath))
+    {
+        var fromCwd = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, jsonPath));
+        var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        var fromRepo = Path.Combine(repoRoot, jsonPath);
+        jsonPath = File.Exists(fromCwd) ? fromCwd : (File.Exists(fromRepo) ? fromRepo : fromCwd);
+    }
+    if (!File.Exists(jsonPath))
+    {
+        Console.WriteLine($"Файл не найден: {jsonPath}");
+        Console.WriteLine("Сначала выполните: cd scripts/scraper && node fetch-product-images.mjs");
+        return 1;
+    }
+    using var scope = app.Services.CreateScope();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var result = await importer.UpdateProductImagesFromFileAsync(jsonPath);
+        logger.LogInformation("Обновление изображений: {Updated} обновлено, {Deleted} очищено (SKU не в файле), {NotFound} не найдено, {Errors} ошибок",
+            result.Updated, result.Deleted, result.NotFound, result.Errors);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка обновления изображений");
+        throw;
+    }
+    return 0;
+}
+
+// CLI: dotnet run -- seed-xcore [путь к JSON]
+if (args is ["seed-xcore"] or ["seed-xcore", _])
+{
+    var jsonPath = args.Length == 2 ? args[1] : null;
+    if (string.IsNullOrEmpty(jsonPath))
+    {
+        var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        jsonPath = Path.Combine(repoRoot, "scripts", "scraper", "data", "xcore-products.json");
+        if (!File.Exists(jsonPath))
+        {
+            jsonPath = Path.Combine(repoRoot, "scripts", "scraper", "data", "sample-products.json");
+        }
+    }
+    else if (!Path.IsPathRooted(jsonPath))
+    {
+        var fromCwd = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, jsonPath));
+        var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        var fromRepo = Path.Combine(repoRoot, jsonPath);
+        jsonPath = File.Exists(fromCwd) ? fromCwd : (File.Exists(fromRepo) ? fromRepo : fromCwd);
+    }
+    using var scope = app.Services.CreateScope();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var result = await importer.ImportFromFileAsync(jsonPath);
+        logger.LogInformation("Импорт завершён: {Imported} добавлено, {Updated} обновлено, {Skipped} пропущено, {Errors} ошибок",
+            result.Imported, result.Updated, result.Skipped, result.Errors);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка импорта");
+        throw;
+    }
+    return 0;
+}
+
+Log.Information("Catalog Service запущен на порту {Port}",
     app.Services.GetRequiredService<IConfiguration>()["ASPNETCORE_URLS"] ?? "5000");
 
-app.Run();
+await app.RunAsync();
+return 0;
 
 /// <summary>
 /// Partial класс для обеспечения доступа к Program из тестов (WebApplicationFactory)

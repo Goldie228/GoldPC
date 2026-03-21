@@ -134,6 +134,18 @@ db-seed: ## Seed database with test data
 	@echo "$(CYAN)Seeding database...$(RESET)"
 	$(DOCKER_COMPOSE_DEV) exec catalogservice dotnet seed
 
+db-seed-xcore: ## Импорт товаров X-Core из scripts/scraper/data/xcore-products.json
+	@echo "$(CYAN)Импорт товаров X-Core...$(RESET)"
+	cd src/CatalogService && dotnet run -- seed-xcore
+
+scraper-fetch-images: ## Загрузить изображения с x-core.by (div.slides) -> xcore-images.json
+	@echo "$(CYAN)Загрузка изображений товаров...$(RESET)"
+	cd scripts/scraper && npm run fetch-images
+
+db-update-images: ## Обновить картинки в БД из xcore-images.json (после scraper-fetch-images)
+	@echo "$(CYAN)Обновление изображений в БД...$(RESET)"
+	cd src/CatalogService && dotnet run -- seed-xcore-images
+
 db-admin: ## Open Adminer database UI
 	@echo "$(GREEN)Adminer available at: http://localhost:8080$(RESET)"
 	$(DOCKER_COMPOSE_DEV) up -d adminer

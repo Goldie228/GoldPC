@@ -142,6 +142,243 @@ namespace CatalogService.Migrations
                             Name = "Периферия",
                             Order = 0,
                             Slug = "periphery"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-00000000000a"),
+                            ComponentType = 10,
+                            Name = "Мониторы",
+                            Order = 0,
+                            Slug = "monitors"
+                        });
+                });
+
+            modelBuilder.Entity("CatalogService.Models.CategoryFilterAttribute", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AttributeKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("attribute_key");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("display_name");
+
+                    b.Property<int>("FilterType")
+                        .HasColumnType("integer")
+                        .HasColumnName("filter_type");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("category_filter_attributes", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000001"),
+                            AttributeKey = "vram",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000004"),
+                            DisplayName = "Объём видеопамяти",
+                            FilterType = 0,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000002"),
+                            AttributeKey = "gpu",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000004"),
+                            DisplayName = "Серия GPU",
+                            FilterType = 0,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000003"),
+                            AttributeKey = "socket",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            DisplayName = "Сокет",
+                            FilterType = 0,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000004"),
+                            AttributeKey = "cores",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            DisplayName = "Количество ядер",
+                            FilterType = 1,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000005"),
+                            AttributeKey = "socket",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            DisplayName = "Сокет",
+                            FilterType = 0,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000006"),
+                            AttributeKey = "chipset",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            DisplayName = "Чипсет",
+                            FilterType = 0,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000007"),
+                            AttributeKey = "type",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            DisplayName = "Тип памяти",
+                            FilterType = 0,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000008"),
+                            AttributeKey = "capacity",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            DisplayName = "Объём",
+                            FilterType = 0,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000009"),
+                            AttributeKey = "capacity",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000006"),
+                            DisplayName = "Объём",
+                            FilterType = 0,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000a"),
+                            AttributeKey = "wattage",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000005"),
+                            DisplayName = "Мощность",
+                            FilterType = 0,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000b"),
+                            AttributeKey = "efficiency",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000005"),
+                            DisplayName = "Сертификат",
+                            FilterType = 0,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000c"),
+                            AttributeKey = "form_factor",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000007"),
+                            DisplayName = "Форм-фактор",
+                            FilterType = 0,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000d"),
+                            AttributeKey = "color",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000007"),
+                            DisplayName = "Цвет",
+                            FilterType = 0,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000e"),
+                            AttributeKey = "type",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000008"),
+                            DisplayName = "Тип",
+                            FilterType = 0,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000000f"),
+                            AttributeKey = "socket",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000008"),
+                            DisplayName = "Сокет",
+                            FilterType = 0,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000010"),
+                            AttributeKey = "tdp",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000008"),
+                            DisplayName = "TDP, Вт",
+                            FilterType = 1,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000011"),
+                            AttributeKey = "diagonal",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000a"),
+                            DisplayName = "Диагональ",
+                            FilterType = 0,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000012"),
+                            AttributeKey = "resolution",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000a"),
+                            DisplayName = "Разрешение",
+                            FilterType = 0,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000013"),
+                            AttributeKey = "refresh_rate",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000a"),
+                            DisplayName = "Частота обновления",
+                            FilterType = 0,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000014"),
+                            AttributeKey = "type",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000009"),
+                            DisplayName = "Тип устройства",
+                            FilterType = 0,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000015"),
+                            AttributeKey = "connection",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000009"),
+                            DisplayName = "Подключение",
+                            FilterType = 0,
+                            SortOrder = 2
                         });
                 });
 
@@ -303,6 +540,11 @@ namespace CatalogService.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("external_id");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
@@ -342,6 +584,11 @@ namespace CatalogService.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("sku");
 
+                    b.Property<string>("SourceUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("source_url");
+
                     b.Property<Dictionary<string, object>>("Specifications")
                         .IsRequired()
                         .HasColumnType("jsonb")
@@ -362,6 +609,10 @@ namespace CatalogService.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("ExternalId")
+                        .IsUnique()
+                        .HasFilter("external_id IS NOT NULL");
 
                     b.HasIndex("IsActive");
 
@@ -705,6 +956,17 @@ namespace CatalogService.Migrations
                     b.Navigation("Parent");
                 });
 
+            modelBuilder.Entity("CatalogService.Models.CategoryFilterAttribute", b =>
+                {
+                    b.HasOne("CatalogService.Models.Category", "Category")
+                        .WithMany("FilterAttributes")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
             modelBuilder.Entity("CatalogService.Models.Product", b =>
                 {
                     b.HasOne("CatalogService.Models.Category", "Category")
@@ -748,6 +1010,8 @@ namespace CatalogService.Migrations
             modelBuilder.Entity("CatalogService.Models.Category", b =>
                 {
                     b.Navigation("Children");
+
+                    b.Navigation("FilterAttributes");
 
                     b.Navigation("Products");
                 });

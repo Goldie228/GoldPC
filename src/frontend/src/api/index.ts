@@ -31,6 +31,7 @@ export type {
   GetProductsParams,
   Category,
   Manufacturer,
+  FilterAttribute,
   PaginationMeta,
   PagedResponse,
   Uuid,

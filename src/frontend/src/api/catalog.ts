@@ -1,5 +1,19 @@
 import api from './index';
-import type { ProductListResponse, GetProductsParams, Product, Category } from './types';
+import type { ProductListResponse, GetProductsParams, Product, Category, FilterAttribute, ProductCategory } from './types';
+
+/** Маппинг frontend category -> backend slug для API */
+const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
+  cpu: 'processors',
+  gpu: 'gpu',
+  motherboard: 'motherboards',
+  ram: 'ram',
+  storage: 'storage',
+  psu: 'psu',
+  case: 'cases',
+  cooling: 'coolers',
+  monitor: 'monitors',
+  peripherals: 'periphery',
+};
 
 /**
  * API сервиса каталога
@@ -9,8 +23,12 @@ export const catalogApi = {
    * Получить список товаров с пагинацией и фильтрацией
    */
   async getProducts(params?: GetProductsParams): Promise<ProductListResponse> {
+    const apiParams: Record<string, unknown> = params ? { ...params } : {};
+    if (params?.category && FRONTEND_TO_BACKEND_SLUG[params.category]) {
+      apiParams.category = FRONTEND_TO_BACKEND_SLUG[params.category];
+    }
     const response = await api.get<ProductListResponse>('/catalog/products', {
-      params,
+      params: apiParams,
     });
     return response.data;
   },
@@ -34,5 +52,13 @@ export const catalogApi = {
       return data;
     }
     return data?.data || data?.categories || [];
+  },
+
+  /**
+   * Получить атрибуты фильтрации для категории (VRAM, socket, chipset и т.д.)
+   */
+  async getFilterAttributes(categorySlug: string): Promise<FilterAttribute[]> {
+    const response = await api.get<{ data?: FilterAttribute[] }>(`/catalog/categories/${categorySlug}/filter-attributes`);
+    return response.data?.data ?? [];
   },
 };

@@ -16,6 +16,7 @@ public interface IProductRepository
     Task<IEnumerable<Product>> GetByIdsAsync(IEnumerable<Guid> ids);
     Task<IEnumerable<Product>> GetByCategoryAsync(Guid categoryId);
     Task<Dictionary<Guid, int>> GetProductCountsByCategoryAsync();
+    Task<Dictionary<string, List<string>>> GetDistinctSpecificationValuesAsync(Guid categoryId, IEnumerable<string> attributeKeys);
     Task<Product> CreateAsync(Product product);
     Task<Product> UpdateAsync(Product product);
     Task DeleteAsync(Guid id);
@@ -31,6 +32,7 @@ public interface ICategoryRepository
 {
     Task<Category?> GetByIdAsync(Guid id);
     Task<Category?> GetBySlugAsync(string slug);
+    Task<IEnumerable<CategoryFilterAttribute>> GetFilterAttributesByCategorySlugAsync(string slug);
     Task<IEnumerable<Category>> GetAllAsync();
     Task<IEnumerable<Category>> GetRootCategoriesAsync();
     Task<Category> CreateAsync(Category category);

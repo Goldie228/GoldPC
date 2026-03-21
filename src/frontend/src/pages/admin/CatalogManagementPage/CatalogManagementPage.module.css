@@ -111,12 +111,17 @@
   max-width: 250px;
 }
 
-.productImage {
+.productImage,
+.productImagePlaceholder {
   width: 40px;
   height: 40px;
   border-radius: 0.375rem;
   object-fit: cover;
   flex-shrink: 0;
+}
+
+.productImagePlaceholder {
+  display: block;
 }
 
 .sku {

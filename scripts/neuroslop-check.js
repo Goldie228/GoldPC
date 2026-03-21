@@ -316,5 +316,3 @@ if (args.length === 0) {
 }
 
 printResults();
-</task_progress>
-</write_to_file>

@@ -3,7 +3,7 @@ import { ChevronDown, Grid3X3, DollarSign, Package, Check, Star, Tag } from 'luc
 import { catalogApi } from '../../api/catalog';
 import { RangeSlider } from '../ui/RangeSlider';
 import { Skeleton } from '../ui/Skeleton';
-import type { ProductCategory, Category } from '../../api/types';
+import type { ProductCategory, Category, FilterAttribute } from '../../api/types';
 import styles from './FilterSidebar.module.css';
 
 interface FilterSidebarProps {
@@ -17,6 +17,8 @@ interface FilterSidebarProps {
   onRatingChange: (rating: number) => void;
   selectedAvailability: string[];
   onAvailabilityChange: (availability: string[]) => void;
+  selectedSpecifications: Record<string, string | number>;
+  onSpecificationsChange: (specs: Record<string, string | number>) => void;
   onReset: () => void;
 }
 
@@ -59,6 +61,21 @@ const BACKEND_SLUG_MAP: Record<string, ProductCategory> = {
   cases: 'case',
   coolers: 'cooling',
   periphery: 'peripherals',
+  monitors: 'monitor',
+};
+
+// Обратный маппинг: frontend -> backend slug для API
+const FRONTEND_TO_BACKEND: Record<ProductCategory, string> = {
+  cpu: 'processors',
+  gpu: 'gpu',
+  motherboard: 'motherboards',
+  ram: 'ram',
+  storage: 'storage',
+  psu: 'psu',
+  case: 'cases',
+  cooling: 'coolers',
+  monitor: 'monitors',
+  peripherals: 'periphery',
 };
 
 interface FilterGroupProps {
@@ -104,6 +121,8 @@ export function FilterSidebar({
   onRatingChange,
   selectedAvailability,
   onAvailabilityChange,
+  selectedSpecifications,
+  onSpecificationsChange,
   onReset,
 }: FilterSidebarProps) {
   const PRICE_MIN = 0;
@@ -134,6 +153,8 @@ export function FilterSidebar({
   // Состояние для хранения количества товаров в каждой категории
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [filterAttributes, setFilterAttributes] = useState<FilterAttribute[]>([]);
+  const [specAttrsLoading, setSpecAttrsLoading] = useState(false);
   
   // Локальное состояние для debounce цены
   const [localPriceRange, setLocalPriceRange] = useState({
@@ -189,6 +210,28 @@ export function FilterSidebar({
     fetchCategories();
   }, []);
 
+  // Загрузка атрибутов фильтрации при выборе категории
+  useEffect(() => {
+    if (!selectedCategory) {
+      setFilterAttributes([]);
+      return;
+    }
+    const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
+    const fetchAttrs = async () => {
+      setSpecAttrsLoading(true);
+      try {
+        const attrs = await catalogApi.getFilterAttributes(backendSlug);
+        setFilterAttributes(attrs);
+      } catch (err) {
+        console.error('Failed to fetch filter attributes:', err);
+        setFilterAttributes([]);
+      } finally {
+        setSpecAttrsLoading(false);
+      }
+    };
+    fetchAttrs();
+  }, [selectedCategory]);
+
   // Подсчёт общего количества товаров
   const totalCount = CATEGORY_ORDER.reduce((sum, slug) => sum + (categoryCounts[slug] || 0), 0);
 
@@ -199,7 +242,8 @@ export function FilterSidebar({
     priceRange.max > 0 || 
     selectedBrands.length > 0 || 
     minRating > 0 ||
-    selectedAvailability.length > 0;
+    selectedAvailability.length > 0 ||
+    Object.keys(selectedSpecifications).length > 0;
 
   return (
     <aside className={styles.sidebar}>
@@ -285,6 +329,58 @@ export function FilterSidebar({
           </div>
         </div>
       </FilterGroup>
+
+      {/* Динамические фильтры по характеристикам (VRAM, socket и т.д.) */}
+      {selectedCategory && filterAttributes.length > 0 && (
+        <FilterGroup
+          title="Характеристики"
+          icon={<Tag size={14} />}
+          defaultOpen={true}
+        >
+          {specAttrsLoading ? (
+            <div className={styles.checkboxList}>
+              <Skeleton width="100%" height={24} borderRadius="sm" />
+              <Skeleton width="100%" height={24} borderRadius="sm" />
+            </div>
+          ) : (
+            <div className={styles.checkboxList}>
+              {filterAttributes.map((attr) => (
+                attr.filterType === 'select' && (attr.values?.length ?? 0) > 0 ? (
+                  <div key={attr.key} className={styles.specFilterBlock}>
+                    <span className={styles.specFilterLabel}>{attr.displayName}</span>
+                    {attr.values!.map((val) => (
+                      <label
+                        key={val}
+                        className={`${styles.checkboxItem} ${selectedSpecifications[attr.key] === val ? styles.checked : ''}`}
+                      >
+                        <input
+                          type="radio"
+                          name={`spec-${attr.key}`}
+                          className="sr-only"
+                          checked={selectedSpecifications[attr.key] === val}
+                          onChange={() => {
+                            const next = { ...selectedSpecifications };
+                            if (selectedSpecifications[attr.key] === val) {
+                              delete next[attr.key];
+                            } else {
+                              next[attr.key] = val;
+                            }
+                            onSpecificationsChange(next);
+                          }}
+                        />
+                        <span className={styles.checkbox}>
+                          <Check size={10} className={styles.checkIcon} />
+                        </span>
+                        <span className={styles.checkboxLabel}>{val}</span>
+                      </label>
+                    ))}
+                  </div>
+                ) : null
+              ))}
+            </div>
+          )}
+        </FilterGroup>
+      )}
 
       {/* Brands */}
       <FilterGroup

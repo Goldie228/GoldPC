@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "VITE_USE_REAL_API=true vite",
     "build": "tsc -b && vite build",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -101,6 +101,15 @@ export function CatalogPage() {
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>(
     () => searchParams.get('availability')?.split(',').filter(Boolean) || []
   );
+  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | number>>(() => {
+    const specStr = searchParams.get('specs');
+    if (!specStr) return {};
+    try {
+      return JSON.parse(decodeURIComponent(specStr)) as Record<string, string | number>;
+    } catch {
+      return {};
+    }
+  });
 
   // Синхронизация фильтров с URL
   useEffect(() => {
@@ -113,8 +122,11 @@ export function CatalogPage() {
     if (selectedBrands.length > 0) params.set('brands', selectedBrands.join(','));
     if (minRating > 0) params.set('rating', minRating.toString());
     if (selectedAvailability.length > 0) params.set('availability', selectedAvailability.join(','));
+    if (Object.keys(selectedSpecifications).length > 0) {
+      params.set('specs', encodeURIComponent(JSON.stringify(selectedSpecifications)));
+    }
     setSearchParams(params, { replace: true });
-  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedBrands, minRating, selectedAvailability, setSearchParams]);
+  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedBrands, minRating, selectedAvailability, selectedSpecifications, setSearchParams]);
 
   // Начальная загрузка при изменении фильтров
   useEffect(() => {
@@ -128,6 +140,7 @@ export function CatalogPage() {
     selectedBrands,
     minRating,
     selectedAvailability,
+    selectedSpecifications,
   ]);
 
   const fetchProducts = async (pageNum: number, replace: boolean = false) => {
@@ -202,11 +215,37 @@ export function CatalogPage() {
     }
   };
 
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const isLoadingMoreRef = useRef(false);
+
   const handleShowMore = useCallback(() => {
+    if (isLoadingMoreRef.current || !hasMore) return;
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchProducts(nextPage, false);
-  }, [page]);
+    isLoadingMoreRef.current = true;
+    fetchProducts(nextPage, false).finally(() => {
+      isLoadingMoreRef.current = false;
+    });
+  }, [page, hasMore]);
+
+  // Бесконечный скролл: при достижении низа — подгрузка следующей страницы
+  useEffect(() => {
+    if (!hasMore || loading || loadingMore) return;
+    const el = loadMoreRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry?.isIntersecting && hasMore && !loadingMore) {
+          handleShowMore();
+        }
+      },
+      { rootMargin: '200px', threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, handleShowMore]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,6 +275,7 @@ export function CatalogPage() {
     setSelectedBrands([]);
     setMinRating(0);
     setSelectedAvailability([]);
+    setSelectedSpecifications({});
     setPage(1);
     setSearchQuery('');
   };
@@ -288,6 +328,8 @@ export function CatalogPage() {
               onRatingChange={setMinRating}
               selectedAvailability={selectedAvailability}
               onAvailabilityChange={setSelectedAvailability}
+              selectedSpecifications={selectedSpecifications}
+              onSpecificationsChange={setSelectedSpecifications}
               onReset={handleResetFilters}
             />
           </motion.div>
@@ -307,6 +349,8 @@ export function CatalogPage() {
           onRatingChange={setMinRating}
           selectedAvailability={selectedAvailability}
           onAvailabilityChange={setSelectedAvailability}
+          selectedSpecifications={selectedSpecifications}
+          onSpecificationsChange={setSelectedSpecifications}
           onReset={handleResetFilters}
         />
       </div>
@@ -423,23 +467,17 @@ export function CatalogPage() {
               ))}
             </motion.div>
 
-            {/* Show More Button */}
+            {/* Сентинель для бесконечного скролла — при скролле до конца подгружаем следующую страницу */}
             {hasMore && (
-              <div className={styles.showMore}>
-                <button
-                  className={styles.showMoreBtn}
-                  onClick={handleShowMore}
-                  disabled={loadingMore}
-                >
-                  {loadingMore ? (
-                    <>
+              <div ref={loadMoreRef} className={styles.loadMoreSentinel} aria-hidden="true">
+                {loadingMore && (
+                  <div className={styles.showMore}>
+                    <div className={styles.showMoreBtn}>
                       <Loader2 size={20} className={styles.spinner} />
                       <span>Загрузка...</span>
-                    </>
-                  ) : (
-                    <span>Показать ещё</span>
-                  )}
-                </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </>

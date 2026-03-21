@@ -106,10 +106,23 @@ public class ProductRepository : IProductRepository
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var searchTerm = filter.Search.ToLower();
-            query = query.Where(p => 
-                p.Name.ToLower().Contains(searchTerm) || 
+            query = query.Where(p =>
+                p.Name.ToLower().Contains(searchTerm) ||
                 (p.Description != null && p.Description.ToLower().Contains(searchTerm)) ||
                 p.Sku.ToLower().Contains(searchTerm));
+        }
+
+        // Фильтрация по спецификациям (JSONB @> containment)
+        if (filter.Specifications != null && filter.Specifications.Count > 0)
+        {
+            foreach (var (key, value) in filter.Specifications)
+            {
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
+                    continue;
+                object parsedValue = int.TryParse(value, out var intVal) ? intVal : (double.TryParse(value, out var dblVal) ? dblVal : value);
+                var contained = new Dictionary<string, object> { [key] = parsedValue };
+                query = query.Where(p => EF.Functions.JsonContains(p.Specifications, contained));
+            }
         }
 
         // Подсчёт общего количества
@@ -163,6 +176,34 @@ public class ProductRepository : IProductRepository
             .Include(p => p.Manufacturer)
             .Where(p => p.CategoryId == categoryId && p.IsActive)
             .ToListAsync();
+    }
+
+    public async Task<Dictionary<string, List<string>>> GetDistinctSpecificationValuesAsync(Guid categoryId, IEnumerable<string> attributeKeys)
+    {
+        var keys = attributeKeys.Where(k => !string.IsNullOrEmpty(k)).Distinct().ToList();
+        if (keys.Count == 0)
+            return new Dictionary<string, List<string>>();
+
+        var result = new Dictionary<string, List<string>>();
+        foreach (var key in keys)
+        {
+            var products = await _context.Products
+                .Where(p => p.CategoryId == categoryId && p.IsActive && p.Specifications != null)
+                .Select(p => p.Specifications)
+                .ToListAsync();
+
+            var values = products
+                .Where(s => s != null && s.ContainsKey(key) && s[key] != null)
+                .Select(s => s[key]?.ToString() ?? string.Empty)
+                .Where(v => !string.IsNullOrEmpty(v))
+                .Distinct()
+                .OrderBy(v => v)
+                .ToList();
+
+            if (values.Count > 0)
+                result[key] = values;
+        }
+        return result;
     }
 
     public async Task<Dictionary<Guid, int>> GetProductCountsByCategoryAsync()

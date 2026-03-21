@@ -117,6 +117,17 @@ public class CatalogController : ControllerBase
     }
 
     /// <summary>
+    /// Получить атрибуты фильтрации для категории (VRAM, socket, chipset и т.д.)
+    /// </summary>
+    [HttpGet("categories/{slug}/filter-attributes")]
+    [ProducesResponseType(typeof(FilterAttributesResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<FilterAttributesResponse>> GetFilterAttributes(string slug)
+    {
+        var attributes = await _catalogService.GetFilterAttributesByCategoryAsync(slug);
+        return Ok(new FilterAttributesResponse { Data = attributes });
+    }
+
+    /// <summary>
     /// Получить список производителей
     /// </summary>
     [HttpGet("manufacturers")]
@@ -152,6 +163,14 @@ public record CategoriesResponse
 public record ManufacturersResponse
 {
     public IEnumerable<ManufacturerDto> Data { get; init; } = Enumerable.Empty<ManufacturerDto>();
+}
+
+/// <summary>
+/// Ответ со списком атрибутов фильтрации
+/// </summary>
+public record FilterAttributesResponse
+{
+    public IEnumerable<FilterAttributeDto> Data { get; init; } = Enumerable.Empty<FilterAttributeDto>();
 }
 
 /// <summary>

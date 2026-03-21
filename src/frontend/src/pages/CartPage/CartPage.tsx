@@ -3,6 +3,7 @@
 import { useState, type ReactElement, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
+import { hasValidProductImage } from '../../utils/image';
 import './CartPage.css';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -181,7 +182,7 @@ export function CartPage(): ReactElement {
             {items.map((item) => (
               <div key={item.id} className="cart-item">
                 <div className="item-image">
-                  {item.imageUrl !== undefined ? (
+                  {hasValidProductImage(item.imageUrl) ? (
                     <img src={item.imageUrl} alt={item.name} />
                   ) : (
                     renderProductIcon(item.category)

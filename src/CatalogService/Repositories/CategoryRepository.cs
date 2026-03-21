@@ -28,6 +28,21 @@ public class CategoryRepository : ICategoryRepository
             .FirstOrDefaultAsync(c => c.Slug == slug);
     }
 
+    public async Task<IEnumerable<CategoryFilterAttribute>> GetFilterAttributesByCategorySlugAsync(string slug)
+    {
+        var category = await _context.Categories
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Slug == slug);
+        if (category == null)
+            return Array.Empty<CategoryFilterAttribute>();
+
+        return await _context.CategoryFilterAttributes
+            .AsNoTracking()
+            .Where(a => a.CategoryId == category.Id)
+            .OrderBy(a => a.SortOrder)
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<Category>> GetAllAsync()
     {
         return await _context.Categories

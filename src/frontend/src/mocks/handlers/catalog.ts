@@ -765,12 +765,37 @@ export const catalogHandlers = [
     const inStock = url.searchParams.get('inStock') === 'true';
     const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | null;
     const sortOrder = (url.searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
+    const specifications: Record<string, string> = {};
+    for (const [k, v] of url.searchParams) {
+      const m = k.match(/^specifications\[(.+)\]$/i);
+      if (m && v) specifications[m[1]] = v;
+    }
 
     let products = [...getProductsCache()];
 
-    // Фильтрация
+    // Фильтрация (category приходит как backend slug: processors, gpu, etc.)
+    const slugToFrontend: Record<string, ProductCategory> = {
+      processors: 'cpu',
+      gpu: 'gpu',
+      motherboards: 'motherboard',
+      ram: 'ram',
+      storage: 'storage',
+      psu: 'psu',
+      cases: 'case',
+      coolers: 'cooling',
+      monitors: 'monitor',
+      periphery: 'peripherals',
+    };
     if (category) {
-      products = products.filter((p) => p.category === category);
+      const frontendCat = slugToFrontend[category] ?? category;
+      products = products.filter((p) => p.category === frontendCat);
+    }
+
+    if (Object.keys(specifications).length > 0) {
+      products = products.filter((p) => {
+        const pSpecs = (p as RealisticProduct).specifications ?? {};
+        return Object.entries(specifications).every(([k, v]) => String(pSpecs[k]) === String(v));
+      });
     }
 
     if (manufacturerId) {
@@ -875,6 +900,38 @@ export const catalogHandlers = [
       productCount: cat.count,
     }));
     return HttpResponse.json(categoriesList);
+  }),
+
+  // GET /api/v1/catalog/categories/:slug/filter-attributes - атрибуты фильтрации
+  http.get('/api/v1/catalog/categories/:slug/filter-attributes', async ({ params }) => {
+    await delay(faker.number.int({ min: 20, max: 80 }));
+    const slug = typeof params.slug === 'string' ? params.slug : params.slug?.[0] ?? '';
+    // Backend slugs: gpu, processors, motherboards, ram, storage, psu, cases, coolers, periphery, monitors
+    const attrMap: Record<string, Array<{ key: string; displayName: string; filterType: string; sortOrder: number; values?: string[] }>> = {
+      gpu: [
+        { key: 'vram', displayName: 'Объём видеопамяти', filterType: 'select', sortOrder: 1, values: ['8GB', '12GB', '16GB', '24GB'] },
+        { key: 'gpu', displayName: 'Серия GPU', filterType: 'select', sortOrder: 2, values: ['GeForce RTX 5060', 'GeForce RTX 4070 SUPER', 'Radeon RX 7800 XT'] },
+      ],
+      processors: [
+        { key: 'socket', displayName: 'Сокет', filterType: 'select', sortOrder: 1, values: ['AM4', 'AM5', 'LGA1700'] },
+        { key: 'cores', displayName: 'Количество ядер', filterType: 'range', sortOrder: 2 },
+      ],
+      motherboards: [
+        { key: 'socket', displayName: 'Сокет', filterType: 'select', sortOrder: 1, values: ['AM5'] },
+        { key: 'chipset', displayName: 'Чипсет', filterType: 'select', sortOrder: 2, values: ['B650'] },
+      ],
+      ram: [
+        { key: 'type', displayName: 'Тип памяти', filterType: 'select', sortOrder: 1, values: ['DDR5'] },
+        { key: 'capacity', displayName: 'Объём', filterType: 'select', sortOrder: 2, values: ['32GB'] },
+      ],
+      storage: [{ key: 'capacity', displayName: 'Объём', filterType: 'select', sortOrder: 1, values: [] }],
+      psu: [
+        { key: 'wattage', displayName: 'Мощность', filterType: 'select', sortOrder: 1, values: ['750W', '850W'] },
+        { key: 'efficiency', displayName: 'Сертификат', filterType: 'select', sortOrder: 2, values: ['80+ Gold'] },
+      ],
+    };
+    const attrs = attrMap[slug] ?? [];
+    return HttpResponse.json({ data: attrs });
   }),
 
   // GET /api/v1/catalog/categories/:slug - получение категории по slug

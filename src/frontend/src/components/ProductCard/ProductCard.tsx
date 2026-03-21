@@ -1,4 +1,5 @@
 import { useState, type ReactElement } from 'react';
+import { hasValidProductImage } from '../../utils/image';
 import type { ProductSummary } from '../../api/types';
 import { useCart } from '../../hooks/useCart';
 import { useToastStore } from '../../store/toastStore';
@@ -120,8 +121,7 @@ function ImageContainer({
   const [imageError, setImageError] = useState(false);
 
   const hasValidImage =
-    product.mainImage !== undefined &&
-    product.mainImage.url.trim() !== '' &&
+    hasValidProductImage(product.mainImage?.url) &&
     !imageError;
 
   return (
@@ -132,8 +132,8 @@ function ImageContainer({
     >
       {hasValidImage ? (
         <img
-          src={product.mainImage!.url}
-          alt={product.mainImage!.alt ?? product.name}
+          src={product.mainImage?.url ?? ''}
+          alt={product.mainImage?.alt ?? product.name}
           className={styles.image}
           onError={() => setImageError(true)}
         />
@@ -146,11 +146,11 @@ function ImageContainer({
         <span className={styles.discountBadge}>-{discountPercent}%</span>
       )}
       
-      {product.rating !== undefined && product.rating >= 4.8 && !hasDiscount && (
+      {product.rating != null && Number(product.rating) >= 4.8 && !hasDiscount && (
         <span className={styles.hitBadge}>Хит</span>
       )}
       
-      {product.rating !== undefined && product.rating >= 4.8 && hasDiscount && (
+      {product.rating != null && Number(product.rating) >= 4.8 && hasDiscount && (
         <span className={styles.hitBadgeRight}>Хит</span>
       )}
 
@@ -213,7 +213,7 @@ function Content({
 
   return (
     <div className={styles.content}>
-      {product.manufacturer !== undefined && (
+      {product.manufacturer != null && (
         <span className={styles.manufacturer}>{product.manufacturer.name}</span>
       )}
 
@@ -224,13 +224,13 @@ function Content({
       </h3>
 
       <div className={styles.rating}>
-        {product.rating !== undefined && (
+        {product.rating != null && !Number.isNaN(Number(product.rating)) && (
           <>
             <span className={styles.stars}>
-              {'★'.repeat(Math.round(product.rating))}
-              {'☆'.repeat(5 - Math.round(product.rating))}
+              {'★'.repeat(Math.round(Number(product.rating)))}
+              {'☆'.repeat(5 - Math.round(Number(product.rating)))}
             </span>
-            <span className={styles.ratingValue}>{product.rating.toFixed(1)}</span>
+            <span className={styles.ratingValue}>{Number(product.rating).toFixed(1)}</span>
           </>
         )}
       </div>
@@ -308,7 +308,7 @@ function QuickViewContent({ product }: { product: ProductSummary }): ReactElemen
   return (
     <div className={styles.quickViewContent}>
       <div className={styles.quickViewImage}>
-        {product.mainImage !== undefined && product.mainImage.url.trim() !== '' ? (
+        {hasValidProductImage(product.mainImage?.url) ? (
           <img
             src={product.mainImage.url}
             alt={product.mainImage.alt ?? product.name}
@@ -320,7 +320,7 @@ function QuickViewContent({ product }: { product: ProductSummary }): ReactElemen
         )}
       </div>
       <div className={styles.quickViewDetails}>
-        {product.manufacturer !== undefined && (
+        {product.manufacturer != null && (
           <span className={styles.quickViewManufacturer}>
             {product.manufacturer.name}
           </span>
@@ -329,24 +329,29 @@ function QuickViewContent({ product }: { product: ProductSummary }): ReactElemen
         <div className={styles.quickViewPrice}>
           {formatPrice(product.price)}
         </div>
-        {product.rating !== undefined && (
+        {product.rating != null && !Number.isNaN(Number(product.rating)) && (
           <div className={styles.quickViewRating}>
             <span className={styles.stars}>
-              {'★'.repeat(Math.round(product.rating))}
-              {'☆'.repeat(5 - Math.round(product.rating))}
+              {'★'.repeat(Math.round(Number(product.rating)))}
+              {'☆'.repeat(5 - Math.round(Number(product.rating)))}
             </span>
-            <span>{product.rating.toFixed(1)}</span>
+            <span>{Number(product.rating).toFixed(1)}</span>
           </div>
         )}
-        <p className={styles.quickViewDescription}>
-          Подробное описание товара будет доступно на странице товара.
-        </p>
-        <a
-          href={`/product/${product.id}`}
-          className={styles.quickViewLink}
-        >
-          Перейти к товару →
-        </a>
+        <div className={styles.quickViewDescription}>
+          {product.descriptionShort != null && product.descriptionShort.trim() !== '' ? (
+            <>
+              <p className={styles.quickViewDescriptionText}>{product.descriptionShort}</p>
+              <a href={`/product/${product.id}`} className={styles.quickViewLink}>
+                Подробнее на странице товара →
+              </a>
+            </>
+          ) : (
+            <a href={`/product/${product.id}`} className={styles.quickViewLink}>
+              Подробное описание на странице товара →
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );

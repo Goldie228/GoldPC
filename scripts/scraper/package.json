@@ -1,0 +1,16 @@
+{
+  "name": "xcore-scraper",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Парсер товаров X-Core.by для учебного проекта GoldPC",
+  "scripts": {
+    "scrape": "node index.mjs",
+    "scrape:all": "node index.mjs --all",
+    "fetch-images": "node fetch-product-images.mjs",
+    "fetch-images:test": "node fetch-product-images.mjs --limit=10"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0"
+  }
+}

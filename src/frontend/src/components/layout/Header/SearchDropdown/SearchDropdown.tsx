@@ -12,8 +12,9 @@
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, TrendingUp, Loader2 } from 'lucide-react';
+import { Search, X, TrendingUp, Loader2, Image } from 'lucide-react';
 import { useDebounce } from '../../../../hooks/useDebounce';
+import { hasValidProductImage } from '../../../../utils/image';
 import { useProducts } from '../../../../hooks/useProducts';
 import styles from './SearchDropdown.module.css';
 
@@ -191,7 +192,7 @@ export function SearchDropdown() {
                     >
                       {/* Thumbnail */}
                       <div className={styles.thumbnail}>
-                        {product.mainImage ? (
+                        {hasValidProductImage(product.mainImage?.url) ? (
                           <img
                             src={product.mainImage.url}
                             alt={product.mainImage.alt || product.name}
@@ -199,7 +200,7 @@ export function SearchDropdown() {
                           />
                         ) : (
                           <div className={styles.thumbnailPlaceholder}>
-                            <Search />
+                            <Image size={20} strokeWidth={1.5} />
                           </div>
                         )}
                       </div>
