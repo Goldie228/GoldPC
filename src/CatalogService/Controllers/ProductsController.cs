@@ -117,13 +117,14 @@ public class CatalogController : ControllerBase
     }
 
     /// <summary>
-    /// Получить атрибуты фильтрации для категории (VRAM, socket, chipset и т.д.)
+    /// Получить атрибуты фильтрации для категории (VRAM, socket, chipset и т.д.).
+    /// Поддержка контекстных фильтров: при manufacturerIds=... возвращаются только значения из отфильтрованных товаров.
     /// </summary>
     [HttpGet("categories/{slug}/filter-attributes")]
     [ProducesResponseType(typeof(FilterAttributesResponse), StatusCodes.Status200OK)]
-    public async Task<ActionResult<FilterAttributesResponse>> GetFilterAttributes(string slug)
+    public async Task<ActionResult<FilterAttributesResponse>> GetFilterAttributes(string slug, [FromQuery] FilterAttributesQueryDto? filterParams)
     {
-        var attributes = await _catalogService.GetFilterAttributesByCategoryAsync(slug);
+        var attributes = await _catalogService.GetFilterAttributesByCategoryAsync(slug, filterParams);
         return Ok(new FilterAttributesResponse { Data = attributes });
     }
 

@@ -190,6 +190,20 @@ public class XCoreImporter
     }
 
     /// <summary>
+    /// Удаляет все товары X-Core (SKU начинается с "XCORE-"). Изображения и отзывы удаляются каскадно.
+    /// </summary>
+    public async Task<int> DeleteXCoreProductsAsync()
+    {
+        var toDelete = await _context.Products
+            .Where(p => p.Sku != null && EF.Functions.Like(p.Sku, "XCORE-%"))
+            .ToListAsync();
+
+        _context.Products.RemoveRange(toDelete);
+        await _context.SaveChangesAsync();
+        return toDelete.Count;
+    }
+
+    /// <summary>
     /// Обновляет изображения товаров из JSON (вывод fetch-product-images.mjs).
     /// Формат: { "products": [ { "sku": "...", "images": ["url1", "url2"] } ] }
     /// </summary>

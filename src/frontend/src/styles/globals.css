@@ -15,8 +15,8 @@
 
   /* Foreground Colors - WCAG AA compliant */
   --fg: #fafafa;
-  --fg-muted: #a1a1aa;      /* Contrast 7.2:1 on dark bg - AA/AAA */
-  --fg-dim: #949494;        /* Contrast 6.3:1 on dark bg - AA compliant */
+  --fg-muted: #71717a;      /* Приглушённый текст — дизайн-система GoldPC */
+  --fg-dim: #71717a;        /* Дополнительный приглушённый */
 
   /* Accent Colors */
   --accent: #d4a574;

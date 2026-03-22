@@ -7,9 +7,10 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 20px;
-  max-width: 1400px;
+  width: 100%;
+  max-width: 1680px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px 24px;
   min-height: calc(100vh - 200px);
   background: var(--bg, #09090b);
   /* Тонкий градиент для глубины без отвлечения */
@@ -22,9 +23,9 @@
 
 @media (min-width: 768px) {
   .container {
-    grid-template-columns: 260px 1fr;
-    gap: 24px;
-    padding: 32px;
+    grid-template-columns: 220px 1fr;
+    gap: 20px;
+    padding: 24px 24px;
   }
 }
 
@@ -60,7 +61,7 @@
   display: block;
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(9, 9, 11, 0.92);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 1000;
@@ -508,6 +509,15 @@
 /* ========================================
    Empty State
    ======================================== */
+
+.emptyStateWrapper {
+  width: 100%;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
 
 .empty {
   display: flex;

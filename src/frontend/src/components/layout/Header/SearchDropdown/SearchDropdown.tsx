@@ -143,11 +143,11 @@ export function SearchDropdown() {
           ref={inputRef}
           type="text"
           className={styles.input}
-          placeholder="Поиск товаров..."
+          placeholder="Поиск по сайту..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={handleFocus}
-          aria-label="Поиск товаров"
+          aria-label="Поиск по сайту"
           role="combobox"
           aria-expanded={isOpen}
           aria-haspopup="listbox"

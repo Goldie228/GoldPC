@@ -184,7 +184,7 @@ public class CatalogService : ICatalogService
         return category != null ? MapToCategoryDto(category) : null;
     }
 
-    public async Task<IEnumerable<FilterAttributeDto>> GetFilterAttributesByCategoryAsync(string categorySlug)
+    public async Task<IEnumerable<FilterAttributeDto>> GetFilterAttributesByCategoryAsync(string categorySlug, FilterAttributesQueryDto? filterParams = null)
     {
         var category = await _categoryRepository.GetBySlugAsync(categorySlug);
         if (category == null)
@@ -192,18 +192,41 @@ public class CatalogService : ICatalogService
 
         var attributes = await _categoryRepository.GetFilterAttributesByCategorySlugAsync(categorySlug);
         var selectKeys = attributes.Where(a => a.FilterType == FilterAttributeType.Select).Select(a => a.AttributeKey).ToList();
+
+        var filterContext = filterParams != null
+            ? new ProductFilterDto
+            {
+                ManufacturerIds = filterParams.ManufacturerIds,
+                Specifications = filterParams.Specifications,
+                SpecificationRanges = filterParams.SpecificationRanges
+            }
+            : null;
+
         var distinctValues = selectKeys.Count > 0
-            ? await _productRepository.GetDistinctSpecificationValuesAsync(category.Id, selectKeys)
+            ? await _productRepository.GetDistinctSpecificationValuesAsync(category.Id, selectKeys, filterContext)
             : new Dictionary<string, List<string>>();
 
-        return attributes.Select(a => new FilterAttributeDto
+        var result = new List<FilterAttributeDto>();
+        foreach (var a in attributes)
         {
-            Key = a.AttributeKey,
-            DisplayName = a.DisplayName,
-            FilterType = a.FilterType == FilterAttributeType.Range ? "range" : "select",
-            SortOrder = a.SortOrder,
-            Values = distinctValues.GetValueOrDefault(a.AttributeKey, new List<string>())
-        });
+            decimal? minVal = null, maxVal = null;
+            if (a.FilterType == FilterAttributeType.Range)
+            {
+                (minVal, maxVal) = await _productRepository.GetSpecificationRangeAsync(category.Id, a.AttributeKey, filterContext);
+            }
+
+            result.Add(new FilterAttributeDto
+            {
+                Key = a.AttributeKey,
+                DisplayName = a.DisplayName,
+                FilterType = a.FilterType == FilterAttributeType.Range ? "range" : "select",
+                SortOrder = a.SortOrder,
+                Values = distinctValues.GetValueOrDefault(a.AttributeKey, new List<string>()),
+                MinValue = minVal,
+                MaxValue = maxVal
+            });
+        }
+        return result;
     }
 
     public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto dto)
@@ -240,13 +263,8 @@ public class CatalogService : ICatalogService
             return Enumerable.Empty<ManufacturerDto>();
         }
 
-        // Получаем производителей, у которых есть товары в этой категории
-        var products = await _productRepository.GetByCategoryAsync(category.Id);
-        var manufacturerIds = products
-            .Where(p => p.ManufacturerId.HasValue)
-            .Select(p => p.ManufacturerId!.Value)
-            .Distinct();
-
+        // Получаем производителей, у которых есть товары в этой категории (включая без фото)
+        var manufacturerIds = (await _productRepository.GetManufacturerIdsByCategoryAsync(category.Id)).ToHashSet();
         var manufacturers = await _manufacturerRepository.GetAllAsync();
         return manufacturers
             .Where(m => manufacturerIds.Contains(m.Id))

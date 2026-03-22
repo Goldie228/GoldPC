@@ -59,7 +59,7 @@ public class ProductRepository : IProductRepository
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
             .Include(p => p.Images.Where(i => i.IsPrimary))
-            .Where(p => p.IsActive);
+            .Where(p => p.IsActive && p.Images.Any());
 
         // Фильтрация по ID категории
         if (filter.CategoryId.HasValue)
@@ -73,8 +73,13 @@ public class ProductRepository : IProductRepository
             query = query.Where(p => p.Category != null && p.Category.Slug.ToLower() == categorySlug);
         }
 
-        // Фильтрация по производителю
-        if (filter.ManufacturerId.HasValue)
+        // Фильтрация по производителю(ам)
+        var manIds = filter.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
+        if (manIds != null && manIds.Count > 0)
+        {
+            query = query.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
+        }
+        else if (filter.ManufacturerId.HasValue)
         {
             query = query.Where(p => p.ManufacturerId == filter.ManufacturerId.Value);
         }
@@ -95,6 +100,10 @@ public class ProductRepository : IProductRepository
         {
             query = query.Where(p => p.Stock > 0);
         }
+        else if (filter.InStock == false)
+        {
+            query = query.Where(p => p.Stock <= 0);
+        }
 
         // Фильтрация по рекомендуемым
         if (filter.IsFeatured == true)
@@ -112,27 +121,83 @@ public class ProductRepository : IProductRepository
                 p.Sku.ToLower().Contains(searchTerm));
         }
 
-        // Фильтрация по спецификациям (JSONB @> containment)
-        if (filter.Specifications != null && filter.Specifications.Count > 0)
+        // Фильтрация по спецификациям и range — в памяти (надёжный мультивыбор AM4+AM5 и т.п.)
+        var hasSpecs = filter.Specifications != null && filter.Specifications.Count > 0;
+        var hasRanges = filter.SpecificationRanges != null && filter.SpecificationRanges.Count > 0;
+        if (hasSpecs || hasRanges)
         {
-            foreach (var (key, value) in filter.Specifications)
+            var allFiltered = await query.ToListAsync();
+
+            if (hasSpecs)
             {
-                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
-                    continue;
-                object parsedValue = int.TryParse(value, out var intVal) ? intVal : (double.TryParse(value, out var dblVal) ? dblVal : value);
-                var contained = new Dictionary<string, object> { [key] = parsedValue };
-                query = query.Where(p => EF.Functions.JsonContains(p.Specifications, contained));
+                foreach (var (key, value) in filter.Specifications!)
+                {
+                    if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
+                        continue;
+                    var allowedValues = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                    if (allowedValues.Count == 0) continue;
+
+                    allFiltered = allFiltered.Where(p =>
+                    {
+                        if (p.Specifications == null || !p.Specifications.TryGetValue(key, out var specVal) || specVal == null)
+                            return false;
+                        var specStr = specVal.ToString() ?? "";
+                        return allowedValues.Any(allowed =>
+                        {
+                            if (int.TryParse(allowed, out var intAllowed) && int.TryParse(specStr, out var intSpec))
+                                return intAllowed == intSpec;
+                            if (double.TryParse(allowed, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var dblAllowed) &&
+                                double.TryParse(specStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var dblSpec))
+                                return Math.Abs(dblAllowed - dblSpec) < 0.001;
+                            return string.Equals(specStr, allowed, StringComparison.OrdinalIgnoreCase);
+                        });
+                    }).ToList();
+                }
             }
+
+            if (hasRanges)
+            {
+                foreach (var (key, rangeStr) in filter.SpecificationRanges!)
+                {
+                    if (string.IsNullOrEmpty(key)) continue;
+                    var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);
+                    decimal? min = parts.Length > 0 && decimal.TryParse(parts[0], out var m) ? m : null;
+                    decimal? max = parts.Length > 1 && decimal.TryParse(parts[1], out var x) ? x : null;
+                    if (!min.HasValue && !max.HasValue) continue;
+
+                    allFiltered = allFiltered.Where(p =>
+                        p.Specifications != null &&
+                        p.Specifications.TryGetValue(key, out var val) &&
+                        val != null &&
+                        TryParseSpecNumber(val, out var num) &&
+                        (!min.HasValue || num >= min.Value) &&
+                        (!max.HasValue || num <= max.Value)).ToList();
+                }
+            }
+
+            var specTotal = allFiltered.Count;
+            var specSortDesc = filter.SortOrder?.ToLower() == "desc";
+            var specSorted = ApplySorting(allFiltered.AsQueryable(), filter.SortBy, specSortDesc);
+            var specItems = specSorted
+                .Skip((filter.Page - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToList();
+
+            return new RepositoryPagedResult<Product>
+            {
+                Items = specItems,
+                TotalCount = specTotal,
+                Page = filter.Page,
+                PageSize = filter.PageSize
+            };
         }
 
-        // Подсчёт общего количества
+        // Подсчёт и пагинация (без спецификаций)
         var totalCount = await query.CountAsync();
 
-        // Сортировка
         var sortDesc = filter.SortOrder?.ToLower() == "desc";
         query = ApplySorting(query, filter.SortBy, sortDesc);
 
-        // Пагинация
         var items = await query
             .Skip((filter.Page - 1) * filter.PageSize)
             .Take(filter.PageSize)
@@ -145,6 +210,19 @@ public class ProductRepository : IProductRepository
             Page = filter.Page,
             PageSize = filter.PageSize
         };
+    }
+
+    private static bool TryParseSpecNumber(object? val, out decimal num)
+    {
+        num = 0;
+        if (val == null) return false;
+        if (val is int i) { num = i; return true; }
+        if (val is long l) { num = l; return true; }
+        if (val is decimal d) { num = d; return true; }
+        if (val is double db) { num = (decimal)db; return true; }
+        if (val is float f) { num = (decimal)f; return true; }
+        if (val is string s && decimal.TryParse(s.Replace(" ", "").Replace(",", "."), out var parsed)) { num = parsed; return true; }
+        return false;
     }
 
     private static IQueryable<Product> ApplySorting(IQueryable<Product> query, string sortBy, bool sortDesc)
@@ -174,42 +252,145 @@ public class ProductRepository : IProductRepository
         return await _context.Products
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
-            .Where(p => p.CategoryId == categoryId && p.IsActive)
+            .Where(p => p.CategoryId == categoryId && p.IsActive && p.Images.Any())
             .ToListAsync();
     }
 
-    public async Task<Dictionary<string, List<string>>> GetDistinctSpecificationValuesAsync(Guid categoryId, IEnumerable<string> attributeKeys)
+    public async Task<IEnumerable<Guid>> GetManufacturerIdsByCategoryAsync(Guid categoryId)
+    {
+        return await _context.Products
+            .Where(p => p.CategoryId == categoryId && p.IsActive && p.ManufacturerId.HasValue)
+            .Select(p => p.ManufacturerId!.Value)
+            .Distinct()
+            .ToListAsync();
+    }
+
+    public async Task<Dictionary<string, List<string>>> GetDistinctSpecificationValuesAsync(Guid categoryId, IEnumerable<string> attributeKeys, ProductFilterDto? filterContext = null)
     {
         var keys = attributeKeys.Where(k => !string.IsNullOrEmpty(k)).Distinct().ToList();
         if (keys.Count == 0)
             return new Dictionary<string, List<string>>();
 
+        var productsQuery = _context.Products
+            .Where(p => p.CategoryId == categoryId && p.IsActive && p.Specifications != null);
+
+        if (filterContext != null)
+        {
+            var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
+            if (manIds != null && manIds.Count > 0)
+                productsQuery = productsQuery.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
+        }
+
+        var allProducts = await productsQuery.Select(p => new { p.Id, p.Specifications }).ToListAsync();
+
         var result = new Dictionary<string, List<string>>();
         foreach (var key in keys)
         {
-            var products = await _context.Products
-                .Where(p => p.CategoryId == categoryId && p.IsActive && p.Specifications != null)
-                .Select(p => p.Specifications)
-                .ToListAsync();
-
-            var values = products
-                .Where(s => s != null && s.ContainsKey(key) && s[key] != null)
-                .Select(s => s[key]?.ToString() ?? string.Empty)
+            var filteredForKey = allProducts.AsEnumerable();
+            var specsExcludingKey = filterContext?.Specifications?.Where(kv => kv.Key != key).ToDictionary(kv => kv.Key, kv => kv.Value);
+            if (specsExcludingKey != null && specsExcludingKey.Count > 0)
+            {
+                foreach (var (specKey, value) in specsExcludingKey)
+                {
+                    if (string.IsNullOrEmpty(specKey) || string.IsNullOrEmpty(value)) continue;
+                    var allowed = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                    if (allowed.Count == 0) continue;
+                    filteredForKey = filteredForKey.Where(p => p.Specifications != null && p.Specifications.TryGetValue(specKey, out var v) && v != null &&
+                        allowed.Any(a => string.Equals((v?.ToString() ?? ""), a, StringComparison.OrdinalIgnoreCase)));
+                }
+            }
+            if (filterContext?.SpecificationRanges != null && filterContext.SpecificationRanges.Count > 0)
+            {
+                foreach (var (rangeKey, rangeStr) in filterContext.SpecificationRanges)
+                {
+                    if (string.IsNullOrEmpty(rangeKey)) continue;
+                    var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);
+                    decimal? min = parts.Length > 0 && decimal.TryParse(parts[0], out var m) ? m : null;
+                    decimal? max = parts.Length > 1 && decimal.TryParse(parts[1], out var x) ? x : null;
+                    if (!min.HasValue && !max.HasValue) continue;
+                    filteredForKey = filteredForKey.Where(p => p.Specifications != null && p.Specifications.TryGetValue(rangeKey, out var val) && val != null &&
+                        TryParseSpecNumber(val, out var num) &&
+                        (!min.HasValue || num >= min.Value) &&
+                        (!max.HasValue || num <= max.Value));
+                }
+            }
+            var values = filteredForKey
+                .Where(p => p.Specifications != null && p.Specifications.ContainsKey(key) && p.Specifications[key] != null)
+                .Select(p => p.Specifications![key]?.ToString() ?? string.Empty)
                 .Where(v => !string.IsNullOrEmpty(v))
                 .Distinct()
                 .OrderBy(v => v)
                 .ToList();
-
             if (values.Count > 0)
                 result[key] = values;
         }
         return result;
     }
 
+    public async Task<(decimal? Min, decimal? Max)> GetSpecificationRangeAsync(Guid categoryId, string attributeKey, ProductFilterDto? filterContext = null)
+    {
+        var productsQuery = _context.Products
+            .Where(p => p.CategoryId == categoryId && p.IsActive && p.Specifications != null);
+
+        if (filterContext != null)
+        {
+            var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
+            if (manIds != null && manIds.Count > 0)
+                productsQuery = productsQuery.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
+        }
+
+        var products = await productsQuery.Select(p => p.Specifications).ToListAsync();
+
+        if (filterContext?.Specifications != null && filterContext.Specifications.Count > 0 ||
+            filterContext?.SpecificationRanges != null && filterContext.SpecificationRanges.Count > 0)
+        {
+            var allProductsWithId = await productsQuery.Select(p => new { p.Id, p.Specifications }).ToListAsync();
+            var filtered = allProductsWithId.AsEnumerable();
+            if (filterContext.Specifications != null)
+            {
+                foreach (var (specKey, value) in filterContext.Specifications)
+                {
+                    if (string.IsNullOrEmpty(specKey) || string.IsNullOrEmpty(value)) continue;
+                    var allowed = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                    if (allowed.Count == 0) continue;
+                    filtered = filtered.Where(p => p.Specifications != null && p.Specifications.TryGetValue(specKey, out var v) && v != null &&
+                        allowed.Any(a => string.Equals((v?.ToString() ?? ""), a, StringComparison.OrdinalIgnoreCase)));
+                }
+            }
+            if (filterContext.SpecificationRanges != null)
+            {
+                foreach (var (rangeKey, rangeStr) in filterContext.SpecificationRanges)
+                {
+                    if (string.IsNullOrEmpty(rangeKey)) continue;
+                    var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);
+                    decimal? min = parts.Length > 0 && decimal.TryParse(parts[0], out var m) ? m : null;
+                    decimal? max = parts.Length > 1 && decimal.TryParse(parts[1], out var x) ? x : null;
+                    if (!min.HasValue && !max.HasValue) continue;
+                    filtered = filtered.Where(p => p.Specifications != null && p.Specifications.TryGetValue(rangeKey, out var val) && val != null &&
+                        TryParseSpecNumber(val, out var num) &&
+                        (!min.HasValue || num >= min.Value) &&
+                        (!max.HasValue || num <= max.Value));
+                }
+            }
+            products = filtered.Select(p => p.Specifications).ToList();
+        }
+
+        decimal? minVal = null;
+        decimal? maxVal = null;
+        foreach (var specs in products)
+        {
+            if (specs == null || !specs.TryGetValue(attributeKey, out var val) || val == null) continue;
+            if (!TryParseSpecNumber(val, out var num)) continue;
+            if (!minVal.HasValue || num < minVal) minVal = num;
+            if (!maxVal.HasValue || num > maxVal) maxVal = num;
+        }
+        return (minVal, maxVal);
+    }
+
     public async Task<Dictionary<Guid, int>> GetProductCountsByCategoryAsync()
     {
         return await _context.Products
-            .Where(p => p.IsActive)
+            .Where(p => p.IsActive && p.Images.Any())
             .GroupBy(p => p.CategoryId)
             .Select(g => new { CategoryId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.CategoryId, x => x.Count);

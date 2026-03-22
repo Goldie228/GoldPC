@@ -3,7 +3,7 @@ import { ChevronDown, Grid3X3, DollarSign, Package, Check, Star, Tag } from 'luc
 import { catalogApi } from '../../api/catalog';
 import { RangeSlider } from '../ui/RangeSlider';
 import { Skeleton } from '../ui/Skeleton';
-import type { ProductCategory, Category, FilterAttribute } from '../../api/types';
+import type { ProductCategory, Category, FilterAttribute, Manufacturer } from '../../api/types';
 import styles from './FilterSidebar.module.css';
 
 interface FilterSidebarProps {
@@ -11,14 +11,14 @@ interface FilterSidebarProps {
   onCategoryChange: (category: ProductCategory | null) => void;
   priceRange: { min: number; max: number };
   onPriceChange: (range: { min: number; max: number }) => void;
-  selectedBrands: string[];
-  onBrandsChange: (brands: string[]) => void;
+  selectedManufacturerIds: string[];
+  onManufacturerIdsChange: (ids: string[]) => void;
   minRating: number;
   onRatingChange: (rating: number) => void;
   selectedAvailability: string[];
   onAvailabilityChange: (availability: string[]) => void;
-  selectedSpecifications: Record<string, string | number>;
-  onSpecificationsChange: (specs: Record<string, string | number>) => void;
+  selectedSpecifications: Record<string, string | number | string[]>;
+  onSpecificationsChange: (specs: Record<string, string | number | string[]>) => void;
   onReset: () => void;
 }
 
@@ -78,6 +78,72 @@ const FRONTEND_TO_BACKEND: Record<ProductCategory, string> = {
   peripherals: 'periphery',
 };
 
+/** Логические группы характеристик по категориям (backend slug -> группы) */
+const SPEC_GROUPS: Record<string, Array<{ title: string; keys: string[] }>> = {
+  gpu: [
+    { title: 'Процессор', keys: ['graficheskiy_protsessor', 'proizvoditel_graficheskogo_protsessora'] },
+    { title: 'Видеопамять', keys: ['videopamyat', 'tip_videopamyati', 'shirina_shiny_pamyati'] },
+    { title: 'Охлаждение и питание', keys: ['okhlazhdenie_1', 'razyemy_pitaniya', 'rekomenduemyy_blok_pitaniya'] },
+    { title: 'Габариты', keys: ['dlina_videokarty', 'vysota_videokarty'] },
+    { title: 'Интерфейс', keys: ['interfeys_1'] },
+    { title: 'Прочее', keys: ['data_vykhoda_na_rynok_2'] },
+  ],
+  processors: [
+    { title: 'Платформа', keys: ['socket'] },
+    { title: 'Производительность', keys: ['cores', 'threads'] },
+    { title: 'Энергопотребление', keys: ['tdp'] },
+    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+  ],
+  motherboards: [
+    { title: 'Платформа', keys: ['socket', 'chipset', 'socket_compatibility'] },
+    { title: 'Формат', keys: ['form_factor'] },
+    { title: 'Память', keys: ['memory_type', 'memory_slots', 'max_memory', 'max_memory_freq'] },
+    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+  ],
+  ram: [
+    { title: 'Объём', keys: ['capacity', 'capacity_per_module'] },
+    { title: 'Тип', keys: ['type'] },
+    { title: 'Частота', keys: ['frequency'] },
+    { title: 'Тайминги', keys: ['pc_index', 'cas_latency'] },
+    { title: 'Дополнительные технологии', keys: ['ecc', 'expo', 'xmp'] },
+    { title: 'Напряжение', keys: ['voltage'] },
+    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+  ],
+  storage: [
+    { title: 'Объём', keys: ['capacity'] },
+    { title: 'Формат и интерфейс', keys: ['form_factor', 'interface'] },
+    { title: 'Производительность', keys: ['read_speed', 'write_speed', 'flash_type', 'tbw'] },
+    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+  ],
+  psu: [
+    { title: 'Мощность', keys: ['wattage'] },
+    { title: 'Эффективность', keys: ['efficiency'] },
+    { title: 'Конструкция', keys: ['form_factor', 'modular', 'fan_size'] },
+    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+  ],
+  cases: [
+    { title: 'Формат и материалы', keys: ['form_factor', 'material', 'material_front', 'window'] },
+    { title: 'Совместимость', keys: ['max_cooler_height', 'max_gpu_length'] },
+    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+  ],
+  coolers: [
+    { title: 'Тип и сокет', keys: ['type', 'socket'] },
+    { title: 'Производительность', keys: ['tdp', 'fan_size', 'fan_count', 'noise'] },
+    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+  ],
+  monitors: [
+    { title: 'Экран', keys: ['diagonal', 'resolution', 'matrix'] },
+    { title: 'Изображение', keys: ['refresh_rate', 'brightness', 'response_time'] },
+    { title: 'Тип', keys: ['type'] },
+    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+  ],
+  periphery: [
+    { title: 'Тип и подключение', keys: ['type', 'interface'] },
+    { title: 'Характеристики', keys: ['color', 'sensor_type', 'dpi'] },
+    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+  ],
+};
+
 interface FilterGroupProps {
   title: string;
   icon: React.ReactNode;
@@ -115,8 +181,8 @@ export function FilterSidebar({
   onCategoryChange,
   priceRange,
   onPriceChange,
-  selectedBrands,
-  onBrandsChange,
+  selectedManufacturerIds,
+  onManufacturerIdsChange,
   minRating,
   onRatingChange,
   selectedAvailability,
@@ -155,6 +221,8 @@ export function FilterSidebar({
   const [loading, setLoading] = useState(true);
   const [filterAttributes, setFilterAttributes] = useState<FilterAttribute[]>([]);
   const [specAttrsLoading, setSpecAttrsLoading] = useState(false);
+  const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
+  const [manufacturersLoading, setManufacturersLoading] = useState(false);
   
   // Локальное состояние для debounce цены
   const [localPriceRange, setLocalPriceRange] = useState({
@@ -210,17 +278,47 @@ export function FilterSidebar({
     fetchCategories();
   }, []);
 
-  // Загрузка атрибутов фильтрации при выборе категории
+  // Загрузка атрибутов фильтрации при выборе категории и фильтров (контекстные значения: при Intel — без AM4/AM5)
   useEffect(() => {
     if (!selectedCategory) {
       setFilterAttributes([]);
       return;
     }
     const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
+
+    const specsSelect: Record<string, string> = {};
+    const specsRange: Record<string, string> = {};
+    for (const [k, v] of Object.entries(selectedSpecifications)) {
+      if (Array.isArray(v)) {
+        if (v.length > 0) specsSelect[k] = v.length === 1 ? v[0] : v.join(',');
+      } else {
+        const str = String(v);
+        if (str.includes(',')) {
+          const parts = str.split(',');
+          if (parts.length === 2 && !Number.isNaN(parseFloat(parts[0])) && !Number.isNaN(parseFloat(parts[1]))) {
+            specsRange[k] = str;
+          } else {
+            specsSelect[k] = str;
+          }
+        } else {
+          specsSelect[k] = typeof v === 'number' ? String(v) : str;
+        }
+      }
+    }
+
+    const filterParams =
+      selectedManufacturerIds.length > 0 || Object.keys(specsSelect).length > 0 || Object.keys(specsRange).length > 0
+        ? {
+            manufacturerIds: selectedManufacturerIds.length > 0 ? selectedManufacturerIds : undefined,
+            specifications: Object.keys(specsSelect).length > 0 ? specsSelect : undefined,
+            specificationRanges: Object.keys(specsRange).length > 0 ? specsRange : undefined,
+          }
+        : undefined;
+
     const fetchAttrs = async () => {
       setSpecAttrsLoading(true);
       try {
-        const attrs = await catalogApi.getFilterAttributes(backendSlug);
+        const attrs = await catalogApi.getFilterAttributes(backendSlug, filterParams);
         setFilterAttributes(attrs);
       } catch (err) {
         console.error('Failed to fetch filter attributes:', err);
@@ -230,19 +328,38 @@ export function FilterSidebar({
       }
     };
     fetchAttrs();
+  }, [selectedCategory, selectedManufacturerIds, selectedSpecifications]);
+
+  // Загрузка производителей: по категории или всех
+  useEffect(() => {
+    const fetchManufacturers = async () => {
+      setManufacturersLoading(true);
+      try {
+        const backendSlug = selectedCategory ? FRONTEND_TO_BACKEND[selectedCategory] : undefined;
+        const list = await catalogApi.getManufacturers(backendSlug);
+        setManufacturers(list);
+      } catch (err) {
+        console.error('Failed to fetch manufacturers:', err);
+        setManufacturers([]);
+      } finally {
+        setManufacturersLoading(false);
+      }
+    };
+    fetchManufacturers();
   }, [selectedCategory]);
 
   // Подсчёт общего количества товаров
   const totalCount = CATEGORY_ORDER.reduce((sum, slug) => sum + (categoryCounts[slug] || 0), 0);
 
-  // Проверка активных фильтров
+  // Проверка активных фильтров (наличие по умолчанию ['in_stock'] не считается)
+  const hasNonDefaultAvailability = selectedAvailability.length !== 1 || selectedAvailability[0] !== 'in_stock';
   const hasActiveFilters = 
     selectedCategory !== null || 
     priceRange.min > 0 || 
     priceRange.max > 0 || 
-    selectedBrands.length > 0 || 
+    selectedManufacturerIds.length > 0 || 
     minRating > 0 ||
-    selectedAvailability.length > 0 ||
+    hasNonDefaultAvailability ||
     Object.keys(selectedSpecifications).length > 0;
 
   return (
@@ -254,7 +371,7 @@ export function FilterSidebar({
         </h2>
       </div>
 
-      {/* Categories */}
+      {/* Categories — открыта по умолчанию для быстрой навигации */}
       <FilterGroup
         title="Категории"
         icon={<Grid3X3 size={14} />}
@@ -289,7 +406,7 @@ export function FilterSidebar({
       <FilterGroup
         title="Цена"
         icon={<DollarSign size={14} />}
-        defaultOpen={true}
+        defaultOpen={false}
       >
         <RangeSlider
           min={PRICE_MIN}
@@ -330,88 +447,153 @@ export function FilterSidebar({
         </div>
       </FilterGroup>
 
-      {/* Динамические фильтры по характеристикам (VRAM, socket и т.д.) */}
-      {selectedCategory && filterAttributes.length > 0 && (
-        <FilterGroup
-          title="Характеристики"
-          icon={<Tag size={14} />}
-          defaultOpen={true}
-        >
-          {specAttrsLoading ? (
-            <div className={styles.checkboxList}>
-              <Skeleton width="100%" height={24} borderRadius="sm" />
-              <Skeleton width="100%" height={24} borderRadius="sm" />
-            </div>
-          ) : (
-            <div className={styles.checkboxList}>
-              {filterAttributes.map((attr) => (
-                attr.filterType === 'select' && (attr.values?.length ?? 0) > 0 ? (
-                  <div key={attr.key} className={styles.specFilterBlock}>
-                    <span className={styles.specFilterLabel}>{attr.displayName}</span>
-                    {attr.values!.map((val) => (
-                      <label
-                        key={val}
-                        className={`${styles.checkboxItem} ${selectedSpecifications[attr.key] === val ? styles.checked : ''}`}
-                      >
+      {/* Динамические фильтры по характеристикам — разбиты на логические группы */}
+      {selectedCategory && filterAttributes.length > 0 && (() => {
+        const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
+        const baseGroups = SPEC_GROUPS[backendSlug] ?? [];
+        const attrMap = new Map(filterAttributes.map((a) => [a.key, a]));
+        const keysInGroups = new Set(baseGroups.flatMap((g) => g.keys));
+        const keysNotInGroups = filterAttributes.filter((a) => !keysInGroups.has(a.key)).map((a) => a.key);
+        const groups =
+          keysNotInGroups.length > 0
+            ? [...baseGroups, { title: 'Прочее', keys: keysNotInGroups }]
+            : baseGroups.length > 0
+              ? baseGroups
+              : [{ title: 'Характеристики', keys: filterAttributes.map((a) => a.key) }];
+
+        const renderAttr = (attr: FilterAttribute) => {
+          if (attr.filterType === 'range') {
+            if (attr.minValue == null && attr.maxValue == null) return null;
+            const minVal = attr.minValue ?? 0;
+            const maxVal = attr.maxValue ?? Math.max(minVal + 1, 100);
+            const raw = selectedSpecifications[attr.key];
+            const rangeStr = typeof raw === 'string' ? raw : undefined;
+            const [minSel, maxSel] = rangeStr?.includes(',')
+              ? rangeStr.split(',').map((s) => parseFloat(s.trim()) || 0)
+              : [minVal, maxVal];
+            const localRange = { min: minSel || minVal, max: maxSel || maxVal };
+            const rangeSpan = maxVal - minVal;
+            const step = attr.key.includes('videopamyat') || attr.key.includes('capacity') ? 1 : Math.max(1, Math.floor(rangeSpan / 100) || 1);
+            return (
+              <div key={attr.key} className={styles.specFilterBlock}>
+                <span className={styles.specFilterLabel}>{attr.displayName}</span>
+                <RangeSlider
+                  min={minVal}
+                  max={maxVal}
+                  step={step}
+                  value={localRange}
+                  onChange={(r) => {
+                    const next = { ...selectedSpecifications };
+                    if (r.min === minVal && r.max === maxVal) delete next[attr.key];
+                    else next[attr.key] = `${r.min},${r.max}`;
+                    onSpecificationsChange(next);
+                  }}
+                  formatValue={(v) => (Number.isInteger(v) ? v.toString() : v.toFixed(0))}
+                />
+              </div>
+            );
+          }
+          if (attr.filterType === 'select') {
+            const values = attr.values ?? [];
+            const selected = selectedSpecifications[attr.key];
+            const selectedArr = Array.isArray(selected) ? selected : selected != null ? [String(selected)] : [];
+            const isChecked = (val: string) => selectedArr.includes(val);
+            return (
+              <div key={attr.key} className={styles.specFilterBlock}>
+                <span className={styles.specFilterLabel}>{attr.displayName}</span>
+                <div className={styles.specFilterValues}>
+                  {values.length > 0 ? (
+                    values.map((val) => (
+                      <label key={val} className={`${styles.checkboxItem} ${isChecked(val) ? styles.checked : ''}`}>
                         <input
-                          type="radio"
-                          name={`spec-${attr.key}`}
+                          type="checkbox"
                           className="sr-only"
-                          checked={selectedSpecifications[attr.key] === val}
+                          checked={isChecked(val)}
                           onChange={() => {
                             const next = { ...selectedSpecifications };
-                            if (selectedSpecifications[attr.key] === val) {
-                              delete next[attr.key];
-                            } else {
-                              next[attr.key] = val;
-                            }
+                            const newArr = isChecked(val)
+                              ? selectedArr.filter((v) => v !== val)
+                              : [...selectedArr, val];
+                            if (newArr.length === 0) delete next[attr.key];
+                            else next[attr.key] = newArr;
                             onSpecificationsChange(next);
                           }}
                         />
-                        <span className={styles.checkbox}>
-                          <Check size={10} className={styles.checkIcon} />
-                        </span>
+                        <span className={styles.checkbox}><Check size={10} className={styles.checkIcon} /></span>
                         <span className={styles.checkboxLabel}>{val}</span>
                       </label>
-                    ))}
-                  </div>
-                ) : null
-              ))}
-            </div>
-          )}
-        </FilterGroup>
-      )}
+                    ))
+                  ) : (
+                    <span className={styles.emptySpecHint}>Нет вариантов</span>
+                  )}
+                </div>
+              </div>
+            );
+          }
+          return null;
+        };
 
-      {/* Brands */}
+        return specAttrsLoading ? (
+          <FilterGroup title="Характеристики" icon={<Tag size={14} />} defaultOpen={false}>
+            <div className={styles.checkboxList}>
+              <Skeleton width="100%" height={24} borderRadius="sm" />
+              <Skeleton width="100%" height={24} borderRadius="sm" />
+            </div>
+          </FilterGroup>
+        ) : (
+          groups.map((group) => {
+            const attrsInGroup = group.keys.map((k) => attrMap.get(k)).filter(Boolean) as FilterAttribute[];
+            const rendered = attrsInGroup.map(renderAttr).filter(Boolean);
+            if (rendered.length === 0) return null;
+            return (
+              <FilterGroup key={group.title} title={group.title} icon={<Tag size={14} />} defaultOpen={false}>
+                <div className={styles.checkboxList}>{rendered}</div>
+              </FilterGroup>
+            );
+          })
+        );
+      })()}
+
+      {/* Manufacturers (бренды) — реальные данные с API */}
       <FilterGroup
         title="Бренды"
         icon={<Tag size={14} />}
-        defaultOpen={true}
+        defaultOpen={false}
       >
         <div className={styles.checkboxList}>
-          {['AMD', 'Intel', 'NVIDIA', 'ASUS', 'MSI', 'Gigabyte', 'Corsair', 'Kingston', 'Samsung', 'Western Digital'].map((brand) => (
-            <label
-              key={brand}
-              className={`${styles.checkboxItem} ${selectedBrands.includes(brand) ? styles.checked : ''}`}
-            >
-              <input
-                type="checkbox"
-                className="sr-only"
-                checked={selectedBrands.includes(brand)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    onBrandsChange([...selectedBrands, brand]);
-                  } else {
-                    onBrandsChange(selectedBrands.filter((b) => b !== brand));
-                  }
-                }}
-              />
-              <span className={styles.checkbox}>
-                <Check size={10} className={styles.checkIcon} />
-              </span>
-              <span className={styles.checkboxLabel}>{brand}</span>
-            </label>
-          ))}
+          {manufacturersLoading ? (
+            <>
+              <Skeleton width="100%" height={24} borderRadius="sm" />
+              <Skeleton width="100%" height={24} borderRadius="sm" />
+              <Skeleton width="100%" height={24} borderRadius="sm" />
+            </>
+          ) : manufacturers.length === 0 ? (
+            <span className={styles.emptySpecHint}>Нет производителей</span>
+          ) : (
+            manufacturers.map((m) => (
+              <label
+                key={m.id}
+                className={`${styles.checkboxItem} ${selectedManufacturerIds.includes(m.id) ? styles.checked : ''}`}
+              >
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={selectedManufacturerIds.includes(m.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      onManufacturerIdsChange([...selectedManufacturerIds, m.id]);
+                    } else {
+                      onManufacturerIdsChange(selectedManufacturerIds.filter((id) => id !== m.id));
+                    }
+                  }}
+                />
+                <span className={styles.checkbox}>
+                  <Check size={10} className={styles.checkIcon} />
+                </span>
+                <span className={styles.checkboxLabel}>{m.name}</span>
+              </label>
+            ))
+          )}
         </div>
       </FilterGroup>
 
@@ -419,7 +601,7 @@ export function FilterSidebar({
       <FilterGroup
         title="Рейтинг"
         icon={<Star size={14} />}
-        defaultOpen={true}
+        defaultOpen={false}
       >
         <div className={styles.ratingOptions}>
           {[4, 3, 2, 1].map((rating) => (
@@ -471,7 +653,7 @@ export function FilterSidebar({
       <FilterGroup
         title="Наличие"
         icon={<Package size={14} />}
-        defaultOpen={true}
+        defaultOpen={false}
       >
         <div className={styles.checkboxList}>
           <label

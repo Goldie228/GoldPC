@@ -3,9 +3,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: 3rem 2rem;
   text-align: center;
-  min-height: 400px;
+  width: 100%;
+  max-width: 480px;
 }
 
 .iconWrapper {
@@ -15,25 +16,27 @@
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(212, 165, 116, 0.05) 100%);
   margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
 }
 
 .icon {
-  color: var(--gold-500, #d4af37);
-  opacity: 0.8;
+  color: var(--accent);
+  opacity: 0.85;
 }
 
 .title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--color-text-primary, #ffffff);
+  color: var(--fg);
   margin: 0 0 0.75rem 0;
+  letter-spacing: -0.02em;
 }
 
 .description {
   font-size: 1rem;
-  color: var(--color-text-secondary, #a0a0a0);
+  color: var(--fg-muted);
   margin: 0 0 2rem 0;
   max-width: 400px;
   line-height: 1.6;
@@ -43,21 +46,23 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, var(--gold-600, #b8960c) 0%, var(--gold-500, #d4af37) 100%);
-  color: var(--color-bg-primary, #0a0a0a);
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9375rem;
+  padding: 12px 24px;
+  background: var(--accent);
+  color: var(--bg);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px rgba(212, 165, 116, 0.25);
 }
 
 .resetButton:hover {
+  background: var(--accent-hover);
+  border-color: rgba(212, 165, 116, 0.4);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
 }
 
 .resetButton:active {
@@ -65,15 +70,14 @@
 }
 
 .resetButton:focus-visible {
-  outline: 2px solid var(--gold-500, #d4af37);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .container {
-    padding: 3rem 1.5rem;
-    min-height: 300px;
+    padding: 2.5rem 1.5rem;
   }
 
   .iconWrapper {

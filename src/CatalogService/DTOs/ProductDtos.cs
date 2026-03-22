@@ -1,5 +1,7 @@
 namespace CatalogService.DTOs;
 
+using Microsoft.AspNetCore.Mvc;
+
 /// <summary>
 /// DTO для списка товаров (каталог) - соответствует ProductSummary в OpenAPI
 /// </summary>
@@ -179,13 +181,18 @@ public record ProductFilterDto
     /// <summary>Фильтр по ID категории (для внутренней фильтрации)</summary>
     public Guid? CategoryId { get; init; }
     
-    /// <summary>Фильтр по ID производителя</summary>
+    /// <summary>Фильтр по ID производителя (один)</summary>
     public Guid? ManufacturerId { get; init; }
+
+    /// <summary>Фильтр по списку ID производителей (несколько)</summary>
+    public IEnumerable<Guid>? ManufacturerIds { get; init; }
     
-    /// <summary>Минимальная цена</summary>
+    /// <summary>Минимальная цена (query: priceMin)</summary>
+    [FromQuery(Name = "priceMin")]
     public decimal? MinPrice { get; init; }
     
-    /// <summary>Максимальная цена</summary>
+    /// <summary>Максимальная цена (query: priceMax)</summary>
+    [FromQuery(Name = "priceMax")]
     public decimal? MaxPrice { get; init; }
     
     /// <summary>Только в наличии</summary>
@@ -197,8 +204,11 @@ public record ProductFilterDto
     /// <summary>Поиск по названию и описанию</summary>
     public string? Search { get; init; }
     
-    /// <summary>Фильтр по спецификациям (ключ → значение для JSONB containment)</summary>
+    /// <summary>Фильтр по спецификациям (ключ → значение для JSONB containment, select)</summary>
     public Dictionary<string, string>? Specifications { get; init; }
+
+    /// <summary>Диапазоны для range-атрибутов: ключ → "min,max" (например "8,16")</summary>
+    public Dictionary<string, string>? SpecificationRanges { get; init; }
     
     // Пагинация
     public int Page { get; init; } = 1;
@@ -207,6 +217,16 @@ public record ProductFilterDto
     // Сортировка
     public string SortBy { get; init; } = "createdAt";
     public string SortOrder { get; init; } = "desc";
+}
+
+/// <summary>
+/// Query-параметры для контекстно-зависимых атрибутов фильтра (при выборе Intel скрывать AM4/AM5)
+/// </summary>
+public record FilterAttributesQueryDto
+{
+    public IEnumerable<Guid>? ManufacturerIds { get; init; }
+    public Dictionary<string, string>? Specifications { get; init; }
+    public Dictionary<string, string>? SpecificationRanges { get; init; }
 }
 
 /// <summary>
@@ -220,6 +240,10 @@ public record FilterAttributeDto
     public int SortOrder { get; init; }
     /// <summary>Уникальные значения для select-фильтра (из товаров категории)</summary>
     public List<string> Values { get; init; } = new();
+    /// <summary>Мин. значение для range-фильтра (из товаров категории)</summary>
+    public decimal? MinValue { get; init; }
+    /// <summary>Макс. значение для range-фильтра</summary>
+    public decimal? MaxValue { get; init; }
 }
 
 /// <summary>

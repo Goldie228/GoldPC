@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react';
 import { hasValidProductImage } from '../../utils/image';
-import type { ProductSummary } from '../../api/types';
+import type { ProductSummary, ProductCategory } from '../../api/types';
 import { useCart } from '../../hooks/useCart';
 import { useToastStore } from '../../store/toastStore';
 import { useWishlistStore } from '../../store/wishlistStore';
@@ -66,9 +66,20 @@ function getStockStatus(stock: number): StockStatus {
 }
 
 /**
- * SVG-плейсхолдер для отсутствующего изображения (CPU chip icon)
+ * Премиальный SVG-плейсхолдер — шестиугольник (отсылка к логотипу GoldPC).
+ * Минимализм, тонкие линии, стиль Dark Luxury.
  */
-function ImagePlaceholder(): ReactElement {
+function NeutralPlaceholder(): ReactElement {
+  const cx = 32;
+  const cy = 32;
+  const r = 20;
+  const angles = [0, 60, 120, 180, 240, 300].map((d) => {
+    const rad = (d * Math.PI) / 180;
+    return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+  });
+  const pathD = angles
+    .map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`)
+    .join(' ') + ' Z';
   return (
     <svg
       className={styles.placeholder}
@@ -77,33 +88,47 @@ function ImagePlaceholder(): ReactElement {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      {/* Центральный чип */}
+      <path d={pathD} strokeWidth="1.5" stroke="currentColor" strokeLinejoin="round" fill="none" opacity="0.4" />
+    </svg>
+  );
+}
+
+/**
+ * CPU-чип плейсхолдер (только для процессоров)
+ */
+function CpuPlaceholder(): ReactElement {
+  return (
+    <svg
+      className={styles.placeholder}
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
       <rect x="16" y="16" width="32" height="32" rx="4" strokeWidth="2" stroke="currentColor" />
-      {/* Внутренний квадрат */}
       <rect x="22" y="22" width="20" height="20" rx="2" strokeWidth="1.5" stroke="currentColor" opacity="0.6" />
-      {/* Пины сверху */}
       <line x1="24" y1="16" x2="24" y2="8" strokeWidth="2" stroke="currentColor" />
       <line x1="32" y1="16" x2="32" y2="8" strokeWidth="2" stroke="currentColor" />
       <line x1="40" y1="16" x2="40" y2="8" strokeWidth="2" stroke="currentColor" />
-      {/* Пины снизу */}
       <line x1="24" y1="48" x2="24" y2="56" strokeWidth="2" stroke="currentColor" />
       <line x1="32" y1="48" x2="32" y2="56" strokeWidth="2" stroke="currentColor" />
       <line x1="40" y1="48" x2="40" y2="56" strokeWidth="2" stroke="currentColor" />
-      {/* Пины слева */}
       <line x1="16" y1="24" x2="8" y2="24" strokeWidth="2" stroke="currentColor" />
       <line x1="16" y1="32" x2="8" y2="32" strokeWidth="2" stroke="currentColor" />
       <line x1="16" y1="40" x2="8" y2="40" strokeWidth="2" stroke="currentColor" />
-      {/* Пины справа */}
       <line x1="48" y1="24" x2="56" y2="24" strokeWidth="2" stroke="currentColor" />
       <line x1="48" y1="32" x2="56" y2="32" strokeWidth="2" stroke="currentColor" />
       <line x1="48" y1="40" x2="56" y2="40" strokeWidth="2" stroke="currentColor" />
-      {/* Угловые маркеры */}
       <circle cx="26" cy="26" r="2" fill="currentColor" opacity="0.4" />
       <circle cx="38" cy="26" r="2" fill="currentColor" opacity="0.4" />
       <circle cx="26" cy="38" r="2" fill="currentColor" opacity="0.4" />
       <circle cx="38" cy="38" r="2" fill="currentColor" opacity="0.4" />
     </svg>
   );
+}
+
+function getImagePlaceholder(category: ProductCategory): ReactElement {
+  return category === 'cpu' ? <CpuPlaceholder /> : <NeutralPlaceholder />;
 }
 
 /**
@@ -131,14 +156,16 @@ function ImageContainer({
       onMouseLeave={onQuickViewClose}
     >
       {hasValidImage ? (
-        <img
-          src={product.mainImage?.url ?? ''}
-          alt={product.mainImage?.alt ?? product.name}
-          className={styles.image}
-          onError={() => setImageError(true)}
-        />
+        <div className={styles.imageWrapper}>
+          <img
+            src={product.mainImage?.url ?? ''}
+            alt={product.mainImage?.alt ?? product.name}
+            className={styles.image}
+            onError={() => setImageError(true)}
+          />
+        </div>
       ) : (
-        <ImagePlaceholder />
+        getImagePlaceholder(product.category)
       )}
 
       {/* Badge logic: Discount takes priority, Hit shown on right if both exist */}
@@ -308,11 +335,13 @@ function QuickViewContent({ product }: { product: ProductSummary }): ReactElemen
   return (
     <div className={styles.quickViewContent}>
       <div className={styles.quickViewImage}>
-        {hasValidProductImage(product.mainImage?.url) ? (
-          <img
-            src={product.mainImage.url}
-            alt={product.mainImage.alt ?? product.name}
-          />
+        {product.mainImage && hasValidProductImage(product.mainImage.url) ? (
+          <div className={styles.quickViewImageWrapper}>
+            <img
+              src={product.mainImage.url}
+              alt={product.mainImage.alt ?? product.name}
+            />
+          </div>
         ) : (
           <div className={styles.quickViewPlaceholder}>
             <Icon name="image" size="2xl" color="secondary" />

@@ -89,6 +89,8 @@ export interface GetProductsParams {
   pageSize?: number;
   category?: ProductCategory;
   manufacturerId?: Uuid;
+  /** Фильтр по нескольким производителям */
+  manufacturerIds?: Uuid[];
   brand?: string;
   priceMin?: number;
   priceMax?: number;
@@ -98,8 +100,10 @@ export interface GetProductsParams {
   sortOrder?: 'asc' | 'desc';
   inStock?: boolean;
   isFeatured?: boolean;
-  /** Фильтр по характеристикам (vram, socket, chipset и т.д.) */
-  specifications?: Record<string, string | number>;
+  /** Фильтр по характеристикам (select). Значение может быть массивом для мультивыбора */
+  specifications?: Record<string, string | number | string[]>;
+  /** Диапазоны для range-атрибутов: key -> "min,max" */
+  specificationRanges?: Record<string, string>;
 }
 
 // === Атрибут фильтра по характеристикам ===
@@ -110,6 +114,10 @@ export interface FilterAttribute {
   sortOrder: number;
   /** Уникальные значения для select-фильтра */
   values?: string[];
+  /** Мин. значение для range-фильтра */
+  minValue?: number;
+  /** Макс. значение для range-фильтра */
+  maxValue?: number;
 }
 
 // === Категория ===

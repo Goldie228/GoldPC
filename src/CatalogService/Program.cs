@@ -78,6 +78,7 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 // Регистрация сервисов
 builder.Services.AddScoped<ICatalogService, CatalogService.Services.CatalogService>();
 builder.Services.AddScoped<CatalogService.Services.XCoreImporter>();
+builder.Services.AddScoped<CatalogService.Services.FilterAttributesSeeder>();
 
 // Настройка CORS
 builder.Services.AddCors(options =>
@@ -269,6 +270,88 @@ if (args is ["seed-xcore-images"] or ["seed-xcore-images", _])
     catch (Exception ex)
     {
         logger.LogError(ex, "Ошибка обновления изображений");
+        throw;
+    }
+    return 0;
+}
+
+// CLI: dotnet run -- seed-xcore-reset
+// Полный сброс: удаляет все товары X-Core, затем импортирует из xcore-products.json + обновляет картинки из xcore-images.json
+if (args is ["seed-xcore-reset"])
+{
+    var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+    var productsPath = Path.Combine(repoRoot, "scripts", "scraper", "data", "xcore-products.json");
+    var imagesPath = Path.Combine(repoRoot, "scripts", "scraper", "data", "xcore-images.json");
+
+    if (!File.Exists(productsPath))
+    {
+        Console.WriteLine($"Файл не найден: {productsPath}");
+        return 1;
+    }
+    if (!File.Exists(imagesPath))
+    {
+        Console.WriteLine($"Файл не найден: {imagesPath}");
+        return 1;
+    }
+
+    using var scope = app.Services.CreateScope();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        var deleted = await importer.DeleteXCoreProductsAsync();
+        logger.LogInformation("Удалено товаров X-Core: {Count}", deleted);
+
+        var importResult = await importer.ImportFromFileAsync(productsPath);
+        logger.LogInformation("Импорт: {Imported} добавлено, {Updated} обновлено, {Skipped} пропущено, {Errors} ошибок",
+            importResult.Imported, importResult.Updated, importResult.Skipped, importResult.Errors);
+
+        var imagesResult = await importer.UpdateProductImagesFromFileAsync(imagesPath);
+        logger.LogInformation("Изображения: {Updated} обновлено, {Deleted} очищено, {NotFound} не найдено, {Errors} ошибок",
+            imagesResult.Updated, imagesResult.Deleted, imagesResult.NotFound, imagesResult.Errors);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка seed-xcore-reset");
+        throw;
+    }
+    return 0;
+}
+
+// CLI: dotnet run -- seed-filter-attributes [путь к xcore-filter-attributes.json]
+if (args is ["seed-filter-attributes"] or ["seed-filter-attributes", _])
+{
+    var jsonPath = args.Length == 2 ? args[1] : null;
+    if (string.IsNullOrEmpty(jsonPath))
+    {
+        var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        jsonPath = Path.Combine(repoRoot, "scripts", "scraper", "config", "xcore-filter-attributes.json");
+    }
+    else if (!Path.IsPathRooted(jsonPath))
+    {
+        var fromCwd = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, jsonPath));
+        var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        var fromRepo = Path.Combine(repoRoot, jsonPath);
+        jsonPath = File.Exists(fromCwd) ? fromCwd : (File.Exists(fromRepo) ? fromRepo : fromCwd);
+    }
+    if (!File.Exists(jsonPath))
+    {
+        Console.WriteLine($"Файл не найден: {jsonPath}");
+        return 1;
+    }
+    using var scope = app.Services.CreateScope();
+    var seeder = scope.ServiceProvider.GetRequiredService<CatalogService.Services.FilterAttributesSeeder>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var result = await seeder.SeedFromFileAsync(jsonPath);
+        logger.LogInformation("Filter attributes: {Added} добавлено, {Deleted} удалено, {Skipped} пропущено",
+            result.Added, result.Deleted, result.Skipped);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка seed-filter-attributes");
         throw;
     }
     return 0;

@@ -4,7 +4,7 @@
 
 .card {
   background: var(--bg-elevated, #121214);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
   box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.04);
   border-radius: 8px;
   transition: all 0.3s ease;
@@ -31,27 +31,64 @@
 .imageContainer {
   position: relative;
   aspect-ratio: 1;
-  /* Dark background to prevent white flash on broken images */
   background: #09090b;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 20px;
   overflow: hidden;
+}
+
+/* Сплошной белый фон — совпадает с белым на фото товаров */
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+/* Переход белый → тёмный только у рамки, центр остаётся белым */
+.imageWrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 100% 100% at 50% 50%,
+    transparent 82%,
+    rgba(9, 9, 11, 0.2) 92%,
+    rgba(9, 9, 11, 0.7) 100%
+  );
 }
 
 .image {
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   transition: transform 0.3s;
-  /* Apply grayscale/dark tint to external placeholder images */
-  /* Keep premium contrast while preserving placeholder legibility */
-  filter: saturate(0.85) contrast(1.08) brightness(0.98);
 }
 
 .card:hover .image {
-  transform: scale(1.05);
+  transform: scale(1.04);
+}
+
+/* Hover: золотистый переход у рамки */
+.card:hover .imageWrapper::after {
+  background: radial-gradient(
+    ellipse 100% 100% at 50% 50%,
+    transparent 82%,
+    rgba(212, 165, 116, 0.08) 92%,
+    rgba(9, 9, 11, 0.65) 100%
+  );
 }
 
 .placeholder {
@@ -60,8 +97,13 @@
   justify-content: center;
   width: 100%;
   height: 100%;
-  font-size: 48px;
-  color: var(--fg-dim, #52525b);
+  color: var(--fg-dim, #71717a);
+  opacity: 0.6;
+}
+
+/* Золотой оттенок на hover карточки для плейсхолдера */
+.card:hover .placeholder {
+  color: rgba(212, 165, 116, 0.5);
 }
 
 /* ========================================
@@ -79,7 +121,7 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: rgba(10, 10, 10, 0.8);
+  background: rgba(9, 9, 11, 0.85);
   border: 1px solid #d4a574;
   color: #d4a574;
   border-radius: 2px;
@@ -114,7 +156,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: rgba(10, 10, 10, 0.9);
+  background: rgba(9, 9, 11, 0.9);
   border: 1px solid rgba(212, 165, 116, 0.4);
   border-radius: 4px;
   color: #d4a574;
@@ -130,9 +172,12 @@
 }
 
 .quickViewBtn:hover {
-  background: rgba(212, 165, 116, 0.15);
-  border-color: rgba(212, 165, 116, 0.6);
-  box-shadow: 0 0 12px rgba(212, 165, 116, 0.3);
+  background: rgba(18, 18, 21, 0.98);
+  border-color: rgba(212, 165, 116, 0.8);
+  color: #e8c4a0;
+  box-shadow:
+    0 0 12px rgba(212, 165, 116, 0.4),
+    0 2px 12px rgba(0, 0, 0, 0.5);
 }
 
 .quickViewVisible {
@@ -486,14 +531,44 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px;
   overflow: hidden;
+  position: relative;
+}
+
+.quickViewImageWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.quickViewImageWrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 100% 100% at 50% 50%,
+    transparent 82%,
+    rgba(9, 9, 11, 0.2) 92%,
+    rgba(9, 9, 11, 0.7) 100%
+  );
 }
 
 .quickViewImage img {
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
-  filter: grayscale(20%) contrast(90%) brightness(0.95);
 }
 
 .quickViewPlaceholder {
@@ -502,6 +577,8 @@
   justify-content: center;
   width: 100%;
   height: 100%;
+  background: #ffffff;
+  border-radius: 8px;
 }
 
 .quickViewDetails {
@@ -577,10 +654,11 @@
 }
 
 .quickViewLink:hover {
-  background: #e6b98b;
+  background: #c99763;
+  color: var(--bg, #09090b);
   box-shadow:
-    0 0 0 1px rgba(212, 165, 116, 0.5),
-    0 0 16px rgba(212, 165, 116, 0.4);
+    0 0 0 1px rgba(212, 165, 116, 0.6),
+    0 0 20px rgba(212, 165, 116, 0.35);
   transform: translateY(-1px);
 }
 

@@ -138,13 +138,25 @@ db-seed-xcore: ## Импорт товаров X-Core из scripts/scraper/data/x
 	@echo "$(CYAN)Импорт товаров X-Core...$(RESET)"
 	cd src/CatalogService && dotnet run -- seed-xcore
 
+db-seed-xcore-reset: ## Полный сброс X-Core: удалить все XCORE- товары и переимпортировать только с фото
+	@echo "$(CYAN)Полный сброс каталога X-Core (только товары с фото)...$(RESET)"
+	cd src/CatalogService && dotnet run -- seed-xcore-reset
+
 scraper-fetch-images: ## Загрузить изображения с x-core.by (div.slides) -> xcore-images.json
 	@echo "$(CYAN)Загрузка изображений товаров...$(RESET)"
 	cd scripts/scraper && npm run fetch-images
 
+scraper-sync-with-images: ## Удалить товары без фото; выровнять xcore-products.json с xcore-images.json
+	@echo "$(CYAN)Синхронизация товаров с изображениями...$(RESET)"
+	cd scripts/scraper && npm run sync-with-images
+
 db-update-images: ## Обновить картинки в БД из xcore-images.json (после scraper-fetch-images)
 	@echo "$(CYAN)Обновление изображений в БД...$(RESET)"
 	cd src/CatalogService && dotnet run -- seed-xcore-images
+
+db-seed-filter-attributes: ## Синхронизировать атрибуты фильтров из xcore-filter-attributes.json
+	@echo "$(CYAN)Синхронизация атрибутов фильтров...$(RESET)"
+	cd src/CatalogService && dotnet run -- seed-filter-attributes
 
 db-admin: ## Open Adminer database UI
 	@echo "$(GREEN)Adminer available at: http://localhost:8080$(RESET)"

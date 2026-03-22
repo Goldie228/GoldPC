@@ -40,7 +40,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius);
 }
 
 .logoIcon svg {
@@ -133,16 +132,21 @@
   position: absolute;
   top: -4px;
   right: -4px;
-  width: 16px;
+  min-width: 16px;
   height: 16px;
+  padding: 0 4px;
   background: var(--accent);
   color: var(--bg);
+  font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 600;
+  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Mobile Menu Toggle - Hamburger Button */

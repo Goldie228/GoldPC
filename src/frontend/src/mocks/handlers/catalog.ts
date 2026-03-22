@@ -491,81 +491,82 @@ function generateCategory(index: number): Category {
   };
 }
 
+// === Производители по категориям (используется в generateAdditionalProducts и manufacturers handler) ===
+const manufacturersByCategory: Record<ProductCategory, { name: string; country: string }[]> = {
+  cpu: [
+    { name: 'AMD', country: 'США' },
+    { name: 'Intel', country: 'США' },
+  ],
+  gpu: [
+    { name: 'NVIDIA', country: 'США' },
+    { name: 'AMD', country: 'США' },
+    { name: 'ASUS', country: 'Тайвань' },
+    { name: 'MSI', country: 'Тайвань' },
+    { name: 'Gigabyte', country: 'Тайвань' },
+    { name: 'Palit', country: 'Гонконг' },
+  ],
+  motherboard: [
+    { name: 'ASUS', country: 'Тайвань' },
+    { name: 'MSI', country: 'Тайвань' },
+    { name: 'Gigabyte', country: 'Тайвань' },
+    { name: 'ASRock', country: 'Тайвань' },
+  ],
+  ram: [
+    { name: 'Kingston', country: 'США' },
+    { name: 'Corsair', country: 'США' },
+    { name: 'G.Skill', country: 'Тайвань' },
+    { name: 'Crucial', country: 'США' },
+    { name: 'Samsung', country: 'Южная Корея' },
+  ],
+  storage: [
+    { name: 'Samsung', country: 'Южная Корея' },
+    { name: 'WD', country: 'США' },
+    { name: 'Seagate', country: 'США' },
+    { name: 'Crucial', country: 'США' },
+    { name: 'Kingston', country: 'США' },
+  ],
+  psu: [
+    { name: 'Corsair', country: 'США' },
+    { name: 'Seasonic', country: 'Тайвань' },
+    { name: 'be quiet!', country: 'Германия' },
+    { name: 'EVGA', country: 'США' },
+    { name: 'Deepcool', country: 'Китай' },
+  ],
+  case: [
+    { name: 'NZXT', country: 'США' },
+    { name: 'Corsair', country: 'США' },
+    { name: 'Fractal Design', country: 'Швеция' },
+    { name: 'be quiet!', country: 'Германия' },
+    { name: 'Deepcool', country: 'Китай' },
+  ],
+  cooling: [
+    { name: 'Noctua', country: 'Австрия' },
+    { name: 'be quiet!', country: 'Германия' },
+    { name: 'Corsair', country: 'США' },
+    { name: 'Deepcool', country: 'Китай' },
+    { name: 'ARCTIC', country: 'Германия' },
+  ],
+  monitor: [
+    { name: 'Samsung', country: 'Южная Корея' },
+    { name: 'LG', country: 'Южная Корея' },
+    { name: 'ASUS', country: 'Тайвань' },
+    { name: 'BenQ', country: 'Тайвань' },
+    { name: 'Dell', country: 'США' },
+    { name: 'AOC', country: 'Тайвань' },
+  ],
+  peripherals: [
+    { name: 'Logitech', country: 'Швейцария' },
+    { name: 'Razer', country: 'США' },
+    { name: 'SteelSeries', country: 'Дания' },
+    { name: 'HyperX', country: 'США' },
+    { name: 'Zowie', country: 'Тайвань' },
+  ],
+};
+
 // === Генерация дополнительных продуктов для каждой категории ===
 
 function generateAdditionalProducts(): ProductSummary[] {
   const additionalProducts: ProductSummary[] = [];
-  
-  const manufacturersByCategory: Record<ProductCategory, { name: string; country: string }[]> = {
-    cpu: [
-      { name: 'AMD', country: 'США' },
-      { name: 'Intel', country: 'США' },
-    ],
-    gpu: [
-      { name: 'NVIDIA', country: 'США' },
-      { name: 'AMD', country: 'США' },
-      { name: 'ASUS', country: 'Тайвань' },
-      { name: 'MSI', country: 'Тайвань' },
-      { name: 'Gigabyte', country: 'Тайвань' },
-      { name: 'Palit', country: 'Гонконг' },
-    ],
-    motherboard: [
-      { name: 'ASUS', country: 'Тайвань' },
-      { name: 'MSI', country: 'Тайвань' },
-      { name: 'Gigabyte', country: 'Тайвань' },
-      { name: 'ASRock', country: 'Тайвань' },
-    ],
-    ram: [
-      { name: 'Kingston', country: 'США' },
-      { name: 'Corsair', country: 'США' },
-      { name: 'G.Skill', country: 'Тайвань' },
-      { name: 'Crucial', country: 'США' },
-      { name: 'Samsung', country: 'Южная Корея' },
-    ],
-    storage: [
-      { name: 'Samsung', country: 'Южная Корея' },
-      { name: 'WD', country: 'США' },
-      { name: 'Seagate', country: 'США' },
-      { name: 'Crucial', country: 'США' },
-      { name: 'Kingston', country: 'США' },
-    ],
-    psu: [
-      { name: 'Corsair', country: 'США' },
-      { name: 'Seasonic', country: 'Тайвань' },
-      { name: 'be quiet!', country: 'Германия' },
-      { name: 'EVGA', country: 'США' },
-      { name: 'Deepcool', country: 'Китай' },
-    ],
-    case: [
-      { name: 'NZXT', country: 'США' },
-      { name: 'Corsair', country: 'США' },
-      { name: 'Fractal Design', country: 'Швеция' },
-      { name: 'be quiet!', country: 'Германия' },
-      { name: 'Deepcool', country: 'Китай' },
-    ],
-    cooling: [
-      { name: 'Noctua', country: 'Австрия' },
-      { name: 'be quiet!', country: 'Германия' },
-      { name: 'Corsair', country: 'США' },
-      { name: 'Deepcool', country: 'Китай' },
-      { name: 'ARCTIC', country: 'Германия' },
-    ],
-    monitor: [
-      { name: 'Samsung', country: 'Южная Корея' },
-      { name: 'LG', country: 'Южная Корея' },
-      { name: 'ASUS', country: 'Тайвань' },
-      { name: 'BenQ', country: 'Тайвань' },
-      { name: 'Dell', country: 'США' },
-      { name: 'AOC', country: 'Тайвань' },
-    ],
-    peripherals: [
-      { name: 'Logitech', country: 'Швейцария' },
-      { name: 'Razer', country: 'США' },
-      { name: 'SteelSeries', country: 'Дания' },
-      { name: 'HyperX', country: 'США' },
-      { name: 'Zowie', country: 'Тайвань' },
-    ],
-  };
 
   const productNamesByCategory: Record<ProductCategory, string[]> = {
     cpu: [
@@ -757,21 +758,27 @@ export const catalogHandlers = [
     const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
     const category = url.searchParams.get('category') as ProductCategory | null;
     const manufacturerId = url.searchParams.get('manufacturerId');
+    const manufacturerIds = url.searchParams.getAll('manufacturerIds');
     const brand = url.searchParams.get('brand')?.toLowerCase();
-    const priceMin = parseInt(url.searchParams.get('priceMin') || '0', 10);
-    const priceMax = parseInt(url.searchParams.get('priceMax') || '999999', 10);
+    const priceMinParam = url.searchParams.get('priceMin');
+    const priceMaxParam = url.searchParams.get('priceMax');
+    const priceMin = (priceMinParam != null && priceMinParam !== '') ? parseInt(priceMinParam, 10) : 0;
+    const priceMax = (priceMaxParam != null && priceMaxParam !== '' && parseInt(priceMaxParam, 10) > 0) ? parseInt(priceMaxParam, 10) : 999999;
     const search = url.searchParams.get('search')?.toLowerCase();
     const rating = url.searchParams.get('rating') ? parseFloat(url.searchParams.get('rating')!) : null;
     const inStock = url.searchParams.get('inStock') === 'true';
     const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | null;
     const sortOrder = (url.searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
     const specifications: Record<string, string> = {};
+    const specificationRanges: Record<string, string> = {};
     for (const [k, v] of url.searchParams) {
-      const m = k.match(/^specifications\[(.+)\]$/i);
-      if (m && v) specifications[m[1]] = v;
+      const mSpec = k.match(/^specifications\[(.+)\]$/i);
+      const mRange = k.match(/^specificationRanges\[(.+)\]$/i);
+      if (mSpec && v) specifications[mSpec[1]] = v;
+      if (mRange && v) specificationRanges[mRange[1]] = v;
     }
 
-    let products = [...getProductsCache()];
+    let products = [...getAllProducts()];
 
     // Фильтрация (category приходит как backend slug: processors, gpu, etc.)
     const slugToFrontend: Record<string, ProductCategory> = {
@@ -791,21 +798,11 @@ export const catalogHandlers = [
       products = products.filter((p) => p.category === frontendCat);
     }
 
-    if (Object.keys(specifications).length > 0) {
-      products = products.filter((p) => {
-        const pSpecs = (p as RealisticProduct).specifications ?? {};
-        return Object.entries(specifications).every(([k, v]) => String(pSpecs[k]) === String(v));
-      });
-    }
-
-    if (manufacturerId) {
+    if (manufacturerIds.length > 0) {
+      const ids = new Set(manufacturerIds);
+      products = products.filter((p) => p.manufacturer?.id && ids.has(p.manufacturer.id));
+    } else if (manufacturerId) {
       products = products.filter((p) => p.manufacturer?.id === manufacturerId);
-    }
-
-    if (brand) {
-      products = products.filter((p) => 
-        p.manufacturer?.name.toLowerCase().includes(brand)
-      );
     }
 
     products = products.filter(
@@ -824,8 +821,40 @@ export const catalogHandlers = [
       products = products.filter((p) => (p.rating ?? 0) >= rating);
     }
 
-    if (inStock) {
-      products = products.filter((p) => p.stock > 0);
+    if (url.searchParams.has('inStock')) {
+      const inStockVal = url.searchParams.get('inStock') === 'true';
+      products = products.filter((p) => inStockVal ? p.stock > 0 : p.stock <= 0);
+    }
+
+    if (Object.keys(specifications).length > 0) {
+      products = products.filter((p) => {
+        const pSpecs = (p as RealisticProduct).specifications ?? {};
+        return Object.entries(specifications).every(([k, v]) => {
+          const pVal = String(pSpecs[k] ?? '');
+          if (v.includes(',')) {
+            const allowed = v.split(',').map((s) => s.trim()).filter(Boolean);
+            return allowed.includes(pVal) || allowed.some((a) => String(pVal) === a);
+          }
+          return pVal === String(v);
+        });
+      });
+    }
+
+    if (Object.keys(specificationRanges).length > 0) {
+      products = products.filter((p) => {
+        const pSpecs = (p as RealisticProduct).specifications ?? {};
+        return Object.entries(specificationRanges).every(([k, rangeStr]) => {
+          const [minS, maxS] = rangeStr.split(',').map((s) => s.trim());
+          const min = parseFloat(minS);
+          const max = parseFloat(maxS);
+          if (Number.isNaN(min) || Number.isNaN(max)) return true;
+          const val = pSpecs[k];
+          if (val == null) return false;
+          const num = typeof val === 'number' ? val : parseFloat(String(val));
+          if (Number.isNaN(num)) return false;
+          return num >= min && num <= max;
+        });
+      });
     }
 
     // Сортировка
@@ -902,36 +931,159 @@ export const catalogHandlers = [
     return HttpResponse.json(categoriesList);
   }),
 
-  // GET /api/v1/catalog/categories/:slug/filter-attributes - атрибуты фильтрации
-  http.get('/api/v1/catalog/categories/:slug/filter-attributes', async ({ params }) => {
+  // GET /api/v1/catalog/categories/:slug/filter-attributes - атрибуты фильтрации (контекстно-зависимые)
+  http.get('/api/v1/catalog/categories/:slug/filter-attributes', async ({ params, request }) => {
     await delay(faker.number.int({ min: 20, max: 80 }));
     const slug = typeof params.slug === 'string' ? params.slug : params.slug?.[0] ?? '';
-    // Backend slugs: gpu, processors, motherboards, ram, storage, psu, cases, coolers, periphery, monitors
-    const attrMap: Record<string, Array<{ key: string; displayName: string; filterType: string; sortOrder: number; values?: string[] }>> = {
+    const url = new URL(request.url);
+    const manufacturerIds = url.searchParams.getAll('manufacturerIds');
+    const specifications: Record<string, string> = {};
+    const specificationRanges: Record<string, string> = {};
+    for (const [k, v] of url.searchParams) {
+      const mSpec = k.match(/^specifications\[(.+)\]$/i);
+      const mRange = k.match(/^specificationRanges\[(.+)\]$/i);
+      if (mSpec && v) specifications[mSpec[1]] = v;
+      if (mRange && v) specificationRanges[mRange[1]] = v;
+    }
+
+    const slugToFrontend: Record<string, ProductCategory> = {
+      processors: 'cpu',
+      gpu: 'gpu',
+      motherboards: 'motherboard',
+      ram: 'ram',
+      storage: 'storage',
+      psu: 'psu',
+      cases: 'case',
+      coolers: 'cooling',
+      monitors: 'monitor',
+      periphery: 'peripherals',
+    };
+    const frontendCat = slugToFrontend[slug] ?? slug;
+    let products = getAllProducts().filter((p) => p.category === frontendCat) as RealisticProduct[];
+
+    if (manufacturerIds.length > 0) {
+      const ids = new Set(manufacturerIds);
+      products = products.filter((p) => p.manufacturer?.id && ids.has(p.manufacturer.id));
+    }
+    if (Object.keys(specificationRanges).length > 0) {
+      products = products.filter((p) => {
+        const pSpecs = p.specifications ?? {};
+        return Object.entries(specificationRanges).every(([k, rangeStr]) => {
+          const [minS, maxS] = rangeStr.split(',').map((s) => s.trim());
+          const min = parseFloat(minS);
+          const max = parseFloat(maxS);
+          if (Number.isNaN(min) || Number.isNaN(max)) return true;
+          const val = pSpecs[k];
+          if (val == null) return false;
+          const num = typeof val === 'number' ? val : parseFloat(String(val));
+          if (Number.isNaN(num)) return false;
+          return num >= min && num <= max;
+        });
+      });
+    }
+
+    const attrTemplates: Record<string, Array<{ key: string; displayName: string; filterType: string; sortOrder: number; values?: string[]; minValue?: number; maxValue?: number }>> = {
       gpu: [
-        { key: 'vram', displayName: 'Объём видеопамяти', filterType: 'select', sortOrder: 1, values: ['8GB', '12GB', '16GB', '24GB'] },
-        { key: 'gpu', displayName: 'Серия GPU', filterType: 'select', sortOrder: 2, values: ['GeForce RTX 5060', 'GeForce RTX 4070 SUPER', 'Radeon RX 7800 XT'] },
+        { key: 'vram', displayName: 'Объём видеопамяти', filterType: 'select', sortOrder: 1 },
+        { key: 'videopamyat', displayName: 'Объём видеопамяти (ГБ)', filterType: 'range', sortOrder: 1.5 },
+        { key: 'gpu', displayName: 'Серия GPU', filterType: 'select', sortOrder: 2 },
       ],
       processors: [
-        { key: 'socket', displayName: 'Сокет', filterType: 'select', sortOrder: 1, values: ['AM4', 'AM5', 'LGA1700'] },
+        { key: 'socket', displayName: 'Сокет', filterType: 'select', sortOrder: 1 },
         { key: 'cores', displayName: 'Количество ядер', filterType: 'range', sortOrder: 2 },
       ],
       motherboards: [
-        { key: 'socket', displayName: 'Сокет', filterType: 'select', sortOrder: 1, values: ['AM5'] },
-        { key: 'chipset', displayName: 'Чипсет', filterType: 'select', sortOrder: 2, values: ['B650'] },
+        { key: 'socket', displayName: 'Сокет', filterType: 'select', sortOrder: 1 },
+        { key: 'chipset', displayName: 'Чипсет', filterType: 'select', sortOrder: 2 },
       ],
       ram: [
-        { key: 'type', displayName: 'Тип памяти', filterType: 'select', sortOrder: 1, values: ['DDR5'] },
-        { key: 'capacity', displayName: 'Объём', filterType: 'select', sortOrder: 2, values: ['32GB'] },
+        { key: 'type', displayName: 'Тип памяти', filterType: 'select', sortOrder: 1 },
+        { key: 'capacity', displayName: 'Объём', filterType: 'select', sortOrder: 2 },
       ],
-      storage: [{ key: 'capacity', displayName: 'Объём', filterType: 'select', sortOrder: 1, values: [] }],
+      storage: [{ key: 'capacity', displayName: 'Объём', filterType: 'select', sortOrder: 1 }],
       psu: [
-        { key: 'wattage', displayName: 'Мощность', filterType: 'select', sortOrder: 1, values: ['750W', '850W'] },
-        { key: 'efficiency', displayName: 'Сертификат', filterType: 'select', sortOrder: 2, values: ['80+ Gold'] },
+        { key: 'wattage', displayName: 'Мощность', filterType: 'select', sortOrder: 1 },
+        { key: 'efficiency', displayName: 'Сертификат', filterType: 'select', sortOrder: 2 },
       ],
     };
-    const attrs = attrMap[slug] ?? [];
+    const templates = attrTemplates[slug] ?? [];
+    const attrs = templates.map((t) => {
+      const specsExcludingKey = Object.fromEntries(Object.entries(specifications).filter(([k]) => k !== t.key));
+      const specsForFilter = t.filterType === 'select' ? specsExcludingKey : specifications;
+      let productsForKey = products;
+      if (Object.keys(specsForFilter).length > 0) {
+        productsForKey = products.filter((p) => {
+          const pSpecs = p.specifications ?? {};
+          return Object.entries(specsForFilter).every(([k, v]) => {
+            const pVal = String(pSpecs[k] ?? '');
+            if (v.includes(',')) {
+              const allowed = v.split(',').map((s) => s.trim()).filter(Boolean);
+              return allowed.includes(pVal) || allowed.some((a) => String(pVal) === a);
+            }
+            return pVal === String(v);
+          });
+        });
+      }
+      if (t.filterType === 'select') {
+        const valuesSet = new Set<string>();
+        productsForKey.forEach((p) => {
+          const v = p.specifications?.[t.key];
+          if (v != null && v !== '') valuesSet.add(String(v));
+        });
+        const values = Array.from(valuesSet).sort();
+        return { ...t, values };
+      }
+      const nums = productsForKey
+        .map((p) => {
+          const v = p.specifications?.[t.key];
+          if (v == null) return null;
+          const n = typeof v === 'number' ? v : parseFloat(String(v));
+          return Number.isNaN(n) ? null : n;
+        })
+        .filter((n): n is number => n != null);
+      const minValue = nums.length > 0 ? Math.min(...nums) : 0;
+      const maxValue = nums.length > 0 ? Math.max(...nums) : 100;
+      return { ...t, minValue, maxValue };
+    });
     return HttpResponse.json({ data: attrs });
+  }),
+
+  // GET /api/v1/catalog/manufacturers - список производителей (по категории или все)
+  http.get('/api/v1/catalog/manufacturers', async ({ request }) => {
+    await delay(faker.number.int({ min: 20, max: 60 }));
+    const url = new URL(request.url);
+    const category = url.searchParams.get('category') as string | null;
+    const slugToFrontend: Record<string, ProductCategory> = {
+      processors: 'cpu',
+      gpu: 'gpu',
+      motherboards: 'motherboard',
+      ram: 'ram',
+      storage: 'storage',
+      psu: 'psu',
+      cases: 'case',
+      coolers: 'cooling',
+      monitors: 'monitor',
+      periphery: 'peripherals',
+    };
+    const frontendCat = category ? (slugToFrontend[category] ?? null) : null;
+    const byName = new Map<string, { id: string; name: string; country?: string }>();
+    const allCats = frontendCat
+      ? [frontendCat]
+      : (['cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'peripherals'] as ProductCategory[]);
+    allCats.forEach((cat) => {
+      const list = manufacturersByCategory[cat] ?? [];
+      list.forEach((m) => {
+        if (!byName.has(m.name)) {
+          byName.set(m.name, {
+            id: `mfr-${m.name.toLowerCase()}`,
+            name: m.name,
+            country: m.country,
+          });
+        }
+      });
+    });
+    const manufacturers = Array.from(byName.values()).map((m) => ({ ...m, logo: undefined, description: undefined }));
+    return HttpResponse.json({ data: manufacturers });
   }),
 
   // GET /api/v1/catalog/categories/:slug - получение категории по slug
@@ -969,7 +1121,7 @@ export const catalogHandlers = [
     const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | null;
     const sortOrder = (url.searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
 
-    let products = [...getProductsCache()];
+    let products = [...getAllProducts()];
 
     // Фильтрация (идентичная логика с /products)
     if (category) {
@@ -1002,8 +1154,9 @@ export const catalogHandlers = [
       products = products.filter((p) => (p.rating || 0) >= rating);
     }
 
-    if (inStock) {
-      products = products.filter((p) => p.stock > 0);
+    if (url.searchParams.has('inStock')) {
+      const inStockVal = url.searchParams.get('inStock') === 'true';
+      products = products.filter((p) => inStockVal ? p.stock > 0 : p.stock <= 0);
     }
 
     // Сортировка

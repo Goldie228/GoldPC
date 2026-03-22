@@ -1,0 +1,187 @@
+/* Pagination - Dark Gold Theme */
+
+.pagination {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.paginationInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rangeText {
+  font-size: 0.85rem;
+  color: var(--fg-muted, #71717a);
+}
+
+.pageSizeGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pageSizeLabel {
+  font-size: 0.8rem;
+  color: var(--fg-dim, #52525b);
+  white-space: nowrap;
+}
+
+.pageSizeSelect {
+  height: 36px;
+  padding: 0 32px 0 12px;
+  background: var(--bg-elevated, #121214);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 6px;
+  color: var(--fg, #fafafa);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+}
+
+.pageSizeSelect:hover:not(:disabled) {
+  border-color: var(--fg-dim, #52525b);
+}
+
+.pageSizeSelect:focus {
+  outline: none;
+  border-color: var(--accent, #d4a574);
+}
+
+.paginationControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.navBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
+  color: var(--fg, #fafafa);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  justify-content: center;
+}
+
+.navBtn:hover:not(:disabled) {
+  border-color: var(--accent, #d4a574);
+  color: var(--accent, #d4a574);
+}
+
+.navBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.navBtn:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
+}
+
+.navBtnText {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .navBtnText {
+    display: inline;
+  }
+}
+
+.pageNumbers {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pageBtn {
+  min-width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
+  color: var(--fg-muted, #71717a);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pageBtn:hover:not(:disabled) {
+  border-color: var(--accent, #d4a574);
+  color: var(--fg, #fafafa);
+}
+
+.pageBtn.active {
+  background: rgba(212, 165, 116, 0.15);
+  border-color: var(--accent, #d4a574);
+  color: var(--accent, #d4a574);
+}
+
+.pageBtn:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
+}
+
+.ellipsis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  color: var(--fg-dim, #52525b);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .paginationInfo {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pageSizeGroup {
+    justify-content: flex-end;
+  }
+
+  .navBtn {
+    padding: 0 10px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .pageBtn {
+    min-width: 40px;
+    height: 40px;
+  }
+}

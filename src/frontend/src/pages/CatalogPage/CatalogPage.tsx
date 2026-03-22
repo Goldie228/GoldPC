@@ -7,10 +7,9 @@ import {
   SlidersHorizontal,
   X,
   LayoutGrid,
-  List,
-  Loader2
+  List
 } from 'lucide-react';
-import { FilterSidebar, EmptyState } from '../../components/catalog';
+import { FilterSidebar, EmptyState, Pagination } from '../../components/catalog';
 import { ProductCard } from '../../components/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { catalogApi } from '../../api/catalog';
@@ -68,7 +67,6 @@ export function CatalogPage() {
   
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Инициализация состояния из URL params
@@ -78,8 +76,12 @@ export function CatalogPage() {
   const [searchQuery, setSearchQuery] = useState(
     () => searchParams.get('search') || ''
   );
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(() => {
+    const p = parseInt(searchParams.get('page') || '1', 10);
+    return isNaN(p) || p < 1 ? 1 : p;
+  });
+  const [pageSize, setPageSize] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -92,26 +94,26 @@ export function CatalogPage() {
   const [sortBy, setSortBy] = useState(
     () => searchParams.get('sortBy') || 'popular'
   );
-  const [selectedBrands, setSelectedBrands] = useState<string[]>(
-    () => searchParams.get('brands')?.split(',').filter(Boolean) || []
+  const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<string[]>(
+    () => searchParams.get('manufacturerIds')?.split(',').filter(Boolean) || []
   );
   const [minRating, setMinRating] = useState(
     () => parseInt(searchParams.get('rating') || '0')
   );
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>(
-    () => searchParams.get('availability')?.split(',').filter(Boolean) || []
+    () => searchParams.get('availability')?.split(',').filter(Boolean) || ['in_stock']
   );
-  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | number>>(() => {
+  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | number | string[]>>(() => {
     const specStr = searchParams.get('specs');
     if (!specStr) return {};
     try {
-      return JSON.parse(decodeURIComponent(specStr)) as Record<string, string | number>;
+      return JSON.parse(decodeURIComponent(specStr)) as Record<string, string | number | string[]>;
     } catch {
       return {};
     }
   });
 
-  // Синхронизация фильтров с URL
+  // Синхронизация фильтров и страницы с URL
   useEffect(() => {
     const params = new URLSearchParams();
     if (selectedCategory) params.set('category', selectedCategory);
@@ -119,42 +121,51 @@ export function CatalogPage() {
     if (priceRange.min > 0) params.set('priceMin', priceRange.min.toString());
     if (priceRange.max > 0) params.set('priceMax', priceRange.max.toString());
     if (sortBy !== 'popular') params.set('sortBy', sortBy);
-    if (selectedBrands.length > 0) params.set('brands', selectedBrands.join(','));
+    if (selectedManufacturerIds.length > 0) params.set('manufacturerIds', selectedManufacturerIds.join(','));
     if (minRating > 0) params.set('rating', minRating.toString());
     if (selectedAvailability.length > 0) params.set('availability', selectedAvailability.join(','));
     if (Object.keys(selectedSpecifications).length > 0) {
       params.set('specs', encodeURIComponent(JSON.stringify(selectedSpecifications)));
     }
+    if (page > 1) params.set('page', page.toString());
     setSearchParams(params, { replace: true });
-  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedBrands, minRating, selectedAvailability, selectedSpecifications, setSearchParams]);
+  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, page, setSearchParams]);
 
-  // Начальная загрузка при изменении фильтров
-  useEffect(() => {
-    setPage(1);
-    fetchProducts(1, true);
-  }, [
+  const filterDeps = [
     selectedCategory,
     searchQuery,
     priceRange,
     sortBy,
-    selectedBrands,
+    selectedManufacturerIds,
     minRating,
     selectedAvailability,
     selectedSpecifications,
-  ]);
+  ];
 
-  const fetchProducts = async (pageNum: number, replace: boolean = false) => {
-    if (replace) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
+  const isInitialMount = useRef(true);
+
+  // Сброс на стр. 1 при изменении фильтров или pageSize (не на первый рендер — чтим page из URL)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
     }
+    setPage(1);
+  }, [...filterDeps, pageSize]);
+
+  // Загрузка при смене страницы, фильтров или pageSize
+  useEffect(() => {
+    fetchProducts(page);
+  }, [page, pageSize, ...filterDeps]);
+
+  const fetchProducts = async (pageNum: number) => {
+    setLoading(true);
     setError(null);
     
     try {
       const params: GetProductsParams = {
         page: pageNum,
-        pageSize: 12,
+        pageSize,
       };
       
       if (selectedCategory) {
@@ -171,6 +182,10 @@ export function CatalogPage() {
 
       if (priceRange.max > 0) {
         params.priceMax = priceRange.max;
+      }
+
+      if (selectedManufacturerIds.length > 0) {
+        params.manufacturerIds = selectedManufacturerIds;
       }
 
       // Маппинг sortBy на API параметры
@@ -195,66 +210,71 @@ export function CatalogPage() {
       if (minRating > 0) {
         params.rating = minRating;
       }
+
+      // Фильтр по наличию: по умолчанию только в наличии
+      if (selectedAvailability.includes('in_stock') || selectedAvailability.length === 0) {
+        params.inStock = true;
+      } else if (selectedAvailability.includes('on_order') && !selectedAvailability.includes('in_stock')) {
+        params.inStock = false;
+      }
+
+      // Фильтр по характеристикам: разделяем select (в т.ч. мультивыбор) и range
+      const specsSelect: Record<string, string | number | string[]> = {};
+      const specsRange: Record<string, string> = {};
+      for (const [k, v] of Object.entries(selectedSpecifications)) {
+        if (Array.isArray(v)) {
+          if (v.length > 0) specsSelect[k] = v.length === 1 ? v[0] : v.join(',');
+        } else {
+          const str = String(v);
+          if (str.includes(',')) {
+            const parts = str.split(',');
+            if (parts.length === 2 && !Number.isNaN(parseFloat(parts[0])) && !Number.isNaN(parseFloat(parts[1]))) {
+              specsRange[k] = str;
+            } else {
+              specsSelect[k] = str;
+            }
+          } else {
+            specsSelect[k] = typeof v === 'number' ? v : str;
+          }
+        }
+      }
+      if (Object.keys(specsSelect).length > 0) params.specifications = specsSelect;
+      if (Object.keys(specsRange).length > 0) params.specificationRanges = specsRange;
       
       const response = await catalogApi.getProducts(params);
       
-      if (replace) {
-        setProducts(response.data);
-      } else {
-        setProducts(prev => [...prev, ...response.data]);
-      }
-      
-      setHasMore(response.meta.hasNext);
+      setProducts(response.data);
+      setTotalPages(response.meta.totalPages);
       setTotalItems(response.meta.totalItems);
     } catch (err) {
       setError('Не удалось загрузить товары. Попробуйте позже.');
       console.error('Failed to fetch products:', err);
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
   };
 
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const isLoadingMoreRef = useRef(false);
+  const handlePageChange = useCallback((newPage: number) => {
+    const clamped = Math.max(1, Math.min(newPage, totalPages));
+    setPage(clamped);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [totalPages]);
 
-  const handleShowMore = useCallback(() => {
-    if (isLoadingMoreRef.current || !hasMore) return;
-    const nextPage = page + 1;
-    setPage(nextPage);
-    isLoadingMoreRef.current = true;
-    fetchProducts(nextPage, false).finally(() => {
-      isLoadingMoreRef.current = false;
-    });
-  }, [page, hasMore]);
-
-  // Бесконечный скролл: при достижении низа — подгрузка следующей страницы
-  useEffect(() => {
-    if (!hasMore || loading || loadingMore) return;
-    const el = loadMoreRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        if (entry?.isIntersecting && hasMore && !loadingMore) {
-          handleShowMore();
-        }
-      },
-      { rootMargin: '200px', threshold: 0.1 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasMore, loading, loadingMore, handleShowMore]);
+  const handlePageSizeChange = useCallback((newSize: number) => {
+    setPageSize(newSize);
+    setPage(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
-    fetchProducts(1, true);
+    fetchProducts(1);
   };
 
   const handleCategoryChange = (category: ProductCategory | null) => {
     setSelectedCategory(category);
+    setSelectedSpecifications({});
     setPage(1);
     setMobileFilterOpen(false);
   };
@@ -272,9 +292,9 @@ export function CatalogPage() {
   const handleResetFilters = () => {
     setSelectedCategory(null);
     setPriceRange({ min: 0, max: 0 });
-    setSelectedBrands([]);
+    setSelectedManufacturerIds([]);
     setMinRating(0);
-    setSelectedAvailability([]);
+    setSelectedAvailability(['in_stock']);
     setSelectedSpecifications({});
     setPage(1);
     setSearchQuery('');
@@ -322,8 +342,8 @@ export function CatalogPage() {
               onCategoryChange={handleCategoryChange}
               priceRange={priceRange}
               onPriceChange={handlePriceChange}
-              selectedBrands={selectedBrands}
-              onBrandsChange={setSelectedBrands}
+              selectedManufacturerIds={selectedManufacturerIds}
+              onManufacturerIdsChange={setSelectedManufacturerIds}
               minRating={minRating}
               onRatingChange={setMinRating}
               selectedAvailability={selectedAvailability}
@@ -343,8 +363,8 @@ export function CatalogPage() {
           onCategoryChange={handleCategoryChange}
           priceRange={priceRange}
           onPriceChange={handlePriceChange}
-          selectedBrands={selectedBrands}
-          onBrandsChange={setSelectedBrands}
+          selectedManufacturerIds={selectedManufacturerIds}
+          onManufacturerIdsChange={setSelectedManufacturerIds}
           minRating={minRating}
           onRatingChange={setMinRating}
           selectedAvailability={selectedAvailability}
@@ -365,7 +385,9 @@ export function CatalogPage() {
             <span>Каталог</span>
           </nav>
           <h1 className={styles.title}>Каталог комплектующих</h1>
-          <p className={styles.stats}>Показано {products.length} из {totalItems} товаров</p>
+          <p className={styles.stats}>
+            {totalItems > 0 ? `Всего ${totalItems} товаров` : 'Товары не найдены'}
+          </p>
         </header>
 
         {/* Toolbar */}
@@ -402,7 +424,8 @@ export function CatalogPage() {
                 <input
                   type="text"
                   className={styles.searchInput}
-                  placeholder="Поиск товаров..."
+                  placeholder="Поиск в каталоге..."
+                  aria-label="Поиск в каталоге"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -436,7 +459,7 @@ export function CatalogPage() {
         {error && (
           <div className={styles.error}>
             <p>{error}</p>
-            <button onClick={() => fetchProducts(1, true)} className={styles.retryBtn}>
+            <button onClick={() => fetchProducts(1)} className={styles.retryBtn}>
               <RefreshCw size={18} />
               <span>Попробовать снова</span>
             </button>
@@ -445,7 +468,9 @@ export function CatalogPage() {
 
         {/* Empty State */}
         {!loading && !error && products.length === 0 && (
-          <EmptyState onReset={handleResetFilters} />
+          <div className={styles.emptyStateWrapper}>
+            <EmptyState onReset={handleResetFilters} />
+          </div>
         )}
 
         {/* Product Grid - 4 columns */}
@@ -467,18 +492,18 @@ export function CatalogPage() {
               ))}
             </motion.div>
 
-            {/* Сентинель для бесконечного скролла — при скролле до конца подгружаем следующую страницу */}
-            {hasMore && (
-              <div ref={loadMoreRef} className={styles.loadMoreSentinel} aria-hidden="true">
-                {loadingMore && (
-                  <div className={styles.showMore}>
-                    <div className={styles.showMoreBtn}>
-                      <Loader2 size={20} className={styles.spinner} />
-                      <span>Загрузка...</span>
-                    </div>
-                  </div>
-                )}
-              </div>
+            {totalItems > 0 && (
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                showPageSizeSelector={true}
+                showFirstLast={totalPages > 5}
+                disabled={loading}
+              />
             )}
           </>
         )}

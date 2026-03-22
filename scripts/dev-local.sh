@@ -27,6 +27,7 @@ RESET='\033[0m'
 FRONTEND_ONLY=false
 BACKEND_ONLY=false
 INFRA_ONLY=false
+SKIP_SEED=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -42,6 +43,10 @@ while [[ $# -gt 0 ]]; do
             INFRA_ONLY=true
             shift
             ;;
+        --skip-seed)
+            SKIP_SEED=true
+            shift
+            ;;
         --help|-h)
             echo "GoldPC Local Development Startup"
             echo ""
@@ -51,6 +56,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --frontend-only    Start only frontend"
             echo "  --backend-only     Start only backend services"
             echo "  --infra-only       Start only infrastructure (postgres, redis)"
+            echo "  --skip-seed        Skip database seed (products from xcore/sample)"
             echo "  --help             Show this help message"
             exit 0
             ;;
@@ -91,6 +97,26 @@ start_infra() {
     echo -e "${GREEN}✓ Infrastructure ready${RESET}"
     echo -e "  PostgreSQL: localhost:5434"
     echo -e "  Redis: localhost:6379"
+}
+
+# Function to seed catalog database (products from xcore-products.json or sample-products.json)
+seed_catalog() {
+    if [ "$SKIP_SEED" = true ]; then
+        echo -e "${YELLOW}Skipping database seed (--skip-seed)${RESET}"
+        return
+    fi
+    echo -e "${CYAN}Seeding catalog database...${RESET}"
+    if (cd "$PROJECT_DIR/src/CatalogService" && dotnet run -- seed-xcore); then
+        echo -e "${GREEN}✓ Catalog seeded${RESET}"
+    else
+        echo -e "${YELLOW}⚠ Seed failed or no JSON found. Run manually: make db-seed-xcore${RESET}"
+    fi
+    # Синхронизация атрибутов фильтров (сокет, видеопамять и т.д.)
+    if (cd "$PROJECT_DIR/src/CatalogService" && dotnet run -- seed-filter-attributes); then
+        echo -e "${GREEN}✓ Filter attributes synced${RESET}"
+    else
+        echo -e "${YELLOW}⚠ Filter attributes sync failed (optional)${RESET}"
+    fi
 }
 
 # Function to kill existing processes on ports
@@ -179,6 +205,7 @@ else
     # Start everything
     start_infra
     sleep 3
+    seed_catalog
     start_backend
     sleep 3
     start_frontend
@@ -195,6 +222,8 @@ echo -e "${GREEN}Orders API:${RESET}   http://localhost:5002/swagger"
 echo -e "${GREEN}PCBuilder API:${RESET} http://localhost:5005/swagger"
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop all services${RESET}"
+echo ""
+echo -e "${CYAN}Если каталог пустой: make db-seed-xcore${RESET}"
 
 # Wait for all background processes
 wait
