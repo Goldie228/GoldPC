@@ -26,7 +26,7 @@ export const CATEGORY_MAP = {
   'catalog/periferiya_i_aksessuary/monitory': 'monitors',
   'catalog/periferiya_i_aksessuary/myshi': 'periphery',
   'catalog/periferiya_i_aksessuary/klaviatury': 'periphery',
-  'catalog/periferiya_i_aksessuary/naushniki_i_garnitury': 'periphery',
+  'catalog/zvuk/naushniki_i_garnitury': 'periphery', // Наушники в разделе Звук на x-core.by
 };
 
 /** Категории для базового парсинга (видеокарты, процессоры, мат. платы) */
@@ -50,7 +50,7 @@ export const FULL_CATEGORIES = [
   { path: 'catalog/periferiya_i_aksessuary/monitory', slug: 'monitors' },
   { path: 'catalog/periferiya_i_aksessuary/myshi', slug: 'periphery' },
   { path: 'catalog/periferiya_i_aksessuary/klaviatury', slug: 'periphery' },
-  { path: 'catalog/periferiya_i_aksessuary/naushniki_i_garnitury', slug: 'periphery' },
+  { path: 'catalog/zvuk/naushniki_i_garnitury', slug: 'periphery' },
 ];
 
 export { BASE_URL, DELAY_MS, MAX_PRODUCTS_PER_CATEGORY, PAGE_LOAD_TIMEOUT_MS, PRODUCT_PAGE_TIMEOUT_MS, SHOW_MORE_WAIT_MS };

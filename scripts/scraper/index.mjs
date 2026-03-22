@@ -9,7 +9,7 @@
  */
 
 import { load } from 'cheerio';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { INITIAL_CATEGORIES, FULL_CATEGORIES, BASE_URL, DELAY_MS, MAX_PRODUCTS_PER_CATEGORY, PAGE_LOAD_TIMEOUT_MS, PRODUCT_PAGE_TIMEOUT_MS } from './config.js';
@@ -20,7 +20,17 @@ const OUTPUT_FILE = join(OUTPUT_DIR, 'xcore-products.json');
 
 const parseAll = process.argv.includes('--all');
 const slowMode = process.argv.includes('--slow');
-const categoriesToScrape = parseAll ? FULL_CATEGORIES : INITIAL_CATEGORIES;
+const categoriesArg = process.argv.find((a) => a.startsWith('--categories='));
+const categoriesFilter = categoriesArg ? categoriesArg.split('=')[1].split(',').map((s) => s.trim()) : null;
+
+let categoriesToScrape = parseAll ? FULL_CATEGORIES : INITIAL_CATEGORIES;
+if (categoriesFilter?.length) {
+  categoriesToScrape = FULL_CATEGORIES.filter((c) => categoriesFilter.includes(c.slug));
+  if (categoriesToScrape.length === 0) {
+    console.error('Неизвестные категории:', categoriesFilter.join(', '));
+    process.exit(1);
+  }
+}
 
 const PAGE_TIMEOUT = slowMode ? 60000 : PAGE_LOAD_TIMEOUT_MS;
 const productPageTimeout = slowMode ? 35000 : PRODUCT_PAGE_TIMEOUT_MS;
@@ -116,7 +126,7 @@ function isProductSlug(slug, categoryPath) {
   if (path.includes('nakopiteli') || path.includes('zhestkie_diski')) return s.startsWith('ssd_') || s.startsWith('hdd_') || s.startsWith('nakopitel_') || /^\w+_\d+/.test(s);
   if (path.includes('bloki_pitaniya')) return s.includes('blok_pitaniya') || s.includes('bp_');
   if (path.includes('korpusa')) return s.startsWith('korpus_') || s.startsWith('case_');
-  if (path.includes('sistemy_okhlazhdeniya')) return s.startsWith('sistema_okhlazhdeniya') || s.startsWith('kuler_') || s.startsWith('cooler_');
+  if (path.includes('sistemy_okhlazhdeniya')) return s.startsWith('sistema_okhlazhdeniya') || s.startsWith('kuler_') || s.startsWith('cooler_') || s.startsWith('termopasta_') || s.startsWith('ventilyator_') || s.startsWith('zhidkostnoe_') || s.startsWith('komplekt_ventilyatorov') || s.startsWith('sistema_zhidkostnogo');
   if (path.includes('monitory')) return s.startsWith('monitor_') || (s.includes('monitor') && s.length > 10);
   if (path.includes('myshi') || path.includes('klaviatury') || path.includes('naushniki')) return slug.includes('_') && slug.length > 8;
   return slug.includes('_') && slug.length > 6;
@@ -279,7 +289,12 @@ async function main() {
     mkdirSync(OUTPUT_DIR, { recursive: true });
   }
 
-  const allProducts = [];
+  let allProducts = [];
+  if (categoriesFilter?.length && existsSync(OUTPUT_FILE)) {
+    const existing = JSON.parse(readFileSync(OUTPUT_FILE, 'utf8'));
+    allProducts = (existing.products || []).filter((p) => !categoriesFilter.includes(p.categorySlug));
+    console.log(`Загружено ${allProducts.length} товаров (без ${categoriesFilter.join(', ')})`);
+  }
 
   const handleInterrupt = () => {
     if (allProducts.length > 0) {

@@ -5,10 +5,11 @@
  * парсит div.slides ul li -> link[itemprop=image] или a[href] с картинками.
  * Выход: xcore-images.json { products: [{ sku, images: [urls] }] }
  *
- * Использование: node fetch-product-images.mjs [--concurrency=20] [--limit=100] [--slow]
+ * Использование: node fetch-product-images.mjs [--concurrency=20] [--limit=100] [--slow] [--categories=ram,coolers]
  * --concurrency=N  параллельных запросов (по умолчанию 25)
  * --limit=N        обработать только первые N товаров (для теста)
  * --slow           задержка 500ms между батчами
+ * --categories=ram,coolers  только товары этих категорий (результат мержится в xcore-images.json)
  */
 
 import { load } from 'cheerio';
@@ -27,6 +28,8 @@ const concurrency = parseInt(args.find((a) => a.startsWith('--concurrency='))?.s
 const limitArg = args.find((a) => a.startsWith('--limit='));
 const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : null;
 const slowMode = args.includes('--slow');
+const categoriesArg = args.find((a) => a.startsWith('--categories='));
+const categoriesFilter = categoriesArg ? categoriesArg.split('=')[1].split(',').map((s) => s.trim()) : null;
 
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const BATCH_DELAY_MS = slowMode ? 500 : 80;
@@ -68,8 +71,12 @@ function thumbToFullUrl(thumbUrl) {
 }
 
 /**
- * Парсит изображения из div.slides
- * Структура: div.slides > ul > li > (link[itemprop=image] или a.popup_link > img)
+ * Парсит изображения со страницы товара x-core.by.
+ * Поддерживает разные структуры:
+ * - div.slides ul li (классический слайдер)
+ * - div.slides > link[itemprop=image] (прямые дети, RAM/охлаждение)
+ * - .gallery-block / .gallery-wrapper a[href*="upload/iblock"]
+ * - link[itemprop=image], meta[og:image] как fallback
  */
 function parseSlidesImages(html, productName) {
   const $ = load(html);
@@ -79,10 +86,12 @@ function parseSlidesImages(html, productName) {
   const add = (url) => {
     const full = ensureAbs(url);
     if (!full || !full.includes('upload') || seen.has(full)) return;
+    if (full.includes('/menu_img/') || full.includes('7ed3a254421df44ec')) return;
     seen.add(full);
     images.push(full);
   };
 
+  // 1. div.slides ul li (классический слайдер)
   $('div.slides ul li').each((_, li) => {
     const $li = $(li);
     const link = $li.find('link[itemprop="image"][href]').attr('href');
@@ -101,6 +110,43 @@ function parseSlidesImages(html, productName) {
       add(fullUrl);
     }
   });
+
+  // 2. div.slides > link[itemprop=image] (прямые дети — RAM, охлаждение)
+  if (images.length === 0) {
+    $('div.slides link[itemprop="image"][href]').each((_, el) => {
+      const href = $(el).attr('href');
+      if (href) add(href);
+    });
+  }
+
+  // 3. Фотогалерея: a.fancy[href*="upload/iblock"]
+  if (images.length === 0) {
+    $('.gallery-block a[href*="upload/iblock"], .gallery-wrapper a[href*="upload/iblock"], a.fancy[href*="upload/iblock"]').each((_, el) => {
+      const href = $(el).attr('href');
+      if (href) add(href);
+    });
+  }
+
+  // 4. Thumbs: img в .thumbs с data-xpreview или src (resize_cache -> iblock)
+  if (images.length === 0) {
+    $('.item_slider .thumbs img[data-xpreview*="upload"], .item_slider .thumbs img[src*="resize_cache"]').each((_, el) => {
+      const src = $(el).attr('data-xpreview') || $(el).attr('src');
+      if (src) {
+        const fullUrl = src.includes('resize_cache') ? thumbToFullUrl(ensureAbs(src)) : ensureAbs(src);
+        add(fullUrl);
+      }
+    });
+  }
+
+  // 5. Fallback: link[itemprop=image], meta[og:image]
+  if (images.length === 0) {
+    $('link[itemprop="image"][href]').each((_, el) => {
+      const href = $(el).attr('href');
+      if (href) add(href);
+    });
+    const og = $('meta[property="og:image"][content]').attr('content');
+    if (og) add(og);
+  }
 
   return images;
 }
@@ -147,7 +193,11 @@ async function main() {
   }
 
   const data = JSON.parse(readFileSync(INPUT_FILE, 'utf8'));
-  const products = data.products || [];
+  let products = data.products || [];
+  if (categoriesFilter?.length) {
+    products = products.filter((p) => p.categorySlug && categoriesFilter.includes(p.categorySlug));
+    console.log(`  Категории: ${categoriesFilter.join(', ')} (${products.length} товаров)`);
+  }
   const toProcess = limit ? products.slice(0, limit) : products;
 
   console.log(`Загрузка изображений с x-core.by`);
@@ -181,13 +231,32 @@ async function main() {
 
   if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
 
-  const output = {
-    source: 'x-core.by',
-    fetchedAt: new Date().toISOString(),
-    productCount: results.length,
-    withImagesCount: withImages,
-    products: results,
-  };
+  let output;
+  if (categoriesFilter?.length && existsSync(OUTPUT_FILE)) {
+    const existing = JSON.parse(readFileSync(OUTPUT_FILE, 'utf8'));
+    const bySku = new Map((existing.products || []).map((p) => [p.sku, p]));
+    for (const r of results) {
+      bySku.set(r.sku, { sku: r.sku, images: r.images });
+    }
+    const merged = Array.from(bySku.values());
+    output = {
+      ...existing,
+      source: 'x-core.by',
+      fetchedAt: new Date().toISOString(),
+      productCount: merged.length,
+      withImagesCount: merged.filter((p) => p.images?.length > 0).length,
+      products: merged,
+    };
+    console.log(`  Обновлено ${results.length} товаров, всего в файле: ${merged.length}`);
+  } else {
+    output = {
+      source: 'x-core.by',
+      fetchedAt: new Date().toISOString(),
+      productCount: results.length,
+      withImagesCount: withImages,
+      products: results,
+    };
+  }
 
   writeFileSync(OUTPUT_FILE, JSON.stringify(output, null, 2), 'utf8');
   console.log(`Сохранено: ${OUTPUT_FILE}`);

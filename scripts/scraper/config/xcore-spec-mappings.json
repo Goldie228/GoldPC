@@ -1,0 +1,111 @@
+{
+  "gpu": [
+    ["Дата выхода чипа", "data_vykhoda_na_rynok_2"],
+    ["Дата выхода на рынок", "data_vykhoda_na_rynok_2"],
+    ["Производитель графического процессора", "proizvoditel_graficheskogo_protsessora"],
+    ["Графический процессор", "graficheskiy_protsessor"],
+    ["Видеопамять", "videopamyat"],
+    ["Тип видеопамяти", "tip_videopamyati"],
+    ["Ширина шины памяти", "shirina_shiny_pamyati"],
+    ["Охлаждение", "okhlazhdenie_1"],
+    ["Разъёмы питания", "razyemy_pitaniya"],
+    ["Интерфейс", "interfeys_1"],
+    ["Рекомендуемый блок питания", "rekomenduemyy_blok_pitaniya"],
+    ["Длина видеокарты", "dlina_videokarty"],
+    ["Высота видеокарты", "vysota_videokarty"]
+  ],
+  "processors": [
+    ["Сокет", "socket"],
+    ["Количество ядер", "cores"],
+    ["Максимальное количество потоков", "threads"],
+    ["Расчетная тепловая мощность (TDP)", "tdp"],
+    ["Базовая расчетная тепловая мощность (TDP)", "tdp"],
+    ["Расчетная базовая тепловая мощность (TDP)", "tdp"],
+    ["Дата выхода на рынок", "data_vykhoda_na_rynok"]
+  ],
+  "motherboards": [
+    ["Сокет", "socket"],
+    ["Чипсет", "chipset"],
+    ["Форм-фактор", "form_factor"],
+    ["Тип памяти", "memory_type"],
+    ["Количество слотов памяти", "memory_slots"],
+    ["Максимальный объём памяти", "max_memory"],
+    ["Максимальная частота памяти", "max_memory_freq"],
+    ["Дата выхода на рынок", "data_vykhoda_na_rynok"],
+    ["Поддержка процессоров", "socket_compatibility"]
+  ],
+  "ram": [
+    ["Объём", "capacity"],
+    ["Общий объем", "capacity"],
+    ["Объем одного модуля", "capacity_per_module"],
+    ["Тип памяти", "type"],
+    ["Тип", "type"],
+    ["Частота", "frequency"],
+    ["PC-индекс", "pc_index"],
+    ["CAS Latency", "cas_latency"],
+    ["ECC", "ecc"],
+    ["Напряжение питания", "voltage"],
+    ["Дата выхода на рынок", "data_vykhoda_na_rynok"],
+    ["Поддержка AMD EXPO", "expo"],
+    ["Профили XMP", "xmp"]
+  ],
+  "storage": [
+    ["Объём", "capacity"],
+    ["Форм-фактор", "form_factor"],
+    ["Интерфейс", "interface"],
+    ["Тип микросхем Flash", "flash_type"],
+    ["Скорость последовательного чтения", "read_speed"],
+    ["Скорость последовательной записи", "write_speed"],
+    ["Ресурс записи", "tbw"],
+    ["Дата выхода на рынок", "data_vykhoda_na_rynok"]
+  ],
+  "psu": [
+    ["Мощность", "wattage"],
+    ["Сертификат 80 PLUS", "efficiency"],
+    ["КПД", "efficiency"],
+    ["Форм-фактор", "form_factor"],
+    ["Модульное подключение кабелей питания", "modular"],
+    ["Размер вентилятора блока питания", "fan_size"],
+    ["Дата выхода на рынок", "data_vykhoda_na_rynok"]
+  ],
+  "cases": [
+    ["Форм-фактор", "form_factor"],
+    ["Макс. размер материнской платы", "form_factor"],
+    ["Материал корпуса", "material"],
+    ["Материал передней панели", "material_front"],
+    ["Прозрачное окно", "window"],
+    ["Макс. высота процессорного кулера", "max_cooler_height"],
+    ["Макс. длина видеокарты", "max_gpu_length"],
+    ["Дата выхода на рынок", "data_vykhoda_na_rynok"]
+  ],
+  "coolers": [
+    ["Тип", "type"],
+    ["Сокет", "socket"],
+    ["Рассеиваемая мощность", "tdp"],
+    ["Метод охлаждения", "type"],
+    ["Диаметр вентилятора", "fan_size"],
+    ["Количество вентиляторов", "fan_count"],
+    ["Максимальный уровень шума", "noise"],
+    ["Дата выхода на рынок", "data_vykhoda_na_rynok"]
+  ],
+  "monitors": [
+    ["Диагональ", "diagonal"],
+    ["Разрешение", "resolution"],
+    ["Макс. частота обновления экрана", "refresh_rate"],
+    ["Частота обновления", "refresh_rate"],
+    ["Матрица", "matrix"],
+    ["Тип", "type"],
+    ["Яркость", "brightness"],
+    ["Время отклика", "response_time"],
+    ["Дата выхода на рынок", "data_vykhoda_na_rynok"]
+  ],
+  "periphery": [
+    ["Тип", "type"],
+    ["Интерфейс подключения", "interface"],
+    ["Интерфейс подключения мыши", "interface"],
+    ["Цвет", "color"],
+    ["Тип сенсора", "sensor_type"],
+    ["Максимальное разрешение сенсора", "dpi"],
+    ["Дата выхода на рынок", "data_vykhoda_na_rynok"]
+  ]
+}

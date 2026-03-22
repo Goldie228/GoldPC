@@ -7,8 +7,16 @@
   "scripts": {
     "scrape": "node index.mjs",
     "scrape:all": "node index.mjs --all",
+    "scrape:gpu-ram-coolers": "node index.mjs --categories=gpu,ram,coolers --slow",
     "fetch-images": "node fetch-product-images.mjs",
-    "fetch-images:test": "node fetch-product-images.mjs --limit=10"
+    "fetch-images:test": "node fetch-product-images.mjs --limit=10",
+    "fetch-images:ram-coolers": "node fetch-product-images.mjs --categories=ram,coolers",
+    "sync-with-images": "node sync-products-with-images.mjs",
+    "parse-specs-html": "node parse-specs-from-html.mjs",
+    "parse-specs-html:test": "node parse-specs-from-html.mjs --test",
+    "parse-specs-html:retry": "node parse-specs-from-html.mjs --category=psu --only-empty --slow",
+    "audit-filters": "node fetch-xcore-filters.mjs",
+    "audit-filters:gpu": "node fetch-xcore-filters.mjs --category=gpu"
   },
   "dependencies": {
     "cheerio": "^1.0.0"
