@@ -115,6 +115,12 @@ seed_catalog() {
     if [ -f "$PROJECT_DIR/scripts/scraper/data/xcore-images.json" ]; then
         if (cd "$PROJECT_DIR/src/CatalogService" && dotnet run -- seed-xcore-images); then
             echo -e "${GREEN}✓ Product images updated from xcore-images.json${RESET}"
+            # Скачивание изображений в uploads и обновление path в БД
+            if (cd "$PROJECT_DIR/scripts/scraper" && npm run download-images 2>/dev/null); then
+                echo -e "${GREEN}✓ Product images downloaded to uploads${RESET}"
+            else
+                echo -e "${YELLOW}⚠ Image download failed or skipped (optional). Run: make scraper-download-images${RESET}"
+            fi
         else
             echo -e "${YELLOW}⚠ Image seed failed (optional)${RESET}"
         fi

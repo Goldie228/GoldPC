@@ -158,6 +158,8 @@ db-update-images: ## Обновить картинки в БД из xcore-images
 	@echo "$(CYAN)Обновление изображений в БД...$(RESET)"
 	cd src/CatalogService && dotnet run -- seed-xcore-images
 
+db-images-full: db-update-images scraper-download-images ## Импорт изображений в БД + скачивание в uploads (рекомендуемый порядок)
+
 scraper-download-images: ## Скачать изображения с внешних URL в uploads, обновить path в БД
 	@echo "$(CYAN)Скачивание изображений товаров и логотипов производителей...$(RESET)"
 	cd scripts/scraper && npm run download-images

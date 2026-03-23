@@ -1,7 +1,12 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using CatalogService.Data;
 using CatalogService.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace CatalogService.Services;
 
@@ -12,12 +17,19 @@ public class XCoreImporter
 {
     private readonly CatalogDbContext _context;
     private readonly ILogger<XCoreImporter> _logger;
+    private readonly string _uploadsFullPath;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    public XCoreImporter(CatalogDbContext context, ILogger<XCoreImporter> logger)
+    public XCoreImporter(
+        CatalogDbContext context,
+        ILogger<XCoreImporter> logger,
+        IHostEnvironment hostEnv,
+        IConfiguration configuration)
     {
         _context = context;
         _logger = logger;
+        var uploadsPath = configuration["CatalogService:UploadsPath"] ?? "uploads";
+        _uploadsFullPath = Path.Combine(hostEnv.ContentRootPath, uploadsPath);
     }
 
     private static string TruncateSku(string s) => s.Length > 50 ? s[..50] : s;
@@ -25,6 +37,32 @@ public class XCoreImporter
     /// <summary>URL placeholder'а X-Core.by (логотип "X-core") — не сохраняем.</summary>
     private static bool IsXCorePlaceholderUrl(string? url) =>
         !string.IsNullOrEmpty(url) && url.Contains("/upload/CNext/", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Вычисляет локальный путь по URL (алгоритм как в download-images.mjs: SHA256 + products/{prefix}/{hash}.{ext}).
+    /// </summary>
+    private static (string RelPath, string Ext) ComputeLocalPathFromUrl(string url)
+    {
+        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(url));
+        var hash = Convert.ToHexString(hashBytes).ToLowerInvariant();
+        var extMatch = Regex.Match(url, @"\.(jpe?g|png|gif|webp)(?:\?|$)", RegexOptions.IgnoreCase);
+        var ext = extMatch.Success
+            ? extMatch.Groups[1].Value.ToLowerInvariant().Replace("jpeg", "jpg")
+            : "jpg";
+        var prefix = hash.Length >= 2 ? hash[..2] : hash;
+        var relPath = $"products/{prefix}/{hash}.{ext}";
+        return (relPath, ext);
+    }
+
+    /// <summary>
+    /// Если локальный файл уже существует (после download-images.mjs), возвращает Path для DTO.
+    /// </summary>
+    private string? TryGetExistingLocalPath(string url)
+    {
+        var (relPath, _) = ComputeLocalPathFromUrl(url);
+        var fullPath = Path.Combine(_uploadsFullPath, relPath);
+        return File.Exists(fullPath) ? $"/uploads/{relPath}" : null;
+    }
 
     public async Task<ImportResult> ImportFromFileAsync(string filePath)
     {
@@ -257,11 +295,14 @@ public class XCoreImporter
                             var imgUrl = raw is JsonElement je ? je.GetString() : raw?.ToString();
                             if (!string.IsNullOrEmpty(imgUrl) && !IsXCorePlaceholderUrl(imgUrl))
                             {
+                                var urlTruncated = imgUrl.Length > 500 ? imgUrl[..500] : imgUrl;
+                                var existingPath = TryGetExistingLocalPath(imgUrl);
                                 _context.ProductImages.Add(new ProductImage
                                 {
                                     Id = Guid.NewGuid(),
                                     ProductId = product.Id,
-                                    Url = imgUrl.Length > 500 ? imgUrl[..500] : imgUrl,
+                                    Url = urlTruncated,
+                                    Path = existingPath,
                                     AltText = product.Name,
                                     IsPrimary = i == 0,
                                     SortOrder = i,
@@ -385,11 +426,15 @@ public class XCoreImporter
                     var url = imageUrls[i]?.ToString();
                     if (string.IsNullOrEmpty(url) || IsXCorePlaceholderUrl(url)) continue;
 
+                    var urlTruncated = url.Length > 500 ? url[..500] : url;
+                    var existingPath = TryGetExistingLocalPath(url);
+
                     _context.ProductImages.Add(new ProductImage
                     {
                         Id = Guid.NewGuid(),
                         ProductId = product.Id,
-                        Url = url.Length > 500 ? url[..500] : url,
+                        Url = urlTruncated,
+                        Path = existingPath,
                         AltText = product.Name,
                         IsPrimary = i == 0,
                         SortOrder = i,
