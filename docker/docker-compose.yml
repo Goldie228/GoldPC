@@ -11,6 +11,7 @@ services:
       - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d goldpc"]
       interval: 10s
@@ -43,11 +44,13 @@ services:
       context: ..
       dockerfile: docker/backend/Dockerfile.CatalogService
     container_name: goldpc-catalog
+    volumes:
+      - ../src/CatalogService/uploads:/app/uploads
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc;User Id=postgres;Password=admin
-      - ConnectionStrings__PostgreSQL=Server=postgres;Database=goldpc;User Id=postgres;Password=admin
+      - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc_catalog;User Id=postgres;Password=admin
+      - ConnectionStrings__PostgreSQL=Server=postgres;Database=goldpc_catalog;User Id=postgres;Password=admin
       - ConnectionStrings__Redis=redis:6379
       - Redis__Host=redis
       - Redis__Port=6379

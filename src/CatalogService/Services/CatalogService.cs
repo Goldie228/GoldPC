@@ -416,7 +416,7 @@ public class CatalogService : ICatalogService
             Id = manufacturer.Id,
             Name = manufacturer.Name,
             Country = manufacturer.Country,
-            Logo = manufacturer.LogoUrl,
+            Logo = !string.IsNullOrEmpty(manufacturer.LogoPath) ? manufacturer.LogoPath : manufacturer.LogoUrl,
             Description = manufacturer.Description
         };
     }
@@ -426,7 +426,7 @@ public class CatalogService : ICatalogService
         return new ProductImageDto
         {
             Id = image.Id,
-            Url = image.Url,
+            Url = !string.IsNullOrEmpty(image.Path) ? image.Path : image.Url,
             Alt = image.AltText,
             IsMain = image.IsPrimary,
             Order = image.SortOrder

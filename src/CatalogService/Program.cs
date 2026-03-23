@@ -8,6 +8,7 @@ using CatalogService.Services.Interfaces;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
@@ -210,6 +211,20 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+
+// Раздача локальных изображений из /uploads (product_images.path, manufacturers.logo_path)
+var uploadsPath = builder.Configuration["CatalogService:UploadsPath"] ?? "uploads";
+var uploadsFullPath = Path.Combine(builder.Environment.ContentRootPath, uploadsPath);
+if (!Directory.Exists(uploadsFullPath))
+{
+    Directory.CreateDirectory(uploadsFullPath);
+}
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsFullPath),
+    RequestPath = "/uploads",
+});
+
 app.UseAuthorization();
 app.MapControllers();
 

@@ -107,6 +107,12 @@ kubeconfig
 .terraform.lock.hcl
 
 # ==================================================
+# Uploaded/Generated content
+# ==================================================
+src/CatalogService/uploads/*
+!src/CatalogService/uploads/.gitkeep
+
+# ==================================================
 # Logs
 # ==================================================
 logs/

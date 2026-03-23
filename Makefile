@@ -154,6 +154,14 @@ db-update-images: ## Обновить картинки в БД из xcore-images
 	@echo "$(CYAN)Обновление изображений в БД...$(RESET)"
 	cd src/CatalogService && dotnet run -- seed-xcore-images
 
+scraper-download-images: ## Скачать изображения с внешних URL в uploads, обновить path в БД
+	@echo "$(CYAN)Скачивание изображений товаров и логотипов производителей...$(RESET)"
+	cd scripts/scraper && npm run download-images
+
+scraper-download-images-test: ## Скачать первые 20 изображений (тест)
+	@echo "$(CYAN)Тест: скачивание 20 изображений...$(RESET)"
+	cd scripts/scraper && npm run download-images:test
+
 db-seed-filter-attributes: ## Синхронизировать атрибуты фильтров из xcore-filter-attributes.json
 	@echo "$(CYAN)Синхронизация атрибутов фильтров...$(RESET)"
 	cd src/CatalogService && dotnet run -- seed-filter-attributes

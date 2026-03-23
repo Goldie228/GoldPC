@@ -1,3 +1,7 @@
+// <copyright file="RegisterRequestValidator.cs" company="GoldPC">
+// Copyright (c) GoldPC. All rights reserved.
+// </copyright>
+
 using FluentValidation;
 using GoldPC.SharedKernel.DTOs;
 
@@ -228,7 +232,7 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
         }
 
         // Проверяем, что пароль не содержит фамилию
-        if (!string.IsNullOrWhiteSpace(request.LastName) && 
+        if (!string.IsNullOrWhiteSpace(request.LastName) &&
             lowerPassword.Contains(request.LastName.ToLowerInvariant()))
         {
             return false;

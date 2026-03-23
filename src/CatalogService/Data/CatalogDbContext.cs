@@ -150,6 +150,7 @@ public class CatalogDbContext : DbContext
             entity.Property(e => e.Name).HasColumnName("name").IsRequired().HasMaxLength(100);
             entity.Property(e => e.Country).HasColumnName("country").HasMaxLength(50);
             entity.Property(e => e.LogoUrl).HasColumnName("logo_url").HasMaxLength(500);
+            entity.Property(e => e.LogoPath).HasColumnName("logo_path").HasMaxLength(500);
             entity.Property(e => e.Description).HasColumnName("description").HasMaxLength(1000);
             
             entity.HasIndex(e => e.Name).IsUnique();
@@ -166,6 +167,7 @@ public class CatalogDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.ProductId).HasColumnName("product_id");
             entity.Property(e => e.Url).HasColumnName("url").IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Path).HasColumnName("path").HasMaxLength(500);
             entity.Property(e => e.AltText).HasColumnName("alt_text").HasMaxLength(200);
             entity.Property(e => e.IsPrimary).HasColumnName("is_primary");
             entity.Property(e => e.SortOrder).HasColumnName("sort_order");

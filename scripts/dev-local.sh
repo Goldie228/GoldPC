@@ -86,7 +86,7 @@ start_infra() {
     echo -e "${CYAN}Waiting for PostgreSQL...${RESET}"
     sleep 3
     
-    # Create databases if not exist
+    # Create databases if not exist (init script only runs on fresh postgres; dev-local ensures they exist)
     echo -e "${CYAN}Creating databases...${RESET}"
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_catalog;" 2>/dev/null || true
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_auth;" 2>/dev/null || true
@@ -110,6 +110,14 @@ seed_catalog() {
         echo -e "${GREEN}✓ Catalog seeded${RESET}"
     else
         echo -e "${YELLOW}⚠ Seed failed or no JSON found. Run manually: make db-seed-xcore${RESET}"
+    fi
+    # Обновление изображений из xcore-images.json (если файл есть)
+    if [ -f "$PROJECT_DIR/scripts/scraper/data/xcore-images.json" ]; then
+        if (cd "$PROJECT_DIR/src/CatalogService" && dotnet run -- seed-xcore-images); then
+            echo -e "${GREEN}✓ Product images updated from xcore-images.json${RESET}"
+        else
+            echo -e "${YELLOW}⚠ Image seed failed (optional)${RESET}"
+        fi
     fi
     # Синхронизация атрибутов фильтров (сокет, видеопамять и т.д.)
     if (cd "$PROJECT_DIR/src/CatalogService" && dotnet run -- seed-filter-attributes); then
@@ -223,7 +231,8 @@ echo -e "${GREEN}PCBuilder API:${RESET} http://localhost:5005/swagger"
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop all services${RESET}"
 echo ""
-echo -e "${CYAN}Если каталог пустой: make db-seed-xcore${RESET}"
+echo -e "${CYAN}Если каталог пустой: make db-seed-xcore && make db-update-images${RESET}"
+echo -e "${CYAN}Скачать фото локально: make scraper-download-images${RESET}"
 
 # Wait for all background processes
 wait

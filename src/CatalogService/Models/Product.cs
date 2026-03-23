@@ -146,8 +146,11 @@ public class Manufacturer
     /// <summary>Страна</summary>
     public string? Country { get; set; }
     
-    /// <summary>Логотип (URL)</summary>
+    /// <summary>Логотип (URL источника)</summary>
     public string? LogoUrl { get; set; }
+
+    /// <summary>Локальный путь к логотипу (например /uploads/manufacturers/...)</summary>
+    public string? LogoPath { get; set; }
     
     /// <summary>Описание</summary>
     public string? Description { get; set; }
@@ -168,8 +171,11 @@ public class ProductImage
     /// <summary>Товар</summary>
     public Product Product { get; set; } = null!;
     
-    /// <summary>URL изображения</summary>
+    /// <summary>URL изображения (источник)</summary>
     public string Url { get; set; } = string.Empty;
+
+    /// <summary>Локальный путь к файлу (например /uploads/products/...)</summary>
+    public string? Path { get; set; }
     
     /// <summary>Альтернативный текст</summary>
     public string? AltText { get; set; }

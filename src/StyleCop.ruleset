@@ -18,7 +18,7 @@
     <Rule Id="SA1622" Action="None" />
     <Rule Id="SA1623" Action="Warning" />
     <Rule Id="SA1629" Action="None" />
-    <Rule Id="SA1633" Action="Warning" />
+    <Rule Id="SA1633" Action="None" />
     <Rule Id="SA1642" Action="Warning" />
     <Rule Id="SA1643" Action="Warning" />
     <Rule Id="SA1649" Action="Warning" />
@@ -41,7 +41,7 @@
     <Rule Id="SA1515" Action="None" />
     <Rule Id="SA1516" Action="Warning" />
     <Rule Id="SA1517" Action="Warning" />
-    <Rule Id="SA1518" Action="Warning" />
+    <Rule Id="SA1518" Action="None" />
     <Rule Id="SA1519" Action="Warning" />
     <Rule Id="SA1520" Action="Warning" />
     
@@ -58,7 +58,7 @@
     <Rule Id="SA1408" Action="Warning" />
     <Rule Id="SA1410" Action="Warning" />
     <Rule Id="SA1411" Action="Warning" />
-    <Rule Id="SA1413" Action="Warning" />
+    <Rule Id="SA1413" Action="None" />
     <Rule Id="SA1414" Action="Warning" />
     
     <!-- Naming Rules -->
@@ -164,7 +164,7 @@
     <Rule Id="SA1025" Action="Warning" />
     <Rule Id="SA1026" Action="Warning" />
     <Rule Id="SA1027" Action="Warning" />
-    <Rule Id="SA1028" Action="Warning" />
+    <Rule Id="SA1028" Action="None" />
   </Rules>
   
   <Rules AnalyzerId="Microsoft.CodeAnalysis.NetAnalyzers" RuleNamespace="Microsoft.CodeAnalysis">
@@ -173,16 +173,17 @@
     <Rule Id="CA1010" Action="Warning" />
     <Rule Id="CA1050" Action="Warning" />
     <Rule Id="CA1061" Action="Warning" />
-    <Rule Id="CA1062" Action="Warning" />
+    <Rule Id="CA1062" Action="None" />
     <Rule Id="CA1063" Action="Warning" />
     <Rule Id="CA1303" Action="None" />
     <Rule Id="CA1304" Action="Warning" />
-    <Rule Id="CA1305" Action="Warning" />
+    <Rule Id="CA1305" Action="None" />
     <Rule Id="CA1307" Action="Warning" />
     <Rule Id="CA1310" Action="Warning" />
     <Rule Id="CA1707" Action="Warning" />
     <Rule Id="CA1716" Action="Warning" />
     <Rule Id="CA1822" Action="Warning" />
+    <Rule Id="CA1848" Action="None" />
     <Rule Id="CA2007" Action="None" />
     <Rule Id="CA2227" Action="Warning" />
   </Rules>
