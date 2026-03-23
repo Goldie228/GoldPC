@@ -54,7 +54,7 @@ const getUsersCache = (): User[] => {
 let adminProductsCache: Product[] | null = null;
 
 const categories: ProductCategory[] = [
-  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'peripherals'
+  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'keyboard', 'mouse', 'headphones'
 ];
 
 // === Кэш справочников ===
@@ -72,7 +72,9 @@ const categoryNames = [
   { name: 'Корпуса', slug: 'cases' },
   { name: 'Системы охлаждения', slug: 'cooling' },
   { name: 'Мониторы', slug: 'monitors' },
-  { name: 'Периферия', slug: 'peripherals' },
+  { name: 'Клавиатуры', slug: 'keyboards' },
+  { name: 'Мыши', slug: 'mice' },
+  { name: 'Наушники', slug: 'headphones' },
 ];
 
 const manufacturerNames = [

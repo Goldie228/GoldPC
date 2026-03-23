@@ -128,9 +128,12 @@ public enum ComponentType
     Storage = 6,       // Накопитель (SSD/HDD)
     Case = 7,          // Корпус
     Cooler = 8,        // Охлаждение
-    Periphery = 9,     // Периферия
+    Periphery = 9,     // Периферия (legacy, deprecated)
     Monitor = 10,      // Монитор
-    Accessories = 11   // Аксессуары
+    Accessories = 11,  // Аксессуары
+    Keyboard = 12,     // Клавиатура
+    Mouse = 13,        // Мышь
+    Headphones = 14    // Наушники
 }
 
 /// <summary>

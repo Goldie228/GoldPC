@@ -33,7 +33,9 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
   case: 'Корпуса',
   cooling: 'Охлаждение',
   monitor: 'Мониторы',
-  peripherals: 'Периферия',
+  keyboard: 'Клавиатуры',
+  mouse: 'Мыши',
+  headphones: 'Наушники',
 };
 
 // Порядок категорий
@@ -47,7 +49,9 @@ const CATEGORY_ORDER: ProductCategory[] = [
   'case',
   'cooling',
   'monitor',
-  'peripherals',
+  'keyboard',
+  'mouse',
+  'headphones',
 ];
 
 // Маппинг slug'ов бэкенда (processors, motherboards...) на ключи фронта (cpu, motherboard...)
@@ -60,8 +64,11 @@ const BACKEND_SLUG_MAP: Record<string, ProductCategory> = {
   storage: 'storage',
   cases: 'case',
   coolers: 'cooling',
-  periphery: 'peripherals',
   monitors: 'monitor',
+  keyboards: 'keyboard',
+  mice: 'mouse',
+  headphones: 'headphones',
+  periphery: 'keyboard', // legacy fallback
 };
 
 // Обратный маппинг: frontend -> backend slug для API
@@ -75,73 +82,109 @@ const FRONTEND_TO_BACKEND: Record<ProductCategory, string> = {
   case: 'cases',
   cooling: 'coolers',
   monitor: 'monitors',
-  peripherals: 'periphery',
+  keyboard: 'keyboards',
+  mouse: 'mice',
+  headphones: 'headphones',
 };
 
-/** Логические группы характеристик по категориям (backend slug -> группы) */
-const SPEC_GROUPS: Record<string, Array<{ title: string; keys: string[] }>> = {
+/**
+ * Порядок атрибутов по категориям (backend slug -> ключи).
+ * Каждый фильтр — атомарный, без объединения в "Прочее" или "Дополнительные".
+ */
+const SPEC_ORDER: Record<string, string[]> = {
   gpu: [
-    { title: 'Процессор', keys: ['graficheskiy_protsessor', 'proizvoditel_graficheskogo_protsessora'] },
-    { title: 'Видеопамять', keys: ['videopamyat', 'tip_videopamyati', 'shirina_shiny_pamyati'] },
-    { title: 'Охлаждение и питание', keys: ['okhlazhdenie_1', 'razyemy_pitaniya', 'rekomenduemyy_blok_pitaniya'] },
-    { title: 'Габариты', keys: ['dlina_videokarty', 'vysota_videokarty'] },
-    { title: 'Интерфейс', keys: ['interfeys_1'] },
-    { title: 'Прочее', keys: ['data_vykhoda_na_rynok_2'] },
+    'data_vykhoda_na_rynok_2',
+    'proizvoditel_graficheskogo_protsessora',
+    'graficheskiy_protsessor',
+    'videopamyat',
+    'tip_videopamyati',
+    'shirina_shiny_pamyati',
+    'okhlazhdenie_1',
+    'razyemy_pitaniya',
+    'rekomenduemyy_blok_pitaniya',
+    'interfeys_1',
+    'dlina_videokarty',
+    'vysota_videokarty',
   ],
   processors: [
-    { title: 'Платформа', keys: ['socket'] },
-    { title: 'Производительность', keys: ['cores', 'threads'] },
-    { title: 'Энергопотребление', keys: ['tdp'] },
-    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+    'socket',
+    'model_series',
+    'codename',
+    'data_vykhoda_na_rynok',
+    'integrated_graphics',
+    'cores',
+    'threads',
+    'base_freq',
+    'max_freq',
+    'max_memory_freq',
+    'tdp',
+    'delivery_type',
+    'cooling_included',
+    'process_nm',
+    'cache_l2',
+    'cache_l3',
+    'memory_support',
+    'memory_channels',
+    'multithreading',
   ],
   motherboards: [
-    { title: 'Платформа', keys: ['socket', 'chipset', 'socket_compatibility'] },
-    { title: 'Формат', keys: ['form_factor'] },
-    { title: 'Память', keys: ['memory_type', 'memory_slots', 'max_memory', 'max_memory_freq'] },
-    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+    'socket',
+    'chipset',
+    'socket_compatibility',
+    'form_factor',
+    'memory_type',
+    'memory_slots',
+    'max_memory',
+    'max_memory_freq',
+    'data_vykhoda_na_rynok',
   ],
   ram: [
-    { title: 'Объём', keys: ['capacity', 'capacity_per_module'] },
-    { title: 'Тип', keys: ['type'] },
-    { title: 'Частота', keys: ['frequency'] },
-    { title: 'Тайминги', keys: ['pc_index', 'cas_latency'] },
-    { title: 'Дополнительные технологии', keys: ['ecc', 'expo', 'xmp'] },
-    { title: 'Напряжение', keys: ['voltage'] },
-    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+    'capacity',
+    'capacity_per_module',
+    'type',
+    'frequency',
+    'pc_index',
+    'cas_latency',
+    'ecc',
+    'expo',
+    'xmp',
+    'voltage',
+    'data_vykhoda_na_rynok',
   ],
   storage: [
-    { title: 'Объём', keys: ['capacity'] },
-    { title: 'Формат и интерфейс', keys: ['form_factor', 'interface'] },
-    { title: 'Производительность', keys: ['read_speed', 'write_speed', 'flash_type', 'tbw'] },
-    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+    'capacity',
+    'form_factor',
+    'interface',
+    'read_speed',
+    'write_speed',
+    'flash_type',
+    'tbw',
+    'data_vykhoda_na_rynok',
   ],
-  psu: [
-    { title: 'Мощность', keys: ['wattage'] },
-    { title: 'Эффективность', keys: ['efficiency'] },
-    { title: 'Конструкция', keys: ['form_factor', 'modular', 'fan_size'] },
-    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
-  ],
+  psu: ['wattage', 'efficiency', 'form_factor', 'modular', 'fan_size', 'data_vykhoda_na_rynok'],
   cases: [
-    { title: 'Формат и материалы', keys: ['form_factor', 'material', 'material_front', 'window'] },
-    { title: 'Совместимость', keys: ['max_cooler_height', 'max_gpu_length'] },
-    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+    'form_factor',
+    'material',
+    'material_front',
+    'window',
+    'max_cooler_height',
+    'max_gpu_length',
+    'data_vykhoda_na_rynok',
   ],
-  coolers: [
-    { title: 'Тип и сокет', keys: ['type', 'socket'] },
-    { title: 'Производительность', keys: ['tdp', 'fan_size', 'fan_count', 'noise'] },
-    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
-  ],
+  coolers: ['type', 'socket', 'tdp', 'fan_size', 'fan_count', 'noise', 'data_vykhoda_na_rynok'],
   monitors: [
-    { title: 'Экран', keys: ['diagonal', 'resolution', 'matrix'] },
-    { title: 'Изображение', keys: ['refresh_rate', 'brightness', 'response_time'] },
-    { title: 'Тип', keys: ['type'] },
-    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
+    'diagonal',
+    'resolution',
+    'refresh_rate',
+    'matrix',
+    'type',
+    'brightness',
+    'response_time',
+    'data_vykhoda_na_rynok',
   ],
-  periphery: [
-    { title: 'Тип и подключение', keys: ['type', 'interface'] },
-    { title: 'Характеристики', keys: ['color', 'sensor_type', 'dpi'] },
-    { title: 'Прочее', keys: ['data_vykhoda_na_rynok'] },
-  ],
+  keyboards: ['type', 'interface', 'color', 'data_vykhoda_na_rynok'],
+  mice: ['type', 'interface', 'color', 'sensor_type', 'dpi', 'data_vykhoda_na_rynok'],
+  headphones: ['type', 'interface', 'connection_type', 'driver_size', 'frequency_range', 'impedance', 'color', 'data_vykhoda_na_rynok'],
 };
 
 interface FilterGroupProps {
@@ -450,16 +493,13 @@ export function FilterSidebar({
       {/* Динамические фильтры по характеристикам — разбиты на логические группы */}
       {selectedCategory && filterAttributes.length > 0 && (() => {
         const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
-        const baseGroups = SPEC_GROUPS[backendSlug] ?? [];
+        const order = SPEC_ORDER[backendSlug] ?? [];
         const attrMap = new Map(filterAttributes.map((a) => [a.key, a]));
-        const keysInGroups = new Set(baseGroups.flatMap((g) => g.keys));
-        const keysNotInGroups = filterAttributes.filter((a) => !keysInGroups.has(a.key)).map((a) => a.key);
-        const groups =
-          keysNotInGroups.length > 0
-            ? [...baseGroups, { title: 'Прочее', keys: keysNotInGroups }]
-            : baseGroups.length > 0
-              ? baseGroups
-              : [{ title: 'Характеристики', keys: filterAttributes.map((a) => a.key) }];
+        const orderedKeys = [
+          ...order.filter((k) => attrMap.has(k)),
+          ...filterAttributes.map((a) => a.key).filter((k) => !order.includes(k)),
+        ];
+        const groups = orderedKeys.map((key) => ({ keys: [key] }));
 
         const renderAttr = (attr: FilterAttribute) => {
           if (attr.filterType === 'range') {
@@ -545,8 +585,9 @@ export function FilterSidebar({
             const attrsInGroup = group.keys.map((k) => attrMap.get(k)).filter(Boolean) as FilterAttribute[];
             const rendered = attrsInGroup.map(renderAttr).filter(Boolean);
             if (rendered.length === 0) return null;
+            const title = attrsInGroup[0]?.displayName ?? group.keys[0];
             return (
-              <FilterGroup key={group.title} title={group.title} icon={<Tag size={14} />} defaultOpen={false}>
+              <FilterGroup key={group.keys[0]} title={title} icon={<Tag size={14} />} defaultOpen={false}>
                 <div className={styles.checkboxList}>{rendered}</div>
               </FilterGroup>
             );

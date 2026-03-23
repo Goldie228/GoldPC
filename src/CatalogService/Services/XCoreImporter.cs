@@ -126,6 +126,7 @@ public class XCoreImporter
                     existing.UpdatedAt = DateTime.UtcNow;
                     existing.SourceUrl = p.Url;
                     existing.Specifications = specs;
+                    existing.CategoryId = categoryId;
                     _logger.LogDebug("Обновлён товар {Sku}", existing.Sku);
                     result.Updated++;
                 }

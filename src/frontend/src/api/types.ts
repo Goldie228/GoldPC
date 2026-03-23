@@ -31,7 +31,9 @@ export type ProductCategory =
   | 'case'
   | 'cooling'
   | 'monitor'
-  | 'peripherals';
+  | 'keyboard'
+  | 'mouse'
+  | 'headphones';
 
 export interface Manufacturer {
   id: Uuid;

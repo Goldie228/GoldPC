@@ -26,7 +26,9 @@ const categories: ProductCategory[] = [
   'case',
   'cooling',
   'monitor',
-  'peripherals',
+  'keyboard',
+  'mouse',
+  'headphones',
 ];
 
 const categoryNames: Record<ProductCategory, string> = {
@@ -39,7 +41,9 @@ const categoryNames: Record<ProductCategory, string> = {
   case: 'Корпуса',
   cooling: 'Охлаждение',
   monitor: 'Мониторы',
-  peripherals: 'Периферия',
+  keyboard: 'Клавиатуры',
+  mouse: 'Мыши',
+  headphones: 'Наушники',
 };
 
 // === Реалистичные продукты для разработки ===
@@ -554,12 +558,24 @@ const manufacturersByCategory: Record<ProductCategory, { name: string; country: 
     { name: 'Dell', country: 'США' },
     { name: 'AOC', country: 'Тайвань' },
   ],
-  peripherals: [
+  keyboard: [
     { name: 'Logitech', country: 'Швейцария' },
     { name: 'Razer', country: 'США' },
     { name: 'SteelSeries', country: 'Дания' },
     { name: 'HyperX', country: 'США' },
+  ],
+  mouse: [
+    { name: 'Logitech', country: 'Швейцария' },
+    { name: 'Razer', country: 'США' },
+    { name: 'SteelSeries', country: 'Дания' },
     { name: 'Zowie', country: 'Тайвань' },
+  ],
+  headphones: [
+    { name: 'Logitech', country: 'Швейцария' },
+    { name: 'Razer', country: 'США' },
+    { name: 'SteelSeries', country: 'Дания' },
+    { name: 'HyperX', country: 'США' },
+    { name: 'Sennheiser', country: 'Германия' },
   ],
 };
 
@@ -626,13 +642,21 @@ function generateAdditionalProducts(): ProductSummary[] {
       'BenQ MOBIUZ EX2710 27"', 'Dell S2721DGF 27"',
       'AOC Q27G2U 27" 144Hz', 'Samsung Odyssey Neo G9 49"',
     ],
-    peripherals: [
+    keyboard: [
+      'Logitech G715', 'Razer BlackWidow V4 Pro',
+      'SteelSeries Apex Pro TKL', 'HyperX Alloy Origins',
+      'Corsair K70 RGB', 'Keychron K2', 'Ducky One 3',
+    ],
+    mouse: [
       'Logitech G Pro X Superlight', 'Logitech G502 Lightspeed',
       'Razer DeathAdder V3 Pro', 'Razer Basilisk V3',
       'SteelSeries Rival 600', 'SteelSeries Sensei Ten',
       'HyperX Pulsefire Haste', 'Zowie EC2-C',
-      'Logitech G715 Keyboard', 'Razer BlackWidow V4 Pro',
-      'SteelSeries Apex Pro TKL', 'HyperX Alloy Origins',
+    ],
+    headphones: [
+      'Logitech G Pro X', 'Razer BlackShark V2',
+      'SteelSeries Arctis 7', 'HyperX Cloud II',
+      'Sennheiser HD 560S', 'Corsair Virtuoso',
     ],
   };
 
@@ -646,7 +670,9 @@ function generateAdditionalProducts(): ProductSummary[] {
     case: { min: 100, max: 500 },        // Корпуса
     cooling: { min: 80, max: 400 },      // Охлаждение
     monitor: { min: 400, max: 2000 },    // Мониторы
-    peripherals: { min: 50, max: 400 },  // Периферия
+    keyboard: { min: 80, max: 500 },     // Клавиатуры
+    mouse: { min: 50, max: 350 },        // Мыши
+    headphones: { min: 100, max: 600 },  // Наушники
   };
 
   const categoryCounts: Record<ProductCategory, number> = {
@@ -659,7 +685,9 @@ function generateAdditionalProducts(): ProductSummary[] {
     case: 28,
     cooling: 45,
     monitor: 22,
-    peripherals: 51,
+    keyboard: 18,
+    mouse: 20,
+    headphones: 15,
   };
 
   categories.forEach((category) => {
@@ -791,7 +819,10 @@ export const catalogHandlers = [
       cases: 'case',
       coolers: 'cooling',
       monitors: 'monitor',
-      periphery: 'peripherals',
+      keyboards: 'keyboard',
+      mice: 'mouse',
+      headphones: 'headphones',
+      periphery: 'keyboard',
     };
     if (category) {
       const frontendCat = slugToFrontend[category] ?? category;
@@ -956,7 +987,10 @@ export const catalogHandlers = [
       cases: 'case',
       coolers: 'cooling',
       monitors: 'monitor',
-      periphery: 'peripherals',
+      keyboards: 'keyboard',
+      mice: 'mouse',
+      headphones: 'headphones',
+      periphery: 'keyboard',
     };
     const frontendCat = slugToFrontend[slug] ?? slug;
     let products = getAllProducts().filter((p) => p.category === frontendCat) as RealisticProduct[];
@@ -1063,13 +1097,16 @@ export const catalogHandlers = [
       cases: 'case',
       coolers: 'cooling',
       monitors: 'monitor',
-      periphery: 'peripherals',
+      keyboards: 'keyboard',
+      mice: 'mouse',
+      headphones: 'headphones',
+      periphery: 'keyboard',
     };
     const frontendCat = category ? (slugToFrontend[category] ?? null) : null;
     const byName = new Map<string, { id: string; name: string; country?: string }>();
     const allCats = frontendCat
       ? [frontendCat]
-      : (['cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'peripherals'] as ProductCategory[]);
+      : (['cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'keyboard', 'mouse', 'headphones'] as ProductCategory[]);
     allCats.forEach((cat) => {
       const list = manufacturersByCategory[cat] ?? [];
       list.forEach((m) => {

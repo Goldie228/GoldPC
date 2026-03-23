@@ -16,7 +16,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   case: 'Корпус',
   cooling: 'Охлаждение',
   monitor: 'Монитор',
-  peripherals: 'Периферия',
+  keyboard: 'Клавиатуры',
+  mouse: 'Мыши',
+  headphones: 'Наушники',
 };
 
 /**

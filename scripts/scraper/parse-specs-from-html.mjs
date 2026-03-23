@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /**
  * Парсит характеристики товаров, загружая HTML страницы x-core.by.
- * Извлекает данные из div.detail_text (ul/li) и div.description-prod__lists-item,
- * маппирует на attribute_key и сохраняет в product.specifications.
+ * Использует fetch (без браузера/рендеринга) + cheerio для парсинга.
+ * Извлекает данные из div.detail_text (ul/li) и div.description-prod__lists-item.
  *
- * Использование: node parse-specs-from-html.mjs [--test] [--category=gpu,processors] [--limit=50] [--slow] [--only-empty]
+ * Использование: node parse-specs-from-html.mjs [--test] [--category=gpu,processors] [--limit=50] [--workers=8] [--slow] [--only-empty]
  * --test       — по 2–3 товара на категорию
  * --category   — только указанные категории
  * --limit      — макс. общее число товаров
- * --slow       — задержка 2с вместо 1.2с
+ * --workers    — кол-во параллельных запросов (по умолчанию 8)
+ * --slow       — задержка 2с между батчами, workers=2
  * --only-empty — только товары с пустыми specifications (для retry упавших)
  */
 
@@ -33,10 +34,12 @@ const slowMode = process.argv.includes('--slow');
 const onlyEmpty = process.argv.includes('--only-empty');
 const categoryArg = process.argv.find((a) => a.startsWith('--category='));
 const limitArg = process.argv.find((a) => a.startsWith('--limit='));
+const workersArg = process.argv.find((a) => a.startsWith('--workers='));
 
 const categoryFilter = categoryArg ? categoryArg.split('=')[1].split(',').map((s) => s.trim()) : null;
 const limitTotal = limitArg ? parseInt(limitArg.split('=')[1], 10) : null;
-const delayMs = slowMode ? 2000 : 1200;
+const concurrency = workersArg ? Math.max(1, parseInt(workersArg.split('=')[1], 10)) : (slowMode ? 2 : 8);
+const delayMs = slowMode ? 2000 : 50;
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -84,6 +87,10 @@ function normalizeValue(value, attributeKey) {
   if (!str) return value;
 
   const lower = str.toLowerCase();
+  const selectYesNo = ['integrated_graphics', 'cooling_included', 'multithreading'];
+  if (selectYesNo.includes(attributeKey) && (lower === 'да' || lower === 'нет')) {
+    return str;
+  }
   if (lower === 'да') return 'true';
   if (lower === 'нет') return 'false';
 
@@ -100,6 +107,24 @@ function normalizeValue(value, attributeKey) {
 
   const mhzMatch = str.match(/(\d[\d\s]*)\s*МГц/i);
   if (mhzMatch) return parseInt(mhzMatch[1].replace(/\s/g, ''), 10);
+
+  const ghzMatch = str.match(/(\d[\d\s.,]*)\s*ГГц/i);
+  if (ghzMatch && (attributeKey === 'base_freq' || attributeKey === 'max_freq')) {
+    const num = parseFloat(ghzMatch[1].replace(/\s/g, '').replace(',', '.'));
+    return Number.isNaN(num) ? str : num;
+  }
+
+  const mbMatch = str.match(/(\d[\d\s.,]*)\s*МБ/i);
+  if (mbMatch && (attributeKey === 'cache_l2' || attributeKey === 'cache_l3')) {
+    const num = parseFloat(mbMatch[1].replace(/\s/g, '').replace(',', '.'));
+    return Number.isNaN(num) ? str : num;
+  }
+
+  const nmMatch = str.match(/(\d[\d\s.,]*)\s*нм/i);
+  if (nmMatch && attributeKey === 'process_nm') {
+    const num = parseInt(nmMatch[1].replace(/\s/g, ''), 10);
+    return Number.isNaN(num) ? str : num;
+  }
 
   const bitMatch = str.match(/^(\d[\d\s]*)\s*бит/i);
   if (bitMatch) return parseInt(bitMatch[1].replace(/\s/g, ''), 10);
@@ -164,6 +189,7 @@ function extractFromDescLists($) {
 
 /**
  * Парсит HTML страницы и возвращает объект specifications.
+ * Использует cheerio без рендеринга (только парсинг DOM).
  */
 function parseSpecsFromHtml(html, categorySlug, mappings) {
   const $ = load(html);
@@ -234,10 +260,13 @@ async function main() {
   if (testMode) console.log('Режим --test');
   if (categoryFilter?.length) console.log('Категории:', categoryFilter.join(', '));
   if (limitTotal) console.log('Лимит:', limitTotal);
-  console.log(`Задержка: ${delayMs} мс`);
+  console.log(`Параллельных запросов: ${concurrency}`);
+  console.log(`Пауза между батчами: ${delayMs} мс`);
   console.log('');
 
   const stats = { updated: 0, failed: 0, skipped: 0, byCategory: {} };
+  let completed = 0;
+  let lastSave = 0;
 
   const handleInterrupt = () => {
     saveData(data);
@@ -247,11 +276,9 @@ async function main() {
   process.on('SIGINT', handleInterrupt);
   process.on('SIGTERM', handleInterrupt);
 
-  for (let i = 0; i < products.length; i++) {
-    const product = products[i];
+  async function processOne(product, index) {
     const slug = product.categorySlug;
     const shortName = product.externalId || product.name?.slice(0, 40) || product.url?.slice(-40) || '?';
-
     let html = null;
     let lastErr = null;
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -260,43 +287,58 @@ async function main() {
         break;
       } catch (e) {
         lastErr = e;
-        if (attempt < MAX_RETRIES - 1) {
-          const backoff = Math.pow(2, attempt) * 1000;
-          await sleep(backoff);
-        }
+        if (attempt < MAX_RETRIES - 1) await sleep(Math.pow(2, attempt) * 500);
       }
     }
-
     if (!html) {
       stats.failed++;
       if (!stats.byCategory[slug]) stats.byCategory[slug] = { ok: 0, fail: 0 };
       stats.byCategory[slug].fail++;
-      process.stdout.write(`[${i + 1}/${total}] ${slug}: ${shortName} — FAIL: ${lastErr?.message || 'unknown'}\n`);
-      await sleep(delayMs);
-      continue;
+      return { ok: false, msg: `FAIL: ${lastErr?.message || 'unknown'}` };
     }
-
     const specs = parseSpecsFromHtml(html, slug, mappings);
-
     if (Object.keys(specs).length === 0 && (!mappings[slug] || mappings[slug].length === 0)) {
       stats.skipped++;
       if (!stats.byCategory[slug]) stats.byCategory[slug] = { ok: 0, fail: 0 };
-      process.stdout.write(`[${i + 1}/${total}] ${slug}: ${shortName} — SKIP (no mapping)\r`);
-    } else {
-      product.specifications = { ...(product.specifications || {}), ...specs };
-      stats.updated++;
-      if (!stats.byCategory[slug]) stats.byCategory[slug] = { ok: 0, fail: 0 };
-      stats.byCategory[slug].ok++;
-      process.stdout.write(`[${i + 1}/${total}] ${slug}: ${shortName} — OK (${Object.keys(specs).length} specs)\r`);
+      return { ok: false, skip: true };
     }
-
-    if ((i + 1) % SAVE_INTERVAL === 0) {
-      saveData(data);
-      process.stdout.write(` [saved]\n`);
-    }
-
-    await sleep(delayMs);
+    product.specifications = { ...(product.specifications || {}), ...specs };
+    stats.updated++;
+    if (!stats.byCategory[slug]) stats.byCategory[slug] = { ok: 0, fail: 0 };
+    stats.byCategory[slug].ok++;
+    return { ok: true, count: Object.keys(specs).length };
   }
+
+  async function runWithConcurrency(items, concurrencyLimit) {
+    const executing = new Set();
+    for (let i = 0; i < items.length; i++) {
+      const product = items[i];
+      const index = i;
+      const p = processOne(product, index).then((r) => {
+        completed++;
+        const slug = product.categorySlug;
+        const shortName = product.externalId || product.name?.slice(0, 40) || '?';
+        if (r.msg) process.stdout.write(`[${completed}/${total}] ${slug}: ${shortName} — ${r.msg}\n`);
+        else if (r.skip) process.stdout.write(`[${completed}/${total}] ${slug}: ${shortName} — SKIP (no mapping)\r`);
+        else process.stdout.write(`[${completed}/${total}] ${slug}: ${shortName} — OK (${r.count} specs)\r`);
+        if (completed - lastSave >= SAVE_INTERVAL) {
+          lastSave = completed;
+          saveData(data);
+          process.stdout.write(` [saved]\n`);
+        }
+        return r;
+      });
+      executing.add(p);
+      p.finally(() => executing.delete(p));
+      if (executing.size >= concurrencyLimit) {
+        await Promise.race(executing);
+        if (delayMs > 0 && concurrencyLimit <= 4) await sleep(delayMs);
+      }
+    }
+    await Promise.all(executing);
+  }
+
+  await runWithConcurrency(products, concurrency);
 
   process.off('SIGINT', handleInterrupt);
   process.off('SIGTERM', handleInterrupt);

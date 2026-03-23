@@ -212,7 +212,10 @@ public class CatalogDbContext : DbContext
             new Category { Id = Guid.Parse("00000000-0000-0000-0000-000000000007"), Name = "Корпуса", Slug = "cases", ComponentType = ComponentType.Case },
             new Category { Id = Guid.Parse("00000000-0000-0000-0000-000000000008"), Name = "Системы охлаждения", Slug = "coolers", ComponentType = ComponentType.Cooler },
             new Category { Id = Guid.Parse("00000000-0000-0000-0000-000000000009"), Name = "Периферия", Slug = "periphery", ComponentType = ComponentType.Periphery },
-            new Category { Id = Guid.Parse("00000000-0000-0000-0000-00000000000a"), Name = "Мониторы", Slug = "monitors", ComponentType = ComponentType.Monitor }
+            new Category { Id = Guid.Parse("00000000-0000-0000-0000-00000000000a"), Name = "Мониторы", Slug = "monitors", ComponentType = ComponentType.Monitor },
+            new Category { Id = Guid.Parse("00000000-0000-0000-0000-00000000000b"), Name = "Клавиатуры", Slug = "keyboards", ComponentType = ComponentType.Keyboard },
+            new Category { Id = Guid.Parse("00000000-0000-0000-0000-00000000000c"), Name = "Мыши", Slug = "mice", ComponentType = ComponentType.Mouse },
+            new Category { Id = Guid.Parse("00000000-0000-0000-0000-00000000000d"), Name = "Наушники", Slug = "headphones", ComponentType = ComponentType.Headphones }
         };
 
         modelBuilder.Entity<Category>().HasData(categories);
@@ -230,6 +233,9 @@ public class CatalogDbContext : DbContext
         var coolersId = Guid.Parse("00000000-0000-0000-0000-000000000008");
         var peripheryId = Guid.Parse("00000000-0000-0000-0000-000000000009");
         var monitorsId = Guid.Parse("00000000-0000-0000-0000-00000000000a");
+        var keyboardsId = Guid.Parse("00000000-0000-0000-0000-00000000000b");
+        var miceId = Guid.Parse("00000000-0000-0000-0000-00000000000c");
+        var headphonesId = Guid.Parse("00000000-0000-0000-0000-00000000000d");
 
         var attributes = new[]
         {
@@ -261,9 +267,22 @@ public class CatalogDbContext : DbContext
             new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000011"), CategoryId = monitorsId, AttributeKey = "diagonal", DisplayName = "Диагональ", FilterType = FilterAttributeType.Select, SortOrder = 1 },
             new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000012"), CategoryId = monitorsId, AttributeKey = "resolution", DisplayName = "Разрешение", FilterType = FilterAttributeType.Select, SortOrder = 2 },
             new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000013"), CategoryId = monitorsId, AttributeKey = "refresh_rate", DisplayName = "Частота обновления", FilterType = FilterAttributeType.Select, SortOrder = 3 },
-            // Periphery
+            // Periphery (legacy, для товаров до реимпорта)
             new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000014"), CategoryId = peripheryId, AttributeKey = "type", DisplayName = "Тип устройства", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000015"), CategoryId = peripheryId, AttributeKey = "connection", DisplayName = "Подключение", FilterType = FilterAttributeType.Select, SortOrder = 2 }
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000015"), CategoryId = peripheryId, AttributeKey = "connection", DisplayName = "Подключение", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            // Keyboards
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000016"), CategoryId = keyboardsId, AttributeKey = "type", DisplayName = "Тип/типоразмер", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000017"), CategoryId = keyboardsId, AttributeKey = "interface", DisplayName = "Интерфейс", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000018"), CategoryId = keyboardsId, AttributeKey = "color", DisplayName = "Цвет", FilterType = FilterAttributeType.Select, SortOrder = 3 },
+            // Mice
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000019"), CategoryId = miceId, AttributeKey = "type", DisplayName = "Тип", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001a"), CategoryId = miceId, AttributeKey = "interface", DisplayName = "Интерфейс", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001b"), CategoryId = miceId, AttributeKey = "dpi", DisplayName = "DPI", FilterType = FilterAttributeType.Range, SortOrder = 3 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001c"), CategoryId = miceId, AttributeKey = "sensor_type", DisplayName = "Тип сенсора", FilterType = FilterAttributeType.Select, SortOrder = 4 },
+            // Headphones
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001d"), CategoryId = headphonesId, AttributeKey = "type", DisplayName = "Тип", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001e"), CategoryId = headphonesId, AttributeKey = "interface", DisplayName = "Интерфейс", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001f"), CategoryId = headphonesId, AttributeKey = "color", DisplayName = "Цвет", FilterType = FilterAttributeType.Select, SortOrder = 3 }
         };
 
         modelBuilder.Entity<CategoryFilterAttribute>().HasData(attributes);

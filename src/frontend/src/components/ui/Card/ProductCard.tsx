@@ -89,7 +89,7 @@ export function ProductCard({
     const product = {
       id,
       name,
-      category: (category || 'peripherals') as ProductCategory,
+      category: (category || 'keyboard') as ProductCategory,
       price,
       sku: '',
       stock: 1,
@@ -112,7 +112,7 @@ export function ProductCard({
     const product = {
       id,
       name,
-      category: (category || 'peripherals') as ProductCategory,
+      category: (category || 'keyboard') as ProductCategory,
       price,
       sku: '',
       stock: 1,

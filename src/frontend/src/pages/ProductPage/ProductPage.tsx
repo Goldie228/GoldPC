@@ -9,7 +9,7 @@ import { useProduct } from '../../hooks/useProduct';
 import { useProducts } from '../../hooks/useProducts';
 import { useCart } from '../../hooks/useCart';
 import { useToastStore } from '../../store/toastStore';
-import type { Product, ProductSpecifications } from '../../api/types';
+import type { Product, ProductSpecifications, ProductCategory } from '../../api/types';
 import './ProductPage.css';
 
 /**
@@ -279,7 +279,7 @@ function useProductTabs(product: Product): Tab[] {
  */
 function RelatedProducts({ category, currentProductId }: { category: string; currentProductId: string }): ReactElement | null {
   const { data: relatedData } = useProducts(
-    { category: category as 'cpu' | 'gpu' | 'motherboard' | 'ram' | 'storage' | 'psu' | 'case' | 'cooling' | 'monitor' | 'peripherals', pageSize: 9 },
+    { category: category as ProductCategory, pageSize: 9 },
     { enabled: true }
   );
 

@@ -19,11 +19,13 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
   case: 'Корпуса',
   cooling: 'Охлаждение',
   monitor: 'Мониторы',
-  peripherals: 'Периферия',
+  keyboard: 'Клавиатуры',
+  mouse: 'Мыши',
+  headphones: 'Наушники',
 };
 
 const CATEGORY_OPTIONS: ProductCategory[] = [
-  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'peripherals'
+  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'keyboard', 'mouse', 'headphones'
 ];
 
 interface EditFormData {

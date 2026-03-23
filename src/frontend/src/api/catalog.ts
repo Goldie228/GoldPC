@@ -12,7 +12,9 @@ const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
   case: 'cases',
   cooling: 'coolers',
   monitor: 'monitors',
-  peripherals: 'periphery',
+  keyboard: 'keyboards',
+  mouse: 'mice',
+  headphones: 'headphones',
 };
 
 /**

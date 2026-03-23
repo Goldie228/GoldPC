@@ -15,10 +15,24 @@
   ],
   "processors": [
     { "attribute_key": "socket", "display_name": "Сокет", "filter_type": "select", "sort_order": 1 },
-    { "attribute_key": "cores", "display_name": "Количество ядер", "filter_type": "range", "sort_order": 2 },
-    { "attribute_key": "threads", "display_name": "Потоков", "filter_type": "range", "sort_order": 3 },
-    { "attribute_key": "tdp", "display_name": "TDP, Вт", "filter_type": "range", "sort_order": 4 },
-    { "attribute_key": "data_vykhoda_na_rynok", "display_name": "Дата выхода, г", "filter_type": "range", "sort_order": 5 }
+    { "attribute_key": "model_series", "display_name": "Модельный ряд", "filter_type": "select", "sort_order": 2 },
+    { "attribute_key": "codename", "display_name": "Кодовое название", "filter_type": "select", "sort_order": 3 },
+    { "attribute_key": "data_vykhoda_na_rynok", "display_name": "Дата выхода, г", "filter_type": "range", "sort_order": 4 },
+    { "attribute_key": "integrated_graphics", "display_name": "Встроенная графика", "filter_type": "select", "sort_order": 5 },
+    { "attribute_key": "cores", "display_name": "Количество ядер", "filter_type": "range", "sort_order": 6 },
+    { "attribute_key": "threads", "display_name": "Потоков", "filter_type": "range", "sort_order": 7 },
+    { "attribute_key": "base_freq", "display_name": "Базовая частота, ГГц", "filter_type": "range", "sort_order": 8 },
+    { "attribute_key": "max_freq", "display_name": "Макс. частота, ГГц", "filter_type": "range", "sort_order": 9 },
+    { "attribute_key": "max_memory_freq", "display_name": "Макс. частота памяти, МГц", "filter_type": "range", "sort_order": 10 },
+    { "attribute_key": "tdp", "display_name": "TDP, Вт", "filter_type": "range", "sort_order": 11 },
+    { "attribute_key": "delivery_type", "display_name": "Тип поставки", "filter_type": "select", "sort_order": 12 },
+    { "attribute_key": "cooling_included", "display_name": "Охлаждение в комплекте", "filter_type": "select", "sort_order": 13 },
+    { "attribute_key": "process_nm", "display_name": "Техпроцесс, нм", "filter_type": "range", "sort_order": 14 },
+    { "attribute_key": "cache_l2", "display_name": "Кэш L2, МБ", "filter_type": "range", "sort_order": 15 },
+    { "attribute_key": "cache_l3", "display_name": "Кэш L3, МБ", "filter_type": "range", "sort_order": 16 },
+    { "attribute_key": "memory_support", "display_name": "Поддержка памяти", "filter_type": "select", "sort_order": 17 },
+    { "attribute_key": "memory_channels", "display_name": "Каналы памяти", "filter_type": "range", "sort_order": 18 },
+    { "attribute_key": "multithreading", "display_name": "Многопоточность", "filter_type": "select", "sort_order": 19 }
   ],
   "motherboards": [
     { "attribute_key": "socket", "display_name": "Сокет", "filter_type": "select", "sort_order": 1 },
@@ -90,12 +104,28 @@
     { "attribute_key": "response_time", "display_name": "Отклик, мс", "filter_type": "range", "sort_order": 7 },
     { "attribute_key": "data_vykhoda_na_rynok", "display_name": "Дата выхода, г", "filter_type": "range", "sort_order": 8 }
   ],
-  "periphery": [
-    { "attribute_key": "type", "display_name": "Тип устройства", "filter_type": "select", "sort_order": 1 },
+  "keyboards": [
+    { "attribute_key": "type", "display_name": "Тип/типоразмер", "filter_type": "select", "sort_order": 1 },
+    { "attribute_key": "interface", "display_name": "Интерфейс", "filter_type": "select", "sort_order": 2 },
+    { "attribute_key": "color", "display_name": "Цвет", "filter_type": "select", "sort_order": 3 },
+    { "attribute_key": "data_vykhoda_na_rynok", "display_name": "Дата выхода, г", "filter_type": "range", "sort_order": 4 }
+  ],
+  "mice": [
+    { "attribute_key": "type", "display_name": "Тип", "filter_type": "select", "sort_order": 1 },
     { "attribute_key": "interface", "display_name": "Интерфейс", "filter_type": "select", "sort_order": 2 },
     { "attribute_key": "color", "display_name": "Цвет", "filter_type": "select", "sort_order": 3 },
     { "attribute_key": "sensor_type", "display_name": "Тип сенсора", "filter_type": "select", "sort_order": 4 },
     { "attribute_key": "dpi", "display_name": "DPI", "filter_type": "range", "sort_order": 5 },
     { "attribute_key": "data_vykhoda_na_rynok", "display_name": "Дата выхода, г", "filter_type": "range", "sort_order": 6 }
+  ],
+  "headphones": [
+    { "attribute_key": "type", "display_name": "Тип", "filter_type": "select", "sort_order": 1 },
+    { "attribute_key": "interface", "display_name": "Интерфейс", "filter_type": "select", "sort_order": 2 },
+    { "attribute_key": "connection_type", "display_name": "Тип подключения", "filter_type": "select", "sort_order": 3 },
+    { "attribute_key": "driver_size", "display_name": "Диаметр драйвера, мм", "filter_type": "range", "sort_order": 4 },
+    { "attribute_key": "frequency_range", "display_name": "Диапазон частот, Гц", "filter_type": "select", "sort_order": 5 },
+    { "attribute_key": "impedance", "display_name": "Сопротивление, Ом", "filter_type": "range", "sort_order": 6 },
+    { "attribute_key": "color", "display_name": "Цвет", "filter_type": "select", "sort_order": 7 },
+    { "attribute_key": "data_vykhoda_na_rynok", "display_name": "Дата выхода, г", "filter_type": "range", "sort_order": 8 }
   ]
 }

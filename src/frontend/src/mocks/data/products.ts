@@ -18,7 +18,9 @@ export type ProductCategory =
   | 'case'
   | 'cooling'
   | 'monitor'
-  | 'peripherals';
+  | 'keyboard'
+  | 'mouse'
+  | 'headphones';
 
 export interface Rating {
   average: number;
@@ -129,7 +131,9 @@ const PRODUCT_CATEGORIES: ProductCategory[] = [
   'case',
   'cooling',
   'monitor',
-  'peripherals',
+  'keyboard',
+  'mouse',
+  'headphones',
 ];
 
 const CATEGORY_NAMES: Record<ProductCategory, string> = {
@@ -142,7 +146,9 @@ const CATEGORY_NAMES: Record<ProductCategory, string> = {
   case: 'Корпуса',
   cooling: 'Охлаждение',
   monitor: 'Мониторы',
-  peripherals: 'Периферия',
+  keyboard: 'Клавиатуры',
+  mouse: 'Мыши',
+  headphones: 'Наушники',
 };
 
 const MANUFACTURERS: Record<ProductCategory, string[]> = {
@@ -155,7 +161,9 @@ const MANUFACTURERS: Record<ProductCategory, string[]> = {
   case: ['NZXT', 'Corsair', 'Fractal Design', 'be quiet!', 'Deepcool'],
   cooling: ['Noctua', 'be quiet!', 'Corsair', 'Deepcool', 'ARCTIC'],
   monitor: ['Samsung', 'LG', 'ASUS', 'BenQ', 'Dell', 'AOC'],
-  peripherals: ['Logitech', 'Razer', 'SteelSeries', 'HyperX', 'Zowie'],
+  keyboard: ['Logitech', 'Razer', 'SteelSeries', 'HyperX', 'Corsair'],
+  mouse: ['Logitech', 'Razer', 'SteelSeries', 'HyperX', 'Zowie'],
+  headphones: ['Logitech', 'Razer', 'SteelSeries', 'HyperX', 'Sennheiser'],
 };
 
 const COUNTRIES = ['США', 'Китай', 'Тайвань', 'Южная Корея', 'Япония', 'Германия'];
@@ -171,7 +179,7 @@ const STORAGE_TYPES = ['NVMe SSD', 'SATA SSD', 'HDD'];
  * Генерация производителя
  */
 export const generateManufacturer = (category: ProductCategory): Manufacturer => {
-  const manufacturerNames = MANUFACTURERS[category] || MANUFACTURERS.peripherals;
+  const manufacturerNames = MANUFACTURERS[category] || MANUFACTURERS.keyboard;
   const name = faker.helpers.arrayElement(manufacturerNames);
 
   return {
@@ -294,10 +302,28 @@ const generateSpecifications = (category: ProductCategory): ProductSpecification
       baseSpecs['responseTime'] = `${faker.helpers.arrayElement([1, 2, 4, 5])} мс`;
       break;
 
-    case 'peripherals':
-    default:
-      baseSpecs['connection'] = faker.helpers.arrayElement(['USB', 'Bluetooth', 'USB + Bluetooth']);
+    case 'keyboard':
+      baseSpecs['type'] = faker.helpers.arrayElement(['Механическая', 'Мембранная', '75%', 'TKL', 'Полноразмерная']);
+      baseSpecs['interface'] = faker.helpers.arrayElement(['USB', 'Bluetooth', 'USB + Bluetooth']);
       baseSpecs['color'] = faker.helpers.arrayElement(['Черный', 'Белый', 'RGB']);
+      break;
+
+    case 'mouse':
+      baseSpecs['dpi'] = `${faker.number.int({ min: 4000, max: 26000 })}`;
+      baseSpecs['interface'] = faker.helpers.arrayElement(['USB', 'Bluetooth', 'USB + Bluetooth']);
+      baseSpecs['sensor_type'] = faker.helpers.arrayElement(['Оптический', 'Лазерный']);
+      baseSpecs['color'] = faker.helpers.arrayElement(['Черный', 'Белый', 'RGB']);
+      break;
+
+    case 'headphones':
+      baseSpecs['type'] = faker.helpers.arrayElement(['Накладные', 'Внутриканальные', 'Полноразмерные']);
+      baseSpecs['interface'] = faker.helpers.arrayElement(['3.5 мм', 'USB', 'Bluetooth']);
+      baseSpecs['color'] = faker.helpers.arrayElement(['Черный', 'Белый', 'Серебристый']);
+      break;
+
+    default:
+      baseSpecs['connection'] = faker.helpers.arrayElement(['USB', 'Bluetooth']);
+      baseSpecs['color'] = faker.helpers.arrayElement(['Черный', 'Белый']);
       break;
   }
 
@@ -327,7 +353,9 @@ const generatePrice = (category: ProductCategory): { price: number; oldPrice?: n
     case: { min: 100, max: 500 },        // Корпуса
     cooling: { min: 80, max: 400 },      // Охлаждение
     monitor: { min: 400, max: 2000 },    // Мониторы
-    peripherals: { min: 50, max: 400 },  // Периферия
+    keyboard: { min: 80, max: 500 },     // Клавиатуры
+    mouse: { min: 50, max: 350 },        // Мыши
+    headphones: { min: 100, max: 600 },  // Наушники
   };
 
   const range = priceRanges[category];
