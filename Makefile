@@ -170,6 +170,14 @@ db-seed-filter-attributes: ## Синхронизировать атрибуты 
 	@echo "$(CYAN)Синхронизация атрибутов фильтров...$(RESET)"
 	cd src/CatalogService && dotnet run -- seed-filter-attributes
 
+db-migrate-gpu-release-year: ## Миграция: data_vykhoda_na_rynok_2 → release_year для видеокарт
+	@echo "$(CYAN)Миграция GPU release_year...$(RESET)"
+	cd src/CatalogService && dotnet run -- migrate-gpu-release-year
+
+dump-filters: ## Собрать все фильтры категорий в JSON+MD (требует запущенный dev)
+	@echo "$(CYAN)Сбор фильтров...$(RESET)"
+	node scripts/dump-all-filters.mjs
+
 db-admin: ## Open Adminer database UI
 	@echo "$(GREEN)Adminer available at: http://localhost:8080$(RESET)"
 	$(DOCKER_COMPOSE_DEV) up -d adminer

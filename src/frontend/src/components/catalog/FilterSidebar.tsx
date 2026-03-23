@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, Grid3X3, DollarSign, Package, Check, Star, Tag } from 'lucide-react';
+import { ChevronDown, Grid3X3, DollarSign, Package, Check, Star, Tag, Search } from 'lucide-react';
 import { catalogApi } from '../../api/catalog';
 import { RangeSlider } from '../ui/RangeSlider';
 import { Skeleton } from '../ui/Skeleton';
@@ -93,7 +93,7 @@ const FRONTEND_TO_BACKEND: Record<ProductCategory, string> = {
  */
 const SPEC_ORDER: Record<string, string[]> = {
   gpu: [
-    'data_vykhoda_na_rynok_2',
+    'release_year',
     'proizvoditel_graficheskogo_protsessora',
     'graficheskiy_protsessor',
     'videopamyat',
@@ -110,6 +110,7 @@ const SPEC_ORDER: Record<string, string[]> = {
     'socket',
     'model_series',
     'codename',
+    'architecture',
     'data_vykhoda_na_rynok',
     'integrated_graphics',
     'cores',
@@ -130,9 +131,10 @@ const SPEC_ORDER: Record<string, string[]> = {
   motherboards: [
     'socket',
     'chipset',
-    'socket_compatibility',
     'form_factor',
     'memory_type',
+    'memory_mixed_slots',
+    'memory_cudimm',
     'memory_slots',
     'max_memory',
     'max_memory_freq',
@@ -155,6 +157,7 @@ const SPEC_ORDER: Record<string, string[]> = {
     'capacity',
     'form_factor',
     'interface',
+    'protocol',
     'read_speed',
     'write_speed',
     'flash_type',
@@ -174,6 +177,9 @@ const SPEC_ORDER: Record<string, string[]> = {
   coolers: ['type', 'socket', 'tdp', 'fan_size', 'fan_count', 'noise', 'data_vykhoda_na_rynok'],
   monitors: [
     'diagonal',
+    'aspect_ratio',
+    'curved',
+    'sync_technology',
     'resolution',
     'refresh_rate',
     'matrix',
@@ -182,9 +188,35 @@ const SPEC_ORDER: Record<string, string[]> = {
     'response_time',
     'data_vykhoda_na_rynok',
   ],
-  keyboards: ['type', 'interface', 'color', 'data_vykhoda_na_rynok'],
-  mice: ['type', 'interface', 'color', 'sensor_type', 'dpi', 'data_vykhoda_na_rynok'],
-  headphones: ['type', 'interface', 'connection_type', 'driver_size', 'frequency_range', 'impedance', 'color', 'data_vykhoda_na_rynok'],
+  keyboards: [
+    'type',
+    'interface',
+    'connection_type',
+    'wireless_protocols',
+    'color',
+    'data_vykhoda_na_rynok',
+  ],
+  mice: [
+    'type',
+    'interface',
+    'connection_type',
+    'wireless_protocols',
+    'color',
+    'sensor_type',
+    'dpi',
+    'data_vykhoda_na_rynok',
+  ],
+  headphones: [
+    'type',
+    'form_factor',
+    'interface',
+    'connection_type',
+    'driver_size',
+    'frequency_range',
+    'impedance',
+    'color',
+    'data_vykhoda_na_rynok',
+  ],
 };
 
 interface FilterGroupProps {
@@ -264,6 +296,7 @@ export function FilterSidebar({
   const [loading, setLoading] = useState(true);
   const [filterAttributes, setFilterAttributes] = useState<FilterAttribute[]>([]);
   const [specAttrsLoading, setSpecAttrsLoading] = useState(false);
+  const [specSearchQuery, setSpecSearchQuery] = useState<Record<string, string>>({});
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
   const [manufacturersLoading, setManufacturersLoading] = useState(false);
   
@@ -326,6 +359,7 @@ export function FilterSidebar({
   useEffect(() => {
     if (!selectedCategory) {
       setFilterAttributes([]);
+      setSpecSearchQuery({});
       return;
     }
     const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
@@ -502,7 +536,7 @@ export function FilterSidebar({
         ];
         const groups = orderedKeys.map((key) => ({ keys: [key] }));
 
-        const renderAttr = (attr: FilterAttribute) => {
+        const renderAttr = (attr: FilterAttribute, options?: { hideLabel?: boolean }) => {
           if (attr.filterType === 'range') {
             if (attr.minValue == null && attr.maxValue == null) return null;
             const minVal = attr.minValue ?? 0;
@@ -517,7 +551,7 @@ export function FilterSidebar({
             const step = attr.key.includes('videopamyat') || attr.key.includes('capacity') ? 1 : Math.max(1, Math.floor(rangeSpan / 100) || 1);
             return (
               <div key={attr.key} className={styles.specFilterBlock}>
-                <span className={styles.specFilterLabel}>{attr.displayName}</span>
+                {!options?.hideLabel && <span className={styles.specFilterLabel}>{attr.displayName}</span>}
                 <RangeSlider
                   min={minVal}
                   max={maxVal}
@@ -536,15 +570,34 @@ export function FilterSidebar({
           }
           if (attr.filterType === 'select') {
             const values = attr.values ?? [];
+            const showSearch = values.length > 15;
+            const query = (specSearchQuery[attr.key] ?? '').trim().toLowerCase();
+            const filteredValues = showSearch && query
+              ? values.filter((v) => v.toLowerCase().includes(query))
+              : values;
             const selected = selectedSpecifications[attr.key];
             const selectedArr = Array.isArray(selected) ? selected : selected != null ? [String(selected)] : [];
             const isChecked = (val: string) => selectedArr.includes(val);
             return (
               <div key={attr.key} className={styles.specFilterBlock}>
-                <span className={styles.specFilterLabel}>{attr.displayName}</span>
+                {!options?.hideLabel && <span className={styles.specFilterLabel}>{attr.displayName}</span>}
+                {showSearch && (
+                  <div className={styles.specSearchWrap}>
+                    <Search size={14} className={styles.specSearchIcon} aria-hidden />
+                    <input
+                      type="search"
+                      placeholder="Поиск..."
+                      value={specSearchQuery[attr.key] ?? ''}
+                      onChange={(e) =>
+                        setSpecSearchQuery((prev) => ({ ...prev, [attr.key]: e.target.value }))
+                      }
+                      className={styles.specSearchInput}
+                    />
+                  </div>
+                )}
                 <div className={styles.specFilterValues}>
-                  {values.length > 0 ? (
-                    values.map((val) => (
+                  {filteredValues.length > 0 ? (
+                    filteredValues.map((val) => (
                       <label key={val} className={`${styles.checkboxItem} ${isChecked(val) ? styles.checked : ''}`}>
                         <input
                           type="checkbox"
@@ -565,7 +618,9 @@ export function FilterSidebar({
                       </label>
                     ))
                   ) : (
-                    <span className={styles.emptySpecHint}>Нет вариантов</span>
+                    <span className={styles.emptySpecHint}>
+                      {showSearch && query ? 'Ничего не найдено' : 'Нет вариантов'}
+                    </span>
                   )}
                 </div>
               </div>
@@ -584,7 +639,8 @@ export function FilterSidebar({
         ) : (
           groups.map((group) => {
             const attrsInGroup = group.keys.map((k) => attrMap.get(k)).filter(Boolean) as FilterAttribute[];
-            const rendered = attrsInGroup.map(renderAttr).filter(Boolean);
+            const singleAttrGroup = attrsInGroup.length === 1;
+            const rendered = attrsInGroup.map((attr) => renderAttr(attr, { hideLabel: singleAttrGroup })).filter(Boolean);
             if (rendered.length === 0) return null;
             const title = attrsInGroup[0]?.displayName ?? group.keys[0];
             return (

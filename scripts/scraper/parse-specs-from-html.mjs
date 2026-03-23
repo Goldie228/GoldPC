@@ -83,7 +83,11 @@ function resolveAttributeKey(name, mapping) {
  */
 function normalizeValue(value, attributeKey) {
   if (value === undefined || value === null) return value;
-  const str = String(value).trim();
+  let str = String(value).trim();
+  if (!str) return value;
+
+  // Санитизация HTML-мусора (теги, обрезки вроде /LI>)
+  str = str.replace(/<[^>]+>/g, '').replace(/\/[a-zA-Z]+>/gi, '').replace(/[<>]/g, '').trim();
   if (!str) return value;
 
   const lower = str.toLowerCase();
@@ -94,7 +98,7 @@ function normalizeValue(value, attributeKey) {
   if (lower === 'да') return 'true';
   if (lower === 'нет') return 'false';
 
-  if (attributeKey === 'data_vykhoda_na_rynok' || attributeKey === 'data_vykhoda_na_rynok_2') {
+  if (attributeKey === 'data_vykhoda_na_rynok' || attributeKey === 'data_vykhoda_na_rynok_2' || attributeKey === 'release_year') {
     const yearMatch = str.match(/\d{4}/);
     if (yearMatch) return parseInt(yearMatch[0], 10);
   }
@@ -152,6 +156,12 @@ function normalizeValue(value, attributeKey) {
   const cleanNum = str.replace(/\s/g, '');
   if (/^\d+$/.test(cleanNum)) return parseInt(cleanNum, 10);
 
+  // "1 модуль", "2 модуля" -> 1, 2
+  const kitMatch = str.match(/^(\d+)\s*модул/i);
+  if (kitMatch && attributeKey === 'kit_modules') {
+    return parseInt(kitMatch[1], 10);
+  }
+
   return str;
 }
 
@@ -185,6 +195,40 @@ function extractFromDescLists($) {
     if (name && value) pairs.push([name, value]);
   });
   return pairs;
+}
+
+/**
+ * Извлекает пары «Ключ: значение» из plain text (например description).
+ * Строки вида "Конструкция: накладные", "Интерфейс: 3.5 мм".
+ */
+function extractFromDescription(description, categorySlug, mappings) {
+  if (!description || typeof description !== 'string') return {};
+  const mapping = mappings[categorySlug];
+  if (!mapping || mapping.length === 0) return {};
+
+  const text = description
+    .replace(/<[^>]+>/g, '\n')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+  const lines = text.split(/[\r\n]+/).map((s) => s.trim()).filter(Boolean);
+
+  const specs = {};
+  for (const line of lines) {
+    const colonIdx = line.indexOf(':');
+    if (colonIdx < 0) continue;
+    const name = line.slice(0, colonIdx).trim();
+    const value = line.slice(colonIdx + 1).trim();
+    if (!name || !value) continue;
+    const key = resolveAttributeKey(name, mapping);
+    if (!key) continue;
+    const normalized = normalizeValue(value, key);
+    if (normalized !== undefined && normalized !== null) {
+      specs[key] = normalized;
+    }
+  }
+  return specs;
 }
 
 /**
@@ -296,7 +340,10 @@ async function main() {
       stats.byCategory[slug].fail++;
       return { ok: false, msg: `FAIL: ${lastErr?.message || 'unknown'}` };
     }
-    const specs = parseSpecsFromHtml(html, slug, mappings);
+    let specs = parseSpecsFromHtml(html, slug, mappings);
+    if (Object.keys(specs).length === 0 && product.description) {
+      specs = extractFromDescription(product.description, slug, mappings);
+    }
     if (Object.keys(specs).length === 0 && (!mappings[slug] || mappings[slug].length === 0)) {
       stats.skipped++;
       if (!stats.byCategory[slug]) stats.byCategory[slug] = { ok: 0, fail: 0 };

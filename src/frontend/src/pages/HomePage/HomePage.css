@@ -422,6 +422,19 @@
   color: var(--fg-dim);
 }
 
+.categoryCardSkeleton {
+  min-height: 120px;
+  background: linear-gradient(90deg, var(--bg-elevated) 25%, rgba(255, 255, 255, 0.05) 50%, var(--bg-elevated) 75%);
+  background-size: 200% 100%;
+  animation: categoryShimmer 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes categoryShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* ========================================
    Products Section
    ======================================== */

@@ -17,8 +17,8 @@ const DATA_PATH = join(__dirname, 'data', 'xcore-products.json');
 // Маппинг для GPU (categorySlug gpu)
 // Порядок важен: более специфичные паттерны — выше
 const GPU_MAPPING = [
-  ['Дата выхода чипа', 'data_vykhoda_na_rynok_2'],
-  ['Дата выхода на рынок', 'data_vykhoda_na_rynok_2'],
+  ['Дата выхода чипа', 'release_year'],
+  ['Дата выхода на рынок', 'release_year'],
   ['Производитель графического процессора', 'proizvoditel_graficheskogo_protsessora'],
   ['Графический процессор', 'graficheskiy_protsessor'],
   ['Видеопамять', 'videopamyat'],
@@ -87,8 +87,8 @@ function normalizeValue(value, attributeKey) {
   if (lower === 'да') return 'true';
   if (lower === 'нет') return 'false';
 
-  // data_vykhoda_na_rynok: "2019 г." → 2019
-  if (attributeKey === 'data_vykhoda_na_rynok' || attributeKey === 'data_vykhoda_na_rynok_2') {
+  // data_vykhoda_na_rynok / release_year: "2019 г." → 2019
+  if (attributeKey === 'data_vykhoda_na_rynok' || attributeKey === 'data_vykhoda_na_rynok_2' || attributeKey === 'release_year') {
     const yearMatch = str.match(/\d{4}/);
     if (yearMatch) return parseInt(yearMatch[0], 10);
   }

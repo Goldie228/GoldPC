@@ -4,14 +4,66 @@ import {
   Cpu, 
   Monitor, 
   MemoryStick,
+  HardDrive,
+  Zap,
+  Box,
+  ThermometerSun,
+  Keyboard,
+  Mouse,
+  Headphones,
   ArrowRight,
   ChevronRight
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from '../../components/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton/ProductCardSkeleton';
 import { useProducts } from '../../hooks/useProducts';
+import { useCategories } from '../../hooks/useCategories';
+import type { ProductCategory } from '../../api/types';
 import './HomePage.css';
+
+// Маппинг backend slug -> frontend id для ссылок
+const BACKEND_TO_FRONTEND: Record<string, ProductCategory> = {
+  processors: 'cpu',
+  motherboards: 'motherboard',
+  ram: 'ram',
+  gpu: 'gpu',
+  psu: 'psu',
+  storage: 'storage',
+  cases: 'case',
+  coolers: 'cooling',
+  monitors: 'monitor',
+  keyboards: 'keyboard',
+  mice: 'mouse',
+  headphones: 'headphones',
+  periphery: 'keyboard',
+};
+
+// Маппинг frontend id -> иконка
+const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
+  cpu: Cpu,
+  gpu: Monitor,
+  motherboard: Cpu,
+  ram: MemoryStick,
+  storage: HardDrive,
+  psu: Zap,
+  case: Box,
+  cooling: ThermometerSun,
+  monitor: Monitor,
+  keyboard: Keyboard,
+  mouse: Mouse,
+  headphones: Headphones,
+};
+
+function formatProductCount(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod100 >= 11 && mod100 <= 19) return `${count} товаров`;
+  if (mod10 === 1) return `${count} товар`;
+  if (mod10 >= 2 && mod10 <= 4) return `${count} товара`;
+  return `${count} товаров`;
+}
 
 // Dummy build data for hero visual
 const buildItems = [
@@ -38,14 +90,6 @@ const buildItems = [
   },
 ];
 
-// Category data
-const categoriesData = [
-  { id: 'cpu', name: 'Процессоры', count: '124 товара', icon: Cpu },
-  { id: 'gpu', name: 'Видеокарты', count: '86 товаров', icon: Monitor },
-  { id: 'motherboard', name: 'Мат. платы', count: '72 товара', icon: Cpu },
-  { id: 'ram', name: 'Память', count: '98 товаров', icon: MemoryStick },
-];
-
 /**
  * HomePage - Main landing page for GoldPC
  * Matching prototypes/home.html design
@@ -54,6 +98,9 @@ export function HomePage() {
   // Refs for scroll animations
   const categoriesRef = useRef<HTMLDivElement>(null);
   const productsRef = useRef<HTMLDivElement>(null);
+
+  // Fetch categories with product counts
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
 
   // Fetch popular products (featured items, limit 8)
   const { data: productsData, isLoading, isError } = useProducts({
@@ -188,23 +235,31 @@ export function HomePage() {
           </div>
 
           <div className="categoriesGrid" ref={categoriesRef}>
-            {categoriesData.map((category, index) => {
-              const IconComponent = category.icon;
-              const delayClass = index > 0 ? `delay${index}` : '';
-              return (
-                <Link
-                  key={category.id}
-                  to={`/catalog?category=${category.id}`}
-                  className={`categoryCard fadeUp ${delayClass}`}
-                >
-                  <div className="categoryIcon">
-                    <IconComponent size={24} />
-                  </div>
-                  <div className="categoryName">{category.name}</div>
-                  <div className="categoryCount">{category.count}</div>
-                </Link>
-              );
-            })}
+            {categoriesLoading ? (
+              [...Array(8)].map((_, index) => (
+                <div key={`cat-skeleton-${index}`} className="categoryCard categoryCardSkeleton fadeUp" />
+              ))
+            ) : (
+              (categoriesData ?? []).map((cat, index) => {
+                const frontendId = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug) as ProductCategory;
+                const IconComponent = CATEGORY_ICONS[frontendId] ?? Cpu;
+                const delayClass = index > 0 ? `delay${index}` : '';
+                const count = cat.productCount ?? 0;
+                return (
+                  <Link
+                    key={cat.id}
+                    to={`/catalog/${frontendId}`}
+                    className={`categoryCard fadeUp ${delayClass}`}
+                  >
+                    <div className="categoryIcon">
+                      <IconComponent size={24} />
+                    </div>
+                    <div className="categoryName">{cat.name}</div>
+                    <div className="categoryCount">{formatProductCount(count)}</div>
+                  </Link>
+                );
+              })
+            )}
           </div>
         </div>
       </section>

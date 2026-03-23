@@ -4,6 +4,77 @@
  */
 
 import { http, HttpResponse, delay } from 'msw';
+
+// Нормализация значений для фильтров (как в SpecValueNormalizer на бэкенде)
+const BOOLEAN_LIKE_KEYS = new Set(['integrated_graphics', 'cooling_included', 'multithreading']);
+const YES_NO_KEYS = new Set(['ecc', 'expo', 'xmp', 'window']);
+const VALUE_MAPPINGS: Array<{ key: string; raw: string; display: string }> = [
+  { key: 'razyemy_pitaniya', raw: 'false', display: 'Не требуется' },
+  { key: 'modular', raw: 'false', display: 'Нет' },
+  { key: 'modular', raw: 'true', display: 'Полумодульный' },
+  { key: 'modular', raw: 'Full', display: 'Полностью модульный' },
+  { key: 'modular', raw: 'Semi', display: 'Полумодульный' },
+  { key: 'modular', raw: 'полностью модульное', display: 'Полностью модульный' },
+  { key: 'modular', raw: 'полумодульное', display: 'Полумодульный' },
+  { key: 'modular', raw: 'модульный', display: 'Модульный' },
+  { key: 'modular', raw: '(полностью модульный)', display: 'Полностью модульный' },
+  { key: 'efficiency', raw: 'базовый', display: '80+' },
+  { key: 'efficiency', raw: 'бронзовый', display: '80+ Bronze' },
+  { key: 'efficiency', raw: 'серебряный', display: '80+ Silver' },
+  { key: 'efficiency', raw: 'золотой', display: '80+ Gold' },
+  { key: 'efficiency', raw: 'платиновый', display: '80+ Platinum' },
+  { key: 'efficiency', raw: 'титановый', display: '80+ Titanium' },
+  { key: 'efficiency', raw: 'false', display: 'Без сертификата' },
+  { key: 'efficiency', raw: 'true', display: 'Сертифицирован' },
+  { key: 'xmp', raw: 'true', display: 'Да' },
+  { key: 'xmp', raw: 'false', display: 'Нет' },
+  { key: 'xmp', raw: '2.0', display: 'XMP 2.0' },
+  { key: 'xmp', raw: '3.0', display: 'XMP 3.0' },
+];
+const MULTI_VALUE_EXPAND_KEYS = new Set(['form_factor', 'socket']);
+function expandMultiValue(values: string[]): string[] {
+  const set = new Set<string>();
+  for (const v of values) {
+    if (!v?.trim()) continue;
+    for (const part of v.split(',').map((s) => s.trim()).filter(Boolean)) set.add(part);
+  }
+  return Array.from(set).sort();
+}
+function isYesValue(v: string): boolean {
+  const s = v.trim();
+  if (!s) return false;
+  if (/^(Нет|No|false|0)$/i.test(s)) return false;
+  if (/^(Да|Yes|true)$/i.test(s)) return true;
+  if (/^\d+$/.test(s)) return true;
+  if (/Graphics|Radeon|UHD|Vega|Xe/i.test(s)) return true;
+  return true;
+}
+function isNormalizedAttribute(key: string): boolean {
+  return BOOLEAN_LIKE_KEYS.has(key) || YES_NO_KEYS.has(key) || VALUE_MAPPINGS.some((m) => m.key === key);
+}
+function isChipTypeValue(v: string | null | undefined): boolean {
+  if (!v || !v.trim()) return false;
+  return /^\d+[MG]?x\d+$/i.test(v.trim());
+}
+function normalizeSpecForDisplay(key: string, raw: unknown): string {
+  if (raw == null || (typeof raw === 'string' && !raw.trim())) return YES_NO_KEYS.has(key) ? 'Нет' : 'Нет';
+  const str = String(raw).trim();
+  const mapping = VALUE_MAPPINGS.find((m) => m.key === key && m.raw.toLowerCase() === str.toLowerCase());
+  if (mapping) return mapping.display;
+  if (BOOLEAN_LIKE_KEYS.has(key)) return isYesValue(str) ? 'Есть' : 'Нет';
+  if (YES_NO_KEYS.has(key)) return isYesValue(str) ? 'Да' : 'Нет';
+  return str;
+}
+function multiValueContains(productValue: string | null | undefined, selected: string): boolean {
+  if (!productValue?.trim()) return false;
+  const parts = productValue.split(',').map((s) => s.trim()).filter(Boolean);
+  return parts.some((p) => p.toLowerCase() === selected.toLowerCase());
+}
+function specMatchesFilter(key: string, raw: unknown, selected: string): boolean {
+  if (!isNormalizedAttribute(key)) return false;
+  const normalized = normalizeSpecForDisplay(key, raw);
+  return normalized.toLowerCase() === selected.toLowerCase();
+}
 import { faker } from '@faker-js/faker';
 import type {
   Product,
@@ -79,6 +150,9 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
     description: 'Флагманский процессор AMD Ryzen 9 7950X на архитектуре Zen 4. 16 ядер, 32 потока, идеально для игр и профессиональных задач.',
     specifications: {
       socket: 'AM5',
+      integrated_graphics: 'Нет',
+      cooling_included: 'Нет',
+      multithreading: 'Да',
       cores: 16,
       threads: 32,
       baseFrequency: '4500 МГц',
@@ -119,6 +193,9 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
     description: 'Мощнейший процессор Intel 14-го поколения. 24 ядра, частота до 6.0 ГГц, поддержка DDR5 и PCIe 5.0.',
     specifications: {
       socket: 'LGA1700',
+      integrated_graphics: 'Intel UHD Graphics 770',
+      cooling_included: 'Нет',
+      multithreading: 'Да',
       cores: 24,
       threads: 32,
       baseFrequency: '3600 МГц',
@@ -157,6 +234,9 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
     description: 'Лучший игровой процессор с технологией 3D V-Cache. 8 ядер, невероятная производительность в играх.',
     specifications: {
       socket: 'AM5',
+      integrated_graphics: 'Нет',
+      cooling_included: 'Нет',
+      multithreading: 'Да',
       cores: 8,
       threads: 16,
       baseFrequency: '4200 МГц',
@@ -195,6 +275,9 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
     description: 'Отличный выбор для игрового ПК. 14 ядер, разгон до 5.3 ГГц, отличное соотношение цена/качество.',
     specifications: {
       socket: 'LGA1700',
+      integrated_graphics: 2200,
+      cooling_included: 'Да',
+      multithreading: 'Да',
       cores: 14,
       threads: 20,
       baseFrequency: '3500 МГц',
@@ -234,9 +317,13 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
     description: 'Флагманская видеокарта NVIDIA на архитектуре Ada Lovelace. 24 ГБ GDDR6X, трассировка лучей 3-го поколения, DLSS 3.',
     specifications: {
       chip: 'AD102',
+      gpu: 'RTX 40',
+      vram: '24 ГБ',
+      videopamyat: 24,
       memory: '24 ГБ',
       memoryType: 'GDDR6X',
       memoryBus: '384 бит',
+      razyemy_pitaniya: '16 pin (PCIe Gen5)',
       baseFrequency: '2235 МГц',
       boostFrequency: '2520 МГц',
       tdp: '450 Вт',
@@ -274,9 +361,13 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
     description: 'Топовая видеокарта AMD на архитектуре RDNA 3. 24 ГБ памяти, поддержка DisplayPort 2.1, FSR 3.',
     specifications: {
       chip: 'Navi 31',
+      gpu: 'RX 7000',
+      vram: '24 ГБ',
+      videopamyat: 24,
       memory: '24 ГБ',
       memoryType: 'GDDR6',
       memoryBus: '384 бит',
+      razyemy_pitaniya: '8+8 pin',
       baseFrequency: '1900 МГц',
       boostFrequency: '2500 МГц',
       tdp: '355 Вт',
@@ -311,9 +402,13 @@ const REALISTIC_PRODUCTS: RealisticProduct[] = [
     description: 'Отличная видеокарта для 1440p гейминга. 12 ГБ GDDR6X, DLSS 3, трассировка лучей.',
     specifications: {
       chip: 'AD104',
+      gpu: 'RTX 40',
+      vram: '12 ГБ',
+      videopamyat: 12,
       memory: '12 ГБ',
       memoryType: 'GDDR6X',
       memoryBus: '192 бит',
+      razyemy_pitaniya: '8 pin',
       baseFrequency: '1980 МГц',
       boostFrequency: '2475 МГц',
       tdp: '220 Вт',
@@ -753,6 +848,22 @@ function getAllProducts(): ProductSummary[] {
   return allProductsCache;
 }
 
+// Маппинг frontend -> backend slug (для согласованности с реальным API)
+const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
+  cpu: 'processors',
+  gpu: 'gpu',
+  motherboard: 'motherboards',
+  ram: 'ram',
+  storage: 'storage',
+  psu: 'psu',
+  case: 'cases',
+  cooling: 'coolers',
+  monitor: 'monitors',
+  keyboard: 'keyboards',
+  mouse: 'mice',
+  headphones: 'headphones',
+};
+
 // Кэш категорий с количеством продуктов
 let categoriesCache: (Category & { count: number })[] | null = null;
 
@@ -761,10 +872,11 @@ function getCategoriesWithCount(): (Category & { count: number })[] {
     const products = getAllProducts();
     categoriesCache = categories.map((category, index) => {
       const count = products.filter(p => p.category === category).length;
+      const backendSlug = FRONTEND_TO_BACKEND_SLUG[category];
       return {
         id: `cat-${index}`,
         name: categoryNames[category],
-        slug: category,
+        slug: backendSlug,
         description: `${categoryNames[category]} для вашего ПК`,
         productCount: count,
         count,
@@ -795,7 +907,7 @@ export const catalogHandlers = [
     const search = url.searchParams.get('search')?.toLowerCase();
     const rating = url.searchParams.get('rating') ? parseFloat(url.searchParams.get('rating')!) : null;
     const inStock = url.searchParams.get('inStock') === 'true';
-    const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | null;
+    const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | 'createdAt' | null;
     const sortOrder = (url.searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
     const specifications: Record<string, string> = {};
     const specificationRanges: Record<string, string> = {};
@@ -861,12 +973,21 @@ export const catalogHandlers = [
       products = products.filter((p) => {
         const pSpecs = (p as RealisticProduct).specifications ?? {};
         return Object.entries(specifications).every(([k, v]) => {
-          const pVal = String(pSpecs[k] ?? '');
+          const pVal = pSpecs[k];
+          if (MULTI_VALUE_EXPAND_KEYS.has(k)) {
+            const allowed = v.split(',').map((s) => s.trim()).filter(Boolean);
+            return allowed.some((a) => multiValueContains(String(pVal ?? ''), a));
+          }
+          if (isNormalizedAttribute(k)) {
+            const allowed = v.split(',').map((s) => s.trim()).filter(Boolean);
+            return allowed.some((a) => specMatchesFilter(k, pVal, a));
+          }
+          const pStr = String(pVal ?? '');
           if (v.includes(',')) {
             const allowed = v.split(',').map((s) => s.trim()).filter(Boolean);
-            return allowed.includes(pVal) || allowed.some((a) => String(pVal) === a);
+            return allowed.includes(pStr) || allowed.some((a) => String(pVal) === a);
           }
-          return pVal === String(v);
+          return pStr === String(v);
         });
       });
     }
@@ -901,6 +1022,9 @@ export const catalogHandlers = [
             break;
           case 'rating':
             comparison = (a.rating || 0) - (b.rating || 0);
+            break;
+          case 'createdAt':
+            comparison = new Date((a as RealisticProduct).createdAt || 0).getTime() - new Date((b as RealisticProduct).createdAt || 0).getTime();
             break;
         }
         return sortOrder === 'desc' ? -comparison : comparison;
@@ -1021,10 +1145,14 @@ export const catalogHandlers = [
         { key: 'vram', displayName: 'Объём видеопамяти', filterType: 'select', sortOrder: 1 },
         { key: 'videopamyat', displayName: 'Объём видеопамяти (ГБ)', filterType: 'range', sortOrder: 1.5 },
         { key: 'gpu', displayName: 'Серия GPU', filterType: 'select', sortOrder: 2 },
+        { key: 'razyemy_pitaniya', displayName: 'Разъёмы питания', filterType: 'select', sortOrder: 3 },
       ],
       processors: [
         { key: 'socket', displayName: 'Сокет', filterType: 'select', sortOrder: 1 },
-        { key: 'cores', displayName: 'Количество ядер', filterType: 'range', sortOrder: 2 },
+        { key: 'integrated_graphics', displayName: 'Встроенная графика', filterType: 'select', sortOrder: 2 },
+        { key: 'cooling_included', displayName: 'Охлаждение в комплекте', filterType: 'select', sortOrder: 3 },
+        { key: 'multithreading', displayName: 'Многопоточность', filterType: 'select', sortOrder: 4 },
+        { key: 'cores', displayName: 'Количество ядер', filterType: 'range', sortOrder: 5 },
       ],
       motherboards: [
         { key: 'socket', displayName: 'Сокет', filterType: 'select', sortOrder: 1 },
@@ -1033,11 +1161,56 @@ export const catalogHandlers = [
       ram: [
         { key: 'type', displayName: 'Тип памяти', filterType: 'select', sortOrder: 1 },
         { key: 'capacity', displayName: 'Объём', filterType: 'select', sortOrder: 2 },
+        { key: 'ecc', displayName: 'ECC', filterType: 'select', sortOrder: 3 },
+        { key: 'xmp', displayName: 'Профили XMP', filterType: 'select', sortOrder: 4 },
+        { key: 'expo', displayName: 'AMD EXPO', filterType: 'select', sortOrder: 5 },
       ],
       storage: [{ key: 'capacity', displayName: 'Объём', filterType: 'select', sortOrder: 1 }],
       psu: [
         { key: 'wattage', displayName: 'Мощность', filterType: 'select', sortOrder: 1 },
-        { key: 'efficiency', displayName: 'Сертификат', filterType: 'select', sortOrder: 2 },
+        { key: 'efficiency', displayName: 'Сертификат 80+', filterType: 'select', sortOrder: 2 },
+        { key: 'modular', displayName: 'Модульный', filterType: 'select', sortOrder: 3 },
+      ],
+      case: [
+        { key: 'form_factor', displayName: 'Форм-фактор', filterType: 'select', sortOrder: 1 },
+        { key: 'material', displayName: 'Материал', filterType: 'select', sortOrder: 2 },
+        { key: 'window', displayName: 'Прозрачное окно', filterType: 'select', sortOrder: 3 },
+        { key: 'max_cooler_height', displayName: 'Макс. высота кулера, мм', filterType: 'range', sortOrder: 4 },
+        { key: 'max_gpu_length', displayName: 'Макс. длина ВК, мм', filterType: 'range', sortOrder: 5 },
+      ],
+      cases: [
+        { key: 'form_factor', displayName: 'Форм-фактор', filterType: 'select', sortOrder: 1 },
+        { key: 'material', displayName: 'Материал', filterType: 'select', sortOrder: 2 },
+        { key: 'window', displayName: 'Прозрачное окно', filterType: 'select', sortOrder: 3 },
+        { key: 'max_cooler_height', displayName: 'Макс. высота кулера, мм', filterType: 'range', sortOrder: 4 },
+        { key: 'max_gpu_length', displayName: 'Макс. длина ВК, мм', filterType: 'range', sortOrder: 5 },
+      ],
+      coolers: [
+        { key: 'type', displayName: 'Тип', filterType: 'select', sortOrder: 1 },
+        { key: 'socket', displayName: 'Сокет', filterType: 'select', sortOrder: 2 },
+        { key: 'tdp', displayName: 'TDP, Вт', filterType: 'range', sortOrder: 3 },
+        { key: 'fan_size', displayName: 'Вентилятор, мм', filterType: 'range', sortOrder: 4 },
+      ],
+      monitors: [
+        { key: 'diagonal', displayName: 'Диагональ, "', filterType: 'range', sortOrder: 1 },
+        { key: 'resolution', displayName: 'Разрешение', filterType: 'select', sortOrder: 2 },
+        { key: 'refresh_rate', displayName: 'Частота, Гц', filterType: 'range', sortOrder: 3 },
+        { key: 'matrix', displayName: 'Матрица', filterType: 'select', sortOrder: 4 },
+      ],
+      keyboards: [
+        { key: 'type', displayName: 'Тип/типоразмер', filterType: 'select', sortOrder: 1 },
+        { key: 'interface', displayName: 'Интерфейс', filterType: 'select', sortOrder: 2 },
+        { key: 'color', displayName: 'Цвет', filterType: 'select', sortOrder: 3 },
+      ],
+      mice: [
+        { key: 'type', displayName: 'Тип', filterType: 'select', sortOrder: 1 },
+        { key: 'interface', displayName: 'Интерфейс', filterType: 'select', sortOrder: 2 },
+        { key: 'dpi', displayName: 'DPI', filterType: 'range', sortOrder: 3 },
+      ],
+      headphones: [
+        { key: 'type', displayName: 'Тип', filterType: 'select', sortOrder: 1 },
+        { key: 'interface', displayName: 'Интерфейс', filterType: 'select', sortOrder: 2 },
+        { key: 'connection_type', displayName: 'Тип подключения', filterType: 'select', sortOrder: 3 },
       ],
     };
     const templates = attrTemplates[slug] ?? [];
@@ -1049,12 +1222,21 @@ export const catalogHandlers = [
         productsForKey = products.filter((p) => {
           const pSpecs = p.specifications ?? {};
           return Object.entries(specsForFilter).every(([k, v]) => {
-            const pVal = String(pSpecs[k] ?? '');
+            const pVal = pSpecs[k];
+            if (MULTI_VALUE_EXPAND_KEYS.has(k)) {
+              const allowed = v.split(',').map((s) => s.trim()).filter(Boolean);
+              return allowed.some((a) => multiValueContains(String(pVal ?? ''), a));
+            }
+            if (isNormalizedAttribute(k)) {
+              const allowed = v.split(',').map((s) => s.trim()).filter(Boolean);
+              return allowed.some((a) => specMatchesFilter(k, pVal, a));
+            }
+            const pStr = String(pVal ?? '');
             if (v.includes(',')) {
               const allowed = v.split(',').map((s) => s.trim()).filter(Boolean);
-              return allowed.includes(pVal) || allowed.some((a) => String(pVal) === a);
+              return allowed.includes(pStr) || allowed.some((a) => String(pVal) === a);
             }
-            return pVal === String(v);
+            return pStr === String(v);
           });
         });
       }
@@ -1062,9 +1244,18 @@ export const catalogHandlers = [
         const valuesSet = new Set<string>();
         productsForKey.forEach((p) => {
           const v = p.specifications?.[t.key];
-          if (v != null && v !== '') valuesSet.add(String(v));
+          if (slug === 'ram' && t.key === 'type' && isChipTypeValue(v != null ? String(v) : null)) return;
+          if (MULTI_VALUE_EXPAND_KEYS.has(t.key)) {
+            const raw = v != null && v !== '' ? String(v) : null;
+            if (raw) for (const part of raw.split(',').map((s) => s.trim()).filter(Boolean)) valuesSet.add(part);
+          } else {
+            const display = isNormalizedAttribute(t.key) ? normalizeSpecForDisplay(t.key, v) : (v != null && v !== '' ? String(v) : null);
+            if (display) valuesSet.add(display);
+          }
         });
-        const values = Array.from(valuesSet).sort();
+        const values = MULTI_VALUE_EXPAND_KEYS.has(t.key)
+          ? expandMultiValue(Array.from(valuesSet))
+          : Array.from(valuesSet).sort((a, b) => (a === 'Нет' ? -1 : a === 'Есть' ? (b === 'Нет' ? 1 : 0) : b === 'Нет' || b === 'Есть' ? 1 : a.localeCompare(b)));
         return { ...t, values };
       }
       const nums = productsForKey
@@ -1155,7 +1346,7 @@ export const catalogHandlers = [
     const search = url.searchParams.get('search')?.toLowerCase();
     const rating = url.searchParams.get('rating') ? parseFloat(url.searchParams.get('rating')!) : null;
     const inStock = url.searchParams.get('inStock') === 'true';
-    const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | null;
+    const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | 'createdAt' | null;
     const sortOrder = (url.searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
 
     let products = [...getAllProducts()];
@@ -1209,6 +1400,9 @@ export const catalogHandlers = [
             break;
           case 'rating':
             comparison = (a.rating || 0) - (b.rating || 0);
+            break;
+          case 'createdAt':
+            comparison = new Date((a as RealisticProduct).createdAt || 0).getTime() - new Date((b as RealisticProduct).createdAt || 0).getTime();
             break;
         }
         return sortOrder === 'desc' ? -comparison : comparison;

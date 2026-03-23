@@ -334,6 +334,46 @@ if (args is ["seed-xcore-reset"])
     return 0;
 }
 
+// CLI: dotnet run -- migrate-gpu-release-year
+// Миграция: data_vykhoda_na_rynok_2 → release_year для видеокарт
+if (args is ["migrate-gpu-release-year"])
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var gpuCategory = await context.Categories.FirstOrDefaultAsync(c => c.Slug == "gpu");
+        if (gpuCategory == null)
+        {
+            logger.LogWarning("Категория gpu не найдена");
+            return 1;
+        }
+        var products = await context.Products
+            .Where(p => p.CategoryId == gpuCategory.Id && p.Specifications != null)
+            .ToListAsync();
+        var migrated = 0;
+        foreach (var p in products)
+        {
+            if (p.Specifications.TryGetValue("data_vykhoda_na_rynok_2", out var val) && val != null)
+            {
+                p.Specifications["release_year"] = val;
+                p.Specifications.Remove("data_vykhoda_na_rynok_2");
+                p.UpdatedAt = DateTime.UtcNow;
+                migrated++;
+            }
+        }
+        await context.SaveChangesAsync();
+        logger.LogInformation("Миграция GPU: {Migrated} товаров обновлено (data_vykhoda_na_rynok_2 → release_year)", migrated);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка миграции migrate-gpu-release-year");
+        throw;
+    }
+    return 0;
+}
+
 // CLI: dotnet run -- seed-filter-attributes [путь к xcore-filter-attributes.json]
 if (args is ["seed-filter-attributes"] or ["seed-filter-attributes", _])
 {

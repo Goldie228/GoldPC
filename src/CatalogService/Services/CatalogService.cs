@@ -215,13 +215,211 @@ public class CatalogService : ICatalogService
                 (minVal, maxVal) = await _productRepository.GetSpecificationRangeAsync(category.Id, a.AttributeKey, filterContext);
             }
 
+            var values = distinctValues.GetValueOrDefault(a.AttributeKey, new List<string>());
+
+            // Глобально: исключаем значения с HTML-мусором (<, >) для всех select
+            if (a.FilterType == FilterAttributeType.Select)
+            {
+                values = values.Where(v => v != null && !v.Contains('<') && !v.Contains('>')).ToList();
+            }
+
+            // PSU efficiency: исключаем обрезки вроде (230V EU)
+            if (string.Equals(a.AttributeKey, "efficiency", StringComparison.OrdinalIgnoreCase))
+            {
+                values = values.Where(v => !SpecValueNormalizer.ShouldExcludeEfficiencyValue(v)).ToList();
+            }
+
+            // RAM: из «Тип памяти» убираем микросхемы (2Gx8) и standalone DDR3/DDR4/DDR5 (оставляем только с форм-фактором)
+            if (string.Equals(categorySlug, "ram", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(a.AttributeKey, "type", StringComparison.OrdinalIgnoreCase))
+            {
+                var excludeStandalone = new[] { "DDR3", "DDR4", "DDR5" };
+                values = values.Where(v =>
+                {
+                    if (SpecValueNormalizer.ShouldExcludeFromRamTypeFilter(v)) return false;
+                    var s = (v ?? "").Trim();
+                    if (excludeStandalone.Contains(s, StringComparer.OrdinalIgnoreCase)) return false;
+                    return true;
+                }).ToList();
+            }
+
+            // Материнские платы memory_type: разворачиваем «DDR5, DDR4» в DDR5 и DDR4
+            if (string.Equals(categorySlug, "motherboards", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(a.AttributeKey, "memory_type", StringComparison.OrdinalIgnoreCase))
+            {
+                values = values
+                    .SelectMany(v => SpecValueNormalizer.ExpandMotherboardMemoryType(v))
+                    .Where(x => !string.IsNullOrEmpty(x))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(x => x)
+                    .ToList();
+            }
+            else if (string.Equals(a.AttributeKey, "socket", StringComparison.OrdinalIgnoreCase))
+            {
+                values = SpecValueNormalizer.ExpandMultiValue(values).ToList();
+                values = values
+                    .Select(v => SpecValueNormalizer.NormalizeForDisplay(a.AttributeKey, v))
+                    .Where(x => !string.IsNullOrEmpty(x))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(x => x)
+                    .ToList();
+            }
+            else if (SpecValueNormalizer.IsNormalizedAttribute(a.AttributeKey))
+            {
+                var normalized = values
+                    .Select(v => SpecValueNormalizer.NormalizeForDisplay(a.AttributeKey, v))
+                    .Distinct()
+                    .OrderBy(x => x == "Нет" ? 0 : (x == "Есть" ? 1 : 2))
+                    .ThenBy(x => x)
+                    .ToList();
+                values = normalized;
+
+                // Процессоры codename: Zen 3/4/5 — архитектура, не кодовое имя
+                if (string.Equals(categorySlug, "processors", StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(a.AttributeKey, "codename", StringComparison.OrdinalIgnoreCase))
+                {
+                    var excludeArchitecture = new[] { "Zen 3", "Zen 4", "Zen 5" };
+                    values = values.Where(v => !excludeArchitecture.Contains(v, StringComparer.OrdinalIgnoreCase)).ToList();
+                }
+
+                // PSU efficiency: исключаем «Сертифицирован» (не стандарт 80+)
+                if (string.Equals(a.AttributeKey, "efficiency", StringComparison.OrdinalIgnoreCase))
+                {
+                    values = values.Where(v => !string.Equals(v, "Сертифицирован", StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+
+                // Storage interface: исключаем «асинхронный» (ONFi, очень старые SSD)
+                if (string.Equals(categorySlug, "storage", StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(a.AttributeKey, "interface", StringComparison.OrdinalIgnoreCase))
+                {
+                    values = values.Where(v => !(v ?? "").Trim().StartsWith("асинхронный", StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+            }
+            else if (SpecValueNormalizer.ShouldExpandMultiValue(a.AttributeKey))
+            {
+                // form_factor: нормализуем «до 280 мм», miniITX/mini-itx → Mini-ITX и т.п.
+                if (string.Equals(a.AttributeKey, "form_factor", StringComparison.OrdinalIgnoreCase))
+                {
+                    values = values
+                        .Select(v => SpecValueNormalizer.NormalizeFormFactorForDisplay(v))
+                        .Where(x => !string.IsNullOrEmpty(x))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+                }
+                values = SpecValueNormalizer.ExpandMultiValue(values).ToList();
+                if (string.Equals(a.AttributeKey, "form_factor", StringComparison.OrdinalIgnoreCase))
+                {
+                    values = values
+                        .Select(v => SpecValueNormalizer.NormalizeFormFactorForDisplay(v))
+                        .Where(x => !string.IsNullOrEmpty(x))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .OrderBy(x => x)
+                        .ToList();
+                    // Корпуса: исключаем размеры вида 12" x 13", 304x276 мм (серверные)
+                    if (string.Equals(categorySlug, "cases", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var opts = System.Text.RegularExpressions.RegexOptions.IgnoreCase;
+                        values = values.Where(v =>
+                        {
+                            if (string.IsNullOrEmpty(v)) return false;
+                            if (System.Text.RegularExpressions.Regex.IsMatch(v, @"^\d+[\""""]?\s*x\s*\d+", opts)) return false;
+                            if (System.Text.RegularExpressions.Regex.IsMatch(v, @"^\d+x\d+\s*мм", opts)) return false;
+                            return true;
+                        }).ToList();
+                    }
+                }
+            }
+            else
+            {
+                // Глобально: исключаем сырые true/false для «сырых» атрибутов (не нормализуемых)
+                values = values.Where(v =>
+                {
+                    var lower = (v ?? "").Trim().ToLowerInvariant();
+                    return lower != "true" && lower != "false";
+                }).ToList();
+
+                // Monitors type: исключаем яркость (200 кд/м²), smart, для камер видеонаблюдения
+                if (string.Equals(categorySlug, "monitors", StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(a.AttributeKey, "type", StringComparison.OrdinalIgnoreCase))
+                {
+                    var excludeMonitorType = new[] { "smart", "для камер видеонаблюдения" };
+                    values = values.Where(v =>
+                    {
+                        var s = (v ?? "").Trim();
+                        if (System.Text.RegularExpressions.Regex.IsMatch(s, @"^\d+\s*кд\s*/\s*м[2²]", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                            return false;
+                        if (excludeMonitorType.Contains(s, StringComparer.OrdinalIgnoreCase))
+                            return false;
+                        return true;
+                    }).ToList();
+                }
+                // Mice type: исключаем питание (AA, AA/AAA, Li-pol, Li-ion) и слишком длинные значения
+                if (string.Equals(categorySlug, "mice", StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(a.AttributeKey, "type", StringComparison.OrdinalIgnoreCase))
+                {
+                    var opts = System.Text.RegularExpressions.RegexOptions.IgnoreCase;
+                    values = values.Where(v =>
+                    {
+                        if (v != null && v.Length > 60) return false;
+                        return !System.Text.RegularExpressions.Regex.IsMatch(v ?? "", @"^\d+\s*x\s*AA", opts) &&
+                            !System.Text.RegularExpressions.Regex.IsMatch(v ?? "", @"^AA\b", opts) &&
+                            !System.Text.RegularExpressions.Regex.IsMatch(v ?? "", @"^AA/AAA$", opts) &&
+                            !System.Text.RegularExpressions.Regex.IsMatch(v ?? "", @"^(Li-pol|Li-ion|Bluetooth)$", opts);
+                    }).ToList();
+                }
+                // Coolers type: исключаем типы коннекторов (2 pin, Molex, ARGB и т.п.)
+                if (string.Equals(categorySlug, "coolers", StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(a.AttributeKey, "type", StringComparison.OrdinalIgnoreCase))
+                {
+                    var opts = System.Text.RegularExpressions.RegexOptions.IgnoreCase;
+                    values = values.Where(v =>
+                    {
+                        var s = v ?? "";
+                        if (System.Text.RegularExpressions.Regex.IsMatch(s, @"^\d+[-]?\s*pin", opts)) return false;
+                        if (System.Text.RegularExpressions.Regex.IsMatch(s, @"pin\s*\+\s*", opts)) return false;
+                        if (s.Contains("Molex", StringComparison.OrdinalIgnoreCase)) return false;
+                        if (s.Contains("Power SATA", StringComparison.OrdinalIgnoreCase)) return false;
+                        if (System.Text.RegularExpressions.Regex.IsMatch(s, @"USB\s*\d*-pin", opts)) return false;
+                        if (s.Contains("ARGB", StringComparison.OrdinalIgnoreCase)) return false;
+                        if (System.Text.RegularExpressions.Regex.IsMatch(s, @"RGB\s*\d*V", opts)) return false;
+                        if (s.Contains("термопаста", StringComparison.OrdinalIgnoreCase)) return false;
+                        return true;
+                    }).ToList();
+                }
+                // Keyboards type: исключаем переключатели, питание, назначение — оставляем только типоразмер
+                if (string.Equals(categorySlug, "keyboards", StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(a.AttributeKey, "type", StringComparison.OrdinalIgnoreCase))
+                {
+                    var excludePatterns = new[] { "Kailh", "Outemu", "Razer", "Gateron", "Cherry", "Bloody", "Light Strike", "Content Slim", "Logitech GX" };
+                    var excludeExact = new[] { "2 x AAA", "AA", "AAA", "игровая", "игровая механико-оптическая", "офисная", "мультимедийная", "компактная", "полноразмерная", "стандартная" };
+                    values = values.Where(v =>
+                    {
+                        var s = (v ?? "").Trim();
+                        if (excludeExact.Contains(s, StringComparer.OrdinalIgnoreCase)) return false;
+                        if (excludePatterns.Any(p => s.Contains(p, StringComparison.OrdinalIgnoreCase))) return false;
+                        return true;
+                    }).ToList();
+                }
+                // Убираем переносы строк и лишние пробелы в сырых значениях
+                values = values
+                    .Select(v => SpecValueNormalizer.CollapseWhitespace(v))
+                    .Where(v => !string.IsNullOrEmpty(v))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(v => v)
+                    .ToList();
+            }
+
+            // Не отдаём select-атрибуты с пустым списком значений (например sensor_type для mice)
+            if (a.FilterType == FilterAttributeType.Select && !values.Any())
+                continue;
+
             result.Add(new FilterAttributeDto
             {
                 Key = a.AttributeKey,
                 DisplayName = a.DisplayName,
                 FilterType = a.FilterType == FilterAttributeType.Range ? "range" : "select",
                 SortOrder = a.SortOrder,
-                Values = distinctValues.GetValueOrDefault(a.AttributeKey, new List<string>()),
+                Values = values,
                 MinValue = minVal,
                 MaxValue = maxVal
             });

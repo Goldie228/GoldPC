@@ -2,6 +2,7 @@ using CatalogService.Data;
 using CatalogService.DTOs;
 using CatalogService.Models;
 using CatalogService.Repositories.Interfaces;
+using CatalogService.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace CatalogService.Repositories;
@@ -139,9 +140,35 @@ public class ProductRepository : IProductRepository
 
                     allFiltered = allFiltered.Where(p =>
                     {
-                        if (p.Specifications == null || !p.Specifications.TryGetValue(key, out var specVal) || specVal == null)
+                        if (p.Specifications == null || !p.Specifications.TryGetValue(key, out var specVal))
                             return false;
-                        var specStr = specVal.ToString() ?? "";
+                        if (string.Equals(key, "socket", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var pv = specVal?.ToString() ?? "";
+                            var parts = pv.Split(',', StringSplitOptions.TrimEntries);
+                            return allowedValues.Any(allowed =>
+                                parts.Any(part => string.Equals(
+                                    SpecValueNormalizer.NormalizeForDisplay(key, part.Trim()),
+                                    allowed,
+                                    StringComparison.OrdinalIgnoreCase)));
+                        }
+                        if (SpecValueNormalizer.IsNormalizedAttribute(key))
+                        {
+                            return allowedValues.Any(allowed =>
+                                SpecValueNormalizer.MatchesFilter(key, specVal, allowed));
+                        }
+                        if (string.Equals(key, "memory_type", StringComparison.OrdinalIgnoreCase) && (specVal?.ToString() ?? "").Contains(","))
+                            return allowedValues.Any(allowed => SpecValueNormalizer.MotherboardMemoryTypeMatches(specVal?.ToString(), allowed));
+                        if (SpecValueNormalizer.ShouldExpandMultiValue(key))
+                        {
+                            var pv = specVal?.ToString() ?? "";
+                            if (string.Equals(key, "form_factor", StringComparison.OrdinalIgnoreCase))
+                                pv = SpecValueNormalizer.NormalizeFormFactorForDisplay(pv);
+                            return allowedValues.Any(allowed =>
+                                SpecValueNormalizer.MultiValueContains(pv, allowed));
+                        }
+                        if (specVal == null) return false;
+                        var specStr = SpecValueNormalizer.CollapseWhitespace(specVal.ToString() ?? "");
                         return allowedValues.Any(allowed =>
                         {
                             if (int.TryParse(allowed, out var intAllowed) && int.TryParse(specStr, out var intSpec))
@@ -295,8 +322,30 @@ public class ProductRepository : IProductRepository
                     if (string.IsNullOrEmpty(specKey) || string.IsNullOrEmpty(value)) continue;
                     var allowed = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
                     if (allowed.Count == 0) continue;
-                    filteredForKey = filteredForKey.Where(p => p.Specifications != null && p.Specifications.TryGetValue(specKey, out var v) && v != null &&
-                        allowed.Any(a => string.Equals((v?.ToString() ?? ""), a, StringComparison.OrdinalIgnoreCase)));
+                    filteredForKey = filteredForKey.Where(p =>
+                    {
+                        if (p.Specifications == null || !p.Specifications.TryGetValue(specKey, out var v)) return false;
+                        if (string.Equals(specKey, "socket", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var pv = v?.ToString() ?? "";
+                            var parts = pv.Split(',', StringSplitOptions.TrimEntries);
+                            return allowed.Any(a => parts.Any(part => string.Equals(
+                                SpecValueNormalizer.NormalizeForDisplay(specKey, part.Trim()), a, StringComparison.OrdinalIgnoreCase)));
+                        }
+                        if (SpecValueNormalizer.IsNormalizedAttribute(specKey))
+                            return allowed.Any(a => SpecValueNormalizer.MatchesFilter(specKey, v, a));
+                        if (string.Equals(specKey, "memory_type", StringComparison.OrdinalIgnoreCase) && (v?.ToString() ?? "").Contains(","))
+                            return allowed.Any(a => SpecValueNormalizer.MotherboardMemoryTypeMatches(v?.ToString(), a));
+                        if (SpecValueNormalizer.ShouldExpandMultiValue(specKey))
+                        {
+                            var pv = v?.ToString() ?? "";
+                            if (string.Equals(specKey, "form_factor", StringComparison.OrdinalIgnoreCase))
+                                pv = SpecValueNormalizer.NormalizeFormFactorForDisplay(pv);
+                            return allowed.Any(a => SpecValueNormalizer.MultiValueContains(pv, a));
+                        }
+                        if (v == null) return false;
+                        return allowed.Any(a => string.Equals((v?.ToString() ?? ""), a, StringComparison.OrdinalIgnoreCase));
+                    });
                 }
             }
             if (filterContext?.SpecificationRanges != null && filterContext.SpecificationRanges.Count > 0)
@@ -353,8 +402,30 @@ public class ProductRepository : IProductRepository
                     if (string.IsNullOrEmpty(specKey) || string.IsNullOrEmpty(value)) continue;
                     var allowed = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
                     if (allowed.Count == 0) continue;
-                    filtered = filtered.Where(p => p.Specifications != null && p.Specifications.TryGetValue(specKey, out var v) && v != null &&
-                        allowed.Any(a => string.Equals((v?.ToString() ?? ""), a, StringComparison.OrdinalIgnoreCase)));
+                    filtered = filtered.Where(p =>
+                    {
+                        if (p.Specifications == null || !p.Specifications.TryGetValue(specKey, out var v)) return false;
+                        if (string.Equals(specKey, "socket", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var pv = v?.ToString() ?? "";
+                            var parts = pv.Split(',', StringSplitOptions.TrimEntries);
+                            return allowed.Any(a => parts.Any(part => string.Equals(
+                                SpecValueNormalizer.NormalizeForDisplay(specKey, part.Trim()), a, StringComparison.OrdinalIgnoreCase)));
+                        }
+                        if (SpecValueNormalizer.IsNormalizedAttribute(specKey))
+                            return allowed.Any(a => SpecValueNormalizer.MatchesFilter(specKey, v, a));
+                        if (string.Equals(specKey, "memory_type", StringComparison.OrdinalIgnoreCase) && (v?.ToString() ?? "").Contains(","))
+                            return allowed.Any(a => SpecValueNormalizer.MotherboardMemoryTypeMatches(v?.ToString(), a));
+                        if (SpecValueNormalizer.ShouldExpandMultiValue(specKey))
+                        {
+                            var pv = v?.ToString() ?? "";
+                            if (string.Equals(specKey, "form_factor", StringComparison.OrdinalIgnoreCase))
+                                pv = SpecValueNormalizer.NormalizeFormFactorForDisplay(pv);
+                            return allowed.Any(a => SpecValueNormalizer.MultiValueContains(pv, a));
+                        }
+                        if (v == null) return false;
+                        return allowed.Any(a => string.Equals((v?.ToString() ?? ""), a, StringComparison.OrdinalIgnoreCase));
+                    });
                 }
             }
             if (filterContext.SpecificationRanges != null)

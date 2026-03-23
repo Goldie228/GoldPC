@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Search, 
@@ -42,6 +42,19 @@ const itemVariants = {
  * Страница каталога товаров с Dark Gold темой
  * Layout: Sidebar (20%) | Product Grid (80%)
  */
+const VALID_CATEGORIES: ProductCategory[] = [
+  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'keyboard', 'mouse', 'headphones'
+];
+
+function resolveCategoryFromUrl(
+  categoryParam: string | undefined,
+  categoryQuery: string | null
+): ProductCategory | null {
+  const fromPath = categoryParam && VALID_CATEGORIES.includes(categoryParam as ProductCategory) ? categoryParam as ProductCategory : null;
+  const fromQuery = categoryQuery && VALID_CATEGORIES.includes(categoryQuery as ProductCategory) ? categoryQuery as ProductCategory : null;
+  return fromPath ?? fromQuery ?? null;
+}
+
 export function CatalogPage() {
   const PRICE_MIN = 0;
   const PRICE_MAX = 10000;
@@ -63,16 +76,22 @@ export function CatalogPage() {
     return { min: max, max: min };
   };
 
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { category: categoryParam } = useParams<{ category?: string }>();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Инициализация состояния из URL params
-  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | null>(
-    () => (searchParams.get('category') as ProductCategory) || null
-  );
+  // Инициализация и синхронизация категории из URL (path или query)
+  const resolvedCategory = resolveCategoryFromUrl(categoryParam, searchParams.get('category'));
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory | null>(resolvedCategory);
+  
+  // Синхронизация selectedCategory при навигации (path или query изменились извне)
+  useEffect(() => {
+    setSelectedCategory(resolvedCategory);
+  }, [resolvedCategory]);
   const [searchQuery, setSearchQuery] = useState(
     () => searchParams.get('search') || ''
   );
@@ -113,7 +132,7 @@ export function CatalogPage() {
     }
   });
 
-  // Синхронизация фильтров и страницы с URL
+  // Синхронизация фильтров и страницы с URL (path + query)
   useEffect(() => {
     const params = new URLSearchParams();
     if (selectedCategory) params.set('category', selectedCategory);
@@ -128,8 +147,11 @@ export function CatalogPage() {
       params.set('specs', encodeURIComponent(JSON.stringify(selectedSpecifications)));
     }
     if (page > 1) params.set('page', page.toString());
-    setSearchParams(params, { replace: true });
-  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, page, setSearchParams]);
+    const queryString = params.toString();
+    const path = selectedCategory ? `/catalog/${selectedCategory}` : '/catalog';
+    const fullPath = queryString ? `${path}?${queryString}` : path;
+    navigate(fullPath, { replace: true });
+  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, page, navigate]);
 
   const filterDeps = [
     selectedCategory,
@@ -211,11 +233,17 @@ export function CatalogPage() {
         params.rating = minRating;
       }
 
-      // Фильтр по наличию: по умолчанию только в наличии
-      if (selectedAvailability.includes('in_stock') || selectedAvailability.length === 0) {
+      // Фильтр по наличию: при выборе обоих (in_stock + on_order) — не передаём inStock (показать всё)
+      const hasInStock = selectedAvailability.includes('in_stock');
+      const hasOnOrder = selectedAvailability.includes('on_order');
+      if (hasInStock && !hasOnOrder) {
         params.inStock = true;
-      } else if (selectedAvailability.includes('on_order') && !selectedAvailability.includes('in_stock')) {
+      } else if (hasOnOrder && !hasInStock) {
         params.inStock = false;
+      }
+      // selectedAvailability.length === 0 — по умолчанию только в наличии
+      if (selectedAvailability.length === 0) {
+        params.inStock = true;
       }
 
       // Фильтр по характеристикам: разделяем select (в т.ч. мультивыбор) и range

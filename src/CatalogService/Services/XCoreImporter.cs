@@ -118,6 +118,100 @@ public class XCoreImporter
                     }
                 }
 
+                // GPU: миграция data_vykhoda_na_rynok_2 → release_year
+                if (string.Equals(p.CategorySlug, "gpu", StringComparison.OrdinalIgnoreCase) &&
+                    specs.TryGetValue("data_vykhoda_na_rynok_2", out var oldVal) && oldVal != null)
+                {
+                    specs["release_year"] = oldVal;
+                    specs.Remove("data_vykhoda_na_rynok_2");
+                }
+
+                // Процессоры: derive architecture из codename, если architecture не задан
+                if (string.Equals(p.CategorySlug, "processors", StringComparison.OrdinalIgnoreCase) &&
+                    !specs.ContainsKey("architecture") &&
+                    specs.TryGetValue("codename", out var codenameObj) && codenameObj != null)
+                {
+                    var codenameStr = codenameObj.ToString()?.Replace("\n", " ").Replace("\r", "").Trim() ?? "";
+                    var arch = DeriveArchitectureFromCodename(codenameStr);
+                    if (!string.IsNullOrEmpty(arch))
+                        specs["architecture"] = arch;
+                }
+
+                // Материнские платы: разбор memory_type → memory_mixed_slots, memory_cudimm
+                if (string.Equals(p.CategorySlug, "motherboards", StringComparison.OrdinalIgnoreCase) &&
+                    specs.TryGetValue("memory_type", out var memTypeObj) && memTypeObj != null)
+                {
+                    var memStr = memTypeObj.ToString()?.Trim() ?? "";
+                    if (memStr.Contains("CUDIMM", StringComparison.OrdinalIgnoreCase))
+                    {
+                        specs["memory_cudimm"] = "Да";
+                        specs["memory_type"] = System.Text.RegularExpressions.Regex.Replace(memStr, @",?\s*DDR\d+\s*CUDIMM", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim().TrimEnd(',').Trim();
+                    }
+                    else
+                        specs["memory_cudimm"] = "Нет";
+
+                    if ((memStr.Contains("DDR4", StringComparison.OrdinalIgnoreCase) && memStr.Contains("DDR5", StringComparison.OrdinalIgnoreCase)) ||
+                        (memStr.Contains("DDR5", StringComparison.OrdinalIgnoreCase) && memStr.Contains("DDR4", StringComparison.OrdinalIgnoreCase)))
+                        specs["memory_mixed_slots"] = "Да";
+                    else
+                        specs["memory_mixed_slots"] = "Нет";
+                }
+
+                // Клавиатуры и мыши: derive connection_type и wireless_protocols из interface
+                if ((string.Equals(p.CategorySlug, "keyboards", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(p.CategorySlug, "mice", StringComparison.OrdinalIgnoreCase)) &&
+                    specs.TryGetValue("interface", out var ifaceForDerive) && ifaceForDerive != null)
+                {
+                    var ifStr = ifaceForDerive.ToString()?.ToLowerInvariant() ?? "";
+                    var hasWired = ifStr.Contains("usb") || ifStr.Contains("проводн");
+                    var hasBluetooth = ifStr.Contains("bluetooth");
+                    var hasRadio = ifStr.Contains("радио") || ifStr.Contains("2.4");
+                    if (!specs.ContainsKey("connection_type"))
+                    {
+                        if (hasWired && (hasBluetooth || hasRadio))
+                            specs["connection_type"] = "проводная и беспроводная";
+                        else if (hasBluetooth || hasRadio)
+                            specs["connection_type"] = "беспроводная";
+                        else if (hasWired)
+                            specs["connection_type"] = "проводная";
+                    }
+                    if (!specs.ContainsKey("wireless_protocols") && (hasBluetooth || hasRadio))
+                    {
+                        var protocols = new List<string>();
+                        if (hasBluetooth) protocols.Add("Bluetooth");
+                        if (hasRadio) protocols.Add("2.4 GHz");
+                        specs["wireless_protocols"] = string.Join(", ", protocols);
+                    }
+                }
+
+                // Наушники: derive form_factor из type
+                if (string.Equals(p.CategorySlug, "headphones", StringComparison.OrdinalIgnoreCase) &&
+                    !specs.ContainsKey("form_factor") &&
+                    specs.TryGetValue("type", out var typeObj) && typeObj != null)
+                {
+                    var typeStr = typeObj.ToString()?.ToLowerInvariant() ?? "";
+                    if (typeStr.Contains("полноразмерн") || typeStr.Contains("охватывающ"))
+                        specs["form_factor"] = "полноразмерные";
+                    else if (typeStr.Contains("накладн"))
+                        specs["form_factor"] = "накладные";
+                    else if (typeStr.Contains("внутриканал") || typeStr.Contains("вкладыш"))
+                        specs["form_factor"] = typeStr.Contains("внутриканал") ? "внутриканальные" : "вкладыши";
+                }
+
+                // Накопители: derive protocol из interface, если protocol не задан
+                if (string.Equals(p.CategorySlug, "storage", StringComparison.OrdinalIgnoreCase) &&
+                    !specs.ContainsKey("protocol") &&
+                    specs.TryGetValue("interface", out var ifaceObj) && ifaceObj != null)
+                {
+                    var ifaceStr = ifaceObj.ToString()?.ToUpperInvariant() ?? "";
+                    if (ifaceStr.Contains("PCI") || ifaceStr.Contains("U.2"))
+                        specs["protocol"] = "NVMe";
+                    else if (ifaceStr.Contains("SAS"))
+                        specs["protocol"] = "SAS";
+                    else if (ifaceStr.Contains("SATA"))
+                        specs["protocol"] = "SATA";
+                }
+
                 if (existing != null)
                 {
                     existing.Price = (decimal)p.Price;
@@ -188,6 +282,39 @@ public class XCoreImporter
 
         await _context.SaveChangesAsync();
         return result;
+    }
+
+    /// <summary>
+    /// Извлекает архитектуру из codename процессора (Zen 3, Zen 4, Raptor Lake и т.д.).
+    /// </summary>
+    private static string? DeriveArchitectureFromCodename(string codename)
+    {
+        if (string.IsNullOrWhiteSpace(codename)) return null;
+        var s = codename.Replace("\n", " ").Replace("\r", "").Trim();
+
+        // Извлечь (Zen 3), (Zen 4), (Zen 5) из скобок
+        var zenMatch = System.Text.RegularExpressions.Regex.Match(s, @"\(Zen\s*(\d+)\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (zenMatch.Success)
+            return $"Zen {zenMatch.Groups[1].Value}";
+
+        // AMD codename → architecture lookup (без Zen в скобках)
+        var codenameBase = System.Text.RegularExpressions.Regex.Replace(s, @"\s*\([^)]*\)\s*$", "").Trim();
+        var amdZen3 = new[] { "Cezanne", "Vermeer", "Matisse", "Lucienne", "Barcelo" };
+        var amdZen4 = new[] { "Raphael", "Phoenix", "Dragon Range" };
+        var amdZen5 = new[] { "Granite Ridge", "Strix Point" };
+        if (amdZen3.Any(c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase))) return "Zen 3";
+        if (amdZen4.Any(c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase))) return "Zen 4";
+        if (amdZen5.Any(c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase))) return "Zen 5";
+
+        // Zen 3 как standalone (Threadripper)
+        if (string.Equals(codenameBase, "Zen 3", StringComparison.OrdinalIgnoreCase)) return "Zen 3";
+
+        // Intel: codename = architecture (Alder Lake, Raptor Lake и т.д.)
+        var intelCodenames = new[] { "Alder Lake", "Arrow Lake", "Raptor Lake", "Raptor Lake-R", "Rocket Lake",
+            "Comet Lake", "Ice Lake", "Skylake", "Coffee Lake", "Cascade Lake", "Sapphire Rapids",
+            "Emerald Rapids", "Genoa", "Milan", "Rome" };
+        var match = intelCodenames.FirstOrDefault(c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase));
+        return match;
     }
 
     /// <summary>
