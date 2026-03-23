@@ -150,6 +150,10 @@ scraper-sync-with-images: ## Удалить товары без фото; выр
 	@echo "$(CYAN)Синхронизация товаров с изображениями...$(RESET)"
 	cd scripts/scraper && npm run sync-with-images
 
+scraper-remap-periphery: ## Переприсвоить slug periphery -> mice/keyboards по categoryPath
+	@echo "$(CYAN)Remap periphery -> mice/keyboards...$(RESET)"
+	cd scripts/scraper && npm run remap-periphery
+
 db-update-images: ## Обновить картинки в БД из xcore-images.json (после scraper-fetch-images)
 	@echo "$(CYAN)Обновление изображений в БД...$(RESET)"
 	cd src/CatalogService && dotnet run -- seed-xcore-images

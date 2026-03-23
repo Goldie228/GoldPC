@@ -222,18 +222,25 @@ public class XCoreImporter
             return result;
 
         var skusInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var processedSkus = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         foreach (var item in data.Products)
         {
             if (string.IsNullOrEmpty(item.Sku))
                 continue;
 
-            skusInFile.Add(item.Sku);
+            var skuNormalized = TruncateSku(item.Sku);
+            skusInFile.Add(skuNormalized);
+
+            // Несколько SKU могут обрезаться до одного — обрабатываем только первый
+            if (processedSkus.Contains(skuNormalized))
+                continue;
 
             try
             {
                 var product = await _context.Products
                     .Include(p => p.Images)
-                    .FirstOrDefaultAsync(p => p.Sku == item.Sku);
+                    .FirstOrDefaultAsync(p => p.Sku == skuNormalized);
 
                 if (product == null)
                 {
@@ -241,7 +248,9 @@ public class XCoreImporter
                     continue;
                 }
 
-                _context.ProductImages.RemoveRange(product.Images);
+                processedSkus.Add(skuNormalized);
+
+                _context.ProductImages.RemoveRange(product.Images.ToList());
 
                 var imageUrls = item.Images ?? new List<string>();
                 for (var i = 0; i < imageUrls.Count; i++)
@@ -277,7 +286,7 @@ public class XCoreImporter
 
         foreach (var product in productsWithImagesNotInFile)
         {
-            _context.ProductImages.RemoveRange(product.Images);
+            _context.ProductImages.RemoveRange(product.Images.ToList());
             result.Deleted++;
         }
 

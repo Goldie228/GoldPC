@@ -12,6 +12,7 @@
     "fetch-images:test": "node fetch-product-images.mjs --limit=10",
     "fetch-images:ram-coolers": "node fetch-product-images.mjs --categories=ram,coolers",
     "sync-with-images": "node sync-products-with-images.mjs",
+    "remap-periphery": "node remap-periphery-to-mice-keyboards.mjs",
     "parse-specs-html": "node parse-specs-from-html.mjs",
     "parse-specs-html:test": "node parse-specs-from-html.mjs --test",
     "parse-specs-html:retry": "node parse-specs-from-html.mjs --category=psu --only-empty --slow",

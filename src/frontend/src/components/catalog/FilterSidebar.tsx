@@ -306,7 +306,8 @@ export function FilterSidebar({
         categories?.forEach((cat: Category) => {
           if (cat?.slug != null) {
             const key = (BACKEND_SLUG_MAP[cat.slug] ?? cat.slug) as ProductCategory;
-            counts[key] = cat.productCount ?? 0;
+            // Несколько backend-категорий могут маппиться на один frontend (keyboards + periphery -> keyboard)
+            counts[key] = (counts[key] ?? 0) + (cat.productCount ?? 0);
           }
         });
         setCategoryCounts(counts);

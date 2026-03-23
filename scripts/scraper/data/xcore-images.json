@@ -1,9 +1,9 @@
 {
   "source": "x-core.by",
-  "fetchedAt": "2026-03-21T13:30:51.062Z",
-  "syncedAt": "2026-03-21T13:30:52.117Z",
-  "productCount": 5336,
-  "withImagesCount": 5336,
+  "fetchedAt": "2026-03-23T06:37:46.727Z",
+  "syncedAt": "2026-03-23T06:37:52.547Z",
+  "productCount": 5683,
+  "withImagesCount": 5683,
   "products": [
     {
       "sku": "XCORE-protsessor_amd_ryzen_5_3600",
@@ -23720,12 +23720,6 @@
       ]
     },
     {
-      "sku": "XCORE-klaviatura_royal_kludge_rk61_rgb_chernyy_rk_brown",
-      "images": [
-        "https://x-core.by/upload/iblock/177/wb64hz0cta5f5v1v3ehrgygtwkus1tgi.jpeg"
-      ]
-    },
-    {
       "sku": "XCORE-klaviatura_a4tech_kv_300h",
       "images": [
         "https://x-core.by/upload/iblock/b04/c3vmekvbs73t3ec4d58aay5gj1bdoctb.jpeg"
@@ -41560,6 +41554,2453 @@
       "sku": "XCORE-kuler_dlya_protsessora_thermalright_assassin_x_90_se",
       "images": [
         "https://x-core.by/upload/iblock/3a0/o378azthcng6y7pbpzhr20lhc5viz67s.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_heroad_v200_tri_mode_edition_bh25h4gma_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/78d/nlc25hu15d3idiwa2v4hhenla1s296ol.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_melobuds_n30_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/47e/eo06sn24jscahaof9fll0xouidfust9o.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_clip_zolotistyy",
+      "images": [
+        "https://x-core.by/upload/iblock/433/cyon3ndd357isrxfl0nmnnmlejpmk1cn.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_heroad_v200_tri_mode_edition_bh25h4gma_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/914/ycf1mb9c4b3fvmx53kwxkxavuy7acec6.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_heroad_v200_pro_bh25h4gmc_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/e88/ds1xwvr44wnxinautsdbjzwjeyr3gvp1.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_logitech_g435_lightspeed_chernyy_neonovyy_zheltyy",
+      "images": [
+        "https://x-core.by/upload/iblock/6ba/txk9za6vegw816hsqxcd1ndowpbja9os.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bass_bh1_nc_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/29d/0q0y7rexn0kf01umh7zdezwajth2tp1u.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_dark_project_hs5_v2_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/717/eu1btg41wvrg3r75z86ypk1772sarxva.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_logitech_h150_siniy_981_000368",
+      "images": [
+        "https://x-core.by/upload/iblock/a15/344p6094vfpii4l2ob72xue1ryxo34cu.jpeg",
+        "https://x-core.by/upload/iblock/d0a/xupjf68s9ips51d4qm8uzth6apuzktez.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_lunacy_louder_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/055/ipfqyrh9jer8caa4rtzft8kcjg0mcp0g.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_logitech_g435_lightspeed_belyy_sirenevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/e72/sgveumkb8ogs3vwzwd9zdev3in9a4jv2.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bass_bh1_lite_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/0e0/50165e1ry84lxztbuhh99aihcdkau9hk.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bass_bh1_nc_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/376/pdjg1ijf18qohn161c2g2l43b1vcmft8.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_logitech_g435_lightspeed_siniy_malinovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/038/au0v71n0xpug8v4kfj3xb8em3ot4no52.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bass_bh1_lite_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/670/vc25d06z31bzco9etavh2qvncyd3birf.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_samsung_galaxy_buds3_serebristyy",
+      "images": [
+        "https://x-core.by/upload/iblock/65a/xbirxxaakaqpb003eiro3ftkwt846uuc.jpeg",
+        "https://x-core.by/upload/iblock/253/y3jorlqvnvbkcliswfx1347e89lnlq1x.jpeg",
+        "https://x-core.by/upload/iblock/df7/cz6tozg2xwx6zxibz6d1ex4vtn6iy5dm.jpeg",
+        "https://x-core.by/upload/iblock/39e/zhh7ah2mssnv6b797qazn2vemhb3z202.jpeg",
+        "https://x-core.by/upload/iblock/053/x6830jx955p51aqlk5pzap07crysynx6.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_redmi_buds_6_active_m2344e1_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/4a6/w1vl0iohd7vs95ymvm8n3v1au07lt8cj.jpeg",
+        "https://x-core.by/upload/iblock/44d/63nzzbzj7pu7sl9qzjk6d46rws9xtnmi.jpeg",
+        "https://x-core.by/upload/iblock/be0/qpguj2rt88rk00ylnvpg5h472quq8oyb.jpeg",
+        "https://x-core.by/upload/iblock/2e3/p5naf0j8jfjmonz851819i6ydok8iuqb.jpeg",
+        "https://x-core.by/upload/iblock/5dc/yq4i7rrrwuemxm2ca499f7235jd99l75.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sven_e_310b",
+      "images": [
+        "https://x-core.by/upload/iblock/864/odrdprbddn5pu75ewr21j4jebwgh7c8m.jpeg",
+        "https://x-core.by/upload/iblock/206/3h1nqyiphqg8vemtkllaqtnckmciwqj0.jpeg",
+        "https://x-core.by/upload/iblock/c9e/ynr5h3f13sfwvgm0aaa330e2zfymz7d7.jpeg",
+        "https://x-core.by/upload/iblock/91c/mjidfx86py5s5gcbq67khjs685st96zi.jpeg",
+        "https://x-core.by/upload/iblock/027/j3c3hvdhji0k785et6aifcz5bse2bcjr.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_h2_pro_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/eba/pb2yuni30if7jewau55rvhwtoqfobor4.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_clip_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/b63/mhuk0sv1rqfpe0b78gx1mb5xoh13cavy.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_se_3_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/c9b/b19eqk9i9manua3r66rem9730q8uotsz.jpeg",
+        "https://x-core.by/upload/iblock/b88/kjnd6hyh0l4wyzjeb200vuf9vjm2bx63.jpeg",
+        "https://x-core.by/upload/iblock/2a8/xqqux1c60pev9cp23clnfvgpam90yl81.jpeg",
+        "https://x-core.by/upload/iblock/99f/qtyq7tdiuy5xtktdkwmrbbc2h7lm3zvh.jpeg",
+        "https://x-core.by/upload/iblock/0c4/8ydg3mvydap4avtrsk1f21khw1in5z8v.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_earbuds_x7_pro_temno_seryy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/a15/5n8vsn4h43z21qkh21qcxrimfxok5ta5.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_earbuds_x7_play_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/777/0jjbpmamyyjseccxtvem356jqad4036z.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_asus_rog_cetra_true_wireless_speednova_moonlight_white",
+      "images": [
+        "https://x-core.by/upload/iblock/d41/5nx9ngbm1pj4l6u0cs6s7rbnr9zjngpf.jpeg",
+        "https://x-core.by/upload/iblock/9c2/0mluxc197feox49wvbkdmprdtm9dkde4.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_redmi_buds_6_active_m2344e1_goluboy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/e2a/9auk8wyefwbtpl7e7764kfzhhjkhr892.jpeg",
+        "https://x-core.by/upload/iblock/6c0/1307odcfs076n33m3hvsexhw2rhdtub8.jpeg",
+        "https://x-core.by/upload/iblock/9a6/fi1ntvlypptpahivf5hsy5knhnka48g0.jpeg",
+        "https://x-core.by/upload/iblock/5c5/jjfff2uoqzu0jv87qbjeeypsgrcey5ss.jpeg",
+        "https://x-core.by/upload/iblock/831/6z4k974pzbqw5aacncm632a3ncuvwnh6.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_blackshark_v2_x_zelenyy",
+      "images": [
+        "https://x-core.by/upload/iblock/b63/vdth5gdjj3995zf21b0nngmcowqty2kb.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_barracuda_x_2022_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/91d/3oqg3sx7po4u5nkvg9xcpgccqjjoyo48.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bass_bp1_pro_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/762/zm1p6fae7pnvbiiqby36f7elojb8vvha.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_earbuds_x7_lite_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/15c/bk9rg8ojovvkg4p4p70664182ticnbxs.jpeg",
+        "https://x-core.by/upload/iblock/fe7/nc26bvube5mlgs6en4wxh6z3i4w94s0c.jpeg",
+        "https://x-core.by/upload/iblock/817/sn3mtl5632lsdx2c832bhnby8x47ur6b.jpeg",
+        "https://x-core.by/upload/iblock/602/redn6wacxljafallmdhz7llju4weard1.jpeg",
+        "https://x-core.by/upload/iblock/625/lpj4pxl4npgzg1ptjiuyjacaygfv1ugd.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_blackshark_v2_x_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/a07/ddj1dwns6kwjabeuww98oykyvpa8u1wn.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_crossky_c10_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/83c/fj5hfdyg0dj19oj4c73dfvsltr9kpoe0.jpeg",
+        "https://x-core.by/upload/iblock/9a2/3a7cxhwob6n3kaeim22piuawh9slr812.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_marshall_motif_ii_anc",
+      "images": [
+        "https://x-core.by/upload/iblock/6d8/4tjoyvgrb76q3ahnmgxfgnjje51dfywu.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_6_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/b02/az5lp15idnzebd5h21uev33mziokofcd.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_nothing_ear_2024_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/da7/ugalugex106lf88jth4e7mgu4oxxru6h.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_redmi_buds_6_active_m2344e1_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/b24/etg01qzk9c5hntd41lnibaapfpzy5hs8.jpeg",
+        "https://x-core.by/upload/iblock/6f6/z9zct2fbrmt22j4hqd1ga2z1xv28yawj.jpeg",
+        "https://x-core.by/upload/iblock/7a8/tv9xwoyzzeqt6se9cdm6jxbvxb1hgnij.jpeg",
+        "https://x-core.by/upload/iblock/55e/re3c3wqwwv3brl8xcq27qyik6s86fig1.jpeg",
+        "https://x-core.by/upload/iblock/727/2xe5pe1heqeli41zjhd1270hwqv16j9f.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_earbuds_x8_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/419/s9g7230hhdva76enclfbmzkh5th7gm8k.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_asus_rog_cetra_true_wireless",
+      "images": [
+        "https://x-core.by/upload/iblock/b3e/xg9custr69eoib00izewlapgijhnmitc.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_redmi_buds_6_active_m2344e1_rozovyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/73b/otxb03og46i4rcoasxhq8owuef010lua.jpeg",
+        "https://x-core.by/upload/iblock/149/v10pfldug5ckmlmscffz0waqh4n1077g.jpeg",
+        "https://x-core.by/upload/iblock/072/4i9t86xavmmr5nn7xvedfaun7lchac3p.jpeg",
+        "https://x-core.by/upload/iblock/0a5/vehsagepcpfy36149hibhh8ug47hc97b.jpeg",
+        "https://x-core.by/upload/iblock/fb7/ow6p63fro8ium7tivmznauxuapzyqsya.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_nothing_headphone_1_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/23a/mrmqy6mhw6iy7bk8r581o35l36lun8fa.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_nothing_ear_2024_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/069/yu2sqhk74qkre5rb0u8hjp7knfx48xve.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_lunacy_loud",
+      "images": [
+        "https://x-core.by/upload/iblock/d6b/3grrzmnb7xmp1zyhzssyfw122h4yqu96.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_earbuds_s7_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/08d/l2r4sjcu6jwzdvtjyb3af7q1jvfv88xg.jpeg",
+        "https://x-core.by/upload/iblock/e9e/2nm2d7ga0vuk41n1cjuvsrdfblxtctiv.jpeg",
+        "https://x-core.by/upload/iblock/f5e/zp7xattinc2rbo14u5om2ibbo6i4thqf.jpeg",
+        "https://x-core.by/upload/iblock/94c/cuy5sgefy720qbc2b057m04igz33wirb.jpeg",
+        "https://x-core.by/upload/iblock/cc0/g6n2r7jsq2krplcpwc780pc4jy0mcvp1.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_t200_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/d59/c5vyu77yfqs1hvtibzn5gnbkpar4r61h.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_logitech_g_pro_x_2_lightspeed_rozovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/a54/r4g1tq7xa9nb9m53wwwpyg899m9mvmbp.jpeg",
+        "https://x-core.by/upload/iblock/47b/olgfw4hijvemm7i0hdu2bxks2976wf0t.jpeg",
+        "https://x-core.by/upload/iblock/213/gw8pqgj2jmt1z3yo15ud8zdrp40c8z1s.jpeg",
+        "https://x-core.by/upload/iblock/f26/risxkxt5drbn4r9e3399tv3ui3omivy9.jpeg",
+        "https://x-core.by/upload/iblock/54a/64afgcb9k25145vqyeazfff9g69smom2.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_nothing_ear_a_zheltyy",
+      "images": [
+        "https://x-core.by/upload/iblock/3f9/byuowcou2x932r1ww4bt9v35my5p5p0g.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_ugreen_hitune_max5c_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/a88/nflupzf6llzzr4g1y9j5wfpb4gcsbmuo.jpeg",
+        "https://x-core.by/upload/iblock/67d/s03fpewyzoha5zg846oghn5d7ai9fxvq.jpeg",
+        "https://x-core.by/upload/iblock/aac/joatgra2s2zh7hxdo5hra9p6ruepizqa.jpeg",
+        "https://x-core.by/upload/iblock/e42/0aa3g8juawtxg1vhfvxqdyfd2fa3vzik.jpeg",
+        "https://x-core.by/upload/iblock/e58/9a8qgigqs96o69ufrx657pa5s6i84y99.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_7i_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/4ca/kinfxgp406xpkb3s9tf6hdoosh8l673w.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_marshall_major_iv_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/2b8/hg863tku0cetk1z6sby9cxku4sn2lost.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve_20_ms_stereo",
+      "images": [
+        "https://x-core.by/upload/iblock/01e/v4orj5qu4tvkk5ez4u2ur306pbyv9kiz.jpeg",
+        "https://x-core.by/upload/iblock/b15/1h2gfsarwx3cdcwnxfcw67yua2w10jgz.jpeg",
+        "https://x-core.by/upload/iblock/745/n80y72xms0sk26ggoauuxh63frbtsayf.jpeg",
+        "https://x-core.by/upload/iblock/2f5/5p4pake1s1pd5v7ejmlrvetz8ic0b4p2.jpeg",
+        "https://x-core.by/upload/iblock/1ed/p6dyosakww6rvto5embbv0unxwkum18s.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_logitech_pc_headset_960_usb",
+      "images": [
+        "https://x-core.by/upload/iblock/b13/cgrj0n1902f89n2fb3hsrkxt7xslns1q.jpeg",
+        "https://x-core.by/upload/iblock/069/dommj9zp5g7151721z5nmi1xef7q74x6.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_audio_technica_ath_m50x_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/b66/tbxeo4c2fq805qauub76sdv63w803mom.jpeg",
+        "https://x-core.by/upload/iblock/907/ryqsru1mm9avb43jjivnydwc8p9ijutf.jpeg",
+        "https://x-core.by/upload/iblock/231/brla5770wodorfcpb6gef2qw8a82gz7b.jpeg",
+        "https://x-core.by/upload/iblock/607/srkzfh1pv8l8e7eb16aewcwwpmvq89lr.jpeg",
+        "https://x-core.by/upload/iblock/fba/h9iysh39khvhi0z14wep2qrxadzw7iek.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_openwear_stereo_pro_m2503e1_zolotistyy_pesok_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/e02/a73cwybpg5dbv98educsjr46o9ay3x5w.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_barracuda_x_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/1ca/tf6n85cwg5vtrglpb6flerc3z7em6k7g.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_logitech_stereo_headset_h151_981_000589",
+      "images": [
+        "https://x-core.by/upload/iblock/c72/nvz9g3jkuav9jgvvdvh88wnup12de69h.jpeg",
+        "https://x-core.by/upload/iblock/051/nxvbti266d2zypfasroje9zcu65sutfu.jpeg",
+        "https://x-core.by/upload/iblock/ed4/17kw25rs8t26sxflk44k9xnurj1q11v8.jpeg",
+        "https://x-core.by/upload/iblock/f22/2u4pbfz9wzsahd1egsul68bnqdowahow.jpeg",
+        "https://x-core.by/upload/iblock/85d/rashd1ccnsvdyzm81dujtd6lske90p1i.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_kraken_v3_x",
+      "images": [
+        "https://x-core.by/upload/iblock/4db/t83n79384zxhvd2z9dxi9s4wi22utli1.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_asus_rog_cetra_ii",
+      "images": [
+        "https://x-core.by/upload/iblock/d0a/k31ewczj8tn00ihktdrbcy4aawwz5eha.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sennheiser_hd_620s",
+      "images": [
+        "https://x-core.by/upload/iblock/9e4/y7ww81b8u2axccjwdzw1za1c82sc5if5.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_air_7_pro_zelenyy",
+      "images": [
+        "https://x-core.by/upload/iblock/1a2/2j6rr4sh1mg6pnogqt41aldno6nj2hnp.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_6_fioletovyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/77b/fuvrxoy7y16x9bdbfbzojsqxt3lh6xp0.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_earbuds_x7_pro_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/684/w79j07lz1tx33gbmvfgxigntvvr803v9.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_logitech_h111",
+      "images": [
+        "https://x-core.by/upload/iblock/1a5/40fqc1ifabgbxuitfo10fhdznnbko3zw.jpeg",
+        "https://x-core.by/upload/iblock/a19/ilbvv9qrczeyw2wioog6n2f3710xsemm.jpeg",
+        "https://x-core.by/upload/iblock/827/e0wy0kp7oj1i1erza0gwwga6kjh6bbn8.jpeg",
+        "https://x-core.by/upload/iblock/4f0/5ib175iyw479jsann2e4qy5oebklfoir.jpeg",
+        "https://x-core.by/upload/iblock/182/jv0rowx8elftt08guzypf8v5irtttr0a.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_barracuda_x_2022_rozovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/080/mjgsa4t64axbouhxgvmdgy86x82798b2.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_redmi_buds_8_lite_m2539e1_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/4a8/oj8k3oamcf7r81ih5gl0mk0t7w5hoshm.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_earbuds_x7e_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/f11/m3rrj22xkz6r8q5sxk7n4c9b1xpddx7l.jpeg",
+        "https://x-core.by/upload/iblock/9b8/yx0ls84zx5k3y4rjbc7hnx4y1xubtmeb.jpeg",
+        "https://x-core.by/upload/iblock/2ff/ljjfsfvc6nxo04fxol5sq6ckgu06w101.jpeg",
+        "https://x-core.by/upload/iblock/2c6/bv7dra4cl8w29mptouyyo356pilxesut.jpeg",
+        "https://x-core.by/upload/iblock/084/pzjuqrmx5gbiv0u2cxdggym3p1o1lzci.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_canyon_onriff_10_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/ba4/efa6bclkyos8wxii47cpfb0v34aryr25.jpeg",
+        "https://x-core.by/upload/iblock/216/mn4gmr0daqjs6comcax3udsbjpewzndt.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_logitech_usb_headset_h340",
+      "images": [
+        "https://x-core.by/upload/iblock/560/p9nurzvlxp3iw370cm26o5yqzf6nt52z.jpeg",
+        "https://x-core.by/upload/iblock/10a/q2v55z1sr2k25sgdoogzq0dpz2l8i9fx.jpeg",
+        "https://x-core.by/upload/iblock/94c/z2sjt31dm6arkt9js02mq4ssznaocg1l.jpeg",
+        "https://x-core.by/upload/iblock/9f3/6lcy45hkwd4pju6nxlbeth0cne2jt1ho.jpeg",
+        "https://x-core.by/upload/iblock/062/hd6gbb54i26tgdsguk5bfqzieylwm53o.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hyperx_cloud_stinger_2_core_dlya_ps4_ps5_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/53a/9slf3wm9uuenxl3t7fsrxro7c5ay80qf.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bass_bp1_pro_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/ab0/k4dcqm15z6zi4628xpaozvsnc2ata1oo.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_epos_adapt_660",
+      "images": [
+        "https://x-core.by/upload/iblock/996/ug40nbrqpkphrrlvwsi0zb3hvjs4yu5u.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_headphones_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/ee1/d7irukxgw0rp6tz7w6fu6a9ki9jz3inm.jpeg",
+        "https://x-core.by/upload/iblock/0d6/1ad6vogdtmrjchuzselvucue9s3onvye.jpeg",
+        "https://x-core.by/upload/iblock/991/801s6df0ufcgy6eqp02zk88uqc52mp7k.jpeg",
+        "https://x-core.by/upload/iblock/037/4dh233tyl4li9st64k71mxnvjhsc6hjx.jpeg",
+        "https://x-core.by/upload/iblock/169/n1gj2h7zy5i0i43o430xz5fg78pqxxbn.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_edifier_es850nb_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/390/hqzr8z712o1ivcbrcbs6do21b7yj4eio.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_ailybuds_lite_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/4eb/uzpnxxt274h5mh8mdhzvy4c3flccke4u.jpeg",
+        "https://x-core.by/upload/iblock/00a/keg4o6b4grt5vzam9k0rp0rwhuh8ig3u.jpeg",
+        "https://x-core.by/upload/iblock/3dd/mii0s2dl2j5qrwvydu5runw4drgsynew.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_6i_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/0e8/b0ls82d49lr29vx7r0w08bbrh6xbfczw.jpeg",
+        "https://x-core.by/upload/iblock/c93/rqm8iz321hlsrb8xvit3fz6jo82rcbzw.jpeg",
+        "https://x-core.by/upload/iblock/dd0/obzuoafoba09ofvyupte50n8vcwqbr1d.jpeg",
+        "https://x-core.by/upload/iblock/d72/q3u7jixsockekbzpohkeb9g1x5zqaqd4.jpeg",
+        "https://x-core.by/upload/iblock/81f/56xh9h309yk0nzhodny0wp3w2wuet7e6.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_samsung_galaxy_buds_3_fe_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/d5e/kelvpu77mjfnywxjhr5mbanahza5b6b4.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_asus_rog_cetra_true_wireless_speednova",
+      "images": [
+        "https://x-core.by/upload/iblock/cbf/mgu3d0cosss8clthvlbxj8s13200rxqt.jpeg",
+        "https://x-core.by/upload/iblock/025/kesei21u8fq0s3pagwa8grr1fbw173b1.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_raskat_standart_2j_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/aa1/iuoeqxgclhshvrij5qjg3279zb7l7hmd.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_t200_lite_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/d1b/plf43l6fhwbp16vhvnql1w0gg1a3m0zx.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_t13x_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/7ec/2d1w3w5ozlgzpjvk3fozh3sxgj4q71fa.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_crossky_c30_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/6c7/eerjqt9kmi0aoeqal29fp9ikoqjvc7xo.jpeg",
+        "https://x-core.by/upload/iblock/5be/cxdtcf7afif4jcvx8ggwb4ptk134g1u5.jpeg",
+        "https://x-core.by/upload/iblock/15d/pwu6fxh6a9376yyrzyhakzxife303v50.jpeg",
+        "https://x-core.by/upload/iblock/5d6/esgt4347cr0ku8j4r5u7ymnivqlmd081.jpeg",
+        "https://x-core.by/upload/iblock/e15/56uc0yjl747v8j8wcvfx8gnynyadb53x.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_logitech_usb_headset_h540",
+      "images": [
+        "https://x-core.by/upload/iblock/deb/jv869mwui43b1mb0os6k0os77eplp25f.jpeg",
+        "https://x-core.by/upload/iblock/71a/qrtyzrojgz93a39msqp9hycymp4efe6j.jpeg",
+        "https://x-core.by/upload/iblock/385/r99x3du855pfl84jbjmus6wrcyliw96l.jpeg",
+        "https://x-core.by/upload/iblock/fd2/hfcbedl03mf3sw762zh258witgmse2gf.jpeg",
+        "https://x-core.by/upload/iblock/1b4/m4droiwxya2ghh1y5u5mgnm1sgjlu1wc.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_6_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/8ce/jdy5krzevibc93z9d21oi93xtb5z7aun.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_steelseries_arctis_nova_pro_dlya_playstation",
+      "images": [
+        "https://x-core.by/upload/iblock/bcc/120bi1rky6xmqga0q7lphewfta9gymp0.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_krutoff_jay_belyy_1",
+      "images": [
+        "https://x-core.by/upload/iblock/a2c/yc2wjt8c5wu3bnx01ftu86val7bm6rkd.jpeg",
+        "https://x-core.by/upload/iblock/21d/klser6ui3a2b2q7w6so7umx44p1120vr.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_earbuds_s7_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/8eb/rbh24t6ukqrl9hqiw165ejj5sl4ke2oa.jpeg",
+        "https://x-core.by/upload/iblock/0c4/ppsffopws4lxk5ttjy34lajzhln755cx.jpeg",
+        "https://x-core.by/upload/iblock/3c1/kuw1qkk47vu14einyb8atzrtnwh3td2n.jpeg",
+        "https://x-core.by/upload/iblock/f83/dt35a0igvk4ibbqdaufxsq6isklxgycr.jpeg",
+        "https://x-core.by/upload/iblock/a5e/1ev25fomjw8p2kerm701mw3chwf4cvqh.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_air_pro_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/1be/i2avnx3w8745sg7beoa1jyn7jorqle8a.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_barracuda_x_2022_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/370/1wat8oiilgjezjaoh1jgr5y9ramtcb0d.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_yealink_wh67_teams",
+      "images": [
+        "https://x-core.by/upload/iblock/5b6/hsv8a2tqf6lrl2tx4km6i6eitf0ke7mq.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_poly_blackwire_3220_8x228a6",
+      "images": [
+        "https://x-core.by/upload/iblock/7f1/ry8sc6mm2ovpgatm4wpnxzfx7bv2m0ys.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_openwear_stereo_pro_m2503e1_titanovyy_seryy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/a0e/p24ahbbap12t65oohnovjynpsrixafd4.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hyperx_cloud_iii_wireless_chernyy_krasnyy",
+      "images": [
+        "https://x-core.by/upload/iblock/a0c/dr0ap6x0vt9mvc2fyho60el59levmem3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jbl_tune_670nc_belyy_kitayskaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/c31/1rh1gf84v76w7vn73x9jccoo53sgeqhe.jpeg",
+        "https://x-core.by/upload/iblock/57d/cb7csi5zrtj160jwn3npx08yzevsrunp.jpeg",
+        "https://x-core.by/upload/iblock/d60/dejhyetecj9tht2uhtn1hnqf6rsdih03.jpeg",
+        "https://x-core.by/upload/iblock/718/ibkp9bnbdpkr07ovdxzmzele4mdzz69c.jpeg",
+        "https://x-core.by/upload/iblock/453/i542ef1nq22sxipr4dtlca6zh3xnxiy3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_headphones_pro_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/d70/xg822tesb6ip56l4ky2pcdinvzmewlft.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_ailybuds_clear_belyy_serebiristyy",
+      "images": [
+        "https://x-core.by/upload/iblock/723/b1rbqp942tscjyqepcyt2bc5amtn4ka2.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_asus_rog_theta_7_1_1",
+      "images": [
+        "https://x-core.by/upload/iblock/29b/b07d3h0ufznsi7o5r7h993gevg91z06f.jpeg",
+        "https://x-core.by/upload/iblock/61b/ovg8p17ch1xky8zx4rpucxvdieeh6q6u.jpeg",
+        "https://x-core.by/upload/iblock/223/op9wc3f8stqciravobxdhcghmqm90kya.jpeg",
+        "https://x-core.by/upload/iblock/5bc/pc4jm3z7go22gagdsiw7tx3ky9n3wax7.jpeg",
+        "https://x-core.by/upload/iblock/e3c/c93izy0613ws9wu93srtsi89oz2f38hi.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_apple_airpods_max_s_razyemom_usb_type_c_siniy",
+      "images": [
+        "https://x-core.by/upload/iblock/8ab/i8gzhl2ss81ql7htxmxsgbx1dly63y2f.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jlab_audio_jbuds_lux_anc_fioletovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/59c/nqm2f59sy9wg2gt1v29fevd0ytdagdxp.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hyperx_cloud_iii_wireless_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/3ec/cwr8bc7ra5mma0hl7ub7oeg5lqv9nrji.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_t200_zelenyy",
+      "images": [
+        "https://x-core.by/upload/iblock/329/lfiei8w09owgjng7r6z6ml7je8qzowic.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_crossky_c50_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/893/qjl78jwfbfzrnou9l2j6h8f5qyyc6p2s.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_redmi_buds_6_m2429e1_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/221/56e388sc42ka9gl3p1joqibjubcaeq6o.jpeg",
+        "https://x-core.by/upload/iblock/c03/n3y78gcuimsw6vvlia645bds58pf77c1.jpeg",
+        "https://x-core.by/upload/iblock/d9c/2566e0ei3c3yg0mjp1f67jhn2js27nk7.jpeg",
+        "https://x-core.by/upload/iblock/ddb/0xea71mryewqs4d5enl5j7cc62qnvmgf.jpeg",
+        "https://x-core.by/upload/iblock/c81/fbhy4hohp9xijfvyr49m0qs0jplxw7md.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_ailybuds_pro_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/bb0/k7zrz57fs9saxdq4nwq4ujqnrpg3pqhi.jpeg",
+        "https://x-core.by/upload/iblock/4fd/nr7k4rkdoiw6gzzywvcp3xgnkd7ic73v.jpeg",
+        "https://x-core.by/upload/iblock/5d3/cjjbp9ignyxuv1rdlts86qb281vl9yg6.jpeg",
+        "https://x-core.by/upload/iblock/582/b9kqvmw04t8e831lwwe74sjcd1vn5qae.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_raskat_standart_4u_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/a7e/8x1pqtbvpv4t652nnzi6di10gxibntxf.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_raskat_anc_1b_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/489/e8cr1eker0fjcwswrk3g41scp7ckhbck.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hyperx_cloud_iii_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/922/4nefpuuwzivrzgx7ihwt325zzqpn65nw.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_havit_h652bt_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/4c1/0bgd43xmhrmjmy5ozqq8tp6eu831x6d4.jpeg",
+        "https://x-core.by/upload/iblock/993/uujk3cxyf4rwwa9j3wejfh1c1clf0448.jpeg",
+        "https://x-core.by/upload/iblock/bc3/bjszlbt3xckfor5vras9ugrnrxwt0i67.jpeg",
+        "https://x-core.by/upload/iblock/d64/xd52p9tbwtrogs4c3zpa1cweiea11ac1.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_epos_pc_8_usb",
+      "images": [
+        "https://x-core.by/upload/iblock/77f/ygekzjy4t1wy55yjnfrkm4uo8mgl9h7f.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_redmi_buds_5_pro_m2317e1_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/cc7/vkpii26kbt9lymtk7jkom4qh9yzl66w6.jpeg",
+        "https://x-core.by/upload/iblock/b70/jsc9etb2wyr2bu4jl2122xde9bgh63rg.jpeg",
+        "https://x-core.by/upload/iblock/840/kfof668d21a4djfrwsb8i44zq90w7ybe.jpeg",
+        "https://x-core.by/upload/iblock/702/sxt6k1f0kn8wc5kr7fuaet60y8lbtds7.jpeg",
+        "https://x-core.by/upload/iblock/61c/k9dsayg5xohl9gvh7ckbps3izo5tc5g3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_encok_w09_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/99e/nuughose9wdi3nx4g3xah3hif5wzcfwh.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_marshall_major_v_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/a1e/tsl77andn9zd01wp7mxbeiefj7jqo0z7.jpeg",
+        "https://x-core.by/upload/iblock/0bc/b6trp5bp0l4y0w0vr2xge1gkb20xo1pk.jpeg",
+        "https://x-core.by/upload/iblock/66d/u1upandxrstm39qev1ctfjebb11hhghm.jpeg",
+        "https://x-core.by/upload/iblock/7a2/jwi287k3npttejhqc2wne3yghttmgk4d.jpeg",
+        "https://x-core.by/upload/iblock/d50/jdhk05e43w534rnarr57zc0elfidla36.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_t310_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/9b5/81afk6vhr3qms43c02j2zuiexgnv5oih.jpeg",
+        "https://x-core.by/upload/iblock/780/bbpmp1ji9l938lx6r5sypb9xhfoc31ri.jpeg",
+        "https://x-core.by/upload/iblock/a89/4f61tjtftreltvf1c5fa7659e3p29oao.jpeg",
+        "https://x-core.by/upload/iblock/2f3/fdowimn3oc4250vnt3j68bsqbsrbrd5k.jpeg",
+        "https://x-core.by/upload/iblock/028/ql7lxbos0pjeu46a7evhqgi8knnxw13q.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jlab_audio_jbuds_lux_anc_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/619/ytahp73okvdo3lxorkzb3dp8esd194zs.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_redragon_lamia_2_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/1c0/2wr3wg0uri83z7d0c4onrgrsk4qz72s3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_h3_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/88c/kcezhwzxyo83ld67zimp5cdee5k95ig1.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_nothing_ear_a_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/833/oe0y1hyn3mxlzh5mn5dw0mplgna9kpi8.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_krutoff_j69_chernyy_krasnyy",
+      "images": [
+        "https://x-core.by/upload/iblock/745/hmppem7mgtol028il0i8g81u1axoe9rb.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_ailybuds_clear_chernyy_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/5ce/9f1fx0lioanlh1m70lx8z7hrmpbka0p3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jbl_tune_670nc_sirenevyy_kitayskaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/9b0/m57mibii2sf77jdqkp3guwxo6wwj8r6r.jpeg",
+        "https://x-core.by/upload/iblock/73f/7118cqzphdh2ldeeyvllkiavajh8ibs6.jpeg",
+        "https://x-core.by/upload/iblock/d70/mryyrtv3415hnjj0k7ltms9gpjdvggsf.jpeg",
+        "https://x-core.by/upload/iblock/9a2/asgg8c5pyu4sthx35ypzkz2swyviyfpb.jpeg",
+        "https://x-core.by/upload/iblock/f2b/l03pvrgfjwx1d2e9azvvxoqopueein2w.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g560_naraka",
+      "images": [
+        "https://x-core.by/upload/iblock/a97/rj6tgjvdo9wsgw30pmla77ob13bh2bu9.jpeg",
+        "https://x-core.by/upload/iblock/06a/f88j6k6u9wdljgjertfhq7f7m1zmgty4.jpeg",
+        "https://x-core.by/upload/iblock/07b/ywodha62roxvzrcg6vgo9kf4hqvhza83.jpeg",
+        "https://x-core.by/upload/iblock/b83/oetclh59u5hzggg0brnfobbi2q3jodow.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hoco_es56_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/ea8/5v10y1dujx0iooxtqcsc5jikr4yvw92s.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_epos_edu_10",
+      "images": [
+        "https://x-core.by/upload/iblock/385/99912s7vsxq52w775g658tvdhlxh3c46.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_h3_temno_siniy",
+      "images": [
+        "https://x-core.by/upload/iblock/e4e/uk2aylbyagwbuoh55mifc3kvu0st27bd.jpeg",
+        "https://x-core.by/upload/iblock/01b/dyxrql4mihb1g5aip8h9hhrunj3alcd8.jpeg",
+        "https://x-core.by/upload/iblock/bd9/bo4x1uurww9eymhir2asttmn2z1qqwct.jpeg",
+        "https://x-core.by/upload/iblock/d9a/2iwi9gs4169x9lhsnzrhp2yjs3i8hoz4.jpeg",
+        "https://x-core.by/upload/iblock/d85/sho227n51ykrd2man22hagihcuv93440.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_fstyler_bh350c_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/cb1/qaprdgsmg7ab01rhf727splht7uw0vzu.jpeg",
+        "https://x-core.by/upload/iblock/acb/0mhaptvc26f4iypb3xzbqb9o39bz7ogf.jpeg",
+        "https://x-core.by/upload/iblock/2c7/azhhsw9765gd619s21348p2eqmyht4cb.jpeg",
+        "https://x-core.by/upload/iblock/3cd/dt2n5o3peifole0f6xhsptdrvdq6pryn.jpeg",
+        "https://x-core.by/upload/iblock/b27/d44bkg5h1xjnrxtupz0hcep14adtdf4h.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_comfortfit_hu_50",
+      "images": [
+        "https://x-core.by/upload/iblock/a4b/tk3ukct1ed56an1clhzwojg22g8khyd0.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_gembird_ghs_sanpo_s300",
+      "images": [
+        "https://x-core.by/upload/iblock/7ff/yaz9krjagjup16cttn6pozqdjdeja3h1.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_redragon_hylas_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/1b9/fk0bhjjh13vpgcqm7aao297snfnphnmr.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_nearity_ht302",
+      "images": [
+        "https://x-core.by/upload/iblock/ff8/x093qqkzieg005m0urf9tf8tm1o1zpao.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sennheiser_accentum_true_wireless_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/9de/jj7oo9fri2b3jt52r9jht80y5j8y90yr.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_redmi_buds_6_lite_m2349e1_goluboy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/6d5/ij49gpz96qa47efrp60s1iejbxmy5iru.jpeg",
+        "https://x-core.by/upload/iblock/923/8fjbtcklfubzhtbftff4r1q5n0ocrfmr.jpeg",
+        "https://x-core.by/upload/iblock/bb7/0yv4aysk3cl3ua2dvxqjedv190rou5og.jpeg",
+        "https://x-core.by/upload/iblock/525/1274q92yrkc6gdbkc5a01buolsghvlqb.jpeg",
+        "https://x-core.by/upload/iblock/c28/70u0v3t4t3ynykfjamtknlzdiywy8j11.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_ailybuds_pro_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/7cd/i8b7wsrw5wvf5jwimz9y4wvzbe2a9tsn.jpeg",
+        "https://x-core.by/upload/iblock/78f/yrft0hgkvhunx3udmj8gah5aa3d18cuk.jpeg",
+        "https://x-core.by/upload/iblock/0b3/0ce0e70fbp2nvhp8ipgepry9xddr761z.jpeg",
+        "https://x-core.by/upload/iblock/ea3/c56flaec9a6k660yhhwca0ebpjrknblg.jpeg",
+        "https://x-core.by/upload/iblock/5cf/2qv9l09ske877inxwf9oviftcz87y7hf.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_remax_rm_502_zheltyy_1",
+      "images": [
+        "https://x-core.by/upload/iblock/a1c/d57rhjkhvcekwm8py48yeamle8qseniv.jpeg",
+        "https://x-core.by/upload/iblock/db3/r7y0ri2fi08owxon6jd87gokviqafnch.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_ugreen_hp206_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/e42/57qcookwxfcwgolk6ytzobj46cmz23cr.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_ailybuds_pro_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/8bd/gqebmz83z9jij3ov4kw06crwwhtlbhz3.jpeg",
+        "https://x-core.by/upload/iblock/e08/dp6xmp3v618awzuxnuaifffaizqsgtyb.jpeg",
+        "https://x-core.by/upload/iblock/74f/i2o6yscu1rh1oa7mnl0e4wugnbelmhak.jpeg",
+        "https://x-core.by/upload/iblock/aaa/lzg3icnks5q2je23mbn1jepw9ivu5wwe.jpeg",
+        "https://x-core.by/upload/iblock/d59/b3bzydp64r8lg2f77kpf3rs29qk5hdyt.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_epos_impact_460",
+      "images": [
+        "https://x-core.by/upload/iblock/6c5/zb6d26xy6bdmilnkymzh7cprmdxh7vay.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_fanvil_ht301_u",
+      "images": [
+        "https://x-core.by/upload/iblock/6c4/gq4gq5b2t43d7tzgqpl8cygoxenjqhtg.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bh300_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/3ac/v22z6cmo0upaf17ppd9smf73qsysezk6.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_epos_impact_1060t_anc",
+      "images": [
+        "https://x-core.by/upload/iblock/516/g3lk7xn0o58ljei4ngmoizsmmmovzmmf.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_openwear_stereo_pro_m2503e1_grafitovyy_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/6d0/mvzhk8gx7v5bj02evgn96yjyrokqpw07.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g580",
+      "images": [
+        "https://x-core.by/upload/iblock/55e/hve6ntiy5o9aij7jwbicgbietbf2amxx.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_redmi_buds_8_lite_m2539e1_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/b07/hvl2i8ev0bko9nxz38wb9ye04c5blbm4.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_crownmicro_cmgh_3000",
+      "images": [
+        "https://x-core.by/upload/iblock/090/751e8d7n9v2zpff6r1fkisvdi8sv29sy.jpeg",
+        "https://x-core.by/upload/iblock/5f5/hwnefo63oc4w67yjgv34cssdaa1r79fu.jpeg",
+        "https://x-core.by/upload/iblock/00e/62m2412r6hmh1f67do1mn3wha3b2wjhy.jpeg",
+        "https://x-core.by/upload/iblock/9df/wpdbsyxv9ud10ep3z264u256uewhb16g.jpeg",
+        "https://x-core.by/upload/iblock/443/50y9b6miza9s7vbx8959u2da4wlph798.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_encok_wm01_plus_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/807/2aiz7ttl6dw9t34ylefrpqmq5sk6g3bm.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_buds_5_pro_m2437e1_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/826/39mwoyhtiw34rc75ordr1fphupqk6rg9.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hyperx_cloud_iii_chernyy_krasnyy",
+      "images": [
+        "https://x-core.by/upload/iblock/6ae/wgpnj6qll9hj4oqcyl7z21szx2sww1xa.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_logitech_h390_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/3a2/2tq41h0h6w3uylufyn88i9pq0ppofsnj.jpeg",
+        "https://x-core.by/upload/iblock/250/tv42tfzyszn7upiyvhv1ozqkds7hvngj.jpeg",
+        "https://x-core.by/upload/iblock/cdd/d3rd1fpgocloz5jr1lwbt03vfrt2ki9n.jpeg",
+        "https://x-core.by/upload/iblock/7e8/zhhkzg2g1sk8htic3sm6tht3q7mcmmwf.jpeg",
+        "https://x-core.by/upload/iblock/f0b/0007jy3k7uwwics5zvfsgp1zj4ptwp68.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jlab_audio_jbuds_lux_anc_zelenyy",
+      "images": [
+        "https://x-core.by/upload/iblock/246/y5deknufwnwq9yax92p6ie4xx09z9sap.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_h3_sirenevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/5da/m4hxugyix02argr6b6yys1y32mv6oot5.jpeg",
+        "https://x-core.by/upload/iblock/829/ln0fszrsj3a51v6m90rwfshfzkfhnslt.jpeg",
+        "https://x-core.by/upload/iblock/735/bgvgrs39jelptnr9g6yxua4gr7wms3xl.jpeg",
+        "https://x-core.by/upload/iblock/4c8/f7x4qv06nysugb5y4ctsh37ul33yhfoj.jpeg",
+        "https://x-core.by/upload/iblock/940/u1f3msocicjc512tjypqmn7wx7ciencm.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_redmi_buds_6_m2429e1_zelenyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/cdc/4thqywow3lg84506jjj32g0n2gdteepl.jpeg",
+        "https://x-core.by/upload/iblock/baa/j8ckkh7gl5uukzops0333xo8iwqmeobc.jpeg",
+        "https://x-core.by/upload/iblock/8f3/ch1ts6nv3zhbr3furd4dvpltuj6jiwof.jpeg",
+        "https://x-core.by/upload/iblock/811/5p6rlf7oxsffpwsf0kxrg49a4t8a6rvx.jpeg",
+        "https://x-core.by/upload/iblock/fcc/n8uvsl5w1s68f6k7ox8xxvnumzxyv7sx.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_kraken_v3",
+      "images": [
+        "https://x-core.by/upload/iblock/ae7/gl1t6g0ajdzx6jcirzh8emv79o1yzeys.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sony_wh_1000xm5_temno_siniy",
+      "images": [
+        "https://x-core.by/upload/iblock/ad9/g42a6ah87vjzpky4cwgjk80ivhutv2lh.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_apple_airpods_max_s_razyemom_usb_type_c_polunochnyy",
+      "images": [
+        "https://x-core.by/upload/iblock/a0d/95ql7bydarmfra8g1f49va0t5ptmzbtu.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_remax_rm_505_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/1cc/pikik6m02zqhvq8lo7unom05szfw6p9g.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_ailybuds_pro_temno_siniy",
+      "images": [
+        "https://x-core.by/upload/iblock/fd9/h39m4w26irn00cngbijt2g8cpm9jmrc6.jpeg",
+        "https://x-core.by/upload/iblock/687/eo3rrg152476eo72mxb260p2acu3waqi.jpeg",
+        "https://x-core.by/upload/iblock/570/f29pn8qjz0iuioz6b6ggiudsrbcri77s.jpeg",
+        "https://x-core.by/upload/iblock/d2b/i3rkmbin9qlyd1k6y2o7w9v5350cy0zt.jpeg",
+        "https://x-core.by/upload/iblock/f20/g2y2qz3quv7yz90v33lwmxqpz53lcd9s.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_comfortfit_hu_30",
+      "images": [
+        "https://x-core.by/upload/iblock/8f2/adceydxipb5o67oku9n3d933duf28nko.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_krutoff_j69_chernyy_siniy",
+      "images": [
+        "https://x-core.by/upload/iblock/977/530vg4t0a7dw1ruv66tyb8bxn6jei6rx.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_technics_eah_dj1200e_k",
+      "images": [
+        "https://x-core.by/upload/iblock/f4b/jm12e07b9n2lmzx6pe372k9755rouo6p.jpeg",
+        "https://x-core.by/upload/iblock/e79/0zp15xy1xqbi7ahogmgdzpdgp60ujl3v.jpeg",
+        "https://x-core.by/upload/iblock/085/okah6ot1qu5d8bk67qvtnq5ojgcf7ww1.jpeg",
+        "https://x-core.by/upload/iblock/76f/ymrvj0zqzuv6ptfxx9n4poz2vy8yk5l6.jpeg",
+        "https://x-core.by/upload/iblock/fcd/zhqw532g98w02tzlun4ivpojncmkkzzi.jpeg",
+        "https://x-core.by/upload/iblock/8bf/1ydv452admmy3f3hg12gri39s9jbtqh9.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_6i_sirenevyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/c44/ogi3s6winxxtt32e8tbzs3fyh0ukvpv5.jpeg",
+        "https://x-core.by/upload/iblock/de3/3c7fvp5m7e3zvsqe19r2aopdgle6aewf.jpeg",
+        "https://x-core.by/upload/iblock/2a9/4o260gvuv4mrrm088xwrgtkhln94asm1.jpeg",
+        "https://x-core.by/upload/iblock/c03/ofw7wq9dtpdxvyp9cnwylgb3h358xawa.jpeg",
+        "https://x-core.by/upload/iblock/510/x8agh8ojm20nyi9m6o7se97fy1e3mzxr.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g200s",
+      "images": [
+        "https://x-core.by/upload/iblock/494/2nvpqp0fta7ufrke4mxc6wdzwnu9c19o.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_technics_eah_az40g_s",
+      "images": [
+        "https://x-core.by/upload/iblock/3c9/st38j17mjyseyrbh16phjqzmsvx6zbpm.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_asus_rog_fusion_ii_500",
+      "images": [
+        "https://x-core.by/upload/iblock/566/pthdt7bhbvwqthjv1f2ffrfwdf68pceh.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g521_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/c5b/ymx1846uiijroxr05n7hcspym4bvwkj1.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sennheiser_accentum_plus_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/c82/yoln0wzeyl7a2rb2xpeh4uc0v616mzz8.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_airnora_3_zelenyy",
+      "images": [
+        "https://x-core.by/upload/iblock/82d/1wnost4x7nw3hf8kb6f3aizn7aetzryd.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_melobuds_neo_siniy",
+      "images": [
+        "https://x-core.by/upload/iblock/aff/xw2d0k598521n5dwc9qwlcwi08lwdw7v.jpeg",
+        "https://x-core.by/upload/iblock/9fa/drfahdeo07ymngfd1wh6uraoetgtcxyr.jpeg",
+        "https://x-core.by/upload/iblock/432/e8841u1yzawog10tfohyku8votsooyzl.jpeg",
+        "https://x-core.by/upload/iblock/661/ap0megu5kjmjxpyio29j01hpxs0mnd5r.jpeg",
+        "https://x-core.by/upload/iblock/c31/pqd1umr681abyk9y070nm9ky6e7rqs6f.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_melobuds_neo_oranzhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/3f9/wpclz1cpdsq0zejd2c30dm5utykhw134.jpeg",
+        "https://x-core.by/upload/iblock/886/1blaoeowp6pd5392ste7l8aw8l1s6hau.jpeg",
+        "https://x-core.by/upload/iblock/e7d/5910wo3m9xvpknntkcpmnmpvvftmwrt2.jpeg",
+        "https://x-core.by/upload/iblock/3b2/1kc821a6944ukjmzj120q4zz59fqlxv0.jpeg",
+        "https://x-core.by/upload/iblock/bdc/sxo9uwpt4t3usf49bvw0r9qtxe62ihe3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_krutoff_jay_chernyy_siniy",
+      "images": [
+        "https://x-core.by/upload/iblock/329/c9nz36k94o7s0m3l0ltmwht7iqa238zp.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_logitech_zone_wired_ms",
+      "images": [
+        "https://x-core.by/upload/iblock/889/y3bfkbqh6vga24851vdfc0dsbtpc9bd8.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_exegate_960_usb_stereo",
+      "images": [
+        "https://x-core.by/upload/iblock/3c3/23fzq4xqq5uxx8uk9wiolzqz6wcvkztl.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_h3_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/75a/j8nvpr10zbkx3ab2lia37gs4gbhni48e.jpeg",
+        "https://x-core.by/upload/iblock/023/33jr644qn23dkstqr7rajmu8zccd5457.jpeg",
+        "https://x-core.by/upload/iblock/e96/0rnbletr819fn952d7v3390udfk1mcsy.jpeg",
+        "https://x-core.by/upload/iblock/bee/uyja1gj3tlez7h5lfnfg29k4118l28k6.jpeg",
+        "https://x-core.by/upload/iblock/123/ek3vw4z1yod1n344g9rst2ree3abmsjg.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_barracuda",
+      "images": [
+        "https://x-core.by/upload/iblock/5b7/prhq29nuxr451mck409euo393hpvopbx.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_t200x_goluboy",
+      "images": [
+        "https://x-core.by/upload/iblock/89e/rpecass0fv4q4u3vaq1qenz0xpf7xzg3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g220",
+      "images": [
+        "https://x-core.by/upload/iblock/a65/5vmfvwwk1y0zl128735t0mo7xacwagyv.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_krutoff_j69_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/777/xjivvcl562temf9fgx1yvvym4hmwrfkp.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve_65_te_ms_mono",
+      "images": [
+        "https://x-core.by/upload/iblock/964/1mrakbj6nqu7yd7fk7lhedbyw8k64lzg.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_opus_x_zelenyy",
+      "images": [
+        "https://x-core.by/upload/iblock/76c/v1fpo7aspuj4z7422mkd3qxe0z4x338x.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_krutoff_j69_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/4da/cpmfjsxneq90ltpxllcbvx6e5smrlngv.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_tecno_true_1_air_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/b19/piz7fkfmfgjcr5jg21x6q5ch3vcvpx62.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_defender_gryphon_750_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/f30/5pbu29fab28j6gqn97e4gojptlwuq41l.jpeg",
+        "https://x-core.by/upload/iblock/3e6/qpre6wyh6cphy617jd6hfru18npw73ds.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_fstyler_fh100u_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/ba7/3iv36yisgcu92nvlbhe7r6n75pafj7jz.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g560_chernyy_krasnyy",
+      "images": [
+        "https://x-core.by/upload/iblock/1f9/ywvwph00gut4smcfxaedv7o2hq4jnv6t.jpeg",
+        "https://x-core.by/upload/iblock/e22/xu23wypixyox0wj31omhkfu4kuuj9fai.jpeg",
+        "https://x-core.by/upload/iblock/5d9/83hbvaboy840938jl736y74xujfylyq7.jpeg",
+        "https://x-core.by/upload/iblock/cae/7kmsth7bzvtyua8bk2lb7fgn22l74270.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_melobuds_pro_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/93b/kz8bx5ua7topp0t59ofevqefd4qy9vzi.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_melobuds_pro_zolotistyy",
+      "images": [
+        "https://x-core.by/upload/iblock/c5c/uqxgh91rzrcnov78v8abqo9w6vpjg2tj.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_fstyler_fh100",
+      "images": [
+        "https://x-core.by/upload/iblock/99f/88f9sjyw7of1c7091hmjtn4z05z4r0h5.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_cmf_buds_pro_2_siniy",
+      "images": [
+        "https://x-core.by/upload/iblock/2f5/r5m8glesau98deuopnuqdx620a84udg8.jpeg",
+        "https://x-core.by/upload/iblock/99a/cqh1rw8j7ozh3ajadk3zfygoecmyjksg.jpeg",
+        "https://x-core.by/upload/iblock/cb8/drpju02kf6f26mi7h9p7rmzluy7xc1fr.jpeg",
+        "https://x-core.by/upload/iblock/9a4/zdpjghir66vbtzd83krm9be6l8xnfr0u.jpeg",
+        "https://x-core.by/upload/iblock/938/5m2d9cypey0fosm01ifxuc25ycnaleb6.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_marshall_major_v_kremovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/958/3u6vj8ksj0wjfjk05v5856hnpiupua03.jpeg",
+        "https://x-core.by/upload/iblock/1d8/cu8jkax5fp2bfy1im79lc99dtq2sbi9h.jpeg",
+        "https://x-core.by/upload/iblock/974/cy7e5nccaodraoidabs7s66z0hkst3n4.jpeg",
+        "https://x-core.by/upload/iblock/016/t720go3qx35gxxf1u06950i5mnjp1k0t.jpeg",
+        "https://x-core.by/upload/iblock/d42/448lhug5wwb34g5jk5izmu0ytnkn9wwf.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve_10_usb_a_stereo",
+      "images": [
+        "https://x-core.by/upload/iblock/191/eqrygsd610m4l3a8owgghiv4w8dm91zo.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_steelseries_arctis_nova_1_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/933/ouo2r9ctgq5gn2h94hya2j0o7prn3o15.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sennheiser_hd_400_pro",
+      "images": [
+        "https://x-core.by/upload/iblock/b8e/zipkuqt6jgcbat33jsds48hz1hxfgaff.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve_20_se_ms_stereo",
+      "images": [
+        "https://x-core.by/upload/iblock/191/ld3wre9s6dzm8g1be887kqk0kpgt0d24.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve2_40_se_ms_duo_usb_c",
+      "images": [
+        "https://x-core.by/upload/iblock/d9c/mo4e4eit2hjo8jc85lew2hrkzk0wy0ww.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve2_65_flex_ms_stereo_usb_a",
+      "images": [
+        "https://x-core.by/upload/iblock/3df/qp3c80s1zr7xqerhbo5c1rpkc4x7ql72.jpeg",
+        "https://x-core.by/upload/iblock/755/m959kptm9gyywm6bjgy91vdytssactt3.jpeg",
+        "https://x-core.by/upload/iblock/a48/27yfgcyuq0heyl7f89wv5fyz85uf2qd2.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_epos_impact_430",
+      "images": [
+        "https://x-core.by/upload/iblock/145/l6z9qgvqpiebq7mce4bk8c282guxq5h2.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_biz_1500_mono_usb",
+      "images": [
+        "https://x-core.by/upload/iblock/2a4/qbt37ie1szpgtcp9dgbp4cc5fxkzpton.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_fifine_h9_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/e84/ithcymshd3fbalr0reksu1191c37b4td.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_air_7_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/669/ma4b4v46r49wguk9y0nzopce388p7a3t.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_redmi_buds_5_m2316e1_goluboy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/6ae/9q4w16m602okn7d4j0voq3ca5krt9p5j.jpeg",
+        "https://x-core.by/upload/iblock/444/ts3wx2z6betmfu51yga4u03xy5c7v7p5.jpeg",
+        "https://x-core.by/upload/iblock/c4b/e77l3f21oiutk65ul6oeiit4muo70sir.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_mc750_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/2f7/jqkg6y5u6mzu5v75onq93qz8bgw4hho3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g575_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/25d/mphzdo7belc13g79gd57z9aaykvm1xzv.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_zalman_zm_hps600",
+      "images": [
+        "https://x-core.by/upload/iblock/462/pbaruljx7ys4lmystwglucgi3dqeo25z.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve2_40_se_ms_duo_usb_a",
+      "images": [
+        "https://x-core.by/upload/iblock/e11/4xiirsdfshhfby4n3v4h67wz6w6f1j4s.jpeg",
+        "https://x-core.by/upload/iblock/f6b/z8z13d4123esz8er9ygcx6gbiev40ehg.jpeg",
+        "https://x-core.by/upload/iblock/5e3/rky9wj4rtg9tvox4kkyqi0rmxpku3oz9.jpeg",
+        "https://x-core.by/upload/iblock/957/6lr3jx03autd30qj6oih94qgd5u8pzvh.jpeg",
+        "https://x-core.by/upload/iblock/7d1/7qwwbm5myvybzu0i4qvltcmqpcvqutgi.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_asus_rog_delta_s_core",
+      "images": [
+        "https://x-core.by/upload/iblock/abe/qxo7v9vk29hk5vuwcinl0ked3k6bqor8.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_gembird_mhs_g30",
+      "images": [
+        "https://x-core.by/upload/iblock/952/nyexoep3m7pahm32cmd6z4d30l1f3p3e.jpeg",
+        "https://x-core.by/upload/iblock/f85/7cb441j8rsmib57y54ip862r42wtm69z.jpeg",
+        "https://x-core.by/upload/iblock/ca3/3nypp4eb387igdyheyfe9vhf6kr76nsq.jpeg",
+        "https://x-core.by/upload/iblock/c56/oe6mik2f2d4m04djrojsvqgoazjj3g3y.jpeg",
+        "https://x-core.by/upload/iblock/09c/qatrgngssl0qy2o5meq2gn8ru1lrlpsc.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_crownmicro_cmgh_3002",
+      "images": [
+        "https://x-core.by/upload/iblock/5e5/3ifgj4s27c0dfk3qgm1ijgsfe9zwzpj4.jpeg",
+        "https://x-core.by/upload/iblock/4c5/uxjsn7d0iuxkup6oy757ev1ff9o2ehn8.jpeg",
+        "https://x-core.by/upload/iblock/d1f/o09ixpeltfsw7i21wxkqmmobjutfkcjl.jpeg",
+        "https://x-core.by/upload/iblock/e96/1uijnviy43h2gihph5h5jwg1ytusu534.jpeg",
+        "https://x-core.by/upload/iblock/0f1/iqneyk2kab41ls768xbx7lwnod5arn3q.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_melobuds_pro_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/fc2/443lu207m3xrlobgrlgozj5z8bb8w3c8.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_infinix_xbuds_n4_pro_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/cb8/1ns0w4ljit3xrygmesc5onz0xabndp5n.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_steelseries_arctis_nova_pro_dlya_xbox",
+      "images": [
+        "https://x-core.by/upload/iblock/e18/3cw9zwzd1czx9e1m0lwx1gy8ti2j4ssw.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_xiaomi_openwear_stereo_m2319e1_chernyy_kitayskaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/6f5/y0wljyat89hwawajtjinatjln4t5iumq.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bowie_wm03_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/c9b/veamxvs6mijtx916whz1dysgcznmvq0k.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_h3_lite_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/489/kek4yj7c2ttz2sibz0djjkltliakgjf5.jpeg",
+        "https://x-core.by/upload/iblock/b4c/h39jo0u8duuqneg910qfqt32a5558rdp.jpeg",
+        "https://x-core.by/upload/iblock/9cc/jezuf939biccwpv3pdcupfszova9rnbw.jpeg",
+        "https://x-core.by/upload/iblock/058/j6c04jdgqrnrwg0eb846vfb437s94bjk.jpeg",
+        "https://x-core.by/upload/iblock/276/c17ezy00mb2pnld694h34owx57spkuqv.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_air_7_pro_temno_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/f99/thcc44iwmknculprp9ws6rtkby4ur427.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_t13x_fioletovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/311/iywygkaibgg0aff564xmx5hh32fr4uxg.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_fifine_h9",
+      "images": [
+        "https://x-core.by/upload/iblock/d6b/l454sl5dqjcwhop0tz9ck0wugz4lhpip.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_raskat_strike_3u_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/2ff/51l3e662uexzefzscjvixcr2754ys71g.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_edifier_neobuds_pro_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/bee/drpncpwrdfpdwk1b24qyxc42psuf9v8m.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve_65_te_ms_stereo",
+      "images": [
+        "https://x-core.by/upload/iblock/ef6/ns9z54t50w07c6zybsbac857qcinnmh0.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_air_7_pro_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/ffe/vk5g9qlro622gp0z4b0bdzdlo07o76th.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_fiio_fd3_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/f5c/pmx9bp5htwhv1j7ky6oq626stydaixfy.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sony_wh_1000xm5_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/4b6/550xlcycgs3gtjjtrdlppk3kl03xi9t8.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_panasonic_rb_m500bge_c",
+      "images": [
+        "https://x-core.by/upload/iblock/6ae/hc0gm112qszi92q0axhwzhwkns0wdp2c.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_encok_hz11_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/f02/jpu9mazubdt2am2n9gejjaxirwzyek54.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hoco_w25_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/896/a47skf548fhcljsst1191mv5n02fcib2.jpeg",
+        "https://x-core.by/upload/iblock/3fd/lx7vk5sdye61nh9pkge6hm3s6tcig1ry.jpeg",
+        "https://x-core.by/upload/iblock/eda/jia9gyvdjwf1sewf1hsh8hqlic966a3c.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_edifier_h280",
+      "images": [
+        "https://x-core.by/upload/iblock/3b9/lor9pzwve6tt350aqv2zt5surf42e0lr.jpeg",
+        "https://x-core.by/upload/iblock/173/g2ssa3mg2q26jbk00ttmr54iq3g9f5qn.jpeg",
+        "https://x-core.by/upload/iblock/f58/jow6wbngmlaims8h0462s8h0o8vtiwbx.jpeg",
+        "https://x-core.by/upload/iblock/115/k8vkix4t1bz72tc4glouya2v6k7d0x62.jpeg",
+        "https://x-core.by/upload/iblock/909/srrs0tdaltyex7ew9y0b7fj7v6yqxmel.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sven_ap_010mv",
+      "images": [
+        "https://x-core.by/upload/iblock/991/nn5hg4m909yfaitv2c8zjozofu8lbk4p.jpeg",
+        "https://x-core.by/upload/iblock/88c/22m0o6w7cjmodny95ywyh98fkqjg2eha.jpeg",
+        "https://x-core.by/upload/iblock/5fb/tcf57n1pfj0iwd4go8qja4qga8stp9cq.jpeg",
+        "https://x-core.by/upload/iblock/377/1yqhnhsx45ss2m5jed8b4unjoxkp41b5.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sennheiser_momentum_true_wireless_4_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/2d6/qeo65baeomg81e79qlm4io2yrsxfr605.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_havit_h655bt_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/05c/1bqgqeo4ca48oxgeafjvyaatbznaswiy.jpeg",
+        "https://x-core.by/upload/iblock/3ed/i00bcn2w3lx00r2hgjgi2d429d2nyw3r.jpeg",
+        "https://x-core.by/upload/iblock/de1/smvu6nizx9l4n481wqvbfl61eye7gl4c.jpeg",
+        "https://x-core.by/upload/iblock/126/9j5f2xscx369edk27yxflwayslxvb21e.jpeg",
+        "https://x-core.by/upload/iblock/9ad/0bkm86n6fyr0ubhzxkue4jjnxj2xzwd5.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_gembird_bhp_ber_w",
+      "images": [
+        "https://x-core.by/upload/iblock/71b/e1lv4t7z4qup6sk0dxd6q11d2ra1x9w2.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_melobuds_n30_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/ed2/lmqgy4g30x21xu3oxda69ipac7bhkpg4.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_cmf_buds_pro_2_svetlo_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/5f6/tyn1bbtkferedeixal6xwo6ra2gsupz3.jpeg",
+        "https://x-core.by/upload/iblock/168/gbnrnw5esk3bcmgzt9objoz7rqzpj0zg.jpeg",
+        "https://x-core.by/upload/iblock/6dc/uijn0f8s5xb9c40wwz8sntf0g2vqr8f3.jpeg",
+        "https://x-core.by/upload/iblock/159/gyszl8qkbgv0181q6l8dt3nrie1di12f.jpeg",
+        "https://x-core.by/upload/iblock/9a5/gkvp5e2z3xufj215ufvdpwdiivjqyqnz.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_ugreen_hp206_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/6c5/ey4miqabannhktivxkz2lj6w14rdjzoj.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hoco_w25_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/023/7wqozdjittq1wbx6ejjnp4bqo5psx418.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g260p_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/93d/q8c9kbk15lltejyiv3w3q7vpcr4trqfa.jpeg",
+        "https://x-core.by/upload/iblock/8bc/vaw83ccl23hnm1zcl10gcjons181zirv.jpeg",
+        "https://x-core.by/upload/iblock/067/888lt32bjkmku7i776btla52p2on452w.jpeg",
+        "https://x-core.by/upload/iblock/767/u7gr0gjo2hx3zn23qfu7s86vxdyuef1a.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sven_ap_930m",
+      "images": [
+        "https://x-core.by/upload/iblock/acb/qx8v7q8gwqivi23ah1fqdrlnj0dn5hfd.jpeg",
+        "https://x-core.by/upload/iblock/b5e/hgbanlgksmhoysx98ce9wcg37lxtk05l.jpeg",
+        "https://x-core.by/upload/iblock/890/ojglq598qj9tm23p4kyxswgyzflut1v1.jpeg",
+        "https://x-core.by/upload/iblock/860/zi9l662rcralqvxp1gxnmywpuz1nd9w8.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sony_wf_c710n_rozovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/c7b/g0dbc710quz48atcvd1i4b4bcedh7n78.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_steelseries_arctis_nova_5_wireless_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/594/us3wulydiettkbzpboajc26u28qcirfl.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_h2_pro_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/8ce/9j59a34v58x807k3w2h4ujwroe6ir7xd.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bowie_mz10_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/4b0/oummm3a1hf83799ojsu8x213w23srtr3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g535p",
+      "images": [
+        "https://x-core.by/upload/iblock/bb7/8jf4n8tj1e3wirxxyyk9zxseo1gf64k6.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve_20_ms_stereo_usb_c_a",
+      "images": [
+        "https://x-core.by/upload/iblock/7d7/8c74sgtgj5oafzxby88qxi4gslzv281i.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve_20_ms_mono_usb_c_a",
+      "images": [
+        "https://x-core.by/upload/iblock/679/zt8oynr369pznro35lg6qxa6kl4omxze.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sony_wh_1000xm5_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/621/ojgdixaywqylp0jdpg9zf4mqy6rpj6ld.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_redragon_themis",
+      "images": [
+        "https://x-core.by/upload/iblock/dc6/9hyrtfx4g46o1tye3q5y6mk7tqu5etcm.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_defender_freemotion_b665_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/0d5/64mnv12oj1mhi8vomjfdptid0bepco9v.jpeg",
+        "https://x-core.by/upload/iblock/881/2oisp9r5k3y72a39qs43vlfyjlegjw6u.jpeg",
+        "https://x-core.by/upload/iblock/d04/a98seg1rfg0qjttxn07wnf2jjwkiy2qw.jpeg",
+        "https://x-core.by/upload/iblock/e01/w2pdtnaq3vx9x02s0zhn0eoxs6bsd3ls.jpeg",
+        "https://x-core.by/upload/iblock/3e4/hvvyx9jy6ob9cz5y8w4uhce1nn2fjrkx.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sony_wh_ch720n_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/810/cezphtjtnw3k4rqujmgapgowovhc014m.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jbl_wave_beam_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/ec3/flzdfz1vctd2swbp3sls3vky336i2uoi.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_dark_project_hs6_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/83d/vaz4v80hh6bp13ta7k1qppjzu9qffmz7.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sony_wf_c710n_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/2c2/utezyu66ub61leukb87hftqk7pu4xgy5.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g535_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/da9/03p0wxk8nzfim04y1hjwrc3ql185gkpv.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve_20_ms_mono_4993_823_109",
+      "images": [
+        "https://x-core.by/upload/iblock/053/gw6qbsneom11svgt7cwtiq8vr50i133z.jpeg",
+        "https://x-core.by/upload/iblock/122/4mmezcxb1jlw8ziyhvd25eaw8bs3z35a.jpeg",
+        "https://x-core.by/upload/iblock/43e/72hgzb74u11n2qmuj8jptatzfhpc7zm2.jpeg",
+        "https://x-core.by/upload/iblock/bd0/jloo5m2ad3i3d2derd14sc7ccj7fzhei.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hoco_es56_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/ced/d8hmqv6uxtn90bi81aj882mzpevcu1l9.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_fanvil_ht301_rj9",
+      "images": [
+        "https://x-core.by/upload/iblock/de7/geqkzvihxk8so9syz4gzsuzdva76uu39.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_6i_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/e47/g5tgd2q2jjld1tngm97zo1p4kz8pe7i2.jpeg",
+        "https://x-core.by/upload/iblock/33f/ab6pszlwlfsq8qb18eyh4q5mcl8v66qh.jpeg",
+        "https://x-core.by/upload/iblock/1ee/xnxwy3ud33xk8gcs4fza7ve3u6g0pnss.jpeg",
+        "https://x-core.by/upload/iblock/ae4/mlykgaw5s0g8zo6lsqbm4pxc5jl0k3uk.jpeg",
+        "https://x-core.by/upload/iblock/e4e/2sx84kzhvesgx82gzy9i43fkpgy4zl66.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bowie_d05_temno_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/b36/dyn9blc4zk9kzk13pxw3und4b69xiift.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_earbuds_x7_play_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/4d1/12gu1eqa2n1yvb7b4qkfrnvj7v3sf2yi.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_havit_e48p_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/15c/l3qngx49fp8t3is0g3h7lzpdbdru3jc7.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g570",
+      "images": [
+        "https://x-core.by/upload/iblock/f92/oqskc9ra25m3sq5f5tlkzgbypg5d28g1.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bowie_e17_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/1c9/gzfrl5h1ke9jqz62fvsoh3gxo6j72b9q.jpeg",
+        "https://x-core.by/upload/iblock/302/yzrj6fx2c6cktw030f2t44sxhg7uq876.jpeg",
+        "https://x-core.by/upload/iblock/8f9/z4gzwpepzcqnomdgxvr5seq5x6ph2x54.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_crownmicro_cmgh_2001",
+      "images": [
+        "https://x-core.by/upload/iblock/0e4/c4574gnka8fquf3p1bas6x3af3witzt8.jpeg",
+        "https://x-core.by/upload/iblock/e31/q0ikztejdoagj6pmvzb4i8lp05wx29tz.jpeg",
+        "https://x-core.by/upload/iblock/271/5yojkfq2iu8kgasspjgm6jubthduutz2.jpeg",
+        "https://x-core.by/upload/iblock/ea1/xo037u542uz7uj48wzyx2hrbt52veton.jpeg",
+        "https://x-core.by/upload/iblock/be8/xsq7bgeokbda5l1fkbgv3mlx0rem63lv.jpeg",
+        "https://x-core.by/upload/iblock/410/i0ghkijl5mbshapsdhbd66v9vh346xps.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_defender_freemotion_b695",
+      "images": [
+        "https://x-core.by/upload/iblock/852/mzcmqt9t01pjrlqpbttwo1epl540y0c1.jpeg",
+        "https://x-core.by/upload/iblock/59a/enepfx9azf4rq0blsouclfm6sij2cbg5.jpeg",
+        "https://x-core.by/upload/iblock/899/s2i7mw370o53ypwfzy8vd83zwt0zlqoz.jpeg",
+        "https://x-core.by/upload/iblock/af6/q33krln7fe9rr8t0qbveic67yfskyo3o.jpeg",
+        "https://x-core.by/upload/iblock/2f1/pjyyc3n7f2duxiqla2blxzs90fgq63mq.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bowie_d05_belyy_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/965/181fe50220oc39zafpdya8fc1qucnzq3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_edifier_wh950nb_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/38c/m2o3tlgs1lcy1pg4agmuqahljzr51yjh.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hyperx_cloud_mix_buds",
+      "images": [
+        "https://x-core.by/upload/iblock/d5b/6817l8563o0z9sik9qscrhlnacycx5ph.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_ugreen_studio_max2_hp205_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/99e/pul5gqtdzfvlc5axntboz9c3beeewwa0.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sony_wh_1000xm6_temno_siniy",
+      "images": [
+        "https://x-core.by/upload/iblock/65d/0i7kya5qf7mqr91po8a4i95wznizd30r.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve2_75_ms_stereo_usb_c_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/089/v0xifqtu0iqu402snzae9f6wkbp4ae21.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_blackshark_v2_hyperspeed",
+      "images": [
+        "https://x-core.by/upload/iblock/e51/91qvfkagc4s9exb1sti2hhjdunsb02um.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve_30_ii_ms_stereo",
+      "images": [
+        "https://x-core.by/upload/iblock/d36/nmq40kxapfcv7j48pg3jx3ukadnfx8hk.jpeg",
+        "https://x-core.by/upload/iblock/b23/gqdwdmhic34a4pt6vm8narn647riu8p6.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_gembird_ghs_u_5_1_01",
+      "images": [
+        "https://x-core.by/upload/iblock/0b1/cimp9j7025xae9zxbarap6a0ufrnr95m.jpeg",
+        "https://x-core.by/upload/iblock/fa0/pna8bzs2whs93fnlt2gcftmrwasvg01d.jpeg",
+        "https://x-core.by/upload/iblock/f07/1hzuqyc0dahkm3wykjhk3uen35vi7x36.jpeg",
+        "https://x-core.by/upload/iblock/5d5/xxi42envj4mw2sqlgbyp7qcqj6gjtt3o.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hyperx_cloud_mini_multi",
+      "images": [
+        "https://x-core.by/upload/iblock/963/qj7o8whj16887iyjfq543a02qbx12gyk.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_fiio_fd3_pro_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/1ae/vzogv212r1dodkax3s9jq7a2b800i5f3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_opus_x_rozovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/6e2/n0rgf7ijvx3iunw44w31p02ftja00cfg.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_redragon_ire_pro",
+      "images": [
+        "https://x-core.by/upload/iblock/c89/4y04mywm5pcq05ghtmhnlsnfj2v367qb.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_blackshark_v2_x_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/52c/1r8tyiviv1ie6orc62h6d1elvb15yrzi.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jbl_tune_520bt_temno_siniy",
+      "images": [
+        "https://x-core.by/upload/iblock/c08/0s9z8bbrs8ym120z75zhecnttv44pbq9.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_oklick_hs_g300_armageddon_chernyy_krasnyy",
+      "images": [
+        "https://x-core.by/upload/iblock/90e/jta177czdan9jbjg57rbqh0y2abz4xl1.jpeg",
+        "https://x-core.by/upload/iblock/b5f/7htoqt0z8933epg70aifxrlm9r043wbu.jpeg",
+        "https://x-core.by/upload/iblock/f58/h1sid5p7hb8fckyi9vv320hg47534srp.jpeg",
+        "https://x-core.by/upload/iblock/2a6/cs7kax9jzaomt9za0kb5h0xypsk659e3.jpeg",
+        "https://x-core.by/upload/iblock/4d5/9pyjx0k17by599hrvnfglbrumrunuye0.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_remax_rm_505_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/518/uff6zrzsfujo5ejckx0w02jejp9iao94.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_engage_75_stereo",
+      "images": [
+        "https://x-core.by/upload/iblock/97c/7212mf98e0dvb37lbkf03sxwj7crnchi.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hyperx_cloud_mini_wireless_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/36c/apxtvn7x2i2b60pyzgyac1cieg2f19po.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_asus_rog_strix_go_2_4",
+      "images": [
+        "https://x-core.by/upload/iblock/729/ttpqu6tthmya0qv4tagm4g716uekfvy0.jpeg",
+        "https://x-core.by/upload/iblock/a2a/kz6cjqxmdb8or8rjffx7rmf9g3ejuxl7.jpeg",
+        "https://x-core.by/upload/iblock/b6e/gwp96ky55nxjef9n3r3qucc2oiwdfe8x.jpeg",
+        "https://x-core.by/upload/iblock/f0c/rleoy1xnp1uy8o1c7eqxaqn09ijkb188.jpeg",
+        "https://x-core.by/upload/iblock/b81/pqkx0f349gri30pfy5xbar17wtmzf8wc.jpeg",
+        "https://x-core.by/upload/iblock/803/mw2a7919je8ctnc33ufchik1hur32vov.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_fifine_h6x_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/fd4/2ojr31tne01ksimg41w81fjp0pvdb8ie.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hyperx_cloud_stinger_2_core",
+      "images": [
+        "https://x-core.by/upload/iblock/a15/264uip9kb70wpg2atofzmjzka2h0jm66.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_remax_rm_505_rozovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/934/3kmwm1gwjn6ynb6st4pagav7x9i2frvt.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hoco_w25_krasnyy",
+      "images": [
+        "https://x-core.by/upload/iblock/800/s6tskrhrnd3kduo68cjwz732ndzpls43.jpeg",
+        "https://x-core.by/upload/iblock/5b4/1rgpyi12m9horv4j2xyyk48830pypu6u.jpeg",
+        "https://x-core.by/upload/iblock/c62/d9ldshd7qwnt4ct86od628omslcmuvy2.jpeg",
+        "https://x-core.by/upload/iblock/9cf/evcebc08peyckeyjv03a4hlbny3rcikj.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hyperx_cloud_mini_lavandovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/629/0o0rdwgzfkdlo22yzxdm73sm533o44qb.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_honor_choice_headphones_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/a31/1d0flu1u3j2aih3vkr3byp11gtatte7r.jpeg",
+        "https://x-core.by/upload/iblock/7f1/xrvfbrga4wmzfxc852ji42rl7qnfctmn.jpeg",
+        "https://x-core.by/upload/iblock/996/md3vvkfmdy8dhho5rmix0gpcwl48kg2h.jpeg",
+        "https://x-core.by/upload/iblock/71c/itttk3fqfcmacmrw6bku6wtsj9khnxvj.jpeg",
+        "https://x-core.by/upload/iblock/fd0/5j9hpj8nx6w9asvutgb1k9hkkq06ypo3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_fstyler_fh100i",
+      "images": [
+        "https://x-core.by/upload/iblock/779/at0swgzipfotmc2mh0ueau1or8yuqjet.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_7i_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/a05/w0kro4dw6e0lfa4gj14496m4316ogl0s.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hoco_w25_siniy",
+      "images": [
+        "https://x-core.by/upload/iblock/61a/vppc9wm8f5bwhjmphqfzltja7uaql8h3.jpeg",
+        "https://x-core.by/upload/iblock/fdf/7kyrqnl60p1xkfi3y7fcfm8jhbgi2yrr.jpeg",
+        "https://x-core.by/upload/iblock/12f/fi0tu9sn7rwqvz7zs5m1x8nsiwicqrxi.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_cmf_buds_pro_2_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/250/zh9vi4ap4j81tiakzg7izju7sw5whwfw.jpeg",
+        "https://x-core.by/upload/iblock/9f0/w4j86qzxwe4fum1nqpjynva1bh3n3prl.jpeg",
+        "https://x-core.by/upload/iblock/e73/d9z6ku6i5amed890rmlcfxn87wpbz2k9.jpeg",
+        "https://x-core.by/upload/iblock/91d/h2zdggp4epqn4pz7fmxm3b5jed2bwkct.jpeg",
+        "https://x-core.by/upload/iblock/20b/c3xk4tm3z4rspjo5xxk2f0j8nfko2wph.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_fstyler_bh220_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/799/sqm2a57y21njl52dwetn0tb5uutbu92u.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jbl_tune_520bt_fioletovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/0f4/17g8awx0ekobje45ohj9ewl8lbnssgoe.png"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve_40_ms_stereo",
+      "images": [
+        "https://x-core.by/upload/iblock/a4b/2lnosp5e38c0oixkjuatmovu21a8zs5h.jpeg",
+        "https://x-core.by/upload/iblock/83c/aydloiqul6rq5azk1c1kiqvzbx5918l7.jpeg",
+        "https://x-core.by/upload/iblock/afe/adx64tvr08qcz1hozka2n2h94e6vijn6.jpeg",
+        "https://x-core.by/upload/iblock/acc/y1djb023ognagzhi1fj0q17fwki8gjv6.jpeg",
+        "https://x-core.by/upload/iblock/235/zhbc9nlsb6vbbpqq7g5lkd8dow6jw4rt.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve2_65_flex_ms_stereo_usb_c",
+      "images": [
+        "https://x-core.by/upload/iblock/6da/5wsilxf49yqnqgsdxj4tra0utvx2aacl.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_borofone_bm88_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/644/drzof9vboezzh5rauzig3nkegwaembrx.jpeg",
+        "https://x-core.by/upload/iblock/681/4evujv2chtsw9h6na8z8i1b0hbspwsmh.jpeg",
+        "https://x-core.by/upload/iblock/988/gf1pn7i18jmk2dl4les57d43tn79qu1r.jpeg",
+        "https://x-core.by/upload/iblock/825/h5ist9ne9z5r9n2ts0bo0re8b6a95qg4.jpeg",
+        "https://x-core.by/upload/iblock/700/4u6trspxfzdo7vgdll6g0gcriixofiqa.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sony_wh_1000xm5_rozovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/71a/wwql0qvwyys4xviksy3nhw8oxo4rlyqk.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_crownmicro_cmgh_3001",
+      "images": [
+        "https://x-core.by/upload/iblock/fb9/ocf8puayuswr16irbvfm7h3nsl840yjz.jpeg",
+        "https://x-core.by/upload/iblock/0a1/omratwvgi9ptzc64lao57e12jtw114fh.jpeg",
+        "https://x-core.by/upload/iblock/af7/zjaoflrqbfsxg3bqcghc0zkznfwwhpls.jpeg",
+        "https://x-core.by/upload/iblock/cc8/fuqpvlqwb3rtpst23af6qydifvy67kqz.jpeg",
+        "https://x-core.by/upload/iblock/6b1/ddpogreonq1i8i2bz1cq92i5xcpu9ib3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_se_4_anc_chernyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/8ff/um21dzyfew56l15ujbmv6xudt7xsqez5.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_se_4_anc_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/b56/3r7c0zfn5covjkdcwxdvvg3p8h2h0h8b.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jabra_evolve2_buds_ms_usb_a",
+      "images": [
+        "https://x-core.by/upload/iblock/186/rgqxuxw59n6blu5nztv3fn1o6qhspyq4.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_fstyler_fh200u_chernyy_goluboy",
+      "images": [
+        "https://x-core.by/upload/iblock/5ef/g16qtpk676q0wtawfnrcgw4lid4555my.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_qcy_crossky_c50_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/dc9/eeurb5uy61og1rsfrygbsw03zt9ihuid.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_remax_rm_505_goluboy",
+      "images": [
+        "https://x-core.by/upload/iblock/664/h2xoj8t1f5rvr25dbljd8geflol8mj73.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_oklick_hs_g300_armageddon_belyy_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/e62/ocwd6umpeq21zf9i6godz1ruozk7l0a5.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_g521_rozovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/3af/1qdam3u1sa83k7f0n7ysppettoadgu1v.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_crownmicro_cmgh_2003",
+      "images": [
+        "https://x-core.by/upload/iblock/845/1gs1n62w3x2g3sd6gen9cde4fx94lk4w.jpeg",
+        "https://x-core.by/upload/iblock/a85/98ofowi8rtjkyci3bt2yr9gk0sgb33hc.jpeg",
+        "https://x-core.by/upload/iblock/bbb/tjutqeu9gx3fhzh2fqtb44xhntlokbgr.jpeg",
+        "https://x-core.by/upload/iblock/770/xj95l06c51bp71ziuxwns09paic6cnf6.jpeg",
+        "https://x-core.by/upload/iblock/d43/0qststffg6jvay139bokk3qq99xrh0xi.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_fifine_h3_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/62e/4ftpe4eg65jqhgtvbzjxw8bmw7n5h76r.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_5i_keramicheskiy_belyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/12d/flzybz32bvmhlhunasw2901jy384vjkh.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jabra_evolve2_40_ms_stereo_usb_a",
+      "images": [
+        "https://x-core.by/upload/iblock/72b/7pkybhu6ulo7eufpxsn6nose5ibjqdbh.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_t200x_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/d6e/46sama30l8vt6zmeqmtm9hle1ytxml1p.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sennheiser_hd_200_pro_507182",
+      "images": [
+        "https://x-core.by/upload/iblock/08f/2vb3desy422qfjut258903z7q4w30xt2.jpeg",
+        "https://x-core.by/upload/iblock/50c/9zfwi1stsj6gp8uufvy5jos59omzi29s.jpeg",
+        "https://x-core.by/upload/iblock/d6f/n2i8kxws47kj6r1d7cvf98jddgwe7di8.jpeg",
+        "https://x-core.by/upload/iblock/f23/fej7w73vu5vl66w2tk88431j76stggcw.jpeg",
+        "https://x-core.by/upload/iblock/02e/nzggm4c9ofixsusqvinva0p0ba7r3y9n.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_crownmicro_cmgh_102t_usb_oranzhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/c6a/ccg65czf64qoneuyytpjr396ednp23az.jpeg",
+        "https://x-core.by/upload/iblock/059/e5uwxs632c7id63xpm2eg4n4kufot3o8.jpeg",
+        "https://x-core.by/upload/iblock/b03/d3je70r92g1rhd7vtp069ctqs96z6xix.jpeg",
+        "https://x-core.by/upload/iblock/f0f/hmazaw2f945jxcqo3xlte07djb0x8jq7.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_kraken_kitty_v2_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/1bc/tku7m3z6wxs8ln1n3ixgwrrx7fqx1t4i.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_crownmicro_cmgh_3003",
+      "images": [
+        "https://x-core.by/upload/iblock/b53/tqgd3hnmldy8gh9vb8lsg340b9c91dsw.jpeg",
+        "https://x-core.by/upload/iblock/620/s291hg36yrwal7kp0warvpy5uk5fpaq1.jpeg",
+        "https://x-core.by/upload/iblock/30f/8nr4b7xfkdqb6ti2sxnsdsksh68gjrd6.jpeg",
+        "https://x-core.by/upload/iblock/292/pehxoyitl5n6eojrw4jm2r3vgoeipp0e.jpeg",
+        "https://x-core.by/upload/iblock/c82/w5eoqhhe6qf56du560i2ikno1i6m7mix.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_apple_airpods_pro_2_s_razemom_usb_type_c",
+      "images": [
+        "https://x-core.by/upload/iblock/9c7/3lx724cgpnmilspnw6wrzj4zdo6viyc5.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_redragon_diomedes",
+      "images": [
+        "https://x-core.by/upload/iblock/7ae/uw0iot5gms42f2k3dv75tdbj2kblk9jh.png"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_a4tech_fstyler_fh150u_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/d2a/1m2fstennx3fv2upjbdu29frbyl6juyu.jpeg",
+        "https://x-core.by/upload/iblock/309/ztdoliffoafj55ewp9lixc2g94sc1h1u.jpeg",
+        "https://x-core.by/upload/iblock/2ca/mxmbh3al6fciatbl2b1c4wn7qysg55ub.jpeg",
+        "https://x-core.by/upload/iblock/838/xpp90iepejdd5b6fnx6yoilma114qd0r.jpeg",
+        "https://x-core.by/upload/iblock/3f3/4sgqm7063orig49wfgpj2brrd2zkvijz.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sven_ap_b710mv_seryy",
+      "images": [
+        "https://x-core.by/upload/iblock/6b0/j9y5y3w1wg0ijrm4gfkdncf9ezfur202.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_t200_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/a59/0x163oi5ai3s35p8cjbmz38y263n62dp.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_hyperx_cloud_ii_krasnyy",
+      "images": [
+        "https://x-core.by/upload/iblock/892/fyir948lx24pidiyp5e53m8stx2qhvrn.jpeg",
+        "https://x-core.by/upload/iblock/219/9ds5382djjbk8u2r19ug5mnxx75k6l3r.jpeg",
+        "https://x-core.by/upload/iblock/515/2z5mqugq29gf4fikeyk3lncc9gzan6k1.jpeg",
+        "https://x-core.by/upload/iblock/edd/c364xnrveceeen6zh5l1gdwt885l33gh.jpeg",
+        "https://x-core.by/upload/iblock/8c0/2uefses5a712v8tv6kjml7w289o1xkco.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jabra_evolve2_65_ms_stereo_usb_a_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/a34/6mxvd14rjpss0jbf7azrt2l097czevr8.jpeg",
+        "https://x-core.by/upload/iblock/4c1/ekn9vuych54mzq96nx7h3t7ncw1aijsl.jpeg",
+        "https://x-core.by/upload/iblock/3ea/oljrxrrqufweu6m0cpjfdw6kr2raqc2f.jpeg",
+        "https://x-core.by/upload/iblock/818/avbktpjlu2hdak0howyc3xkhg2hu0epi.jpeg",
+        "https://x-core.by/upload/iblock/fbe/ryyv1kxlasixs49t6crvm8se5lbzg3m3.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve2_75_ms_stereo_usb_a_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/006/enf7z6mgtwupn1zhp6oiu3np154nld26.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_oklick_hs_l810g_anonymous",
+      "images": [
+        "https://x-core.by/upload/iblock/d8b/naqycbikmke7yd3uz3ucfba8208hr3al.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_a4tech_fstyler_fh150u_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/594/pef1grmqi791f0n7k11cv7hhkxlcak7y.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_edifier_wh950nb_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/001/o37hdr92xckc364msieiuqjtttk0srq7.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_koss_sb45",
+      "images": [
+        "https://x-core.by/upload/iblock/525/21q56o9lp4of4ctbb5dooqucccv388xq.jpeg",
+        "https://x-core.by/upload/iblock/179/8pyaxk9dpnphb4veewxipotx88xak51i.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_kraken_kitty_v2_rozovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/676/zg6lh8zttpdcc22fzv2bdelpevlhqq6y.png"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_baseus_bowie_e20_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/198/8iq0iobtcstcy10s8zd5es03p4gk2kkk.jpeg",
+        "https://x-core.by/upload/iblock/3a0/lzcjmkjmo2r4pqx43nlvjc0k8o430m34.jpeg",
+        "https://x-core.by/upload/iblock/4f6/cag8tzw1mueqf6o578khpt9p8cpsdvx3.jpeg",
+        "https://x-core.by/upload/iblock/77b/kw1cfdh1d1ub1y72yrezwf8nb9vcy5j1.jpeg",
+        "https://x-core.by/upload/iblock/422/g99ojarf9s26hmy1q41jxsl8z5ks2xhj.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_oklick_hs_m200",
+      "images": [
+        "https://x-core.by/upload/iblock/ac3/n1rak7623uzo30zg8td9ykyde8vt6j4e.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_huawei_freebuds_se_3_bezhevyy_mezhdunarodnaya_versiya",
+      "images": [
+        "https://x-core.by/upload/iblock/ec3/10mnxcr6xaqwepk83ysawa8fzlv4jur5.jpeg",
+        "https://x-core.by/upload/iblock/308/ypnidc282sz7kg6b5di0ie0vgn0suqqa.jpeg",
+        "https://x-core.by/upload/iblock/06b/d1gjy7iiz00wfoff18w4n36r6ip4vv5l.jpeg",
+        "https://x-core.by/upload/iblock/ad0/c7i0w6b7hy78x0lbfi1dvcfovnfs4tph.jpeg",
+        "https://x-core.by/upload/iblock/bcc/6lhztyy6sbovuy32w8m7aqp086gyshjq.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_fstyler_bh220_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/759/jy87tbmgj6wt0rj0nr7jjpqf43ufmuxp.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_colorful_igame_dna_gaming_headset_standard_edition",
+      "images": [
+        "https://x-core.by/upload/iblock/77c/llss3dc0pmdu1qcd3prq9boc8smkj3x1.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_fifine_h3_rozovyy",
+      "images": [
+        "https://x-core.by/upload/iblock/198/z63aos9c9hktdul4l2metd0xwmvp0zwi.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_steelseries_arctis_nova_1_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/7db/mar75132il3h8xx6ve58lskwv87t4oog.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_borofone_bm63_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/d6f/m7mvuqrogtzgyha4tqwfh72fdcwsrpdy.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_j200s",
+      "images": [
+        "https://x-core.by/upload/iblock/1a7/koz698cved3x7l57gy248iva931y9pz9.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_fstyler_fh100u_belyy_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/60d/3dvc58fqxofn8zifyb07447yukvv4tu6.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_defender_freemotion_b535",
+      "images": [
+        "https://x-core.by/upload/iblock/8ca/yyv1d3lli0mam7gtdu69sub0keeqnhte.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sennheiser_accentum_true_wireless_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/1e3/poclbyyyxf6k0z5iiy5sau9aze244iow.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sven_ap_151mv",
+      "images": [
+        "https://x-core.by/upload/iblock/fcd/8it3uhopbz5kjssfsgfr1fsva41txgt4.jpeg",
+        "https://x-core.by/upload/iblock/9b0/uqx42jfqk176tk80wnvrz52n5xcgnuku.jpeg",
+        "https://x-core.by/upload/iblock/096/e9ke9gpy6syktaxnt30jt9cw4bkq43nl.jpeg",
+        "https://x-core.by/upload/iblock/9b3/prfzu985575n9rmb0xu9iy6k23piymgn.jpeg",
+        "https://x-core.by/upload/iblock/185/otchx1o6sli9xwy5d6vu17s9tt2txy02.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_fifine_h3",
+      "images": [
+        "https://x-core.by/upload/iblock/9a2/eky5nfrck1n4108t38pl8h7aeql2zzfl.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_edifier_neobuds_s",
+      "images": [
+        "https://x-core.by/upload/iblock/572/zybb3dk01bs9nkk9ef355isibj2vuf24.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_a4tech_bloody_mr595_proxy_boom_bezhevyy",
+      "images": [
+        "https://x-core.by/upload/iblock/f6d/tse3rws5b3ujukz00yd1sn2p5c392gbj.jpeg",
+        "https://x-core.by/upload/iblock/985/p9mwig4qpwmbz1rm1jdnk2zkkl2wqo9q.jpeg",
+        "https://x-core.by/upload/iblock/70e/ok4agf6foi6ju274lpbi3uhewc5fro8l.jpeg",
+        "https://x-core.by/upload/iblock/5d4/diofdha101ro2j4rjgok6g8x2df9293g.jpeg",
+        "https://x-core.by/upload/iblock/525/bekbt9pt4uf2vfpl60222ctafcj1376s.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_apple_airpods_4_s_aktivnym_shumopodavleniem",
+      "images": [
+        "https://x-core.by/upload/iblock/e79/s9tj5nm1taqpvndlvpn2i0e8qa01znsq.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-ofisnaya_garnitura_jabra_evolve_20_ms_stereo_usb_c",
+      "images": [
+        "https://x-core.by/upload/iblock/2e2/ui5ppkddge8rrdnu5ycs2t6x27nkx32e.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_realme_buds_t200x_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/a39/anhmrrso2rxvrf6j7ba9s3kfnv7iu7ts.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_jabra_evolve2_65_ms_stereo_usb_c_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/026/e3gt8do0y5p3kzk2tbxbl75j1syqi0bv.jpeg",
+        "https://x-core.by/upload/iblock/272/odzx20umcd4zyw53yhcaqm0np9gyyn3r.jpeg",
+        "https://x-core.by/upload/iblock/a47/vood9ayu5u51rb7c3zihyofgjkoldjxr.jpeg",
+        "https://x-core.by/upload/iblock/226/9dm3bwi52zrc69cwcj6veh0ihwbgqjd2.jpeg",
+        "https://x-core.by/upload/iblock/9ff/29zg3mwtj4aap8m88vg75fz2qjrhswbx.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_sennheiser_hd_25_plus",
+      "images": [
+        "https://x-core.by/upload/iblock/694/ldrhkiz5f01ykbdgsgfgtk19cgiyw9il.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_fiio_fh5s_chernyy",
+      "images": [
+        "https://x-core.by/upload/iblock/fe1/j1545aw6tis3krn38xc8yh8whv40n6uo.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_apple_airpods_4_bez_aktivnogo_shumopodavleniya",
+      "images": [
+        "https://x-core.by/upload/iblock/5dc/umko1tvw2gtrwpdgoofjpcrv90txdt3s.jpeg"
+      ]
+    },
+    {
+      "sku": "XCORE-naushniki_razer_blackshark_v2_hyperspeed_belyy",
+      "images": [
+        "https://x-core.by/upload/iblock/a43/tkisur7te1n9vf4d3jiu3mdr2khjhr84.jpeg"
       ]
     }
   ]
