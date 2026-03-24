@@ -99,6 +99,10 @@ public class ServicesController : ControllerBase
         return Ok(ApiResponse<ServiceRequestDto>.Ok(result!));
     }
 
+    /// <summary>
+    /// Завершение работы мастером (ФТ-4.9)
+    /// Переводит в статус ReadyForPickup
+    /// </summary>
     [HttpPut("{id}/complete")]
     [Authorize(Roles = "Master")]
     public async Task<IActionResult> Complete(Guid id, [FromBody] UpdateServiceRequestRequest request)
@@ -111,7 +115,56 @@ public class ServicesController : ControllerBase
         if (error != null)
             return BadRequest(ApiResponse.Fail(error));
 
-        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!));
+        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Работа завершена, ожидает выдачи"));
+    }
+
+    /// <summary>
+    /// Обновление статуса (общий эндпоинт)
+    /// </summary>
+    [HttpPatch("{id}/status")]
+    [Authorize(Roles = "Manager,Admin,Master")]
+    public async Task<IActionResult> UpdateStatus(Guid id, [FromQuery] ServiceRequestStatus status, [FromQuery] string? comment = null)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var (result, error) = await _servicesService.UpdateStatusAsync(id, status, userId.Value, comment);
+        if (error != null)
+            return BadRequest(ApiResponse.Fail(error));
+
+        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Статус успешно обновлен"));
+    }
+
+    /// <summary>
+    /// Добавление запчасти к заявке (ФТ-4.8)
+    /// </summary>
+    [HttpPost("{id}/parts")]
+    [Authorize(Roles = "Master")]
+    public async Task<IActionResult> AddPart(Guid id, [FromBody] ServicePartDto partDto)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var (result, error) = await _servicesService.AddPartAsync(id, userId.Value, partDto);
+        if (error != null)
+            return BadRequest(ApiResponse.Fail(error));
+
+        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Запчасть добавлена"));
+    }
+
+    /// <summary>
+    /// Получение отчета о работе (ФТ-4.11)
+    /// </summary>
+    [HttpGet("{id}/report")]
+    public async Task<IActionResult> GetReport(Guid id)
+    {
+        var report = await _servicesService.GenerateReportAsync(id);
+        if (report == null)
+            return NotFound(ApiResponse.Fail("Отчет не найден"));
+
+        return Ok(ApiResponse<WorkReportDto>.Ok(report));
     }
 
     [HttpPost("{id}/cancel")]
@@ -130,9 +183,10 @@ public class ServicesController : ControllerBase
 
     /// <summary>
     /// Выдача оборудования клиенту (ФТ-4.10)
+    /// Переводит в финальный статус Completed
     /// </summary>
     [HttpPost("{id}/close")]
-    [Authorize(Roles = "Manager,Admin,Master")]
+    [Authorize(Roles = "Manager,Admin")]
     public async Task<IActionResult> Close(Guid id, [FromBody] CloseServiceRequestRequest? request = null)
     {
         var userId = GetCurrentUserId();
@@ -141,14 +195,14 @@ public class ServicesController : ControllerBase
 
         var (result, error) = await _servicesService.UpdateStatusAsync(
             id, 
-            ServiceRequestStatus.Closed, 
+            ServiceRequestStatus.Completed, 
             userId.Value, 
-            request?.Comment ?? "Оборудование выдано клиенту");
+            request?.Comment ?? "Оборудование выдано клиенту, оплата получена");
         
         if (error != null)
             return BadRequest(ApiResponse.Fail(error));
 
-        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Оборудование выдано клиенту"));
+        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Заявка успешно закрыта"));
     }
 
     private Guid? GetCurrentUserId()

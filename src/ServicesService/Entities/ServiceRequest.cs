@@ -12,7 +12,7 @@ public class ServiceRequest : BaseEntity
     public Guid ClientId { get; set; }
     public Guid? MasterId { get; set; }
     public Guid ServiceTypeId { get; set; }
-    public ServiceRequestStatus Status { get; set; } = ServiceRequestStatus.New;
+    public ServiceRequestStatus Status { get; set; } = ServiceRequestStatus.Submitted;
     public string Description { get; set; } = string.Empty;
     public string? DeviceModel { get; set; }
     public string? SerialNumber { get; set; }
@@ -22,8 +22,8 @@ public class ServiceRequest : BaseEntity
     public DateTime? CompletedAt { get; set; }
     
     public ServiceType ServiceType { get; set; } = null!;
-    public ICollection<UsedPart> UsedParts { get; set; } = new List<UsedPart>();
-    public ICollection<ServiceHistory> History { get; set; } = new List<ServiceHistory>();
+    public ICollection<ServicePart> ServiceParts { get; set; } = new List<ServicePart>();
+    public ICollection<WorkReport> WorkReports { get; set; } = new List<WorkReport>();
 }
 
 /// <summary>
@@ -42,9 +42,9 @@ public class ServiceType
 }
 
 /// <summary>
-/// Использованные запчасти
+/// Использованные запчасти (ФТ-4.8)
 /// </summary>
-public class UsedPart
+public class ServicePart
 {
     public Guid Id { get; set; }
     public Guid ServiceRequestId { get; set; }
@@ -57,9 +57,9 @@ public class UsedPart
 }
 
 /// <summary>
-/// История изменений заявки
+/// Отчет о работе / История изменений (ФТ-4.11)
 /// </summary>
-public class ServiceHistory
+public class WorkReport
 {
     public Guid Id { get; set; }
     public Guid ServiceRequestId { get; set; }

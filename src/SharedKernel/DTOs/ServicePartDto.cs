@@ -3,9 +3,9 @@
 namespace GoldPC.SharedKernel.DTOs;
 
 /// <summary>
-/// DTO для использованных запчастей.
+/// DTO для использованных запчастей (ServicePart).
 /// </summary>
-public class UsedPartDto
+public class ServicePartDto
 {
     public Guid ProductId { get; set; }
 

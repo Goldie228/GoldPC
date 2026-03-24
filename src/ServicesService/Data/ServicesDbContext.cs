@@ -9,8 +9,8 @@ public class ServicesDbContext : DbContext
     
     public DbSet<ServiceRequest> ServiceRequests => Set<ServiceRequest>();
     public DbSet<ServiceType> ServiceTypes => Set<ServiceType>();
-    public DbSet<UsedPart> UsedParts => Set<UsedPart>();
-    public DbSet<ServiceHistory> ServiceHistory => Set<ServiceHistory>();
+    public DbSet<ServicePart> ServiceParts => Set<ServicePart>();
+    public DbSet<WorkReport> WorkReports => Set<WorkReport>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,7 +31,7 @@ public class ServicesDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.RequestNumber).IsUnique();
             entity.Property(e => e.RequestNumber).IsRequired().HasMaxLength(20);
-            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(30);
             entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
             entity.Property(e => e.DeviceModel).HasMaxLength(100);
             entity.Property(e => e.SerialNumber).HasMaxLength(50);
@@ -44,27 +44,29 @@ public class ServicesDbContext : DbContext
                 .HasForeignKey(e => e.ServiceTypeId);
         });
         
-        modelBuilder.Entity<UsedPart>(entity =>
+        modelBuilder.Entity<ServicePart>(entity =>
         {
-            entity.ToTable("used_parts");
+            entity.ToTable("service_parts");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ProductName).IsRequired().HasMaxLength(255);
             entity.Property(e => e.UnitPrice).HasPrecision(12, 2);
             
             entity.HasOne(e => e.ServiceRequest)
-                .WithMany(sr => sr.UsedParts)
+                .WithMany(sr => sr.ServiceParts)
                 .HasForeignKey(e => e.ServiceRequestId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
         
-        modelBuilder.Entity<ServiceHistory>(entity =>
+        modelBuilder.Entity<WorkReport>(entity =>
         {
-            entity.ToTable("service_history");
+            entity.ToTable("work_reports");
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Comment).HasMaxLength(500);
+            entity.Property(e => e.NewStatus).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.PreviousStatus).HasConversion<string>().HasMaxLength(30);
+            entity.Property(e => e.Comment).HasMaxLength(1000);
             
             entity.HasOne(e => e.ServiceRequest)
-                .WithMany(sr => sr.History)
+                .WithMany(sr => sr.WorkReports)
                 .HasForeignKey(e => e.ServiceRequestId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

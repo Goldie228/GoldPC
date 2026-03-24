@@ -17,5 +17,5 @@ public class UpdateServiceRequestRequest
 
     public decimal? ActualCost { get; set; }
 
-    public List<UsedPartDto>? UsedParts { get; set; }
+    public ICollection<ServicePartDto>? ServiceParts { get; set; }
 }

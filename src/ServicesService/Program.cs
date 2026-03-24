@@ -1,6 +1,9 @@
 using System.Text;
 using GoldPC.ServicesService.Data;
 using GoldPC.ServicesService.Services;
+using GoldPC.Shared.Services;
+using GoldPC.Shared.Services.Interfaces;
+using GoldPC.Shared.Services.Mocks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -21,6 +24,24 @@ builder.Services.AddDbContext<ServicesDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IServicesService, ServicesService>();
+builder.Services.AddSingleton<INotificationService, NotificationServiceMock>();
+
+// Warranty Service Client
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSingleton<IWarrantyClient>(sp =>
+    {
+        var logger = sp.GetRequiredService<ILogger<WarrantyClientMock>>();
+        return new WarrantyClientMock(logger);
+    });
+}
+else
+{
+    builder.Services.AddHttpClient<IWarrantyClient, WarrantyClient>(client =>
+    {
+        client.BaseAddress = new Uri(builder.Configuration["Services:WarrantyService"] ?? "http://warranty-service:5004");
+    });
+}
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["SecretKey"] ?? "GoldPC_SuperSecretKey_ForDevelopment_Only_2024!";
@@ -77,7 +98,7 @@ app.UseSecurityHeaders();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ServicesDbContext>();
-    dbContext.Database.EnsureCreated();
+    dbContext.Database.Migrate();
 }
 
 if (app.Environment.IsDevelopment())

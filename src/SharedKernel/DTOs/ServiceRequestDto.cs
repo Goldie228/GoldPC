@@ -37,5 +37,7 @@ public class ServiceRequestDto
 
     public DateTime? CompletedAt { get; set; }
 
-    public List<ServiceHistoryDto> History { get; set; } = new();
+    public ICollection<ServicePartDto> ServiceParts { get; set; } = new List<ServicePartDto>();
+
+    public ICollection<WorkReportDto> WorkReports { get; set; } = new List<WorkReportDto>();
 }

@@ -6,6 +6,9 @@ using GoldPC.SharedKernel.Enums;
 using Microsoft.EntityFrameworkCore;
 using FluentAssertions;
 using Xunit;
+using Moq;
+using Microsoft.Extensions.Logging;
+using GoldPC.Shared.Services.Interfaces;
 
 namespace GoldPC.ServicesService.Tests;
 
@@ -20,7 +23,10 @@ public class ServicesServiceUnitTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
         _context = new ServicesDbContext(options);
-        _servicesService = new ServicesService.Services.ServicesService(_context, Mock.Of<ILogger<ServicesService.Services.ServicesService>>());
+        _servicesService = new ServicesService.Services.ServicesService(
+            _context, 
+            Mock.Of<ILogger<ServicesService.Services.ServicesService>>(),
+            Mock.Of<INotificationService>());
         
         // Seed service types
         _context.ServiceTypes.Add(new ServiceType { Id = Guid.NewGuid(), Name = "Диагностика", BasePrice = 50, EstimatedDurationMinutes = 60 });
@@ -47,7 +53,7 @@ public class ServicesServiceUnitTests
         error.Should().BeNull();
         result.Should().NotBeNull();
         result!.RequestNumber.Should().StartWith("SR-");
-        result.Status.Should().Be(ServiceRequestStatus.New);
+        result.Status.Should().Be(ServiceRequestStatus.Submitted);
     }
 
     [Fact]
@@ -70,7 +76,7 @@ public class ServicesServiceUnitTests
     }
 
     [Fact]
-    public async Task Complete_ServiceRequest_ShouldMarkAsCompleted()
+    public async Task Complete_ServiceRequest_ShouldMarkAsReadyForPickup()
     {
         // Arrange
         var clientId = Guid.NewGuid();
@@ -91,8 +97,7 @@ public class ServicesServiceUnitTests
 
         // Assert
         error.Should().BeNull();
-        result!.Status.Should().Be(ServiceRequestStatus.Completed);
-        result.CompletedAt.Should().NotBeNull();
+        result!.Status.Should().Be(ServiceRequestStatus.ReadyForPickup);
     }
 
     [Fact]

@@ -5,9 +5,9 @@ using GoldPC.SharedKernel.Enums;
 namespace GoldPC.SharedKernel.DTOs;
 
 /// <summary>
-/// DTO для истории изменений заявки.
+/// DTO для отчета о работе (бывшая история изменений).
 /// </summary>
-public class ServiceHistoryDto
+public class WorkReportDto
 {
     public Guid Id { get; set; }
 

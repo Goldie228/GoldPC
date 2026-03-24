@@ -6,27 +6,32 @@ namespace GoldPC.SharedKernel.Enums;
 public enum ServiceRequestStatus
 {
     /// <summary>
-    /// Принята - заявка создана
+    /// Подана (Submitted) - заявка создана клиентом
     /// </summary>
-    New = 0,
+    Submitted = 0,
     
     /// <summary>
-    /// В работе - мастер выполняет работу
+    /// В работе (InProgress) - мастер выполняет работу
     /// </summary>
     InProgress = 1,
+
+    /// <summary>
+    /// Ожидание запчастей (PartsPending) - требуются комплектующие
+    /// </summary>
+    PartsPending = 2,
+
+    /// <summary>
+    /// Готова к выдаче (ReadyForPickup) - работа завершена, ожидает клиента
+    /// </summary>
+    ReadyForPickup = 3,
     
     /// <summary>
-    /// Выполнена - работа завершена
+    /// Завершена (Completed) - клиент получил оборудование, оплата произведена
     /// </summary>
-    Completed = 2,
+    Completed = 4,
     
     /// <summary>
-    /// Выдана - клиент получил оборудование
+    /// Отменена (Cancelled)
     /// </summary>
-    Closed = 3,
-    
-    /// <summary>
-    /// Отменена
-    /// </summary>
-    Cancelled = 4
+    Cancelled = 5
 }
