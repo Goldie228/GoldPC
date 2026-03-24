@@ -311,7 +311,7 @@ export function CatalogManagementPage() {
                   <tr key={product.id} className={!product.isActive ? styles.inactiveRow : ''}>
                     <td className={styles.sku}>{product.sku}</td>
                     <td className={styles.productName}>
-                      {hasValidProductImage(product.mainImage?.url) ? (
+                      {hasValidProductImage(product.mainImage?.url) && product.mainImage ? (
                         <img 
                           src={product.mainImage.url} 
                           alt={product.name}

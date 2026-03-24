@@ -5,7 +5,6 @@
  */
 
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import './OrderDetailPage.css';
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';
@@ -146,8 +145,6 @@ function formatDateTimeShort(dateStr: string): string {
 }
 
 export function OrderDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [order, setOrder] = useState<Order>(MOCK_ORDER);
   const [isUpdating, setIsUpdating] = useState(false);
 

@@ -848,6 +848,54 @@ function getAllProducts(): ProductSummary[] {
   return allProductsCache;
 }
 
+interface MockReview {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment?: string;
+  pros?: string;
+  cons?: string;
+  isVerified: boolean;
+  createdAt: string;
+}
+
+const reviewsByProduct: Record<string, MockReview[]> = {};
+
+function ensureReviewStore(productId: string): MockReview[] {
+  if (!reviewsByProduct[productId]) {
+    reviewsByProduct[productId] = [];
+  }
+  return reviewsByProduct[productId];
+}
+
+function updateProductRatingFromReviews(productId: string): void {
+  const reviews = ensureReviewStore(productId);
+  const count = reviews.length;
+  const average = count > 0 ? Number((reviews.reduce((sum, item) => sum + item.rating, 0) / count).toFixed(1)) : 0;
+
+  const summaryProduct = getAllProducts().find((p) => p.id === productId);
+  if (summaryProduct) {
+    summaryProduct.rating = count > 0 ? { average, count } : undefined;
+    summaryProduct.reviewCount = count;
+  }
+
+  const realisticProduct = REALISTIC_PRODUCTS.find((p) => p.id === productId);
+  if (realisticProduct) {
+    realisticProduct.rating = average;
+    realisticProduct.reviewCount = count;
+  }
+}
+
+function getNumericRatingValue(value: ProductSummary['rating']): number {
+  if (typeof value === 'number') return value;
+  if (value != null && typeof value === 'object' && 'average' in value && typeof value.average === 'number') {
+    return value.average;
+  }
+  return 0;
+}
+
 // Маппинг frontend -> backend slug (для согласованности с реальным API)
 const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
   cpu: 'processors',
@@ -899,14 +947,12 @@ export const catalogHandlers = [
     const category = url.searchParams.get('category') as ProductCategory | null;
     const manufacturerId = url.searchParams.get('manufacturerId');
     const manufacturerIds = url.searchParams.getAll('manufacturerIds');
-    const brand = url.searchParams.get('brand')?.toLowerCase();
     const priceMinParam = url.searchParams.get('priceMin');
     const priceMaxParam = url.searchParams.get('priceMax');
     const priceMin = (priceMinParam != null && priceMinParam !== '') ? parseInt(priceMinParam, 10) : 0;
     const priceMax = (priceMaxParam != null && priceMaxParam !== '' && parseInt(priceMaxParam, 10) > 0) ? parseInt(priceMaxParam, 10) : 999999;
     const search = url.searchParams.get('search')?.toLowerCase();
     const rating = url.searchParams.get('rating') ? parseFloat(url.searchParams.get('rating')!) : null;
-    const inStock = url.searchParams.get('inStock') === 'true';
     const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | 'createdAt' | null;
     const sortOrder = (url.searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
     const specifications: Record<string, string> = {};
@@ -961,7 +1007,7 @@ export const catalogHandlers = [
     }
 
     if (rating) {
-      products = products.filter((p) => (p.rating ?? 0) >= rating);
+      products = products.filter((p) => getNumericRatingValue(p.rating) >= rating);
     }
 
     if (url.searchParams.has('inStock')) {
@@ -1021,7 +1067,7 @@ export const catalogHandlers = [
             comparison = a.price - b.price;
             break;
           case 'rating':
-            comparison = (a.rating || 0) - (b.rating || 0);
+            comparison = getNumericRatingValue(a.rating) - getNumericRatingValue(b.rating);
             break;
           case 'createdAt':
             comparison = new Date((a as RealisticProduct).createdAt || 0).getTime() - new Date((b as RealisticProduct).createdAt || 0).getTime();
@@ -1068,6 +1114,64 @@ export const catalogHandlers = [
 
     const product = generateProduct(summary);
     return HttpResponse.json(product);
+  }),
+
+  // GET /api/v1/catalog/products/:id/reviews - отзывы товара
+  http.get('/api/v1/catalog/products/:id/reviews', async ({ params, request }) => {
+    await delay(faker.number.int({ min: 40, max: 120 }));
+    const productId = String(params.id ?? '');
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '20', 10);
+
+    const reviews = ensureReviewStore(productId)
+      .slice()
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    const totalItems = reviews.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const startIndex = (page - 1) * pageSize;
+    const data = reviews.slice(startIndex, startIndex + pageSize);
+
+    return HttpResponse.json({
+      data,
+      meta: {
+        page,
+        pageSize,
+        totalPages,
+        totalItems,
+        hasNext: page < totalPages,
+        hasPrevious: page > 1,
+      },
+    });
+  }),
+
+  // POST /api/v1/catalog/products/:id/reviews - добавить отзыв
+  http.post('/api/v1/catalog/products/:id/reviews', async ({ params, request }) => {
+    await delay(faker.number.int({ min: 50, max: 150 }));
+    const productId = String(params.id ?? '');
+    const body = (await request.json()) as { rating?: number; comment?: string; pros?: string; cons?: string };
+    const rating = typeof body.rating === 'number' ? body.rating : 5;
+    if (rating < 1 || rating > 5) {
+      return HttpResponse.json({ error: 'Неверный рейтинг' }, { status: 400 });
+    }
+
+    const created: MockReview = {
+      id: crypto.randomUUID(),
+      productId,
+      userId: 'mock-user',
+      userName: 'Покупатель',
+      rating,
+      comment: body.comment ?? '',
+      pros: body.pros ?? '',
+      cons: body.cons ?? '',
+      isVerified: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    ensureReviewStore(productId).push(created);
+    updateProductRatingFromReviews(productId);
+    return HttpResponse.json(created, { status: 201 });
   }),
 
   // GET /api/v1/catalog/categories - список категорий
@@ -1345,7 +1449,6 @@ export const catalogHandlers = [
     const priceMax = parseInt(url.searchParams.get('priceMax') || '999999', 10);
     const search = url.searchParams.get('search')?.toLowerCase();
     const rating = url.searchParams.get('rating') ? parseFloat(url.searchParams.get('rating')!) : null;
-    const inStock = url.searchParams.get('inStock') === 'true';
     const sortBy = url.searchParams.get('sortBy') as 'name' | 'price' | 'rating' | 'createdAt' | null;
     const sortOrder = (url.searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
 
@@ -1379,7 +1482,7 @@ export const catalogHandlers = [
     }
 
     if (rating) {
-      products = products.filter((p) => (p.rating || 0) >= rating);
+      products = products.filter((p) => getNumericRatingValue(p.rating) >= rating);
     }
 
     if (url.searchParams.has('inStock')) {
@@ -1399,7 +1502,7 @@ export const catalogHandlers = [
             comparison = a.price - b.price;
             break;
           case 'rating':
-            comparison = (a.rating || 0) - (b.rating || 0);
+            comparison = getNumericRatingValue(a.rating) - getNumericRatingValue(b.rating);
             break;
           case 'createdAt':
             comparison = new Date((a as RealisticProduct).createdAt || 0).getTime() - new Date((b as RealisticProduct).createdAt || 0).getTime();

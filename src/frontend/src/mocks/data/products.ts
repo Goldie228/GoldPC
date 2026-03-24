@@ -197,7 +197,7 @@ export const generateManufacturer = (category: ProductCategory): Manufacturer =>
  * Использует локальный SVG-плейсхолдер с тёмным circuit board паттерном
  */
 export const generateProductImage = (
-  productId: string,
+  _productId: string,
   index: number,
   isMain: boolean = false
 ): ProductImage => ({

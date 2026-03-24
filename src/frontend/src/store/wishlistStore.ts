@@ -6,6 +6,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { wishlistApi } from '../api/wishlist';
 
 interface WishlistState {
   /** Массив ID товаров в списке желаний */
@@ -28,6 +29,13 @@ interface WishlistState {
 
   /** Получить количество товаров в списке желаний */
   getCount: () => number;
+
+  /** Синхронизировать с сервером для авторизованного пользователя */
+  syncWithServer: () => Promise<void>;
+}
+
+function isAuthorizedSession(): boolean {
+  return Boolean(localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken'));
 }
 
 /**
@@ -55,8 +63,18 @@ export const useWishlistStore = create<WishlistState>()(
         const { items } = get();
         if (items.includes(productId)) {
           set({ items: items.filter((id) => id !== productId) });
+          if (isAuthorizedSession()) {
+            void wishlistApi.removeItem(productId).catch((error) => {
+              console.error('Failed to remove wishlist item:', error);
+            });
+          }
         } else {
           set({ items: [...items, productId] });
+          if (isAuthorizedSession()) {
+            void wishlistApi.addItem(productId).catch((error) => {
+              console.error('Failed to add wishlist item:', error);
+            });
+          }
         }
       },
 
@@ -64,11 +82,21 @@ export const useWishlistStore = create<WishlistState>()(
         const { items } = get();
         if (!items.includes(productId)) {
           set({ items: [...items, productId] });
+          if (isAuthorizedSession()) {
+            void wishlistApi.addItem(productId).catch((error) => {
+              console.error('Failed to add wishlist item:', error);
+            });
+          }
         }
       },
 
       removeItem: (productId: string): void => {
         set({ items: get().items.filter((id) => id !== productId) });
+        if (isAuthorizedSession()) {
+          void wishlistApi.removeItem(productId).catch((error) => {
+            console.error('Failed to remove wishlist item:', error);
+          });
+        }
       },
 
       clearWishlist: (): void => {
@@ -77,6 +105,17 @@ export const useWishlistStore = create<WishlistState>()(
 
       getCount: (): number => {
         return get().items.length;
+      },
+
+      syncWithServer: async (): Promise<void> => {
+        if (!isAuthorizedSession()) return;
+        const localItems = get().items;
+        try {
+          const synced = await wishlistApi.sync(localItems);
+          set({ items: synced });
+        } catch (error) {
+          console.error('Wishlist sync failed:', error);
+        }
       },
     }),
     {

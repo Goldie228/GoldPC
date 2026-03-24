@@ -13,7 +13,6 @@
 
 import { useState, useMemo } from 'react';
 import type { FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import { Modal } from '../../ui/Modal/Modal';
 import { useAuth } from '../../../hooks/useAuth';
 import { useAuthModalStore } from '../../../store/authModalStore';

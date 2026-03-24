@@ -15,22 +15,28 @@ public enum FilterAttributeType
 public class CategoryFilterAttribute
 {
     public Guid Id { get; set; }
-    
+
     /// <summary>ID категории</summary>
     public Guid CategoryId { get; set; }
-    
+
     /// <summary>Категория</summary>
     public Category Category { get; set; } = null!;
-    
-    /// <summary>Ключ в Product.Specifications (vram, chipset, socket...)</summary>
+
+    /// <summary>ID глобального атрибута спецификации</summary>
+    public Guid AttributeId { get; set; }
+
+    /// <summary>Атрибут спецификации</summary>
+    public SpecificationAttribute Attribute { get; set; } = null!;
+
+    /// <summary>Ключ атрибута (денормализация Attribute.Key для запросов)</summary>
     public string AttributeKey { get; set; } = string.Empty;
-    
-    /// <summary>Отображаемое имя ("Объём видеопамяти", "Чипсет")</summary>
+
+    /// <summary>Отображаемое имя для фильтра ("Объём видеопамяти", "Чипсет")</summary>
     public string DisplayName { get; set; } = string.Empty;
-    
+
     /// <summary>Тип фильтра: select или range</summary>
     public FilterAttributeType FilterType { get; set; }
-    
+
     /// <summary>Порядок отображения в сайдбаре</summary>
     public int SortOrder { get; set; }
 }

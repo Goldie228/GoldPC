@@ -19,6 +19,10 @@ public class OrderDto
 
     public decimal Total { get; set; }
 
+    public decimal Subtotal { get; set; }
+
+    public decimal DeliveryCost { get; set; }
+
     public string DeliveryMethod { get; set; } = string.Empty;
 
     public string PaymentMethod { get; set; } = string.Empty;

@@ -14,4 +14,5 @@ public interface IOrdersService
     Task<(OrderDto? Order, string? Error)> UpdateStatusAsync(Guid id, OrderStatus newStatus, Guid changedBy, string? comment = null);
     Task<(bool Success, string? Error)> CancelAsync(Guid id, Guid userId);
     Task<decimal> CalculateTotalAsync(Guid orderId);
+    Task<DeliveryQuoteResponse> CalculateDeliveryQuoteAsync(DeliveryQuoteRequest request);
 }

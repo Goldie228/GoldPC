@@ -4,6 +4,7 @@ import type { ProductSummary, ProductCategory } from '../../api/types';
 import { useCart } from '../../hooks/useCart';
 import { useToastStore } from '../../store/toastStore';
 import { useWishlistStore } from '../../store/wishlistStore';
+import { useComparisonStore } from '../../store/comparisonStore';
 import { Icon } from '../ui/Icon/Icon';
 import { Modal } from '../ui/Modal/Modal';
 import styles from './ProductCard.module.css';
@@ -26,6 +27,9 @@ interface ImageContainerProps {
   onQuickViewOpen: () => void;
   onQuickViewClose: () => void;
   onQuickViewClick: () => void;
+  onToggleWishlist: () => void;
+  inWishlist: boolean;
+  isDisabled: boolean;
 }
 
 interface ContentProps {
@@ -35,12 +39,12 @@ interface ContentProps {
   inCart: boolean;
   quantityInCart: number;
   isAdding: boolean;
-  inWishlist: boolean;
+  inComparison: boolean;
   onAddToCart: () => void;
   onDecrement: () => void;
   onIncrement: () => void;
   canIncrement: boolean;
-  onToggleWishlist: () => void;
+  onToggleComparison: () => void;
 }
 
 /**
@@ -55,14 +59,25 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
+function extractRatingValue(rating: ProductSummary['rating']): number | null {
+  if (typeof rating === 'number') return rating;
+  if (rating != null && typeof rating === 'object' && 'average' in rating) {
+    return typeof rating.average === 'number' ? rating.average : null;
+  }
+  return null;
+}
+
 /**
  * Получить статус наличия
  */
 function getStockStatus(stock: number): StockStatus {
   if (stock === 0) {
-    return { text: 'Под заказ', className: styles.outOfStock };
+    return { text: 'Нет в наличии', className: styles.outOfStock };
   }
-  return { text: 'В наличии', className: styles.inStock };
+  if (stock < 5) {
+    return { text: `Мало (${stock} шт)`, className: styles.lowStock };
+  }
+  return { text: `В наличии (${stock} шт)`, className: styles.inStock };
 }
 
 /**
@@ -142,8 +157,12 @@ function ImageContainer({
   onQuickViewOpen,
   onQuickViewClose,
   onQuickViewClick,
+  onToggleWishlist,
+  inWishlist,
+  isDisabled,
 }: ImageContainerProps): ReactElement {
   const [imageError, setImageError] = useState(false);
+  const ratingValue = extractRatingValue(product.rating);
 
   const hasValidImage =
     hasValidProductImage(product.mainImage?.url) &&
@@ -173,13 +192,28 @@ function ImageContainer({
         <span className={styles.discountBadge}>-{discountPercent}%</span>
       )}
       
-      {product.rating != null && Number(product.rating) >= 4.8 && !hasDiscount && (
+      {ratingValue != null && ratingValue >= 4.8 && !hasDiscount && (
         <span className={styles.hitBadge}>Хит</span>
       )}
       
-      {product.rating != null && Number(product.rating) >= 4.8 && hasDiscount && (
+      {ratingValue != null && ratingValue >= 4.8 && hasDiscount && (
         <span className={styles.hitBadgeRight}>Хит</span>
       )}
+
+      {/* Кнопка избранного в углу (при hover) */}
+      <button
+        className={`${styles.wishlistCornerBtn} ${isQuickViewHovered ? styles.wishlistCornerVisible : ''} ${inWishlist ? styles.wishlistActive : ''}`}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggleWishlist();
+        }}
+        disabled={isDisabled}
+        aria-label={inWishlist ? 'Удалить из избранного' : 'Добавить в избранное'}
+        type="button"
+      >
+        <Icon name="heart" size="sm" color={inWishlist ? 'gold' : 'default'} />
+      </button>
 
       {/* Кнопка быстрого просмотра при hover */}
       <button
@@ -209,14 +243,15 @@ function Content({
   inCart,
   quantityInCart,
   isAdding,
-  inWishlist,
+  inComparison,
   onAddToCart,
   onDecrement,
   onIncrement,
   canIncrement,
-  onToggleWishlist,
+  onToggleComparison,
 }: ContentProps): ReactElement {
   const isDisabled = product.stock === 0 || !product.isActive;
+  const ratingValue = extractRatingValue(product.rating);
 
   // Определяем состояние кнопки корзины
   const getCartButtonContent = (): ReactElement => {
@@ -251,13 +286,13 @@ function Content({
       </h3>
 
       <div className={styles.rating}>
-        {product.rating != null && !Number.isNaN(Number(product.rating)) && (
+        {ratingValue != null && !Number.isNaN(ratingValue) && (
           <>
             <span className={styles.stars}>
-              {'★'.repeat(Math.round(Number(product.rating)))}
-              {'☆'.repeat(5 - Math.round(Number(product.rating)))}
+              {'★'.repeat(Math.round(ratingValue))}
+              {'☆'.repeat(5 - Math.round(ratingValue))}
             </span>
-            <span className={styles.ratingValue}>{Number(product.rating).toFixed(1)}</span>
+            <span className={styles.ratingValue}>{ratingValue.toFixed(1)}</span>
           </>
         )}
       </div>
@@ -277,15 +312,15 @@ function Content({
         </div>
 
         <div className={styles.actions}>
-          {/* Кнопка избранного (Wishlist) */}
+          {/* Кнопка сравнения */}
           <button
-            className={`${styles.wishlistBtn} ${inWishlist ? styles.wishlistActive : ''}`}
-            onClick={onToggleWishlist}
+            className={`${styles.compareBtn} ${inComparison ? styles.compareActive : ''}`}
+            onClick={onToggleComparison}
             disabled={isDisabled}
-            aria-label={inWishlist ? 'Удалить из избранного' : 'Добавить в избранное'}
+            aria-label={inComparison ? 'Удалить из сравнения' : 'Добавить в сравнение'}
             type="button"
           >
-            <Icon name="heart" size="md" color={inWishlist ? 'gold' : 'default'} />
+            <Icon name="compare" size="md" color={inComparison ? 'gold' : 'default'} />
           </button>
 
           {/* Кнопка корзины или блок +/- */}
@@ -332,6 +367,7 @@ function Content({
  * Placeholder контент для модального окна быстрого просмотра
  */
 function QuickViewContent({ product }: { product: ProductSummary }): ReactElement {
+  const ratingValue = extractRatingValue(product.rating);
   return (
     <div className={styles.quickViewContent}>
       <div className={styles.quickViewImage}>
@@ -358,13 +394,13 @@ function QuickViewContent({ product }: { product: ProductSummary }): ReactElemen
         <div className={styles.quickViewPrice}>
           {formatPrice(product.price)}
         </div>
-        {product.rating != null && !Number.isNaN(Number(product.rating)) && (
+        {ratingValue != null && !Number.isNaN(ratingValue) && (
           <div className={styles.quickViewRating}>
             <span className={styles.stars}>
-              {'★'.repeat(Math.round(Number(product.rating)))}
-              {'☆'.repeat(5 - Math.round(Number(product.rating)))}
+              {'★'.repeat(Math.round(ratingValue))}
+              {'☆'.repeat(5 - Math.round(ratingValue))}
             </span>
-            <span>{Number(product.rating).toFixed(1)}</span>
+            <span>{ratingValue.toFixed(1)}</span>
           </div>
         )}
         <div className={styles.quickViewDescription}>
@@ -393,6 +429,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps): ReactEl
   const { addToCart, changeQuantity, isInCart, getItemQuantity } = useCart();
   const showToast = useToastStore((state) => state.showToast);
   const { isInWishlist, toggleWishlist } = useWishlistStore();
+  const { isInComparison, toggleComparison } = useComparisonStore();
 
   const [isAdding, setIsAdding] = useState(false);
   const [isQuickViewHovered, setIsQuickViewHovered] = useState(false);
@@ -401,6 +438,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps): ReactEl
   const inCart = isInCart(product.id);
   const quantityInCart = getItemQuantity(product.id);
   const inWishlist = isInWishlist(product.id);
+  const inComparison = isInComparison(product.id);
   const stockStatus = getStockStatus(product.stock);
   const hasDiscount =
     product.oldPrice !== undefined && product.oldPrice > product.price;
@@ -449,6 +487,22 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps): ReactEl
     }
   };
 
+  const handleToggleComparison = (): void => {
+    if (inComparison) {
+      toggleComparison(product.id, product.category);
+      showToast('Удалено из сравнения', 'info');
+      return;
+    }
+    const result = toggleComparison(product.id, product.category);
+    if (result.success) {
+      showToast('Добавлено в сравнение', 'success');
+    } else if (result.reason === 'category') {
+      showToast('Можно сравнивать только товары одной категории', 'info');
+    } else {
+      showToast('Максимум 4 товара в сравнении', 'info');
+    }
+  };
+
   return (
     <>
       <article className={styles.card} aria-label={`Товар: ${product.name}`}>
@@ -460,6 +514,9 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps): ReactEl
           onQuickViewOpen={() => setIsQuickViewHovered(true)}
           onQuickViewClose={() => setIsQuickViewHovered(false)}
           onQuickViewClick={() => setIsQuickViewOpen(true)}
+          onToggleWishlist={handleToggleWishlist}
+          inWishlist={inWishlist}
+          isDisabled={product.stock === 0 || !product.isActive}
         />
         <Content
           product={product}
@@ -468,12 +525,12 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps): ReactEl
           inCart={inCart}
           quantityInCart={quantityInCart}
           isAdding={isAdding}
-          inWishlist={inWishlist}
+          inComparison={inComparison}
           onAddToCart={handleAddToCart}
           onDecrement={handleDecrement}
           onIncrement={handleIncrement}
           canIncrement={canIncrement}
-          onToggleWishlist={handleToggleWishlist}
+          onToggleComparison={handleToggleComparison}
         />
       </article>
 

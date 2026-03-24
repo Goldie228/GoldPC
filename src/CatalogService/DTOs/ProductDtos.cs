@@ -48,6 +48,7 @@ public record ProductDetailDto
     public int WarrantyMonths { get; init; }
     public string? Description { get; init; }
     public Dictionary<string, object> Specifications { get; init; } = new();
+    public ProductImageDto? MainImage { get; init; }
     public List<ProductImageDto> Images { get; init; } = new();
     public RatingDto? Rating { get; init; }
     public bool IsActive { get; init; }

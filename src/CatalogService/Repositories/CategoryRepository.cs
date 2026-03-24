@@ -212,4 +212,10 @@ public class ReviewRepository : IReviewRepository
         return await _context.Reviews
             .CountAsync(r => r.ProductId == productId && r.IsVerified);
     }
+
+    public async Task<bool> ExistsByUserAndProductAsync(Guid userId, Guid productId)
+    {
+        return await _context.Reviews
+            .AnyAsync(r => r.UserId == userId && r.ProductId == productId);
+    }
 }

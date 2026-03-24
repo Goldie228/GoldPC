@@ -55,6 +55,11 @@ export interface ProductSpecifications {
   [key: string]: string | number | boolean | undefined;
 }
 
+export interface RatingSummary {
+  average: number;
+  count: number;
+}
+
 export interface ProductSummary {
   id: Uuid;
   name: string;
@@ -66,7 +71,8 @@ export interface ProductSummary {
   oldPrice?: number;
   stock: number;
   mainImage?: ProductImage;
-  rating?: number;
+  rating?: number | RatingSummary;
+  reviewCount?: number;
   isActive: boolean;
   /** Краткое описание для QuickView (первые 300 символов) */
   descriptionShort?: string;
@@ -82,6 +88,32 @@ export interface Product extends ProductSummary {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface ProductReview {
+  id: Uuid;
+  productId: Uuid;
+  userId: Uuid;
+  userName: string;
+  rating: number;
+  title?: string;
+  comment?: string;
+  pros?: string;
+  cons?: string;
+  isVerified: boolean;
+  isApproved?: boolean;
+  helpful?: number;
+  createdAt: string;
+}
+
+export interface CreateReviewRequest {
+  rating: number;
+  title?: string;
+  comment?: string;
+  pros?: string;
+  cons?: string;
+}
+
+export interface ProductReviewsResponse extends PagedResponse<ProductReview> {}
 
 export interface ProductListResponse extends PagedResponse<ProductSummary> {}
 

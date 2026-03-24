@@ -27,6 +27,16 @@ public class Order : BaseEntity
     /// Общая сумма заказа
     /// </summary>
     public decimal Total { get; set; }
+
+    /// <summary>
+    /// Стоимость товаров без доставки.
+    /// </summary>
+    public decimal Subtotal { get; set; }
+
+    /// <summary>
+    /// Стоимость доставки.
+    /// </summary>
+    public decimal DeliveryCost { get; set; }
     
     /// <summary>
     /// Способ получения (Pickup, Delivery)

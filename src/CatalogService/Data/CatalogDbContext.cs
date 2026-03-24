@@ -15,6 +15,9 @@ public class CatalogDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<CategoryFilterAttribute> CategoryFilterAttributes => Set<CategoryFilterAttribute>();
+    public DbSet<SpecificationAttribute> SpecificationAttributes => Set<SpecificationAttribute>();
+    public DbSet<SpecificationCanonicalValue> SpecificationCanonicalValues => Set<SpecificationCanonicalValue>();
+    public DbSet<ProductSpecificationValue> ProductSpecificationValues => Set<ProductSpecificationValue>();
     public DbSet<Manufacturer> Manufacturers => Set<Manufacturer>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<Review> Reviews => Set<Review>();
@@ -25,6 +28,9 @@ public class CatalogDbContext : DbContext
 
         ConfigureProduct(modelBuilder);
         ConfigureCategory(modelBuilder);
+        ConfigureSpecificationAttribute(modelBuilder);
+        ConfigureSpecificationCanonicalValue(modelBuilder);
+        ConfigureProductSpecificationValue(modelBuilder);
         ConfigureCategoryFilterAttribute(modelBuilder);
         ConfigureManufacturer(modelBuilder);
         ConfigureProductImage(modelBuilder);
@@ -32,6 +38,8 @@ public class CatalogDbContext : DbContext
         
         SeedCategories(modelBuilder);
         SeedManufacturers(modelBuilder);
+        SeedSpecificationAttributes(modelBuilder);
+        SeedSpecificationCanonicalValues(modelBuilder);
         SeedProducts(modelBuilder);
         SeedFilterAttributes(modelBuilder);
     }
@@ -55,10 +63,6 @@ public class CatalogDbContext : DbContext
             entity.Property(e => e.IsActive).HasColumnName("is_active");
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
-            
-            entity.Property(e => e.Specifications)
-                .HasColumnName("specifications")
-                .HasColumnType("jsonb");
             
             entity.Property(e => e.SourceUrl).HasColumnName("source_url").HasMaxLength(1000);
             entity.Property(e => e.ExternalId).HasColumnName("external_id").HasMaxLength(100);
@@ -89,6 +93,73 @@ public class CatalogDbContext : DbContext
                 .WithOne(r => r.Product)
                 .HasForeignKey(r => r.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.SpecificationValues)
+                .WithOne(s => s.Product)
+                .HasForeignKey(s => s.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private void ConfigureSpecificationAttribute(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SpecificationAttribute>(entity =>
+        {
+            entity.ToTable("specification_attributes");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Key).HasColumnName("key").IsRequired().HasMaxLength(50);
+            entity.Property(e => e.DisplayName).HasColumnName("display_name").IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ValueType).HasColumnName("value_type");
+            entity.Property(e => e.IsMultiValue).HasColumnName("is_multi_value");
+            entity.HasIndex(e => e.Key).IsUnique();
+        });
+    }
+
+    private void ConfigureSpecificationCanonicalValue(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<SpecificationCanonicalValue>(entity =>
+        {
+            entity.ToTable("specification_canonical_values");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AttributeId).HasColumnName("attribute_id");
+            entity.Property(e => e.ValueText).HasColumnName("value_text").IsRequired().HasMaxLength(200);
+            entity.Property(e => e.SortOrder).HasColumnName("sort_order");
+            entity.HasIndex(e => new { e.AttributeId, e.ValueText }).IsUnique();
+            entity.HasOne(e => e.Attribute)
+                .WithMany(a => a.CanonicalValues)
+                .HasForeignKey(e => e.AttributeId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private void ConfigureProductSpecificationValue(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ProductSpecificationValue>(entity =>
+        {
+            entity.ToTable("product_specification_values");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ProductId).HasColumnName("product_id");
+            entity.Property(e => e.AttributeId).HasColumnName("attribute_id");
+            entity.Property(e => e.CanonicalValueId).HasColumnName("canonical_value_id");
+            entity.Property(e => e.ValueNumber).HasColumnName("value_number").HasPrecision(18, 4);
+            entity.HasIndex(e => new { e.ProductId, e.AttributeId });
+            entity.HasIndex(e => new { e.AttributeId, e.CanonicalValueId });
+            entity.HasIndex(e => new { e.AttributeId, e.ValueNumber });
+            entity.HasOne(e => e.Product)
+                .WithMany(p => p.SpecificationValues)
+                .HasForeignKey(e => e.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Attribute)
+                .WithMany(a => a.ProductValues)
+                .HasForeignKey(e => e.AttributeId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.CanonicalValue)
+                .WithMany(c => c.ProductValues)
+                .HasForeignKey(e => e.CanonicalValueId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 
@@ -127,15 +198,19 @@ public class CatalogDbContext : DbContext
         {
             entity.ToTable("category_filter_attributes");
             entity.HasKey(e => e.Id);
-            
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CategoryId).HasColumnName("category_id");
+            entity.Property(e => e.AttributeId).HasColumnName("attribute_id");
             entity.Property(e => e.AttributeKey).HasColumnName("attribute_key").IsRequired().HasMaxLength(50);
             entity.Property(e => e.DisplayName).HasColumnName("display_name").IsRequired().HasMaxLength(100);
             entity.Property(e => e.FilterType).HasColumnName("filter_type");
             entity.Property(e => e.SortOrder).HasColumnName("sort_order");
-            
             entity.HasIndex(e => e.CategoryId);
+            entity.HasIndex(e => e.AttributeId);
+            entity.HasOne(e => e.Attribute)
+                .WithMany(a => a.CategoryFilterAttributes)
+                .HasForeignKey(e => e.AttributeId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 
@@ -221,6 +296,99 @@ public class CatalogDbContext : DbContext
         modelBuilder.Entity<Category>().HasData(categories);
     }
 
+    private void SeedSpecificationAttributes(ModelBuilder modelBuilder)
+    {
+        var specAttrs = new[]
+        {
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000001"), Key = "socket", DisplayName = "Сокет", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = true },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000002"), Key = "vram", DisplayName = "Объём видеопамяти", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000003"), Key = "gpu", DisplayName = "Серия GPU", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000004"), Key = "cores", DisplayName = "Количество ядер", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000005"), Key = "chipset", DisplayName = "Чипсет", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000006"), Key = "type", DisplayName = "Тип", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000007"), Key = "capacity", DisplayName = "Объём", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000008"), Key = "wattage", DisplayName = "Мощность", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000009"), Key = "efficiency", DisplayName = "Сертификат", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000000a"), Key = "form_factor", DisplayName = "Форм-фактор", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = true },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000000b"), Key = "color", DisplayName = "Цвет", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000000c"), Key = "tdp", DisplayName = "TDP", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000000d"), Key = "diagonal", DisplayName = "Диагональ", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000000e"), Key = "resolution", DisplayName = "Разрешение", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000000f"), Key = "refresh_rate", DisplayName = "Частота обновления", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000010"), Key = "connection", DisplayName = "Подключение", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000011"), Key = "dpi", DisplayName = "DPI", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000012"), Key = "sensor_type", DisplayName = "Тип сенсора", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000013"), Key = "memory_type", DisplayName = "Тип памяти", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = true },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000014"), Key = "threads", DisplayName = "Потоков", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000015"), Key = "integrated_graphics", DisplayName = "Встроенная графика", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000016"), Key = "modular", DisplayName = "Модульный", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000017"), Key = "memory_slots", DisplayName = "Слотов памяти", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000018"), Key = "max_memory", DisplayName = "Макс. память", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000019"), Key = "interface", DisplayName = "Интерфейс", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000001a"), Key = "release_year", DisplayName = "Год выхода", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000001b"), Key = "data_vykhoda_na_rynok_2", DisplayName = "Дата выхода (legacy)", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000001c"), Key = "proizvoditel_graficheskogo_protsessora", DisplayName = "Производитель ГП", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000001d"), Key = "shirina_shiny_pamyati", DisplayName = "Ширина шины памяти", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000001e"), Key = "okhlazhdenie_1", DisplayName = "Охлаждение", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-00000000001f"), Key = "razyemy_pitaniya", DisplayName = "Разъёмы питания", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000020"), Key = "rekomenduemyy_blok_pitaniya", DisplayName = "Рек. БП, Вт", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000021"), Key = "dlina_videokarty", DisplayName = "Длина видеокарты", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000022"), Key = "vysota_videokarty", DisplayName = "Высота видеокарты", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
+        };
+
+        modelBuilder.Entity<SpecificationAttribute>().HasData(specAttrs);
+    }
+
+    private void SeedSpecificationCanonicalValues(ModelBuilder modelBuilder)
+    {
+        var socketId = Guid.Parse("40000000-0000-0000-0000-000000000001");
+        var vramId = Guid.Parse("40000000-0000-0000-0000-000000000002");
+        var gpuId = Guid.Parse("40000000-0000-0000-0000-000000000003");
+        var chipsetId = Guid.Parse("40000000-0000-0000-0000-000000000005");
+        var typeId = Guid.Parse("40000000-0000-0000-0000-000000000006");
+        var capacityId = Guid.Parse("40000000-0000-0000-0000-000000000007");
+        var wattageId = Guid.Parse("40000000-0000-0000-0000-000000000008");
+        var efficiencyId = Guid.Parse("40000000-0000-0000-0000-000000000009");
+        var formFactorId = Guid.Parse("40000000-0000-0000-0000-00000000000a");
+        var modularId = Guid.Parse("40000000-0000-0000-0000-000000000016");
+        var maxMemoryId = Guid.Parse("40000000-0000-0000-0000-000000000018");
+        var integratedGraphicsId = Guid.Parse("40000000-0000-0000-0000-000000000015");
+        var memoryTypeId = Guid.Parse("40000000-0000-0000-0000-000000000013");
+
+        var cv = new List<SpecificationCanonicalValue>();
+        var i = 1;
+        Guid NextId() => Guid.Parse($"50000000-0000-0000-0000-{i++:d12}");
+
+        foreach (var (text, order) in new[] { ("AM4", 1), ("AM5", 2), ("LGA1700", 3) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = socketId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("8GB GDDR6", 1), ("12GB GDDR6X", 2), ("16GB GDDR6", 3), ("8GB", 4), ("12GB", 5), ("16GB", 6) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = vramId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("NVIDIA GeForce RTX 4070 SUPER", 1), ("AMD Radeon RX 7800 XT", 2), ("GeForce RTX 4070 SUPER", 3), ("Radeon RX 7800 XT", 4) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = gpuId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("B650", 1), ("Z790", 2) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = chipsetId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("DDR5", 1), ("DDR4", 2) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = typeId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("32GB", 1), ("16GB", 2), ("64GB", 3), ("128GB", 4) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = capacityId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("750W", 1), ("850W", 2), ("650W", 3), ("700W", 4) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = wattageId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("80+ Gold", 1), ("80+ Bronze", 2), ("80+ Platinum", 3), ("80+", 4) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = efficiencyId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("ATX", 1), ("mATX", 2), ("Mini-ITX", 3), ("eATX (до 280 мм)", 4) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = formFactorId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("Полностью модульный", 1), ("Полумодульный", 2), ("Нет", 3), ("Full", 4), ("Semi", 5) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = modularId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("128GB", 1), ("64GB", 2) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = maxMemoryId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("Есть", 1), ("Нет", 2) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = integratedGraphicsId, ValueText = text, SortOrder = order });
+        foreach (var (text, order) in new[] { ("DDR5", 1), ("DDR4", 2) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = memoryTypeId, ValueText = text, SortOrder = order });
+
+        modelBuilder.Entity<SpecificationCanonicalValue>().HasData(cv);
+    }
+
     private void SeedFilterAttributes(ModelBuilder modelBuilder)
     {
         var gpuId = Guid.Parse("00000000-0000-0000-0000-000000000004");
@@ -237,52 +405,59 @@ public class CatalogDbContext : DbContext
         var miceId = Guid.Parse("00000000-0000-0000-0000-00000000000c");
         var headphonesId = Guid.Parse("00000000-0000-0000-0000-00000000000d");
 
+        var socketAttrId = Guid.Parse("40000000-0000-0000-0000-000000000001");
+        var vramAttrId = Guid.Parse("40000000-0000-0000-0000-000000000002");
+        var gpuAttrId = Guid.Parse("40000000-0000-0000-0000-000000000003");
+        var coresAttrId = Guid.Parse("40000000-0000-0000-0000-000000000004");
+        var chipsetAttrId = Guid.Parse("40000000-0000-0000-0000-000000000005");
+        var typeAttrId = Guid.Parse("40000000-0000-0000-0000-000000000006");
+        var capacityAttrId = Guid.Parse("40000000-0000-0000-0000-000000000007");
+        var wattageAttrId = Guid.Parse("40000000-0000-0000-0000-000000000008");
+        var efficiencyAttrId = Guid.Parse("40000000-0000-0000-0000-000000000009");
+        var formFactorAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000a");
+        var colorAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000b");
+        var tdpAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000c");
+        var diagonalAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000d");
+        var resolutionAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000e");
+        var refreshRateAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000f");
+        var connectionAttrId = Guid.Parse("40000000-0000-0000-0000-000000000010");
+        var dpiAttrId = Guid.Parse("40000000-0000-0000-0000-000000000011");
+        var sensorTypeAttrId = Guid.Parse("40000000-0000-0000-0000-000000000012");
+        var interfaceAttrId = Guid.Parse("40000000-0000-0000-0000-000000000019");
+
         var attributes = new[]
         {
-            // GPU (оригинальные + без изменений)
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000001"), CategoryId = gpuId, AttributeKey = "vram", DisplayName = "Объём видеопамяти", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000002"), CategoryId = gpuId, AttributeKey = "gpu", DisplayName = "Серия GPU", FilterType = FilterAttributeType.Select, SortOrder = 2 },
-            // CPU
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000003"), CategoryId = cpuId, AttributeKey = "socket", DisplayName = "Сокет", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000004"), CategoryId = cpuId, AttributeKey = "cores", DisplayName = "Количество ядер", FilterType = FilterAttributeType.Range, SortOrder = 2 },
-            // Motherboards
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000005"), CategoryId = mbId, AttributeKey = "socket", DisplayName = "Сокет", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000006"), CategoryId = mbId, AttributeKey = "chipset", DisplayName = "Чипсет", FilterType = FilterAttributeType.Select, SortOrder = 2 },
-            // RAM
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000007"), CategoryId = ramId, AttributeKey = "type", DisplayName = "Тип памяти", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000008"), CategoryId = ramId, AttributeKey = "capacity", DisplayName = "Объём", FilterType = FilterAttributeType.Select, SortOrder = 2 },
-            // Storage
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000009"), CategoryId = storageId, AttributeKey = "capacity", DisplayName = "Объём", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            // PSU
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000a"), CategoryId = psuId, AttributeKey = "wattage", DisplayName = "Мощность", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000b"), CategoryId = psuId, AttributeKey = "efficiency", DisplayName = "Сертификат", FilterType = FilterAttributeType.Select, SortOrder = 2 },
-            // Cases
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000c"), CategoryId = casesId, AttributeKey = "form_factor", DisplayName = "Форм-фактор", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000d"), CategoryId = casesId, AttributeKey = "color", DisplayName = "Цвет", FilterType = FilterAttributeType.Select, SortOrder = 2 },
-            // Coolers
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000e"), CategoryId = coolersId, AttributeKey = "type", DisplayName = "Тип", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000f"), CategoryId = coolersId, AttributeKey = "socket", DisplayName = "Сокет", FilterType = FilterAttributeType.Select, SortOrder = 2 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000010"), CategoryId = coolersId, AttributeKey = "tdp", DisplayName = "TDP, Вт", FilterType = FilterAttributeType.Range, SortOrder = 3 },
-            // Monitors
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000011"), CategoryId = monitorsId, AttributeKey = "diagonal", DisplayName = "Диагональ", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000012"), CategoryId = monitorsId, AttributeKey = "resolution", DisplayName = "Разрешение", FilterType = FilterAttributeType.Select, SortOrder = 2 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000013"), CategoryId = monitorsId, AttributeKey = "refresh_rate", DisplayName = "Частота обновления", FilterType = FilterAttributeType.Select, SortOrder = 3 },
-            // Periphery (legacy, для товаров до реимпорта)
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000014"), CategoryId = peripheryId, AttributeKey = "type", DisplayName = "Тип устройства", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000015"), CategoryId = peripheryId, AttributeKey = "connection", DisplayName = "Подключение", FilterType = FilterAttributeType.Select, SortOrder = 2 },
-            // Keyboards
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000016"), CategoryId = keyboardsId, AttributeKey = "type", DisplayName = "Тип/типоразмер", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000017"), CategoryId = keyboardsId, AttributeKey = "interface", DisplayName = "Интерфейс", FilterType = FilterAttributeType.Select, SortOrder = 2 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000018"), CategoryId = keyboardsId, AttributeKey = "color", DisplayName = "Цвет", FilterType = FilterAttributeType.Select, SortOrder = 3 },
-            // Mice
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000019"), CategoryId = miceId, AttributeKey = "type", DisplayName = "Тип", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001a"), CategoryId = miceId, AttributeKey = "interface", DisplayName = "Интерфейс", FilterType = FilterAttributeType.Select, SortOrder = 2 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001b"), CategoryId = miceId, AttributeKey = "dpi", DisplayName = "DPI", FilterType = FilterAttributeType.Range, SortOrder = 3 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001c"), CategoryId = miceId, AttributeKey = "sensor_type", DisplayName = "Тип сенсора", FilterType = FilterAttributeType.Select, SortOrder = 4 },
-            // Headphones
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001d"), CategoryId = headphonesId, AttributeKey = "type", DisplayName = "Тип", FilterType = FilterAttributeType.Select, SortOrder = 1 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001e"), CategoryId = headphonesId, AttributeKey = "interface", DisplayName = "Интерфейс", FilterType = FilterAttributeType.Select, SortOrder = 2 },
-            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001f"), CategoryId = headphonesId, AttributeKey = "color", DisplayName = "Цвет", FilterType = FilterAttributeType.Select, SortOrder = 3 }
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000001"), CategoryId = gpuId, AttributeId = vramAttrId, AttributeKey = "vram", DisplayName = "Объём видеопамяти", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000002"), CategoryId = gpuId, AttributeId = gpuAttrId, AttributeKey = "gpu", DisplayName = "Серия GPU", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000003"), CategoryId = cpuId, AttributeId = socketAttrId, AttributeKey = "socket", DisplayName = "Сокет", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000004"), CategoryId = cpuId, AttributeId = coresAttrId, AttributeKey = "cores", DisplayName = "Количество ядер", FilterType = FilterAttributeType.Range, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000005"), CategoryId = mbId, AttributeId = socketAttrId, AttributeKey = "socket", DisplayName = "Сокет", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000006"), CategoryId = mbId, AttributeId = chipsetAttrId, AttributeKey = "chipset", DisplayName = "Чипсет", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000007"), CategoryId = ramId, AttributeId = typeAttrId, AttributeKey = "type", DisplayName = "Тип памяти", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000008"), CategoryId = ramId, AttributeId = capacityAttrId, AttributeKey = "capacity", DisplayName = "Объём", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000009"), CategoryId = storageId, AttributeId = capacityAttrId, AttributeKey = "capacity", DisplayName = "Объём", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000a"), CategoryId = psuId, AttributeId = wattageAttrId, AttributeKey = "wattage", DisplayName = "Мощность", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000b"), CategoryId = psuId, AttributeId = efficiencyAttrId, AttributeKey = "efficiency", DisplayName = "Сертификат", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000c"), CategoryId = casesId, AttributeId = formFactorAttrId, AttributeKey = "form_factor", DisplayName = "Форм-фактор", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000d"), CategoryId = casesId, AttributeId = colorAttrId, AttributeKey = "color", DisplayName = "Цвет", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000e"), CategoryId = coolersId, AttributeId = typeAttrId, AttributeKey = "type", DisplayName = "Тип", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000000f"), CategoryId = coolersId, AttributeId = socketAttrId, AttributeKey = "socket", DisplayName = "Сокет", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000010"), CategoryId = coolersId, AttributeId = tdpAttrId, AttributeKey = "tdp", DisplayName = "TDP, Вт", FilterType = FilterAttributeType.Range, SortOrder = 3 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000011"), CategoryId = monitorsId, AttributeId = diagonalAttrId, AttributeKey = "diagonal", DisplayName = "Диагональ", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000012"), CategoryId = monitorsId, AttributeId = resolutionAttrId, AttributeKey = "resolution", DisplayName = "Разрешение", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000013"), CategoryId = monitorsId, AttributeId = refreshRateAttrId, AttributeKey = "refresh_rate", DisplayName = "Частота обновления", FilterType = FilterAttributeType.Select, SortOrder = 3 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000014"), CategoryId = peripheryId, AttributeId = typeAttrId, AttributeKey = "type", DisplayName = "Тип устройства", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000015"), CategoryId = peripheryId, AttributeId = connectionAttrId, AttributeKey = "connection", DisplayName = "Подключение", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000016"), CategoryId = keyboardsId, AttributeId = typeAttrId, AttributeKey = "type", DisplayName = "Тип/типоразмер", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000017"), CategoryId = keyboardsId, AttributeId = interfaceAttrId, AttributeKey = "interface", DisplayName = "Интерфейс", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000018"), CategoryId = keyboardsId, AttributeId = colorAttrId, AttributeKey = "color", DisplayName = "Цвет", FilterType = FilterAttributeType.Select, SortOrder = 3 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-000000000019"), CategoryId = miceId, AttributeId = typeAttrId, AttributeKey = "type", DisplayName = "Тип", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001a"), CategoryId = miceId, AttributeId = interfaceAttrId, AttributeKey = "interface", DisplayName = "Интерфейс", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001b"), CategoryId = miceId, AttributeId = dpiAttrId, AttributeKey = "dpi", DisplayName = "DPI", FilterType = FilterAttributeType.Range, SortOrder = 3 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001c"), CategoryId = miceId, AttributeId = sensorTypeAttrId, AttributeKey = "sensor_type", DisplayName = "Тип сенсора", FilterType = FilterAttributeType.Select, SortOrder = 4 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001d"), CategoryId = headphonesId, AttributeId = typeAttrId, AttributeKey = "type", DisplayName = "Тип", FilterType = FilterAttributeType.Select, SortOrder = 1 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001e"), CategoryId = headphonesId, AttributeId = interfaceAttrId, AttributeKey = "interface", DisplayName = "Интерфейс", FilterType = FilterAttributeType.Select, SortOrder = 2 },
+            new CategoryFilterAttribute { Id = Guid.Parse("30000000-0000-0000-0000-00000000001f"), CategoryId = headphonesId, AttributeId = colorAttrId, AttributeKey = "color", DisplayName = "Цвет", FilterType = FilterAttributeType.Select, SortOrder = 3 }
         };
 
         modelBuilder.Entity<CategoryFilterAttribute>().HasData(attributes);
@@ -354,19 +529,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 156,
                 IsActive = true,
                 IsFeatured = true,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["socket"] = "AM4",
-                    ["cores"] = 6,
-                    ["threads"] = 12,
-                    ["base_clock"] = "3.7 GHz",
-                    ["boost_clock"] = "4.6 GHz",
-                    ["tdp"] = "65W",
-                    ["l3_cache"] = "32MB",
-                    ["unlocked"] = true,
-                    ["integrated_graphics"] = false
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Product
             {
@@ -383,19 +546,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 89,
                 IsActive = true,
                 IsFeatured = true,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["socket"] = "AM5",
-                    ["cores"] = 8,
-                    ["threads"] = 16,
-                    ["base_clock"] = "4.2 GHz",
-                    ["boost_clock"] = "5.0 GHz",
-                    ["tdp"] = "120W",
-                    ["l3_cache"] = "104MB",
-                    ["unlocked"] = true,
-                    ["integrated_graphics"] = true
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Product
             {
@@ -413,19 +564,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 134,
                 IsActive = true,
                 IsFeatured = false,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["socket"] = "LGA1700",
-                    ["cores"] = 14,
-                    ["threads"] = 20,
-                    ["base_clock"] = "3.5 GHz",
-                    ["boost_clock"] = "5.1 GHz",
-                    ["tdp"] = "125W",
-                    ["l3_cache"] = "24MB",
-                    ["unlocked"] = true,
-                    ["integrated_graphics"] = false
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
 
             // === МАТЕРИНСКИЕ ПЛАТЫ ===
@@ -444,21 +583,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 67,
                 IsActive = true,
                 IsFeatured = true,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["socket"] = "AM5",
-                    ["chipset"] = "B650",
-                    ["form_factor"] = "ATX",
-                    ["memory_slots"] = 4,
-                    ["max_memory"] = "128GB",
-                    ["memory_type"] = "DDR5",
-                    ["pcie_slots"] = "1x PCIe 5.0 x16, 1x PCIe 4.0 x16",
-                    ["m2_slots"] = 3,
-                    ["usb_ports"] = "8x USB-A, 2x USB-C",
-                    ["wifi"] = "WiFi 6",
-                    ["lan"] = "2.5G"
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Product
             {
@@ -475,21 +600,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 98,
                 IsActive = true,
                 IsFeatured = false,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["socket"] = "AM5",
-                    ["chipset"] = "B650",
-                    ["form_factor"] = "ATX",
-                    ["memory_slots"] = 4,
-                    ["max_memory"] = "128GB",
-                    ["memory_type"] = "DDR5",
-                    ["pcie_slots"] = "2x PCIe 4.0 x16",
-                    ["m2_slots"] = 4,
-                    ["usb_ports"] = "9x USB-A, 1x USB-C",
-                    ["wifi"] = "WiFi 6E",
-                    ["lan"] = "2.5G"
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
 
             // === ОПЕРАТИВНАЯ ПАМЯТЬ ===
@@ -509,18 +620,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 203,
                 IsActive = true,
                 IsFeatured = true,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["capacity"] = "32GB",
-                    ["kit_config"] = "2x16GB",
-                    ["type"] = "DDR5",
-                    ["speed"] = "5600 MHz",
-                    ["cas_latency"] = 36,
-                    ["voltage"] = "1.25V",
-                    ["heat_spreader"] = true,
-                    ["rgb"] = false
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Product
             {
@@ -537,18 +637,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 145,
                 IsActive = true,
                 IsFeatured = true,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["capacity"] = "32GB",
-                    ["kit_config"] = "2x16GB",
-                    ["type"] = "DDR5",
-                    ["speed"] = "6000 MHz",
-                    ["cas_latency"] = 30,
-                    ["voltage"] = "1.35V",
-                    ["heat_spreader"] = true,
-                    ["rgb"] = true
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
 
             // === ВИДЕОКАРТЫ ===
@@ -567,20 +656,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 72,
                 IsActive = true,
                 IsFeatured = true,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["gpu"] = "NVIDIA GeForce RTX 4070 SUPER",
-                    ["vram"] = "12GB GDDR6X",
-                    ["memory_bus"] = "192-bit",
-                    ["base_clock"] = "1980 MHz",
-                    ["boost_clock"] = "2475 MHz",
-                    ["cuda_cores"] = 7168,
-                    ["rt_cores"] = 56,
-                    ["tdp"] = "220W",
-                    ["outputs"] = "3x DisplayPort 1.4a, 1x HDMI 2.1",
-                    ["recommended_psu"] = "650W"
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Product
             {
@@ -597,20 +673,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 58,
                 IsActive = true,
                 IsFeatured = false,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["gpu"] = "AMD Radeon RX 7800 XT",
-                    ["vram"] = "16GB GDDR6",
-                    ["memory_bus"] = "256-bit",
-                    ["base_clock"] = "1295 MHz",
-                    ["boost_clock"] = "2430 MHz",
-                    ["stream_processors"] = 3840,
-                    ["ray_accelerators"] = 60,
-                    ["tdp"] = "263W",
-                    ["outputs"] = "2x DisplayPort 2.1, 2x HDMI 2.1, 1x USB-C",
-                    ["recommended_psu"] = "700W"
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
 
             // === БЛОКИ ПИТАНИЯ ===
@@ -629,19 +692,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 189,
                 IsActive = true,
                 IsFeatured = true,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["wattage"] = "750W",
-                    ["efficiency"] = "80+ Gold",
-                    ["modular"] = "Full",
-                    ["fan_size"] = "120mm",
-                    ["fan_type"] = "Rifle Bearing",
-                    ["atx_version"] = "ATX 3.0",
-                    ["pcie_connectors"] = "4x 8-pin (2x 12VHPWR)",
-                    ["sata_connectors"] = 8,
-                    ["noise_level"] = "10-25 dBA"
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Product
             {
@@ -658,19 +709,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 156,
                 IsActive = true,
                 IsFeatured = false,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["wattage"] = "850W",
-                    ["efficiency"] = "80+ Gold",
-                    ["modular"] = "Semi",
-                    ["fan_size"] = "135mm",
-                    ["fan_type"] = "Silent Wings",
-                    ["atx_version"] = "ATX 3.0",
-                    ["pcie_connectors"] = "6x 8-pin",
-                    ["sata_connectors"] = 6,
-                    ["noise_level"] = "5-18 dBA"
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new Product
             {
@@ -687,19 +726,7 @@ public class CatalogDbContext : DbContext
                 ReviewCount = 234,
                 IsActive = true,
                 IsFeatured = true,
-                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-                Specifications = new Dictionary<string, object>
-                {
-                    ["wattage"] = "850W",
-                    ["efficiency"] = "80+ Gold",
-                    ["modular"] = "Full",
-                    ["fan_size"] = "120mm",
-                    ["fan_type"] = "Fluid Dynamic Bearing",
-                    ["atx_version"] = "ATX 3.0",
-                    ["pcie_connectors"] = "6x 8-pin",
-                    ["sata_connectors"] = 8,
-                    ["noise_level"] = "8-22 dBA"
-                }
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         };
 

@@ -37,9 +37,9 @@ public class Product
     /// <summary>Остаток на складе</summary>
     public int Stock { get; set; }
     
-    /// <summary>Технические характеристики (JSON)</summary>
-    public Dictionary<string, object> Specifications { get; set; } = new();
-    
+    /// <summary>Значения спецификаций (нормализованные)</summary>
+    public ICollection<ProductSpecificationValue> SpecificationValues { get; set; } = new List<ProductSpecificationValue>();
+
     /// <summary>Гарантийный срок в месяцах</summary>
     public int WarrantyMonths { get; set; } = 12;
     

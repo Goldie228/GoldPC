@@ -101,7 +101,11 @@ public class CatalogController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return NotFound(new { error = ex.Message });
+            if (ex.Message.Contains("не найден", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            return BadRequest(new { error = ex.Message });
         }
     }
 

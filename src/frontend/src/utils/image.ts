@@ -20,3 +20,17 @@ export function hasValidProductImage(url: string | null | undefined): boolean {
   if (!u) return false;
   return !isXCorePlaceholderUrl(u);
 }
+
+/**
+ * Возвращает URL изображения товара. Относительные пути дополняются origin.
+ */
+export function getProductImageUrl(url: string | null | undefined): string | null {
+  const u = url?.trim();
+  if (!u) return null;
+  if (u.startsWith('http://') || u.startsWith('https://')) return u;
+  if (u.startsWith('//')) return `https:${u}`;
+  if (u.startsWith('/')) return `${window.location.origin}${u}`;
+  const apiBase = import.meta.env?.VITE_API_URL;
+  const base = apiBase ? String(apiBase).replace(/\/api\/v\d+(\/)?$/, '') : window.location.origin;
+  return `${base.replace(/\/$/, '')}/${u.replace(/^\//, '')}`;
+}

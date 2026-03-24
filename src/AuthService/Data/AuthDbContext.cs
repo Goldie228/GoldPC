@@ -21,6 +21,11 @@ public class AuthDbContext : DbContext
     /// Refresh токены
     /// </summary>
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    /// <summary>
+    /// Избранные товары пользователей.
+    /// </summary>
+    public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,6 +58,23 @@ public class AuthDbContext : DbContext
             
             entity.HasOne(e => e.User)
                 .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Конфигурация WishlistItem
+        modelBuilder.Entity<WishlistItem>(entity =>
+        {
+            entity.ToTable("wishlist_items");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.ProductId).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+
+            entity.HasIndex(e => new { e.UserId, e.ProductId }).IsUnique();
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.WishlistItems)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

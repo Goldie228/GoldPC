@@ -7,6 +7,11 @@ const routes = [
   { path: '/catalog', name: 'Catalog', expectedContent: 'Каталог' },
   { path: '/login', name: 'Login', expectedContent: 'Войти' },
   { path: '/pc-builder', name: 'PC Builder', expectedContent: 'Конфигуратор' },
+  { path: '/delivery', name: 'Delivery', expectedContent: 'Доставка' },
+  { path: '/payment', name: 'Payment', expectedContent: 'Оплата' },
+  { path: '/warranty', name: 'Warranty', expectedContent: 'Гарантия' },
+  { path: '/returns', name: 'Returns', expectedContent: 'Возврат' },
+  { path: '/faq', name: 'FAQ', expectedContent: 'FAQ' },
   { path: '/account', name: 'Account', expectedContent: '' }, // Protected route, may redirect to login
 ];
 

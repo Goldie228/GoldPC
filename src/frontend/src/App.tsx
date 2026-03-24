@@ -1,8 +1,11 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
 import { AuthGuard, RoleGuard } from './components/guards';
 import { AuthModalContainer } from './components/auth';
+import { RouteMeta } from './components/seo/RouteMeta';
+import { useAuthStore } from './store/authStore';
+import { useWishlistStore } from './store/wishlistStore';
 import './App.css';
 
 // Lazy load pages for better FCP/LCP performance
@@ -13,6 +16,7 @@ const ProductPage = lazy(() => import('./pages/ProductPage/ProductPage').then(m 
 const PCBuilderPage = lazy(() => import('./pages/PCBuilderPage/PCBuilderPage').then(m => ({ default: m.PCBuilderPage })));
 const CartPage = lazy(() => import('./pages/CartPage/CartPage').then(m => ({ default: m.CartPage })));
 const WishlistPage = lazy(() => import('./pages/WishlistPage/WishlistPage').then(m => ({ default: m.WishlistPage })));
+const ComparisonPage = lazy(() => import('./pages/ComparisonPage/ComparisonPage').then(m => ({ default: m.ComparisonPage })));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
@@ -20,6 +24,11 @@ const AboutPage = lazy(() => import('./pages/AboutPage/AboutPage').then(m => ({ 
 const ServicesPage = lazy(() => import('./pages/ServicesPage').then(m => ({ default: m.ServicesPage })));
 const ServiceDetailPage = lazy(() => import('./pages/ServiceDetailPage').then(m => ({ default: m.ServiceDetailPage })));
 const ServiceRequestPage = lazy(() => import('./pages/ServiceRequestPage').then(m => ({ default: m.ServiceRequestPage })));
+const DeliveryPage = lazy(() => import('./pages/info/DeliveryPage').then(m => ({ default: m.DeliveryPage })));
+const PaymentPage = lazy(() => import('./pages/info/PaymentPage').then(m => ({ default: m.PaymentPage })));
+const WarrantyPage = lazy(() => import('./pages/info/WarrantyPage').then(m => ({ default: m.WarrantyPage })));
+const ReturnsPage = lazy(() => import('./pages/info/ReturnsPage').then(m => ({ default: m.ReturnsPage })));
+const FaqPage = lazy(() => import('./pages/info/FaqPage').then(m => ({ default: m.FaqPage })));
 
 // Account pages - lazy loaded
 const AccountPage = lazy(() => import('./pages/AccountPage/AccountPage').then(m => ({ default: m.AccountPage })));
@@ -76,9 +85,18 @@ const PageLoader = () => (
  * - /manager/*            -> Manager Pages [RoleGuard: Manager, Admin]
  */
 function App() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const syncWishlistWithServer = useWishlistStore((state) => state.syncWithServer);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    void syncWishlistWithServer();
+  }, [isAuthenticated, syncWishlistWithServer]);
+
   return (
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
+        <RouteMeta />
         {/* Global Auth Modals */}
         <AuthModalContainer />
         
@@ -93,11 +111,17 @@ function App() {
             <Route path="/pc-builder" element={<PCBuilderPage />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
+            <Route path="/comparison" element={<ComparisonPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/services/:slug" element={<ServiceDetailPage />} />
             <Route path="/service-request" element={<ServiceRequestPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/delivery" element={<DeliveryPage />} />
+            <Route path="/payment" element={<PaymentPage />} />
+            <Route path="/warranty" element={<WarrantyPage />} />
+            <Route path="/returns" element={<ReturnsPage />} />
+            <Route path="/faq" element={<FaqPage />} />
 
             {/* Account Routes - Protected by AuthGuard */}
             <Route element={<AuthGuard />}>

@@ -77,6 +77,7 @@ builder.Services.AddScoped<IManufacturerRepository, ManufacturerRepository>();
 builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 // Регистрация сервисов
+builder.Services.AddScoped<CatalogService.Services.SpecImportNormalizer>();
 builder.Services.AddScoped<ICatalogService, CatalogService.Services.CatalogService>();
 builder.Services.AddScoped<CatalogService.Services.XCoreImporter>();
 builder.Services.AddScoped<CatalogService.Services.FilterAttributesSeeder>();
@@ -349,19 +350,45 @@ if (args is ["migrate-gpu-release-year"])
             logger.LogWarning("Категория gpu не найдена");
             return 1;
         }
-        var products = await context.Products
-            .Where(p => p.CategoryId == gpuCategory.Id && p.Specifications != null)
+        var dataAttr = await context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == "data_vykhoda_na_rynok_2");
+        var releaseAttr = await context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == "release_year");
+        if (dataAttr == null || releaseAttr == null)
+        {
+            logger.LogInformation("Миграция GPU: атрибуты data_vykhoda_na_rynok_2/release_year не найдены, пропуск");
+            return 0;
+        }
+        var psvs = await context.ProductSpecificationValues
+            .Where(psv => psv.AttributeId == dataAttr.Id)
+            .Include(psv => psv.CanonicalValue)
             .ToListAsync();
         var migrated = 0;
-        foreach (var p in products)
+        foreach (var psv in psvs)
         {
-            if (p.Specifications.TryGetValue("data_vykhoda_na_rynok_2", out var val) && val != null)
+            if (psv.CanonicalValue == null) continue;
+            var cvRelease = await context.SpecificationCanonicalValues
+                .FirstOrDefaultAsync(cv => cv.AttributeId == releaseAttr.Id && cv.ValueText == psv.CanonicalValue.ValueText);
+            if (cvRelease == null)
             {
-                p.Specifications["release_year"] = val;
-                p.Specifications.Remove("data_vykhoda_na_rynok_2");
-                p.UpdatedAt = DateTime.UtcNow;
-                migrated++;
+                cvRelease = new CatalogService.Models.SpecificationCanonicalValue
+                {
+                    Id = Guid.NewGuid(),
+                    AttributeId = releaseAttr.Id,
+                    ValueText = psv.CanonicalValue.ValueText,
+                    SortOrder = 999
+                };
+                context.SpecificationCanonicalValues.Add(cvRelease);
+                await context.SaveChangesAsync();
             }
+            context.ProductSpecificationValues.Add(new CatalogService.Models.ProductSpecificationValue
+            {
+                Id = Guid.NewGuid(),
+                ProductId = psv.ProductId,
+                AttributeId = releaseAttr.Id,
+                CanonicalValueId = cvRelease.Id,
+                ValueNumber = null
+            });
+            context.ProductSpecificationValues.Remove(psv);
+            migrated++;
         }
         await context.SaveChangesAsync();
         logger.LogInformation("Миграция GPU: {Migrated} товаров обновлено (data_vykhoda_na_rynok_2 → release_year)", migrated);

@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import './ServerErrorPage.css';
 
@@ -18,7 +18,6 @@ import './ServerErrorPage.css';
  */
 export function ServerErrorPage() {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleRetry = () => {
     // Navigate to the same page to retry

@@ -1,0 +1,35 @@
+.info-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 16px 56px;
+  color: var(--text-primary, #f4f4f5);
+}
+
+.info-page h1 {
+  margin: 0 0 16px;
+  font-size: 2rem;
+}
+
+.info-page section {
+  border: 1px solid var(--border-primary, #27272a);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  background: var(--bg-card, #111113);
+}
+
+.info-page h2 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+
+.info-page p,
+.info-page li {
+  color: var(--text-secondary, #d4d4d8);
+  line-height: 1.5;
+}
+
+.info-page ul {
+  margin: 0;
+  padding-left: 18px;
+}

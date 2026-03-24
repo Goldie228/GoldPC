@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, User, Menu, X, LogOut, ShoppingBag, Heart } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, LogOut, ShoppingBag, Heart, GitCompare } from 'lucide-react';
 import { useCartTotalItems } from '../../../store/cartStore';
 import { useWishlistCount } from '../../../store/wishlistStore';
+import { useComparisonCount } from '../../../store/comparisonStore';
 import { useAuthStore } from '../../../store/authStore';
 import { useAuthModalStore } from '../../../store/authModalStore';
 import { MiniCart } from './MiniCart';
@@ -31,6 +32,7 @@ export function Header() {
   const [cartFlash, setCartFlash] = useState(false);
   const cartCount = useCartTotalItems();
   const wishlistCount = useWishlistCount();
+  const comparisonCount = useComparisonCount();
   const prevCartCountRef = useRef(cartCount);
   const { isAuthenticated, user, logout } = useAuthStore();
   const { openLoginModal, openRegisterModal } = useAuthModalStore();
@@ -201,6 +203,17 @@ export function Header() {
             {wishlistCount > 0 && <span className={styles.cartBadge}>{wishlistCount}</span>}
           </Link>
 
+          {/* Comparison Button */}
+          <Link
+            to="/comparison"
+            className={styles.iconBtn}
+            aria-label={`Сравнение: ${comparisonCount} товаров`}
+            title="Сравнение"
+          >
+            <GitCompare />
+            {comparisonCount > 0 && <span className={styles.cartBadge}>{comparisonCount}</span>}
+          </Link>
+
           {/* Cart Button */}
           <motion.button
             className={styles.iconBtn}
@@ -362,6 +375,11 @@ export function Header() {
             <Heart />
             <span>Избранное</span>
             {wishlistCount > 0 && <span className={styles.mobileBadge}>{wishlistCount}</span>}
+          </Link>
+          <Link to="/comparison" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+            <GitCompare />
+            <span>Сравнение</span>
+            {comparisonCount > 0 && <span className={styles.mobileBadge}>{comparisonCount}</span>}
           </Link>
           <Link to="/cart" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
             <ShoppingCart />

@@ -159,8 +159,10 @@ public class OrdersService : IOrdersService
         
         var orderNumber = $"ORD-{year}-{nextNumber:D4}";
 
-        // Расчёт общей стоимости (ФТ-3.13)
-        var total = request.Items.Sum(i => i.Quantity * i.UnitPrice);
+        // Расчёт стоимости товаров и доставки
+        var subtotal = request.Items.Sum(i => i.Quantity * i.UnitPrice);
+        var deliveryCost = CalculateDeliveryCost(request.DeliveryMethod, subtotal, request.City);
+        var total = subtotal + deliveryCost;
         
         // Валидация общей стоимости
         if (total < 0)
@@ -178,6 +180,8 @@ public class OrdersService : IOrdersService
             PaymentMethod = request.PaymentMethod,
             Address = request.Address,
             Comment = request.Comment,
+            Subtotal = subtotal,
+            DeliveryCost = deliveryCost,
             Total = total,
             CreatedAt = DateTime.UtcNow
         };
@@ -318,6 +322,43 @@ public class OrdersService : IOrdersService
         return items.Sum(oi => oi.TotalPrice);
     }
 
+    public Task<DeliveryQuoteResponse> CalculateDeliveryQuoteAsync(DeliveryQuoteRequest request)
+    {
+        var deliveryCost = CalculateDeliveryCost(request.DeliveryMethod, request.Subtotal, request.City);
+        return Task.FromResult(new DeliveryQuoteResponse
+        {
+            Subtotal = request.Subtotal,
+            DeliveryCost = deliveryCost,
+            Total = request.Subtotal + deliveryCost
+        });
+    }
+
+    private static decimal CalculateDeliveryCost(string deliveryMethod, decimal subtotal, string? city)
+    {
+        if (deliveryMethod == "Pickup")
+        {
+            return 0m;
+        }
+
+        if (deliveryMethod != "Delivery")
+        {
+            return 0m;
+        }
+
+        if (subtotal >= 1500m)
+        {
+            return 0m;
+        }
+
+        var cityNormalized = city?.Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(cityNormalized))
+        {
+            return 20m;
+        }
+
+        return cityNormalized == "минск" || cityNormalized == "minsk" ? 10m : 20m;
+    }
+
     private static bool IsValidStatusTransition(OrderStatus from, OrderStatus to)
     {
         return from switch
@@ -342,6 +383,8 @@ public class OrdersService : IOrdersService
             OrderNumber = order.OrderNumber,
             Status = order.Status,
             Total = order.Total,
+            Subtotal = order.Subtotal,
+            DeliveryCost = order.DeliveryCost,
             DeliveryMethod = order.DeliveryMethod,
             PaymentMethod = order.PaymentMethod,
             Address = order.Address,

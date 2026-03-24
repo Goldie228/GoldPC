@@ -24,11 +24,13 @@ public class RepositoryPagedResult<T>
 public class ProductRepository : IProductRepository
 {
     private readonly CatalogDbContext _context;
+    private readonly SpecImportNormalizer _specNormalizer;
     private readonly ILogger<ProductRepository> _logger;
 
-    public ProductRepository(CatalogDbContext context, ILogger<ProductRepository> logger)
+    public ProductRepository(CatalogDbContext context, SpecImportNormalizer specNormalizer, ILogger<ProductRepository> logger)
     {
         _context = context;
+        _specNormalizer = specNormalizer;
         _logger = logger;
     }
 
@@ -50,6 +52,10 @@ public class ProductRepository : IProductRepository
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
             .Include(p => p.Images.OrderBy(i => i.SortOrder))
+            .Include(p => p.SpecificationValues)
+                .ThenInclude(s => s.Attribute)
+            .Include(p => p.SpecificationValues)
+                .ThenInclude(s => s.CanonicalValue)
             .Include(p => p.Reviews.Where(r => r.IsVerified).OrderByDescending(r => r.CreatedAt))
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
     }
@@ -122,101 +128,48 @@ public class ProductRepository : IProductRepository
                 p.Sku.ToLower().Contains(searchTerm));
         }
 
-        // Фильтрация по спецификациям и range — в памяти (надёжный мультивыбор AM4+AM5 и т.п.)
+        // Фильтрация по спецификациям (SQL)
         var hasSpecs = filter.Specifications != null && filter.Specifications.Count > 0;
         var hasRanges = filter.SpecificationRanges != null && filter.SpecificationRanges.Count > 0;
-        if (hasSpecs || hasRanges)
+        if (hasSpecs)
         {
-            var allFiltered = await query.ToListAsync();
-
-            if (hasSpecs)
+            foreach (var (key, value) in filter.Specifications!)
             {
-                foreach (var (key, value) in filter.Specifications!)
-                {
-                    if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value))
-                        continue;
-                    var allowedValues = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
-                    if (allowedValues.Count == 0) continue;
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(value)) continue;
+                var allowedTexts = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                if (allowedTexts.Count == 0) continue;
 
-                    allFiltered = allFiltered.Where(p =>
-                    {
-                        if (p.Specifications == null || !p.Specifications.TryGetValue(key, out var specVal))
-                            return false;
-                        if (string.Equals(key, "socket", StringComparison.OrdinalIgnoreCase))
-                        {
-                            var pv = specVal?.ToString() ?? "";
-                            var parts = pv.Split(',', StringSplitOptions.TrimEntries);
-                            return allowedValues.Any(allowed =>
-                                parts.Any(part => string.Equals(
-                                    SpecValueNormalizer.NormalizeForDisplay(key, part.Trim()),
-                                    allowed,
-                                    StringComparison.OrdinalIgnoreCase)));
-                        }
-                        if (SpecValueNormalizer.IsNormalizedAttribute(key))
-                        {
-                            return allowedValues.Any(allowed =>
-                                SpecValueNormalizer.MatchesFilter(key, specVal, allowed));
-                        }
-                        if (string.Equals(key, "memory_type", StringComparison.OrdinalIgnoreCase) && (specVal?.ToString() ?? "").Contains(","))
-                            return allowedValues.Any(allowed => SpecValueNormalizer.MotherboardMemoryTypeMatches(specVal?.ToString(), allowed));
-                        if (SpecValueNormalizer.ShouldExpandMultiValue(key))
-                        {
-                            var pv = specVal?.ToString() ?? "";
-                            if (string.Equals(key, "form_factor", StringComparison.OrdinalIgnoreCase))
-                                pv = SpecValueNormalizer.NormalizeFormFactorForDisplay(pv);
-                            return allowedValues.Any(allowed =>
-                                SpecValueNormalizer.MultiValueContains(pv, allowed));
-                        }
-                        if (specVal == null) return false;
-                        var specStr = SpecValueNormalizer.CollapseWhitespace(specVal.ToString() ?? "");
-                        return allowedValues.Any(allowed =>
-                        {
-                            if (int.TryParse(allowed, out var intAllowed) && int.TryParse(specStr, out var intSpec))
-                                return intAllowed == intSpec;
-                            if (double.TryParse(allowed, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var dblAllowed) &&
-                                double.TryParse(specStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var dblSpec))
-                                return Math.Abs(dblAllowed - dblSpec) < 0.001;
-                            return string.Equals(specStr, allowed, StringComparison.OrdinalIgnoreCase);
-                        });
-                    }).ToList();
-                }
+                var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == key);
+                if (attr == null) continue;
+
+                var canonicalIds = await _context.SpecificationCanonicalValues
+                    .Where(cv => cv.AttributeId == attr.Id && allowedTexts.Contains(cv.ValueText))
+                    .Select(cv => cv.Id)
+                    .ToListAsync();
+                if (canonicalIds.Count == 0) continue;
+
+                query = query.Where(p => _context.ProductSpecificationValues
+                    .Any(psv => psv.ProductId == p.Id && psv.AttributeId == attr.Id && psv.CanonicalValueId != null && canonicalIds.Contains(psv.CanonicalValueId!.Value)));
             }
-
-            if (hasRanges)
+        }
+        if (hasRanges)
+        {
+            foreach (var (key, rangeStr) in filter.SpecificationRanges!)
             {
-                foreach (var (key, rangeStr) in filter.SpecificationRanges!)
-                {
-                    if (string.IsNullOrEmpty(key)) continue;
-                    var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);
-                    decimal? min = parts.Length > 0 && decimal.TryParse(parts[0], out var m) ? m : null;
-                    decimal? max = parts.Length > 1 && decimal.TryParse(parts[1], out var x) ? x : null;
-                    if (!min.HasValue && !max.HasValue) continue;
+                if (string.IsNullOrEmpty(key)) continue;
+                var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);
+                var min = parts.Length > 0 && decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : (decimal?)null;
+                var max = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
+                if (!min.HasValue && !max.HasValue) continue;
 
-                    allFiltered = allFiltered.Where(p =>
-                        p.Specifications != null &&
-                        p.Specifications.TryGetValue(key, out var val) &&
-                        val != null &&
-                        TryParseSpecNumber(val, out var num) &&
-                        (!min.HasValue || num >= min.Value) &&
-                        (!max.HasValue || num <= max.Value)).ToList();
-                }
+                var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == key);
+                if (attr == null) continue;
+
+                query = query.Where(p => _context.ProductSpecificationValues
+                    .Any(psv => psv.ProductId == p.Id && psv.AttributeId == attr.Id && psv.ValueNumber != null &&
+                        (!min.HasValue || psv.ValueNumber >= min) &&
+                        (!max.HasValue || psv.ValueNumber <= max)));
             }
-
-            var specTotal = allFiltered.Count;
-            var specSortDesc = filter.SortOrder?.ToLower() == "desc";
-            var specSorted = ApplySorting(allFiltered.AsQueryable(), filter.SortBy, specSortDesc);
-            var specItems = specSorted
-                .Skip((filter.Page - 1) * filter.PageSize)
-                .Take(filter.PageSize)
-                .ToList();
-
-            return new RepositoryPagedResult<Product>
-            {
-                Items = specItems,
-                TotalCount = specTotal,
-                Page = filter.Page,
-                PageSize = filter.PageSize
-            };
         }
 
         // Подсчёт и пагинация (без спецификаций)
@@ -237,19 +190,6 @@ public class ProductRepository : IProductRepository
             Page = filter.Page,
             PageSize = filter.PageSize
         };
-    }
-
-    private static bool TryParseSpecNumber(object? val, out decimal num)
-    {
-        num = 0;
-        if (val == null) return false;
-        if (val is int i) { num = i; return true; }
-        if (val is long l) { num = l; return true; }
-        if (val is decimal d) { num = d; return true; }
-        if (val is double db) { num = (decimal)db; return true; }
-        if (val is float f) { num = (decimal)f; return true; }
-        if (val is string s && decimal.TryParse(s.Replace(" ", "").Replace(",", "."), out var parsed)) { num = parsed; return true; }
-        return false;
     }
 
     private static IQueryable<Product> ApplySorting(IQueryable<Product> query, string sortBy, bool sortDesc)
@@ -298,78 +238,67 @@ public class ProductRepository : IProductRepository
         if (keys.Count == 0)
             return new Dictionary<string, List<string>>();
 
-        var productsQuery = _context.Products
-            .Where(p => p.CategoryId == categoryId && p.IsActive && p.Specifications != null);
-
+        var baseProductsQuery = _context.Products.Where(p => p.CategoryId == categoryId && p.IsActive);
         if (filterContext != null)
         {
             var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
             if (manIds != null && manIds.Count > 0)
-                productsQuery = productsQuery.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
+                baseProductsQuery = baseProductsQuery.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
         }
+        var productIds = await baseProductsQuery.Select(p => p.Id).ToListAsync();
 
-        var allProducts = await productsQuery.Select(p => new { p.Id, p.Specifications }).ToListAsync();
+        if (filterContext?.Specifications != null && filterContext.Specifications.Count > 0)
+        {
+            foreach (var (specKey, value) in filterContext.Specifications.Where(kv => kv.Key != null && kv.Value != null))
+            {
+                var allowedTexts = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                if (allowedTexts.Count == 0) continue;
+                var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == specKey);
+                if (attr == null) continue;
+                var canonIds = await _context.SpecificationCanonicalValues
+                    .Where(cv => cv.AttributeId == attr.Id && allowedTexts.Contains(cv.ValueText))
+                    .Select(cv => cv.Id).ToListAsync();
+                if (canonIds.Count == 0) continue;
+                productIds = await _context.ProductSpecificationValues
+                    .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == attr.Id && psv.CanonicalValueId != null && canonIds.Contains(psv.CanonicalValueId!.Value))
+                    .Select(psv => psv.ProductId)
+                    .Distinct()
+                    .ToListAsync();
+            }
+        }
+        if (filterContext?.SpecificationRanges != null && filterContext.SpecificationRanges.Count > 0)
+        {
+            foreach (var (rangeKey, rangeStr) in filterContext.SpecificationRanges)
+            {
+                if (string.IsNullOrEmpty(rangeKey)) continue;
+                var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);
+                var min = parts.Length > 0 && decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : (decimal?)null;
+                var max = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
+                if (!min.HasValue && !max.HasValue) continue;
+                var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
+                if (attr == null) continue;
+                productIds = await _context.ProductSpecificationValues
+                    .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == attr.Id && psv.ValueNumber != null &&
+                        (!min.HasValue || psv.ValueNumber >= min) &&
+                        (!max.HasValue || psv.ValueNumber <= max))
+                    .Select(psv => psv.ProductId)
+                    .Distinct()
+                    .ToListAsync();
+            }
+        }
 
         var result = new Dictionary<string, List<string>>();
         foreach (var key in keys)
         {
-            var filteredForKey = allProducts.AsEnumerable();
-            var specsExcludingKey = filterContext?.Specifications?.Where(kv => kv.Key != key).ToDictionary(kv => kv.Key, kv => kv.Value);
-            if (specsExcludingKey != null && specsExcludingKey.Count > 0)
-            {
-                foreach (var (specKey, value) in specsExcludingKey)
-                {
-                    if (string.IsNullOrEmpty(specKey) || string.IsNullOrEmpty(value)) continue;
-                    var allowed = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
-                    if (allowed.Count == 0) continue;
-                    filteredForKey = filteredForKey.Where(p =>
-                    {
-                        if (p.Specifications == null || !p.Specifications.TryGetValue(specKey, out var v)) return false;
-                        if (string.Equals(specKey, "socket", StringComparison.OrdinalIgnoreCase))
-                        {
-                            var pv = v?.ToString() ?? "";
-                            var parts = pv.Split(',', StringSplitOptions.TrimEntries);
-                            return allowed.Any(a => parts.Any(part => string.Equals(
-                                SpecValueNormalizer.NormalizeForDisplay(specKey, part.Trim()), a, StringComparison.OrdinalIgnoreCase)));
-                        }
-                        if (SpecValueNormalizer.IsNormalizedAttribute(specKey))
-                            return allowed.Any(a => SpecValueNormalizer.MatchesFilter(specKey, v, a));
-                        if (string.Equals(specKey, "memory_type", StringComparison.OrdinalIgnoreCase) && (v?.ToString() ?? "").Contains(","))
-                            return allowed.Any(a => SpecValueNormalizer.MotherboardMemoryTypeMatches(v?.ToString(), a));
-                        if (SpecValueNormalizer.ShouldExpandMultiValue(specKey))
-                        {
-                            var pv = v?.ToString() ?? "";
-                            if (string.Equals(specKey, "form_factor", StringComparison.OrdinalIgnoreCase))
-                                pv = SpecValueNormalizer.NormalizeFormFactorForDisplay(pv);
-                            return allowed.Any(a => SpecValueNormalizer.MultiValueContains(pv, a));
-                        }
-                        if (v == null) return false;
-                        return allowed.Any(a => string.Equals((v?.ToString() ?? ""), a, StringComparison.OrdinalIgnoreCase));
-                    });
-                }
-            }
-            if (filterContext?.SpecificationRanges != null && filterContext.SpecificationRanges.Count > 0)
-            {
-                foreach (var (rangeKey, rangeStr) in filterContext.SpecificationRanges)
-                {
-                    if (string.IsNullOrEmpty(rangeKey)) continue;
-                    var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);
-                    decimal? min = parts.Length > 0 && decimal.TryParse(parts[0], out var m) ? m : null;
-                    decimal? max = parts.Length > 1 && decimal.TryParse(parts[1], out var x) ? x : null;
-                    if (!min.HasValue && !max.HasValue) continue;
-                    filteredForKey = filteredForKey.Where(p => p.Specifications != null && p.Specifications.TryGetValue(rangeKey, out var val) && val != null &&
-                        TryParseSpecNumber(val, out var num) &&
-                        (!min.HasValue || num >= min.Value) &&
-                        (!max.HasValue || num <= max.Value));
-                }
-            }
-            var values = filteredForKey
-                .Where(p => p.Specifications != null && p.Specifications.ContainsKey(key) && p.Specifications[key] != null)
-                .Select(p => p.Specifications![key]?.ToString() ?? string.Empty)
-                .Where(v => !string.IsNullOrEmpty(v))
+            var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == key);
+            if (attr == null) continue;
+
+            var values = await _context.ProductSpecificationValues
+                .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == attr.Id && psv.CanonicalValueId != null)
+                .Join(_context.SpecificationCanonicalValues, psv => psv.CanonicalValueId, scv => scv.Id, (psv, scv) => scv.ValueText)
                 .Distinct()
-                .OrderBy(v => v)
-                .ToList();
+                .OrderBy(t => t)
+                .ToListAsync();
             if (values.Count > 0)
                 result[key] = values;
         }
@@ -378,84 +307,62 @@ public class ProductRepository : IProductRepository
 
     public async Task<(decimal? Min, decimal? Max)> GetSpecificationRangeAsync(Guid categoryId, string attributeKey, ProductFilterDto? filterContext = null)
     {
-        var productsQuery = _context.Products
-            .Where(p => p.CategoryId == categoryId && p.IsActive && p.Specifications != null);
+        var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == attributeKey);
+        if (attr == null) return (null, null);
 
+        var baseProductsQuery = _context.Products.Where(p => p.CategoryId == categoryId && p.IsActive);
         if (filterContext != null)
         {
             var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
             if (manIds != null && manIds.Count > 0)
-                productsQuery = productsQuery.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
+                baseProductsQuery = baseProductsQuery.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
         }
+        var productIds = await baseProductsQuery.Select(p => p.Id).ToListAsync();
 
-        var products = await productsQuery.Select(p => p.Specifications).ToListAsync();
-
-        if (filterContext?.Specifications != null && filterContext.Specifications.Count > 0 ||
-            filterContext?.SpecificationRanges != null && filterContext.SpecificationRanges.Count > 0)
+        if (filterContext?.Specifications != null && filterContext.Specifications.Count > 0)
         {
-            var allProductsWithId = await productsQuery.Select(p => new { p.Id, p.Specifications }).ToListAsync();
-            var filtered = allProductsWithId.AsEnumerable();
-            if (filterContext.Specifications != null)
+            foreach (var (specKey, value) in filterContext.Specifications)
             {
-                foreach (var (specKey, value) in filterContext.Specifications)
-                {
-                    if (string.IsNullOrEmpty(specKey) || string.IsNullOrEmpty(value)) continue;
-                    var allowed = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
-                    if (allowed.Count == 0) continue;
-                    filtered = filtered.Where(p =>
-                    {
-                        if (p.Specifications == null || !p.Specifications.TryGetValue(specKey, out var v)) return false;
-                        if (string.Equals(specKey, "socket", StringComparison.OrdinalIgnoreCase))
-                        {
-                            var pv = v?.ToString() ?? "";
-                            var parts = pv.Split(',', StringSplitOptions.TrimEntries);
-                            return allowed.Any(a => parts.Any(part => string.Equals(
-                                SpecValueNormalizer.NormalizeForDisplay(specKey, part.Trim()), a, StringComparison.OrdinalIgnoreCase)));
-                        }
-                        if (SpecValueNormalizer.IsNormalizedAttribute(specKey))
-                            return allowed.Any(a => SpecValueNormalizer.MatchesFilter(specKey, v, a));
-                        if (string.Equals(specKey, "memory_type", StringComparison.OrdinalIgnoreCase) && (v?.ToString() ?? "").Contains(","))
-                            return allowed.Any(a => SpecValueNormalizer.MotherboardMemoryTypeMatches(v?.ToString(), a));
-                        if (SpecValueNormalizer.ShouldExpandMultiValue(specKey))
-                        {
-                            var pv = v?.ToString() ?? "";
-                            if (string.Equals(specKey, "form_factor", StringComparison.OrdinalIgnoreCase))
-                                pv = SpecValueNormalizer.NormalizeFormFactorForDisplay(pv);
-                            return allowed.Any(a => SpecValueNormalizer.MultiValueContains(pv, a));
-                        }
-                        if (v == null) return false;
-                        return allowed.Any(a => string.Equals((v?.ToString() ?? ""), a, StringComparison.OrdinalIgnoreCase));
-                    });
-                }
+                if (string.IsNullOrEmpty(specKey) || string.IsNullOrEmpty(value)) continue;
+                var allowedTexts = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                if (allowedTexts.Count == 0) continue;
+                var specAttr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == specKey);
+                if (specAttr == null) continue;
+                var canonIds = await _context.SpecificationCanonicalValues
+                    .Where(cv => cv.AttributeId == specAttr.Id && allowedTexts.Contains(cv.ValueText))
+                    .Select(cv => cv.Id).ToListAsync();
+                if (canonIds.Count == 0) continue;
+                productIds = await _context.ProductSpecificationValues
+                    .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == specAttr.Id && psv.CanonicalValueId != null && canonIds.Contains(psv.CanonicalValueId!.Value))
+                    .Select(psv => psv.ProductId).Distinct().ToListAsync();
             }
-            if (filterContext.SpecificationRanges != null)
+        }
+        if (filterContext?.SpecificationRanges != null && filterContext.SpecificationRanges.Count > 0)
+        {
+            foreach (var (rangeKey, rangeStr) in filterContext.SpecificationRanges.Where(kv => kv.Key != attributeKey))
             {
-                foreach (var (rangeKey, rangeStr) in filterContext.SpecificationRanges)
-                {
-                    if (string.IsNullOrEmpty(rangeKey)) continue;
-                    var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);
-                    decimal? min = parts.Length > 0 && decimal.TryParse(parts[0], out var m) ? m : null;
-                    decimal? max = parts.Length > 1 && decimal.TryParse(parts[1], out var x) ? x : null;
-                    if (!min.HasValue && !max.HasValue) continue;
-                    filtered = filtered.Where(p => p.Specifications != null && p.Specifications.TryGetValue(rangeKey, out var val) && val != null &&
-                        TryParseSpecNumber(val, out var num) &&
-                        (!min.HasValue || num >= min.Value) &&
-                        (!max.HasValue || num <= max.Value));
-                }
+                if (string.IsNullOrEmpty(rangeKey)) continue;
+                var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);
+                var minR = parts.Length > 0 && decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : (decimal?)null;
+                var maxR = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
+                if (!minR.HasValue && !maxR.HasValue) continue;
+                var rangeAttr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
+                if (rangeAttr == null) continue;
+                productIds = await _context.ProductSpecificationValues
+                    .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == rangeAttr.Id && psv.ValueNumber != null &&
+                        (!minR.HasValue || psv.ValueNumber >= minR) &&
+                        (!maxR.HasValue || psv.ValueNumber <= maxR))
+                    .Select(psv => psv.ProductId).Distinct().ToListAsync();
             }
-            products = filtered.Select(p => p.Specifications).ToList();
         }
 
-        decimal? minVal = null;
-        decimal? maxVal = null;
-        foreach (var specs in products)
-        {
-            if (specs == null || !specs.TryGetValue(attributeKey, out var val) || val == null) continue;
-            if (!TryParseSpecNumber(val, out var num)) continue;
-            if (!minVal.HasValue || num < minVal) minVal = num;
-            if (!maxVal.HasValue || num > maxVal) maxVal = num;
-        }
-        return (minVal, maxVal);
+        var nums = await _context.ProductSpecificationValues
+            .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == attr.Id && psv.ValueNumber != null)
+            .Select(psv => psv.ValueNumber!.Value)
+            .ToListAsync();
+
+        if (nums.Count == 0) return (null, null);
+        return (nums.Min(), nums.Max());
     }
 
     public async Task<Dictionary<Guid, int>> GetProductCountsByCategoryAsync()
@@ -478,6 +385,20 @@ public class ProductRepository : IProductRepository
         _logger.LogInformation("Created product {ProductId} with SKU {Sku}", product.Id, product.Sku);
         
         return product;
+    }
+
+    public async Task SetSpecificationsAsync(Guid productId, Dictionary<string, object> specifications)
+    {
+        var existing = await _context.ProductSpecificationValues.Where(v => v.ProductId == productId).ToListAsync();
+        _context.ProductSpecificationValues.RemoveRange(existing);
+        await _context.SaveChangesAsync();
+
+        var values = await _specNormalizer.ToSpecificationValuesAsync(productId, specifications);
+        foreach (var v in values)
+        {
+            _context.ProductSpecificationValues.Add(v);
+        }
+        await _context.SaveChangesAsync();
     }
 
     public async Task<Product> UpdateAsync(Product product)

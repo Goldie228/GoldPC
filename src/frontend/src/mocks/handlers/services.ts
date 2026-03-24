@@ -7,7 +7,6 @@ import { http, HttpResponse, delay } from 'msw';
 import { faker } from '@faker-js/faker';
 import { SERVICES, SERVICE_BENEFITS } from '../data/services';
 import type {
-  Service,
   ServiceListResponse,
   PaginationMeta,
   ServiceCategory,

@@ -20,6 +20,7 @@ public interface IProductRepository
     Task<Dictionary<string, List<string>>> GetDistinctSpecificationValuesAsync(Guid categoryId, IEnumerable<string> attributeKeys, ProductFilterDto? filterContext = null);
     Task<(decimal? Min, decimal? Max)> GetSpecificationRangeAsync(Guid categoryId, string attributeKey, ProductFilterDto? filterContext = null);
     Task<Product> CreateAsync(Product product);
+    Task SetSpecificationsAsync(Guid productId, Dictionary<string, object> specifications);
     Task<Product> UpdateAsync(Product product);
     Task DeleteAsync(Guid id);
     Task<bool> ExistsAsync(Guid id);
@@ -69,4 +70,5 @@ public interface IReviewRepository
     Task DeleteAsync(Guid id);
     Task<double> GetAverageRatingAsync(Guid productId);
     Task<int> GetReviewCountAsync(Guid productId);
+    Task<bool> ExistsByUserAndProductAsync(Guid userId, Guid productId);
 }

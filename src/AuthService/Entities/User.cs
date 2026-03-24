@@ -57,6 +57,11 @@ public class User : BaseEntity
     /// Refresh токены пользователя
     /// </summary>
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
+    /// <summary>
+    /// Избранные товары пользователя.
+    /// </summary>
+    public ICollection<WishlistItem> WishlistItems { get; set; } = new List<WishlistItem>();
     
     /// <summary>
     /// Полное имя

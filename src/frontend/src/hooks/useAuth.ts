@@ -5,6 +5,7 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { useWishlistStore } from '../store/wishlistStore';
 import { authService } from '../api/authService';
 import type { LoginRequest, RegisterRequest, User } from '../api/types';
 
@@ -20,6 +21,7 @@ interface UseAuthReturn {
 export function useAuth(): UseAuthReturn {
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoading, setUser, setLoading, logout: storeLogout } = useAuthStore();
+  const syncWishlistWithServer = useWishlistStore((state) => state.syncWithServer);
 
   /**
    * Сохранение токенов в хранилище
@@ -47,13 +49,14 @@ export function useAuth(): UseAuthReturn {
       
       saveTokens(response.accessToken, response.refreshToken, remember);
       setUser(response.user);
+      await syncWishlistWithServer();
       
       navigate('/');
     } catch (error) {
       storeLogout();
       throw error;
     }
-  }, [setLoading, setUser, storeLogout, saveTokens, navigate]);
+  }, [setLoading, setUser, storeLogout, saveTokens, navigate, syncWishlistWithServer]);
 
   /**
    * Регистрация
@@ -68,13 +71,14 @@ export function useAuth(): UseAuthReturn {
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('refreshToken', response.refreshToken);
       setUser(response.user);
+      await syncWishlistWithServer();
       
       navigate('/');
     } catch (error) {
       storeLogout();
       throw error;
     }
-  }, [setLoading, setUser, storeLogout, navigate]);
+  }, [setLoading, setUser, storeLogout, navigate, syncWishlistWithServer]);
 
   /**
    * Выход из системы

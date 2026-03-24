@@ -192,7 +192,7 @@ export function SearchDropdown() {
                     >
                       {/* Thumbnail */}
                       <div className={styles.thumbnail}>
-                        {hasValidProductImage(product.mainImage?.url) ? (
+                        {hasValidProductImage(product.mainImage?.url) && product.mainImage ? (
                           <img
                             src={product.mainImage.url}
                             alt={product.mainImage.alt || product.name}

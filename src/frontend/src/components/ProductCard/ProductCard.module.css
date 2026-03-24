@@ -144,6 +144,49 @@
 }
 
 /* ========================================
+   Wishlist Corner Button
+   ======================================== */
+
+.wishlistCornerBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(9, 9, 11, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  color: var(--fg-dim, #71717a);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  z-index: 3;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  visibility: hidden;
+}
+
+.wishlistCornerBtn:hover:not(:disabled) {
+  border-color: rgba(212, 165, 116, 0.4);
+  color: #d4a574;
+  box-shadow: 0 0 8px rgba(212, 165, 116, 0.2);
+}
+
+.wishlistCornerVisible {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .wishlistCornerBtn {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}
+
+/* ========================================
    Quick View Button (appears on hover)
    ======================================== */
 
@@ -378,6 +421,48 @@
 }
 
 .wishlistActive:hover {
+  background: rgba(212, 165, 116, 0.25);
+  border-color: #e6b98b;
+  color: #e6b98b;
+}
+
+/* ========================================
+   Compare Button (same style as wishlist)
+   ======================================== */
+
+.compareBtn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--fg-dim, #71717a);
+  flex-shrink: 0;
+}
+
+.compareBtn:hover:not(:disabled) {
+  border-color: rgba(212, 165, 116, 0.4);
+  color: #d4a574;
+  box-shadow: 0 0 8px rgba(212, 165, 116, 0.2);
+}
+
+.compareBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.compareActive {
+  background: rgba(212, 165, 116, 0.15);
+  border-color: #d4a574;
+  color: #d4a574;
+}
+
+.compareActive:hover {
   background: rgba(212, 165, 116, 0.25);
   border-color: #e6b98b;
   color: #e6b98b;
@@ -666,7 +751,7 @@
    Responsive
    ======================================== */
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .content {
     padding: 12px;
   }
@@ -698,7 +783,8 @@
     gap: 4px;
   }
 
-  .wishlistBtn {
+  .wishlistBtn,
+  .compareBtn {
     width: 36px;
     height: 36px;
   }

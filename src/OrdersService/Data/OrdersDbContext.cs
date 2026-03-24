@@ -41,6 +41,8 @@ public class OrdersDbContext : DbContext
             entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
             entity.Property(e => e.Total).HasPrecision(12, 2);
+            entity.Property(e => e.Subtotal).HasPrecision(12, 2);
+            entity.Property(e => e.DeliveryCost).HasPrecision(12, 2);
             entity.Property(e => e.DeliveryMethod).IsRequired().HasMaxLength(20);
             entity.Property(e => e.PaymentMethod).IsRequired().HasMaxLength(20);
             entity.Property(e => e.Address).HasMaxLength(500);

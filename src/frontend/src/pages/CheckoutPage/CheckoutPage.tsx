@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ordersApi } from '../../api/orders';
 import './CheckoutPage.css';
 
 /**
@@ -32,11 +33,14 @@ interface ShippingData {
 }
 
 type PaymentMethod = 'card' | 'erip' | 'cash';
+type DeliveryMethod = 'pickup' | 'delivery';
 type Step = 'shipping' | 'payment' | 'confirm';
 
 export function CheckoutPage() {
   const [currentStep, setCurrentStep] = useState<Step>('shipping');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('delivery');
+  const [deliveryCost, setDeliveryCost] = useState(0);
   const [orderPlaced, setOrderPlaced] = useState(false);
   
   const [shippingData, setShippingData] = useState<ShippingData>({
@@ -57,7 +61,38 @@ export function CheckoutPage() {
 
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const total = subtotal;
+  const total = subtotal + deliveryCost;
+
+  useEffect(() => {
+    const deliveryMethodApi = deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery';
+    const city =
+      shippingData.city === 'minsk'
+        ? 'Минск'
+        : shippingData.city === 'brest'
+          ? 'Брест'
+          : shippingData.city === 'grodno'
+            ? 'Гродно'
+            : shippingData.city === 'vitebsk'
+              ? 'Витебск'
+              : shippingData.city === 'gomel'
+                ? 'Гомель'
+                : shippingData.city === 'mogilev'
+                  ? 'Могилёв'
+                  : shippingData.city;
+
+    void ordersApi
+      .getDeliveryQuote({
+        deliveryMethod: deliveryMethodApi,
+        subtotal,
+        city,
+      })
+      .then((quote) => {
+        setDeliveryCost(quote.deliveryCost);
+      })
+      .catch(() => {
+        setDeliveryCost(deliveryMethod === 'pickup' ? 0 : subtotal >= 1500 ? 0 : shippingData.city === 'minsk' ? 10 : 20);
+      });
+  }, [deliveryMethod, subtotal, shippingData.city]);
 
   const steps = [
     { id: 'shipping' as Step, label: 'Доставка', number: 1 },
@@ -194,6 +229,37 @@ export function CheckoutPage() {
             {currentStep === 'shipping' && (
               <div className="form-card">
                 <h2 className="form-card-title">Доставка</h2>
+                <div className="payment-methods" style={{ marginBottom: '16px' }}>
+                  <label className={`payment-method ${deliveryMethod === 'delivery' ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="delivery"
+                      value="delivery"
+                      checked={deliveryMethod === 'delivery'}
+                      onChange={() => setDeliveryMethod('delivery')}
+                    />
+                    <span className="payment-radio"></span>
+                    <div className="payment-info">
+                      <div className="payment-name">Курьерская доставка</div>
+                      <div className="payment-desc">По Минску и Беларуси</div>
+                    </div>
+                  </label>
+
+                  <label className={`payment-method ${deliveryMethod === 'pickup' ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="delivery"
+                      value="pickup"
+                      checked={deliveryMethod === 'pickup'}
+                      onChange={() => setDeliveryMethod('pickup')}
+                    />
+                    <span className="payment-radio"></span>
+                    <div className="payment-info">
+                      <div className="payment-name">Самовывоз</div>
+                      <div className="payment-desc">Бесплатно, в день подтверждения</div>
+                    </div>
+                  </label>
+                </div>
                 
                 <div className="form-grid">
                   <div className="form-group">
@@ -446,7 +512,9 @@ export function CheckoutPage() {
 
             <div className="summary-row">
               <span className="summary-label">Доставка</span>
-              <span className="summary-value summary-value--accent">Бесплатно</span>
+              <span className="summary-value summary-value--accent">
+                {deliveryCost === 0 ? 'Бесплатно' : `${deliveryCost.toLocaleString('ru-BY')} BYN`}
+              </span>
             </div>
 
             <div className="summary-total">

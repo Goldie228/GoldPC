@@ -6,7 +6,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft,
-  ArrowRight,
   RefreshCw,
   Loader2,
   Clock,
@@ -21,7 +20,7 @@ import {
   Sun,
 } from 'lucide-react';
 import { useServiceBySlug } from '../../hooks/useServices';
-import type { Service, ServiceCategory, ServicePriceItem } from '../../api/types';
+import type { ServiceCategory, ServicePriceItem } from '../../api/types';
 import styles from './ServiceDetailPage.module.css';
 
 // Маппинг категорий на иконки
@@ -136,8 +135,6 @@ export function ServiceDetailPage() {
       </div>
     );
   }
-
-  const IconComponent = categoryIcons[service.category] || Wrench;
 
   // Преимущества услуги
   const features = service.features || [

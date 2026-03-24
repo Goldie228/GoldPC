@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import './TicketDetailPage.css';
 
 type TicketPriority = 'high' | 'medium' | 'low';
@@ -129,7 +129,6 @@ function getInitials(name: string): string {
 }
 
 export function TicketDetailPage() {
-  const { id } = useParams<{ id: string }>();
   const [ticket] = useState<TicketDetail>(MOCK_TICKET);
   const [status, setStatus] = useState<TicketStatus>(ticket.status);
   const [priority, setPriority] = useState<TicketPriority>(ticket.priority);

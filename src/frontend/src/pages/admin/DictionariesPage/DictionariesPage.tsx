@@ -144,19 +144,6 @@ export function DictionariesPage() {
       );
     }
 
-    const getItemId = (index: number): string => {
-      switch (activeTab) {
-        case 'categories':
-          return categories[index]?.id || '';
-        case 'manufacturers':
-          return manufacturers[index]?.id || '';
-        case 'attributes':
-          return attributes[index]?.id || '';
-        default:
-          return '';
-      }
-    };
-
     let filteredItems: DictionaryItem[] = [];
     let itemCounts: Record<string, number> = {};
 

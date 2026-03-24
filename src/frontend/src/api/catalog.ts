@@ -1,5 +1,16 @@
 import api from './index';
-import type { ProductListResponse, GetProductsParams, Product, Category, FilterAttribute, ProductCategory, Manufacturer } from './types';
+import type {
+  ProductListResponse,
+  GetProductsParams,
+  Product,
+  Category,
+  FilterAttribute,
+  ProductCategory,
+  Manufacturer,
+  ProductReview,
+  ProductReviewsResponse,
+  CreateReviewRequest,
+} from './types';
 
 /** Маппинг frontend category -> backend slug для API */
 const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
@@ -91,6 +102,24 @@ export const catalogApi = {
    */
   async getProduct(productId: string): Promise<Product> {
     const response = await api.get<Product>(`/catalog/products/${productId}`);
+    return response.data;
+  },
+
+  /**
+   * Получить отзывы товара
+   */
+  async getProductReviews(productId: string, page = 1, pageSize = 20): Promise<ProductReviewsResponse> {
+    const response = await api.get<ProductReviewsResponse>(`/catalog/products/${productId}/reviews`, {
+      params: { page, pageSize },
+    });
+    return response.data;
+  },
+
+  /**
+   * Добавить отзыв к товару
+   */
+  async addProductReview(productId: string, payload: CreateReviewRequest): Promise<ProductReview> {
+    const response = await api.post<ProductReview>(`/catalog/products/${productId}/reviews`, payload);
     return response.data;
   },
 

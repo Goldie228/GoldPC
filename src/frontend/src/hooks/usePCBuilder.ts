@@ -8,7 +8,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
-import type { Product, ProductCategory, ProductSpecifications } from '../api/types';
+import type { Product, ProductSpecifications } from '../api/types';
 
 // === Типы ===
 
@@ -56,17 +56,9 @@ export interface PCBuildState {
 
 // === Константы ===
 
-/** Сокеты для процессоров и материнских плат */
-const CPU_SOCKETS = ['AM5', 'AM4', 'LGA1700', 'LGA1851', 'LGA1200'] as const;
-type CPUSocket = typeof CPU_SOCKETS[number];
-
 /** Типы памяти */
 const RAM_TYPES = ['DDR5', 'DDR4', 'DDR3'] as const;
 type RAMType = typeof RAM_TYPES[number];
-
-/** Форм-факторы материнских плат */
-const MOTHERBOARD_FORM_FACTORS = ['ATX', 'mATX', 'mITX', 'E-ATX'] as const;
-type FormFactor = typeof MOTHERBOARD_FORM_FACTORS[number];
 
 /** Общее количество слотов */
 const TOTAL_SLOTS = 8;
@@ -89,18 +81,6 @@ function extractRAMType(specs: ProductSpecifications | undefined): RAMType | nul
   const memoryType = specs.memoryType as string | undefined;
   if (memoryType && RAM_TYPES.includes(memoryType as RAMType)) {
     return memoryType as RAMType;
-  }
-  return null;
-}
-
-/**
- * Извлекает форм-фактор из спецификаций
- */
-function extractFormFactor(specs: ProductSpecifications | undefined): FormFactor | null {
-  if (!specs) return null;
-  const formFactor = specs.formFactor as string | undefined;
-  if (formFactor && MOTHERBOARD_FORM_FACTORS.includes(formFactor as FormFactor)) {
-    return formFactor as FormFactor;
   }
   return null;
 }

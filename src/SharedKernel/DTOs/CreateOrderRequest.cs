@@ -24,6 +24,9 @@ public class CreateOrderRequest
     [MaxLength(500, ErrorMessage = "Адрес не должен превышать 500 символов")]
     public string? Address { get; set; }
 
+    [MaxLength(100, ErrorMessage = "Город не должен превышать 100 символов")]
+    public string? City { get; set; }
+
     [MaxLength(1000, ErrorMessage = "Комментарий не должен превышать 1000 символов")]
     public string? Comment { get; set; }
 

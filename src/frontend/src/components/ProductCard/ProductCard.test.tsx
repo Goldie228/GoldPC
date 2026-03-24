@@ -1,9 +1,38 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { ProductCard } from './ProductCard';
 import type { ProductSummary } from '../../api/types';
+
+// Mock useCart hook
+vi.mock('../../hooks/useCart', () => ({
+  useCart: vi.fn(() => ({
+    addToCart: vi.fn(),
+    changeQuantity: vi.fn(),
+    isInCart: vi.fn(() => false),
+    getItemQuantity: vi.fn(() => 0),
+  })),
+}));
+
+// Mock other stores if needed
+vi.mock('../../store/toastStore', () => ({
+  useToastStore: vi.fn(() => vi.fn()),
+}));
+
+vi.mock('../../store/wishlistStore', () => ({
+  useWishlistStore: vi.fn(() => ({
+    isInWishlist: vi.fn(() => false),
+    toggleWishlist: vi.fn(),
+  })),
+}));
+
+vi.mock('../../store/comparisonStore', () => ({
+  useComparisonStore: vi.fn(() => ({
+    isInComparison: vi.fn(() => false),
+    toggleComparison: vi.fn(() => ({ success: true })),
+  })),
+}));
 
 describe('ProductCard', () => {
   const mockProduct: ProductSummary = {

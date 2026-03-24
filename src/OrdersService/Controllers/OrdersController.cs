@@ -117,6 +117,18 @@ public class OrdersController : ControllerBase
     }
 
     /// <summary>
+    /// Предварительный расчет стоимости доставки.
+    /// </summary>
+    [HttpPost("delivery/quote")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<DeliveryQuoteResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetDeliveryQuote([FromBody] DeliveryQuoteRequest request)
+    {
+        var quote = await _ordersService.CalculateDeliveryQuoteAsync(request);
+        return Ok(ApiResponse<DeliveryQuoteResponse>.Ok(quote));
+    }
+
+    /// <summary>
     /// Изменение статуса заказа
     /// </summary>
     [HttpPut("{id}/status")]

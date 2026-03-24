@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { hasValidProductImage } from '../../utils/image';
 import { Button } from '../../components/ui/Button';
@@ -9,6 +9,8 @@ import { useProduct } from '../../hooks/useProduct';
 import { useProducts } from '../../hooks/useProducts';
 import { useCart } from '../../hooks/useCart';
 import { useToastStore } from '../../store/toastStore';
+import { useAuthStore } from '../../store/authStore';
+import { catalogApi } from '../../api/catalog';
 import type { Product, ProductSpecifications, ProductCategory } from '../../api/types';
 import './ProductPage.css';
 
@@ -35,6 +37,22 @@ function getStockStatus(stock: number): { text: string; className: string } {
     return { text: `Мало (${stock} шт)`, className: 'stock--low' };
   }
   return { text: `В наличии (${stock} шт)`, className: 'stock--in' };
+}
+
+function getRatingValue(product: Product): number | null {
+  if (typeof product.rating === 'number') return product.rating;
+  if (product.rating != null && typeof product.rating === 'object' && 'average' in product.rating) {
+    return typeof product.rating.average === 'number' ? product.rating.average : null;
+  }
+  return null;
+}
+
+function getReviewCountValue(product: Product): number {
+  if (typeof product.reviewCount === 'number') return product.reviewCount;
+  if (product.rating != null && typeof product.rating === 'object' && 'count' in product.rating) {
+    return typeof product.rating.count === 'number' ? product.rating.count : 0;
+  }
+  return 0;
 }
 
 /**
@@ -81,6 +99,8 @@ function ProductGallery({ product }: { product: Product }): ReactElement {
   const discountPercent = hasDiscount && product.oldPrice !== undefined
     ? Math.round((1 - product.price / product.oldPrice) * 100)
     : 0;
+  const mainImageUrl = product.mainImage?.url;
+  const mainImageAlt = product.mainImage?.alt ?? product.name;
 
   return (
     <div className="gallery">
@@ -88,10 +108,10 @@ function ProductGallery({ product }: { product: Product }): ReactElement {
         {hasDiscount && (
           <span className="gallery__badge">-{discountPercent}%</span>
         )}
-        {hasValidProductImage(product.mainImage?.url) ? (
+        {hasValidProductImage(mainImageUrl) ? (
           <img
-            src={product.mainImage.url}
-            alt={product.mainImage.alt ?? product.name}
+            src={mainImageUrl ?? ''}
+            alt={mainImageAlt}
             className="gallery__image"
           />
         ) : (
@@ -205,7 +225,7 @@ function ProductInfo({ product }: { product: Product }): ReactElement {
 /**
  * Содержимое табов
  */
-function useProductTabs(product: Product): Tab[] {
+function useProductTabs(product: Product, reviewsContent: ReactElement): Tab[] {
   const specs = product.specifications as ProductSpecifications | undefined;
   const hasSpecs = specs !== undefined && Object.keys(specs).length > 0;
 
@@ -242,28 +262,6 @@ function useProductTabs(product: Product): Tab[] {
       ) : (
         <p className="tab-description__empty">Описание товара отсутствует.</p>
       )}
-    </div>
-  );
-
-  const reviewsContent = (
-    <div className="tab-reviews">
-      <div className="tab-reviews__header">
-        <div className="tab-reviews__rating">
-          {product.rating !== undefined && (
-            <>
-              <span className="tab-reviews__stars">
-                {'★'.repeat(Math.round(product.rating))}
-                {'☆'.repeat(5 - Math.round(product.rating))}
-              </span>
-              <span className="tab-reviews__value">{product.rating.toFixed(1)}</span>
-            </>
-          )}
-        </div>
-        <span className="tab-reviews__count">42 отзыва</span>
-      </div>
-      <div className="tab-reviews__placeholder">
-        <p>Отзывы скоро будут доступны.</p>
-      </div>
     </div>
   );
 
@@ -309,7 +307,182 @@ function RelatedProducts({ category, currentProductId }: { category: string; cur
 export function ProductPage(): ReactElement {
   const { id } = useParams<{ id: string }>();
   const { data: product, isLoading, error } = useProduct(id);
-  const tabs = useProductTabs(product ?? ({} as Product));
+  const showToast = useToastStore((state) => state.showToast);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<
+    Array<{
+      id: string;
+      userName: string;
+      rating: number;
+      comment?: string;
+      createdAt: string;
+      pros?: string;
+      cons?: string;
+    }>
+  >([]);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '', pros: '', cons: '' });
+  const [submittingReview, setSubmittingReview] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setReviewsLoading(true);
+    setReviewsError(null);
+
+    void catalogApi
+      .getProductReviews(id, 1, 20)
+      .then((result) => {
+        if (cancelled) return;
+        setReviews(
+          result.data.map((r) => ({
+            id: r.id,
+            userName: r.userName || 'Покупатель',
+            rating: r.rating,
+            comment: r.comment,
+            createdAt: r.createdAt,
+            pros: r.pros,
+            cons: r.cons,
+          }))
+        );
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setReviewsError('Не удалось загрузить отзывы');
+      })
+      .finally(() => {
+        if (!cancelled) setReviewsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const handleSubmitReview = async () => {
+    if (!id) return;
+    if (!isAuthenticated) {
+      showToast('Войдите в аккаунт, чтобы оставить отзыв', 'info');
+      return;
+    }
+    if (!reviewForm.comment.trim()) {
+      showToast('Добавьте текст отзыва', 'error');
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      const created = await catalogApi.addProductReview(id, {
+        rating: reviewForm.rating,
+        comment: reviewForm.comment.trim(),
+        pros: reviewForm.pros.trim() || undefined,
+        cons: reviewForm.cons.trim() || undefined,
+      });
+      setReviews((prev) => [
+        {
+          id: created.id,
+          userName: created.userName || 'Вы',
+          rating: created.rating,
+          comment: created.comment,
+          createdAt: created.createdAt,
+          pros: created.pros,
+          cons: created.cons,
+        },
+        ...prev,
+      ]);
+      setReviewForm({ rating: 5, comment: '', pros: '', cons: '' });
+      showToast('Отзыв добавлен', 'success');
+    } catch {
+      showToast('Не удалось отправить отзыв', 'error');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const reviewsContent = useMemo(() => {
+    const ratingValue = product ? getRatingValue(product) : null;
+    const reviewCount = product ? getReviewCountValue(product) : 0;
+
+    return (
+      <div className="tab-reviews">
+        <div className="tab-reviews__header">
+          <div className="tab-reviews__rating">
+            {ratingValue != null && reviewCount > 0 && (
+              <>
+                <span className="tab-reviews__stars">
+                  {'★'.repeat(Math.round(ratingValue))}
+                  {'☆'.repeat(5 - Math.round(ratingValue))}
+                </span>
+                <span className="tab-reviews__value">{ratingValue.toFixed(1)}</span>
+              </>
+            )}
+          </div>
+          <span className="tab-reviews__count">
+            {reviewCount > 0 ? `${reviewCount} ${reviewCount === 1 ? 'отзыв' : 'отзывов'}` : 'Пока нет отзывов'}
+          </span>
+        </div>
+
+        <div className="tab-reviews__placeholder">
+          {reviewsLoading ? (
+            <p>Загрузка отзывов...</p>
+          ) : reviewsError ? (
+            <p>{reviewsError}</p>
+          ) : reviews.length === 0 ? (
+            <p>Станьте первым, кто оставит отзыв.</p>
+          ) : (
+            <div style={{ display: 'grid', gap: '12px' }}>
+              {reviews.map((review) => (
+                <article key={review.id} style={{ border: '1px solid #27272a', borderRadius: '8px', padding: '12px' }}>
+                  <strong>{review.userName}</strong>
+                  <div>{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</div>
+                  <p style={{ margin: '8px 0' }}>{review.comment}</p>
+                  {review.pros ? <p style={{ margin: '4px 0' }}><strong>Плюсы:</strong> {review.pros}</p> : null}
+                  {review.cons ? <p style={{ margin: '4px 0' }}><strong>Минусы:</strong> {review.cons}</p> : null}
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div style={{ marginTop: '16px', display: 'grid', gap: '8px' }}>
+          <strong>Оставить отзыв</strong>
+          <label>
+            Оценка:
+            <select
+              value={reviewForm.rating}
+              onChange={(e) => setReviewForm((prev) => ({ ...prev, rating: Number(e.target.value) }))}
+              style={{ marginLeft: '8px' }}
+            >
+              {[5, 4, 3, 2, 1].map((value) => (
+                <option key={value} value={value}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <textarea
+            value={reviewForm.comment}
+            onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))}
+            placeholder="Ваш отзыв"
+            rows={4}
+          />
+          <input
+            value={reviewForm.pros}
+            onChange={(e) => setReviewForm((prev) => ({ ...prev, pros: e.target.value }))}
+            placeholder="Плюсы (необязательно)"
+          />
+          <input
+            value={reviewForm.cons}
+            onChange={(e) => setReviewForm((prev) => ({ ...prev, cons: e.target.value }))}
+            placeholder="Минусы (необязательно)"
+          />
+          <button type="button" onClick={handleSubmitReview} disabled={submittingReview}>
+            {submittingReview ? 'Отправка...' : 'Отправить отзыв'}
+          </button>
+        </div>
+      </div>
+    );
+  }, [product, reviewsLoading, reviewsError, reviews, reviewForm, handleSubmitReview, submittingReview]);
+
+  const tabs = useProductTabs(product ?? ({} as Product), reviewsContent);
 
   if (isLoading) {
     return <ProductPageSkeleton />;

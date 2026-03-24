@@ -16,17 +16,20 @@ namespace CatalogService.Services;
 public class XCoreImporter
 {
     private readonly CatalogDbContext _context;
+    private readonly SpecImportNormalizer _specNormalizer;
     private readonly ILogger<XCoreImporter> _logger;
     private readonly string _uploadsFullPath;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     public XCoreImporter(
         CatalogDbContext context,
+        SpecImportNormalizer specNormalizer,
         ILogger<XCoreImporter> logger,
         IHostEnvironment hostEnv,
         IConfiguration configuration)
     {
         _context = context;
+        _specNormalizer = specNormalizer;
         _logger = logger;
         var uploadsPath = configuration["CatalogService:UploadsPath"] ?? "uploads";
         _uploadsFullPath = Path.Combine(hostEnv.ContentRootPath, uploadsPath);
@@ -257,8 +260,14 @@ public class XCoreImporter
                     existing.Stock = p.Stock;
                     existing.UpdatedAt = DateTime.UtcNow;
                     existing.SourceUrl = p.Url;
-                    existing.Specifications = specs;
                     existing.CategoryId = categoryId;
+                    var existingSpecs = await _context.ProductSpecificationValues.Where(v => v.ProductId == existing.Id).ToListAsync();
+                    _context.ProductSpecificationValues.RemoveRange(existingSpecs);
+                    await _context.SaveChangesAsync();
+                    var specValues = await _specNormalizer.ToSpecificationValuesAsync(existing.Id, specs);
+                    foreach (var sv in specValues)
+                        _context.ProductSpecificationValues.Add(sv);
+                    await _context.SaveChangesAsync();
                     _logger.LogDebug("Обновлён товар {Sku}", existing.Sku);
                     result.Updated++;
                 }
@@ -277,7 +286,6 @@ public class XCoreImporter
                         OldPrice = p.OldPrice.HasValue ? (decimal)p.OldPrice.Value : null,
                         Stock = p.Stock,
                         WarrantyMonths = p.WarrantyMonths,
-                        Specifications = specs,
                         SourceUrl = p.Url,
                         ExternalId = p.ExternalId,
                         IsActive = true,
@@ -286,6 +294,11 @@ public class XCoreImporter
                     };
 
                     _context.Products.Add(product);
+                    await _context.SaveChangesAsync();
+                    var specValues = await _specNormalizer.ToSpecificationValuesAsync(product.Id, specs);
+                    foreach (var sv in specValues)
+                        _context.ProductSpecificationValues.Add(sv);
+                    await _context.SaveChangesAsync();
 
                     if (p.Images != null && p.Images.Count > 0)
                     {

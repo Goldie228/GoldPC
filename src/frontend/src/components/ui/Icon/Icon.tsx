@@ -78,6 +78,7 @@ import {
   Sun,
   ShieldCheck,
   Users,
+  GitCompare,
 } from 'lucide-react';
 import React from 'react';
 import type { CSSProperties } from 'react';
@@ -107,6 +108,7 @@ const iconMap = {
   // E-commerce
   cart: ShoppingCart,
   heart: Heart,
+  compare: GitCompare,
   package: Package,
   'credit-card': CreditCard,
   trash: Trash2,

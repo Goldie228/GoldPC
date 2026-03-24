@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Plus, Check, ShoppingCart, Minus } from 'lucide-react';
+import { Plus, Check, Minus } from 'lucide-react';
 import { useCartStore } from '../../../store/cartStore';
 import type { ProductCategory } from '../../../api/types';
 import styles from './Card.module.css';

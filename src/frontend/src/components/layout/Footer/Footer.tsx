@@ -68,10 +68,13 @@ export function Footer() {
           <div>
             <h4 className={styles.title}>Сервис</h4>
             <ul className={styles.links}>
-              <li><Link to="/builder" className={styles.link}>Конструктор ПК</Link></li>
+              <li><Link to="/pc-builder" className={styles.link}>Конструктор ПК</Link></li>
               <li><Link to="/services/assembly" className={styles.link}>Сборка</Link></li>
-              <li><Link to="/services/delivery" className={styles.link}>Доставка</Link></li>
-              <li><Link to="/services/warranty" className={styles.link}>Гарантия</Link></li>
+              <li><Link to="/delivery" className={styles.link}>Доставка</Link></li>
+              <li><Link to="/payment" className={styles.link}>Оплата</Link></li>
+              <li><Link to="/warranty" className={styles.link}>Гарантия</Link></li>
+              <li><Link to="/returns" className={styles.link}>Возврат</Link></li>
+              <li><Link to="/faq" className={styles.link}>FAQ</Link></li>
             </ul>
           </div>
 
