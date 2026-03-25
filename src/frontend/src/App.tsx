@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { MainLayout } from './components/layout/MainLayout';
 import { AuthGuard, RoleGuard } from './components/guards';
 import { AuthModalContainer } from './components/auth';
+import { ModalContainer } from './components/ui/Modal/ModalContainer';
 import { RouteMeta } from './components/seo/RouteMeta';
 import { ProductCardSkeleton } from './components/ui/Skeleton';
 import { useAuthStore } from './store/authStore';
@@ -85,6 +86,7 @@ const router = createBrowserRouter([
       <>
         <RouteMeta />
         <AuthModalContainer />
+        <ModalContainer />
         <MainLayout />
       </>
     ),
