@@ -35,6 +35,7 @@ public static class RolePermissions
             // Reports
             Permissions.ReportsView,
             Permissions.ReportsExport,
+            Permissions.AuditView,
 
             // Categories
             Permissions.CategoriesView,

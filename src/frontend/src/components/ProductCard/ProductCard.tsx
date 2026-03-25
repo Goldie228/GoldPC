@@ -1,4 +1,5 @@
 import { useState, type ReactElement } from 'react';
+import { Link } from 'react-router-dom';
 import { hasValidProductImage } from '../../utils/image';
 import type { ProductSummary, ProductCategory } from '../../api/types';
 import { useCart } from '../../hooks/useCart';
@@ -7,11 +8,15 @@ import { useWishlistStore } from '../../store/wishlistStore';
 import { useComparisonStore } from '../../store/comparisonStore';
 import { Icon } from '../ui/Icon/Icon';
 import { Modal } from '../ui/Modal/Modal';
+import { OptimizedImage } from '../ui/Image/OptimizedImage';
 import styles from './ProductCard.module.css';
 
 interface ProductCardProps {
   product: ProductSummary;
   onAddToCart?: (productId: string) => void;
+  viewMode?: 'grid' | 'list';
+  /** Первые карточки above the fold: высокий приоритет LCP */
+  imageFetchPriority?: 'high' | 'low' | 'auto';
 }
 
 interface StockStatus {
@@ -30,6 +35,9 @@ interface ImageContainerProps {
   onToggleWishlist: () => void;
   inWishlist: boolean;
   isDisabled: boolean;
+  stockBadgeClass: string;
+  stockBadgeShort: string;
+  imageFetchPriority?: 'high' | 'low' | 'auto';
 }
 
 interface ContentProps {
@@ -78,6 +86,12 @@ function getStockStatus(stock: number): StockStatus {
     return { text: `Мало (${stock} шт)`, className: styles.lowStock };
   }
   return { text: `В наличии (${stock} шт)`, className: styles.inStock };
+}
+
+function getStockBadge(stock: number): { short: string; badgeClass: string } {
+  if (stock === 0) return { short: 'Нет', badgeClass: styles.stockBadgeOut };
+  if (stock < 5) return { short: `Мало · ${stock}`, badgeClass: styles.stockBadgeLow };
+  return { short: 'В наличии', badgeClass: styles.stockBadgeIn };
 }
 
 /**
@@ -160,13 +174,13 @@ function ImageContainer({
   onToggleWishlist,
   inWishlist,
   isDisabled,
+  stockBadgeClass,
+  stockBadgeShort,
+  imageFetchPriority,
 }: ImageContainerProps): ReactElement {
-  const [imageError, setImageError] = useState(false);
   const ratingValue = extractRatingValue(product.rating);
 
-  const hasValidImage =
-    hasValidProductImage(product.mainImage?.url) &&
-    !imageError;
+  const hasValidImage = hasValidProductImage(product.mainImage?.url);
 
   return (
     <div
@@ -175,16 +189,19 @@ function ImageContainer({
       onMouseLeave={onQuickViewClose}
     >
       {hasValidImage ? (
-        <div className={styles.imageWrapper}>
-          <img
-            src={product.mainImage?.url ?? ''}
-            alt={product.mainImage?.alt ?? product.name}
-            className={styles.image}
-            onError={() => setImageError(true)}
-          />
-        </div>
+        <OptimizedImage
+          src={product.mainImage?.url ?? ''}
+          alt={product.mainImage?.alt ?? product.name}
+          className={styles.image}
+          aspectRatio={1.2}
+          placeholder={getImagePlaceholder(product.category)}
+          fetchPriority={imageFetchPriority}
+          loading={imageFetchPriority === 'high' ? 'eager' : 'lazy'}
+        />
       ) : (
-        getImagePlaceholder(product.category)
+        <div className={styles.placeholderWrapper}>
+          {getImagePlaceholder(product.category)}
+        </div>
       )}
 
       {/* Badge logic: Discount takes priority, Hit shown on right if both exist */}
@@ -199,6 +216,8 @@ function ImageContainer({
       {ratingValue != null && ratingValue >= 4.8 && hasDiscount && (
         <span className={styles.hitBadgeRight}>Хит</span>
       )}
+
+      <span className={`${styles.stockBadge} ${stockBadgeClass}`}>{stockBadgeShort}</span>
 
       {/* Кнопка избранного в углу (при hover) */}
       <button
@@ -280,9 +299,9 @@ function Content({
       )}
 
       <h3 className={styles.name}>
-        <a href={`/product/${product.id}`} className={styles.link}>
+        <Link to={`/product/${product.id}`} className={styles.link}>
           {product.name}
-        </a>
+        </Link>
       </h3>
 
       <div className={styles.rating}>
@@ -372,12 +391,12 @@ function QuickViewContent({ product }: { product: ProductSummary }): ReactElemen
     <div className={styles.quickViewContent}>
       <div className={styles.quickViewImage}>
         {product.mainImage && hasValidProductImage(product.mainImage.url) ? (
-          <div className={styles.quickViewImageWrapper}>
-            <img
-              src={product.mainImage.url}
-              alt={product.mainImage.alt ?? product.name}
-            />
-          </div>
+          <OptimizedImage
+            src={product.mainImage.url}
+            alt={product.mainImage.alt ?? product.name}
+            aspectRatio={1.2}
+            className={styles.quickViewOptimizedImage}
+          />
         ) : (
           <div className={styles.quickViewPlaceholder}>
             <Icon name="image" size="2xl" color="secondary" />
@@ -407,14 +426,14 @@ function QuickViewContent({ product }: { product: ProductSummary }): ReactElemen
           {product.descriptionShort != null && product.descriptionShort.trim() !== '' ? (
             <>
               <p className={styles.quickViewDescriptionText}>{product.descriptionShort}</p>
-              <a href={`/product/${product.id}`} className={styles.quickViewLink}>
+              <Link to={`/product/${product.id}`} className={styles.quickViewLink}>
                 Подробнее на странице товара →
-              </a>
+              </Link>
             </>
           ) : (
-            <a href={`/product/${product.id}`} className={styles.quickViewLink}>
+            <Link to={`/product/${product.id}`} className={styles.quickViewLink}>
               Подробное описание на странице товара →
-            </a>
+            </Link>
           )}
         </div>
       </div>
@@ -425,7 +444,12 @@ function QuickViewContent({ product }: { product: ProductSummary }): ReactElemen
 /**
  * Карточка товара для каталога
  */
-export function ProductCard({ product, onAddToCart }: ProductCardProps): ReactElement {
+export function ProductCard({
+  product,
+  onAddToCart,
+  viewMode = 'grid',
+  imageFetchPriority,
+}: ProductCardProps): ReactElement {
   const { addToCart, changeQuantity, isInCart, getItemQuantity } = useCart();
   const showToast = useToastStore((state) => state.showToast);
   const { isInWishlist, toggleWishlist } = useWishlistStore();
@@ -440,6 +464,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps): ReactEl
   const inWishlist = isInWishlist(product.id);
   const inComparison = isInComparison(product.id);
   const stockStatus = getStockStatus(product.stock);
+  const stockBadge = getStockBadge(product.stock);
   const hasDiscount =
     product.oldPrice !== undefined && product.oldPrice > product.price;
   const discountPercent =
@@ -505,7 +530,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps): ReactEl
 
   return (
     <>
-      <article className={styles.card} aria-label={`Товар: ${product.name}`}>
+      <article className={`${styles.card} ${viewMode === 'list' ? styles.cardList : ''}`} aria-label={`Товар: ${product.name}`}>
         <ImageContainer
           product={product}
           hasDiscount={hasDiscount}
@@ -517,6 +542,9 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps): ReactEl
           onToggleWishlist={handleToggleWishlist}
           inWishlist={inWishlist}
           isDisabled={product.stock === 0 || !product.isActive}
+          stockBadgeClass={stockBadge.badgeClass}
+          stockBadgeShort={stockBadge.short}
+          imageFetchPriority={imageFetchPriority}
         />
         <Content
           product={product}

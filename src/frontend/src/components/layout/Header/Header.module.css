@@ -27,10 +27,16 @@
   gap: 10px;
   text-decoration: none;
   transition: opacity var(--transition-fast);
+  border-radius: var(--radius-sm);
 }
 
 .logo:hover {
   opacity: 0.9;
+}
+
+.logo:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 3px;
 }
 
 .logoIcon {
@@ -92,6 +98,12 @@
   right: 0;
   height: 2px;
   background: var(--accent);
+}
+
+.navLink:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 4px;
+  border-radius: 2px;
 }
 
 /* Header Actions */

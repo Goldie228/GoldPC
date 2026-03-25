@@ -1,12 +1,19 @@
 using System.Text;
 using GoldPC.WarrantyService.Data;
 using GoldPC.WarrantyService.Services;
+using GoldPC.WarrantyService.Background;
+using GoldPC.Shared.Services.Interfaces;
+using GoldPC.Shared.Services.Mocks;
+using Shared.Messaging;
+using GoldPC.WarrantyService.Consumers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Shared.Middleware;
+using Shared.Messaging;
+using GoldPC.WarrantyService.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +28,26 @@ builder.Services.AddDbContext<WarrantyDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IWarrantyService, WarrantyService>();
+
+using GoldPC.Shared.Services.Implementations;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// ... existing code ...
+
+builder.Services.AddScoped<IWarrantyService, WarrantyService>();
+
+// Messaging (Consumer for OrderPlacedEvent)
+builder.Services.AddMessaging(builder.Configuration, x =>
+{
+    x.AddConsumer<OrderPlacedConsumer>();
+});
+
+// Production Notifications (SMTP, Twilio, Mocks support)
+builder.Services.AddProductionNotifications(builder.Configuration, builder.Environment);
+
+// Background worker
+builder.Services.AddHostedService<WarrantyExpirationWorker>();
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["SecretKey"] ?? "GoldPC_SuperSecretKey_ForDevelopment_Only_2024!";

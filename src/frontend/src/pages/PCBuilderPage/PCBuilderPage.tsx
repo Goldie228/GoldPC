@@ -10,8 +10,13 @@
  */
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ComponentSlot } from '../../components/pc-builder';
 import { Modal } from '../../components/ui';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { usePCBuilder, useProducts, PC_BUILDER_SLOTS, type PCComponentType } from '../../hooks';
 import type { Product, ProductCategory } from '../../api/types';
 import './PCBuilderPage.css';
@@ -119,7 +124,7 @@ export function PCBuilderPage() {
   const [selectedSlot, setSelectedSlot] = useState<PCComponentType | null>(null);
 
   // Fetch products for selected category
-  const { data: productsResponse, isLoading, error } = useProducts(
+  const { data: productsResponse, isLoading, error, refetch } = useProducts(
     selectedSlot ? { category: componentTypeToCategory[selectedSlot], pageSize: 50 } : undefined
   );
 
@@ -211,45 +216,49 @@ export function PCBuilderPage() {
   const currentSlotLabel = PC_BUILDER_SLOTS.find(s => s.key === selectedSlot)?.label || '';
 
   return (
-    <div className="pc-builder">
-      {/* Header */}
-      <header className="pc-builder__header">
-        <div className="pc-builder__header-container">
-          <a href="/" className="pc-builder__logo">
-            <div className="pc-builder__logo-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-                <polyline points="2 17 12 22 22 17"/>
-                <polyline points="2 12 12 17 22 12"/>
-              </svg>
-            </div>
-            <span className="pc-builder__logo-text">PC<span>Builder</span></span>
-          </a>
-          <div className="pc-builder__total-price">
-            <span className="pc-builder__total-label">Итого</span>
-            <span className="pc-builder__total-value">{totalPrice.toLocaleString('ru-BY')} BYN</span>
-          </div>
+    <div
+      className="pc-builder"
+      role="region"
+      aria-labelledby="pc-builder-title"
+      aria-describedby="pc-builder-kbd-hint"
+    >
+      <p id="pc-builder-kbd-hint" className="sr-only">
+        Клавиатура: Tab — переход между слотами и кнопками. Enter или пробел — выбрать или изменить компонент в слоте.
+      </p>
+      <nav className="pc-builder__toolbar" aria-label="Навигация конструктора ПК">
+        <Link to="/catalog" className="pc-builder__back">
+          <ChevronLeft size={18} aria-hidden />
+          Каталог
+        </Link>
+        <div className="pc-builder__toolbar-total" aria-live="polite">
+          <span className="pc-builder__total-label">Итого</span>
+          <span className="pc-builder__total-value">{totalPrice.toLocaleString('ru-BY')} BYN</span>
         </div>
-      </header>
+      </nav>
 
-      {/* Main Content */}
       <main className="pc-builder__main">
         <div className="pc-builder__content">
           {/* Left: Configuration List */}
           <div className="pc-builder__left">
             <div className="pc-builder__section-header">
-              <h1 className="pc-builder__section-title">Комплектующие</h1>
-              <div className={`pc-builder__status ${isCompatible ? 'pc-builder__status--ok' : 'pc-builder__status--warning'}`}>
+              <h1 id="pc-builder-title" className="pc-builder__section-title">
+                Комплектующие
+              </h1>
+              <div 
+                className={`pc-builder__status ${isCompatible ? 'pc-builder__status--ok' : 'pc-builder__status--warning'}`}
+                role="status"
+                aria-live="polite"
+              >
                 {isCompatible ? (
                   <>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <polyline points="20 6 9 17 4 12"/>
                     </svg>
                     Совместимо
                   </>
                 ) : (
                   <>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                       <line x1="12" y1="9" x2="12" y2="13"/>
                       <line x1="12" y1="17" x2="12.01" y2="17"/>
@@ -277,7 +286,7 @@ export function PCBuilderPage() {
             )}
 
             <div className="pc-builder__slots">
-              {PC_BUILDER_SLOTS.map((slot) => {
+              {PC_BUILDER_SLOTS.map((slot, index) => {
                 const selectedComponent = selectedComponents[slot.key];
                 const product = selectedComponent?.product;
                 const slotState = getSlotState(slot.key);
@@ -285,6 +294,7 @@ export function PCBuilderPage() {
                 return (
                   <ComponentSlot
                     key={slot.key}
+                    index={index}
                     type={slot.label}
                     icon={getIcon(slot.key)}
                     name={slotState.state === 'empty' ? 'Выберите компонент' : (product?.name || '')}
@@ -305,28 +315,50 @@ export function PCBuilderPage() {
               <h2 className="pc-builder__summary-title">Ваша сборка</h2>
               
               <div className="pc-builder__summary-list">
-                {PC_BUILDER_SLOTS.map((slot) => {
-                  const product = selectedComponents[slot.key]?.product;
-                  return (
-                    <div key={slot.key} className="pc-builder__summary-item">
-                      <span className="pc-builder__summary-label">{slot.label}</span>
-                      <span className="pc-builder__summary-price">
-                        {product 
-                          ? `${product.price.toLocaleString('ru-BY')} BYN`
-                          : '—'}
-                      </span>
-                    </div>
-                  );
-                })}
+                <AnimatePresence mode="popLayout">
+                  {PC_BUILDER_SLOTS.map((slot) => {
+                    const product = selectedComponents[slot.key]?.product;
+                    return (
+                      <motion.div 
+                        key={slot.key} 
+                        className="pc-builder__summary-item"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        layout
+                        aria-label={`${slot.label}: ${product ? `${product.price.toLocaleString('ru-BY')} BYN` : 'не выбрано'}`}
+                      >
+                        <span className="pc-builder__summary-label" aria-hidden="true">{slot.label}</span>
+                        <motion.span 
+                          key={product?.id || 'empty'}
+                          className="pc-builder__summary-price"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          aria-hidden="true"
+                        >
+                          {product 
+                            ? `${product.price.toLocaleString('ru-BY')} BYN`
+                            : '—'}
+                        </motion.span>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
               </div>
 
               <div className="pc-builder__summary-divider" />
 
               <div className="pc-builder__summary-total">
                 <span>Итого:</span>
-                <span className="pc-builder__summary-total-value">
+                <motion.span 
+                  key={totalPrice}
+                  className="pc-builder__summary-total-value"
+                  initial={{ scale: 1 }}
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 0.3 }}
+                >
                   {totalPrice.toLocaleString('ru-BY')} BYN
-                </span>
+                </motion.span>
               </div>
 
               <button 
@@ -402,20 +434,25 @@ export function PCBuilderPage() {
         {/* Loading state */}
         {isLoading && (
           <div className="pc-builder__modal-loading">
-            <div className="pc-builder__spinner" />
-            <span>Загрузка товаров...</span>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="pc-builder__modal-skeleton-row">
+                <Skeleton width={44} height={44} borderRadius="sm" />
+                <div className="pc-builder__modal-skeleton-text">
+                  <Skeleton width="70%" height={18} borderRadius="sm" />
+                  <Skeleton width="45%" height={14} borderRadius="sm" className="pc-builder__modal-skeleton-sub" />
+                </div>
+                <Skeleton width={88} height={24} borderRadius="sm" />
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Error state */}
         {error && (
           <div className="pc-builder__modal-error">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="15" y1="9" x2="9" y2="15"/>
-              <line x1="9" y1="9" x2="15" y2="15"/>
-            </svg>
-            <span>Ошибка загрузки товаров</span>
+            <ApiErrorBanner
+              message="Не удалось загрузить список комплектующих."
+              onRetry={() => refetch()}
+            />
           </div>
         )}
 

@@ -155,11 +155,11 @@ export function OrdersPage() {
   };
 
   return (
-    <div className="manager-orders">
-      <header className="manager-orders__header">
+    <div className="staff-page manager-orders">
+      <header className="staff-page__header manager-orders__header">
         <div className="manager-orders__title-section">
-          <h1 className="manager-orders__title">Управление заказами</h1>
-          <p className="manager-orders__subtitle">Все заказы магазина</p>
+          <h1 className="staff-page__title manager-orders__title">Управление заказами</h1>
+          <p className="staff-page__subtitle manager-orders__subtitle">Все заказы магазина</p>
         </div>
       </header>
 

@@ -1,4 +1,4 @@
-import { type ReactElement } from 'react';
+import { type ReactElement, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../../hooks/useCart';
 import { hasValidProductImage } from '../../../utils/image';
@@ -21,6 +21,51 @@ interface MiniCartProps {
  */
 export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
   const { items, totalPrice, isEmpty, removeFromCart, itemCount, changeQuantity } = useCart();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const prevActiveRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    prevActiveRef.current = document.activeElement as HTMLElement;
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const getFocusables = () =>
+      Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => !el.hasAttribute('disabled'));
+
+    requestAnimationFrame(() => {
+      const focusables = getFocusables();
+      focusables[0]?.focus();
+    });
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const focusables = getFocusables();
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown, true);
+      prevActiveRef.current?.focus?.();
+    };
+  }, [isOpen]);
 
   return (
     <>
@@ -33,9 +78,11 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
 
       {/* Dropdown */}
       <div
+        ref={panelRef}
         className={`${styles.miniCart} ${isOpen ? styles.miniCartOpen : ''}`}
         aria-hidden={!isOpen}
         role="dialog"
+        aria-modal="true"
         aria-label="Корзина"
       >
         {/* Header */}
@@ -141,7 +188,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
                   Продолжить покупки
                 </Link>
                 <Link to="/checkout" className={styles.btnPrimary} onClick={onClose}>
-                  Оформить
+                  Оформить заказ
                 </Link>
               </div>
             </div>

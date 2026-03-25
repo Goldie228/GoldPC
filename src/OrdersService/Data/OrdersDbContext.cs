@@ -27,6 +27,11 @@ public class OrdersDbContext : DbContext
     /// </summary>
     public DbSet<OrderHistory> OrderHistory => Set<OrderHistory>();
     
+    /// <summary>
+    /// Сообщения Outbox
+    /// </summary>
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -66,12 +71,24 @@ public class OrdersDbContext : DbContext
         modelBuilder.Entity<OrderHistory>(entity =>
         {
             entity.ToTable("order_history");
-            entity.HasKey(e => e.Id);
+            entity.HasKey(e => new { e.Id, e.ChangedAt }); // Composite key for partitioning
             entity.Property(e => e.Comment).HasMaxLength(500);
             entity.HasOne(e => e.Order)
                 .WithMany(o => o.History)
                 .HasForeignKey(e => e.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Конфигурация OutboxMessage
+        modelBuilder.Entity<OutboxMessage>(entity =>
+        {
+            entity.ToTable("outbox_messages");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Type).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.Content).IsRequired().HasColumnType("text");
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.ProcessedAt);
+            entity.Property(e => e.Error);
         });
     }
 }

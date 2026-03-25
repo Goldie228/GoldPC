@@ -90,6 +90,11 @@ public static class Permissions
     /// </summary>
     public const string ReportsExport = "reports:export";
 
+    /// <summary>
+    /// Просмотр журнала аудита.
+    /// </summary>
+    public const string AuditView = "audit:view";
+
     #endregion
 
     #region Categories (Категории)
@@ -163,7 +168,7 @@ public static class Permissions
         UsersView, UsersManage, UsersViewRoles, UsersManageRoles,
 
         // Reports
-        ReportsView, ReportsExport,
+        ReportsView, ReportsExport, AuditView,
 
         // Categories
         CategoriesView, CategoriesManage,

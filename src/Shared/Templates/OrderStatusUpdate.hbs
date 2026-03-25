@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="ru">
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <h2 style="color: #4CAF50;">Статус вашего заказа #{{OrderNumber}} обновлен</h2>
+    <p>Здравствуйте, {{CustomerName}}!</p>
+    <p>Ваш заказ <strong>#{{OrderNumber}}</strong> перешел в статус: <strong>{{NewStatus}}</strong>.</p>
+    {{#if Comment}}
+        <p><em>Комментарий:</em> {{Comment}}</p>
+    {{/if}}
+    <p>Вы можете просмотреть детали вашего заказа в <a href="{{OrderUrl}}" style="color: #4CAF50; text-decoration: none;">Личном кабинете</a>.</p>
+    <hr>
+    <p style="font-size: 12px; color: #888;">Это автоматическое письмо от магазина GoldPC. Пожалуйста, не отвечайте на него.</p>
+</body>
+</html>

@@ -8,9 +8,9 @@
   grid-template-columns: 1fr;
   gap: 20px;
   width: 100%;
-  max-width: 1680px;
+  max-width: var(--layout-page-wide);
   margin: 0 auto;
-  padding: 20px 24px;
+  padding: 20px var(--layout-page-pad-x);
   min-height: calc(100vh - 200px);
   background: var(--bg, #09090b);
   /* Тонкий градиент для глубины без отвлечения */
@@ -25,7 +25,7 @@
   .container {
     grid-template-columns: 220px 1fr;
     gap: 20px;
-    padding: 24px 24px;
+    padding: 24px var(--layout-page-pad-x);
   }
 }
 
@@ -429,6 +429,10 @@
   grid-template-columns: 1fr;
 }
 
+.tableView {
+  display: none;
+}
+
 /* ========================================
    Loading State
    ======================================== */
@@ -472,6 +476,12 @@
 /* ========================================
    Error State
    ======================================== */
+
+.errorState {
+  display: flex;
+  justify-content: center;
+  padding: 48px 16px 64px;
+}
 
 .error {
   display: flex;

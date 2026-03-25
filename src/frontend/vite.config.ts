@@ -51,9 +51,15 @@ export default defineConfig({
             return 'react-query';
           }
           // UI библиотеки - загружаются асинхронно
-          if (id.includes('node_modules/framer-motion/') || 
-              id.includes('node_modules/lucide-react/')) {
-            return 'ui-vendor';
+          if (id.includes('node_modules/framer-motion/')) {
+            return 'framer-motion';
+          }
+          if (id.includes('node_modules/lucide-react/')) {
+            return 'lucide-icons';
+          }
+          // MUI и другие тяжелые UI библиотеки (если будут добавлены)
+          if (id.includes('node_modules/@mui/')) {
+            return 'mui-vendor';
           }
           // Утилиты
           if (id.includes('node_modules/axios/') || 

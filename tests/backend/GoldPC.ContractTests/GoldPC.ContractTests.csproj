@@ -21,4 +21,8 @@
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CatalogService\CatalogService.csproj" />
+  </ItemGroup>
+
 </Project>

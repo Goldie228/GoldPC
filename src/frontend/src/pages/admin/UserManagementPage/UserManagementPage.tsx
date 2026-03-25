@@ -120,11 +120,11 @@ export function UserManagementPage() {
   };
 
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
+    <div className="staff-page">
+      <header className={`${styles.header} staff-page__header`}>
         <div>
-          <h1 className={styles.title}>Пользователи</h1>
-          <p className={styles.subtitle}>
+          <h1 className={`${styles.title} staff-page__title`}>Пользователи</h1>
+          <p className={`${styles.subtitle} staff-page__subtitle`}>
             Управление пользователями системы
           </p>
         </div>

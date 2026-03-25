@@ -15,6 +15,12 @@
   min-height: 0;
 }
 
+.cardList {
+  flex-direction: row;
+  height: auto;
+  align-items: stretch;
+}
+
 .card:hover {
   border-color: rgba(212, 165, 116, 0.25);
   box-shadow:
@@ -37,6 +43,13 @@
   justify-content: center;
   padding: 20px;
   overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cardList .imageContainer {
+  width: 200px;
+  aspect-ratio: 1;
+  padding: 16px;
 }
 
 /* Сплошной белый фон — совпадает с белым на фото товаров */
@@ -75,6 +88,19 @@
   max-height: 100%;
   object-fit: contain;
   transition: transform 0.3s;
+}
+
+.placeholderWrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quickViewOptimizedImage {
+  width: 100%;
+  height: 100%;
 }
 
 .card:hover .image {
@@ -141,6 +167,43 @@
 .hitBadgeRight {
   right: 8px;
   left: auto;
+}
+
+.stockBadge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  z-index: 2;
+  max-width: calc(100% - 16px);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  border-radius: 2px;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stockBadgeIn {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  color: #86efac;
+}
+
+.stockBadgeLow {
+  background: rgba(212, 165, 116, 0.12);
+  border: 1px solid rgba(212, 165, 116, 0.45);
+  color: var(--accent);
+}
+
+.stockBadgeOut {
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #fca5a5;
 }
 
 /* ========================================
@@ -344,6 +407,13 @@
   gap: 12px;
   margin-top: auto;
   flex-shrink: 0;
+}
+
+.cardList .priceRow {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0;
 }
 
 .prices {

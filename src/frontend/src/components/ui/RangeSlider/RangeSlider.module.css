@@ -36,15 +36,13 @@
   height: 100%;
   background: linear-gradient(
     90deg,
-    rgba(212, 165, 116, 0.8) 0%,
-    rgba(212, 165, 116, 1) 50%,
-    rgba(212, 165, 116, 0.8) 100%
+    var(--color-gold-300) 0%,
+    var(--brand-primary) 50%,
+    var(--color-gold-300) 100%
   );
-  border-radius: 2px;
-  box-shadow: 
-    0 0 8px rgba(212, 165, 116, 0.4),
-    0 0 16px rgba(212, 165, 116, 0.2);
-  transition: box-shadow 0.2s ease;
+  border-radius: var(--radius-xs);
+  box-shadow: var(--shadow-gold);
+  transition: box-shadow var(--transition-fast);
 }
 
 /* ========================================
@@ -59,7 +57,7 @@
   transform: translate(-50%, -50%);
   cursor: grab;
   z-index: 10;
-  transition: transform 0.15s ease;
+  transition: transform var(--transition-fast);
 }
 
 .thumb::before {
@@ -68,16 +66,16 @@
   inset: 0;
   background: linear-gradient(
     135deg,
-    #d4a574 0%,
-    #c49464 100%
+    var(--brand-primary) 0%,
+    var(--color-gold-600) 100%
   );
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.2);
   box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.4),
-    0 0 12px rgba(212, 165, 116, 0.3),
+    var(--shadow-md),
+    var(--shadow-gold),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .thumb::after {

@@ -184,21 +184,39 @@ db-admin: ## Open Adminer database UI
 	@echo "$(GREEN)Adminer available at: http://localhost:8080$(RESET)"
 	$(DOCKER_COMPOSE_DEV) up -d adminer
 
-backup: ## Backup database to file
-	@echo "$(CYAN)Creating database backup...$(RESET)"
-	@mkdir -p backups
-	$(DOCKER_COMPOSE_DEV) exec postgres pg_dump -U postgres goldpc > backups/backup_$$(date +%Y%m%d_%H%M%S).sql
-	@echo "$(GREEN)Backup created in backups/$(RESET)"
+backup: ## Backup all databases to files
+	@echo "$(CYAN)Creating database backups...$(RESET)"
+	@mkdir -p backups/$(shell date +%Y%m%d_%H%M%S)
+	@for db in goldpc_catalog goldpc_auth goldpc_orders goldpc_services goldpc_warranty; do \
+		echo "Backing up $$db..."; \
+		$(DOCKER_COMPOSE_DEV) exec -T postgres pg_dump -U postgres $$db > backups/$(shell date +%Y%m%d_%H%M%S)/$$db.sql; \
+	done
+	@echo "$(GREEN)Backups created in backups/$(shell date +%Y%m%d_%H%M%S)/$(RESET)"
 
-restore: ## Restore database from backup (use: make restore FILE=backups/backup.sql)
+backup-pitr: ## Create base backup for PITR
+	@echo "$(CYAN)Creating base backup for PITR...$(RESET)"
+	@mkdir -p backups/pitr/$(shell date +%Y%m%d_%H%M%S)
+	$(DOCKER_COMPOSE_DEV) exec postgres pg_basebackup -U postgres -D /tmp/base_backup -Ft -z -P
+	$(DOCKER_COMPOSE_DEV) cp postgres:/tmp/base_backup backups/pitr/$(shell date +%Y%m%d_%H%M%S)/base.tar.gz
+	$(DOCKER_COMPOSE_DEV) exec postgres rm -rf /tmp/base_backup
+	@echo "$(GREEN)Base backup created in backups/pitr/$(shell date +%Y%m%d_%H%M%S)/$(RESET)"
+
+restore: ## Restore database from backup (use: make restore FILE=backups/dir/db.sql DB=goldpc_catalog)
 ifndef FILE
 	@echo "$(RED)Error: FILE parameter required$(RESET)"
-	@echo "Usage: make restore FILE=backups/backup.sql"
+	@echo "Usage: make restore FILE=backups/20240324_120000/goldpc_catalog.sql DB=goldpc_catalog"
 	@exit 1
 endif
-	@echo "$(CYAN)Restoring database from $(FILE)...$(RESET)"
-	$(DOCKER_COMPOSE_DEV) exec -T postgres psql -U postgres goldpc < $(FILE)
-	@echo "$(GREEN)Database restored$(RESET)"
+ifndef DB
+	@echo "$(RED)Error: DB parameter required$(RESET)"
+	@echo "Usage: make restore FILE=backups/20240324_120000/goldpc_catalog.sql DB=goldpc_catalog"
+	@exit 1
+endif
+	@echo "$(CYAN)Restoring database $(DB) from $(FILE)...$(RESET)"
+	$(DOCKER_COMPOSE_DEV) exec -T postgres psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS $(DB);"
+	$(DOCKER_COMPOSE_DEV) exec -T postgres psql -U postgres -d postgres -c "CREATE DATABASE $(DB);"
+	$(DOCKER_COMPOSE_DEV) exec -T postgres psql -U postgres -d $(DB) < $(FILE)
+	@echo "$(GREEN)Database $(DB) restored$(RESET)"
 
 ## REDIS
 ## =====

@@ -3,15 +3,6 @@
  * Основано на прототипе admin-users.html
  */
 
-.container {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
-  min-height: 100vh;
-  background: var(--bg, #09090b);
-  color: var(--fg, #fafafa);
-}
-
 /* Header */
 .header {
   display: flex;
@@ -543,10 +534,6 @@
 }
 
 @media (max-width: 768px) {
-  .container {
-    padding: 16px;
-  }
-
   .filters {
     flex-direction: column;
   }

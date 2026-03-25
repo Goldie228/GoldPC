@@ -33,5 +33,5 @@ public class OrderDto
 
     public DateTime? UpdatedAt { get; set; }
 
-    public List<OrderItemDto> Items { get; set; } = new();
+    public ICollection<OrderItemDto> Items { get; set; } = new List<OrderItemDto>();
 }

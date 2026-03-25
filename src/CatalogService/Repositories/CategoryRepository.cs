@@ -8,35 +8,37 @@ namespace CatalogService.Repositories;
 public class CategoryRepository : ICategoryRepository
 {
     private readonly CatalogDbContext _context;
+    private readonly ReadOnlyCatalogDbContext _readContext;
 
-    public CategoryRepository(CatalogDbContext context)
+    public CategoryRepository(CatalogDbContext context, ReadOnlyCatalogDbContext readContext)
     {
         _context = context;
+        _readContext = readContext;
     }
 
     public async Task<Category?> GetByIdAsync(Guid id)
     {
-        return await _context.Categories
+        return await _readContext.Categories
             .Include(c => c.Children)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
     public async Task<Category?> GetBySlugAsync(string slug)
     {
-        return await _context.Categories
+        return await _readContext.Categories
             .Include(c => c.Children)
             .FirstOrDefaultAsync(c => c.Slug == slug);
     }
 
     public async Task<IEnumerable<CategoryFilterAttribute>> GetFilterAttributesByCategorySlugAsync(string slug)
     {
-        var category = await _context.Categories
+        var category = await _readContext.Categories
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Slug == slug);
         if (category == null)
             return Array.Empty<CategoryFilterAttribute>();
 
-        return await _context.CategoryFilterAttributes
+        return await _readContext.CategoryFilterAttributes
             .AsNoTracking()
             .Where(a => a.CategoryId == category.Id)
             .OrderBy(a => a.SortOrder)
@@ -45,7 +47,7 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<IEnumerable<Category>> GetAllAsync()
     {
-        return await _context.Categories
+        return await _readContext.Categories
             .Include(c => c.Children)
             .OrderBy(c => c.Name)
             .ToListAsync();
@@ -53,7 +55,7 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<IEnumerable<Category>> GetRootCategoriesAsync()
     {
-        return await _context.Categories
+        return await _readContext.Categories
             .Where(c => c.ParentId == null)
             .Include(c => c.Children)
             .OrderBy(c => c.Name)
@@ -87,33 +89,35 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<bool> HasProductsAsync(Guid id)
     {
-        return await _context.Products.AnyAsync(p => p.CategoryId == id);
+        return await _readContext.Products.AnyAsync(p => p.CategoryId == id);
     }
 }
 
 public class ManufacturerRepository : IManufacturerRepository
 {
     private readonly CatalogDbContext _context;
+    private readonly ReadOnlyCatalogDbContext _readContext;
 
-    public ManufacturerRepository(CatalogDbContext context)
+    public ManufacturerRepository(CatalogDbContext context, ReadOnlyCatalogDbContext readContext)
     {
         _context = context;
+        _readContext = readContext;
     }
 
     public async Task<Manufacturer?> GetByIdAsync(Guid id)
     {
-        return await _context.Manufacturers.FindAsync(id);
+        return await _readContext.Manufacturers.FindAsync(id);
     }
 
     public async Task<Manufacturer?> GetByNameAsync(string name)
     {
-        return await _context.Manufacturers
+        return await _readContext.Manufacturers
             .FirstOrDefaultAsync(m => m.Name == name);
     }
 
     public async Task<IEnumerable<Manufacturer>> GetAllAsync()
     {
-        return await _context.Manufacturers
+        return await _readContext.Manufacturers
             .OrderBy(m => m.Name)
             .ToListAsync();
     }
@@ -145,17 +149,19 @@ public class ManufacturerRepository : IManufacturerRepository
 
     public async Task<bool> HasProductsAsync(Guid id)
     {
-        return await _context.Products.AnyAsync(p => p.ManufacturerId == id);
+        return await _readContext.Products.AnyAsync(p => p.ManufacturerId == id);
     }
 }
 
 public class ReviewRepository : IReviewRepository
 {
     private readonly CatalogDbContext _context;
+    private readonly ReadOnlyCatalogDbContext _readContext;
 
-    public ReviewRepository(CatalogDbContext context)
+    public ReviewRepository(CatalogDbContext context, ReadOnlyCatalogDbContext readContext)
     {
         _context = context;
+        _readContext = readContext;
     }
 
     public async Task<Review?> GetByIdAsync(Guid id)
@@ -199,7 +205,7 @@ public class ReviewRepository : IReviewRepository
 
     public async Task<double> GetAverageRatingAsync(Guid productId)
     {
-        var reviews = await _context.Reviews
+        var reviews = await _readContext.Reviews
             .Where(r => r.ProductId == productId && r.IsVerified)
             .Select(r => r.Rating)
             .ToListAsync();
@@ -209,13 +215,13 @@ public class ReviewRepository : IReviewRepository
 
     public async Task<int> GetReviewCountAsync(Guid productId)
     {
-        return await _context.Reviews
+        return await _readContext.Reviews
             .CountAsync(r => r.ProductId == productId && r.IsVerified);
     }
 
     public async Task<bool> ExistsByUserAndProductAsync(Guid userId, Guid productId)
     {
-        return await _context.Reviews
+        return await _readContext.Reviews
             .AnyAsync(r => r.UserId == userId && r.ProductId == productId);
     }
 }

@@ -23,8 +23,16 @@ builder.Host.UseSerilog();
 builder.Services.AddDbContext<ServicesDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+using GoldPC.Shared.Services.Implementations;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// ... existing code ...
+
 builder.Services.AddScoped<IServicesService, ServicesService>();
-builder.Services.AddSingleton<INotificationService, NotificationServiceMock>();
+
+// Production Notifications (SMTP, Twilio, Mocks support)
+builder.Services.AddProductionNotifications(builder.Configuration, builder.Environment);
 
 // Warranty Service Client
 if (builder.Environment.IsDevelopment())

@@ -65,11 +65,11 @@ export function ReportsPage() {
   };
 
   return (
-    <div className="reports-page">
-      <header className="reports-page__header">
+    <div className="staff-page reports-page">
+      <header className="staff-page__header reports-page__header">
         <div className="reports-page__title-section">
-          <h1 className="reports-page__title">Финансовые отчёты</h1>
-          <p className="reports-page__subtitle">
+          <h1 className="staff-page__title reports-page__title">Финансовые отчёты</h1>
+          <p className="staff-page__subtitle reports-page__subtitle">
             Формирование отчётов за выбранный период
           </p>
         </div>

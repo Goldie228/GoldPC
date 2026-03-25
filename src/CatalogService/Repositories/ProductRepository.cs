@@ -1,5 +1,5 @@
 using CatalogService.Data;
-using CatalogService.DTOs;
+using GoldPC.SharedKernel.DTOs;
 using CatalogService.Models;
 using CatalogService.Repositories.Interfaces;
 using CatalogService.Services;
@@ -24,31 +24,37 @@ public class RepositoryPagedResult<T>
 public class ProductRepository : IProductRepository
 {
     private readonly CatalogDbContext _context;
+    private readonly ReadOnlyCatalogDbContext _readContext;
     private readonly SpecImportNormalizer _specNormalizer;
     private readonly ILogger<ProductRepository> _logger;
 
-    public ProductRepository(CatalogDbContext context, SpecImportNormalizer specNormalizer, ILogger<ProductRepository> logger)
+    public ProductRepository(
+        CatalogDbContext context, 
+        ReadOnlyCatalogDbContext readContext,
+        SpecImportNormalizer specNormalizer, 
+        ILogger<ProductRepository> logger)
     {
         _context = context;
+        _readContext = readContext;
         _specNormalizer = specNormalizer;
         _logger = logger;
     }
 
     public async Task<Product?> GetByIdAsync(Guid id)
     {
-        return await _context.Products
+        return await _readContext.Products
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
     }
 
     public async Task<Product?> GetBySkuAsync(string sku)
     {
-        return await _context.Products
+        return await _readContext.Products
             .FirstOrDefaultAsync(p => p.Sku == sku);
     }
 
     public async Task<Product?> GetDetailByIdAsync(Guid id)
     {
-        return await _context.Products
+        return await _readContext.Products
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
             .Include(p => p.Images.OrderBy(i => i.SortOrder))
@@ -62,7 +68,7 @@ public class ProductRepository : IProductRepository
 
     public async Task<RepositoryPagedResult<Product>> GetFilteredAsync(ProductFilterDto filter)
     {
-        var query = _context.Products
+        var query = _readContext.Products
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
             .Include(p => p.Images.Where(i => i.IsPrimary))
@@ -139,16 +145,16 @@ public class ProductRepository : IProductRepository
                 var allowedTexts = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
                 if (allowedTexts.Count == 0) continue;
 
-                var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == key);
+                var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == key);
                 if (attr == null) continue;
 
-                var canonicalIds = await _context.SpecificationCanonicalValues
+                var canonicalIds = await _readContext.SpecificationCanonicalValues
                     .Where(cv => cv.AttributeId == attr.Id && allowedTexts.Contains(cv.ValueText))
                     .Select(cv => cv.Id)
                     .ToListAsync();
                 if (canonicalIds.Count == 0) continue;
 
-                query = query.Where(p => _context.ProductSpecificationValues
+                query = query.Where(p => _readContext.ProductSpecificationValues
                     .Any(psv => psv.ProductId == p.Id && psv.AttributeId == attr.Id && psv.CanonicalValueId != null && canonicalIds.Contains(psv.CanonicalValueId!.Value)));
             }
         }
@@ -162,10 +168,10 @@ public class ProductRepository : IProductRepository
                 var max = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
                 if (!min.HasValue && !max.HasValue) continue;
 
-                var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == key);
+                var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == key);
                 if (attr == null) continue;
 
-                query = query.Where(p => _context.ProductSpecificationValues
+                query = query.Where(p => _readContext.ProductSpecificationValues
                     .Any(psv => psv.ProductId == p.Id && psv.AttributeId == attr.Id && psv.ValueNumber != null &&
                         (!min.HasValue || psv.ValueNumber >= min) &&
                         (!max.HasValue || psv.ValueNumber <= max)));
@@ -207,7 +213,7 @@ public class ProductRepository : IProductRepository
 
     public async Task<IEnumerable<Product>> GetByIdsAsync(IEnumerable<Guid> ids)
     {
-        return await _context.Products
+        return await _readContext.Products
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
             .Where(p => ids.Contains(p.Id) && p.IsActive)
@@ -216,7 +222,7 @@ public class ProductRepository : IProductRepository
 
     public async Task<IEnumerable<Product>> GetByCategoryAsync(Guid categoryId)
     {
-        return await _context.Products
+        return await _readContext.Products
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
             .Where(p => p.CategoryId == categoryId && p.IsActive && p.Images.Any())
@@ -225,7 +231,7 @@ public class ProductRepository : IProductRepository
 
     public async Task<IEnumerable<Guid>> GetManufacturerIdsByCategoryAsync(Guid categoryId)
     {
-        return await _context.Products
+        return await _readContext.Products
             .Where(p => p.CategoryId == categoryId && p.IsActive && p.ManufacturerId.HasValue)
             .Select(p => p.ManufacturerId!.Value)
             .Distinct()
@@ -238,7 +244,7 @@ public class ProductRepository : IProductRepository
         if (keys.Count == 0)
             return new Dictionary<string, List<string>>();
 
-        var baseProductsQuery = _context.Products.Where(p => p.CategoryId == categoryId && p.IsActive);
+        var baseProductsQuery = _readContext.Products.Where(p => p.CategoryId == categoryId && p.IsActive);
         if (filterContext != null)
         {
             var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
@@ -253,13 +259,13 @@ public class ProductRepository : IProductRepository
             {
                 var allowedTexts = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
                 if (allowedTexts.Count == 0) continue;
-                var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == specKey);
+                var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == specKey);
                 if (attr == null) continue;
-                var canonIds = await _context.SpecificationCanonicalValues
+                var canonIds = await _readContext.SpecificationCanonicalValues
                     .Where(cv => cv.AttributeId == attr.Id && allowedTexts.Contains(cv.ValueText))
                     .Select(cv => cv.Id).ToListAsync();
                 if (canonIds.Count == 0) continue;
-                productIds = await _context.ProductSpecificationValues
+                productIds = await _readContext.ProductSpecificationValues
                     .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == attr.Id && psv.CanonicalValueId != null && canonIds.Contains(psv.CanonicalValueId!.Value))
                     .Select(psv => psv.ProductId)
                     .Distinct()
@@ -275,9 +281,9 @@ public class ProductRepository : IProductRepository
                 var min = parts.Length > 0 && decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : (decimal?)null;
                 var max = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
                 if (!min.HasValue && !max.HasValue) continue;
-                var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
+                var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
                 if (attr == null) continue;
-                productIds = await _context.ProductSpecificationValues
+                productIds = await _readContext.ProductSpecificationValues
                     .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == attr.Id && psv.ValueNumber != null &&
                         (!min.HasValue || psv.ValueNumber >= min) &&
                         (!max.HasValue || psv.ValueNumber <= max))
@@ -290,12 +296,12 @@ public class ProductRepository : IProductRepository
         var result = new Dictionary<string, List<string>>();
         foreach (var key in keys)
         {
-            var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == key);
+            var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == key);
             if (attr == null) continue;
 
-            var values = await _context.ProductSpecificationValues
+            var values = await _readContext.ProductSpecificationValues
                 .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == attr.Id && psv.CanonicalValueId != null)
-                .Join(_context.SpecificationCanonicalValues, psv => psv.CanonicalValueId, scv => scv.Id, (psv, scv) => scv.ValueText)
+                .Join(_readContext.SpecificationCanonicalValues, psv => psv.CanonicalValueId, scv => scv.Id, (psv, scv) => scv.ValueText)
                 .Distinct()
                 .OrderBy(t => t)
                 .ToListAsync();
@@ -307,10 +313,10 @@ public class ProductRepository : IProductRepository
 
     public async Task<(decimal? Min, decimal? Max)> GetSpecificationRangeAsync(Guid categoryId, string attributeKey, ProductFilterDto? filterContext = null)
     {
-        var attr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == attributeKey);
+        var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == attributeKey);
         if (attr == null) return (null, null);
 
-        var baseProductsQuery = _context.Products.Where(p => p.CategoryId == categoryId && p.IsActive);
+        var baseProductsQuery = _readContext.Products.Where(p => p.CategoryId == categoryId && p.IsActive);
         if (filterContext != null)
         {
             var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
@@ -326,13 +332,13 @@ public class ProductRepository : IProductRepository
                 if (string.IsNullOrEmpty(specKey) || string.IsNullOrEmpty(value)) continue;
                 var allowedTexts = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
                 if (allowedTexts.Count == 0) continue;
-                var specAttr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == specKey);
+                var specAttr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == specKey);
                 if (specAttr == null) continue;
-                var canonIds = await _context.SpecificationCanonicalValues
+                var canonIds = await _readContext.SpecificationCanonicalValues
                     .Where(cv => cv.AttributeId == specAttr.Id && allowedTexts.Contains(cv.ValueText))
                     .Select(cv => cv.Id).ToListAsync();
                 if (canonIds.Count == 0) continue;
-                productIds = await _context.ProductSpecificationValues
+                productIds = await _readContext.ProductSpecificationValues
                     .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == specAttr.Id && psv.CanonicalValueId != null && canonIds.Contains(psv.CanonicalValueId!.Value))
                     .Select(psv => psv.ProductId).Distinct().ToListAsync();
             }
@@ -346,9 +352,9 @@ public class ProductRepository : IProductRepository
                 var minR = parts.Length > 0 && decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : (decimal?)null;
                 var maxR = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
                 if (!minR.HasValue && !maxR.HasValue) continue;
-                var rangeAttr = await _context.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
+                var rangeAttr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
                 if (rangeAttr == null) continue;
-                productIds = await _context.ProductSpecificationValues
+                productIds = await _readContext.ProductSpecificationValues
                     .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == rangeAttr.Id && psv.ValueNumber != null &&
                         (!minR.HasValue || psv.ValueNumber >= minR) &&
                         (!maxR.HasValue || psv.ValueNumber <= maxR))
@@ -356,7 +362,7 @@ public class ProductRepository : IProductRepository
             }
         }
 
-        var nums = await _context.ProductSpecificationValues
+        var nums = await _readContext.ProductSpecificationValues
             .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == attr.Id && psv.ValueNumber != null)
             .Select(psv => psv.ValueNumber!.Value)
             .ToListAsync();
@@ -367,7 +373,7 @@ public class ProductRepository : IProductRepository
 
     public async Task<Dictionary<Guid, int>> GetProductCountsByCategoryAsync()
     {
-        return await _context.Products
+        return await _readContext.Products
             .Where(p => p.IsActive && p.Images.Any())
             .GroupBy(p => p.CategoryId)
             .Select(g => new { CategoryId = g.Key, Count = g.Count() })
@@ -445,7 +451,7 @@ public class ProductRepository : IProductRepository
 
     public async Task UpdateStockAsync(Guid id, int quantity)
     {
-        var product = await GetByIdAsync(id);
+        var product = await _context.Products.FindAsync(id);
         if (product != null)
         {
             product.Stock = Math.Max(0, product.Stock + quantity);
@@ -455,5 +461,10 @@ public class ProductRepository : IProductRepository
             _logger.LogInformation("Updated stock for product {ProductId} by {Quantity}. New stock: {Stock}", 
                 id, quantity, product.Stock);
         }
+    }
+
+    public async Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync()
+    {
+        return await _context.Database.BeginTransactionAsync();
     }
 }

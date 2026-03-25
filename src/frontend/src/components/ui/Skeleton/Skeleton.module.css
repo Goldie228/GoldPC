@@ -3,7 +3,7 @@
    ======================================== */
 
 .skeleton {
-  background: var(--bg-elevated, #121214);
+  background: var(--bg-elevated);
   position: relative;
   overflow: hidden;
 }
@@ -14,19 +14,19 @@
 }
 
 .radiusSm {
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
 }
 
 .radiusMd {
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .radiusLg {
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
 }
 
 .radiusFull {
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
 }
 
 /* Анимация пульсации */

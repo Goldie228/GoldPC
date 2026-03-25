@@ -1,0 +1,280 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - link "Перейти к основному контенту" [ref=e4] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e5]:
+    - link "GoldPC" [ref=e6] [cursor=pointer]:
+      - /url: /
+      - img [ref=e8]
+      - generic [ref=e12]: GoldPC
+    - navigation [ref=e13]:
+      - link "Каталог" [ref=e14] [cursor=pointer]:
+        - /url: /catalog
+      - link "Конструктор" [ref=e15] [cursor=pointer]:
+        - /url: /pc-builder
+      - link "Сервис" [ref=e16] [cursor=pointer]:
+        - /url: /services
+      - link "О нас" [ref=e17] [cursor=pointer]:
+        - /url: /about
+    - generic [ref=e18]:
+      - generic [ref=e20]:
+        - img
+        - combobox "Поиск по сайту" [ref=e21]
+      - 'link "Избранное: 0 товаров" [ref=e22] [cursor=pointer]':
+        - /url: /wishlist
+        - img [ref=e23]
+      - 'link "Сравнение: 0 товаров" [ref=e25] [cursor=pointer]':
+        - /url: /comparison
+        - img [ref=e26]
+      - 'button "Корзина: 0 товаров" [ref=e31] [cursor=pointer]':
+        - img [ref=e32]
+      - button "Войти" [ref=e37] [cursor=pointer]:
+        - img [ref=e38]
+  - generic [ref=e41]:
+    - button [ref=e42] [cursor=pointer]:
+      - img [ref=e43]
+    - navigation [ref=e46]:
+      - link [ref=e47] [cursor=pointer]:
+        - /url: /catalog
+        - text: Каталог
+      - link [ref=e48] [cursor=pointer]:
+        - /url: /pc-builder
+        - text: Конструктор
+      - link [ref=e49] [cursor=pointer]:
+        - /url: /services
+        - text: Сервис
+      - link [ref=e50] [cursor=pointer]:
+        - /url: /about
+        - text: О нас
+    - generic [ref=e51]:
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /wishlist
+        - img [ref=e53]
+        - generic [ref=e55]: Избранное
+      - link [ref=e56] [cursor=pointer]:
+        - /url: /comparison
+        - img [ref=e57]
+        - generic [ref=e62]: Сравнение
+      - link [ref=e63] [cursor=pointer]:
+        - /url: /cart
+        - img [ref=e64]
+        - generic [ref=e68]: Корзина
+      - link [ref=e69] [cursor=pointer]:
+        - /url: /account
+        - img [ref=e70]
+        - generic [ref=e73]: Профиль
+  - main [ref=e74]:
+    - application "Конструктор ПК GoldPC" [ref=e75]:
+      - banner [ref=e76]:
+        - generic [ref=e77]:
+          - link "Вернуться на главную GoldPC" [ref=e78] [cursor=pointer]:
+            - /url: /
+            - img [ref=e80]
+            - generic [ref=e84]: PCBuilder
+          - generic [ref=e85]:
+            - generic [ref=e86]: Итого
+            - generic [ref=e87]: 0 BYN
+      - main [ref=e88]:
+        - generic [ref=e89]:
+          - generic [ref=e90]:
+            - generic [ref=e91]:
+              - heading "Комплектующие" [level=1] [ref=e92]
+              - status [ref=e93]:
+                - img [ref=e94]
+                - text: Совместимо
+            - generic [ref=e96]:
+              - generic [ref=e98]:
+                - img [ref=e100]
+                - generic [ref=e104]:
+                  - generic [ref=e105]: Процессор
+                  - generic [ref=e106]: Выберите компонент
+                  - generic [ref=e107]:
+                    - generic [ref=e108]: AM5
+                    - generic [ref=e109]: LGA1700
+                - generic [ref=e112]: —
+                - button "Выбрать" [ref=e113] [cursor=pointer]
+              - generic [ref=e115]:
+                - img [ref=e117]
+                - generic [ref=e121]:
+                  - generic [ref=e122]: Видеокарта
+                  - generic [ref=e123]: Выберите компонент
+                  - generic [ref=e124]:
+                    - generic [ref=e125]: PCIe 4.0
+                    - generic [ref=e126]: Ray Tracing
+                - generic [ref=e129]: —
+                - button "Выбрать" [ref=e130] [cursor=pointer]
+              - generic [ref=e132]:
+                - img [ref=e134]
+                - generic [ref=e140]:
+                  - generic [ref=e141]: Материнская плата
+                  - generic [ref=e142]: Выберите компонент
+                  - generic [ref=e143]:
+                    - generic [ref=e144]: ATX
+                    - generic [ref=e145]: mATX
+                - generic [ref=e148]: —
+                - button "Выбрать" [ref=e149] [cursor=pointer]
+              - generic [ref=e151]:
+                - img [ref=e153]
+                - generic [ref=e159]:
+                  - generic [ref=e160]: Оперативная память
+                  - generic [ref=e161]: Выберите компонент
+                  - generic [ref=e162]:
+                    - generic [ref=e163]: DDR5
+                    - generic [ref=e164]: 32GB
+                - generic [ref=e167]: —
+                - button "Выбрать" [ref=e168] [cursor=pointer]
+              - generic [ref=e170]:
+                - img [ref=e172]
+                - generic [ref=e177]:
+                  - generic [ref=e178]: Накопитель
+                  - generic [ref=e179]: Выберите компонент
+                  - generic [ref=e180]:
+                    - generic [ref=e181]: NVMe
+                    - generic [ref=e182]: SATA SSD
+                - generic [ref=e185]: —
+                - button "Выбрать" [ref=e186] [cursor=pointer]
+              - generic [ref=e188]:
+                - img [ref=e190]
+                - generic [ref=e194]:
+                  - generic [ref=e195]: Блок питания
+                  - generic [ref=e196]: Выберите компонент
+                  - generic [ref=e197]:
+                    - generic [ref=e198]: 750W
+                    - generic [ref=e199]: 80+ Gold
+                - generic [ref=e202]: —
+                - button "Выбрать" [ref=e203] [cursor=pointer]
+              - generic [ref=e205]:
+                - img [ref=e207]
+                - generic [ref=e213]:
+                  - generic [ref=e214]: Корпус
+                  - generic [ref=e215]: Выберите компонент
+                  - generic [ref=e216]:
+                    - generic [ref=e217]: Mid Tower
+                    - generic [ref=e218]: ATX
+                - generic [ref=e221]: —
+                - button "Выбрать" [ref=e222] [cursor=pointer]
+              - generic [ref=e224]:
+                - img [ref=e226]
+                - generic [ref=e230]:
+                  - generic [ref=e231]: Охлаждение
+                  - generic [ref=e232]: Выберите компонент
+                  - generic [ref=e233]:
+                    - generic [ref=e234]: 240mm AIO
+                    - generic [ref=e235]: Air Cooler
+                - generic [ref=e238]: —
+                - button "Выбрать" [ref=e239] [cursor=pointer]
+          - generic [ref=e241]:
+            - heading "Ваша сборка" [level=2] [ref=e242]
+            - generic [ref=e243]:
+              - 'generic "Процессор: не выбрано" [ref=e244]':
+                - generic [ref=e245]: Процессор
+                - generic [ref=e246]: —
+              - 'generic "Видеокарта: не выбрано" [ref=e247]':
+                - generic [ref=e248]: Видеокарта
+                - generic [ref=e249]: —
+              - 'generic "Материнская плата: не выбрано" [ref=e250]':
+                - generic [ref=e251]: Материнская плата
+                - generic [ref=e252]: —
+              - 'generic "Оперативная память: не выбрано" [ref=e253]':
+                - generic [ref=e254]: Оперативная память
+                - generic [ref=e255]: —
+              - 'generic "Накопитель: не выбрано" [ref=e256]':
+                - generic [ref=e257]: Накопитель
+                - generic [ref=e258]: —
+              - 'generic "Блок питания: не выбрано" [ref=e259]':
+                - generic [ref=e260]: Блок питания
+                - generic [ref=e261]: —
+              - 'generic "Корпус: не выбрано" [ref=e262]':
+                - generic [ref=e263]: Корпус
+                - generic [ref=e264]: —
+              - 'generic "Охлаждение: не выбрано" [ref=e265]':
+                - generic [ref=e266]: Охлаждение
+                - generic [ref=e267]: —
+            - generic [ref=e269]:
+              - generic [ref=e270]: "Итого:"
+              - generic [ref=e271]: 0 BYN
+            - button "Добавить в корзину" [disabled] [ref=e272]:
+              - img [ref=e273]
+              - text: Добавить в корзину
+      - generic [ref=e276]:
+        - generic [ref=e278]:
+          - text: Выбрано
+          - strong [ref=e279]: 0 из 8
+          - text: компонентов
+        - button "Оформить 0 BYN" [disabled] [ref=e280]:
+          - img [ref=e281]
+          - generic [ref=e283]: Оформить
+          - generic [ref=e284]: 0 BYN
+  - contentinfo [ref=e285]:
+    - generic [ref=e286]:
+      - generic [ref=e287]:
+        - generic [ref=e288]:
+          - link "GoldPC" [ref=e289] [cursor=pointer]:
+            - /url: /
+            - img [ref=e291]
+            - generic [ref=e295]: GoldPC
+          - paragraph [ref=e296]: Премиальный магазин компьютерных компонентов с профессиональной сборкой и гарантией качества.
+        - generic [ref=e297]:
+          - heading "Каталог" [level=4] [ref=e298]
+          - list [ref=e299]:
+            - listitem [ref=e300]:
+              - link "Процессоры" [ref=e301] [cursor=pointer]:
+                - /url: /catalog?category=cpu
+            - listitem [ref=e302]:
+              - link "Видеокарты" [ref=e303] [cursor=pointer]:
+                - /url: /catalog?category=gpu
+            - listitem [ref=e304]:
+              - link "Материнские платы" [ref=e305] [cursor=pointer]:
+                - /url: /catalog?category=motherboard
+            - listitem [ref=e306]:
+              - link "Память" [ref=e307] [cursor=pointer]:
+                - /url: /catalog?category=ram
+            - listitem [ref=e308]:
+              - link "Накопители" [ref=e309] [cursor=pointer]:
+                - /url: /catalog?category=storage
+        - generic [ref=e310]:
+          - heading "Сервис" [level=4] [ref=e311]
+          - list [ref=e312]:
+            - listitem [ref=e313]:
+              - link "Конструктор ПК" [ref=e314] [cursor=pointer]:
+                - /url: /pc-builder
+            - listitem [ref=e315]:
+              - link "Сборка" [ref=e316] [cursor=pointer]:
+                - /url: /services/assembly
+            - listitem [ref=e317]:
+              - link "Доставка" [ref=e318] [cursor=pointer]:
+                - /url: /delivery
+            - listitem [ref=e319]:
+              - link "Оплата" [ref=e320] [cursor=pointer]:
+                - /url: /payment
+            - listitem [ref=e321]:
+              - link "Гарантия" [ref=e322] [cursor=pointer]:
+                - /url: /warranty
+            - listitem [ref=e323]:
+              - link "Возврат" [ref=e324] [cursor=pointer]:
+                - /url: /returns
+            - listitem [ref=e325]:
+              - link "FAQ" [ref=e326] [cursor=pointer]:
+                - /url: /faq
+        - generic [ref=e327]:
+          - heading "Контакты" [level=4] [ref=e328]
+          - list [ref=e329]:
+            - listitem [ref=e330]:
+              - link "Позвонить нам" [ref=e331] [cursor=pointer]:
+                - /url: tel:+375291234567
+                - text: +375 (29) 123-45-67
+            - listitem [ref=e332]:
+              - link "Написать нам на email" [ref=e333] [cursor=pointer]:
+                - /url: mailto:hi@goldpc.by
+                - text: hi@goldpc.by
+            - listitem [ref=e334]: Минск, ул. Примерная, 1
+      - generic [ref=e335]:
+        - generic [ref=e336]: © 2026 GoldPC. Все права защищены.
+        - generic [ref=e337]:
+          - generic "Telegram (скоро)" [ref=e338]:
+            - img [ref=e339]
+          - generic "Instagram (скоро)" [ref=e341]:
+            - img [ref=e342]
+```

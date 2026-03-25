@@ -31,8 +31,12 @@ jobs:
         run: dotnet build --no-restore -c Release
       
       - name: Run Unit Tests
-        working-directory: tests/backend/GoldPC.UnitTests
-        run: dotnet test -c Release --filter "FullyQualifiedName~UnitTests" --collect:"XPlat Code Coverage" --results-directory ./coverage
+        working-directory: kursovaya
+        run: |
+          dotnet test tests/AuthService.Tests/AuthService.Tests.csproj -c Release --collect:"XPlat Code Coverage"
+          dotnet test tests/PCBuilderService.Tests/PCBuilderService.Tests.csproj -c Release --collect:"XPlat Code Coverage"
+          dotnet test tests/WarrantyService.Tests/WarrantyService.Tests.csproj -c Release --collect:"XPlat Code Coverage"
+          dotnet test tests/backend/GoldPC.UnitTests/GoldPC.UnitTests.csproj -c Release --collect:"XPlat Code Coverage"
       
       - name: Upload Coverage to Codecov
         uses: codecov/codecov-action@v3

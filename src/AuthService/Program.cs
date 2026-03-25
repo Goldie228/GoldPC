@@ -46,7 +46,6 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Настройка JWT аутентификации
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -55,17 +54,39 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.TokenValidationParameters = new TokenValidationParameters
+    // В Development оставляем поддержку симметричных ключей или моков, 
+    // в Production используем Keycloak (OIDC)
+    if (builder.Environment.IsProduction())
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"] ?? "GoldPC",
-        ValidAudience = jwtSettings["Audience"] ?? "GoldPC",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-        ClockSkew = TimeSpan.Zero
-    };
+        options.Authority = jwtSettings["Authority"] ?? "https://auth.goldpc.by/realms/goldpc";
+        options.Audience = jwtSettings["Audience"] ?? "goldpc-api";
+        options.RequireHttpsMetadata = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Authority"] ?? "https://auth.goldpc.by/realms/goldpc",
+            ValidAudience = jwtSettings["Audience"] ?? "goldpc-api",
+            ClockSkew = TimeSpan.Zero
+        };
+    }
+    else
+    {
+        var secretKey = jwtSettings["SecretKey"] ?? "development_secret_key_32_chars_long!!";
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"] ?? "GoldPC",
+            ValidAudience = jwtSettings["Audience"] ?? "GoldPC",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    }
 });
 
 builder.Services.AddPermissionBasedAuthorization();
@@ -152,6 +173,7 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapGet("/health", () => Results.Ok());
 
 Log.Information("Auth Service starting on port 5001");
 

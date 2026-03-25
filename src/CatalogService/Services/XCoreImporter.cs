@@ -97,10 +97,18 @@ public class XCoreImporter
             manufacturersCache[m.Name] = m.Id;
         }
 
+        var productsBySku = await _context.Products.ToDictionaryAsync(x => x.Sku!, x => x.Id);
+        var productsByExternalId = await _context.Products
+            .Where(x => x.ExternalId != null)
+            .ToDictionaryAsync(x => x.ExternalId!, x => x.Id);
+
         var addedSkusInBatch = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var batchSize = 100;
+        var count = 0;
 
         foreach (var p in data.Products)
         {
+            count++;
             try
             {
                 if (!categories.TryGetValue(p.CategorySlug, out var categoryId))
@@ -118,15 +126,23 @@ public class XCoreImporter
                     continue;
                 }
 
-                var existing = await _context.Products
-                    .FirstOrDefaultAsync(x => x.ExternalId == p.ExternalId || x.Sku == sku);
+                Guid? existingId = null;
+                if (!string.IsNullOrEmpty(p.ExternalId) && productsByExternalId.TryGetValue(p.ExternalId, out var id1))
+                    existingId = id1;
+                else if (productsBySku.TryGetValue(sku, out var id2))
+                    existingId = id2;
+
+                var existing = existingId.HasValue 
+                    ? await _context.Products.FindAsync(existingId.Value) 
+                    : null;
 
                 Manufacturer? manufacturer = null;
                 if (!string.IsNullOrEmpty(p.Manufacturer))
                 {
                     if (manufacturersCache.TryGetValue(p.Manufacturer, out var manId))
                     {
-                        manufacturer = await _context.Manufacturers.FindAsync(manId);
+                        manufacturer = _context.Manufacturers.Local.FirstOrDefault(m => m.Id == manId) 
+                                       ?? await _context.Manufacturers.FindAsync(manId);
                     }
                     else
                     {
@@ -159,6 +175,7 @@ public class XCoreImporter
                     }
                 }
 
+                // ... [GPU, CPU, MB, etc logic remains same] ...
                 // GPU: миграция data_vykhoda_na_rynok_2 → release_year
                 if (string.Equals(p.CategorySlug, "gpu", StringComparison.OrdinalIgnoreCase) &&
                     specs.TryGetValue("data_vykhoda_na_rynok_2", out var oldVal) && oldVal != null)
@@ -261,13 +278,15 @@ public class XCoreImporter
                     existing.UpdatedAt = DateTime.UtcNow;
                     existing.SourceUrl = p.Url;
                     existing.CategoryId = categoryId;
-                    var existingSpecs = await _context.ProductSpecificationValues.Where(v => v.ProductId == existing.Id).ToListAsync();
-                    _context.ProductSpecificationValues.RemoveRange(existingSpecs);
-                    await _context.SaveChangesAsync();
+                    
+                    await _context.ProductSpecificationValues
+                        .Where(v => v.ProductId == existing.Id)
+                        .ExecuteDeleteAsync();
+
                     var specValues = await _specNormalizer.ToSpecificationValuesAsync(existing.Id, specs);
                     foreach (var sv in specValues)
                         _context.ProductSpecificationValues.Add(sv);
-                    await _context.SaveChangesAsync();
+                    
                     _logger.LogDebug("Обновлён товар {Sku}", existing.Sku);
                     result.Updated++;
                 }
@@ -294,11 +313,9 @@ public class XCoreImporter
                     };
 
                     _context.Products.Add(product);
-                    await _context.SaveChangesAsync();
                     var specValues = await _specNormalizer.ToSpecificationValuesAsync(product.Id, specs);
                     foreach (var sv in specValues)
                         _context.ProductSpecificationValues.Add(sv);
-                    await _context.SaveChangesAsync();
 
                     if (p.Images != null && p.Images.Count > 0)
                     {
@@ -325,6 +342,12 @@ public class XCoreImporter
                     }
 
                     result.Imported++;
+                }
+
+                if (count % batchSize == 0)
+                {
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Обработано товаров: {Count}/{Total}", count, result.Total);
                 }
             }
             catch (Exception ex)

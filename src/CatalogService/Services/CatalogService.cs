@@ -1,7 +1,10 @@
-using CatalogService.DTOs;
+using GoldPC.SharedKernel.DTOs;
 using CatalogService.Models;
 using CatalogService.Repositories.Interfaces;
 using CatalogService.Services.Interfaces;
+using GoldPC.SharedKernel.Utilities;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace CatalogService.Services;
 
@@ -15,30 +18,47 @@ public class CatalogService : ICatalogService
     private readonly IManufacturerRepository _manufacturerRepository;
     private readonly IReviewRepository _reviewRepository;
     private readonly ILogger<CatalogService> _logger;
+    private readonly IDistributedCache _cache;
 
     public CatalogService(
         IProductRepository productRepository,
         ICategoryRepository categoryRepository,
         IManufacturerRepository manufacturerRepository,
         IReviewRepository reviewRepository,
-        ILogger<CatalogService> logger)
+        ILogger<CatalogService> logger,
+        IDistributedCache cache)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
         _manufacturerRepository = manufacturerRepository;
         _reviewRepository = reviewRepository;
         _logger = logger;
+        _cache = cache;
     }
 
     #region Products
 
     public async Task<PagedResult<ProductListDto>> GetProductsAsync(ProductFilterDto filter)
     {
+        // Cache featured products on page 1
+        bool isFeaturedPage1 = filter is { IsFeatured: true, Page: 1, PageSize: 20, Category: null, Search: null };
+        string? cacheKey = isFeaturedPage1 ? "featured_products_p1" : null;
+
+        if (cacheKey != null)
+        {
+            var cached = await _cache.GetStringAsync(cacheKey);
+            if (!string.IsNullOrEmpty(cached))
+            {
+                _logger.LogInformation("Returning cached featured products.");
+                return JsonSerializer.Deserialize<PagedResult<ProductListDto>>(cached)!;
+            }
+        }
+
         var result = await _productRepository.GetFilteredAsync(filter);
         
         var totalPages = (int)Math.Ceiling(result.TotalCount / (double)result.PageSize);
         
-        return new PagedResult<ProductListDto>
+        var pagedResult = new PagedResult<ProductListDto>
         {
             Data = result.Items.Select(MapToListDto).ToList(),
             Meta = new PaginationMeta
@@ -51,6 +71,16 @@ public class CatalogService : ICatalogService
                 HasPrevPage = result.Page > 1
             }
         };
+
+        if (cacheKey != null)
+        {
+            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(pagedResult), new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+            });
+        }
+
+        return pagedResult;
     }
 
     public async Task<ProductDetailDto?> GetProductByIdAsync(Guid id)
@@ -174,9 +204,27 @@ public class CatalogService : ICatalogService
 
     public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
     {
+        var cacheKey = "all_categories";
+        var cachedCategories = await _cache.GetStringAsync(cacheKey);
+
+        if (!string.IsNullOrEmpty(cachedCategories))
+        {
+            _logger.LogInformation("Returning cached categories.");
+            return JsonSerializer.Deserialize<IEnumerable<CategoryDto>>(cachedCategories) ?? Array.Empty<CategoryDto>();
+        }
+
         var categories = await _categoryRepository.GetAllAsync();
         var counts = await _productRepository.GetProductCountsByCategoryAsync();
-        return categories.Select(c => MapToCategoryDto(c, counts.GetValueOrDefault(c.Id, 0)));
+        var result = categories.Select(c => MapToCategoryDto(c, counts.GetValueOrDefault(c.Id, 0)));
+
+        var cacheOptions = new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+        };
+
+        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(result), cacheOptions);
+
+        return result;
     }
 
     public async Task<CategoryDto?> GetCategoryBySlugAsync(string slug)
@@ -341,10 +389,10 @@ public class CatalogService : ICatalogService
             UserId = userId,
             UserName = "Покупатель",
             Rating = dto.Rating,
-            Title = dto.Title,
-            Comment = dto.Comment,
-            Pros = dto.Pros,
-            Cons = dto.Cons,
+            Title = StringSanitizer.SanitizeText(dto.Title),
+            Comment = StringSanitizer.SanitizeText(dto.Comment),
+            Pros = StringSanitizer.SanitizeText(dto.Pros),
+            Cons = StringSanitizer.SanitizeText(dto.Cons),
             CreatedAt = DateTime.UtcNow,
             IsVerified = true,
             IsApproved = true
@@ -362,6 +410,61 @@ public class CatalogService : ICatalogService
     {
         var reviews = await _reviewRepository.GetByProductIdAsync(productId);
         return reviews.Select(MapToReviewDto);
+    }
+
+    public async Task<(bool Success, string? Error)> ReserveStockAsync(IEnumerable<(Guid ProductId, int Quantity)> items)
+    {
+        using var transaction = await _productRepository.BeginTransactionAsync();
+        try
+        {
+            foreach (var item in items)
+            {
+                var product = await _productRepository.GetByIdAsync(item.ProductId);
+                if (product == null)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, $"Товар с ID {item.ProductId} не найден");
+                }
+
+                if (product.Stock < item.Quantity)
+                {
+                    await transaction.RollbackAsync();
+                    return (false, $"Недостаточно товара '{product.Name}' на складе (доступно: {product.Stock}, требуется: {item.Quantity})");
+                }
+
+                await _productRepository.UpdateStockAsync(item.ProductId, -item.Quantity);
+            }
+
+            await transaction.CommitAsync();
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "Ошибка при резервировании товара");
+            return (false, "Внутренняя ошибка при резервировании товара");
+        }
+    }
+
+    public async Task<(bool Success, string? Error)> ReleaseStockAsync(IEnumerable<(Guid ProductId, int Quantity)> items)
+    {
+        using var transaction = await _productRepository.BeginTransactionAsync();
+        try
+        {
+            foreach (var item in items)
+            {
+                await _productRepository.UpdateStockAsync(item.ProductId, item.Quantity);
+            }
+
+            await transaction.CommitAsync();
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "Ошибка при возврате товара на склад");
+            return (false, "Внутренняя ошибка при возврате товара на склад");
+        }
     }
 
     private async Task UpdateProductRatingAsync(Guid productId)

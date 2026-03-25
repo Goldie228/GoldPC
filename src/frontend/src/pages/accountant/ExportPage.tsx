@@ -116,11 +116,11 @@ export function ExportPage() {
   };
 
   return (
-    <div className="export-page">
-      <header className="export-page__header">
+    <div className="staff-page export-page">
+      <header className="staff-page__header export-page__header">
         <div className="export-page__title-section">
-          <h1 className="export-page__title">Экспорт данных</h1>
-          <p className="export-page__subtitle">
+          <h1 className="staff-page__title export-page__title">Экспорт данных</h1>
+          <p className="staff-page__subtitle export-page__subtitle">
             Выберите формат и данные для экспорта
           </p>
         </div>

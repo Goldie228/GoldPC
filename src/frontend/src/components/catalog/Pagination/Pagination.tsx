@@ -1,43 +1,57 @@
 /**
- * Профессиональная пагинация для каталога
- * - Prev/Next
- * - Номера страниц с умными ellipsis
- * - Первая/Последняя для большого числа страниц
- * - Доступность (aria, keyboard)
+ * Пагинация каталога
+ * — Блоки страниц с многоточием между ними
+ * — Переход на страницу по номеру (валидация)
  */
 
+import { useState, useEffect, type FormEvent } from 'react';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import styles from './Pagination.module.css';
 
 const PAGE_SIZE_OPTIONS = [12, 24, 48] as const;
 
-/** Генерирует массив номеров страниц с ellipsis для отображения */
-function getPageNumbers(current: number, total: number): (number | 'ellipsis')[] {
-  if (total <= 1) return total === 1 ? [1] : [];
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  if (current <= 4) return [1, 2, 3, 4, 5, 'ellipsis', total];
-  if (current >= total - 3) return [1, 'ellipsis', total - 4, total - 3, total - 2, total - 1, total];
-  return [1, 'ellipsis', current - 1, current, current + 1, 'ellipsis', total];
+type PageSegment = { kind: 'pages'; pages: number[] } | { kind: 'ellipsis' };
+
+/** Группы страниц с разделителем «…» между блоками */
+function buildPaginationSegments(current: number, total: number): PageSegment[] {
+  if (total <= 0) return [];
+  if (total === 1) return [{ kind: 'pages', pages: [1] }];
+  if (total <= 7) {
+    return [{ kind: 'pages', pages: Array.from({ length: total }, (_, i) => i + 1) }];
+  }
+
+  const out: PageSegment[] = [];
+
+  if (current <= 4) {
+    out.push({ kind: 'pages', pages: [1, 2, 3, 4, 5] });
+    out.push({ kind: 'ellipsis' });
+    out.push({ kind: 'pages', pages: [total] });
+  } else if (current >= total - 3) {
+    out.push({ kind: 'pages', pages: [1] });
+    out.push({ kind: 'ellipsis' });
+    out.push({
+      kind: 'pages',
+      pages: [total - 4, total - 3, total - 2, total - 1, total],
+    });
+  } else {
+    out.push({ kind: 'pages', pages: [1] });
+    out.push({ kind: 'ellipsis' });
+    out.push({ kind: 'pages', pages: [current - 1, current, current + 1] });
+    out.push({ kind: 'ellipsis' });
+    out.push({ kind: 'pages', pages: [total] });
+  }
+  return out;
 }
 
 export interface PaginationProps {
-  /** Текущая страница (1-based) */
   page: number;
-  /** Всего страниц */
   totalPages: number;
-  /** Всего элементов */
   totalItems: number;
-  /** Размер страницы */
   pageSize: number;
-  /** Callback при смене страницы */
   onPageChange: (page: number) => void;
-  /** Callback при смене размера страницы */
   onPageSizeChange?: (pageSize: number) => void;
-  /** Показывать селектор размера страницы */
   showPageSizeSelector?: boolean;
-  /** Показывать кнопки "В начало" / "В конец" */
   showFirstLast?: boolean;
-  /** В состоянии загрузки (блокирует клики) */
   disabled?: boolean;
 }
 
@@ -52,9 +66,14 @@ export function Pagination({
   showFirstLast = true,
   disabled = false,
 }: PaginationProps) {
-  const pageNumbers = getPageNumbers(page, totalPages);
+  const [jumpInput, setJumpInput] = useState(String(page));
+  const segments = buildPaginationSegments(page, totalPages);
   const startItem = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, totalItems);
+
+  useEffect(() => {
+    setJumpInput(String(page));
+  }, [page]);
 
   if (totalPages <= 0) return null;
 
@@ -64,11 +83,18 @@ export function Pagination({
     if (clamped !== page) onPageChange(clamped);
   };
 
+  const submitJump = (e?: FormEvent) => {
+    e?.preventDefault();
+    const n = parseInt(jumpInput.trim(), 10);
+    if (Number.isNaN(n) || n < 1) {
+      setJumpInput(String(page));
+      return;
+    }
+    goToPage(n);
+  };
+
   return (
-    <nav
-      className={styles.pagination}
-      aria-label="Навигация по страницам каталога"
-    >
+    <nav className={styles.pagination} aria-label="Навигация по страницам каталога">
       <div className={styles.paginationInfo}>
         <span className={styles.rangeText}>
           Показано {startItem}–{endItem} из {totalItems}
@@ -82,7 +108,9 @@ export function Pagination({
               id="catalog-page-size"
               className={styles.pageSizeSelect}
               value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value) as typeof PAGE_SIZE_OPTIONS[number])}
+              onChange={(e) =>
+                onPageSizeChange(Number(e.target.value) as (typeof PAGE_SIZE_OPTIONS)[number])
+              }
               disabled={disabled}
               aria-label="Количество товаров на странице"
             >
@@ -120,26 +148,38 @@ export function Pagination({
         </button>
 
         <ul className={styles.pageNumbers} role="list">
-          {pageNumbers.map((num, idx) =>
-            num === 'ellipsis' ? (
-              <li key={`ellipsis-${idx}`} className={styles.ellipsis} aria-hidden="true">
-                …
-              </li>
-            ) : (
-              <li key={num}>
-                <button
-                  type="button"
-                  className={`${styles.pageBtn} ${num === page ? styles.active : ''}`}
-                  onClick={() => goToPage(num)}
-                  disabled={disabled}
-                  aria-current={num === page ? 'page' : undefined}
-                  aria-label={`Страница ${num}`}
+          {segments.map((seg, segIdx) => {
+            if (seg.kind === 'ellipsis') {
+              return (
+                <li
+                  key={`ellipsis-${segIdx}`}
+                  className={styles.ellipsisBetween}
+                  aria-hidden="true"
                 >
-                  {num}
-                </button>
+                  <span className={styles.ellipsisDots}>…</span>
+                </li>
+              );
+            }
+            return (
+              <li key={`seg-${segIdx}-${seg.pages.join('-')}`} className={styles.pageGroup}>
+                <div className={styles.pageGroupInner} role="presentation">
+                  {seg.pages.map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      className={`${styles.pageBtn} ${num === page ? styles.active : ''}`}
+                      onClick={() => goToPage(num)}
+                      disabled={disabled}
+                      aria-current={num === page ? 'page' : undefined}
+                      aria-label={`Страница ${num}`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
               </li>
-            )
-          )}
+            );
+          })}
         </ul>
 
         <button
@@ -164,6 +204,36 @@ export function Pagination({
           </button>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <form className={styles.jumpForm} onSubmit={submitJump} aria-label="Переход на страницу по номеру">
+          <label htmlFor="catalog-page-jump" className={styles.jumpLabel}>
+            Страница
+          </label>
+          <input
+            id="catalog-page-jump"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            className={styles.jumpInput}
+            value={jumpInput}
+            disabled={disabled}
+            onChange={(e) => setJumpInput(e.target.value.replace(/\D/g, ''))}
+            onBlur={() => {
+              const n = parseInt(jumpInput.trim(), 10);
+              if (Number.isNaN(n) || n < 1) setJumpInput(String(page));
+              else setJumpInput(String(Math.min(totalPages, Math.max(1, n))));
+            }}
+            aria-describedby="catalog-page-jump-hint"
+          />
+          <span id="catalog-page-jump-hint" className={styles.jumpHint}>
+            из {totalPages}
+          </span>
+          <button type="submit" className={styles.jumpBtn} disabled={disabled}>
+            Перейти
+          </button>
+        </form>
+      )}
     </nav>
   );
 }

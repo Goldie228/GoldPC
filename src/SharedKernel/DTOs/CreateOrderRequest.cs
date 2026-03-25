@@ -35,5 +35,5 @@ public class CreateOrderRequest
     /// </summary>
     [Required(ErrorMessage = "Заказ должен содержать минимум одну позицию")]
     [MinLength(1, ErrorMessage = "Заказ должен содержать минимум одну позицию")]
-    public List<CreateOrderItemRequest> Items { get; set; } = new();
+    public ICollection<CreateOrderItemRequest> Items { get; } = new List<CreateOrderItemRequest>();
 }

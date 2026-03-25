@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { PasswordField } from '../../components/ui/PasswordField';
 import styles from './LoginPage.module.css';
 
 /**
@@ -91,21 +92,17 @@ export function LoginPage() {
             />
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="password">
-              Пароль
-            </label>
-            <input
-              id="password"
-              type="password"
-              className={styles.input}
-              placeholder="Введите пароль"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-          </div>
+          <PasswordField
+            className={styles.field}
+            id="password"
+            label="Пароль"
+            value={password}
+            onChange={setPassword}
+            required
+            autoComplete="current-password"
+            labelClassName={styles.label}
+            inputClassName={styles.input}
+          />
 
           <div className={styles.options}>
             <div className={styles.checkboxGroup}>

@@ -9,6 +9,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { useAuthModalStore } from '../../../store/authModalStore';
 import { MiniCart } from './MiniCart';
 import { SearchDropdown } from './SearchDropdown';
+import { formatCountRu, RU_FORMS } from '../../../utils/pluralizeRu';
 import styles from './Header.module.css';
 
 /**
@@ -37,6 +38,8 @@ export function Header() {
   const { isAuthenticated, user, logout } = useAuthStore();
   const { openLoginModal, openRegisterModal } = useAuthModalStore();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileDrawerRef = useRef<HTMLDivElement>(null);
 
   // Flash cart icon when items are added
   useEffect(() => {
@@ -121,6 +124,49 @@ export function Header() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isMobileMenuOpen, handleCloseMenu]);
 
+  // Фокус при открытии мобильного меню, ловушка Tab, возврат фокуса на кнопку при закрытии
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const container = mobileDrawerRef.current;
+    if (!container) return;
+
+    const getFocusable = (): HTMLElement[] => {
+      const selector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+      return Array.from(container.querySelectorAll<HTMLElement>(selector)).filter(
+        (el) => el.tabIndex !== -1 && !el.hasAttribute('disabled')
+      );
+    };
+
+    const focusables = getFocusable();
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    const raf = requestAnimationFrame(() => {
+      first?.focus();
+    });
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || focusables.length === 0) return;
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        }
+      } else if (document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => {
+      cancelAnimationFrame(raf);
+      document.removeEventListener('keydown', onKeyDown, true);
+      menuButtonRef.current?.focus();
+    };
+  }, [isMobileMenuOpen]);
+
   // Prevent body scroll when menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -196,7 +242,7 @@ export function Header() {
           <Link
             to="/wishlist"
             className={styles.iconBtn}
-            aria-label={`Избранное: ${wishlistCount} товаров`}
+            aria-label={`Избранное: ${formatCountRu(wishlistCount, RU_FORMS.tovar)}`}
             title="Избранное"
           >
             <Heart />
@@ -207,7 +253,7 @@ export function Header() {
           <Link
             to="/comparison"
             className={styles.iconBtn}
-            aria-label={`Сравнение: ${comparisonCount} товаров`}
+            aria-label={`Сравнение: ${formatCountRu(comparisonCount, RU_FORMS.tovar)}`}
             title="Сравнение"
           >
             <GitCompare />
@@ -217,7 +263,7 @@ export function Header() {
           {/* Cart Button */}
           <motion.button
             className={styles.iconBtn}
-            aria-label={`Корзина: ${cartCount} товаров`}
+            aria-label={`Корзина: ${formatCountRu(cartCount, RU_FORMS.tovar)}`}
             onClick={handleCartToggle}
             type="button"
             animate={cartFlash ? {
@@ -227,7 +273,11 @@ export function Header() {
             transition={{ duration: 0.4, ease: 'easeInOut' }}
           >
             <ShoppingCart />
-            {cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
+            {cartCount > 0 && (
+              <span className={styles.cartBadge} aria-live="polite">
+                {cartCount}
+              </span>
+            )}
           </motion.button>
 
           {/* Profile Button / Auth Dropdown */}
@@ -302,7 +352,7 @@ export function Header() {
                         <span>Заказы</span>
                       </Link>
                       <Link
-                        to="/account/wishlist"
+                        to="/wishlist"
                         className={styles.profileNavLink}
                         onClick={handleProfileDropdownClose}
                       >
@@ -327,9 +377,11 @@ export function Header() {
 
           {/* Mobile Menu Toggle - Hamburger Button */}
           <button
+            ref={menuButtonRef}
             className={styles.menuToggle}
             aria-label={isMobileMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
             aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-navigation-drawer"
             type="button"
             onClick={handleMenuToggle}
           >
@@ -340,8 +392,14 @@ export function Header() {
 
       {/* Mobile Slide-out Menu Drawer */}
       <div
+        ref={mobileDrawerRef}
+        id="mobile-navigation-drawer"
         className={`${styles.mobileDrawer} ${isMobileMenuOpen ? styles.mobileDrawerOpen : ''}`}
         aria-hidden={!isMobileMenuOpen}
+        inert={!isMobileMenuOpen ? true : undefined}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Мобильная навигация"
       >
         {/* Close Button */}
         <button
@@ -384,7 +442,11 @@ export function Header() {
           <Link to="/cart" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
             <ShoppingCart />
             <span>Корзина</span>
-            {cartCount > 0 && <span className={styles.mobileBadge}>{cartCount}</span>}
+            {cartCount > 0 && (
+              <span className={styles.mobileBadge} aria-live="polite">
+                {cartCount}
+              </span>
+            )}
           </Link>
           <Link to="/account" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
             <User />

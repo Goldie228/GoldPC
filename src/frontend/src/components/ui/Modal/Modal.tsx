@@ -69,33 +69,52 @@ export function Modal({
     e.stopPropagation();
   }, []);
 
-  // Setup event listeners and focus management
+  // Focus management and focus trapping
   useEffect(() => {
     if (isOpen) {
-      // Store current active element
       previousActiveElement.current = document.activeElement as HTMLElement;
-
-      // Add event listeners
       document.addEventListener('keydown', handleKeyDown);
-
-      // Prevent body scroll
       document.body.style.overflow = 'hidden';
 
-      // Focus modal
+      const focusableElements = modalRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstElement = focusableElements?.[0] as HTMLElement;
+      const lastElement = focusableElements?.[focusableElements.length - 1] as HTMLElement;
+
+      const trapFocus = (e: KeyboardEvent) => {
+        if (e.key !== 'Tab') return;
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            lastElement.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            firstElement.focus();
+            e.preventDefault();
+          }
+        }
+      };
+
+      document.addEventListener('keydown', trapFocus);
+      
+      // Focus first element or modal itself
       setTimeout(() => {
-        modalRef.current?.focus();
+        if (firstElement) firstElement.focus();
+        else modalRef.current?.focus();
       }, 0);
+
+      return () => {
+        document.removeEventListener('keydown', trapFocus);
+        document.removeEventListener('keydown', handleKeyDown);
+        document.body.style.overflow = '';
+        if (previousActiveElement.current) {
+          previousActiveElement.current.focus();
+        }
+      };
     }
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-
-      // Restore focus
-      if (previousActiveElement.current) {
-        previousActiveElement.current.focus();
-      }
-    };
   }, [isOpen, handleKeyDown]);
 
   if (!isOpen) {
@@ -106,15 +125,16 @@ export function Modal({
     <div 
       className="modal-overlay"
       onClick={handleOverlayClick}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
+      role="presentation"
     >
       <div 
         ref={modalRef}
         className={`modal modal--${size} ${className}`}
         onClick={handleModalClick}
         tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
       >
         {/* Header */}
         <div className="modal__header">

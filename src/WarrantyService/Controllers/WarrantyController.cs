@@ -14,65 +14,155 @@ namespace GoldPC.WarrantyService.Controllers;
 public class WarrantyController : ControllerBase
 {
     private readonly IWarrantyService _warrantyService;
-    public WarrantyController(IWarrantyService warrantyService) => _warrantyService = warrantyService;
+    private readonly ILogger<WarrantyController> _logger;
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(Guid id)
+    public WarrantyController(IWarrantyService warrantyService, ILogger<WarrantyController> logger)
     {
-        var claim = await _warrantyService.GetByIdAsync(id);
+        _warrantyService = warrantyService;
+        _logger = logger;
+    }
+
+    #region Claims
+
+    [HttpGet("claim/{id}")]
+    public async Task<IActionResult> GetClaimById(Guid id)
+    {
+        var claim = await _warrantyService.GetClaimByIdAsync(id);
         if (claim == null) return NotFound(ApiResponse.Fail("Заявка не найдена"));
         if (!HasAccess(claim.UserId)) return Forbid();
         return Ok(ApiResponse<WarrantyClaimDto>.Ok(claim));
     }
 
-    [HttpGet("my")]
+    [HttpGet("claim/my")]
     public async Task<IActionResult> GetMyClaims([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         var userId = GetCurrentUserId();
         if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
-        var result = await _warrantyService.GetByUserIdAsync(userId.Value, page, pageSize);
+        var result = await _warrantyService.GetClaimsByUserIdAsync(userId.Value, page, pageSize);
         return Ok(ApiResponse<PagedResult<WarrantyClaimDto>>.Ok(result));
     }
 
-    [HttpGet]
+    [HttpGet("claim")]
     [Authorize(Roles = "Manager,Admin,Master")]
-    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] WarrantyStatus? status = null)
+    public async Task<IActionResult> GetAllClaims([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] WarrantyStatus? status = null)
     {
-        var result = await _warrantyService.GetAllAsync(page, pageSize, status);
+        var result = await _warrantyService.GetAllClaimsAsync(page, pageSize, status);
         return Ok(ApiResponse<PagedResult<WarrantyClaimDto>>.Ok(result));
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateWarrantyClaimRequest request)
+    [HttpPost("claim")]
+    public async Task<IActionResult> CreateClaim([FromBody] CreateWarrantyClaimRequest request)
     {
         var userId = GetCurrentUserId();
         if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
-        var (claim, error) = await _warrantyService.CreateAsync(userId.Value, request);
+        var (claim, error) = await _warrantyService.CreateClaimAsync(userId.Value, request);
         if (error != null) return BadRequest(ApiResponse.Fail(error));
-        return CreatedAtAction(nameof(GetById), new { id = claim!.Id }, ApiResponse<WarrantyClaimDto>.Ok(claim, "Заявка создана"));
+        return CreatedAtAction(nameof(GetClaimById), new { id = claim!.Id }, ApiResponse<WarrantyClaimDto>.Ok(claim, "Заявка создана"));
     }
 
-    [HttpPut("{id}/status")]
+    [HttpPut("claim/{id}/status")]
     [Authorize(Roles = "Manager,Admin,Master")]
-    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateWarrantyStatusRequest request)
+    public async Task<IActionResult> UpdateClaimStatus(Guid id, [FromBody] UpdateWarrantyStatusRequest request)
     {
         var userId = GetCurrentUserId();
         if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
-        var (claim, error) = await _warrantyService.UpdateStatusAsync(id, request.Status, userId.Value, request.Comment);
+        var (claim, error) = await _warrantyService.UpdateClaimStatusAsync(id, request.Status, userId.Value, request.Comment);
         if (error != null) return BadRequest(ApiResponse.Fail(error));
         return Ok(ApiResponse<WarrantyClaimDto>.Ok(claim!));
     }
 
-    [HttpPost("{id}/resolve")]
+    [HttpPost("claim/{id}/resolve")]
     [Authorize(Roles = "Manager,Admin,Master")]
-    public async Task<IActionResult> Resolve(Guid id, [FromBody] ResolveWarrantyRequest request)
+    public async Task<IActionResult> ResolveClaim(Guid id, [FromBody] ResolveWarrantyRequest request)
     {
         var userId = GetCurrentUserId();
         if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
-        var (claim, error) = await _warrantyService.ResolveAsync(id, request.Resolution, userId.Value);
+        var (claim, error) = await _warrantyService.ResolveClaimAsync(id, request.Resolution, userId.Value);
         if (error != null) return BadRequest(ApiResponse.Fail(error));
         return Ok(ApiResponse<WarrantyClaimDto>.Ok(claim!));
     }
+
+    #endregion
+
+    #region Cards
+
+    [HttpGet("card/{id}")]
+    public async Task<IActionResult> GetCardById(Guid id)
+    {
+        var card = await _warrantyService.GetCardByIdAsync(id);
+        if (card == null) return NotFound(ApiResponse.Fail("Гарантийный талон не найден"));
+        if (!HasAccess(card.UserId)) return Forbid();
+        return Ok(ApiResponse<WarrantyDto>.Ok(card));
+    }
+
+    [HttpGet("card/number/{number}")]
+    public async Task<IActionResult> GetCardByNumber(string number)
+    {
+        var card = await _warrantyService.GetCardByNumberAsync(number);
+        if (card == null) return NotFound(ApiResponse.Fail("Гарантийный талон не найден"));
+        if (!HasAccess(card.UserId)) return Forbid();
+        return Ok(ApiResponse<WarrantyDto>.Ok(card));
+    }
+
+    [HttpGet("card/order/{orderId}")]
+    public async Task<IActionResult> GetCardByOrderId(Guid orderId)
+    {
+        var card = await _warrantyService.GetCardByOrderIdAsync(orderId);
+        if (card == null) return NotFound(ApiResponse.Fail("Гарантийный талон не найден"));
+        if (!HasAccess(card.UserId)) return Forbid();
+        return Ok(ApiResponse<WarrantyDto>.Ok(card));
+    }
+
+    [HttpGet("card/service/{serviceId}")]
+    public async Task<IActionResult> GetCardByServiceId(Guid serviceId)
+    {
+        var card = await _warrantyService.GetCardByServiceIdAsync(serviceId);
+        if (card == null) return NotFound(ApiResponse.Fail("Гарантийный талон не найден"));
+        if (!HasAccess(card.UserId)) return Forbid();
+        return Ok(ApiResponse<WarrantyDto>.Ok(card));
+    }
+
+    [HttpGet("card/serial/{serialNumber}")]
+    public async Task<IActionResult> GetCardBySerialNumber(string serialNumber)
+    {
+        var card = await _warrantyService.GetCardBySerialNumberAsync(serialNumber);
+        if (card == null) return NotFound(ApiResponse.Fail("Гарантийный талон не найден"));
+        if (!HasAccess(card.UserId)) return Forbid();
+        return Ok(ApiResponse<WarrantyDto>.Ok(card));
+    }
+
+    [HttpGet("card/my")]
+    public async Task<IActionResult> GetMyCards([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+        var result = await _warrantyService.GetCardsByUserIdAsync(userId.Value, page, pageSize);
+        return Ok(ApiResponse<PagedResult<WarrantyDto>>.Ok(result));
+    }
+
+    [HttpPost("card")]
+    [Authorize(Roles = "Manager,Admin,System")]
+    public async Task<IActionResult> CreateCard([FromBody] CreateWarrantyRequest request)
+    {
+        var (card, error) = await _warrantyService.CreateCardAsync(request);
+        if (error != null) return BadRequest(ApiResponse.Fail(error));
+        return CreatedAtAction(nameof(GetCardById), new { id = card!.Id }, ApiResponse<WarrantyDto>.Ok(card, "Гарантийный талон создан"));
+    }
+
+    [HttpPost("card/{id}/annul")]
+    [Authorize(Roles = "Manager,Admin")]
+    public async Task<IActionResult> AnnulCard(Guid id, [FromBody] AnnulWarrantyRequest request)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+        var (success, error) = await _warrantyService.AnnulCardAsync(id, request, userId.Value);
+        if (!success) return BadRequest(ApiResponse.Fail(error ?? "Не удалось аннулировать гарантию"));
+        return Ok(ApiResponse.Ok("Гарантия аннулирована"));
+    }
+
+    #endregion
+
+    #region Helpers
 
     private Guid? GetCurrentUserId()
     {
@@ -80,12 +170,14 @@ public class WarrantyController : ControllerBase
         return userIdClaim != null && Guid.TryParse(userIdClaim, out var userId) ? userId : null;
     }
 
-    private bool HasAccess(Guid claimUserId)
+    private bool HasAccess(Guid ownerUserId)
     {
         var currentUserId = GetCurrentUserId();
         var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
-        return currentUserId == claimUserId || roles.Contains("Manager") || roles.Contains("Admin") || roles.Contains("Master");
+        return currentUserId == ownerUserId || roles.Contains("Manager") || roles.Contains("Admin") || roles.Contains("Master");
     }
+
+    #endregion
 }
 
 public record UpdateWarrantyStatusRequest(WarrantyStatus Status, string? Comment);

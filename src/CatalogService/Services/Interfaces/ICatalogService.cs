@@ -1,4 +1,4 @@
-using CatalogService.DTOs;
+using GoldPC.SharedKernel.DTOs;
 using CatalogService.Models;
 
 namespace CatalogService.Services.Interfaces;
@@ -31,6 +31,10 @@ public interface ICatalogService
     // Отзывы
     Task<ReviewDto> CreateReviewAsync(Guid productId, Guid userId, CreateReviewDto dto);
     Task<IEnumerable<ReviewDto>> GetProductReviewsAsync(Guid productId);
+
+    // Склад
+    Task<(bool Success, string? Error)> ReserveStockAsync(IEnumerable<(Guid ProductId, int Quantity)> items);
+    Task<(bool Success, string? Error)> ReleaseStockAsync(IEnumerable<(Guid ProductId, int Quantity)> items);
 }
 
 /// <summary>

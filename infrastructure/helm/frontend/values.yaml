@@ -1,0 +1,126 @@
+# Default values for frontend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/goldie/goldpc-frontend
+  pullPolicy: IfNotPresent
+  # Overridden by CI/CD
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsUser: 101 # Nginx non-root
+  runAsGroup: 101
+  fsGroup: 101
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true # Now it can be true
+  runAsNonRoot: true
+  runAsUser: 101
+  allowPrivilegeEscalation: false
+
+volumes:
+  - name: cache
+    emptyDir: {}
+  - name: runtime
+    emptyDir: {}
+
+volumeMounts:
+  - name: cache
+    mountPath: /var/cache/nginx
+  - name: runtime
+    mountPath: /var/run
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080 # Usually 80 for Nginx, but configured as 8080 in Docker/non-root
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: goldpc.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Environment variables for the application
+env: {}
+
+# Health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+
+# Network Policy configuration
+networkPolicy:
+  enabled: true
+  defaultDeny: false # If true, will create a default deny policy for this pod
+  ingress: []
+  egress: []
+  strategy:
+    type: BlueGreen
+    blueGreen:
+      activeService: "{{ include \"frontend.fullname\" . }}"
+      previewService: "{{ include \"frontend.fullname\" . }}-preview"
+      autoPromotionEnabled: true
+      autoPromotionSeconds: 30

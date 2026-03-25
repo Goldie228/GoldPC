@@ -4,36 +4,10 @@
  * Основано на prototypes/manager-orders.html
  */
 
-/* === Main Container === */
-.manager-orders {
-  padding: 100px 24px 40px;
-  max-width: 1400px;
-  margin: 0 auto;
-  min-height: 100vh;
-  background: var(--bg);
-  color: var(--fg);
-}
+/* Оболочка: .staff-page (styles/staff.css) */
 
-/* === Header === */
 .manager-orders__header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
-}
-
-.manager-orders__title {
-  font-size: 1.75rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  margin: 0;
-  color: var(--fg);
-}
-
-.manager-orders__subtitle {
-  font-size: 0.85rem;
-  color: var(--fg-muted);
-  margin-top: 4px;
 }
 
 /* === Filter Bar === */

@@ -79,6 +79,9 @@ import {
   ShieldCheck,
   Users,
   GitCompare,
+  LayoutGrid,
+  List,
+  Table,
 } from 'lucide-react';
 import React from 'react';
 import type { CSSProperties } from 'react';
@@ -167,6 +170,9 @@ const iconMap = {
   sun: Sun,
   'shield-check': ShieldCheck,
   users: Users,
+  grid: LayoutGrid,
+  list: List,
+  table: Table,
 } as const;
 
 /** All available icon names */

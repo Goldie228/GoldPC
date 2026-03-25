@@ -1,11 +1,100 @@
 import { useState, useEffect, useMemo, useCallback, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useComparisonStore } from '../../store/comparisonStore';
 import { catalogApi } from '../../api/catalog';
 import { getProductImageUrl } from '../../utils/image';
+import { useCart } from '../../hooks/useCart';
+import { useToastStore } from '../../store/toastStore';
 import type { Product, ProductSpecifications, ProductCategory, ProductImage } from '../../api/types';
 import { Icon } from '../../components/ui/Icon/Icon';
+import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
+import { EmptyState } from '../../components/catalog/EmptyState';
+import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
+import { Modal } from '../../components/ui/Modal/Modal';
 import styles from './ComparisonPage.module.css';
+
+/** Placeholder контент для модального окна быстрого просмотра */
+function QuickViewContent({ product }: { product: Product }): ReactElement {
+  const ratingValue = typeof product.rating === 'number'
+    ? product.rating
+    : (product.rating as { average?: number } | undefined)?.average;
+    
+  return (
+    <div className={styles.quickViewContent}>
+      <div className={styles.quickViewImage}>
+        {product.mainImage?.url ? (
+          <div className={styles.quickViewImageWrapper}>
+            <img
+              src={product.mainImage.url}
+              alt={product.mainImage.alt ?? product.name}
+            />
+          </div>
+        ) : (
+          <div className={styles.quickViewPlaceholder}>
+            <Icon name="image" size="2xl" color="secondary" />
+          </div>
+        )}
+      </div>
+      <div className={styles.quickViewDetails}>
+        {product.manufacturer != null && (
+          <span className={styles.quickViewManufacturer}>
+            {product.manufacturer.name}
+          </span>
+        )}
+        <h2 className={styles.quickViewName}>{product.name}</h2>
+        <div className={styles.quickViewPrice}>
+          {formatPrice(product.price)}
+        </div>
+        {ratingValue != null && !Number.isNaN(ratingValue) && (
+          <div className={styles.quickViewRating}>
+            <div className={styles.stars}>
+              {'★'.repeat(Math.round(ratingValue))}
+              {'☆'.repeat(5 - Math.round(ratingValue))}
+            </div>
+            <span>{Number(ratingValue).toFixed(1)}</span>
+          </div>
+        )}
+        <div className={styles.quickViewDescription}>
+          {product.descriptionShort != null && product.descriptionShort.trim() !== '' ? (
+            <>
+              <p className={styles.quickViewDescriptionText}>{product.descriptionShort}</p>
+              <Link to={`/product/${product.id}`} className={styles.quickViewLink}>
+                Подробнее на странице товара →
+              </Link>
+            </>
+          ) : (
+            <Link to={`/product/${product.id}`} className={styles.quickViewLink}>
+              Подробное описание на странице товара →
+            </Link>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.33, 1, 0.68, 1],
+    },
+  },
+};
 
 /** Получить главное изображение товара (mainImage или первое из images) */
 function getMainImage(product: Product): ProductImage | undefined {
@@ -180,11 +269,14 @@ function getBestIndices(
 export function ComparisonPage(): ReactElement {
   const items = useComparisonStore((state) => state.items);
   const removeItem = useComparisonStore((state) => state.removeItem);
+  const { addToCart, isInCart } = useCart();
+  const showToast = useToastStore((state) => state.showToast);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   const itemIds = useMemo(() => items.map((i) => i.id), [items]);
 
@@ -230,13 +322,32 @@ export function ComparisonPage(): ReactElement {
     setImageErrors((prev) => new Set(prev).add(productId));
   }, []);
 
+  const handleAddToCart = (product: Product) => {
+    if (product.stock === 0) return;
+    addToCart(product, 1);
+    showToast('Товар добавлен в корзину', 'success');
+  };
+
+  const handleOpenQuickView = (product: Product) => {
+    setQuickViewProduct(product);
+  };
+
   const specKeys = useMemo(() => {
     const keys = new Set<string>();
     products.forEach((p) => {
       const specs = p.specifications as ProductSpecifications | undefined;
       if (specs) Object.keys(specs).forEach((k) => keys.add(k));
     });
-    return Array.from(keys).sort();
+    // Sort keys: prioritize known important ones, then alphabetical
+    const priority = ['socket', 'chipset', 'cores', 'threads', 'vram', 'capacity', 'frequency'];
+    return Array.from(keys).sort((a, b) => {
+      const ia = priority.indexOf(a);
+      const ib = priority.indexOf(b);
+      if (ia !== -1 && ib !== -1) return ia - ib;
+      if (ia !== -1) return -1;
+      if (ib !== -1) return 1;
+      return a.localeCompare(b);
+    });
   }, [products]);
 
   const categories = useMemo(() => {
@@ -251,16 +362,21 @@ export function ComparisonPage(): ReactElement {
     return (
       <div className={styles.page}>
         <div className={styles.container}>
-          <h1 className={styles.title}>Сравнение</h1>
-          <div className={styles.empty}>
-            <div className={styles.emptyIcon}>
-              <Icon name="compare" size="2xl" color="secondary" />
-            </div>
-            <h2 className={styles.emptyTitle}>Сравнение пусто</h2>
-            <p className={styles.emptyText}>
-              Добавляйте товары из каталога для сравнения характеристик. Можно сравнивать до 4 товаров одной категории.
-            </p>
-            <Link to="/catalog" className={styles.emptyBtn}>
+          <header className={styles.header}>
+            <nav className={styles.breadcrumb}>
+              <Link to="/">Главная</Link>
+              <span>/</span>
+              <span>Сравнение</span>
+            </nav>
+            <h1 className={styles.title}>Сравнение</h1>
+          </header>
+          <div className={styles.emptyStateWrapper}>
+            <EmptyState 
+              title="Список сравнения пуст"
+              description="Добавляйте товары из каталога, чтобы сравнить их характеристики и выбрать лучшее решение."
+              showResetButton={false}
+            />
+            <Link to="/catalog" className={styles.backToCatalog}>
               Перейти в каталог
             </Link>
           </div>
@@ -273,12 +389,20 @@ export function ComparisonPage(): ReactElement {
     return (
       <div className={styles.page}>
         <div className={styles.container}>
-          <h1 className={styles.title}>Сравнение</h1>
-          <div className={styles.error}>
-            <p>{error}</p>
-            <Link to="/catalog" className={styles.emptyBtn}>
-              Перейти в каталог
-            </Link>
+          <header className={styles.header}>
+            <nav className={styles.breadcrumb}>
+              <Link to="/">Главная</Link>
+              <span>/</span>
+              <span>Сравнение</span>
+            </nav>
+            <h1 className={styles.title}>Сравнение</h1>
+          </header>
+          <div className={styles.errorContainer}>
+            <ApiErrorBanner message={error} onRetry={() => window.location.reload()}>
+              <Link to="/catalog" className={styles.emptyBtn}>
+                Перейти в каталог
+              </Link>
+            </ApiErrorBanner>
           </div>
         </div>
       </div>
@@ -287,90 +411,126 @@ export function ComparisonPage(): ReactElement {
 
   return (
     <div className={styles.page}>
-      <div className={styles.container}>
+      <motion.div 
+        className={styles.container}
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
         <header className={styles.header}>
-          <h1 className={styles.title}>Сравнение</h1>
-          <div className={styles.headerMeta}>
+          <nav className={styles.breadcrumb}>
+            <Link to="/">Главная</Link>
+            <span>/</span>
+            <Link to="/catalog">Каталог</Link>
+            <span>/</span>
+            <span>Сравнение</span>
+          </nav>
+          <div className={styles.titleRow}>
+            <h1 className={styles.title}>Сравнение товаров</h1>
             {categoryLabel && <span className={styles.categoryBadge}>{categoryLabel}</span>}
-            <p className={styles.stats}>
-              {products.length} {products.length === 1 ? 'товар' : 'товара'}
-            </p>
           </div>
+          <p className={styles.stats}>
+            {formatCountRu(products.length, RU_FORMS.tovar)} в списке
+          </p>
         </header>
 
         {loading ? (
           <div className={styles.loading}>
-            <span className={styles.spinner} aria-hidden />
-            <span>Загрузка...</span>
+            <Icon name="loader" size="xl" animated color="gold" />
+            <span>Загружаем характеристики...</span>
           </div>
         ) : (
-          <div className={styles.tableWrapper}>
+          <motion.div 
+            className={styles.tableWrapper}
+            variants={itemVariants}
+          >
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th className={styles.attrCol}>Характеристика</th>
-                  {products.map((product) => (
-                    <th key={product.id} className={styles.productCol}>
-                      <div className={styles.productHeader}>
-                        <button
-                          className={styles.removeBtn}
-                          onClick={() => removeItem(product.id)}
-                          aria-label={`Удалить ${product.name} из сравнения`}
-                          type="button"
-                        >
-                          <Icon name="trash" size="sm" />
-                        </button>
-                        <Link to={`/product/${product.id}`} className={styles.productImageLink}>
-                          {(() => {
-                            const img = getMainImage(product);
-                            const url = getProductImageUrl(img?.url);
-                            return url && !imageErrors.has(product.id) ? (
-                              <img
-                                src={url}
-                                alt={img?.alt ?? product.name}
-                                className={styles.productImage}
-                                onError={() => handleImageError(product.id)}
-                              />
-                            ) : (
-                            <div className={styles.productImagePlaceholder}>
-                              <Icon name="image" size="lg" color="secondary" />
+                  <th className={styles.stickyCol}>
+                    <div className={styles.cornerHeader}>
+                      <span>Характеристики</span>
+                    </div>
+                  </th>
+                  <AnimatePresence mode="popLayout">
+                    {products.map((product) => (
+                      <motion.th 
+                        key={product.id} 
+                        className={styles.productCol}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                      >
+                        <div className={styles.productHeader}>
+                          <button
+                            className={styles.removeBtn}
+                            onClick={() => removeItem(product.id)}
+                            aria-label={`Удалить ${product.name} из сравнения`}
+                            type="button"
+                          >
+                            <Icon name="close" size="xs" />
+                          </button>
+                          <Link to={`/product/${product.id}`} className={styles.productImageLink}>
+                            {(() => {
+                              const img = getMainImage(product);
+                              const url = getProductImageUrl(img?.url);
+                              return url && !imageErrors.has(product.id) ? (
+                                <img
+                                  src={url}
+                                  alt={img?.alt ?? product.name}
+                                  className={styles.productImage}
+                                  onError={() => handleImageError(product.id)}
+                                />
+                              ) : (
+                              <div className={styles.productImagePlaceholder}>
+                                <Icon name="image" size="lg" color="secondary" />
+                              </div>
+                              );
+                            })()}
+                          </Link>
+                          <div className={styles.productInfo}>
+                            <Link to={`/product/${product.id}`} className={styles.productName}>
+                              {product.name}
+                            </Link>
+                            <div className={styles.priceContainer}>
+                              <span className={styles.price}>{formatPrice(product.price)}</span>
                             </div>
-                            );
-                          })()}
-                        </Link>
-                        <Link to={`/product/${product.id}`} className={styles.productName}>
-                          {product.name}
-                        </Link>
-                      </div>
-                    </th>
-                  ))}
+                            <div className={styles.actionButtons}>
+                              <button 
+                                className={`${styles.addToCartBtn} ${isInCart(product.id) ? styles.inCart : ''}`}
+                                onClick={() => handleAddToCart(product)}
+                                disabled={product.stock === 0}
+                              >
+                                <Icon name={isInCart(product.id) ? 'check' : 'cart'} size="xs" />
+                                <span>{isInCart(product.id) ? 'В корзине' : 'Купить'}</span>
+                              </button>
+                              <button 
+                                className={styles.quickViewMiniBtn}
+                                onClick={() => handleOpenQuickView(product)}
+                                aria-label="Быстрый просмотр"
+                              >
+                                <Icon name="eye" size="xs" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.th>
+                    ))}
+                  </AnimatePresence>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className={styles.attrCell}>Производитель</td>
+                <tr className={styles.row}>
+                  <td className={styles.stickyCol}>Производитель</td>
                   {products.map((product) => (
                     <td key={product.id} className={styles.valueCell}>
                       {product.manufacturer?.name ?? '—'}
                     </td>
                   ))}
                 </tr>
-                <tr>
-                  <td className={styles.attrCell}>Цена</td>
-                  {products.map((product, idx) => {
-                    const bestIndices = getBestIndices('price', products.map((p) => p.price));
-                    return (
-                      <td
-                        key={product.id}
-                        className={`${styles.valueCell} ${bestIndices.has(idx) ? styles.bestValue : ''}`}
-                      >
-                        <span className={styles.price}>{formatPrice(product.price)}</span>
-                      </td>
-                    );
-                  })}
-                </tr>
-                <tr>
-                  <td className={styles.attrCell}>Рейтинг</td>
+                <tr className={styles.row}>
+                  <td className={styles.stickyCol}>Рейтинг</td>
                   {products.map((product, idx) => {
                     const ratingNum =
                       typeof product.rating === 'number'
@@ -385,18 +545,23 @@ export function ComparisonPage(): ReactElement {
                         key={product.id}
                         className={`${styles.valueCell} ${bestIndices.has(idx) ? styles.bestValue : ''}`}
                       >
-                        {ratingNum != null && !Number.isNaN(ratingNum)
-                          ? `${Number(ratingNum).toFixed(1)} ★`
-                          : '—'}
+                        {ratingNum != null && !Number.isNaN(ratingNum) ? (
+                          <div className={styles.ratingBox}>
+                            <Icon name="star" size="xs" color="gold" />
+                            <span>{Number(ratingNum).toFixed(1)}</span>
+                          </div>
+                        ) : '—'}
                       </td>
                     );
                   })}
                 </tr>
-                <tr>
-                  <td className={styles.attrCell}>Наличие</td>
+                <tr className={styles.row}>
+                  <td className={styles.stickyCol}>Наличие</td>
                   {products.map((product) => (
                     <td key={product.id} className={styles.valueCell}>
-                      {product.stock === 0 ? 'Под заказ' : 'В наличии'}
+                      <span className={product.stock === 0 ? styles.outOfStock : styles.inStock}>
+                        {product.stock === 0 ? 'Под заказ' : 'В наличии'}
+                      </span>
                     </td>
                   ))}
                 </tr>
@@ -408,8 +573,8 @@ export function ComparisonPage(): ReactElement {
                   const bestIndices = getBestIndices(key, values);
 
                   return (
-                    <tr key={key}>
-                      <td className={styles.attrCell}>{specLabel(key)}</td>
+                    <tr key={key} className={styles.row}>
+                      <td className={styles.stickyCol}>{specLabel(key)}</td>
                       {products.map((product, idx) => {
                         const specs = product.specifications as ProductSpecifications | undefined;
                         const value = specs?.[key];
@@ -429,9 +594,19 @@ export function ComparisonPage(): ReactElement {
                 })}
               </tbody>
             </table>
-          </div>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
+
+      {/* Модальное окно быстрого просмотра */}
+      <Modal
+        isOpen={!!quickViewProduct}
+        onClose={() => setQuickViewProduct(null)}
+        title="Быстрый просмотр"
+        size="large"
+      >
+        {quickViewProduct && <QuickViewContent product={quickViewProduct} />}
+      </Modal>
     </div>
   );
 }

@@ -1,0 +1,222 @@
+name: Kubernetes Deployment (Argo Rollouts)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (e.g., v1.2.3)'
+        required: false
+        default: ''
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository_owner }}/goldpc
+  HELM_CHART_PATH: infrastructure/helm
+
+jobs:
+  # ============================================================================
+  # BUILD & SCAN - Build, push and scan Docker images
+  # ============================================================================
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-catalog
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-pcbuilder
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-auth
+            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend
+          tags: |
+            type=sha,prefix=
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push CatalogService
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.CatalogService
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-catalog:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push PCBuilderService
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.PCBuilderService
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-pcbuilder:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push AuthService
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile.AuthService
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-auth:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/frontend/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ============================================================================
+  # LINT & VALIDATE - Scan Helm charts and Kubernetes manifests
+  # ============================================================================
+  validate:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Helm Lint Backend
+        run: helm lint ${{ env.HELM_CHART_PATH }}/backend
+
+      - name: Helm Lint Frontend
+        run: helm lint ${{ env.HELM_CHART_PATH }}/frontend
+
+      - name: Checkov Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: infrastructure/
+          framework: helm
+          quiet: true
+          soft_fail: true # For demo purposes, don't fail the build
+
+  # ============================================================================
+  # DEPLOY STAGING - Deploy to staging for verification
+  # ============================================================================
+  deploy-staging:
+    needs: [build, validate]
+    runs-on: ubuntu-latest
+    environment: staging
+    if: github.ref == 'refs/heads/main' || inputs.environment == 'staging'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Configure Kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.STAGING_KUBECONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Deploy Backend Services (Catalog)
+        run: |
+          helm upgrade --install catalog-staging ${{ env.HELM_CHART_PATH }}/backend \
+            --namespace staging --create-namespace \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-catalog \
+            --set image.tag=${{ github.sha }} \
+            --values ${{ env.HELM_CHART_PATH }}/backend/values.yaml
+
+      - name: Deploy Frontend
+        run: |
+          helm upgrade --install frontend-staging ${{ env.HELM_CHART_PATH }}/frontend \
+            --namespace staging --create-namespace \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend \
+            --set image.tag=${{ github.sha }} \
+            --values ${{ env.HELM_CHART_PATH }}/frontend/values.yaml
+
+  # ============================================================================
+  # DEPLOY PRODUCTION - Deploy to production with Argo Rollouts
+  # ============================================================================
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main' || inputs.environment == 'production'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Install Argo Rollouts CLI
+        run: |
+          curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
+          chmod +x ./kubectl-argo-rollouts-linux-amd64
+          sudo mv ./kubectl-argo-rollouts-linux-amd64 /usr/local/bin/kubectl-argo-rollouts
+
+      - name: Configure Kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.PROD_KUBECONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Deploy Catalog Service (Production)
+        run: |
+          helm upgrade --install catalog-prod ${{ env.HELM_CHART_PATH }}/backend \
+            --namespace production --create-namespace \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-catalog \
+            --set image.tag=${{ github.sha }} \
+            --set rollout.strategy.type=BlueGreen \
+            --values ${{ env.HELM_CHART_PATH }}/backend/values.yaml
+
+      - name: Wait for Rollout Completion
+        run: |
+          kubectl argo rollouts status catalog-prod-backend-service --namespace production --timeout 10m
+
+      - name: Deploy Frontend (Production)
+        run: |
+          helm upgrade --install frontend-prod ${{ env.HELM_CHART_PATH }}/frontend \
+            --namespace production --create-namespace \
+            --set image.repository=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend \
+            --set image.tag=${{ github.sha }} \
+            --set rollout.strategy.type=BlueGreen \
+            --values ${{ env.HELM_CHART_PATH }}/frontend/values.yaml
+
+      - name: Wait for Frontend Rollout Completion
+        run: |
+          kubectl argo rollouts status frontend-prod-frontend --namespace production --timeout 10m

@@ -8,12 +8,12 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background: var(--bg-card, #18181b);
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
   min-width: 300px;
   max-width: 420px;
-  animation: slideIn 0.3s ease-out;
+  animation: slideIn var(--transition-normal);
 }
 
 /* ===== BORDER VARIANTS ===== */
@@ -21,12 +21,17 @@
 /* Success/Info - Gold border */
 .success,
 .info {
-  border-left: 3px solid var(--accent, #d4a574);
+  border-left: 3px solid var(--brand-primary);
 }
 
 /* Error - Red border */
 .error {
   border-left: 3px solid #ef4444;
+}
+
+/* Warning - Amber border */
+.warning {
+  border-left: 3px solid #f59e0b;
 }
 
 /* ===== ICON ===== */
@@ -56,6 +61,11 @@
 .error .icon {
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
+}
+
+.warning .icon {
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
 }
 
 /* ===== MESSAGE ===== */

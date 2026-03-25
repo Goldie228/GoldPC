@@ -11,11 +11,12 @@
  * - Keyboard navigation support
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, X, TrendingUp, Loader2, Image } from 'lucide-react';
 import { useDebounce } from '../../../../hooks/useDebounce';
 import { hasValidProductImage } from '../../../../utils/image';
 import { useProducts } from '../../../../hooks/useProducts';
+import { CATEGORY_LABELS_RU } from '../../../../utils/categoryLabels';
 import styles from './SearchDropdown.module.css';
 
 /** Популярные запросы для empty state */
@@ -104,12 +105,22 @@ export function SearchDropdown() {
     handleClose();
   }, [navigate, debouncedQuery, handleClose]);
 
-  // Обработка Escape
+  // Escape + глобально: / или Ctrl+K — фокус в поиск
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
         handleClose();
         inputRef.current?.blur();
+        return;
+      }
+      if (e.key === '/' || (e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey))) {
+        const t = e.target as HTMLElement | null;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) {
+          return;
+        }
+        e.preventDefault();
+        setIsOpen(true);
+        inputRef.current?.focus();
       }
     };
 
@@ -136,7 +147,6 @@ export function SearchDropdown() {
 
   return (
     <div className={styles.container} ref={dropdownRef}>
-      {/* Search Input */}
       <div className={`${styles.inputWrapper} ${isFocused ? styles.inputWrapperFocused : ''}`}>
         <Search className={styles.searchIcon} />
         <input
@@ -147,10 +157,11 @@ export function SearchDropdown() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={handleFocus}
-          aria-label="Поиск по сайту"
+          aria-label="Поиск по сайту. Горячие клавиши: слэш или Ctrl+K"
           role="combobox"
           aria-expanded={isOpen}
           aria-haspopup="listbox"
+          autoComplete="off"
         />
         {query && (
           <button
@@ -166,6 +177,9 @@ export function SearchDropdown() {
           </button>
         )}
       </div>
+      <p className={styles.searchHint} aria-hidden>
+        <kbd>/</kbd> или <kbd>Ctrl</kbd>+<kbd>K</kbd>
+      </p>
 
       {/* Dropdown */}
       {isOpen && (
@@ -207,6 +221,7 @@ export function SearchDropdown() {
 
                       {/* Info */}
                       <div className={styles.resultInfo}>
+                        <span className={styles.resultCategory}>{CATEGORY_LABELS_RU[product.category]}</span>
                         <span className={styles.resultName}>
                           {highlightMatch(product.name, debouncedQuery)}
                         </span>
@@ -246,7 +261,14 @@ export function SearchDropdown() {
               <p className={styles.emptyText}>
                 По запросу «{debouncedQuery}» ничего не найдено
               </p>
-              <p className={styles.emptyHint}>Попробуйте изменить запрос</p>
+              <p className={styles.emptyHint}>Попробуйте изменить запрос или откройте полный каталог.</p>
+              <Link
+                className={styles.emptyCatalogLink}
+                to={`/catalog?search=${encodeURIComponent(debouncedQuery.trim())}`}
+                onClick={handleClose}
+              >
+                Смотреть в каталоге →
+              </Link>
             </div>
           )}
 

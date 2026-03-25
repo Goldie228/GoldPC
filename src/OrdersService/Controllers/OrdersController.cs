@@ -1,6 +1,7 @@
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
 using GoldPC.SharedKernel.Models;
+using PagedResultOrder = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.OrderDto>;
 using GoldPC.OrdersService.Services;
 using GoldPC.Shared.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -80,7 +81,7 @@ public class OrdersController : ControllerBase
         }
 
         var result = await _ordersService.GetByUserIdAsync(userId.Value, page, pageSize);
-        return Ok(ApiResponse<PagedResult<OrderDto>>.Ok(result));
+        return Ok(ApiResponse<PagedResultOrder>.Ok(result));
     }
 
     /// <summary>
@@ -91,7 +92,7 @@ public class OrdersController : ControllerBase
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] OrderStatus? status = null)
     {
         var result = await _ordersService.GetAllAsync(page, pageSize, status);
-        return Ok(ApiResponse<PagedResult<OrderDto>>.Ok(result));
+        return Ok(ApiResponse<PagedResultOrder>.Ok(result));
     }
 
     /// <summary>

@@ -3,7 +3,7 @@
 // </copyright>
 
 using AutoFixture;
-using CatalogService.DTOs;
+using GoldPC.SharedKernel.DTOs;
 using CatalogService.Models;
 using CatalogService.Repositories;
 using CatalogService.Repositories.Interfaces;

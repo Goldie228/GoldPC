@@ -1,20 +1,77 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
-  RefreshCw, 
   SlidersHorizontal,
   X,
   LayoutGrid,
-  List
+  List,
+  Table
 } from 'lucide-react';
-import { FilterSidebar, EmptyState, Pagination } from '../../components/catalog';
+import { FilterSidebar, EmptyState, Pagination, ProductTable } from '../../components/catalog';
 import { ProductCard } from '../../components/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton';
+import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { catalogApi } from '../../api/catalog';
+import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
 import type { ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
+import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
+import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
 import styles from './CatalogPage.module.css';
+
+/**
+ * Loader for CatalogPage to support SSR/SSG-like data fetching
+ */
+export async function catalogLoader({ params, request }: { params: any; request: Request }) {
+  const url = new URL(request.url);
+  const category = params.category as ProductCategory | undefined;
+  const search = url.searchParams.get('search') || undefined;
+  const page = parseInt(url.searchParams.get('page') || '1', 10);
+  const priceMin = parseInt(url.searchParams.get('priceMin') || '0', 10);
+  const priceMax = parseInt(url.searchParams.get('priceMax') || '0', 10);
+  const sortBy = url.searchParams.get('sortBy') || undefined;
+  const manufacturerIds = url.searchParams.get('manufacturerIds')?.split(',').filter(Boolean);
+
+  const apiParams: GetProductsParams = {
+    page,
+    pageSize: 12,
+    category,
+    search,
+    priceMin: priceMin > 0 ? priceMin : undefined,
+    priceMax: priceMax > 0 ? priceMax : undefined,
+  };
+
+  if (manufacturerIds?.length) {
+    apiParams.manufacturerIds = manufacturerIds;
+  }
+
+  // Map sortBy to API parameters
+  if (sortBy === 'price-asc') {
+    apiParams.sortBy = 'price';
+    apiParams.sortOrder = 'asc';
+  } else if (sortBy === 'price-desc') {
+    apiParams.sortBy = 'price';
+    apiParams.sortOrder = 'desc';
+  } else if (sortBy === 'rating') {
+    apiParams.sortBy = 'rating';
+    apiParams.sortOrder = 'desc';
+  } else if (sortBy === 'newest') {
+    apiParams.sortBy = 'createdAt';
+    apiParams.sortOrder = 'desc';
+  } else if (sortBy === 'name') {
+    apiParams.sortBy = 'name';
+    apiParams.sortOrder = 'asc';
+  }
+
+  try {
+    const initialData = await catalogApi.getProducts(apiParams);
+    return { initialData, category };
+  } catch (error) {
+    console.error('Failed to load catalog data:', error);
+    return { initialData: null, category };
+  }
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -103,7 +160,10 @@ export function CatalogPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>(() => {
+    const v = searchParams.get('view');
+    return (v === 'list' || v === 'table') ? v : 'grid';
+  });
   const [priceRange, setPriceRange] = useState(() => ({
     ...normalizePriceRange({
       min: parseInt(searchParams.get('priceMin') || '0'),
@@ -146,12 +206,13 @@ export function CatalogPage() {
     if (Object.keys(selectedSpecifications).length > 0) {
       params.set('specs', encodeURIComponent(JSON.stringify(selectedSpecifications)));
     }
+    if (viewMode !== 'grid') params.set('view', viewMode);
     if (page > 1) params.set('page', page.toString());
     const queryString = params.toString();
     const path = selectedCategory ? `/catalog/${selectedCategory}` : '/catalog';
     const fullPath = queryString ? `${path}?${queryString}` : path;
     navigate(fullPath, { replace: true });
-  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, page, navigate]);
+  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, page, navigate, viewMode]);
 
   const filterDeps = [
     selectedCategory,
@@ -282,16 +343,22 @@ export function CatalogPage() {
     }
   };
 
+  const catalogScrollAnchorRef = useRef<HTMLDivElement>(null);
+
   const handlePageChange = useCallback((newPage: number) => {
     const clamped = Math.max(1, Math.min(newPage, totalPages));
     setPage(clamped);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    requestAnimationFrame(() => {
+      catalogScrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }, [totalPages]);
 
   const handlePageSizeChange = useCallback((newSize: number) => {
     setPageSize(newSize);
     setPage(1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    requestAnimationFrame(() => {
+      catalogScrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -328,61 +395,67 @@ export function CatalogPage() {
     setSearchQuery('');
   };
 
-  const handleAddToCart = (productId: string) => {
-    console.log('Add to cart:', productId);
-    // TODO: Implement cart functionality
+  const handleAddToCart = (_productId: string) => {
+    // ProductCard already adds to cart via useCart; callback for optional analytics
   };
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} role="main" aria-label="Каталог товаров GoldPC">
       {/* Mobile Filter Toggle */}
       <button 
         className={styles.mobileFilterToggle}
         onClick={() => setMobileFilterOpen(true)}
         aria-label="Открыть фильтры"
+        aria-expanded={mobileFilterOpen}
+        aria-controls="mobile-filter-sidebar"
       >
         <SlidersHorizontal size={20} />
         <span>Фильтры</span>
       </button>
 
       {/* Mobile Filter Overlay */}
-      {mobileFilterOpen && (
-        <div className={styles.mobileOverlay} onClick={() => setMobileFilterOpen(false)}>
-          <motion.div 
-            className={styles.mobileSidebar}
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          >
-            <div className={styles.mobileSidebarHeader}>
-              <h2 className={styles.mobileSidebarTitle}>Фильтры</h2>
-              <button 
-                className={styles.closeBtn}
-                onClick={() => setMobileFilterOpen(false)}
-                aria-label="Закрыть"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <FilterSidebar
-              selectedCategory={selectedCategory}
-              onCategoryChange={handleCategoryChange}
-              priceRange={priceRange}
-              onPriceChange={handlePriceChange}
-              selectedManufacturerIds={selectedManufacturerIds}
-              onManufacturerIdsChange={setSelectedManufacturerIds}
-              minRating={minRating}
-              onRatingChange={setMinRating}
-              selectedAvailability={selectedAvailability}
-              onAvailabilityChange={setSelectedAvailability}
-              selectedSpecifications={selectedSpecifications}
-              onSpecificationsChange={setSelectedSpecifications}
-              onReset={handleResetFilters}
-            />
-          </motion.div>
-        </div>
-      )}
+      <AnimatePresence>
+        {mobileFilterOpen && (
+          <div className={styles.mobileOverlay} onClick={() => setMobileFilterOpen(false)}>
+            <motion.div 
+              id="mobile-filter-sidebar"
+              className={styles.mobileSidebar}
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              role="complementary"
+              aria-label="Боковая панель фильтров"
+            >
+              <div className={styles.mobileSidebarHeader}>
+                <h2 className={styles.mobileSidebarTitle}>Фильтры</h2>
+                <button 
+                  className={styles.closeBtn}
+                  onClick={() => setMobileFilterOpen(false)}
+                  aria-label="Закрыть панель фильтров"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <FilterSidebar
+                selectedCategory={selectedCategory}
+                onCategoryChange={handleCategoryChange}
+                priceRange={priceRange}
+                onPriceChange={handlePriceChange}
+                selectedManufacturerIds={selectedManufacturerIds}
+                onManufacturerIdsChange={setSelectedManufacturerIds}
+                minRating={minRating}
+                onRatingChange={setMinRating}
+                selectedAvailability={selectedAvailability}
+                onAvailabilityChange={setSelectedAvailability}
+                selectedSpecifications={selectedSpecifications}
+                onSpecificationsChange={setSelectedSpecifications}
+                onReset={handleResetFilters}
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Desktop Sidebar - 20% width */}
       <div className={styles.sidebarWrapper}>
@@ -407,19 +480,28 @@ export function CatalogPage() {
       <main className={styles.main}>
         {/* Page Header */}
         <header className={styles.header}>
-          <nav className={styles.breadcrumb}>
-            <a href="/">Главная</a>
-            <span>/</span>
-            <span>Каталог</span>
-          </nav>
+          <Breadcrumbs
+            items={
+              selectedCategory
+                ? [
+                    { label: 'Главная', to: '/' },
+                    { label: 'Каталог', to: '/catalog' },
+                    { label: CATEGORY_LABELS_RU[selectedCategory] },
+                  ]
+                : [
+                    { label: 'Главная', to: '/' },
+                    { label: 'Каталог' },
+                  ]
+            }
+          />
           <h1 className={styles.title}>Каталог комплектующих</h1>
           <p className={styles.stats}>
-            {totalItems > 0 ? `Всего ${totalItems} товаров` : 'Товары не найдены'}
+            {totalItems > 0 ? `Всего ${formatCountRu(totalItems, RU_FORMS.tovar)}` : 'Товары не найдены'}
           </p>
         </header>
 
-        {/* Toolbar */}
-        <div className={styles.toolbar}>
+        {/* Toolbar — якорь для прокрутки при смене страницы */}
+        <div ref={catalogScrollAnchorRef} className={styles.toolbar}>
           <div className={styles.toolbarLeft}>
             <button 
               className={styles.mobileFilterBtn}
@@ -442,6 +524,13 @@ export function CatalogPage() {
                 aria-label="Список"
               >
                 <List size={16} />
+              </button>
+              <button 
+                className={`${styles.viewToggleBtn} ${viewMode === 'table' ? styles.active : ''}`}
+                onClick={() => setViewMode('table')}
+                aria-label="Таблица"
+              >
+                <Table size={16} />
               </button>
             </div>
           </div>
@@ -476,7 +565,7 @@ export function CatalogPage() {
 
         {/* Loading State - Skeleton Grid */}
         {loading && (
-          <div className={`${styles.grid} ${viewMode === 'list' ? styles.listView : ''}`}>
+          <div className={`${styles.grid} ${viewMode === 'list' ? styles.listView : ''} ${viewMode === 'table' ? styles.tableView : ''}`}>
             {Array.from({ length: 12 }).map((_, index) => (
               <ProductCardSkeleton key={index} />
             ))}
@@ -485,12 +574,8 @@ export function CatalogPage() {
 
         {/* Error State */}
         {error && (
-          <div className={styles.error}>
-            <p>{error}</p>
-            <button onClick={() => fetchProducts(1)} className={styles.retryBtn}>
-              <RefreshCw size={18} />
-              <span>Попробовать снова</span>
-            </button>
+          <div className={styles.errorState}>
+            <ApiErrorBanner message={error} onRetry={() => fetchProducts(page)} />
           </div>
         )}
 
@@ -504,21 +589,27 @@ export function CatalogPage() {
         {/* Product Grid - 4 columns */}
         {!loading && !error && products.length > 0 && (
           <>
-            <motion.div 
-              className={`${styles.grid} ${viewMode === 'list' ? styles.listView : ''}`}
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {products.map((product) => (
-                <motion.div key={product.id} variants={itemVariants} className={styles.gridItem}>
-                  <ProductCard 
-                    product={product} 
-                    onAddToCart={handleAddToCart}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
+            {viewMode === 'table' ? (
+              <ProductTable products={products} onAddToCart={handleAddToCart} />
+            ) : (
+              <motion.div 
+                className={`${styles.grid} ${viewMode === 'list' ? styles.listView : ''}`}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {products.map((product, index) => (
+                  <motion.div key={product.id} variants={itemVariants} className={styles.gridItem}>
+                    <ProductCard 
+                      product={product} 
+                      onAddToCart={handleAddToCart}
+                      viewMode={viewMode}
+                      imageFetchPriority={viewMode === 'grid' && index < 4 ? 'high' : undefined}
+                    />
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
 
             {totalItems > 0 && (
               <Pagination

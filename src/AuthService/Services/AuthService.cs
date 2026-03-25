@@ -2,6 +2,7 @@ using GoldPC.AuthService.Data;
 using GoldPC.AuthService.Entities;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
+using GoldPC.SharedKernel.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GoldPC.AuthService.Services;
@@ -38,9 +39,9 @@ public class AuthService : IAuthService
             Id = Guid.NewGuid(),
             Email = request.Email.ToLower(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12),
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Phone = request.Phone,
+            FirstName = StringSanitizer.SanitizeText(request.FirstName),
+            LastName = StringSanitizer.SanitizeText(request.LastName),
+            Phone = StringSanitizer.SanitizeText(request.Phone),
             Role = UserRole.Client,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -186,11 +187,11 @@ public class AuthService : IAuthService
         }
 
         if (request.FirstName != null)
-            user.FirstName = request.FirstName;
+            user.FirstName = StringSanitizer.SanitizeText(request.FirstName);
         if (request.LastName != null)
-            user.LastName = request.LastName;
+            user.LastName = StringSanitizer.SanitizeText(request.LastName);
         if (request.Phone != null)
-            user.Phone = request.Phone;
+            user.Phone = StringSanitizer.SanitizeText(request.Phone);
 
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();

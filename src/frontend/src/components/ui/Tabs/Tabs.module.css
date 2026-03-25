@@ -11,7 +11,7 @@
 .tabHeaders {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-bottom: 1px solid var(--border-muted);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -26,29 +26,29 @@
   padding: 12px 20px;
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--fg-muted, #71717a);
+  color: var(--fg-secondary);
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   white-space: nowrap;
   position: relative;
 }
 
 .tabHeader:hover {
-  color: var(--fg, #fafafa);
+  color: var(--fg-primary);
   background: rgba(255, 255, 255, 0.02);
 }
 
 .tabHeader:focus-visible {
-  outline: 2px solid var(--accent, #d4a574);
+  outline: 2px solid var(--brand-primary);
   outline-offset: -2px;
 }
 
 .tabHeaderActive {
-  color: var(--accent, #d4a574);
-  border-bottom-color: var(--accent, #d4a574);
+  color: var(--brand-primary);
+  border-bottom-color: var(--brand-primary);
 }
 
 .tabHeaderActive:hover {

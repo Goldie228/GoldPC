@@ -1,0 +1,220 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef0123456789",
+		"name": "GoldPC API Tests",
+		"description": "Автоматизированные тесты API для проекта GoldPC (Catalog, Orders, PCBuilder)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Catalog Service",
+			"item": [
+				{
+					"name": "Get Products List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 500ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(500);",
+									"});",
+									"",
+									"pm.test(\"Response has paged result structure\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData).to.have.property('meta');",
+									"    pm.expect(Array.isArray(jsonData.data)).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{catalog_url}}/api/v1/catalog/products?page=1&limit=20",
+							"host": [
+								"{{catalog_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"catalog",
+								"products"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Categories",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response contains categories data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('data');",
+									"    pm.expect(jsonData.data.length).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{catalog_url}}/api/v1/catalog/categories",
+							"host": [
+								"{{catalog_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"catalog",
+								"categories"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Orders Service",
+			"item": [
+				{
+					"name": "Create Order - Unauthenticated (Should Fail)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"items\": [\n    { \"productId\": \"00000000-0000-0000-0000-000000000001\", \"quantity\": 1 }\n  ],\n  \"deliveryMethod\": \"Delivery\",\n  \"paymentMethod\": \"Online\",\n  \"address\": {\n    \"city\": \"Moscow\",\n    \"street\": \"Tverskaya\",\n    \"house\": \"10\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{orders_url}}/api/v1/orders",
+							"host": [
+								"{{orders_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "PC Builder Service",
+			"item": [
+				{
+					"name": "Check Compatibility - Valid Config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Config is compatible\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.result.isCompatible).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"components\": [\n    { \"productId\": \"cpu-uuid\", \"category\": \"cpu\", \"specifications\": { \"socket\": \"AM5\" } },\n    { \"productId\": \"mb-uuid\", \"category\": \"motherboard\", \"specifications\": { \"socket\": \"AM5\" } }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{pcbuilder_url}}/api/v1/pcbuilder/check-compatibility",
+							"host": [
+								"{{pcbuilder_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"pcbuilder",
+								"check-compatibility"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "catalog_url",
+			"value": "http://localhost:5000"
+		},
+		{
+			"key": "orders_url",
+			"value": "http://localhost:5002"
+		},
+		{
+			"key": "pcbuilder_url",
+			"value": "http://localhost:5003"
+		}
+	]
+}

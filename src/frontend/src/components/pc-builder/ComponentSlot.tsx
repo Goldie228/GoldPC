@@ -8,6 +8,7 @@
  * - Empty, Selected, and Incompatible states
  */
 
+import { motion } from 'framer-motion';
 import './ComponentSlot.css';
 
 export interface ComponentSlotProps {
@@ -29,6 +30,8 @@ export interface ComponentSlotProps {
   onSelect: () => void;
   /** Button text (default: "Выбрать" for empty, "Изменить" for selected) */
   buttonText?: string;
+  /** Animation index for staggered entry */
+  index?: number;
 }
 
 export function ComponentSlot({
@@ -41,6 +44,7 @@ export function ComponentSlot({
   warning,
   onSelect,
   buttonText,
+  index = 0,
 }: ComponentSlotProps) {
   const getButtonText = () => {
     if (buttonText) return buttonText;
@@ -56,45 +60,81 @@ export function ComponentSlot({
   };
 
   return (
-    <div className={`component-slot component-slot--${state}`}>
+    <motion.div 
+      className={`component-slot component-slot--${state}`}
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ 
+        duration: 0.4, 
+        delay: index * 0.05,
+        ease: [0.22, 1, 0.36, 1] 
+      }}
+      layout
+    >
       <div className="component-slot__inner">
         {/* Icon */}
-        <div className="component-slot__icon">
+        <motion.div 
+          className="component-slot__icon"
+          animate={{ 
+            scale: state === 'selected' ? 1.1 : 1,
+            color: state === 'selected' ? 'var(--gold-primary)' : 'inherit'
+          }}
+        >
           {icon}
-        </div>
+        </motion.div>
 
         {/* Info */}
         <div className="component-slot__info">
           <span className="component-slot__type">{type}</span>
-          <div className={`component-slot__name ${state === 'empty' ? 'component-slot__name--empty' : ''}`}>
+          <motion.div 
+            key={name}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`component-slot__name ${state === 'empty' ? 'component-slot__name--empty' : ''}`}
+          >
             {name}
-          </div>
+          </motion.div>
           {specs && specs.length > 0 && (
-            <div className="component-slot__specs">
+            <motion.div 
+              className="component-slot__specs"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
               {specs.map((spec, index) => (
                 <span key={index} className="component-slot__spec">{spec}</span>
               ))}
-            </div>
+            </motion.div>
           )}
           {warning && state === 'incompatible' && (
-            <div className="component-slot__warning">
+            <motion.div 
+              className="component-slot__warning"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                 <line x1="12" y1="9" x2="12" y2="13"/>
                 <line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
               {warning}
-            </div>
+            </motion.div>
           )}
         </div>
 
         {/* Price */}
         <div className="component-slot__price">
-          {price !== null ? (
-            <div className="component-slot__price-value">{price.toLocaleString('ru-BY')} BYN</div>
-          ) : (
-            <div className="component-slot__price-empty">—</div>
-          )}
+          <motion.div 
+            key={price}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            {price !== null ? (
+              <div className="component-slot__price-value">{price.toLocaleString('ru-BY')} BYN</div>
+            ) : (
+              <div className="component-slot__price-empty">—</div>
+            )}
+          </motion.div>
         </div>
 
         {/* Button */}
@@ -105,6 +145,6 @@ export function ComponentSlot({
           {getButtonText()}
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -18,6 +18,8 @@ using Serilog;
 using Serilog.Formatting.Json;
 using Shared.Data;
 using Shared.Middleware;
+using Shared.Messaging;
+using CatalogService.Consumers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,6 +46,7 @@ builder.Host.UseSerilog();
 
 // Добавление сервисов
 builder.Services.AddControllers();
+builder.Services.AddGrpc();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -59,13 +62,27 @@ builder.Services.AddSwaggerGen(c =>
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQL") 
     ?? "Host=localhost;Database=goldpc_catalog;Username=postgres;Password=postgres";
 
+var readConnectionString = builder.Configuration.GetConnectionString("ReadPostgreSQL") 
+    ?? connectionString;
+
 var npgsqlBuilder = new NpgsqlDataSourceBuilder(connectionString);
 npgsqlBuilder.EnableDynamicJson();
 var dataSource = npgsqlBuilder.Build();
 builder.Services.AddSingleton(dataSource);
 
+var readNpgsqlBuilder = new NpgsqlDataSourceBuilder(readConnectionString);
+readNpgsqlBuilder.EnableDynamicJson();
+var readDataSource = readNpgsqlBuilder.Build();
+builder.Services.AddKeyedSingleton("ReadPostgreSQL", readDataSource);
+
 builder.Services.AddDbContext<CatalogDbContext>(options =>
     options.UseNpgsql(dataSource, npgsqlOptions =>
+    {
+        npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
+    }));
+
+builder.Services.AddDbContext<ReadOnlyCatalogDbContext>(options =>
+    options.UseNpgsql(readDataSource, npgsqlOptions =>
     {
         npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
     }));
@@ -81,6 +98,20 @@ builder.Services.AddScoped<CatalogService.Services.SpecImportNormalizer>();
 builder.Services.AddScoped<ICatalogService, CatalogService.Services.CatalogService>();
 builder.Services.AddScoped<CatalogService.Services.XCoreImporter>();
 builder.Services.AddScoped<CatalogService.Services.FilterAttributesSeeder>();
+
+// Redis Caching
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+    options.InstanceName = "Catalog_";
+});
+
+// Messaging (Consumers for OrderPaidEvent and OrderPlacedEvent)
+builder.Services.AddMessaging(builder.Configuration, x =>
+{
+    x.AddConsumer<OrderPaidConsumer>();
+    x.AddConsumer<OrderPlacedConsumer>();
+});
 
 // Настройка CORS
 builder.Services.AddCors(options =>
@@ -228,6 +259,7 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseAuthorization();
 app.MapControllers();
+app.MapGrpcService<CatalogService.Grpc.CatalogGrpcService>();
 
 // Health check endpoints для container orchestration
 // /health - полный отчет со всеми зависимостями (для мониторинга и диагностики)

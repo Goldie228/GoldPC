@@ -34,8 +34,15 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
 
+// Настройка gRPC для Catalog Service
+var catalogServiceGrpcUrl = builder.Configuration["CatalogService:GrpcUrl"] ?? "http://localhost:5000";
+builder.Services.AddGrpcClient<Shared.Protos.CatalogGrpc.CatalogGrpcClient>(o =>
+{
+    o.Address = new Uri(catalogServiceGrpcUrl);
+});
+
 // Настройка HttpClient для Catalog Service
-var catalogServiceUrl = builder.Configuration["CatalogService:Url"] ?? "http://localhost:5001";
+var catalogServiceUrl = builder.Configuration["CatalogService:Url"] ?? "http://localhost:5000";
 builder.Services.AddHttpClient("CatalogService", client =>
 {
     client.BaseAddress = new Uri(catalogServiceUrl);
@@ -97,11 +104,13 @@ public class ConfigurationService : IConfigurationService
     private readonly List<PCBuilderService.Models.PCConfiguration> _configurations = new();
     private readonly ILogger<ConfigurationService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly Shared.Protos.CatalogGrpc.CatalogGrpcClient _catalogClient;
 
-    public ConfigurationService(ILogger<ConfigurationService> logger, IHttpClientFactory httpClientFactory)
+    public ConfigurationService(ILogger<ConfigurationService> logger, IHttpClientFactory httpClientFactory, Shared.Protos.CatalogGrpc.CatalogGrpcClient catalogClient)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+        _catalogClient = catalogClient;
     }
 
     public Task<PCBuilderService.Models.PCConfiguration?> GetConfigurationAsync(Guid id)
@@ -153,19 +162,30 @@ public class ConfigurationService : IConfigurationService
 
     public async Task<decimal> CalculateTotalPriceAsync(PCConfigurationDto dto)
     {
-        // В реальности будет запрос к Catalog Service для получения цен
-        // Здесь заглушка
-        decimal total = 0;
-        
         var componentIds = new[] 
         { 
             dto.ProcessorId, dto.MotherboardId, dto.RamId, 
             dto.GpuId, dto.PsuId, dto.StorageId, dto.CaseId, dto.CoolerId 
-        }.Where(id => id.HasValue).Select(id => id!.Value).ToList();
+        }
+        .Where(id => id.HasValue)
+        .Select(id => id!.Value.ToString())
+        .ToList();
 
-        // Заглушка: базовая цена для демонстрации
-        total = componentIds.Count * 15000; // Примерная средняя цена компонента в BYN
-        
-        return await Task.FromResult(total);
+        if (!componentIds.Any()) return 0;
+
+        try
+        {
+            var request = new Shared.Protos.GetProductsRequest();
+            request.Ids.AddRange(componentIds);
+
+            var response = await _catalogClient.GetProductsByIdsAsync(request);
+            
+            return (decimal)response.Products.Sum(p => p.Price);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "gRPC Error: Failed to calculate total price via Catalog Service");
+            throw new InvalidOperationException("Price calculation currently unavailable", ex);
+        }
     }
 }

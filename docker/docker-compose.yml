@@ -1,8 +1,18 @@
 services:
-  # PostgreSQL Database
+  # PostgreSQL Primary
   postgres:
     image: postgres:16-alpine
     container_name: goldpc-postgres
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c max_replication_slots=10
+      -c hot_standby=on
+      -c archive_mode=on
+      -c archive_command='test ! -f /var/lib/postgresql/data/archive/%f && cp %p /var/lib/postgresql/data/archive/%f'
+      -c shared_preload_libraries='pg_stat_statements'
+      -c pg_stat_statements.track=all
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
@@ -12,12 +22,60 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh
+      - ./postgres/setup-archive.sh:/docker-entrypoint-initdb.d/setup-archive.sh
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d goldpc"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - goldpc-network
+
+  # PostgreSQL Replica
+  postgres-replica:
+    image: postgres:16-alpine
+    container_name: goldpc-postgres-replica
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: goldpc
+      PGPASSWORD: admin
+    command: >
+      bash -c "
+      until pg_basebackup -h postgres -D /var/lib/postgresql/data -U postgres -vP -R -X stream; do
+        echo 'Waiting for primary to be ready...'
+        sleep 1
+      done
+      echo 'Backup done, starting replica...'
+      exec postgres
+      "
+    ports:
+      - "5435:5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - goldpc-network
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: goldpc-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - goldpc-network
 
@@ -134,6 +192,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  rabbitmq_data:
 
 networks:
   goldpc-network:

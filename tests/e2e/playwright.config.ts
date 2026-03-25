@@ -57,6 +57,14 @@ export default defineConfig({
     navigationTimeout: 30000,
   },
 
+  // Настройки сравнения скриншотов
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixels: 100,
+      threshold: 0.2,
+    },
+  },
+
   // Проекты для разных браузеров (Chromium, Firefox, WebKit как требуется)
   projects: [
     {

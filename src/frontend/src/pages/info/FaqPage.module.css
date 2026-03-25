@@ -1,0 +1,156 @@
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 56px;
+  color: var(--text-primary, #f4f4f5);
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: 2rem;
+}
+
+.lead {
+  margin: 0 0 24px;
+  color: var(--text-secondary, #d4d4d8);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.toolbar {
+  margin-bottom: 16px;
+}
+
+.toolbarBtn {
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 16px;
+  border: 1px solid var(--border-primary, #27272a);
+  background: var(--bg-card, #111113);
+  color: var(--accent, #d4a574);
+  cursor: pointer;
+  border-radius: 8px;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.toolbarBtn:hover {
+  border-color: rgba(212, 165, 116, 0.45);
+  background: rgba(212, 165, 116, 0.08);
+}
+
+.toolbarBtn:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item {
+  border: 1px solid var(--border-primary, #27272a);
+  border-radius: 12px;
+  background: var(--bg-card, #111113);
+  scroll-margin-top: 88px;
+}
+
+.questionHeading {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+.trigger:hover {
+  background: rgba(212, 165, 116, 0.06);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: -2px;
+}
+
+.triggerLabel {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--accent, #d4a574);
+  transition: transform 0.25s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.panelWrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.panelWrapOpen {
+  grid-template-rows: 1fr;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panelWrap {
+    transition: none;
+  }
+}
+
+.panelInner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.answer {
+  margin: 0;
+  padding: 0 18px 8px;
+  color: var(--text-secondary, #d4d4d8);
+  line-height: 1.55;
+  font-size: 0.9rem;
+}
+
+.permalink {
+  margin: 0;
+  padding: 0 18px 16px;
+  font-size: 0.8rem;
+}
+
+.permalinkLink {
+  color: var(--accent, #d4a574);
+  text-decoration: none;
+}
+
+.permalinkLink:hover {
+  text-decoration: underline;
+}
+
+.permalinkLink:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
+}

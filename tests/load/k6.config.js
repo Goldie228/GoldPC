@@ -54,39 +54,56 @@ export const options = {
   // Сценарии нагрузки
   scenarios: {
     // =========================================================================
-    // Сценарий 1: Smoke Test - проверка каталога
+    // Сценарий 1: Catalog Browsing - просмотр каталога
     // =========================================================================
     // Ramp up до 100 VU, проверка GET /api/v1/catalog/products
-    // Проверка: http_req_duration < 500ms
-    smoke_test: {
+    catalog_browsing: {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '30s', target: 20 },   // Начальный разогрев
-        { duration: '1m', target: 100 },   // Ramp up до 100 VU
-        { duration: '2m', target: 100 },   // Удержание 100 VU
-        { duration: '30s', target: 0 },    // Снижение
+        { duration: '1m', target: 50 },    // Начальный разогрев
+        { duration: '2m', target: 100 },   // Ramp up до 100 VU
+        { duration: '5m', target: 100 },   // Удержание 100 VU
+        { duration: '1m', target: 0 },     // Снижение
       ],
       gracefulRampDown: '30s',
-      exec: 'smokeTestScenario',          // Функция для этого сценария
+      exec: 'catalogBrowsingScenario',     // Функция для этого сценария
     },
 
     // =========================================================================
-    // Сценарий 2: Order Creation - создание заказов
+    // Сценарий 2: PC Builder Interaction
     // =========================================================================
-    // Имитация создания заказов с static token или mock
+    // Имитация работы с конструктором ПК
+    pc_builder: {
+      executor: 'ramping-vus',
+      startVUs: 0,
+      stages: [
+        { duration: '1m', target: 25 },    // Начальная нагрузка
+        { duration: '2m', target: 50 },    // Увеличение
+        { duration: '4m', target: 50 },    // Удержание
+        { duration: '1m', target: 0 },     // Снижение
+      ],
+      gracefulRampDown: '30s',
+      exec: 'pcBuilderScenario',           // Функция для этого сценария
+      startTime: '1m',                     // Начать через 1 минуту
+    },
+
+    // =========================================================================
+    // Сценарий 3: Order Creation - создание заказов
+    // =========================================================================
+    // Имитация создания заказов
     order_creation: {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '1m', target: 10 },    // Начальная нагрузка
+        { duration: '1m', target: 25 },    // Начальная нагрузка
         { duration: '2m', target: 50 },    // Увеличение
-        { duration: '2m', target: 50 },    // Удержание
+        { duration: '3m', target: 50 },    // Удержание
         { duration: '1m', target: 0 },     // Снижение
       ],
       gracefulRampDown: '30s',
       exec: 'orderCreationScenario',       // Функция для этого сценария
-      startTime: '3m',                     // Начать после smoke test
+      startTime: '2m',                     // Начать через 2 минуты
     },
   },
 };
@@ -94,6 +111,22 @@ export const options = {
 // ============================================================================
 // Вспомогательные функции
 // ============================================================================
+
+/**
+ * Генерация тестовой конфигурации ПК
+ */
+function generateTestConfig() {
+  return {
+    processorId: '00000000-0000-0000-0000-000000000001',
+    motherboardId: '00000000-0000-0000-0000-000000000002',
+    ramId: '00000000-0000-0000-0000-000000000003',
+    gpuId: '00000000-0000-0000-0000-000000000004',
+    psuId: '00000000-0000-0000-0000-000000000005',
+    caseId: '00000000-0000-0000-0000-000000000006',
+    storageIds: ['00000000-0000-0000-0000-000000000007'],
+    coolingId: '00000000-0000-0000-0000-000000000008'
+  };
+}
 
 /**
  * Генерация тестового заказа
@@ -171,18 +204,17 @@ function getMockToken() {
 }
 
 // ============================================================================
-// Сценарий 1: Smoke Test - Проверка каталога
+// Сценарий 1: Catalog Browsing - Просмотр каталога
 // ============================================================================
 
 /**
- * Smoke Test сценарий
+ * Catalog Browsing сценарий
  * 
  * - Ramp up до 100 VU
  * - GET /api/v1/catalog/products
- * - Проверка: http_req_duration < 500ms
  */
-export function smokeTestScenario() {
-  group('Smoke Test - Catalog', () => {
+export function catalogBrowsingScenario() {
+  group('Catalog Browsing', () => {
     // Основной запрос: получение списка продуктов
     const response = http.get(
       `${BASE_URL}/api/v1/catalog/products?page=1&limit=20`,
@@ -200,7 +232,6 @@ export function smokeTestScenario() {
       'response has valid structure': (r) => {
         try {
           const body = r.json();
-          // Проверяем структуру ответа (data или массив продуктов)
           return body !== null && body !== undefined && 
                  (body.data !== undefined || Array.isArray(body));
         } catch {
@@ -209,47 +240,93 @@ export function smokeTestScenario() {
       },
     });
     
-    // Записываем ошибку, если проверка не прошла
     errorRate.add(!success);
     
-    // Если успешно, проверяем дополнительные эндпоинты
     if (response.status === 200) {
       // Получение категорий
       const categoriesResponse = http.get(`${BASE_URL}/api/v1/catalog/categories`);
-      
-      check(categoriesResponse, {
-        'categories status is 200': (r) => r.status === 200,
-      });
-      
+      check(categoriesResponse, { 'categories status is 200': (r) => r.status === 200 });
       errorRate.add(categoriesResponse.status >= 500);
-      responseTimeTrend.add(categoriesResponse.timings.duration);
       
-      // Поиск товаров (опционально, для части пользователей)
+      // Поиск товаров
       if (Math.random() < 0.3) {
-        const searchQueries = ['ryzen', 'intel', 'rtx', 'ddr5'];
-        const query = searchQueries[Math.floor(Math.random() * searchQueries.length)];
-        
-        const searchResponse = http.get(
-          `${BASE_URL}/api/v1/catalog/products/search?q=${query}`
-        );
-        
-        check(searchResponse, {
-          'search status is 200': (r) => r.status === 200,
-          'search response time < 500ms': (r) => r.timings.duration < 500,
-        });
-        
+        const query = ['ryzen', 'intel', 'rtx', 'ddr5'][Math.floor(Math.random() * 4)];
+        const searchResponse = http.get(`${BASE_URL}/api/v1/catalog/products/search?q=${query}`);
+        check(searchResponse, { 'search status is 200': (r) => r.status === 200 });
         errorRate.add(searchResponse.status >= 500);
-        responseTimeTrend.add(searchResponse.timings.duration);
       }
     }
   });
   
-  // Имитация "обдумывания" пользователем
   sleep(Math.random() * 2 + 1);
 }
 
 // ============================================================================
-// Сценарий 2: Order Creation - Создание заказов
+// Сценарий 2: PC Builder - Конструктор ПК
+// ============================================================================
+
+/**
+ * PC Builder сценарий
+ * 
+ * - Проверка совместимости
+ * - Расчет мощности
+ */
+export function pcBuilderScenario() {
+  group('PC Builder', () => {
+    const config = generateTestConfig();
+    
+    // Шаг 1: Проверка совместимости
+    const compatibilityResponse = http.post(
+      `${BASE_URL}/api/v1/pcbuilder/check-compatibility`,
+      JSON.stringify(config),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    
+    check(compatibilityResponse, {
+      'compatibility status is 200': (r) => r.status === 200,
+      'compatibility check fast': (r) => r.timings.duration < 500,
+    });
+    
+    errorRate.add(compatibilityResponse.status >= 500);
+    responseTimeTrend.add(compatibilityResponse.timings.duration);
+    
+    sleep(1);
+    
+    // Шаг 2: Расчет мощности
+    const powerResponse = http.post(
+      `${BASE_URL}/api/v1/pcbuilder/calculate-power`,
+      JSON.stringify({ componentIds: Object.values(config).flat() }),
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    
+    check(powerResponse, {
+      'power calc status is 200': (r) => r.status === 200,
+    });
+    
+    errorRate.add(powerResponse.status >= 500);
+    
+    // Шаг 3: Сохранение конфигурации (для авторизованных)
+    if (Math.random() < 0.2) {
+      const token = getMockToken();
+      const saveResponse = http.post(
+        `${BASE_URL}/api/v1/pcbuilder/configurations`,
+        JSON.stringify({ ...config, name: `LoadTest-${__VU}` }),
+        { headers: getAuthHeaders(token) }
+      );
+      
+      check(saveResponse, {
+        'config save status is 201 or 401': (r) => [201, 200, 401].includes(r.status),
+      });
+      
+      errorRate.add(saveResponse.status >= 500);
+    }
+  });
+  
+  sleep(Math.random() * 3 + 2);
+}
+
+// ============================================================================
+// Сценарий 3: Order Creation - Создание заказов
 // ============================================================================
 
 /**

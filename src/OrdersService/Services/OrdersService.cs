@@ -3,7 +3,13 @@ using GoldPC.OrdersService.Entities;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
 using GoldPC.SharedKernel.Models;
+using GoldPC.Shared.Services.Interfaces;
+using PagedResult = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.OrderDto>;
+using Shared.Protos;
 using Microsoft.EntityFrameworkCore;
+using MassTransit;
+using SharedKernel.Events;
+using System.Text.Json;
 
 namespace GoldPC.OrdersService.Services;
 
@@ -15,16 +21,18 @@ public class OrdersService : IOrdersService
 {
     private readonly OrdersDbContext _context;
     private readonly ILogger<OrdersService> _logger;
+    private readonly CatalogGrpc.CatalogGrpcClient _catalogClient;
     
-    /// <summary>
-    /// Максимальное количество единиц одного товара в заказе (ФТ-3.11)
-    /// </summary>
     private const int MaxItemQuantity = 5;
 
-    public OrdersService(OrdersDbContext context, ILogger<OrdersService> logger)
+    public OrdersService(
+        OrdersDbContext context, 
+        ILogger<OrdersService> logger, 
+        CatalogGrpc.CatalogGrpcClient catalogClient)
     {
         _context = context;
         _logger = logger;
+        _catalogClient = catalogClient;
     }
 
     public async Task<OrderDto?> GetByIdAsync(Guid id)
@@ -47,7 +55,7 @@ public class OrdersService : IOrdersService
         return order != null ? MapToDto(order) : null;
     }
 
-    public async Task<PagedResult<OrderDto>> GetByUserIdAsync(Guid userId, int page, int pageSize)
+    public async Task<PagedResult> GetByUserIdAsync(Guid userId, int page, int pageSize)
     {
         var query = _context.Orders
             .Include(o => o.Items)
@@ -60,7 +68,7 @@ public class OrdersService : IOrdersService
             .Take(pageSize)
             .ToListAsync();
 
-        return new PagedResult<OrderDto>
+        return new PagedResult
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
@@ -69,7 +77,7 @@ public class OrdersService : IOrdersService
         };
     }
 
-    public async Task<PagedResult<OrderDto>> GetAllAsync(int page, int pageSize, OrderStatus? status = null)
+    public async Task<PagedResult> GetAllAsync(int page, int pageSize, OrderStatus? status = null)
     {
         var query = _context.Orders
             .Include(o => o.Items)
@@ -88,7 +96,7 @@ public class OrdersService : IOrdersService
             .Take(pageSize)
             .ToListAsync();
 
-        return new PagedResult<OrderDto>
+        return new PagedResult
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
@@ -189,6 +197,7 @@ public class OrdersService : IOrdersService
         _context.Orders.Add(order);
 
         // Добавление позиций заказа
+        var reserveRequest = new ReserveStockRequest();
         foreach (var itemRequest in request.Items)
         {
             var orderItem = new OrderItem
@@ -201,6 +210,27 @@ public class OrdersService : IOrdersService
                 UnitPrice = itemRequest.UnitPrice
             };
             _context.OrderItems.Add(orderItem);
+            
+            reserveRequest.Items.Add(new StockItem 
+            { 
+                ProductId = itemRequest.ProductId.ToString(), 
+                Quantity = itemRequest.Quantity 
+            });
+        }
+
+        // Резервирование товара в каталоге (ФТ-3.5)
+        try
+        {
+            var stockResponse = await _catalogClient.ReserveStockAsync(reserveRequest);
+            if (!stockResponse.Success)
+            {
+                return (null, stockResponse.ErrorMessage ?? "Ошибка при резервировании товара в каталоге");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при вызове CatalogService для резервирования товара");
+            return (null, "Сервис каталога временно недоступен. Пожалуйста, попробуйте позже.");
         }
 
         // Добавляем запись в историю (ФТ-3.12 - ведение истории)
@@ -220,6 +250,21 @@ public class OrdersService : IOrdersService
 
         _logger.LogInformation("Order created: {OrderNumber} for user {UserId} with {ItemCount} items, total: {Total}", 
             orderNumber, userId, request.Items.Count, total);
+
+        // Publish OrderPlacedEvent (ФТ-3.13 - уведомление внешних систем) - via Outbox
+        SaveToOutbox(new OrderPlacedEvent
+        {
+            OrderId = order.Id,
+            CustomerId = userId,
+            TotalAmount = total,
+            Items = request.Items.Select(i => new OrderItemEventDto
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                Price = i.UnitPrice
+            }).ToList()
+        });
 
         // Загружаем позиции для маппинга
         order.Items = await _context.OrderItems.Where(oi => oi.OrderId == order.Id).ToListAsync();
@@ -253,6 +298,25 @@ public class OrdersService : IOrdersService
         {
             order.IsPaid = true;
             order.PaidAt = DateTime.UtcNow;
+
+            // Publish OrderPaidEvent - via Outbox
+            SaveToOutbox(new OrderPaidEvent
+            {
+                OrderId = order.Id,
+                AmountPaid = order.Total,
+                Items = order.Items.Select(i => new OrderItemEventDto
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.ProductName,
+                    Quantity = i.Quantity,
+                    Price = i.UnitPrice
+                }).ToList()
+            });
+        }
+
+        if (newStatus == OrderStatus.Cancelled)
+        {
+            await ReleaseOrderStockAsync(order);
         }
 
         // Добавляем запись в историю
@@ -278,21 +342,25 @@ public class OrdersService : IOrdersService
 
     public async Task<(bool Success, string? Error)> CancelAsync(Guid id, Guid userId)
     {
-        var order = await _context.Orders.FindAsync(id);
+        var order = await _context.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id);
 
         if (order == null)
         {
             return (false, "Заказ не найден");
         }
 
-        if (order.Status != OrderStatus.New && order.Status != OrderStatus.Processing)
+        if (order.Status == OrderStatus.Completed || order.Status == OrderStatus.Cancelled)
         {
-            return (false, "Заказ нельзя отменить в текущем статусе");
+            return (false, "Заказ уже завершён или отменён");
         }
 
         var previousStatus = order.Status;
         order.Status = OrderStatus.Cancelled;
         order.UpdatedAt = DateTime.UtcNow;
+
+        await ReleaseOrderStockAsync(order);
 
         var history = new OrderHistory
         {
@@ -311,6 +379,38 @@ public class OrdersService : IOrdersService
         _logger.LogInformation("Order {OrderId} cancelled by {UserId}", id, userId);
 
         return (true, null);
+    }
+
+    private async Task ReleaseOrderStockAsync(Order order)
+    {
+        var releaseRequest = new ReleaseStockRequest();
+        foreach (var item in order.Items)
+        {
+            releaseRequest.Items.Add(new StockItem 
+            { 
+                ProductId = item.ProductId.ToString(), 
+                Quantity = item.Quantity 
+            });
+        }
+
+        try
+        {
+            var policy = GoldPC.Shared.Resilience.ResiliencePolicies.GetGenericResiliencePolicy(_logger, "CatalogService (gRPC)");
+            await policy.ExecuteAsync(async () =>
+            {
+                var stockResponse = await _catalogClient.ReleaseStockAsync(releaseRequest);
+                if (!stockResponse.Success)
+                {
+                    _logger.LogError("Ошибка при возврате товара на склад для заказа {OrderNumber}: {Error}", 
+                        order.OrderNumber, stockResponse.ErrorMessage);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при вызове CatalogService для возврата товара на склад для заказа {OrderNumber}", 
+                order.OrderNumber);
+        }
     }
 
     public async Task<decimal> CalculateTotalAsync(Guid orderId)
@@ -363,11 +463,11 @@ public class OrdersService : IOrdersService
     {
         return from switch
         {
-            OrderStatus.New => to == OrderStatus.Processing || to == OrderStatus.Cancelled,
+            OrderStatus.New => to == OrderStatus.Processing || to == OrderStatus.Paid || to == OrderStatus.Cancelled,
             OrderStatus.Processing => to == OrderStatus.Paid || to == OrderStatus.Cancelled,
             OrderStatus.Paid => to == OrderStatus.InProgress || to == OrderStatus.Cancelled,
-            OrderStatus.InProgress => to == OrderStatus.Ready,
-            OrderStatus.Ready => to == OrderStatus.Completed,
+            OrderStatus.InProgress => to == OrderStatus.Ready || to == OrderStatus.Cancelled,
+            OrderStatus.Ready => to == OrderStatus.Completed || to == OrderStatus.Cancelled,
             OrderStatus.Completed => false,
             OrderStatus.Cancelled => false,
             _ => false
@@ -400,5 +500,18 @@ public class OrdersService : IOrdersService
                 TotalPrice = oi.TotalPrice
             }).ToList() ?? new List<OrderItemDto>()
         };
+    }
+
+    private void SaveToOutbox<T>(T message) where T : class
+    {
+        var outboxMessage = new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            Type = typeof(T).AssemblyQualifiedName ?? typeof(T).Name,
+            Content = JsonSerializer.Serialize(message),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.OutboxMessages.Add(outboxMessage);
     }
 }

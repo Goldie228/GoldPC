@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text.Encodings.Web;
 
 namespace GoldPC.Api.Controllers;
 
@@ -47,15 +48,19 @@ public class FeedbackController : ControllerBase
 
         try
         {
+            // Санитарная обработка данных для предотвращения XSS
+            var sanitizedComment = HtmlEncoder.Default.Encode(request.Comment ?? string.Empty);
+            var sanitizedPage = HtmlEncoder.Default.Encode(request.Page ?? string.Empty);
+
             await _feedbackService.SubmitAsync(new Feedback
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 Type = request.Type,
                 Rating = request.Rating,
-                Comment = request.Comment,
-                Page = request.Page,
-                UserAgent = Request.Headers.UserAgent.ToString(),
+                Comment = sanitizedComment,
+                Page = sanitizedPage,
+                UserAgent = HtmlEncoder.Default.Encode(Request.Headers.UserAgent.ToString()),
                 Timestamp = DateTime.UtcNow
             });
 

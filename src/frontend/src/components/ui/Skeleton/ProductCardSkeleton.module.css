@@ -18,7 +18,8 @@
 
 .imageContainer {
   position: relative;
-  aspect-ratio: 1;
+  /* Совпадает с OptimizedImage aspectRatio в ProductCard (1.2) */
+  aspect-ratio: 1.2;
   background: var(--bg-elevated, #121214);
 }
 

@@ -15,6 +15,10 @@ export type { CardProps, CardVariant } from './Card';
 export { Input } from './Input';
 export type { InputProps, InputSize } from './Input';
 
+// Password field with visibility toggle
+export { PasswordField } from './PasswordField';
+export type { PasswordFieldProps } from './PasswordField';
+
 // Icon Component
 export { Icon, default as IconDefault } from './Icon';
 export type { IconProps, IconName, IconSize } from './Icon';
@@ -29,6 +33,10 @@ export { Toast, ToastContainer } from './Toast';
 // Skeleton Component
 export { Skeleton, ProductCardSkeleton } from './Skeleton';
 export type { SkeletonProps } from './Skeleton';
+
+// API error state
+export { ApiErrorBanner } from './ApiErrorBanner';
+export type { ApiErrorBannerProps } from './ApiErrorBanner';
 
 // ScrollToTop Component
 export { ScrollToTop } from './ScrollToTop';

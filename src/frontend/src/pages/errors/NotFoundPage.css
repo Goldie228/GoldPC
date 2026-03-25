@@ -1,31 +1,42 @@
-/* ========================================
-   NotFoundPage Styles
-   GoldPC Design System
-   Based on prototypes/404.html
-   ======================================== */
+/* NotFoundPage — характер и микровзаимодействия */
 
 .not-found {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 68px); /* Account for header */
+  min-height: calc(100vh - 68px);
   padding: 40px 24px;
   position: relative;
   overflow: hidden;
   background: var(--bg);
 }
 
-/* Background Pattern */
 .not-found__bg-pattern {
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     linear-gradient(var(--border) 1px, transparent 1px),
     linear-gradient(90deg, var(--border) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
   opacity: 0.5;
   pointer-events: none;
+}
+
+.not-found__glow {
+  position: absolute;
+  width: min(90vw, 520px);
+  height: min(90vw, 520px);
+  left: 50%;
+  top: 38%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--accent) 18%, transparent) 0%,
+    transparent 62%
+  );
+  pointer-events: none;
+  animation: notFoundGlowPulse 5s ease-in-out infinite;
 }
 
 .not-found__container {
@@ -36,9 +47,45 @@
   text-align: center;
   position: relative;
   z-index: 1;
+  animation: notFoundEnter 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Large 404 Code - Gold with Space Grotesk */
+.not-found__visual {
+  margin-bottom: 8px;
+  color: var(--accent);
+  opacity: 0.85;
+}
+
+.not-found__svg {
+  width: min(220px, 55vw);
+  height: auto;
+  display: block;
+}
+
+.not-found__wave {
+  animation: notFoundWave 3.5s ease-in-out infinite;
+}
+
+.not-found__dot {
+  fill: currentColor;
+}
+
+.not-found__dot--a {
+  animation: notFoundDot 2.2s ease-in-out infinite;
+}
+
+.not-found__dot--b {
+  animation: notFoundDot 2.2s ease-in-out 0.35s infinite;
+}
+
+.not-found__dot--c {
+  animation: notFoundDot 2.2s ease-in-out 0.7s infinite;
+}
+
+.not-found__break {
+  animation: notFoundBreak 2.8s ease-in-out infinite;
+}
+
 .not-found__code {
   font-family: 'JetBrains Mono', 'Space Grotesk', monospace;
   font-size: clamp(8rem, 25vw, 16rem);
@@ -46,9 +93,10 @@
   line-height: 1;
   color: var(--accent);
   letter-spacing: -0.05em;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   text-shadow: 0 0 120px var(--accent-glow);
   user-select: none;
+  animation: notFoundCodeShimmer 4s ease-in-out infinite;
 }
 
 .not-found__title {
@@ -76,14 +124,131 @@
   flex-wrap: wrap;
 }
 
+.not-found__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 22px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.not-found__link--primary {
+  background: var(--accent);
+  color: var(--bg, #09090b);
+  border: 1px solid transparent;
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.not-found__link--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.not-found__link--primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.not-found__link--ghost {
+  background: transparent;
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+}
+
+.not-found__link--ghost:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.not-found__link--ghost:active {
+  transform: scale(0.98);
+}
+
+.not-found__link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .not-found__btn-icon {
   width: 16px;
   height: 16px;
 }
 
-/* ========================================
-   Responsive Styles
-   ======================================== */
+@keyframes notFoundEnter {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes notFoundCodeShimmer {
+  0%,
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  50% {
+    opacity: 0.92;
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes notFoundGlowPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+}
+
+@keyframes notFoundWave {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes notFoundDot {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes notFoundBreak {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
 
 @media (max-width: 768px) {
   .not-found {
@@ -122,27 +287,19 @@
   }
 }
 
-/* ========================================
-   Animation (subtle entrance)
-   ======================================== */
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.not-found__container {
-  animation: fadeInUp 0.6s ease-out;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .not-found__container {
-    animation: none;
+  .not-found__container,
+  .not-found__code,
+  .not-found__glow,
+  .not-found__wave,
+  .not-found__dot--a,
+  .not-found__dot--b,
+  .not-found__dot--c,
+  .not-found__break {
+    animation: none !important;
+  }
+
+  .not-found__link {
+    transition: none;
   }
 }

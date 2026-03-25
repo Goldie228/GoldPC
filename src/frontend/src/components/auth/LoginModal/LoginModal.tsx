@@ -13,6 +13,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { Modal } from '../../ui/Modal/Modal';
+import { PasswordField } from '../../ui/PasswordField';
 import { useAuth } from '../../../hooks/useAuth';
 import { useAuthModalStore } from '../../../store/authModalStore';
 import styles from './LoginModal.module.css';
@@ -88,21 +89,17 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           />
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="login-password">
-            Пароль
-          </label>
-          <input
-            id="login-password"
-            type="password"
-            className={styles.input}
-            placeholder="Введите пароль"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-          />
-        </div>
+        <PasswordField
+          className={styles.field}
+          id="login-password"
+          label="Пароль"
+          value={password}
+          onChange={setPassword}
+          required
+          autoComplete="current-password"
+          labelClassName={styles.label}
+          inputClassName={styles.input}
+        />
 
         <div className={styles.options}>
           <div className={styles.checkboxGroup}>

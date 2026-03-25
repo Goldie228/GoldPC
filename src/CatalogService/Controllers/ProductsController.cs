@@ -1,4 +1,4 @@
-using CatalogService.DTOs;
+using GoldPC.SharedKernel.DTOs;
 using CatalogService.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -38,6 +38,14 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem('refreshToken');
         sessionStorage.removeItem('accessToken');
         sessionStorage.removeItem('refreshToken');
+        
+        // В Production делаем logout через Keycloak
+        if (import.meta.env.PROD) {
+          import('../services/keycloak').then(module => {
+            module.doLogout();
+          });
+        }
+        
         set({
           user: null,
           isAuthenticated: false,

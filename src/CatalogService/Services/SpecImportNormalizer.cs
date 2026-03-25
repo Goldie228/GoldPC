@@ -99,8 +99,7 @@ public class SpecImportNormalizer
                         SortOrder = 999
                     };
                     _context.SpecificationCanonicalValues.Add(cv);
-                    await _context.SaveChangesAsync();
-                    _canonicalCache[(attr.Id, part.Trim().ToLowerInvariant())] = cv.Id;
+                    _canonicalCache[(attr.Id, normalized)] = cv.Id;
                     result.Add(new ProductSpecificationValue
                     {
                         Id = Guid.NewGuid(),

@@ -1,5 +1,5 @@
 using CatalogService.Data;
-using CatalogService.DTOs;
+using GoldPC.SharedKernel.DTOs;
 using CatalogService.Services.Interfaces;
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;

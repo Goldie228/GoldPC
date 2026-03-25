@@ -13,6 +13,7 @@ const icons: Record<ToastType, string> = {
   success: '✓',
   error: '✕',
   info: 'ℹ',
+  warning: '⚠',
 };
 
 export function Toast({ id, message, type, onClose }: ToastProps): ReactElement {

@@ -1,4 +1,4 @@
-using CatalogService.DTOs;
+using GoldPC.SharedKernel.DTOs;
 using CatalogService.Models;
 using CatalogService.Repositories;
 
@@ -26,6 +26,7 @@ public interface IProductRepository
     Task<bool> ExistsAsync(Guid id);
     Task<bool> SkuExistsAsync(string sku, Guid? excludeId = null);
     Task UpdateStockAsync(Guid id, int quantity);
+    Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync();
 }
 
 /// <summary>

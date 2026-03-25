@@ -26,61 +26,47 @@
   z-index: 0;
 }
 
-/* ===== HEADER ===== */
-.pc-builder__header {
+/* ===== Toolbar (единая навигация с витриной: без дублирующего логотипа) ===== */
+.pc-builder__toolbar {
   position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(9, 9, 11, 0.9);
+  /* Под фиксированной шапкой MainLayout (padding-top контента 80px) */
+  top: 80px;
+  z-index: 40;
+  background: rgba(9, 9, 11, 0.92);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
-  padding: 16px 24px;
-}
-
-.pc-builder__header-container {
-  max-width: 1200px;
+  padding: 12px var(--layout-page-pad-x);
+  max-width: var(--layout-page-max);
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  font-family: var(--font-sans);
 }
 
-/* Logo */
-.pc-builder__logo {
-  display: flex;
+.pc-builder__back {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
+  color: var(--fg-muted);
   text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color var(--transition-fast);
 }
 
-.pc-builder__logo-icon {
-  width: 36px;
-  height: 36px;
-  background: var(--accent, #d4a574);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.pc-builder__back:hover {
+  color: var(--brand-primary);
 }
 
-.pc-builder__logo-icon svg {
-  width: 20px;
-  height: 20px;
-  color: var(--bg, #09090b);
+.pc-builder__back:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
-.pc-builder__logo-text {
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--fg, #fafafa);
-}
-
-.pc-builder__logo-text span {
-  color: var(--accent, #d4a574);
-}
-
-/* Total Price in Header */
-.pc-builder__total-price {
+.pc-builder__toolbar-total {
   display: flex;
   align-items: baseline;
   gap: 8px;
@@ -105,9 +91,9 @@
 .pc-builder__main {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
+  max-width: var(--layout-page-max);
   margin: 0 auto;
-  padding: 24px;
+  padding: 24px var(--layout-page-pad-x);
 }
 
 .pc-builder__content {
@@ -541,47 +527,41 @@
   white-space: nowrap;
 }
 
-/* Modal loading state */
+/* Modal loading: строки-скелетоны в стиле списка товаров */
 .pc-builder__modal-loading {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  padding: 12px 8px 20px;
+  max-height: min(58vh, 460px);
+  overflow-y: auto;
+}
+
+.pc-builder__modal-skeleton-row {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  gap: 16px;
-  color: var(--fg-muted, #71717a);
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.2);
 }
 
-.pc-builder__spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(212, 165, 116, 0.2);
-  border-top-color: var(--accent, #d4a574);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.pc-builder__modal-skeleton-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+.pc-builder__modal-skeleton-sub {
+  margin-top: 2px;
 }
 
 /* Modal error state */
 .pc-builder__modal-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  gap: 12px;
-  color: #fca5a5;
-}
-
-.pc-builder__modal-error svg {
-  width: 32px;
-  height: 32px;
-  color: #ef4444;
+  padding: 12px 8px 20px;
 }
 
 /* Compatibility errors */
@@ -626,8 +606,8 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .pc-builder__header {
-    padding: 12px 16px;
+  .pc-builder__toolbar {
+    padding: 10px var(--layout-page-pad-x);
   }
 
   .pc-builder__total-value {

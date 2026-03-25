@@ -601,7 +601,7 @@ export function FilterSidebar({
                       <label key={val} className={`${styles.checkboxItem} ${isChecked(val) ? styles.checked : ''}`}>
                         <input
                           type="checkbox"
-                          className="sr-only"
+                          className={styles.filterVisuallyHiddenControl}
                           checked={isChecked(val)}
                           onChange={() => {
                             const next = { ...selectedSpecifications };
@@ -613,7 +613,9 @@ export function FilterSidebar({
                             onSpecificationsChange(next);
                           }}
                         />
-                        <span className={styles.checkbox}><Check size={10} className={styles.checkIcon} /></span>
+                        <span className={styles.checkbox} aria-hidden="true">
+                          <Check size={10} className={styles.checkIcon} aria-hidden />
+                        </span>
                         <span className={styles.checkboxLabel}>{val}</span>
                       </label>
                     ))
@@ -675,7 +677,7 @@ export function FilterSidebar({
               >
                 <input
                   type="checkbox"
-                  className="sr-only"
+                  className={styles.filterVisuallyHiddenControl}
                   checked={selectedManufacturerIds.includes(m.id)}
                   onChange={(e) => {
                     if (e.target.checked) {
@@ -685,8 +687,8 @@ export function FilterSidebar({
                     }
                   }}
                 />
-                <span className={styles.checkbox}>
-                  <Check size={10} className={styles.checkIcon} />
+                <span className={styles.checkbox} aria-hidden="true">
+                  <Check size={10} className={styles.checkIcon} aria-hidden />
                 </span>
                 <span className={styles.checkboxLabel}>{m.name}</span>
               </label>
@@ -701,48 +703,56 @@ export function FilterSidebar({
         icon={<Star size={14} />}
         defaultOpen={false}
       >
-        <div className={styles.ratingOptions}>
-          {[4, 3, 2, 1].map((rating) => (
-            <label
-              key={rating}
-              className={`${styles.ratingOption} ${minRating === rating ? styles.checked : ''}`}
-            >
-              <input
-                type="radio"
-                name="rating"
-                className="sr-only"
-                checked={minRating === rating}
-                onChange={() => onRatingChange(rating)}
-              />
-              <span className={styles.ratingRadio}>
-                <Check size={10} className={styles.checkIcon} />
-              </span>
-              <span className={styles.ratingStars}>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    size={12}
-                    className={i < rating ? styles.starFilled : styles.starEmpty}
-                  />
-                ))}
-              </span>
-              <span className={styles.ratingLabel}>и выше</span>
-            </label>
-          ))}
+        <div className={styles.ratingOptions} role="radiogroup" aria-label="Минимальный рейтинг">
+          {[4, 3, 2, 1].map((rating) => {
+            const labelText = `${rating}★ и выше`;
+            return (
+              <label
+                key={rating}
+                className={`${styles.ratingOption} ${minRating === rating ? styles.checked : ''}`}
+              >
+                <input
+                  type="radio"
+                  name="rating"
+                  className={styles.filterVisuallyHiddenControl}
+                  checked={minRating === rating}
+                  onChange={() => onRatingChange(rating)}
+                  aria-label={labelText}
+                />
+                <span className={styles.ratingRadio} aria-hidden="true">
+                  <Check size={10} className={styles.checkIcon} aria-hidden />
+                </span>
+                <span className={styles.ratingStars} aria-hidden="true">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      size={12}
+                      className={i < rating ? styles.starFilled : styles.starEmpty}
+                      aria-hidden
+                    />
+                  ))}
+                </span>
+                <span className={styles.ratingLabel} aria-hidden="true">
+                  {labelText}
+                </span>
+              </label>
+            );
+          })}
           <label
             className={`${styles.ratingOption} ${minRating === 0 ? styles.checked : ''}`}
           >
             <input
               type="radio"
               name="rating"
-              className="sr-only"
+              className={styles.filterVisuallyHiddenControl}
               checked={minRating === 0}
               onChange={() => onRatingChange(0)}
+              aria-label="Любой рейтинг"
             />
-            <span className={styles.ratingRadio}>
-              <Check size={10} className={styles.checkIcon} />
+            <span className={styles.ratingRadio} aria-hidden="true">
+              <Check size={10} className={styles.checkIcon} aria-hidden />
             </span>
-            <span className={styles.ratingLabel}>Любой рейтинг</span>
+            <span className={styles.ratingLabel} aria-hidden="true">Любой рейтинг</span>
           </label>
         </div>
       </FilterGroup>
@@ -759,7 +769,7 @@ export function FilterSidebar({
           >
             <input
               type="checkbox"
-              className="sr-only"
+              className={styles.filterVisuallyHiddenControl}
               checked={selectedAvailability.includes('in_stock')}
               onChange={(e) => {
                 if (e.target.checked) {
@@ -769,8 +779,8 @@ export function FilterSidebar({
                 }
               }}
             />
-            <span className={styles.checkbox}>
-              <Check size={10} className={styles.checkIcon} />
+            <span className={styles.checkbox} aria-hidden="true">
+              <Check size={10} className={styles.checkIcon} aria-hidden />
             </span>
             <span className={styles.checkboxLabel}>В наличии</span>
           </label>
@@ -779,7 +789,7 @@ export function FilterSidebar({
           >
             <input
               type="checkbox"
-              className="sr-only"
+              className={styles.filterVisuallyHiddenControl}
               checked={selectedAvailability.includes('on_order')}
               onChange={(e) => {
                 if (e.target.checked) {
@@ -789,8 +799,8 @@ export function FilterSidebar({
                 }
               }}
             />
-            <span className={styles.checkbox}>
-              <Check size={10} className={styles.checkIcon} />
+            <span className={styles.checkbox} aria-hidden="true">
+              <Check size={10} className={styles.checkIcon} aria-hidden />
             </span>
             <span className={styles.checkboxLabel}>Под заказ</span>
           </label>

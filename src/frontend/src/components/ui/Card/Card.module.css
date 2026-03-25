@@ -5,25 +5,26 @@
 
 /* ===== BASE CARD ===== */
 .card {
-  background: var(--bg-elevated, #121214);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.10));
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-muted);
   box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
+  border-radius: var(--radius-md);
 }
 
 /* ===== HOVER EFFECTS ===== */
 .card.hoverable:hover {
-  border-color: rgba(212, 165, 116, 0.3);
+  border-color: var(--border-brand);
   box-shadow: 
-    0 12px 40px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(212, 165, 116, 0.1);
+    var(--shadow-lg),
+    var(--shadow-gold);
   transform: translateY(-4px);
 }
 
 .card.hoverable:focus-visible {
-  outline: 2px solid var(--accent, #d4a574);
+  outline: 2px solid var(--brand-primary);
   outline-offset: 2px;
 }
 

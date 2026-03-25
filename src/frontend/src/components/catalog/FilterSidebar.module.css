@@ -563,6 +563,23 @@
   background: rgba(18, 18, 21, 0.8);
 }
 
+/* Нативный input поверх кастомного вида — видимый фокус (:focus-within), без «глухого» sr-only */
+.filterVisuallyHiddenControl {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.checkboxItem:focus-within {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
+}
+
 .checkboxItem {
   display: flex;
   align-items: center;
@@ -637,6 +654,11 @@
   max-height: 180px;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+.ratingOption:focus-within {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
 }
 
 .ratingOption {

@@ -116,10 +116,41 @@
 .pageNumbers {
   display: flex;
   align-items: center;
-  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0;
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.pageGroup {
+  display: flex;
+  align-items: center;
+}
+
+.pageGroupInner {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ellipsisBetween {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 44px;
+  padding: 0 6px;
+  list-style: none;
+}
+
+.ellipsisDots {
+  color: var(--fg-dim, #52525b);
+  font-size: 1.1rem;
+  letter-spacing: 0.12em;
+  user-select: none;
+  opacity: 0.85;
 }
 
 .pageBtn {
@@ -154,14 +185,74 @@
   outline-offset: 2px;
 }
 
-.ellipsis {
+.jumpForm {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  height: 44px;
-  color: var(--fg-dim, #52525b);
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.jumpLabel {
+  font-size: 0.85rem;
+  color: var(--fg-muted, #71717a);
+}
+
+.jumpInput {
+  width: 56px;
+  height: 40px;
+  text-align: center;
+  background: var(--bg-elevated, #121214);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
+  color: var(--fg, #fafafa);
   font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.jumpInput:focus {
+  outline: none;
+  border-color: var(--accent, #d4a574);
+}
+
+.jumpInput:disabled {
+  opacity: 0.5;
+}
+
+.jumpHint {
+  font-size: 0.8rem;
+  color: var(--fg-dim, #52525b);
+}
+
+.jumpBtn {
+  height: 40px;
+  padding: 0 16px;
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
+  color: var(--fg, #fafafa);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.jumpBtn:hover:not(:disabled) {
+  border-color: var(--accent, #d4a574);
+  color: var(--accent, #d4a574);
+}
+
+.jumpBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.jumpBtn:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
 }
 
 @media (max-width: 640px) {

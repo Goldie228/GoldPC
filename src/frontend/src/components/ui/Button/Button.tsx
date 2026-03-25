@@ -1,48 +1,57 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import type { ReactElement } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, ReactElement } from 'react';
 import styles from './Button.module.css';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Button variant: 'primary' (gold) or 'ghost' (transparent) */
-  variant?: 'primary' | 'ghost';
-  /** Button content */
-  children: ReactNode;
-  /** Optional icon (SVG) to display */
+  /** Button variant */
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+  /** Vertical rhythm */
+  size?: 'sm' | 'md' | 'lg';
+  fullWidth?: boolean;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
+  /**
+   * Иконка справа (legacy API — то же, что `rightIcon`, если он не задан).
+   */
   icon?: ReactNode;
-  /** Click handler */
-  onClick?: () => void;
-  /** Disabled state */
-  disabled?: boolean;
+  children: ReactNode;
 }
 
 /**
- * Button component matching the luxury GoldPC prototype.
- * Supports primary (gold background) and ghost (transparent) variants.
+ * Кнопка в стиле GoldPC: primary (золото), secondary, outline, ghost, danger.
  */
 export function Button({
   variant = 'primary',
-  children,
+  size = 'md',
+  fullWidth = false,
+  leftIcon,
+  rightIcon,
   icon,
-  onClick,
-  disabled = false,
+  children,
   className = '',
+  disabled = false,
   ...props
 }: ButtonProps): ReactElement {
+  const trailing = rightIcon ?? icon;
+
   const classNames = [
     styles.btn,
     styles[variant],
+    styles[size],
+    fullWidth ? styles.fullWidth : '',
     className,
-  ].filter((name): name is string => typeof name === 'string' && name.length > 0).join(' ');
+  ]
+    .filter((name): name is string => typeof name === 'string' && name.length > 0)
+    .join(' ');
 
   return (
-    <button
-      className={classNames}
-      onClick={onClick}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-      {icon !== undefined && icon !== null && <span className={styles.icon}>{icon}</span>}
+    <button className={classNames} disabled={disabled} {...props}>
+      {leftIcon !== undefined && leftIcon !== null && (
+        <span className={styles.icon}>{leftIcon}</span>
+      )}
+      <span className={styles.text}>{children}</span>
+      {trailing !== undefined && trailing !== null && (
+        <span className={styles.icon}>{trailing}</span>
+      )}
     </button>
   );
 }

@@ -71,6 +71,7 @@ public class CatalogDbContext : DbContext
             entity.HasIndex(e => e.ExternalId).IsUnique().HasFilter("external_id IS NOT NULL");
             entity.HasIndex(e => e.CategoryId);
             entity.HasIndex(e => e.ManufacturerId);
+            entity.HasIndex(e => new { e.IsActive, e.Price }); // Composite index for filtering
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.Price);
             
