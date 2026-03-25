@@ -34,6 +34,11 @@ export function useCart() {
     store.updateQuantity(productId, quantity);
   };
 
+  // Backward-compatible alias (used in some components)
+  const updateQuantity = (productId: string, quantity: number) => {
+    store.updateQuantity(productId, quantity);
+  };
+
   const applyPromo = (code: string): boolean => {
     return store.applyPromoCode(code);
   };
@@ -73,6 +78,7 @@ export function useCart() {
     removeFromCart,
     changeQuantity,
     setQuantity,
+    updateQuantity,
     applyPromo,
     clearPromoCode,
     emptyCart,

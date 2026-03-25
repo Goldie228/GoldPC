@@ -62,6 +62,7 @@ export interface ProductSummary {
   stock: number;
   manufacturer?: Manufacturer;
   mainImage?: ProductImage;
+  images?: ProductImage[];
   rating?: Rating;
   isActive: boolean;
 }
@@ -379,6 +380,13 @@ export const generateProduct = (overrides?: Partial<ProductSummary>): ProductSum
   const manufacturer = generateManufacturer(category);
   const { price, oldPrice } = generatePrice(category);
   const productId = faker.string.uuid();
+  const mainImage = generateProductImage(productId, 0, true);
+  const images = [
+    mainImage,
+    ...Array.from({ length: faker.number.int({ min: 1, max: 3 }) }, (_, i) =>
+      generateProductImage(productId, i + 1, false)
+    ),
+  ];
 
   return {
     id: productId,
@@ -390,7 +398,8 @@ export const generateProduct = (overrides?: Partial<ProductSummary>): ProductSum
     oldPrice,
     stock: faker.number.int({ min: 0, max: 100 }),
     manufacturer,
-    mainImage: generateProductImage(productId, 0, true),
+    mainImage,
+    images,
     rating: generateRating(),
     isActive: faker.datatype.boolean({ probability: 0.95 }),
     ...overrides,

@@ -76,6 +76,7 @@ export interface ProductSummary {
   isActive: boolean;
   /** Краткое описание для QuickView (первые 300 символов) */
   descriptionShort?: string;
+  images?: ProductImage[];
 }
 
 export interface Product extends ProductSummary {

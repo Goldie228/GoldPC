@@ -54,8 +54,8 @@
 }
 
 .info .icon {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
+  background: color-mix(in srgb, var(--accent, #d4a574) 20%, transparent);
+  color: var(--accent, #d4a574);
 }
 
 .error .icon {

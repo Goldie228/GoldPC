@@ -59,8 +59,13 @@ export function Footer() {
               <li><Link to="/catalog?category=cpu" className={styles.link}>Процессоры</Link></li>
               <li><Link to="/catalog?category=gpu" className={styles.link}>Видеокарты</Link></li>
               <li><Link to="/catalog?category=motherboard" className={styles.link}>Материнские платы</Link></li>
-              <li><Link to="/catalog?category=ram" className={styles.link}>Память</Link></li>
-              <li><Link to="/catalog?category=storage" className={styles.link}>Накопители</Link></li>
+              <li><Link to="/catalog?category=ram" className={styles.link}>Оперативная память</Link></li>
+              <li><Link to="/catalog?category=storage" className={styles.link}>Накопители (SSD/HDD)</Link></li>
+              <li><Link to="/catalog?category=psu" className={styles.link}>Блоки питания</Link></li>
+              <li><Link to="/catalog?category=case" className={styles.link}>Корпуса</Link></li>
+              <li><Link to="/catalog?category=cooling" className={styles.link}>Охлаждение</Link></li>
+              <li><Link to="/catalog?category=monitor" className={styles.link}>Мониторы</Link></li>
+              <li><Link to="/catalog?category=keyboard" className={styles.link}>Периферия</Link></li>
             </ul>
           </div>
 
@@ -69,12 +74,11 @@ export function Footer() {
             <h4 className={styles.title}>Сервис</h4>
             <ul className={styles.links}>
               <li><Link to="/pc-builder" className={styles.link}>Конструктор ПК</Link></li>
-              <li><Link to="/services/assembly" className={styles.link}>Сборка</Link></li>
-              <li><Link to="/delivery" className={styles.link}>Доставка</Link></li>
-              <li><Link to="/payment" className={styles.link}>Оплата</Link></li>
-              <li><Link to="/warranty" className={styles.link}>Гарантия</Link></li>
-              <li><Link to="/returns" className={styles.link}>Возврат</Link></li>
-              <li><Link to="/faq" className={styles.link}>FAQ</Link></li>
+              <li><Link to="/services/assembly" className={styles.link}>Сборка и настройка</Link></li>
+              <li><Link to="/delivery" className={styles.link}>Доставка по РБ</Link></li>
+              <li><Link to="/payment" className={styles.link}>Оплата и рассрочка</Link></li>
+              <li><Link to="/warranty" className={styles.link}>Гарантийное обслуживание</Link></li>
+              <li><Link to="/faq" className={styles.link}>Частые вопросы</Link></li>
             </ul>
           </div>
 
@@ -82,9 +86,9 @@ export function Footer() {
           <div>
             <h4 className={styles.title}>Контакты</h4>
             <ul className={styles.links}>
-              <li><a href="tel:+375291234567" className={styles.link} aria-label="Позвонить нам">+375 (29) 123-45-67</a></li>
-              <li><a href="mailto:hi@goldpc.by" className={styles.link} aria-label="Написать нам на email">hi@goldpc.by</a></li>
-              <li><span className={styles.disabledLink} aria-label="Адрес магазина (скоро)">Минск, ул. Примерная, 1</span></li>
+              <li><a href="tel:+375333149283" className={styles.link} aria-label="Позвонить нам">+375 (33) 314-92-83</a></li>
+              <li><a href="mailto:goldpc.team@gmail.com" className={styles.link} aria-label="Написать нам на email">goldpc.team@gmail.com</a></li>
+              <li><span className={styles.link} aria-label="Адрес магазина">Минск, Улица Казимировская 21</span></li>
             </ul>
           </div>
         </div>

@@ -1,9 +1,11 @@
 import { type ReactElement, useCallback, useState } from 'react';
-import { ShoppingCart, Heart, Share2, Check, Clock, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, Check, Clock, AlertTriangle, Minus, Plus } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { useCart } from '../../../hooks/useCart';
+import { useWishlistStore } from '../../../store/wishlistStore';
 import { useToastStore } from '../../../store/toastStore';
 import type { Product, ProductSpecifications } from '../../../api/types';
+import { formatSpecValueForKey, specLabel } from '../../../utils/specifications';
 import styles from '../ProductPage.module.css';
 
 export interface ProductInfoProps {
@@ -19,32 +21,30 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
-function getStockStatus(stock: number): { text: string; className: string; icon: ReactElement } {
+function getStockStatus(stock: number): { text: string; className: string } {
   if (stock === 0) {
     return { 
       text: 'Нет в наличии', 
-      className: styles.stockOut,
-      icon: <AlertTriangle size={14} />
+      className: styles.stockOut
     };
   }
   if (stock <= 5) {
     return { 
       text: `Мало (${stock} шт)`, 
-      className: styles.stockLow,
-      icon: <Clock size={14} />
+      className: styles.stockLow
     };
   }
   return { 
-    text: `В наличии (${stock} шт)`, 
-    className: styles.stockIn,
-    icon: <Check size={14} />
+    text: `В наличии`, 
+    className: styles.stockIn
   };
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function ProductInfo({ product }: ProductInfoProps): ReactElement {
-  const { addToCart, isInCart, getItemQuantity } = useCart();
+  const { addToCart, removeFromCart, updateQuantity, isInCart, getItemQuantity } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlistStore();
   const showToast = useToastStore((state) => state.showToast);
   const [notifyEmail, setNotifyEmail] = useState('');
   const [notifySent, setNotifySent] = useState(false);
@@ -55,11 +55,33 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
   const inCart = isInCart(product.id);
   const quantityInCart = getItemQuantity(product.id);
   const isDisabled = product.stock === 0 || !product.isActive;
+  const inWishlist = isInWishlist(product.id);
 
   const handleAddToCart = (): void => {
     if (isDisabled) return;
     addToCart(product, 1);
     showToast('Товар добавлен в корзину', 'success');
+  };
+
+  const handleUpdateQty = (delta: number) => {
+    const next = quantityInCart + delta;
+    if (next < 1) {
+      removeFromCart(product.id);
+      return;
+    }
+    if (next > product.stock) {
+      showToast(`Доступно только ${product.stock} шт.`, 'error');
+      return;
+    }
+    updateQuantity(product.id, next);
+  };
+
+  const handleToggleWishlist = () => {
+    toggleWishlist(product.id);
+    showToast(
+      inWishlist ? 'Удалено из избранного' : 'Добавлено в избранное',
+      inWishlist ? 'info' : 'success'
+    );
   };
 
   const handleNotifyStock = (): void => {
@@ -74,6 +96,7 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
   const handleShare = useCallback(async (): Promise<void> => {
     const url = typeof window !== 'undefined' ? window.location.href : '';
     const title = product.name;
+    
     if (typeof navigator !== 'undefined' && 'share' in navigator && navigator.share) {
       try {
         await navigator.share({ title, text: title, url });
@@ -82,9 +105,10 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
         if (err instanceof DOMException && err.name === 'AbortError') return;
       }
     }
+    
     try {
       await navigator.clipboard.writeText(url);
-      showToast('Ссылка скопирована', 'success');
+      showToast('Ссылка скопирована в буфер обмена', 'success');
     } catch {
       showToast('Не удалось скопировать ссылку', 'error');
     }
@@ -101,10 +125,9 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
       <h1 className={styles.title}>{product.name}</h1>
       
       <div className={styles.meta}>
-        <span className={styles.sku}>Арт: {product.sku}</span>
+        <span className={styles.sku}>АРТ: {product.sku}</span>
         <div className={`${styles.stockStatus} ${stockStatus.className}`}>
           <span className={styles.stockDot}></span>
-          {stockStatus.icon}
           {stockStatus.text}
         </div>
       </div>
@@ -116,22 +139,50 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
             <span className={styles.priceOld}>{formatPrice(product.oldPrice)}</span>
           )}
         </div>
-        <span className={styles.priceNote}>Цена действительна при заказе через сайт</span>
       </div>
 
       <div className={styles.actions}>
-        <Button 
-          variant="primary" 
-          onClick={handleAddToCart} 
-          disabled={isDisabled}
-          className={styles.cartBtn}
+        {inCart ? (
+          <div className={styles.quantityControls}>
+            <button 
+              className={styles.qtyBtn} 
+              onClick={() => handleUpdateQty(-1)}
+              aria-label="Уменьшить количество"
+              type="button"
+            >
+              <Minus size={18} />
+            </button>
+            <span className={styles.qtyValue}>{quantityInCart}</span>
+            <button 
+              className={styles.qtyBtn} 
+              onClick={() => handleUpdateQty(1)}
+              aria-label="Увеличить количество"
+              type="button"
+            >
+              <Plus size={18} />
+            </button>
+          </div>
+        ) : (
+          <Button 
+            variant="primary" 
+            onClick={handleAddToCart} 
+            disabled={isDisabled}
+            className={styles.cartBtn}
+          >
+            <ShoppingCart size={20} style={{ marginRight: '10px' }} />
+            Добавить в корзину
+          </Button>
+        )}
+        
+        <button 
+          type="button" 
+          className={`${styles.wishlistBtn} ${inWishlist ? styles.activeWishlistBtn : ''}`} 
+          onClick={handleToggleWishlist}
+          aria-label={inWishlist ? "Удалить из избранного" : "Добавить в избранное"}
         >
-          <ShoppingCart size={20} style={{ marginRight: '10px' }} />
-          {inCart ? `В корзине (${quantityInCart})` : 'Добавить в корзину'}
-        </Button>
-        <button type="button" className={styles.wishlistBtn} aria-label="Добавить в избранное">
-          <Heart size={20} />
+          <Heart size={20} fill={inWishlist ? 'currentColor' : 'none'} />
         </button>
+        
         <button
           type="button"
           className={styles.wishlistBtn}
@@ -178,8 +229,10 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
         <div className={styles.quickSpecs}>
           {quickSpecs.map(([key, value]) => (
             <div key={key} className={styles.specItem}>
-              <span className={styles.specLabel}>{key}</span>
-              <span className={styles.specValue}>{String(value)}</span>
+              <span className={styles.specLabel}>{specLabel(key)}</span>
+              <span className={styles.specValue}>
+                {formatSpecValueForKey(key, value as string | number | boolean | undefined)}
+              </span>
             </div>
           ))}
         </div>

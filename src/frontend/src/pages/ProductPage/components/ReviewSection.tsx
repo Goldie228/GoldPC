@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactElement } from 'react';
+import { useId, useState, useEffect, type KeyboardEvent, type ReactElement } from 'react';
 import { Button } from '../../../components/ui/Button';
 import { Skeleton } from '../../../components/ui/Skeleton';
 import { catalogApi } from '../../../api/catalog';
@@ -11,6 +11,81 @@ export interface ReviewSectionProps {
   product: Product;
   isAuthenticated: boolean;
   showToast: (msg: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
+}
+
+interface StarRatingInputProps {
+  value: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+}
+
+function StarRatingInput({ value, onChange, disabled }: StarRatingInputProps): ReactElement {
+  const groupId = useId();
+
+  const setClamped = (next: number) => {
+    const v = Math.max(1, Math.min(5, next));
+    onChange(v);
+  };
+
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (disabled) return;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      setClamped(value - 1);
+      return;
+    }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      setClamped(value + 1);
+      return;
+    }
+    if (e.key === 'Home') {
+      e.preventDefault();
+      setClamped(1);
+      return;
+    }
+    if (e.key === 'End') {
+      e.preventDefault();
+      setClamped(5);
+    }
+  };
+
+  return (
+    <div
+      className={styles.ratingInput}
+      role="radiogroup"
+      aria-label="Ваша оценка"
+      aria-disabled={disabled || undefined}
+      tabIndex={disabled ? -1 : 0}
+      onKeyDown={onKeyDown}
+    >
+      {Array.from({ length: 5 }, (_, i) => {
+        const star = i + 1;
+        const isActive = star <= value;
+        return (
+          <button
+            key={star}
+            type="button"
+            className={`${styles.ratingStarBtn} ${isActive ? styles.ratingStarActive : ''}`}
+            role="radio"
+            aria-checked={value === star}
+            aria-label={`${star} из 5`}
+            disabled={disabled}
+            data-rating={star}
+            onClick={() => onChange(star)}
+          >
+            <span aria-hidden>{isActive ? '★' : '☆'}</span>
+          </button>
+        );
+      })}
+      <span className={styles.ratingInputValue} aria-hidden>
+        {value}/5
+      </span>
+      <span className="sr-only" id={`${groupId}-value`}>
+        Выбрано: {value} из 5
+      </span>
+    </div>
+  );
 }
 
 export function ReviewSection({
@@ -71,7 +146,7 @@ export function ReviewSection({
       <div className={styles.reviewsHeader}>
         <div className={styles.ratingSummary}>
           <div className={styles.ratingValue}>
-            {ratingValue > 0 ? ratingValue.toFixed(1) : '—'}
+            {ratingValue > 0 ? ratingValue.toFixed(1) : 'Нет оценок'}
           </div>
           <div className={styles.ratingStars}>
             <div className={styles.stars} aria-hidden>
@@ -112,65 +187,34 @@ export function ReviewSection({
       </div>
 
       <div id="review-form" className={styles.reviewItem}>
-        <h3 style={{ marginBottom: '20px' }}>Ваш отзыв</h3>
-        <div style={{ display: 'grid', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span>Ваша оценка:</span>
-            <select
+        <h3 className={styles.reviewFormTitle}>Ваш отзыв</h3>
+        <div className={styles.reviewFormGrid}>
+          <div className={styles.reviewFormRow}>
+            <span className={styles.reviewFormLabel}>Ваша оценка:</span>
+            <StarRatingInput
               value={form.rating}
-              onChange={(e) => setForm((f) => ({ ...f, rating: Number(e.target.value) }))}
-              style={{
-                background: '#121214',
-                border: '1px solid #27272a',
-                color: '#fff',
-                padding: '4px 8px',
-              }}
-            >
-              {[5, 4, 3, 2, 1].map((v) => (
-                <option key={v} value={v}>
-                  {v}
-                </option>
-              ))}
-            </select>
+              onChange={(rating) => setForm((f) => ({ ...f, rating }))}
+              disabled={submitting}
+            />
           </div>
           <textarea
             placeholder="Комментарий"
             value={form.comment}
             onChange={(e) => setForm((f) => ({ ...f, comment: e.target.value }))}
-            style={{
-              width: '100%',
-              height: '100px',
-              background: '#121214',
-              border: '1px solid #27272a',
-              color: '#fff',
-              padding: '12px',
-              borderRadius: '8px',
-            }}
+            className={styles.reviewTextarea}
           />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div className={styles.reviewProsConsInputs}>
             <input
               placeholder="Достоинства"
               value={form.pros}
               onChange={(e) => setForm((f) => ({ ...f, pros: e.target.value }))}
-              style={{
-                background: '#121214',
-                border: '1px solid #27272a',
-                color: '#fff',
-                padding: '12px',
-                borderRadius: '8px',
-              }}
+              className={styles.reviewInput}
             />
             <input
               placeholder="Недостатки"
               value={form.cons}
               onChange={(e) => setForm((f) => ({ ...f, cons: e.target.value }))}
-              style={{
-                background: '#121214',
-                border: '1px solid #27272a',
-                color: '#fff',
-                padding: '12px',
-                borderRadius: '8px',
-              }}
+              className={styles.reviewInput}
             />
           </div>
           <Button onClick={handleSubmit} disabled={submitting}>

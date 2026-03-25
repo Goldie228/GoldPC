@@ -1,8 +1,11 @@
 import { type ReactElement, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Heart, GitCompare, ShoppingCart, Check, Loader2 } from 'lucide-react';
 import type { ProductSummary } from '../../../api/types';
 import { useCart } from '../../../hooks/useCart';
+import { useWishlistStore } from '../../../store/wishlistStore';
+import { useComparisonStore } from '../../../store/comparisonStore';
 import { useToastStore } from '../../../store/toastStore';
 import { Icon } from '../../ui/Icon/Icon';
 import styles from './ProductTable.module.css';
@@ -33,6 +36,8 @@ function getStockStatus(stock: number) {
 
 export function ProductTable({ products, onAddToCart }: ProductTableProps): ReactElement {
   const { addToCart, isInCart, getItemQuantity } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlistStore();
+  const { isInComparison, toggleComparison } = useComparisonStore();
   const showToast = useToastStore((state) => state.showToast);
   const [addingId, setAddingId] = useState<string | null>(null);
 
@@ -50,6 +55,31 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
     setTimeout(() => setAddingId(null), 500);
   };
 
+  const handleToggleWishlist = (productId: string) => {
+    const inWishlist = isInWishlist(productId);
+    toggleWishlist(productId);
+    showToast(
+      inWishlist ? 'Удалено из избранного' : 'Добавлено в избранное',
+      inWishlist ? 'info' : 'success'
+    );
+  };
+
+  const handleToggleComparison = (product: ProductSummary) => {
+    const inComp = isInComparison(product.id);
+    const result = toggleComparison(product.id, product.category);
+
+    if (result.success) {
+      showToast(
+        inComp ? 'Удалено из сравнения' : 'Добавлено к сравнению',
+        inComp ? 'info' : 'success'
+      );
+    } else if (result.reason === 'limit') {
+      showToast('Можно сравнивать не более 4 товаров', 'error');
+    } else if (result.reason === 'category') {
+      showToast('Можно сравнивать товары только одной категории', 'error');
+    }
+  };
+
   return (
     <div className={styles.tableContainer}>
       <table className={styles.table}>
@@ -57,7 +87,6 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
           <tr>
             <th className={styles.colImage}>Фото</th>
             <th className={styles.colName}>Наименование</th>
-            <th className={styles.colSku}>Артикул</th>
             <th className={styles.colManufacturer}>Бренд</th>
             <th className={styles.colStock}>Наличие</th>
             <th className={styles.colPrice}>Цена</th>
@@ -71,6 +100,8 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
             const quantity = getItemQuantity(product.id);
             const isAdding = addingId === product.id;
             const isDisabled = product.stock === 0 || !product.isActive;
+            const inWishlist = isInWishlist(product.id);
+            const inComparison = isInComparison(product.id);
 
             return (
               <motion.tr 
@@ -93,9 +124,6 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
                     {product.name}
                   </Link>
                 </td>
-                <td className={styles.colSku}>
-                  <span className={styles.skuText}>{product.sku}</span>
-                </td>
                 <td className={styles.colManufacturer}>
                   {product.manufacturer?.name || '-'}
                 </td>
@@ -113,20 +141,39 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
                   </div>
                 </td>
                 <td className={styles.colActions}>
-                  <button
-                    className={`${styles.addToCartBtn} ${inCart ? styles.inCart : ''}`}
-                    onClick={() => handleAddToCart(product)}
-                    disabled={isDisabled || isAdding}
-                    title={inCart ? `В корзине: ${quantity} шт` : 'Добавить в корзину'}
-                  >
-                    {isAdding ? (
-                      <Icon name="loader" size="sm" animated />
-                    ) : inCart ? (
-                      <Icon name="check" size="sm" />
-                    ) : (
-                      <Icon name="cart" size="sm" />
-                    )}
-                  </button>
+                  <div className={styles.actionButtons}>
+                    <button
+                      className={`${styles.actionBtn} ${inWishlist ? styles.activeWishlist : ''}`}
+                      onClick={() => handleToggleWishlist(product.id)}
+                      title={inWishlist ? 'Удалить из избранного' : 'В избранное'}
+                      type="button"
+                    >
+                      <Heart size={16} fill={inWishlist ? 'currentColor' : 'none'} />
+                    </button>
+                    <button
+                      className={`${styles.actionBtn} ${inComparison ? styles.activeComparison : ''}`}
+                      onClick={() => handleToggleComparison(product)}
+                      title={inComparison ? 'Удалить из сравнения' : 'Сравнить'}
+                      type="button"
+                    >
+                      <GitCompare size={16} />
+                    </button>
+                    <button
+                      className={`${styles.addToCartBtn} ${inCart ? styles.inCart : ''}`}
+                      onClick={() => handleAddToCart(product)}
+                      disabled={isDisabled || isAdding}
+                      title={inCart ? `В корзине: ${quantity} шт` : 'В корзину'}
+                      type="button"
+                    >
+                      {isAdding ? (
+                        <Loader2 size={16} className={styles.spinner} />
+                      ) : inCart ? (
+                        <Check size={16} />
+                      ) : (
+                        <ShoppingCart size={16} />
+                      )}
+                    </button>
+                  </div>
                 </td>
               </motion.tr>
             );

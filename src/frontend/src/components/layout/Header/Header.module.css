@@ -14,9 +14,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(9, 9, 11, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
 }
 
@@ -28,6 +26,7 @@
   text-decoration: none;
   transition: opacity var(--transition-fast);
   border-radius: var(--radius-sm);
+  flex-shrink: 0;
 }
 
 .logo:hover {
@@ -512,6 +511,33 @@
 }
 
 /* Responsive */
+@media (max-width: 1100px) {
+  .nav {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .nav {
+    gap: 16px;
+  }
+  
+  .actions {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 900px) {
+  .nav {
+    gap: 12px;
+  }
+  
+  .navLink {
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+}
+
 @media (max-width: 768px) {
   .header {
     padding: 12px 16px;
@@ -519,6 +545,19 @@
 
   .nav {
     display: none;
+  }
+
+  /* Hide secondary actions on mobile, they are in the drawer */
+  .actions a[href="/wishlist"],
+  .actions a[href="/comparison"] {
+    display: none;
+  }
+
+  /* Adjust search width on mobile */
+  .actions > div:first-child {
+    flex: 1;
+    max-width: none;
+    min-width: 140px;
   }
 
   .menuToggle {
@@ -530,17 +569,32 @@
   }
 
   .actions {
-    gap: 6px;
+    gap: 8px;
+    flex: 1;
+    justify-content: flex-end;
+    margin-left: 12px;
   }
 
   .iconBtn {
     width: 36px;
     height: 36px;
+    flex-shrink: 0;
   }
 
   .iconBtn svg {
     width: 16px;
     height: 16px;
+  }
+}
+
+/* Hide logo text earlier if it gets tight */
+@media (max-width: 640px) {
+  .logoText {
+    display: none;
+  }
+  
+  .actions {
+    margin-left: 8px;
   }
 }
 
@@ -560,8 +614,10 @@
     height: 16px;
   }
 
-  .logoText {
-    font-size: 0.95rem;
+  /* Search takes most space, icons stay accessible */
+  .actions {
+    gap: 4px;
+    margin-left: 6px;
   }
 
   .iconBtn {

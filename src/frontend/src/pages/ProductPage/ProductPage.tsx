@@ -13,7 +13,149 @@ import { ProductGallery } from './components/ProductGallery';
 import { ProductInfo } from './components/ProductInfo';
 import { ReviewSection } from './components/ReviewSection';
 import { RelatedProducts } from './components/RelatedProducts';
+import { formatSpecValueForKey, specLabel } from '../../utils/specifications';
 import styles from './ProductPage.module.css';
+
+const DESCRIPTION_SECTIONS = [
+  'Общая информация',
+  'Основные',
+  'Технические характеристики',
+  'Технические характеристики и функциональность',
+  'Функциональные особенности',
+  'Звук',
+  'Микрофон',
+  'Интерфейс',
+  'Интерфейсы',
+  'Питание',
+  'Корпус',
+  'Аккумулятор и время работы',
+  'Габариты',
+  'Комплектация',
+] as const;
+
+function normalizeText(input: string): string {
+  return input.replace(/\s+/g, ' ').trim();
+}
+
+function splitIntoDescriptionBlocks(description: string): Array<{ title?: string; body: string }> {
+  const text = normalizeText(description);
+  if (!text) return [];
+
+  const escaped = DESCRIPTION_SECTIONS.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const re = new RegExp(`\\b(${escaped.join('|')})\\b`, 'g');
+
+  const matches = Array.from(text.matchAll(re));
+  if (matches.length === 0) {
+    return [{ body: text }];
+  }
+
+  const blocks: Array<{ title?: string; body: string }> = [];
+  for (let i = 0; i < matches.length; i++) {
+    const m = matches[i];
+    const title = m[1];
+    const start = m.index ?? 0;
+    const nextStart = matches[i + 1]?.index ?? text.length;
+
+    // prepend leading text before first heading
+    if (i === 0 && start > 0) {
+      const lead = text.slice(0, start).trim();
+      if (lead) blocks.push({ body: lead });
+    }
+
+    const body = text.slice(start + title.length, nextStart).trim();
+    blocks.push({ title, body });
+  }
+
+  return blocks.filter((b) => b.title || b.body);
+}
+
+function inferInlineTitle(body: string): { title?: string; body: string } {
+  const text = normalizeText(body);
+  if (!text) return { body };
+
+  // If the line starts with a heading and then immediately goes into "Key: Value"
+  const firstKv = text.match(/\b[А-ЯЁA-Za-z0-9().,\-+/%\s]{2,60}:\s/);
+  if (!firstKv || firstKv.index == null || firstKv.index <= 0) return { body };
+
+  const head = text.slice(0, firstKv.index).trim();
+  if (!head || head.length > 60) return { body };
+  if (head.includes(':')) return { body };
+  // Prefer headings that look like words (not too many tokens)
+  const tokens = head.split(' ').filter(Boolean);
+  if (tokens.length < 1 || tokens.length > 8) return { body };
+
+  return { title: head, body: text.slice(firstKv.index).trim() };
+}
+
+function extractPairsWithoutColon(body: string): Array<{ key: string; value: string }> {
+  const text = normalizeText(body);
+  if (!text) return [];
+
+  // Typical values in imported descriptions: Да/Нет, versions (5.0), codecs (SBC/AAC), small tokens.
+  const re = /\b([A-Za-zА-ЯЁа-яё0-9][A-Za-zА-ЯЁа-яё0-9+().,\-/_]{1,40})\s+(Да|Нет|SBC|AAC|aptX|LDAC|\d+(?:[.,]\d+)?)(?=\b|\s)/g;
+  const out: Array<{ key: string; value: string }> = [];
+
+  for (const m of text.matchAll(re)) {
+    const key = (m[1] ?? '').trim();
+    const value = (m[2] ?? '').trim();
+    if (!key || !value) continue;
+    out.push({ key, value });
+  }
+
+  return out;
+}
+
+function extractKeyValueItems(body: string): { items: Array<{ key: string; value: string }>; rest: string } {
+  const text = normalizeText(body);
+  if (!text) return { items: [], rest: body };
+
+  // Normalize "Key — Value" into "Key: Value" to avoid capturing whole tails as a single key/value.
+  const normalizedForPairs = text.replace(
+    /\b([А-ЯЁA-Za-z0-9][А-ЯЁA-Za-z0-9+().,\-/_\s]{1,40})\s+—\s+/g,
+    '$1: '
+  );
+
+  const items: Array<{ key: string; value: string }> = [];
+  const re =
+    /([А-ЯЁA-Za-z0-9().,\-+/%\s]{2,60}):\s*([\s\S]*?)(?=(?:\s+[А-ЯЁA-Za-z0-9().,\-+/%\s]{2,60}:)|$)/g;
+
+  let consumedUntil = 0;
+  for (const m of normalizedForPairs.matchAll(re)) {
+    const rawKey = (m[1] ?? '').trim();
+    const rawVal = (m[2] ?? '').trim();
+    if (rawKey && rawVal) {
+      items.push({ key: rawKey, value: rawVal });
+      const idx = (m.index ?? 0) + m[0].length;
+      consumedUntil = Math.max(consumedUntil, idx);
+    }
+  }
+
+  const restAfterColon = normalizedForPairs.slice(consumedUntil).trim();
+
+  // If we got nothing via ":" patterns, try to extract simple "Key Value" pairs (Да/Нет/версии/codecs)
+  if (items.length === 0) {
+    // Typical values in imported descriptions: Да/Нет, versions (5.0), codecs (SBC/AAC), small tokens.
+    const reNoColon =
+      /\b([A-Za-zА-ЯЁа-яё0-9][A-Za-zА-ЯЁа-яё0-9+().,\-/_]{1,40})\s+(Да|Нет|SBC|AAC|aptX|LDAC|\d+(?:[.,]\d+)?)(?=\b|\s)/g;
+    const pairs: Array<{ key: string; value: string }> = [];
+    let rest = normalizedForPairs;
+
+    for (const m of normalizedForPairs.matchAll(reNoColon)) {
+      const key = (m[1] ?? '').trim();
+      const value = (m[2] ?? '').trim();
+      if (!key || !value) continue;
+      pairs.push({ key, value });
+    }
+
+    if (pairs.length > 0) {
+      // Remove extracted pairs from remaining text
+      rest = rest.replace(reNoColon, '').replace(/\s+/g, ' ').trim();
+      return { items: pairs, rest };
+    }
+  }
+
+  return { items, rest: restAfterColon };
+}
 
 /**
  * Анимационные варианты для контейнера
@@ -54,10 +196,6 @@ export function ProductPage(): ReactElement {
     if (!product) return [];
 
     const specs = product.specifications as ProductSpecifications;
-    const SPEC_LABELS: Record<string, string> = {
-      vram: 'Объём видеопамяти', gpu: 'Графический процессор', socket: 'Сокет', 
-      cores: 'Ядра', threads: 'Потоки', chipset: 'Чипсет'
-    };
 
     const reviewCount = product.reviewCount ?? 0;
 
@@ -70,8 +208,8 @@ export function ProductPage(): ReactElement {
             {specs && Object.keys(specs).length > 0 ? (
               Object.entries(specs).map(([key, value]) => (
                 <div key={key} className={styles.specsRow}>
-                  <span className={styles.specsLabel}>{SPEC_LABELS[key.toLowerCase()] || key}</span>
-                  <span className={styles.specsValue}>{String(value)}</span>
+                  <span className={styles.specsLabel}>{specLabel(key)}</span>
+                  <span className={styles.specsValue}>{formatSpecValueForKey(key, value as string | number | boolean | undefined)}</span>
                 </div>
               ))
             ) : (
@@ -85,7 +223,9 @@ export function ProductPage(): ReactElement {
         label: 'Описание',
         content: (
           <div className={styles.description}>
-            {product.description || 'Описание этого товара пока не добавлено.'}
+            <div className={styles.descriptionText}>
+              {product.description || 'Описание этого товара пока не добавлено.'}
+            </div>
           </div>
         )
       },

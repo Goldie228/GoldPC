@@ -7,7 +7,6 @@ import { useToastStore } from '../../store/toastStore';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useComparisonStore } from '../../store/comparisonStore';
 import { Icon } from '../ui/Icon/Icon';
-import { Modal } from '../ui/Modal/Modal';
 import { OptimizedImage } from '../ui/Image/OptimizedImage';
 import styles from './ProductCard.module.css';
 
@@ -19,30 +18,18 @@ interface ProductCardProps {
   imageFetchPriority?: 'high' | 'low' | 'auto';
 }
 
-interface StockStatus {
-  text: string;
-  className: string;
-}
-
 interface ImageContainerProps {
   product: ProductSummary;
   hasDiscount: boolean;
   discountPercent: number;
-  isQuickViewHovered: boolean;
-  onQuickViewOpen: () => void;
-  onQuickViewClose: () => void;
-  onQuickViewClick: () => void;
   onToggleWishlist: () => void;
   inWishlist: boolean;
   isDisabled: boolean;
-  stockBadgeClass: string;
-  stockBadgeShort: string;
   imageFetchPriority?: 'high' | 'low' | 'auto';
 }
 
 interface ContentProps {
   product: ProductSummary;
-  stockStatus: StockStatus;
   hasDiscount: boolean;
   inCart: boolean;
   quantityInCart: number;
@@ -73,25 +60,6 @@ function extractRatingValue(rating: ProductSummary['rating']): number | null {
     return typeof rating.average === 'number' ? rating.average : null;
   }
   return null;
-}
-
-/**
- * Получить статус наличия
- */
-function getStockStatus(stock: number): StockStatus {
-  if (stock === 0) {
-    return { text: 'Нет в наличии', className: styles.outOfStock };
-  }
-  if (stock < 5) {
-    return { text: `Мало (${stock} шт)`, className: styles.lowStock };
-  }
-  return { text: `В наличии (${stock} шт)`, className: styles.inStock };
-}
-
-function getStockBadge(stock: number): { short: string; badgeClass: string } {
-  if (stock === 0) return { short: 'Нет', badgeClass: styles.stockBadgeOut };
-  if (stock < 5) return { short: `Мало · ${stock}`, badgeClass: styles.stockBadgeLow };
-  return { short: 'В наличии', badgeClass: styles.stockBadgeIn };
 }
 
 /**
@@ -161,47 +129,92 @@ function getImagePlaceholder(category: ProductCategory): ReactElement {
 }
 
 /**
- * Контейнер изображения с hover actions
+ * Контейнер изображения с переключением картинок
  */
 function ImageContainer({
   product,
   hasDiscount,
   discountPercent,
-  isQuickViewHovered,
-  onQuickViewOpen,
-  onQuickViewClose,
-  onQuickViewClick,
   onToggleWishlist,
   inWishlist,
   isDisabled,
-  stockBadgeClass,
-  stockBadgeShort,
   imageFetchPriority,
 }: ImageContainerProps): ReactElement {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const ratingValue = extractRatingValue(product.rating);
 
-  const hasValidImage = hasValidProductImage(product.mainImage?.url);
+  const images = product.images && product.images.length > 0 
+    ? product.images 
+    : product.mainImage 
+      ? [product.mainImage] 
+      : [];
+  
+  const hasMultipleImages = images.length > 1;
+  const currentImage = images[currentImageIndex];
+  const hasValidImage = hasValidProductImage(currentImage?.url);
+
+  const handlePrevImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const handleNextImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
 
   return (
-    <div
-      className={styles.imageContainer}
-      onMouseEnter={onQuickViewOpen}
-      onMouseLeave={onQuickViewClose}
-    >
-      {hasValidImage ? (
-        <OptimizedImage
-          src={product.mainImage?.url ?? ''}
-          alt={product.mainImage?.alt ?? product.name}
-          className={styles.image}
-          aspectRatio={1.2}
-          placeholder={getImagePlaceholder(product.category)}
-          fetchPriority={imageFetchPriority}
-          loading={imageFetchPriority === 'high' ? 'eager' : 'lazy'}
-        />
-      ) : (
-        <div className={styles.placeholderWrapper}>
-          {getImagePlaceholder(product.category)}
+    <div className={styles.imageContainer}>
+      <Link to={`/product/${product.id}`} className={styles.imageLink}>
+        <div className={styles.imageWrapper}>
+          {hasValidImage ? (
+            <OptimizedImage
+              src={currentImage.url}
+              alt={currentImage.alt ?? product.name}
+              className={styles.image}
+              aspectRatio={1}
+              placeholder={getImagePlaceholder(product.category)}
+              fetchPriority={imageFetchPriority}
+              loading={imageFetchPriority === 'high' ? 'eager' : 'lazy'}
+            />
+          ) : (
+            <div className={styles.placeholderWrapper}>
+              {getImagePlaceholder(product.category)}
+            </div>
+          )}
         </div>
+      </Link>
+
+      {/* Навигация по изображениям */}
+      {hasMultipleImages && (
+        <>
+          <button
+            className={`${styles.navBtn} ${styles.prevBtn}`}
+            onClick={handlePrevImage}
+            aria-label="Предыдущее изображение"
+            type="button"
+          >
+            <Icon name="chevron-left" size="sm" />
+          </button>
+          <button
+            className={`${styles.navBtn} ${styles.nextBtn}`}
+            onClick={handleNextImage}
+            aria-label="Следующее изображение"
+            type="button"
+          >
+            <Icon name="chevron-right" size="sm" />
+          </button>
+          <div className={styles.imageDots}>
+            {images.map((_, i) => (
+              <div
+                key={i}
+                className={`${styles.dot} ${i === currentImageIndex ? styles.dotActive : ''}`}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       {/* Badge logic: Discount takes priority, Hit shown on right if both exist */}
@@ -217,11 +230,9 @@ function ImageContainer({
         <span className={styles.hitBadgeRight}>Хит</span>
       )}
 
-      <span className={`${styles.stockBadge} ${stockBadgeClass}`}>{stockBadgeShort}</span>
-
-      {/* Кнопка избранного в углу (при hover) */}
+      {/* Кнопка избранного всегда видна на мобильных или при hover на десктопе */}
       <button
-        className={`${styles.wishlistCornerBtn} ${isQuickViewHovered ? styles.wishlistCornerVisible : ''} ${inWishlist ? styles.wishlistActive : ''}`}
+        className={`${styles.wishlistCornerBtn} ${inWishlist ? styles.wishlistActive : ''}`}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -233,21 +244,6 @@ function ImageContainer({
       >
         <Icon name="heart" size="sm" color={inWishlist ? 'gold' : 'default'} />
       </button>
-
-      {/* Кнопка быстрого просмотра при hover */}
-      <button
-        className={`${styles.quickViewBtn} ${isQuickViewHovered ? styles.quickViewVisible : ''}`}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onQuickViewClick();
-        }}
-        aria-label="Быстрый просмотр"
-        type="button"
-      >
-        <Icon name="eye" size="sm" />
-        <span>Быстрый просмотр</span>
-      </button>
     </div>
   );
 }
@@ -257,7 +253,6 @@ function ImageContainer({
  */
 function Content({
   product,
-  stockStatus,
   hasDiscount,
   inCart,
   quantityInCart,
@@ -315,8 +310,6 @@ function Content({
           </>
         )}
       </div>
-
-      <p className={stockStatus.className}>{stockStatus.text}</p>
 
       <div className={styles.priceRow}>
         <div className={styles.prices}>
@@ -383,65 +376,6 @@ function Content({
 }
 
 /**
- * Placeholder контент для модального окна быстрого просмотра
- */
-function QuickViewContent({ product }: { product: ProductSummary }): ReactElement {
-  const ratingValue = extractRatingValue(product.rating);
-  return (
-    <div className={styles.quickViewContent}>
-      <div className={styles.quickViewImage}>
-        {product.mainImage && hasValidProductImage(product.mainImage.url) ? (
-          <OptimizedImage
-            src={product.mainImage.url}
-            alt={product.mainImage.alt ?? product.name}
-            aspectRatio={1.2}
-            className={styles.quickViewOptimizedImage}
-          />
-        ) : (
-          <div className={styles.quickViewPlaceholder}>
-            <Icon name="image" size="2xl" color="secondary" />
-          </div>
-        )}
-      </div>
-      <div className={styles.quickViewDetails}>
-        {product.manufacturer != null && (
-          <span className={styles.quickViewManufacturer}>
-            {product.manufacturer.name}
-          </span>
-        )}
-        <h2 className={styles.quickViewName}>{product.name}</h2>
-        <div className={styles.quickViewPrice}>
-          {formatPrice(product.price)}
-        </div>
-        {ratingValue != null && !Number.isNaN(ratingValue) && (
-          <div className={styles.quickViewRating}>
-            <span className={styles.stars}>
-              {'★'.repeat(Math.round(ratingValue))}
-              {'☆'.repeat(5 - Math.round(ratingValue))}
-            </span>
-            <span>{ratingValue.toFixed(1)}</span>
-          </div>
-        )}
-        <div className={styles.quickViewDescription}>
-          {product.descriptionShort != null && product.descriptionShort.trim() !== '' ? (
-            <>
-              <p className={styles.quickViewDescriptionText}>{product.descriptionShort}</p>
-              <Link to={`/product/${product.id}`} className={styles.quickViewLink}>
-                Подробнее на странице товара →
-              </Link>
-            </>
-          ) : (
-            <Link to={`/product/${product.id}`} className={styles.quickViewLink}>
-              Подробное описание на странице товара →
-            </Link>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
  * Карточка товара для каталога
  */
 export function ProductCard({
@@ -456,15 +390,11 @@ export function ProductCard({
   const { isInComparison, toggleComparison } = useComparisonStore();
 
   const [isAdding, setIsAdding] = useState(false);
-  const [isQuickViewHovered, setIsQuickViewHovered] = useState(false);
-  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
 
   const inCart = isInCart(product.id);
   const quantityInCart = getItemQuantity(product.id);
   const inWishlist = isInWishlist(product.id);
   const inComparison = isInComparison(product.id);
-  const stockStatus = getStockStatus(product.stock);
-  const stockBadge = getStockBadge(product.stock);
   const hasDiscount =
     product.oldPrice !== undefined && product.oldPrice > product.price;
   const discountPercent =
@@ -529,48 +459,29 @@ export function ProductCard({
   };
 
   return (
-    <>
-      <article className={`${styles.card} ${viewMode === 'list' ? styles.cardList : ''}`} aria-label={`Товар: ${product.name}`}>
-        <ImageContainer
-          product={product}
-          hasDiscount={hasDiscount}
-          discountPercent={discountPercent}
-          isQuickViewHovered={isQuickViewHovered}
-          onQuickViewOpen={() => setIsQuickViewHovered(true)}
-          onQuickViewClose={() => setIsQuickViewHovered(false)}
-          onQuickViewClick={() => setIsQuickViewOpen(true)}
-          onToggleWishlist={handleToggleWishlist}
-          inWishlist={inWishlist}
-          isDisabled={product.stock === 0 || !product.isActive}
-          stockBadgeClass={stockBadge.badgeClass}
-          stockBadgeShort={stockBadge.short}
-          imageFetchPriority={imageFetchPriority}
-        />
-        <Content
-          product={product}
-          stockStatus={stockStatus}
-          hasDiscount={hasDiscount}
-          inCart={inCart}
-          quantityInCart={quantityInCart}
-          isAdding={isAdding}
-          inComparison={inComparison}
-          onAddToCart={handleAddToCart}
-          onDecrement={handleDecrement}
-          onIncrement={handleIncrement}
-          canIncrement={canIncrement}
-          onToggleComparison={handleToggleComparison}
-        />
-      </article>
-
-      {/* Модальное окно быстрого просмотра */}
-      <Modal
-        isOpen={isQuickViewOpen}
-        onClose={() => setIsQuickViewOpen(false)}
-        title="Быстрый просмотр"
-        size="large"
-      >
-        <QuickViewContent product={product} />
-      </Modal>
-    </>
+    <article className={`${styles.card} ${viewMode === 'list' ? styles.cardList : ''}`} aria-label={`Товар: ${product.name}`}>
+      <ImageContainer
+        product={product}
+        hasDiscount={hasDiscount}
+        discountPercent={discountPercent}
+        onToggleWishlist={handleToggleWishlist}
+        inWishlist={inWishlist}
+        isDisabled={product.stock === 0 || !product.isActive}
+        imageFetchPriority={imageFetchPriority}
+      />
+      <Content
+        product={product}
+        hasDiscount={hasDiscount}
+        inCart={inCart}
+        quantityInCart={quantityInCart}
+        isAdding={isAdding}
+        inComparison={inComparison}
+        onAddToCart={handleAddToCart}
+        onDecrement={handleDecrement}
+        onIncrement={handleIncrement}
+        canIncrement={canIncrement}
+        onToggleComparison={handleToggleComparison}
+      />
+    </article>
   );
 }

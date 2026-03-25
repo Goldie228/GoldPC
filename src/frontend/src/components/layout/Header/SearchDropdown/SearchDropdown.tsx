@@ -153,11 +153,11 @@ export function SearchDropdown() {
           ref={inputRef}
           type="text"
           className={styles.input}
-          placeholder="Поиск по сайту..."
+          placeholder="Поиск..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={handleFocus}
-          aria-label="Поиск по сайту. Горячие клавиши: слэш или Ctrl+K"
+          aria-label="Поиск по сайту (/, Ctrl+K)"
           role="combobox"
           aria-expanded={isOpen}
           aria-haspopup="listbox"
@@ -177,9 +177,6 @@ export function SearchDropdown() {
           </button>
         )}
       </div>
-      <p className={styles.searchHint} aria-hidden>
-        <kbd>/</kbd> или <kbd>Ctrl</kbd>+<kbd>K</kbd>
-      </p>
 
       {/* Dropdown */}
       {isOpen && (

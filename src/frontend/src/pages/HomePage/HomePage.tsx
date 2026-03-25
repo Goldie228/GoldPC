@@ -72,7 +72,6 @@ export function HomePage() {
 
   const { data: productsData, isLoading, isError, refetch } = useProducts({
     pageSize: 8,
-    isFeatured: true,
     sortBy: 'rating',
     sortOrder: 'desc',
   });
@@ -113,7 +112,6 @@ export function HomePage() {
 
         <div className={styles.heroContent}>
           <div className={styles.heroText}>
-            <div className={styles.heroTag}>PC Builder v2.0</div>
             <h1 className={styles.heroTitle}>
               <span className={styles.heroTitleLine}>Собери свой</span>
               <span className={`${styles.heroTitleLine} ${styles.heroTitleLine2}`}>
@@ -150,77 +148,6 @@ export function HomePage() {
               </div>
             </div>
           </div>
-
-          <div className={styles.heroVisual}>
-            <div className={styles.heroCard}>
-              <div className={styles.cardHeader}>
-                <span className={styles.cardTitle}>Топ по рейтингу</span>
-                <span className={styles.cardBadge}>LIVE</span>
-              </div>
-              <div className={styles.buildPreview}>
-                {isLoading &&
-                  [...Array(3)].map((_, i) => (
-                    <div key={`hero-skel-${i}`} className={`${styles.buildItem} ${styles.buildItemSkeleton}`} aria-hidden>
-                      <div className={`${styles.buildIcon} ${styles.buildIconSkeleton}`} />
-                      <div className={styles.buildInfo}>
-                        <div className={styles.buildNameSkeleton} />
-                        <div className={styles.buildSpecSkeleton} />
-                      </div>
-                      <div className={styles.buildPriceSkeleton} />
-                    </div>
-                  ))}
-                {!isLoading &&
-                  heroPreviewProducts.map((product) => {
-                    const IconComponent = CATEGORY_ICONS[product.category] ?? Cpu;
-                    const spec =
-                      product.descriptionShort?.trim().slice(0, 48) ||
-                      [product.brand, product.category].filter(Boolean).join(' · ') ||
-                      'В каталоге';
-                    return (
-                      <Link
-                        key={product.id}
-                        to={`/product/${product.id}`}
-                        className={`${styles.buildItem} ${styles.buildItemLink}`}
-                      >
-                        <div className={styles.buildIcon}>
-                          <IconComponent size={20} />
-                        </div>
-                        <div className={styles.buildInfo}>
-                          <div className={styles.buildName}>{product.name}</div>
-                          <div className={styles.buildSpec}>{spec}</div>
-                        </div>
-                        <div className={styles.buildPrice}>
-                          {product.price.toLocaleString('ru-BY')} BYN
-                        </div>
-                      </Link>
-                    );
-                  })}
-                {!isLoading && heroPreviewProducts.length === 0 && (
-                  <div className={styles.heroPreviewEmpty}>
-                    <p>Скоро здесь появятся рекомендованные товары.</p>
-                    <Link to="/catalog" className={styles.heroPreviewEmptyLink}>
-                      Перейти в каталог
-                    </Link>
-                  </div>
-                )}
-              </div>
-              <div className={styles.buildTotal}>
-                <span className={styles.totalLabel}>
-                  {heroPreviewProducts.length > 0
-                    ? `Итого, ${formatCountRu(heroPreviewProducts.length, RU_FORMS.tovar)}`
-                    : 'Итого'}
-                </span>
-                <span className={styles.totalValue}>
-                  <span>
-                    {heroPreviewProducts.length > 0
-                      ? heroPreviewTotal.toLocaleString('ru-BY')
-                      : '—'}
-                  </span>{' '}
-                  BYN
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -231,10 +158,6 @@ export function HomePage() {
               <h2 className={styles.sectionTitle}>Категории</h2>
               <p className={styles.sectionSubtitle}>Выберите компонент</p>
             </div>
-            <Link to="/catalog" className={styles.viewAll}>
-              Все категории
-              <ChevronRight size={14} />
-            </Link>
           </div>
 
           <div className={styles.categoriesGrid} ref={categoriesRef}>
@@ -245,7 +168,9 @@ export function HomePage() {
                     className={`${styles.categoryCard} ${styles.categoryCardSkeleton} ${styles.fadeUp}`}
                   />
                 ))
-              : (categoriesData ?? []).map((cat, index) => {
+              : (categoriesData ?? [])
+                  .filter((cat) => (cat.productCount ?? 0) > 0)
+                  .map((cat, index) => {
                   const frontendId = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug) as ProductCategory;
                   const IconComponent = CATEGORY_ICONS[frontendId] ?? Cpu;
                   const delayClass = index > 0 && index < DELAY_CLASSES.length ? DELAY_CLASSES[index] : '';

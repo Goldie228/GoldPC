@@ -13,14 +13,38 @@ const PAGE_SIZE_OPTIONS = [12, 24, 48] as const;
 type PageSegment = { kind: 'pages'; pages: number[] } | { kind: 'ellipsis' };
 
 /** Группы страниц с разделителем «…» между блоками */
-function buildPaginationSegments(current: number, total: number): PageSegment[] {
+function buildPaginationSegments(current: number, total: number, isMobile: boolean): PageSegment[] {
   if (total <= 0) return [];
   if (total === 1) return [{ kind: 'pages', pages: [1] }];
-  if (total <= 7) {
+  
+  const mobileLimit = 3;
+  const desktopLimit = 7;
+  const limit = isMobile ? mobileLimit : desktopLimit;
+
+  if (total <= limit) {
     return [{ kind: 'pages', pages: Array.from({ length: total }, (_, i) => i + 1) }];
   }
 
   const out: PageSegment[] = [];
+
+  if (isMobile) {
+    if (current <= 2) {
+      out.push({ kind: 'pages', pages: [1, 2] });
+      out.push({ kind: 'ellipsis' });
+      out.push({ kind: 'pages', pages: [total] });
+    } else if (current >= total - 1) {
+      out.push({ kind: 'pages', pages: [1] });
+      out.push({ kind: 'ellipsis' });
+      out.push({ kind: 'pages', pages: [total - 1, total] });
+    } else {
+      out.push({ kind: 'pages', pages: [1] });
+      out.push({ kind: 'ellipsis' });
+      out.push({ kind: 'pages', pages: [current] });
+      out.push({ kind: 'ellipsis' });
+      out.push({ kind: 'pages', pages: [total] });
+    }
+    return out;
+  }
 
   if (current <= 4) {
     out.push({ kind: 'pages', pages: [1, 2, 3, 4, 5] });
@@ -67,7 +91,15 @@ export function Pagination({
   disabled = false,
 }: PaginationProps) {
   const [jumpInput, setJumpInput] = useState(String(page));
-  const segments = buildPaginationSegments(page, totalPages);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const segments = buildPaginationSegments(page, totalPages, isMobile);
   const startItem = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, totalItems);
 

@@ -578,6 +578,12 @@ export function FilterSidebar({
             const selected = selectedSpecifications[attr.key];
             const selectedArr = Array.isArray(selected) ? selected : selected != null ? [String(selected)] : [];
             const isChecked = (val: string) => selectedArr.includes(val);
+            
+            // Clean up Integrated Graphics values
+            const cleanValues = attr.key === 'integrated_graphics'
+              ? filteredValues.filter(v => !/^\d+$/.test(v))
+              : filteredValues;
+
             return (
               <div key={attr.key} className={styles.specFilterBlock}>
                 {!options?.hideLabel && <span className={styles.specFilterLabel}>{attr.displayName}</span>}
@@ -596,8 +602,8 @@ export function FilterSidebar({
                   </div>
                 )}
                 <div className={styles.specFilterValues}>
-                  {filteredValues.length > 0 ? (
-                    filteredValues.map((val) => (
+                  {cleanValues.length > 0 ? (
+                    cleanValues.map((val) => (
                       <label key={val} className={`${styles.checkboxItem} ${isChecked(val) ? styles.checked : ''}`}>
                         <input
                           type="checkbox"

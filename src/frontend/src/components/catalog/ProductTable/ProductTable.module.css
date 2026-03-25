@@ -44,13 +44,8 @@
   width: 80px;
 }
 
-.colSku {
-  width: 120px;
-  color: var(--fg-dim, #52525b);
-}
-
 .colManufacturer {
-  width: 120px;
+  width: 140px;
 }
 
 .colStock {
@@ -62,11 +57,54 @@
 }
 
 .colActions {
-  width: 60px;
+  width: 140px;
   text-align: right;
 }
 
 /* Elements */
+.actionButtons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.actionBtn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated, #121214);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 4px;
+  color: var(--fg-muted, #71717a);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.actionBtn:hover {
+  border-color: var(--accent, #d4a574);
+  color: var(--accent, #d4a574);
+  background: rgba(212, 165, 116, 0.05);
+}
+
+.activeWishlist {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.activeWishlist:hover {
+  color: #f87171;
+  border-color: #ef4444;
+}
+
+.activeComparison {
+  color: var(--accent, #d4a574);
+  border-color: var(--accent, #d4a574);
+  background: rgba(212, 165, 116, 0.1);
+}
+
 .imageWrapper {
   width: 48px;
   height: 48px;
@@ -100,31 +138,31 @@
   color: var(--accent, #d4a574);
 }
 
-.skuText {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-}
-
 .stockBadge {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
   padding: 2px 8px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
 }
 
 .inStock {
-  color: #22c55e;
-  background: rgba(34, 197, 94, 0.1);
+  color: var(--accent, #d4a574);
+  background: rgba(212, 165, 116, 0.1);
+  border: 1px solid rgba(212, 165, 116, 0.2);
 }
 
 .lowStock {
   color: #f59e0b;
   background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .outOfStock {
   color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .priceWrapper {
@@ -133,21 +171,21 @@
 }
 
 .price {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   color: var(--accent, #d4a574);
   font-weight: 600;
 }
 
 .oldPrice {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: #71717a;
+  color: var(--fg-dim, #52525b);
   text-decoration: line-through;
 }
 
 .addToCartBtn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -161,11 +199,11 @@
 
 .addToCartBtn:hover:not(:disabled) {
   background: #e6b98b;
-  transform: scale(1.05);
+  transform: translateY(-1px);
 }
 
 .addToCartBtn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
@@ -177,4 +215,25 @@
 
 .inCart:hover:not(:disabled) {
   background: rgba(212, 165, 116, 0.1);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1024px) {
+  .colManufacturer {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .colStock {
+    display: none;
+  }
 }
