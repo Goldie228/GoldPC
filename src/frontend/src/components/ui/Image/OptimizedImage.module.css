@@ -54,9 +54,28 @@
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   color: var(--fg-muted, #a1a1aa);
   font-size: 0.875rem;
   background-color: var(--bg-card, #18181b);
+}
+
+.retryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 215, 0, 0.22);
+  background: rgba(255, 215, 0, 0.08);
+  color: var(--fg, #fafafa);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.retryButton:hover {
+  background: rgba(255, 215, 0, 0.12);
 }

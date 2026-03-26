@@ -8,6 +8,7 @@ import { useWishlistStore } from '../../../store/wishlistStore';
 import { useComparisonStore } from '../../../store/comparisonStore';
 import { useToastStore } from '../../../store/toastStore';
 import { Icon } from '../../ui/Icon/Icon';
+import { telemetryTrack } from '../../../utils/telemetry';
 import styles from './ProductTable.module.css';
 
 interface ProductTableProps {
@@ -120,7 +121,11 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
                   </div>
                 </td>
                 <td className={styles.colName}>
-                  <Link to={`/product/${product.id}`} className={styles.productLink}>
+                  <Link
+                    to={`/product/${product.id}`}
+                    className={styles.productLink}
+                    onClick={() => telemetryTrack('catalog_product_open', { productId: product.id, category: product.category, source: 'table' })}
+                  >
                     {product.name}
                   </Link>
                 </td>

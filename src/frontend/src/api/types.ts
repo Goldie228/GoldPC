@@ -83,6 +83,10 @@ export interface Product extends ProductSummary {
   manufacturerId?: Uuid;
   warrantyMonths?: number;
   description?: string;
+  manufacturerAddress?: string;
+  productionAddress?: string;
+  importer?: string;
+  serviceSupport?: string;
   specifications?: ProductSpecifications;
   images?: ProductImage[];
   isFeatured?: boolean;
@@ -152,6 +156,21 @@ export interface FilterAttribute {
   /** Мин. значение для range-фильтра */
   minValue?: number;
   /** Макс. значение для range-фильтра */
+  maxValue?: number;
+}
+
+export interface FilterFacetOption {
+  value: string;
+  count: number;
+}
+
+export interface FilterFacetAttribute {
+  key: string;
+  displayName: string;
+  filterType: 'select' | 'range';
+  sortOrder: number;
+  options?: FilterFacetOption[];
+  minValue?: number;
   maxValue?: number;
 }
 

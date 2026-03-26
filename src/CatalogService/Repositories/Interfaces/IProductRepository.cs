@@ -18,6 +18,7 @@ public interface IProductRepository
     Task<IEnumerable<Guid>> GetManufacturerIdsByCategoryAsync(Guid categoryId);
     Task<Dictionary<Guid, int>> GetProductCountsByCategoryAsync();
     Task<Dictionary<string, List<string>>> GetDistinctSpecificationValuesAsync(Guid categoryId, IEnumerable<string> attributeKeys, ProductFilterDto? filterContext = null);
+    Task<Dictionary<string, int>> GetSpecificationValueCountsAsync(Guid categoryId, string attributeKey, ProductFilterDto? filterContext = null);
     Task<(decimal? Min, decimal? Max)> GetSpecificationRangeAsync(Guid categoryId, string attributeKey, ProductFilterDto? filterContext = null);
     Task<Product> CreateAsync(Product product);
     Task SetSpecificationsAsync(Guid productId, Dictionary<string, object> specifications);

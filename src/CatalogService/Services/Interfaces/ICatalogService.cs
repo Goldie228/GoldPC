@@ -21,6 +21,7 @@ public interface ICatalogService
     Task<IEnumerable<CategoryDto>> GetCategoriesAsync();
     Task<CategoryDto?> GetCategoryBySlugAsync(string slug);
     Task<IEnumerable<FilterAttributeDto>> GetFilterAttributesByCategoryAsync(string categorySlug, FilterAttributesQueryDto? filterParams = null);
+    Task<IEnumerable<FilterFacetAttributeDto>> GetFilterFacetsByCategoryAsync(string categorySlug, FilterAttributesQueryDto? filterParams = null);
     Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto dto);
     
     // Производители

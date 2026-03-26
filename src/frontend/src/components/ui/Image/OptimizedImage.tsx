@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './OptimizedImage.module.css';
 
@@ -34,12 +34,65 @@ export function OptimizedImage({
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+
+  const effectiveSrc = useMemo(() => {
+    if (!src) return src;
+    // Allow retry without relying on browser cache behavior
+    if (retryToken === 0) return src;
+    const sep = src.includes('?') ? '&' : '?';
+    return `${src}${sep}retry=${retryToken}`;
+  }, [src, retryToken]);
 
   useEffect(() => {
     if (!src) return;
     setIsLoaded(false);
     setError(false);
+    setRetryToken(0);
   }, [src]);
+
+  useEffect(() => {
+    if (!effectiveSrc) return;
+
+    let finished = false;
+    const preload = new Image();
+    preload.decoding = decoding;
+    const timeoutId = window.setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      setError(true);
+    }, 12000);
+
+    preload.onload = () => {
+      if (finished) return;
+      finished = true;
+      window.clearTimeout(timeoutId);
+      setIsLoaded(true);
+    };
+    preload.onerror = () => {
+      if (finished) return;
+      finished = true;
+      window.clearTimeout(timeoutId);
+      setError(true);
+    };
+
+    preload.src = effectiveSrc;
+
+    // If the DOM <img> already has it cached/complete, sync state
+    if (imgRef.current && imgRef.current.src === effectiveSrc && imgRef.current.complete) {
+      setIsLoaded(true);
+      window.clearTimeout(timeoutId);
+      finished = true;
+    }
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      preload.onload = null;
+      preload.onerror = null;
+      finished = true;
+    };
+  }, [effectiveSrc, decoding]);
 
   return (
     <div 
@@ -61,7 +114,8 @@ export function OptimizedImage({
 
       {!error ? (
         <img
-          src={src}
+          ref={imgRef}
+          src={effectiveSrc}
           alt={alt}
           loading={loading}
           decoding={decoding}
@@ -76,7 +130,18 @@ export function OptimizedImage({
         />
       ) : (
         <div className={styles.error}>
-          <span>Failed to load image</span>
+          <span>Не удалось загрузить изображение</span>
+          <button
+            type="button"
+            className={styles.retryButton}
+            onClick={() => {
+              setError(false);
+              setIsLoaded(false);
+              setRetryToken((t) => t + 1);
+            }}
+          >
+            Повторить
+          </button>
         </div>
       )}
     </div>

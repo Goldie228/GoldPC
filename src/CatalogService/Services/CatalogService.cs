@@ -305,6 +305,82 @@ public class CatalogService : ICatalogService
         return result;
     }
 
+    public async Task<IEnumerable<FilterFacetAttributeDto>> GetFilterFacetsByCategoryAsync(string categorySlug, FilterAttributesQueryDto? filterParams = null)
+    {
+        var category = await _categoryRepository.GetBySlugAsync(categorySlug);
+        if (category == null)
+            return Array.Empty<FilterFacetAttributeDto>();
+
+        var attributes = await _categoryRepository.GetFilterAttributesByCategorySlugAsync(categorySlug);
+
+        var filterContext = filterParams != null
+            ? new ProductFilterDto
+            {
+                ManufacturerIds = filterParams.ManufacturerIds,
+                Specifications = filterParams.Specifications,
+                SpecificationRanges = filterParams.SpecificationRanges
+            }
+            : null;
+
+        var result = new List<FilterFacetAttributeDto>();
+
+        foreach (var a in attributes)
+        {
+            if (a.FilterType == FilterAttributeType.Range)
+            {
+                var (minVal, maxVal) = await _productRepository.GetSpecificationRangeAsync(category.Id, a.AttributeKey, filterContext);
+                if (minVal == null && maxVal == null) continue;
+
+                result.Add(new FilterFacetAttributeDto
+                {
+                    Key = a.AttributeKey,
+                    DisplayName = a.DisplayName,
+                    FilterType = "range",
+                    SortOrder = a.SortOrder,
+                    MinValue = minVal,
+                    MaxValue = maxVal
+                });
+
+                continue;
+            }
+
+            // select: full list for category + counts in current context (excluding self)
+            var allValuesDict = await _productRepository.GetDistinctSpecificationValuesAsync(category.Id, new[] { a.AttributeKey }, null);
+            var allValues = allValuesDict.GetValueOrDefault(a.AttributeKey, new List<string>());
+
+            // Post-processing same as v1
+            allValues = allValues
+                .Where(v => v != null && !v.Contains('<') && !v.Contains('>'))
+                .Select(v => string.IsNullOrEmpty(v) ? null : v.Replace("\n", " ").Replace("\r", "").Trim())
+                .Where(v => !string.IsNullOrEmpty(v))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(v => v == "Нет" ? 0 : (v == "Есть" ? 1 : 2))
+                .ThenBy(v => v)
+                .ToList()!;
+
+            if (allValues.Count == 0) continue;
+
+            var counts = await _productRepository.GetSpecificationValueCountsAsync(category.Id, a.AttributeKey, filterContext);
+
+            var options = allValues.Select(v => new FilterFacetOptionDto
+            {
+                Value = v!,
+                Count = counts.GetValueOrDefault(v!, 0)
+            }).ToList();
+
+            result.Add(new FilterFacetAttributeDto
+            {
+                Key = a.AttributeKey,
+                DisplayName = a.DisplayName,
+                FilterType = "select",
+                SortOrder = a.SortOrder,
+                Options = options
+            });
+        }
+
+        return result;
+    }
+
     public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto dto)
     {
         var category = new Category
@@ -528,6 +604,10 @@ public class CatalogService : ICatalogService
             Stock = product.Stock,
             WarrantyMonths = product.WarrantyMonths,
             Description = product.Description,
+            ManufacturerAddress = product.ManufacturerAddress,
+            ProductionAddress = product.ProductionAddress,
+            Importer = product.Importer,
+            ServiceSupport = product.ServiceSupport,
             Specifications = product.SpecificationValues.ToSpecificationsDict(),
             MainImage = product.Images.Where(i => i.IsPrimary).Select(MapToImageDto).FirstOrDefault()
                 ?? product.Images.Select(MapToImageDto).FirstOrDefault(),

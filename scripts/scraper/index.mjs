@@ -113,6 +113,62 @@ function ensureAbs(url, base = BASE_URL) {
   return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
+function normalizeLegalLabel(label) {
+  return (label || '')
+    .replace(/:\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function parseWarrantyMonths(value) {
+  if (!value) return null;
+  const m = String(value).match(/(\d+)\s*мес/i);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+function extractLegalInfo($) {
+  const legalInfo = {};
+
+  $('.description-prod__lists-item').each((_, el) => {
+    const rawName = $(el).find('.description-prod__name').text()?.trim();
+    const rawVal = $(el).find('.description-prod__val').text()?.trim();
+    if (!rawName || !rawVal) return;
+
+    const name = normalizeLegalLabel(rawName);
+    const value = rawVal.replace(/\s+/g, ' ').trim();
+    if (!value) return;
+
+    if (name === 'гарантия') {
+      const months = parseWarrantyMonths(value);
+      if (months != null && months > 0) legalInfo.warrantyMonths = months;
+      else legalInfo.warrantyText = value;
+      return;
+    }
+    if (name === 'адрес производителя') {
+      legalInfo.manufacturerAddress = value;
+      return;
+    }
+    if (name === 'адрес производства') {
+      legalInfo.productionAddress = value;
+      return;
+    }
+    if (name === 'импортер') {
+      legalInfo.importer = value;
+      return;
+    }
+    if (name === 'сервисная поддержка') {
+      legalInfo.serviceSupport = value;
+      return;
+    }
+
+    // Keep unknown keys as-is (for later expansion without breaking data)
+    legalInfo[name] = value;
+  });
+
+  return Object.keys(legalInfo).length > 0 ? legalInfo : null;
+}
+
 /** Проверяет, что slug — товар, а не подкатегория */
 function isProductSlug(slug, categoryPath) {
   if (!slug || typeof slug !== 'string') return false;
@@ -259,8 +315,10 @@ async function parseProductDetail(item) {
     }
   });
 
+  const legalInfo = extractLegalInfo($);
   const warrantyMatch = bodyText.match(/(\d+)\s*мес/i);
-  const warrantyMonths = warrantyMatch ? parseInt(warrantyMatch[1], 10) : 12;
+  const warrantyFromBody = warrantyMatch ? parseInt(warrantyMatch[1], 10) : null;
+  const warrantyMonths = legalInfo?.warrantyMonths ?? warrantyFromBody ?? 12;
 
   const manufacturerMatch = name?.match(/\b(MSI|ASUS|Gigabyte|Palit|AMD|Intel|NVIDIA|G\.Skill|Kingston|Corsair|Samsung|WD|Western Digital|be quiet!|Seasonic|Fractal|NZXT|ASRock|EVGA|Sapphire|PowerColor|XFX|Inno3D|Zotac|KFA2|Aorus|ROG|TUF|Lenovo|Acer|Dell|HP|BenQ|LG|Xiaomi|Realme)\b/i);
   const manufacturer = manufacturerMatch ? manufacturerMatch[1] : null;
@@ -275,6 +333,7 @@ async function parseProductDetail(item) {
     specifications: specs,
     warrantyMonths,
     manufacturer,
+    legalInfo,
     images: images.length > 0 ? images : [],
   };
 }

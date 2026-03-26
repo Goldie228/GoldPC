@@ -272,12 +272,26 @@ public class XCoreImporter
 
                 if (existing != null)
                 {
+                    existing.Name = p.Name ?? existing.Name;
+                    existing.Description = p.Description;
                     existing.Price = (decimal)p.Price;
                     existing.OldPrice = p.OldPrice.HasValue ? (decimal)p.OldPrice.Value : null;
                     existing.Stock = p.Stock;
+                    existing.WarrantyMonths = p.WarrantyMonths;
                     existing.UpdatedAt = DateTime.UtcNow;
                     existing.SourceUrl = p.Url;
                     existing.CategoryId = categoryId;
+
+                    if (p.LegalInfo != null)
+                    {
+                        existing.ManufacturerAddress = p.LegalInfo.ManufacturerAddress;
+                        existing.ProductionAddress = p.LegalInfo.ProductionAddress;
+                        existing.Importer = p.LegalInfo.Importer;
+                        existing.ServiceSupport = p.LegalInfo.ServiceSupport;
+
+                        if (p.LegalInfo.WarrantyMonths.HasValue && p.LegalInfo.WarrantyMonths.Value > 0)
+                            existing.WarrantyMonths = p.LegalInfo.WarrantyMonths.Value;
+                    }
                     
                     await _context.ProductSpecificationValues
                         .Where(v => v.ProductId == existing.Id)
@@ -299,12 +313,16 @@ public class XCoreImporter
                         Name = p.Name,
                         Sku = sku,
                         Description = p.Description,
+                        ManufacturerAddress = p.LegalInfo?.ManufacturerAddress,
+                        ProductionAddress = p.LegalInfo?.ProductionAddress,
+                        Importer = p.LegalInfo?.Importer,
+                        ServiceSupport = p.LegalInfo?.ServiceSupport,
                         CategoryId = categoryId,
                         ManufacturerId = manufacturer?.Id,
                         Price = (decimal)p.Price,
                         OldPrice = p.OldPrice.HasValue ? (decimal)p.OldPrice.Value : null,
                         Stock = p.Stock,
-                        WarrantyMonths = p.WarrantyMonths,
+                        WarrantyMonths = p.LegalInfo?.WarrantyMonths is > 0 ? p.LegalInfo.WarrantyMonths.Value : p.WarrantyMonths,
                         SourceUrl = p.Url,
                         ExternalId = p.ExternalId,
                         IsActive = true,
@@ -556,4 +574,15 @@ public class XCoreProductDto
     public string? Manufacturer { get; set; }
     public List<object>? Images { get; set; }
     public string? Sku { get; set; }
+    public XCoreLegalInfoDto? LegalInfo { get; set; }
+}
+
+public class XCoreLegalInfoDto
+{
+    public int? WarrantyMonths { get; set; }
+    public string? WarrantyText { get; set; }
+    public string? ManufacturerAddress { get; set; }
+    public string? ProductionAddress { get; set; }
+    public string? Importer { get; set; }
+    public string? ServiceSupport { get; set; }
 }

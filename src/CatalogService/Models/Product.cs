@@ -15,6 +15,18 @@ public class Product
     
     /// <summary>Описание товара</summary>
     public string? Description { get; set; }
+
+    /// <summary>Адрес производителя (для юридической информации)</summary>
+    public string? ManufacturerAddress { get; set; }
+
+    /// <summary>Адрес производства (для юридической информации)</summary>
+    public string? ProductionAddress { get; set; }
+
+    /// <summary>Импортер (для юридической информации)</summary>
+    public string? Importer { get; set; }
+
+    /// <summary>Сервисная поддержка (для юридической информации)</summary>
+    public string? ServiceSupport { get; set; }
     
     /// <summary>ID категории</summary>
     public Guid CategoryId { get; set; }

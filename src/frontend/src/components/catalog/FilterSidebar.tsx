@@ -3,12 +3,13 @@ import { ChevronDown, Grid3X3, DollarSign, Package, Check, Star, Tag, Search } f
 import { catalogApi } from '../../api/catalog';
 import { RangeSlider } from '../ui/RangeSlider';
 import { Skeleton } from '../ui/Skeleton';
-import type { ProductCategory, Category, FilterAttribute, Manufacturer } from '../../api/types';
+import type { ProductCategory, Category, FilterFacetAttribute, Manufacturer } from '../../api/types';
 import styles from './FilterSidebar.module.css';
 
 interface FilterSidebarProps {
   selectedCategory: ProductCategory | null;
   onCategoryChange: (category: ProductCategory | null) => void;
+  categoryLocked?: boolean;
   priceRange: { min: number; max: number };
   onPriceChange: (range: { min: number; max: number }) => void;
   selectedManufacturerIds: string[];
@@ -254,6 +255,7 @@ function FilterGroup({ title, icon, defaultOpen = true, children }: FilterGroupP
 export function FilterSidebar({
   selectedCategory,
   onCategoryChange,
+  categoryLocked = false,
   priceRange,
   onPriceChange,
   selectedManufacturerIds,
@@ -294,7 +296,7 @@ export function FilterSidebar({
   // Состояние для хранения количества товаров в каждой категории
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
-  const [filterAttributes, setFilterAttributes] = useState<FilterAttribute[]>([]);
+  const [filterAttributes, setFilterAttributes] = useState<FilterFacetAttribute[]>([]);
   const [specAttrsLoading, setSpecAttrsLoading] = useState(false);
   const [specSearchQuery, setSpecSearchQuery] = useState<Record<string, string>>({});
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
@@ -332,6 +334,11 @@ export function FilterSidebar({
 
   // Загрузка категорий с количеством товаров (реальные данные с API)
   useEffect(() => {
+    if (categoryLocked) {
+      setCategoryCounts({});
+      setLoading(false);
+      return;
+    }
     const fetchCategories = async () => {
       try {
         const categories = await catalogApi.getCategories();
@@ -396,7 +403,7 @@ export function FilterSidebar({
     const fetchAttrs = async () => {
       setSpecAttrsLoading(true);
       try {
-        const attrs = await catalogApi.getFilterAttributes(backendSlug, filterParams);
+        const attrs = await catalogApi.getFilterFacets(backendSlug, filterParams);
         setFilterAttributes(attrs);
       } catch (err) {
         console.error('Failed to fetch filter attributes:', err);
@@ -450,35 +457,39 @@ export function FilterSidebar({
       </div>
 
       {/* Categories — открыта по умолчанию для быстрой навигации */}
-      <FilterGroup
-        title="Категории"
-        icon={<Grid3X3 size={14} />}
-        defaultOpen={true}
-      >
-        <div className={styles.categoryList}>
-          <button
-            className={`${styles.categoryItem} ${!selectedCategory ? styles.active : ''}`}
-            onClick={() => onCategoryChange(null)}
-          >
-            <span className={styles.categoryName}>Все товары</span>
-            <span className={styles.categoryCount} aria-hidden={loading ? true : undefined}>
-              {loading ? <Skeleton width={44} height={12} borderRadius="sm" /> : totalCount}
-            </span>
-          </button>
-          {CATEGORY_ORDER.map((category) => (
+      {!categoryLocked && (
+        <FilterGroup
+          title="Категории"
+          icon={<Grid3X3 size={14} />}
+          defaultOpen={true}
+        >
+          <div className={styles.categoryList}>
             <button
-              key={category}
-              className={`${styles.categoryItem} ${selectedCategory === category ? styles.active : ''}`}
-              onClick={() => onCategoryChange(category)}
+              type="button"
+              className={`${styles.categoryItem} ${!selectedCategory ? styles.active : ''}`}
+              onClick={() => onCategoryChange(null)}
             >
-              <span className={styles.categoryName}>{CATEGORY_LABELS[category]}</span>
-              <span className={styles.categoryCount}>
-                {loading ? <Skeleton width={36} height={12} borderRadius="sm" /> : (categoryCounts[category] || 0)}
+              <span className={styles.categoryName}>Все товары</span>
+              <span className={styles.categoryCount} aria-hidden={loading ? true : undefined}>
+                {loading ? <Skeleton width={44} height={12} borderRadius="sm" /> : totalCount}
               </span>
             </button>
-          ))}
-        </div>
-      </FilterGroup>
+            {CATEGORY_ORDER.map((category) => (
+              <button
+                key={category}
+                type="button"
+                className={`${styles.categoryItem} ${selectedCategory === category ? styles.active : ''}`}
+                onClick={() => onCategoryChange(category)}
+              >
+                <span className={styles.categoryName}>{CATEGORY_LABELS[category]}</span>
+                <span className={styles.categoryCount}>
+                  {loading ? <Skeleton width={36} height={12} borderRadius="sm" /> : (categoryCounts[category] || 0)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </FilterGroup>
+      )}
 
       {/* Price */}
       <FilterGroup
@@ -536,7 +547,7 @@ export function FilterSidebar({
         ];
         const groups = orderedKeys.map((key) => ({ keys: [key] }));
 
-        const renderAttr = (attr: FilterAttribute, options?: { hideLabel?: boolean }) => {
+        const renderAttr = (attr: FilterFacetAttribute, options?: { hideLabel?: boolean }) => {
           if (attr.filterType === 'range') {
             if (attr.minValue == null && attr.maxValue == null) return null;
             const minVal = attr.minValue ?? 0;
@@ -569,20 +580,20 @@ export function FilterSidebar({
             );
           }
           if (attr.filterType === 'select') {
-            const values = attr.values ?? [];
-            const showSearch = values.length > 15;
+            const optionsList = attr.options ?? [];
+            const showSearch = optionsList.length > 15;
             const query = (specSearchQuery[attr.key] ?? '').trim().toLowerCase();
-            const filteredValues = showSearch && query
-              ? values.filter((v) => v.toLowerCase().includes(query))
-              : values;
+            const filteredOptions = showSearch && query
+              ? optionsList.filter((o) => o.value.toLowerCase().includes(query))
+              : optionsList;
             const selected = selectedSpecifications[attr.key];
             const selectedArr = Array.isArray(selected) ? selected : selected != null ? [String(selected)] : [];
             const isChecked = (val: string) => selectedArr.includes(val);
             
             // Clean up Integrated Graphics values
-            const cleanValues = attr.key === 'integrated_graphics'
-              ? filteredValues.filter(v => !/^\d+$/.test(v))
-              : filteredValues;
+            const cleanOptions = attr.key === 'integrated_graphics'
+              ? filteredOptions.filter((o) => !/^\d+$/.test(o.value))
+              : filteredOptions;
 
             return (
               <div key={attr.key} className={styles.specFilterBlock}>
@@ -602,13 +613,21 @@ export function FilterSidebar({
                   </div>
                 )}
                 <div className={styles.specFilterValues}>
-                  {cleanValues.length > 0 ? (
-                    cleanValues.map((val) => (
-                      <label key={val} className={`${styles.checkboxItem} ${isChecked(val) ? styles.checked : ''}`}>
+                  {cleanOptions.length > 0 ? (
+                    cleanOptions.map(({ value: val, count }) => {
+                      const disabled = count === 0 && !isChecked(val);
+                      return (
+                      <label
+                        key={val}
+                        className={`${styles.checkboxItem} ${isChecked(val) ? styles.checked : ''}`}
+                        aria-disabled={disabled ? true : undefined}
+                        style={disabled ? { opacity: 0.55 } : undefined}
+                      >
                         <input
                           type="checkbox"
                           className={styles.filterVisuallyHiddenControl}
                           checked={isChecked(val)}
+                          disabled={disabled}
                           onChange={() => {
                             const next = { ...selectedSpecifications };
                             const newArr = isChecked(val)
@@ -622,9 +641,10 @@ export function FilterSidebar({
                         <span className={styles.checkbox} aria-hidden="true">
                           <Check size={10} className={styles.checkIcon} aria-hidden />
                         </span>
-                        <span className={styles.checkboxLabel}>{val}</span>
+                        <span className={styles.checkboxLabel}>{val} <span style={{ opacity: 0.7 }}>({count})</span></span>
                       </label>
-                    ))
+                    );
+                    })
                   ) : (
                     <span className={styles.emptySpecHint}>
                       {showSearch && query ? 'Ничего не найдено' : 'Нет вариантов'}
@@ -646,7 +666,7 @@ export function FilterSidebar({
           </FilterGroup>
         ) : (
           groups.map((group) => {
-            const attrsInGroup = group.keys.map((k) => attrMap.get(k)).filter(Boolean) as FilterAttribute[];
+            const attrsInGroup = group.keys.map((k) => attrMap.get(k)).filter(Boolean) as FilterFacetAttribute[];
             const singleAttrGroup = attrsInGroup.length === 1;
             const rendered = attrsInGroup.map((attr) => renderAttr(attr, { hideLabel: singleAttrGroup })).filter(Boolean);
             if (rendered.length === 0) return null;
@@ -815,7 +835,7 @@ export function FilterSidebar({
 
       {/* Reset Button - показывается только при активных фильтрах */}
       {hasActiveFilters && (
-        <button className={styles.resetBtn} onClick={onReset}>
+        <button type="button" className={styles.resetBtn} onClick={onReset}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
             <polyline points="1 4 1 10 7 10" />
             <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />

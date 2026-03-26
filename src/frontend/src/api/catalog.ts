@@ -5,6 +5,7 @@ import type {
   Product,
   Category,
   FilterAttribute,
+  FilterFacetAttribute,
   ProductCategory,
   Manufacturer,
   ProductReview,
@@ -169,6 +170,40 @@ export const catalogApi = {
     };
     const response = await api.get<{ data?: FilterAttribute[] }>(
       `/catalog/categories/${categorySlug}/filter-attributes`,
+      Object.keys(apiParams).length > 0 ? { params: apiParams as Record<string, unknown>, paramsSerializer } : {}
+    );
+    return response.data?.data ?? [];
+  },
+
+  async getFilterFacets(
+    categorySlug: string,
+    filterParams?: { manufacturerIds?: string[]; specifications?: Record<string, string>; specificationRanges?: Record<string, string> }
+  ): Promise<FilterFacetAttribute[]> {
+    const apiParams: Record<string, string | number | boolean> = {};
+    if (filterParams?.manufacturerIds?.length) {
+      (apiParams as Record<string, unknown>).manufacturerIds = filterParams.manufacturerIds;
+    }
+    if (filterParams?.specifications && Object.keys(filterParams.specifications).length > 0) {
+      for (const [key, value] of Object.entries(filterParams.specifications)) {
+        if (value != null && value !== '') apiParams[`specifications[${key}]`] = value;
+      }
+    }
+    if (filterParams?.specificationRanges && Object.keys(filterParams.specificationRanges).length > 0) {
+      for (const [key, value] of Object.entries(filterParams.specificationRanges)) {
+        if (value) apiParams[`specificationRanges[${key}]`] = value;
+      }
+    }
+    const paramsSerializer = (params: Record<string, unknown>) => {
+      const pairs: [string, string][] = [];
+      for (const [k, v] of Object.entries(params)) {
+        if (v === undefined || v === null) continue;
+        if (Array.isArray(v)) v.forEach((x) => pairs.push([k, String(x)]));
+        else pairs.push([k, String(v)]);
+      }
+      return new URLSearchParams(pairs).toString();
+    };
+    const response = await api.get<{ data?: FilterFacetAttribute[] }>(
+      `/catalog/categories/${categorySlug}/filter-facets`,
       Object.keys(apiParams).length > 0 ? { params: apiParams as Record<string, unknown>, paramsSerializer } : {}
     );
     return response.data?.data ?? [];

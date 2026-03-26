@@ -77,7 +77,7 @@ export function HomePage() {
   });
 
   const heroPreviewProducts = (productsData?.data ?? []).slice(0, 3);
-  const heroPreviewTotal = heroPreviewProducts.reduce((sum, p) => sum + p.price, 0);
+  void heroPreviewProducts;
 
   useEffect(() => {
     const observerOptions = {

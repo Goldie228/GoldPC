@@ -49,6 +49,26 @@ components:
           maxLength: 5000
           description: Описание товара
           example: "Процессор AMD Ryzen 7 7800X3D с 3D V-Cache технологией..."
+        manufacturerAddress:
+          type: string
+          maxLength: 3000
+          description: Адрес производителя (юридическая информация)
+          example: "Razer Incorporated, 2035 Corte Del Nogal, Suite 101, Carlsbad CA 92011, USA, США."
+        productionAddress:
+          type: string
+          maxLength: 3000
+          description: Адрес производства (юридическая информация)
+          example: "Shenzhen Sunsonny Electronics Co., LTD..., Китай."
+        importer:
+          type: string
+          maxLength: 3000
+          description: Импортер (юридическая информация)
+          example: "ТУП АСС Дистрибуция, 220099, г. Минск, ул. Казинца, д. 4, РБ."
+        serviceSupport:
+          type: string
+          maxLength: 3000
+          description: Сервисная поддержка (юридическая информация)
+          example: "ООО \"ИКСЫ\", г.Минск, Долгиновский тракт 185"
         specifications:
           $ref: '#/components/schemas/ProductSpecifications'
         images:

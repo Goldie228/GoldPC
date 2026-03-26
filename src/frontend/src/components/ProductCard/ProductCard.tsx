@@ -8,11 +8,13 @@ import { useWishlistStore } from '../../store/wishlistStore';
 import { useComparisonStore } from '../../store/comparisonStore';
 import { Icon } from '../ui/Icon/Icon';
 import { OptimizedImage } from '../ui/Image/OptimizedImage';
+import { telemetryTrack } from '../../utils/telemetry';
 import styles from './ProductCard.module.css';
 
 interface ProductCardProps {
   product: ProductSummary;
   onAddToCart?: (productId: string) => void;
+  onQuickView?: (productId: string) => void;
   viewMode?: 'grid' | 'list';
   /** Первые карточки above the fold: высокий приоритет LCP */
   imageFetchPriority?: 'high' | 'low' | 'auto';
@@ -35,6 +37,7 @@ interface ContentProps {
   quantityInCart: number;
   isAdding: boolean;
   inComparison: boolean;
+  onQuickView?: () => void;
   onAddToCart: () => void;
   onDecrement: () => void;
   onIncrement: () => void;
@@ -167,7 +170,11 @@ function ImageContainer({
 
   return (
     <div className={styles.imageContainer}>
-      <Link to={`/product/${product.id}`} className={styles.imageLink}>
+      <Link
+        to={`/product/${product.id}`}
+        className={styles.imageLink}
+        onClick={() => telemetryTrack('catalog_product_open', { productId: product.id, category: product.category, source: 'image' })}
+      >
         <div className={styles.imageWrapper}>
           {hasValidImage ? (
             <OptimizedImage
@@ -258,6 +265,7 @@ function Content({
   quantityInCart,
   isAdding,
   inComparison,
+  onQuickView,
   onAddToCart,
   onDecrement,
   onIncrement,
@@ -294,7 +302,11 @@ function Content({
       )}
 
       <h3 className={styles.name}>
-        <Link to={`/product/${product.id}`} className={styles.link}>
+        <Link
+          to={`/product/${product.id}`}
+          className={styles.link}
+          onClick={() => telemetryTrack('catalog_product_open', { productId: product.id, category: product.category, source: 'title' })}
+        >
           {product.name}
         </Link>
       </h3>
@@ -324,6 +336,17 @@ function Content({
         </div>
 
         <div className={styles.actions}>
+          {onQuickView && (
+            <button
+              className={styles.compareBtn}
+              onClick={onQuickView}
+              disabled={isDisabled}
+              aria-label="Быстрый просмотр"
+              type="button"
+            >
+              <Icon name="eye" size="md" />
+            </button>
+          )}
           {/* Кнопка сравнения */}
           <button
             className={`${styles.compareBtn} ${inComparison ? styles.compareActive : ''}`}
@@ -381,6 +404,7 @@ function Content({
 export function ProductCard({
   product,
   onAddToCart,
+  onQuickView,
   viewMode = 'grid',
   imageFetchPriority,
 }: ProductCardProps): ReactElement {
@@ -476,6 +500,7 @@ export function ProductCard({
         quantityInCart={quantityInCart}
         isAdding={isAdding}
         inComparison={inComparison}
+        onQuickView={onQuickView ? () => onQuickView(product.id) : undefined}
         onAddToCart={handleAddToCart}
         onDecrement={handleDecrement}
         onIncrement={handleIncrement}

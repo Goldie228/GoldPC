@@ -6,14 +6,13 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { useProduct } from '../../hooks/useProduct';
 import { useToastStore } from '../../store/toastStore';
 import { useAuthStore } from '../../store/authStore';
-import type { ProductSpecifications } from '../../api/types';
+import type { Product } from '../../api/types';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
 import { ProductGallery } from './components/ProductGallery';
 import { ProductInfo } from './components/ProductInfo';
 import { ReviewSection } from './components/ReviewSection';
 import { RelatedProducts } from './components/RelatedProducts';
-import { formatSpecValueForKey, specLabel } from '../../utils/specifications';
 import styles from './ProductPage.module.css';
 
 const DESCRIPTION_SECTIONS = [
@@ -31,130 +30,220 @@ const DESCRIPTION_SECTIONS = [
   'Аккумулятор и время работы',
   'Габариты',
   'Комплектация',
+  'Особенности конструкции',
+  'Кабель',
+  'Метки',
 ] as const;
 
-function normalizeText(input: string): string {
-  return input.replace(/\s+/g, ' ').trim();
+type DescriptionBlock = { title?: string; body: string };
+
+function trimDescriptionBeforeMain(description: string | undefined): string | undefined {
+  const raw = normalizeDescriptionPreserveLines(description ?? '');
+  if (!raw) return undefined;
+
+  const blocks = splitDescriptionByHeadings(raw);
+  if (blocks.length === 0) return raw;
+
+  const mainIdx = blocks.findIndex((b) => (b.title ?? '').trim() === 'Основные');
+  if (mainIdx <= 0) return raw;
+
+  // Drop everything before "Основные" (часто это мусор/дубли из характеристик)
+  const kept = blocks.slice(mainIdx);
+  const rebuilt = kept
+    .map((b) => {
+      const title = (b.title ?? '').trim();
+      const body = (b.body ?? '').trim();
+      if (title && body) return `${title}\n${body}`;
+      if (title) return title;
+      return body;
+    })
+    .filter(Boolean)
+    .join('\n');
+
+  return normalizeDescriptionPreserveLines(rebuilt);
 }
 
-function splitIntoDescriptionBlocks(description: string): Array<{ title?: string; body: string }> {
-  const text = normalizeText(description);
+function normalizeDescriptionPreserveLines(input: string): string {
+  const text = (input ?? '').replace(/\r/g, '');
+  return text
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function splitDescriptionByHeadings(description: string): DescriptionBlock[] {
+  const text = normalizeDescriptionPreserveLines(description);
   if (!text) return [];
 
-  const escaped = DESCRIPTION_SECTIONS.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const re = new RegExp(`\\b(${escaped.join('|')})\\b`, 'g');
+  const known = new Set<string>(DESCRIPTION_SECTIONS);
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
 
-  const matches = Array.from(text.matchAll(re));
-  if (matches.length === 0) {
-    return [{ body: text }];
-  }
+  const blocks: DescriptionBlock[] = [];
+  let current: DescriptionBlock | null = null;
 
-  const blocks: Array<{ title?: string; body: string }> = [];
-  for (let i = 0; i < matches.length; i++) {
-    const m = matches[i];
-    const title = m[1];
-    const start = m.index ?? 0;
-    const nextStart = matches[i + 1]?.index ?? text.length;
-
-    // prepend leading text before first heading
-    if (i === 0 && start > 0) {
-      const lead = text.slice(0, start).trim();
-      if (lead) blocks.push({ body: lead });
+  for (const line of lines) {
+    if (known.has(line)) {
+      if (current && (current.title || current.body.trim())) blocks.push(current);
+      current = { title: line, body: '' };
+      continue;
     }
-
-    const body = text.slice(start + title.length, nextStart).trim();
-    blocks.push({ title, body });
+    if (!current) current = { body: '' };
+    current.body = current.body ? `${current.body}\n${line}` : line;
   }
 
-  return blocks.filter((b) => b.title || b.body);
+  if (current && (current.title || current.body.trim())) blocks.push(current);
+  return blocks;
 }
 
-function inferInlineTitle(body: string): { title?: string; body: string } {
-  const text = normalizeText(body);
-  if (!text) return { body };
+function extractKeyValueFromLine(line: string): Array<{ key: string; value: string }> {
+  const s = line.trim();
+  if (!s) return [];
 
-  // If the line starts with a heading and then immediately goes into "Key: Value"
-  const firstKv = text.match(/\b[А-ЯЁA-Za-z0-9().,\-+/%\s]{2,60}:\s/);
-  if (!firstKv || firstKv.index == null || firstKv.index <= 0) return { body };
-
-  const head = text.slice(0, firstKv.index).trim();
-  if (!head || head.length > 60) return { body };
-  if (head.includes(':')) return { body };
-  // Prefer headings that look like words (not too many tokens)
-  const tokens = head.split(' ').filter(Boolean);
-  if (tokens.length < 1 || tokens.length > 8) return { body };
-
-  return { title: head, body: text.slice(firstKv.index).trim() };
-}
-
-function extractPairsWithoutColon(body: string): Array<{ key: string; value: string }> {
-  const text = normalizeText(body);
-  if (!text) return [];
-
-  // Typical values in imported descriptions: Да/Нет, versions (5.0), codecs (SBC/AAC), small tokens.
-  const re = /\b([A-Za-zА-ЯЁа-яё0-9][A-Za-zА-ЯЁа-яё0-9+().,\-/_]{1,40})\s+(Да|Нет|SBC|AAC|aptX|LDAC|\d+(?:[.,]\d+)?)(?=\b|\s)/g;
   const out: Array<{ key: string; value: string }> = [];
 
-  for (const m of text.matchAll(re)) {
-    const key = (m[1] ?? '').trim();
-    const value = (m[2] ?? '').trim();
-    if (!key || !value) continue;
-    out.push({ key, value });
-  }
-
-  return out;
-}
-
-function extractKeyValueItems(body: string): { items: Array<{ key: string; value: string }>; rest: string } {
-  const text = normalizeText(body);
-  if (!text) return { items: [], rest: body };
-
-  // Normalize "Key — Value" into "Key: Value" to avoid capturing whole tails as a single key/value.
-  const normalizedForPairs = text.replace(
-    /\b([А-ЯЁA-Za-z0-9][А-ЯЁA-Za-z0-9+().,\-/_\s]{1,40})\s+—\s+/g,
-    '$1: '
-  );
-
-  const items: Array<{ key: string; value: string }> = [];
-  const re =
-    /([А-ЯЁA-Za-z0-9().,\-+/%\s]{2,60}):\s*([\s\S]*?)(?=(?:\s+[А-ЯЁA-Za-z0-9().,\-+/%\s]{2,60}:)|$)/g;
-
-  let consumedUntil = 0;
-  for (const m of normalizedForPairs.matchAll(re)) {
-    const rawKey = (m[1] ?? '').trim();
-    const rawVal = (m[2] ?? '').trim();
-    if (rawKey && rawVal) {
-      items.push({ key: rawKey, value: rawVal });
-      const idx = (m.index ?? 0) + m[0].length;
-      consumedUntil = Math.max(consumedUntil, idx);
-    }
-  }
-
-  const restAfterColon = normalizedForPairs.slice(consumedUntil).trim();
-
-  // If we got nothing via ":" patterns, try to extract simple "Key Value" pairs (Да/Нет/версии/codecs)
-  if (items.length === 0) {
-    // Typical values in imported descriptions: Да/Нет, versions (5.0), codecs (SBC/AAC), small tokens.
-    const reNoColon =
-      /\b([A-Za-zА-ЯЁа-яё0-9][A-Za-zА-ЯЁа-яё0-9+().,\-/_]{1,40})\s+(Да|Нет|SBC|AAC|aptX|LDAC|\d+(?:[.,]\d+)?)(?=\b|\s)/g;
-    const pairs: Array<{ key: string; value: string }> = [];
-    let rest = normalizedForPairs;
-
-    for (const m of normalizedForPairs.matchAll(reNoColon)) {
+  // Multiple pairs in one line: "Bluetooth — SBC Multipoint — Нет"
+  const multiRe =
+    /([А-ЯЁA-Za-z0-9().,\-+/%\s]{2,60}?)\s*(?:—|:)\s*([^—:]+?)(?=\s+[А-ЯЁA-Za-z0-9().,\-+/%\s]{2,60}?\s*(?:—|:)\s*|$)/g;
+  const multiMatches = Array.from(s.matchAll(multiRe));
+  if (multiMatches.length >= 2) {
+    for (const m of multiMatches) {
       const key = (m[1] ?? '').trim();
       const value = (m[2] ?? '').trim();
-      if (!key || !value) continue;
-      pairs.push({ key, value });
+      if (key && value) out.push({ key, value });
     }
-
-    if (pairs.length > 0) {
-      // Remove extracted pairs from remaining text
-      rest = rest.replace(reNoColon, '').replace(/\s+/g, ' ').trim();
-      return { items: pairs, rest };
-    }
+    return out;
   }
 
-  return { items, rest: restAfterColon };
+  const colonIdx = s.indexOf(':');
+  if (colonIdx > 0) {
+    const key = s.slice(0, colonIdx).trim();
+    const value = s.slice(colonIdx + 1).trim();
+    if (key && value) return [{ key, value }];
+  }
+
+  const dashIdx = s.indexOf('—');
+  if (dashIdx > 0) {
+    const key = s.slice(0, dashIdx).trim();
+    const value = s.slice(dashIdx + 1).trim();
+    if (key && value) return [{ key, value }];
+  }
+
+  return [];
+}
+
+function extractKeyValueItemsFromBody(body: string): { items: Array<{ key: string; value: string }>; rest: string } {
+  const text = normalizeDescriptionPreserveLines(body);
+  if (!text) return { items: [], rest: '' };
+
+  const items: Array<{ key: string; value: string }> = [];
+  const restLines: string[] = [];
+
+  const rawLines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+
+    // Pattern: "Ключ" "\u2014" "Значение" as three separate lines
+    if ((line === '—' || line === '-' || line === '–') && i > 0 && i + 1 < rawLines.length) {
+      const prev = rawLines[i - 1];
+      const next = rawLines[i + 1];
+      const merged = `${prev} — ${next}`;
+      const pairs = extractKeyValueFromLine(merged);
+      if (pairs.length > 0) {
+        // Remove previously added prev line from restLines if it was added there
+        if (restLines.length > 0 && restLines[restLines.length - 1] === prev) {
+          restLines.pop();
+        }
+        items.push(...pairs);
+        i++; // skip next
+        continue;
+      }
+    }
+
+    const pairs = extractKeyValueFromLine(line);
+    if (pairs.length > 0) items.push(...pairs);
+    else restLines.push(line);
+  }
+
+  return { items, rest: restLines.join('\n').trim() };
+}
+
+function renderDescriptionBlocks(description: string | undefined): ReactElement {
+  const raw = trimDescriptionBeforeMain(description);
+  if (!raw) {
+    return <div className={styles.descriptionText}>Описание этого товара пока не добавлено.</div>;
+  }
+
+  const blocks = splitDescriptionByHeadings(raw);
+
+  if (blocks.length === 0) {
+    return <div className={styles.descriptionText}>{raw}</div>;
+  }
+
+  const anyPairs = blocks.some((b) => extractKeyValueItemsFromBody(b.body).items.length > 0);
+
+  return (
+    <div className={styles.descriptionBlocks}>
+      {blocks.map((block, idx) => {
+        const { items, rest } = extractKeyValueItemsFromBody(block.body);
+        const hasTitle = !!block.title?.trim();
+        const hasItems = items.length > 0;
+        const hasRest = !!rest?.trim();
+
+        return (
+          <section key={`${block.title ?? 'block'}-${idx}`} className={styles.descriptionBlock}>
+            {hasTitle && <h3 className={styles.descriptionBlockTitle}>{block.title}</h3>}
+
+            {hasItems && (
+              <ul className={styles.descriptionBullets}>
+                {items.map(({ key, value }, i) => (
+                  <li key={`${key}-${i}`} className={styles.descriptionBullet}>
+                    <span className={styles.descriptionBulletKey}>{key}</span>
+                    <span className={styles.descriptionBulletSep}>—</span>
+                    <span className={styles.descriptionBulletValue}>{value}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {hasRest && <div className={styles.descriptionText}>{rest}</div>}
+          </section>
+        );
+      })}
+
+      {!anyPairs && <div className={styles.descriptionText}>{raw}</div>}
+    </div>
+  );
+}
+
+function renderLegalInfoBlock(product: Product): ReactElement | null {
+  const items: Array<{ key: string; value: string }> = [];
+
+  if (product.warrantyMonths != null && product.warrantyMonths > 0) {
+    items.push({ key: 'Гарантия', value: `${product.warrantyMonths} мес.` });
+  }
+  if (product.manufacturerAddress) items.push({ key: 'Адрес производителя', value: product.manufacturerAddress });
+  if (product.productionAddress) items.push({ key: 'Адрес производства', value: product.productionAddress });
+  if (product.importer) items.push({ key: 'Импортер', value: product.importer });
+  if (product.serviceSupport) items.push({ key: 'Сервисная поддержка', value: product.serviceSupport });
+
+  if (items.length === 0) return null;
+
+  return (
+    <section className={styles.descriptionBlock}>
+      <h3 className={styles.descriptionBlockTitle}>Юридическая информация</h3>
+      <ul className={styles.descriptionBullets}>
+        {items.map(({ key, value }, i) => (
+          <li key={`${key}-${i}`} className={styles.descriptionBullet}>
+            <span className={styles.descriptionBulletKey}>{key}</span>
+            <span className={styles.descriptionBulletSep}>—</span>
+            <span className={styles.descriptionBulletValue}>{value}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
 /**
@@ -195,7 +284,7 @@ export function ProductPage(): ReactElement {
   const tabs = useMemo<Tab[]>(() => {
     if (!product) return [];
 
-    const specs = product.specifications as ProductSpecifications;
+    const descriptionForUi = trimDescriptionBeforeMain(product.description);
 
     const reviewCount = product.reviewCount ?? 0;
 
@@ -204,29 +293,12 @@ export function ProductPage(): ReactElement {
         id: 'specs',
         label: 'Характеристики',
         content: (
-          <div className={styles.specsTable}>
-            {specs && Object.keys(specs).length > 0 ? (
-              Object.entries(specs).map(([key, value]) => (
-                <div key={key} className={styles.specsRow}>
-                  <span className={styles.specsLabel}>{specLabel(key)}</span>
-                  <span className={styles.specsValue}>{formatSpecValueForKey(key, value as string | number | boolean | undefined)}</span>
-                </div>
-              ))
-            ) : (
-              <p className={styles.empty}>Характеристики не указаны</p>
-            )}
-          </div>
-        )
-      },
-      {
-        id: 'description',
-        label: 'Описание',
-        content: (
-          <div className={styles.description}>
-            <div className={styles.descriptionText}>
-              {product.description || 'Описание этого товара пока не добавлено.'}
+          <>
+            <div className={styles.description}>
+              {renderDescriptionBlocks(descriptionForUi)}
+              {renderLegalInfoBlock(product)}
             </div>
-          </div>
+          </>
         )
       },
       {

@@ -55,6 +55,10 @@ public class CatalogDbContext : DbContext
             entity.Property(e => e.Name).HasColumnName("name").IsRequired().HasMaxLength(200);
             entity.Property(e => e.Sku).HasColumnName("sku").IsRequired().HasMaxLength(50);
             entity.Property(e => e.Description).HasColumnName("description").HasColumnType("text");
+            entity.Property(e => e.ManufacturerAddress).HasColumnName("manufacturer_address").HasColumnType("text");
+            entity.Property(e => e.ProductionAddress).HasColumnName("production_address").HasColumnType("text");
+            entity.Property(e => e.Importer).HasColumnName("importer").HasColumnType("text");
+            entity.Property(e => e.ServiceSupport).HasColumnName("service_support").HasColumnType("text");
             entity.Property(e => e.Price).HasColumnName("price").HasPrecision(12, 2);
             entity.Property(e => e.Stock).HasColumnName("stock");
             entity.Property(e => e.WarrantyMonths).HasColumnName("warranty_months");

@@ -311,6 +311,77 @@ public class ProductRepository : IProductRepository
         return result;
     }
 
+    public async Task<Dictionary<string, int>> GetSpecificationValueCountsAsync(Guid categoryId, string attributeKey, ProductFilterDto? filterContext = null)
+    {
+        var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == attributeKey);
+        if (attr == null) return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        var baseProductsQuery = _readContext.Products.Where(p => p.CategoryId == categoryId && p.IsActive);
+        if (filterContext != null)
+        {
+            var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
+            if (manIds != null && manIds.Count > 0)
+                baseProductsQuery = baseProductsQuery.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
+        }
+        var productIds = await baseProductsQuery.Select(p => p.Id).ToListAsync();
+
+        // Apply spec filters excluding current attributeKey (facet behaviour)
+        if (filterContext?.Specifications != null && filterContext.Specifications.Count > 0)
+        {
+            foreach (var (specKey, value) in filterContext.Specifications.Where(kv => kv.Key != attributeKey))
+            {
+                if (string.IsNullOrEmpty(specKey) || string.IsNullOrEmpty(value)) continue;
+                var allowedTexts = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                if (allowedTexts.Count == 0) continue;
+                var specAttr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == specKey);
+                if (specAttr == null) continue;
+                var canonIds = await _readContext.SpecificationCanonicalValues
+                    .Where(cv => cv.AttributeId == specAttr.Id && allowedTexts.Contains(cv.ValueText))
+                    .Select(cv => cv.Id).ToListAsync();
+                if (canonIds.Count == 0) continue;
+                productIds = await _readContext.ProductSpecificationValues
+                    .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == specAttr.Id && psv.CanonicalValueId != null && canonIds.Contains(psv.CanonicalValueId!.Value))
+                    .Select(psv => psv.ProductId)
+                    .Distinct()
+                    .ToListAsync();
+            }
+        }
+
+        if (filterContext?.SpecificationRanges != null && filterContext.SpecificationRanges.Count > 0)
+        {
+            foreach (var (rangeKey, rangeStr) in filterContext.SpecificationRanges)
+            {
+                if (string.IsNullOrEmpty(rangeKey)) continue;
+                var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);
+                var min = parts.Length > 0 && decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : (decimal?)null;
+                var max = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
+                if (!min.HasValue && !max.HasValue) continue;
+                var rangeAttr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
+                if (rangeAttr == null) continue;
+                productIds = await _readContext.ProductSpecificationValues
+                    .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == rangeAttr.Id && psv.ValueNumber != null &&
+                        (!min.HasValue || psv.ValueNumber >= min) &&
+                        (!max.HasValue || psv.ValueNumber <= max))
+                    .Select(psv => psv.ProductId)
+                    .Distinct()
+                    .ToListAsync();
+            }
+        }
+
+        if (productIds.Count == 0) return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        var rows = await _readContext.ProductSpecificationValues
+            .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == attr.Id && psv.CanonicalValueId != null)
+            .Join(_readContext.SpecificationCanonicalValues, psv => psv.CanonicalValueId, scv => scv.Id, (psv, scv) => new { psv.ProductId, scv.ValueText })
+            .GroupBy(x => x.ValueText)
+            .Select(g => new { Value = g.Key, Count = g.Select(x => x.ProductId).Distinct().Count() })
+            .ToListAsync();
+
+        return rows
+            .Where(r => !string.IsNullOrWhiteSpace(r.Value))
+            .ToDictionary(r => r.Value.Trim(), r => r.Count, StringComparer.OrdinalIgnoreCase);
+    }
+
     public async Task<(decimal? Min, decimal? Max)> GetSpecificationRangeAsync(Guid categoryId, string attributeKey, ProductFilterDto? filterContext = null)
     {
         var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == attributeKey);

@@ -937,6 +937,12 @@ function getCategoriesWithCount(): (Category & { count: number })[] {
 // === Handlers ===
 
 export const catalogHandlers = [
+  // POST /api/v1/catalog/telemetry/events - прием телеметрии (заглушка для dev)
+  http.post('/api/v1/catalog/telemetry/events', async () => {
+    await delay(faker.number.int({ min: 5, max: 30 }));
+    return new HttpResponse(null, { status: 204 });
+  }),
+
   // GET /api/v1/catalog/products - список продуктов с фильтрацией и пагинацией
   http.get('/api/v1/catalog/products', async ({ request }) => {
     await delay(faker.number.int({ min: 50, max: 200 }));
@@ -1375,6 +1381,152 @@ export const catalogHandlers = [
       return { ...t, minValue, maxValue };
     });
     return HttpResponse.json({ data: attrs });
+  }),
+
+  // GET /api/v1/catalog/categories/:slug/filter-facets - фасеты (полный список + counts)
+  http.get('/api/v1/catalog/categories/:slug/filter-facets', async ({ params, request }) => {
+    await delay(faker.number.int({ min: 20, max: 80 }));
+    const slug = typeof params.slug === 'string' ? params.slug : params.slug?.[0] ?? '';
+    const url = new URL(request.url);
+    const manufacturerIds = url.searchParams.getAll('manufacturerIds');
+    const specifications: Record<string, string> = {};
+    const specificationRanges: Record<string, string> = {};
+    for (const [k, v] of url.searchParams) {
+      const mSpec = k.match(/^specifications\[(.+)\]$/i);
+      const mRange = k.match(/^specificationRanges\[(.+)\]$/i);
+      if (mSpec && v) specifications[mSpec[1]] = v;
+      if (mRange && v) specificationRanges[mRange[1]] = v;
+    }
+
+    const slugToFrontend: Record<string, ProductCategory> = {
+      processors: 'cpu',
+      gpu: 'gpu',
+      motherboards: 'motherboard',
+      ram: 'ram',
+      storage: 'storage',
+      psu: 'psu',
+      cases: 'case',
+      coolers: 'cooling',
+      monitors: 'monitor',
+      keyboards: 'keyboard',
+      mice: 'mouse',
+      headphones: 'headphones',
+      periphery: 'keyboard',
+    };
+    const frontendCat = slugToFrontend[slug] ?? (slug as ProductCategory);
+    const productsAll = getAllProducts().filter((p) => p.category === frontendCat) as RealisticProduct[];
+    let products = [...productsAll];
+
+    if (manufacturerIds.length > 0) {
+      const ids = new Set(manufacturerIds);
+      products = products.filter((p) => p.manufacturer?.id && ids.has(p.manufacturer.id));
+    }
+
+    if (Object.keys(specificationRanges).length > 0) {
+      products = products.filter((p) => {
+        const pSpecs = p.specifications ?? {};
+        return Object.entries(specificationRanges).every(([k, rangeStr]) => {
+          const [minS, maxS] = rangeStr.split(',').map((s) => s.trim());
+          const min = parseFloat(minS);
+          const max = parseFloat(maxS);
+          if (Number.isNaN(min) || Number.isNaN(max)) return true;
+          const val = pSpecs[k];
+          if (val == null) return false;
+          const num = typeof val === 'number' ? val : parseFloat(String(val));
+          if (Number.isNaN(num)) return false;
+          return num >= min && num <= max;
+        });
+      });
+    }
+
+    const attrTemplates: Record<string, Array<{ key: string; displayName: string; filterType: string; sortOrder: number }>> = {
+      headphones: [
+        { key: 'type', displayName: 'Тип', filterType: 'select', sortOrder: 1 },
+        { key: 'interface', displayName: 'Интерфейс', filterType: 'select', sortOrder: 2 },
+        { key: 'connection_type', displayName: 'Тип подключения', filterType: 'select', sortOrder: 3 },
+      ],
+      processors: [
+        { key: 'socket', displayName: 'Сокет', filterType: 'select', sortOrder: 1 },
+        { key: 'integrated_graphics', displayName: 'Встроенная графика', filterType: 'select', sortOrder: 2 },
+        { key: 'cooling_included', displayName: 'Охлаждение в комплекте', filterType: 'select', sortOrder: 3 },
+        { key: 'multithreading', displayName: 'Многопоточность', filterType: 'select', sortOrder: 4 },
+        { key: 'cores', displayName: 'Количество ядер', filterType: 'range', sortOrder: 5 },
+      ],
+      gpu: [
+        { key: 'vram', displayName: 'Объём видеопамяти', filterType: 'select', sortOrder: 1 },
+        { key: 'videopamyat', displayName: 'Объём видеопамяти (ГБ)', filterType: 'range', sortOrder: 2 },
+        { key: 'gpu', displayName: 'Серия GPU', filterType: 'select', sortOrder: 3 },
+        { key: 'razyemy_pitaniya', displayName: 'Разъёмы питания', filterType: 'select', sortOrder: 4 },
+      ],
+    };
+
+    const templates = attrTemplates[slug] ?? [];
+    const facets = templates.map((t) => {
+      // Apply select specs excluding current key
+      const specsExcludingKey = Object.fromEntries(Object.entries(specifications).filter(([k]) => k !== t.key));
+      const productsForKey = t.filterType === 'select'
+        ? products.filter((p) => {
+            const pSpecs = p.specifications ?? {};
+            return Object.entries(specsExcludingKey).every(([k, v]) => {
+              const pVal = pSpecs[k];
+              if (MULTI_VALUE_EXPAND_KEYS.has(k)) {
+                const allowed = v.split(',').map((s) => s.trim()).filter(Boolean);
+                return allowed.some((a) => multiValueContains(String(pVal ?? ''), a));
+              }
+              if (isNormalizedAttribute(k)) {
+                const allowed = v.split(',').map((s) => s.trim()).filter(Boolean);
+                return allowed.some((a) => specMatchesFilter(k, pVal, a));
+              }
+              const pStr = String(pVal ?? '');
+              if (v.includes(',')) {
+                const allowed = v.split(',').map((s) => s.trim()).filter(Boolean);
+                return allowed.includes(pStr);
+              }
+              return pStr === String(v);
+            });
+          })
+        : products;
+
+      if (t.filterType === 'range') {
+        const nums = productsForKey
+          .map((p) => {
+            const v = p.specifications?.[t.key];
+            if (v == null) return null;
+            const n = typeof v === 'number' ? v : parseFloat(String(v));
+            return Number.isNaN(n) ? null : n;
+          })
+          .filter((n): n is number => n != null);
+        const minValue = nums.length > 0 ? Math.min(...nums) : 0;
+        const maxValue = nums.length > 0 ? Math.max(...nums) : 100;
+        return { key: t.key, displayName: t.displayName, filterType: 'range', sortOrder: t.sortOrder, minValue, maxValue };
+      }
+
+      const allValuesSet = new Set<string>();
+      productsAll.forEach((p) => {
+        const v = p.specifications?.[t.key];
+        const display = isNormalizedAttribute(t.key) ? normalizeSpecForDisplay(t.key, v) : (v != null && v !== '' ? String(v) : null);
+        if (display) allValuesSet.add(display);
+      });
+      const allValues = Array.from(allValuesSet).sort();
+
+      const counts = new Map<string, number>();
+      productsForKey.forEach((p) => {
+        const v = p.specifications?.[t.key];
+        const display = isNormalizedAttribute(t.key) ? normalizeSpecForDisplay(t.key, v) : (v != null && v !== '' ? String(v) : null);
+        if (!display) return;
+        counts.set(display, (counts.get(display) ?? 0) + 1);
+      });
+
+      return {
+        key: t.key,
+        displayName: t.displayName,
+        filterType: 'select',
+        sortOrder: t.sortOrder,
+        options: allValues.map((v) => ({ value: v, count: counts.get(v) ?? 0 })),
+      };
+    });
+
+    return HttpResponse.json({ data: facets });
   }),
 
   // GET /api/v1/catalog/manufacturers - список производителей (по категории или все)

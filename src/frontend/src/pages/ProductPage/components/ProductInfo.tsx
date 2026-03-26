@@ -1,11 +1,11 @@
 import { type ReactElement, useCallback, useState } from 'react';
-import { ShoppingCart, Heart, Share2, Check, Clock, AlertTriangle, Minus, Plus } from 'lucide-react';
+import { ShoppingCart, Heart, Share2, Minus, Plus, ArrowRight } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { useCart } from '../../../hooks/useCart';
 import { useWishlistStore } from '../../../store/wishlistStore';
 import { useToastStore } from '../../../store/toastStore';
-import type { Product, ProductSpecifications } from '../../../api/types';
-import { formatSpecValueForKey, specLabel } from '../../../utils/specifications';
+import type { Product } from '../../../api/types';
+import { Link } from 'react-router-dom';
 import styles from '../ProductPage.module.css';
 
 export interface ProductInfoProps {
@@ -113,9 +113,6 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
       showToast('Не удалось скопировать ссылку', 'error');
     }
   }, [product.name, showToast]);
-
-  const specs = product.specifications as ProductSpecifications | undefined;
-  const quickSpecs = specs ? Object.entries(specs).slice(0, 4) : [];
 
   return (
     <div className={styles.info}>
@@ -225,18 +222,47 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
         </div>
       )}
 
-      {quickSpecs.length > 0 && (
-        <div className={styles.quickSpecs}>
-          {quickSpecs.map(([key, value]) => (
-            <div key={key} className={styles.specItem}>
-              <span className={styles.specLabel}>{specLabel(key)}</span>
-              <span className={styles.specValue}>
-                {formatSpecValueForKey(key, value as string | number | boolean | undefined)}
-              </span>
-            </div>
-          ))}
+      <section className={styles.deliveryDetails} aria-label="Доставка по Минску">
+        <div className={styles.deliveryHeadline}>
+          <p className={styles.deliveryTitle}>Доставка</p>
+          <span className={styles.deliveryCity}>по Минску</span>
         </div>
-      )}
+
+        <div className={styles.deliveryItems}>
+          <div className={styles.deliveryItem} aria-label="Курьером в ваше время">
+            <div className={styles.deliveryText}>
+              <p className={styles.deliveryItemTitle}>Курьером в ваше время</p>
+              <p className={styles.deliveryItemDesc}>Доставим заказ в удобный для вас 30‑минутный интервал времени</p>
+            </div>
+            <p className={styles.deliveryPrice}>от 7 BYN</p>
+            <Link to="/delivery" className={styles.deliveryLinkBtn} aria-label="Условия доставки">
+              <ArrowRight size={18} aria-hidden />
+            </Link>
+          </div>
+
+          <div className={styles.deliveryItem} aria-label="Курьером">
+            <div className={styles.deliveryText}>
+              <p className={styles.deliveryItemTitle}>Курьером</p>
+              <p className={styles.deliveryItemDesc}>Обычно 1–2 дня</p>
+            </div>
+            <p className={`${styles.deliveryPrice} ${styles.deliveryPriceFree}`}>бесплатно</p>
+            <Link to="/delivery" className={styles.deliveryLinkBtn} aria-label="Условия доставки">
+              <ArrowRight size={18} aria-hidden />
+            </Link>
+          </div>
+
+          <div className={styles.deliveryItem} aria-label="Самовывоз">
+            <div className={styles.deliveryText}>
+              <p className={styles.deliveryItemTitle}>Самовывоз</p>
+              <p className={styles.deliveryItemDesc}>Заберите в пункте выдачи</p>
+            </div>
+            <p className={`${styles.deliveryPrice} ${styles.deliveryPriceFree}`}>бесплатно</p>
+            <Link to="/delivery" className={styles.deliveryLinkBtn} aria-label="Условия самовывоза">
+              <ArrowRight size={18} aria-hidden />
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

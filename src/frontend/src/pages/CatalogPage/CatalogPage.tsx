@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -9,16 +9,19 @@ import {
   List,
   Table
 } from 'lucide-react';
-import { FilterSidebar, EmptyState, Pagination, ProductTable } from '../../components/catalog';
+import { FilterSidebar, EmptyState, Pagination, ProductTable, ActiveFiltersBar, buildCatalogFilterChips } from '../../components/catalog';
 import { ProductCard } from '../../components/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { catalogApi } from '../../api/catalog';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
-import type { ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
+import type { Product, ProductSpecifications, ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
+import { Modal } from '../../components/ui/Modal/Modal';
+import { formatSpecValueForKey, specLabel } from '../../utils/specifications';
 import styles from './CatalogPage.module.css';
+import { telemetryInitAutoFlush, telemetryTrack } from '../../utils/telemetry';
 
 /**
  * Loader for CatalogPage to support SSR/SSG-like data fetching
@@ -136,10 +139,15 @@ export function CatalogPage() {
   const { category: categoryParam } = useParams<{ category?: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const isCategoryLocked = Boolean(categoryParam);
   
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [quickViewId, setQuickViewId] = useState<string | null>(null);
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [quickViewLoading, setQuickViewLoading] = useState(false);
   
   // Инициализация и синхронизация категории из URL (path или query)
   const resolvedCategory = resolveCategoryFromUrl(categoryParam, searchParams.get('category'));
@@ -192,10 +200,30 @@ export function CatalogPage() {
     }
   });
 
+  // === Telemetry (engagement baseline) ===
+  const catalogStartTsRef = useRef<number>(performance.now());
+  const filterChangeCountRef = useRef<number>(0);
+  const firstInteractionSentRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    telemetryInitAutoFlush();
+  }, []);
+
+  useEffect(() => {
+    catalogStartTsRef.current = performance.now();
+    filterChangeCountRef.current = 0;
+    firstInteractionSentRef.current = false;
+    telemetryTrack('catalog_view', {
+      category: selectedCategory ?? 'all',
+      viewMode,
+    });
+  }, [selectedCategory, viewMode]);
+
   // Синхронизация фильтров и страницы с URL (path + query)
   useEffect(() => {
     const params = new URLSearchParams();
-    if (selectedCategory) params.set('category', selectedCategory);
+    // When category is fixed via path (/catalog/:category), don't duplicate it in query string.
+    if (selectedCategory && !isCategoryLocked) params.set('category', selectedCategory);
     if (searchQuery) params.set('search', searchQuery);
     if (priceRange.min > 0) params.set('priceMin', priceRange.min.toString());
     if (priceRange.max > 0) params.set('priceMax', priceRange.max.toString());
@@ -212,7 +240,7 @@ export function CatalogPage() {
     const path = selectedCategory ? `/catalog/${selectedCategory}` : '/catalog';
     const fullPath = queryString ? `${path}?${queryString}` : path;
     navigate(fullPath, { replace: true });
-  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, page, navigate, viewMode]);
+  }, [selectedCategory, isCategoryLocked, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, page, navigate, viewMode]);
 
   const filterDeps = [
     selectedCategory,
@@ -236,10 +264,36 @@ export function CatalogPage() {
     setPage(1);
   }, [...filterDeps, pageSize]);
 
+  useEffect(() => {
+    if (isInitialMount.current) return;
+    filterChangeCountRef.current += 1;
+    if (!firstInteractionSentRef.current) {
+      firstInteractionSentRef.current = true;
+      telemetryTrack('catalog_first_interaction', {
+        msSinceView: Math.round(performance.now() - catalogStartTsRef.current),
+        category: selectedCategory ?? 'all',
+      });
+    }
+    telemetryTrack('catalog_filters_changed', {
+      count: filterChangeCountRef.current,
+      category: selectedCategory ?? 'all',
+    });
+  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications]);
+
   // Загрузка при смене страницы, фильтров или pageSize
   useEffect(() => {
     fetchProducts(page);
   }, [page, pageSize, ...filterDeps]);
+
+  const manufacturersById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of products) {
+      if (p.manufacturer?.id && p.manufacturer?.name) {
+        map.set(p.manufacturer.id, p.manufacturer.name);
+      }
+    }
+    return map;
+  }, [products]);
 
   const fetchProducts = async (pageNum: number) => {
     setLoading(true);
@@ -335,6 +389,14 @@ export function CatalogPage() {
       setProducts(response.data);
       setTotalPages(response.meta.totalPages);
       setTotalItems(response.meta.totalItems);
+      setHasLoadedOnce(true);
+
+      if (response.data.length === 0) {
+        telemetryTrack('catalog_empty_state', {
+          category: selectedCategory ?? 'all',
+          filterChangeCount: filterChangeCountRef.current,
+        });
+      }
     } catch (err) {
       setError('Не удалось загрузить товары. Попробуйте позже.');
       console.error('Failed to fetch products:', err);
@@ -342,6 +404,27 @@ export function CatalogPage() {
       setLoading(false);
     }
   };
+
+  const openQuickView = useCallback(async (productId: string) => {
+    setQuickViewId(productId);
+    setQuickViewProduct(null);
+    setQuickViewLoading(true);
+    telemetryTrack('catalog_quick_view_open', { productId, category: selectedCategory ?? 'all' });
+    try {
+      const p = await catalogApi.getProduct(productId);
+      setQuickViewProduct(p);
+    } catch {
+      setQuickViewProduct(null);
+    } finally {
+      setQuickViewLoading(false);
+    }
+  }, [selectedCategory]);
+
+  const closeQuickView = useCallback(() => {
+    setQuickViewId(null);
+    setQuickViewProduct(null);
+    setQuickViewLoading(false);
+  }, []);
 
   const catalogScrollAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -385,7 +468,9 @@ export function CatalogPage() {
   }, []);
 
   const handleResetFilters = () => {
-    setSelectedCategory(null);
+    if (!isCategoryLocked) {
+      setSelectedCategory(null);
+    }
     setPriceRange({ min: 0, max: 0 });
     setSelectedManufacturerIds([]);
     setMinRating(0);
@@ -395,8 +480,45 @@ export function CatalogPage() {
     setSearchQuery('');
   };
 
+  const activeFilterCount =
+    (searchQuery.trim() ? 1 : 0) +
+    (priceRange.min > 0 || priceRange.max > 0 ? 1 : 0) +
+    (selectedManufacturerIds.length > 0 ? 1 : 0) +
+    (minRating > 0 ? 1 : 0) +
+    ((selectedAvailability.length !== 1 || selectedAvailability[0] !== 'in_stock') ? 1 : 0) +
+    (Object.keys(selectedSpecifications).length > 0 ? 1 : 0);
+
+  const chips = buildCatalogFilterChips({
+    isCategoryLocked,
+    selectedCategory,
+    searchQuery,
+    priceRange,
+    selectedManufacturerIds,
+    manufacturersById,
+    minRating,
+    selectedAvailability,
+    selectedSpecifications,
+    onClearSearch: () => setSearchQuery(''),
+    onClearPrice: () => setPriceRange({ min: 0, max: 0 }),
+    onClearManufacturers: () => setSelectedManufacturerIds([]),
+    onClearRating: () => setMinRating(0),
+    onClearAvailability: () => setSelectedAvailability(['in_stock']),
+    onClearSpecKey: (key) => {
+      setSelectedSpecifications((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    },
+    onClearCategory: () => setSelectedCategory(null),
+  });
+
   const handleAddToCart = (_productId: string) => {
     // ProductCard already adds to cart via useCart; callback for optional analytics
+    telemetryTrack('catalog_add_to_cart', {
+      category: selectedCategory ?? 'all',
+      viewMode,
+    });
   };
 
   return (
@@ -440,6 +562,7 @@ export function CatalogPage() {
               <FilterSidebar
                 selectedCategory={selectedCategory}
                 onCategoryChange={handleCategoryChange}
+                categoryLocked={isCategoryLocked}
                 priceRange={priceRange}
                 onPriceChange={handlePriceChange}
                 selectedManufacturerIds={selectedManufacturerIds}
@@ -462,6 +585,7 @@ export function CatalogPage() {
         <FilterSidebar
           selectedCategory={selectedCategory}
           onCategoryChange={handleCategoryChange}
+          categoryLocked={isCategoryLocked}
           priceRange={priceRange}
           onPriceChange={handlePriceChange}
           selectedManufacturerIds={selectedManufacturerIds}
@@ -563,8 +687,14 @@ export function CatalogPage() {
           </div>
         </div>
 
-        {/* Loading State - Skeleton Grid */}
-        {loading && (
+        <ActiveFiltersBar
+          chips={chips}
+          activeCount={activeFilterCount}
+          onClearAll={handleResetFilters}
+        />
+
+        {/* Loading State - Skeleton only for first load */}
+        {loading && !hasLoadedOnce && (
           <div className={`${styles.grid} ${viewMode === 'list' ? styles.listView : ''} ${viewMode === 'table' ? styles.tableView : ''}`}>
             {Array.from({ length: 12 }).map((_, index) => (
               <ProductCardSkeleton key={index} />
@@ -580,35 +710,64 @@ export function CatalogPage() {
         )}
 
         {/* Empty State */}
-        {!loading && !error && products.length === 0 && (
+        {!loading && !error && hasLoadedOnce && products.length === 0 && (
           <div className={styles.emptyStateWrapper}>
-            <EmptyState onReset={handleResetFilters} />
+            <EmptyState
+              title="0 товаров по выбранным фильтрам"
+              description="Попробуйте снять один из фильтров ниже или сбросить всё — так вы быстрее найдёте подходящий вариант."
+              onReset={handleResetFilters}
+              actions={[
+                ...(priceRange.min > 0 || priceRange.max > 0
+                  ? [{ label: 'Снять цену', onClick: () => setPriceRange({ min: 0, max: 0 }) }]
+                  : []),
+                ...(selectedManufacturerIds.length > 0
+                  ? [{ label: 'Снять бренды', onClick: () => setSelectedManufacturerIds([]) }]
+                  : []),
+                ...(Object.keys(selectedSpecifications).length > 0
+                  ? [{ label: 'Сбросить характеристики', onClick: () => setSelectedSpecifications({}) }]
+                  : []),
+                ...(searchQuery.trim()
+                  ? [{ label: 'Очистить поиск', onClick: () => setSearchQuery('') }]
+                  : []),
+              ]}
+            />
           </div>
         )}
 
         {/* Product Grid - 4 columns */}
-        {!loading && !error && products.length > 0 && (
+        {!error && products.length > 0 && (
           <>
             {viewMode === 'table' ? (
               <ProductTable products={products} onAddToCart={handleAddToCart} />
             ) : (
-              <motion.div 
-                className={`${styles.grid} ${viewMode === 'list' ? styles.listView : ''}`}
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {products.map((product, index) => (
-                  <motion.div key={product.id} variants={itemVariants} className={styles.gridItem}>
-                    <ProductCard 
-                      product={product} 
-                      onAddToCart={handleAddToCart}
-                      viewMode={viewMode}
-                      imageFetchPriority={viewMode === 'grid' && index < 4 ? 'high' : undefined}
-                    />
-                  </motion.div>
-                ))}
-              </motion.div>
+              <div className={styles.gridWrapper}>
+                <motion.div 
+                  className={`${styles.grid} ${viewMode === 'list' ? styles.listView : ''}`}
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {products.map((product, index) => (
+                    <motion.div key={product.id} variants={itemVariants} className={styles.gridItem}>
+                      <ProductCard 
+                        product={product} 
+                        onAddToCart={handleAddToCart}
+                        onQuickView={openQuickView}
+                        viewMode={viewMode}
+                        imageFetchPriority={viewMode === 'grid' && index < 4 ? 'high' : undefined}
+                      />
+                    </motion.div>
+                  ))}
+                </motion.div>
+                {loading && hasLoadedOnce && (
+                  <div className={styles.loadingOverlay} aria-hidden="true">
+                    <div className={styles.loadingOverlayInner}>
+                      <span className={styles.spinnerIcon}>⟳</span>
+                      <span>Обновляем список…</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {totalItems > 0 && (
@@ -626,6 +785,52 @@ export function CatalogPage() {
             )}
           </>
         )}
+
+        <Modal
+          isOpen={quickViewId != null}
+          onClose={closeQuickView}
+          title={quickViewProduct?.name ?? 'Быстрый просмотр'}
+          size="large"
+        >
+          {quickViewLoading && <div style={{ color: 'var(--fg-muted)' }}>Загружаем…</div>}
+          {!quickViewLoading && quickViewProduct && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+              <div>
+                {quickViewProduct.mainImage?.url ? (
+                  <div className={styles.quickViewImageBox}>
+                    <img
+                      src={quickViewProduct.mainImage.url}
+                      alt={quickViewProduct.mainImage.alt ?? quickViewProduct.name}
+                      className={styles.quickViewImage}
+                    />
+                  </div>
+                ) : null}
+              </div>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>{quickViewProduct.name}</div>
+                <div style={{ color: 'var(--fg-muted)', marginBottom: 10 }}>
+                  {quickViewProduct.manufacturer?.name ?? '—'} · {quickViewProduct.sku}
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>
+                  {quickViewProduct.price.toLocaleString('ru-RU')} BYN
+                </div>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {Object.entries((quickViewProduct.specifications as ProductSpecifications) ?? {})
+                    .slice(0, 8)
+                    .map(([k, v]) => (
+                      <div key={k} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        <div style={{ color: 'var(--fg-muted)' }}>{specLabel(k)}</div>
+                        <div style={{ color: 'var(--fg)' }}>{formatSpecValueForKey(k, v as any)}</div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {!quickViewLoading && !quickViewProduct && (
+            <div style={{ color: 'var(--fg-muted)' }}>Не удалось загрузить данные товара.</div>
+          )}
+        </Modal>
       </main>
     </div>
   );

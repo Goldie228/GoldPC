@@ -49,6 +49,10 @@ public record ProductDetailDto
     public int Stock { get; init; }
     public int WarrantyMonths { get; init; }
     public string? Description { get; init; }
+    public string? ManufacturerAddress { get; init; }
+    public string? ProductionAddress { get; init; }
+    public string? Importer { get; init; }
+    public string? ServiceSupport { get; init; }
     public Dictionary<string, object> Specifications { get; init; } = new();
     public ProductImageDto? MainImage { get; init; }
     public List<ProductImageDto> Images { get; init; } = new();

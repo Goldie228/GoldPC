@@ -133,6 +133,18 @@ public class CatalogController : ControllerBase
     }
 
     /// <summary>
+    /// Получить фасеты для фильтров по категории: полный список значений + counts по текущим фильтрам.
+    /// Используется для UX (disabled варианты с (0), корректные диапазоны).
+    /// </summary>
+    [HttpGet("categories/{slug}/filter-facets")]
+    [ProducesResponseType(typeof(FilterFacetsResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<FilterFacetsResponse>> GetFilterFacets(string slug, [FromQuery] FilterAttributesQueryDto? filterParams)
+    {
+        var facets = await _catalogService.GetFilterFacetsByCategoryAsync(slug, filterParams);
+        return Ok(new FilterFacetsResponse { Data = facets });
+    }
+
+    /// <summary>
     /// Получить список производителей
     /// </summary>
     [HttpGet("manufacturers")]
@@ -176,6 +188,11 @@ public record ManufacturersResponse
 public record FilterAttributesResponse
 {
     public IEnumerable<FilterAttributeDto> Data { get; init; } = Enumerable.Empty<FilterAttributeDto>();
+}
+
+public record FilterFacetsResponse
+{
+    public IEnumerable<FilterFacetAttributeDto> Data { get; init; } = Enumerable.Empty<FilterFacetAttributeDto>();
 }
 
 /// <summary>

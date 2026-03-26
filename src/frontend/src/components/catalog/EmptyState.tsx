@@ -2,11 +2,17 @@ import { Package, RotateCcw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import styles from './EmptyState.module.css';
 
+type EmptyStateAction = {
+  label: string;
+  onClick: () => void;
+};
+
 interface EmptyStateProps {
   title?: string;
   description?: string;
   onReset?: () => void;
   showResetButton?: boolean;
+  actions?: EmptyStateAction[];
 }
 
 /**
@@ -18,6 +24,7 @@ export function EmptyState({
   description = 'Попробуйте изменить параметры поиска или сбросить фильтры',
   onReset,
   showResetButton = true,
+  actions = [],
 }: EmptyStateProps) {
   return (
     <motion.div
@@ -42,6 +49,16 @@ export function EmptyState({
           <RotateCcw size={18} />
           <span>Сбросить фильтры</span>
         </button>
+      )}
+
+      {actions.length > 0 && (
+        <div className={styles.actions}>
+          {actions.map((a) => (
+            <button key={a.label} type="button" className={styles.actionButton} onClick={a.onClick}>
+              <span>{a.label}</span>
+            </button>
+          ))}
+        </div>
       )}
     </motion.div>
   );
