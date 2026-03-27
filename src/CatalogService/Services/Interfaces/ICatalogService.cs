@@ -11,6 +11,7 @@ public interface ICatalogService
     // Товары
     Task<PagedResult<ProductListDto>> GetProductsAsync(ProductFilterDto filter);
     Task<ProductDetailDto?> GetProductByIdAsync(Guid id);
+    Task<ProductDetailDto?> GetProductBySlugAsync(string slug);
     Task<ProductDetailDto?> GetProductBySkuAsync(string sku);
     Task<ProductDetailDto> CreateProductAsync(CreateProductDto dto);
     Task<ProductDetailDto?> UpdateProductAsync(Guid id, UpdateProductDto dto);

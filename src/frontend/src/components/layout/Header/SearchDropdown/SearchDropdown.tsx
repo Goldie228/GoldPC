@@ -84,8 +84,8 @@ export function SearchDropdown() {
 
   // Клик по результату
   const handleResultClick = useCallback(
-    (productId: string) => {
-      navigate(`/product/${productId}`);
+    (productSlug: string) => {
+      navigate(`/product/${productSlug}`);
       handleClose();
     },
     [navigate, handleClose]
@@ -197,7 +197,7 @@ export function SearchDropdown() {
                   <li key={product.id}>
                     <button
                       className={styles.resultItem}
-                      onClick={() => handleResultClick(product.id)}
+                      onClick={() => handleResultClick(product.slug ?? product.id)}
                       type="button"
                       role="option"
                     >

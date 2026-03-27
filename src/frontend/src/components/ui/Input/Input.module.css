@@ -89,7 +89,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   color: #ef4444;
 }
@@ -105,7 +105,7 @@
    ======================================== */
 
 .helperText {
-  font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   color: var(--fg-dim, #52525b);
 }

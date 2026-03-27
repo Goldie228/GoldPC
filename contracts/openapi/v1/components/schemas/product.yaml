@@ -6,7 +6,7 @@ components:
     # === Продукт ===
     Product:
       type: object
-      required: [id, name, sku, category, price, stock, isActive]
+      required: [id, name, sku, slug, category, price, stock, isActive]
       properties:
         id:
           $ref: './common.yaml#/components/schemas/Uuid'
@@ -22,6 +22,12 @@ components:
           maxLength: 50
           description: Артикул (SKU)
           example: "CPU-AMD-7800X3D"
+        slug:
+          type: string
+          minLength: 2
+          maxLength: 220
+          description: Человекочитаемый slug товара для URL
+          example: "naushniki_razer_blackshark_v2_hyperspeed_bel"
         category:
           $ref: './common.yaml#/components/schemas/ProductCategory'
         manufacturerId:
@@ -90,7 +96,7 @@ components:
 
     ProductSummary:
       type: object
-      required: [id, name, sku, category, price, stock]
+      required: [id, name, sku, slug, category, price, stock]
       properties:
         id:
           $ref: './common.yaml#/components/schemas/Uuid'
@@ -100,6 +106,9 @@ components:
         sku:
           type: string
           example: "CPU-AMD-7800X3D"
+        slug:
+          type: string
+          example: "naushniki_razer_blackshark_v2_hyperspeed_bel"
         category:
           $ref: './common.yaml#/components/schemas/ProductCategory'
         manufacturer:
@@ -136,9 +145,8 @@ components:
           example: "AMD"
         logo:
           type: string
-          format: uri
-          description: URL логотипа
-          example: "https://cdn.goldpc.by/manufacturers/amd.png"
+          description: Локальный путь логотипа производителя
+          example: "/uploads/manufacturers/amd.png"
         country:
           type: string
           maxLength: 50
@@ -411,9 +419,8 @@ components:
           $ref: './common.yaml#/components/schemas/Uuid'
         url:
           type: string
-          format: uri
-          description: URL изображения
-          example: "https://cdn.goldpc.by/products/cpu-1.jpg"
+          description: Локальный путь изображения товара
+          example: "/uploads/products/cpu-1.jpg"
         alt:
           type: string
           description: Alt текст
@@ -588,6 +595,10 @@ components:
           type: string
           minLength: 3
           maxLength: 50
+        slug:
+          type: string
+          minLength: 2
+          maxLength: 220
         category:
           $ref: './common.yaml#/components/schemas/ProductCategory'
         manufacturerId:
@@ -620,6 +631,10 @@ components:
           type: string
           minLength: 2
           maxLength: 200
+        slug:
+          type: string
+          minLength: 2
+          maxLength: 220
         manufacturerId:
           $ref: './common.yaml#/components/schemas/Uuid'
         price:

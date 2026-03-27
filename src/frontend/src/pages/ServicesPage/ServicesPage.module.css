@@ -128,7 +128,7 @@
 }
 
 .servicePrice {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.85rem;
   color: var(--fg-dim, #52525b);
 }
@@ -270,7 +270,7 @@
   align-items: center;
   gap: 10px;
   padding: 14px 24px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.85rem;
   font-weight: 600;
   text-decoration: none;

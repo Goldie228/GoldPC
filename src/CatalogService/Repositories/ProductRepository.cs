@@ -52,6 +52,12 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync(p => p.Sku == sku);
     }
 
+    public async Task<Product?> GetBySlugAsync(string slug)
+    {
+        return await _readContext.Products
+            .FirstOrDefaultAsync(p => p.Slug == slug && p.IsActive);
+    }
+
     public async Task<Product?> GetDetailByIdAsync(Guid id)
     {
         return await _readContext.Products
@@ -66,13 +72,27 @@ public class ProductRepository : IProductRepository
             .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
     }
 
+    public async Task<Product?> GetDetailBySlugAsync(string slug)
+    {
+        return await _readContext.Products
+            .Include(p => p.Category)
+            .Include(p => p.Manufacturer)
+            .Include(p => p.Images.OrderBy(i => i.SortOrder))
+            .Include(p => p.SpecificationValues)
+                .ThenInclude(s => s.Attribute)
+            .Include(p => p.SpecificationValues)
+                .ThenInclude(s => s.CanonicalValue)
+            .Include(p => p.Reviews.Where(r => r.IsVerified).OrderByDescending(r => r.CreatedAt))
+            .FirstOrDefaultAsync(p => p.Slug == slug && p.IsActive);
+    }
+
     public async Task<RepositoryPagedResult<Product>> GetFilteredAsync(ProductFilterDto filter)
     {
         var query = _readContext.Products
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
             .Include(p => p.Images.Where(i => i.IsPrimary))
-            .Where(p => p.IsActive && p.Images.Any());
+            .Where(p => p.IsActive && p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)));
 
         // Фильтрация по ID категории
         if (filter.CategoryId.HasValue)
@@ -225,7 +245,7 @@ public class ProductRepository : IProductRepository
         return await _readContext.Products
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
-            .Where(p => p.CategoryId == categoryId && p.IsActive && p.Images.Any())
+            .Where(p => p.CategoryId == categoryId && p.IsActive && p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)))
             .ToListAsync();
     }
 
@@ -445,7 +465,7 @@ public class ProductRepository : IProductRepository
     public async Task<Dictionary<Guid, int>> GetProductCountsByCategoryAsync()
     {
         return await _readContext.Products
-            .Where(p => p.IsActive && p.Images.Any())
+            .Where(p => p.IsActive && p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)))
             .GroupBy(p => p.CategoryId)
             .Select(g => new { CategoryId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.CategoryId, x => x.Count);
@@ -517,6 +537,18 @@ public class ProductRepository : IProductRepository
             query = query.Where(p => p.Id != excludeId.Value);
         }
         
+        return await query.AnyAsync();
+    }
+
+    public async Task<bool> SlugExistsAsync(string slug, Guid? excludeId = null)
+    {
+        var query = _context.Products.Where(p => p.Slug == slug);
+
+        if (excludeId.HasValue)
+        {
+            query = query.Where(p => p.Id != excludeId.Value);
+        }
+
         return await query.AnyAsync();
     }
 

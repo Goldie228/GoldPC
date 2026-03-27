@@ -10,7 +10,7 @@ export { useProducts, productsKeys } from './useProducts';
 export type { ProductListResponse, GetProductsParams } from './useProducts';
 
 export { useProduct, productKeys } from './useProduct';
-export type { Product, Uuid } from './useProduct';
+export type { Product } from './useProduct';
 
 // Categories
 export { useCategories, categoriesKeys } from './useCategories';

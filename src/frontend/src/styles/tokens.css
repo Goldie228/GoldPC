@@ -100,9 +100,8 @@
 
   /* Typography scale */
   --font-sans: 'Space Grotesk', sans-serif;
-  /* Заголовки витрины: контраст к UI-шрифту */
-  --font-display: 'Fraunces', 'Georgia', 'Times New Roman', serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: var(--font-sans);
+  --font-mono: var(--font-sans);
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;

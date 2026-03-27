@@ -1122,6 +1122,25 @@ export const catalogHandlers = [
     return HttpResponse.json(product);
   }),
 
+  // GET /api/v1/catalog/products/by-slug/:slug - получение продукта по slug
+  http.get('/api/v1/catalog/products/by-slug/:slug', async ({ params }) => {
+    await delay(faker.number.int({ min: 50, max: 150 }));
+
+    const slug = String(params.slug ?? '');
+    const cachedProducts = getProductsCache();
+    const summary = cachedProducts.find((p) => p.slug === slug);
+
+    if (!summary) {
+      return new HttpResponse(
+        JSON.stringify({ error: 'Product not found', message: `Product with slug ${slug} not found` }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const product = generateProduct(summary);
+    return HttpResponse.json(product);
+  }),
+
   // GET /api/v1/catalog/products/:id/reviews - отзывы товара
   http.get('/api/v1/catalog/products/:id/reviews', async ({ params, request }) => {
     await delay(faker.number.int({ min: 40, max: 120 }));

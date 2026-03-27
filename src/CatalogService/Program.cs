@@ -508,8 +508,7 @@ if (args is ["seed-xcore"] or ["seed-xcore", _])
     return 0;
 }
 
-Log.Information("Catalog Service запущен на порту {Port}",
-    app.Services.GetRequiredService<IConfiguration>()["ASPNETCORE_URLS"] ?? "5000");
+Log.Information("Catalog Service запущен на: {Urls}", string.Join(", ", app.Urls));
 
 await app.RunAsync();
 return 0;

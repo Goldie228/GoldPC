@@ -177,7 +177,7 @@
 
 /* Item Styles */
 .itemId {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   color: var(--text-dim, #52525b);
 }
@@ -188,13 +188,13 @@
 }
 
 .itemSlug {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   color: var(--text-dim, #52525b);
 }
 
 .itemCount {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   color: var(--text-muted, #71717a);
 }

@@ -81,7 +81,7 @@
 }
 
 .pc-builder__total-value {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--accent, #d4a574);
@@ -201,7 +201,7 @@
 
 .pc-builder__summary-price {
   color: var(--fg, #fafafa);
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
 }
 
 /* Divider */
@@ -221,7 +221,7 @@
 }
 
 .pc-builder__summary-total-value {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
   font-size: 1.5rem;
   color: var(--accent, #d4a574);
 }
@@ -237,7 +237,7 @@
   background: var(--accent, #d4a574);
   border: none;
   color: var(--bg, #09090b);
-  font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+  font-family: var(--font-sans);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -314,7 +314,7 @@
   background: var(--accent, #d4a574);
   border: none;
   color: var(--bg, #09090b);
-  font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+  font-family: var(--font-sans);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -332,7 +332,7 @@
 }
 
 .pc-builder__checkout-price {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
 }
 
 /* ===== MODAL ===== */
@@ -403,7 +403,7 @@
 .pc-builder__modal-btn {
   flex: 1;
   padding: 12px 20px;
-  font-family: var(--font-sans, 'Space Grotesk', sans-serif);
+  font-family: var(--font-sans);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -520,7 +520,7 @@
 }
 
 .pc-builder__modal-product-price {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--accent, #d4a574);

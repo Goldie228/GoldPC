@@ -12,6 +12,9 @@ public class Product
     
     /// <summary>Артикул (SKU)</summary>
     public string Sku { get; set; } = string.Empty;
+
+    /// <summary>Человекочитаемый slug для URL товара</summary>
+    public string Slug { get; set; } = string.Empty;
     
     /// <summary>Описание товара</summary>
     public string? Description { get; set; }

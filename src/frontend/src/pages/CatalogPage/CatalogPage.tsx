@@ -24,57 +24,11 @@ import styles from './CatalogPage.module.css';
 import { telemetryInitAutoFlush, telemetryTrack } from '../../utils/telemetry';
 
 /**
- * Loader for CatalogPage to support SSR/SSG-like data fetching
+ * Страница каталога товаров с Dark Gold темой
  */
-export async function catalogLoader({ params, request }: { params: any; request: Request }) {
-  const url = new URL(request.url);
-  const category = params.category as ProductCategory | undefined;
-  const search = url.searchParams.get('search') || undefined;
-  const page = parseInt(url.searchParams.get('page') || '1', 10);
-  const priceMin = parseInt(url.searchParams.get('priceMin') || '0', 10);
-  const priceMax = parseInt(url.searchParams.get('priceMax') || '0', 10);
-  const sortBy = url.searchParams.get('sortBy') || undefined;
-  const manufacturerIds = url.searchParams.get('manufacturerIds')?.split(',').filter(Boolean);
-
-  const apiParams: GetProductsParams = {
-    page,
-    pageSize: 12,
-    category,
-    search,
-    priceMin: priceMin > 0 ? priceMin : undefined,
-    priceMax: priceMax > 0 ? priceMax : undefined,
-  };
-
-  if (manufacturerIds?.length) {
-    apiParams.manufacturerIds = manufacturerIds;
-  }
-
-  // Map sortBy to API parameters
-  if (sortBy === 'price-asc') {
-    apiParams.sortBy = 'price';
-    apiParams.sortOrder = 'asc';
-  } else if (sortBy === 'price-desc') {
-    apiParams.sortBy = 'price';
-    apiParams.sortOrder = 'desc';
-  } else if (sortBy === 'rating') {
-    apiParams.sortBy = 'rating';
-    apiParams.sortOrder = 'desc';
-  } else if (sortBy === 'newest') {
-    apiParams.sortBy = 'createdAt';
-    apiParams.sortOrder = 'desc';
-  } else if (sortBy === 'name') {
-    apiParams.sortBy = 'name';
-    apiParams.sortOrder = 'asc';
-  }
-
-  try {
-    const initialData = await catalogApi.getProducts(apiParams);
-    return { initialData, category };
-  } catch (error) {
-    console.error('Failed to load catalog data:', error);
-    return { initialData: null, category };
-  }
-}
+const VALID_CATEGORIES: ProductCategory[] = [
+  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'keyboard', 'mouse', 'headphones'
+];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -97,14 +51,6 @@ const itemVariants = {
     }
   }
 };
-
-/**
- * Страница каталога товаров с Dark Gold темой
- * Layout: Sidebar (20%) | Product Grid (80%)
- */
-const VALID_CATEGORIES: ProductCategory[] = [
-  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'keyboard', 'mouse', 'headphones'
-];
 
 function resolveCategoryFromUrl(
   categoryParam: string | undefined,
@@ -237,10 +183,22 @@ export function CatalogPage() {
     if (viewMode !== 'grid') params.set('view', viewMode);
     if (page > 1) params.set('page', page.toString());
     const queryString = params.toString();
-    const path = selectedCategory ? `/catalog/${selectedCategory}` : '/catalog';
-    const fullPath = queryString ? `${path}?${queryString}` : path;
+
+    // Stay on current path if we are at /catalog/:category and THAT category is selected.
+    // Otherwise (if at /catalog OR if category changed while on a locked path), stay on /catalog.
+    const path = (isCategoryLocked && selectedCategory === categoryParam)
+      ? `/catalog/${categoryParam}`
+      : '/catalog';
+
+    // If we are NOT on a locked path, but a category is selected, add it to query params
+    if (selectedCategory && path === '/catalog') {
+      params.set('category', selectedCategory);
+    }
+
+    const finalQueryString = params.toString();
+    const fullPath = finalQueryString ? `${path}?${finalQueryString}` : path;
     navigate(fullPath, { replace: true });
-  }, [selectedCategory, isCategoryLocked, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, page, navigate, viewMode]);
+  }, [selectedCategory, isCategoryLocked, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, page, navigate, viewMode, categoryParam]);
 
   const filterDeps = [
     selectedCategory,
@@ -468,9 +426,7 @@ export function CatalogPage() {
   }, []);
 
   const handleResetFilters = () => {
-    if (!isCategoryLocked) {
-      setSelectedCategory(null);
-    }
+    setSelectedCategory(null);
     setPriceRange({ min: 0, max: 0 });
     setSelectedManufacturerIds([]);
     setMinRating(0);

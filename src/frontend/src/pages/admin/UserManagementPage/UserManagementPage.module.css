@@ -96,7 +96,7 @@
 }
 
 .statNumber {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 1.25rem;
   font-weight: 500;
   color: var(--accent, #d4a574);
@@ -290,7 +290,7 @@
 }
 
 .userId {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   color: var(--fg-dim, #52525b);
 }
@@ -356,7 +356,7 @@
 
 /* Date */
 .date {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   color: var(--fg-muted, #71717a);
 }
@@ -495,7 +495,7 @@
   background: transparent;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
   color: var(--fg-muted, #71717a);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s;

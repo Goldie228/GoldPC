@@ -50,6 +50,22 @@ public class CatalogController : ControllerBase
     }
 
     /// <summary>
+    /// Получить товар по slug
+    /// </summary>
+    [HttpGet("products/by-slug/{slug}")]
+    [ProducesResponseType(typeof(ProductDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ProductDetailDto>> GetProductBySlug(string slug)
+    {
+        var product = await _catalogService.GetProductBySlugAsync(slug);
+        if (product == null)
+        {
+            return NotFound(new { error = "Товар не найден", slug });
+        }
+        return Ok(product);
+    }
+
+    /// <summary>
     /// Получить отзывы о товаре
     /// </summary>
     [HttpGet("products/{productId:guid}/reviews")]

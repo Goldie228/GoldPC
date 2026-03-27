@@ -65,7 +65,7 @@
 }
 
 .stat-card__value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 2rem;
   font-weight: 500;
   margin-bottom: 4px;
@@ -91,7 +91,7 @@
   background: transparent;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
   color: var(--fg-muted, #71717a);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
@@ -150,7 +150,7 @@
 }
 
 .order-id {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   color: var(--accent, #d4a574);
   text-decoration: none;
@@ -182,13 +182,13 @@
 }
 
 .order-date {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   color: var(--fg-muted, #71717a);
 }
 
 .order-total {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-weight: 500;
 }
 
@@ -285,7 +285,7 @@
   background: transparent;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
   color: var(--fg-muted, #71717a);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s ease;

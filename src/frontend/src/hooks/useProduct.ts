@@ -1,37 +1,37 @@
 /**
- * Хук для получения одного товара по ID
+ * Хук для получения одного товара по slug
  * Абстрагирует прямой вызов API от компонентов
  */
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { catalogApi } from '../api/catalog';
-import type { Product, Uuid } from '../api/types';
+import type { Product } from '../api/types';
 
 /**
  * Ключи для кэширования запросов отдельного продукта
  */
 export const productKeys = {
   all: ['product'] as const,
-  detail: (id: Uuid) => [...productKeys.all, id] as const,
+  detail: (slug: string) => [...productKeys.all, slug] as const,
 };
 
 /**
- * Хук для получения товара по ID
- * @param productId - ID товара
+ * Хук для получения товара по slug
+ * @param productSlug - slug товара
  * @param options - дополнительные опции (например, enabled для условного запроса)
  * @returns UseQueryResult с данными о продукте, статусом загрузки и ошибками
  */
 export function useProduct(
-  productId: Uuid | undefined,
+  productSlug: string | undefined,
   options?: {
     enabled?: boolean;
   }
 ): UseQueryResult<Product, Error> {
   return useQuery({
-    queryKey: productKeys.detail(productId ?? ''),
-    queryFn: () => catalogApi.getProduct(productId!),
-    enabled: !!productId && (options?.enabled ?? true),
+    queryKey: productKeys.detail(productSlug ?? ''),
+    queryFn: () => catalogApi.getProductBySlug(productSlug!),
+    enabled: !!productSlug && (options?.enabled ?? true),
     staleTime: 5 * 60 * 1000, // 5 минут
   });
 }
 
-export type { Product, Uuid };
+export type { Product };

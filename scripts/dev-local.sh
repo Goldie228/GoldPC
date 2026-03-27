@@ -23,6 +23,43 @@ YELLOW='\033[33m'
 RED='\033[31m'
 RESET='\033[0m'
 
+timestamp() {
+    date '+%H:%M:%S'
+}
+
+log_info() {
+    echo -e "${CYAN}[$(timestamp)] $1${RESET}"
+}
+
+log_ok() {
+    echo -e "${GREEN}[$(timestamp)] ✓ $1${RESET}"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[$(timestamp)] ⚠ $1${RESET}"
+}
+
+run_with_heartbeat() {
+    local title="$1"
+    local log_file="$2"
+    shift 2
+
+    log_info "$title (logs: $log_file)"
+    "$@" >> "$log_file" 2>&1 &
+    local cmd_pid=$!
+    local elapsed=0
+
+    while kill -0 "$cmd_pid" 2>/dev/null; do
+        sleep 5
+        elapsed=$((elapsed + 5))
+        if [ $((elapsed % 15)) -eq 0 ]; then
+            echo -e "${CYAN}[$(timestamp)] ... still running: $title (${elapsed}s)${RESET}"
+        fi
+    done
+
+    wait "$cmd_pid"
+}
+
 # Parse arguments
 FRONTEND_ONLY=false
 BACKEND_ONLY=false
@@ -160,7 +197,7 @@ trap cleanup SIGINT SIGTERM EXIT
 wait_for_health() {
     local url=$1
     local name=$2
-    local timeout=60
+    local timeout=120
     local count=0
     
     echo -ne "${CYAN}Waiting for $name to be ready...${RESET}"
@@ -246,33 +283,37 @@ start_infra() {
 # Function to seed catalog database
 seed_catalog() {
     if [ "$SKIP_SEED" = true ]; then
-        echo -e "${YELLOW}Skipping database seed (--skip-seed)${RESET}"
+        log_warn "Skipping database seed (--skip-seed)"
         return
     fi
-    echo -e "${CYAN}Seeding catalog database...${RESET}"
+    log_info "Seeding catalog database..."
+    log_info "Detailed seed logs: $LOG_DIR/catalog-seed.log"
     
     # Primary seed
-    if (cd "$PROJECT_DIR/src/CatalogService" && dotnet run -- seed-xcore >> "$LOG_DIR/catalog-seed.log" 2>&1); then
-        echo -e "${GREEN}✓ Catalog seeded${RESET}"
+    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-xcore" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-xcore); then
+        log_ok "Catalog seeded"
     else
-        echo -e "${YELLOW}⚠ Seed failed or no JSON found. Check logs/catalog-seed.log${RESET}"
+        log_warn "Seed failed or no JSON found. Check logs/catalog-seed.log"
     fi
 
     # Image seed if available
     if [ -f "$PROJECT_DIR/scripts/scraper/data/xcore-images.json" ]; then
-        if (cd "$PROJECT_DIR/src/CatalogService" && dotnet run -- seed-xcore-images >> "$LOG_DIR/catalog-seed.log" 2>&1); then
-            echo -e "${GREEN}✓ Product images updated from xcore-images.json${RESET}"
-            if (cd "$PROJECT_DIR/scripts/scraper" && npm run download-images >> "$LOG_DIR/catalog-seed.log" 2>&1); then
-                echo -e "${GREEN}✓ Product images downloaded to uploads${RESET}"
+        log_info "Found xcore-images.json, starting image sync..."
+        if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-xcore-images" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-xcore-images); then
+            log_ok "Product images updated from xcore-images.json"
+            if (cd "$PROJECT_DIR/scripts/scraper" && run_with_heartbeat "Downloading product images to uploads" "$LOG_DIR/catalog-seed.log" npm run download-images); then
+                log_ok "Product images downloaded to uploads"
             else
-                echo -e "${YELLOW}⚠ Image download failed (optional). Check logs/catalog-seed.log${RESET}"
+                log_warn "Image download failed (optional). Check logs/catalog-seed.log"
             fi
         fi
+    else
+        log_warn "xcore-images.json not found, skipping image sync"
     fi
 
     # Filter attributes sync
-    if (cd "$PROJECT_DIR/src/CatalogService" && dotnet run -- seed-filter-attributes >> "$LOG_DIR/catalog-seed.log" 2>&1); then
-        echo -e "${GREEN}✓ Filter attributes synced${RESET}"
+    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-filter-attributes" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-filter-attributes); then
+        log_ok "Filter attributes synced"
     fi
 }
 

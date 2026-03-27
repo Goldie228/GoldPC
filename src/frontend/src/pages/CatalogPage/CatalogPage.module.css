@@ -258,9 +258,20 @@
     position: sticky;
     top: 80px;
     z-index: 30;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    background: rgba(24, 24, 27, 0.88);
+    background: var(--bg-card, #18181b);
+  }
+
+  /* Fill gap between header and toolbar to hide scrolling cards */
+  .toolbar::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: -50px;
+    right: -50px;
+    height: 15px;
+    background: var(--bg, #09090b);
+    z-index: -1;
+    pointer-events: none;
   }
 }
 

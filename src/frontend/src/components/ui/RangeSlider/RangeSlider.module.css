@@ -128,7 +128,7 @@
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(212, 165, 116, 0.3);
   border-radius: 4px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--accent, #d4a574);
@@ -170,7 +170,7 @@
 
 .valueMin,
 .valueMax {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--fg-muted, #71717a);

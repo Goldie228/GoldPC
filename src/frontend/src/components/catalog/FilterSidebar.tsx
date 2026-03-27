@@ -334,11 +334,6 @@ export function FilterSidebar({
 
   // Загрузка категорий с количеством товаров (реальные данные с API)
   useEffect(() => {
-    if (categoryLocked) {
-      setCategoryCounts({});
-      setLoading(false);
-      return;
-    }
     const fetchCategories = async () => {
       try {
         const categories = await catalogApi.getCategories();
@@ -457,39 +452,37 @@ export function FilterSidebar({
       </div>
 
       {/* Categories — открыта по умолчанию для быстрой навигации */}
-      {!categoryLocked && (
-        <FilterGroup
-          title="Категории"
-          icon={<Grid3X3 size={14} />}
-          defaultOpen={true}
-        >
-          <div className={styles.categoryList}>
+      <FilterGroup
+        title="Категории"
+        icon={<Grid3X3 size={14} />}
+        defaultOpen={true}
+      >
+        <div className={styles.categoryList}>
+          <button
+            type="button"
+            className={`${styles.categoryItem} ${!selectedCategory ? styles.active : ''}`}
+            onClick={() => onCategoryChange(null)}
+          >
+            <span className={styles.categoryName}>Все товары</span>
+            <span className={styles.categoryCount} aria-hidden={loading ? true : undefined}>
+              {loading ? <Skeleton width={44} height={12} borderRadius="sm" /> : totalCount}
+            </span>
+          </button>
+          {CATEGORY_ORDER.map((category) => (
             <button
+              key={category}
               type="button"
-              className={`${styles.categoryItem} ${!selectedCategory ? styles.active : ''}`}
-              onClick={() => onCategoryChange(null)}
+              className={`${styles.categoryItem} ${selectedCategory === category ? styles.active : ''}`}
+              onClick={() => onCategoryChange(category)}
             >
-              <span className={styles.categoryName}>Все товары</span>
-              <span className={styles.categoryCount} aria-hidden={loading ? true : undefined}>
-                {loading ? <Skeleton width={44} height={12} borderRadius="sm" /> : totalCount}
+              <span className={styles.categoryName}>{CATEGORY_LABELS[category]}</span>
+              <span className={styles.categoryCount}>
+                {loading ? <Skeleton width={36} height={12} borderRadius="sm" /> : (categoryCounts[category] || 0)}
               </span>
             </button>
-            {CATEGORY_ORDER.map((category) => (
-              <button
-                key={category}
-                type="button"
-                className={`${styles.categoryItem} ${selectedCategory === category ? styles.active : ''}`}
-                onClick={() => onCategoryChange(category)}
-              >
-                <span className={styles.categoryName}>{CATEGORY_LABELS[category]}</span>
-                <span className={styles.categoryCount}>
-                  {loading ? <Skeleton width={36} height={12} borderRadius="sm" /> : (categoryCounts[category] || 0)}
-                </span>
-              </button>
-            ))}
-          </div>
-        </FilterGroup>
-      )}
+          ))}
+        </div>
+      </FilterGroup>
 
       {/* Price */}
       <FilterGroup

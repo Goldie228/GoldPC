@@ -4,6 +4,52 @@
  */
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { ServiceListResponse, GetServicesParams, Service, Uuid } from '../api/types';
+import { SERVICES } from '../mocks/data/services';
+
+function buildMockServicesResponse(params?: GetServicesParams): ServiceListResponse {
+  const page = params?.page ?? 1;
+  const pageSize = params?.pageSize ?? 10;
+  const category = params?.category;
+  const search = params?.search?.trim().toLowerCase();
+  const isPopular = params?.isPopular;
+
+  let services = [...SERVICES];
+
+  if (category) {
+    services = services.filter((s) => s.category === category);
+  }
+
+  if (typeof isPopular === 'boolean') {
+    services = services.filter((s) => Boolean(s.isPopular) === isPopular);
+  }
+
+  if (search) {
+    services = services.filter(
+      (s) =>
+        s.name.toLowerCase().includes(search) ||
+        s.description.toLowerCase().includes(search) ||
+        s.shortDescription.toLowerCase().includes(search)
+    );
+  }
+
+  const totalItems = services.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (safePage - 1) * pageSize;
+  const data = services.slice(startIndex, startIndex + pageSize);
+
+  return {
+    data,
+    meta: {
+      page: safePage,
+      pageSize,
+      totalPages,
+      totalItems,
+      hasNext: safePage < totalPages,
+      hasPrevious: safePage > 1,
+    },
+  };
+}
 
 // Временный API клиент для услуг (пока MSW не настроен)
 const servicesApi = {
@@ -15,27 +61,51 @@ const servicesApi = {
     if (params?.search) searchParams.set('search', params.search);
     if (params?.isPopular !== undefined) searchParams.set('isPopular', String(params.isPopular));
 
-    const response = await fetch(`/api/services?${searchParams.toString()}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch services');
+    try {
+      const response = await fetch(`/api/services?${searchParams.toString()}`);
+      if (response.ok) {
+        return response.json();
+      }
+    } catch {
+      // fallback below
     }
-    return response.json();
+
+    // Fallback: keep services page functional even when backend route is unavailable.
+    return buildMockServicesResponse(params);
   },
 
   getService: async (id: Uuid): Promise<Service> => {
-    const response = await fetch(`/api/services/${id}`);
-    if (!response.ok) {
+    try {
+      const response = await fetch(`/api/services/${id}`);
+      if (response.ok) {
+        return response.json();
+      }
+    } catch {
+      // fallback below
+    }
+
+    const service = SERVICES.find((s) => s.id === id);
+    if (!service) {
       throw new Error('Failed to fetch service');
     }
-    return response.json();
+    return service;
   },
 
   getServiceBySlug: async (slug: string): Promise<Service> => {
-    const response = await fetch(`/api/services/slug/${slug}`);
-    if (!response.ok) {
+    try {
+      const response = await fetch(`/api/services/slug/${slug}`);
+      if (response.ok) {
+        return response.json();
+      }
+    } catch {
+      // fallback below
+    }
+
+    const service = SERVICES.find((s) => s.slug === slug);
+    if (!service) {
       throw new Error('Failed to fetch service');
     }
-    return response.json();
+    return service;
   },
 };
 

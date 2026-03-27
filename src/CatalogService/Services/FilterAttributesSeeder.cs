@@ -37,6 +37,9 @@ public class FilterAttributesSeeder
     {
         var result = new SeedResult();
         var categories = await _context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
+        var attributesByKey = await _context.SpecificationAttributes
+            .AsNoTracking()
+            .ToDictionaryAsync(a => a.Key, a => a.Id);
 
         foreach (var (slug, attrs) in config)
         {
@@ -56,10 +59,21 @@ public class FilterAttributesSeeder
 
             foreach (var a in attrs)
             {
+                if (!attributesByKey.TryGetValue(a.AttributeKey, out var attributeId))
+                {
+                    _logger.LogWarning(
+                        "Атрибут спецификации {AttributeKey} для категории {CategorySlug} не найден, пропуск",
+                        a.AttributeKey,
+                        slug);
+                    result.Skipped++;
+                    continue;
+                }
+
                 _context.CategoryFilterAttributes.Add(new CategoryFilterAttribute
                 {
                     Id = Guid.NewGuid(),
                     CategoryId = categoryId,
+                    AttributeId = attributeId,
                     AttributeKey = a.AttributeKey,
                     DisplayName = a.DisplayName,
                     FilterType = a.FilterType?.ToLowerInvariant() == "range" ? FilterAttributeType.Range : FilterAttributeType.Select,

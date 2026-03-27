@@ -437,7 +437,7 @@
 
 /* === WIP Badge === */
 .wip-badge {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
   background: rgba(255, 255, 255, 0.1);
@@ -462,7 +462,7 @@
   font-size: 0.65rem;
   padding: 0.2rem 0.5rem;
   border-radius: 4px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   cursor: help;
 }
 
@@ -605,7 +605,7 @@
 }
 
 .blocker-card__id {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.75rem;
   color: #9ca3af;
   background: rgba(255, 255, 255, 0.1);
@@ -723,7 +723,7 @@
   background: rgba(239, 68, 68, 0.2);
   color: #ef4444;
   border-radius: 4px;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
 }
 
 /* === Resolved Blocker === */
@@ -739,7 +739,7 @@
 }
 
 .resolved-blocker__id {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   color: #22c55e;
 }
 
@@ -886,7 +886,7 @@
 }
 
 .stat-card__value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 2rem;
   font-weight: 500;
   color: var(--accent);

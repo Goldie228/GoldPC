@@ -106,6 +106,11 @@ export const catalogApi = {
     return response.data;
   },
 
+  async getProductBySlug(slug: string): Promise<Product> {
+    const response = await api.get<Product>(`/catalog/products/by-slug/${slug}`);
+    return response.data;
+  },
+
   /**
    * Получить отзывы товара
    */

@@ -12,6 +12,7 @@ public record ProductListDto
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
     public string Sku { get; init; } = string.Empty;
+    public string Slug { get; init; } = string.Empty;
     public string Category { get; init; } = string.Empty;
     public decimal Price { get; init; }
     public decimal? OldPrice { get; init; }
@@ -41,6 +42,7 @@ public record ProductDetailDto
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
     public string Sku { get; init; } = string.Empty;
+    public string Slug { get; init; } = string.Empty;
     public string Category { get; init; } = string.Empty;
     public Guid? ManufacturerId { get; init; }
     public ManufacturerDto? Manufacturer { get; init; }
@@ -70,6 +72,7 @@ public record CreateProductDto
 {
     public string Name { get; init; } = string.Empty;
     public string Sku { get; init; } = string.Empty;
+    public string? Slug { get; init; }
     
     /// <summary>Категория товара (slug или название)</summary>
     public string Category { get; init; } = string.Empty;
@@ -94,6 +97,7 @@ public record CreateProductDto
 public record UpdateProductDto
 {
     public string? Name { get; init; }
+    public string? Slug { get; init; }
     public Guid? ManufacturerId { get; init; }
     public decimal? Price { get; init; }
     public decimal? OldPrice { get; init; }

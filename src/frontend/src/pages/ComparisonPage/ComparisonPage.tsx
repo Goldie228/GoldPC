@@ -59,12 +59,12 @@ function QuickViewContent({ product }: { product: Product }): ReactElement {
           {product.descriptionShort != null && product.descriptionShort.trim() !== '' ? (
             <>
               <p className={styles.quickViewDescriptionText}>{product.descriptionShort}</p>
-              <Link to={`/product/${product.id}`} className={styles.quickViewLink}>
+              <Link to={`/product/${product.slug}`} className={styles.quickViewLink}>
                 Подробнее на странице товара →
               </Link>
             </>
           ) : (
-            <Link to={`/product/${product.id}`} className={styles.quickViewLink}>
+            <Link to={`/product/${product.slug}`} className={styles.quickViewLink}>
               Подробное описание на странице товара →
             </Link>
           )}
@@ -471,7 +471,7 @@ export function ComparisonPage(): ReactElement {
                           >
                             <Icon name="close" size="xs" />
                           </button>
-                          <Link to={`/product/${product.id}`} className={styles.productImageLink}>
+                          <Link to={`/product/${product.slug}`} className={styles.productImageLink}>
                             {(() => {
                               const img = getMainImage(product);
                               const url = getProductImageUrl(img?.url);
@@ -490,7 +490,7 @@ export function ComparisonPage(): ReactElement {
                             })()}
                           </Link>
                           <div className={styles.productInfo}>
-                            <Link to={`/product/${product.id}`} className={styles.productName}>
+                            <Link to={`/product/${product.slug}`} className={styles.productName}>
                               {product.name}
                             </Link>
                             <div className={styles.priceContainer}>

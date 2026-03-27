@@ -8,7 +8,6 @@ import { RouteMeta } from './components/seo/RouteMeta';
 import { ProductCardSkeleton } from './components/ui/Skeleton';
 import { useAuthStore } from './store/authStore';
 import { useWishlistStore } from './store/wishlistStore';
-import { catalogLoader } from './pages/CatalogPage/CatalogPage';
 import './App.css';
 
 // Lazy load pages
@@ -93,16 +92,10 @@ const router = createBrowserRouter([
     children: [
       { path: '/', element: <HomePage /> },
       { 
-        path: '/catalog', 
-        element: <CatalogPage />,
-        loader: catalogLoader,
+        path: '/catalog/:category?', 
+        element: <CatalogPage />
       },
-      { 
-        path: '/catalog/:category', 
-        element: <CatalogPage />,
-        loader: catalogLoader,
-      },
-      { path: '/product/:id', element: <ProductPage /> },
+      { path: '/product/:slug', element: <ProductPage /> },
       { path: '/pc-builder', element: <PCBuilderPage /> },
       { path: '/cart', element: <CartPage /> },
       { path: '/wishlist', element: <WishlistPage /> },

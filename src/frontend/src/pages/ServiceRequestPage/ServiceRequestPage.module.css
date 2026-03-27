@@ -151,7 +151,7 @@
   background: var(--bg-elevated, #121214);
   border: 1px solid var(--border-accent, rgba(212, 165, 116, 0.3));
   color: var(--fg, #fafafa);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.9rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   resize: vertical;
@@ -187,7 +187,7 @@
   background: var(--bg-elevated, #121214);
   border: 1px solid var(--border-accent, rgba(212, 165, 116, 0.3));
   color: var(--fg, #fafafa);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.9rem;
   cursor: pointer;
   appearance: none;

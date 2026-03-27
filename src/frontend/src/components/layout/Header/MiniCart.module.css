@@ -230,7 +230,7 @@
 }
 
 .qtyValue {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--fg);
@@ -239,7 +239,7 @@
 }
 
 .itemTotalPrice {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--accent);
@@ -292,7 +292,7 @@
 }
 
 .totalPrice {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--accent);
@@ -309,7 +309,7 @@
   align-items: center;
   justify-content: center;
   padding: 10px 16px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--accent);
@@ -333,7 +333,7 @@
   align-items: center;
   justify-content: center;
   padding: 10px 16px;
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--bg);

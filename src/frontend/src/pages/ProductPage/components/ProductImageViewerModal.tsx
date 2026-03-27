@@ -209,7 +209,7 @@ export function ProductImageViewerModal({
         <div className={styles.topBar}>
           <div>
             <div className={styles.title}>{productName}</div>
-            <div className={styles.counter}>0 / 0</div>
+            {safeImages.length > 1 && <div className={styles.counter}>0 / 0</div>}
           </div>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Закрыть">
             <X size={18} />
@@ -225,7 +225,9 @@ export function ProductImageViewerModal({
       <div className={styles.topBar}>
         <div>
           <div className={styles.title}>{productName}</div>
-          <div className={styles.counter}>{activeIndex + 1} / {safeImages.length}</div>
+          {safeImages.length > 1 && (
+            <div className={styles.counter}>{activeIndex + 1} / {safeImages.length}</div>
+          )}
         </div>
         <button className={styles.closeBtn} onClick={onClose} aria-label="Закрыть">
           <X size={18} />

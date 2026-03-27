@@ -40,7 +40,7 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   color: var(--fg);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.9rem;
   border-radius: var(--radius);
   transition: all 0.2s;
@@ -137,7 +137,7 @@
   padding: 14px 24px;
   background: var(--accent);
   color: var(--bg);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.85rem;
   font-weight: 600;
   border: none;

@@ -36,6 +36,65 @@ public class XCoreImporter
     }
 
     private static string TruncateSku(string s) => s.Length > 50 ? s[..50] : s;
+    private static string? Truncate(string? s, int max) => s?.Length > max ? s[..max] : s;
+    private static readonly Random SkuRandom = new();
+
+    private static string BuildSlug(string? raw, string? fallback)
+    {
+        var source = !string.IsNullOrWhiteSpace(raw) ? raw! : (fallback ?? string.Empty);
+        source = source.Trim().ToLowerInvariant();
+        source = Regex.Replace(source, @"[^a-z0-9]+", "_");
+        source = Regex.Replace(source, @"_+", "_").Trim('_');
+        if (string.IsNullOrWhiteSpace(source))
+            source = $"product_{Guid.NewGuid():N}";
+        return source.Length > 220 ? source[..220].TrimEnd('_') : source;
+    }
+
+    private static string EnsureUniqueSlug(
+        string baseSlug,
+        HashSet<string> occupiedSlugs,
+        Dictionary<string, Guid> productsBySlug,
+        Guid? keepId = null)
+    {
+        var slug = baseSlug;
+        var i = 2;
+        while (true)
+        {
+            var existsInDb = productsBySlug.TryGetValue(slug, out var id) && (!keepId.HasValue || id != keepId.Value);
+            var existsInBatch = occupiedSlugs.Contains(slug);
+            if (!existsInDb && !existsInBatch)
+                return slug;
+            slug = $"{baseSlug}_{i}";
+            i++;
+        }
+    }
+
+    private static string GenerateNumericSku(HashSet<string> occupiedSkus)
+    {
+        while (true)
+        {
+            // Use a higher range to avoid overlap with migration-generated SKUs (around 1B)
+            var value = SkuRandom.NextInt64(2_000_000_000L, 9_999_999_999L).ToString();
+            if (occupiedSkus.Add(value))
+                return value;
+        }
+    }
+
+    private static string? TryExtractExternalIdFromXcoreSku(string? sku)
+    {
+        if (string.IsNullOrWhiteSpace(sku))
+            return null;
+
+        const string prefix = "XCORE-";
+        if (!sku.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var externalId = sku[prefix.Length..].Trim();
+        if (string.IsNullOrWhiteSpace(externalId))
+            return null;
+
+        return Truncate(externalId, 100);
+    }
 
     /// <summary>URL placeholder'а X-Core.by (логотип "X-core") — не сохраняем.</summary>
     private static bool IsXCorePlaceholderUrl(string? url) =>
@@ -98,11 +157,14 @@ public class XCoreImporter
         }
 
         var productsBySku = await _context.Products.ToDictionaryAsync(x => x.Sku!, x => x.Id);
+        var productsBySlug = await _context.Products
+            .Where(x => !string.IsNullOrEmpty(x.Slug))
+            .ToDictionaryAsync(x => x.Slug!, x => x.Id);
         var productsByExternalId = await _context.Products
             .Where(x => x.ExternalId != null)
             .ToDictionaryAsync(x => x.ExternalId!, x => x.Id);
-
-        var addedSkusInBatch = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var occupiedSkus = new HashSet<string>(productsBySku.Keys, StringComparer.OrdinalIgnoreCase);
+        var occupiedSlugs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var batchSize = 100;
         var count = 0;
 
@@ -118,18 +180,17 @@ public class XCoreImporter
                     continue;
                 }
 
-                var sku = TruncateSku(p.Sku ?? $"XCORE-{p.ExternalId ?? Guid.NewGuid().ToString("N")}");
-                if (addedSkusInBatch.Contains(sku))
-                {
-                    _logger.LogDebug("Дубликат SKU в батче, пропуск: {Sku}", sku);
-                    result.Skipped++;
-                    continue;
-                }
+                var baseSlug = BuildSlug(p.Sku ?? p.ExternalId, p.Name);
 
                 Guid? existingId = null;
-                if (!string.IsNullOrEmpty(p.ExternalId) && productsByExternalId.TryGetValue(p.ExternalId, out var id1))
-                    existingId = id1;
-                else if (productsBySku.TryGetValue(sku, out var id2))
+                if (!string.IsNullOrEmpty(p.ExternalId))
+                {
+                    var extId = Truncate(p.ExternalId, 100)!;
+                    if (productsByExternalId.TryGetValue(extId, out var id1))
+                        existingId = id1;
+                }
+                
+                if (existingId == null && productsBySlug.TryGetValue(baseSlug, out var id2))
                     existingId = id2;
 
                 var existing = existingId.HasValue 
@@ -139,7 +200,8 @@ public class XCoreImporter
                 Manufacturer? manufacturer = null;
                 if (!string.IsNullOrEmpty(p.Manufacturer))
                 {
-                    if (manufacturersCache.TryGetValue(p.Manufacturer, out var manId))
+                    var mName = Truncate(p.Manufacturer, 100)!;
+                    if (manufacturersCache.TryGetValue(mName, out var manId))
                     {
                         manufacturer = _context.Manufacturers.Local.FirstOrDefault(m => m.Id == manId) 
                                        ?? await _context.Manufacturers.FindAsync(manId);
@@ -149,11 +211,11 @@ public class XCoreImporter
                         manufacturer = new Manufacturer
                         {
                             Id = Guid.NewGuid(),
-                            Name = p.Manufacturer,
+                            Name = mName,
                             Country = null,
                         };
                         _context.Manufacturers.Add(manufacturer);
-                        manufacturersCache[p.Manufacturer] = manufacturer.Id;
+                        manufacturersCache[mName] = manufacturer.Id;
                     }
                 }
 
@@ -272,7 +334,11 @@ public class XCoreImporter
 
                 if (existing != null)
                 {
+                    var normalizedSlug = EnsureUniqueSlug(baseSlug, occupiedSlugs, productsBySlug, existing.Id);
+                    occupiedSlugs.Add(normalizedSlug);
+
                     existing.Name = p.Name ?? existing.Name;
+                    existing.Slug = normalizedSlug;
                     existing.Description = p.Description;
                     existing.Price = (decimal)p.Price;
                     existing.OldPrice = p.OldPrice.HasValue ? (decimal)p.OldPrice.Value : null;
@@ -306,12 +372,16 @@ public class XCoreImporter
                 }
                 else
                 {
-                    addedSkusInBatch.Add(sku);
+                    var normalizedSlug = EnsureUniqueSlug(baseSlug, occupiedSlugs, productsBySlug);
+                    occupiedSlugs.Add(normalizedSlug);
+                    var sku = GenerateNumericSku(occupiedSkus);
+
                     var product = new Product
                     {
                         Id = Guid.NewGuid(),
                         Name = p.Name,
                         Sku = sku,
+                        Slug = normalizedSlug,
                         Description = p.Description,
                         ManufacturerAddress = p.LegalInfo?.ManufacturerAddress,
                         ProductionAddress = p.LegalInfo?.ProductionAddress,
@@ -324,13 +394,18 @@ public class XCoreImporter
                         Stock = p.Stock,
                         WarrantyMonths = p.LegalInfo?.WarrantyMonths is > 0 ? p.LegalInfo.WarrantyMonths.Value : p.WarrantyMonths,
                         SourceUrl = p.Url,
-                        ExternalId = p.ExternalId,
+                        ExternalId = Truncate(p.ExternalId, 100),
                         IsActive = true,
                         IsFeatured = false,
                         CreatedAt = DateTime.UtcNow,
                     };
 
                     _context.Products.Add(product);
+                    productsBySlug[normalizedSlug] = product.Id;
+                    if (product.ExternalId != null)
+                        productsByExternalId[product.ExternalId] = product.Id;
+                    if (product.Sku != null)
+                        occupiedSkus.Add(product.Sku);
                     var specValues = await _specNormalizer.ToSpecificationValuesAsync(product.Id, specs);
                     foreach (var sv in specValues)
                         _context.ProductSpecificationValues.Add(sv);
@@ -364,8 +439,17 @@ public class XCoreImporter
 
                 if (count % batchSize == 0)
                 {
-                    await _context.SaveChangesAsync();
-                    _logger.LogInformation("Обработано товаров: {Count}/{Total}", count, result.Total);
+                    try
+                    {
+                        await _context.SaveChangesAsync();
+                        _logger.LogInformation("Обработано товаров: {Count}/{Total}", count, result.Total);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Ошибка при сохранении пачки товаров (около {Count})", count);
+                        // Ошибки в пачке считаем как ошибки товаров
+                        result.Errors += batchSize;
+                    }
                 }
             }
             catch (Exception ex)
@@ -443,8 +527,8 @@ public class XCoreImporter
         if (data.Products == null || data.Products.Count == 0)
             return result;
 
-        var skusInFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var processedSkus = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var processedProductIds = new HashSet<Guid>();
+        var matchedProductIds = new HashSet<Guid>();
 
         foreach (var item in data.Products)
         {
@@ -452,17 +536,15 @@ public class XCoreImporter
                 continue;
 
             var skuNormalized = TruncateSku(item.Sku);
-            skusInFile.Add(skuNormalized);
-
-            // Несколько SKU могут обрезаться до одного — обрабатываем только первый
-            if (processedSkus.Contains(skuNormalized))
-                continue;
+            var externalId = TryExtractExternalIdFromXcoreSku(item.Sku);
 
             try
             {
                 var product = await _context.Products
                     .Include(p => p.Images)
-                    .FirstOrDefaultAsync(p => p.Sku == skuNormalized);
+                    .FirstOrDefaultAsync(p =>
+                        p.Sku == skuNormalized ||
+                        (externalId != null && p.ExternalId == externalId));
 
                 if (product == null)
                 {
@@ -470,7 +552,13 @@ public class XCoreImporter
                     continue;
                 }
 
-                processedSkus.Add(skuNormalized);
+                matchedProductIds.Add(product.Id);
+
+                // Один товар мог встретиться в файле несколько раз (по разным идентификаторам)
+                if (processedProductIds.Contains(product.Id))
+                    continue;
+
+                processedProductIds.Add(product.Id);
 
                 _context.ProductImages.RemoveRange(product.Images.ToList());
 
@@ -504,16 +592,26 @@ public class XCoreImporter
             }
         }
 
-        // Удалить изображения у товаров, которых нет в xcore-images.json
-        var productsWithImagesNotInFile = await _context.Products
-            .Include(p => p.Images)
-            .Where(p => p.Images.Count > 0 && !skusInFile.Contains(p.Sku))
-            .ToListAsync();
-
-        foreach (var product in productsWithImagesNotInFile)
+        // Удаляем изображения только у X-Core товаров, отсутствующих в файле.
+        // Важно: если не сопоставили ни одного товара, удаление отключаем (защита от массовой потери изображений).
+        if (matchedProductIds.Count > 0)
         {
-            _context.ProductImages.RemoveRange(product.Images.ToList());
-            result.Deleted++;
+            var productsWithImagesNotInFile = await _context.Products
+                .Include(p => p.Images)
+                .Where(p => p.ExternalId != null && p.Images.Count > 0 && !matchedProductIds.Contains(p.Id))
+                .ToListAsync();
+
+            foreach (var product in productsWithImagesNotInFile)
+            {
+                _context.ProductImages.RemoveRange(product.Images.ToList());
+                result.Deleted++;
+            }
+        }
+        else
+        {
+            _logger.LogWarning(
+                "seed-xcore-images: не удалось сопоставить ни одного товара с файлом {FilePath}; удаление изображений пропущено",
+                filePath);
         }
 
         await _context.SaveChangesAsync();

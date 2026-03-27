@@ -1,11 +1,12 @@
-import { useState, type ReactElement } from 'react';
+import { useState, useMemo, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { hasValidProductImage } from '../../utils/image';
-import type { ProductSummary, ProductCategory } from '../../api/types';
+import type { ProductSummary, ProductCategory, ProductImage } from '../../api/types';
 import { useCart } from '../../hooks/useCart';
 import { useToastStore } from '../../store/toastStore';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useComparisonStore } from '../../store/comparisonStore';
+import { useProduct } from '../../hooks/useProduct';
 import { Icon } from '../ui/Icon/Icon';
 import { OptimizedImage } from '../ui/Image/OptimizedImage';
 import { telemetryTrack } from '../../utils/telemetry';
@@ -144,14 +145,22 @@ function ImageContainer({
   imageFetchPriority,
 }: ImageContainerProps): ReactElement {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
   const ratingValue = extractRatingValue(product.rating);
 
-  const images = product.images && product.images.length > 0 
-    ? product.images 
-    : product.mainImage 
-      ? [product.mainImage] 
-      : [];
-  
+  // Подгружаем полные данные (включая все изображения) при наведении,
+  // если их нет в списке каталога. React Query закэширует результат.
+  const hasImagesInList = !!product.images && product.images.length > 1;
+  const { data: fullProduct } = useProduct(product.slug, {
+    enabled: isHovered && !hasImagesInList && !!product.slug,
+  });
+
+  const images = useMemo(() => {
+    if (hasImagesInList) return product.images!;
+    if (fullProduct?.images && fullProduct.images.length > 1) return fullProduct.images;
+    return product.mainImage ? [product.mainImage] : [];
+  }, [product.images, product.mainImage, fullProduct, hasImagesInList]);
+
   const hasMultipleImages = images.length > 1;
   const currentImage = images[currentImageIndex];
   const hasValidImage = hasValidProductImage(currentImage?.url);
@@ -168,10 +177,27 @@ function ImageContainer({
     setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
+  const handleZoneHover = (index: number) => {
+    setCurrentImageIndex(index);
+  };
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setCurrentImageIndex(0);
+  };
+
   return (
-    <div className={styles.imageContainer}>
+    <div 
+      className={styles.imageContainer} 
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <Link
-        to={`/product/${product.id}`}
+        to={`/product/${product.slug}`}
         className={styles.imageLink}
         onClick={() => telemetryTrack('catalog_product_open', { productId: product.id, category: product.category, source: 'image' })}
       >
@@ -191,10 +217,35 @@ function ImageContainer({
               {getImagePlaceholder(product.category)}
             </div>
           )}
+
+          {/* Навигация по изображениям (линии) теперь внутри белого квадрата */}
+          {hasMultipleImages && (
+            <div className={styles.imageLines}>
+              {images.map((_, i) => (
+                <div
+                  key={i}
+                  className={`${styles.line} ${i === currentImageIndex ? styles.lineActive : ''}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* Зоны наведения для переключения картинок */}
+        {hasMultipleImages && (
+          <div className={styles.hoverZones}>
+            {images.map((_, i) => (
+              <div
+                key={i}
+                className={styles.zone}
+                onMouseEnter={() => handleZoneHover(i)}
+              />
+            ))}
+          </div>
+        )}
       </Link>
 
-      {/* Навигация по изображениям */}
+      {/* Навигация по изображениям (кнопки) */}
       {hasMultipleImages && (
         <>
           <button
@@ -213,14 +264,6 @@ function ImageContainer({
           >
             <Icon name="chevron-right" size="sm" />
           </button>
-          <div className={styles.imageDots}>
-            {images.map((_, i) => (
-              <div
-                key={i}
-                className={`${styles.dot} ${i === currentImageIndex ? styles.dotActive : ''}`}
-              />
-            ))}
-          </div>
         </>
       )}
 
@@ -303,7 +346,7 @@ function Content({
 
       <h3 className={styles.name}>
         <Link
-          to={`/product/${product.id}`}
+          to={`/product/${product.slug}`}
           className={styles.link}
           onClick={() => telemetryTrack('catalog_product_open', { productId: product.id, category: product.category, source: 'title' })}
         >

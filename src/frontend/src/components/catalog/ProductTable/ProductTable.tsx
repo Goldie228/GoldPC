@@ -122,7 +122,7 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
                 </td>
                 <td className={styles.colName}>
                   <Link
-                    to={`/product/${product.id}`}
+                    to={`/product/${product.slug}`}
                     className={styles.productLink}
                     onClick={() => telemetryTrack('catalog_product_open', { productId: product.id, category: product.category, source: 'table' })}
                   >

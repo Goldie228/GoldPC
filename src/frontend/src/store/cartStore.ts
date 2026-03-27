@@ -5,6 +5,7 @@ import type { ProductSummary } from '../api/types';
 export interface CartItem {
   id: string;
   productId: string;
+  productSlug?: string;
   name: string;
   category: string;
   price: number;
@@ -62,6 +63,7 @@ export const useCartStore = create<CartStore>()(
           const newItem: CartItem = {
             id: crypto.randomUUID(),
             productId: product.id,
+            productSlug: product.slug,
             name: product.name,
             category: product.category,
             price: product.price,

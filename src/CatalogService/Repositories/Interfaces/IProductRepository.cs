@@ -11,7 +11,9 @@ public interface IProductRepository
 {
     Task<Product?> GetByIdAsync(Guid id);
     Task<Product?> GetBySkuAsync(string sku);
+    Task<Product?> GetBySlugAsync(string slug);
     Task<Product?> GetDetailByIdAsync(Guid id);
+    Task<Product?> GetDetailBySlugAsync(string slug);
     Task<RepositoryPagedResult<Product>> GetFilteredAsync(ProductFilterDto filter);
     Task<IEnumerable<Product>> GetByIdsAsync(IEnumerable<Guid> ids);
     Task<IEnumerable<Product>> GetByCategoryAsync(Guid categoryId);
@@ -26,6 +28,7 @@ public interface IProductRepository
     Task DeleteAsync(Guid id);
     Task<bool> ExistsAsync(Guid id);
     Task<bool> SkuExistsAsync(string sku, Guid? excludeId = null);
+    Task<bool> SlugExistsAsync(string slug, Guid? excludeId = null);
     Task UpdateStockAsync(Guid id, int quantity);
     Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync();
 }

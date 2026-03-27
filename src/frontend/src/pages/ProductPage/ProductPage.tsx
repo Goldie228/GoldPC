@@ -276,8 +276,8 @@ const itemVariants = {
  * Главный компонент страницы
  */
 export function ProductPage(): ReactElement {
-  const { id } = useParams<{ id: string }>();
-  const { data: product, isLoading, error } = useProduct(id);
+  const { slug } = useParams<{ slug: string }>();
+  const { data: product, isLoading, error } = useProduct(slug);
   const showToast = useToastStore((state) => state.showToast);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -304,10 +304,10 @@ export function ProductPage(): ReactElement {
       {
         id: 'reviews',
         label: reviewCount > 0 ? `Отзывы (${reviewCount})` : 'Отзывы',
-        content: <ReviewSection productId={id!} product={product} isAuthenticated={isAuthenticated} showToast={showToast} />
+        content: <ReviewSection productId={product.id} product={product} isAuthenticated={isAuthenticated} showToast={showToast} />
       }
     ];
-  }, [product, id, isAuthenticated, showToast]);
+  }, [product, isAuthenticated, showToast]);
 
   if (isLoading) {
     return (
@@ -370,7 +370,7 @@ export function ProductPage(): ReactElement {
         <Tabs tabs={tabs} defaultTab="specs" />
       </motion.div>
 
-      <RelatedProducts product={product} productId={id!} />
+      <RelatedProducts product={product} productId={product.id} />
     </motion.div>
   );
 }

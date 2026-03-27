@@ -86,7 +86,7 @@
 
 /* Badge */
 .badge {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
   font-size: 0.65rem;
   padding: 4px 8px;
   background: var(--accent-glow, rgba(212, 165, 116, 0.15));
@@ -132,7 +132,7 @@
 
 /* Count (for category cards) */
 .count {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
   font-size: 0.7rem;
   color: var(--fg-dim, #52525b);
 }
@@ -172,7 +172,7 @@
   position: absolute;
   top: 12px;
   left: 12px;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
   font-size: 0.6rem;
   padding: 4px 8px;
   background: var(--accent, #d4a574);
@@ -186,7 +186,7 @@
   position: absolute;
   top: 12px;
   left: 12px;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
   font-size: 0.65rem;
   padding: 4px 8px;
   background: transparent;
@@ -202,7 +202,7 @@
   position: absolute;
   top: 12px;
   left: 12px;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
   font-size: 0.6rem;
   padding: 4px 8px;
   background: transparent;
@@ -257,7 +257,7 @@
 
 /* Product Price - Gold Accent */
 .productPrice {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
   font-size: 1rem;
   font-weight: 500;
   color: var(--accent, #d4a574);
@@ -306,7 +306,7 @@
   width: auto;
   padding: 0 12px;
   gap: 6px;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
   font-size: 0.7rem;
   font-weight: 500;
 }
@@ -351,7 +351,7 @@
 }
 
 .quantityValue {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--fg, #fafafa);

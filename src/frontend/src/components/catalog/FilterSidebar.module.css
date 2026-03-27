@@ -84,6 +84,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  font-family: var(--font-sans);
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--fg, #fafafa);
@@ -319,7 +320,7 @@
 }
 
 .categoryCount {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.65rem;
   color: var(--fg-dim, #52525b);
   padding: 2px 6px;
@@ -371,7 +372,7 @@
   background: rgba(18, 18, 21, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: var(--fg, #fafafa);
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   transition: all 0.2s ease;
   border-radius: 4px;

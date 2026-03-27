@@ -64,6 +64,7 @@ export interface ProductSummary {
   id: Uuid;
   name: string;
   sku: string;
+  slug?: string;
   category: ProductCategory;
   brand?: string;
   manufacturer?: Manufacturer;

@@ -54,6 +54,7 @@ public class CatalogDbContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Name).HasColumnName("name").IsRequired().HasMaxLength(200);
             entity.Property(e => e.Sku).HasColumnName("sku").IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Slug).HasColumnName("slug").IsRequired().HasMaxLength(220);
             entity.Property(e => e.Description).HasColumnName("description").HasColumnType("text");
             entity.Property(e => e.ManufacturerAddress).HasColumnName("manufacturer_address").HasColumnType("text");
             entity.Property(e => e.ProductionAddress).HasColumnName("production_address").HasColumnType("text");
@@ -72,6 +73,7 @@ public class CatalogDbContext : DbContext
             entity.Property(e => e.ExternalId).HasColumnName("external_id").HasMaxLength(100);
             
             entity.HasIndex(e => e.Sku).IsUnique();
+            entity.HasIndex(e => e.Slug).IsUnique();
             entity.HasIndex(e => e.ExternalId).IsUnique().HasFilter("external_id IS NOT NULL");
             entity.HasIndex(e => e.CategoryId);
             entity.HasIndex(e => e.ManufacturerId);
@@ -524,6 +526,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000001"),
                 Name = "AMD Ryzen 5 5600X",
                 Sku = "CPU-AMD-5600X",
+                Slug = "amd_ryzen_5_5600x",
                 Description = "Процессор AMD Ryzen 5 5600X, 6 ядер, 12 потоков, базовая частота 3.7 ГГц, турбо до 4.6 ГГц. Socket AM4. Отличное соотношение цена/производительность для игр и работы.",
                 CategoryId = cpuCategoryId,
                 ManufacturerId = amdId,
@@ -541,6 +544,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000002"),
                 Name = "AMD Ryzen 7 7800X3D",
                 Sku = "CPU-AMD-7800X3D",
+                Slug = "amd_ryzen_7_7800x3d",
                 Description = "Лучший игровой процессор с технологией 3D V-Cache. 8 ядер, 16 потоков, Socket AM5. Идеален для игр с объёмным кэшем 104MB.",
                 CategoryId = cpuCategoryId,
                 ManufacturerId = amdId,
@@ -558,6 +562,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000003"),
                 Name = "Intel Core i5-13600KF",
                 Sku = "CPU-INT-13600KF",
+                Slug = "intel_core_i5_13600kf",
                 Description = "Процессор Intel Core i5 13-го поколения, 14 ядер (6P+8E), 20 потоков. Socket LGA1700. Отличная производительность для игр и контента.",
                 CategoryId = cpuCategoryId,
                 ManufacturerId = intelId,
@@ -578,6 +583,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000004"),
                 Name = "ASUS TUF Gaming B650-Plus WiFi",
                 Sku = "MB-ASUS-B650TUF",
+                Slug = "asus_tuf_gaming_b650_plus_wifi",
                 Description = "Материнская плата ASUS TUF Gaming на чипсете B650, Socket AM5. Поддержка DDR5, PCIe 5.0, WiFi 6, 2.5G LAN. Надёжность военного класса.",
                 CategoryId = motherboardCategoryId,
                 ManufacturerId = asusId,
@@ -595,6 +601,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000005"),
                 Name = "MSI MAG B650 TOMAHAWK WIFI",
                 Sku = "MB-MSI-B650TOM",
+                Slug = "msi_mag_b650_tomahawk_wifi",
                 Description = "Материнская плата MSI MAG B650 Tomahawk, Socket AM5. DDR5, PCIe 4.0, WiFi 6E, 2.5G LAN. Идеальна для Ryzen 7000 серии.",
                 CategoryId = motherboardCategoryId,
                 ManufacturerId = msiId,
@@ -614,6 +621,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000006"),
                 Name = "Kingston FURY Beast 32GB DDR5-5600",
                 Sku = "RAM-KING-32D5",
+                Slug = "kingston_fury_beast_32gb_ddr5_5600",
                 Description = "Комплект оперативной памяти Kingston FURY Beast 2x16GB DDR5-5600 MHz. CL36, 1.25V. Высокая производительность для игр и работы.",
                 CategoryId = ramCategoryId,
                 ManufacturerId = kingstonId,
@@ -632,6 +640,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000007"),
                 Name = "G.Skill Trident Z5 RGB 32GB DDR5-6000",
                 Sku = "RAM-GSKILL-32Z5",
+                Slug = "g_skill_trident_z5_rgb_32gb_ddr5_6000",
                 Description = "Память G.Skill Trident Z5 RGB 2x16GB DDR5-6000 MHz CL30. Эффектная RGB-подсветка, оптимизировано для Intel XMP 3.0.",
                 CategoryId = ramCategoryId,
                 ManufacturerId = gskillId,
@@ -651,6 +660,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000008"),
                 Name = "Palit GeForce RTX 4070 SUPER Dual",
                 Sku = "GPU-PALIT-4070S",
+                Slug = "palit_geforce_rtx_4070_super_dual",
                 Description = "Видеокарта Palit GeForce RTX 4070 SUPER 12GB GDDR6X. DLSS 3, Ray Tracing, 12GB VRAM. Отличная производительность в 1440p.",
                 CategoryId = gpuCategoryId,
                 ManufacturerId = palitId,
@@ -668,6 +678,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000009"),
                 Name = "Gigabyte Radeon RX 7800 XT GAMING OC",
                 Sku = "GPU-GIGA-7800XT",
+                Slug = "gigabyte_radeon_rx_7800_xt_gaming_oc",
                 Description = "Видеокарта Gigabyte Radeon RX 7800 XT 16GB GDDR6. 16GB VRAM, FSR 3, отличное соотношение цена/производительность для 1440p.",
                 CategoryId = gpuCategoryId,
                 ManufacturerId = gigabyteId,
@@ -687,6 +698,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000010"),
                 Name = "Corsair RM750e 750W 80+ Gold",
                 Sku = "PSU-CORS-RM750E",
+                Slug = "corsair_rm750e_750w_80_gold",
                 Description = "Блок питания Corsair RM750e 750W, сертификат 80+ Gold, полностью модульный. Тихий 120mm вентилятор, ATX 3.0 совместимость.",
                 CategoryId = psuCategoryId,
                 ManufacturerId = corsairId,
@@ -704,6 +716,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000011"),
                 Name = "be quiet! Pure Power 12 M 850W",
                 Sku = "PSU-BEQT-PP12M",
+                Slug = "be_quiet_pure_power_12_m_850w",
                 Description = "Блок питания be quiet! Pure Power 12 M 850W, 80+ Gold, полумодульный. Немецкая разработка, сверхтихая работа.",
                 CategoryId = psuCategoryId,
                 ManufacturerId = beQuietId,
@@ -721,6 +734,7 @@ public class CatalogDbContext : DbContext
                 Id = Guid.Parse("20000000-0000-0000-0000-000000000012"),
                 Name = "Seasonic Focus GX-850 850W",
                 Sku = "PSU-SEAS-GX850",
+                Slug = "seasonic_focus_gx_850_850w",
                 Description = "Блок питания Seasonic Focus GX-850 850W, 80+ Gold, полностью модульный. Премиум качество, 10 лет гарантии.",
                 CategoryId = psuCategoryId,
                 ManufacturerId = seasonicId,

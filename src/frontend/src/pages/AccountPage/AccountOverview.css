@@ -75,7 +75,7 @@
 }
 
 .welcome-stat__value {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 1.5rem;
   font-weight: 500;
   color: var(--fg, #fafafa);
@@ -167,7 +167,7 @@
 }
 
 .order-id {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   color: var(--accent, #d4a574);
 }
@@ -178,13 +178,13 @@
 }
 
 .order-date {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-size: 0.8rem;
   color: var(--fg-muted, #71717a);
 }
 
 .order-total {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-weight: 500;
 }
 

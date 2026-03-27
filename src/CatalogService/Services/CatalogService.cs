@@ -5,6 +5,7 @@ using CatalogService.Services.Interfaces;
 using GoldPC.SharedKernel.Utilities;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace CatalogService.Services;
 
@@ -89,9 +90,23 @@ public class CatalogService : ICatalogService
         return product != null ? MapToDetailDto(product) : null;
     }
 
+    public async Task<ProductDetailDto?> GetProductBySlugAsync(string slug)
+    {
+        var normalized = slug?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(normalized))
+            return null;
+
+        var product = await _productRepository.GetDetailBySlugAsync(normalized);
+        return product != null ? MapToDetailDto(product) : null;
+    }
+
     public async Task<ProductDetailDto?> GetProductBySkuAsync(string sku)
     {
-        var product = await _productRepository.GetBySkuAsync(sku);
+        var normalizedInput = sku?.Trim() ?? string.Empty;
+        if (string.IsNullOrEmpty(normalizedInput))
+            return null;
+
+        var product = await _productRepository.GetBySkuAsync(normalizedInput);
         if (product == null) return null;
         
         var detailedProduct = await _productRepository.GetDetailByIdAsync(product.Id);
@@ -133,10 +148,13 @@ public class CatalogService : ICatalogService
             throw new InvalidOperationException("Необходимо указать CategoryId или Category");
         }
 
+        var productSlug = await EnsureUniqueProductSlugAsync(dto.Slug, dto.Name);
+
         var product = new Product
         {
             Name = dto.Name,
             Sku = dto.Sku,
+            Slug = productSlug,
             Description = dto.Description,
             CategoryId = categoryId,
             ManufacturerId = dto.ManufacturerId,
@@ -160,6 +178,10 @@ public class CatalogService : ICatalogService
 
         if (dto.Name != null)
             product.Name = dto.Name;
+        if (dto.Slug != null)
+        {
+            product.Slug = await EnsureUniqueProductSlugAsync(dto.Slug, dto.Name ?? product.Name, product.Id);
+        }
         if (dto.Description != null)
             product.Description = dto.Description;
         if (dto.Price.HasValue)
@@ -209,8 +231,18 @@ public class CatalogService : ICatalogService
 
         if (!string.IsNullOrEmpty(cachedCategories))
         {
-            _logger.LogInformation("Returning cached categories.");
-            return JsonSerializer.Deserialize<IEnumerable<CategoryDto>>(cachedCategories) ?? Array.Empty<CategoryDto>();
+            var cached = JsonSerializer.Deserialize<IEnumerable<CategoryDto>>(cachedCategories)?.ToList()
+                ?? new List<CategoryDto>();
+
+            // Самовосстановление после "битого" кэша:
+            // ранее могли закешироваться нулевые productCount, когда изображения ещё не были заполнены.
+            if (cached.Any() && cached.Any(c => c.ProductCount > 0))
+            {
+                _logger.LogInformation("Returning cached categories.");
+                return cached;
+            }
+
+            _logger.LogWarning("Categories cache is stale (all productCount are zero), rebuilding.");
         }
 
         var categories = await _categoryRepository.GetAllAsync();
@@ -563,6 +595,27 @@ public class CatalogService : ICatalogService
 
     private const int DescriptionShortMaxLength = 300;
 
+    private static string BuildSlug(string? raw, string fallback)
+    {
+        var source = string.IsNullOrWhiteSpace(raw) ? fallback : raw;
+        var slug = Regex.Replace(source.ToLowerInvariant(), @"[^a-z0-9]+", "_");
+        slug = Regex.Replace(slug, @"_+", "_").Trim('_');
+        return string.IsNullOrWhiteSpace(slug) ? $"product_{Guid.NewGuid():N}" : slug;
+    }
+
+    private async Task<string> EnsureUniqueProductSlugAsync(string? requestedSlug, string fallbackName, Guid? excludeId = null)
+    {
+        var baseSlug = BuildSlug(requestedSlug, fallbackName);
+        var slug = baseSlug;
+        var i = 2;
+        while (await _productRepository.SlugExistsAsync(slug, excludeId))
+        {
+            slug = $"{baseSlug}_{i}";
+            i++;
+        }
+        return slug;
+    }
+
     private static ProductListDto MapToListDto(Product product)
     {
         var descShort = !string.IsNullOrEmpty(product.Description)
@@ -576,13 +629,20 @@ public class CatalogService : ICatalogService
             Id = product.Id,
             Name = product.Name,
             Sku = product.Sku,
+            Slug = product.Slug,
             Category = product.Category?.Name ?? string.Empty,
             Price = product.Price,
             OldPrice = product.OldPrice,
             Stock = product.Stock,
             Manufacturer = product.Manufacturer != null ? MapToManufacturerDto(product.Manufacturer) : null,
-            MainImage = product.Images.Where(i => i.IsPrimary).Select(MapToImageDto).FirstOrDefault()
-                ?? product.Images.Select(MapToImageDto).FirstOrDefault(),
+            MainImage = product.Images
+                .Where(i => !string.IsNullOrWhiteSpace(i.Path) && i.IsPrimary)
+                .Select(MapToImageDto)
+                .FirstOrDefault()
+                ?? product.Images
+                    .Where(i => !string.IsNullOrWhiteSpace(i.Path))
+                    .Select(MapToImageDto)
+                    .FirstOrDefault(),
             Rating = product.Rating > 0 ? new RatingDto { Average = product.Rating, Count = product.ReviewCount } : null,
             IsActive = product.IsActive,
             DescriptionShort = descShort
@@ -596,6 +656,7 @@ public class CatalogService : ICatalogService
             Id = product.Id,
             Name = product.Name,
             Sku = product.Sku,
+            Slug = product.Slug,
             Category = product.Category?.Name ?? string.Empty,
             ManufacturerId = product.ManufacturerId,
             Manufacturer = product.Manufacturer != null ? MapToManufacturerDto(product.Manufacturer) : null,
@@ -609,9 +670,18 @@ public class CatalogService : ICatalogService
             Importer = product.Importer,
             ServiceSupport = product.ServiceSupport,
             Specifications = product.SpecificationValues.ToSpecificationsDict(),
-            MainImage = product.Images.Where(i => i.IsPrimary).Select(MapToImageDto).FirstOrDefault()
-                ?? product.Images.Select(MapToImageDto).FirstOrDefault(),
-            Images = product.Images.Select(MapToImageDto).ToList(),
+            MainImage = product.Images
+                .Where(i => !string.IsNullOrWhiteSpace(i.Path) && i.IsPrimary)
+                .Select(MapToImageDto)
+                .FirstOrDefault()
+                ?? product.Images
+                    .Where(i => !string.IsNullOrWhiteSpace(i.Path))
+                    .Select(MapToImageDto)
+                    .FirstOrDefault(),
+            Images = product.Images
+                .Where(i => !string.IsNullOrWhiteSpace(i.Path))
+                .Select(MapToImageDto)
+                .ToList(),
             Rating = product.Rating > 0 ? new RatingDto { Average = product.Rating, Count = product.ReviewCount } : null,
             IsActive = product.IsActive,
             IsFeatured = product.IsFeatured,
@@ -643,7 +713,7 @@ public class CatalogService : ICatalogService
             Id = manufacturer.Id,
             Name = manufacturer.Name,
             Country = manufacturer.Country,
-            Logo = !string.IsNullOrEmpty(manufacturer.LogoPath) ? manufacturer.LogoPath : manufacturer.LogoUrl,
+            Logo = manufacturer.LogoPath,
             Description = manufacturer.Description
         };
     }
@@ -653,7 +723,7 @@ public class CatalogService : ICatalogService
         return new ProductImageDto
         {
             Id = image.Id,
-            Url = !string.IsNullOrEmpty(image.Path) ? image.Path : image.Url,
+            Url = image.Path ?? string.Empty,
             Alt = image.AltText,
             IsMain = image.IsPrimary,
             Order = image.SortOrder

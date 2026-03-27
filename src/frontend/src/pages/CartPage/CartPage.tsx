@@ -235,7 +235,7 @@ export function CartPage(): ReactElement {
                 
                 <div className={styles.itemInfo}>
                   <span className={styles.itemCategory}>{getCategoryLabel(item.category)}</span>
-                  <Link to={`/product/${item.productId}`} className={styles.itemName}>
+                  <Link to={`/product/${item.productSlug ?? item.productId}`} className={styles.itemName}>
                     {item.name}
                   </Link>
                   <div className={styles.controls}>
