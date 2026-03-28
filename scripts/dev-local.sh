@@ -289,31 +289,57 @@ seed_catalog() {
     log_info "Seeding catalog database..."
     log_info "Detailed seed logs: $LOG_DIR/catalog-seed.log"
     
-    # Primary seed
+    # Primary seed (upsert, без полного reset)
     if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-xcore" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-xcore); then
-        log_ok "Catalog seeded"
+        log_ok "Catalog upsert completed"
     else
         log_warn "Seed failed or no JSON found. Check logs/catalog-seed.log"
     fi
 
-    # Image seed if available
+    # Backfill производителей для исторических данных
+    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running backfill-manufacturers" "$LOG_DIR/catalog-seed.log" dotnet run -- backfill-manufacturers); then
+        log_ok "Manufacturer backfill completed"
+    else
+        log_warn "Manufacturer backfill failed. Check logs/catalog-seed.log"
+    fi
+
+    # Получаем/обновляем карту изображений из x-core
+    if [ -d "$PROJECT_DIR/scripts/scraper" ]; then
+        if (cd "$PROJECT_DIR/scripts/scraper" && run_with_heartbeat "Running fetch-images" "$LOG_DIR/catalog-seed.log" npm run fetch-images); then
+            log_ok "xcore-images.json refreshed"
+        else
+            log_warn "fetch-images failed (will continue with existing xcore-images.json if present)"
+        fi
+    fi
+
+    # Инкрементально мержим ссылки изображений в БД
     if [ -f "$PROJECT_DIR/scripts/scraper/data/xcore-images.json" ]; then
-        log_info "Found xcore-images.json, starting image sync..."
-        if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-xcore-images" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-xcore-images); then
-            log_ok "Product images updated from xcore-images.json"
-            if (cd "$PROJECT_DIR/scripts/scraper" && run_with_heartbeat "Downloading product images to uploads" "$LOG_DIR/catalog-seed.log" npm run download-images); then
-                log_ok "Product images downloaded to uploads"
-            else
-                log_warn "Image download failed (optional). Check logs/catalog-seed.log"
-            fi
+        if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-xcore-images-merge" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-xcore-images-merge); then
+            log_ok "Image links merged into DB"
+        else
+            log_warn "Image merge failed. Check logs/catalog-seed.log"
+        fi
+
+        # Докачиваем только недостающие локальные файлы (path IS NULL)
+        if (cd "$PROJECT_DIR/scripts/scraper" && run_with_heartbeat "Downloading missing product images" "$LOG_DIR/catalog-seed.log" npm run download-images); then
+            log_ok "Missing images downloaded"
+        else
+            log_warn "Image download failed (optional). Check logs/catalog-seed.log"
         fi
     else
-        log_warn "xcore-images.json not found, skipping image sync"
+        log_warn "xcore-images.json not found, skipping image merge/download"
     fi
 
     # Filter attributes sync
     if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-filter-attributes" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-filter-attributes); then
         log_ok "Filter attributes synced"
+    fi
+
+    # Финальная чистка невалидных X-Core товаров
+    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running cleanup-invalid-products" "$LOG_DIR/catalog-seed.log" dotnet run -- cleanup-invalid-products); then
+        log_ok "Invalid products cleanup completed"
+    else
+        log_warn "Invalid products cleanup failed. Check logs/catalog-seed.log"
     fi
 }
 

@@ -31,8 +31,8 @@ public class CatalogServiceTests
     private readonly Mock<ICategoryRepository> _categoryRepositoryMock;
     private readonly Mock<IManufacturerRepository> _manufacturerRepositoryMock;
     private readonly Mock<IReviewRepository> _reviewRepositoryMock;
-    private readonly Mock<ILogger<CatalogService>> _loggerMock;
-    private readonly CatalogService _sut; // System Under Test
+    private readonly Mock<ILogger<CatalogService.Services.CatalogService>> _loggerMock;
+    private readonly CatalogService.Services.CatalogService _sut; // System Under Test
 
     public CatalogServiceTests()
     {
@@ -40,9 +40,9 @@ public class CatalogServiceTests
         _categoryRepositoryMock = new Mock<ICategoryRepository>();
         _manufacturerRepositoryMock = new Mock<IManufacturerRepository>();
         _reviewRepositoryMock = new Mock<IReviewRepository>();
-        _loggerMock = new Mock<ILogger<CatalogService>>();
+        _loggerMock = new Mock<ILogger<CatalogService.Services.CatalogService>>();
 
-        _sut = new CatalogService(
+        _sut = new CatalogService.Services.CatalogService(
             _productRepositoryMock.Object,
             _categoryRepositoryMock.Object,
             _manufacturerRepositoryMock.Object,

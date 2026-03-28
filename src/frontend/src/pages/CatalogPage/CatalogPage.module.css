@@ -266,8 +266,8 @@
     content: '';
     position: absolute;
     top: -15px;
-    left: -50px;
-    right: -50px;
+    left: 0;
+    right: 0;
     height: 15px;
     background: var(--bg, #09090b);
     z-index: -1;

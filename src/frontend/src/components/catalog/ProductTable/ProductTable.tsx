@@ -76,8 +76,6 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
       );
     } else if (result.reason === 'limit') {
       showToast('Можно сравнивать не более 4 товаров', 'error');
-    } else if (result.reason === 'category') {
-      showToast('Можно сравнивать товары только одной категории', 'error');
     }
   };
 

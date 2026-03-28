@@ -95,6 +95,7 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 // Регистрация сервисов
 builder.Services.AddScoped<CatalogService.Services.SpecImportNormalizer>();
+builder.Services.AddScoped<CatalogService.Services.ManufacturerDetector>();
 builder.Services.AddScoped<ICatalogService, CatalogService.Services.CatalogService>();
 builder.Services.AddScoped<CatalogService.Services.XCoreImporter>();
 builder.Services.AddScoped<CatalogService.Services.FilterAttributesSeeder>();
@@ -323,6 +324,49 @@ if (args is ["seed-xcore-images"] or ["seed-xcore-images", _])
     return 0;
 }
 
+// CLI: dotnet run -- seed-xcore-images-merge [путь к xcore-images.json]
+// Инкрементально добавляет новые изображения без удаления уже существующих.
+if (args is ["seed-xcore-images-merge"] or ["seed-xcore-images-merge", _])
+{
+    var jsonPath = args.Length == 2 ? args[1] : null;
+    if (string.IsNullOrEmpty(jsonPath))
+    {
+        var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        jsonPath = Path.Combine(repoRoot, "scripts", "scraper", "data", "xcore-images.json");
+    }
+    else if (!Path.IsPathRooted(jsonPath))
+    {
+        var fromCwd = Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, jsonPath));
+        var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+        var fromRepo = Path.Combine(repoRoot, jsonPath);
+        jsonPath = File.Exists(fromCwd) ? fromCwd : (File.Exists(fromRepo) ? fromRepo : fromCwd);
+    }
+
+    if (!File.Exists(jsonPath))
+    {
+        Console.WriteLine($"Файл не найден: {jsonPath}");
+        Console.WriteLine("Сначала выполните: cd scripts/scraper && npm run fetch-images");
+        return 1;
+    }
+
+    using var scope = app.Services.CreateScope();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var result = await importer.MergeProductImagesFromFileAsync(jsonPath);
+        logger.LogInformation("Merge изображений: {Updated} товаров дополнено, {NotFound} не найдено, {Errors} ошибок",
+            result.Updated, result.NotFound, result.Errors);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка seed-xcore-images-merge");
+        throw;
+    }
+
+    return 0;
+}
+
 // CLI: dotnet run -- seed-xcore-reset
 // Полный сброс: удаляет все товары X-Core, затем импортирует из xcore-products.json + обновляет картинки из xcore-images.json
 if (args is ["seed-xcore-reset"])
@@ -505,6 +549,68 @@ if (args is ["seed-xcore"] or ["seed-xcore", _])
         logger.LogError(ex, "Ошибка импорта");
         throw;
     }
+    return 0;
+}
+
+// CLI: dotnet run -- backfill-manufacturers [batchSize]
+// Разово доопределяет производителя для товаров без ManufacturerId.
+if (args is ["backfill-manufacturers"] or ["backfill-manufacturers", _])
+{
+    var batchSize = 100;
+    if (args.Length == 2 && int.TryParse(args[1], out var parsedBatchSize) && parsedBatchSize > 0)
+    {
+        batchSize = parsedBatchSize;
+    }
+
+    using var scope = app.Services.CreateScope();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        var result = await importer.BackfillMissingManufacturersAsync(batchSize);
+        logger.LogInformation(
+            "Backfill производителей завершён: кандидатов {Total}, обработано {Processed}, обновлено {UpdatedProducts}, создано производителей {CreatedManufacturers}, пропущено {Skipped}, ошибок {Errors}",
+            result.TotalCandidates,
+            result.Processed,
+            result.UpdatedProducts,
+            result.CreatedManufacturers,
+            result.Skipped,
+            result.Errors);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка backfill-manufacturers");
+        throw;
+    }
+
+    return 0;
+}
+
+// CLI: dotnet run -- cleanup-invalid-products
+// Удаляет невалидные X-Core товары (без производителя или без локальных изображений).
+if (args is ["cleanup-invalid-products"])
+{
+    using var scope = app.Services.CreateScope();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        var result = await importer.CleanupInvalidProductsAsync();
+        logger.LogInformation(
+            "Cleanup невалидных товаров: проверено {Checked}, удалено {Deleted}, без производителя {MissingManufacturer}, без изображений {MissingImages}",
+            result.Checked,
+            result.Deleted,
+            result.MissingManufacturer,
+            result.MissingImages);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка cleanup-invalid-products");
+        throw;
+    }
+
     return 0;
 }
 

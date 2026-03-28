@@ -2,7 +2,7 @@
  * Comparison Store - Управление списком товаров для сравнения
  *
  * Хранит ID и категорию товаров в localStorage. Лимит 4 товара.
- * Разрешено сравнивать только товары одной категории.
+ * Разрешено сравнивать товары разных категорий.
  */
 
 import { create } from 'zustand';
@@ -20,9 +20,9 @@ interface ComparisonState {
 
   isInComparison: (productId: string) => boolean;
 
-  toggleComparison: (productId: string, category: string) => { success: boolean; reason?: 'limit' | 'category' };
+  toggleComparison: (productId: string, category: string) => { success: boolean; reason?: 'limit' };
 
-  addItem: (productId: string, category: string) => { success: boolean; reason?: 'limit' | 'category' };
+  addItem: (productId: string, category: string) => { success: boolean; reason?: 'limit' };
 
   removeItem: (productId: string) => void;
 
@@ -50,7 +50,7 @@ export const useComparisonStore = create<ComparisonState>()(
         return get().items.some((i) => i.id === productId);
       },
 
-      toggleComparison: (productId: string, category: string): { success: boolean; reason?: 'limit' | 'category' } => {
+      toggleComparison: (productId: string, category: string): { success: boolean; reason?: 'limit' } => {
         const { items } = get();
         const existing = items.find((i) => i.id === productId);
         if (existing) {
@@ -60,22 +60,14 @@ export const useComparisonStore = create<ComparisonState>()(
         if (items.length >= MAX_COMPARISON_ITEMS) {
           return { success: false, reason: 'limit' };
         }
-        const existingCategory = items[0]?.category;
-        if (existingCategory && existingCategory !== '' && existingCategory !== category) {
-          return { success: false, reason: 'category' };
-        }
         set({ items: [...items, { id: productId, category }] });
         return { success: true };
       },
 
-      addItem: (productId: string, category: string): { success: boolean; reason?: 'limit' | 'category' } => {
+      addItem: (productId: string, category: string): { success: boolean; reason?: 'limit' } => {
         const { items } = get();
         if (items.some((i) => i.id === productId)) return { success: true };
         if (items.length >= MAX_COMPARISON_ITEMS) return { success: false, reason: 'limit' };
-        const existingCategory = items[0]?.category;
-        if (existingCategory && existingCategory !== '' && existingCategory !== category) {
-          return { success: false, reason: 'category' };
-        }
         set({ items: [...items, { id: productId, category }] });
         return { success: true };
       },
@@ -94,10 +86,9 @@ export const useComparisonStore = create<ComparisonState>()(
 
       canAdd: (category?: string): boolean => {
         const { items } = get();
+        void category;
         if (items.length >= MAX_COMPARISON_ITEMS) return false;
-        if (items.length === 0 || !category) return true;
-        const existingCategory = items[0]?.category;
-        return !existingCategory || existingCategory === '' || existingCategory === category;
+        return true;
       },
 
       getItems: (): string[] => {
@@ -106,7 +97,7 @@ export const useComparisonStore = create<ComparisonState>()(
     }),
     {
       name: 'goldpc-comparison-v2',
-      version: 2,
+      version: 3,
       partialize: (state) => ({ items: state.items }),
       merge: (persisted, current) => {
         const p = persisted as { items?: unknown[] };

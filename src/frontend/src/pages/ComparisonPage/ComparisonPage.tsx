@@ -6,12 +6,17 @@ import { catalogApi } from '../../api/catalog';
 import { getProductImageUrl } from '../../utils/image';
 import { useCart } from '../../hooks/useCart';
 import { useToastStore } from '../../store/toastStore';
+import { useWishlistStore } from '../../store/wishlistStore';
 import type { Product, ProductSpecifications, ProductCategory, ProductImage } from '../../api/types';
 import { Icon } from '../../components/ui/Icon/Icon';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { EmptyState } from '../../components/catalog/EmptyState';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
 import { Modal } from '../../components/ui/Modal/Modal';
+import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
+import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
+import { evaluateComparison } from '../../utils/comparison/comparisonEngine';
+import { getBackendCategorySlug, normalizeCategory, normalizeSpecKey } from '../../utils/comparison/comparisonRules';
 import styles from './ComparisonPage.module.css';
 
 /** Placeholder контент для модального окна быстрого просмотра */
@@ -104,119 +109,9 @@ function getMainImage(product: Product): ProductImage | undefined {
   return images.find((i) => i.isMain) ?? images[0];
 }
 
-/** Расширенный словарь русских названий характеристик (локализация) */
-const SPEC_LABELS: Record<string, string> = {
-  vram: 'Объём видеопамяти',
-  videopamyat: 'Объём видеопамяти (ГБ)',
-  gpu: 'Серия GPU',
-  razyemy_pitaniya: 'Разъёмы питания',
-  chip: 'Чип',
-  memory: 'Память',
-  memoryType: 'Тип памяти',
-  interface: 'Интерфейс',
-  socket: 'Сокет',
-  cores: 'Количество ядер',
-  threads: 'Потоки',
-  integrated_graphics: 'Встроенная графика',
-  cooling_included: 'Охлаждение в комплекте',
-  multithreading: 'Многопоточность',
-  baseFrequency: 'Базовая частота',
-  boostFrequency: 'Турбо частота',
-  chipset: 'Чипсет',
-  form_factor: 'Форм-фактор',
-  formFactor: 'Форм-фактор',
-  type: 'Тип',
-  capacity: 'Объём',
-  frequency: 'Частота',
-  wattage: 'Мощность',
-  power: 'Мощность',
-  efficiency: 'Сертификат 80+',
-  modular: 'Модульный',
-  color: 'Цвет',
-  tdp: 'TDP',
-  diagonal: 'Диагональ',
-  resolution: 'Разрешение',
-  refresh_rate: 'Частота обновления',
-  refreshRate: 'Частота обновления',
-  connection: 'Подключение',
-  cache: 'Кэш',
-  ports: 'Разъёмы',
-  memorySlots: 'Слотов памяти',
-  maxMemory: 'Макс. память',
-  pcieSlots: 'Слоты PCIe',
-  latency: 'Задержка',
-  voltage: 'Напряжение',
-  modules: 'Модули',
-  readSpeed: 'Скорость чтения',
-  writeSpeed: 'Скорость записи',
-  fanSize: 'Вентилятор',
-  fan_size: 'Вентилятор',
-  material: 'Материал',
-  window: 'Прозрачное окно',
-  max_cooler_height: 'Макс. высота кулера',
-  max_gpu_length: 'Макс. длина видеокарты',
-  gpuLength: 'Длина видеокарты',
-  cpuCoolerHeight: 'Высота кулера',
-  fans: 'Вентиляторы',
-  noise: 'Уровень шума',
-  height: 'Высота',
-  panelType: 'Тип матрицы',
-  matrix: 'Матрица',
-  responseTime: 'Время отклика',
-  dpi: 'DPI',
-  sensor_type: 'Тип сенсора',
-  connection_type: 'Тип подключения',
-  ecc: 'ECC',
-  xmp: 'Профили XMP',
-  expo: 'AMD EXPO',
-  data_vykhoda_na_rynok: 'Год выхода на рынок',
-  driver_size: 'Размер драйвера, мм',
-  impedance: 'Импеданс',
-};
-
-const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  cpu: 'Процессоры',
-  gpu: 'Видеокарты',
-  motherboard: 'Материнские платы',
-  ram: 'Оперативная память',
-  storage: 'Накопители',
-  psu: 'Блоки питания',
-  case: 'Корпуса',
-  cooling: 'Охлаждение',
-  monitor: 'Мониторы',
-  keyboard: 'Клавиатуры',
-  mouse: 'Мыши',
-  headphones: 'Наушники',
-};
-
-/** snake_case → человекочитаемое русское */
-const SNAKE_TO_RU: Record<string, string> = {
-  data_vykhoda_na_rynok: 'Год выхода на рынок',
-  driver_size: 'Размер драйвера',
-  max_cooler_height: 'Макс. высота кулера',
-  max_gpu_length: 'Макс. длина видеокарты',
-  connection_type: 'Тип подключения',
-  sensor_type: 'Тип сенсора',
-  refresh_rate: 'Частота обновления',
-  response_time: 'Время отклика',
-  form_factor: 'Форм-фактор',
-  fan_size: 'Размер вентилятора',
-};
-
-function specLabel(key: string): string {
-  const lower = key.toLowerCase();
-  const normalized = key.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
-  return (
-    SPEC_LABELS[key] ??
-    SPEC_LABELS[normalized] ??
-    SPEC_LABELS[lower] ??
-    SNAKE_TO_RU[lower] ??
-    SNAKE_TO_RU[normalized] ??
-    key
-      .split('_')
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(' ')
-  );
+function getCategoryLabel(category: string): string {
+  const normalized = normalizeCategory(category);
+  return CATEGORY_LABELS_RU[normalized as ProductCategory] ?? normalized;
 }
 
 function formatPrice(price: number): string {
@@ -228,40 +123,6 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
-/** Форматировать значение спецификации для отображения */
-function formatSpecValue(value: string | number | boolean | undefined): string {
-  if (value === undefined || value === null || value === '') return '—';
-  if (typeof value === 'boolean') return value ? 'Да' : 'Нет';
-  return String(value);
-}
-
-/** Спеки, для которых ниже = лучше (цена, TDP, шум и т.д.) */
-const LOWER_IS_BETTER = new Set(['price', 'tdp', 'noise', 'voltage', 'responseTime', 'response_time']);
-
-/** Извлечь числовое значение для сравнения */
-function extractNumeric(val: unknown): number | null {
-  if (typeof val === 'number' && !Number.isNaN(val)) return val;
-  if (val == null) return null;
-  const s = String(val);
-  const num = parseFloat(s.replace(/[^\d.,-]/g, '').replace(',', '.'));
-  return Number.isNaN(num) ? null : num;
-}
-
-/** Определить лучший индекс для строки (для подсветки) */
-function getBestIndices(
-  rowKey: string,
-  values: (string | number | boolean | undefined)[]
-): Set<number> {
-  const numerics = values.map(extractNumeric);
-  const valid = numerics.map((n, i) => (n != null ? { i, n } : null)).filter(Boolean) as { i: number; n: number }[];
-  if (valid.length < 2) return new Set();
-
-  const lowerBetter = LOWER_IS_BETTER.has(rowKey.toLowerCase());
-  const best = lowerBetter
-    ? valid.reduce((a, b) => (a.n <= b.n ? a : b))
-    : valid.reduce((a, b) => (a.n >= b.n ? a : b));
-  return new Set(valid.filter((v) => v.n === best.n).map((v) => v.i));
-}
 
 /**
  * Страница сравнения товаров
@@ -269,7 +130,8 @@ function getBestIndices(
 export function ComparisonPage(): ReactElement {
   const items = useComparisonStore((state) => state.items);
   const removeItem = useComparisonStore((state) => state.removeItem);
-  const { addToCart, isInCart } = useCart();
+  const { addToCart, changeQuantity, isInCart, getItemQuantity } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlistStore();
   const showToast = useToastStore((state) => state.showToast);
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -277,6 +139,8 @@ export function ComparisonPage(): ReactElement {
   const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [facetDisplayNames, setFacetDisplayNames] = useState<Record<string, string>>({});
 
   const itemIds = useMemo(() => items.map((i) => i.id), [items]);
 
@@ -322,19 +186,110 @@ export function ComparisonPage(): ReactElement {
     setImageErrors((prev) => new Set(prev).add(productId));
   }, []);
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: Product): void => {
     if (product.stock === 0) return;
+    if (isInCart(product.id)) return;
     addToCart(product, 1);
     showToast('Товар добавлен в корзину', 'success');
+  };
+
+  const handleDecrement = (product: Product): void => {
+    const quantity = getItemQuantity(product.id);
+    if (quantity <= 1) {
+      changeQuantity(product.id, -1);
+      showToast('Товар удалён из корзины', 'info');
+      return;
+    }
+    changeQuantity(product.id, -1);
+  };
+
+  const handleIncrement = (product: Product): void => {
+    const quantity = getItemQuantity(product.id);
+    if (product.stock > 0 && quantity >= product.stock) {
+      showToast('Достигнуто максимальное количество на складе', 'info');
+      return;
+    }
+    changeQuantity(product.id, 1);
+  };
+
+  const handleToggleWishlist = (productId: string): void => {
+    const inWishlist = isInWishlist(productId);
+    toggleWishlist(productId);
+    showToast(inWishlist ? 'Удалено из избранного' : 'Добавлено в избранное', inWishlist ? 'info' : 'success');
   };
 
   const handleOpenQuickView = (product: Product) => {
     setQuickViewProduct(product);
   };
 
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    products.forEach((product) => {
+      const category = normalizeCategory(product.category);
+      if (category !== '') {
+        counts.set(category, (counts.get(category) ?? 0) + 1);
+      }
+    });
+    return counts;
+  }, [products]);
+
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((product) => {
+      const category = normalizeCategory(product.category);
+      if (category !== '') set.add(category);
+    });
+    return Array.from(set).sort((a, b) => getCategoryLabel(a).localeCompare(getCategoryLabel(b), 'ru'));
+  }, [products]);
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      setActiveCategory(null);
+      return;
+    }
+    if (activeCategory === null || !categories.includes(activeCategory)) {
+      setActiveCategory(categories[0]);
+    }
+  }, [activeCategory, categories]);
+
+  const visibleProducts = useMemo(() => {
+    if (!activeCategory) return products;
+    return products.filter((product) => normalizeCategory(product.category) === activeCategory);
+  }, [activeCategory, products]);
+
+  useEffect(() => {
+    if (!activeCategory) {
+      setFacetDisplayNames({});
+      return;
+    }
+    const backendSlug = getBackendCategorySlug(activeCategory);
+    if (!backendSlug) {
+      setFacetDisplayNames({});
+      return;
+    }
+    let cancelled = false;
+    catalogApi
+      .getFilterFacets(backendSlug)
+      .then((facets) => {
+        if (cancelled) return;
+        const next: Record<string, string> = {};
+        facets.forEach((facet) => {
+          const normalizedKey = normalizeSpecKey(facet.key);
+          next[normalizedKey] = facet.displayName;
+        });
+        setFacetDisplayNames(next);
+      })
+      .catch(() => {
+        if (!cancelled) setFacetDisplayNames({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCategory]);
+
   const specKeys = useMemo(() => {
     const keys = new Set<string>();
-    products.forEach((p) => {
+    visibleProducts.forEach((p) => {
       const specs = p.specifications as ProductSpecifications | undefined;
       if (specs) Object.keys(specs).forEach((k) => keys.add(k));
     });
@@ -348,15 +303,15 @@ export function ComparisonPage(): ReactElement {
       if (ib !== -1) return 1;
       return a.localeCompare(b);
     });
-  }, [products]);
+  }, [visibleProducts]);
 
-  const categories = useMemo(() => {
-    const set = new Set(products.map((p) => p.category));
-    return Array.from(set);
-  }, [products]);
-
-  const categoryLabel =
-    categories.length === 1 ? CATEGORY_LABELS[categories[0] as ProductCategory] ?? categories[0] : null;
+  const resolveSpecLabel = useCallback(
+    (key: string): string => {
+      const normalized = normalizeSpecKey(key);
+      return facetDisplayNames[normalized] ?? specLabel(key);
+    },
+    [facetDisplayNames]
+  );
 
   if (items.length === 0 && !loading) {
     return (
@@ -427,17 +382,45 @@ export function ComparisonPage(): ReactElement {
           </nav>
           <div className={styles.titleRow}>
             <h1 className={styles.title}>Сравнение товаров</h1>
-            {categoryLabel && <span className={styles.categoryBadge}>{categoryLabel}</span>}
+            {activeCategory && <span className={styles.categoryBadge}>{getCategoryLabel(activeCategory)}</span>}
           </div>
           <p className={styles.stats}>
-            {formatCountRu(products.length, RU_FORMS.tovar)} в списке
+            {formatCountRu(visibleProducts.length, RU_FORMS.tovar)} в выбранной категории
           </p>
+          {categories.length > 1 && (
+            <div className={styles.categoryTabs} role="tablist" aria-label="Категории сравнения">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeCategory === category}
+                  className={`${styles.categoryTab} ${activeCategory === category ? styles.categoryTabActive : ''}`}
+                  onClick={() => setActiveCategory(category)}
+                >
+                  <span>{getCategoryLabel(category)}</span>
+                  <span className={styles.categoryTabCount}>{categoryCounts.get(category) ?? 0}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </header>
 
         {loading ? (
           <div className={styles.loading}>
             <Icon name="loader" size="xl" animated color="gold" />
             <span>Загружаем характеристики...</span>
+          </div>
+        ) : visibleProducts.length === 0 ? (
+          <div className={styles.emptyStateWrapper}>
+            <EmptyState
+              title="Для этой категории пока нечего сравнивать"
+              description="Выберите другую категорию в переключателе сверху или добавьте товары в сравнение из каталога."
+              showResetButton={false}
+            />
+            <Link to="/catalog" className={styles.backToCatalog}>
+              Перейти в каталог
+            </Link>
           </div>
         ) : (
           <motion.div 
@@ -453,7 +436,13 @@ export function ComparisonPage(): ReactElement {
                     </div>
                   </th>
                   <AnimatePresence mode="popLayout">
-                    {products.map((product) => (
+                    {visibleProducts.map((product) => {
+                      const inCart = isInCart(product.id);
+                      const inWishlist = isInWishlist(product.id);
+                      const quantityInCart = getItemQuantity(product.id);
+                      const canIncrement = product.stock <= 0 || quantityInCart < product.stock;
+
+                      return (
                       <motion.th 
                         key={product.id} 
                         className={styles.productCol}
@@ -497,14 +486,44 @@ export function ComparisonPage(): ReactElement {
                               <span className={styles.price}>{formatPrice(product.price)}</span>
                             </div>
                             <div className={styles.actionButtons}>
-                              <button 
-                                className={`${styles.addToCartBtn} ${isInCart(product.id) ? styles.inCart : ''}`}
-                                onClick={() => handleAddToCart(product)}
-                                disabled={product.stock === 0}
+                              <button
+                                className={`${styles.wishlistBtn} ${inWishlist ? styles.wishlistBtnActive : ''}`}
+                                onClick={() => handleToggleWishlist(product.id)}
+                                aria-label={inWishlist ? 'Удалить из избранного' : 'Добавить в избранное'}
                               >
-                                <Icon name={isInCart(product.id) ? 'check' : 'cart'} size="xs" />
-                                <span>{isInCart(product.id) ? 'В корзине' : 'Купить'}</span>
+                                <Icon name="heart" size="xs" color={inWishlist ? 'gold' : 'default'} />
                               </button>
+                              {inCart ? (
+                                <div className={styles.quantityControls}>
+                                  <button
+                                    className={styles.quantityButton}
+                                    onClick={() => handleDecrement(product)}
+                                    aria-label="Уменьшить количество"
+                                    type="button"
+                                  >
+                                    <Icon name="minus" size="xs" />
+                                  </button>
+                                  <span className={styles.quantityValue}>{quantityInCart}</span>
+                                  <button
+                                    className={styles.quantityButton}
+                                    onClick={() => handleIncrement(product)}
+                                    disabled={!canIncrement || product.stock === 0}
+                                    aria-label="Увеличить количество"
+                                    type="button"
+                                  >
+                                    <Icon name="plus" size="xs" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button 
+                                  className={styles.addToCartBtn}
+                                  onClick={() => handleAddToCart(product)}
+                                  disabled={product.stock === 0}
+                                >
+                                  <Icon name="cart" size="xs" />
+                                  <span>В корзину</span>
+                                </button>
+                              )}
                               <button 
                                 className={styles.quickViewMiniBtn}
                                 onClick={() => handleOpenQuickView(product)}
@@ -516,14 +535,15 @@ export function ComparisonPage(): ReactElement {
                           </div>
                         </div>
                       </motion.th>
-                    ))}
+                    );
+                    })}
                   </AnimatePresence>
                 </tr>
               </thead>
               <tbody>
                 <tr className={styles.row}>
                   <td className={styles.stickyCol}>Производитель</td>
-                  {products.map((product) => (
+                  {visibleProducts.map((product) => (
                     <td key={product.id} className={styles.valueCell}>
                       {product.manufacturer?.name ?? '—'}
                     </td>
@@ -531,19 +551,19 @@ export function ComparisonPage(): ReactElement {
                 </tr>
                 <tr className={styles.row}>
                   <td className={styles.stickyCol}>Рейтинг</td>
-                  {products.map((product, idx) => {
+                  {visibleProducts.map((product, idx) => {
                     const ratingNum =
                       typeof product.rating === 'number'
                         ? product.rating
                         : (product.rating as { average?: number } | undefined)?.average;
-                    const ratings = products.map((p) =>
+                    const ratings = visibleProducts.map((p) =>
                       typeof p.rating === 'number' ? p.rating : (p.rating as { average?: number })?.average
                     );
-                    const bestIndices = getBestIndices('rating', ratings);
+                    const ratingEvaluation = evaluateComparison(activeCategory ?? '', 'rating', ratings);
                     return (
                       <td
                         key={product.id}
-                        className={`${styles.valueCell} ${bestIndices.has(idx) ? styles.bestValue : ''}`}
+                        className={`${styles.valueCell} ${ratingEvaluation.bestIndices.has(idx) ? styles.bestValue : ''}`}
                       >
                         {ratingNum != null && !Number.isNaN(ratingNum) ? (
                           <div className={styles.ratingBox}>
@@ -557,33 +577,36 @@ export function ComparisonPage(): ReactElement {
                 </tr>
                 <tr className={styles.row}>
                   <td className={styles.stickyCol}>Наличие</td>
-                  {products.map((product) => (
+                  {visibleProducts.map((product) => (
                     <td key={product.id} className={styles.valueCell}>
-                      <span className={product.stock === 0 ? styles.outOfStock : styles.inStock}>
+                      <span className={`${styles.stockBadge} ${product.stock === 0 ? styles.outOfStock : styles.inStock}`}>
                         {product.stock === 0 ? 'Под заказ' : 'В наличии'}
                       </span>
                     </td>
                   ))}
                 </tr>
                 {specKeys.map((key) => {
-                  const values = products.map((p) => {
+                  const values = visibleProducts.map((p) => {
                     const specs = p.specifications as ProductSpecifications | undefined;
                     return specs?.[key];
                   });
-                  const bestIndices = getBestIndices(key, values);
+                  const evaluation = evaluateComparison(activeCategory ?? '', key, values);
 
                   return (
                     <tr key={key} className={styles.row}>
-                      <td className={styles.stickyCol}>{specLabel(key)}</td>
-                      {products.map((product, idx) => {
+                      <td className={styles.stickyCol}>{resolveSpecLabel(key)}</td>
+                      {visibleProducts.map((product, idx) => {
                         const specs = product.specifications as ProductSpecifications | undefined;
                         const value = specs?.[key];
-                        const display = formatSpecValue(value);
+                        const display = formatSpecValueForKey(key, value);
+                        const cellClassName = `${styles.valueCell} ${
+                          evaluation.bestIndices.has(idx) ? styles.bestValue : ''
+                        }`;
 
                         return (
                           <td
                             key={product.id}
-                            className={`${styles.valueCell} ${bestIndices.has(idx) ? styles.bestValue : ''}`}
+                            className={cellClassName}
                           >
                             {display}
                           </td>

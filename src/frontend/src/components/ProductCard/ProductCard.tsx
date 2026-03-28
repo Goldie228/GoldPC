@@ -518,8 +518,6 @@ export function ProductCard({
     const result = toggleComparison(product.id, product.category);
     if (result.success) {
       showToast('Добавлено в сравнение', 'success');
-    } else if (result.reason === 'category') {
-      showToast('Можно сравнивать только товары одной категории', 'info');
     } else {
       showToast('Максимум 4 товара в сравнении', 'info');
     }

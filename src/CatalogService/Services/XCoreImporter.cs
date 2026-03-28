@@ -17,6 +17,7 @@ public class XCoreImporter
 {
     private readonly CatalogDbContext _context;
     private readonly SpecImportNormalizer _specNormalizer;
+    private readonly ManufacturerDetector _manufacturerDetector;
     private readonly ILogger<XCoreImporter> _logger;
     private readonly string _uploadsFullPath;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
@@ -24,12 +25,14 @@ public class XCoreImporter
     public XCoreImporter(
         CatalogDbContext context,
         SpecImportNormalizer specNormalizer,
+        ManufacturerDetector manufacturerDetector,
         ILogger<XCoreImporter> logger,
         IHostEnvironment hostEnv,
         IConfiguration configuration)
     {
         _context = context;
         _specNormalizer = specNormalizer;
+        _manufacturerDetector = manufacturerDetector;
         _logger = logger;
         var uploadsPath = configuration["CatalogService:UploadsPath"] ?? "uploads";
         _uploadsFullPath = Path.Combine(hostEnv.ContentRootPath, uploadsPath);
@@ -197,10 +200,21 @@ public class XCoreImporter
                     ? await _context.Products.FindAsync(existingId.Value) 
                     : null;
 
-                Manufacturer? manufacturer = null;
-                if (!string.IsNullOrEmpty(p.Manufacturer))
+                var manufacturerName = p.Manufacturer;
+                if (string.IsNullOrWhiteSpace(manufacturerName))
                 {
-                    var mName = Truncate(p.Manufacturer, 100)!;
+                    // Попытка определить производителя из названия, если он не задан явно
+                    manufacturerName = _manufacturerDetector.Detect(p.Name ?? "", manufacturersCache.Keys);
+                    if (!string.IsNullOrEmpty(manufacturerName))
+                    {
+                        _logger.LogInformation("Определён производитель {Manufacturer} для товара {Name}", manufacturerName, p.Name);
+                    }
+                }
+
+                Manufacturer? manufacturer = null;
+                if (!string.IsNullOrEmpty(manufacturerName))
+                {
+                    var mName = Truncate(manufacturerName, 100)!;
                     if (manufacturersCache.TryGetValue(mName, out var manId))
                     {
                         manufacturer = _context.Manufacturers.Local.FirstOrDefault(m => m.Id == manId) 
@@ -617,6 +631,237 @@ public class XCoreImporter
         await _context.SaveChangesAsync();
         return result;
     }
+
+    /// <summary>
+    /// Инкрементально добавляет новые изображения из JSON, не удаляя уже существующие.
+    /// Подходит для локального обновления: "докачать недостающие", без массового сброса.
+    /// </summary>
+    public async Task<UpdateImagesResult> MergeProductImagesFromFileAsync(string filePath)
+    {
+        if (!File.Exists(filePath))
+            throw new FileNotFoundException($"Файл не найден: {filePath}");
+
+        var json = await File.ReadAllTextAsync(filePath);
+        var data = JsonSerializer.Deserialize<XCoreImagesData>(json, JsonOptions)
+            ?? throw new InvalidOperationException("Неверный формат JSON");
+
+        var result = new UpdateImagesResult();
+        if (data.Products == null || data.Products.Count == 0)
+            return result;
+
+        foreach (var item in data.Products)
+        {
+            if (string.IsNullOrWhiteSpace(item.Sku))
+                continue;
+
+            var skuNormalized = TruncateSku(item.Sku);
+            var externalId = TryExtractExternalIdFromXcoreSku(item.Sku);
+
+            try
+            {
+                var product = await _context.Products
+                    .Include(p => p.Images)
+                    .FirstOrDefaultAsync(p =>
+                        p.Sku == skuNormalized ||
+                        (externalId != null && p.ExternalId == externalId));
+
+                if (product == null)
+                {
+                    result.NotFound++;
+                    continue;
+                }
+
+                var existingUrls = new HashSet<string>(
+                    product.Images
+                        .Where(i => !string.IsNullOrWhiteSpace(i.Url))
+                        .Select(i => i.Url),
+                    StringComparer.OrdinalIgnoreCase);
+
+                var addedForProduct = 0;
+                var nextSortOrder = product.Images.Count > 0 ? product.Images.Max(i => i.SortOrder) + 1 : 0;
+
+                foreach (var raw in item.Images ?? new List<string>())
+                {
+                    var url = raw?.ToString();
+                    if (string.IsNullOrWhiteSpace(url) || IsXCorePlaceholderUrl(url))
+                        continue;
+
+                    var urlTruncated = url.Length > 500 ? url[..500] : url;
+                    if (existingUrls.Contains(urlTruncated))
+                        continue;
+
+                    var existingPath = TryGetExistingLocalPath(url);
+                    _context.ProductImages.Add(new ProductImage
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = product.Id,
+                        Url = urlTruncated,
+                        Path = existingPath,
+                        AltText = product.Name,
+                        IsPrimary = product.Images.Count == 0 && addedForProduct == 0,
+                        SortOrder = nextSortOrder++,
+                    });
+
+                    existingUrls.Add(urlTruncated);
+                    addedForProduct++;
+                }
+
+                if (addedForProduct > 0)
+                {
+                    result.Updated++;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка merge изображений для SKU {Sku}", item.Sku);
+                result.Errors++;
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return result;
+    }
+
+    /// <summary>
+    /// Удаляет невалидные X-Core товары:
+    /// - без производителя;
+    /// - без локальных изображений (path), которые необходимы для отображения в каталоге.
+    /// </summary>
+    public async Task<CleanupInvalidProductsResult> CleanupInvalidProductsAsync()
+    {
+        var candidates = await _context.Products
+            .Include(p => p.Images)
+            .Where(p => p.ExternalId != null)
+            .ToListAsync();
+
+        var invalidByManufacturer = candidates
+            .Where(p => p.ManufacturerId == null)
+            .Select(p => p.Id)
+            .ToHashSet();
+
+        var invalidByImages = candidates
+            .Where(p => !p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)))
+            .Select(p => p.Id)
+            .ToHashSet();
+
+        var invalidIds = invalidByManufacturer
+            .Union(invalidByImages)
+            .ToHashSet();
+
+        if (invalidIds.Count == 0)
+        {
+            return new CleanupInvalidProductsResult
+            {
+                Checked = candidates.Count,
+                Deleted = 0,
+                MissingManufacturer = 0,
+                MissingImages = 0
+            };
+        }
+
+        var toDelete = candidates.Where(p => invalidIds.Contains(p.Id)).ToList();
+        _context.Products.RemoveRange(toDelete);
+        await _context.SaveChangesAsync();
+
+        return new CleanupInvalidProductsResult
+        {
+            Checked = candidates.Count,
+            Deleted = toDelete.Count,
+            MissingManufacturer = invalidByManufacturer.Count,
+            MissingImages = invalidByImages.Count
+        };
+    }
+
+    /// <summary>
+    /// Разово доопределяет ManufacturerId для товаров без производителя
+    /// на основе имени товара (детектор + создание производителя при необходимости).
+    /// </summary>
+    public async Task<BackfillManufacturersResult> BackfillMissingManufacturersAsync(int batchSize = 100)
+    {
+        if (batchSize <= 0)
+            batchSize = 100;
+
+        var result = new BackfillManufacturersResult();
+        var existingManufacturers = await _context.Manufacturers.ToListAsync();
+        var manufacturersCache = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+        foreach (var m in existingManufacturers)
+        {
+            if (!string.IsNullOrWhiteSpace(m.Name) && !manufacturersCache.ContainsKey(m.Name))
+                manufacturersCache[m.Name] = m.Id;
+        }
+
+        var candidateIds = await _context.Products
+            .Where(p => p.ManufacturerId == null)
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        result.TotalCandidates = candidateIds.Count;
+        if (result.TotalCandidates == 0)
+            return result;
+
+        for (var offset = 0; offset < candidateIds.Count; offset += batchSize)
+        {
+            var batchIds = candidateIds.Skip(offset).Take(batchSize).ToList();
+            var products = await _context.Products
+                .Where(p => batchIds.Contains(p.Id))
+                .ToListAsync();
+
+            foreach (var product in products)
+            {
+                result.Processed++;
+                try
+                {
+                    var manufacturerName = _manufacturerDetector.Detect(product.Name ?? string.Empty, manufacturersCache.Keys);
+                    if (string.IsNullOrWhiteSpace(manufacturerName))
+                    {
+                        result.Skipped++;
+                        continue;
+                    }
+
+                    var normalizedName = Truncate(manufacturerName.Trim(), 100);
+                    if (string.IsNullOrWhiteSpace(normalizedName))
+                    {
+                        result.Skipped++;
+                        continue;
+                    }
+
+                    if (!manufacturersCache.TryGetValue(normalizedName, out var manufacturerId))
+                    {
+                        var manufacturer = new Manufacturer
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = normalizedName,
+                        };
+                        _context.Manufacturers.Add(manufacturer);
+                        manufacturerId = manufacturer.Id;
+                        manufacturersCache[normalizedName] = manufacturerId;
+                        result.CreatedManufacturers++;
+                    }
+
+                    product.ManufacturerId = manufacturerId;
+                    product.UpdatedAt = DateTime.UtcNow;
+                    result.UpdatedProducts++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Ошибка при доопределении производителя для товара {ProductId} ({Name})", product.Id, product.Name);
+                    result.Errors++;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            _logger.LogInformation(
+                "Backfill производителей: обработано {Processed}/{Total}, обновлено {Updated}, создано производителей {Created}, пропущено {Skipped}, ошибок {Errors}",
+                result.Processed,
+                result.TotalCandidates,
+                result.UpdatedProducts,
+                result.CreatedManufacturers,
+                result.Skipped,
+                result.Errors);
+        }
+
+        return result;
+    }
 }
 
 public class UpdateImagesResult
@@ -626,6 +871,24 @@ public class UpdateImagesResult
     public int Errors { get; set; }
     /// <summary>Количество товаров, у которых удалены изображения (SKU не найден в файле)</summary>
     public int Deleted { get; set; }
+}
+
+public class BackfillManufacturersResult
+{
+    public int TotalCandidates { get; set; }
+    public int Processed { get; set; }
+    public int UpdatedProducts { get; set; }
+    public int CreatedManufacturers { get; set; }
+    public int Skipped { get; set; }
+    public int Errors { get; set; }
+}
+
+public class CleanupInvalidProductsResult
+{
+    public int Checked { get; set; }
+    public int Deleted { get; set; }
+    public int MissingManufacturer { get; set; }
+    public int MissingImages { get; set; }
 }
 
 public class XCoreImagesData

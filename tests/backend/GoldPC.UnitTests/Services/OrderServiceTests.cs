@@ -3,8 +3,275 @@ using Moq;
 using Xunit;
 using GoldPC.UnitTests.Fakers;
 using Microsoft.Extensions.Logging;
+using GoldPC.SharedKernel.Enums;
+using GoldPC.SharedKernel.DTOs;
+using CatalogService.Models;
 
 namespace GoldPC.UnitTests.Services;
+
+#region Interfaces and DTOs (Stubs)
+
+public interface IOrderRepository
+{
+    Task<Order?> GetByIdAsync(Guid id);
+    Task<List<Order>> GetByUserIdAsync(Guid userId, OrderStatus? status = null);
+    Task<Order> CreateAsync(Order order);
+    Task<Order> UpdateAsync(Order order);
+    Task DeleteAsync(Guid id);
+}
+
+public interface IProductService
+{
+    Task<List<Product>> GetProductsByIdsAsync(IEnumerable<Guid> ids);
+}
+
+public interface INotificationService
+{
+    Task SendOrderCreatedAsync(Guid orderId, Guid userId);
+    Task SendOrderCancelledAsync(Guid orderId, Guid userId);
+    Task SendOrderStatusChangedAsync(Guid orderId, OrderStatus newStatus);
+}
+
+public interface IPaymentService
+{
+    Task<PaymentResult> ProcessPaymentAsync(PaymentRequest request);
+    Task<RefundResult> RefundAsync(Guid orderId, decimal amount);
+}
+
+public interface IInventoryService
+{
+    Task<bool> CheckAvailabilityAsync(Dictionary<Guid, int> items);
+    Task ReserveStockAsync(Dictionary<Guid, int> items);
+    Task RestoreStockAsync(Dictionary<Guid, int> items);
+}
+
+// ILogger определён в CompatibilityServiceTests.cs
+
+public class OrderService
+{
+    private readonly IOrderRepository _orderRepository;
+    private readonly IProductService _productService;
+    private readonly INotificationService _notificationService;
+    private readonly IPaymentService _paymentService;
+    private readonly IInventoryService _inventoryService;
+    private readonly ILogger<OrderService> _logger;
+
+    private static readonly Dictionary<OrderStatus, OrderStatus[]> ValidTransitions = new()
+    {
+        [OrderStatus.New] = new[] { OrderStatus.Processing, OrderStatus.Cancelled },
+        [OrderStatus.Processing] = new[] { OrderStatus.Paid, OrderStatus.Cancelled },
+        [OrderStatus.Paid] = new[] { OrderStatus.Ready },
+        [OrderStatus.Ready] = new[] { OrderStatus.Completed, OrderStatus.Cancelled },
+        [OrderStatus.Completed] = Array.Empty<OrderStatus>(),
+        [OrderStatus.Cancelled] = Array.Empty<OrderStatus>()
+    };
+
+    public OrderService(
+        IOrderRepository orderRepository,
+        IProductService productService,
+        INotificationService notificationService,
+        IPaymentService paymentService,
+        IInventoryService inventoryService,
+        ILogger<OrderService> logger)
+    {
+        _orderRepository = orderRepository;
+        _productService = productService;
+        _notificationService = notificationService;
+        _paymentService = paymentService;
+        _inventoryService = inventoryService;
+        _logger = logger;
+    }
+
+    public async Task<Order> CreateOrderAsync(Guid userId, CreateOrderDto dto)
+    {
+        if (dto.Items == null || !dto.Items.Any())
+            throw new ValidationException("Товары обязательны для заказа");
+
+        if (dto.Items.Any(i => i.Quantity <= 0))
+            throw new ValidationException("Количество должно быть положительным");
+
+        var productIds = dto.Items.Select(i => i.ProductId).ToList();
+        var products = await _productService.GetProductsByIdsAsync(productIds);
+
+        if (products.Count != productIds.Count)
+            throw new ProductNotFoundException("Некоторые товары не найдены");
+
+        var itemsDict = dto.Items.ToDictionary(i => i.ProductId, i => i.Quantity);
+        var isAvailable = await _inventoryService.CheckAvailabilityAsync(itemsDict);
+
+        if (!isAvailable)
+            throw new InsufficientStockException("Недостаточно товаров на складе");
+
+        var order = new Order
+        {
+            Id = Guid.NewGuid(),
+            OrderNumber = $"ORD-{Random.Shared.Next(10000, 99999)}",
+            UserId = userId,
+            Status = OrderStatus.New,
+            Items = dto.Items.Select(i =>
+            {
+                var product = products.First(p => p.Id == i.ProductId);
+                return new OrderItem
+                {
+                    Id = Guid.NewGuid(),
+                    ProductId = i.ProductId,
+                    ProductName = product.Name,
+                    Sku = product.Sku,
+                    Quantity = i.Quantity,
+                    Price = product.Price
+                };
+            }).ToList(),
+            DeliveryMethod = dto.DeliveryMethod,
+            PaymentMethod = dto.PaymentMethod,
+            DeliveryAddress = dto.DeliveryAddress,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var result = await _orderRepository.CreateAsync(order);
+        await _notificationService.SendOrderCreatedAsync(result.Id, userId);
+
+        return result;
+    }
+
+    public async Task<Order?> GetOrderByIdAsync(Guid orderId, Guid userId)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId);
+        if (order == null) return null;
+        if (order.UserId != userId)
+            throw new UnauthorizedAccessException("У вас нет доступа к этому заказу");
+        return order;
+    }
+
+    public async Task<Order?> UpdateOrderStatusAsync(Guid orderId, OrderStatus newStatus)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId);
+        if (order == null) return null;
+
+        var validNext = ValidTransitions[order.Status];
+        if (!validNext.Contains(newStatus))
+            throw new InvalidStatusTransitionException(
+                $"Невозможно изменить статус с {order.Status} на {newStatus}");
+
+        order.Status = newStatus;
+        order.UpdatedAt = DateTime.UtcNow;
+
+        return await _orderRepository.UpdateAsync(order);
+    }
+
+    public async Task<Order?> CancelOrderAsync(Guid orderId, Guid userId)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId);
+        if (order == null) return null;
+        if (order.UserId != userId)
+            throw new UnauthorizedAccessException();
+        if (order.Status == OrderStatus.Completed)
+            throw new InvalidOperationException("Нельзя отменить завершённый заказ");
+
+        order.Status = OrderStatus.Cancelled;
+        order.UpdatedAt = DateTime.UtcNow;
+
+        var itemsDict = order.Items.ToDictionary(i => i.ProductId, i => i.Quantity);
+        await _inventoryService.RestoreStockAsync(itemsDict);
+        await _notificationService.SendOrderCancelledAsync(orderId, userId);
+
+        return await _orderRepository.UpdateAsync(order);
+    }
+
+    public async Task<ProcessPaymentResult> ProcessPaymentAsync(Guid orderId, decimal amount)
+    {
+        var order = await _orderRepository.GetByIdAsync(orderId);
+        if (order == null)
+            throw new OrderNotFoundException("Заказ не найден");
+
+        var paymentResult = await _paymentService.ProcessPaymentAsync(new PaymentRequest
+        {
+            OrderId = orderId,
+            Amount = amount
+        });
+
+        if (paymentResult.Success)
+        {
+            order.Status = OrderStatus.Paid;
+            order.UpdatedAt = DateTime.UtcNow;
+            await _orderRepository.UpdateAsync(order);
+        }
+
+        return new ProcessPaymentResult
+        {
+            Success = paymentResult.Success,
+            TransactionId = paymentResult.TransactionId,
+            ErrorCode = paymentResult.ErrorCode,
+            ErrorMessage = paymentResult.ErrorMessage,
+            OrderStatus = order.Status
+        };
+    }
+
+    public async Task<List<Order>> GetUserOrdersAsync(Guid userId, OrderStatus? status = null)
+    {
+        return await _orderRepository.GetByUserIdAsync(userId, status);
+    }
+}
+
+public class CreateOrderDto
+{
+    public List<OrderItemDto> Items { get; set; } = new();
+    public DeliveryMethod DeliveryMethod { get; set; }
+    public PaymentMethod PaymentMethod { get; set; }
+    public DeliveryAddress? DeliveryAddress { get; set; }
+}
+
+public class OrderItemDto
+{
+    public Guid ProductId { get; set; }
+    public int Quantity { get; set; }
+}
+
+public class PaymentRequest
+{
+    public Guid OrderId { get; set; }
+    public decimal Amount { get; set; }
+}
+
+public class PaymentResult
+{
+    public bool Success { get; set; }
+    public string? TransactionId { get; set; }
+    public string? ErrorCode { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+public class RefundResult
+{
+    public bool Success { get; set; }
+    public string? RefundId { get; set; }
+}
+
+public class ProcessPaymentResult : PaymentResult
+{
+    public OrderStatus OrderStatus { get; set; }
+}
+
+public class InsufficientStockException : Exception
+{
+    public InsufficientStockException(string message) : base(message) { }
+}
+
+public class ProductNotFoundException : Exception
+{
+    public ProductNotFoundException(string message) : base(message) { }
+}
+
+public class OrderNotFoundException : Exception
+{
+    public OrderNotFoundException(string message) : base(message) { }
+}
+
+public class InvalidStatusTransitionException : Exception
+{
+    public InvalidStatusTransitionException(string message) : base(message) { }
+}
+
+#endregion
 
 /// <summary>
 /// Модульные тесты для сервиса заказов
