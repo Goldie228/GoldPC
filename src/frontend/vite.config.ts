@@ -15,6 +15,8 @@ export default defineConfig({
   // Разрешаем доступ к файловой системе для родительских директорий
   server: {
     host: true,
+    port: 5173,
+    strictPort: true,
     watch: {
       // Используем polling для надежности при синхронизации через rsync
       usePolling: true,

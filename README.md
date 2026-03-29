@@ -147,12 +147,16 @@ node index.mjs --slow
 
 ### 2) Импортировать в БД (обновит и существующие товары)
 
+Обычный локальный сид (без сети): `scripts/seed-data/catalog-seed.json` и картинки в `src/CatalogService/uploads/seed/`.
+
 ```bash
 # из корня репозитория
-dotnet run --project src/CatalogService -- seed-xcore
+dotnet run --project src/CatalogService -- seed-catalog
+# совместимый алиас: seed-xcore
 
-# или полный сброс X-Core товаров + импорт + картинки (если готовы xcore-images.json)
-dotnet run --project src/CatalogService -- seed-xcore-reset
+# полный сброс товаров со SKU XCORE-* и импорт из catalog-seed.json; опционально merge картинок из xcore-images.json
+dotnet run --project src/CatalogService -- seed-catalog-reset
+# алиас: seed-xcore-reset
 ```
 
 Примечание: `CatalogService` при старте применяет миграции автоматически, поэтому новые поля для юридической информации будут созданы при запуске сервиса.

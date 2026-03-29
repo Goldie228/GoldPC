@@ -1,14 +1,13 @@
 /**
  * Comparison Store - Управление списком товаров для сравнения
  *
- * Хранит ID и категорию товаров в localStorage. Лимит 4 товара.
- * Разрешено сравнивать товары разных категорий.
+ * Хранит ID и категорию товаров в localStorage. Лимит 4 товара на каждую категорию (нормализованную).
+ * Разрешено сравнивать товары разных категорий; счётчик в шапке — суммарное число позиций.
  */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-const MAX_COMPARISON_ITEMS = 4;
+import { canAddToNormalizedCategory } from './comparisonLimits';
 
 export interface ComparisonItem {
   id: string;
@@ -57,7 +56,7 @@ export const useComparisonStore = create<ComparisonState>()(
           set({ items: items.filter((i) => i.id !== productId) });
           return { success: true };
         }
-        if (items.length >= MAX_COMPARISON_ITEMS) {
+        if (!canAddToNormalizedCategory(items, category)) {
           return { success: false, reason: 'limit' };
         }
         set({ items: [...items, { id: productId, category }] });
@@ -67,7 +66,9 @@ export const useComparisonStore = create<ComparisonState>()(
       addItem: (productId: string, category: string): { success: boolean; reason?: 'limit' } => {
         const { items } = get();
         if (items.some((i) => i.id === productId)) return { success: true };
-        if (items.length >= MAX_COMPARISON_ITEMS) return { success: false, reason: 'limit' };
+        if (!canAddToNormalizedCategory(items, category)) {
+          return { success: false, reason: 'limit' };
+        }
         set({ items: [...items, { id: productId, category }] });
         return { success: true };
       },
@@ -85,10 +86,8 @@ export const useComparisonStore = create<ComparisonState>()(
       },
 
       canAdd: (category?: string): boolean => {
-        const { items } = get();
-        void category;
-        if (items.length >= MAX_COMPARISON_ITEMS) return false;
-        return true;
+        if (category === undefined || category === '') return false;
+        return canAddToNormalizedCategory(get().items, category);
       },
 
       getItems: (): string[] => {
@@ -97,7 +96,7 @@ export const useComparisonStore = create<ComparisonState>()(
     }),
     {
       name: 'goldpc-comparison-v2',
-      version: 3,
+      version: 4,
       partialize: (state) => ({ items: state.items }),
       merge: (persisted, current) => {
         const p = persisted as { items?: unknown[] };
@@ -108,5 +107,4 @@ export const useComparisonStore = create<ComparisonState>()(
   )
 );
 
-export const useComparisonCount = () =>
-  useComparisonStore((state) => state.items.length);
+export const useComparisonCount = () => useComparisonStore((state) => state.items.length);

@@ -1,6 +1,7 @@
 import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import './styles/fonts.css'
 import './styles/tokens.css'
 import './styles/globals.css'
 import './styles/staff.css'

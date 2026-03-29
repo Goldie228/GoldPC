@@ -11,22 +11,22 @@ using Microsoft.Extensions.Configuration;
 namespace CatalogService.Services;
 
 /// <summary>
-/// Импортёр товаров из JSON, полученного парсером X-Core.by
+/// Импорт товаров из JSON (офлайн-сиды и внешние выгрузки). Формат совместим с прежним X-Core scraper.
 /// </summary>
-public class XCoreImporter
+public class CatalogJsonImporter
 {
     private readonly CatalogDbContext _context;
     private readonly SpecImportNormalizer _specNormalizer;
     private readonly ManufacturerDetector _manufacturerDetector;
-    private readonly ILogger<XCoreImporter> _logger;
+    private readonly ILogger<CatalogJsonImporter> _logger;
     private readonly string _uploadsFullPath;
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
-    public XCoreImporter(
+    public CatalogJsonImporter(
         CatalogDbContext context,
         SpecImportNormalizer specNormalizer,
         ManufacturerDetector manufacturerDetector,
-        ILogger<XCoreImporter> logger,
+        ILogger<CatalogJsonImporter> logger,
         IHostEnvironment hostEnv,
         IConfiguration configuration)
     {
@@ -129,6 +129,60 @@ public class XCoreImporter
         return File.Exists(fullPath) ? $"/uploads/{relPath}" : null;
     }
 
+    /// <summary>
+    /// Локальный путь вида /uploads/... если файл есть на диске; иначе вычисление по URL (как после download-images).
+    /// </summary>
+    private string? TryResolveStoredImagePath(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+        var s = raw.Trim();
+        if (IsXCorePlaceholderUrl(s)) return null;
+
+        var normalized = s.Replace('\\', '/');
+        if (normalized.StartsWith("uploads/", StringComparison.OrdinalIgnoreCase))
+            normalized = "/" + normalized;
+        if (normalized.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+        {
+            var rel = normalized["/uploads/".Length..].TrimStart('/');
+            var full = Path.Combine(_uploadsFullPath, rel.Replace('/', Path.DirectorySeparatorChar));
+            if (File.Exists(full))
+                return normalized.StartsWith("/") ? normalized : "/" + normalized.TrimStart('/');
+        }
+
+        return TryGetExistingLocalPath(s);
+    }
+
+    private static ProductImage CreateProductImageRow(Guid productId, string urlForDb, string? path, string? alt, bool isPrimary, int sortOrder) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            ProductId = productId,
+            Url = urlForDb.Length > 500 ? urlForDb[..500] : urlForDb,
+            Path = path,
+            AltText = alt,
+            IsPrimary = isPrimary,
+            SortOrder = sortOrder,
+        };
+
+    private void ReplaceProductImagesFromImport(Product product, List<object>? images)
+    {
+        if (images == null || images.Count == 0) return;
+
+        _context.ProductImages.RemoveRange(product.Images.ToList());
+
+        for (var i = 0; i < images.Count; i++)
+        {
+            var raw = images[i];
+            var imgRaw = raw is JsonElement je ? je.GetString() : raw?.ToString();
+            if (string.IsNullOrEmpty(imgRaw)) continue;
+            var path = TryResolveStoredImagePath(imgRaw);
+            if (path == null) continue;
+
+            var urlForDb = imgRaw.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase) ? path : imgRaw;
+            _context.ProductImages.Add(CreateProductImageRow(product.Id, urlForDb, path, product.Name, i == 0, i));
+        }
+    }
+
     public async Task<ImportResult> ImportFromFileAsync(string filePath)
     {
         if (!File.Exists(filePath))
@@ -196,8 +250,10 @@ public class XCoreImporter
                 if (existingId == null && productsBySlug.TryGetValue(baseSlug, out var id2))
                     existingId = id2;
 
-                var existing = existingId.HasValue 
-                    ? await _context.Products.FindAsync(existingId.Value) 
+                var existing = existingId.HasValue
+                    ? await _context.Products
+                        .Include(p => p.Images)
+                        .FirstOrDefaultAsync(p => p.Id == existingId.Value)
                     : null;
 
                 var manufacturerName = p.Manufacturer;
@@ -346,6 +402,13 @@ public class XCoreImporter
                         specs["protocol"] = "SATA";
                 }
 
+                // Мониторы: в сырых данных иногда приходит boolean вместо Гц — не сохраняем, чтобы сравнение не вводило в заблуждение
+                if (string.Equals(p.CategorySlug, "monitors", StringComparison.OrdinalIgnoreCase) &&
+                    specs.TryGetValue("refresh_rate", out var refreshObj) && refreshObj is bool)
+                {
+                    specs.Remove("refresh_rate");
+                }
+
                 if (existing != null)
                 {
                     var normalizedSlug = EnsureUniqueSlug(baseSlug, occupiedSlugs, productsBySlug, existing.Id);
@@ -380,6 +443,8 @@ public class XCoreImporter
                     var specValues = await _specNormalizer.ToSpecificationValuesAsync(existing.Id, specs);
                     foreach (var sv in specValues)
                         _context.ProductSpecificationValues.Add(sv);
+
+                    ReplaceProductImagesFromImport(existing, p.Images);
                     
                     _logger.LogDebug("Обновлён товар {Sku}", existing.Sku);
                     result.Updated++;
@@ -424,29 +489,7 @@ public class XCoreImporter
                     foreach (var sv in specValues)
                         _context.ProductSpecificationValues.Add(sv);
 
-                    if (p.Images != null && p.Images.Count > 0)
-                    {
-                        for (var i = 0; i < p.Images.Count; i++)
-                        {
-                            var raw = p.Images[i];
-                            var imgUrl = raw is JsonElement je ? je.GetString() : raw?.ToString();
-                            if (!string.IsNullOrEmpty(imgUrl) && !IsXCorePlaceholderUrl(imgUrl))
-                            {
-                                var urlTruncated = imgUrl.Length > 500 ? imgUrl[..500] : imgUrl;
-                                var existingPath = TryGetExistingLocalPath(imgUrl);
-                                _context.ProductImages.Add(new ProductImage
-                                {
-                                    Id = Guid.NewGuid(),
-                                    ProductId = product.Id,
-                                    Url = urlTruncated,
-                                    Path = existingPath,
-                                    AltText = product.Name,
-                                    IsPrimary = i == 0,
-                                    SortOrder = i,
-                                });
-                            }
-                        }
-                    }
+                    ReplaceProductImagesFromImport(product, p.Images);
 
                     result.Imported++;
                 }
@@ -511,7 +554,7 @@ public class XCoreImporter
     }
 
     /// <summary>
-    /// Удаляет все товары X-Core (SKU начинается с "XCORE-"). Изображения и отзывы удаляются каскадно.
+    /// Удаляет товары, импортированные со старым префиксом SKU <c>XCORE-</c> (каскадно изображения и отзывы).
     /// </summary>
     public async Task<int> DeleteXCoreProductsAsync()
     {
@@ -583,7 +626,7 @@ public class XCoreImporter
                     if (string.IsNullOrEmpty(url) || IsXCorePlaceholderUrl(url)) continue;
 
                     var urlTruncated = url.Length > 500 ? url[..500] : url;
-                    var existingPath = TryGetExistingLocalPath(url);
+                    var existingPath = TryResolveStoredImagePath(url);
 
                     _context.ProductImages.Add(new ProductImage
                     {
@@ -690,7 +733,7 @@ public class XCoreImporter
                     if (existingUrls.Contains(urlTruncated))
                         continue;
 
-                    var existingPath = TryGetExistingLocalPath(url);
+                    var existingPath = TryResolveStoredImagePath(url);
                     _context.ProductImages.Add(new ProductImage
                     {
                         Id = Guid.NewGuid(),
@@ -723,9 +766,8 @@ public class XCoreImporter
     }
 
     /// <summary>
-    /// Удаляет невалидные X-Core товары:
-    /// - без производителя;
-    /// - без локальных изображений (path), которые необходимы для отображения в каталоге.
+    /// Удаляет невалидные товары с внешним <c>external_id</c>:
+    /// без производителя или без локально сохранённого изображения (<c>Path</c>).
     /// </summary>
     public async Task<CleanupInvalidProductsResult> CleanupInvalidProductsAsync()
     {
@@ -862,6 +904,42 @@ public class XCoreImporter
 
         return result;
     }
+
+    /// <summary>
+    /// Для строк product_images с пустым path: если файл уже лежит в uploads (тот же путь, что в download-images.mjs),
+    /// проставляет path. Нужен после частичного сбоя загрузки или если файлы скопировали вручную.
+    /// </summary>
+    public async Task<SyncImagePathsFromDiskResult> SyncImagePathsFromDiskAsync(CancellationToken cancellationToken = default)
+    {
+        var images = await _context.ProductImages
+            .Where(i => (i.Path == null || i.Path == "") && i.Url != null && i.Url != "")
+            .ToListAsync(cancellationToken);
+
+        var updated = 0;
+        foreach (var img in images)
+        {
+            if (IsXCorePlaceholderUrl(img.Url)) continue;
+            var local = TryResolveStoredImagePath(img.Url);
+            if (local == null) continue;
+            img.Path = local;
+            updated++;
+        }
+
+        if (updated > 0)
+            await _context.SaveChangesAsync(cancellationToken);
+
+        return new SyncImagePathsFromDiskResult
+        {
+            Scanned = images.Count,
+            Updated = updated
+        };
+    }
+}
+
+public class SyncImagePathsFromDiskResult
+{
+    public int Scanned { get; set; }
+    public int Updated { get; set; }
 }
 
 public class UpdateImagesResult

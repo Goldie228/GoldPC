@@ -15,8 +15,10 @@ import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
 import { Modal } from '../../components/ui/Modal/Modal';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
 import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
+import { specificationsWithDescriptionFallback } from '../../utils/productDescriptionSpecs';
 import { evaluateComparison } from '../../utils/comparison/comparisonEngine';
 import { getBackendCategorySlug, normalizeCategory, normalizeSpecKey } from '../../utils/comparison/comparisonRules';
+import { sortSpecKeysForComparison } from '../../utils/comparison/specKeysSort';
 import styles from './ComparisonPage.module.css';
 
 /** Placeholder контент для модального окна быстрого просмотра */
@@ -79,28 +81,6 @@ function QuickViewContent({ product }: { product: Product }): ReactElement {
   );
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.33, 1, 0.68, 1],
-    },
-  },
-};
-
 /** Получить главное изображение товара (mainImage или первое из images) */
 function getMainImage(product: Product): ProductImage | undefined {
   if (product.mainImage?.url) return product.mainImage;
@@ -143,6 +123,15 @@ export function ComparisonPage(): ReactElement {
   const [facetDisplayNames, setFacetDisplayNames] = useState<Record<string, string>>({});
 
   const itemIds = useMemo(() => items.map((i) => i.id), [items]);
+
+  const productsWithMergedSpecs = useMemo(
+    () =>
+      products.map((p) => ({
+        ...p,
+        specifications: specificationsWithDescriptionFallback(p.specifications, p.description),
+      })),
+    [products]
+  );
 
   useEffect(() => {
     if (itemIds.length === 0) {
@@ -253,9 +242,9 @@ export function ComparisonPage(): ReactElement {
   }, [activeCategory, categories]);
 
   const visibleProducts = useMemo(() => {
-    if (!activeCategory) return products;
-    return products.filter((product) => normalizeCategory(product.category) === activeCategory);
-  }, [activeCategory, products]);
+    if (!activeCategory) return productsWithMergedSpecs;
+    return productsWithMergedSpecs.filter((product) => normalizeCategory(product.category) === activeCategory);
+  }, [activeCategory, productsWithMergedSpecs]);
 
   useEffect(() => {
     if (!activeCategory) {
@@ -293,16 +282,7 @@ export function ComparisonPage(): ReactElement {
       const specs = p.specifications as ProductSpecifications | undefined;
       if (specs) Object.keys(specs).forEach((k) => keys.add(k));
     });
-    // Sort keys: prioritize known important ones, then alphabetical
-    const priority = ['socket', 'chipset', 'cores', 'threads', 'vram', 'capacity', 'frequency'];
-    return Array.from(keys).sort((a, b) => {
-      const ia = priority.indexOf(a);
-      const ib = priority.indexOf(b);
-      if (ia !== -1 && ib !== -1) return ia - ib;
-      if (ia !== -1) return -1;
-      if (ib !== -1) return 1;
-      return a.localeCompare(b);
-    });
+    return sortSpecKeysForComparison(Array.from(keys));
   }, [visibleProducts]);
 
   const resolveSpecLabel = useCallback(
@@ -366,12 +346,7 @@ export function ComparisonPage(): ReactElement {
 
   return (
     <div className={styles.page}>
-      <motion.div 
-        className={styles.container}
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-      >
+      <div className={styles.container}>
         <header className={styles.header}>
           <nav className={styles.breadcrumb}>
             <Link to="/">Главная</Link>
@@ -423,10 +398,7 @@ export function ComparisonPage(): ReactElement {
             </Link>
           </div>
         ) : (
-          <motion.div 
-            className={styles.tableWrapper}
-            variants={itemVariants}
-          >
+          <div className={styles.tableWrapper}>
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -617,9 +589,9 @@ export function ComparisonPage(): ReactElement {
                 })}
               </tbody>
             </table>
-          </motion.div>
+          </div>
         )}
-      </motion.div>
+      </div>
 
       {/* Модальное окно быстрого просмотра */}
       <Modal

@@ -164,8 +164,10 @@ vulnerable-packages.json
 # ==================================================
 site/
 _site/
-</task_progress>
-</write_to_file>
+
+# Comparison audit reports (scripts/comparison-audit/run-comparison-audit.ts)
+scripts/comparison-audit/out/
+scripts/comparison-audit/audit-notes/
 
 *.turbo/
 *.cursor/

@@ -9,6 +9,7 @@ import { useComparisonStore } from '../../../store/comparisonStore';
 import { useToastStore } from '../../../store/toastStore';
 import { Icon } from '../../ui/Icon/Icon';
 import { telemetryTrack } from '../../../utils/telemetry';
+import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import styles from './ProductTable.module.css';
 
 interface ProductTableProps {
@@ -75,7 +76,7 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
         inComp ? 'info' : 'success'
       );
     } else if (result.reason === 'limit') {
-      showToast('Можно сравнивать не более 4 товаров', 'error');
+      showToast('В сравнении уже 4 товара этой категории', 'info');
     }
   };
 
@@ -111,8 +112,11 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
               >
                 <td className={styles.colImage}>
                   <div className={styles.imageWrapper}>
-                    {product.mainImage?.url ? (
-                      <img src={product.mainImage.url} alt={product.name} />
+                    {hasValidProductImage(product.mainImage?.url) && product.mainImage ? (
+                      <img
+                        src={getProductImageUrl(product.mainImage.url) ?? ''}
+                        alt={product.name}
+                      />
                     ) : (
                       <Icon name="image" size="sm" color="secondary" />
                     )}

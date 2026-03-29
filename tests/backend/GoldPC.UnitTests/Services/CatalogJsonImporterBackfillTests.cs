@@ -11,7 +11,7 @@ using Xunit;
 
 namespace GoldPC.UnitTests.Services;
 
-public class XCoreImporterBackfillTests
+public class CatalogJsonImporterBackfillTests
 {
     [Fact]
     public async Task BackfillMissingManufacturersAsync_WhenManufacturerMissing_AssignsAndCreatesManufacturer()
@@ -101,7 +101,7 @@ public class XCoreImporterBackfillTests
         return context;
     }
 
-    private static XCoreImporter CreateImporter(CatalogDbContext context)
+    private static CatalogJsonImporter CreateImporter(CatalogDbContext context)
     {
         var hostEnvironmentMock = new Mock<IHostEnvironment>();
         hostEnvironmentMock.SetupGet(e => e.ContentRootPath).Returns(Path.GetTempPath());
@@ -113,11 +113,11 @@ public class XCoreImporterBackfillTests
             })
             .Build();
 
-        return new XCoreImporter(
+        return new CatalogJsonImporter(
             context,
             new SpecImportNormalizer(context),
             new ManufacturerDetector(),
-            NullLogger<XCoreImporter>.Instance,
+            NullLogger<CatalogJsonImporter>.Instance,
             hostEnvironmentMock.Object,
             configuration);
     }

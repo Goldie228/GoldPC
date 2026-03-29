@@ -23,7 +23,10 @@
     "test:backend": "dotnet test src/GoldPC.sln --configuration Release",
     "test:mutation": "dotnet tool restore && dotnet stryker --config-file stryker-config.json",
     "test:mutation:catalog": "dotnet tool restore && dotnet stryker --config-file stryker-config.json",
-    "test:mutation:ci": "dotnet tool restore && dotnet stryker --config-file stryker-config.json --reporter json --output StrykerOutput"
+    "test:mutation:ci": "dotnet tool restore && dotnet stryker --config-file stryker-config.json --reporter json --output StrykerOutput",
+    "comparison-audit": "npx --yes tsx scripts/comparison-audit/run-comparison-audit.ts",
+    "comparison-audit:docs": "npx --yes tsx scripts/comparison-audit/generate-per-category-docs.ts",
+    "comparison-audit:full-md": "npx --yes tsx scripts/comparison-audit/generate-full-comparison-tables-md.ts"
   },
   "workspaces": [
     "src/frontend"

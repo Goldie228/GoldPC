@@ -97,7 +97,7 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<CatalogService.Services.SpecImportNormalizer>();
 builder.Services.AddScoped<CatalogService.Services.ManufacturerDetector>();
 builder.Services.AddScoped<ICatalogService, CatalogService.Services.CatalogService>();
-builder.Services.AddScoped<CatalogService.Services.XCoreImporter>();
+builder.Services.AddScoped<CatalogService.Services.CatalogJsonImporter>();
 builder.Services.AddScoped<CatalogService.Services.FilterAttributesSeeder>();
 
 // Redis Caching
@@ -308,7 +308,7 @@ if (args is ["seed-xcore-images"] or ["seed-xcore-images", _])
         return 1;
     }
     using var scope = app.Services.CreateScope();
-    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.CatalogJsonImporter>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
@@ -350,7 +350,7 @@ if (args is ["seed-xcore-images-merge"] or ["seed-xcore-images-merge", _])
     }
 
     using var scope = app.Services.CreateScope();
-    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.CatalogJsonImporter>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
@@ -367,12 +367,17 @@ if (args is ["seed-xcore-images-merge"] or ["seed-xcore-images-merge", _])
     return 0;
 }
 
-// CLI: dotnet run -- seed-xcore-reset
-// Полный сброс: удаляет все товары X-Core, затем импортирует из xcore-products.json + обновляет картинки из xcore-images.json
-if (args is ["seed-xcore-reset"])
+// CLI: dotnet run -- seed-catalog-reset (алиас: seed-xcore-reset)
+// Полный сброс товаров XCORE-* и импорт из scripts/seed-data/catalog-seed.json; опционально merge картинок из JSON
+if (args is ["seed-catalog-reset"] or ["seed-xcore-reset"])
 {
     var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
-    var productsPath = Path.Combine(repoRoot, "scripts", "scraper", "data", "xcore-products.json");
+    var productsPath = Path.Combine(repoRoot, "scripts", "seed-data", "catalog-seed.json");
+    if (!File.Exists(productsPath))
+    {
+        productsPath = Path.Combine(repoRoot, "scripts", "scraper", "data", "xcore-products.json");
+    }
+
     var imagesPath = Path.Combine(repoRoot, "scripts", "scraper", "data", "xcore-images.json");
 
     if (!File.Exists(productsPath))
@@ -380,32 +385,34 @@ if (args is ["seed-xcore-reset"])
         Console.WriteLine($"Файл не найден: {productsPath}");
         return 1;
     }
-    if (!File.Exists(imagesPath))
-    {
-        Console.WriteLine($"Файл не найден: {imagesPath}");
-        return 1;
-    }
 
     using var scope = app.Services.CreateScope();
-    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.CatalogJsonImporter>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     try
     {
         var deleted = await importer.DeleteXCoreProductsAsync();
-        logger.LogInformation("Удалено товаров X-Core: {Count}", deleted);
+        logger.LogInformation("Удалено товаров со SKU XCORE-*: {Count}", deleted);
 
         var importResult = await importer.ImportFromFileAsync(productsPath);
         logger.LogInformation("Импорт: {Imported} добавлено, {Updated} обновлено, {Skipped} пропущено, {Errors} ошибок",
             importResult.Imported, importResult.Updated, importResult.Skipped, importResult.Errors);
 
-        var imagesResult = await importer.UpdateProductImagesFromFileAsync(imagesPath);
-        logger.LogInformation("Изображения: {Updated} обновлено, {Deleted} очищено, {NotFound} не найдено, {Errors} ошибок",
-            imagesResult.Updated, imagesResult.Deleted, imagesResult.NotFound, imagesResult.Errors);
+        if (File.Exists(imagesPath))
+        {
+            var imagesResult = await importer.UpdateProductImagesFromFileAsync(imagesPath);
+            logger.LogInformation("Изображения (опционально): {Updated} обновлено, {Deleted} очищено, {NotFound} не найдено, {Errors} ошибок",
+                imagesResult.Updated, imagesResult.Deleted, imagesResult.NotFound, imagesResult.Errors);
+        }
+        else
+        {
+            logger.LogInformation("Файл картинок не найден ({ImagesPath}), пропуск обновления изображений из внешнего JSON", imagesPath);
+        }
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Ошибка seed-xcore-reset");
+        logger.LogError(ex, "Ошибка seed-catalog-reset");
         throw;
     }
     return 0;
@@ -515,14 +522,14 @@ if (args is ["seed-filter-attributes"] or ["seed-filter-attributes", _])
     return 0;
 }
 
-// CLI: dotnet run -- seed-xcore [путь к JSON]
-if (args is ["seed-xcore"] or ["seed-xcore", _])
+// CLI: dotnet run -- seed-catalog [путь к JSON]  (алиас: seed-xcore)
+if (args is ["seed-catalog"] or ["seed-catalog", _] or ["seed-xcore"] or ["seed-xcore", _])
 {
     var jsonPath = args.Length == 2 ? args[1] : null;
     if (string.IsNullOrEmpty(jsonPath))
     {
         var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
-        jsonPath = Path.Combine(repoRoot, "scripts", "scraper", "data", "xcore-products.json");
+        jsonPath = Path.Combine(repoRoot, "scripts", "seed-data", "catalog-seed.json");
         if (!File.Exists(jsonPath))
         {
             jsonPath = Path.Combine(repoRoot, "scripts", "scraper", "data", "sample-products.json");
@@ -536,7 +543,7 @@ if (args is ["seed-xcore"] or ["seed-xcore", _])
         jsonPath = File.Exists(fromCwd) ? fromCwd : (File.Exists(fromRepo) ? fromRepo : fromCwd);
     }
     using var scope = app.Services.CreateScope();
-    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.CatalogJsonImporter>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     try
     {
@@ -547,6 +554,33 @@ if (args is ["seed-xcore"] or ["seed-xcore", _])
     catch (Exception ex)
     {
         logger.LogError(ex, "Ошибка импорта");
+        throw;
+    }
+    return 0;
+}
+
+// CLI: dotnet run -- delete-demo-catalog-products
+// Удаляет товары офлайн-cида: ExternalId начинается с demo_ или SKU с DEMO-.
+if (args is ["delete-demo-catalog-products"])
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var toDelete = await context.Products
+            .Where(p =>
+                (p.ExternalId != null && EF.Functions.ILike(p.ExternalId, "demo_%")) ||
+                (p.Sku != null && EF.Functions.ILike(p.Sku, "DEMO-%")))
+            .ToListAsync();
+        context.Products.RemoveRange(toDelete);
+        await context.SaveChangesAsync();
+        logger.LogInformation("Удалено демо-товаров каталога: {Count}", toDelete.Count);
+        Console.WriteLine($"Удалено демо-товаров: {toDelete.Count}");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка delete-demo-catalog-products");
         throw;
     }
     return 0;
@@ -563,7 +597,7 @@ if (args is ["backfill-manufacturers"] or ["backfill-manufacturers", _])
     }
 
     using var scope = app.Services.CreateScope();
-    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.CatalogJsonImporter>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     try
@@ -587,12 +621,36 @@ if (args is ["backfill-manufacturers"] or ["backfill-manufacturers", _])
     return 0;
 }
 
+// CLI: dotnet run -- sync-image-paths-from-disk
+// Проставляет path в product_images, если файл уже есть на диске (как download-images.mjs).
+if (args is ["sync-image-paths-from-disk"])
+{
+    using var scope = app.Services.CreateScope();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.CatalogJsonImporter>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var result = await importer.SyncImagePathsFromDiskAsync();
+        logger.LogInformation(
+            "sync-image-paths-from-disk: просмотрено записей {Scanned}, обновлено path {Updated}",
+            result.Scanned,
+            result.Updated);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка sync-image-paths-from-disk");
+        throw;
+    }
+
+    return 0;
+}
+
 // CLI: dotnet run -- cleanup-invalid-products
-// Удаляет невалидные X-Core товары (без производителя или без локальных изображений).
+// Удаляет невалидные товары с external_id (без производителя или без локальных изображений).
 if (args is ["cleanup-invalid-products"])
 {
     using var scope = app.Services.CreateScope();
-    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.XCoreImporter>();
+    var importer = scope.ServiceProvider.GetRequiredService<CatalogService.Services.CatalogJsonImporter>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     try

@@ -88,10 +88,11 @@ public class ProductRepository : IProductRepository
 
     public async Task<RepositoryPagedResult<Product>> GetFilteredAsync(ProductFilterDto filter)
     {
+        // Витрина: только товары с локально сохранённым файлом (Path), без внешних URL в выдаче
         var query = _readContext.Products
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
-            .Include(p => p.Images.Where(i => i.IsPrimary))
+            .Include(p => p.Images)
             .Where(p => p.IsActive && p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)));
 
         // Фильтрация по ID категории

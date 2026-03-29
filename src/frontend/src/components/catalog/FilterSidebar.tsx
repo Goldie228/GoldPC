@@ -255,7 +255,7 @@ function FilterGroup({ title, icon, defaultOpen = true, children }: FilterGroupP
 export function FilterSidebar({
   selectedCategory,
   onCategoryChange,
-  categoryLocked = false,
+  categoryLocked: _categoryLocked = false,
   priceRange,
   onPriceChange,
   selectedManufacturerIds,

@@ -13,161 +13,14 @@ import { ProductGallery } from './components/ProductGallery';
 import { ProductInfo } from './components/ProductInfo';
 import { ReviewSection } from './components/ReviewSection';
 import { RelatedProducts } from './components/RelatedProducts';
+import {
+  trimDescriptionBeforeMain,
+  splitDescriptionByHeadings,
+  extractKeyValueItemsFromBody,
+  mergeDescriptionIntoSpecifications,
+} from '../../utils/productDescriptionSpecs';
+import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
 import styles from './ProductPage.module.css';
-
-const DESCRIPTION_SECTIONS = [
-  'Общая информация',
-  'Основные',
-  'Технические характеристики',
-  'Технические характеристики и функциональность',
-  'Функциональные особенности',
-  'Звук',
-  'Микрофон',
-  'Интерфейс',
-  'Интерфейсы',
-  'Питание',
-  'Корпус',
-  'Аккумулятор и время работы',
-  'Габариты',
-  'Комплектация',
-  'Особенности конструкции',
-  'Кабель',
-  'Метки',
-] as const;
-
-type DescriptionBlock = { title?: string; body: string };
-
-function trimDescriptionBeforeMain(description: string | undefined): string | undefined {
-  const raw = normalizeDescriptionPreserveLines(description ?? '');
-  if (!raw) return undefined;
-
-  const blocks = splitDescriptionByHeadings(raw);
-  if (blocks.length === 0) return raw;
-
-  const mainIdx = blocks.findIndex((b) => (b.title ?? '').trim() === 'Основные');
-  if (mainIdx <= 0) return raw;
-
-  // Drop everything before "Основные" (часто это мусор/дубли из характеристик)
-  const kept = blocks.slice(mainIdx);
-  const rebuilt = kept
-    .map((b) => {
-      const title = (b.title ?? '').trim();
-      const body = (b.body ?? '').trim();
-      if (title && body) return `${title}\n${body}`;
-      if (title) return title;
-      return body;
-    })
-    .filter(Boolean)
-    .join('\n');
-
-  return normalizeDescriptionPreserveLines(rebuilt);
-}
-
-function normalizeDescriptionPreserveLines(input: string): string {
-  const text = (input ?? '').replace(/\r/g, '');
-  return text
-    .split('\n')
-    .map((line) => line.replace(/[ \t]+/g, ' ').trim())
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
-
-function splitDescriptionByHeadings(description: string): DescriptionBlock[] {
-  const text = normalizeDescriptionPreserveLines(description);
-  if (!text) return [];
-
-  const known = new Set<string>(DESCRIPTION_SECTIONS);
-  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-
-  const blocks: DescriptionBlock[] = [];
-  let current: DescriptionBlock | null = null;
-
-  for (const line of lines) {
-    if (known.has(line)) {
-      if (current && (current.title || current.body.trim())) blocks.push(current);
-      current = { title: line, body: '' };
-      continue;
-    }
-    if (!current) current = { body: '' };
-    current.body = current.body ? `${current.body}\n${line}` : line;
-  }
-
-  if (current && (current.title || current.body.trim())) blocks.push(current);
-  return blocks;
-}
-
-function extractKeyValueFromLine(line: string): Array<{ key: string; value: string }> {
-  const s = line.trim();
-  if (!s) return [];
-
-  const out: Array<{ key: string; value: string }> = [];
-
-  // Multiple pairs in one line: "Bluetooth — SBC Multipoint — Нет"
-  const multiRe =
-    /([А-ЯЁA-Za-z0-9().,\-+/%\s]{2,60}?)\s*(?:—|:)\s*([^—:]+?)(?=\s+[А-ЯЁA-Za-z0-9().,\-+/%\s]{2,60}?\s*(?:—|:)\s*|$)/g;
-  const multiMatches = Array.from(s.matchAll(multiRe));
-  if (multiMatches.length >= 2) {
-    for (const m of multiMatches) {
-      const key = (m[1] ?? '').trim();
-      const value = (m[2] ?? '').trim();
-      if (key && value) out.push({ key, value });
-    }
-    return out;
-  }
-
-  const colonIdx = s.indexOf(':');
-  if (colonIdx > 0) {
-    const key = s.slice(0, colonIdx).trim();
-    const value = s.slice(colonIdx + 1).trim();
-    if (key && value) return [{ key, value }];
-  }
-
-  const dashIdx = s.indexOf('—');
-  if (dashIdx > 0) {
-    const key = s.slice(0, dashIdx).trim();
-    const value = s.slice(dashIdx + 1).trim();
-    if (key && value) return [{ key, value }];
-  }
-
-  return [];
-}
-
-function extractKeyValueItemsFromBody(body: string): { items: Array<{ key: string; value: string }>; rest: string } {
-  const text = normalizeDescriptionPreserveLines(body);
-  if (!text) return { items: [], rest: '' };
-
-  const items: Array<{ key: string; value: string }> = [];
-  const restLines: string[] = [];
-
-  const rawLines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-  for (let i = 0; i < rawLines.length; i++) {
-    const line = rawLines[i];
-
-    // Pattern: "Ключ" "\u2014" "Значение" as three separate lines
-    if ((line === '—' || line === '-' || line === '–') && i > 0 && i + 1 < rawLines.length) {
-      const prev = rawLines[i - 1];
-      const next = rawLines[i + 1];
-      const merged = `${prev} — ${next}`;
-      const pairs = extractKeyValueFromLine(merged);
-      if (pairs.length > 0) {
-        // Remove previously added prev line from restLines if it was added there
-        if (restLines.length > 0 && restLines[restLines.length - 1] === prev) {
-          restLines.pop();
-        }
-        items.push(...pairs);
-        i++; // skip next
-        continue;
-      }
-    }
-
-    const pairs = extractKeyValueFromLine(line);
-    if (pairs.length > 0) items.push(...pairs);
-    else restLines.push(line);
-  }
-
-  return { items, rest: restLines.join('\n').trim() };
-}
 
 function renderDescriptionBlocks(description: string | undefined): ReactElement {
   const raw = trimDescriptionBeforeMain(description);
@@ -214,6 +67,33 @@ function renderDescriptionBlocks(description: string | undefined): ReactElement 
 
       {!anyPairs && <div className={styles.descriptionText}>{raw}</div>}
     </div>
+  );
+}
+
+function renderSpecsFromCatalog(product: Product): ReactElement {
+  const specs = mergeDescriptionIntoSpecifications(product.specifications, product.description);
+  if (!specs || Object.keys(specs).length === 0) {
+    return renderDescriptionBlocks(trimDescriptionBeforeMain(product.description));
+  }
+  const priority = ['socket', 'chipset', 'cores', 'threads', 'vram', 'capacity', 'frequency'];
+  const keys = Object.keys(specs).sort((a, b) => {
+    const ia = priority.indexOf(a);
+    const ib = priority.indexOf(b);
+    if (ia !== -1 && ib !== -1) return ia - ib;
+    if (ia !== -1) return -1;
+    if (ib !== -1) return 1;
+    return a.localeCompare(b);
+  });
+  return (
+    <ul className={styles.descriptionBullets}>
+      {keys.map((k) => (
+        <li key={k} className={styles.descriptionBullet}>
+          <span className={styles.descriptionBulletKey}>{specLabel(k)}</span>
+          <span className={styles.descriptionBulletSep}>—</span>
+          <span className={styles.descriptionBulletValue}>{formatSpecValueForKey(k, specs[k])}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -284,8 +164,6 @@ export function ProductPage(): ReactElement {
   const tabs = useMemo<Tab[]>(() => {
     if (!product) return [];
 
-    const descriptionForUi = trimDescriptionBeforeMain(product.description);
-
     const reviewCount = product.reviewCount ?? 0;
 
     return [
@@ -295,7 +173,7 @@ export function ProductPage(): ReactElement {
         content: (
           <>
             <div className={styles.description}>
-              {renderDescriptionBlocks(descriptionForUi)}
+              {renderSpecsFromCatalog(product)}
               {renderLegalInfoBlock(product)}
             </div>
           </>

@@ -182,7 +182,6 @@ export function CatalogPage() {
     }
     if (viewMode !== 'grid') params.set('view', viewMode);
     if (page > 1) params.set('page', page.toString());
-    const queryString = params.toString();
 
     // Stay on current path if we are at /catalog/:category and THAT category is selected.
     // Otherwise (if at /catalog OR if category changed while on a locked path), stay on /catalog.

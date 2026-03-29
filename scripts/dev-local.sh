@@ -39,12 +39,34 @@ log_warn() {
     echo -e "${YELLOW}[$(timestamp)] ⚠ $1${RESET}"
 }
 
+# Последние строки лога (для heartbeat, когда вывод только в файл)
+tail_log_hint() {
+    local log_file="$1"
+    local n="${2:-4}"
+    if [ ! -f "$log_file" ] || [ ! -s "$log_file" ]; then
+        echo "    (лог пока пустой — процесс стартовал)"
+        return
+    fi
+    tail -n "$n" "$log_file" | sed 's/^/    │ /'
+}
+
 run_with_heartbeat() {
     local title="$1"
     local log_file="$2"
     shift 2
 
-    log_info "$title (logs: $log_file)"
+    log_info "$title (полный лог: $log_file)"
+    if [ "$TAIL_LOGS" = true ]; then
+        # Дублируем stdout/stderr в терминал и в файл — видно прогресс в реальном времени
+        set +e
+        set -o pipefail
+        "$@" 2>&1 | tee -a "$log_file"
+        local rc=$?
+        set +o pipefail
+        set -e
+        return $rc
+    fi
+
     "$@" >> "$log_file" 2>&1 &
     local cmd_pid=$!
     local elapsed=0
@@ -52,8 +74,11 @@ run_with_heartbeat() {
     while kill -0 "$cmd_pid" 2>/dev/null; do
         sleep 5
         elapsed=$((elapsed + 5))
-        if [ $((elapsed % 15)) -eq 0 ]; then
-            echo -e "${CYAN}[$(timestamp)] ... still running: $title (${elapsed}s)${RESET}"
+        if [ $((elapsed % 10)) -eq 0 ]; then
+            local lines
+            lines=$(wc -l < "$log_file" 2>/dev/null | tr -d ' ' || echo 0)
+            echo -e "${CYAN}[$(timestamp)] … ещё выполняется: $title (${elapsed}s), строк в логе: ${lines}${RESET}"
+            tail_log_hint "$log_file" 3
         fi
     done
 
@@ -98,8 +123,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --frontend-only    Start only frontend"
             echo "  --backend-only     Start only backend services"
             echo "  --infra-only       Start only infrastructure (postgres, redis)"
-            echo "  --skip-seed        Skip database seed (products from xcore/sample)"
-            echo "  --tail             Tail logs from all services after startup"
+            echo "  --skip-seed        Skip database seed (catalog-seed.json)"
+            echo "  --tail             Во время сида: вывод этапов (seed, fetch-images, …) в консоль"
+            echo "                     и в logs/catalog-seed.log; после старта — поток логов сервисов"
             echo "  --help             Show this help message"
             exit 0
             ;;
@@ -119,6 +145,15 @@ LOG_DIR="$PROJECT_DIR/logs"
 # Ensure log directory exists
 mkdir -p "$LOG_DIR"
 rm -f "$LOG_DIR"/*.log
+if [ "$TAIL_LOGS" = true ]; then
+    echo -e "${GREEN}Режим --tail:${RESET} логи сида дублируются в консоль; полный архив — ${CYAN}$LOG_DIR/catalog-seed.log${RESET}"
+fi
+{
+    echo "======== GoldPC dev-local seed log ========"
+    echo "Started: $(date -Iseconds)"
+    echo "TAIL_LOGS=$TAIL_LOGS"
+    echo "=========================================="
+} >> "$LOG_DIR/catalog-seed.log"
 
 # Global PID list for cleanup
 declare -a SERVICE_PIDS
@@ -287,10 +322,13 @@ seed_catalog() {
         return
     fi
     log_info "Seeding catalog database..."
-    log_info "Detailed seed logs: $LOG_DIR/catalog-seed.log"
+    log_info "Полный лог сида: $LOG_DIR/catalog-seed.log"
+    if [ "$TAIL_LOGS" != true ]; then
+        log_info "Подсказка: ${YELLOW}./scripts/dev-local.sh --tail${RESET} — видеть прогресс сида в консоли"
+    fi
     
-    # Primary seed (upsert, без полного reset)
-    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-xcore" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-xcore); then
+    # Офлайн-сид (scripts/seed-data/catalog-seed.json + локальные /uploads/seed/*)
+    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-catalog" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-catalog); then
         log_ok "Catalog upsert completed"
     else
         log_warn "Seed failed or no JSON found. Check logs/catalog-seed.log"
@@ -303,31 +341,11 @@ seed_catalog() {
         log_warn "Manufacturer backfill failed. Check logs/catalog-seed.log"
     fi
 
-    # Получаем/обновляем карту изображений из x-core
-    if [ -d "$PROJECT_DIR/scripts/scraper" ]; then
-        if (cd "$PROJECT_DIR/scripts/scraper" && run_with_heartbeat "Running fetch-images" "$LOG_DIR/catalog-seed.log" npm run fetch-images); then
-            log_ok "xcore-images.json refreshed"
-        else
-            log_warn "fetch-images failed (will continue with existing xcore-images.json if present)"
-        fi
-    fi
-
-    # Инкрементально мержим ссылки изображений в БД
-    if [ -f "$PROJECT_DIR/scripts/scraper/data/xcore-images.json" ]; then
-        if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-xcore-images-merge" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-xcore-images-merge); then
-            log_ok "Image links merged into DB"
-        else
-            log_warn "Image merge failed. Check logs/catalog-seed.log"
-        fi
-
-        # Докачиваем только недостающие локальные файлы (path IS NULL)
-        if (cd "$PROJECT_DIR/scripts/scraper" && run_with_heartbeat "Downloading missing product images" "$LOG_DIR/catalog-seed.log" npm run download-images); then
-            log_ok "Missing images downloaded"
-        else
-            log_warn "Image download failed (optional). Check logs/catalog-seed.log"
-        fi
+    # Если файлы уже на диске, а path в БД пустой — подтянуть path тем же алгоритмом, что и при импорте
+    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Sync image paths from disk" "$LOG_DIR/catalog-seed.log" dotnet run -- sync-image-paths-from-disk); then
+        log_ok "Image paths synced from disk"
     else
-        log_warn "xcore-images.json not found, skipping image merge/download"
+        log_warn "sync-image-paths-from-disk failed. Check logs/catalog-seed.log"
     fi
 
     # Filter attributes sync
@@ -370,9 +388,41 @@ start_backend() {
     echo -e "${GREEN}✓ All backend services started${RESET}"
 }
 
+# Resolve path to local vite binary (npm workspaces hoist to repo root)
+vite_bin() {
+    if [ -x "$PROJECT_DIR/node_modules/.bin/vite" ]; then
+        echo "$PROJECT_DIR/node_modules/.bin/vite"
+    elif [ -x "$FRONTEND_SRC/node_modules/.bin/vite" ]; then
+        echo "$FRONTEND_SRC/node_modules/.bin/vite"
+    else
+        return 1
+    fi
+}
+
+ensure_frontend_deps() {
+    if vite_bin >/dev/null 2>&1; then
+        return 0
+    fi
+    echo -e "${CYAN}Frontend dependencies missing; running npm install at repo root...${RESET}"
+    if (cd "$PROJECT_DIR" && npm install >> "$LOG_DIR/frontend-setup.log" 2>&1); then
+        echo -e "${GREEN}✓ npm install completed${RESET}"
+    else
+        echo -e "${RED}✗ npm install failed. See $LOG_DIR/frontend-setup.log${RESET}"
+        return 1
+    fi
+    if ! vite_bin >/dev/null 2>&1; then
+        echo -e "${RED}✗ vite still not found after npm install${RESET}"
+        return 1
+    fi
+}
+
 # Function to start frontend
 start_frontend() {
     echo -e "${CYAN}Preparing frontend...${RESET}"
+
+    if ! ensure_frontend_deps; then
+        exit 1
+    fi
     
     # Check if path contains '#' - Vite cannot handle this
     if [[ "$FRONTEND_SRC" == *"#"* ]]; then

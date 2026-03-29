@@ -616,6 +616,10 @@ public class CatalogService : ICatalogService
         return slug;
     }
 
+    /// <summary>Картинка для витрины — только после выгрузки на наш сервер (поле Path).</summary>
+    private static bool HasLocallyStoredImage(ProductImage image) =>
+        !string.IsNullOrWhiteSpace(image.Path);
+
     private static ProductListDto MapToListDto(Product product)
     {
         var descShort = !string.IsNullOrEmpty(product.Description)
@@ -636,11 +640,11 @@ public class CatalogService : ICatalogService
             Stock = product.Stock,
             Manufacturer = product.Manufacturer != null ? MapToManufacturerDto(product.Manufacturer) : null,
             MainImage = product.Images
-                .Where(i => !string.IsNullOrWhiteSpace(i.Path) && i.IsPrimary)
+                .Where(i => HasLocallyStoredImage(i) && i.IsPrimary)
                 .Select(MapToImageDto)
                 .FirstOrDefault()
                 ?? product.Images
-                    .Where(i => !string.IsNullOrWhiteSpace(i.Path))
+                    .Where(HasLocallyStoredImage)
                     .Select(MapToImageDto)
                     .FirstOrDefault(),
             Rating = product.Rating > 0 ? new RatingDto { Average = product.Rating, Count = product.ReviewCount } : null,
@@ -671,15 +675,15 @@ public class CatalogService : ICatalogService
             ServiceSupport = product.ServiceSupport,
             Specifications = product.SpecificationValues.ToSpecificationsDict(),
             MainImage = product.Images
-                .Where(i => !string.IsNullOrWhiteSpace(i.Path) && i.IsPrimary)
+                .Where(i => HasLocallyStoredImage(i) && i.IsPrimary)
                 .Select(MapToImageDto)
                 .FirstOrDefault()
                 ?? product.Images
-                    .Where(i => !string.IsNullOrWhiteSpace(i.Path))
+                    .Where(HasLocallyStoredImage)
                     .Select(MapToImageDto)
                     .FirstOrDefault(),
             Images = product.Images
-                .Where(i => !string.IsNullOrWhiteSpace(i.Path))
+                .Where(HasLocallyStoredImage)
                 .Select(MapToImageDto)
                 .ToList(),
             Rating = product.Rating > 0 ? new RatingDto { Average = product.Rating, Count = product.ReviewCount } : null,
@@ -720,6 +724,7 @@ public class CatalogService : ICatalogService
 
     private static ProductImageDto MapToImageDto(ProductImage image)
     {
+        // Клиенту отдаём только локальный путь (/uploads/...). URL источника (x-core) в API не экспонируем.
         return new ProductImageDto
         {
             Id = image.Id,

@@ -1,7 +1,7 @@
 import { useState, useMemo, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
-import { hasValidProductImage } from '../../utils/image';
-import type { ProductSummary, ProductCategory, ProductImage } from '../../api/types';
+import { getProductImageUrl, hasValidProductImage } from '../../utils/image';
+import type { ProductSummary, ProductCategory } from '../../api/types';
 import { useCart } from '../../hooks/useCart';
 import { useToastStore } from '../../store/toastStore';
 import { useWishlistStore } from '../../store/wishlistStore';
@@ -204,7 +204,7 @@ function ImageContainer({
         <div className={styles.imageWrapper}>
           {hasValidImage ? (
             <OptimizedImage
-              src={currentImage.url}
+              src={getProductImageUrl(currentImage.url) ?? ''}
               alt={currentImage.alt ?? product.name}
               className={styles.image}
               aspectRatio={1}
@@ -519,7 +519,7 @@ export function ProductCard({
     if (result.success) {
       showToast('Добавлено в сравнение', 'success');
     } else {
-      showToast('Максимум 4 товара в сравнении', 'info');
+      showToast('В сравнении уже 4 товара этой категории', 'info');
     }
   };
 

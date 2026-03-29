@@ -130,17 +130,17 @@ db-migrate: ## Run database migrations
 	@echo "$(CYAN)Running migrations...$(RESET)"
 	cd scripts/db && ./migrate.sh
 
-db-seed: ## Seed database with test data
-	@echo "$(CYAN)Seeding database...$(RESET)"
-	$(DOCKER_COMPOSE_DEV) exec catalogservice dotnet seed
+db-seed: ## Seed database from scripts/seed-data/catalog-seed.json (офлайн)
+	@echo "$(CYAN)Seeding catalog...$(RESET)"
+	cd src/CatalogService && dotnet run -- seed-catalog
 
-db-seed-xcore: ## Импорт товаров X-Core из scripts/scraper/data/xcore-products.json
-	@echo "$(CYAN)Импорт товаров X-Core...$(RESET)"
-	cd src/CatalogService && dotnet run -- seed-xcore
+db-seed-xcore: ## Алиас: импорт каталога (то же, что seed-catalog; legacy имя)
+	@echo "$(CYAN)Импорт каталога (seed-catalog)...$(RESET)"
+	cd src/CatalogService && dotnet run -- seed-catalog
 
-db-seed-xcore-reset: ## Полный сброс X-Core: удалить все XCORE- товары и переимпортировать только с фото
-	@echo "$(CYAN)Полный сброс каталога X-Core (только товары с фото)...$(RESET)"
-	cd src/CatalogService && dotnet run -- seed-xcore-reset
+db-seed-xcore-reset: ## Полный сброс товаров XCORE-* и импорт из catalog-seed.json
+	@echo "$(CYAN)Полный сброс каталога (seed-catalog-reset)...$(RESET)"
+	cd src/CatalogService && dotnet run -- seed-catalog-reset
 
 scraper-fetch-images: ## Загрузить изображения с x-core.by (div.slides) -> xcore-images.json
 	@echo "$(CYAN)Загрузка изображений товаров...$(RESET)"
