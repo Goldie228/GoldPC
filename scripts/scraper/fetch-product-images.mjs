@@ -208,20 +208,31 @@ async function main() {
   const start = Date.now();
   const tasks = toProcess.map((p) => () => processProduct(p));
   const results = [];
+  const isTty = process.stdout.isTTY;
+  const logEveryBatch = Math.max(1, Math.ceil(tasks.length / concurrency / 20));
+  let batchNum = 0;
 
   for (let i = 0; i < tasks.length; i += concurrency) {
+    batchNum++;
     const batch = tasks.slice(i, i + concurrency);
     const batchResults = await Promise.all(batch.map((t) => t()));
     results.push(...batchResults);
 
     const done = Math.min(i + concurrency, tasks.length);
     const withImages = batchResults.filter((r) => r.images.length > 0).length;
-    process.stdout.write(`\r  [${done}/${tasks.length}] +${withImages} с картинками`);
+    if (isTty) {
+      process.stdout.write(`\r  [${done}/${tasks.length}] +${withImages} с картинками в батче   `);
+    } else if (batchNum === 1 || batchNum % logEveryBatch === 0 || done === tasks.length) {
+      console.log(
+        `  [${done}/${tasks.length}] батч ${batchNum}, в батче с картинками: ${withImages}`
+      );
+    }
 
     if (i + concurrency < tasks.length) {
       await sleep(BATCH_DELAY_MS);
     }
   }
+  if (isTty) process.stdout.write('\n');
 
   const elapsed = ((Date.now() - start) / 1000).toFixed(1);
   const withImages = results.filter((r) => r.images.length > 0).length;

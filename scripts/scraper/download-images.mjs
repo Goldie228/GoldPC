@@ -104,6 +104,10 @@ async function downloadProductImages(pool, uploadsBase) {
   let rows = res.rows;
   if (limit) rows = rows.slice(0, limit);
 
+  console.log(
+    `  К скачиванию/обновлению path: ${rows.length} записей product_images (файл на диске — только проставляем path)`
+  );
+
   let downloaded = 0;
   let errors = 0;
   const updatePath = async (id, path) => {
@@ -137,11 +141,18 @@ async function downloadProductImages(pool, uploadsBase) {
     }
   };
 
+  let batchIndex = 0;
+  const logEveryNBatches = rows.length <= 40 ? 1 : Math.max(1, Math.ceil(rows.length / concurrency / 20));
   for (let i = 0; i < rows.length; i += concurrency) {
+    batchIndex++;
     const batch = rows.slice(i, i + concurrency);
     await Promise.all(batch.map(processOne));
-    if ((i + concurrency) % 100 === 0 || i + concurrency >= rows.length) {
-      console.log(`  Product images: ${downloaded} downloaded, ${errors} errors (${i + batch.length}/${rows.length})`);
+    const done = Math.min(i + batch.length, rows.length);
+    if (rows.length === 0) break;
+    if (batchIndex === 1 || batchIndex % logEveryNBatches === 0 || done === rows.length) {
+      console.log(
+        `  Прогресс product_images: ${done}/${rows.length} обработано, в БД обновлено: ${downloaded}, ошибок: ${errors}`
+      );
     }
   }
   return { downloaded, errors, total: rows.length };
@@ -157,6 +168,8 @@ async function downloadManufacturerLogos(pool, uploadsBase) {
   );
   let rows = res.rows;
   if (limit) rows = rows.slice(0, limit);
+
+  console.log(`  Логотипов производителей к загрузке: ${rows.length}`);
 
   let downloaded = 0;
   let errors = 0;

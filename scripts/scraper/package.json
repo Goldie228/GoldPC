@@ -19,7 +19,8 @@
     "audit-filters": "node fetch-xcore-filters.mjs",
     "audit-filters:gpu": "node fetch-xcore-filters.mjs --category=gpu",
     "download-images": "node download-images.mjs",
-    "download-images:test": "node download-images.mjs --limit=20"
+    "download-images:test": "node download-images.mjs --limit=20",
+    "verify-local-images": "node verify-local-images.mjs"
   },
   "dependencies": {
     "cheerio": "^1.0.0",
