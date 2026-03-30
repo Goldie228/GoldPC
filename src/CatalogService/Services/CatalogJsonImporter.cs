@@ -45,7 +45,9 @@ public class CatalogJsonImporter
     private static string BuildSlug(string? raw, string? fallback)
     {
         var source = !string.IsNullOrWhiteSpace(raw) ? raw! : (fallback ?? string.Empty);
+#pragma warning disable CA1308 // Slug must remain lowercase for URLs
         source = source.Trim().ToLowerInvariant();
+#pragma warning restore CA1308
         source = Regex.Replace(source, @"[^a-z0-9]+", "_");
         source = Regex.Replace(source, @"_+", "_").Trim('_');
         if (string.IsNullOrWhiteSpace(source))
@@ -166,7 +168,10 @@ public class CatalogJsonImporter
 
     private void ReplaceProductImagesFromImport(Product product, List<object>? images)
     {
-        if (images == null || images.Count == 0) return;
+        if (images == null || images.Count == 0)
+        {
+            return;
+        }
 
         _context.ProductImages.RemoveRange(product.Images.ToList());
 
@@ -174,9 +179,16 @@ public class CatalogJsonImporter
         {
             var raw = images[i];
             var imgRaw = raw is JsonElement je ? je.GetString() : raw?.ToString();
-            if (string.IsNullOrEmpty(imgRaw)) continue;
+            if (string.IsNullOrEmpty(imgRaw))
+            {
+                continue;
+            }
+
             var path = TryResolveStoredImagePath(imgRaw);
-            if (path == null) continue;
+            if (path == null)
+            {
+                continue;
+            }
 
             var urlForDb = imgRaw.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase) ? path : imgRaw;
             _context.ProductImages.Add(CreateProductImageRow(product.Id, urlForDb, path, product.Name, i == 0, i));
@@ -228,6 +240,7 @@ public class CatalogJsonImporter
         foreach (var p in data.Products)
         {
             count++;
+#pragma warning disable CA1031 // Устойчивость импорта: любая ошибка по одному товару не должна прерывать весь файл
             try
             {
                 if (!categories.TryGetValue(p.CategorySlug, out var categoryId))
@@ -244,11 +257,15 @@ public class CatalogJsonImporter
                 {
                     var extId = Truncate(p.ExternalId, 100)!;
                     if (productsByExternalId.TryGetValue(extId, out var id1))
+                    {
                         existingId = id1;
+                    }
                 }
-                
+
                 if (existingId == null && productsBySlug.TryGetValue(baseSlug, out var id2))
+                {
                     existingId = id2;
+                }
 
                 var existing = existingId.HasValue
                     ? await _context.Products
@@ -260,7 +277,7 @@ public class CatalogJsonImporter
                 if (string.IsNullOrWhiteSpace(manufacturerName))
                 {
                     // Попытка определить производителя из названия, если он не задан явно
-                    manufacturerName = _manufacturerDetector.Detect(p.Name ?? "", manufacturersCache.Keys);
+                    manufacturerName = _manufacturerDetector.Detect(p.Name ?? string.Empty, manufacturersCache.Keys);
                     if (!string.IsNullOrEmpty(manufacturerName))
                     {
                         _logger.LogInformation("Определён производитель {Manufacturer} для товара {Name}", manufacturerName, p.Name);
@@ -294,14 +311,17 @@ public class CatalogJsonImporter
                 {
                     foreach (var kv in p.Specifications)
                     {
-                        if (kv.Value == null) continue;
+                        if (kv.Value == null)
+                        {
+                            continue;
+                        }
                         var v = kv.Value;
                         specs[kv.Key] = v switch
                         {
                             JsonElement je when je.ValueKind == JsonValueKind.Number => je.TryGetInt64(out var n) ? n : je.GetDecimal(),
                             JsonElement je when je.ValueKind == JsonValueKind.True => true,
                             JsonElement je when je.ValueKind == JsonValueKind.False => false,
-                            JsonElement je => je.GetString() ?? "",
+                            JsonElement je => je.GetString() ?? string.Empty,
                             _ => v
                         };
                     }
@@ -321,30 +341,38 @@ public class CatalogJsonImporter
                     !specs.ContainsKey("architecture") &&
                     specs.TryGetValue("codename", out var codenameObj) && codenameObj != null)
                 {
-                    var codenameStr = codenameObj.ToString()?.Replace("\n", " ").Replace("\r", "").Trim() ?? "";
+                    var codenameStr = codenameObj.ToString()?.Replace("\n", " ", StringComparison.Ordinal).Replace("\r", string.Empty, StringComparison.Ordinal).Trim() ?? string.Empty;
                     var arch = DeriveArchitectureFromCodename(codenameStr);
                     if (!string.IsNullOrEmpty(arch))
+                    {
                         specs["architecture"] = arch;
+                    }
                 }
 
                 // Материнские платы: разбор memory_type → memory_mixed_slots, memory_cudimm
                 if (string.Equals(p.CategorySlug, "motherboards", StringComparison.OrdinalIgnoreCase) &&
                     specs.TryGetValue("memory_type", out var memTypeObj) && memTypeObj != null)
                 {
-                    var memStr = memTypeObj.ToString()?.Trim() ?? "";
+                    var memStr = memTypeObj.ToString()?.Trim() ?? string.Empty;
                     if (memStr.Contains("CUDIMM", StringComparison.OrdinalIgnoreCase))
                     {
                         specs["memory_cudimm"] = "Да";
-                        specs["memory_type"] = System.Text.RegularExpressions.Regex.Replace(memStr, @",?\s*DDR\d+\s*CUDIMM", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim().TrimEnd(',').Trim();
+                        specs["memory_type"] = System.Text.RegularExpressions.Regex.Replace(memStr, @",?\s*DDR\d+\s*CUDIMM", string.Empty, System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim().TrimEnd(',').Trim();
                     }
                     else
+                    {
                         specs["memory_cudimm"] = "Нет";
+                    }
 
                     if ((memStr.Contains("DDR4", StringComparison.OrdinalIgnoreCase) && memStr.Contains("DDR5", StringComparison.OrdinalIgnoreCase)) ||
                         (memStr.Contains("DDR5", StringComparison.OrdinalIgnoreCase) && memStr.Contains("DDR4", StringComparison.OrdinalIgnoreCase)))
+                    {
                         specs["memory_mixed_slots"] = "Да";
+                    }
                     else
+                    {
                         specs["memory_mixed_slots"] = "Нет";
+                    }
                 }
 
                 // Клавиатуры и мыши: derive connection_type и wireless_protocols из interface
@@ -352,24 +380,39 @@ public class CatalogJsonImporter
                      string.Equals(p.CategorySlug, "mice", StringComparison.OrdinalIgnoreCase)) &&
                     specs.TryGetValue("interface", out var ifaceForDerive) && ifaceForDerive != null)
                 {
-                    var ifStr = ifaceForDerive.ToString()?.ToLowerInvariant() ?? "";
-                    var hasWired = ifStr.Contains("usb") || ifStr.Contains("проводн");
-                    var hasBluetooth = ifStr.Contains("bluetooth");
-                    var hasRadio = ifStr.Contains("радио") || ifStr.Contains("2.4");
+                    var ifStr = ifaceForDerive.ToString() ?? string.Empty;
+                    var hasWired = ifStr.Contains("usb", StringComparison.OrdinalIgnoreCase) || ifStr.Contains("проводн", StringComparison.OrdinalIgnoreCase);
+                    var hasBluetooth = ifStr.Contains("bluetooth", StringComparison.OrdinalIgnoreCase);
+                    var hasRadio = ifStr.Contains("радио", StringComparison.OrdinalIgnoreCase) || ifStr.Contains("2.4", StringComparison.OrdinalIgnoreCase);
                     if (!specs.ContainsKey("connection_type"))
                     {
                         if (hasWired && (hasBluetooth || hasRadio))
+                        {
                             specs["connection_type"] = "проводная и беспроводная";
+                        }
                         else if (hasBluetooth || hasRadio)
+                        {
                             specs["connection_type"] = "беспроводная";
+                        }
                         else if (hasWired)
+                        {
                             specs["connection_type"] = "проводная";
+                        }
                     }
+
                     if (!specs.ContainsKey("wireless_protocols") && (hasBluetooth || hasRadio))
                     {
                         var protocols = new List<string>();
-                        if (hasBluetooth) protocols.Add("Bluetooth");
-                        if (hasRadio) protocols.Add("2.4 GHz");
+                        if (hasBluetooth)
+                        {
+                            protocols.Add("Bluetooth");
+                        }
+
+                        if (hasRadio)
+                        {
+                            protocols.Add("2.4 GHz");
+                        }
+
                         specs["wireless_protocols"] = string.Join(", ", protocols);
                     }
                 }
@@ -379,13 +422,19 @@ public class CatalogJsonImporter
                     !specs.ContainsKey("form_factor") &&
                     specs.TryGetValue("type", out var typeObj) && typeObj != null)
                 {
-                    var typeStr = typeObj.ToString()?.ToLowerInvariant() ?? "";
-                    if (typeStr.Contains("полноразмерн") || typeStr.Contains("охватывающ"))
+                    var typeStr = typeObj.ToString() ?? string.Empty;
+                    if (typeStr.Contains("полноразмерн", StringComparison.OrdinalIgnoreCase) || typeStr.Contains("охватывающ", StringComparison.OrdinalIgnoreCase))
+                    {
                         specs["form_factor"] = "полноразмерные";
-                    else if (typeStr.Contains("накладн"))
+                    }
+                    else if (typeStr.Contains("накладн", StringComparison.OrdinalIgnoreCase))
+                    {
                         specs["form_factor"] = "накладные";
-                    else if (typeStr.Contains("внутриканал") || typeStr.Contains("вкладыш"))
-                        specs["form_factor"] = typeStr.Contains("внутриканал") ? "внутриканальные" : "вкладыши";
+                    }
+                    else if (typeStr.Contains("внутриканал", StringComparison.OrdinalIgnoreCase) || typeStr.Contains("вкладыш", StringComparison.OrdinalIgnoreCase))
+                    {
+                        specs["form_factor"] = typeStr.Contains("внутриканал", StringComparison.OrdinalIgnoreCase) ? "внутриканальные" : "вкладыши";
+                    }
                 }
 
                 // Накопители: derive protocol из interface, если protocol не задан
@@ -393,13 +442,19 @@ public class CatalogJsonImporter
                     !specs.ContainsKey("protocol") &&
                     specs.TryGetValue("interface", out var ifaceObj) && ifaceObj != null)
                 {
-                    var ifaceStr = ifaceObj.ToString()?.ToUpperInvariant() ?? "";
-                    if (ifaceStr.Contains("PCI") || ifaceStr.Contains("U.2"))
+                    var ifaceStr = ifaceObj.ToString()?.ToUpperInvariant() ?? string.Empty;
+                    if (ifaceStr.Contains("PCI", StringComparison.OrdinalIgnoreCase) || ifaceStr.Contains("U.2", StringComparison.OrdinalIgnoreCase))
+                    {
                         specs["protocol"] = "NVMe";
-                    else if (ifaceStr.Contains("SAS"))
+                    }
+                    else if (ifaceStr.Contains("SAS", StringComparison.OrdinalIgnoreCase))
+                    {
                         specs["protocol"] = "SAS";
-                    else if (ifaceStr.Contains("SATA"))
+                    }
+                    else if (ifaceStr.Contains("SATA", StringComparison.OrdinalIgnoreCase))
+                    {
                         specs["protocol"] = "SATA";
+                    }
                 }
 
                 // Мониторы: в сырых данных иногда приходит boolean вместо Гц — не сохраняем, чтобы сравнение не вводило в заблуждение
@@ -433,16 +488,20 @@ public class CatalogJsonImporter
                         existing.ServiceSupport = p.LegalInfo.ServiceSupport;
 
                         if (p.LegalInfo.WarrantyMonths.HasValue && p.LegalInfo.WarrantyMonths.Value > 0)
+                        {
                             existing.WarrantyMonths = p.LegalInfo.WarrantyMonths.Value;
+                        }
                     }
-                    
+
                     await _context.ProductSpecificationValues
                         .Where(v => v.ProductId == existing.Id)
                         .ExecuteDeleteAsync();
 
                     var specValues = await _specNormalizer.ToSpecificationValuesAsync(existing.Id, specs);
                     foreach (var sv in specValues)
+                    {
                         _context.ProductSpecificationValues.Add(sv);
+                    }
 
                     ReplaceProductImagesFromImport(existing, p.Images);
                     
@@ -482,12 +541,20 @@ public class CatalogJsonImporter
                     _context.Products.Add(product);
                     productsBySlug[normalizedSlug] = product.Id;
                     if (product.ExternalId != null)
+                    {
                         productsByExternalId[product.ExternalId] = product.Id;
+                    }
+
                     if (product.Sku != null)
+                    {
                         occupiedSkus.Add(product.Sku);
+                    }
+
                     var specValues = await _specNormalizer.ToSpecificationValuesAsync(product.Id, specs);
                     foreach (var sv in specValues)
+                    {
                         _context.ProductSpecificationValues.Add(sv);
+                    }
 
                     ReplaceProductImagesFromImport(product, p.Images);
 
@@ -501,7 +568,7 @@ public class CatalogJsonImporter
                         await _context.SaveChangesAsync();
                         _logger.LogInformation("Обработано товаров: {Count}/{Total}", count, result.Total);
                     }
-                    catch (Exception ex)
+                    catch (DbUpdateException ex)
                     {
                         _logger.LogError(ex, "Ошибка при сохранении пачки товаров (около {Count})", count);
                         // Ошибки в пачке считаем как ошибки товаров
@@ -514,6 +581,7 @@ public class CatalogJsonImporter
                 _logger.LogError(ex, "Ошибка импорта товара {Name}", p.Name);
                 result.Errors++;
             }
+#pragma warning restore CA1031
         }
 
         await _context.SaveChangesAsync();
@@ -525,32 +593,57 @@ public class CatalogJsonImporter
     /// </summary>
     private static string? DeriveArchitectureFromCodename(string codename)
     {
-        if (string.IsNullOrWhiteSpace(codename)) return null;
-        var s = codename.Replace("\n", " ").Replace("\r", "").Trim();
+        if (string.IsNullOrWhiteSpace(codename))
+        {
+            return null;
+        }
+
+        var s = codename.Replace("\n", " ", StringComparison.Ordinal).Replace("\r", string.Empty, StringComparison.Ordinal).Trim();
 
         // Извлечь (Zen 3), (Zen 4), (Zen 5) из скобок
         var zenMatch = System.Text.RegularExpressions.Regex.Match(s, @"\(Zen\s*(\d+)\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         if (zenMatch.Success)
+        {
             return $"Zen {zenMatch.Groups[1].Value}";
+        }
 
         // AMD codename → architecture lookup (без Zen в скобках)
-        var codenameBase = System.Text.RegularExpressions.Regex.Replace(s, @"\s*\([^)]*\)\s*$", "").Trim();
+        var codenameBase = System.Text.RegularExpressions.Regex.Replace(s, @"\s*\([^)]*\)\s*$", string.Empty).Trim();
         var amdZen3 = new[] { "Cezanne", "Vermeer", "Matisse", "Lucienne", "Barcelo" };
         var amdZen4 = new[] { "Raphael", "Phoenix", "Dragon Range" };
         var amdZen5 = new[] { "Granite Ridge", "Strix Point" };
-        if (amdZen3.Any(c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase))) return "Zen 3";
-        if (amdZen4.Any(c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase))) return "Zen 4";
-        if (amdZen5.Any(c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase))) return "Zen 5";
+        if (Array.Exists(amdZen3, c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase)))
+        {
+            return "Zen 3";
+        }
+
+        if (Array.Exists(amdZen4, c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase)))
+        {
+            return "Zen 4";
+        }
+
+        if (Array.Exists(amdZen5, c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase)))
+        {
+            return "Zen 5";
+        }
 
         // Zen 3 как standalone (Threadripper)
-        if (string.Equals(codenameBase, "Zen 3", StringComparison.OrdinalIgnoreCase)) return "Zen 3";
+        if (string.Equals(codenameBase, "Zen 3", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Zen 3";
+        }
 
         // Intel: codename = architecture (Alder Lake, Raptor Lake и т.д.)
-        var intelCodenames = new[] { "Alder Lake", "Arrow Lake", "Raptor Lake", "Raptor Lake-R", "Rocket Lake",
+        var intelCodenames = new[]
+        {
+            "Alder Lake", "Arrow Lake", "Raptor Lake", "Raptor Lake-R", "Rocket Lake",
             "Comet Lake", "Ice Lake", "Skylake", "Coffee Lake", "Cascade Lake", "Sapphire Rapids",
-            "Emerald Rapids", "Genoa", "Milan", "Rome" };
-        var match = intelCodenames.FirstOrDefault(c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase));
-        return match;
+            "Emerald Rapids", "Genoa", "Milan", "Rome",
+        };
+
+        return Array.Find(
+            intelCodenames,
+            c => codenameBase.Contains(c, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
@@ -582,7 +675,9 @@ public class CatalogJsonImporter
 
         var result = new UpdateImagesResult();
         if (data.Products == null || data.Products.Count == 0)
+        {
             return result;
+        }
 
         var processedProductIds = new HashSet<Guid>();
         var matchedProductIds = new HashSet<Guid>();
@@ -590,11 +685,14 @@ public class CatalogJsonImporter
         foreach (var item in data.Products)
         {
             if (string.IsNullOrEmpty(item.Sku))
+            {
                 continue;
+            }
 
             var skuNormalized = TruncateSku(item.Sku);
             var externalId = TryExtractExternalIdFromXcoreSku(item.Sku);
 
+#pragma warning disable CA1031 // Устойчивость по SKU: логируем и продолжаем
             try
             {
                 var product = await _context.Products
@@ -613,7 +711,9 @@ public class CatalogJsonImporter
 
                 // Один товар мог встретиться в файле несколько раз (по разным идентификаторам)
                 if (processedProductIds.Contains(product.Id))
+                {
                     continue;
+                }
 
                 processedProductIds.Add(product.Id);
 
@@ -623,7 +723,10 @@ public class CatalogJsonImporter
                 for (var i = 0; i < imageUrls.Count; i++)
                 {
                     var url = imageUrls[i]?.ToString();
-                    if (string.IsNullOrEmpty(url) || IsXCorePlaceholderUrl(url)) continue;
+                    if (string.IsNullOrEmpty(url) || IsXCorePlaceholderUrl(url))
+                    {
+                        continue;
+                    }
 
                     var urlTruncated = url.Length > 500 ? url[..500] : url;
                     var existingPath = TryResolveStoredImagePath(url);
@@ -647,6 +750,7 @@ public class CatalogJsonImporter
                 _logger.LogError(ex, "Ошибка обновления изображений для SKU {Sku}", item.Sku);
                 result.Errors++;
             }
+#pragma warning restore CA1031
         }
 
         // Удаляем изображения только у X-Core товаров, отсутствующих в файле.
@@ -682,7 +786,9 @@ public class CatalogJsonImporter
     public async Task<UpdateImagesResult> MergeProductImagesFromFileAsync(string filePath)
     {
         if (!File.Exists(filePath))
+        {
             throw new FileNotFoundException($"Файл не найден: {filePath}");
+        }
 
         var json = await File.ReadAllTextAsync(filePath);
         var data = JsonSerializer.Deserialize<XCoreImagesData>(json, JsonOptions)
@@ -690,16 +796,21 @@ public class CatalogJsonImporter
 
         var result = new UpdateImagesResult();
         if (data.Products == null || data.Products.Count == 0)
+        {
             return result;
+        }
 
         foreach (var item in data.Products)
         {
             if (string.IsNullOrWhiteSpace(item.Sku))
+            {
                 continue;
+            }
 
             var skuNormalized = TruncateSku(item.Sku);
             var externalId = TryExtractExternalIdFromXcoreSku(item.Sku);
 
+#pragma warning disable CA1031
             try
             {
                 var product = await _context.Products
@@ -727,11 +838,15 @@ public class CatalogJsonImporter
                 {
                     var url = raw?.ToString();
                     if (string.IsNullOrWhiteSpace(url) || IsXCorePlaceholderUrl(url))
+                    {
                         continue;
+                    }
 
                     var urlTruncated = url.Length > 500 ? url[..500] : url;
                     if (existingUrls.Contains(urlTruncated))
+                    {
                         continue;
+                    }
 
                     var existingPath = TryResolveStoredImagePath(url);
                     _context.ProductImages.Add(new ProductImage
@@ -759,6 +874,7 @@ public class CatalogJsonImporter
                 _logger.LogError(ex, "Ошибка merge изображений для SKU {Sku}", item.Sku);
                 result.Errors++;
             }
+#pragma warning restore CA1031
         }
 
         await _context.SaveChangesAsync();
@@ -821,7 +937,9 @@ public class CatalogJsonImporter
     public async Task<BackfillManufacturersResult> BackfillMissingManufacturersAsync(int batchSize = 100)
     {
         if (batchSize <= 0)
+        {
             batchSize = 100;
+        }
 
         var result = new BackfillManufacturersResult();
         var existingManufacturers = await _context.Manufacturers.ToListAsync();
@@ -829,7 +947,9 @@ public class CatalogJsonImporter
         foreach (var m in existingManufacturers)
         {
             if (!string.IsNullOrWhiteSpace(m.Name) && !manufacturersCache.ContainsKey(m.Name))
+            {
                 manufacturersCache[m.Name] = m.Id;
+            }
         }
 
         var candidateIds = await _context.Products
@@ -839,7 +959,9 @@ public class CatalogJsonImporter
 
         result.TotalCandidates = candidateIds.Count;
         if (result.TotalCandidates == 0)
+        {
             return result;
+        }
 
         for (var offset = 0; offset < candidateIds.Count; offset += batchSize)
         {
@@ -851,6 +973,7 @@ public class CatalogJsonImporter
             foreach (var product in products)
             {
                 result.Processed++;
+#pragma warning disable CA1031
                 try
                 {
                     var manufacturerName = _manufacturerDetector.Detect(product.Name ?? string.Empty, manufacturersCache.Keys);
@@ -889,6 +1012,7 @@ public class CatalogJsonImporter
                     _logger.LogError(ex, "Ошибка при доопределении производителя для товара {ProductId} ({Name})", product.Id, product.Name);
                     result.Errors++;
                 }
+#pragma warning restore CA1031
             }
 
             await _context.SaveChangesAsync();
@@ -912,21 +1036,30 @@ public class CatalogJsonImporter
     public async Task<SyncImagePathsFromDiskResult> SyncImagePathsFromDiskAsync(CancellationToken cancellationToken = default)
     {
         var images = await _context.ProductImages
-            .Where(i => (i.Path == null || i.Path == "") && i.Url != null && i.Url != "")
+            .Where(i => (i.Path == null || i.Path == string.Empty) && i.Url != null && i.Url != string.Empty)
             .ToListAsync(cancellationToken);
 
         var updated = 0;
         foreach (var img in images)
         {
-            if (IsXCorePlaceholderUrl(img.Url)) continue;
+            if (IsXCorePlaceholderUrl(img.Url))
+            {
+                continue;
+            }
+
             var local = TryResolveStoredImagePath(img.Url);
-            if (local == null) continue;
+            if (local == null)
+            {
+                continue;
+            }
             img.Path = local;
             updated++;
         }
 
         if (updated > 0)
+        {
             await _context.SaveChangesAsync(cancellationToken);
+        }
 
         return new SyncImagePathsFromDiskResult
         {

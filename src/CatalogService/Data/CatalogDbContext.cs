@@ -44,7 +44,7 @@ public class CatalogDbContext : DbContext
         SeedFilterAttributes(modelBuilder);
     }
 
-    private void ConfigureProduct(ModelBuilder modelBuilder)
+    private static void ConfigureProduct(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Product>(entity =>
         {
@@ -108,7 +108,7 @@ public class CatalogDbContext : DbContext
         });
     }
 
-    private void ConfigureSpecificationAttribute(ModelBuilder modelBuilder)
+    private static void ConfigureSpecificationAttribute(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<SpecificationAttribute>(entity =>
         {
@@ -123,7 +123,7 @@ public class CatalogDbContext : DbContext
         });
     }
 
-    private void ConfigureSpecificationCanonicalValue(ModelBuilder modelBuilder)
+    private static void ConfigureSpecificationCanonicalValue(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<SpecificationCanonicalValue>(entity =>
         {
@@ -141,7 +141,7 @@ public class CatalogDbContext : DbContext
         });
     }
 
-    private void ConfigureProductSpecificationValue(ModelBuilder modelBuilder)
+    private static void ConfigureProductSpecificationValue(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ProductSpecificationValue>(entity =>
         {
@@ -170,7 +170,7 @@ public class CatalogDbContext : DbContext
         });
     }
 
-    private void ConfigureCategory(ModelBuilder modelBuilder)
+    private static void ConfigureCategory(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Category>(entity =>
         {
@@ -199,7 +199,7 @@ public class CatalogDbContext : DbContext
         });
     }
 
-    private void ConfigureCategoryFilterAttribute(ModelBuilder modelBuilder)
+    private static void ConfigureCategoryFilterAttribute(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CategoryFilterAttribute>(entity =>
         {
@@ -221,7 +221,7 @@ public class CatalogDbContext : DbContext
         });
     }
 
-    private void ConfigureManufacturer(ModelBuilder modelBuilder)
+    private static void ConfigureManufacturer(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Manufacturer>(entity =>
         {
@@ -239,7 +239,7 @@ public class CatalogDbContext : DbContext
         });
     }
 
-    private void ConfigureProductImage(ModelBuilder modelBuilder)
+    private static void ConfigureProductImage(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ProductImage>(entity =>
         {
@@ -258,7 +258,7 @@ public class CatalogDbContext : DbContext
         });
     }
 
-    private void ConfigureReview(ModelBuilder modelBuilder)
+    private static void ConfigureReview(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Review>(entity =>
         {
@@ -281,7 +281,7 @@ public class CatalogDbContext : DbContext
         });
     }
 
-    private void SeedCategories(ModelBuilder modelBuilder)
+    private static void SeedCategories(ModelBuilder modelBuilder)
     {
         var categories = new[]
         {
@@ -303,7 +303,7 @@ public class CatalogDbContext : DbContext
         modelBuilder.Entity<Category>().HasData(categories);
     }
 
-    private void SeedSpecificationAttributes(ModelBuilder modelBuilder)
+    private static void SeedSpecificationAttributes(ModelBuilder modelBuilder)
     {
         var specAttrs = new[]
         {
@@ -346,7 +346,7 @@ public class CatalogDbContext : DbContext
         modelBuilder.Entity<SpecificationAttribute>().HasData(specAttrs);
     }
 
-    private void SeedSpecificationCanonicalValues(ModelBuilder modelBuilder)
+    private static void SeedSpecificationCanonicalValues(ModelBuilder modelBuilder)
     {
         var socketId = Guid.Parse("40000000-0000-0000-0000-000000000001");
         var vramId = Guid.Parse("40000000-0000-0000-0000-000000000002");
@@ -396,7 +396,7 @@ public class CatalogDbContext : DbContext
         modelBuilder.Entity<SpecificationCanonicalValue>().HasData(cv);
     }
 
-    private void SeedFilterAttributes(ModelBuilder modelBuilder)
+    private static void SeedFilterAttributes(ModelBuilder modelBuilder)
     {
         var gpuId = Guid.Parse("00000000-0000-0000-0000-000000000004");
         var cpuId = Guid.Parse("00000000-0000-0000-0000-000000000001");
@@ -470,7 +470,7 @@ public class CatalogDbContext : DbContext
         modelBuilder.Entity<CategoryFilterAttribute>().HasData(attributes);
     }
 
-    private void SeedManufacturers(ModelBuilder modelBuilder)
+    private static void SeedManufacturers(ModelBuilder modelBuilder)
     {
         var manufacturers = new[]
         {
@@ -496,7 +496,7 @@ public class CatalogDbContext : DbContext
         modelBuilder.Entity<Manufacturer>().HasData(manufacturers);
     }
 
-    private void SeedProducts(ModelBuilder modelBuilder)
+    private static void SeedProducts(ModelBuilder modelBuilder)
     {
         // ID категорий
         var cpuCategoryId = Guid.Parse("00000000-0000-0000-0000-000000000001");

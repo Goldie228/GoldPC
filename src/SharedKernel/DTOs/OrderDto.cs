@@ -16,6 +16,14 @@ public class OrderDto
 
     public string OrderNumber { get; set; } = string.Empty;
 
+    public string CustomerFirstName { get; set; } = string.Empty;
+
+    public string CustomerLastName { get; set; } = string.Empty;
+
+    public string CustomerPhone { get; set; } = string.Empty;
+
+    public string CustomerEmail { get; set; } = string.Empty;
+
     public OrderStatus Status { get; set; }
 
     public decimal Total { get; set; }
@@ -29,6 +37,16 @@ public class OrderDto
     public string PaymentMethod { get; set; } = string.Empty;
 
     public string? Address { get; set; }
+
+    public string? PromoCode { get; set; }
+
+    public decimal DiscountAmount { get; set; }
+
+    public string? DeliveryDate { get; set; }
+
+    public string? DeliveryTimeSlot { get; set; }
+
+    public string? TrackingNumber { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

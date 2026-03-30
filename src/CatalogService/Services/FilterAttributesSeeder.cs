@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CatalogService.Data;
@@ -76,7 +77,7 @@ public class FilterAttributesSeeder
                     AttributeId = attributeId,
                     AttributeKey = a.AttributeKey,
                     DisplayName = a.DisplayName,
-                    FilterType = a.FilterType?.ToLowerInvariant() == "range" ? FilterAttributeType.Range : FilterAttributeType.Select,
+                    FilterType = string.Equals(a.FilterType, "range", StringComparison.OrdinalIgnoreCase) ? FilterAttributeType.Range : FilterAttributeType.Select,
                     SortOrder = a.SortOrder
                 });
                 result.Added++;
@@ -92,10 +93,10 @@ public class FilterAttributesSeeder
     private class FilterAttrConfig
     {
         [JsonPropertyName("attribute_key")]
-        public string AttributeKey { get; set; } = "";
+        public string AttributeKey { get; set; } = string.Empty;
 
         [JsonPropertyName("display_name")]
-        public string DisplayName { get; set; } = "";
+        public string DisplayName { get; set; } = string.Empty;
 
         [JsonPropertyName("filter_type")]
         public string? FilterType { get; set; }

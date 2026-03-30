@@ -39,7 +39,7 @@ function getRatingAverage(product: Product): number | null {
 
 export function ProductQuickViewContent({
   product,
-  onClose,
+  onClose: _onClose,
 }: {
   product: Product;
   onClose?: () => void;

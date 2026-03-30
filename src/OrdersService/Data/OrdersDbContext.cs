@@ -32,6 +32,11 @@ public class OrdersDbContext : DbContext
     /// </summary>
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     
+    /// <summary>
+    /// Промокоды
+    /// </summary>
+    public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -44,14 +49,23 @@ public class OrdersDbContext : DbContext
             entity.HasIndex(e => e.OrderNumber).IsUnique();
             entity.Property(e => e.OrderNumber).IsRequired().HasMaxLength(20);
             entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.CustomerFirstName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.CustomerLastName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.CustomerPhone).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.CustomerEmail).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
             entity.Property(e => e.Total).HasPrecision(12, 2);
             entity.Property(e => e.Subtotal).HasPrecision(12, 2);
             entity.Property(e => e.DeliveryCost).HasPrecision(12, 2);
+            entity.Property(e => e.DiscountAmount).HasPrecision(12, 2);
             entity.Property(e => e.DeliveryMethod).IsRequired().HasMaxLength(20);
             entity.Property(e => e.PaymentMethod).IsRequired().HasMaxLength(20);
             entity.Property(e => e.Address).HasMaxLength(500);
             entity.Property(e => e.Comment).HasMaxLength(1000);
+            entity.Property(e => e.PromoCode).HasMaxLength(50);
+            entity.Property(e => e.DeliveryDate).HasMaxLength(20);
+            entity.Property(e => e.DeliveryTimeSlot).HasMaxLength(20);
+            entity.Property(e => e.TrackingNumber).HasMaxLength(100);
         });
         
         // Конфигурация OrderItem
@@ -89,6 +103,18 @@ public class OrdersDbContext : DbContext
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.ProcessedAt);
             entity.Property(e => e.Error);
+        });
+        
+        // Конфигурация PromoCode
+        modelBuilder.Entity<PromoCode>(entity =>
+        {
+            entity.ToTable("promo_codes");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.DiscountPercent).IsRequired();
+            entity.Property(e => e.MinOrderAmount).HasPrecision(12, 2);
+            entity.Property(e => e.Description).HasMaxLength(500);
         });
     }
 }

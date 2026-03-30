@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -9,27 +9,64 @@ namespace CatalogService.Migrations
     /// <inheritdoc />
     public partial class AddXCoreGpuFilterAttributes : Migration
     {
+        private static readonly Guid CategoryGpuId = new Guid("00000000-0000-0000-0000-000000000004");
+
+        private static readonly string[] CategoryFilterAttributeColumns =
+        {
+            "id", "attribute_key", "category_id", "display_name", "filter_type", "sort_order",
+        };
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.InsertData(
                 table: "category_filter_attributes",
-                columns: new[] { "id", "attribute_key", "category_id", "display_name", "filter_type", "sort_order" },
-                values: new object[,]
-                {
-                    { new Guid("30000000-0000-0000-0000-000000000020"), "videopamyat", new Guid("00000000-0000-0000-0000-000000000004"), "Видеопамять, ГБ", 1, 1 },
-                    { new Guid("30000000-0000-0000-0000-000000000021"), "graficheskiy_protsessor", new Guid("00000000-0000-0000-0000-000000000004"), "Графический процессор", 0, 2 },
-                    { new Guid("30000000-0000-0000-0000-000000000022"), "proizvoditel_graficheskogo_protsessora", new Guid("00000000-0000-0000-0000-000000000004"), "Производитель ГП", 0, 3 },
-                    { new Guid("30000000-0000-0000-0000-000000000023"), "tip_videopamyati", new Guid("00000000-0000-0000-0000-000000000004"), "Тип видеопамяти", 0, 4 },
-                    { new Guid("30000000-0000-0000-0000-000000000024"), "data_vykhoda_na_rynok_2", new Guid("00000000-0000-0000-0000-000000000004"), "Дата выхода на рынок, г", 1, 5 },
-                    { new Guid("30000000-0000-0000-0000-000000000025"), "shirina_shiny_pamyati", new Guid("00000000-0000-0000-0000-000000000004"), "Ширина шины памяти, бит", 1, 6 },
-                    { new Guid("30000000-0000-0000-0000-000000000026"), "okhlazhdenie_1", new Guid("00000000-0000-0000-0000-000000000004"), "Охлаждение", 0, 7 },
-                    { new Guid("30000000-0000-0000-0000-000000000027"), "razyemy_pitaniya", new Guid("00000000-0000-0000-0000-000000000004"), "Разъёмы питания", 0, 8 },
-                    { new Guid("30000000-0000-0000-0000-000000000028"), "interfeys_1", new Guid("00000000-0000-0000-0000-000000000004"), "Интерфейс", 0, 9 },
-                    { new Guid("30000000-0000-0000-0000-000000000029"), "rekomenduemyy_blok_pitaniya", new Guid("00000000-0000-0000-0000-000000000004"), "Рекомендуемый БП, Вт", 1, 10 },
-                    { new Guid("30000000-0000-0000-0000-00000000002a"), "dlina_videokarty", new Guid("00000000-0000-0000-0000-000000000004"), "Длина, мм", 1, 11 },
-                    { new Guid("30000000-0000-0000-0000-00000000002b"), "vysota_videokarty", new Guid("00000000-0000-0000-0000-000000000004"), "Высота, мм", 1, 12 }
-                });
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000020"), "videopamyat", CategoryGpuId, "Видеопамять, ГБ", 1, 1 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000021"), "graficheskiy_protsessor", CategoryGpuId, "Графический процессор", 0, 2 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000022"), "proizvoditel_graficheskogo_protsessora", CategoryGpuId, "Производитель ГП", 0, 3 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000023"), "tip_videopamyati", CategoryGpuId, "Тип видеопамяти", 0, 4 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000024"), "data_vykhoda_na_rynok_2", CategoryGpuId, "Дата выхода на рынок, г", 1, 5 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000025"), "shirina_shiny_pamyati", CategoryGpuId, "Ширина шины памяти, бит", 1, 6 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000026"), "okhlazhdenie_1", CategoryGpuId, "Охлаждение", 0, 7 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000027"), "razyemy_pitaniya", CategoryGpuId, "Разъёмы питания", 0, 8 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000028"), "interfeys_1", CategoryGpuId, "Интерфейс", 0, 9 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000029"), "rekomenduemyy_blok_pitaniya", CategoryGpuId, "Рекомендуемый БП, Вт", 1, 10 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-00000000002a"), "dlina_videokarty", CategoryGpuId, "Длина, мм", 1, 11 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-00000000002b"), "vysota_videokarty", CategoryGpuId, "Высота, мм", 1, 12 });
 
             migrationBuilder.UpdateData(
                 table: "products",

@@ -39,8 +39,8 @@ export function useCart() {
     store.updateQuantity(productId, quantity);
   };
 
-  const applyPromo = (code: string): boolean => {
-    return store.applyPromoCode(code);
+  const validateAndApplyPromo = async (code: string): Promise<{ success: boolean; message: string }> => {
+    return store.validateAndApplyPromoCode(code);
   };
 
   const clearPromoCode = () => {
@@ -79,7 +79,7 @@ export function useCart() {
     changeQuantity,
     setQuantity,
     updateQuantity,
-    applyPromo,
+    validateAndApplyPromo,
     clearPromoCode,
     emptyCart,
 

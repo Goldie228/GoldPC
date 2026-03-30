@@ -32,6 +32,7 @@ builder.Services.AddDbContext<OrdersDbContext>(options =>
 
 // Services
 builder.Services.AddScoped<IOrdersService, GoldPC.OrdersService.Services.OrdersService>();
+builder.Services.AddScoped<GoldPC.OrdersService.Services.Interfaces.IPromoCodeService, GoldPC.OrdersService.Services.PromoCodeService>();
 builder.Services.AddMessaging(builder.Configuration);
 
 // Outbox Processor

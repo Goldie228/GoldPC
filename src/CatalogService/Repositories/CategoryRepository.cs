@@ -36,7 +36,9 @@ public class CategoryRepository : ICategoryRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Slug == slug);
         if (category == null)
+        {
             return Array.Empty<CategoryFilterAttribute>();
+        }
 
         return await _readContext.CategoryFilterAttributes
             .AsNoTracking()

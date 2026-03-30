@@ -23,6 +23,30 @@ export default defineConfig({
       interval: 100,
     },
     proxy: {
+      '/api/v1/auth': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+      '/api/v1/address': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+      '/api/v1/wishlist': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+      '/api/v1/orders': {
+        target: 'http://localhost:5002',
+        changeOrigin: true,
+      },
+      '/api/v1/promo': {
+        target: 'http://localhost:5002',
+        changeOrigin: true,
+      },
+      '/api/v1/pcbuilder': {
+        target: 'http://localhost:5005',
+        changeOrigin: true,
+      },
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,

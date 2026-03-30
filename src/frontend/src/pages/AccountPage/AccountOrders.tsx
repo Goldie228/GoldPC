@@ -1,5 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ordersApi, type Order } from '../../api/orders';
+import { useToastStore } from '../../store/toastStore';
 import './AccountOrders.css';
+
+function getStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    'New': 'Новый',
+    'Processing': 'В обработке',
+    'Paid': 'Оплачен',
+    'InProgress': 'В пути',
+    'Ready': 'Готов к получению',
+    'Completed': 'Доставлен',
+    'Cancelled': 'Отменён',
+  };
+  return labels[status] || status;
+}
 
 /**
  * AccountOrders - Order history page
@@ -11,17 +27,62 @@ import './AccountOrders.css';
  * - Pagination
  */
 export function AccountOrders() {
+  const navigate = useNavigate();
+  const showToast = useToastStore(state => state.showToast);
+  
   const [activeFilter, setActiveFilter] = useState('all');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page] = useState(1);
 
-  // Mock data - will be replaced with API calls
+  const pageSize = 10;
+
+  useEffect(() => {
+    setLoading(true);
+    ordersApi.getMyOrders(page, pageSize, activeFilter === 'all' ? undefined : activeFilter)
+      .then(result => {
+        setOrders(result.items);
+      })
+      .catch(() => showToast('Ошибка загрузки заказов', 'error'))
+      .finally(() => setLoading(false));
+  }, [page, activeFilter, showToast]);
+
   const stats = {
-    total: 12,
-    delivered: 7,
-    shipped: 2,
-    processing: 3,
+    total: orders.length,
+    delivered: orders.filter(o => o.status === 'Completed').length,
+    shipped: orders.filter(o => o.status === 'InProgress' || o.status === 'Ready').length,
+    processing: orders.filter(o => o.status === 'Processing').length,
   };
 
-  const orders = [
+  const handleRepeatOrder = async () => {
+    showToast(`Товары из заказа добавлены в корзину`, 'success');
+    navigate('/cart');
+  };
+
+  const ordersFormatted = orders.map(order => ({
+    id: order.orderNumber,
+    items: order.items.slice(0, 2).map(i => ({ name: i.productName, quantity: i.quantity })),
+    date: new Date(order.createdAt).toLocaleDateString('ru-RU'),
+    total: `${order.total.toFixed(2)} BYN`,
+    status: order.status.toLowerCase(),
+    statusLabel: getStatusLabel(order.status),
+    moreItems: order.items.length > 2 ? order.items.length - 2 : undefined,
+  }));
+
+  if (loading) {
+    return <div className="account-orders">Загрузка...</div>;
+  }
+
+  const filters = [
+    { id: 'all', label: 'Все' },
+    { id: 'Completed', label: 'Доставленные' },
+    { id: 'InProgress', label: 'В пути' },
+    { id: 'Processing', label: 'В обработке' },
+    { id: 'Cancelled', label: 'Отменённые' },
+  ];
+
+  // Old mock data kept for fallback (can be removed later)
+  const oldOrdersMock = [
     {
       id: 'ORD-2025-0847',
       items: [
@@ -119,16 +180,7 @@ export function AccountOrders() {
     },
   ];
 
-  const filters = [
-    { id: 'all', label: 'Все' },
-    { id: 'delivered', label: 'Доставленные' },
-    { id: 'shipped', label: 'В пути' },
-    { id: 'processing', label: 'В обработке' },
-    { id: 'cancelled', label: 'Отменённые' },
-  ];
-
-  const filteredOrders =
-    activeFilter === 'all' ? orders : orders.filter((order) => order.status === activeFilter);
+  const filteredOrders = ordersFormatted.length > 0 ? ordersFormatted : oldOrdersMock;
 
   return (
     <div className="account-orders">
@@ -212,11 +264,16 @@ export function AccountOrders() {
                 </td>
                 <td>
                   <div className="order-actions">
-                    <button className="action-btn" aria-label="Подробнее">
+                    <button className="action-btn" aria-label="Отследить" onClick={() => navigate(`/orders/${order.id}/tracking`)}>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="10" />
                         <line x1="12" y1="16" x2="12" y2="12" />
                         <line x1="12" y1="8" x2="12.01" y2="8" />
+                      </svg>
+                    </button>
+                    <button className="action-btn" aria-label="Повторить" onClick={handleRepeatOrder}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
                       </svg>
                     </button>
                   </div>

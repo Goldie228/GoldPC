@@ -19,6 +19,26 @@ public class Order : BaseEntity
     public Guid UserId { get; set; }
     
     /// <summary>
+    /// Имя покупателя
+    /// </summary>
+    public string CustomerFirstName { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Фамилия покупателя
+    /// </summary>
+    public string CustomerLastName { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Телефон покупателя
+    /// </summary>
+    public string CustomerPhone { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Email покупателя
+    /// </summary>
+    public string CustomerEmail { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Статус заказа
     /// </summary>
     public OrderStatus Status { get; set; } = OrderStatus.New;
@@ -57,6 +77,31 @@ public class Order : BaseEntity
     /// Комментарий к заказу
     /// </summary>
     public string? Comment { get; set; }
+    
+    /// <summary>
+    /// Промокод, использованный при оформлении заказа
+    /// </summary>
+    public string? PromoCode { get; set; }
+    
+    /// <summary>
+    /// Сумма скидки по промокоду
+    /// </summary>
+    public decimal DiscountAmount { get; set; }
+    
+    /// <summary>
+    /// Желаемая дата доставки
+    /// </summary>
+    public string? DeliveryDate { get; set; }
+    
+    /// <summary>
+    /// Временной слот доставки (morning | afternoon | evening | asap)
+    /// </summary>
+    public string? DeliveryTimeSlot { get; set; }
+    
+    /// <summary>
+    /// Номер отслеживания заказа
+    /// </summary>
+    public string? TrackingNumber { get; set; }
     
     /// <summary>
     /// Признак оплаты

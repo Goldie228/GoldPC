@@ -11,8 +11,7 @@ using System.Security.Claims;
 namespace GoldPC.OrdersService.Controllers;
 
 [ApiController]
-[Route("api/v1/[controller]")]
-[Authorize]
+[Route("api/v1/orders")]
 public class OrdersController : ControllerBase
 {
     private readonly IOrdersService _ordersService;
@@ -30,6 +29,7 @@ public class OrdersController : ControllerBase
     /// Получение заказа по ID
     /// </summary>
     [HttpGet("{id}")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResponse<OrderDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -51,6 +51,7 @@ public class OrdersController : ControllerBase
     /// Получение заказа по номеру
     /// </summary>
     [HttpGet("number/{orderNumber}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<OrderDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetByNumber(string orderNumber)
     {
@@ -60,7 +61,8 @@ public class OrdersController : ControllerBase
             return NotFound(ApiResponse.Fail("Заказ не найден"));
         }
 
-        if (!HasAccess(order.UserId))
+        // Если заказ принадлежит конкретному пользователю, проверяем доступ
+        if (order.UserId != Guid.Empty && !HasAccess(order.UserId))
         {
             return Forbid();
         }
@@ -72,6 +74,7 @@ public class OrdersController : ControllerBase
     /// Получение списка заказов пользователя
     /// </summary>
     [HttpGet("my")]
+    [Authorize]
     public async Task<IActionResult> GetMyOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         var userId = GetCurrentUserId();
@@ -99,16 +102,13 @@ public class OrdersController : ControllerBase
     /// Создание заказа
     /// </summary>
     [HttpPost]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<OrderDto>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateOrderRequest request)
     {
-        var userId = GetCurrentUserId();
-        if (userId == null)
-        {
-            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
-        }
+        var userId = GetCurrentUserId() ?? Guid.Empty;
 
-        var (order, error) = await _ordersService.CreateAsync(userId.Value, request);
+        var (order, error) = await _ordersService.CreateAsync(userId, request);
         if (error != null)
         {
             return BadRequest(ApiResponse.Fail(error));
@@ -155,6 +155,7 @@ public class OrdersController : ControllerBase
     /// Отмена заказа
     /// </summary>
     [HttpPost("{id}/cancel")]
+    [Authorize]
     public async Task<IActionResult> Cancel(Guid id)
     {
         var userId = GetCurrentUserId();
@@ -176,6 +177,7 @@ public class OrdersController : ControllerBase
     /// Оплата заказа
     /// </summary>
     [HttpPost("{id}/pay")]
+    [Authorize]
     public async Task<IActionResult> Pay(Guid id)
     {
         var order = await _ordersService.GetByIdAsync(id);

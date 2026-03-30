@@ -27,6 +27,11 @@ public class AuthDbContext : DbContext
     /// </summary>
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
     
+    /// <summary>
+    /// Адреса доставки пользователей
+    /// </summary>
+    public DbSet<UserAddress> UserAddresses => Set<UserAddress>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -75,6 +80,25 @@ public class AuthDbContext : DbContext
 
             entity.HasOne(e => e.User)
                 .WithMany(u => u.WishlistItems)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Конфигурация UserAddress
+        modelBuilder.Entity<UserAddress>(entity =>
+        {
+            entity.ToTable("user_addresses");
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.City).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Address).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Apartment).HasMaxLength(50);
+            entity.Property(e => e.PostalCode).HasMaxLength(20);
+            entity.Property(e => e.IsDefault).IsRequired();
+            
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Addresses)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

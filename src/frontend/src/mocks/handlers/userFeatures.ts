@@ -54,4 +54,47 @@ export const userFeaturesHandlers = [
       },
     });
   }),
+
+  http.post('/api/v1/orders', async ({ request }) => {
+    await delay(1000);
+    const body = (await request.json()) as any;
+    
+    // Генерируем фейковый заказ
+    const orderNumber = `ORD-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+    
+    return HttpResponse.json({
+      data: {
+        id: crypto.randomUUID(),
+        orderNumber,
+        customerFirstName: body.firstName,
+        customerLastName: body.lastName,
+        customerEmail: body.email,
+        customerPhone: body.phone,
+        status: 'New',
+        total: body.items.reduce((acc: number, item: any) => acc + item.unitPrice * item.quantity, 0) + (body.deliveryMethod === 'Delivery' ? 10 : 0),
+        items: body.items.map((item: any) => ({
+          ...item,
+          id: crypto.randomUUID(),
+          totalPrice: item.unitPrice * item.quantity
+        })),
+        createdAt: new Date().toISOString()
+      },
+      success: true
+    });
+  }),
+
+  http.get('/api/v1/orders/number/:orderNumber', async ({ params }) => {
+    await delay(100);
+    return HttpResponse.json({
+      data: {
+        orderNumber: params.orderNumber,
+        customerEmail: 'customer@example.com',
+        status: 'New',
+        total: 1185.36,
+        createdAt: new Date().toISOString(),
+        items: []
+      },
+      success: true
+    });
+  }),
 ];

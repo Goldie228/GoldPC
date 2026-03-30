@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RuleSet Name="GoldPC StyleCop Rules" Description="Code analysis rules for GoldPC project" ToolsVersion="17.0">
   <Rules AnalyzerId="StyleCop.Analyzers" RuleNamespace="StyleCop.Analyzers">
+    <Rule Id="SA0001" Action="None" />
     <!-- Documentation Rules -->
     <Rule Id="SA1600" Action="Warning" />
     <Rule Id="SA1601" Action="Warning" />

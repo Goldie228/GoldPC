@@ -1,28 +1,39 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
-
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
 namespace CatalogService.Migrations
 {
     /// <inheritdoc />
     public partial class SplitPeripheryIntoKeyboardsMiceHeadphones : Migration
     {
+        private static readonly string[] CategoryInsertColumns =
+        {
+            "id", "component_type", "description", "Icon", "name", "Order", "parent_id", "slug",
+        };
+
+        private static readonly string[] CategoryFilterAttributeColumns =
+        {
+            "id", "attribute_key", "category_id", "display_name", "filter_type", "sort_order",
+        };
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.InsertData(
                 table: "categories",
-                columns: new[] { "id", "component_type", "description", "Icon", "name", "Order", "parent_id", "slug" },
-                values: new object[,]
-                {
-                    { new Guid("00000000-0000-0000-0000-00000000000b"), 12, null, null, "Клавиатуры", 0, null, "keyboards" },
-                    { new Guid("00000000-0000-0000-0000-00000000000c"), 13, null, null, "Мыши", 0, null, "mice" },
-                    { new Guid("00000000-0000-0000-0000-00000000000d"), 14, null, null, "Наушники", 0, null, "headphones" }
-                });
+                columns: CategoryInsertColumns,
+                values: new object[] { new Guid("00000000-0000-0000-0000-00000000000b"), 12, null, null, "Клавиатуры", 0, null, "keyboards" });
+            migrationBuilder.InsertData(
+                table: "categories",
+                columns: CategoryInsertColumns,
+                values: new object[] { new Guid("00000000-0000-0000-0000-00000000000c"), 13, null, null, "Мыши", 0, null, "mice" });
+            migrationBuilder.InsertData(
+                table: "categories",
+                columns: CategoryInsertColumns,
+                values: new object[] { new Guid("00000000-0000-0000-0000-00000000000d"), 14, null, null, "Наушники", 0, null, "headphones" });
 
             migrationBuilder.UpdateData(
                 table: "products",
@@ -110,20 +121,44 @@ namespace CatalogService.Migrations
 
             migrationBuilder.InsertData(
                 table: "category_filter_attributes",
-                columns: new[] { "id", "attribute_key", "category_id", "display_name", "filter_type", "sort_order" },
-                values: new object[,]
-                {
-                    { new Guid("30000000-0000-0000-0000-000000000016"), "type", new Guid("00000000-0000-0000-0000-00000000000b"), "Тип/типоразмер", 0, 1 },
-                    { new Guid("30000000-0000-0000-0000-000000000017"), "interface", new Guid("00000000-0000-0000-0000-00000000000b"), "Интерфейс", 0, 2 },
-                    { new Guid("30000000-0000-0000-0000-000000000018"), "color", new Guid("00000000-0000-0000-0000-00000000000b"), "Цвет", 0, 3 },
-                    { new Guid("30000000-0000-0000-0000-000000000019"), "type", new Guid("00000000-0000-0000-0000-00000000000c"), "Тип", 0, 1 },
-                    { new Guid("30000000-0000-0000-0000-00000000001a"), "interface", new Guid("00000000-0000-0000-0000-00000000000c"), "Интерфейс", 0, 2 },
-                    { new Guid("30000000-0000-0000-0000-00000000001b"), "dpi", new Guid("00000000-0000-0000-0000-00000000000c"), "DPI", 1, 3 },
-                    { new Guid("30000000-0000-0000-0000-00000000001c"), "sensor_type", new Guid("00000000-0000-0000-0000-00000000000c"), "Тип сенсора", 0, 4 },
-                    { new Guid("30000000-0000-0000-0000-00000000001d"), "type", new Guid("00000000-0000-0000-0000-00000000000d"), "Тип", 0, 1 },
-                    { new Guid("30000000-0000-0000-0000-00000000001e"), "interface", new Guid("00000000-0000-0000-0000-00000000000d"), "Интерфейс", 0, 2 },
-                    { new Guid("30000000-0000-0000-0000-00000000001f"), "color", new Guid("00000000-0000-0000-0000-00000000000d"), "Цвет", 0, 3 }
-                });
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000016"), "type", new Guid("00000000-0000-0000-0000-00000000000b"), "Тип/типоразмер", 0, 1 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000017"), "interface", new Guid("00000000-0000-0000-0000-00000000000b"), "Интерфейс", 0, 2 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000018"), "color", new Guid("00000000-0000-0000-0000-00000000000b"), "Цвет", 0, 3 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-000000000019"), "type", new Guid("00000000-0000-0000-0000-00000000000c"), "Тип", 0, 1 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-00000000001a"), "interface", new Guid("00000000-0000-0000-0000-00000000000c"), "Интерфейс", 0, 2 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-00000000001b"), "dpi", new Guid("00000000-0000-0000-0000-00000000000c"), "DPI", 1, 3 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-00000000001c"), "sensor_type", new Guid("00000000-0000-0000-0000-00000000000c"), "Тип сенсора", 0, 4 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-00000000001d"), "type", new Guid("00000000-0000-0000-0000-00000000000d"), "Тип", 0, 1 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-00000000001e"), "interface", new Guid("00000000-0000-0000-0000-00000000000d"), "Интерфейс", 0, 2 });
+            migrationBuilder.InsertData(
+                table: "category_filter_attributes",
+                columns: CategoryFilterAttributeColumns,
+                values: new object[] { new Guid("30000000-0000-0000-0000-00000000001f"), "color", new Guid("00000000-0000-0000-0000-00000000000d"), "Цвет", 0, 3 });
         }
 
         /// <inheritdoc />

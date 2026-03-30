@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ProductSummary } from '../api/types';
+import { promoApi } from '../api/promo';
 
 export interface CartItem {
   id: string;
@@ -18,28 +19,23 @@ interface CartState {
   items: CartItem[];
   promoCode: string | null;
   discount: number;
+  discountAmount: number;
 }
 
 interface CartActions {
   addItem: (product: ProductSummary, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
-  applyPromoCode: (code: string) => boolean;
+  validateAndApplyPromoCode: (code: string) => Promise<{ success: boolean; message: string }>;
   clearPromo: () => void;
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
   getDiscountedTotal: () => number;
+  getDiscountAmount: () => number;
 }
 
 type CartStore = CartState & CartActions;
-
-// Доступные промокоды
-const PROMO_CODES: Record<string, number> = {
-  GOLDPC: 5,
-  GOLDPC10: 10,
-  SAVE15: 15,
-};
 
 export const useCartStore = create<CartStore>()(
   persist(
@@ -47,6 +43,7 @@ export const useCartStore = create<CartStore>()(
       items: [],
       promoCode: null,
       discount: 0,
+      discountAmount: 0,
 
       addItem: (product, quantity = 1) => {
         set((state) => {
@@ -96,21 +93,37 @@ export const useCartStore = create<CartStore>()(
         });
       },
 
-      applyPromoCode: (code) => {
-        const discount = PROMO_CODES[code.toUpperCase()];
-        if (discount) {
-          set({ promoCode: code.toUpperCase(), discount });
-          return true;
+      validateAndApplyPromoCode: async (code) => {
+        const state = get();
+        const total = state.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+        try {
+          const result = await promoApi.validatePromoCode({
+            code,
+            orderAmount: total,
+          });
+
+          if (result.valid) {
+            set({
+              promoCode: code.toUpperCase(),
+              discount: result.discount,
+              discountAmount: result.discountAmount,
+            });
+            return { success: true, message: result.message };
+          } else {
+            return { success: false, message: result.message };
+          }
+        } catch (error) {
+          return { success: false, message: 'Ошибка проверки промокода' };
         }
-        return false;
       },
 
       clearPromo: () => {
-        set({ promoCode: null, discount: 0 });
+        set({ promoCode: null, discount: 0, discountAmount: 0 });
       },
 
       clearCart: () => {
-        set({ items: [], promoCode: null, discount: 0 });
+        set({ items: [], promoCode: null, discount: 0, discountAmount: 0 });
       },
 
       getTotal: () => {
@@ -126,7 +139,12 @@ export const useCartStore = create<CartStore>()(
       getDiscountedTotal: () => {
         const state = get();
         const total = state.items.reduce((total, item) => total + item.price * item.quantity, 0);
-        return Math.round(total * (1 - state.discount / 100));
+        return Math.round(total - state.discountAmount);
+      },
+
+      getDiscountAmount: () => {
+        const state = get();
+        return state.discountAmount;
       },
     }),
     {
@@ -135,6 +153,7 @@ export const useCartStore = create<CartStore>()(
         items: state.items,
         promoCode: state.promoCode,
         discount: state.discount,
+        discountAmount: state.discountAmount,
       }),
     }
   )

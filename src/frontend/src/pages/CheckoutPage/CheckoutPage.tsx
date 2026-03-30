@@ -1,241 +1,324 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { ordersApi } from '../../api/orders';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../../store/cartStore';
-import { getProductImageUrl, hasValidProductImage } from '../../utils/image';
+import { useAuthStore } from '../../store/authStore';
+import { ordersApi } from '../../api/orders';
+import { addressesApi, type UserAddress } from '../../api/addresses';
+import { useToastStore } from '../../store/toastStore';
+import { AddressMap } from '../../components/checkout/AddressMap';
+import { DeliveryTimeSlotPicker } from '../../components/checkout/DeliveryTimeSlotPicker';
+import { PaymentForm, type PaymentData } from '../../components/checkout/PaymentForm';
+import { QRCodePayment } from '../../components/checkout/QRCodePayment';
+import { Icon } from '../../components/ui/Icon';
+import { Button } from '../../components/ui/Button';
 import styles from './CheckoutPage.module.css';
 
-/**
- * CheckoutPage - Checkout Page with 3-step process
- */
+type Step = 'delivery' | 'contacts' | 'payment' | 'confirm';
+type DeliveryMethod = 'Delivery' | 'Pickup';
+type PaymentMethod = 'CardOnline' | 'SBP' | 'Cash' | 'CardOnDelivery';
+type ContactField = keyof ContactData;
 
-interface ShippingData {
+interface ContactData {
   firstName: string;
   lastName: string;
   phone: string;
   email: string;
-  city: string;
-  address: string;
-  comment: string;
 }
 
-type PaymentMethod = 'card' | 'erip' | 'cash';
-type DeliveryMethod = 'pickup' | 'delivery';
-type Step = 'shipping' | 'payment' | 'confirm';
+interface DeliveryData {
+  method: DeliveryMethod;
+  city: string;
+  address: string;
+  addressId?: string;
+  deliveryDate?: string;
+  timeSlot?: string;
+  saveAddress?: boolean;
+  pickupPointId?: string;
+  pickupPointName?: string;
+}
 
-const PHONE_RE = /^\+?[\d\s()\-]{9,}$/;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const FREE_DELIVERY_THRESHOLD = 200;
+const NAME_REGEX = /^[A-Za-zА-Яа-яЁё-]{2,50}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^((\+375|80)(17|25|29|33|44)\d{7})$/;
+const CONTACT_FIELDS: ContactField[] = ['firstName', 'lastName', 'phone', 'email'];
+
+function normalizePhone(value: string): string {
+  return value.replace(/[\s()-]/g, '');
+}
+
+function isOnlinePaymentMethod(method: PaymentMethod): boolean {
+  return method === 'CardOnline' || method === 'SBP';
+}
+
+function getPaymentMethodLabel(method: PaymentMethod, paymentData: PaymentData | null): string {
+  if (method === 'CardOnline') {
+    return `Карта онлайн${paymentData ? ` (**** ${paymentData.cardNumber.slice(-4)})` : ''}`;
+  }
+
+  if (method === 'SBP') {
+    return 'СБП (Система быстрых платежей)';
+  }
+
+  if (method === 'Cash') {
+    return 'Наличными при получении';
+  }
+
+  return 'Картой при получении';
+}
 
 export function CheckoutPage() {
-  const [currentStep, setCurrentStep] = useState<Step>('shipping');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('delivery');
-  const [deliveryCost, setDeliveryCost] = useState(0);
-  const [orderPlaced, setOrderPlaced] = useState(false);
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const navigate = useNavigate();
+  const { items, getTotal, getDiscountAmount, promoCode, clearCart } = useCartStore();
+  const { user } = useAuthStore();
+  const showToast = useToastStore(state => state.showToast);
 
-  const { items: cartItems, getTotal, getItemCount, getDiscountedTotal, discount, clearCart } = useCartStore();
+  const [currentStep, setCurrentStep] = useState<Step>('delivery');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([]);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [showQRPayment, setShowQRPayment] = useState(false);
 
-  const [shippingData, setShippingData] = useState<ShippingData>({
-    firstName: '',
-    lastName: '',
-    phone: '',
-    email: '',
-    city: 'minsk',
+  const [deliveryData, setDeliveryData] = useState<DeliveryData>({
+    method: 'Delivery',
+    city: 'Минск',
     address: '',
-    comment: '',
+    saveAddress: false,
   });
 
-  const totalItems = getItemCount();
+  const [contactData, setContactData] = useState<ContactData>({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    phone: user?.phone || '',
+    email: user?.email || '',
+  });
+  const [contactErrors, setContactErrors] = useState<Partial<Record<ContactField, string>>>({});
+  const [contactTouched, setContactTouched] = useState<Partial<Record<ContactField, boolean>>>({});
+
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CardOnline');
+  const [deliveryCost, setDeliveryCost] = useState(0);
+  const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
+
   const subtotal = getTotal();
-  const total = (discount > 0 ? getDiscountedTotal() : subtotal) + deliveryCost;
+  const discountAmount = getDiscountAmount();
+  const total = subtotal - discountAmount + deliveryCost;
 
+  // Load saved addresses
   useEffect(() => {
-    const deliveryMethodApi = deliveryMethod === 'pickup' ? 'Pickup' : 'Delivery';
-    const city =
-      shippingData.city === 'minsk'
-        ? 'Минск'
-        : shippingData.city === 'brest'
-          ? 'Брест'
-          : shippingData.city === 'grodno'
-            ? 'Гродно'
-            : shippingData.city === 'vitebsk'
-              ? 'Витебск'
-              : shippingData.city === 'gomel'
-                ? 'Гомель'
-                : shippingData.city === 'mogilev'
-                  ? 'Могилёв'
-                  : shippingData.city;
+    if (user) {
+      addressesApi.getAddresses()
+        .then(setSavedAddresses)
+        .catch(() => {});
+    }
+  }, [user]);
 
-    void ordersApi
-      .getDeliveryQuote({
-        deliveryMethod: deliveryMethodApi,
-        subtotal,
-        city,
-      })
-      .then((quote) => {
-        setDeliveryCost(quote.deliveryCost);
-      })
-      .catch(() => {
-        setDeliveryCost(deliveryMethod === 'pickup' ? 0 : subtotal >= 1500 ? 0 : shippingData.city === 'minsk' ? 10 : 20);
-      });
-  }, [deliveryMethod, subtotal, shippingData.city]);
+  // Calculate delivery cost
+  useEffect(() => {
+    ordersApi.getDeliveryQuote({
+      deliveryMethod: deliveryData.method,
+      subtotal,
+      city: deliveryData.city,
+    }).then(quote => setDeliveryCost(quote.deliveryCost)).catch(() => {});
+  }, [deliveryData.method, deliveryData.city, subtotal]);
 
-  const steps = [
-    { id: 'shipping' as Step, label: 'Доставка', number: 1 },
-    { id: 'payment' as Step, label: 'Оплата', number: 2 },
-    { id: 'confirm' as Step, label: 'Подтверждение', number: 3 },
-  ];
+  const validateContactField = (field: ContactField, rawValue: string): boolean => {
+    const value = rawValue.trim();
+    let error = '';
 
-  const getStepStatus = (stepId: Step) => {
-    const stepOrder = ['shipping', 'payment', 'confirm'];
-    const currentIndex = stepOrder.indexOf(currentStep);
-    const stepIndex = stepOrder.indexOf(stepId);
+    if (field === 'firstName' || field === 'lastName') {
+      if (!value) {
+        error = 'Поле обязательно для заполнения';
+      } else if (!NAME_REGEX.test(value)) {
+        error = 'Используйте 2-50 букв кириллицы или латиницы, дефис допускается';
+      }
+    }
 
-    if (stepIndex < currentIndex) return 'completed';
-    if (stepIndex === currentIndex) return 'active';
-    return 'pending';
+    if (field === 'phone') {
+      const normalizedPhone = normalizePhone(value);
+      if (!value) {
+        error = 'Укажите номер телефона';
+      } else if (!PHONE_REGEX.test(normalizedPhone)) {
+        error = 'Введите номер в формате +375291234567 или 80291234567';
+      }
+    }
+
+    if (field === 'email') {
+      if (!value) {
+        error = 'Укажите email';
+      } else if (!EMAIL_REGEX.test(value)) {
+        error = 'Введите корректный email';
+      }
+    }
+
+    setContactErrors(prev => ({ ...prev, [field]: error }));
+    return !error;
   };
 
-  const handleShippingChange = (field: keyof ShippingData, value: string) => {
-    setShippingData((prev) => ({ ...prev, [field]: value }));
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next[field];
-      return next;
+  const validateContacts = (): boolean => {
+    setContactTouched({
+      firstName: true,
+      lastName: true,
+      phone: true,
+      email: true,
     });
+
+    return CONTACT_FIELDS.every(field => validateContactField(field, contactData[field]));
   };
 
-  const validateShipping = useCallback((): boolean => {
-    const err: Record<string, string> = {};
-    if (!shippingData.firstName.trim()) err.firstName = 'Укажите имя';
-    if (!shippingData.lastName.trim()) err.lastName = 'Укажите фамилию';
-    if (!shippingData.phone.trim() || !PHONE_RE.test(shippingData.phone.trim())) {
-      err.phone = 'Укажите корректный телефон';
+  const handleContactChange = (field: ContactField, value: string) => {
+    setContactData(prev => ({ ...prev, [field]: value }));
+
+    if (contactTouched[field]) {
+      validateContactField(field, value);
     }
-    if (!shippingData.email.trim() || !EMAIL_RE.test(shippingData.email.trim())) {
-      err.email = 'Укажите корректный email';
-    }
-    if (deliveryMethod === 'delivery' && !shippingData.address.trim()) {
-      err.address = 'Укажите адрес доставки';
-    }
-    setFieldErrors(err);
-    return Object.keys(err).length === 0;
-  }, [shippingData, deliveryMethod]);
+  };
+
+  const handleContactBlur = (field: ContactField) => {
+    setContactTouched(prev => ({ ...prev, [field]: true }));
+    validateContactField(field, contactData[field]);
+  };
 
   const handleNextStep = () => {
-    if (currentStep === 'shipping' && !validateShipping()) return;
-    const stepOrder: Step[] = ['shipping', 'payment', 'confirm'];
-    const currentIndex = stepOrder.indexOf(currentStep);
-    if (currentIndex < stepOrder.length - 1) {
-      setCurrentStep(stepOrder[currentIndex + 1]);
+    if (currentStep === 'delivery') {
+      if (deliveryData.method === 'Delivery' && !deliveryData.address) {
+        showToast('Укажите адрес доставки', 'error');
+        return;
+      }
+      if (deliveryData.method === 'Pickup' && !deliveryData.pickupPointId) {
+        showToast('Выберите пункт выдачи', 'error');
+        return;
+      }
+      setCurrentStep('contacts');
+    } else if (currentStep === 'contacts') {
+      if (!validateContacts()) {
+        showToast('Проверьте корректность контактных данных', 'error');
+        return;
+      }
+      setCurrentStep('payment');
+    } else if (currentStep === 'payment') {
+      if (paymentMethod === 'CardOnline') {
+        setShowPaymentForm(true);
+        return;
+      }
+      if (paymentMethod === 'SBP') {
+        setShowQRPayment(true);
+        return;
+      }
+      setCurrentStep('confirm');
     }
   };
 
   const handlePrevStep = () => {
-    const stepOrder: Step[] = ['shipping', 'payment', 'confirm'];
-    const currentIndex = stepOrder.indexOf(currentStep);
-    if (currentIndex > 0) {
-      setCurrentStep(stepOrder[currentIndex - 1]);
+    if (currentStep === 'contacts') setCurrentStep('delivery');
+    else if (currentStep === 'payment') setCurrentStep('contacts');
+    else if (currentStep === 'confirm') setCurrentStep('payment');
+  };
+
+  const handlePaymentFormSubmit = async (data: PaymentData) => {
+    setPaymentData(data);
+    await handlePlaceOrder();
+  };
+
+  const handleQRPaymentConfirm = async () => {
+    await handlePlaceOrder();
+  };
+
+  const handlePlaceOrder = async (): Promise<boolean> => {
+    setIsProcessing(true);
+    try {
+      // Сохранить адрес если нужно
+      if (deliveryData.saveAddress && user && deliveryData.method === 'Delivery') {
+        try {
+          await addressesApi.createAddress({
+            name: 'Адрес доставки',
+            city: deliveryData.city,
+            address: deliveryData.address,
+            isDefault: savedAddresses.length === 0,
+          });
+        } catch (error) {
+          console.error('Failed to save address:', error);
+        }
+      }
+
+      const order = await ordersApi.createOrder({
+        firstName: contactData.firstName.trim(),
+        lastName: contactData.lastName.trim(),
+        phone: normalizePhone(contactData.phone.trim()),
+        email: contactData.email.trim(),
+        deliveryMethod: deliveryData.method,
+        paymentMethod: isOnlinePaymentMethod(paymentMethod) ? 'Online' : 'OnReceipt',
+        address: deliveryData.method === 'Delivery' ? deliveryData.address : deliveryData.pickupPointName,
+        city: deliveryData.city,
+        promoCode: promoCode || undefined,
+        discountAmount,
+        deliveryDate: deliveryData.deliveryDate,
+        deliveryTimeSlot: deliveryData.timeSlot,
+        items: items.map(item => ({
+          productId: item.productId,
+          productName: item.name,
+          quantity: item.quantity,
+          unitPrice: item.price,
+        })),
+      });
+
+      clearCart();
+      showToast('Заказ успешно оформлен!', 'success');
+      navigate(`/orders/${order.orderNumber}/success`);
+      return true;
+    } catch (error) {
+      showToast('Ошибка при оформлении заказа', 'error');
+      return false;
+    } finally {
+      setIsProcessing(false);
     }
   };
 
-  const handlePlaceOrder = () => {
-    clearCart();
-    setOrderPlaced(true);
-  };
-
-  const renderProductIcon = (category: string) => {
-    switch (category) {
-      case 'gpu':
-        return (
-          <svg viewBox="0 0 32 32" fill="none">
-            <rect x="4" y="4" width="24" height="24" rx="2" stroke="#d4a574" strokeWidth="1.5" />
-            <circle cx="16" cy="16" r="6" stroke="#d4a574" strokeWidth="1" />
-          </svg>
-        );
-      case 'cpu':
-        return (
-          <svg viewBox="0 0 32 32" fill="none">
-            <rect x="6" y="6" width="20" height="20" rx="2" stroke="#d4a574" strokeWidth="1.5" />
-            <text x="16" y="18" textAnchor="middle" fill="#d4a574" fontSize="8">
-              CPU
-            </text>
-          </svg>
-        );
-      case 'ram':
-        return (
-          <svg viewBox="0 0 32 32" fill="none">
-            <rect x="4" y="10" width="24" height="12" rx="1" stroke="#d4a574" strokeWidth="1.5" />
-            <rect x="8" y="13" width="4" height="6" rx="0.5" fill="#d4a574" opacity="0.5" />
-            <rect x="14" y="13" width="4" height="6" rx="0.5" fill="#d4a574" opacity="0.5" />
-          </svg>
-        );
-      default:
-        return (
-          <svg viewBox="0 0 32 32" fill="none">
-            <rect x="4" y="4" width="24" height="24" rx="2" stroke="#d4a574" strokeWidth="1.5" />
-          </svg>
-        );
-    }
-  };
-
-  const stepBlockClass = (status: string) =>
-    [
-      styles.stepBlock,
-      status === 'active' ? styles.stepBlockActive : '',
-      status === 'completed' ? styles.stepBlockCompleted : '',
-    ]
-      .filter(Boolean)
-      .join(' ');
-
-  const checkoutBtn = (extra?: string) =>
-    [styles.checkoutBtn, extra].filter(Boolean).join(' ');
-
-  if (cartItems.length === 0 && !orderPlaced) {
+  if (items.length === 0) {
     return (
       <div className={styles.checkoutPage}>
         <div className={styles.checkoutPageContainer}>
           <div className={styles.orderSuccess}>
-            <h1 className={styles.orderSuccessTitle}>Корзина пуста</h1>
-            <p className={styles.orderSuccessText}>Добавьте товары в корзину перед оформлением заказа.</p>
-            <div className={styles.orderSuccessActions}>
-              <Link to="/catalog" className={`${checkoutBtn()} ${styles.checkoutBtnPrimary}`}>
+            <h1>Корзина пуста</h1>
+            <Link to="/catalog">
+              <Button variant="primary" size="lg" fullWidth>
                 В каталог
-              </Link>
-              <Link to="/cart" className={`${checkoutBtn()} ${styles.checkoutBtnGhost}`}>
-                В корзину
-              </Link>
-            </div>
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
     );
   }
 
-  if (orderPlaced) {
+  if (showPaymentForm) {
     return (
       <div className={styles.checkoutPage}>
         <div className={styles.checkoutPageContainer}>
-          <div className={styles.orderSuccess}>
-            <div className={styles.orderSuccessIcon}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </div>
-            <h1 className={styles.orderSuccessTitle}>Заказ оформлен!</h1>
-            <p className={styles.orderSuccessText}>
-              Номер вашего заказа: <span className={styles.orderSuccessNumber}>#GP-2024-001234</span>
-            </p>
-            <p className={styles.orderSuccessInfo}>Мы отправили подтверждение на email: {shippingData.email}</p>
-            <div className={styles.orderSuccessActions}>
-              <Link to="/catalog" className={`${checkoutBtn()} ${styles.checkoutBtnPrimary}`}>
-                Продолжить покупки
-              </Link>
-              <Link to="/account" className={`${checkoutBtn()} ${styles.checkoutBtnGhost}`}>
-                Мои заказы
-              </Link>
-            </div>
+          <h1 className={styles.pageTitle}>Оплата картой</h1>
+          <div className={styles.paymentFormContainer}>
+            <PaymentForm
+              onSubmit={handlePaymentFormSubmit}
+              onCancel={() => setShowPaymentForm(false)}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (showQRPayment) {
+    return (
+      <div className={styles.checkoutPage}>
+        <div className={styles.checkoutPageContainer}>
+          <h1 className={styles.pageTitle}>Оплата через СБП</h1>
+          <div className={styles.paymentFormContainer}>
+            <QRCodePayment
+              amount={total}
+              orderNumber={`TEMP-${Date.now()}`}
+              onConfirm={handleQRPaymentConfirm}
+              onCancel={() => setShowQRPayment(false)}
+              isProcessing={isProcessing}
+            />
           </div>
         </div>
       </div>
@@ -245,32 +328,38 @@ export function CheckoutPage() {
   return (
     <div className={styles.checkoutPage}>
       <div className={styles.checkoutPageContainer}>
+        {/* Breadcrumb */}
+        <nav className={styles.breadcrumb}>
+          <Link to="/">Главная</Link>
+          <span>/</span>
+          <span>Оформление заказа</span>
+        </nav>
+
         <h1 className={styles.pageTitle}>Оформление заказа</h1>
 
-        <nav className={styles.stepsIndicator} aria-label="Шаги оформления заказа">
-          {steps.map((step, index) => {
-            const status = getStepStatus(step.id);
+        {/* Steps Indicator */}
+        <nav className={styles.stepsIndicator}>
+          {[
+            { id: 'delivery', label: 'Доставка', num: 1 },
+            { id: 'contacts', label: 'Контакты', num: 2 },
+            { id: 'payment', label: 'Оплата', num: 3 },
+            { id: 'confirm', label: 'Подтверждение', num: 4 },
+          ].map((step, i, arr) => {
+            const stepIndex = arr.findIndex(s => s.id === currentStep);
+            const thisIndex = i;
+            const isCompleted = thisIndex < stepIndex;
+            const isCurrent = step.id === currentStep;
+
             return (
               <div key={step.id} className={styles.stepWrapper}>
-                <div className={stepBlockClass(status)} aria-current={status === 'active' ? 'step' : undefined}>
+                <div className={`${styles.stepBlock} ${isCurrent ? styles.stepBlockActive : ''} ${isCompleted ? styles.stepBlockCompleted : ''}`}>
                   <span className={styles.stepNumber}>
-                    {status === 'completed' ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    ) : (
-                      step.number
-                    )}
+                    {isCompleted ? <Icon name="check" size="sm" color="accent" /> : step.num}
                   </span>
                   <span className={styles.stepLabel}>{step.label}</span>
                 </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`${styles.stepConnector} ${
-                      getStepStatus(steps[index + 1].id) !== 'pending' ? styles.stepConnectorDone : ''
-                    }`}
-                    aria-hidden
-                  />
+                {i < arr.length - 1 && (
+                  <div className={`${styles.stepConnector} ${isCompleted ? styles.stepConnectorActive : ''}`} />
                 )}
               </div>
             );
@@ -279,448 +368,408 @@ export function CheckoutPage() {
 
         <div className={styles.checkoutLayout}>
           <div className={styles.formSection}>
-            {currentStep === 'shipping' && (
+            
+            {/* Step 1: Delivery */}
+            {currentStep === 'delivery' && (
               <div className={styles.formCard}>
-                <h2 className={styles.formCardTitle}>Доставка</h2>
-                <p className={styles.guestHint}>
-                  Уже есть аккаунт? <Link to="/login">Войти</Link> — история заказов и гарантийные документы в личном
-                  кабинете.
-                </p>
-                <div className={styles.paymentMethods} style={{ marginBottom: '16px' }}>
-                  <label
-                    className={`${styles.paymentMethod} ${
-                      deliveryMethod === 'delivery' ? styles.paymentMethodSelected : ''
-                    }`}
-                  >
+                <h2>Способ доставки</h2>
+                <div className={styles.paymentMethods}>
+                  <label className={`${styles.paymentMethod} ${deliveryData.method === 'Delivery' ? styles.paymentMethodSelected : ''}`}>
                     <input
                       type="radio"
-                      name="delivery"
-                      value="delivery"
-                      checked={deliveryMethod === 'delivery'}
-                      onChange={() => setDeliveryMethod('delivery')}
+                      checked={deliveryData.method === 'Delivery'}
+                      onChange={() => setDeliveryData(prev => ({ ...prev, method: 'Delivery', pickupPointId: undefined }))}
                     />
-                    <span className={styles.paymentRadio} />
-                    <div className={styles.paymentInfo}>
-                      <div className={styles.paymentName}>Курьерская доставка</div>
-                      <div className={styles.paymentDesc}>По Минску и Беларуси</div>
-                    </div>
+                    <span>
+                      <Icon name="package" size="sm" color="accent" /> Курьерская доставка
+                    </span>
                   </label>
-
-                  <label
-                    className={`${styles.paymentMethod} ${
-                      deliveryMethod === 'pickup' ? styles.paymentMethodSelected : ''
-                    }`}
-                  >
+                  <label className={`${styles.paymentMethod} ${deliveryData.method === 'Pickup' ? styles.paymentMethodSelected : ''}`}>
                     <input
                       type="radio"
-                      name="delivery"
-                      value="pickup"
-                      checked={deliveryMethod === 'pickup'}
-                      onChange={() => setDeliveryMethod('pickup')}
+                      checked={deliveryData.method === 'Pickup'}
+                      onChange={() => setDeliveryData(prev => ({ ...prev, method: 'Pickup' }))}
                     />
-                    <span className={styles.paymentRadio} />
-                    <div className={styles.paymentInfo}>
-                      <div className={styles.paymentName}>Самовывоз</div>
-                      <div className={styles.paymentDesc}>Бесплатно, в день подтверждения</div>
-                    </div>
+                    <span>
+                      <Icon name="package" size="sm" color="accent" /> Самовывоз (бесплатно)
+                    </span>
                   </label>
                 </div>
 
-                <div className={styles.formGrid}>
+                <div className={styles.formGroupWithTopMargin}>
+                  <label>Город</label>
+                  <select
+                    value={deliveryData.city}
+                    onChange={(e) => setDeliveryData(prev => ({...prev, city: e.target.value}))}
+                    className={styles.select}
+                  >
+                    <option value="Минск">Минск</option>
+                    <option value="Брест">Брест</option>
+                    <option value="Гродно">Гродно</option>
+                    <option value="Витебск">Витебск</option>
+                    <option value="Гомель">Гомель</option>
+                    <option value="Могилёв">Могилёв</option>
+                  </select>
+                </div>
+
+                {deliveryData.method === 'Delivery' && user && savedAddresses.length > 0 && (
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel} htmlFor="firstName">
-                      Имя
-                    </label>
-                    <input
-                      type="text"
-                      id="firstName"
-                      className={`${styles.formInput} ${fieldErrors.firstName ? styles.formInputError : ''}`}
-                      placeholder="Иван"
-                      value={shippingData.firstName}
-                      onChange={(e) => handleShippingChange('firstName', e.target.value)}
-                      aria-invalid={!!fieldErrors.firstName}
-                      aria-describedby={fieldErrors.firstName ? 'err-firstName' : undefined}
-                    />
-                    {fieldErrors.firstName && (
-                      <span id="err-firstName" className={styles.fieldError} role="alert">
-                        {fieldErrors.firstName}
-                      </span>
-                    )}
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel} htmlFor="lastName">
-                      Фамилия
-                    </label>
-                    <input
-                      type="text"
-                      id="lastName"
-                      className={`${styles.formInput} ${fieldErrors.lastName ? styles.formInputError : ''}`}
-                      placeholder="Иванов"
-                      value={shippingData.lastName}
-                      onChange={(e) => handleShippingChange('lastName', e.target.value)}
-                      aria-invalid={!!fieldErrors.lastName}
-                      aria-describedby={fieldErrors.lastName ? 'err-lastName' : undefined}
-                    />
-                    {fieldErrors.lastName && (
-                      <span id="err-lastName" className={styles.fieldError} role="alert">
-                        {fieldErrors.lastName}
-                      </span>
-                    )}
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel} htmlFor="phone">
-                      Телефон
-                    </label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      className={`${styles.formInput} ${fieldErrors.phone ? styles.formInputError : ''}`}
-                      placeholder="+375 (29) 123-45-67"
-                      value={shippingData.phone}
-                      onChange={(e) => handleShippingChange('phone', e.target.value)}
-                      aria-invalid={!!fieldErrors.phone}
-                      aria-describedby={fieldErrors.phone ? 'err-phone' : undefined}
-                    />
-                    {fieldErrors.phone && (
-                      <span id="err-phone" className={styles.fieldError} role="alert">
-                        {fieldErrors.phone}
-                      </span>
-                    )}
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel} htmlFor="email">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      className={`${styles.formInput} ${fieldErrors.email ? styles.formInputError : ''}`}
-                      placeholder="email@example.com"
-                      value={shippingData.email}
-                      onChange={(e) => handleShippingChange('email', e.target.value)}
-                      aria-invalid={!!fieldErrors.email}
-                      aria-describedby={fieldErrors.email ? 'err-email' : undefined}
-                    />
-                    {fieldErrors.email && (
-                      <span id="err-email" className={styles.fieldError} role="alert">
-                        {fieldErrors.email}
-                      </span>
-                    )}
-                  </div>
-                  <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                    <label className={styles.formLabel} htmlFor="city">
-                      Город
-                    </label>
+                    <label>Сохранённые адреса</label>
                     <select
-                      id="city"
-                      className={styles.formInput}
-                      value={shippingData.city}
-                      onChange={(e) => handleShippingChange('city', e.target.value)}
+                      onChange={(e) => {
+                        const addr = savedAddresses.find(a => a.id === e.target.value);
+                        if (addr) {
+                          setDeliveryData(prev => ({
+                            ...prev,
+                            city: addr.city,
+                            address: addr.apartment ? `${addr.address}, кв. ${addr.apartment}` : addr.address,
+                            addressId: addr.id
+                          }));
+                        }
+                      }}
+                      className={styles.select}
                     >
-                      <option value="minsk">Минск</option>
-                      <option value="brest">Брест</option>
-                      <option value="grodno">Гродно</option>
-                      <option value="vitebsk">Витебск</option>
-                      <option value="gomel">Гомель</option>
-                      <option value="mogilev">Могилёв</option>
+                      <option value="">Выберите адрес или введите новый</option>
+                      {savedAddresses.map(addr => (
+                        <option key={addr.id} value={addr.id}>
+                          {addr.name}: {addr.city}, {addr.address}
+                        </option>
+                      ))}
                     </select>
                   </div>
-                  <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                    <label className={styles.formLabel} htmlFor="address">
-                      Адрес доставки
-                    </label>
-                    <input
-                      type="text"
-                      id="address"
-                      className={`${styles.formInput} ${fieldErrors.address ? styles.formInputError : ''}`}
-                      placeholder="ул. Примерная, д. 1, кв. 1"
-                      value={shippingData.address}
-                      onChange={(e) => handleShippingChange('address', e.target.value)}
-                      aria-invalid={!!fieldErrors.address}
-                      aria-describedby={fieldErrors.address ? 'err-address' : undefined}
-                      disabled={deliveryMethod === 'pickup'}
-                    />
-                    {fieldErrors.address && (
-                      <span id="err-address" className={styles.fieldError} role="alert">
-                        {fieldErrors.address}
-                      </span>
+                )}
+
+                {/* Карта */}
+                <AddressMap
+                  mode={deliveryData.method === 'Delivery' ? 'delivery' : 'pickup'}
+                  city={deliveryData.city}
+                  onAddressSelect={(address) => {
+                    setDeliveryData(prev => ({ ...prev, address }));
+                  }}
+                  onPickupPointSelect={(point) => {
+                    setDeliveryData(prev => ({
+                      ...prev,
+                      pickupPointId: point.id,
+                      pickupPointName: `${point.name}, ${point.address}`,
+                    }));
+                  }}
+                />
+
+                {deliveryData.method === 'Delivery' && (
+                  <>
+                    <div className={styles.formGroup}>
+                      <label>Адрес доставки</label>
+                      <input
+                        type="text"
+                        placeholder="ул. Примерная, д. 1, кв. 1"
+                        value={deliveryData.address}
+                        onChange={(e) => setDeliveryData(prev => ({...prev, address: e.target.value}))}
+                        className={styles.input}
+                      />
+                    </div>
+
+                    {user && (
+                      <label className={styles.checkbox}>
+                        <input
+                          type="checkbox"
+                          checked={deliveryData.saveAddress}
+                          onChange={(e) => setDeliveryData(prev => ({...prev, saveAddress: e.target.checked}))}
+                        />
+                        <span>Сохранить адрес в профиль</span>
+                      </label>
                     )}
-                  </div>
-                  <div className={`${styles.formGroup} ${styles.formGroupFull}`}>
-                    <label className={styles.formLabel} htmlFor="comment">
-                      Комментарий к заказу
-                    </label>
-                    <input
-                      type="text"
-                      id="comment"
-                      className={styles.formInput}
-                      placeholder="Пожелания к доставке (необязательно)"
-                      value={shippingData.comment}
-                      onChange={(e) => handleShippingChange('comment', e.target.value)}
+
+                    {/* Временные слоты */}
+                    <DeliveryTimeSlotPicker
+                      selectedDate={deliveryData.deliveryDate}
+                      selectedSlot={deliveryData.timeSlot}
+                      onSelect={(date, slot) => {
+                        setDeliveryData(prev => ({
+                          ...prev,
+                          deliveryDate: date,
+                          timeSlot: slot,
+                        }));
+                      }}
                     />
+                  </>
+                )}
+
+                {deliveryData.method === 'Pickup' && deliveryData.pickupPointName && (
+                  <div className={styles.selectedPoint}>
+                    <strong>Выбранный пункт выдачи:</strong>
+                    <p>{deliveryData.pickupPointName}</p>
                   </div>
-                </div>
+                )}
 
                 <div className={styles.formActions}>
-                  <Link to="/cart" className={`${checkoutBtn()} ${styles.checkoutBtnGhost}`}>
-                    ← Вернуться в корзину
+                  <Link to="/cart">
+                    <Button variant="ghost" size="md" leftIcon={<Icon name="arrow-left" size="sm" />}>
+                      Назад в корзину
+                    </Button>
                   </Link>
-                  <button type="button" className={`${checkoutBtn()} ${styles.checkoutBtnPrimary}`} onClick={handleNextStep}>
+                  <Button variant="primary" size="md" onClick={handleNextStep} rightIcon={<Icon name="arrow-right" size="sm" />}>
                     Продолжить
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                      <polyline points="12 5 19 12 12 19" />
-                    </svg>
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
 
+            {/* Step 2: Contacts */}
+            {currentStep === 'contacts' && (
+              <div className={styles.formCard}>
+                <h2>Контактные данные</h2>
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label>Имя*</label>
+                    <input
+                      value={contactData.firstName}
+                      onChange={(e) => handleContactChange('firstName', e.target.value)}
+                      onBlur={() => handleContactBlur('firstName')}
+                      className={`${styles.input} ${contactTouched.firstName && contactErrors.firstName ? styles.inputError : ''}`}
+                      placeholder="Иван"
+                      autoComplete="given-name"
+                    />
+                    {contactTouched.firstName && contactErrors.firstName && (
+                      <span className={styles.errorMessage}>{contactErrors.firstName}</span>
+                    )}
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Фамилия*</label>
+                    <input
+                      value={contactData.lastName}
+                      onChange={(e) => handleContactChange('lastName', e.target.value)}
+                      onBlur={() => handleContactBlur('lastName')}
+                      className={`${styles.input} ${contactTouched.lastName && contactErrors.lastName ? styles.inputError : ''}`}
+                      placeholder="Иванов"
+                      autoComplete="family-name"
+                    />
+                    {contactTouched.lastName && contactErrors.lastName && (
+                      <span className={styles.errorMessage}>{contactErrors.lastName}</span>
+                    )}
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Телефон*</label>
+                    <input
+                      type="tel"
+                      value={contactData.phone}
+                      onChange={(e) => handleContactChange('phone', e.target.value)}
+                      onBlur={() => handleContactBlur('phone')}
+                      className={`${styles.input} ${contactTouched.phone && contactErrors.phone ? styles.inputError : ''}`}
+                      placeholder="+375 29 123-45-67"
+                      autoComplete="tel"
+                    />
+                    {contactTouched.phone && contactErrors.phone && (
+                      <span className={styles.errorMessage}>{contactErrors.phone}</span>
+                    )}
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Email*</label>
+                    <input
+                      type="email"
+                      value={contactData.email}
+                      onChange={(e) => handleContactChange('email', e.target.value)}
+                      onBlur={() => handleContactBlur('email')}
+                      className={`${styles.input} ${contactTouched.email && contactErrors.email ? styles.inputError : ''}`}
+                      placeholder="example@mail.com"
+                      autoComplete="email"
+                    />
+                    {contactTouched.email && contactErrors.email && (
+                      <span className={styles.errorMessage}>{contactErrors.email}</span>
+                    )}
+                  </div>
+                </div>
+                <div className={styles.formActions}>
+                  <Button variant="ghost" size="md" onClick={handlePrevStep} leftIcon={<Icon name="arrow-left" size="sm" />}>
+                    Назад
+                  </Button>
+                  <Button variant="primary" size="md" onClick={handleNextStep} rightIcon={<Icon name="arrow-right" size="sm" />}>
+                    Продолжить
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Payment */}
             {currentStep === 'payment' && (
               <div className={styles.formCard}>
-                <h2 className={styles.formCardTitle}>Способ оплаты</h2>
-
+                <h2>Способ оплаты</h2>
                 <div className={styles.paymentMethods}>
-                  <label className={`${styles.paymentMethod} ${paymentMethod === 'card' ? styles.paymentMethodSelected : ''}`}>
+                  <label className={`${styles.paymentMethod} ${paymentMethod === 'CardOnline' ? styles.paymentMethodSelected : ''}`}>
                     <input
                       type="radio"
-                      name="payment"
-                      value="card"
-                      checked={paymentMethod === 'card'}
-                      onChange={() => setPaymentMethod('card')}
+                      checked={paymentMethod === 'CardOnline'}
+                      onChange={() => setPaymentMethod('CardOnline')}
                     />
-                    <span className={styles.paymentRadio} />
-                    <div className={styles.paymentInfo}>
-                      <div className={styles.paymentName}>Банковская карта</div>
-                      <div className={styles.paymentDesc}>Visa, Mastercard, МИР</div>
-                    </div>
-                    <div className={styles.paymentIcon}>
-                      <svg viewBox="0 0 32 20" fill="none">
-                        <rect x="1" y="1" width="30" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                        <rect x="4" y="8" width="8" height="4" rx="1" fill="currentColor" opacity="0.3" />
-                      </svg>
+                    <div className={styles.paymentMethodContent}>
+                      <span><Icon name="credit-card" size="sm" color="accent" /> Карта онлайн</span>
+                      <small>Visa, Mastercard, МИР</small>
                     </div>
                   </label>
-
-                  <label className={`${styles.paymentMethod} ${paymentMethod === 'erip' ? styles.paymentMethodSelected : ''}`}>
+                  <label className={`${styles.paymentMethod} ${paymentMethod === 'SBP' ? styles.paymentMethodSelected : ''}`}>
                     <input
                       type="radio"
-                      name="payment"
-                      value="erip"
-                      checked={paymentMethod === 'erip'}
-                      onChange={() => setPaymentMethod('erip')}
+                      checked={paymentMethod === 'SBP'}
+                      onChange={() => setPaymentMethod('SBP')}
                     />
-                    <span className={styles.paymentRadio} />
-                    <div className={styles.paymentInfo}>
-                      <div className={styles.paymentName}>ЕРИП</div>
-                      <div className={styles.paymentDesc}>Оплата через систему ЕРИП</div>
-                    </div>
-                    <div className={styles.paymentIcon}>
-                      <svg viewBox="0 0 32 20" fill="none">
-                        <rect x="1" y="1" width="30" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                        <text x="16" y="13" textAnchor="middle" fill="currentColor" fontSize="7">
-                          ЕРИП
-                        </text>
-                      </svg>
+                    <div className={styles.paymentMethodContent}>
+                      <span><Icon name="phone" size="sm" color="accent" /> СБП (Система быстрых платежей)</span>
+                      <small>Оплата через приложение банка</small>
                     </div>
                   </label>
-
-                  <label className={`${styles.paymentMethod} ${paymentMethod === 'cash' ? styles.paymentMethodSelected : ''}`}>
+                  <label className={`${styles.paymentMethod} ${paymentMethod === 'Cash' ? styles.paymentMethodSelected : ''}`}>
                     <input
                       type="radio"
-                      name="payment"
-                      value="cash"
-                      checked={paymentMethod === 'cash'}
-                      onChange={() => setPaymentMethod('cash')}
+                      checked={paymentMethod === 'Cash'}
+                      onChange={() => setPaymentMethod('Cash')}
                     />
-                    <span className={styles.paymentRadio} />
-                    <div className={styles.paymentInfo}>
-                      <div className={styles.paymentName}>Наличными при получении</div>
-                      <div className={styles.paymentDesc}>Оплата курьеру или в пункте выдачи</div>
+                    <div className={styles.paymentMethodContent}>
+                      <span><Icon name="credit-card" size="sm" color="accent" /> Наличными при получении</span>
+                      <small>Оплата курьеру</small>
                     </div>
-                    <div className={styles.paymentIcon}>
-                      <svg viewBox="0 0 32 20" fill="none">
-                        <rect x="1" y="1" width="30" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                        <circle cx="16" cy="10" r="4" stroke="currentColor" strokeWidth="1.5" />
-                      </svg>
+                  </label>
+                  <label className={`${styles.paymentMethod} ${paymentMethod === 'CardOnDelivery' ? styles.paymentMethodSelected : ''}`}>
+                    <input
+                      type="radio"
+                      checked={paymentMethod === 'CardOnDelivery'}
+                      onChange={() => setPaymentMethod('CardOnDelivery')}
+                    />
+                    <div className={styles.paymentMethodContent}>
+                      <span><Icon name="credit-card" size="sm" color="accent" /> Картой при получении</span>
+                      <small>Терминал у курьера</small>
                     </div>
                   </label>
                 </div>
-
                 <div className={styles.formActions}>
-                  <button type="button" className={`${checkoutBtn()} ${styles.checkoutBtnGhost}`} onClick={handlePrevStep}>
-                    ← Назад
-                  </button>
-                  <button type="button" className={`${checkoutBtn()} ${styles.checkoutBtnPrimary}`} onClick={handleNextStep}>
-                    Продолжить
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                      <polyline points="12 5 19 12 12 19" />
-                    </svg>
-                  </button>
+                  <Button variant="ghost" size="md" onClick={handlePrevStep} leftIcon={<Icon name="arrow-left" size="sm" />}>
+                    Назад
+                  </Button>
+                  <Button variant="primary" size="md" onClick={handleNextStep} rightIcon={<Icon name="arrow-right" size="sm" />}>
+                    {isOnlinePaymentMethod(paymentMethod) ? 'Перейти к оплате' : 'Перейти к подтверждению'}
+                  </Button>
                 </div>
               </div>
             )}
 
+            {/* Step 4: Confirmation */}
             {currentStep === 'confirm' && (
               <div className={styles.formCard}>
-                <h2 className={styles.formCardTitle}>Подтверждение заказа</h2>
-
+                <h2>Подтверждение заказа</h2>
+                
                 <div className={styles.confirmSection}>
-                  <h3 className={styles.confirmSectionTitle}>Данные доставки</h3>
-                  <div className={styles.confirmData}>
-                    <p>
-                      <strong>
-                        {shippingData.firstName} {shippingData.lastName}
-                      </strong>
-                    </p>
-                    <p>{shippingData.phone}</p>
-                    <p>{shippingData.email}</p>
-                    <p>
-                      {shippingData.city === 'minsk' ? 'Минск' : shippingData.city}, {shippingData.address}
-                    </p>
-                    {shippingData.comment && (
-                      <p className={styles.confirmDataComment}>Комментарий: {shippingData.comment}</p>
-                    )}
-                  </div>
+                  <h3><Icon name="package" size="sm" color="accent" /> Доставка</h3>
+                  {deliveryData.method === 'Pickup' ? (
+                    <p>{deliveryData.pickupPointName || 'Самовывоз'}</p>
+                  ) : (
+                    <>
+                      <p><strong>Адрес:</strong> {deliveryData.city}, {deliveryData.address}</p>
+                      {deliveryData.deliveryDate && (
+                        <p><strong>Дата:</strong> {new Date(deliveryData.deliveryDate).toLocaleDateString('ru-RU')}</p>
+                      )}
+                      {deliveryData.timeSlot && (
+                        <p><strong>Время:</strong> {deliveryData.timeSlot === 'morning' ? 'Утро (9:00-13:00)' :
+                          deliveryData.timeSlot === 'afternoon' ? 'День (13:00-18:00)' :
+                          deliveryData.timeSlot === 'evening' ? 'Вечер (18:00-21:00)' : 'Как можно скорее'}</p>
+                      )}
+                    </>
+                  )}
                 </div>
 
                 <div className={styles.confirmSection}>
-                  <h3 className={styles.confirmSectionTitle}>Способ оплаты</h3>
-                  <div className={styles.confirmData}>
-                    <p>
-                      {paymentMethod === 'card' && 'Банковская карта (Visa, Mastercard, МИР)'}
-                      {paymentMethod === 'erip' && 'ЕРИП'}
-                      {paymentMethod === 'cash' && 'Наличными при получении'}
+                  <h3><Icon name="user" size="sm" color="accent" /> Контакты</h3>
+                  <p>{contactData.firstName.trim()} {contactData.lastName.trim()}</p>
+                  <p>{contactData.phone.trim()}</p>
+                  <p>{contactData.email.trim()}</p>
+                </div>
+
+                <div className={styles.confirmSection}>
+                  <h3><Icon name="credit-card" size="sm" color="accent" /> Оплата</h3>
+                  <p>{getPaymentMethodLabel(paymentMethod, paymentData)}</p>
+                </div>
+
+                <div className={styles.confirmSection}>
+                  <h3><Icon name="cart" size="sm" color="accent" /> Товары ({items.length})</h3>
+                  {items.slice(0, 3).map(item => (
+                    <p key={item.id}>
+                      {item.name} × {item.quantity} — {(item.price * item.quantity).toFixed(2)} BYN
                     </p>
-                  </div>
+                  ))}
+                  {items.length > 3 && (
+                    <p className={styles.moreItems}>... и ещё {items.length - 3} товар(ов)</p>
+                  )}
                 </div>
 
                 <div className={styles.formActions}>
-                  <button type="button" className={`${checkoutBtn()} ${styles.checkoutBtnGhost}`} onClick={handlePrevStep}>
-                    ← Назад
-                  </button>
-                  <button type="button" className={`${checkoutBtn()} ${styles.checkoutBtnPrimary}`} onClick={handlePlaceOrder}>
-                    Подтвердить заказ
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </button>
+                  <Button variant="ghost" size="md" onClick={handlePrevStep} disabled={isProcessing} leftIcon={<Icon name="arrow-left" size="sm" />}>
+                    Назад
+                  </Button>
+                  <Button variant="primary" size="lg" onClick={handlePlaceOrder} disabled={isProcessing}>
+                    {isProcessing ? 'Обработка...' : `Подтвердить заказ (${total.toFixed(2)} BYN)`}
+                  </Button>
                 </div>
               </div>
             )}
           </div>
 
-          <aside className={styles.orderSummary} aria-label="Сводка заказа">
-            <h2 className={styles.summaryTitle}>Ваш заказ</h2>
-
+          {/* Order Summary */}
+          <aside className={styles.orderSummary}>
+            <h2>Ваш заказ</h2>
+            
             <div className={styles.summaryItems}>
-              {cartItems.map((item) => (
+              {items.slice(0, 3).map(item => (
                 <div key={item.id} className={styles.summaryItem}>
-                  <div className={styles.summaryItemImage}>
-                    {hasValidProductImage(item.imageUrl) && getProductImageUrl(item.imageUrl) ? (
-                      <img src={getProductImageUrl(item.imageUrl)!} alt={item.name} className={styles.summaryItemImg} />
-                    ) : (
-                      renderProductIcon(item.category)
-                    )}
-                  </div>
-                  <div className={styles.summaryItemInfo}>
-                    <div className={styles.summaryItemName}>{item.name}</div>
-                    <div className={styles.summaryItemQty}>{item.quantity} шт</div>
-                  </div>
+                  <span className={styles.summaryItemName}>
+                    {item.name} × {item.quantity}
+                  </span>
                   <span className={styles.summaryItemPrice}>
-                    {(item.price * item.quantity).toLocaleString('ru-BY')} BYN
+                    {(item.price * item.quantity).toFixed(2)} BYN
                   </span>
                 </div>
               ))}
+              {items.length > 3 && (
+                <div className={styles.summaryMoreItems}>
+                  ... и ещё {items.length - 3} товар(ов)
+                </div>
+              )}
             </div>
 
             <div className={styles.summaryDivider} />
 
             <div className={styles.summaryRow}>
-              <span className={styles.summaryLabel}>Товары ({totalItems})</span>
-              <span className={styles.summaryValue}>{subtotal.toLocaleString('ru-BY')} BYN</span>
+              <span>Товары ({items.length})</span>
+              <span>{subtotal.toFixed(2)} BYN</span>
             </div>
-            {discount > 0 && (
+            
+            {discountAmount > 0 && (
               <div className={styles.summaryRow}>
-                <span className={styles.summaryLabel}>Скидка ({discount}%)</span>
-                <span className={`${styles.summaryValue} ${styles.summaryValueAccent}`}>
-                  -{(subtotal - getDiscountedTotal()).toLocaleString('ru-BY')} BYN
-                </span>
+                <span>Скидка ({promoCode})</span>
+                <span className={styles.discountValue}>-{discountAmount.toFixed(2)} BYN</span>
+              </div>
+            )}
+            
+            <div className={styles.summaryRow}>
+              <span>Доставка</span>
+              <span>{deliveryCost === 0 ? 'Бесплатно' : `${deliveryCost.toFixed(2)} BYN`}</span>
+            </div>
+            
+            {subtotal < FREE_DELIVERY_THRESHOLD && deliveryData.method === 'Delivery' && (
+              <div className={styles.freeDeliveryProgress}>
+                <p className={styles.progressLabel}>
+                  До бесплатной доставки: {(FREE_DELIVERY_THRESHOLD - subtotal).toFixed(2)} BYN
+                </p>
+                <div className={styles.progressBar}>
+                  <div
+                    className={styles.progressFill}
+                    style={{ width: `${Math.min((subtotal / FREE_DELIVERY_THRESHOLD) * 100, 100)}%` }}
+                  />
+                </div>
               </div>
             )}
 
-            <div className={styles.summaryRow}>
-              <span className={styles.summaryLabel}>Доставка</span>
-              <span className={`${styles.summaryValue} ${styles.summaryValueAccent}`}>
-                {deliveryCost === 0 ? 'Бесплатно' : `${deliveryCost.toLocaleString('ru-BY')} BYN`}
-              </span>
-            </div>
-
             <div className={styles.summaryTotal}>
-              <span className={styles.totalLabel}>К оплате</span>
-              <span className={styles.totalValue}>{total.toLocaleString('ru-BY')} BYN</span>
-            </div>
-
-            {currentStep === 'confirm' && (
-              <button
-                type="button"
-                className={`${checkoutBtn()} ${styles.checkoutBtnPrimary} ${styles.checkoutBtnFull}`}
-                onClick={handlePlaceOrder}
-              >
-                Подтвердить заказ
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </button>
-            )}
-
-            <div className={styles.secureBadge}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-              Безопасная оплата по SSL
+              <span>Итого</span>
+              <span>{total.toFixed(2)} BYN</span>
             </div>
           </aside>
-        </div>
-
-        <div className={styles.checkoutMobileBar} role="region" aria-label="Итого и следующий шаг">
-          <div className={styles.checkoutMobileBarInner}>
-            <div className={styles.checkoutMobileBarTotal}>
-              <span className={styles.checkoutMobileBarLabel}>К оплате</span>
-              <span className={`${styles.checkoutMobileBarPrice} tabular-nums`}>
-                {total.toLocaleString('ru-BY')} BYN
-              </span>
-            </div>
-            {currentStep === 'shipping' && (
-              <button
-                type="button"
-                className={`${checkoutBtn()} ${styles.checkoutBtnPrimary} ${styles.checkoutMobileBarBtn}`}
-                onClick={handleNextStep}
-              >
-                Продолжить
-              </button>
-            )}
-            {currentStep === 'payment' && (
-              <button
-                type="button"
-                className={`${checkoutBtn()} ${styles.checkoutBtnPrimary} ${styles.checkoutMobileBarBtn}`}
-                onClick={handleNextStep}
-              >
-                Продолжить
-              </button>
-            )}
-            {currentStep === 'confirm' && (
-              <button
-                type="button"
-                className={`${checkoutBtn()} ${styles.checkoutBtnPrimary} ${styles.checkoutMobileBarBtn}`}
-                onClick={handlePlaceOrder}
-              >
-                Подтвердить заказ
-              </button>
-            )}
-          </div>
         </div>
       </div>
     </div>

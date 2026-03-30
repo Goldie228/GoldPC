@@ -202,7 +202,12 @@
   font-size: 1rem;
 }
 
-.removeBtn {
+.itemButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.removeBtn, .saveBtn {
   width: 2.5rem;
   height: 2.5rem;
   display: flex;
@@ -220,6 +225,12 @@
   background: rgba(239, 68, 68, 0.1);
   border-color: #ef4444;
   color: #ef4444;
+}
+
+.saveBtn:hover {
+  background: rgba(212, 165, 116, 0.1);
+  border-color: var(--gold-primary);
+  color: var(--gold-primary);
 }
 
 /* Summary Card */

@@ -4,13 +4,21 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
 namespace CatalogService.Migrations
 {
     /// <inheritdoc />
     public partial class NormalizeSpecifications : Migration
     {
+        private static readonly string[] SpecificationAttributeInsertColumns =
+        {
+            "id", "display_name", "is_multi_value", "key", "value_type",
+        };
+
+        private static readonly string[] SpecificationCanonicalInsertColumns =
+        {
+            "id", "attribute_id", "sort_order", "value_text",
+        };
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -19,7 +27,7 @@ namespace CatalogService.Migrations
                 table: "category_filter_attributes",
                 type: "uuid",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+                defaultValue: Guid.Empty);
 
             migrationBuilder.CreateTable(
                 name: "specification_attributes",
@@ -390,9 +398,10 @@ namespace CatalogService.Migrations
                 column: "attribute_id",
                 value: new Guid("40000000-0000-0000-0000-000000000022"));
 
+#pragma warning disable CA1814 // EF Core InsertData: пакетная вставка через object[,]
             migrationBuilder.InsertData(
                 table: "specification_attributes",
-                columns: new[] { "id", "display_name", "is_multi_value", "key", "value_type" },
+                columns: SpecificationAttributeInsertColumns,
                 values: new object[,]
                 {
                     { new Guid("40000000-0000-0000-0000-000000000001"), "Сокет", true, "socket", 0 },
@@ -433,7 +442,7 @@ namespace CatalogService.Migrations
 
             migrationBuilder.InsertData(
                 table: "specification_canonical_values",
-                columns: new[] { "id", "attribute_id", "sort_order", "value_text" },
+                columns: SpecificationCanonicalInsertColumns,
                 values: new object[,]
                 {
                     { new Guid("50000000-0000-0000-0000-000000000001"), new Guid("40000000-0000-0000-0000-000000000001"), 1, "AM4" },
@@ -481,6 +490,7 @@ namespace CatalogService.Migrations
                     { new Guid("50000000-0000-0000-0000-000000000043"), new Guid("40000000-0000-0000-0000-000000000013"), 1, "DDR5" },
                     { new Guid("50000000-0000-0000-0000-000000000044"), new Guid("40000000-0000-0000-0000-000000000013"), 2, "DDR4" }
                 });
+#pragma warning restore CA1814
 
             migrationBuilder.CreateIndex(
                 name: "IX_category_filter_attributes_attribute_id",

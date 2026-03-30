@@ -1,3 +1,4 @@
+using System.Globalization;
 using CatalogService.Data;
 using GoldPC.SharedKernel.DTOs;
 using CatalogService.Models;
@@ -103,8 +104,8 @@ public class ProductRepository : IProductRepository
         // Фильтрация по slug категории
         else if (!string.IsNullOrWhiteSpace(filter.Category))
         {
-            var categorySlug = filter.Category.ToLower();
-            query = query.Where(p => p.Category != null && p.Category.Slug.ToLower() == categorySlug);
+            var categorySlug = filter.Category.Trim();
+            query = query.Where(p => p.Category != null && string.Equals(p.Category.Slug, categorySlug, StringComparison.OrdinalIgnoreCase));
         }
 
         // Фильтрация по производителю(ам)
@@ -148,11 +149,11 @@ public class ProductRepository : IProductRepository
         // Поиск по названию и описанию
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
-            var searchTerm = filter.Search.ToLower();
+            var term = filter.Search.Trim();
             query = query.Where(p =>
-                p.Name.ToLower().Contains(searchTerm) ||
-                (p.Description != null && p.Description.ToLower().Contains(searchTerm)) ||
-                p.Sku.ToLower().Contains(searchTerm));
+                EF.Functions.ILike(p.Name, $"%{term}%") ||
+                (p.Description != null && EF.Functions.ILike(p.Description, $"%{term}%")) ||
+                EF.Functions.ILike(p.Sku, $"%{term}%"));
         }
 
         // Фильтрация по спецификациям (SQL)
@@ -209,7 +210,7 @@ public class ProductRepository : IProductRepository
         // Подсчёт и пагинация (без спецификаций)
         var totalCount = await query.CountAsync();
 
-        var sortDesc = filter.SortOrder?.ToLower() == "desc";
+        var sortDesc = string.Equals(filter.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
         query = ApplySorting(query, filter.SortBy, sortDesc);
 
         var items = await query
@@ -228,7 +229,7 @@ public class ProductRepository : IProductRepository
 
     private static IQueryable<Product> ApplySorting(IQueryable<Product> query, string sortBy, bool sortDesc)
     {
-        return sortBy.ToLower() switch
+        return (sortBy ?? string.Empty).ToLower(CultureInfo.InvariantCulture) switch
         {
             "price" => sortDesc ? query.OrderByDescending(p => p.Price) : query.OrderBy(p => p.Price),
             "rating" => sortDesc ? query.OrderByDescending(p => p.Rating) : query.OrderBy(p => p.Rating),
@@ -427,14 +428,19 @@ public class ProductRepository : IProductRepository
     public async Task<(decimal? Min, decimal? Max)> GetSpecificationRangeAsync(Guid categoryId, string attributeKey, ProductFilterDto? filterContext = null)
     {
         var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == attributeKey);
-        if (attr == null) return (null, null);
+        if (attr == null)
+        {
+            return (null, null);
+        }
 
         var baseProductsQuery = _readContext.Products.Where(p => p.CategoryId == categoryId && p.IsActive);
         if (filterContext != null)
         {
             var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
             if (manIds != null && manIds.Count > 0)
+            {
                 baseProductsQuery = baseProductsQuery.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
+            }
         }
         var productIds = await baseProductsQuery.Select(p => p.Id).ToListAsync();
 
@@ -442,29 +448,53 @@ public class ProductRepository : IProductRepository
         {
             foreach (var (specKey, value) in filterContext.Specifications)
             {
-                if (string.IsNullOrEmpty(specKey) || string.IsNullOrEmpty(value)) continue;
+                if (string.IsNullOrEmpty(specKey) || string.IsNullOrEmpty(value))
+                {
+                    continue;
+                }
+
                 var allowedTexts = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
-                if (allowedTexts.Count == 0) continue;
+                if (allowedTexts.Count == 0)
+                {
+                    continue;
+                }
+
                 var specAttr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == specKey);
-                if (specAttr == null) continue;
+                if (specAttr == null)
+                {
+                    continue;
+                }
+
                 var canonIds = await _readContext.SpecificationCanonicalValues
                     .Where(cv => cv.AttributeId == specAttr.Id && allowedTexts.Contains(cv.ValueText))
                     .Select(cv => cv.Id).ToListAsync();
-                if (canonIds.Count == 0) continue;
+                if (canonIds.Count == 0)
+                {
+                    continue;
+                }
+
                 productIds = await _readContext.ProductSpecificationValues
                     .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == specAttr.Id && psv.CanonicalValueId != null && canonIds.Contains(psv.CanonicalValueId!.Value))
                     .Select(psv => psv.ProductId).Distinct().ToListAsync();
             }
         }
+
         if (filterContext?.SpecificationRanges != null && filterContext.SpecificationRanges.Count > 0)
         {
             foreach (var (rangeKey, rangeStr) in filterContext.SpecificationRanges.Where(kv => kv.Key != attributeKey))
             {
-                if (string.IsNullOrEmpty(rangeKey)) continue;
+                if (string.IsNullOrEmpty(rangeKey))
+                {
+                    continue;
+                }
+
                 var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);
                 var minR = parts.Length > 0 && decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : (decimal?)null;
                 var maxR = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
-                if (!minR.HasValue && !maxR.HasValue) continue;
+                if (!minR.HasValue && !maxR.HasValue)
+                {
+                    continue;
+                }
 
                 if (string.Equals(rangeKey, "videopamyat", StringComparison.OrdinalIgnoreCase))
                 {
@@ -473,7 +503,11 @@ public class ProductRepository : IProductRepository
                 }
 
                 var rangeAttr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
-                if (rangeAttr == null) continue;
+                if (rangeAttr == null)
+                {
+                    continue;
+                }
+
                 productIds = await _readContext.ProductSpecificationValues
                     .Where(psv => productIds.Contains(psv.ProductId) && psv.AttributeId == rangeAttr.Id && psv.ValueNumber != null &&
                         (!minR.HasValue || psv.ValueNumber >= minR) &&
@@ -487,7 +521,10 @@ public class ProductRepository : IProductRepository
             .Select(psv => psv.ValueNumber!.Value)
             .ToListAsync();
 
-        if (nums.Count == 0) return (null, null);
+        if (nums.Count == 0)
+        {
+            return (null, null);
+        }
 
         // Жесткие физические границы из схемы валидации.
         var bounds = SpecificationValidation.GetRangeBounds(attributeKey);
@@ -498,7 +535,10 @@ public class ProductRepository : IProductRepository
                 .ToList();
         }
 
-        if (nums.Count == 0) return (null, null);
+        if (nums.Count == 0)
+        {
+            return (null, null);
+        }
 
         // Используем percentile-based aggregation для фильтрации выбросов
         // Min: 1-й перцентиль (отсекаем нижние 1% - возможные ошибки парсинга)
@@ -511,8 +551,8 @@ public class ProductRepository : IProductRepository
         if (count <= 10)
         {
             // Если значений мало, используем голые Min/Max
-            min = sortedNums.First();
-            max = sortedNums.Last();
+            min = sortedNums[0];
+            max = sortedNums[count - 1];
         }
         else
         {
@@ -632,8 +672,11 @@ public class ProductRepository : IProductRepository
             product.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             
-            _logger.LogInformation("Updated stock for product {ProductId} by {Quantity}. New stock: {Stock}", 
-                id, quantity, product.Stock);
+            _logger.LogInformation(
+                "Updated stock for product {ProductId} by {Quantity}. New stock: {Stock}",
+                id,
+                quantity,
+                product.Stock);
         }
     }
 

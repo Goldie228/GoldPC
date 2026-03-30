@@ -20,6 +20,8 @@ const CartPage = lazy(() => import('./pages/CartPage/CartPage').then(m => ({ def
 const WishlistPage = lazy(() => import('./pages/WishlistPage/WishlistPage').then(m => ({ default: m.WishlistPage })));
 const ComparisonPage = lazy(() => import('./pages/ComparisonPage/ComparisonPage').then(m => ({ default: m.ComparisonPage })));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
+const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage/OrderSuccessPage').then(m => ({ default: m.OrderSuccessPage })));
+const OrderTrackingPage = lazy(() => import('./pages/OrderTrackingPage/OrderTrackingPage').then(m => ({ default: m.OrderTrackingPage })));
 const LoginPage = lazy(() => import('./pages/LoginPage/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage/AboutPage').then(m => ({ default: m.AboutPage })));
@@ -233,6 +235,8 @@ const router = createBrowserRouter([
           { path: '/accountant/export', element: <ExportPage /> },
         ],
       },
+      { path: '/orders/:orderNumber/success', element: <OrderSuccessPage /> },
+      { path: '/orders/:orderNumber/tracking', element: <OrderTrackingPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

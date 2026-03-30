@@ -1,0 +1,90 @@
+.mapContainer {
+  margin: 16px 0;
+  /* Контейнер карты остаётся в обычном потоке без собственного z-index,
+     чтобы не перекрывать фиксированный header */
+}
+
+.map {
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  z-index: 0;
+}
+
+.hint {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--fg-muted, #71717a);
+  text-align: center;
+}
+
+.popupContent {
+  padding: 8px;
+}
+
+.popupContent h4 {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--fg, #fafafa);
+}
+
+.popupContent p {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  color: var(--fg-muted, #71717a);
+}
+
+.workingHours {
+  color: var(--fg-muted, #71717a);
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.pointsList {
+  margin-top: 16px;
+}
+
+.pointsListTitle {
+  margin-bottom: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--fg-muted, #71717a);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pointItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: var(--bg-elevated, #121214);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.pointItem:hover {
+  border-color: rgba(212, 165, 116, 0.3);
+  background: rgba(212, 165, 116, 0.05);
+}
+
+.pointItem strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--fg, #fafafa);
+  font-size: 0.9rem;
+}
+
+.pointItem span {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--fg-muted, #71717a);
+  margin-bottom: 4px;
+}

@@ -170,7 +170,10 @@ public class OrdersService : IOrdersService
         // Расчёт стоимости товаров и доставки
         var subtotal = request.Items.Sum(i => i.Quantity * i.UnitPrice);
         var deliveryCost = CalculateDeliveryCost(request.DeliveryMethod, subtotal, request.City);
-        var total = subtotal + deliveryCost;
+        
+        // Применение скидки по промокоду
+        var discountAmount = request.DiscountAmount;
+        var total = subtotal - discountAmount + deliveryCost;
         
         // Валидация общей стоимости
         if (total < 0)
@@ -183,11 +186,19 @@ public class OrdersService : IOrdersService
             Id = Guid.NewGuid(),
             OrderNumber = orderNumber,
             UserId = userId,
+            CustomerFirstName = request.FirstName,
+            CustomerLastName = request.LastName,
+            CustomerPhone = request.Phone,
+            CustomerEmail = request.Email,
             Status = OrderStatus.New,
             DeliveryMethod = request.DeliveryMethod,
             PaymentMethod = request.PaymentMethod,
             Address = request.Address,
             Comment = request.Comment,
+            PromoCode = request.PromoCode,
+            DiscountAmount = discountAmount,
+            DeliveryDate = request.DeliveryDate,
+            DeliveryTimeSlot = request.DeliveryTimeSlot,
             Subtotal = subtotal,
             DeliveryCost = deliveryCost,
             Total = total,
@@ -445,7 +456,8 @@ public class OrdersService : IOrdersService
             return 0m;
         }
 
-        if (subtotal >= 1500m)
+        // Бесплатная доставка при заказе от 200 BYN
+        if (subtotal >= 200m)
         {
             return 0m;
         }
@@ -453,10 +465,11 @@ public class OrdersService : IOrdersService
         var cityNormalized = city?.Trim().ToLowerInvariant();
         if (string.IsNullOrEmpty(cityNormalized))
         {
-            return 20m;
+            return 10m;
         }
 
-        return cityNormalized == "минск" || cityNormalized == "minsk" ? 10m : 20m;
+        // Минск: 5 BYN, другие города: 10 BYN
+        return cityNormalized == "минск" || cityNormalized == "minsk" ? 5m : 10m;
     }
 
     private static bool IsValidStatusTransition(OrderStatus from, OrderStatus to)
@@ -481,13 +494,22 @@ public class OrdersService : IOrdersService
             Id = order.Id,
             UserId = order.UserId,
             OrderNumber = order.OrderNumber,
+            CustomerFirstName = order.CustomerFirstName,
+            CustomerLastName = order.CustomerLastName,
+            CustomerPhone = order.CustomerPhone,
+            CustomerEmail = order.CustomerEmail,
             Status = order.Status,
             Total = order.Total,
             Subtotal = order.Subtotal,
             DeliveryCost = order.DeliveryCost,
+            DiscountAmount = order.DiscountAmount,
             DeliveryMethod = order.DeliveryMethod,
             PaymentMethod = order.PaymentMethod,
             Address = order.Address,
+            PromoCode = order.PromoCode,
+            DeliveryDate = order.DeliveryDate,
+            DeliveryTimeSlot = order.DeliveryTimeSlot,
+            TrackingNumber = order.TrackingNumber,
             CreatedAt = order.CreatedAt,
             UpdatedAt = order.UpdatedAt,
             Items = order.Items?.Select(oi => new OrderItemDto

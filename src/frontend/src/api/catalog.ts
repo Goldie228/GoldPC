@@ -32,7 +32,27 @@ const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
 /**
  * API сервиса каталога
  */
+export interface StockCheckRequest {
+  productId: string;
+  quantity: number;
+}
+
+export interface StockCheckResponse {
+  productId: string;
+  available: boolean;
+  availableQuantity: number;
+  message?: string;
+}
+
 export const catalogApi = {
+  /**
+   * Проверка наличия товаров на складе
+   */
+  async checkStock(items: StockCheckRequest[]): Promise<StockCheckResponse[]> {
+    const response = await api.post<StockCheckResponse[]>('/catalog/products/check-stock', items);
+    return response.data;
+  },
+
   /**
    * Получить список товаров с пагинацией и фильтрацией
    * specifications и specificationRanges сериализуются в формат specifications[key]=value для ASP.NET binding

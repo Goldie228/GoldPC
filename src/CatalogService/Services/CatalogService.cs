@@ -12,6 +12,7 @@ namespace CatalogService.Services;
 /// <summary>
 /// Реализация сервиса каталога
 /// </summary>
+#pragma warning disable CA1724 // Имя совпадает с пространством имён CatalogService — публичный контракт ICatalogService
 public class CatalogService : ICatalogService
 {
     private readonly IProductRepository _productRepository;
@@ -36,8 +37,6 @@ public class CatalogService : ICatalogService
         _logger = logger;
         _cache = cache;
     }
-
-    #region Products
 
     public async Task<PagedResult<ProductListDto>> GetProductsAsync(ProductFilterDto filter)
     {
@@ -94,7 +93,9 @@ public class CatalogService : ICatalogService
     {
         var normalized = slug?.Trim() ?? string.Empty;
         if (string.IsNullOrEmpty(normalized))
+        {
             return null;
+        }
 
         var product = await _productRepository.GetDetailBySlugAsync(normalized);
         return product != null ? MapToDetailDto(product) : null;
@@ -104,10 +105,15 @@ public class CatalogService : ICatalogService
     {
         var normalizedInput = sku?.Trim() ?? string.Empty;
         if (string.IsNullOrEmpty(normalizedInput))
+        {
             return null;
+        }
 
         var product = await _productRepository.GetBySkuAsync(normalizedInput);
-        if (product == null) return null;
+        if (product == null)
+        {
+            return null;
+        }
         
         var detailedProduct = await _productRepository.GetDetailByIdAsync(product.Id);
         return detailedProduct != null ? MapToDetailDto(detailedProduct) : null;
@@ -220,10 +226,6 @@ public class CatalogService : ICatalogService
         return products.Select(MapToListDto);
     }
 
-    #endregion
-
-    #region Categories
-
     public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
     {
         var cacheKey = "all_categories";
@@ -269,7 +271,9 @@ public class CatalogService : ICatalogService
     {
         var category = await _categoryRepository.GetBySlugAsync(categorySlug);
         if (category == null)
+        {
             return Array.Empty<FilterAttributeDto>();
+        }
 
         var attributes = await _categoryRepository.GetFilterAttributesByCategorySlugAsync(categorySlug);
         var selectKeys = attributes.Where(a => a.FilterType == FilterAttributeType.Select).Select(a => a.AttributeKey).ToList();
@@ -301,7 +305,7 @@ public class CatalogService : ICatalogService
             // Глобально: исключаем значения с HTML-мусором (<, >) для всех select
             if (a.FilterType == FilterAttributeType.Select)
             {
-                values = values.Where(v => v != null && !v.Contains('<') && !v.Contains('>')).ToList();
+                values = values.Where(v => v != null && !v.Contains('<', StringComparison.Ordinal) && !v.Contains('>', StringComparison.Ordinal)).ToList();
             }
 
             // PSU efficiency: исключаем обрезки вроде (230V EU)
@@ -312,17 +316,19 @@ public class CatalogService : ICatalogService
 
             // Значения из canonical — уже нормализованы. Минимальная постобработка.
             values = values
-                .Select(v => string.IsNullOrEmpty(v) ? null : v.Replace("\n", " ").Replace("\r", "").Trim())
+                .Select(v => string.IsNullOrEmpty(v) ? null : v.Replace("\n", " ", StringComparison.Ordinal).Replace("\r", string.Empty, StringComparison.Ordinal).Trim())
                 .Select(v => NormalizeBooleanDisplay(v))
                 .Where(v => !string.IsNullOrEmpty(v))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(v => v == "Нет" ? 0 : (v == "Есть" ? 1 : 2))
+                .OrderBy(BooleanDisplaySortKey)
                 .ThenBy(v => v)
                 .ToList();
 
             // Не отдаём select-атрибуты с пустым списком значений (например sensor_type для mice)
             if (a.FilterType == FilterAttributeType.Select && !values.Any())
+            {
                 continue;
+            }
 
             result.Add(new FilterAttributeDto
             {
@@ -342,7 +348,9 @@ public class CatalogService : ICatalogService
     {
         var category = await _categoryRepository.GetBySlugAsync(categorySlug);
         if (category == null)
+        {
             return Array.Empty<FilterFacetAttributeDto>();
+        }
 
         var attributes = await _categoryRepository.GetFilterAttributesByCategorySlugAsync(categorySlug);
 
@@ -362,7 +370,10 @@ public class CatalogService : ICatalogService
             if (a.FilterType == FilterAttributeType.Range)
             {
                 var (minVal, maxVal) = await _productRepository.GetSpecificationRangeAsync(category.Id, a.AttributeKey, filterContext);
-                if (minVal == null && maxVal == null) continue;
+                if (minVal == null && maxVal == null)
+                {
+                    continue;
+                }
 
                 // Конвертация videopamyat из МБ (базовая единица) в ГБ для UI
                 if (a.AttributeKey.Equals("videopamyat", StringComparison.OrdinalIgnoreCase))
@@ -390,16 +401,19 @@ public class CatalogService : ICatalogService
 
             // Post-processing same as v1
             allValues = allValues
-                .Where(v => v != null && !v.Contains('<') && !v.Contains('>'))
-                .Select(v => string.IsNullOrEmpty(v) ? null : v.Replace("\n", " ").Replace("\r", "").Trim())
+                .Where(v => v != null && !v.Contains('<', StringComparison.Ordinal) && !v.Contains('>', StringComparison.Ordinal))
+                .Select(v => string.IsNullOrEmpty(v) ? null : v.Replace("\n", " ", StringComparison.Ordinal).Replace("\r", string.Empty, StringComparison.Ordinal).Trim())
                 .Select(v => NormalizeBooleanDisplay(v))
                 .Where(v => !string.IsNullOrEmpty(v))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(v => v == "Нет" ? 0 : (v == "Есть" ? 1 : 2))
+                .OrderBy(BooleanDisplaySortKey)
                 .ThenBy(v => v)
                 .ToList()!;
 
-            if (allValues.Count == 0) continue;
+            if (allValues.Count == 0)
+            {
+                continue;
+            }
 
             var rawCounts = await _productRepository.GetSpecificationValueCountsAsync(category.Id, a.AttributeKey, filterContext);
             var counts = rawCounts
@@ -440,10 +454,6 @@ public class CatalogService : ICatalogService
         return MapToCategoryDto(created);
     }
 
-    #endregion
-
-    #region Manufacturers
-
     public async Task<IEnumerable<ManufacturerDto>> GetManufacturersAsync()
     {
         var manufacturers = await _manufacturerRepository.GetAllAsync();
@@ -480,10 +490,6 @@ public class CatalogService : ICatalogService
         var created = await _manufacturerRepository.CreateAsync(manufacturer);
         return MapToManufacturerDto(created);
     }
-
-    #endregion
-
-    #region Reviews
 
     public async Task<ReviewDto> CreateReviewAsync(Guid productId, Guid userId, CreateReviewDto dto)
     {
@@ -535,6 +541,7 @@ public class CatalogService : ICatalogService
     public async Task<(bool Success, string? Error)> ReserveStockAsync(IEnumerable<(Guid ProductId, int Quantity)> items)
     {
         using var transaction = await _productRepository.BeginTransactionAsync();
+#pragma warning disable CA1031
         try
         {
             foreach (var item in items)
@@ -564,11 +571,13 @@ public class CatalogService : ICatalogService
             _logger.LogError(ex, "Ошибка при резервировании товара");
             return (false, "Внутренняя ошибка при резервировании товара");
         }
+#pragma warning restore CA1031
     }
 
     public async Task<(bool Success, string? Error)> ReleaseStockAsync(IEnumerable<(Guid ProductId, int Quantity)> items)
     {
         using var transaction = await _productRepository.BeginTransactionAsync();
+#pragma warning disable CA1031
         try
         {
             foreach (var item in items)
@@ -585,6 +594,7 @@ public class CatalogService : ICatalogService
             _logger.LogError(ex, "Ошибка при возврате товара на склад");
             return (false, "Внутренняя ошибка при возврате товара на склад");
         }
+#pragma warning restore CA1031
     }
 
     private async Task UpdateProductRatingAsync(Guid productId)
@@ -601,16 +611,14 @@ public class CatalogService : ICatalogService
         }
     }
 
-    #endregion
-
-    #region Mapping
-
     private const int DescriptionShortMaxLength = 300;
 
     private static string BuildSlug(string? raw, string fallback)
     {
         var source = string.IsNullOrWhiteSpace(raw) ? fallback : raw;
+#pragma warning disable CA1308 // Slug для URL в нижнем регистре
         var slug = Regex.Replace(source.ToLowerInvariant(), @"[^a-z0-9]+", "_");
+#pragma warning restore CA1308
         slug = Regex.Replace(slug, @"_+", "_").Trim('_');
         return string.IsNullOrWhiteSpace(slug) ? $"product_{Guid.NewGuid():N}" : slug;
     }
@@ -634,11 +642,13 @@ public class CatalogService : ICatalogService
 
     private static ProductListDto MapToListDto(Product product)
     {
-        var descShort = !string.IsNullOrEmpty(product.Description)
-            ? (product.Description.Length > DescriptionShortMaxLength
+        string? descShort = null;
+        if (!string.IsNullOrEmpty(product.Description))
+        {
+            descShort = product.Description.Length > DescriptionShortMaxLength
                 ? product.Description[..DescriptionShortMaxLength].TrimEnd() + "…"
-                : product.Description)
-            : null;
+                : product.Description;
+        }
 
         return new ProductListDto
         {
@@ -770,15 +780,37 @@ public class CatalogService : ICatalogService
     private static string? NormalizeBooleanDisplay(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return value;
-
-        return value.Trim().ToLowerInvariant() switch
         {
-            "true" or "1" or "yes" => "Да",
-            "false" or "0" or "no" => "Нет",
-            _ => value
-        };
+            return value;
+        }
+
+        var t = value.Trim();
+        if (string.Equals(t, "true", StringComparison.OrdinalIgnoreCase) || t == "1" || string.Equals(t, "yes", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Да";
+        }
+
+        if (string.Equals(t, "false", StringComparison.OrdinalIgnoreCase) || t == "0" || string.Equals(t, "no", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Нет";
+        }
+
+        return value;
     }
 
-    #endregion
+    private static int BooleanDisplaySortKey(string? v)
+    {
+        if (v == "Нет")
+        {
+            return 0;
+        }
+
+        if (v == "Есть")
+        {
+            return 1;
+        }
+
+        return 2;
+    }
+#pragma warning restore CA1724
 }

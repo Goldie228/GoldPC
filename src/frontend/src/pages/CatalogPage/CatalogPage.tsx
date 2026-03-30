@@ -15,7 +15,7 @@ import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { catalogApi } from '../../api/catalog';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
-import type { Product, ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
+import type { ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
 import { ProductQuickViewContent } from '../../components/product/ProductQuickViewContent';

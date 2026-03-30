@@ -64,6 +64,11 @@ public class User : BaseEntity
     public ICollection<WishlistItem> WishlistItems { get; set; } = new List<WishlistItem>();
     
     /// <summary>
+    /// Адреса доставки пользователя
+    /// </summary>
+    public ICollection<UserAddress> Addresses { get; set; } = new List<UserAddress>();
+    
+    /// <summary>
     /// Полное имя
     /// </summary>
     public string FullName => $"{FirstName} {LastName}";

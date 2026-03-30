@@ -289,10 +289,12 @@ public class AdminCatalogController : ControllerBase
 [Authorize(Roles = "Admin")]
 public class AdminDataController : ControllerBase
 {
+    private readonly ICatalogService _catalogService;
     private readonly ILogger<AdminDataController> _logger;
 
-    public AdminDataController(ILogger<AdminDataController> logger)
+    public AdminDataController(ICatalogService catalogService, ILogger<AdminDataController> logger)
     {
+        _catalogService = catalogService;
         _logger = logger;
     }
 
@@ -432,6 +434,58 @@ public class AdminDataController : ControllerBase
             TotalMessage = $"All migrations completed successfully. Frequencies fixed: {frequencies.FixedCount}, VRAM fixed: {vram.FixedCount}"
         });
     }
+
+    /// <summary>
+    /// Проверка наличия товаров на складе
+    /// </summary>
+    [HttpPost("products/check-stock")]
+    [ProducesResponseType(typeof(List<StockCheckResponseDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<StockCheckResponseDto>>> CheckStock([FromBody] List<StockCheckRequestDto> items)
+    {
+        var results = new List<StockCheckResponseDto>();
+
+        foreach (var item in items)
+        {
+            var product = await _catalogService.GetProductByIdAsync(item.ProductId);
+            
+            if (product == null)
+            {
+                results.Add(new StockCheckResponseDto
+                {
+                    ProductId = item.ProductId,
+                    Available = false,
+                    AvailableQuantity = 0,
+                    Message = "Товар не найден"
+                });
+                continue;
+            }
+
+            var available = product.Stock >= item.Quantity;
+            results.Add(new StockCheckResponseDto
+            {
+                ProductId = item.ProductId,
+                Available = available,
+                AvailableQuantity = product.Stock,
+                Message = available ? "В наличии" : $"Доступно только {product.Stock} шт."
+            });
+        }
+
+        return Ok(results);
+    }
+}
+
+public record StockCheckRequestDto
+{
+    public Guid ProductId { get; init; }
+    public int Quantity { get; init; }
+}
+
+public record StockCheckResponseDto
+{
+    public Guid ProductId { get; init; }
+    public bool Available { get; init; }
+    public int AvailableQuantity { get; init; }
+    public string Message { get; init; } = string.Empty;
 }
 
 public record MigrationResultDto

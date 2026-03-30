@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef, type ReactElement } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   ShoppingBag, 
   Trash2, 
   Minus, 
@@ -15,12 +15,15 @@ import {
   Truck,
   ShieldCheck,
   RotateCcw,
-  Package
+  Package,
+  Heart
 } from 'lucide-react';
 import { useCart } from '../../hooks/useCart';
 import { hasValidProductImage } from '../../utils/image';
 import { useToastStore } from '../../store/toastStore';
+import { useWishlistStore } from '../../store/wishlistStore';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
+import { RelatedProducts } from '../../components/cart/RelatedProducts';
 import styles from './CartPage.module.css';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -126,6 +129,7 @@ function EmptyCart(): ReactElement {
  * Страница корзины (Shopping Cart Page)
  */
 export function CartPage(): ReactElement {
+  const navigate = useNavigate();
   const {
     items,
     isEmpty,
@@ -137,11 +141,12 @@ export function CartPage(): ReactElement {
     discount,
     removeFromCart,
     changeQuantity,
-    applyPromo,
+    validateAndApplyPromo,
     clearPromoCode,
   } = useCart();
 
   const showToast = useToastStore((state) => state.showToast);
+  const addToWishlist = useWishlistStore((state) => state.addItem);
   const [promoInput, setPromoInput] = useState('');
   const [promoError, setPromoError] = useState(false);
   const [totalFlash, setTotalFlash] = useState(false);
@@ -157,14 +162,15 @@ export function CartPage(): ReactElement {
     if (!promoCode) prevPromoRef.current = null;
   }, [promoCode]);
 
-  const handleApplyPromo = (): void => {
-    if (applyPromo(promoInput)) {
+  const handleApplyPromo = async (): Promise<void> => {
+    const result = await validateAndApplyPromo(promoInput);
+    if (result.success) {
       setPromoError(false);
       setPromoInput('');
-      showToast('Промокод успешно применен!', 'success');
+      showToast(result.message, 'success');
     } else {
       setPromoError(true);
-      showToast('Неверный промокод', 'error');
+      showToast(result.message, 'error');
     }
   };
 
@@ -183,6 +189,18 @@ export function CartPage(): ReactElement {
   const handleRemoveItem = (productId: string, name: string): void => {
     removeFromCart(productId);
     showToast(`${name} удален из корзины`, 'info');
+  };
+
+  const handleSaveForLater = (productId: string, name: string): void => {
+    addToWishlist(productId);
+    removeFromCart(productId);
+    showToast(`${name} перемещен в избранное`, 'success');
+  };
+
+  const handleCheckout = (): void => {
+    // Переход к оформлению
+    // В реальном проекте здесь была бы проверка наличия через API
+    navigate('/checkout');
   };
 
   if (isEmpty) {
@@ -269,14 +287,25 @@ export function CartPage(): ReactElement {
                       <span className={styles.pricePerItem}>{item.price.toLocaleString('ru-BY')} BYN / шт</span>
                     )}
                   </div>
-                  <button 
-                    className={styles.removeBtn}
-                    onClick={() => handleRemoveItem(item.productId, item.name)}
-                    aria-label="Удалить товар"
-                    type="button"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                  <div className={styles.itemButtons}>
+                    <button 
+                      className={styles.saveBtn}
+                      onClick={() => handleSaveForLater(item.productId, item.name)}
+                      aria-label="Отложить в избранное"
+                      type="button"
+                      title="Отложить в избранное"
+                    >
+                      <Heart size={18} />
+                    </button>
+                    <button 
+                      className={styles.removeBtn}
+                      onClick={() => handleRemoveItem(item.productId, item.name)}
+                      aria-label="Удалить товар"
+                      type="button"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -338,10 +367,10 @@ export function CartPage(): ReactElement {
             </span>
           </div>
 
-          <Link to="/checkout" className={styles.checkoutBtn}>
+          <button onClick={handleCheckout} className={styles.checkoutBtn}>
             Перейти к оформлению
             <ArrowRight size={20} />
-          </Link>
+          </button>
 
           <Link to="/catalog" className={styles.continueBtn}>
             <RotateCcw size={18} />
@@ -394,6 +423,11 @@ export function CartPage(): ReactElement {
           </div>
         </aside>
       </div>
+
+      {/* Рекомендации */}
+      <RelatedProducts 
+        cartItems={items.map(item => ({ productId: item.productId, name: item.name }))}
+      />
     </div>
   );
 }
