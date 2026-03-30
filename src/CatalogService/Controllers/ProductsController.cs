@@ -280,3 +280,172 @@ public class AdminCatalogController : ControllerBase
         return NoContent();
     }
 }
+
+/// <summary>
+/// Контроллер для административных операций с данными (миграции, исправления)
+/// </summary>
+[ApiController]
+[Route("api/v1/admin/data")]
+[Authorize(Roles = "Admin")]
+public class AdminDataController : ControllerBase
+{
+    private readonly ILogger<AdminDataController> _logger;
+
+    public AdminDataController(ILogger<AdminDataController> logger)
+    {
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Запустить миграцию для исправления выбросов в Range-атрибутах
+    /// </summary>
+    [HttpPost("migrate/fix-range-outliers")]
+    [ProducesResponseType(typeof(MigrationResultDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<MigrationResultDto>> FixRangeOutliers([FromServices] CatalogService.Services.SpecificationDataMigration migrationService)
+    {
+        _logger.LogInformation("Starting range outliers migration");
+        var result = await migrationService.FixRangeOutliersAsync();
+        
+        return Ok(new MigrationResultDto
+        {
+            Valid = result.ValidCount,
+            Fixed = result.FixedCount,
+            Removed = result.RemovedCount,
+            Message = $"Migration completed. Valid: {result.ValidCount}, Fixed: {result.FixedCount}, Removed: {result.RemovedCount}"
+        });
+    }
+
+    /// <summary>
+    /// Запустить миграцию для удаления leaked values из Terms-атрибутов
+    /// </summary>
+    [HttpPost("migrate/remove-leaked-values")]
+    [ProducesResponseType(typeof(MigrationResultDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<MigrationResultDto>> RemoveLeakedValues([FromServices] CatalogService.Services.SpecificationDataMigration migrationService)
+    {
+        _logger.LogInformation("Starting leaked values removal migration");
+        var result = await migrationService.RemoveLeakedValuesAsync();
+        
+        return Ok(new MigrationResultDto
+        {
+            Valid = result.ValidCount,
+            Fixed = 0,
+            Removed = result.RemovedCount,
+            Message = $"Migration completed. Valid: {result.ValidCount}, Removed: {result.RemovedCount}"
+        });
+    }
+
+    /// <summary>
+    /// Запустить миграцию для нормализации дубликатов в Terms-атрибутах
+    /// </summary>
+    [HttpPost("migrate/normalize-duplicates")]
+    [ProducesResponseType(typeof(MigrationResultDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<MigrationResultDto>> NormalizeDuplicates([FromServices] CatalogService.Services.SpecificationDataMigration migrationService)
+    {
+        _logger.LogInformation("Starting duplicates normalization migration");
+        var result = await migrationService.NormalizeDuplicatesAsync();
+        
+        return Ok(new MigrationResultDto
+        {
+            Valid = result.ValidCount,
+            Fixed = result.FixedCount,
+            Removed = 0,
+            Message = $"Migration completed. Valid: {result.ValidCount}, Merged: {result.FixedCount}"
+        });
+    }
+
+    /// <summary>
+    /// Пересчитать частоты процессоров из МГц в ГГц
+    /// </summary>
+    [HttpPost("migrate/recalculate-frequencies")]
+    [ProducesResponseType(typeof(MigrationResultDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<MigrationResultDto>> RecalculateFrequencies([FromServices] CatalogService.Services.SpecificationDataMigration migrationService)
+    {
+        _logger.LogInformation("Starting processor frequencies recalculation migration");
+        var result = await migrationService.RecalculateProcessorFrequenciesAsync();
+        
+        return Ok(new MigrationResultDto
+        {
+            Valid = result.ValidCount,
+            Fixed = result.FixedCount,
+            Removed = 0,
+            Message = $"Frequencies recalculated. Valid: {result.ValidCount}, Fixed: {result.FixedCount}"
+        });
+    }
+
+    /// <summary>
+    /// Пересчитать видеопамять из ГБ в МБ
+    /// </summary>
+    [HttpPost("migrate/recalculate-vram")]
+    [ProducesResponseType(typeof(MigrationResultDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<MigrationResultDto>> RecalculateVram([FromServices] CatalogService.Services.SpecificationDataMigration migrationService)
+    {
+        _logger.LogInformation("Starting video memory recalculation migration");
+        var result = await migrationService.RecalculateVideoMemoryAsync();
+        
+        return Ok(new MigrationResultDto
+        {
+            Valid = result.ValidCount,
+            Fixed = result.FixedCount,
+            Removed = 0,
+            Message = $"Video memory recalculated. Valid: {result.ValidCount}, Fixed: {result.FixedCount}"
+        });
+    }
+
+    /// <summary>
+    /// Запустить все миграции последовательно
+    /// </summary>
+    [HttpPost("migrate/all")]
+    [ProducesResponseType(typeof(AllMigrationsResultDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<AllMigrationsResultDto>> RunAllMigrations([FromServices] CatalogService.Services.SpecificationDataMigration migrationService)
+    {
+        _logger.LogInformation("Starting all migrations");
+        
+        var frequencies = await migrationService.RecalculateProcessorFrequenciesAsync();
+        var vram = await migrationService.RecalculateVideoMemoryAsync();
+        var outliers = await migrationService.FixRangeOutliersAsync();
+        var leaked = await migrationService.RemoveLeakedValuesAsync();
+        var duplicates = await migrationService.NormalizeDuplicatesAsync();
+        
+        return Ok(new AllMigrationsResultDto
+        {
+            RangeOutliers = new MigrationResultDto
+            {
+                Valid = outliers.ValidCount,
+                Fixed = outliers.FixedCount,
+                Removed = outliers.RemovedCount,
+                Message = "Range outliers fixed"
+            },
+            LeakedValues = new MigrationResultDto
+            {
+                Valid = leaked.ValidCount,
+                Fixed = 0,
+                Removed = leaked.RemovedCount,
+                Message = "Leaked values removed"
+            },
+            Duplicates = new MigrationResultDto
+            {
+                Valid = duplicates.ValidCount,
+                Fixed = duplicates.FixedCount,
+                Removed = 0,
+                Message = "Duplicates normalized"
+            },
+            TotalMessage = $"All migrations completed successfully. Frequencies fixed: {frequencies.FixedCount}, VRAM fixed: {vram.FixedCount}"
+        });
+    }
+}
+
+public record MigrationResultDto
+{
+    public int Valid { get; init; }
+    public int Fixed { get; init; }
+    public int Removed { get; init; }
+    public string Message { get; init; } = string.Empty;
+}
+
+public record AllMigrationsResultDto
+{
+    public MigrationResultDto RangeOutliers { get; init; } = new();
+    public MigrationResultDto LeakedValues { get; init; } = new();
+    public MigrationResultDto Duplicates { get; init; } = new();
+    public string TotalMessage { get; init; } = string.Empty;
+}

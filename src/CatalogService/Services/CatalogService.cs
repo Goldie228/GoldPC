@@ -313,6 +313,7 @@ public class CatalogService : ICatalogService
             // Значения из canonical — уже нормализованы. Минимальная постобработка.
             values = values
                 .Select(v => string.IsNullOrEmpty(v) ? null : v.Replace("\n", " ").Replace("\r", "").Trim())
+                .Select(v => NormalizeBooleanDisplay(v))
                 .Where(v => !string.IsNullOrEmpty(v))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(v => v == "Нет" ? 0 : (v == "Есть" ? 1 : 2))
@@ -363,6 +364,13 @@ public class CatalogService : ICatalogService
                 var (minVal, maxVal) = await _productRepository.GetSpecificationRangeAsync(category.Id, a.AttributeKey, filterContext);
                 if (minVal == null && maxVal == null) continue;
 
+                // Конвертация videopamyat из МБ (базовая единица) в ГБ для UI
+                if (a.AttributeKey.Equals("videopamyat", StringComparison.OrdinalIgnoreCase))
+                {
+                    minVal = minVal.HasValue ? minVal.Value / 1024m : null;
+                    maxVal = maxVal.HasValue ? maxVal.Value / 1024m : null;
+                }
+
                 result.Add(new FilterFacetAttributeDto
                 {
                     Key = a.AttributeKey,
@@ -384,6 +392,7 @@ public class CatalogService : ICatalogService
             allValues = allValues
                 .Where(v => v != null && !v.Contains('<') && !v.Contains('>'))
                 .Select(v => string.IsNullOrEmpty(v) ? null : v.Replace("\n", " ").Replace("\r", "").Trim())
+                .Select(v => NormalizeBooleanDisplay(v))
                 .Where(v => !string.IsNullOrEmpty(v))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(v => v == "Нет" ? 0 : (v == "Есть" ? 1 : 2))
@@ -392,7 +401,10 @@ public class CatalogService : ICatalogService
 
             if (allValues.Count == 0) continue;
 
-            var counts = await _productRepository.GetSpecificationValueCountsAsync(category.Id, a.AttributeKey, filterContext);
+            var rawCounts = await _productRepository.GetSpecificationValueCountsAsync(category.Id, a.AttributeKey, filterContext);
+            var counts = rawCounts
+                .GroupBy(kv => NormalizeBooleanDisplay(kv.Key) ?? kv.Key, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Value), StringComparer.OrdinalIgnoreCase);
 
             var options = allValues.Select(v => new FilterFacetOptionDto
             {
@@ -752,6 +764,19 @@ public class CatalogService : ICatalogService
             IsApproved = review.IsApproved,
             Helpful = review.Helpful,
             CreatedAt = review.CreatedAt
+        };
+    }
+
+    private static string? NormalizeBooleanDisplay(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return value;
+
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "true" or "1" or "yes" => "Да",
+            "false" or "0" or "no" => "Нет",
+            _ => value
         };
     }
 

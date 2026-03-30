@@ -96,6 +96,7 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 // Регистрация сервисов
 builder.Services.AddScoped<CatalogService.Services.SpecImportNormalizer>();
 builder.Services.AddScoped<CatalogService.Services.ManufacturerDetector>();
+builder.Services.AddScoped<CatalogService.Services.SpecificationDataMigration>();
 builder.Services.AddScoped<ICatalogService, CatalogService.Services.CatalogService>();
 builder.Services.AddScoped<CatalogService.Services.CatalogJsonImporter>();
 builder.Services.AddScoped<CatalogService.Services.FilterAttributesSeeder>();

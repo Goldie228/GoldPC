@@ -189,6 +189,13 @@ public class ProductRepository : IProductRepository
                 var max = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
                 if (!min.HasValue && !max.HasValue) continue;
 
+                // UI работает в ГБ, в базе videopamyat хранится в МБ.
+                if (string.Equals(key, "videopamyat", StringComparison.OrdinalIgnoreCase))
+                {
+                    min = min.HasValue ? min.Value * 1024m : null;
+                    max = max.HasValue ? max.Value * 1024m : null;
+                }
+
                 var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == key);
                 if (attr == null) continue;
 
@@ -302,6 +309,13 @@ public class ProductRepository : IProductRepository
                 var min = parts.Length > 0 && decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : (decimal?)null;
                 var max = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
                 if (!min.HasValue && !max.HasValue) continue;
+
+                if (string.Equals(rangeKey, "videopamyat", StringComparison.OrdinalIgnoreCase))
+                {
+                    min = min.HasValue ? min.Value * 1024m : null;
+                    max = max.HasValue ? max.Value * 1024m : null;
+                }
+
                 var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
                 if (attr == null) continue;
                 productIds = await _readContext.ProductSpecificationValues
@@ -377,6 +391,13 @@ public class ProductRepository : IProductRepository
                 var min = parts.Length > 0 && decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : (decimal?)null;
                 var max = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
                 if (!min.HasValue && !max.HasValue) continue;
+
+                if (string.Equals(rangeKey, "videopamyat", StringComparison.OrdinalIgnoreCase))
+                {
+                    min = min.HasValue ? min.Value * 1024m : null;
+                    max = max.HasValue ? max.Value * 1024m : null;
+                }
+
                 var rangeAttr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
                 if (rangeAttr == null) continue;
                 productIds = await _readContext.ProductSpecificationValues
@@ -444,6 +465,13 @@ public class ProductRepository : IProductRepository
                 var minR = parts.Length > 0 && decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m) ? m : (decimal?)null;
                 var maxR = parts.Length > 1 && decimal.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var x) ? x : (decimal?)null;
                 if (!minR.HasValue && !maxR.HasValue) continue;
+
+                if (string.Equals(rangeKey, "videopamyat", StringComparison.OrdinalIgnoreCase))
+                {
+                    minR = minR.HasValue ? minR.Value * 1024m : null;
+                    maxR = maxR.HasValue ? maxR.Value * 1024m : null;
+                }
+
                 var rangeAttr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
                 if (rangeAttr == null) continue;
                 productIds = await _readContext.ProductSpecificationValues
@@ -460,7 +488,49 @@ public class ProductRepository : IProductRepository
             .ToListAsync();
 
         if (nums.Count == 0) return (null, null);
-        return (nums.Min(), nums.Max());
+
+        // Жесткие физические границы из схемы валидации.
+        var bounds = SpecificationValidation.GetRangeBounds(attributeKey);
+        if (bounds.HasValue)
+        {
+            nums = nums
+                .Where(n => n >= bounds.Value.Min && n <= bounds.Value.Max)
+                .ToList();
+        }
+
+        if (nums.Count == 0) return (null, null);
+
+        // Используем percentile-based aggregation для фильтрации выбросов
+        // Min: 1-й перцентиль (отсекаем нижние 1% - возможные ошибки парсинга)
+        // Max: 99-й перцентиль (отсекаем верхние 1% - выбросы типа 1805 мм вместо 180.5 мм)
+        var sortedNums = nums.OrderBy(n => n).ToList();
+        var count = sortedNums.Count;
+
+        decimal min, max;
+
+        if (count <= 10)
+        {
+            // Если значений мало, используем голые Min/Max
+            min = sortedNums.First();
+            max = sortedNums.Last();
+        }
+        else
+        {
+            // Для больших выборок используем перцентили
+            var p1Index = (int)Math.Floor(count * 0.01);
+            var p99Index = (int)Math.Ceiling(count * 0.99) - 1;
+            
+            min = sortedNums[Math.Max(0, p1Index)];
+            max = sortedNums[Math.Min(count - 1, p99Index)];
+        }
+
+        if (bounds.HasValue)
+        {
+            min = Math.Max(min, bounds.Value.Min);
+            max = Math.Min(max, bounds.Value.Max);
+        }
+
+        return min <= max ? (min, max) : (null, null);
     }
 
     public async Task<Dictionary<Guid, int>> GetProductCountsByCategoryAsync()

@@ -29,14 +29,14 @@ public static class SpecificationMapping
             {
                 var v = items[0];
                 dict[key] = v.CanonicalValueId.HasValue && v.CanonicalValue != null
-                    ? (object)v.CanonicalValue.ValueText
+                    ? (object)NormalizeBooleanDisplay(v.CanonicalValue.ValueText)
                     : (v.ValueNumber ?? 0m);
             }
             else
             {
                 var texts = items
                     .Where(i => i.CanonicalValue != null)
-                    .Select(i => i.CanonicalValue!.ValueText)
+                    .Select(i => NormalizeBooleanDisplay(i.CanonicalValue!.ValueText))
                     .ToList();
                 if (texts.Count > 0)
                     dict[key] = string.Join(", ", texts);
@@ -45,5 +45,15 @@ public static class SpecificationMapping
             }
         }
         return dict;
+    }
+
+    private static string NormalizeBooleanDisplay(string value)
+    {
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "true" or "1" or "yes" => "Да",
+            "false" or "0" or "no" => "Нет",
+            _ => value
+        };
     }
 }
