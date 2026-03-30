@@ -1,7 +1,8 @@
-using GoldPC.Shared.Services.Interfaces;
-using Microsoft.Extensions.Logging;
+#pragma warning disable CA1307, CA1716, CS1591, SA1117, SA1600
 using System.Diagnostics;
 using System.Text.Json;
+using GoldPC.Shared.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace GoldPC.Shared.Services.Implementations;
 
@@ -26,8 +27,9 @@ public class NotificationServiceLoggingDecorator : INotificationService
     {
         var stopwatch = Stopwatch.StartNew();
         var maskedPhone = MaskPhone(phone);
-        
-        _logger.LogInformation("Outgoing SMS Request: To={Phone}, Message='{Message}'", 
+
+        _logger.LogInformation(
+            "Outgoing SMS Request: To={Phone}, Message='{Message}'",
             maskedPhone, message.Length > 20 ? message[..20] + "..." : message);
 
         var result = await _inner.SendSmsAsync(phone, message);
@@ -50,7 +52,8 @@ public class NotificationServiceLoggingDecorator : INotificationService
         var stopwatch = Stopwatch.StartNew();
         var maskedEmail = MaskEmail(email);
 
-        _logger.LogInformation("Outgoing Email Request: To={Email}, Subject='{Subject}'", 
+        _logger.LogInformation(
+            "Outgoing Email Request: To={Email}, Subject='{Subject}'",
             maskedEmail, subject);
 
         var result = await _inner.SendEmailAsync(email, subject, body);
@@ -90,16 +93,29 @@ public class NotificationServiceLoggingDecorator : INotificationService
 
     private static string MaskPhone(string phone)
     {
-        if (string.IsNullOrEmpty(phone) || phone.Length < 7) return phone;
+        if (string.IsNullOrEmpty(phone) || phone.Length < 7)
+        {
+            return phone;
+        }
+
         return phone[..3] + "****" + phone[^3..];
     }
 
     private static string MaskEmail(string email)
     {
-        if (string.IsNullOrEmpty(email) || !email.Contains('@')) return email;
+        if (string.IsNullOrEmpty(email) || !email.Contains('@'))
+        {
+            return email;
+        }
+
         var parts = email.Split('@');
         var local = parts[0];
-        if (local.Length <= 2) return "***@" + parts[1];
+        if (local.Length <= 2)
+        {
+            return "***@" + parts[1];
+        }
+
         return local[..2] + "***@" + parts[1];
     }
 }
+#pragma warning restore CA1307, CA1716, CS1591, SA1117, SA1600

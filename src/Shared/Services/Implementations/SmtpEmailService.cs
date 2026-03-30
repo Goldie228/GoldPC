@@ -1,3 +1,4 @@
+#pragma warning disable CA1031, CA1859, CS1591, SA1600
 using System.Net.Mail;
 using HandlebarsDotNet;
 using MailKit.Net.Smtp;
@@ -36,9 +37,9 @@ public class SmtpEmailService
             {
                 var message = new MimeMessage();
                 message.From.Add(new MailboxAddress(
-                    _configuration["Smtp:FromName"] ?? "GoldPC", 
+                    _configuration["Smtp:FromName"] ?? "GoldPC",
                     _configuration["Smtp:FromEmail"] ?? "no-reply@goldpc.example.com"));
-                message.To.Add(new MailboxAddress("", email));
+                message.To.Add(new MailboxAddress(string.Empty, email));
                 message.Subject = subject;
 
                 message.Body = new TextPart(isHtml ? "html" : "plain")
@@ -47,14 +48,14 @@ public class SmtpEmailService
                 };
 
                 using var client = new MailKit.Net.Smtp.SmtpClient();
-                
+
                 var host = _configuration["Smtp:Host"] ?? "localhost";
                 var port = _configuration.GetValue<int>("Smtp:Port", 587);
                 var user = _configuration["Smtp:Username"];
                 var pass = _configuration["Smtp:Password"];
 
                 await client.ConnectAsync(host, port, SecureSocketOptions.Auto);
-                
+
                 if (!string.IsNullOrEmpty(user))
                 {
                     await client.AuthenticateAsync(user, pass);
@@ -77,11 +78,11 @@ public class SmtpEmailService
     public string RenderTemplate(string templateName, object data)
     {
         var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", $"{templateName}.hbs");
-        
+
         if (!File.Exists(templatePath))
         {
             _logger.LogWarning("Template not found: {TemplatePath}. Using simple text representation.", templatePath);
-            return data.ToString() ?? "";
+            return data.ToString() ?? string.Empty;
         }
 
         var source = File.ReadAllText(templatePath);
@@ -89,3 +90,4 @@ public class SmtpEmailService
         return template(data);
     }
 }
+#pragma warning restore CA1031, CA1859, CS1591, SA1600

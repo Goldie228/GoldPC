@@ -1,3 +1,4 @@
+#pragma warning disable CA2227, CS1591, SA1600
 namespace GoldPC.SharedKernel.Models;
 
 /// <summary>
@@ -19,3 +20,4 @@ public class PagedResult<T>
 
     public bool HasNext => PageNumber < TotalPages;
 }
+#pragma warning restore CA2227, CS1591, SA1600

@@ -1,3 +1,4 @@
+#pragma warning disable CA1716, CS1591, SA1600
 using System;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
@@ -34,3 +35,4 @@ public static class MessagingExtensions
         return services;
     }
 }
+#pragma warning restore CA1716, CS1591, SA1600

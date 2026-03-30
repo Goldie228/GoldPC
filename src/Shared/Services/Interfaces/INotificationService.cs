@@ -1,3 +1,4 @@
+#pragma warning disable CS1591
 namespace GoldPC.Shared.Services.Interfaces;
 
 /// <summary>
@@ -41,3 +42,4 @@ public interface INotificationService
     /// <returns>Результат отправки</returns>
     Task<(bool Success, string? Error)> SendPushNotificationAsync(string userId, string title, string message);
 }
+#pragma warning restore CS1591

@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 namespace GoldPC.SharedKernel.Models;
 
 /// <summary>
@@ -17,3 +18,4 @@ public class PaginationParams
         set => _pageSize = value > MaxPageSize ? MaxPageSize : value;
     }
 }
+#pragma warning restore CS1591, SA1600

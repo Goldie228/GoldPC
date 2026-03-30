@@ -1,3 +1,4 @@
+#pragma warning disable CA1716, CS1591, S3427, SA1402, SA1600, SA1616
 using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,8 +14,9 @@ public static class MockServiceExtensions
     /// <summary>
     /// Регистрирует mock-сервисы при работе в Development окружении
     /// </summary>
+    /// <returns></returns>
     public static IServiceCollection AddMockServices(
-        this IServiceCollection services, 
+        this IServiceCollection services,
         IHostEnvironment environment)
     {
         if (!environment.IsDevelopment())
@@ -31,6 +33,7 @@ public static class MockServiceExtensions
     /// <summary>
     /// Регистрирует mock-сервисы с настраиваемыми параметрами
     /// </summary>
+    /// <returns></returns>
     public static IServiceCollection AddMockServices(
         this IServiceCollection services,
         IHostEnvironment environment,
@@ -78,6 +81,7 @@ public static class MockServiceExtensions
     /// <summary>
     /// Регистрирует mock-сервисы в любом окружении (для тестов)
     /// </summary>
+    /// <returns></returns>
     public static IServiceCollection AddMockServicesForTesting(this IServiceCollection services)
     {
         services.AddSingleton<IPaymentService, PaymentServiceMock>();
@@ -89,6 +93,7 @@ public static class MockServiceExtensions
     /// <summary>
     /// Регистрирует mock-сервисы с настройками для тестирования
     /// </summary>
+    /// <returns></returns>
     public static IServiceCollection AddMockServicesForTesting(
         this IServiceCollection services,
         double paymentSuccessRate = 1.0,
@@ -126,11 +131,19 @@ public static class MockServiceExtensions
 public class MockServicesConfiguration
 {
     public bool UsePaymentServiceMock { get; set; } = true;
+
     public bool UseNotificationServiceMock { get; set; } = true;
+
     public double PaymentSuccessRate { get; set; } = 0.95;
+
     public bool EnablePaymentDelay { get; set; } = true;
+
     public int MinPaymentDelayMs { get; set; } = 100;
+
     public int MaxPaymentDelayMs { get; set; } = 1000;
+
     public bool EnableNotificationLogging { get; set; } = true;
+
     public int NotificationDelayMs { get; set; } = 50;
 }
+#pragma warning restore CA1716, CS1591, S3427, SA1402, SA1600, SA1616

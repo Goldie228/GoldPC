@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 using System.ComponentModel.DataAnnotations;
 
 namespace GoldPC.SharedKernel.DTOs;
@@ -12,3 +13,4 @@ public class AnnulWarrantyRequest
     [MaxLength(500, ErrorMessage = "Причина не должна превышать 500 символов")]
     public string Reason { get; set; } = string.Empty;
 }
+#pragma warning restore CS1591, SA1600

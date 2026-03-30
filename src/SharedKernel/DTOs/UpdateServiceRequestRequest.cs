@@ -1,3 +1,4 @@
+#pragma warning disable CA2227, CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
@@ -19,3 +20,4 @@ public class UpdateServiceRequestRequest
 
     public ICollection<ServicePartDto>? ServiceParts { get; set; }
 }
+#pragma warning restore CA2227, CS1591, SA1600

@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 using System.ComponentModel.DataAnnotations;
 
 namespace GoldPC.SharedKernel.DTOs;
@@ -17,3 +18,4 @@ public class DeliveryQuoteRequest
     [MaxLength(100)]
     public string? City { get; set; }
 }
+#pragma warning restore CS1591, SA1600

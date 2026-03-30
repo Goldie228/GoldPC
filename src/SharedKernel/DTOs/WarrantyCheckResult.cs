@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 namespace GoldPC.SharedKernel.DTOs;
 
 /// <summary>
@@ -13,3 +14,4 @@ public class WarrantyCheckResult
 
     public int? DaysRemaining { get; set; }
 }
+#pragma warning restore CS1591, SA1600

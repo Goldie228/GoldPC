@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
 namespace GoldPC.SharedKernel.DTOs;
@@ -12,9 +13,10 @@ public class AuthResponse
     public string RefreshToken { get; set; } = string.Empty;
 
     /// <summary>
-    /// Время жизни токена в секундах (по умолчанию 15 минут).
+    /// Gets or sets время жизни токена в секундах (по умолчанию 15 минут).
     /// </summary>
     public int ExpiresIn { get; set; } = 900;
 
     public UserDto User { get; set; } = null!;
 }
+#pragma warning restore CS1591, SA1600

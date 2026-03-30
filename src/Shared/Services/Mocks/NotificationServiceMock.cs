@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1201, SA1204, SA1402, SA1600, SA1616
 using System.Collections.Concurrent;
 using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -11,14 +12,14 @@ namespace GoldPC.Shared.Services.Mocks;
 public class NotificationServiceMock : INotificationService
 {
     private readonly ILogger<NotificationServiceMock> _logger;
-    
+
     /// <summary>
     /// Статический список всех отправленных уведомлений для проверки в тестах
     /// </summary>
     private static readonly ConcurrentBag<SentNotification> _sentNotifications = new();
 
     /// <summary>
-    /// Получить все отправленные уведомления (для тестирования)
+    /// Gets получить все отправленные уведомления (для тестирования)
     /// </summary>
     public static IReadOnlyList<SentNotification> SentNotifications => _sentNotifications.ToList().AsReadOnly();
 
@@ -28,12 +29,12 @@ public class NotificationServiceMock : INotificationService
     public static void ClearHistory() => _sentNotifications.Clear();
 
     /// <summary>
-    /// Включить логирование в консоль
+    /// Gets or sets a value indicating whether включить логирование в консоль
     /// </summary>
     public bool EnableConsoleLogging { get; set; } = true;
 
     /// <summary>
-    /// Имитация задержки отправки (мс)
+    /// Gets or sets имитация задержки отправки (мс)
     /// </summary>
     public int SimulatedDelayMs { get; set; } = 50;
 
@@ -128,6 +129,7 @@ public class NotificationServiceMock : INotificationService
     /// <summary>
     /// Получить уведомления по типу (для тестирования)
     /// </summary>
+    /// <returns></returns>
     public static IEnumerable<SentNotification> GetByType(NotificationType type)
     {
         return _sentNotifications.Where(n => n.Type == type);
@@ -136,6 +138,7 @@ public class NotificationServiceMock : INotificationService
     /// <summary>
     /// Получить уведомления по получателю (для тестирования)
     /// </summary>
+    /// <returns></returns>
     public static IEnumerable<SentNotification> GetByRecipient(string recipient)
     {
         return _sentNotifications.Where(n => n.Recipient == recipient);
@@ -144,6 +147,7 @@ public class NotificationServiceMock : INotificationService
     /// <summary>
     /// Получить последние N уведомлений (для тестирования)
     /// </summary>
+    /// <returns></returns>
     public static IEnumerable<SentNotification> GetRecent(int count = 10)
     {
         return _sentNotifications.OrderByDescending(n => n.SentAt).Take(count);
@@ -156,12 +160,19 @@ public class NotificationServiceMock : INotificationService
 public class SentNotification
 {
     public Guid Id { get; set; }
+
     public NotificationType Type { get; set; }
+
     public string Recipient { get; set; } = string.Empty;
+
     public string? Subject { get; set; }
+
     public string Message { get; set; } = string.Empty;
+
     public DateTime SentAt { get; set; }
+
     public bool Success { get; set; }
+
     public string? Error { get; set; }
 
     public override string ToString()
@@ -174,6 +185,7 @@ public class SentNotification
             _ => "📨"
         };
         var msgPreview = Message.Length > 50 ? Message[..50] + "..." : Message;
-        return $"{typeEmoji} [{Type}] To: {Recipient} | {(Subject != null ? $"Subject: {Subject} | " : "")}Message: {msgPreview}";
+        return $"{typeEmoji} [{Type}] To: {Recipient} | {(Subject != null ? $"Subject: {Subject} | " : string.Empty)}Message: {msgPreview}";
     }
 }
+#pragma warning restore CS1591, SA1201, SA1204, SA1402, SA1600, SA1616

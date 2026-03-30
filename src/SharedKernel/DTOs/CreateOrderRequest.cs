@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
@@ -10,13 +11,13 @@ namespace GoldPC.SharedKernel.DTOs;
 public class CreateOrderRequest
 {
     /// <summary>
-    /// Способ получения (Pickup | Delivery).
+    /// Gets or sets способ получения (Pickup | Delivery).
     /// </summary>
     [Required(ErrorMessage = "Способ получения обязателен")]
     public string DeliveryMethod { get; set; } = string.Empty;
 
     /// <summary>
-    /// Способ оплаты (Online | OnReceipt).
+    /// Gets or sets способ оплаты (Online | OnReceipt).
     /// </summary>
     [Required(ErrorMessage = "Способ оплаты обязателен")]
     public string PaymentMethod { get; set; } = string.Empty;
@@ -31,9 +32,10 @@ public class CreateOrderRequest
     public string? Comment { get; set; }
 
     /// <summary>
-    /// Позиции заказа.
+    /// Gets позиции заказа.
     /// </summary>
     [Required(ErrorMessage = "Заказ должен содержать минимум одну позицию")]
     [MinLength(1, ErrorMessage = "Заказ должен содержать минимум одну позицию")]
     public ICollection<CreateOrderItemRequest> Items { get; } = new List<CreateOrderItemRequest>();
 }
+#pragma warning restore CS1591, SA1600

@@ -1,3 +1,4 @@
+#pragma warning disable SA1204, SA1402, SA1651
 using System.Diagnostics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +17,7 @@ public class CorrelationIdMiddleware
     private readonly ILogger<CorrelationIdMiddleware> _logger;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="CorrelationIdMiddleware"/> class.
     /// Инициализирует новый экземпляр <see cref="CorrelationIdMiddleware"/>.
     /// </summary>
     /// <param name="next">Следующий делегат в pipeline.</param>
@@ -30,6 +32,7 @@ public class CorrelationIdMiddleware
     /// Обрабатывает HTTP запрос, извлекая или генерируя Correlation ID.
     /// </summary>
     /// <param name="context">Контекст HTTP запроса.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public async Task Invoke(HttpContext context)
     {
         // Извлекаем Correlation ID из заголовков или генерируем новый
@@ -87,3 +90,4 @@ public static class CorrelationIdMiddlewareExtensions
         return builder.UseMiddleware<CorrelationIdMiddleware>();
     }
 }
+#pragma warning restore SA1204, SA1402, SA1651

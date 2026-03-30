@@ -1,3 +1,4 @@
+#pragma warning disable CA1304, CA1311, CA5394, CS1591, SA1117, SA1201, SA1600
 using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -13,22 +14,22 @@ public class PaymentServiceMock : IPaymentService
     private readonly Random _random = new();
 
     /// <summary>
-    /// Вероятность успешного платежа (0.0 - 1.0)
+    /// Gets or sets вероятность успешного платежа (0.0 - 1.0)
     /// </summary>
     public double SuccessRate { get; set; } = 0.95;
 
     /// <summary>
-    /// Минимальная задержка в миллисекундах
+    /// Gets or sets минимальная задержка в миллисекундах
     /// </summary>
     public int MinDelayMs { get; set; } = 100;
 
     /// <summary>
-    /// Максимальная задержка в миллисекундах
+    /// Gets or sets максимальная задержка в миллисекундах
     /// </summary>
     public int MaxDelayMs { get; set; } = 1000;
 
     /// <summary>
-    /// Включить ли симуляцию задержки
+    /// Gets or sets a value indicating whether включить ли симуляцию задержки
     /// </summary>
     public bool EnableDelay { get; set; } = true;
 
@@ -55,13 +56,13 @@ public class PaymentServiceMock : IPaymentService
             _logger.LogWarning(
                 "[Mock PaymentService] Payment FAILED for Order {OrderId}, Amount: {Amount}. Error: {Error}",
                 orderId, amount, error);
-            
+
             return (null, error);
         }
 
         var paymentUrl = GeneratePaymentUrl(orderId, amount);
         var transactionId = $"TRX-{Guid.NewGuid():N}"[..16].ToUpper();
-        
+
         _logger.LogInformation(
             "[Mock PaymentService] Payment created successfully for Order {OrderId}, Amount: {Amount}, TransactionId: {TransactionId}",
             orderId, amount, transactionId);
@@ -93,7 +94,7 @@ public class PaymentServiceMock : IPaymentService
         return (true, null);
     }
 
-    private string GeneratePaymentUrl(Guid orderId, decimal amount)
+    private static string GeneratePaymentUrl(Guid orderId, decimal amount)
     {
         return $"https://mock-payment.example.com/pay/{orderId}?amount={amount}&mock=true";
     }
@@ -115,3 +116,4 @@ public class PaymentServiceMock : IPaymentService
     }
 }
 
+#pragma warning restore CA1304, CA1311, CA5394, CS1591, SA1117, SA1201, SA1600

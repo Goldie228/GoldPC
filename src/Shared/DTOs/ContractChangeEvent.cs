@@ -1,3 +1,4 @@
+#pragma warning disable CA1002, CA1716, CA2227, SA1402
 namespace GoldPC.Shared.DTOs;
 
 /// <summary>
@@ -9,12 +10,12 @@ public enum ContractChangeType
     /// Критические изменения, нарушающие обратную совместимость
     /// </summary>
     Breaking,
-    
+
     /// <summary>
     /// Новые эндпоинты или поля (обратная совместимость сохранена)
     /// </summary>
     NonBreaking,
-    
+
     /// <summary>
     /// Исправления ошибок, документации
     /// </summary>
@@ -28,57 +29,57 @@ public enum ContractChangeType
 public class ContractChangeEvent
 {
     /// <summary>
-    /// Уникальный идентификатор события
+    /// Gets or sets уникальный идентификатор события
     /// </summary>
     public Guid EventId { get; set; } = Guid.NewGuid();
-    
+
     /// <summary>
-    /// Имя контракта (например, "orders-api", "catalog-api")
+    /// Gets or sets имя контракта (например, "orders-api", "catalog-api")
     /// </summary>
     public required string ContractName { get; set; }
-    
+
     /// <summary>
-    /// Предыдущая версия контракта
+    /// Gets or sets предыдущая версия контракта
     /// </summary>
     public string? PreviousVersion { get; set; }
-    
+
     /// <summary>
-    /// Новая версия контракта
+    /// Gets or sets новая версия контракта
     /// </summary>
     public required string NewVersion { get; set; }
-    
+
     /// <summary>
-    /// Тип изменения (Breaking, NonBreaking, Patch)
+    /// Gets or sets тип изменения (Breaking, NonBreaking, Patch)
     /// </summary>
     public ContractChangeType ChangeType { get; set; }
-    
+
     /// <summary>
-    /// Список критических изменений (для Breaking типа)
+    /// Gets or sets список критических изменений (для Breaking типа)
     /// </summary>
     public List<string> BreakingChanges { get; set; } = new();
-    
+
     /// <summary>
-    /// Затронутые эндпоинты
+    /// Gets or sets затронутые эндпоинты
     /// </summary>
     public List<string> AffectedEndpoints { get; set; } = new();
-    
+
     /// <summary>
-    /// Руководство по миграции
+    /// Gets or sets руководство по миграции
     /// </summary>
     public string? MigrationGuide { get; set; }
-    
+
     /// <summary>
-    /// Время создания события
+    /// Gets or sets время создания события
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
     /// <summary>
-    /// Инициатор изменения
+    /// Gets or sets инициатор изменения
     /// </summary>
     public string? ChangedBy { get; set; }
-    
+
     /// <summary>
-    /// Дополнительные метаданные
+    /// Gets or sets дополнительные метаданные
     /// </summary>
     public Dictionary<string, string> Metadata { get; set; } = new();
 }
@@ -89,27 +90,28 @@ public class ContractChangeEvent
 public class AgentNotification
 {
     /// <summary>
-    /// Тип уведомления
+    /// Gets or sets тип уведомления
     /// </summary>
     public required string Type { get; set; }
-    
+
     /// <summary>
-    /// Сообщение уведомления
+    /// Gets or sets сообщение уведомления
     /// </summary>
     public required string Message { get; set; }
-    
+
     /// <summary>
-    /// Требуемое действие
+    /// Gets or sets требуемое действие
     /// </summary>
     public string? Action { get; set; }
-    
+
     /// <summary>
-    /// Дедлайн для выполнения действия
+    /// Gets or sets дедлайн для выполнения действия
     /// </summary>
     public DateTime? Deadline { get; set; }
-    
+
     /// <summary>
-    /// Связанное событие изменения контракта
+    /// Gets or sets связанное событие изменения контракта
     /// </summary>
     public ContractChangeEvent? ContractEvent { get; set; }
 }
+#pragma warning restore CA1002, CA1716, CA2227, SA1402

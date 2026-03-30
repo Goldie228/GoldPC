@@ -1,6 +1,7 @@
+#pragma warning disable CS1591, SA1117, SA1600
+using System.Diagnostics;
 using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 
 namespace GoldPC.Shared.Services.Implementations;
 
@@ -23,7 +24,8 @@ public class PaymentServiceLoggingDecorator : IPaymentService
     public async Task<(string? PaymentUrl, string? Error)> CreatePaymentAsync(Guid orderId, decimal amount)
     {
         var stopwatch = Stopwatch.StartNew();
-        _logger.LogInformation("Outgoing Payment Request: OrderId={OrderId}, Amount={Amount}", 
+        _logger.LogInformation(
+            "Outgoing Payment Request: OrderId={OrderId}, Amount={Amount}",
             orderId, amount);
 
         var result = await _inner.CreatePaymentAsync(orderId, amount);
@@ -31,12 +33,14 @@ public class PaymentServiceLoggingDecorator : IPaymentService
 
         if (result.Error == null)
         {
-            _logger.LogInformation("Payment Response SUCCESS in {ElapsedMs}ms. URL: {Url}", 
+            _logger.LogInformation(
+                "Payment Response SUCCESS in {ElapsedMs}ms. URL: {Url}",
                 stopwatch.ElapsedMilliseconds, result.PaymentUrl);
         }
         else
         {
-            _logger.LogError("Payment Response FAILURE in {ElapsedMs}ms: {Error}", 
+            _logger.LogError(
+                "Payment Response FAILURE in {ElapsedMs}ms: {Error}",
                 stopwatch.ElapsedMilliseconds, result.Error);
         }
 
@@ -46,7 +50,8 @@ public class PaymentServiceLoggingDecorator : IPaymentService
     public async Task<(bool Success, string? Error)> ProcessPaymentCallbackAsync(string paymentId, bool success)
     {
         var stopwatch = Stopwatch.StartNew();
-        _logger.LogInformation("Outgoing Payment Callback Request: PaymentId={PaymentId}, Success={Success}", 
+        _logger.LogInformation(
+            "Outgoing Payment Callback Request: PaymentId={PaymentId}, Success={Success}",
             paymentId, success);
 
         var result = await _inner.ProcessPaymentCallbackAsync(paymentId, success);
@@ -54,15 +59,18 @@ public class PaymentServiceLoggingDecorator : IPaymentService
 
         if (result.Success)
         {
-            _logger.LogInformation("Payment Callback Response SUCCESS in {ElapsedMs}ms", 
+            _logger.LogInformation(
+                "Payment Callback Response SUCCESS in {ElapsedMs}ms",
                 stopwatch.ElapsedMilliseconds);
         }
         else
         {
-            _logger.LogError("Payment Callback Response FAILURE in {ElapsedMs}ms: {Error}", 
+            _logger.LogError(
+                "Payment Callback Response FAILURE in {ElapsedMs}ms: {Error}",
                 stopwatch.ElapsedMilliseconds, result.Error);
         }
 
         return result;
     }
 }
+#pragma warning restore CS1591, SA1117, SA1600

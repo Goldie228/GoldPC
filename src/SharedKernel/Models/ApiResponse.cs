@@ -1,3 +1,4 @@
+#pragma warning disable CA2227, CS1591, SA1600
 namespace GoldPC.SharedKernel.Models;
 
 /// <summary>
@@ -17,3 +18,4 @@ public class ApiResponse
     public static ApiResponse Fail(string message, ICollection<ApiError>? errors = null)
         => new() { Success = false, Message = message, Errors = errors };
 }
+#pragma warning restore CA2227, CS1591, SA1600

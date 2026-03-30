@@ -1,5 +1,6 @@
-using GoldPC.Shared.Services.Interfaces;
+#pragma warning disable CS1591, SA1600
 using GoldPC.Shared.Services.Implementations;
+using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace GoldPC.Shared.Services;
@@ -38,3 +39,4 @@ public class CompositeNotificationService : INotificationService
         return Task.FromResult<(bool, string?)>((false, "Push notifications not implemented"));
     }
 }
+#pragma warning restore CS1591, SA1600

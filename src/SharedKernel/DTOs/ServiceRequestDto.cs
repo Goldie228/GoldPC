@@ -1,3 +1,4 @@
+#pragma warning disable CA2227, CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
 using GoldPC.SharedKernel.Enums;
@@ -41,3 +42,4 @@ public class ServiceRequestDto
 
     public ICollection<WorkReportDto> WorkReports { get; set; } = new List<WorkReportDto>();
 }
+#pragma warning restore CA2227, CS1591, SA1600

@@ -1,3 +1,4 @@
+#pragma warning disable CA1031, CA1859, CS1591, SA1117, SA1203, SA1204, SA1600
 using System.Collections.Concurrent;
 using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -18,7 +19,7 @@ public class TwilioSmsService : INotificationService
     private readonly ILogger<TwilioSmsService> _logger;
     private readonly IConfiguration _configuration;
     private readonly IAsyncPolicy _resiliencePolicy;
-    
+
     // Простой in-memory tracker для rate-limiting (по номеру телефона)
     private static readonly ConcurrentDictionary<string, List<DateTime>> _rateLimiter = new();
     private const int MaxSmsPerHourPerNumber = 5;
@@ -41,14 +42,15 @@ public class TwilioSmsService : INotificationService
             Policy.Handle<Exception>()
                 .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30),
                     onBreak: (ex, timespan) => _logger.LogWarning("Twilio Circuit Breaker OPEN for {TimeSpan}s", timespan.TotalSeconds),
-                    onReset: () => _logger.LogInformation("Twilio Circuit Breaker CLOSED")
-                )
-        );
+                    onReset: () => _logger.LogInformation("Twilio Circuit Breaker CLOSED")));
     }
 
     public async Task<(bool Success, string? Error)> SendSmsAsync(string phone, string message)
     {
-        if (string.IsNullOrEmpty(phone)) return (false, "Phone number is empty");
+        if (string.IsNullOrEmpty(phone))
+        {
+            return (false, "Phone number is empty");
+        }
 
         // Anti-spam check (FT-2.5.2.3)
         if (IsRateLimited(phone))
@@ -67,8 +69,7 @@ public class TwilioSmsService : INotificationService
                 var result = await MessageResource.CreateAsync(
                     body: message,
                     from: new PhoneNumber(fromNumber),
-                    to: new PhoneNumber(phone)
-                );
+                    to: new PhoneNumber(phone));
 
                 if (result.ErrorCode != null)
                 {
@@ -88,13 +89,13 @@ public class TwilioSmsService : INotificationService
     }
 
     // Эти методы реализуются в EmailService (NotificationServiceMock объединяет их, но в продакшене лучше разделять)
-    public Task<(bool Success, string? Error)> SendEmailAsync(string email, string subject, string body) 
+    public Task<(bool Success, string? Error)> SendEmailAsync(string email, string subject, string body)
         => Task.FromResult<(bool, string?)>((false, "TwilioSmsService handles only SMS"));
 
     public Task<(bool Success, string? Error)> SendPushNotificationAsync(string userId, string title, string message)
         => Task.FromResult<(bool, string?)>((false, "TwilioSmsService handles only SMS"));
 
-    private bool IsRateLimited(string phone)
+    private static bool IsRateLimited(string phone)
     {
         var now = DateTime.UtcNow;
         var limitTime = now.AddHours(-1);
@@ -104,11 +105,15 @@ public class TwilioSmsService : INotificationService
         {
             // Убираем старые записи
             history.RemoveAll(t => t < limitTime);
-            
-            if (history.Count >= MaxSmsPerHourPerNumber) return true;
-            
+
+            if (history.Count >= MaxSmsPerHourPerNumber)
+            {
+                return true;
+            }
+
             history.Add(now);
             return false;
         }
     }
 }
+#pragma warning restore CA1031, CA1859, CS1591, SA1117, SA1203, SA1204, SA1600

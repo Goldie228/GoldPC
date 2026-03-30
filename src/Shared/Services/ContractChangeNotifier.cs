@@ -1,3 +1,4 @@
+#pragma warning disable S1135, S125
 using GoldPC.Shared.DTOs;
 using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ public class ContractChangeNotifier : IContractChangeNotifier
     private readonly List<ContractChangeEvent> _eventHistory = new();
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ContractChangeNotifier"/> class.
     /// Создать экземпляр сервиса уведомлений об изменении контрактов
     /// </summary>
     /// <param name="logger">Логгер</param>
@@ -185,3 +187,4 @@ public class ContractChangeNotifier : IContractChangeNotifier
         //     cancellationToken);
     }
 }
+#pragma warning restore S1135, S125

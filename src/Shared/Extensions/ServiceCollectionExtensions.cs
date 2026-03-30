@@ -1,3 +1,4 @@
+#pragma warning disable CA1716, SA1625
 using GoldPC.Shared.Services;
 using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IContractChangeNotifier, ContractChangeNotifier>();
         return services;
     }
-    
+
     /// <summary>
     /// Добавить все shared сервисы
     /// </summary>
@@ -31,3 +32,4 @@ public static class ServiceCollectionExtensions
         return services;
     }
 }
+#pragma warning restore CA1716, SA1625

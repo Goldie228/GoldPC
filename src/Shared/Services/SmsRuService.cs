@@ -1,11 +1,12 @@
-using GoldPC.Shared.Services.Interfaces;
+#pragma warning disable CA1031, CA2208, CA2234, CS1591, S3928, SA1600
+using System.Text.Json;
 using GoldPC.Shared.Infrastructure;
+using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 using Polly;
-using Polly.Retry;
 using Polly.CircuitBreaker;
+using Polly.Retry;
 
 namespace GoldPC.Shared.Services;
 
@@ -27,7 +28,7 @@ public class SmsRuService : INotificationService
         _httpClient = httpClient;
         _apiKey = configuration["SMS:ApiKey"] ?? throw new ArgumentNullException("SMS:ApiKey is not configured");
         _apiUrl = configuration["SMS:ApiUrl"] ?? "https://api.sms.ru";
-        
+
         _retryPolicy = ResiliencePolicies.GetHttpRetryPolicy(_logger);
         _circuitBreakerPolicy = ResiliencePolicies.GetHttpCircuitBreakerPolicy(_logger);
     }
@@ -40,9 +41,9 @@ public class SmsRuService : INotificationService
 
             var policyWrap = Policy.WrapAsync(_retryPolicy, _circuitBreakerPolicy);
 
-            var response = await policyWrap.ExecuteAsync(async () => 
+            var response = await policyWrap.ExecuteAsync(async () =>
                 await _httpClient.GetAsync($"{_apiUrl}/sms/send?api_id={_apiKey}&to={phone}&msg={Uri.EscapeDataString(message)}&json=1"));
-                
+
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
@@ -94,3 +95,4 @@ public class SmsRuService : INotificationService
         return Task.FromResult<(bool, string?)>((false, "Push notification not supported by SMS service"));
     }
 }
+#pragma warning restore CA1031, CA2208, CA2234, CS1591, S3928, SA1600

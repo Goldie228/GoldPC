@@ -9,7 +9,7 @@ public enum ServiceRequestStatus
     /// Подана (Submitted) - заявка создана клиентом
     /// </summary>
     Submitted = 0,
-    
+
     /// <summary>
     /// В работе (InProgress) - мастер выполняет работу
     /// </summary>
@@ -24,12 +24,12 @@ public enum ServiceRequestStatus
     /// Готова к выдаче (ReadyForPickup) - работа завершена, ожидает клиента
     /// </summary>
     ReadyForPickup = 3,
-    
+
     /// <summary>
     /// Завершена (Completed) - клиент получил оборудование, оплата произведена
     /// </summary>
     Completed = 4,
-    
+
     /// <summary>
     /// Отменена (Cancelled)
     /// </summary>

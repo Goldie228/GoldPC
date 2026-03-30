@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 namespace SharedKernel.Events;
 
 /// <summary>
@@ -11,3 +12,4 @@ public abstract record IntegrationEvent
 
     public string CorrelationId { get; init; } = Guid.NewGuid().ToString();
 }
+#pragma warning restore CS1591, SA1600

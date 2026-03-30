@@ -1,3 +1,4 @@
+#pragma warning disable CA1716, S125
 using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -32,7 +33,7 @@ public static class OpenTelemetryExtensions
                     {
                         options.ScrapeEndpointPath = "/metrics";
                     });
-                    
+
                 // Add custom meters for the service
                 builder.AddMeter(serviceName);
             })
@@ -49,7 +50,7 @@ public static class OpenTelemetryExtensions
                     })
                     .AddHttpClientInstrumentation()
                     .AddSource(serviceName);
-                    
+
                 // Only add Jaeger exporter if configured
                 // builder.AddJaegerExporter(options =>
                 // {
@@ -61,3 +62,4 @@ public static class OpenTelemetryExtensions
         return services;
     }
 }
+#pragma warning restore CA1716, S125

@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
 namespace GoldPC.SharedKernel.DTOs;
@@ -15,3 +16,4 @@ public class ServicePartDto
 
     public decimal UnitPrice { get; set; }
 }
+#pragma warning restore CS1591, SA1600

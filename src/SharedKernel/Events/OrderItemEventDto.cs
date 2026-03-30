@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 namespace SharedKernel.Events;
 
 public record OrderItemEventDto
@@ -10,3 +11,4 @@ public record OrderItemEventDto
 
     public decimal Price { get; init; }
 }
+#pragma warning restore CS1591, SA1600

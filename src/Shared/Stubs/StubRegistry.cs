@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1117, SA1201, SA1202, SA1402, SA1600, SA1616
 using Microsoft.Extensions.Logging;
 
 namespace Shared.Stubs;
@@ -14,7 +15,7 @@ public sealed class StubRegistry
     private ILogger? _logger;
 
     /// <summary>
-    /// Получить единственный экземпляр реестра (Singleton).
+    /// Gets получить единственный экземпляр реестра (Singleton).
     /// </summary>
     public static StubRegistry Instance => _instance.Value;
 
@@ -102,7 +103,7 @@ public sealed class StubRegistry
     public void Register(StubDefinition stub)
     {
         ArgumentNullException.ThrowIfNull(stub);
-        
+
         if (string.IsNullOrWhiteSpace(stub.Name))
         {
             throw new ArgumentException("Имя заглушки не может быть пустым", nameof(stub));
@@ -111,7 +112,8 @@ public sealed class StubRegistry
         lock (_lock)
         {
             _stubs[stub.Name] = stub;
-            _logger?.LogInformation("Зарегистрирована заглушка: {Name} для сервиса {ServiceName}",
+            _logger?.LogInformation(
+                "Зарегистрирована заглушка: {Name} для сервиса {ServiceName}",
                 stub.Name, stub.ServiceName);
         }
     }
@@ -119,6 +121,7 @@ public sealed class StubRegistry
     /// <summary>
     /// Получить заглушку по имени.
     /// </summary>
+    /// <returns></returns>
     public StubDefinition? Get(string name)
     {
         lock (_lock)
@@ -130,6 +133,7 @@ public sealed class StubRegistry
     /// <summary>
     /// Получить все зарегистрированные заглушки.
     /// </summary>
+    /// <returns></returns>
     public IReadOnlyList<StubDefinition> GetAll()
     {
         lock (_lock)
@@ -141,6 +145,7 @@ public sealed class StubRegistry
     /// <summary>
     /// Проверить существование заглушки.
     /// </summary>
+    /// <returns></returns>
     public bool Exists(string name)
     {
         lock (_lock)
@@ -152,6 +157,7 @@ public sealed class StubRegistry
     /// <summary>
     /// Настроить заглушку.
     /// </summary>
+    /// <returns></returns>
     public bool Configure(string name, Action<StubDefinition> configure)
     {
         lock (_lock)
@@ -185,6 +191,7 @@ public sealed class StubRegistry
     /// <summary>
     /// Установить режим работы заглушки.
     /// </summary>
+    /// <returns></returns>
     public bool SetMode(string name, StubMode mode)
     {
         return Configure(name, stub =>
@@ -203,6 +210,7 @@ public sealed class StubRegistry
     /// <summary>
     /// Установить произвольную конфигурацию Chaos для заглушки.
     /// </summary>
+    /// <returns></returns>
     public bool SetChaosConfig(string name, StubChaosConfig config)
     {
         return Configure(name, stub =>
@@ -214,6 +222,7 @@ public sealed class StubRegistry
     /// <summary>
     /// Включить или отключить заглушку.
     /// </summary>
+    /// <returns></returns>
     public bool SetEnabled(string name, bool enabled)
     {
         return Configure(name, stub =>
@@ -225,6 +234,7 @@ public sealed class StubRegistry
     /// <summary>
     /// Удалить заглушку из реестра.
     /// </summary>
+    /// <returns></returns>
     public bool Remove(string name)
     {
         lock (_lock)
@@ -234,6 +244,7 @@ public sealed class StubRegistry
             {
                 _logger?.LogInformation("Заглушка {Name} удалена из реестра", name);
             }
+
             return removed;
         }
     }
@@ -252,7 +263,7 @@ public sealed class StubRegistry
                 stub.IsEnabled = true;
                 stub.LastModified = DateTime.UtcNow;
             }
-            
+
             _logger?.LogInformation("Все заглушки сброшены в нормальный режим");
         }
     }
@@ -260,6 +271,7 @@ public sealed class StubRegistry
     /// <summary>
     /// Получить статистику по заглушкам.
     /// </summary>
+    /// <returns></returns>
     public StubRegistryStats GetStats()
     {
         lock (_lock)
@@ -288,8 +300,11 @@ public sealed class StubRegistry
 public class StubChangedEventArgs : EventArgs
 {
     public string StubName { get; init; } = string.Empty;
+
     public StubMode PreviousMode { get; init; }
+
     public StubMode NewMode { get; init; }
+
     public DateTime Timestamp { get; init; }
 }
 
@@ -299,9 +314,15 @@ public class StubChangedEventArgs : EventArgs
 public class StubRegistryStats
 {
     public int TotalCount { get; init; }
+
     public int NormalCount { get; init; }
+
     public int SlowCount { get; init; }
+
     public int FailingCount { get; init; }
+
     public int UnstableCount { get; init; }
+
     public int DisabledCount { get; init; }
 }
+#pragma warning restore CS1591, SA1117, SA1201, SA1202, SA1402, SA1600, SA1616

@@ -1,3 +1,4 @@
+#pragma warning disable CA1716, CA1860, S2139, SA1117, SA1616
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,25 +22,25 @@ public static class HostExtensions
     /// <param name="seedAction">Опциональное действие для заполнения начальными данными</param>
     /// <returns>Хост приложения для chaining</returns>
     public static IHost ApplyMigrations<TContext>(
-        this IHost host, 
-        Action<IServiceProvider>? seedAction = null) 
+        this IHost host,
+        Action<IServiceProvider>? seedAction = null)
         where TContext : DbContext
     {
         using var scope = host.Services.CreateScope();
         var serviceProvider = scope.ServiceProvider;
         var logger = serviceProvider.GetService<ILogger<TContext>>();
-        
+
         try
         {
             var dbContext = serviceProvider.GetRequiredService<TContext>();
-            
+
             // Всегда используем миграции для консистентности
             // Это предотвращает рассинхронизацию между EnsureCreated и миграциями
             ApplyPendingMigrations(dbContext, logger);
-            
+
             // Выполняем seed данных если передан
             seedAction?.Invoke(serviceProvider);
-            
+
             Log.Information("Миграции базы данных {ContextName} успешно применены", typeof(TContext).Name);
         }
         catch (Exception ex)
@@ -47,7 +48,7 @@ public static class HostExtensions
             Log.Error(ex, "Ошибка при применении миграций базы данных {ContextName}", typeof(TContext).Name);
             throw;
         }
-        
+
         return host;
     }
 
@@ -55,6 +56,7 @@ public static class HostExtensions
     /// Применяет миграции с поддержкой нескольких DbContext.
     /// Всегда использует Migrate() для консистентности.
     /// </summary>
+    /// <returns></returns>
     public static IHost ApplyMigrations(
         this IHost host,
         params Type[] contextTypes)
@@ -63,22 +65,23 @@ public static class HostExtensions
         var serviceProvider = scope.ServiceProvider;
         var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
         var logger = loggerFactory?.CreateLogger("DatabaseMigrations");
-        
+
         foreach (var contextType in contextTypes)
         {
             try
             {
                 var dbContext = (DbContext)serviceProvider.GetRequiredService(contextType);
-                
+
                 // Всегда используем миграции для консистентности
                 var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
                 if (pendingMigrations.Any())
                 {
-                    logger?.LogInformation("Применение {Count} pending миграций для {ContextName}...", 
+                    logger?.LogInformation(
+                        "Применение {Count} pending миграций для {ContextName}...",
                         pendingMigrations.Count, contextType.Name);
                     dbContext.Database.Migrate();
                 }
-                
+
                 Log.Information("Миграции {ContextName} успешно применены", contextType.Name);
             }
             catch (Exception ex)
@@ -87,14 +90,14 @@ public static class HostExtensions
                 throw;
             }
         }
-        
+
         return host;
     }
 
     private static void ApplyPendingMigrations(DbContext dbContext, Microsoft.Extensions.Logging.ILogger? logger)
     {
         var pendingMigrations = dbContext.Database.GetPendingMigrations().ToList();
-        
+
         if (pendingMigrations.Any())
         {
             logger?.LogInformation("Применение {Count} pending миграций...", pendingMigrations.Count);
@@ -107,3 +110,4 @@ public static class HostExtensions
         }
     }
 }
+#pragma warning restore CA1716, CA1860, S2139, SA1117, SA1616

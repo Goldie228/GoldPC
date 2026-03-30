@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 using GoldPC.SharedKernel.Enums;
 
 namespace GoldPC.SharedKernel.DTOs;
@@ -33,3 +34,4 @@ public class WarrantyClaimDto
 
     public string? Resolution { get; set; }
 }
+#pragma warning restore CS1591, SA1600

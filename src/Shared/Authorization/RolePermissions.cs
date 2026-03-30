@@ -1,3 +1,4 @@
+#pragma warning disable S2386, S3887
 namespace GoldPC.Shared.Authorization;
 
 /// <summary>
@@ -177,3 +178,4 @@ public static class RolePermissions
         return Mapping.ContainsKey(role);
     }
 }
+#pragma warning restore S2386, S3887

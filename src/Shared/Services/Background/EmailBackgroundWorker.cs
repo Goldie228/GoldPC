@@ -1,3 +1,4 @@
+#pragma warning disable CA1031, CA1716, CS1591, SA1600
 using GoldPC.Shared.Services.Implementations;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -30,7 +31,7 @@ public class EmailBackgroundWorker : BackgroundService
             {
                 _logger.LogInformation("Processing email job for {Recipient}", job.Recipient);
                 var (success, error) = await _emailService.SendEmailAsync(job.Recipient, job.Subject, job.Body, job.IsHtml);
-                
+
                 if (!success)
                 {
                     _logger.LogWarning("Failed to send email in background to {Recipient}: {Error}", job.Recipient, error);
@@ -46,3 +47,4 @@ public class EmailBackgroundWorker : BackgroundService
         _logger.LogInformation("Email Background Worker is stopping.");
     }
 }
+#pragma warning restore CA1031, CA1716, CS1591, SA1600

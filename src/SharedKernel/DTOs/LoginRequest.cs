@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
@@ -16,3 +17,4 @@ public class LoginRequest
     [Required(ErrorMessage = "Пароль обязателен")]
     public string Password { get; set; } = string.Empty;
 }
+#pragma warning restore CS1591, SA1600

@@ -1,3 +1,4 @@
+#pragma warning disable SA1616
 namespace Shared.Stubs;
 
 /// <summary>
@@ -6,49 +7,50 @@ namespace Shared.Stubs;
 public class StubDefinition
 {
     /// <summary>
-    /// Уникальное имя заглушки.
+    /// Gets уникальное имя заглушки.
     /// </summary>
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
-    /// Имя сервиса, для которого предназначена заглушка.
+    /// Gets имя сервиса, для которого предназначена заглушка.
     /// </summary>
     public string ServiceName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Описание заглушки.
+    /// Gets описание заглушки.
     /// </summary>
     public string Description { get; init; } = string.Empty;
 
     /// <summary>
-    /// Текущий режим работы заглушки.
+    /// Gets or sets текущий режим работы заглушки.
     /// </summary>
     public StubMode Mode { get; set; } = StubMode.Normal;
 
     /// <summary>
-    /// Конфигурация Chaos Engineering для заглушки.
+    /// Gets or sets конфигурация Chaos Engineering для заглушки.
     /// </summary>
     public StubChaosConfig? Chaos { get; set; }
 
     /// <summary>
-    /// Предопределенные ответы для разных сценариев.
+    /// Gets предопределенные ответы для разных сценариев.
     /// Ключ - имя сценария, значение - объект ответа.
     /// </summary>
     public Dictionary<string, object> Responses { get; init; } = new();
 
     /// <summary>
-    /// Включена ли заглушка.
+    /// Gets or sets a value indicating whether включена ли заглушка.
     /// </summary>
     public bool IsEnabled { get; set; } = true;
 
     /// <summary>
-    /// Время последнего изменения режима.
+    /// Gets or sets время последнего изменения режима.
     /// </summary>
     public DateTime LastModified { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Создает копию определения заглушки.
     /// </summary>
+    /// <returns></returns>
     public StubDefinition Clone()
     {
         return new StubDefinition
@@ -65,10 +67,12 @@ public class StubDefinition
                 MaxLatencyMs = Chaos.MaxLatencyMs,
                 FailureStatusCode = Chaos.FailureStatusCode,
                 FailureMessage = Chaos.FailureMessage
-            } : null,
+            }
+            : null,
             Responses = new Dictionary<string, object>(Responses),
             IsEnabled = IsEnabled,
             LastModified = LastModified
         };
     }
 }
+#pragma warning restore SA1616

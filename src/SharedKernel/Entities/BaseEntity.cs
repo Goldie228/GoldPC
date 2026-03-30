@@ -6,17 +6,17 @@ namespace GoldPC.SharedKernel.Entities;
 public abstract class BaseEntity
 {
     /// <summary>
-    /// Уникальный идентификатор сущности
+    /// Gets or sets уникальный идентификатор сущности
     /// </summary>
     public Guid Id { get; set; }
-    
+
     /// <summary>
-    /// Дата и время создания записи (UTC)
+    /// Gets or sets дата и время создания записи (UTC)
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
     /// <summary>
-    /// Дата и время последнего обновления записи (UTC)
+    /// Gets or sets дата и время последнего обновления записи (UTC)
     /// </summary>
     public DateTime? UpdatedAt { get; set; }
 }

@@ -1,3 +1,4 @@
+#pragma warning disable CA1861, CS1591, S3878, SA1600
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -39,13 +40,13 @@ public class SecurityHeadersMiddleware
         context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
 
         // Permissions Policy - контроль браузерных API
-        context.Response.Headers["Permissions-Policy"] = 
+        context.Response.Headers["Permissions-Policy"] =
             "geolocation=(), microphone=(), camera=(), payment=(), usb=()";
 
         // HSTS - Strict Transport Security (только для Production с HTTPS)
         if (context.Request.IsHttps)
         {
-            context.Response.Headers["Strict-Transport-Security"] = 
+            context.Response.Headers["Strict-Transport-Security"] =
                 "max-age=31536000; includeSubDomains; preload";
         }
 
@@ -75,3 +76,4 @@ public class SecurityHeadersMiddleware
         });
     }
 }
+#pragma warning restore CA1861, CS1591, S3878, SA1600

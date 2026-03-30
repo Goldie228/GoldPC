@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
@@ -32,3 +33,4 @@ public class RegisterRequest
     [RegularExpression(@"^\+375\d{9}$", ErrorMessage = "Телефон должен быть в формате +375XXXXXXXXX")]
     public string Phone { get; set; } = string.Empty;
 }
+#pragma warning restore CS1591, SA1600

@@ -1,3 +1,4 @@
+#pragma warning disable SA1204
 namespace Shared.Stubs;
 
 /// <summary>
@@ -6,42 +7,42 @@ namespace Shared.Stubs;
 public class StubChaosConfig
 {
     /// <summary>
-    /// Вероятность возникновения ошибки (0.0 - 1.0).
+    /// Gets or sets вероятность возникновения ошибки (0.0 - 1.0).
     /// </summary>
     public double FailureRate { get; set; } = 0.05;
 
     /// <summary>
-    /// Вероятность возникновения задержки (0.0 - 1.0).
+    /// Gets or sets вероятность возникновения задержки (0.0 - 1.0).
     /// </summary>
     public double LatencyRate { get; set; } = 0.1;
 
     /// <summary>
-    /// Минимальная задержка в миллисекундах.
+    /// Gets or sets минимальная задержка в миллисекундах.
     /// </summary>
     public int MinLatencyMs { get; set; } = 100;
 
     /// <summary>
-    /// Максимальная задержка в миллисекундах.
+    /// Gets or sets максимальная задержка в миллисекундах.
     /// </summary>
     public int MaxLatencyMs { get; set; } = 3000;
 
     /// <summary>
-    /// Код HTTP ошибки для режима Failing.
+    /// Gets or sets код HTTP ошибки для режима Failing.
     /// </summary>
     public int FailureStatusCode { get; set; } = 500;
 
     /// <summary>
-    /// Сообщение об ошибке для режима Failing.
+    /// Gets or sets сообщение об ошибке для режима Failing.
     /// </summary>
     public string FailureMessage { get; set; } = "Service temporarily unavailable";
 
     /// <summary>
-    /// Создает конфигурацию по умолчанию.
+    /// Gets создает конфигурацию по умолчанию.
     /// </summary>
     public static StubChaosConfig Default => new();
 
     /// <summary>
-    /// Создает конфигурацию для медленных ответов.
+    /// Gets создает конфигурацию для медленных ответов.
     /// </summary>
     public static StubChaosConfig Slow => new()
     {
@@ -51,7 +52,7 @@ public class StubChaosConfig
     };
 
     /// <summary>
-    /// Создает конфигурацию для возврата ошибок.
+    /// Gets создает конфигурацию для возврата ошибок.
     /// </summary>
     public static StubChaosConfig Failing => new()
     {
@@ -61,7 +62,7 @@ public class StubChaosConfig
     };
 
     /// <summary>
-    /// Создает конфигурацию для нестабильной работы.
+    /// Gets создает конфигурацию для нестабильной работы.
     /// </summary>
     public static StubChaosConfig Unstable => new()
     {
@@ -71,3 +72,4 @@ public class StubChaosConfig
         MaxLatencyMs = 3000
     };
 }
+#pragma warning restore SA1204

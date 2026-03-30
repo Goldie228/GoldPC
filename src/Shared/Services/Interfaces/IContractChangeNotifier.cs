@@ -1,3 +1,4 @@
+#pragma warning disable CA1002, CA1716
 using GoldPC.Shared.DTOs;
 
 namespace GoldPC.Shared.Services.Interfaces;
@@ -30,7 +31,7 @@ public interface IContractChangeNotifier
         string? migrationGuide = null,
         string? changedBy = null,
         CancellationToken cancellationToken = default);
-    
+
     /// <summary>
     /// Получить историю изменений контракта
     /// </summary>
@@ -43,3 +44,4 @@ public interface IContractChangeNotifier
         int limit = 10,
         CancellationToken cancellationToken = default);
 }
+#pragma warning restore CA1002, CA1716

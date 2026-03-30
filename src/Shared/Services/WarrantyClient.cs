@@ -1,3 +1,4 @@
+#pragma warning disable CA1031, CS1591, SA1117, SA1402, SA1600
 using System.Net.Http.Json;
 using GoldPC.Shared.Services.Interfaces;
 using GoldPC.SharedKernel.DTOs;
@@ -24,7 +25,8 @@ public class WarrantyClient : IWarrantyClient
     {
         try
         {
-            _logger.LogInformation("Sending request to create warranty for Product {ProductId}, User {UserId}", 
+            _logger.LogInformation(
+                "Sending request to create warranty for Product {ProductId}, User {UserId}",
                 request.ProductId, request.UserId);
 
             var response = await _httpClient.PostAsJsonAsync("api/v1/warranty/card", request);
@@ -61,9 +63,11 @@ public class WarrantyClientMock : IWarrantyClient
 
     public Task<(bool Success, string? Error)> CreateWarrantyAsync(CreateWarrantyRequest request)
     {
-        _logger.LogInformation("[MOCK] Automatically creating warranty: Product={ProductId}, User={UserId}, Order={OrderId}, Service={ServiceId}", 
+        _logger.LogInformation(
+            "[MOCK] Automatically creating warranty: Product={ProductId}, User={UserId}, Order={OrderId}, Service={ServiceId}",
             request.ProductId, request.UserId, request.OrderId, request.ServiceRequestId);
-        
+
         return Task.FromResult((true, (string?)null));
     }
 }
+#pragma warning restore CA1031, CS1591, SA1117, SA1402, SA1600

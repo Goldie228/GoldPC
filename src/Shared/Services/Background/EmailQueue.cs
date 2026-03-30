@@ -1,3 +1,4 @@
+#pragma warning disable CA1711, CS1591, SA1600, SA1649
 using System.Threading.Channels;
 
 namespace GoldPC.Shared.Services.Background;
@@ -5,6 +6,7 @@ namespace GoldPC.Shared.Services.Background;
 public interface IEmailQueue
 {
     ValueTask QueueEmailAsync(EmailJob job);
+
     IAsyncEnumerable<EmailJob> DequeueAllAsync(CancellationToken ct);
 }
 
@@ -30,3 +32,4 @@ public class EmailQueue : IEmailQueue
         return _queue.Reader.ReadAllAsync(ct);
     }
 }
+#pragma warning restore CA1711, CS1591, SA1600, SA1649

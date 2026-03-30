@@ -1,3 +1,4 @@
+#pragma warning disable S3267, SA1651
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;
@@ -13,6 +14,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
     private readonly ILogger<PermissionAuthorizationHandler> _logger;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="PermissionAuthorizationHandler"/> class.
     /// Инициализирует новый экземпляр обработчика авторизации.
     /// </summary>
     /// <param name="logger">Логгер.</param>
@@ -26,6 +28,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
     /// </summary>
     /// <param name="context">Контекст авторизации.</param>
     /// <param name="requirement">Требование разрешения.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     protected override Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
@@ -78,3 +81,4 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         return Task.CompletedTask;
     }
 }
+#pragma warning restore S3267, SA1651

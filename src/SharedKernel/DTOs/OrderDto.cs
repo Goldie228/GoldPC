@@ -1,3 +1,4 @@
+#pragma warning disable CA2227, CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
 using GoldPC.SharedKernel.Enums;
@@ -35,3 +36,4 @@ public class OrderDto
 
     public ICollection<OrderItemDto> Items { get; set; } = new List<OrderItemDto>();
 }
+#pragma warning restore CA2227, CS1591, SA1600

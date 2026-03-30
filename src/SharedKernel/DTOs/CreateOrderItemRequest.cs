@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
@@ -24,3 +25,4 @@ public class CreateOrderItemRequest
     [Range(0.01, double.MaxValue, ErrorMessage = "Цена должна быть больше 0")]
     public decimal UnitPrice { get; set; }
 }
+#pragma warning restore CS1591, SA1600

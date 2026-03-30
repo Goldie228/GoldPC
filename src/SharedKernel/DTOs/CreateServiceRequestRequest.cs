@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
@@ -23,3 +24,4 @@ public class CreateServiceRequestRequest
     [MaxLength(50, ErrorMessage = "Серийный номер не должен превышать 50 символов")]
     public string? SerialNumber { get; set; }
 }
+#pragma warning restore CS1591, SA1600

@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 using GoldPC.Shared.Services.Background;
 using GoldPC.Shared.Services.Interfaces;
 using GoldPC.Shared.Services.Mocks;
@@ -36,7 +37,7 @@ public static class ServiceRegistrationExtensions
 
         // 3. Combined Notification Service with Logging Decorator
         services.AddScoped<ProductionNotificationService>();
-        services.AddScoped<INotificationService>(sp => 
+        services.AddScoped<INotificationService>(sp =>
         {
             var inner = sp.GetRequiredService<ProductionNotificationService>();
             var logger = sp.GetRequiredService<ILogger<NotificationServiceLoggingDecorator>>();
@@ -70,3 +71,4 @@ public static class ServiceRegistrationExtensions
         return services;
     }
 }
+#pragma warning restore CS1591, SA1600

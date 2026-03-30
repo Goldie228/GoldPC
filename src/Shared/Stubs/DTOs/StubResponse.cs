@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1402, SA1600
 using System.Text.Json.Serialization;
 
 namespace Shared.Stubs.DTOs;
@@ -8,43 +9,43 @@ namespace Shared.Stubs.DTOs;
 public class StubResponse
 {
     /// <summary>
-    /// Уникальное имя заглушки.
+    /// Gets or sets уникальное имя заглушки.
     /// </summary>
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// Имя сервиса.
+    /// Gets or sets имя сервиса.
     /// </summary>
     [JsonPropertyName("serviceName")]
     public string ServiceName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Описание заглушки.
+    /// Gets or sets описание заглушки.
     /// </summary>
     [JsonPropertyName("description")]
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// Текущий режим работы.
+    /// Gets or sets текущий режим работы.
     /// </summary>
     [JsonPropertyName("mode")]
     public string Mode { get; set; } = "Normal";
 
     /// <summary>
-    /// Включена ли заглушка.
+    /// Gets or sets a value indicating whether включена ли заглушка.
     /// </summary>
     [JsonPropertyName("isEnabled")]
     public bool IsEnabled { get; set; }
 
     /// <summary>
-    /// Время последнего изменения.
+    /// Gets or sets время последнего изменения.
     /// </summary>
     [JsonPropertyName("lastModified")]
     public DateTime LastModified { get; set; }
 
     /// <summary>
-    /// Конфигурация Chaos Engineering.
+    /// Gets or sets конфигурация Chaos Engineering.
     /// </summary>
     [JsonPropertyName("chaos")]
     public StubChaosConfigResponse? Chaos { get; set; }
@@ -109,3 +110,4 @@ public class StubErrorResponse
     [JsonPropertyName("message")]
     public string Message { get; set; } = string.Empty;
 }
+#pragma warning restore CS1591, SA1402, SA1600

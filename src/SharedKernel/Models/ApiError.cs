@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 namespace GoldPC.SharedKernel.Models;
 
 /// <summary>
@@ -14,3 +15,4 @@ public class ApiError
     public static ApiError Create(string code, string message, string? field = null)
         => new() { Code = code, Message = message, Field = field };
 }
+#pragma warning restore CS1591, SA1600

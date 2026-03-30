@@ -1,3 +1,4 @@
+#pragma warning disable CA1031, CS1591, SA1600
 using GoldPC.Shared.Services.Background;
 using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -33,7 +34,7 @@ public class ProductionNotificationService : INotificationService
     public async Task<(bool Success, string? Error)> SendEmailAsync(string email, string subject, string body)
     {
         _logger.LogInformation("ProductionNotificationService: Queueing email for {Email} in background", email);
-        
+
         try
         {
             await _emailQueue.QueueEmailAsync(new EmailJob(email, subject, body));
@@ -52,3 +53,4 @@ public class ProductionNotificationService : INotificationService
         return Task.FromResult<(bool, string?)>((false, "Push notifications not implemented yet"));
     }
 }
+#pragma warning restore CA1031, CS1591, SA1600

@@ -1,3 +1,4 @@
+#pragma warning disable CA1716
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -71,3 +72,4 @@ public static class AuthorizationServiceExtensions
         return services;
     }
 }
+#pragma warning restore CA1716

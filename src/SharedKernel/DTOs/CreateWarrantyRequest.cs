@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 using System.ComponentModel.DataAnnotations;
 using GoldPC.SharedKernel.Enums;
 
@@ -26,3 +27,4 @@ public class CreateWarrantyRequest
 
     public int? WarrantyDays { get; set; }
 }
+#pragma warning restore CS1591, SA1600

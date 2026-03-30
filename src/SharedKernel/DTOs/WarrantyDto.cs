@@ -1,3 +1,4 @@
+#pragma warning disable CA2227, CS1591, SA1600
 using GoldPC.SharedKernel.Enums;
 
 namespace GoldPC.SharedKernel.DTOs;
@@ -33,3 +34,4 @@ public class WarrantyDto
 
     public ICollection<WarrantyOperationDto> Operations { get; set; } = new List<WarrantyOperationDto>();
 }
+#pragma warning restore CA2227, CS1591, SA1600

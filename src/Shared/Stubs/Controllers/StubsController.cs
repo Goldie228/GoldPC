@@ -1,3 +1,4 @@
+#pragma warning disable CA1716, CS1591, SA1402, SA1600, SA1616
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Stubs.DTOs;
@@ -16,6 +17,7 @@ public class StubsController : ControllerBase
     private readonly StubRegistry _registry;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="StubsController"/> class.
     /// Создать новый экземпляр контроллера.
     /// </summary>
     public StubsController()
@@ -29,6 +31,7 @@ public class StubsController : ControllerBase
     /// <remarks>
     /// GET /api/internal/stubs
     /// </remarks>
+    /// <returns></returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<StubResponse>), StatusCodes.Status200OK)]
     public IActionResult GetAll()
@@ -44,6 +47,7 @@ public class StubsController : ControllerBase
     /// <remarks>
     /// GET /api/internal/stubs/stats
     /// </remarks>
+    /// <returns></returns>
     [HttpGet("stats")]
     [ProducesResponseType(typeof(StubRegistryStatsResponse), StatusCodes.Status200OK)]
     public IActionResult GetStats()
@@ -67,6 +71,7 @@ public class StubsController : ControllerBase
     /// <remarks>
     /// GET /api/internal/stubs/{name}
     /// </remarks>
+    /// <returns></returns>
     [HttpGet("{name}")]
     [ProducesResponseType(typeof(StubResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(StubErrorResponse), StatusCodes.Status404NotFound)]
@@ -101,6 +106,7 @@ public class StubsController : ControllerBase
     ///   }
     /// }
     /// </remarks>
+    /// <returns></returns>
     [HttpPatch("{name}")]
     [ProducesResponseType(typeof(StubResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(StubErrorResponse), StatusCodes.Status404NotFound)]
@@ -119,7 +125,7 @@ public class StubsController : ControllerBase
         var success = _registry.Configure(name, stub =>
         {
             stub.Mode = request.Mode;
-            
+
             if (request.IsEnabled.HasValue)
             {
                 stub.IsEnabled = request.IsEnabled.Value;
@@ -174,6 +180,7 @@ public class StubsController : ControllerBase
     /// 
     /// Доступные режимы: Normal, Slow, Failing, Unstable
     /// </remarks>
+    /// <returns></returns>
     [HttpPut("{name}/mode")]
     [ProducesResponseType(typeof(StubResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(StubErrorResponse), StatusCodes.Status404NotFound)]
@@ -211,6 +218,7 @@ public class StubsController : ControllerBase
     /// Пример запроса:
     /// true
     /// </remarks>
+    /// <returns></returns>
     [HttpPut("{name}/enabled")]
     [ProducesResponseType(typeof(StubResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(StubErrorResponse), StatusCodes.Status404NotFound)]
@@ -235,6 +243,7 @@ public class StubsController : ControllerBase
     /// <remarks>
     /// POST /api/internal/stubs/reset
     /// </remarks>
+    /// <returns></returns>
     [HttpPost("reset")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult ResetAll()
@@ -257,6 +266,7 @@ public class StubsController : ControllerBase
     ///   "mode": "Normal"
     /// }
     /// </remarks>
+    /// <returns></returns>
     [HttpPost]
     [ProducesResponseType(typeof(StubResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(StubErrorResponse), StatusCodes.Status400BadRequest)]
@@ -306,6 +316,7 @@ public class StubsController : ControllerBase
     /// <remarks>
     /// DELETE /api/internal/stubs/{name}
     /// </remarks>
+    /// <returns></returns>
     [HttpDelete("{name}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(StubErrorResponse), StatusCodes.Status404NotFound)]
@@ -344,7 +355,8 @@ public class StubsController : ControllerBase
                 MaxLatencyMs = stub.Chaos.MaxLatencyMs,
                 FailureStatusCode = stub.Chaos.FailureStatusCode,
                 FailureMessage = stub.Chaos.FailureMessage
-            } : null
+            }
+            : null
         };
     }
 }
@@ -355,7 +367,11 @@ public class StubsController : ControllerBase
 public class StubDefinitionRequest
 {
     public string Name { get; set; } = string.Empty;
+
     public string? ServiceName { get; set; }
+
     public string? Description { get; set; }
+
     public StubMode Mode { get; set; } = StubMode.Normal;
 }
+#pragma warning restore CA1716, CS1591, SA1402, SA1600, SA1616

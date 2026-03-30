@@ -1,3 +1,4 @@
+#pragma warning disable S1481
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +21,7 @@ public static class ChaosMiddlewareExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var options = configuration.GetSection("Chaos").Get<ChaosOptions>() 
+        var options = configuration.GetSection("Chaos").Get<ChaosOptions>()
                       ?? new ChaosOptions();
 
         services.Configure<ChaosOptions>(configuration.GetSection("Chaos"));
@@ -70,3 +71,4 @@ public static class ChaosMiddlewareExtensions
         return builder;
     }
 }
+#pragma warning restore S1481

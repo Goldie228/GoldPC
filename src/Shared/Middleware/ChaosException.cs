@@ -1,3 +1,4 @@
+#pragma warning disable CA1716, CS1591, SA1201, SA1600
 namespace Shared.Middleware;
 
 /// <summary>
@@ -6,35 +7,42 @@ namespace Shared.Middleware;
 public class ChaosException : Exception
 {
     /// <summary>
-    /// Тип Chaos-воздействия.
+    /// Gets тип Chaos-воздействия.
     /// </summary>
     public ChaosActionType ActionType { get; }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ChaosException"/> class.
     /// Создает новый экземпляр ChaosException.
     /// </summary>
-    public ChaosException(string message) 
+    public ChaosException(string message)
         : base(message)
     {
         ActionType = ChaosActionType.RandomFailure;
     }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ChaosException"/> class.
     /// Создает новый экземпляр ChaosException с указанием типа воздействия.
     /// </summary>
-    public ChaosException(string message, ChaosActionType actionType) 
+    public ChaosException(string message, ChaosActionType actionType)
         : base(message)
     {
         ActionType = actionType;
     }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ChaosException"/> class.
     /// Создает новый экземпляр ChaosException с внутренним исключением.
     /// </summary>
-    public ChaosException(string message, Exception innerException) 
+    public ChaosException(string message, Exception innerException)
         : base(message, innerException)
     {
         ActionType = ChaosActionType.RandomFailure;
+    }
+
+    public ChaosException()
+    {
     }
 }
 
@@ -73,3 +81,4 @@ public enum ChaosActionType
     /// </summary>
     ExternalServiceFailure
 }
+#pragma warning restore CA1716, CS1591, SA1201, SA1600

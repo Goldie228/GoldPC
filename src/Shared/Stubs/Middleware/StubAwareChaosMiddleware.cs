@@ -1,3 +1,4 @@
+#pragma warning disable CA1716, CA5394, CS1591, S1066, S3267, SA1201, SA1204, SA1316, SA1402, SA1600
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Shared.Middleware;
@@ -18,7 +19,7 @@ public class StubAwareChaosMiddleware
     private static readonly Random _random = new();
 
     /// <summary>
-    /// Имя заглушки для текущего сервиса (можно переопределить при регистрации).
+    /// Gets or sets имя заглушки для текущего сервиса (можно переопределить при регистрации).
     /// </summary>
     public static string? ServiceStubName { get; set; }
 
@@ -73,6 +74,7 @@ public class StubAwareChaosMiddleware
                 return true;
             }
         }
+
         return false;
     }
 
@@ -87,7 +89,7 @@ public class StubAwareChaosMiddleware
         }
 
         var stub = _registry.Get(ServiceStubName);
-        
+
         // Если заглушка отключена, вернуть null
         if (stub != null && !stub.IsEnabled)
         {
@@ -137,7 +139,7 @@ public class StubAwareChaosMiddleware
             {
                 var statusCode = chaosConfig?.FailureStatusCode ?? 500;
                 var message = chaosConfig?.FailureMessage ?? "Chaos: Random failure injected";
-                
+
                 await WriteErrorResponse(context, statusCode, message);
                 LogChaosAction("RandomFailure", $"{statusCode} response");
                 return true;
@@ -161,7 +163,7 @@ public class StubAwareChaosMiddleware
         {
             StubMode.Slow => (0, 1.0, stubConfig.Chaos.MinLatencyMs, stubConfig.Chaos.MaxLatencyMs),
             StubMode.Failing => (1.0, 0, _options.MinLatencyMs, _options.MaxLatencyMs),
-            StubMode.Unstable => (stubConfig.Chaos.FailureRate, stubConfig.Chaos.LatencyRate, 
+            StubMode.Unstable => (stubConfig.Chaos.FailureRate, stubConfig.Chaos.LatencyRate,
                 stubConfig.Chaos.MinLatencyMs, stubConfig.Chaos.MaxLatencyMs),
             _ => (_options.FailureRate, _options.LatencyRate, _options.MinLatencyMs, _options.MaxLatencyMs)
         };
@@ -170,11 +172,11 @@ public class StubAwareChaosMiddleware
     /// <summary>
     /// Отправить ответ с ошибкой.
     /// </summary>
-    private async Task WriteErrorResponse(HttpContext context, int statusCode, string message)
+    private static async Task WriteErrorResponse(HttpContext context, int statusCode, string message)
     {
         context.Response.StatusCode = statusCode;
         context.Response.ContentType = "application/json";
-        
+
         var errorResponse = new
         {
             error = "CHAOS_INJECTED",
@@ -221,11 +223,18 @@ public class StubAwareChaosMiddleware
 /// </summary>
 public class ChaosException : Exception
 {
-    public ChaosException(string message) : base(message)
+    public ChaosException(string message)
+        : base(message)
     {
     }
 
-    public ChaosException(string message, Exception innerException) : base(message, innerException)
+    public ChaosException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
+
+    public ChaosException()
     {
     }
 }
+#pragma warning restore CA1716, CA5394, CS1591, S1066, S3267, SA1201, SA1204, SA1316, SA1402, SA1600

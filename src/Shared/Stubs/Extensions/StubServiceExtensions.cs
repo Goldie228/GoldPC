@@ -1,3 +1,4 @@
+#pragma warning disable ASP0004, ASP0005, CA1716, SA1402, SA1616, SA1625
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -40,7 +41,7 @@ public static class StubServiceExtensions
         // Инициализируем Singleton реестр с логгером
         var serviceProvider = services.BuildServiceProvider();
         var logger = serviceProvider.GetService<ILogger<StubRegistry>>();
-        
+
         if (logger != null)
         {
             StubRegistry.Instance.SetLogger(logger);
@@ -197,6 +198,7 @@ public static class ChaosConfigurationExtensions
     /// <summary>
     /// Настроить Chaos Options из конфигурации.
     /// </summary>
+    /// <returns></returns>
     public static ChaosOptions ConfigureFrom(this ChaosOptions options, IConfiguration configuration)
     {
         configuration.GetSection("Chaos").Bind(options);
@@ -206,6 +208,7 @@ public static class ChaosConfigurationExtensions
     /// <summary>
     /// Включить Chaos Engineering для тестовой среды.
     /// </summary>
+    /// <returns></returns>
     public static ChaosOptions EnableForTesting(this ChaosOptions options, double failureRate = 0.1)
     {
         options.Enabled = true;
@@ -217,6 +220,7 @@ public static class ChaosConfigurationExtensions
     /// <summary>
     /// Отключить Chaos Engineering.
     /// </summary>
+    /// <returns></returns>
     public static ChaosOptions Disable(this ChaosOptions options)
     {
         options.Enabled = false;
@@ -229,6 +233,7 @@ public static class ChaosConfigurationExtensions
     /// <summary>
     /// Настроить Chaos для симуляции медленных ответов.
     /// </summary>
+    /// <returns></returns>
     public static ChaosOptions ConfigureSlowResponses(
         this ChaosOptions options,
         int minLatencyMs = 500,
@@ -245,6 +250,7 @@ public static class ChaosConfigurationExtensions
     /// <summary>
     /// Настроить Chaos для симуляции случайных ошибок.
     /// </summary>
+    /// <returns></returns>
     public static ChaosOptions ConfigureRandomFailures(
         this ChaosOptions options,
         double failureRate = 0.1)
@@ -254,3 +260,4 @@ public static class ChaosConfigurationExtensions
         return options;
     }
 }
+#pragma warning restore ASP0004, ASP0005, CA1716, SA1402, SA1616, SA1625

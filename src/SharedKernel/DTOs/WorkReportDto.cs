@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
 using GoldPC.SharedKernel.Enums;
@@ -23,3 +24,4 @@ public class WorkReportDto
 
     public DateTime ChangedAt { get; set; }
 }
+#pragma warning restore CS1591, SA1600

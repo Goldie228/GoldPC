@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 namespace SharedKernel.Events;
 
 public record OrderPlacedEvent : IntegrationEvent
@@ -10,3 +11,4 @@ public record OrderPlacedEvent : IntegrationEvent
 
     public ICollection<OrderItemEventDto> Items { get; init; } = new List<OrderItemEventDto>();
 }
+#pragma warning restore CS1591, SA1600

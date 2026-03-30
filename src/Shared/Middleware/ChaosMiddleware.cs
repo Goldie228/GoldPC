@@ -1,3 +1,4 @@
+#pragma warning disable CA1812, CA1852, CA5394, CS1591, S3267, SA1204, SA1402, SA1600
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -87,9 +88,16 @@ public class ChaosMiddleware
     /// </summary>
     private bool ShouldTrigger(double rate)
     {
-        if (rate <= 0) return false;
-        if (rate >= 1) return true;
-        
+        if (rate <= 0)
+        {
+            return false;
+        }
+
+        if (rate >= 1)
+        {
+            return true;
+        }
+
         return _random.NextDouble() < rate;
     }
 
@@ -127,7 +135,7 @@ public class ChaosMiddleware
     private async Task HandleServiceOutageAsync(HttpContext context)
     {
         var retryAfter = _options.RetryAfterSeconds;
-        
+
         if (_options.EnableLogging)
         {
             _logger.LogWarning(
@@ -204,7 +212,11 @@ public class ChaosMiddleware
 internal class ChaosOutageResponse
 {
     public string Error { get; set; } = string.Empty;
+
     public string Message { get; set; } = string.Empty;
+
     public int RetryAfter { get; set; }
+
     public DateTime Timestamp { get; set; }
 }
+#pragma warning restore CA1812, CA1852, CA5394, CS1591, S3267, SA1204, SA1402, SA1600

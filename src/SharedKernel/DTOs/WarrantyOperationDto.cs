@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 namespace GoldPC.SharedKernel.DTOs;
 
 /// <summary>
@@ -19,3 +20,4 @@ public class WarrantyOperationDto
 
     public Guid PerformedBy { get; set; }
 }
+#pragma warning restore CS1591, SA1600

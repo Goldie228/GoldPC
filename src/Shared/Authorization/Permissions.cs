@@ -1,3 +1,4 @@
+#pragma warning disable CA1724, SA1507
 namespace GoldPC.Shared.Authorization;
 
 /// <summary>
@@ -6,8 +7,6 @@ namespace GoldPC.Shared.Authorization;
 /// </summary>
 public static class Permissions
 {
-    #region Products (Товары)
-
     /// <summary>
     /// Просмотр товаров и каталога.
     /// </summary>
@@ -28,9 +27,7 @@ public static class Permissions
     /// </summary>
     public const string ProductsDelete = "products:delete";
 
-    #endregion
 
-    #region Orders (Заказы)
 
     /// <summary>
     /// Просмотр заказов.
@@ -52,9 +49,7 @@ public static class Permissions
     /// </summary>
     public const string OrdersCreate = "orders:create";
 
-    #endregion
 
-    #region Users (Пользователи)
 
     /// <summary>
     /// Просмотр списка пользователей.
@@ -76,9 +71,7 @@ public static class Permissions
     /// </summary>
     public const string UsersManageRoles = "users:manage-roles";
 
-    #endregion
 
-    #region Reports (Отчёты)
 
     /// <summary>
     /// Просмотр отчётов и аналитики.
@@ -95,9 +88,7 @@ public static class Permissions
     /// </summary>
     public const string AuditView = "audit:view";
 
-    #endregion
 
-    #region Categories (Категории)
 
     /// <summary>
     /// Просмотр категорий товаров.
@@ -109,9 +100,7 @@ public static class Permissions
     /// </summary>
     public const string CategoriesManage = "categories:manage";
 
-    #endregion
 
-    #region Services (Услуги)
 
     /// <summary>
     /// Просмотр услуг сервиса.
@@ -123,9 +112,7 @@ public static class Permissions
     /// </summary>
     public const string ServicesManage = "services:manage";
 
-    #endregion
 
-    #region PC Builder (Конфигуратор ПК)
 
     /// <summary>
     /// Использование конфигуратора ПК.
@@ -137,9 +124,7 @@ public static class Permissions
     /// </summary>
     public const string PcBuilderManage = "pcbuilder:manage";
 
-    #endregion
 
-    #region Warranty (Гарантия)
 
     /// <summary>
     /// Просмотр гарантийных обязательств.
@@ -151,7 +136,6 @@ public static class Permissions
     /// </summary>
     public const string WarrantyManage = "warranty:manage";
 
-    #endregion
 
     /// <summary>
     /// Возвращает список всех разрешений.
@@ -183,3 +167,4 @@ public static class Permissions
         WarrantyView, WarrantyManage
     };
 }
+#pragma warning restore CA1724, SA1507

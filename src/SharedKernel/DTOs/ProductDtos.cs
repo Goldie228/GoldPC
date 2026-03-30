@@ -1,3 +1,4 @@
+#pragma warning disable CA1002, CA1056, CA1805, CS1591, SA1402, SA1600, SA1649
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
@@ -10,18 +11,30 @@ namespace GoldPC.SharedKernel.DTOs;
 public record ProductListDto
 {
     public Guid Id { get; init; }
+
     public string Name { get; init; } = string.Empty;
+
     public string Sku { get; init; } = string.Empty;
+
     public string Slug { get; init; } = string.Empty;
+
     public string Category { get; init; } = string.Empty;
+
     public decimal Price { get; init; }
+
     public decimal? OldPrice { get; init; }
+
     public int Stock { get; init; }
+
     public ManufacturerDto? Manufacturer { get; init; }
+
     public ProductImageDto? MainImage { get; init; }
+
     public RatingDto? Rating { get; init; }
+
     public bool IsActive { get; init; }
-    /// <summary>Краткое описание для QuickView (первые 300 символов)</summary>
+
+    /// <summary>Gets краткое описание для QuickView (первые 300 символов)</summary>
     public string? DescriptionShort { get; init; }
 }
 
@@ -31,6 +44,7 @@ public record ProductListDto
 public record RatingDto
 {
     public double Average { get; init; }
+
     public int Count { get; init; }
 }
 
@@ -40,28 +54,51 @@ public record RatingDto
 public record ProductDetailDto
 {
     public Guid Id { get; init; }
+
     public string Name { get; init; } = string.Empty;
+
     public string Sku { get; init; } = string.Empty;
+
     public string Slug { get; init; } = string.Empty;
+
     public string Category { get; init; } = string.Empty;
+
     public Guid? ManufacturerId { get; init; }
+
     public ManufacturerDto? Manufacturer { get; init; }
+
     public decimal Price { get; init; }
+
     public decimal? OldPrice { get; init; }
+
     public int Stock { get; init; }
+
     public int WarrantyMonths { get; init; }
+
     public string? Description { get; init; }
+
     public string? ManufacturerAddress { get; init; }
+
     public string? ProductionAddress { get; init; }
+
     public string? Importer { get; init; }
+
     public string? ServiceSupport { get; init; }
+
     public Dictionary<string, object> Specifications { get; init; } = new();
+
     public ProductImageDto? MainImage { get; init; }
+
     public List<ProductImageDto> Images { get; init; } = new();
+
     public RatingDto? Rating { get; init; }
+
     public bool IsActive { get; init; }
+
     public bool IsFeatured { get; init; }
+
     public DateTime CreatedAt { get; init; }
+
     public DateTime? UpdatedAt { get; init; }
 }
 
@@ -71,23 +108,33 @@ public record ProductDetailDto
 public record CreateProductDto
 {
     public string Name { get; init; } = string.Empty;
+
     public string Sku { get; init; } = string.Empty;
+
     public string? Slug { get; init; }
-    
-    /// <summary>Категория товара (slug или название)</summary>
+
+    /// <summary>Gets категория товара (slug или название)</summary>
     public string Category { get; init; } = string.Empty;
-    
-    /// <summary>ID категории (для внутреннего использования)</summary>
+
+    /// <summary>Gets iD категории (для внутреннего использования)</summary>
     public Guid? CategoryId { get; init; }
-    
+
     public Guid? ManufacturerId { get; init; }
+
     public decimal Price { get; init; }
+
     public decimal? OldPrice { get; init; }
+
     public int Stock { get; init; }
+
     public int WarrantyMonths { get; init; } = 12;
+
     public string? Description { get; init; }
+
     public Dictionary<string, object> Specifications { get; init; } = new();
+
     public bool IsActive { get; init; } = true;
+
     public bool IsFeatured { get; init; } = false;
 }
 
@@ -97,15 +144,25 @@ public record CreateProductDto
 public record UpdateProductDto
 {
     public string? Name { get; init; }
+
     public string? Slug { get; init; }
+
     public Guid? ManufacturerId { get; init; }
+
     public decimal? Price { get; init; }
+
     public decimal? OldPrice { get; init; }
+
     public int? Stock { get; init; }
+
     public int? WarrantyMonths { get; init; }
+
     public string? Description { get; init; }
+
     public Dictionary<string, object>? Specifications { get; init; }
+
     public bool? IsActive { get; init; }
+
     public bool? IsFeatured { get; init; }
 }
 
@@ -115,13 +172,21 @@ public record UpdateProductDto
 public record CategoryDto
 {
     public Guid Id { get; init; }
+
     public string Name { get; init; } = string.Empty;
+
     public string Slug { get; init; } = string.Empty;
+
     public Guid? ParentId { get; init; }
+
     public List<CategoryDto> Children { get; init; } = new();
+
     public string? Icon { get; init; }
+
     public string? Description { get; init; }
+
     public int ProductCount { get; init; }
+
     public int Order { get; init; }
 }
 
@@ -131,9 +196,13 @@ public record CategoryDto
 public record ManufacturerDto
 {
     public Guid Id { get; init; }
+
     public string Name { get; init; } = string.Empty;
+
     public string? Logo { get; init; }
+
     public string? Country { get; init; }
+
     public string? Description { get; init; }
 }
 
@@ -143,9 +212,13 @@ public record ManufacturerDto
 public record ProductImageDto
 {
     public Guid Id { get; init; }
+
     public string Url { get; init; } = string.Empty;
+
     public string? Alt { get; init; }
+
     public bool IsMain { get; init; }
+
     public int Order { get; init; }
 }
 
@@ -155,17 +228,29 @@ public record ProductImageDto
 public record ReviewDto
 {
     public Guid Id { get; init; }
+
     public Guid ProductId { get; init; }
+
     public Guid UserId { get; init; }
+
     public string UserName { get; init; } = string.Empty;
+
     public int Rating { get; init; }
+
     public string? Title { get; init; }
+
     public string? Comment { get; init; }
+
     public string? Pros { get; init; }
+
     public string? Cons { get; init; }
+
     public bool IsVerified { get; init; }
+
     public bool IsApproved { get; init; }
+
     public int Helpful { get; init; }
+
     public DateTime CreatedAt { get; init; }
 }
 
@@ -175,9 +260,13 @@ public record ReviewDto
 public record CreateReviewDto
 {
     public int Rating { get; init; }
+
     public string? Title { get; init; }
+
     public string? Comment { get; init; }
+
     public string? Pros { get; init; }
+
     public string? Cons { get; init; }
 }
 
@@ -186,47 +275,49 @@ public record CreateReviewDto
 /// </summary>
 public record ProductFilterDto
 {
-    /// <summary>Фильтр по категории (slug или название)</summary>
+    /// <summary>Gets фильтр по категории (slug или название)</summary>
     public string? Category { get; init; }
-    
-    /// <summary>Фильтр по ID категории (для внутренней фильтрации)</summary>
+
+    /// <summary>Gets фильтр по ID категории (для внутренней фильтрации)</summary>
     public Guid? CategoryId { get; init; }
-    
-    /// <summary>Фильтр по ID производителя (один)</summary>
+
+    /// <summary>Gets фильтр по ID производителя (один)</summary>
     public Guid? ManufacturerId { get; init; }
 
-    /// <summary>Фильтр по списку ID производителей (несколько)</summary>
+    /// <summary>Gets фильтр по списку ID производителей (несколько)</summary>
     public IEnumerable<Guid>? ManufacturerIds { get; init; }
-    
-    /// <summary>Минимальная цена (query: priceMin)</summary>
+
+    /// <summary>Gets минимальная цена (query: priceMin)</summary>
     [FromQuery(Name = "priceMin")]
     public decimal? MinPrice { get; init; }
-    
-    /// <summary>Максимальная цена (query: priceMax)</summary>
+
+    /// <summary>Gets максимальная цена (query: priceMax)</summary>
     [FromQuery(Name = "priceMax")]
     public decimal? MaxPrice { get; init; }
-    
-    /// <summary>Только в наличии</summary>
+
+    /// <summary>Gets только в наличии</summary>
     public bool? InStock { get; init; }
-    
-    /// <summary>Только рекомендуемые</summary>
+
+    /// <summary>Gets только рекомендуемые</summary>
     public bool? IsFeatured { get; init; }
-    
-    /// <summary>Поиск по названию и описанию</summary>
+
+    /// <summary>Gets поиск по названию и описанию</summary>
     public string? Search { get; init; }
-    
-    /// <summary>Фильтр по спецификациям (ключ → значение для JSONB containment, select)</summary>
+
+    /// <summary>Gets фильтр по спецификациям (ключ → значение для JSONB containment, select)</summary>
     public Dictionary<string, string>? Specifications { get; init; }
 
-    /// <summary>Диапазоны для range-атрибутов: ключ → "min,max" (например "8,16")</summary>
+    /// <summary>Gets диапазоны для range-атрибутов: ключ → "min,max" (например "8,16")</summary>
     public Dictionary<string, string>? SpecificationRanges { get; init; }
-    
+
     // Пагинация
     public int Page { get; init; } = 1;
+
     public int PageSize { get; init; } = 20;
-    
+
     // Сортировка
     public string SortBy { get; init; } = "createdAt";
+
     public string SortOrder { get; init; } = "desc";
 }
 
@@ -236,7 +327,9 @@ public record ProductFilterDto
 public record FilterAttributesQueryDto
 {
     public IEnumerable<Guid>? ManufacturerIds { get; init; }
+
     public Dictionary<string, string>? Specifications { get; init; }
+
     public Dictionary<string, string>? SpecificationRanges { get; init; }
 }
 
@@ -246,14 +339,20 @@ public record FilterAttributesQueryDto
 public record FilterAttributeDto
 {
     public string Key { get; init; } = string.Empty;
+
     public string DisplayName { get; init; } = string.Empty;
+
     public string FilterType { get; init; } = "select"; // select | range
+
     public int SortOrder { get; init; }
-    /// <summary>Уникальные значения для select-фильтра (из товаров категории)</summary>
+
+    /// <summary>Gets уникальные значения для select-фильтра (из товаров категории)</summary>
     public List<string> Values { get; init; } = new();
-    /// <summary>Мин. значение для range-фильтра (из товаров категории)</summary>
+
+    /// <summary>Gets мин. значение для range-фильтра (из товаров категории)</summary>
     public decimal? MinValue { get; init; }
-    /// <summary>Макс. значение для range-фильтра</summary>
+
+    /// <summary>Gets макс. значение для range-фильтра</summary>
     public decimal? MaxValue { get; init; }
 }
 
@@ -263,6 +362,7 @@ public record FilterAttributeDto
 public record PagedResult<T>
 {
     public List<T> Data { get; init; } = new();
+
     public PaginationMeta Meta { get; init; } = new();
 }
 
@@ -272,9 +372,15 @@ public record PagedResult<T>
 public record PaginationMeta
 {
     public int Page { get; init; }
+
     public int PageSize { get; init; }
+
     public int TotalPages { get; init; }
+
     public int TotalItems { get; init; }
+
     public bool HasNextPage { get; init; }
+
     public bool HasPrevPage { get; init; }
 }
+#pragma warning restore CA1002, CA1056, CA1805, CS1591, SA1402, SA1600, SA1649

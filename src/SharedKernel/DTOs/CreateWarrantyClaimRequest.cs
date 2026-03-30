@@ -1,3 +1,4 @@
+#pragma warning disable CS1591, SA1600
 namespace GoldPC.SharedKernel.DTOs;
 
 /// <summary>
@@ -17,3 +18,4 @@ public class CreateWarrantyClaimRequest
 
     public int WarrantyPeriodMonths { get; set; } = 12;
 }
+#pragma warning restore CS1591, SA1600

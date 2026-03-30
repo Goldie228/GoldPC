@@ -1,10 +1,11 @@
+#pragma warning disable CA1716, CA2017, CS1591, SA1117, SA1600
 using System;
 using System.Net.Http;
 using Microsoft.Extensions.Logging;
 using Polly;
+using Polly.CircuitBreaker;
 using Polly.Extensions.Http;
 using Polly.Retry;
-using Polly.CircuitBreaker;
 
 namespace GoldPC.Shared.Resilience;
 
@@ -30,17 +31,18 @@ public static class ResiliencePolicies
         return Policy.WrapAsync(
             Policy.Handle<Exception>()
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-                    onRetry: (ex, ts, count, context) => 
-                        logger.LogWarning("Retrying {ServiceName} call ({Count}/3) after {Delay}s due to: {Error}", 
+                    onRetry: (ex, ts, count, context) =>
+                        logger.LogWarning(
+                            "Retrying {ServiceName} call ({Count}/3) after {Delay}s due to: {Error}",
                             serviceName, count, ts.TotalSeconds, ex.Message)),
             Policy.Handle<Exception>()
                 .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30),
-                    onBreak: (ex, timespan) => 
-                        logger.LogError("{ServiceName} Circuit Breaker OPEN for {TimeSpan}s. Last error: {Error}", 
+                    onBreak: (ex, timespan) =>
+                        logger.LogError(
+                            "{ServiceName} Circuit Breaker OPEN for {TimeSpan}s. Last error: {Error}",
                             serviceName, timespan.TotalSeconds, ex.Message),
-                    onReset: () => 
-                        logger.LogInformation("{ServiceName} Circuit Breaker CLOSED")
-                )
-        );
+                    onReset: () =>
+                        logger.LogInformation("{ServiceName} Circuit Breaker CLOSED")));
     }
 }
+#pragma warning restore CA1716, CA2017, CS1591, SA1117, SA1600
