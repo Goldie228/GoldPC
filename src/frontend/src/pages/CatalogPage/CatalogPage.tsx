@@ -15,11 +15,11 @@ import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { catalogApi } from '../../api/catalog';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
-import type { Product, ProductSpecifications, ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
+import type { Product, ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
-import { Modal } from '../../components/ui/Modal/Modal';
-import { formatSpecValueForKey, specLabel } from '../../utils/specifications';
+import { ProductQuickViewContent } from '../../components/product/ProductQuickViewContent';
+import { useModal } from '../../hooks/useModal';
 import styles from './CatalogPage.module.css';
 import { telemetryInitAutoFlush, telemetryTrack } from '../../utils/telemetry';
 
@@ -91,9 +91,7 @@ export function CatalogPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const [quickViewId, setQuickViewId] = useState<string | null>(null);
-  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const [quickViewLoading, setQuickViewLoading] = useState(false);
+  const { openModal, closeModal } = useModal();
   
   // Инициализация и синхронизация категории из URL (path или query)
   const resolvedCategory = resolveCategoryFromUrl(categoryParam, searchParams.get('category'));
@@ -362,26 +360,27 @@ export function CatalogPage() {
     }
   };
 
-  const openQuickView = useCallback(async (productId: string) => {
-    setQuickViewId(productId);
-    setQuickViewProduct(null);
-    setQuickViewLoading(true);
-    telemetryTrack('catalog_quick_view_open', { productId, category: selectedCategory ?? 'all' });
-    try {
-      const p = await catalogApi.getProduct(productId);
-      setQuickViewProduct(p);
-    } catch {
-      setQuickViewProduct(null);
-    } finally {
-      setQuickViewLoading(false);
-    }
-  }, [selectedCategory]);
-
-  const closeQuickView = useCallback(() => {
-    setQuickViewId(null);
-    setQuickViewProduct(null);
-    setQuickViewLoading(false);
-  }, []);
+  const openQuickView = useCallback(
+    async (productId: string) => {
+      telemetryTrack('catalog_quick_view_open', { productId, category: selectedCategory ?? 'all' });
+      try {
+        const product = await catalogApi.getProduct(productId);
+        openModal({
+          title: product.name ?? 'Быстрый просмотр',
+          size: 'large',
+          content: (
+            <ProductQuickViewContent
+              product={product}
+              onClose={closeModal}
+            />
+          ),
+        });
+      } catch (err) {
+        console.error('Failed to load product for quick view:', err);
+      }
+    },
+    [selectedCategory, openModal, closeModal]
+  );
 
   const catalogScrollAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -741,51 +740,6 @@ export function CatalogPage() {
           </>
         )}
 
-        <Modal
-          isOpen={quickViewId != null}
-          onClose={closeQuickView}
-          title={quickViewProduct?.name ?? 'Быстрый просмотр'}
-          size="large"
-        >
-          {quickViewLoading && <div style={{ color: 'var(--fg-muted)' }}>Загружаем…</div>}
-          {!quickViewLoading && quickViewProduct && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-              <div>
-                {quickViewProduct.mainImage?.url ? (
-                  <div className={styles.quickViewImageBox}>
-                    <img
-                      src={quickViewProduct.mainImage.url}
-                      alt={quickViewProduct.mainImage.alt ?? quickViewProduct.name}
-                      className={styles.quickViewImage}
-                    />
-                  </div>
-                ) : null}
-              </div>
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>{quickViewProduct.name}</div>
-                <div style={{ color: 'var(--fg-muted)', marginBottom: 10 }}>
-                  {quickViewProduct.manufacturer?.name ?? '—'} · {quickViewProduct.sku}
-                </div>
-                <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>
-                  {quickViewProduct.price.toLocaleString('ru-RU')} BYN
-                </div>
-                <div style={{ display: 'grid', gap: 8 }}>
-                  {Object.entries((quickViewProduct.specifications as ProductSpecifications) ?? {})
-                    .slice(0, 8)
-                    .map(([k, v]) => (
-                      <div key={k} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                        <div style={{ color: 'var(--fg-muted)' }}>{specLabel(k)}</div>
-                        <div style={{ color: 'var(--fg)' }}>{formatSpecValueForKey(k, v as any)}</div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            </div>
-          )}
-          {!quickViewLoading && !quickViewProduct && (
-            <div style={{ color: 'var(--fg-muted)' }}>Не удалось загрузить данные товара.</div>
-          )}
-        </Modal>
       </main>
     </div>
   );

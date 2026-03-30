@@ -282,7 +282,7 @@ function ImageContainer({
 
       {/* Кнопка избранного всегда видна на мобильных или при hover на десктопе */}
       <button
-        className={`${styles.wishlistCornerBtn} ${inWishlist ? styles.wishlistActive : ''}`}
+        className={`${styles.wishlistCornerBtn} ${inWishlist ? styles.wishlistCornerActive : ''}`}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

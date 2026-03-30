@@ -357,7 +357,9 @@ export function FilterSidebar({
     fetchCategories();
   }, []);
 
-  // Загрузка атрибутов фильтрации при выборе категории и фильтров (контекстные значения: при Intel — без AM4/AM5)
+  // Загрузка атрибутов фильтрации только при смене категории.
+  // При изменении самих фильтров (бренды, характеристики) перезагружаются лишь товары,
+  // а сайдбар остаётся стабильным, без лишних спиннеров/миганий.
   useEffect(() => {
     if (!selectedCategory) {
       setFilterAttributes([]);
@@ -366,39 +368,10 @@ export function FilterSidebar({
     }
     const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
 
-    const specsSelect: Record<string, string> = {};
-    const specsRange: Record<string, string> = {};
-    for (const [k, v] of Object.entries(selectedSpecifications)) {
-      if (Array.isArray(v)) {
-        if (v.length > 0) specsSelect[k] = v.length === 1 ? v[0] : v.join(',');
-      } else {
-        const str = String(v);
-        if (str.includes(',')) {
-          const parts = str.split(',');
-          if (parts.length === 2 && !Number.isNaN(parseFloat(parts[0])) && !Number.isNaN(parseFloat(parts[1]))) {
-            specsRange[k] = str;
-          } else {
-            specsSelect[k] = str;
-          }
-        } else {
-          specsSelect[k] = typeof v === 'number' ? String(v) : str;
-        }
-      }
-    }
-
-    const filterParams =
-      selectedManufacturerIds.length > 0 || Object.keys(specsSelect).length > 0 || Object.keys(specsRange).length > 0
-        ? {
-            manufacturerIds: selectedManufacturerIds.length > 0 ? selectedManufacturerIds : undefined,
-            specifications: Object.keys(specsSelect).length > 0 ? specsSelect : undefined,
-            specificationRanges: Object.keys(specsRange).length > 0 ? specsRange : undefined,
-          }
-        : undefined;
-
     const fetchAttrs = async () => {
       setSpecAttrsLoading(true);
       try {
-        const attrs = await catalogApi.getFilterFacets(backendSlug, filterParams);
+        const attrs = await catalogApi.getFilterFacets(backendSlug);
         setFilterAttributes(attrs);
       } catch (err) {
         console.error('Failed to fetch filter attributes:', err);
@@ -408,7 +381,7 @@ export function FilterSidebar({
       }
     };
     fetchAttrs();
-  }, [selectedCategory, selectedManufacturerIds, selectedSpecifications]);
+  }, [selectedCategory]);
 
   // Загрузка производителей: по категории или всех
   useEffect(() => {
@@ -543,31 +516,62 @@ export function FilterSidebar({
         const renderAttr = (attr: FilterFacetAttribute, options?: { hideLabel?: boolean }) => {
           if (attr.filterType === 'range') {
             if (attr.minValue == null && attr.maxValue == null) return null;
-            const minVal = attr.minValue ?? 0;
-            const maxVal = attr.maxValue ?? Math.max(minVal + 1, 100);
+            const isVideoMemory = attr.key === 'videopamyat';
+
+            // Бэкенд хранит видеопамять в МБ, но фильтр показывает в ГБ.
+            // Для остальных числовых характеристик работаем в «сырых» единицах.
+            const rawMin = attr.minValue ?? 0;
+            const rawMax = attr.maxValue ?? Math.max(rawMin + 1, 100);
+
+            const toUi = (v: number) => (isVideoMemory ? v / 1024 : v);
+            const fromUi = (v: number) => (isVideoMemory ? v * 1024 : v);
+
+            const minValUi = toUi(rawMin);
+            const maxValUi = toUi(rawMax);
+
             const raw = selectedSpecifications[attr.key];
             const rangeStr = typeof raw === 'string' ? raw : undefined;
-            const [minSel, maxSel] = rangeStr?.includes(',')
+
+            const [selMinRaw, selMaxRaw] = rangeStr?.includes(',')
               ? rangeStr.split(',').map((s) => parseFloat(s.trim()) || 0)
-              : [minVal, maxVal];
-            const localRange = { min: minSel || minVal, max: maxSel || maxVal };
-            const rangeSpan = maxVal - minVal;
-            const step = attr.key.includes('videopamyat') || attr.key.includes('capacity') ? 1 : Math.max(1, Math.floor(rangeSpan / 100) || 1);
+              : [rawMin, rawMax];
+
+            const minSelUi = toUi(selMinRaw || rawMin);
+            const maxSelUi = toUi(selMaxRaw || rawMax);
+
+            const localRange = { min: minSelUi, max: maxSelUi };
+
+            const rangeSpanUi = maxValUi - minValUi;
+            const step =
+              isVideoMemory || attr.key.includes('capacity')
+                ? 1
+                : Math.max(1, Math.floor(rangeSpanUi / 100) || 1);
+
             return (
               <div key={attr.key} className={styles.specFilterBlock}>
                 {!options?.hideLabel && <span className={styles.specFilterLabel}>{attr.displayName}</span>}
                 <RangeSlider
-                  min={minVal}
-                  max={maxVal}
+                  min={minValUi}
+                  max={maxValUi}
                   step={step}
                   value={localRange}
-                  onChange={(r) => {
+                  onCommit={(r) => {
                     const next = { ...selectedSpecifications };
-                    if (r.min === minVal && r.max === maxVal) delete next[attr.key];
-                    else next[attr.key] = `${r.min},${r.max}`;
+                    const committedMinRaw = fromUi(r.min);
+                    const committedMaxRaw = fromUi(r.max);
+
+                    // Возвращаемся в исходные единицы (МБ для видеопамяти)
+                    if (committedMinRaw === rawMin && committedMaxRaw === rawMax) {
+                      delete next[attr.key];
+                    } else {
+                      next[attr.key] = `${committedMinRaw},${committedMaxRaw}`;
+                    }
                     onSpecificationsChange(next);
                   }}
-                  formatValue={(v) => (Number.isInteger(v) ? v.toString() : v.toFixed(0))}
+                  formatValue={(v) => {
+                    const display = isVideoMemory ? v : v;
+                    return Number.isInteger(display) ? display.toString() : display.toFixed(1);
+                  }}
                 />
               </div>
             );

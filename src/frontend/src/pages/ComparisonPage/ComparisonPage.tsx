@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useComparisonStore } from '../../store/comparisonStore';
 import { catalogApi } from '../../api/catalog';
 import { getProductImageUrl } from '../../utils/image';
@@ -12,7 +11,7 @@ import { Icon } from '../../components/ui/Icon/Icon';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { EmptyState } from '../../components/catalog/EmptyState';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
-import { Modal } from '../../components/ui/Modal/Modal';
+import { ProductQuickViewContent } from '../../components/product/ProductQuickViewContent';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
 import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
 import { specificationsWithDescriptionFallback } from '../../utils/productDescriptionSpecs';
@@ -20,66 +19,7 @@ import { evaluateComparison } from '../../utils/comparison/comparisonEngine';
 import { getBackendCategorySlug, normalizeCategory, normalizeSpecKey } from '../../utils/comparison/comparisonRules';
 import { sortSpecKeysForComparison } from '../../utils/comparison/specKeysSort';
 import styles from './ComparisonPage.module.css';
-
-/** Placeholder контент для модального окна быстрого просмотра */
-function QuickViewContent({ product }: { product: Product }): ReactElement {
-  const ratingValue = typeof product.rating === 'number'
-    ? product.rating
-    : (product.rating as { average?: number } | undefined)?.average;
-    
-  return (
-    <div className={styles.quickViewContent}>
-      <div className={styles.quickViewImage}>
-        {product.mainImage?.url ? (
-          <div className={styles.quickViewImageWrapper}>
-            <img
-              src={product.mainImage.url}
-              alt={product.mainImage.alt ?? product.name}
-            />
-          </div>
-        ) : (
-          <div className={styles.quickViewPlaceholder}>
-            <Icon name="image" size="2xl" color="secondary" />
-          </div>
-        )}
-      </div>
-      <div className={styles.quickViewDetails}>
-        {product.manufacturer != null && (
-          <span className={styles.quickViewManufacturer}>
-            {product.manufacturer.name}
-          </span>
-        )}
-        <h2 className={styles.quickViewName}>{product.name}</h2>
-        <div className={styles.quickViewPrice}>
-          {formatPrice(product.price)}
-        </div>
-        {ratingValue != null && !Number.isNaN(ratingValue) && (
-          <div className={styles.quickViewRating}>
-            <div className={styles.stars}>
-              {'★'.repeat(Math.round(ratingValue))}
-              {'☆'.repeat(5 - Math.round(ratingValue))}
-            </div>
-            <span>{Number(ratingValue).toFixed(1)}</span>
-          </div>
-        )}
-        <div className={styles.quickViewDescription}>
-          {product.descriptionShort != null && product.descriptionShort.trim() !== '' ? (
-            <>
-              <p className={styles.quickViewDescriptionText}>{product.descriptionShort}</p>
-              <Link to={`/product/${product.slug}`} className={styles.quickViewLink}>
-                Подробнее на странице товара →
-              </Link>
-            </>
-          ) : (
-            <Link to={`/product/${product.slug}`} className={styles.quickViewLink}>
-              Подробное описание на странице товара →
-            </Link>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+import { useModal } from '../../hooks/useModal';
 
 /** Получить главное изображение товара (mainImage или первое из images) */
 function getMainImage(product: Product): ProductImage | undefined {
@@ -118,7 +58,7 @@ export function ComparisonPage(): ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const { openModal, closeModal } = useModal();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [facetDisplayNames, setFacetDisplayNames] = useState<Record<string, string>>({});
 
@@ -208,7 +148,16 @@ export function ComparisonPage(): ReactElement {
   };
 
   const handleOpenQuickView = (product: Product) => {
-    setQuickViewProduct(product);
+    openModal({
+      title: product.name ?? 'Быстрый просмотр',
+      size: 'large',
+      content: (
+        <ProductQuickViewContent
+          product={product}
+          onClose={closeModal}
+        />
+      ),
+    });
   };
 
   const categoryCounts = useMemo(() => {
@@ -284,6 +233,18 @@ export function ComparisonPage(): ReactElement {
     });
     return sortSpecKeysForComparison(Array.from(keys));
   }, [visibleProducts]);
+
+  /** Контекст всех значений строк — нужен для conditional-сравнений (например, voltage при mixed DDR4/DDR5). */
+  const specContextValues = useMemo(() => {
+    const ctx: Record<string, (string | number | boolean | undefined)[]> = {};
+    for (const key of specKeys) {
+      ctx[key] = visibleProducts.map((p) => {
+        const specs = p.specifications as ProductSpecifications | undefined;
+        return specs?.[key];
+      });
+    }
+    return ctx;
+  }, [specKeys, visibleProducts]);
 
   const resolveSpecLabel = useCallback(
     (key: string): string => {
@@ -407,7 +368,6 @@ export function ComparisonPage(): ReactElement {
                       <span>Характеристики</span>
                     </div>
                   </th>
-                  <AnimatePresence mode="popLayout">
                     {visibleProducts.map((product) => {
                       const inCart = isInCart(product.id);
                       const inWishlist = isInWishlist(product.id);
@@ -415,13 +375,9 @@ export function ComparisonPage(): ReactElement {
                       const canIncrement = product.stock <= 0 || quantityInCart < product.stock;
 
                       return (
-                      <motion.th 
+                      <th 
                         key={product.id} 
                         className={styles.productCol}
-                        layout
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
                       >
                         <div className={styles.productHeader}>
                           <button
@@ -434,19 +390,23 @@ export function ComparisonPage(): ReactElement {
                           </button>
                           <Link to={`/product/${product.slug}`} className={styles.productImageLink}>
                             {(() => {
-                              const img = getMainImage(product);
-                              const url = getProductImageUrl(img?.url);
-                              return url && !imageErrors.has(product.id) ? (
-                                <img
-                                  src={url}
-                                  alt={img?.alt ?? product.name}
-                                  className={styles.productImage}
-                                  onError={() => handleImageError(product.id)}
-                                />
-                              ) : (
-                              <div className={styles.productImagePlaceholder}>
-                                <Icon name="image" size="lg" color="secondary" />
-                              </div>
+                              const mainImage = getMainImage(product);
+                              const url = getProductImageUrl(mainImage?.url);
+                              return (
+                                <div className={styles.productImageFrame}>
+                                  {url && !imageErrors.has(product.id) ? (
+                                    <img
+                                      src={url}
+                                      alt={mainImage?.alt ?? product.name}
+                                      className={styles.productImage}
+                                      onError={() => handleImageError(product.id)}
+                                    />
+                                  ) : (
+                                    <div className={styles.productImagePlaceholder}>
+                                      <Icon name="image" size="lg" color="secondary" />
+                                    </div>
+                                  )}
+                                </div>
                               );
                             })()}
                           </Link>
@@ -506,10 +466,9 @@ export function ComparisonPage(): ReactElement {
                             </div>
                           </div>
                         </div>
-                      </motion.th>
+                      </th>
                     );
                     })}
-                  </AnimatePresence>
                 </tr>
               </thead>
               <tbody>
@@ -562,7 +521,7 @@ export function ComparisonPage(): ReactElement {
                     const specs = p.specifications as ProductSpecifications | undefined;
                     return specs?.[key];
                   });
-                  const evaluation = evaluateComparison(activeCategory ?? '', key, values);
+                  const evaluation = evaluateComparison(activeCategory ?? '', key, values, specContextValues);
 
                   return (
                     <tr key={key} className={styles.row}>
@@ -593,15 +552,6 @@ export function ComparisonPage(): ReactElement {
         )}
       </div>
 
-      {/* Модальное окно быстрого просмотра */}
-      <Modal
-        isOpen={!!quickViewProduct}
-        onClose={() => setQuickViewProduct(null)}
-        title="Быстрый просмотр"
-        size="large"
-      >
-        {quickViewProduct && <QuickViewContent product={quickViewProduct} />}
-      </Modal>
     </div>
   );
 }

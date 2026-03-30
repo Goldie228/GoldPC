@@ -4,6 +4,8 @@ import { Button } from '../../../components/ui/Button';
 import { useCart } from '../../../hooks/useCart';
 import { useWishlistStore } from '../../../store/wishlistStore';
 import { useToastStore } from '../../../store/toastStore';
+import { useComparisonStore } from '../../../store/comparisonStore';
+import { Icon } from '../../../components/ui/Icon/Icon';
 import type { Product } from '../../../api/types';
 import { Link } from 'react-router-dom';
 import styles from '../ProductPage.module.css';
@@ -46,6 +48,7 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
   const { addToCart, removeFromCart, updateQuantity, isInCart, getItemQuantity } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlistStore();
   const showToast = useToastStore((state) => state.showToast);
+  const { isInComparison, toggleComparison } = useComparisonStore();
   const [notifyEmail, setNotifyEmail] = useState('');
   const [notifySent, setNotifySent] = useState(false);
 
@@ -56,6 +59,7 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
   const quantityInCart = getItemQuantity(product.id);
   const isDisabled = product.stock === 0 || !product.isActive;
   const inWishlist = isInWishlist(product.id);
+  const inComparison = isInComparison(product.id);
 
   const handleAddToCart = (): void => {
     if (isDisabled) return;
@@ -82,6 +86,23 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
       inWishlist ? 'Удалено из избранного' : 'Добавлено в избранное',
       inWishlist ? 'info' : 'success'
     );
+  };
+
+  const handleToggleComparison = (): void => {
+    if (isDisabled) return;
+
+    if (inComparison) {
+      toggleComparison(product.id, product.category);
+      showToast('Удалено из сравнения', 'info');
+      return;
+    }
+
+    const result = toggleComparison(product.id, product.category);
+    if (result.success) {
+      showToast('Добавлено в сравнение', 'success');
+    } else {
+      showToast('В сравнении уже 4 товара этой категории', 'info');
+    }
   };
 
   const handleNotifyStock = (): void => {
@@ -179,7 +200,17 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
         >
           <Heart size={20} fill={inWishlist ? 'currentColor' : 'none'} />
         </button>
-        
+
+        <button
+          type="button"
+          className={`${styles.actionIconBtn} ${inComparison ? styles.actionIconBtnActive : ''}`}
+          onClick={handleToggleComparison}
+          disabled={isDisabled}
+          aria-label={inComparison ? 'Удалить из сравнения' : 'Добавить в сравнение'}
+        >
+          <Icon name="compare" size="md" color={inComparison ? 'gold' : 'default'} />
+        </button>
+
         <button
           type="button"
           className={styles.wishlistBtn}

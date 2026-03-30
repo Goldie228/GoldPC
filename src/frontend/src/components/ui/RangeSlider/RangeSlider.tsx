@@ -6,7 +6,16 @@ interface RangeSliderProps {
   max: number;
   step?: number;
   value: { min: number; max: number };
-  onChange: (value: { min: number; max: number }) => void;
+  /**
+   * Вызывается при каждом движении ползунка (для локального UI-состояния).
+   * Можно опустить, если не нужно реагировать на каждый шаг.
+   */
+  onChange?: (value: { min: number; max: number }) => void;
+  /**
+   * Вызывается один раз после завершения перетаскивания (mouse up).
+   * Используйте для «дорогих» операций: запросов к API, изменения фильтров и т.д.
+   */
+  onCommit?: (value: { min: number; max: number }) => void;
   formatValue?: (value: number) => string;
   label?: string;
 }
@@ -17,6 +26,7 @@ export function RangeSlider({
   step = 1,
   value,
   onChange,
+  onCommit,
   formatValue = (v) => v.toString(),
   label,
 }: RangeSliderProps) {
@@ -62,12 +72,12 @@ export function RangeSlider({
         const newMin = Math.min(clampedValue, localValues.max - step);
         const updated = { ...localValues, min: newMin };
         setLocalValues(updated);
-        onChange(updated);
+        onChange?.(updated);
       } else {
         const newMax = Math.max(clampedValue, localValues.min + step);
         const updated = { ...localValues, max: newMax };
         setLocalValues(updated);
-        onChange(updated);
+        onChange?.(updated);
       }
     },
     [isDragging, getValueFromPosition, localValues, min, max, step, onChange]
@@ -75,7 +85,10 @@ export function RangeSlider({
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(null);
-  }, []);
+    if (onCommit) {
+      onCommit(localValues);
+    }
+  }, [onCommit, localValues]);
 
   useEffect(() => {
     if (isDragging) {

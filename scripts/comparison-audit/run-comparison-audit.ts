@@ -56,6 +56,15 @@ interface ProductDetailDto {
   specifications: Record<string, unknown>;
 }
 
+function shuffleInPlace<T>(arr: T[]): void {
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    if (j !== i) {
+      [arr[i], arr[j]] = [arr[j]!, arr[i]!];
+    }
+  }
+}
+
 function parseArgs(): { perCategory: number } {
   let perCategory = 4;
   for (const a of process.argv.slice(2)) {
@@ -142,7 +151,8 @@ async function main(): Promise<void> {
     listUrl.searchParams.set('page', '1');
 
     const list = await fetchJson<PagedResult<ProductListDto>>(listUrl.toString());
-    const items = list.data ?? [];
+    const items = [...(list.data ?? [])];
+    shuffleInPlace(items);
     if (items.length === 0) continue;
 
     const details: ProductDetailDto[] = [];

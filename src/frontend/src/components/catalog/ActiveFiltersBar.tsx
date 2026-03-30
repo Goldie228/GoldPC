@@ -1,5 +1,6 @@
 import { X, RotateCcw } from 'lucide-react';
 import type { ReactElement } from 'react';
+import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
 import styles from './ActiveFiltersBar.module.css';
 
 type Chip = {
@@ -19,16 +20,6 @@ function ChipView({ chip }: { chip: Chip }): ReactElement {
       )}
     </span>
   );
-}
-
-function formatSpecValue(value: string | number | string[]): string {
-  if (Array.isArray(value)) return value.join(', ');
-  const s = String(value);
-  if (s.includes(',')) {
-    const [a, b] = s.split(',').map((x) => x.trim());
-    if (a && b) return `${a}–${b}`;
-  }
-  return s;
 }
 
 export function ActiveFiltersBar(props: {
@@ -121,10 +112,24 @@ export function buildCatalogFilterChips(args: {
   }
 
   for (const [k, v] of Object.entries(args.selectedSpecifications)) {
-    const value = formatSpecValue(v);
+    let value: string;
+
+    if (Array.isArray(v)) {
+      value = v.map((item) => formatSpecValueForKey(k, item)).join(', ');
+    } else if (typeof v === 'string' && v.includes(',')) {
+      const [a, b] = v.split(',').map((x) => x.trim());
+      if (a && b && !Number.isNaN(parseFloat(a)) && !Number.isNaN(parseFloat(b))) {
+        value = `${a}–${b}`;
+      } else {
+        value = formatSpecValueForKey(k, v);
+      }
+    } else {
+      value = formatSpecValueForKey(k, v);
+    }
+
     chips.push({
       id: `spec-${k}`,
-      label: `${k}: ${value}`,
+      label: `${specLabel(k)}: ${value}`,
       onRemove: () => args.onClearSpecKey(k),
     });
   }

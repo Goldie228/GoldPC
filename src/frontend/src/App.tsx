@@ -48,6 +48,11 @@ const ReportsPage = lazy(() => import('./pages/accountant').then(m => ({ default
 const ExportPage = lazy(() => import('./pages/accountant').then(m => ({ default: m.ExportPage })));
 const NotFoundPage = lazy(() => import('./pages/errors').then(m => ({ default: m.NotFoundPage })));
 
+function lastPathSegment(pathname: string): string {
+  const seg = pathname.split('?')[0].split('/').filter(Boolean);
+  return seg[seg.length - 1] ?? '';
+}
+
 /** Скелетон по типу маршрута (без Router: pathname из window при подгрузке чанка) */
 function RouteAwarePageLoader() {
   const path = typeof window !== 'undefined' ? window.location.pathname : '/';
@@ -64,6 +69,74 @@ function RouteAwarePageLoader() {
         <div className="page-loader__bar page-loader__bar--long" />
         <div className="page-loader__bar page-loader__bar--medium" />
         <div className="page-loader__panel" />
+      </div>
+    );
+  }
+
+  const leaf = lastPathSegment(path);
+
+  if (leaf === 'wishlist') {
+    return (
+      <div className="page-loader page-loader--wishlist" aria-busy="true" aria-label="Загрузка страницы">
+        <aside className="page-loader__wishlistSidebar" aria-hidden>
+          <div className="page-loader__bar page-loader__bar--sidebarTitle" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="page-loader__bar page-loader__bar--sidebarRow" />
+          ))}
+          <div className="page-loader__wishlistSidebarBlock" />
+        </aside>
+        <div className="page-loader__wishlistMain">
+          <div className="page-loader__bar page-loader__bar--long" />
+          <div className="page-loader__bar page-loader__bar--short" />
+          <div className="page-loader__wishlistToolbar">
+            <div className="page-loader__bar page-loader__bar--toolbar" />
+            <div className="page-loader__bar page-loader__bar--toolbarNarrow" />
+          </div>
+          <div className="page-loader__wishlistGrid">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (leaf === 'comparison') {
+    return (
+      <div className="page-loader page-loader--comparison" aria-busy="true" aria-label="Загрузка страницы">
+        <div className="page-loader__bar page-loader__bar--long" />
+        <div className="page-loader__bar page-loader__bar--medium" />
+        <div className="page-loader__comparisonTable" role="presentation">
+          <div className="page-loader__comparisonHead">
+            <div className="page-loader__comparisonCorner">
+              <div className="page-loader__bar page-loader__bar--cornerLabel" />
+            </div>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="page-loader__comparisonProductCol">
+                <div className="page-loader__comparisonImg" />
+                <div className="page-loader__bar page-loader__bar--productTitle" />
+                <div className="page-loader__bar page-loader__bar--productPrice" />
+                <div className="page-loader__comparisonActions">
+                  <div className="page-loader__bar page-loader__bar--action" />
+                  <div className="page-loader__bar page-loader__bar--action" />
+                </div>
+              </div>
+            ))}
+          </div>
+          {Array.from({ length: 5 }).map((_, row) => (
+            <div key={row} className="page-loader__comparisonRow">
+              <div className="page-loader__comparisonLabel">
+                <div className="page-loader__bar page-loader__bar--specLabel" />
+              </div>
+              {Array.from({ length: 3 }).map((_, col) => (
+                <div key={col} className="page-loader__comparisonCell">
+                  <div className="page-loader__bar page-loader__bar--specValue" />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

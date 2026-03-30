@@ -498,6 +498,36 @@
   background: rgba(212, 165, 116, 0.05);
 }
 
+.actionIconBtn {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
+  color: var(--fg-muted, #71717a);
+  transition: all 0.2s;
+}
+
+.actionIconBtn:hover:not(:disabled) {
+  border-color: var(--accent, #d4a574);
+  color: var(--accent, #d4a574);
+  background: rgba(212, 165, 116, 0.05);
+}
+
+.actionIconBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actionIconBtnActive {
+  color: var(--accent, #d4a574);
+  border-color: color-mix(in srgb, var(--accent, #d4a574) 35%, transparent);
+  background: color-mix(in srgb, var(--accent, #d4a574) 10%, transparent);
+}
+
 .notifyBlock {
   margin-bottom: var(--spacing-lg);
   padding: var(--spacing-md);

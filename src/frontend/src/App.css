@@ -301,6 +301,219 @@ a:hover {
   opacity: 0.85;
 }
 
+/* Избранное: сайдбар + основная колонка (как WishlistPage) */
+.page-loader.page-loader--wishlist {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page-loader__wishlistSidebar {
+  display: none;
+  flex-shrink: 0;
+  width: 260px;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.page-loader__bar--sidebarTitle {
+  width: 70%;
+  height: 16px;
+}
+
+.page-loader__bar--sidebarRow {
+  width: 100%;
+  height: 12px;
+}
+
+.page-loader__wishlistSidebarBlock {
+  margin-top: 0.5rem;
+  min-height: 100px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  opacity: 0.7;
+}
+
+.page-loader__wishlistMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.page-loader__bar--short {
+  width: 28%;
+  height: 12px;
+}
+
+.page-loader__wishlistToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.page-loader__bar--toolbar {
+  width: min(280px, 45%);
+  height: 38px;
+  border-radius: 8px;
+}
+
+.page-loader__bar--toolbarNarrow {
+  width: 160px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.page-loader__wishlistGrid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .page-loader__wishlistSidebar {
+    display: flex;
+  }
+}
+
+/* Сравнение: шапка таблицы с колонками товаров */
+.page-loader.page-loader--comparison {
+  flex-direction: column;
+  align-items: stretch;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.page-loader__comparisonTable {
+  margin-top: 0.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.page-loader__comparisonHead {
+  display: grid;
+  grid-template-columns: minmax(100px, 140px) repeat(3, minmax(0, 1fr));
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 0.75rem;
+  align-items: start;
+}
+
+.page-loader__comparisonCorner {
+  padding: 0.5rem 0.25rem 0 0;
+}
+
+.page-loader__bar--cornerLabel {
+  width: 100%;
+  max-width: 120px;
+  height: 12px;
+}
+
+.page-loader__comparisonProductCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0 0.5rem;
+  min-width: 0;
+}
+
+.page-loader__comparisonImg {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    var(--bg-card) 0%,
+    rgba(212, 165, 116, 0.12) 50%,
+    var(--bg-card) 100%
+  );
+  background-size: 200% 100%;
+  animation: pageLoaderShimmer 1.2s ease-in-out infinite;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.page-loader__bar--productTitle {
+  width: 100%;
+  height: 12px;
+}
+
+.page-loader__bar--productPrice {
+  width: 45%;
+  height: 14px;
+}
+
+.page-loader__comparisonActions {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.page-loader__bar--action {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+}
+
+.page-loader__comparisonRow {
+  display: grid;
+  grid-template-columns: minmax(100px, 140px) repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+
+.page-loader__comparisonRow:last-child {
+  border-bottom: none;
+}
+
+.page-loader__comparisonLabel {
+  padding-right: 0.5rem;
+}
+
+.page-loader__bar--specLabel {
+  width: 85%;
+  height: 10px;
+}
+
+.page-loader__comparisonCell {
+  padding: 0 0.5rem;
+}
+
+.page-loader__bar--specValue {
+  width: 70%;
+  height: 10px;
+}
+
+@media (max-width: 900px) {
+  .page-loader__comparisonHead,
+  .page-loader__comparisonRow {
+    grid-template-columns: 90px repeat(3, minmax(0, 1fr));
+  }
+
+  .page-loader__comparisonImg {
+    width: 72px;
+    height: 72px;
+  }
+}
+
 @keyframes pageLoaderShimmer {
   0% {
     background-position: 100% 0;

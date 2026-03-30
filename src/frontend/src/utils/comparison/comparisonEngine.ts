@@ -24,7 +24,7 @@ export function preprocessForNumericExtraction(raw: string): string {
   if (s === '' || s === '—') return '';
   s = s.replace(/[\s\u00a0\u202f]+/g, '');
   s = s.replace(
-    /(?:гб\/с|гб\/сек|gb\/s|g\/s|mb\/s|мб\/с|мгц|mhz|гц|ghz|ггц|вт|w|кд\/м²|кд\/м2|cd\/m²|cd\/m2|дб|db|cfm|об\/мин|об\/min|rpm)/gi,
+    /(?:гб\/с|гб\/сек|gb\/s|g\/s|mb\/s|мб\/с|мгц|mhz|гц|hz|ghz|ггц|вт|w|кд\/м[\u00b22]?|cd\/m[\u00b22]?|дб|db|cfm|об\/мин|об\/min|rpm|мм|mm|г|ч|h)/gi,
     ''
   );
   return s;
@@ -61,7 +61,14 @@ function parseBooleanValue(value: unknown): boolean | null {
   if (['false', '0', 'нет', 'no', 'n'].includes(normalized)) return false;
   // БП и др.: «модульный» в данных как текст, не как boolean
   if (normalized === 'немодульный') return false;
-  if (normalized === 'модульный' || normalized === 'полумодульный') return true;
+  if (
+    normalized === 'модульный' ||
+    normalized === 'полумодульный' ||
+    normalized === 'полностью модульный' ||
+    normalized === 'полностью модульное'
+  ) return true;
+  // Беспроводная зарядка: «Qi» = наличие фичи
+  if (normalized === 'qi') return true;
   return null;
 }
 
@@ -275,6 +282,42 @@ function parseIpIngressRank(value: unknown): number | null {
   return null;
 }
 
+/** «1 000 000 :1», «4 000:1», «1000:1» → левая часть (число до разделителя). */
+function parseContrastRatio(value: unknown): number | null {
+  if (value == null) return null;
+  const s = String(value).replace(/[\s\u00a0\u202f]/g, '');
+  const m = s.match(/^([0-9]+(?:[.,][0-9]+)?)[：:]/);
+  if (!m) return null;
+  const n = Number(m[1].replace(',', '.'));
+  return Number.isNaN(n) ? null : n;
+}
+
+/** «16+2+2» → 20, «12+1+1» → 14. Сумма всех фаз как прокси мощности VRM материнской платы. */
+function parsePowerPhaseSum(value: unknown): number | null {
+  if (value == null) return null;
+  const s = String(value).trim();
+  if (s === '' || s === '—') return null;
+  const nums = s.match(/\d+/g);
+  if (!nums || nums.length === 0) return null;
+  return nums.reduce((sum, n) => sum + Number(n), 0);
+}
+
+/** Ранг сертификата 80 Plus: Titanium=5, Platinum=4, Gold=3, Silver=2, Bronze=1, White/Standard=0. */
+function parse80PlusCertRank(value: unknown): number | null {
+  if (value == null) return null;
+  const s = String(value).trim().toLowerCase();
+  if (s === '' || s === '—') return null;
+  if (s.includes('titanium') || s.includes('титан')) return 5;
+  if (s.includes('platinum') || s.includes('платин')) return 4;
+  if (s.includes('gold') || s.includes('золот')) return 3;
+  if (s.includes('silver') || s.includes('серебр')) return 2;
+  if (s.includes('bronze') || s.includes('бронз')) return 1;
+  if (s.includes('white') || s.includes('белый') || s.includes('standard') || s.includes('стандарт')) return 0;
+  if (s.includes('80') || s.includes('plus') || s.includes('плюс')) return 1;
+  if (s === 'нет' || s === 'no' || s === 'false') return 0;
+  return null;
+}
+
 function evaluateNumericCustom(
   mode: ComparisonMode,
   values: (string | number | boolean | undefined)[],
@@ -293,13 +336,16 @@ function evaluateNumericCustom(
   return new Set(numerics.filter((entry) => entry.numeric === target).map((entry) => entry.index));
 }
 
-/** В БД иногда лежат true/false вместо Гц — сравнение вводит в заблуждение. */
+/**
+ * В БД иногда лежат true/false вместо Гц, или смесь булевых и числовых значений.
+ * Любое присутствие boolean-like значения в строке частоты обновления — признак мусорных данных.
+ */
 function isMonitorRefreshRateBooleanGarbage(
   values: (string | number | boolean | undefined)[]
 ): boolean {
   const present = values.filter((v) => v != null && v !== '');
   if (present.length < 2) return false;
-  return present.every((v) => {
+  return present.some((v) => {
     const s = String(v).trim().toLowerCase();
     return s === 'true' || s === 'false';
   });
@@ -352,7 +398,8 @@ function evaluateCompatibility(values: (string | number | boolean | undefined)[]
 export function evaluateComparison(
   category: string,
   key: string,
-  values: (string | number | boolean | undefined)[]
+  values: (string | number | boolean | undefined)[],
+  contextValues?: Record<string, (string | number | boolean | undefined)[]>
 ): ComparisonEvaluation {
   const normalizedKey = normalizeSpecKey(key);
   const normalizedCategory = normalizeCategory(category);
@@ -367,6 +414,64 @@ export function evaluateComparison(
   const canonicalForRule = getCanonicalSpecKeyForComparison(category, key);
   const hasExplicit = hasExplicitCategoryRuleForCanonicalKey(category, canonicalForRule);
   const effectiveRule = applyBooleanFeatureFallback(normalizedCategory, rule, values, hasExplicit);
+
+  // [CONDITIONAL] RAM: voltage при смешанных поколениях памяти (DDR4 vs DDR5).
+  // 1.2 В у DDR4 не лучше 1.35 В у DDR5 — разные физические поколения.
+  if (
+    normalizedCategory === 'ram' &&
+    (canonicalForRule === 'voltage' ||
+      normalizedKey === 'voltage' ||
+      normalizedKey === 'напряжение_питание' ||
+      normalizedKey === 'напряжение_питания') &&
+    contextValues
+  ) {
+    const memTypeValues =
+      contextValues['memory_type'] ??
+      contextValues['тип_памяти'] ??
+      contextValues['type'] ??
+      contextValues['тип'] ??
+      [];
+    const uniqueMemTypes = new Set(
+      memTypeValues.map((v) => (v != null ? String(v).trim().toLowerCase() : '')).filter(Boolean)
+    );
+    if (uniqueMemTypes.size > 1) {
+      return { mode: 'none', bestIndices: new Set(), compatibilityState: null };
+    }
+  }
+
+  // [CONDITIONAL] Motherboard: max_memory_freq при смешанных DDR4/DDR5.
+  // 4933 МГц DDR4 (топ) vs 8200 МГц DDR5 (базовый) — сравнение вводит в заблуждение.
+  if (
+    normalizedCategory === 'motherboard' &&
+    (canonicalForRule === 'max_memory_freq' ||
+      normalizedKey === 'максимальная_частота_памяти') &&
+    contextValues
+  ) {
+    const memTypeValues =
+      contextValues['memory_type'] ??
+      contextValues['тип_памяти'] ??
+      contextValues['type'] ??
+      contextValues['тип'] ??
+      [];
+    const uniqueMemTypes = new Set(
+      memTypeValues.map((v) => (v != null ? String(v).trim().toLowerCase() : '')).filter(Boolean)
+    );
+    if (uniqueMemTypes.size > 1) {
+      return { mode: 'none', bestIndices: new Set(), compatibilityState: null };
+    }
+  }
+
+  // [CONDITIONAL] Headphones: чувствительность при смешанных данных наушника и микрофона.
+  // Отрицательные значения — признак микрофонной чувствительности (дБВ/Па), несравнимой с наушниковой.
+  if (normalizedCategory === 'headphones' && canonicalForRule === 'sensitivity') {
+    const hasNegative = values.some((v) => {
+      const n = extractNumeric(v);
+      return n !== null && n < 0;
+    });
+    if (hasNegative) {
+      return { mode: 'none', bestIndices: new Set(), compatibilityState: null };
+    }
+  }
   if (effectiveRule.mode === 'max' && effectiveRule.valueType === 'boolean') {
     return {
       mode: 'max',
@@ -447,9 +552,71 @@ export function evaluateComparison(
         compatibilityState: null,
       };
     }
+    if (normalizedCategory === 'monitor' && canonicalForRule === 'contrast_ratio') {
+      return {
+        mode: 'max',
+        bestIndices: evaluateNumericCustom('max', values, parseContrastRatio),
+        compatibilityState: null,
+      };
+    }
+    if (normalizedCategory === 'monitor' && canonicalForRule === 'hdmi_version') {
+      return {
+        mode: 'max',
+        bestIndices: evaluateNumericCustom('max', values, parsePresenceOrVersionScore),
+        compatibilityState: null,
+      };
+    }
+    if (
+      normalizedCategory === 'motherboard' &&
+      (canonicalForRule === 'usb4_40g' || canonicalForRule === 'thunderbolt4')
+    ) {
+      return {
+        mode: 'max',
+        bestIndices: evaluateNumericCustom('max', values, parsePresenceOrVersionScore),
+        compatibilityState: null,
+      };
+    }
+    if (normalizedCategory === 'motherboard' && canonicalForRule === 'power_phases') {
+      return {
+        mode: 'max',
+        bestIndices: evaluateNumericCustom('max', values, parsePowerPhaseSum),
+        compatibilityState: null,
+      };
+    }
+    if (normalizedCategory === 'psu' && canonicalForRule === 'cert_80plus') {
+      return {
+        mode: 'max',
+        bestIndices: evaluateNumericCustom('max', values, parse80PlusCertRank),
+        compatibilityState: null,
+      };
+    }
+    if (normalizedCategory === 'psu' && canonicalForRule === 'cert_cybenetics') {
+      return {
+        mode: 'max',
+        bestIndices: evaluateNumericCustom('max', values, parse80PlusCertRank),
+        compatibilityState: null,
+      };
+    }
+    // «2 устройства» → 2, «Нет» → 0: parsePresenceOrVersionScore обрабатывает смешанные числа и «Нет»
+    if (
+      (normalizedCategory === 'headphones' && canonicalForRule === 'multipoint') ||
+      (normalizedCategory === 'keyboard' && canonicalForRule === 'device_switching') ||
+      (normalizedCategory === 'motherboard' &&
+        (canonicalForRule === 'argb_headers' || canonicalForRule === 'watercooling_headers')) ||
+      (normalizedCategory === 'case' && canonicalForRule === 'usb_c_gen2_10g')
+    ) {
+      return {
+        mode: 'max',
+        bestIndices: evaluateNumericCustom('max', values, parsePresenceOrVersionScore),
+        compatibilityState: null,
+      };
+    }
     return {
       mode: effectiveRule.mode,
-      bestIndices: evaluateNumeric(effectiveRule.mode, values),
+      bestIndices:
+        effectiveRule.mode === 'max'
+          ? evaluateNumericMaxSinglePositiveVsAbsent(values)
+          : evaluateNumeric('min', values),
       compatibilityState: null,
     };
   }

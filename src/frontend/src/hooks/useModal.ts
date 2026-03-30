@@ -13,6 +13,8 @@ export interface UseModalReturn {
   openModal: (content: ModalContent) => void;
   /** Закрыть модальное окно */
   closeModal: () => void;
+  /** Полностью закрыть все модальные окна */
+  closeAll: () => void;
   /** Переключить состояние модального окна */
   toggleModal: (content?: ModalContent) => void;
 }
@@ -37,6 +39,7 @@ export function useModal(): UseModalReturn {
   const modalContent = useModalStore((state) => state.modalContent);
   const openModal = useModalStore((state) => state.openModal);
   const closeModal = useModalStore((state) => state.closeModal);
+   const closeAll = useModalStore((state) => state.closeAll);
 
   const toggleModal = useCallback(
     (content?: ModalContent) => {
@@ -54,6 +57,7 @@ export function useModal(): UseModalReturn {
     modalContent,
     openModal,
     closeModal,
+    closeAll,
     toggleModal,
   };
 }
