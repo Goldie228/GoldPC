@@ -104,8 +104,8 @@ public class ProductRepository : IProductRepository
         // Фильтрация по slug категории
         else if (!string.IsNullOrWhiteSpace(filter.Category))
         {
-            var categorySlug = filter.Category.Trim();
-            query = query.Where(p => p.Category != null && string.Equals(p.Category.Slug, categorySlug, StringComparison.OrdinalIgnoreCase));
+            var categorySlug = filter.Category.Trim().ToLowerInvariant();
+            query = query.Where(p => p.Category != null && p.Category.Slug.ToLower() == categorySlug);
         }
 
         // Фильтрация по производителю(ам)

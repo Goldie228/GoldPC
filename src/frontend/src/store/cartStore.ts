@@ -155,6 +155,9 @@ export const useCartStore = create<CartStore>()(
         discount: state.discount,
         discountAmount: state.discountAmount,
       }),
+      migrate: (persistedState: unknown, _version: number) => {
+        return persistedState as CartState;
+      },
     }
   )
 );

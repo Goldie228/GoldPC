@@ -1,11 +1,11 @@
-using GoldPC.SharedKernel.DTOs;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using CatalogService.Models;
 using CatalogService.Repositories.Interfaces;
 using CatalogService.Services.Interfaces;
+using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Utilities;
 using Microsoft.Extensions.Caching.Distributed;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace CatalogService.Services;
 

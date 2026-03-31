@@ -1,8 +1,8 @@
-using GoldPC.SharedKernel.DTOs;
+using System.Security.Claims;
 using CatalogService.Services.Interfaces;
+using GoldPC.SharedKernel.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace CatalogService.Controllers;
 

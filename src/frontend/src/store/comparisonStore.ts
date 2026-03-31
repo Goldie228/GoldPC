@@ -103,6 +103,9 @@ export const useComparisonStore = create<ComparisonState>()(
         const items = Array.isArray(p?.items) ? migrateItems(p.items) : current.items;
         return { ...current, items };
       },
+      migrate: (persistedState: unknown, _version: number) => {
+        return persistedState as ComparisonState;
+      },
     }
   )
 );

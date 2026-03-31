@@ -59,6 +59,9 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
+      migrate: (persistedState: unknown, _version: number) => {
+        return persistedState as AuthState;
+      },
     }
   )
 );

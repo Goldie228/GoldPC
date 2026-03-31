@@ -1,7 +1,7 @@
-using MassTransit;
-using SharedKernel.Events;
 using CatalogService.Services.Interfaces;
 using GoldPC.SharedKernel.DTOs;
+using MassTransit;
+using SharedKernel.Events;
 
 namespace CatalogService.Consumers;
 

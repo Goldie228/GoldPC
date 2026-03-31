@@ -1,6 +1,6 @@
+using CatalogService.Services.Interfaces;
 using Grpc.Core;
 using Shared.Protos;
-using CatalogService.Services.Interfaces;
 
 namespace CatalogService.Grpc;
 

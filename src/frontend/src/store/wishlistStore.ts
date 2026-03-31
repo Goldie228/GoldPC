@@ -120,6 +120,9 @@ export const useWishlistStore = create<WishlistState>()(
     }),
     {
       name: 'goldpc-wishlist',
+      migrate: (persistedState: unknown, _version: number) => {
+        return persistedState as WishlistState;
+      },
     }
   )
 );

@@ -9,7 +9,7 @@ namespace GoldPC.SharedKernel.DTOs;
 public class ValidatePromoCodeResponse
 {
     /// <summary>
-    /// Gets or sets значение, показывающее, валиден ли промокод
+    /// Gets or sets a value indicating whether this promo code is valid.
     /// </summary>
     public bool Valid { get; set; }
 
