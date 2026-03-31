@@ -58,14 +58,16 @@ export function Footer() {
             <ul className={styles.links}>
               <li><Link to="/catalog?category=cpu" className={styles.link}>Процессоры</Link></li>
               <li><Link to="/catalog?category=gpu" className={styles.link}>Видеокарты</Link></li>
-              <li><Link to="/catalog?category=motherboard" className={styles.link}>Материнские платы</Link></li>
-              <li><Link to="/catalog?category=ram" className={styles.link}>Оперативная память</Link></li>
-              <li><Link to="/catalog?category=storage" className={styles.link}>Накопители (SSD/HDD)</Link></li>
+              <li><Link to="/catalog?category=motherboard" className={styles.link}>Мат. платы</Link></li>
+              <li><Link to="/catalog?category=ram" className={styles.link}>Память</Link></li>
+              <li><Link to="/catalog?category=storage" className={styles.link}>Накопители</Link></li>
               <li><Link to="/catalog?category=psu" className={styles.link}>Блоки питания</Link></li>
               <li><Link to="/catalog?category=case" className={styles.link}>Корпуса</Link></li>
               <li><Link to="/catalog?category=cooling" className={styles.link}>Охлаждение</Link></li>
               <li><Link to="/catalog?category=monitor" className={styles.link}>Мониторы</Link></li>
-              <li><Link to="/catalog?category=keyboard" className={styles.link}>Периферия</Link></li>
+              <li><Link to="/catalog?category=keyboard" className={styles.link}>Клавиатуры</Link></li>
+              <li><Link to="/catalog?category=mouse" className={styles.link}>Мыши</Link></li>
+              <li><Link to="/catalog?category=headphones" className={styles.link}>Наушники</Link></li>
             </ul>
           </div>
 

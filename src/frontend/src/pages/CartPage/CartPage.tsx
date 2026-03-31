@@ -4,26 +4,21 @@ import { useState, useEffect, useRef, type ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ShoppingBag, 
-  Trash2, 
-  Minus, 
-  Plus, 
-  ChevronRight, 
-  ArrowRight,
+  ShoppingBag,
+  Trash2,
+  Minus,
+  Plus,
   ArrowLeft,
   Tag,
-  Truck,
-  ShieldCheck,
-  RotateCcw,
-  Package,
-  Heart
+  X,
 } from 'lucide-react';
 import { useCart } from '../../hooks/useCart';
 import { hasValidProductImage } from '../../utils/image';
 import { useToastStore } from '../../store/toastStore';
-import { useWishlistStore } from '../../store/wishlistStore';
-import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
 import { RelatedProducts } from '../../components/cart/RelatedProducts';
+import { Button } from '../../components/ui/Button';
+import { Icon } from '../../components/ui/Icon';
+import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
 import styles from './CartPage.module.css';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -36,8 +31,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   case: 'Корпус',
   cooling: 'Охлаждение',
   monitor: 'Монитор',
-  keyboard: 'Клавиатуры',
-  mouse: 'Мыши',
+  keyboard: 'Клавиатура',
+  mouse: 'Мышь',
   headphones: 'Наушники',
 };
 
@@ -46,47 +41,13 @@ function getCategoryLabel(category: string): string {
 }
 
 /**
- * Анимации для списка и элементов
- */
-const listVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: { 
-    opacity: 1, 
-    x: 0,
-    transition: {
-      type: 'spring',
-      stiffness: 300,
-      damping: 24
-    }
-  },
-  exit: { 
-    opacity: 0, 
-    x: 20, 
-    height: 0,
-    transition: {
-      duration: 0.3
-    }
-  }
-};
-
-/**
  * Пустая корзина
  */
 function EmptyCart(): ReactElement {
   return (
     <div className={styles.container}>
       <div className={styles.emptyContainer}>
-        <motion.div 
+        <motion.div
           className={styles.emptyIconWrapper}
           initial={{ scale: 0, rotate: -20 }}
           animate={{ scale: 1, rotate: 0 }}
@@ -94,7 +55,7 @@ function EmptyCart(): ReactElement {
         >
           <ShoppingBag size={48} />
         </motion.div>
-        <motion.h1 
+        <motion.h1
           className={styles.emptyTitle}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -102,22 +63,22 @@ function EmptyCart(): ReactElement {
         >
           Корзина пуста
         </motion.h1>
-        <motion.p 
+        <motion.p
           className={styles.emptyDesc}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          Кажется, вы еще ничего не выбрали. Исправьте это в нашем каталоге!
+          Кажется, вы ещё ничего не выбрали. Добавьте товары из каталога!
         </motion.p>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Link to="/catalog" className={styles.checkoutBtn} style={{ width: 'auto', padding: '0 2.5rem' }}>
+          <Link to="/catalog" className={styles.btn}>
             <ArrowLeft size={18} />
-            Вернуться в каталог
+            Перейти в каталог
           </Link>
         </motion.div>
       </div>
@@ -127,6 +88,7 @@ function EmptyCart(): ReactElement {
 
 /**
  * Страница корзины (Shopping Cart Page)
+ * Дизайн соответствует prototypes/cart.html
  */
 export function CartPage(): ReactElement {
   const navigate = useNavigate();
@@ -146,7 +108,6 @@ export function CartPage(): ReactElement {
   } = useCart();
 
   const showToast = useToastStore((state) => state.showToast);
-  const addToWishlist = useWishlistStore((state) => state.addItem);
   const [promoInput, setPromoInput] = useState('');
   const [promoError, setPromoError] = useState(false);
   const [totalFlash, setTotalFlash] = useState(false);
@@ -177,7 +138,7 @@ export function CartPage(): ReactElement {
   const handleRemovePromo = (): void => {
     clearPromoCode();
     setPromoError(false);
-    showToast('Промокод удален', 'info');
+    showToast('Промокод удалён', 'info');
   };
 
   const handlePromoKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
@@ -188,18 +149,10 @@ export function CartPage(): ReactElement {
 
   const handleRemoveItem = (productId: string, name: string): void => {
     removeFromCart(productId);
-    showToast(`${name} удален из корзины`, 'info');
-  };
-
-  const handleSaveForLater = (productId: string, name: string): void => {
-    addToWishlist(productId);
-    removeFromCart(productId);
-    showToast(`${name} перемещен в избранное`, 'success');
+    showToast(`${name} удалён из корзины`, 'info');
   };
 
   const handleCheckout = (): void => {
-    // Переход к оформлению
-    // В реальном проекте здесь была бы проверка наличия через API
     navigate('/checkout');
   };
 
@@ -208,224 +161,199 @@ export function CartPage(): ReactElement {
   }
 
   return (
-    <div className={styles.container}>
-      {/* Breadcrumbs */}
+    <div className={styles.container} role="main" aria-label="Корзина GoldPC">
+      {/* Header */}
       <header className={styles.header}>
-        <nav className={styles.breadcrumb}>
-          <Link to="/">Главная</Link>
-          <ChevronRight size={14} />
-          <Link to="/catalog">Каталог</Link>
-          <ChevronRight size={14} />
-          <span>Корзина</span>
-        </nav>
-        <h1 className={styles.title}>Ваша корзина</h1>
+        <Breadcrumbs
+          items={[
+            { label: 'Главная', to: '/' },
+            { label: 'Каталог', to: '/catalog' },
+            { label: 'Корзина' },
+          ]}
+        />
+        <h1 className={styles.title}>Корзина</h1>
         <p className={styles.stats}>
-          {formatCountRu(itemCount, RU_FORMS.tovar)} на сумму {totalPrice.toLocaleString('ru-BY')} BYN
+          {itemCount > 0 
+            ? `${itemCount} ${itemCount === 1 ? 'товар' : itemCount < 5 ? 'товара' : 'товаров'} · ${totalPrice.toLocaleString('ru-BY')} BYN`
+            : 'Пока пуста'
+          }
         </p>
       </header>
 
       <div className={styles.cartLayout}>
-        {/* Left: Cart Items List */}
-        <motion.div 
-          className={styles.itemsList}
-          variants={listVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <AnimatePresence mode="popLayout">
-            {items.map((item) => (
-              <motion.div 
-                key={item.productId} 
-                className={styles.item}
-                variants={itemVariants}
-                exit="exit"
-                layout
-              >
-                <div className={styles.imageWrapper}>
-                  {hasValidProductImage(item.imageUrl) ? (
-                    <img src={item.imageUrl} alt={item.name} className={styles.image} />
-                  ) : (
-                    <div className={styles.placeholder}>
-                      <Package size={48} />
+        {/* Left: Cart Items */}
+        <main className={styles.cartItems}>
+          <ul className={styles.cartItemsList} role="list">
+            <AnimatePresence mode="popLayout">
+              {items.map((item) => (
+                <li key={item.productId}>
+                  <motion.div
+                    className={styles.cartItem}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -20, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    layout
+                  >
+                    {/* Image */}
+                    <div className={styles.itemImage}>
+                      {hasValidProductImage(item.imageUrl) ? (
+                        <img src={item.imageUrl} alt={item.name} />
+                      ) : (
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
+                          <text x="50" y="55" textAnchor="middle" fill="#d4a574" fontSize="10">Нет фото</text>
+                        </svg>
+                      )}
                     </div>
-                  )}
-                </div>
-                
-                <div className={styles.itemInfo}>
-                  <span className={styles.itemCategory}>{getCategoryLabel(item.category)}</span>
-                  <Link to={`/product/${item.productSlug ?? item.productId}`} className={styles.itemName}>
-                    {item.name}
-                  </Link>
-                  <div className={styles.controls}>
-                    <div className={styles.quantityGroup}>
-                      <button 
-                        className={styles.qtyBtn}
-                        onClick={() => changeQuantity(item.productId, -1)}
-                        disabled={item.quantity <= 1}
-                        aria-label="Уменьшить количество"
-                        type="button"
-                      >
-                        <Minus size={16} />
-                      </button>
-                      <span className={styles.qtyValue}>{item.quantity}</span>
-                      <button 
-                        className={styles.qtyBtn}
-                        onClick={() => changeQuantity(item.productId, 1)}
-                        aria-label="Увеличить количество"
-                        type="button"
-                      >
-                        <Plus size={16} />
-                      </button>
+
+                    {/* Details */}
+                    <div className={styles.itemDetails}>
+                      <span className={styles.itemCategory}>{getCategoryLabel(item.category)}</span>
+                      <Link to={`/product/${item.productSlug ?? item.productId}`} className={styles.itemName}>
+                        {item.name}
+                      </Link>
                     </div>
-                  </div>
-                </div>
 
-                <div className={styles.itemActions}>
-                  <div className={styles.itemPrices}>
-                    <span className={styles.totalPrice}>{(item.price * item.quantity).toLocaleString('ru-BY')} BYN</span>
-                    {item.quantity > 1 && (
-                      <span className={styles.pricePerItem}>{item.price.toLocaleString('ru-BY')} BYN / шт</span>
-                    )}
-                  </div>
-                  <div className={styles.itemButtons}>
-                    <button 
-                      className={styles.saveBtn}
-                      onClick={() => handleSaveForLater(item.productId, item.name)}
-                      aria-label="Отложить в избранное"
-                      type="button"
-                      title="Отложить в избранное"
-                    >
-                      <Heart size={18} />
-                    </button>
-                    <button 
-                      className={styles.removeBtn}
-                      onClick={() => handleRemoveItem(item.productId, item.name)}
-                      aria-label="Удалить товар"
-                      type="button"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+                    {/* Actions */}
+                    <div className={styles.itemActions}>
+                      <span className={styles.itemPrice}>
+                        {(item.price * item.quantity).toLocaleString('ru-BY')} BYN
+                      </span>
+                      <div className={styles.quantityControls}>
+                        <button
+                          className={styles.qtyBtn}
+                          onClick={() => changeQuantity(item.productId, -1)}
+                          disabled={item.quantity <= 1}
+                          aria-label={`Уменьшить количество ${item.name}`}
+                          type="button"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className={styles.qtyValue}>{item.quantity}</span>
+                        <button
+                          className={styles.qtyBtn}
+                          onClick={() => changeQuantity(item.productId, 1)}
+                          aria-label={`Увеличить количество ${item.name}`}
+                          type="button"
+                        >
+                          <Plus size={14} />
+                        </button>
+                        <button
+                          className={styles.removeBtn}
+                          onClick={() => handleRemoveItem(item.productId, item.name)}
+                          aria-label={`Удалить ${item.name}`}
+                          type="button"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                </li>
+              ))}
+            </AnimatePresence>
+          </ul>
+        </main>
 
-        {/* Right: Order Summary Card */}
-        <aside className={styles.summary}>
-          <h2 className={styles.summaryTitle}>Детали заказа</h2>
-          
-          <div className={styles.summaryRow}>
-            <span className={styles.summaryLabel}>
-              <Package size={16} />
-              Товары ({itemCount})
-            </span>
-            <span className={styles.summaryValue}>{totalPrice.toLocaleString('ru-BY')} BYN</span>
-          </div>
-          
-          <div className={styles.summaryRow}>
-            <span className={styles.summaryLabel}>
-              <Truck size={16} />
-              Доставка
-            </span>
-            <span className={`${styles.summaryValue} ${styles.summaryValueAccent}`}>Бесплатно</span>
-          </div>
+        {/* Right: Summary */}
+        <aside className={styles.cartSummary}>
+          <h2 className={styles.summaryTitle}>Итого</h2>
 
           <div className={styles.summaryRow}>
-            <span className={styles.summaryLabel}>
-              <ShieldCheck size={16} />
-              Гарантия
+            <span className={styles.summaryLabel}>Товары ({itemCount})</span>
+            <span className={styles.summaryValue}>
+              {totalPrice.toLocaleString('ru-BY')} BYN
             </span>
-            <span className={styles.summaryValue}>Включена</span>
           </div>
 
           {discount > 0 && (
-            <motion.div 
+            <motion.div
               className={styles.summaryRow}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
             >
-              <span className={styles.summaryLabel}>
-                <Tag size={16} />
-                Скидка ({discount}%)
-              </span>
-              <span className={`${styles.summaryValue} ${styles.discountValue}`}>
+              <span className={styles.summaryLabel}>Скидка</span>
+              <span className={styles.summaryValue} style={{ color: '#ef4444' }}>
                 −{discountAmount.toLocaleString('ru-BY')} BYN
               </span>
             </motion.div>
           )}
 
-          <div className={styles.divider}></div>
+          <div className={styles.summaryRow}>
+            <span className={styles.summaryLabel}>Доставка</span>
+            <span className={styles.summaryValue} style={{ color: 'var(--accent, #d4a574)' }}>
+              Бесплатно
+            </span>
+          </div>
 
-          <div className={styles.totalRow}>
-            <span className={styles.totalLabel}>Итого</span>
+          <div className={styles.summaryDivider} />
+
+          <div className={styles.summaryTotal}>
+            <span className={styles.totalLabel}>К оплате</span>
             <span
-              className={`${styles.totalAmount} ${totalFlash ? styles.totalAmountFlash : ''}`}
+              className={`${styles.totalValue} ${totalFlash ? styles.totalValueFlash : ''}`}
             >
               {discountedTotal.toLocaleString('ru-BY')} BYN
             </span>
           </div>
 
-          <button onClick={handleCheckout} className={styles.checkoutBtn}>
-            Перейти к оформлению
-            <ArrowRight size={20} />
-          </button>
+          <div className={styles.summaryActions}>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleCheckout}
+              rightIcon={<Icon name="arrow-right" size="sm" />}
+            >
+              Оформить заказ
+            </Button>
 
-          <Link to="/catalog" className={styles.continueBtn}>
-            <RotateCcw size={18} />
-            Продолжить покупки
-          </Link>
+            <Link to="/catalog">
+              <Button variant="ghost" size="md" fullWidth>
+                Продолжить покупки
+              </Button>
+            </Link>
+          </div>
 
-          <div className={styles.promoContainer}>
+          {/* Promo Code */}
+          <div className={styles.promoSection}>
             {promoCode ? (
-              <div className={styles.appliedPromo}>
-                <div className={styles.promoBadge}>
-                  <Tag size={14} />
-                  <span>{promoCode} (−{discount}%)</span>
-                </div>
-                <button 
-                  className={styles.removePromoBtn}
+              <div className={styles.promoApplied}>
+                <Tag size={14} />
+                <span>{promoCode}</span>
+                <button
+                  className={styles.promoRemove}
                   onClick={handleRemovePromo}
                   aria-label="Удалить промокод"
                   type="button"
                 >
-                  <Trash2 size={14} />
+                  <X size={14} />
                 </button>
               </div>
             ) : (
-              <>
-                <div className={styles.promoInputGroup}>
-                  <input 
-                    type="text" 
-                    placeholder="Промокод"
-                    value={promoInput}
-                    onChange={(e) => {
-                      setPromoInput(e.target.value);
-                      setPromoError(false);
-                    }}
-                    onKeyDown={handlePromoKeyDown}
-                    className={`${styles.promoInput} ${promoError ? styles.promoInputError : ''}`}
-                  />
-                  <button 
-                    className={styles.promoBtn}
-                    onClick={handleApplyPromo}
-                    type="button"
-                  >
-                    Применить
-                  </button>
-                </div>
-                {promoError && (
-                  <span className={styles.promoErrorText}>Неверный промокод</span>
-                )}
-              </>
+              <div className={styles.promoInput}>
+                <input
+                  type="text"
+                  placeholder="Промокод"
+                  value={promoInput}
+                  onChange={(e) => {
+                    setPromoInput(e.target.value);
+                    setPromoError(false);
+                  }}
+                  onKeyDown={handlePromoKeyDown}
+                  className={promoError ? styles.promoInputError : ''}
+                />
+                <Button variant="outline" size="sm" onClick={handleApplyPromo} type="button">
+                  Применить
+                </Button>
+              </div>
             )}
           </div>
         </aside>
       </div>
 
-      {/* Рекомендации */}
-      <RelatedProducts 
+      {/* Recommendations */}
+      <RelatedProducts
         cartItems={items.map(item => ({ productId: item.productId, name: item.name }))}
       />
     </div>

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { isAxiosError } from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
-import { ordersApi } from '../../api/orders';
+import { extractApiErrorMessage, ordersApi } from '../../api/orders';
 import { addressesApi, type UserAddress } from '../../api/addresses';
 import { useToastStore } from '../../store/toastStore';
 import { AddressMap } from '../../components/checkout/AddressMap';
@@ -266,7 +267,22 @@ export function CheckoutPage() {
       navigate(`/orders/${order.orderNumber}/success`);
       return true;
     } catch (error) {
-      showToast('Ошибка при оформлении заказа', 'error');
+      if (isAxiosError(error)) {
+        const status = error.response?.status;
+        const serverMessage = extractApiErrorMessage(error.response?.data);
+
+        if (serverMessage) {
+          showToast(serverMessage, 'error');
+          return false;
+        }
+
+        if (status && status >= 500) {
+          showToast('Сервис заказов временно недоступен. Попробуйте позже.', 'error');
+          return false;
+        }
+      }
+
+      showToast('Ошибка при оформлении заказа. Проверьте данные и попробуйте снова.', 'error');
       return false;
     } finally {
       setIsProcessing(false);
@@ -748,7 +764,9 @@ export function CheckoutPage() {
             
             <div className={styles.summaryRow}>
               <span>Доставка</span>
-              <span>{deliveryCost === 0 ? 'Бесплатно' : `${deliveryCost.toFixed(2)} BYN`}</span>
+              <span style={deliveryCost === 0 ? { color: 'var(--accent, #d4a574)' } : undefined}>
+                {deliveryCost === 0 ? 'Бесплатно' : `${deliveryCost.toFixed(2)} BYN`}
+              </span>
             </div>
             
             {subtotal < FREE_DELIVERY_THRESHOLD && deliveryData.method === 'Delivery' && (

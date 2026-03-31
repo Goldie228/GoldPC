@@ -761,21 +761,209 @@
    ======================================== */
 
 .orderSuccess {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
   text-align: center;
-  padding: 80px 24px;
+  padding: 48px 40px;
   background: var(--bg-card, #18181b);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
   border-radius: 12px;
-  max-width: 500px;
+  max-width: 620px;
   margin: 0 auto;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
+.orderSuccess::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 140px;
+  background: radial-gradient(
+    ellipse 60% 80% at 50% 0%,
+    rgba(212, 165, 116, 0.14) 0%,
+    rgba(212, 165, 116, 0) 70%
+  );
+  pointer-events: none;
+}
+
+.orderSuccessTop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.orderSuccessIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent, #d4a574);
+  background: rgba(212, 165, 116, 0.08);
+  border: 1px solid rgba(212, 165, 116, 0.28);
+  box-shadow:
+    0 0 0 6px rgba(212, 165, 116, 0.04),
+    0 14px 30px rgba(0, 0, 0, 0.25);
+}
+
+.orderSuccessIcon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.orderSuccessTitle,
 .orderSuccess h1 {
-  font-size: 1.5rem;
+  margin: 0;
+  font-size: clamp(1.55rem, 4vw, 2rem);
   font-weight: 600;
+  letter-spacing: -0.02em;
   color: var(--fg, #fafafa);
-  margin: 0 0 24px 0;
+}
+
+.orderSuccessMeta {
+  display: grid;
+  gap: 10px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.orderSuccessText {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--fg-muted, #a1a1aa);
+}
+
+.orderSuccessNumber {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(212, 165, 116, 0.12);
+  border: 1px solid rgba(212, 165, 116, 0.32);
+  color: var(--accent, #d4a574);
+  font-family: var(--font-mono);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.orderSuccessInfo {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--fg-muted, #71717a);
+}
+
+.orderSuccessActions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.checkoutBtn {
+  width: 100%;
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.checkoutBtnPrimary {
+  background: var(--accent, #d4a574);
+  border-color: var(--accent, #d4a574);
+  color: var(--bg, #09090b);
+}
+
+.checkoutBtnPrimary:hover {
+  transform: translateY(-1px);
+  background: var(--accent-bright, #e8c4a0);
+  border-color: var(--accent-bright, #e8c4a0);
+  color: var(--bg, #09090b);
+  box-shadow: 0 10px 24px rgba(212, 165, 116, 0.24);
+}
+
+.checkoutBtnGhost {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--border, rgba(255, 255, 255, 0.08));
+  color: var(--fg, #fafafa);
+}
+
+.checkoutBtnGhost:hover {
+  transform: translateY(-1px);
+  border-color: rgba(212, 165, 116, 0.38);
+  color: var(--accent, #d4a574);
+  background: rgba(212, 165, 116, 0.08);
+}
+
+.checkoutBtn:focus-visible {
+  outline: 2px solid rgba(212, 165, 116, 0.8);
+  outline-offset: 2px;
+}
+
+.checkoutBtn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 1024px) {
+  .orderSuccess {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .orderSuccess {
+    padding: 36px 20px;
+    gap: 22px;
+  }
+
+  .orderSuccessIcon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .orderSuccessIcon svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .orderSuccessMeta {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .orderSuccess {
+    padding: 30px 14px;
+    border-radius: 10px;
+  }
+
+  .orderSuccessText {
+    font-size: 0.88rem;
+  }
+
+  .orderSuccessNumber {
+    margin-left: 0;
+    margin-top: 6px;
+  }
+
+  .orderSuccessInfo {
+    font-size: 0.84rem;
+  }
 }
 
 /* ========================================

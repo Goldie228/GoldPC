@@ -90,13 +90,13 @@
 }
 
 .activeWishlist {
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--accent, #d4a574);
+  border-color: rgba(212, 165, 116, 0.2);
 }
 
 .activeWishlist:hover {
-  color: #f87171;
-  border-color: #ef4444;
+  color: var(--accent-bright, #e6b98b);
+  border-color: var(--accent, #d4a574);
 }
 
 .activeComparison {

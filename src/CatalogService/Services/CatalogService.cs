@@ -540,7 +540,8 @@ public class CatalogService : ICatalogService
 
     public async Task<(bool Success, string? Error)> ReserveStockAsync(IEnumerable<(Guid ProductId, int Quantity)> items)
     {
-        using var transaction = await _productRepository.BeginTransactionAsync();
+        // Упрощённая версия без транзакции (для совместимости с NpgsqlRetryingExecutionStrategy)
+        // Stock обновляется атомарно через UPDATE с проверкой
 #pragma warning disable CA1031
         try
         {
@@ -549,25 +550,21 @@ public class CatalogService : ICatalogService
                 var product = await _productRepository.GetByIdAsync(item.ProductId);
                 if (product == null)
                 {
-                    await transaction.RollbackAsync();
                     return (false, $"Товар с ID {item.ProductId} не найден");
                 }
 
                 if (product.Stock < item.Quantity)
                 {
-                    await transaction.RollbackAsync();
                     return (false, $"Недостаточно товара '{product.Name}' на складе (доступно: {product.Stock}, требуется: {item.Quantity})");
                 }
 
                 await _productRepository.UpdateStockAsync(item.ProductId, -item.Quantity);
             }
 
-            await transaction.CommitAsync();
             return (true, null);
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
             _logger.LogError(ex, "Ошибка при резервировании товара");
             return (false, "Внутренняя ошибка при резервировании товара");
         }

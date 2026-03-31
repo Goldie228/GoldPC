@@ -165,9 +165,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
+  background: #ffffff;
   border-radius: var(--radius);
   overflow: hidden;
+  padding: 4px;
 }
 
 .itemImage img {
@@ -261,9 +262,9 @@
 }
 
 .removeBtn:hover {
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(212, 165, 116, 0.3);
+  color: var(--accent, #d4a574);
+  background: rgba(212, 165, 116, 0.1);
 }
 
 .removeBtn svg {
@@ -314,6 +315,7 @@
   font-weight: 500;
   color: var(--accent);
   text-decoration: none;
+  text-align: center;
   background: transparent;
   border: 1px solid rgba(212, 165, 116, 0.35);
   border-radius: var(--radius);
@@ -347,6 +349,7 @@
 
 .btnPrimary:hover {
   background: var(--accent-bright);
+  color: var(--bg);
 }
 
 /* Responsive */

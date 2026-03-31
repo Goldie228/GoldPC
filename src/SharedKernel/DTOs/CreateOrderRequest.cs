@@ -83,10 +83,10 @@ public class CreateOrderRequest
     public string? DeliveryTimeSlot { get; set; }
 
     /// <summary>
-    /// Gets позиции заказа.
+    /// Gets or sets позиции заказа.
     /// </summary>
     [Required(ErrorMessage = "Заказ должен содержать минимум одну позицию")]
     [MinLength(1, ErrorMessage = "Заказ должен содержать минимум одну позицию")]
-    public ICollection<CreateOrderItemRequest> Items { get; } = new List<CreateOrderItemRequest>();
+    public ICollection<CreateOrderItemRequest> Items { get; set; } = new List<CreateOrderItemRequest>();
 }
 #pragma warning restore CS1591, SA1600

@@ -187,8 +187,8 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
                 <Link to="/catalog" className={styles.btnGhost} onClick={onClose}>
                   Продолжить покупки
                 </Link>
-                <Link to="/checkout" className={styles.btnPrimary} onClick={onClose}>
-                  Оформить заказ
+                <Link to="/cart" className={styles.btnPrimary} onClick={onClose}>
+                  Перейти в корзину
                 </Link>
               </div>
             </div>

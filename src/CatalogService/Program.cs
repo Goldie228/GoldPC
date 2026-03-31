@@ -21,7 +21,26 @@ using Shared.Middleware;
 using Shared.Messaging;
 using CatalogService.Consumers;
 
+// Включаем HTTP/2 без TLS для gRPC
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Настройка Kestrel для локального режима:
+// - REST API на HTTP/1.1 (порт 5000)
+// - gRPC на HTTP/2 h2c (порт 5006)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(5000, listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;
+    });
+
+    options.ListenLocalhost(5006, listenOptions =>
+    {
+        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
+    });
+});
 
 // Настройка Serilog с разделением форматов для Development/Production
 var loggerConfiguration = new LoggerConfiguration()

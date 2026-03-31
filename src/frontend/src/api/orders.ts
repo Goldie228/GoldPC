@@ -6,6 +6,11 @@ interface ApiResponse<T> {
   message?: string;
 }
 
+interface ApiErrorResponse {
+  message?: string;
+  errors?: Record<string, string[]>;
+}
+
 interface DeliveryQuoteRequest {
   deliveryMethod: 'Pickup' | 'Delivery';
   subtotal: number;
@@ -31,7 +36,7 @@ export interface CreateOrderRequest {
   phone: string;
   email: string;
   deliveryMethod: 'Pickup' | 'Delivery';
-  paymentMethod: string;
+  paymentMethod: 'Online' | 'OnReceipt';
   address?: string;
   city?: string;
   comment?: string;
@@ -40,6 +45,27 @@ export interface CreateOrderRequest {
   deliveryDate?: string;
   deliveryTimeSlot?: string;
   items: CreateOrderItem[];
+}
+
+export function extractApiErrorMessage(payload: unknown): string | null {
+  if (!payload || typeof payload !== 'object') {
+    return null;
+  }
+
+  const response = payload as ApiErrorResponse;
+  if (typeof response.message === 'string' && response.message.trim().length > 0) {
+    return response.message;
+  }
+
+  if (response.errors && typeof response.errors === 'object') {
+    for (const value of Object.values(response.errors)) {
+      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+        return value[0];
+      }
+    }
+  }
+
+  return null;
 }
 
 export interface OrderItem {

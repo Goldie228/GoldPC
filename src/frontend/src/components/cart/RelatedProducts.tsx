@@ -1,192 +1,172 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useCartStore } from '../../store/cartStore';
-import { useToastStore } from '../../store/toastStore';
-import type { ProductSummary } from '../../api/types';
-import { hasValidProductImage } from '../../utils/image';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ProductCard } from '../ProductCard/ProductCard';
+import { useProducts } from '../../hooks/useProducts';
 import styles from './RelatedProducts.module.css';
 
 interface RelatedProductsProps {
   cartItems: Array<{ productId: string; name: string }>;
 }
 
-export function RelatedProducts({ cartItems }: RelatedProductsProps) {
-  const [recommendations, setRecommendations] = useState<ProductSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const addItem = useCartStore(state => state.addItem);
-  const showToast = useToastStore(state => state.showToast);
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.33, 1, 0.68, 1]
+    }
+  }
+};
+
+export function RelatedProducts({ cartItems }: RelatedProductsProps): ReactElement | null {
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const wheelAccumRef = useRef(0);
+  const wheelRafRef = useRef<number | null>(null);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(false);
+  const [canScrollX, setCanScrollX] = useState(false);
+
+  // Получаем все товары для рекомендаций (без категорий корзины для разнообразия)
+  const { data, isLoading } = useProducts(
+    { pageSize: 8 },
+    { enabled: cartItems.length > 0 }
+  );
+
+  // Фильтруем товары - убираем те, что уже в корзине
+  const recommendations = useMemo(() => {
+    if (!data?.data) return [];
+    const cartIds = new Set(cartItems.map(item => item.productId));
+    return data.data
+      .filter(p => !cartIds.has(p.id))
+      .slice(0, 6);
+  }, [data, cartItems]);
 
   useEffect(() => {
-    loadRecommendations();
-  }, [cartItems]);
+    if (recommendations.length === 0) return;
+    const el = trackRef.current;
+    if (!el) return;
 
-  const loadRecommendations = async () => {
-    setLoading(true);
-    try {
-      // В реальности это был бы API запрос к рекомендательной системе
-      // Например: GET /api/v1/catalog/products/recommendations?productIds=...
-      
-      // Для демо создаём моковые рекомендации
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const mockRecommendations: ProductSummary[] = [
-        {
-          id: crypto.randomUUID(),
-          sku: 'KB-RGB-001',
-          name: 'Игровая клавиатура RGB',
-          slug: 'gaming-keyboard-rgb',
-          price: 89.99,
-          oldPrice: 129.99,
-          category: 'keyboard',
-          brand: 'Razer',
-          stock: 100,
-          isActive: true,
-          rating: 4.5,
-          reviewCount: 156,
-          mainImage: {
-            id: '1',
-            url: '/images/products/keyboard.jpg',
-            alt: 'Игровая клавиатура',
-          },
-          images: [],
-        },
-        {
-          id: crypto.randomUUID(),
-          sku: 'MOUSE-PRO-001',
-          name: 'Игровая мышь Pro',
-          slug: 'gaming-mouse-pro',
-          price: 59.99,
-          category: 'mouse',
-          brand: 'Logitech',
-          stock: 100,
-          isActive: true,
-          rating: 4.8,
-          reviewCount: 234,
-          mainImage: {
-            id: '2',
-            url: '/images/products/mouse.jpg',
-            alt: 'Игровая мышь',
-          },
-          images: [],
-        },
-        {
-          id: crypto.randomUUID(),
-          sku: 'PAD-XXL-001',
-          name: 'Игровой коврик XXL',
-          slug: 'gaming-mousepad-xxl',
-          price: 29.99,
-          category: 'keyboard',
-          brand: 'SteelSeries',
-          stock: 100,
-          isActive: true,
-          rating: 4.6,
-          reviewCount: 89,
-          mainImage: {
-            id: '3',
-            url: '/images/products/mousepad.jpg',
-            alt: 'Игровой коврик',
-          },
-          images: [],
-        },
-      ];
+    const onWheel = (e: WheelEvent) => {
+      const canScroll = el.scrollWidth > el.clientWidth + 1;
+      if (!canScroll) return;
 
-      setRecommendations(mockRecommendations);
-    } catch (error) {
-      console.error('Ошибка загрузки рекомендаций:', error);
-    } finally {
-      setLoading(false);
-    }
+      const max = Math.max(0, el.scrollWidth - el.clientWidth);
+      const atStartNow = el.scrollLeft <= 1;
+      const atEndNow = el.scrollLeft >= max - 1;
+
+      const absX = Math.abs(e.deltaX);
+      const absY = Math.abs(e.deltaY);
+      const dominantX = absX > absY;
+
+      if (dominantX && absX > 2) {
+        if ((e.deltaX < 0 && atStartNow) || (e.deltaX > 0 && atEndNow)) return;
+        el.scrollLeft += e.deltaX;
+      } else {
+        if ((e.deltaY < 0 && atStartNow) || (e.deltaY > 0 && atEndNow)) return;
+
+        wheelAccumRef.current += e.deltaY;
+        if (wheelRafRef.current == null) {
+          wheelRafRef.current = window.requestAnimationFrame(() => {
+            wheelRafRef.current = null;
+            const acc = wheelAccumRef.current;
+            wheelAccumRef.current = 0;
+            if (Math.abs(acc) < 6) return;
+            const dir = acc > 0 ? 1 : -1;
+            const step = Math.max(240, Math.floor(el.clientWidth * 0.9));
+            el.scrollBy({ left: dir * step, behavior: 'smooth' });
+          });
+        }
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const update = () => {
+      const max = Math.max(0, el.scrollWidth - el.clientWidth);
+      setAtStart(el.scrollLeft <= 1);
+      setAtEnd(el.scrollLeft >= max - 1);
+      setCanScrollX(max > 1);
+    };
+
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    el.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('resize', update);
+    return () => {
+      el.removeEventListener('scroll', update as any);
+      el.removeEventListener('wheel', onWheel as any);
+      if (wheelRafRef.current != null) {
+        window.cancelAnimationFrame(wheelRafRef.current);
+        wheelRafRef.current = null;
+      }
+      window.removeEventListener('resize', update);
+    };
+  }, [recommendations.length]);
+
+  const scrollByStep = (dir: -1 | 1) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const step = Math.max(240, Math.floor(el.clientWidth * 0.9));
+    el.scrollBy({ left: dir * step, behavior: 'smooth' });
   };
 
-  const handleAddToCart = (product: ProductSummary) => {
-    addItem(product);
-    showToast(`${product.name} добавлен в корзину`, 'success');
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className={styles.container}>
         <h2 className={styles.title}>Часто покупают вместе</h2>
-        <div className={styles.loading}>Загрузка рекомендаций...</div>
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner} />
+          <span>Загрузка рекомендаций...</span>
+        </div>
       </div>
     );
   }
 
-  if (recommendations.length === 0) {
-    return null;
-  }
+  if (recommendations.length === 0) return null;
 
   return (
-    <div className={styles.container}>
-      <h2 className={styles.title}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M8 12h8M12 8v8" />
-        </svg>
-        Часто покупают вместе
-      </h2>
-
-      <div className={styles.products}>
-        {recommendations.map((product) => (
-          <div key={product.id} className={styles.productCard}>
-            <Link to={`/product/${product.slug}`} className={styles.imageLink}>
-              {product.mainImage && hasValidProductImage(product.mainImage.url) ? (
-                <img
-                  src={product.mainImage.url}
-                  alt={product.mainImage.alt || product.name}
-                  className={styles.image}
-                  loading="lazy"
-                />
-              ) : (
-                <div className={styles.imagePlaceholder}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <path d="M21 15l-5-5L5 21" />
-                  </svg>
-                </div>
-              )}
-            </Link>
-
-            <div className={styles.info}>
-              <Link to={`/product/${product.slug}`} className={styles.name}>
-                {product.name}
-              </Link>
-
-              <div className={styles.meta}>
-                {product.rating && typeof product.rating === 'number' && (
-                  <div className={styles.rating}>
-                    <span className={styles.star}>⭐</span>
-                    <span>{product.rating.toFixed(1)}</span>
-                    <span className={styles.reviews}>({product.reviewCount})</span>
-                  </div>
-                )}
-              </div>
-
-              <div className={styles.priceRow}>
-                <div className={styles.prices}>
-                  <span className={styles.price}>{product.price.toFixed(2)} BYN</span>
-                  {product.oldPrice && (
-                    <span className={styles.oldPrice}>{product.oldPrice.toFixed(2)} BYN</span>
-                  )}
-                </div>
-
-                <button
-                  className={styles.addButton}
-                  onClick={() => handleAddToCart(product)}
-                  aria-label={`Добавить ${product.name} в корзину`}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="9" cy="21" r="1" />
-                    <circle cx="20" cy="21" r="1" />
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+    <motion.section variants={itemVariants} className={styles.related}>
+      <div className={styles.relatedHeader}>
+        <h2 className={styles.relatedTitle}>С этим товаром покупают</h2>
+        {canScrollX && (
+          <div className={styles.relatedNav}>
+            <button
+              type="button"
+              className={styles.relatedNavBtn}
+              onClick={() => scrollByStep(-1)}
+              disabled={atStart}
+              aria-label="Листать влево"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              type="button"
+              className={styles.relatedNavBtn}
+              onClick={() => scrollByStep(1)}
+              disabled={atEnd}
+              aria-label="Листать вправо"
+            >
+              <ChevronRight size={20} />
+            </button>
           </div>
-        ))}
+        )}
       </div>
-    </div>
+
+      <div
+        className={`${styles.relatedCarousel} ${atStart ? styles.relatedAtStart : ''} ${atEnd ? styles.relatedAtEnd : ''} ${!canScrollX ? styles.relatedNoScroll : ''}`}
+      >
+        <div ref={trackRef} className={styles.relatedTrack}>
+          {recommendations.map((product) => (
+            <div key={product.id} className={styles.relatedSlide}>
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.section>
   );
 }

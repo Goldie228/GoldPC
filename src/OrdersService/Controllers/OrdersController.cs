@@ -106,15 +106,26 @@ public class OrdersController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<OrderDto>), StatusCodes.Status201Created)]
     public async Task<IActionResult> Create([FromBody] CreateOrderRequest request)
     {
-        var userId = GetCurrentUserId() ?? Guid.Empty;
-
-        var (order, error) = await _ordersService.CreateAsync(userId, request);
-        if (error != null)
+        try
         {
-            return BadRequest(ApiResponse.Fail(error));
-        }
+            var userId = GetCurrentUserId() ?? Guid.Empty;
 
-        return CreatedAtAction(nameof(GetById), new { id = order!.Id }, ApiResponse<OrderDto>.Ok(order, "Заказ успешно создан"));
+            var (order, error) = await _ordersService.CreateAsync(userId, request);
+            if (error != null)
+            {
+                return BadRequest(ApiResponse.Fail(error));
+            }
+
+            return CreatedAtAction(nameof(GetById), new { id = order!.Id }, ApiResponse<OrderDto>.Ok(order, "Заказ успешно создан"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Неожиданная ошибка при создании заказа");
+            return Problem(
+                title: "Ошибка при создании заказа",
+                detail: "Сервис заказов временно недоступен. Пожалуйста, попробуйте позже.",
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
     }
 
     /// <summary>

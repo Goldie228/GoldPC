@@ -16,6 +16,9 @@ using Shared.Middleware;
 using Shared.Messaging;
 using GoldPC.OrdersService.Background;
 
+// Включаем HTTP/2 без TLS для gRPC в development
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Serilog
@@ -39,9 +42,15 @@ builder.Services.AddMessaging(builder.Configuration);
 builder.Services.AddHostedService<OutboxProcessor>();
 
 // gRPC Clients
+var catalogGrpcUrl = builder.Configuration["CatalogService:GrpcUrl"];
+if (string.IsNullOrWhiteSpace(catalogGrpcUrl))
+{
+    throw new InvalidOperationException("CatalogService:GrpcUrl is not configured for OrdersService");
+}
+
 builder.Services.AddGrpcClient<Shared.Protos.CatalogGrpc.CatalogGrpcClient>(o =>
 {
-    o.Address = new Uri(builder.Configuration["CatalogService:GrpcUrl"] ?? "http://localhost:5000");
+    o.Address = new Uri(catalogGrpcUrl);
 });
 
 // Background Services

@@ -18,21 +18,33 @@ export function OrderSuccessPage() {
   return (
     <div className={styles.checkoutPage}>
       <div className={styles.checkoutPageContainer}>
+        <nav className={styles.breadcrumb}>
+          <Link to="/">Главная</Link>
+          <span>/</span>
+          <Link to="/catalog">Каталог</Link>
+          <span>/</span>
+          <span>Заказ оформлен</span>
+        </nav>
+
         <div className={styles.orderSuccess}>
-          <div className={styles.orderSuccessIcon}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+          <div className={styles.orderSuccessTop}>
+            <div className={styles.orderSuccessIcon} aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <h1 className={styles.orderSuccessTitle}>Заказ оформлен!</h1>
           </div>
-          <h1 className={styles.orderSuccessTitle}>Заказ оформлен!</h1>
-          <p className={styles.orderSuccessText}>
-            Номер вашего заказа: <span className={styles.orderSuccessNumber}>#{order?.orderNumber || orderNumber}</span>
-          </p>
-          {order && (
-            <p className={styles.orderSuccessInfo}>
-              Мы отправили подтверждение на email: {order.customerEmail}
+          <div className={styles.orderSuccessMeta}>
+            <p className={styles.orderSuccessText}>
+              Номер вашего заказа: <span className={styles.orderSuccessNumber}>#{order?.orderNumber || orderNumber}</span>
             </p>
-          )}
+            {order && (
+              <p className={styles.orderSuccessInfo}>
+                Мы отправили подтверждение на email: {order.customerEmail}
+              </p>
+            )}
+          </div>
           <div className={styles.orderSuccessActions}>
             <Link to="/catalog" className={`${styles.checkoutBtn} ${styles.checkoutBtnPrimary}`}>
               Продолжить покупки

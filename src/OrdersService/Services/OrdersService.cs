@@ -125,13 +125,13 @@ public class OrdersService : IOrdersService
             // Проверка отрицательной цены единицы товара
             if (item.UnitPrice < 0)
             {
-                throw new ArgumentException($"Цена товара '{item.ProductName}' не может быть отрицательной");
+                return (null, $"Цена товара '{item.ProductName}' не может быть отрицательной");
             }
 
             // Проверка отрицательного количества
             if (item.Quantity <= 0)
             {
-                throw new ArgumentException($"Количество товара '{item.ProductName}' должно быть положительным числом");
+                return (null, $"Количество товара '{item.ProductName}' должно быть положительным числом");
             }
         }
 
@@ -161,9 +161,19 @@ public class OrdersService : IOrdersService
             .OrderByDescending(o => o.OrderNumber)
             .FirstOrDefaultAsync();
         
-        var nextNumber = lastOrder != null 
-            ? int.Parse(lastOrder.OrderNumber.Split('-')[2]) + 1 
-            : 1;
+        var nextNumber = 1;
+        if (lastOrder != null)
+        {
+            var parts = lastOrder.OrderNumber.Split('-');
+            if (parts.Length >= 3 && int.TryParse(parts[2], out var parsedNumber) && parsedNumber > 0)
+            {
+                nextNumber = parsedNumber + 1;
+            }
+            else
+            {
+                _logger.LogWarning("Некорректный формат OrderNumber '{OrderNumber}', номер заказа будет начат заново", lastOrder.OrderNumber);
+            }
+        }
         
         var orderNumber = $"ORD-{year}-{nextNumber:D4}";
 
@@ -178,7 +188,7 @@ public class OrdersService : IOrdersService
         // Валидация общей стоимости
         if (total < 0)
         {
-            throw new ArgumentException("Общая стоимость заказа не может быть отрицательной");
+            return (null, "Общая стоимость заказа не может быть отрицательной");
         }
 
         var order = new Order
