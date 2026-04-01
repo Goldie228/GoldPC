@@ -1,0 +1,318 @@
+/**
+ * BuildSummaryPanel.css - Right summary panel styles
+ * Design System: Dark Background + Gold Borders
+ */
+
+/* ===== Container ===== */
+.bsp {
+  background: var(--bg-card, #18181b);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  padding: 24px;
+  position: sticky;
+  top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: var(--font-sans);
+}
+
+.bsp__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fg, #fafafa);
+  margin: 0;
+}
+
+/* ===== Component List ===== */
+.bsp__component-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bsp__component-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  align-items: center;
+}
+
+.bsp__component-label {
+  color: var(--fg-muted, #71717a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 55%;
+}
+
+.bsp__component-price {
+  color: var(--fg, #fafafa);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+/* ===== Previews (CPU/GPU 120x120 in white frame) ===== */
+.bsp__previews {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.bsp__preview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.bsp__preview-img-wrap {
+  width: 120px;
+  height: 120px;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  background: var(--bg-elevated, #121214);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.bsp__preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+}
+
+.bsp__preview-icon {
+  width: 40px;
+  height: 40px;
+  color: var(--fg-dim, #52525b);
+}
+
+.bsp__preview-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--fg-dim, #52525b);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ===== Divider ===== */
+.bsp__divider {
+  height: 1px;
+  background: var(--border, rgba(255, 255, 255, 0.06));
+  margin: 4px 0;
+}
+
+/* ===== Section ===== */
+.bsp__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bsp__section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fg-muted, #71717a);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ===== Power Bar (gold/gray) ===== */
+.bsp__power-bar-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.bsp__power-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent, #d4a574), #e8c89e);
+  transition: width 0.6s ease-out;
+}
+
+.bsp__power-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--fg, #fafafa);
+}
+
+.bsp__power-info--ok {
+  color: #4ade80;
+}
+
+.bsp__power-info--warn {
+  color: #fbbf24;
+}
+
+.bsp__power-suggestion {
+  font-size: 0.75rem;
+  color: var(--fg-muted, #71717a);
+  padding: 8px 10px;
+  background: rgba(212, 165, 116, 0.08);
+  border: 1px solid rgba(212, 165, 116, 0.15);
+}
+
+.bsp__power-suggestion strong {
+  color: var(--accent, #d4a574);
+}
+
+/* ===== Performance Scores ===== */
+.bsp__score-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+}
+
+.bsp__score-label {
+  width: 72px;
+  color: var(--fg-muted, #71717a);
+  flex-shrink: 0;
+}
+
+.bsp__score-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.bsp__score-bar-fill {
+  height: 100%;
+  transition: width 0.5s ease-out;
+}
+
+.bsp__score-bar-fill.performance-extreme { background: #a855f7; }
+.bsp__score-bar-fill.performance-high { background: #22c55e; }
+.bsp__score-bar-fill.performance-medium { background: #eab308; }
+.bsp__score-bar-fill.performance-entry { background: #f97316; }
+.bsp__score-bar-fill.performance-basic { background: #ef4444; }
+
+.bsp__score-value {
+  width: 28px;
+  text-align: right;
+  font-weight: 600;
+  font-family: var(--font-sans);
+}
+
+.bsp__score-value--overall {
+  font-size: 0.85rem;
+}
+
+.bsp__score-value.performance-extreme { color: #a855f7; }
+.bsp__score-value.performance-high { color: #22c55e; }
+.bsp__score-value.performance-medium { color: #eab308; }
+.bsp__score-value.performance-entry { color: #f97316; }
+.bsp__score-value.performance-basic { color: #ef4444; }
+
+.bsp__score-row--overall {
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.bsp__performance-label {
+  font-size: 0.7rem;
+  color: var(--fg-dim, #52525b);
+  text-align: right;
+}
+
+/* ===== FPS Row ===== */
+.bsp__fps-row {
+  display: flex;
+  gap: 6px;
+  font-size: 0.7rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.bsp__fps-label {
+  color: var(--fg-dim, #52525b);
+}
+
+.bsp__fps-value {
+  color: var(--fg, #fafafa);
+  font-weight: 500;
+}
+
+/* ===== Total ===== */
+.bsp__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.bsp__total-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fg, #fafafa);
+}
+
+.bsp__total-value {
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--accent, #d4a574);
+}
+
+/* ===== Add to Cart Button ===== */
+.bsp__add-to-cart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 24px;
+  background: var(--accent, #d4a574);
+  border: none;
+  color: var(--bg, #09090b);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bsp__add-to-cart svg {
+  width: 18px;
+  height: 18px;
+}
+
+.bsp__add-to-cart:hover:not(:disabled) {
+  background: #e0b68a;
+  transform: translateY(-2px);
+}
+
+.bsp__add-to-cart:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.bsp__add-to-cart:disabled:hover {
+  transform: none;
+  background: var(--accent, #d4a574);
+}
+
+/* ===== Disabled Hint ===== */
+.bsp__disabled-hint {
+  font-size: 0.7rem;
+  color: var(--fg-dim, #52525b);
+  text-align: center;
+  margin: 0;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .bsp {
+    position: static;
+  }
+}

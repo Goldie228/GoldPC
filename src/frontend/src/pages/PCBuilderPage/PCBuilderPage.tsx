@@ -13,7 +13,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ComponentSlot } from '../../components/pc-builder';
+import { ComponentSlot, BuildSummaryPanel } from '../../components/pc-builder';
 import { Modal } from '../../components/ui';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
@@ -117,6 +117,8 @@ export function PCBuilderPage() {
     removeComponent,
     getSlotState,
     isCompatible,
+    powerConsumption,
+    addToCart,
   } = usePCBuilder();
 
   // Modal state
@@ -313,67 +315,15 @@ export function PCBuilderPage() {
 
           {/* Right: Summary Panel */}
           <div className="pc-builder__right">
-            <div className="pc-builder__summary">
-              <h2 className="pc-builder__summary-title">Ваша сборка</h2>
-              
-              <div className="pc-builder__summary-list">
-                <AnimatePresence mode="popLayout">
-                  {PC_BUILDER_SLOTS.map((slot) => {
-                    const product = selectedComponents[slot.key]?.product;
-                    return (
-                      <motion.div 
-                        key={slot.key} 
-                        className="pc-builder__summary-item"
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        layout
-                        aria-label={`${slot.label}: ${product ? `${product.price.toLocaleString('ru-BY')} BYN` : 'не выбрано'}`}
-                      >
-                        <span className="pc-builder__summary-label" aria-hidden="true">{slot.label}</span>
-                        <motion.span 
-                          key={product?.id || 'empty'}
-                          className="pc-builder__summary-price"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          aria-hidden="true"
-                        >
-                          {product 
-                            ? `${product.price.toLocaleString('ru-BY')} BYN`
-                            : '—'}
-                        </motion.span>
-                      </motion.div>
-                    );
-                  })}
-                </AnimatePresence>
-              </div>
-
-              <div className="pc-builder__summary-divider" />
-
-              <div className="pc-builder__summary-total">
-                <span>Итого:</span>
-                <motion.span 
-                  key={totalPrice}
-                  className="pc-builder__summary-total-value"
-                  initial={{ scale: 1 }}
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {totalPrice.toLocaleString('ru-BY')} BYN
-                </motion.span>
-              </div>
-
-              <button 
-                className="pc-builder__add-to-cart"
-                disabled={!isCompatible || selectedCount === 0}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                  <line x1="3" y1="6" x2="21" y2="6"/>
-                </svg>
-                Добавить в корзину
-              </button>
-            </div>
+            <BuildSummaryPanel
+              selectedComponents={selectedComponents}
+              totalPrice={totalPrice}
+              powerConsumption={powerConsumption}
+              isCompatible={isCompatible}
+              selectedCount={selectedCount}
+              totalCount={totalCount}
+              onAddToCart={addToCart}
+            />
           </div>
         </div>
       </main>
