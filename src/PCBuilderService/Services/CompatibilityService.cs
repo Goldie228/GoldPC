@@ -44,7 +44,7 @@ public class CompatibilityService : ICompatibilityService
 
     // Константы для расчёта мощности
     private const int BASE_SYSTEM_POWER = 50; // Базовое потребление системы (RAM, SSD, вентиляторы)
-    private const double PSU_BUFFER_PERCENT = 0.3; // 30% запас мощности
+    private const double PSU_BUFFER_PERCENT = 0.4; // 40% запас мощности
     private const double PSU_MIN_BUFFER_PERCENT = 0.2; // 20% минимальный запас
 
     public CompatibilityService(HttpClient catalogClient, ILogger<CompatibilityService> logger)
@@ -734,29 +734,30 @@ public class CompatibilityService : ICompatibilityService
     /// </summary>
     private void AddPerformanceWarnings(CpuSpecification cpu, GpuSpecification gpu, RamSpecification ram, CompatibilityResultDto result)
     {
-        // Предупреждение о балансе CPU и GPU (bottleneck)
+        // Предупреждение о балансе CPU и GPU (bottleneck detection)
+        // ratio > 2.0 означает значительный дисбаланс
         if (cpu.PerformanceScore > 0 && gpu.PerformanceScore > 0)
         {
             var ratio = (double)cpu.PerformanceScore / gpu.PerformanceScore;
             
-            if (ratio < 0.7)
+            if (ratio > 2.0)
             {
                 result.Warnings.Add(new CompatibilityWarningDto
                 {
-                    Severity = "Info",
+                    Severity = "Warning",
                     Component = cpu.Name,
-                    Message = $"Процессор {cpu.Name} может ограничивать производительность видеокарты {gpu.Name}",
-                    Suggestion = "Рассмотрите более мощный процессор для полной реализации потенциала видеокарты"
+                    Message = $"Обнаружен bottleneck: Процессор {cpu.Name} значительно мощнее видеокарты {gpu.Name} (ratio: {ratio:F2})",
+                    Suggestion = "Рассмотрите более мощную видеокарту для сбалансированной конфигурации"
                 });
             }
-            else if (ratio > 1.4)
+            else if (ratio < 0.5)
             {
                 result.Warnings.Add(new CompatibilityWarningDto
                 {
-                    Severity = "Info",
+                    Severity = "Warning",
                     Component = gpu.Name,
-                    Message = $"Видеокарта {gpu.Name} может ограничивать производительность процессора {cpu.Name}",
-                    Suggestion = "Рассмотрите более мощную видеокарту для игр, или эта конфигурация отлично подойдёт для рабочих задач"
+                    Message = $"Обнаружен bottleneck: Видеокарта {gpu.Name} значительно мощнее процессора {cpu.Name} (ratio: {ratio:F2})",
+                    Suggestion = "Рассмотрите более мощный процессор для полной реализации потенциала видеокарты"
                 });
             }
         }
