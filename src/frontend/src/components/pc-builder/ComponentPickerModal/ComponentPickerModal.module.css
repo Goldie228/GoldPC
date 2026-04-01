@@ -109,11 +109,25 @@
 
 .select {
   min-width: 200px;
+  padding: 0 32px 0 10px;
+  height: 36px;
+  background: var(--bg-elevated, #121214);
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 10px center;
-  padding-right: 32px;
+  background-size: 14px;
+}
+
+.select:hover:not(:disabled) {
+  border-color: var(--fg-dim, #52525b);
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--accent, #d4a574);
 }
 
 .inputNum {
@@ -135,8 +149,37 @@
   width: 18px;
   height: 18px;
   accent-color: var(--accent, #d4a574);
+  background-color: var(--bg-elevated, #121214);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 4px;
   cursor: pointer;
   flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  position: relative;
+}
+
+.checkbox:checked {
+  background-color: var(--accent, #d4a574);
+  border-color: var(--accent, #d4a574);
+}
+
+.checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid var(--bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox:focus {
+  outline: none;
+  border-color: var(--accent, #d4a574);
 }
 
 .facetRow {
@@ -156,27 +199,47 @@
 }
 
 .selectSm {
-  padding: 6px 28px 6px 10px;
+  padding: 0 28px 0 10px;
+  height: 32px;
   border-radius: var(--radius-sm, 6px);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--bg-elevated, #121214);
   color: var(--fg, #fafafa);
   font-size: 0.75rem;
   max-width: 220px;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 8px center;
+  background-size: 14px;
   cursor: pointer;
+}
+
+.selectSm:hover:not(:disabled) {
+  border-color: var(--fg-dim, #52525b);
+}
+
+.selectSm:focus {
+  outline: none;
+  border-color: var(--accent, #d4a574);
 }
 
 .body {
   display: grid;
-  grid-template-columns: 1fr minmax(260px, 320px);
   gap: 20px;
   align-items: start;
   min-height: 0;
   flex: 1;
+}
+
+.bodyFullWidth {
+  grid-template-columns: 1fr;
+}
+
+.bodyWithPreview {
+  grid-template-columns: 1fr minmax(260px, 320px);
 }
 
 .gridCol {
@@ -304,7 +367,7 @@
   padding: 16px;
   border-radius: var(--radius-md, 8px);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-elevated, #121214);
   min-height: 280px;
 }
 
@@ -496,20 +559,72 @@
 }
 
 @media (max-width: 900px) {
-  .body {
+  .body,
+  .bodyFullWidth,
+  .bodyWithPreview {
     grid-template-columns: 1fr;
+    overflow-y: auto;
+    max-height: 65vh;
   }
 
   .preview {
     position: static;
-    order: 2;
+    order: -1;
+    margin: 0;
+    min-height: auto;
   }
 
   .gridCol {
     max-height: none;
+    overflow: visible;
   }
 
   .grid {
-    max-height: 42vh;
+    max-height: none;
+    overflow: visible;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .toolbar {
+    gap: 8px 12px;
+  }
+
+  .select {
+    min-width: 160px;
+  }
+
+  .facetRow {
+    gap: 8px 10px;
+  }
+
+  .facetField {
+    min-width: 120px;
+  }
+  
+  .root {
+    overflow: visible;
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .tile {
+    padding: 8px;
+  }
+
+  .select {
+    min-width: 100%;
+  }
+
+  .inputNum {
+    width: 70px;
+  }
+
+  .facetField {
+    min-width: calc(50% - 5px);
   }
 }

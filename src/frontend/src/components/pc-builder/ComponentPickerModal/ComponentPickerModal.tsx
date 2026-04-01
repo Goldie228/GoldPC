@@ -46,6 +46,134 @@ const BACKEND_SLUG: Record<ProductCategory, string> = {
   headphones: 'headphones',
 };
 
+const SPEC_ORDER: Record<string, string[]> = {
+  gpu: [
+    'release_year',
+    'proizvoditel_graficheskogo_protsessora',
+    'graficheskiy_protsessor',
+    'videopamyat',
+    'tip_videopamyati',
+    'shirina_shiny_pamyati',
+    'okhlazhdenie_1',
+    'razyemy_pitaniya',
+    'rekomenduemyy_blok_pitaniya',
+    'interfeys_1',
+    'dlina_videokarty',
+    'vysota_videokarty',
+  ],
+  processors: [
+    'socket',
+    'model_series',
+    'codename',
+    'architecture',
+    'data_vykhoda_na_rynok',
+    'integrated_graphics',
+    'cores',
+    'threads',
+    'base_freq',
+    'max_freq',
+    'max_memory_freq',
+    'tdp',
+    'delivery_type',
+    'cooling_included',
+    'process_nm',
+    'cache_l2',
+    'cache_l3',
+    'memory_support',
+    'memory_channels',
+    'multithreading',
+  ],
+  motherboards: [
+    'socket',
+    'chipset',
+    'form_factor',
+    'memory_type',
+    'memory_mixed_slots',
+    'memory_cudimm',
+    'memory_slots',
+    'max_memory',
+    'max_memory_freq',
+    'data_vykhoda_na_rynok',
+  ],
+  ram: [
+    'capacity',
+    'capacity_per_module',
+    'type',
+    'frequency',
+    'pc_index',
+    'cas_latency',
+    'ecc',
+    'expo',
+    'xmp',
+    'voltage',
+    'data_vykhoda_na_rynok',
+  ],
+  storage: [
+    'capacity',
+    'form_factor',
+    'interface',
+    'protocol',
+    'read_speed',
+    'write_speed',
+    'flash_type',
+    'tbw',
+    'data_vykhoda_na_rynok',
+  ],
+  psu: ['wattage', 'efficiency', 'form_factor', 'modular', 'fan_size', 'data_vykhoda_na_rynok'],
+  cases: [
+    'form_factor',
+    'material',
+    'material_front',
+    'window',
+    'max_cooler_height',
+    'max_gpu_length',
+    'data_vykhoda_na_rynok',
+  ],
+  coolers: ['type', 'socket', 'tdp', 'fan_size', 'fan_count', 'noise', 'data_vykhoda_na_rynok'],
+  monitors: [
+    'diagonal',
+    'aspect_ratio',
+    'curved',
+    'sync_technology',
+    'resolution',
+    'refresh_rate',
+    'matrix',
+    'type',
+    'brightness',
+    'response_time',
+    'data_vykhoda_na_rynok',
+  ],
+  keyboards: [
+    'type',
+    'interface',
+    'connection_type',
+    'wireless_protocols',
+    'color',
+    'data_vykhoda_na_rynok',
+  ],
+  mice: [
+    'type',
+    'interface',
+    'connection_type',
+    'wireless_protocols',
+    'color',
+    'sensor_type',
+    'dpi',
+    'data_vykhoda_na_rynok',
+  ],
+  headphones: [
+    'type',
+    'form_factor',
+    'interface',
+    'connection_type',
+    'driver_size',
+    'frequency_range',
+    'impedance',
+    'color',
+    'data_vykhoda_na_rynok',
+  ],
+};
+
 const SORT_PRESETS = [
   { value: 'price-asc', label: 'Цена: по возрастанию' },
   { value: 'price-desc', label: 'Цена: по убыванию' },
@@ -252,7 +380,15 @@ export function ComponentPickerModal({
 
   const title = `Выбор: ${slotLabel}`;
 
-  const facetSelects = (facetData ?? []).filter((a) => a.filterType === 'select' && (a.options?.length ?? 0) > 0).slice(0, 6);
+  const order = SPEC_ORDER[categorySlug] ?? [];
+  const attrMap = new Map((facetData ?? []).map((a) => [a.key, a]));
+  const orderedKeys = [
+    ...order.filter((k) => attrMap.has(k)),
+  ];
+  
+  const facetSelects = orderedKeys
+    .map((key) => attrMap.get(key))
+    .filter((a): a is FilterFacetAttribute => !!a && a.filterType === 'select' && (a.options?.length ?? 0) > 0);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="xlarge" showCloseButton>
@@ -359,7 +495,7 @@ export function ComponentPickerModal({
           </div>
         )}
 
-        <div className={styles.body}>
+        <div className={`${styles.body} ${highlightedProduct ? styles.bodyWithPreview : styles.bodyFullWidth}`}>
           <div className={styles.gridCol}>
             {isLoading && (
               <div className={styles.skeletonGrid}>
@@ -445,77 +581,71 @@ export function ComponentPickerModal({
             )}
           </div>
 
+          {highlightedProduct && (
           <aside className={styles.preview} aria-label="Предпросмотр">
-            {highlightedProduct ? (
-              <>
-                <div className={styles.previewImageWrap}>
-                  {previewProduct &&
-                  previewProduct.mainImage?.url &&
-                  hasValidProductImage(previewProduct.mainImage.url) ? (
-                    <img
-                      src={getProductImageUrl(previewProduct.mainImage.url) ?? undefined}
-                      alt=""
-                      className={styles.previewImg}
-                    />
-                  ) : (
-                    <div className={styles.previewPlaceholder} aria-hidden />
-                  )}
-                </div>
-                <h4 className={styles.previewTitle}>{previewProduct?.name ?? highlightedProduct.name}</h4>
-                <p className={styles.previewPrice}>
-                  {(previewProduct ?? highlightedProduct).price.toLocaleString('ru-BY')} BYN
-                </p>
-                {typeof (previewProduct ?? highlightedProduct).stock === 'number' && (
-                  <p className={styles.previewStock}>
-                    {(previewProduct ?? highlightedProduct).stock! > 0
-                      ? `В наличии: ${(previewProduct ?? highlightedProduct).stock}`
-                      : 'Нет в наличии'}
-                  </p>
-                )}
-                {detailLoading && (
-                  <p className={styles.previewLoading}>Загрузка характеристик…</p>
-                )}
-                {previewShortSpecs.length > 0 && (
-                  <ul className={styles.previewSpecsShort}>
-                    {previewShortSpecs.map((s, i) => (
-                      <li key={i}>{s}</li>
-                    ))}
-                  </ul>
-                )}
-                {previewSpecEntries.length > 0 && (
-                  <div className={styles.previewSpecsFull}>
-                    <p className={styles.previewSpecsHeading}>Характеристики</p>
-                    <ul className={styles.previewSpecsList}>
-                      {previewSpecEntries.map((row) => (
-                        <li key={row.key}>
-                          <span className={styles.specKey}>{row.label}</span>
-                          <span className={styles.specVal}>{row.value}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  className={styles.btnPrimary}
-                  onClick={handleConfirm}
-                  disabled={
-                    typeof (previewProduct ?? highlightedProduct).stock === 'number' &&
-                    (previewProduct ?? highlightedProduct).stock! <= 0
-                  }
-                >
-                  {typeof (previewProduct ?? highlightedProduct).stock === 'number' &&
-                  (previewProduct ?? highlightedProduct).stock! <= 0
-                    ? 'Нет в наличии'
-                    : 'Выбрать'}
-                </button>
-              </>
-            ) : (
-              <p className={styles.previewHint}>
-                Выберите товар в списке слева, чтобы увидеть детали и подтвердить выбор.
+            <div className={styles.previewImageWrap}>
+              {previewProduct &&
+              previewProduct.mainImage?.url &&
+              hasValidProductImage(previewProduct.mainImage.url) ? (
+                <img
+                  src={getProductImageUrl(previewProduct.mainImage.url) ?? undefined}
+                  alt=""
+                  className={styles.previewImg}
+                />
+              ) : (
+                <div className={styles.previewPlaceholder} aria-hidden />
+              )}
+            </div>
+            <h4 className={styles.previewTitle}>{previewProduct?.name ?? highlightedProduct.name}</h4>
+            <p className={styles.previewPrice}>
+              {(previewProduct ?? highlightedProduct).price.toLocaleString('ru-BY')} BYN
+            </p>
+            {typeof (previewProduct ?? highlightedProduct).stock === 'number' && (
+              <p className={styles.previewStock}>
+                {(previewProduct ?? highlightedProduct).stock! > 0
+                  ? `В наличии: ${(previewProduct ?? highlightedProduct).stock}`
+                  : 'Нет в наличии'}
               </p>
             )}
+            {detailLoading && (
+              <p className={styles.previewLoading}>Загрузка характеристик…</p>
+            )}
+            {previewShortSpecs.length > 0 && (
+              <ul className={styles.previewSpecsShort}>
+                {previewShortSpecs.map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            )}
+            {previewSpecEntries.length > 0 && (
+              <div className={styles.previewSpecsFull}>
+                <p className={styles.previewSpecsHeading}>Характеристики</p>
+                <ul className={styles.previewSpecsList}>
+                  {previewSpecEntries.map((row) => (
+                    <li key={row.key}>
+                      <span className={styles.specKey}>{row.label}</span>
+                      <span className={styles.specVal}>{row.value}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <button
+              type="button"
+              className={styles.btnPrimary}
+              onClick={handleConfirm}
+              disabled={
+                typeof (previewProduct ?? highlightedProduct).stock === 'number' &&
+                (previewProduct ?? highlightedProduct).stock! <= 0
+              }
+            >
+              {typeof (previewProduct ?? highlightedProduct).stock === 'number' &&
+              (previewProduct ?? highlightedProduct).stock! <= 0
+                ? 'Нет в наличии'
+                : 'Выбрать'}
+            </button>
           </aside>
+          )}
         </div>
       </div>
     </Modal>
