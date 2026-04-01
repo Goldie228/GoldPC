@@ -90,7 +90,7 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "PCBuilder Service v1");
     });
-    
+
     // Включаем Chaos Middleware только в Development
     app.UseChaosMiddleware();
 }
@@ -114,7 +114,10 @@ public class ConfigurationService : IConfigurationService
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly Shared.Protos.CatalogGrpc.CatalogGrpcClient _catalogClient;
 
-    public ConfigurationService(ILogger<ConfigurationService> logger, IHttpClientFactory httpClientFactory, Shared.Protos.CatalogGrpc.CatalogGrpcClient catalogClient)
+    public ConfigurationService(
+        ILogger<ConfigurationService> logger,
+        IHttpClientFactory httpClientFactory,
+        Shared.Protos.CatalogGrpc.CatalogGrpcClient catalogClient)
     {
         _logger = logger;
         _httpClientFactory = httpClientFactory;
@@ -133,7 +136,8 @@ public class ConfigurationService : IConfigurationService
         return Task.FromResult(configs);
     }
 
-    public Task<PCBuilderService.Models.PCConfiguration> SaveConfigurationAsync(PCBuilderService.Models.PCConfiguration config)
+    public Task<PCBuilderService.Models.PCConfiguration> SaveConfigurationAsync(
+        PCBuilderService.Models.PCConfiguration config)
     {
         if (config.Id == Guid.Empty)
         {
@@ -152,6 +156,11 @@ public class ConfigurationService : IConfigurationService
                 _configurations.Add(config);
                 _logger.LogInformation("Обновлена конфигурация {ConfigId}", config.Id);
             }
+            else
+            {
+                _configurations.Add(config);
+                _logger.LogInformation("Добавлена конфигурация {ConfigId}", config.Id);
+            }
         }
         return Task.FromResult(config);
     }
@@ -168,12 +177,12 @@ public class ConfigurationService : IConfigurationService
         return Task.FromResult(false);
     }
 
-    public async Task<decimal> CalculateTotalPriceAsync(PCConfigurationDto dto)
+    public async Task<decimal> CalculateTotalPriceAsync(PCBuilderService.DTOs.PCConfigurationDto dto)
     {
-        var componentIds = new[] 
-        { 
-            dto.ProcessorId, dto.MotherboardId, dto.RamId, 
-            dto.GpuId, dto.PsuId, dto.StorageId, dto.CaseId, dto.CoolerId 
+        var componentIds = new[]
+        {
+            dto.ProcessorId, dto.MotherboardId, dto.RamId,
+            dto.GpuId, dto.PsuId, dto.StorageId, dto.CaseId, dto.CoolerId
         }
         .Where(id => id.HasValue)
         .Select(id => id!.Value.ToString())
@@ -187,7 +196,7 @@ public class ConfigurationService : IConfigurationService
             request.Ids.AddRange(componentIds);
 
             var response = await _catalogClient.GetProductsByIdsAsync(request);
-            
+
             return (decimal)response.Products.Sum(p => p.Price);
         }
         catch (Exception ex)
@@ -195,5 +204,73 @@ public class ConfigurationService : IConfigurationService
             _logger.LogError(ex, "gRPC Error: Failed to calculate total price via Catalog Service");
             throw new InvalidOperationException("Price calculation currently unavailable", ex);
         }
+    }
+
+    /// <inheritdoc />
+    public Task<PCBuilderService.Models.PCConfiguration?> GetConfigurationByShareTokenAsync(string shareToken)
+    {
+        if (string.IsNullOrWhiteSpace(shareToken))
+        {
+            return Task.FromResult<PCBuilderService.Models.PCConfiguration?>(null);
+        }
+
+        var config = _configurations.FirstOrDefault(
+            c => string.Equals(c.ShareToken, shareToken, StringComparison.Ordinal));
+
+        return Task.FromResult(config);
+    }
+
+    /// <inheritdoc />
+    public Task<string?> GenerateShareTokenAsync(Guid configurationId, Guid userId)
+    {
+        var config = _configurations.FirstOrDefault(c => c.Id == configurationId);
+
+        if (config == null)
+        {
+            _logger.LogWarning(
+                "Конфигурация {ConfigId} не найдена при генерации share-токена",
+                configurationId);
+            return Task.FromResult<string?>(null);
+        }
+
+        if (config.UserId != userId)
+        {
+            _logger.LogWarning(
+                "Пользователь {UserId} не имеет прав на конфигурацию {ConfigId}",
+                userId, configurationId);
+            return Task.FromResult<string?>(null);
+        }
+
+        // Генерируем уникальный токен
+        if (string.IsNullOrEmpty(config.ShareToken))
+        {
+            config.ShareToken = GenerateUniqueToken();
+            _logger.LogInformation(
+                "Сгенерирован share-токен для конфигурации {ConfigId}",
+                configurationId);
+        }
+        else
+        {
+            _logger.LogInformation(
+                "Возврат существующего share-токена для конфигурации {ConfigId}",
+                configurationId);
+        }
+
+        return Task.FromResult<string?>(config.ShareToken);
+    }
+
+    /// <summary>
+    /// Генерация уникального токена для публичного доступа
+    /// </summary>
+    private static string GenerateUniqueToken()
+    {
+        // Генерируем URL-safe base64 токен длиной 32 символа
+        var bytes = new byte[24];
+        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        rng.GetBytes(bytes);
+        return Convert.ToBase64String(bytes)
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
     }
 }
