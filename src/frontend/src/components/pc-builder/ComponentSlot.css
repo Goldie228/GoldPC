@@ -1,266 +1,158 @@
 /**
  * ComponentSlot.css - PC Builder Component Slot Styles
- * Design System: Dark Background + Gold Borders
+ * States: empty (gray dashed), selected (gold), incompatible (red)
+ * Features: 64x64 thumbnail white frame, StatusBadge, 0.3s transitions, CPU/GPU 120%
  */
 
-/* Base Slot Styles */
+/* ===== BASE ===== */
 .component-slot {
   background: var(--bg-card, #18181b);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
   padding: 20px;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
 }
-
 .component-slot:hover {
   border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
 }
 
-/* Inner Container */
-.component-slot__inner {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
+/* ===== PRIORITY (CPU/GPU 120%) ===== */
+.component-slot--priority { padding: 24px; transform: scale(1.02); }
+.component-slot--priority .component-slot__icon { width: 56px; height: 56px; }
+.component-slot--priority .component-slot__name { font-size: 1.05rem; }
+.component-slot--priority .component-slot__price-value { font-size: 1.1rem; }
+.component-slot--priority:hover { transform: scale(1.02) translateY(-1px); }
 
-/* ===== STATE: SELECTED (Gold border) ===== */
+/* ===== INNER ===== */
+.component-slot__inner { display: flex; align-items: center; gap: 20px; }
+
+/* ===== EMPTY (gray dashed) ===== */
+.component-slot--empty { border-color: var(--border, rgba(255, 255, 255, 0.06)); border-style: dashed; }
+.component-slot--empty:hover { border-color: var(--border-accent, rgba(212, 165, 116, 0.2)); border-style: solid; }
+
+/* ===== SELECTED (gold) ===== */
 .component-slot--selected {
   border-color: var(--border-accent, rgba(212, 165, 116, 0.2));
   background: linear-gradient(135deg, rgba(212, 165, 116, 0.15) 0%, var(--bg-card, #18181b) 100%);
+  border-style: solid;
 }
-
 .component-slot--selected::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 100%;
-  background: var(--accent, #d4a574);
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%; background: var(--accent, #d4a574);
 }
+.component-slot--selected:hover { border-color: var(--accent, #d4a574); }
 
-.component-slot--selected:hover {
-  border-color: var(--accent, #d4a574);
-}
-
-/* ===== STATE: INCOMPATIBLE (Red border) ===== */
+/* ===== INCOMPATIBLE (red) ===== */
 .component-slot--incompatible {
   border-color: rgba(248, 113, 113, 0.3);
   background: linear-gradient(135deg, rgba(248, 113, 113, 0.1) 0%, var(--bg-card, #18181b) 100%);
+  border-style: solid;
 }
-
 .component-slot--incompatible::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 100%;
-  background: #f87171;
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%; background: #f87171;
 }
-
-.component-slot--incompatible:hover {
-  border-color: #f87171;
-}
-
-/* ===== STATE: EMPTY ===== */
-.component-slot--empty {
-  border-color: var(--border, rgba(255, 255, 255, 0.06));
-}
-
-.component-slot--empty:hover {
-  border-color: var(--border-accent, rgba(212, 165, 116, 0.2));
-}
+.component-slot--incompatible:hover { border-color: #f87171; }
 
 /* ===== ICON ===== */
 .component-slot__icon {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-elevated, #121214);
-  color: var(--fg-dim, #52525b);
-  flex-shrink: 0;
+  width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+  background: var(--bg-elevated, #121214); color: var(--fg-dim, #52525b);
+  flex-shrink: 0; transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1); overflow: hidden;
 }
+.component-slot--selected .component-slot__icon { background: rgba(212, 165, 116, 0.15); color: var(--accent, #d4a574); }
+.component-slot--incompatible .component-slot__icon { background: rgba(248, 113, 113, 0.1); color: #f87171; }
+.component-slot__icon svg { width: 24px; height: 24px; }
 
-.component-slot--selected .component-slot__icon {
-  background: rgba(212, 165, 116, 0.15);
-  color: var(--accent, #d4a574);
+/* ===== 64x64 THUMBNAIL (white frame) ===== */
+.component-slot__thumbnail {
+  width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
+  background: #ffffff; padding: 4px; box-sizing: border-box; flex-shrink: 0;
 }
-
-.component-slot__icon svg {
-  width: 24px;
-  height: 24px;
+.component-slot__thumbnail img {
+  width: 100%; height: 100%; object-fit: contain;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
+.component-slot:hover .component-slot__thumbnail img { transform: scale(1.05); }
+.component-slot__icon:has(.component-slot__thumbnail) { width: auto; height: auto; background: transparent; padding: 0; }
 
 /* ===== INFO ===== */
-.component-slot__info {
-  flex: 1;
-  min-width: 0;
-}
-
+.component-slot__info { flex: 1; min-width: 0; }
 .component-slot__type {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--fg-dim, #52525b);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 4px;
+  display: block; font-size: 0.65rem; font-weight: 600;
+  color: var(--fg-dim, #52525b); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;
 }
-
 .component-slot__name {
-  font-size: 0.95rem;
-  font-weight: 500;
-  margin-bottom: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--fg, #fafafa);
+  font-size: 0.95rem; font-weight: 500; margin-bottom: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--fg, #fafafa); transition: color 0.3s ease;
 }
+.component-slot__name--empty { color: var(--fg-muted, #71717a); font-weight: 400; }
 
-.component-slot__name--empty {
-  color: var(--fg-muted, #71717a);
-  font-weight: 400;
+/* ===== SPECS ===== */
+.component-slot__specs { display: flex; flex-wrap: wrap; gap: 12px; font-family: var(--font-sans); font-size: 0.7rem; color: var(--fg-muted, #71717a); }
+.component-slot__spec { display: flex; align-items: center; gap: 6px; }
+.component-slot__spec:not(:first-child)::before { content: ''; width: 4px; height: 4px; background: var(--fg-dim, #52525b); border-radius: 50%; margin-right: 6px; }
+
+/* ===== INLINE STATUS BADGE ===== */
+.component-slot__status-badge {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 10px;
+  background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2);
+  border-radius: 4px; font-size: 0.7rem; font-weight: 500; color: #f87171;
+  max-width: 100%; overflow: hidden;
 }
+.component-slot__status-badge svg { flex-shrink: 0; color: #fbbf24; }
+.component-slot__status-badge span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Specs */
-.component-slot__specs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-family: var(--font-sans);
-  font-size: 0.7rem;
-  color: var(--fg-muted, #71717a);
-}
-
-.component-slot__spec {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.component-slot__spec:not(:first-child)::before {
-  content: '';
-  width: 4px;
-  height: 4px;
-  background: var(--fg-dim, #52525b);
-  border-radius: 50%;
-  margin-right: 6px;
-}
-
-/* Warning */
+/* Old warning (backward compat) */
 .component-slot__warning {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 10px 12px;
-  background: rgba(248, 113, 113, 0.1);
-  border: 1px solid rgba(248, 113, 113, 0.2);
-  font-size: 0.75rem;
-  color: #f87171;
+  display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 12px;
+  background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2);
+  font-size: 0.75rem; color: #f87171;
 }
-
-.component-slot__warning svg {
-  width: 14px;
-  height: 14px;
-  flex-shrink: 0;
-}
+.component-slot__warning svg { width: 14px; height: 14px; flex-shrink: 0; }
 
 /* ===== PRICE ===== */
-.component-slot__price {
-  text-align: right;
-  min-width: 100px;
-}
-
+.component-slot__price { text-align: right; min-width: 100px; }
 .component-slot__price-value {
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--accent, #d4a574);
+  font-family: var(--font-sans); font-size: 1rem; font-weight: 600;
+  color: var(--accent, #d4a574); text-shadow: 0 0 4px rgba(212, 165, 116, 0.2); transition: all 0.3s ease;
 }
-
-.component-slot__price-empty {
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  color: var(--fg-dim, #52525b);
-}
+.component-slot--incompatible .component-slot__price-value { color: #f87171; text-shadow: 0 0 4px rgba(248, 113, 113, 0.2); }
+.component-slot__price-empty { font-family: var(--font-sans); font-size: 0.85rem; color: var(--fg-dim, #52525b); }
 
 /* ===== BUTTON ===== */
 .component-slot__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 20px;
-  font-family: var(--font-sans);
-  font-size: 0.8rem;
-  font-weight: 600;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
-  background: transparent;
-  color: var(--fg, #fafafa);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
+  display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px;
+  font-family: var(--font-sans); font-size: 0.8rem; font-weight: 600;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06)); background: transparent;
+  color: var(--fg, #fafafa); cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1); white-space: nowrap;
 }
-
-.component-slot__btn:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: var(--bg-elevated, #121214);
-}
-
-/* Primary Button (Gold) */
-.component-slot__btn--primary {
-  background: var(--accent, #d4a574);
-  border-color: var(--accent, #d4a574);
-  color: var(--bg, #09090b);
-}
-
-.component-slot__btn--primary:hover {
-  background: #e0b68a;
-  border-color: #e0b68a;
-}
-
-/* Ghost Button */
-.component-slot__btn--ghost {
-  color: var(--fg-muted, #71717a);
-}
-
-.component-slot__btn--ghost:hover {
-  color: var(--accent, #d4a574);
-  border-color: var(--border-accent, rgba(212, 165, 116, 0.2));
-}
+.component-slot__btn:hover { border-color: rgba(255, 255, 255, 0.12); background: var(--bg-elevated, #121214); transform: translateY(-1px); }
+.component-slot__btn--primary { background: var(--accent, #d4a574); border-color: var(--accent, #d4a574); color: var(--bg, #09090b); }
+.component-slot__btn--primary:hover { background: #e0b68a; border-color: #e0b68a; }
+.component-slot__btn--ghost { color: var(--fg-muted, #71717a); }
+.component-slot__btn--ghost:hover { color: var(--accent, #d4a574); border-color: var(--border-accent, rgba(212, 165, 116, 0.2)); }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .component-slot__inner {
-    flex-wrap: wrap;
-    gap: 16px;
-  }
+  .component-slot__inner { flex-wrap: wrap; gap: 16px; }
+  .component-slot__icon { width: 40px; height: 40px; }
+  .component-slot__icon svg { width: 20px; height: 20px; }
+  .component-slot__thumbnail { width: 48px; height: 48px; }
+  .component-slot__info { flex: 1 1 calc(100% - 60px); }
+  .component-slot__price { text-align: left; margin-top: 8px; width: 100%; }
+  .component-slot__btn { margin-top: 12px; width: 100%; }
+  .component-slot--priority { padding: 20px; transform: none; }
+  .component-slot--priority:hover { transform: translateY(-1px); }
+}
 
-  .component-slot__icon {
-    width: 40px;
-    height: 40px;
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  .component-slot, .component-slot__icon, .component-slot__thumbnail img, .component-slot__btn, .component-slot__status-badge {
+    transition-duration: 0.01ms !important;
   }
-
-  .component-slot__icon svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .component-slot__info {
-    flex: 1 1 calc(100% - 60px);
-  }
-
-  .component-slot__price {
-    text-align: left;
-    margin-top: 8px;
-    width: 100%;
-  }
-
-  .component-slot__btn {
-    margin-top: 12px;
-    width: 100%;
-  }
+  .component-slot:hover, .component-slot--priority, .component-slot--priority:hover { transform: none; }
 }

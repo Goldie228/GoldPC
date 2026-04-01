@@ -303,6 +303,8 @@ export function PCBuilderPage() {
                     specs={getDisplaySpecs(slot.key, product)}
                     warning={slotState.warning}
                     onSelect={() => handleSelect(slot.key)}
+                    imageUrl={product?.mainImage?.url}
+                    isPriority={slot.key === 'cpu' || slot.key === 'gpu'}
                   />
                 );
               })}
