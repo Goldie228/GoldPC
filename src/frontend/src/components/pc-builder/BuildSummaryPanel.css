@@ -145,8 +145,9 @@
   color: var(--fg, #fafafa);
 }
 
+
 .bsp__power-info--ok {
-  color: #4ade80;
+  color: var(--accent, #d4a574);
 }
 
 .bsp__power-info--warn {
@@ -192,7 +193,7 @@
 }
 
 .bsp__score-bar-fill.performance-extreme { background: #a855f7; }
-.bsp__score-bar-fill.performance-high { background: #22c55e; }
+.bsp__score-bar-fill.performance-high { background: #a855f7; }
 .bsp__score-bar-fill.performance-medium { background: #eab308; }
 .bsp__score-bar-fill.performance-entry { background: #f97316; }
 .bsp__score-bar-fill.performance-basic { background: #ef4444; }
@@ -209,7 +210,7 @@
 }
 
 .bsp__score-value.performance-extreme { color: #a855f7; }
-.bsp__score-value.performance-high { color: #22c55e; }
+.bsp__score-value.performance-high { color: #a855f7; }
 .bsp__score-value.performance-medium { color: #eab308; }
 .bsp__score-value.performance-entry { color: #f97316; }
 .bsp__score-value.performance-basic { color: #ef4444; }

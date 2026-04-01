@@ -1,25 +1,30 @@
 /**
  * PCBuilderPage - PC Configuration Builder
- * 
+ *
  * Features:
- * - Left: Configuration list (CPU, GPU, RAM slots)
- * - Right: Total Price (Large Gold numbers) and "Add to Cart"
- * - Dark backgrounds with gold borders
+ * - Split-screen layout: left 60% (component slots), right 40% (sticky summary)
+ * - Breadcrumbs: Главная / Конструктор ПК
+ * - Toolbar with Back button, title, quick filters (Игровой / Офисный / Рабочая станция)
+ * - Dark theme, gold accents (#d4a574). No green colors.
  * - Compatibility checking with status indicators
  * - Modal-based component selection from catalog
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Gamepad2, Briefcase, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ComponentSlot, BuildSummaryPanel } from '../../components/pc-builder';
+import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
 import { Modal } from '../../components/ui';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { usePCBuilder, useProducts, PC_BUILDER_SLOTS, type PCComponentType } from '../../hooks';
 import type { Product, ProductCategory } from '../../api/types';
 import './PCBuilderPage.css';
+
+/** Preset filter types */
+type PresetFilter = 'gaming' | 'office' | 'workstation' | null;
 
 /** SVG Icons for component types */
 const icons = {
@@ -88,6 +93,31 @@ const icons = {
   ),
 };
 
+/** Preset build configurations */
+const PRESET_CONFIGS: Record<Exclude<PresetFilter, null>, Record<string, string>> = {
+  gaming: {
+    cpu: 'Процессор с 8+ ядрами, высокая тактовая частота',
+    gpu: 'Видеокарта RTX 4070 и выше',
+    ram: '32GB DDR5 5600MHz+',
+    storage: 'NVMe SSD 1TB+',
+    psu: 'Блок питания 750W+ 80+ Gold',
+  },
+  office: {
+    cpu: 'Процессор 4-6 ядер, энергоэффективный',
+    gpu: 'Интегрированная графика',
+    ram: '16GB DDR4/DDR5',
+    storage: 'SSD 512GB',
+    psu: 'Блок питания 450W+',
+  },
+  workstation: {
+    cpu: 'Процессор 12+ ядер, много потоков',
+    gpu: 'Видеокарта 16GB+ VRAM',
+    ram: '64GB DDR5',
+    storage: 'NVMe SSD 2TB+',
+    psu: 'Блок питания 850W+ 80+ Platinum',
+  },
+};
+
 // Map PCComponentType to ProductCategory
 const componentTypeToCategory: Record<PCComponentType, ProductCategory> = {
   cpu: 'cpu',
@@ -125,6 +155,9 @@ export function PCBuilderPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<PCComponentType | null>(null);
 
+  // Quick filter state
+  const [activeFilter, setActiveFilter] = useState<PresetFilter>(null);
+
   // Fetch products for selected category
   const { data: productsResponse, isLoading, error, refetch } = useProducts(
     selectedSlot ? { category: componentTypeToCategory[selectedSlot], pageSize: 50 } : undefined
@@ -156,10 +189,14 @@ export function PCBuilderPage() {
     setSelectedSlot(null);
   };
 
+  // Handle quick filter toggle
+  const handleFilterClick = useCallback((filter: PresetFilter) => {
+    setActiveFilter((prev) => (prev === filter ? null : filter));
+  }, []);
+
   // Get specs array for display
   const getDisplaySpecs = (type: PCComponentType, product: Product | undefined): string[] => {
     if (!product?.specifications) {
-      // Placeholder specs
       const placeholderSpecs: Record<PCComponentType, string[]> = {
         cpu: ['AM5', 'LGA1700'],
         gpu: ['PCIe 4.0', 'Ray Tracing'],
@@ -215,7 +252,7 @@ export function PCBuilderPage() {
   const modalProducts = productsResponse?.data ?? [];
 
   // Get current slot label
-  const currentSlotLabel = PC_BUILDER_SLOTS.find(s => s.key === selectedSlot)?.label || '';
+  const currentSlotLabel = PC_BUILDER_SLOTS.find((s) => s.key === selectedSlot)?.label || '';
 
   return (
     <div
@@ -225,28 +262,97 @@ export function PCBuilderPage() {
       aria-describedby="pc-builder-kbd-hint"
     >
       <p id="pc-builder-kbd-hint" className="sr-only">
-        Клавиатура: Tab — переход между слотами и кнопками. Enter или пробел — выбрать или изменить компонент в слоте.
+        Клавиатура: Tab — переход между слотами и кнопками. Enter или пробел — выбрать или изменить
+        компонент в слоте.
       </p>
+
+      {/* Toolbar with Back, Title, and Quick Filters */}
       <nav className="pc-builder__toolbar" aria-label="Навигация конструктора ПК">
-        <Link to="/catalog" className="pc-builder__back">
-          <ChevronLeft size={18} aria-hidden />
-          Каталог
-        </Link>
+        <div className="pc-builder__toolbar-left">
+          <Link to="/catalog" className="pc-builder__back">
+            <ChevronLeft size={18} aria-hidden />
+            Назад
+          </Link>
+          <h1 id="pc-builder-title" className="pc-builder__toolbar-title">
+            Конструктор ПК
+          </h1>
+        </div>
+
+        <div className="pc-builder__toolbar-filters">
+          <button
+            className={`pc-builder__filter-btn ${activeFilter === 'gaming' ? 'pc-builder__filter-btn--active' : ''}`}
+            onClick={() => handleFilterClick('gaming')}
+            aria-pressed={activeFilter === 'gaming'}
+            type="button"
+          >
+            <Gamepad2 size={16} aria-hidden />
+            Игровой
+          </button>
+          <button
+            className={`pc-builder__filter-btn ${activeFilter === 'office' ? 'pc-builder__filter-btn--active' : ''}`}
+            onClick={() => handleFilterClick('office')}
+            aria-pressed={activeFilter === 'office'}
+            type="button"
+          >
+            <Briefcase size={16} aria-hidden />
+            Офисный
+          </button>
+          <button
+            className={`pc-builder__filter-btn ${activeFilter === 'workstation' ? 'pc-builder__filter-btn--active' : ''}`}
+            onClick={() => handleFilterClick('workstation')}
+            aria-pressed={activeFilter === 'workstation'}
+            type="button"
+          >
+            <Monitor size={16} aria-hidden />
+            Рабочая станция
+          </button>
+        </div>
+
         <div className="pc-builder__toolbar-total" aria-live="polite">
           <span className="pc-builder__total-label">Итого</span>
           <span className="pc-builder__total-value">{totalPrice.toLocaleString('ru-BY')} BYN</span>
         </div>
       </nav>
 
+      {/* Breadcrumbs */}
+      <div className="pc-builder__breadcrumbs pageShell">
+        <Breadcrumbs
+          items={[
+            { label: 'Главная', to: '/' },
+            { label: 'Конструктор ПК' },
+          ]}
+        />
+      </div>
+
+      {/* Preset hint banner */}
+      <AnimatePresence>
+        {activeFilter && (
+          <motion.div
+            className="pc-builder__preset-hint pageShell"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <div className="pc-builder__preset-hint-inner">
+              <span className="pc-builder__preset-hint-label">
+                Рекомендация ({activeFilter === 'gaming' ? 'Игровой' : activeFilter === 'office' ? 'Офисный' : 'Рабочая станция'}):
+              </span>
+              <span className="pc-builder__preset-hint-text">
+                {Object.values(PRESET_CONFIGS[activeFilter]).join(' · ')}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <main className="pc-builder__main">
         <div className="pc-builder__content">
-          {/* Left: Configuration List */}
+          {/* Left: Configuration List (60%) */}
           <div className="pc-builder__left">
             <div className="pc-builder__section-header">
-              <h1 id="pc-builder-title" className="pc-builder__section-title">
-                Комплектующие
-              </h1>
-              <div 
+              <h2 className="pc-builder__section-title">Комплектующие</h2>
+              <div
                 className={`pc-builder__status ${isCompatible ? 'pc-builder__status--ok' : 'pc-builder__status--warning'}`}
                 role="status"
                 aria-live="polite"
@@ -274,14 +380,14 @@ export function PCBuilderPage() {
             {/* Compatibility errors list */}
             {compatibility.errors.length > 0 && (
               <div className="pc-builder__errors">
-                {compatibility.errors.map((error, index) => (
+                {compatibility.errors.map((err, index) => (
                   <div key={index} className="pc-builder__error">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <circle cx="12" cy="12" r="10"/>
                       <line x1="15" y1="9" x2="9" y2="15"/>
                       <line x1="9" y1="9" x2="15" y2="15"/>
                     </svg>
-                    {error}
+                    {err}
                   </div>
                 ))}
               </div>
@@ -299,7 +405,7 @@ export function PCBuilderPage() {
                     index={index}
                     type={slot.label}
                     icon={getIcon(slot.key)}
-                    name={slotState.state === 'empty' ? 'Выберите компонент' : (product?.name || '')}
+                    name={slotState.state === 'empty' ? 'Выберите компонент' : product?.name || ''}
                     price={product?.price ?? null}
                     state={slotState.state}
                     specs={getDisplaySpecs(slot.key, product)}
@@ -313,7 +419,7 @@ export function PCBuilderPage() {
             </div>
           </div>
 
-          {/* Right: Summary Panel */}
+          {/* Right: Summary Panel (40%, sticky) */}
           <div className="pc-builder__right">
             <BuildSummaryPanel
               selectedComponents={selectedComponents}
@@ -346,10 +452,7 @@ export function PCBuilderPage() {
               </div>
             )}
           </div>
-          <button 
-            className="pc-builder__checkout-btn"
-            disabled={!isCompatible || selectedCount === 0}
-          >
+          <button className="pc-builder__checkout-btn" disabled={!isCompatible || selectedCount === 0}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
               <line x1="3" y1="6" x2="21" y2="6"/>
@@ -361,17 +464,12 @@ export function PCBuilderPage() {
       </div>
 
       {/* Component Selection Modal */}
-      <Modal
-        isOpen={modalOpen}
-        onClose={handleCloseModal}
-        title={`Выбор: ${currentSlotLabel}`}
-        size="large"
-      >
+      <Modal isOpen={modalOpen} onClose={handleCloseModal} title={`Выбор: ${currentSlotLabel}`} size="large">
         {/* Show currently selected */}
         {selectedSlot && selectedComponents[selectedSlot] && (
           <div className="pc-builder__modal-selected">
             <span>Выбрано: {selectedComponents[selectedSlot]?.product.name}</span>
-            <button 
+            <button
               className="pc-builder__modal-btn pc-builder__modal-btn--danger"
               onClick={() => {
                 handleRemove(selectedSlot);
@@ -382,7 +480,7 @@ export function PCBuilderPage() {
             </button>
           </div>
         )}
-        
+
         {/* Loading state */}
         {isLoading && (
           <div className="pc-builder__modal-loading">
@@ -401,10 +499,7 @@ export function PCBuilderPage() {
 
         {error && (
           <div className="pc-builder__modal-error">
-            <ApiErrorBanner
-              message="Не удалось загрузить список комплектующих."
-              onRetry={() => refetch()}
-            />
+            <ApiErrorBanner message="Не удалось загрузить список комплектующих." onRetry={() => refetch()} />
           </div>
         )}
 
@@ -412,18 +507,16 @@ export function PCBuilderPage() {
         {!isLoading && !error && (
           <div className="pc-builder__modal-products">
             {modalProducts.map((product) => (
-              <div 
+              <div
                 key={product.id}
                 className="pc-builder__modal-product"
                 onClick={() => handleProductSelect(product as Product)}
               >
-                <div className="pc-builder__modal-product-icon">
-                  {getIcon(selectedSlot!)}
-                </div>
+                <div className="pc-builder__modal-product-icon">{getIcon(selectedSlot!)}</div>
                 <div className="pc-builder__modal-product-info">
                   <div className="pc-builder__modal-product-name">{product.name}</div>
                   <div className="pc-builder__modal-product-specs">
-                    {getDisplaySpecs(selectedSlot!, product as Product).join(' • ')}
+                    {getDisplaySpecs(selectedSlot!, product as Product).join(' · ')}
                   </div>
                 </div>
                 <div className="pc-builder__modal-product-price">
@@ -431,11 +524,7 @@ export function PCBuilderPage() {
                 </div>
               </div>
             ))}
-            {modalProducts.length === 0 && (
-              <p className="pc-builder__modal-text">
-                Нет доступных компонентов для выбора.
-              </p>
-            )}
+            {modalProducts.length === 0 && <p className="pc-builder__modal-text">Нет доступных компонентов для выбора.</p>}
           </div>
         )}
       </Modal>
