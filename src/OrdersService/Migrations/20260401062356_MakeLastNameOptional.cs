@@ -10,31 +10,40 @@ namespace GoldPC.OrdersService.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
-                name: "CustomerLastName",
-                table: "orders",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: true,
-                oldClrType: typeof(string),
-                oldType: "character varying(100)",
-                oldMaxLength: 100);
+            migrationBuilder.Sql(
+                """
+                ALTER TABLE orders
+                ADD COLUMN IF NOT EXISTS "CustomerLastName" character varying(100);
+                """);
+
+            migrationBuilder.Sql(
+                """
+                ALTER TABLE orders
+                ALTER COLUMN "CustomerLastName" DROP NOT NULL;
+                """);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<string>(
-                name: "CustomerLastName",
-                table: "orders",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: false,
-                defaultValue: "",
-                oldClrType: typeof(string),
-                oldType: "character varying(100)",
-                oldMaxLength: 100,
-                oldNullable: true);
+            migrationBuilder.Sql(
+                """
+                ALTER TABLE orders
+                ADD COLUMN IF NOT EXISTS "CustomerLastName" character varying(100);
+                """);
+
+            migrationBuilder.Sql(
+                """
+                UPDATE orders
+                SET "CustomerLastName" = ''
+                WHERE "CustomerLastName" IS NULL;
+                """);
+
+            migrationBuilder.Sql(
+                """
+                ALTER TABLE orders
+                ALTER COLUMN "CustomerLastName" SET NOT NULL;
+                """);
         }
     }
 }

@@ -316,8 +316,29 @@
   box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.6);
 }
 
+.viewerModal {
+  width: min(1200px, calc(100vw - 32px)) !important;
+  max-width: none !important;
+  height: calc(100vh - 32px) !important;
+  max-height: none !important;
+}
+
+.viewerModal :global(.modal__header) {
+  display: none !important;
+}
+
+.viewerModal :global(.modal__content) {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
 @media (max-width: 760px) {
   .root {
     grid-template-columns: 1fr;
+  }
+
+  .viewerModal {
+    width: calc(100vw - 24px) !important;
+    height: calc(100vh - 24px) !important;
   }
 }

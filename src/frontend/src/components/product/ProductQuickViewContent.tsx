@@ -11,7 +11,6 @@ import { useToastStore } from '../../store/toastStore';
 import { hasValidProductImage } from '../../utils/image';
 import { useModal } from '../../hooks/useModal';
 import { ProductImageViewerModal } from '../../pages/ProductPage/components/ProductImageViewerModal';
-import viewerStyles from '../../pages/ProductPage/components/ProductImageViewerModal.module.css';
 import { Icon } from '../ui/Icon/Icon';
 import styles from './ProductQuickViewContent.module.css';
 
@@ -113,7 +112,7 @@ export function ProductQuickViewContent({
         />
       ),
       data: {
-        className: viewerStyles.viewerModal,
+        className: styles.viewerModal,
         showCloseButton: false,
         closeOnOverlayClick: true,
       },

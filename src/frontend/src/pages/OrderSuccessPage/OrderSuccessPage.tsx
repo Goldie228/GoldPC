@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ordersApi, type Order } from '../../api/orders';
-import styles from '../CheckoutPage/CheckoutPage.module.css';
+import styles from './OrderSuccessPage.module.css';
 
 export function OrderSuccessPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
