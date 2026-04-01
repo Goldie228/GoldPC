@@ -56,6 +56,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "agent-browser": "^0.23.4"
+    "agent-browser": "^0.23.4",
+    "cline": "^0.8.2"
   }
 }

@@ -197,7 +197,7 @@ public class OrdersService : IOrdersService
             OrderNumber = orderNumber,
             UserId = userId,
             CustomerFirstName = request.FirstName,
-            CustomerLastName = request.LastName,
+            CustomerLastName = request.LastName ?? string.Empty,
             CustomerPhone = request.Phone,
             CustomerEmail = request.Email,
             Status = OrderStatus.New,

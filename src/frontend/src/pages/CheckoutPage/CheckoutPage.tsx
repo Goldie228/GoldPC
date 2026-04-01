@@ -21,7 +21,6 @@ type ContactField = keyof ContactData;
 
 interface ContactData {
   firstName: string;
-  lastName: string;
   phone: string;
   email: string;
 }
@@ -42,7 +41,7 @@ const FREE_DELIVERY_THRESHOLD = 200;
 const NAME_REGEX = /^[A-Za-zА-Яа-яЁё-]{2,50}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^((\+375|80)(17|25|29|33|44)\d{7})$/;
-const CONTACT_FIELDS: ContactField[] = ['firstName', 'lastName', 'phone', 'email'];
+const CONTACT_FIELDS: ContactField[] = ['firstName', 'phone', 'email'];
 
 function normalizePhone(value: string): string {
   return value.replace(/[\s()-]/g, '');
@@ -89,7 +88,6 @@ export function CheckoutPage() {
 
   const [contactData, setContactData] = useState<ContactData>({
     firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
     phone: user?.phone || '',
     email: user?.email || '',
   });
@@ -126,7 +124,7 @@ export function CheckoutPage() {
     const value = rawValue.trim();
     let error = '';
 
-    if (field === 'firstName' || field === 'lastName') {
+    if (field === 'firstName') {
       if (!value) {
         error = 'Поле обязательно для заполнения';
       } else if (!NAME_REGEX.test(value)) {
@@ -158,7 +156,6 @@ export function CheckoutPage() {
   const validateContacts = (): boolean => {
     setContactTouched({
       firstName: true,
-      lastName: true,
       phone: true,
       email: true,
     });
@@ -241,9 +238,9 @@ export function CheckoutPage() {
         }
       }
 
-      const order = await ordersApi.createOrder({
+        const order = await ordersApi.createOrder({
         firstName: contactData.firstName.trim(),
-        lastName: contactData.lastName.trim(),
+        lastName: '',
         phone: normalizePhone(contactData.phone.trim()),
         email: contactData.email.trim(),
         deliveryMethod: deliveryData.method,
@@ -550,20 +547,6 @@ export function CheckoutPage() {
                     )}
                   </div>
                   <div className={styles.formGroup}>
-                    <label>Фамилия*</label>
-                    <input
-                      value={contactData.lastName}
-                      onChange={(e) => handleContactChange('lastName', e.target.value)}
-                      onBlur={() => handleContactBlur('lastName')}
-                      className={`${styles.input} ${contactTouched.lastName && contactErrors.lastName ? styles.inputError : ''}`}
-                      placeholder="Иванов"
-                      autoComplete="family-name"
-                    />
-                    {contactTouched.lastName && contactErrors.lastName && (
-                      <span className={styles.errorMessage}>{contactErrors.lastName}</span>
-                    )}
-                  </div>
-                  <div className={styles.formGroup}>
                     <label>Телефон*</label>
                     <input
                       type="tel"
@@ -692,7 +675,7 @@ export function CheckoutPage() {
 
                 <div className={styles.confirmSection}>
                   <h3><Icon name="user" size="sm" color="accent" /> Контакты</h3>
-                  <p>{contactData.firstName.trim()} {contactData.lastName.trim()}</p>
+                  <p>{contactData.firstName.trim()}</p>
                   <p>{contactData.phone.trim()}</p>
                   <p>{contactData.email.trim()}</p>
                 </div>

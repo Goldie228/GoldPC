@@ -50,7 +50,7 @@ public class OrdersDbContext : DbContext
             entity.Property(e => e.OrderNumber).IsRequired().HasMaxLength(20);
             entity.Property(e => e.UserId).IsRequired();
             entity.Property(e => e.CustomerFirstName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.CustomerLastName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.CustomerLastName).HasMaxLength(100);
             entity.Property(e => e.CustomerPhone).IsRequired().HasMaxLength(20);
             entity.Property(e => e.CustomerEmail).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);

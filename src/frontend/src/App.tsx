@@ -5,7 +5,7 @@ import { AuthGuard, RoleGuard } from './components/guards';
 import { AuthModalContainer } from './components/auth';
 import { ModalContainer } from './components/ui/Modal/ModalContainer';
 import { RouteMeta } from './components/seo/RouteMeta';
-import { ProductCardSkeleton } from './components/ui/Skeleton';
+import { ProductCardSkeleton, SimplePageLoader } from './components/ui/Skeleton';
 import { useAuthStore } from './store/authStore';
 import { useWishlistStore } from './store/wishlistStore';
 import './App.css';
@@ -144,15 +144,7 @@ function RouteAwarePageLoader() {
     );
   }
 
-  return (
-    <div className="page-loader">
-      <div className="page-loader__grid" aria-busy="true" aria-label="Загрузка страницы">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <ProductCardSkeleton key={i} />
-        ))}
-      </div>
-    </div>
-  );
+  return <SimplePageLoader />;
 }
 
 const router = createBrowserRouter([

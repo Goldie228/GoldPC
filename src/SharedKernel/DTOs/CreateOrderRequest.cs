@@ -20,9 +20,8 @@ public class CreateOrderRequest
     /// <summary>
     /// Gets or sets фамилия покупателя.
     /// </summary>
-    [Required(ErrorMessage = "Фамилия обязательна")]
     [MaxLength(100, ErrorMessage = "Фамилия не должна превышать 100 символов")]
-    public string LastName { get; set; } = string.Empty;
+    public string? LastName { get; set; }
 
     /// <summary>
     /// Gets or sets телефон покупателя.
