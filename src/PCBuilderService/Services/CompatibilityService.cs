@@ -792,9 +792,6 @@ public class CompatibilityService : ICompatibilityService
         total += cpu.Tdp;
         total += gpu.Tdp;
 
-        // Добавляем запас на пиковые нагрузки
-        total = (int)(total * 1.1);
-
         return total;
     }
 

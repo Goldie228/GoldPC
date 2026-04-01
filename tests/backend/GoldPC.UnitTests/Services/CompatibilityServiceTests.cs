@@ -276,7 +276,7 @@ public class CompatibilityServiceTests
         var response = await _sut.CheckCompatibilityAsync(request);
 
         // Assert
-        response.PowerConsumption.Should().Be(385); // (100 + 200 + 50) * 1.1 = 385W
+        response.PowerConsumption.Should().Be(350); // 100 + 200 + 50 = 350W
     }
 
     #endregion
