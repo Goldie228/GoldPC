@@ -1,0 +1,123 @@
+/**
+ * Утилиты расчёта производительности ПК
+ */
+import type { Product, ProductSpecifications } from '../api/types';
+
+export interface EstimatedFps { fps1080p: number; fps1440p: number; fps4k: number; }
+export interface PerformanceResult { gamingScore: number; workstationScore: number; renderingScore: number; overallScore: number; estimatedFps: EstimatedFps; }
+
+function num(specs: ProductSpecifications | undefined, ...keys: string[]): number | null {
+  if (!specs) return null;
+  for (const k of keys) { const v = specs[k]; if (typeof v === 'number' && !isNaN(v)) return v; if (typeof v === 'string') { const n = parseFloat(v); if (!isNaN(n)) return n; } }
+  return null;
+}
+function str(specs: ProductSpecifications | undefined, ...keys: string[]): string | null {
+  if (!specs) return null;
+  for (const k of keys) { const v = specs[k]; if (typeof v === 'string' && v.length > 0) return v; }
+  return null;
+}
+
+function estimateCpuSingleCore(specs: ProductSpecifications | undefined): number {
+  const freq = num(specs, 'boostFrequency', 'boost_frequency', 'maksimalnaya_chastota') ?? num(specs, 'baseFrequency', 'base_frequency', 'bazovaya_chastota') ?? 3000;
+  let score = freq * 0.13;
+  const info = ((str(specs, 'model_series', 'modelSeries') ?? '') + ' ' + (str(specs, 'description') ?? '')).toLowerCase();
+  if (/zen\s*4|ryzen\s*(7[0-9]{3}|9[0-9]{3})|raphael|granite/.test(info)) score *= 1.15;
+  else if (/zen\s*3|ryzen\s*5[0-9]{3}|vermeer|cezanne/.test(info)) score *= 1.08;
+  else if (/raptor\s*lake|13[0-9]{3}|14[0-9]{3}/.test(info)) score *= 1.12;
+  else if (/alder\s*lake|12[0-9]{3}/.test(info)) score *= 1.05;
+  return Math.min(score, 600);
+}
+function estimateCpuMultiCore(specs: ProductSpecifications | undefined): number {
+  const cores = num(specs, 'cores', 'yadra') ?? 4;
+  const threads = num(specs, 'threads', 'potoki') ?? cores;
+  const freq = num(specs, 'boostFrequency', 'boost_frequency', 'maksimalnaya_chastota') ?? num(specs, 'baseFrequency', 'base_frequency', 'bazovaya_chastota') ?? 3000;
+  let score = freq * 0.13 * cores * (threads > cores ? 0.75 : 0.85);
+  const info = ((str(specs, 'model_series', 'modelSeries') ?? '') + ' ' + (str(specs, 'description') ?? '')).toLowerCase();
+  if (/zen\s*4|granite/.test(info)) score *= 1.12;
+  else if (/raptor\s*lake|14[0-9]{3}/.test(info)) score *= 1.10;
+  else if (/zen\s*3|vermeer/.test(info)) score *= 1.05;
+  return Math.min(score, 25000);
+}
+
+const GPU_SCORES: [RegExp, number][] = [
+  [/rtx\s*5090/, 950], [/rtx\s*5080/, 870], [/rtx\s*5070\s*ti/, 840], [/rtx\s*5070/, 800],
+  [/rtx\s*5060\s*ti/, 680], [/rtx\s*5060/, 620],
+  [/rtx\s*4090/, 920], [/rtx\s*4080\s*super/, 840], [/rtx\s*4080/, 800],
+  [/rtx\s*4070\s*ti\s*super/, 720], [/rtx\s*4070\s*t[ií]/, 680], [/rtx\s*4070\s*super/, 660], [/rtx\s*4070/, 600],
+  [/rtx\s*4060\s*t[ií]/, 530], [/rtx\s*4060/, 450],
+  [/rtx\s*3090/, 700], [/rtx\s*3080\s*ti/, 640], [/rtx\s*3080/, 600],
+  [/rtx\s*3070\s*ti/, 530], [/rtx\s*3070/, 500],
+  [/rtx\s*3060\s*t[ií]/, 430], [/rtx\s*3060/, 380], [/rtx\s*3050/, 280],
+  [/rtx\s*2080/, 380], [/rtx\s*2070/, 320], [/rtx\s*2060/, 270],
+  [/gtx\s*1660/, 230], [/gtx\s*1650/, 170],
+  [/gtx\s*1080\s*ti/, 280], [/gtx\s*1080/, 250], [/gtx\s*1070/, 210], [/gtx\s*1060/, 170],
+  [/rx\s*9070\s*xt/, 720], [/rx\s*9070/, 650],
+  [/rx\s*7900\s*xt[x]?/, 780], [/rx\s*7900/, 700], [/rx\s*7800\s*xt/, 620], [/rx\s*7800/, 600],
+  [/rx\s*7700\s*xt/, 520], [/rx\s*7700/, 500], [/rx\s*7600/, 400],
+  [/rx\s*6950/, 620], [/rx\s*6900/, 580], [/rx\s*6800/, 520],
+  [/rx\s*6700/, 430], [/rx\s*6600/, 330], [/rx\s*580|rx\s*590/, 170], [/rx\s*570/, 140],
+  [/arc\s*a770/, 350], [/arc\s*a750/, 300], [/arc\s*a380/, 150],
+];
+
+function estimateGpuGaming(specs: ProductSpecifications | undefined): number {
+  if (!specs) return 0;
+  const info = ((str(specs, 'gpu', 'graficheskiy_protsessor', 'chip') ?? '') + ' ' + (str(specs, 'name') ?? '')).toLowerCase();
+  for (const [re, score] of GPU_SCORES) { if (re.test(info)) return score; }
+  const vram = num(specs, 'vram', 'videopamyat');
+  const clock = num(specs, 'boost_clock', 'boostClock', 'gpu_clock');
+  let fallback = 0;
+  if (vram != null) fallback += Math.min(vram * 12, 200);
+  if (clock != null) fallback += clock * 0.05;
+  return fallback;
+}
+function estimateGpuCompute(specs: ProductSpecifications | undefined): number {
+  const gaming = estimateGpuGaming(specs);
+  const info = ((str(specs, 'gpu', 'graficheskiy_protsessor', 'chip') ?? '') + ' ' + (str(specs, 'name') ?? '')).toLowerCase();
+  if (/rtx|gtx/.test(info)) return gaming * 1.1;
+  if (/rx/.test(info)) return gaming * 0.9;
+  return gaming * 0.85;
+}
+
+function estimateRamFactor(specs: ProductSpecifications | undefined): number {
+  if (!specs) return 1.0;
+  const type = (str(specs, 'memoryType', 'type', 'tip_pamyati') ?? '').toUpperCase();
+  const capacity = num(specs, 'capacity', 'obem');
+  const freq = num(specs, 'frequency', 'chastota', 'speed');
+  let factor = 1.0;
+  if (type.includes('DDR5')) factor *= 1.1; else if (type.includes('DDR3')) factor *= 0.85;
+  if (capacity != null) { if (capacity >= 32) factor *= 1.05; else if (capacity < 8) factor *= 0.85; }
+  if (freq != null) { if (freq >= 6000) factor *= 1.05; else if (freq < 3200) factor *= 0.95; }
+  return Math.min(Math.max(factor, 0.8), 1.2);
+}
+
+function estimateFps(cpuScore: number, gpuScore: number): EstimatedFps {
+  return { fps1080p: Math.round(Math.min(gpuScore * 0.14, cpuScore * 0.035)), fps1440p: Math.round(Math.min(gpuScore * 0.10, cpuScore * 0.045)), fps4k: Math.round(Math.min(gpuScore * 0.06, cpuScore * 0.063)) };
+}
+
+export function calculatePerformance(cpu: Product | null, gpu: Product | null, ram: Product | null): PerformanceResult {
+  const cpuSC = cpu ? estimateCpuSingleCore(cpu.specifications) : 150;
+  const cpuMC = cpu ? estimateCpuMultiCore(cpu.specifications) : 2000;
+  const gpuGaming = gpu ? estimateGpuGaming(gpu.specifications) : 60;
+  const gpuCompute = gpu ? estimateGpuCompute(gpu.specifications) : 40;
+  const ramFactor = ram ? estimateRamFactor(ram.specifications) : 1.0;
+  const gamingScore = Math.round(Math.min((gpuGaming * 0.7 + cpuSC * 0.4 + cpuMC * 0.02) * ramFactor / 10, 100));
+  const workstationScore = Math.round(Math.min((cpuMC * 0.008 + cpuSC * 0.3) * ramFactor / 8, 100));
+  const renderingScore = Math.round(Math.min((cpuMC * 0.005 + gpuCompute * 0.3 + cpuSC * 0.1) * ramFactor / 8, 100));
+  const overallScore = Math.round(gamingScore * 0.4 + workstationScore * 0.3 + renderingScore * 0.3);
+  return { gamingScore, workstationScore, renderingScore, overallScore, estimatedFps: estimateFps(cpuSC, gpuGaming) };
+}
+
+export function getPerformanceLabel(score: number): string {
+  if (score >= 90) return 'Экстремальный';
+  if (score >= 75) return 'Высокий';
+  if (score >= 55) return 'Средний';
+  if (score >= 35) return 'Начальный';
+  return 'Базовый';
+}
+export function getPerformanceColor(score: number): string {
+  if (score >= 90) return 'performance-extreme';
+  if (score >= 75) return 'performance-high';
+  if (score >= 55) return 'performance-medium';
+  if (score >= 35) return 'performance-entry';
+  return 'performance-basic';
+}
