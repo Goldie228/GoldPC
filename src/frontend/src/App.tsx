@@ -16,6 +16,7 @@ const CatalogPage = lazy(() => import('./pages/CatalogPage/CatalogPage').then(m 
 // ... other lazy loads remain same ...
 const ProductPage = lazy(() => import('./pages/ProductPage/ProductPage').then(m => ({ default: m.ProductPage })));
 const PCBuilderPage = lazy(() => import('./pages/PCBuilderPage/PCBuilderPage').then(m => ({ default: m.PCBuilderPage })));
+const BuildWizardPage = lazy(() => import('./pages/BuildWizardPage/BuildWizardPage').then(m => ({ default: m.BuildWizardPage })));
 const CartPage = lazy(() => import('./pages/CartPage/CartPage').then(m => ({ default: m.CartPage })));
 const WishlistPage = lazy(() => import('./pages/WishlistPage/WishlistPage').then(m => ({ default: m.WishlistPage })));
 const ComparisonPage = lazy(() => import('./pages/ComparisonPage/ComparisonPage').then(m => ({ default: m.ComparisonPage })));
@@ -172,6 +173,7 @@ const router = createBrowserRouter([
       },
       { path: '/product/:slug', element: <ProductPage /> },
       { path: '/pc-builder', element: <PCBuilderPage /> },
+      { path: '/build-wizard', element: <BuildWizardPage /> },
       { path: '/cart', element: <CartPage /> },
       { path: '/wishlist', element: <WishlistPage /> },
       { path: '/comparison', element: <ComparisonPage /> },
