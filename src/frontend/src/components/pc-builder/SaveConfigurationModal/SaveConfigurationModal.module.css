@@ -1,0 +1,203 @@
+/* ========================================
+   SaveConfigurationModal Styles
+   GoldPC Design System
+   ======================================== */
+
+.modal {
+  /* Override modal padding for compact layout */
+}
+
+/* ========================================
+   Form
+   ======================================== */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ========================================
+   Label (for select)
+   ======================================== */
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--fg-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ========================================
+   Select Dropdown
+   ======================================== */
+
+.select {
+  width: 100%;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--fg-primary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a0a0a0' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.select:hover {
+  border-color: var(--border-brand);
+}
+
+.select:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   Summary Block
+   ======================================== */
+
+.summary {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.summaryTitle {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fg-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summaryGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summaryItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.summaryItem + .summaryItem {
+  border-top: 1px solid var(--border-default);
+}
+
+.summaryLabel {
+  font-size: 0.9rem;
+  color: var(--fg-secondary);
+}
+
+.summaryValue {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--fg-primary);
+}
+
+/* ========================================
+   Status Colors
+   ======================================== */
+
+.statusSuccess {
+  color: #4ade80;
+}
+
+.statusWarning {
+  color: #fbbf24;
+}
+
+.statusError {
+  color: #f87171;
+}
+
+.statusNeutral {
+  color: var(--fg-secondary);
+}
+
+.price {
+  color: var(--brand-primary);
+  font-size: 1.05rem;
+}
+
+/* ========================================
+   Compatibility Details
+   ======================================== */
+
+.compatibilityDetails {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.errorDetail,
+.warningDetail {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.errorDetail {
+  color: #f87171;
+}
+
+.warningDetail {
+  color: #fbbf24;
+}
+
+/* ========================================
+   Actions
+   ======================================== */
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
+
+@media (max-width: 480px) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions > button {
+    width: 100%;
+  }
+}

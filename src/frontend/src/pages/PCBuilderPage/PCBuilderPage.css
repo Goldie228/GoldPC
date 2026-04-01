@@ -436,6 +436,34 @@
   font-family: var(--font-sans);
 }
 
+/* Save button variant (outline style) */
+.pc-builder__checkout-btn--save {
+  background: transparent;
+  border: 1px solid var(--accent, #d4a574);
+  color: var(--accent, #d4a574);
+}
+
+.pc-builder__checkout-btn--save:hover {
+  background: rgba(212, 165, 116, 0.1);
+  transform: translateY(-2px);
+}
+
+.pc-builder__checkout-btn--save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pc-builder__checkout-btn--save:disabled:hover {
+  background: transparent;
+  transform: none;
+}
+
+/* Ensure gap between save and checkout buttons */
+.pc-builder__checkout-btn--save {
+  margin-right: 8px;
+}
+
 /* ===== MODAL ===== */
 .pc-builder__modal-overlay {
   position: fixed;

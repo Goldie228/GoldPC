@@ -14,7 +14,7 @@ import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Gamepad2, Briefcase, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ComponentSlot, BuildSummaryPanel } from '../../components/pc-builder';
+import { ComponentSlot, BuildSummaryPanel, SaveConfigurationModal } from '../../components/pc-builder';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
 import { Modal } from '../../components/ui';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -154,6 +154,7 @@ export function PCBuilderPage() {
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<PCComponentType | null>(null);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
 
   // Quick filter state
   const [activeFilter, setActiveFilter] = useState<PresetFilter>(null);
@@ -452,7 +453,22 @@ export function PCBuilderPage() {
               </div>
             )}
           </div>
-          <button className="pc-builder__checkout-btn" disabled={!isCompatible || selectedCount === 0}>
+          <button 
+            className="pc-builder__checkout-btn pc-builder__checkout-btn--save"
+            disabled={selectedCount === 0}
+            onClick={() => setSaveModalOpen(true)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            <span>Сохранить</span>
+          </button>
+          <button 
+            className="pc-builder__checkout-btn"
+            disabled={!isCompatible || selectedCount === 0}
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
               <line x1="3" y1="6" x2="21" y2="6"/>
@@ -528,6 +544,19 @@ export function PCBuilderPage() {
           </div>
         )}
       </Modal>
+
+      {/* Save Configuration Modal */}
+      <SaveConfigurationModal
+        isOpen={saveModalOpen}
+        onClose={() => setSaveModalOpen(false)}
+        selectedComponents={selectedComponents}
+        totalPrice={totalPrice}
+        isCompatible={isCompatible}
+        selectedCount={selectedCount}
+        totalCount={totalCount}
+        compatibilityErrors={compatibility.errors}
+        compatibilityWarnings={compatibility.warnings}
+      />
     </div>
   );
 }
