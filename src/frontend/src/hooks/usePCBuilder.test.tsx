@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { usePCBuilder, PC_BUILDER_SLOTS } from './usePCBuilder';
 import type { Product } from '../api/types';
+
+const STORAGE_KEY = 'goldpc-pc-builder';
 
 // === Вспомогательные функции для моков ===
 
@@ -95,7 +97,7 @@ function createCooling(overrides: Partial<Product> = {}): Product {
     price: 8000,
     specifications: {
       supportedSockets: ['LGA1700', 'AM5'],
-    },
+    } as Product['specifications'],
     ...overrides,
   });
 }
@@ -213,9 +215,9 @@ describe('usePCBuilder', () => {
 
   // ===== 3. Power Consumption Calculation =====
   describe('should calculate power consumption', () => {
-    it('возвращает 0 для пустой сборки', () => {
+    it('возвращает базовую нагрузку для пустой сборки', () => {
       const { result } = renderHook(() => usePCBuilder());
-      expect(result.current.powerConsumption).toBe(0);
+      expect(result.current.powerConsumption).toBe(50);
     });
 
     it('корректно рассчитывает энергопотребление по TDP компонентов', () => {
@@ -230,11 +232,11 @@ describe('usePCBuilder', () => {
         result.current.selectComponent('cooling', createCooling());
       });
 
-      // CPU 125 + GPU 200 + RAM 10 + Storage 10 + Cooling 5 + Motherboard 50 = 400W
-      expect(result.current.powerConsumption).toBe(400);
+      // 50 база + CPU 125 + GPU 200 + накопитель 5 + охлаждение 10 = 390 Вт
+      expect(result.current.powerConsumption).toBe(390);
     });
 
-    it('использует дефолтные значения TDP если не указаны', () => {
+    it('без TDP в спецификациях учитывается только база и выбранные компоненты без TDP', () => {
       const { result } = renderHook(() => usePCBuilder());
 
       act(() => {
@@ -242,19 +244,7 @@ describe('usePCBuilder', () => {
         result.current.selectComponent('gpu', createGPU({ specifications: {} }));
       });
 
-      // Default CPU 65 + Default GPU 150 = 215W
-      expect(result.current.powerConsumption).toBe(215);
-    });
-
-    it('рекомендуемая мощность БП = 130% от энергопотребления', () => {
-      const { result } = renderHook(() => usePCBuilder());
-
-      act(() => {
-        result.current.selectComponent('cpu', createCPU({ specifications: { socket: 'LGA1700', tdp: 125 } }));
-        result.current.selectComponent('gpu', createGPU({ specifications: { tdp: 200 } }));
-      });
-
-      expect(result.current.recommendedPSU).toBe(Math.ceil(325 * 1.3));
+      expect(result.current.powerConsumption).toBe(50);
     });
   });
 
@@ -267,11 +257,12 @@ describe('usePCBuilder', () => {
         result.current.selectComponent('cpu', createCPU());
       });
 
-      const saved = localStorage.getItem('pc-builder-build');
+      const saved = localStorage.getItem(STORAGE_KEY);
       expect(saved).not.toBeNull();
       const parsed = JSON.parse(saved!);
-      expect(parsed.cpu).toBeDefined();
-      expect(parsed.cpu.product.name).toBe('Intel Core i7-13700K');
+      expect(parsed.v).toBe(2);
+      expect(parsed.components.cpu).toBeDefined();
+      expect(parsed.components.cpu.product.name).toBe('Intel Core i7-13700K');
     });
 
     it('updates localStorage on component removal', () => {
@@ -286,9 +277,10 @@ describe('usePCBuilder', () => {
         result.current.removeComponent('gpu');
       });
 
-      const saved = JSON.parse(localStorage.getItem('pc-builder-build')!);
-      expect(saved.cpu).toBeDefined();
-      expect(saved.gpu).toBeUndefined();
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!);
+      expect(saved.v).toBe(2);
+      expect(saved.components.cpu).toBeDefined();
+      expect(saved.components.gpu).toBeUndefined();
     });
 
     it('removes localStorage data on build clear', () => {
@@ -302,7 +294,7 @@ describe('usePCBuilder', () => {
         result.current.clearBuild();
       });
 
-      expect(localStorage.getItem('pc-builder-build')).toBeNull();
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     });
   });
 
@@ -311,19 +303,26 @@ describe('usePCBuilder', () => {
     it('restores components from localStorage on init', () => {
       const cpu = createCPU();
       const mockData = {
-        cpu: {
-          type: 'cpu',
-          product: {
-            id: cpu.id,
-            name: cpu.name,
-            sku: cpu.sku,
-            category: cpu.category,
-            price: cpu.price,
-            specifications: cpu.specifications,
+        v: 2 as const,
+        savedAt: new Date().toISOString(),
+        components: {
+          cpu: {
+            productId: cpu.id,
+            type: 'cpu' as const,
+            product: {
+              id: cpu.id,
+              name: cpu.name,
+              sku: cpu.sku,
+              category: cpu.category,
+              price: cpu.price,
+              stock: cpu.stock,
+              isActive: cpu.isActive,
+              specifications: cpu.specifications,
+            },
           },
         },
       };
-      localStorage.setItem('pc-builder-build', JSON.stringify(mockData));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockData));
 
       const { result } = renderHook(() => usePCBuilder());
 
@@ -335,16 +334,19 @@ describe('usePCBuilder', () => {
     it('starts with empty build if localStorage is empty', () => {
       const { result } = renderHook(() => usePCBuilder());
 
-      expect(Object.keys(result.current.selectedComponents)).toHaveLength(0);
+      expect(result.current.selectedCount).toBe(0);
+      expect(result.current.selectedComponents.ram).toEqual([]);
+      expect(result.current.selectedComponents.storage).toEqual([]);
       expect(result.current.totalPrice).toBe(0);
     });
 
     it('ignores invalid localStorage data', () => {
-      localStorage.setItem('pc-builder-build', 'invalid-json{{{');
+      localStorage.setItem(STORAGE_KEY, 'invalid-json{{{');
 
       const { result } = renderHook(() => usePCBuilder());
 
-      expect(Object.keys(result.current.selectedComponents)).toHaveLength(0);
+      expect(result.current.selectedCount).toBe(0);
+      expect(result.current.selectedComponents.ram).toEqual([]);
     });
   });
 
@@ -366,9 +368,10 @@ describe('usePCBuilder', () => {
       });
 
       expect(result.current.selectedCount).toBe(0);
-      expect(Object.keys(result.current.selectedComponents)).toHaveLength(0);
+      expect(result.current.selectedComponents.ram).toEqual([]);
+      expect(result.current.selectedComponents.storage).toEqual([]);
       expect(result.current.totalPrice).toBe(0);
-      expect(result.current.powerConsumption).toBe(0);
+      expect(result.current.powerConsumption).toBe(50);
     });
 
     it('resets compatibility after clear', () => {
@@ -398,13 +401,13 @@ describe('usePCBuilder', () => {
         result.current.selectComponent('cpu', createCPU());
       });
 
-      expect(localStorage.getItem('pc-builder-build')).not.toBeNull();
+      expect(localStorage.getItem(STORAGE_KEY)).not.toBeNull();
 
       act(() => {
         result.current.clearBuild();
       });
 
-      expect(localStorage.getItem('pc-builder-build')).toBeNull();
+      expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     });
   });
 

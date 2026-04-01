@@ -1,22 +1,13 @@
 /**
- * usePCBuilder - Хук для управления сборкой ПК
- * 
- * Features:
- * - Управление выбранными компонентами (Record<PCComponentType, SelectedComponent>)
- * - Проверка совместимости (CompatibilityService client-side)
- * - Расчет общей стоимости и энергопотребления (powerConsumption)
- * - Интеграция с корзиной (addToCart)
- * - LocalStorage автосохранение/восстановление
+ * usePCBuilder — сборка ПК: одиночные слоты + несколько модулей ОЗУ и накопителей,
+ * совместимость, корзина, LocalStorage v2 (миграция с v1).
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { Product, ProductSpecifications } from '../api/types';
 import { useCartStore } from '../store/cartStore';
 
-// === Типы ===
-
-/** Типы компонентов для сборки ПК */
-export type PCComponentType = 
+export type PCComponentType =
   | 'cpu'
   | 'gpu'
   | 'motherboard'
@@ -26,62 +17,81 @@ export type PCComponentType =
   | 'case'
   | 'cooling';
 
-/** Состояние слота компонента */
 export type ComponentSlotState = 'empty' | 'selected' | 'incompatible';
 
-/** Выбранный компонент */
 export interface SelectedComponent {
   product: Product;
   type: PCComponentType;
 }
 
-/** Результат проверки совместимости */
 export interface CompatibilityResult {
   isCompatible: boolean;
   errors: string[];
   warnings: string[];
 }
 
-/** Информация о совместимости для конкретного компонента */
 export interface ComponentCompatibility {
   state: ComponentSlotState;
   warning?: string;
 }
 
-/** Сериализованная сборка для LocalStorage */
-interface SerializedBuild {
-  components: Record<string, { productId: string; product: Product; type: PCComponentType }>;
-  savedAt: string;
+/** Состояние выбора (ram / storage — массивы) */
+export interface PCBuilderSelectedState {
+  cpu?: SelectedComponent;
+  gpu?: SelectedComponent;
+  motherboard?: SelectedComponent;
+  psu?: SelectedComponent;
+  case?: SelectedComponent;
+  cooling?: SelectedComponent;
+  ram: SelectedComponent[];
+  storage: SelectedComponent[];
 }
 
-// === Константы ===
+interface SerializedSingle {
+  productId: string;
+  product: Product;
+  type: PCComponentType;
+}
 
-/** Типы памяти */
+interface SerializedBuildV2 {
+  v: 2;
+  savedAt: string;
+  components: {
+    cpu?: SerializedSingle;
+    gpu?: SerializedSingle;
+    motherboard?: SerializedSingle;
+    psu?: SerializedSingle;
+    case?: SerializedSingle;
+    cooling?: SerializedSingle;
+    ram?: SerializedSingle[];
+    storage?: SerializedSingle[];
+  };
+}
+
+interface SerializedBuildV1 {
+  savedAt: string;
+  components: Record<string, SerializedSingle>;
+}
+
 const RAM_TYPES = ['DDR5', 'DDR4', 'DDR3'] as const;
-type RAMType = typeof RAM_TYPES[number];
+type RAMType = (typeof RAM_TYPES)[number];
 
-/** Общее количество слотов */
-const TOTAL_SLOTS = 8;
+const TOTAL_CATEGORIES = 8;
+export const MAX_RAM_MODULES = 8;
+export const MAX_STORAGE_MODULES = 8;
 
-/** Базовое энергопотребление системы (RAM, SSD, fans, etc.) */
 const BASE_POWER_CONSUMPTION = 50;
-
-/** Ключ LocalStorage */
 const STORAGE_KEY = 'goldpc-pc-builder';
 
-// === Вспомогательные функции ===
+export function emptyPcBuilderState(): PCBuilderSelectedState {
+  return { ram: [], storage: [] };
+}
 
-/**
- * Извлекает сокет из спецификаций продукта
- */
 function extractSocket(specs: ProductSpecifications | undefined): string | null {
   if (!specs) return null;
   return (specs.socket as string) || (specs.cpuSocket as string) || null;
 }
 
-/**
- * Извлекает тип памяти из спецификаций
- */
 function extractRAMType(specs: ProductSpecifications | undefined): RAMType | null {
   if (!specs) return null;
   const memoryType = specs.memoryType as string | undefined;
@@ -91,47 +101,32 @@ function extractRAMType(specs: ProductSpecifications | undefined): RAMType | nul
   return null;
 }
 
-/**
- * Извлекает поддерживаемые сокеты из спецификаций охлаждения
- */
 function extractSupportedSockets(specs: ProductSpecifications | undefined): string[] {
   if (!specs) return [];
   const sockets = specs.supportedSockets;
   if (Array.isArray(sockets)) {
     return sockets.filter((s): s is string => typeof s === 'string');
   }
-  // Если указан один сокет
   const singleSocket = specs.socket as string | undefined;
   return singleSocket ? [singleSocket] : [];
 }
 
-/**
- * Извлекает TDP компонента
- */
 function extractTDP(specs: ProductSpecifications | undefined): number {
   if (!specs) return 0;
   return (specs.tdp as number) || (specs.powerDraw as number) || 0;
 }
 
-// === CompatibilityService (client-side) ===
-
-/**
- * Проверяет совместимость сборки
- */
-function checkBuildCompatibility(
-  components: Partial<Record<PCComponentType, SelectedComponent>>
-): CompatibilityResult {
+function checkBuildCompatibility(components: PCBuilderSelectedState): CompatibilityResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   const cpu = components.cpu?.product;
   const motherboard = components.motherboard?.product;
-  const ram = components.ram?.product;
+  const rams = components.ram;
   const cooling = components.cooling?.product;
   const gpu = components.gpu?.product;
   const psu = components.psu?.product;
 
-  // 1. Проверка сокета CPU <-> Motherboard
   if (cpu && motherboard) {
     const cpuSocket = extractSocket(cpu.specifications);
     const mbSocket = extractSocket(motherboard.specifications);
@@ -143,31 +138,36 @@ function checkBuildCompatibility(
     }
   }
 
-  // 2. Проверка типа памяти RAM <-> Motherboard
-  if (ram && motherboard) {
-    const ramType = extractRAMType(ram.specifications);
+  if (motherboard && rams.length > 0) {
     const mbMemoryType = extractRAMType(motherboard.specifications);
-
-    if (ramType && mbMemoryType && ramType !== mbMemoryType) {
-      errors.push(
-        `Тип памяти (${ramType}) не поддерживается материнской платой (${mbMemoryType})`
-      );
+    let refType: RAMType | null = null;
+    for (const r of rams) {
+      const ramType = extractRAMType(r.product.specifications);
+      if (ramType && mbMemoryType && ramType !== mbMemoryType) {
+        errors.push(
+          `Тип памяти (${ramType}) не поддерживается материнской платой (${mbMemoryType})`
+        );
+        break;
+      }
+      if (ramType) {
+        if (refType && ramType !== refType) {
+          errors.push('Все модули ОЗУ должны быть одного типа (DDR4/DDR5 и т.д.)');
+          break;
+        }
+        refType = ramType;
+      }
     }
   }
 
-  // 3. Проверка совместимости охлаждения с сокетом
   if (cooling && cpu) {
     const cpuSocket = extractSocket(cpu.specifications);
     const supportedSockets = extractSupportedSockets(cooling.specifications);
 
     if (cpuSocket && supportedSockets.length > 0 && !supportedSockets.includes(cpuSocket)) {
-      warnings.push(
-        `Система охлаждения может не поддерживать сокет ${cpuSocket}`
-      );
+      warnings.push(`Система охлаждения может не поддерживать сокет ${cpuSocket}`);
     }
   }
 
-  // 4. Предупреждение о встроенной графике
   if (!gpu && cpu) {
     const hasIntegratedGraphics = cpu.specifications?.integratedGraphics as boolean;
     if (!hasIntegratedGraphics) {
@@ -175,7 +175,6 @@ function checkBuildCompatibility(
     }
   }
 
-  // 5. Предупреждение о мощности БП
   if (psu && (cpu || gpu)) {
     const psuWattage = psu.specifications?.wattage as number | undefined;
     const cpuTdp = extractTDP(cpu?.specifications);
@@ -183,7 +182,7 @@ function checkBuildCompatibility(
 
     if (psuWattage) {
       const totalTdp = cpuTdp + gpuTdp + BASE_POWER_CONSUMPTION;
-      const recommendedPsu = totalTdp * 1.3; // 30% запас
+      const recommendedPsu = totalTdp * 1.3;
 
       if (psuWattage < recommendedPsu) {
         warnings.push(
@@ -200,84 +199,181 @@ function checkBuildCompatibility(
   };
 }
 
-/**
- * Вычисляет общее энергопотребление сборки (Watts)
- */
-function calculatePowerConsumption(
-  components: Partial<Record<PCComponentType, SelectedComponent>>
-): number {
+function calculatePowerConsumption(components: PCBuilderSelectedState): number {
   let total = BASE_POWER_CONSUMPTION;
   const cpu = components.cpu?.product;
   const gpu = components.gpu?.product;
-  const storage = components.storage?.product;
   const cooling = components.cooling?.product;
 
   if (cpu) total += extractTDP(cpu.specifications);
   if (gpu) total += extractTDP(gpu.specifications);
-  if (storage) total += extractTDP(storage.specifications) || 5;
+  for (const s of components.storage) {
+    total += extractTDP(s.product.specifications) || 5;
+  }
   if (cooling) total += extractTDP(cooling.specifications) || 10;
 
-  return total;
+  return Math.max(0, total);
 }
 
-// === LocalStorage ===
+function isBuilderEmpty(c: PCBuilderSelectedState): boolean {
+  return (
+    !c.cpu &&
+    !c.gpu &&
+    !c.motherboard &&
+    !c.psu &&
+    !c.case &&
+    !c.cooling &&
+    c.ram.length === 0 &&
+    c.storage.length === 0
+  );
+}
 
-function saveToLocalStorage(components: Partial<Record<PCComponentType, SelectedComponent>>): void {
+function saveToLocalStorage(components: PCBuilderSelectedState): void {
   try {
-    const serialized: SerializedBuild = {
-      components: Object.fromEntries(
-        Object.entries(components).map(([type, comp]) => [
-          type,
-          { productId: comp!.product.id, product: comp!.product, type: comp!.type },
-        ])
-      ),
+    if (isBuilderEmpty(components)) {
+      clearLocalStorage();
+      return;
+    }
+    const componentsPayload: SerializedBuildV2['components'] = {};
+    const singleKeys: (keyof PCBuilderSelectedState)[] = [
+      'cpu',
+      'gpu',
+      'motherboard',
+      'psu',
+      'case',
+      'cooling',
+    ];
+    for (const key of singleKeys) {
+      const comp = components[key];
+      if (comp && typeof comp === 'object' && 'product' in comp) {
+        const sc = comp as SelectedComponent;
+        (componentsPayload as Record<string, SerializedSingle>)[key] = {
+          productId: sc.product.id,
+          product: sc.product,
+          type: sc.type,
+        };
+      }
+    }
+    if (components.ram.length > 0) {
+      componentsPayload.ram = components.ram.map((c) => ({
+        productId: c.product.id,
+        product: c.product,
+        type: 'ram' as const,
+      }));
+    }
+    if (components.storage.length > 0) {
+      componentsPayload.storage = components.storage.map((c) => ({
+        productId: c.product.id,
+        product: c.product,
+        type: 'storage' as const,
+      }));
+    }
+
+    const serialized: SerializedBuildV2 = {
+      v: 2,
       savedAt: new Date().toISOString(),
+      components: componentsPayload,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized));
-  } catch { /* Silent fail */ }
+  } catch {
+    /* ignore */
+  }
 }
 
-function loadFromLocalStorage(): Partial<Record<PCComponentType, SelectedComponent>> {
+function migrateV1ToState(parsed: SerializedBuildV1): PCBuilderSelectedState {
+  const out = emptyPcBuilderState();
+  const c = parsed.components || {};
+  for (const [, raw] of Object.entries(c)) {
+    if (!raw || typeof raw !== 'object') continue;
+    const entry = raw as SerializedSingle;
+    const type = entry.type as PCComponentType;
+    const sc: SelectedComponent = { product: entry.product, type };
+    if (type === 'ram') out.ram.push(sc);
+    else if (type === 'storage') out.storage.push(sc);
+    else if (type === 'cpu') out.cpu = sc;
+    else if (type === 'gpu') out.gpu = sc;
+    else if (type === 'motherboard') out.motherboard = sc;
+    else if (type === 'psu') out.psu = sc;
+    else if (type === 'case') out.case = sc;
+    else if (type === 'cooling') out.cooling = sc;
+  }
+  return out;
+}
+
+function loadFromLocalStorage(): PCBuilderSelectedState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const parsed: SerializedBuild = JSON.parse(raw);
-    if (!parsed.components) return {};
-    return Object.fromEntries(
-      Object.entries(parsed.components).map(([type, comp]) => [
-        type as PCComponentType,
-        { product: comp.product, type: comp.type as PCComponentType },
-      ])
-    ) as Partial<Record<PCComponentType, SelectedComponent>>;
-  } catch { return {}; }
+    if (!raw) return emptyPcBuilderState();
+    const parsed = JSON.parse(raw) as SerializedBuildV2 | SerializedBuildV1;
+
+    if ('v' in parsed && parsed.v === 2 && parsed.components) {
+      const c = parsed.components;
+      return {
+        cpu: c.cpu ? { product: c.cpu.product, type: 'cpu' } : undefined,
+        gpu: c.gpu ? { product: c.gpu.product, type: 'gpu' } : undefined,
+        motherboard: c.motherboard
+          ? { product: c.motherboard.product, type: 'motherboard' }
+          : undefined,
+        psu: c.psu ? { product: c.psu.product, type: 'psu' } : undefined,
+        case: c.case ? { product: c.case.product, type: 'case' } : undefined,
+        cooling: c.cooling ? { product: c.cooling.product, type: 'cooling' } : undefined,
+        ram: (c.ram ?? []).map((x) => ({ product: x.product, type: 'ram' as const })),
+        storage: (c.storage ?? []).map((x) => ({
+          product: x.product,
+          type: 'storage' as const,
+        })),
+      };
+    }
+
+    return migrateV1ToState(parsed as SerializedBuildV1);
+  } catch {
+    return emptyPcBuilderState();
+  }
 }
 
 function clearLocalStorage(): void {
-  try { localStorage.removeItem(STORAGE_KEY); } catch { /* Silent fail */ }
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
-/**
- * Определяет состояние слота компонента
- */
 function getComponentState(
   type: PCComponentType,
-  components: Partial<Record<PCComponentType, SelectedComponent>>,
+  multiIndex: number | undefined,
+  components: PCBuilderSelectedState,
   compatibility: CompatibilityResult
 ): ComponentCompatibility {
-  const component = components[type];
-  
-  if (!component) {
+  let hasComponent = false;
+  if (type === 'ram') {
+    hasComponent =
+      multiIndex !== undefined ? !!components.ram[multiIndex] : components.ram.length > 0;
+  } else if (type === 'storage') {
+    hasComponent =
+      multiIndex !== undefined ? !!components.storage[multiIndex] : components.storage.length > 0;
+  } else {
+    hasComponent = !!components[type];
+  }
+
+  if (!hasComponent) {
     return { state: 'empty' };
   }
 
-  // Проверяем, связан ли этот компонент с ошибками
-  const componentErrors = compatibility.errors.filter(error => {
+  const componentErrors = compatibility.errors.filter((error) => {
     const errorLower = error.toLowerCase();
-    const typeName = type === 'cpu' ? 'процессор' :
-                     type === 'motherboard' ? 'материнск' :
-                     type === 'ram' ? 'памят' :
-                     type === 'cooling' ? 'охлажден' :
-                     type === 'psu' ? 'блок питания' : '';
+    const typeName =
+      type === 'cpu'
+        ? 'процессор'
+        : type === 'motherboard'
+          ? 'материнск'
+          : type === 'ram'
+            ? 'памят'
+            : type === 'cooling'
+              ? 'охлажден'
+              : type === 'psu'
+                ? 'блок питания'
+                : '';
     return errorLower.includes(typeName);
   });
 
@@ -288,15 +384,22 @@ function getComponentState(
     };
   }
 
-  // Проверяем предупреждения
-  const componentWarnings = compatibility.warnings.filter(warning => {
+  const componentWarnings = compatibility.warnings.filter((warning) => {
     const warningLower = warning.toLowerCase();
-    const typeName = type === 'cpu' ? 'процессор' :
-                     type === 'motherboard' ? 'материнск' :
-                     type === 'ram' ? 'памят' :
-                     type === 'cooling' ? 'охлажден' :
-                     type === 'gpu' ? 'видеокарт' :
-                     type === 'psu' ? 'блок питания' : '';
+    const typeName =
+      type === 'cpu'
+        ? 'процессор'
+        : type === 'motherboard'
+          ? 'материнск'
+          : type === 'ram'
+            ? 'памят'
+            : type === 'cooling'
+              ? 'охлажден'
+              : type === 'gpu'
+                ? 'видеокарт'
+                : type === 'psu'
+                  ? 'блок питания'
+                  : '';
     return warningLower.includes(typeName);
   });
 
@@ -310,42 +413,49 @@ function getComponentState(
   return { state: 'selected' };
 }
 
-// === Хук ===
+function countSelectedCategories(c: PCBuilderSelectedState): number {
+  let n = 0;
+  if (c.cpu) n++;
+  if (c.gpu) n++;
+  if (c.motherboard) n++;
+  if (c.ram.length > 0) n++;
+  if (c.storage.length > 0) n++;
+  if (c.psu) n++;
+  if (c.case) n++;
+  if (c.cooling) n++;
+  return n;
+}
+
+export interface SelectComponentOptions {
+  multiIndex?: number;
+}
 
 export interface UsePCBuilderReturn {
-  /** Выбранные компоненты */
-  selectedComponents: Partial<Record<PCComponentType, SelectedComponent>>;
-  /** Результат проверки совместимости */
+  selectedComponents: PCBuilderSelectedState;
   compatibility: CompatibilityResult;
-  /** Общая стоимость */
   totalPrice: number;
-  /** Общее энергопотребление (Watts) */
   powerConsumption: number;
-  /** Количество выбранных компонентов */
   selectedCount: number;
-  /** Общее количество слотов */
   totalCount: number;
-  /** Выбрать компонент */
-  selectComponent: (type: PCComponentType, product: Product) => void;
-  /** Удалить компонент */
-  removeComponent: (type: PCComponentType) => void;
-  /** Сбросить сборку */
+  selectComponent: (
+    type: PCComponentType,
+    product: Product,
+    options?: SelectComponentOptions
+  ) => void;
+  removeComponent: (type: PCComponentType, multiIndex?: number) => void;
   resetBuild: () => void;
-  /** Очистить всю сборку (deprecated) */
   clearBuild: () => void;
-  /** Добавить все компоненты в корзину */
   addToCart: () => void;
-  /** Получить состояние слота */
-  getSlotState: (type: PCComponentType) => ComponentCompatibility;
-  /** Проверить совместимость */
+  getSlotState: (type: PCComponentType, multiIndex?: number) => ComponentCompatibility;
   checkCompatibility: () => CompatibilityResult;
-  /** Совместима ли вся сборка */
   isCompatible: boolean;
+  maxRamModules: number;
+  maxStorageModules: number;
 }
 
 export function usePCBuilder(): UsePCBuilderReturn {
-  const [selectedComponents, setSelectedComponents] = 
-    useState<Partial<Record<PCComponentType, SelectedComponent>>>(loadFromLocalStorage);
+  const [selectedComponents, setSelectedComponents] =
+    useState<PCBuilderSelectedState>(loadFromLocalStorage);
 
   const isFirstRender = useRef(true);
 
@@ -355,9 +465,25 @@ export function usePCBuilder(): UsePCBuilderReturn {
   );
 
   const totalPrice = useMemo(() => {
-    return Object.values(selectedComponents)
-      .filter((c): c is SelectedComponent => c !== undefined)
-      .reduce((sum, c) => sum + c.product.price, 0);
+    let sum = 0;
+    const s = selectedComponents;
+    const keys: (keyof PCBuilderSelectedState)[] = [
+      'cpu',
+      'gpu',
+      'motherboard',
+      'psu',
+      'case',
+      'cooling',
+    ];
+    for (const key of keys) {
+      const c = s[key];
+      if (c && typeof c === 'object' && 'product' in c) {
+        sum += (c as SelectedComponent).product.price;
+      }
+    }
+    for (const r of s.ram) sum += r.product.price;
+    for (const st of s.storage) sum += st.product.price;
+    return sum;
   }, [selectedComponents]);
 
   const powerConsumption = useMemo(
@@ -365,9 +491,8 @@ export function usePCBuilder(): UsePCBuilderReturn {
     [selectedComponents]
   );
 
-  const selectedCount = Object.keys(selectedComponents).length;
+  const selectedCount = countSelectedCategories(selectedComponents);
 
-  // Auto-save to LocalStorage
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -378,31 +503,126 @@ export function usePCBuilder(): UsePCBuilderReturn {
 
   const addItemToCart = useCartStore((s) => s.addItem);
 
-  const selectComponent = useCallback((type: PCComponentType, product: Product) => {
-    setSelectedComponents(prev => ({ ...prev, [type]: { product, type } }));
-  }, []);
+  const selectComponent = useCallback(
+    (type: PCComponentType, product: Product, options?: SelectComponentOptions) => {
+      const idx = options?.multiIndex;
+      setSelectedComponents((prev) => {
+        const next: PCBuilderSelectedState = {
+          cpu: prev.cpu,
+          gpu: prev.gpu,
+          motherboard: prev.motherboard,
+          psu: prev.psu,
+          case: prev.case,
+          cooling: prev.cooling,
+          ram: [...prev.ram],
+          storage: [...prev.storage],
+        };
+        const sc: SelectedComponent = { product, type };
 
-  const removeComponent = useCallback((type: PCComponentType) => {
-    setSelectedComponents(prev => { const next = { ...prev }; delete next[type]; return next; });
+        if (type === 'ram') {
+          if (idx !== undefined) {
+            if (idx < next.ram.length) {
+              next.ram[idx] = sc;
+            } else if (idx === next.ram.length && next.ram.length < MAX_RAM_MODULES) {
+              next.ram.push(sc);
+            }
+          } else if (next.ram.length < MAX_RAM_MODULES) {
+            next.ram.push(sc);
+          }
+          return next;
+        }
+        if (type === 'storage') {
+          if (idx !== undefined) {
+            if (idx < next.storage.length) {
+              next.storage[idx] = sc;
+            } else if (idx === next.storage.length && next.storage.length < MAX_STORAGE_MODULES) {
+              next.storage.push(sc);
+            }
+          } else if (next.storage.length < MAX_STORAGE_MODULES) {
+            next.storage.push(sc);
+          }
+          return next;
+        }
+
+        (next as Record<string, unknown>)[type] = sc;
+        return next;
+      });
+    },
+    []
+  );
+
+  const removeComponent = useCallback((type: PCComponentType, multiIndex?: number) => {
+    setSelectedComponents((prev) => {
+      if (type === 'cpu') {
+        return {
+          cpu: undefined,
+          motherboard: undefined,
+          ram: [],
+          cooling: undefined,
+          gpu: prev.gpu,
+          storage: [...prev.storage],
+          psu: prev.psu,
+          case: prev.case,
+        };
+      }
+      if (type === 'motherboard') {
+        return { ...prev, motherboard: undefined, ram: [] };
+      }
+      if (type === 'ram') {
+        if (multiIndex !== undefined) {
+          const ram = [...prev.ram];
+          ram.splice(multiIndex, 1);
+          return { ...prev, ram };
+        }
+        return { ...prev, ram: [] };
+      }
+      if (type === 'storage') {
+        if (multiIndex !== undefined) {
+          const storage = [...prev.storage];
+          storage.splice(multiIndex, 1);
+          return { ...prev, storage };
+        }
+        return { ...prev, storage: [] };
+      }
+      const next = { ...prev };
+      delete (next as Record<string, unknown>)[type];
+      return next;
+    });
   }, []);
 
   const resetBuild = useCallback(() => {
-    setSelectedComponents({});
+    setSelectedComponents(emptyPcBuilderState());
     clearLocalStorage();
   }, []);
 
   const clearBuild = resetBuild;
 
   const addToCart = useCallback(() => {
-    const comps = Object.values(selectedComponents).filter((c): c is SelectedComponent => c !== undefined);
-    for (const comp of comps) {
-      addItemToCart(comp.product, 1);
+    const s = selectedComponents;
+    const keys: (keyof PCBuilderSelectedState)[] = [
+      'cpu',
+      'gpu',
+      'motherboard',
+      'psu',
+      'case',
+      'cooling',
+    ];
+    for (const key of keys) {
+      const c = s[key];
+      if (c && typeof c === 'object' && 'product' in c) {
+        addItemToCart((c as SelectedComponent).product, 1);
+      }
     }
+    for (const r of s.ram) addItemToCart(r.product, 1);
+    for (const st of s.storage) addItemToCart(st.product, 1);
   }, [selectedComponents, addItemToCart]);
 
-  const getSlotState = useCallback((type: PCComponentType): ComponentCompatibility => {
-    return getComponentState(type, selectedComponents, compatibility);
-  }, [selectedComponents, compatibility]);
+  const getSlotState = useCallback(
+    (type: PCComponentType, multiIndex?: number): ComponentCompatibility => {
+      return getComponentState(type, multiIndex, selectedComponents, compatibility);
+    },
+    [selectedComponents, compatibility]
+  );
 
   const checkCompatibility = useCallback(() => {
     return checkBuildCompatibility(selectedComponents);
@@ -414,7 +634,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     totalPrice,
     powerConsumption,
     selectedCount,
-    totalCount: TOTAL_SLOTS,
+    totalCount: TOTAL_CATEGORIES,
     selectComponent,
     removeComponent,
     resetBuild,
@@ -423,10 +643,10 @@ export function usePCBuilder(): UsePCBuilderReturn {
     getSlotState,
     checkCompatibility,
     isCompatible: compatibility.isCompatible,
+    maxRamModules: MAX_RAM_MODULES,
+    maxStorageModules: MAX_STORAGE_MODULES,
   };
 }
-
-// === Экспорт констант для использования в компонентах ===
 
 export const PC_BUILDER_SLOTS: { key: PCComponentType; label: string }[] = [
   { key: 'cpu', label: 'Процессор' },

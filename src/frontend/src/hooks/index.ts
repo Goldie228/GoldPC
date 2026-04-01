@@ -21,14 +21,21 @@ export { useServices, useService, useServiceBySlug, servicesKeys, servicesApi } 
 export type { ServiceListResponse, GetServicesParams, Service } from './useServices';
 
 // PC Builder
-export { usePCBuilder, PC_BUILDER_SLOTS } from './usePCBuilder';
+export {
+  usePCBuilder,
+  PC_BUILDER_SLOTS,
+  MAX_RAM_MODULES,
+  MAX_STORAGE_MODULES,
+} from './usePCBuilder';
 export type {
   PCComponentType,
   ComponentSlotState,
   SelectedComponent,
+  PCBuilderSelectedState,
   CompatibilityResult,
   ComponentCompatibility,
   UsePCBuilderReturn,
+  SelectComponentOptions,
 } from './usePCBuilder';
 
 // Debounce

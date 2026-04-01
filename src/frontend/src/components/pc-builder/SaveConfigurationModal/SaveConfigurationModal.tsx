@@ -5,7 +5,7 @@ import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
 import { useToastStore } from '../../../store/toastStore';
 import apiClient from '../../../api/client';
-import type { PCComponentType, SelectedComponent } from '../../../hooks';
+import type { PCBuilderSelectedState } from '../../../hooks';
 import styles from './SaveConfigurationModal.module.css';
 
 /** Назначение ПК (соответствует PCPurpose из API) */
@@ -41,7 +41,7 @@ export interface SaveConfigurationModalProps {
   /** Close handler */
   onClose: () => void;
   /** Selected components from usePCBuilder */
-  selectedComponents: Partial<Record<PCComponentType, SelectedComponent>>;
+  selectedComponents: PCBuilderSelectedState;
   /** Total price of the build */
   totalPrice: number;
   /** Compatibility result */
@@ -86,14 +86,18 @@ export function SaveConfigurationModal({
 
   const showToast = useToastStore((state) => state.showToast);
 
-  /** Формируем components map: { cpu: productId, gpu: productId, ... } */
+  /** Формируем components map для API (несколько ОЗУ/накопителей — id через запятую). */
   const buildComponentsMap = useCallback((): Record<string, string> => {
     const map: Record<string, string> = {};
-    for (const [type, comp] of Object.entries(selectedComponents)) {
-      if (comp) {
-        map[type] = comp.product.id;
-      }
-    }
+    const s = selectedComponents;
+    if (s.cpu) map.cpu = s.cpu.product.id;
+    if (s.gpu) map.gpu = s.gpu.product.id;
+    if (s.motherboard) map.motherboard = s.motherboard.product.id;
+    if (s.psu) map.psu = s.psu.product.id;
+    if (s.case) map.case = s.case.product.id;
+    if (s.cooling) map.cooling = s.cooling.product.id;
+    if (s.ram.length > 0) map.ram = s.ram.map((r) => r.product.id).join(',');
+    if (s.storage.length > 0) map.storage = s.storage.map((x) => x.product.id).join(',');
     return map;
   }, [selectedComponents]);
 

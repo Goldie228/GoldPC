@@ -31,6 +31,8 @@ export interface ComponentSlotProps {
   warning?: string;
   /** Button click handler */
   onSelect: () => void;
+  /** Снять выбор (кнопка «Снять» рядом с основным действием) */
+  onClear?: () => void;
   /** Button text (default: "Выбрать" for empty, "Изменить" for selected) */
   buttonText?: string;
   /** Animation index for staggered entry */
@@ -66,6 +68,7 @@ export function ComponentSlot({
   specs,
   warning,
   onSelect,
+  onClear,
   buttonText,
   index = 0,
   imageUrl,
@@ -120,7 +123,9 @@ export function ComponentSlot({
 
         {/* Info */}
         <div className="component-slot__info">
-          <span className="component-slot__type">{type}</span>
+          <div className="component-slot__type-row">
+            <span className="component-slot__type">{type}</span>
+          </div>
           <motion.div 
             key={name}
             initial={{ opacity: 0, y: 5 }}
@@ -164,13 +169,28 @@ export function ComponentSlot({
           </motion.div>
         </div>
 
-        {/* Button */}
-        <button 
-          className={`component-slot__btn component-slot__btn--${getButtonVariant()}`}
-          onClick={onSelect}
-        >
-          {getButtonText()}
-        </button>
+        {/* Снять + основное действие — одна группа справа */}
+        <div className="component-slot__actions">
+          {onClear && (state === 'selected' || state === 'incompatible') && (
+            <button
+              type="button"
+              className="component-slot__clear"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClear();
+              }}
+            >
+              Снять
+            </button>
+          )}
+          <button 
+            type="button"
+            className={`component-slot__btn component-slot__btn--${getButtonVariant()}`}
+            onClick={onSelect}
+          >
+            {getButtonText()}
+          </button>
+        </div>
       </div>
     </motion.div>
   );

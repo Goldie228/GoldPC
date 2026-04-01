@@ -1,16 +1,18 @@
 /**
  * ComponentSlot.css - PC Builder Component Slot Styles
- * States: empty (gray dashed), selected (gold), incompatible (red)
+ * States: empty (как карточка каталога), selected (gold), incompatible (red)
  * Features: 64x64 thumbnail white frame, StatusBadge, 0.3s transitions, CPU/GPU 120%
  */
 
-/* ===== BASE ===== */
+/* ===== BASE ===== (скругление и обводка как ProductCard) */
 .component-slot {
   background: var(--bg-card, #18181b);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
   padding: 20px;
   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   position: relative;
+  overflow: hidden;
 }
 .component-slot:hover {
   border-color: rgba(255, 255, 255, 0.12);
@@ -27,9 +29,25 @@
 /* ===== INNER ===== */
 .component-slot__inner { display: flex; align-items: center; gap: 20px; }
 
-/* ===== EMPTY (gray dashed) ===== */
-.component-slot--empty { border-color: var(--border, rgba(255, 255, 255, 0.06)); border-style: dashed; }
-.component-slot--empty:hover { border-color: var(--border-accent, rgba(212, 165, 116, 0.2)); border-style: solid; }
+/* ===== EMPTY — как карточка каталога: сплошная обводка, без пунктира ===== */
+.component-slot--empty {
+  border-style: solid;
+  border-color: var(--border, rgba(255, 255, 255, 0.06));
+  background: var(--bg-elevated, #121214);
+  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.04);
+}
+.component-slot--empty:hover {
+  border-color: rgba(212, 165, 116, 0.25);
+  box-shadow:
+    0 0 0 1px rgba(212, 165, 116, 0.12),
+    0 8px 28px rgba(212, 165, 116, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px);
+}
+
+.component-slot--priority.component-slot--empty:hover {
+  transform: scale(1.02) translateY(-2px);
+}
 
 /* ===== SELECTED (gold) ===== */
 .component-slot--selected {
@@ -65,23 +83,107 @@
 .component-slot--incompatible .component-slot__icon { background: rgba(248, 113, 113, 0.1); color: #f87171; }
 .component-slot__icon svg { width: 24px; height: 24px; }
 
-/* ===== 64x64 THUMBNAIL (white frame) ===== */
+/* ===== THUMBNAIL — как карточки каталога: белый скруглённый квадрат (.imageWrapper) ===== */
 .component-slot__thumbnail {
-  width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
-  background: #ffffff; padding: 4px; box-sizing: border-box; flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 10px;
+  overflow: hidden;
 }
 .component-slot__thumbnail img {
-  width: 100%; height: 100%; object-fit: contain;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  background: transparent !important;
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.component-slot:hover .component-slot__thumbnail img { transform: scale(1.05); }
-.component-slot__icon:has(.component-slot__thumbnail) { width: auto; height: auto; background: transparent; padding: 0; }
+.component-slot:hover .component-slot__thumbnail img {
+  transform: scale(1.05);
+}
+.component-slot__icon:has(.component-slot__thumbnail) {
+  width: auto;
+  height: auto;
+  background: transparent;
+  padding: 0;
+}
+
+.component-slot--priority .component-slot__thumbnail {
+  width: 72px;
+  height: 72px;
+  padding: 12px;
+}
 
 /* ===== INFO ===== */
-.component-slot__info { flex: 1; min-width: 0; }
+.component-slot__info {
+  flex: 1;
+  min-width: 0;
+}
+.component-slot__type-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+  min-height: 1.25em;
+}
 .component-slot__type {
   display: block; font-size: 0.65rem; font-weight: 600;
-  color: var(--fg-dim, #52525b); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;
+  color: var(--fg-dim, #52525b); text-transform: uppercase; letter-spacing: 0.1em;
+  line-height: 1.2;
+}
+/* ===== ДЕЙСТВИЯ: «Снять» + «Изменить» — одна группа ===== */
+.component-slot__actions {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Вторичная кнопка: текст, не иконка; отличается от ghost «Изменить» */
+.component-slot__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--fg-muted, #a1a1aa);
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.component-slot__clear:hover {
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.component-slot__clear:focus-visible {
+  outline: 2px solid var(--accent, #d4a574);
+  outline-offset: 2px;
+}
+
+.component-slot--incompatible .component-slot__clear {
+  border-color: rgba(248, 113, 113, 0.35);
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.06);
 }
 .component-slot__name {
   font-size: 0.95rem; font-weight: 500; margin-bottom: 6px;
@@ -141,17 +243,39 @@
   .component-slot__inner { flex-wrap: wrap; gap: 16px; }
   .component-slot__icon { width: 40px; height: 40px; }
   .component-slot__icon svg { width: 20px; height: 20px; }
-  .component-slot__thumbnail { width: 48px; height: 48px; }
+  .component-slot__thumbnail {
+    width: 48px;
+    height: 48px;
+    padding: 8px;
+    border-radius: 12px;
+  }
+  .component-slot--priority .component-slot__thumbnail {
+    width: 56px;
+    height: 56px;
+    padding: 10px;
+  }
   .component-slot__info { flex: 1 1 calc(100% - 60px); }
   .component-slot__price { text-align: left; margin-top: 8px; width: 100%; }
-  .component-slot__btn { margin-top: 12px; width: 100%; }
+  .component-slot__actions {
+    width: 100%;
+    margin-top: 12px;
+    flex-direction: row;
+    justify-content: stretch;
+    gap: 10px;
+  }
+  .component-slot__actions .component-slot__clear,
+  .component-slot__actions .component-slot__btn {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
   .component-slot--priority { padding: 20px; transform: none; }
   .component-slot--priority:hover { transform: translateY(-1px); }
 }
 
 /* ===== REDUCED MOTION ===== */
 @media (prefers-reduced-motion: reduce) {
-  .component-slot, .component-slot__icon, .component-slot__thumbnail img, .component-slot__btn, .component-slot__status-badge {
+  .component-slot, .component-slot__icon, .component-slot__thumbnail img, .component-slot__btn, .component-slot__clear, .component-slot__status-badge {
     transition-duration: 0.01ms !important;
   }
   .component-slot:hover, .component-slot--priority, .component-slot--priority:hover { transform: none; }

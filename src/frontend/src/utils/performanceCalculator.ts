@@ -4,7 +4,15 @@
 import type { Product, ProductSpecifications } from '../api/types';
 
 export interface EstimatedFps { fps1080p: number; fps1440p: number; fps4k: number; }
-export interface PerformanceResult { gamingScore: number; workstationScore: number; renderingScore: number; overallScore: number; estimatedFps: EstimatedFps; }
+export interface PerformanceResult {
+  gamingScore: number;
+  workstationScore: number;
+  renderingScore: number;
+  overallScore: number;
+  estimatedFps: EstimatedFps;
+  /** Нет CPU и GPU — оценка не строится (избегаем ложных «базовых» баллов). */
+  isEmptyBuild: boolean;
+}
 
 function num(specs: ProductSpecifications | undefined, ...keys: string[]): number | null {
   if (!specs) return null;
@@ -95,26 +103,47 @@ function estimateFps(cpuScore: number, gpuScore: number): EstimatedFps {
 }
 
 export function calculatePerformance(cpu: Product | null, gpu: Product | null, ram: Product | null): PerformanceResult {
-  const cpuSC = cpu ? estimateCpuSingleCore(cpu.specifications) : 150;
-  const cpuMC = cpu ? estimateCpuMultiCore(cpu.specifications) : 2000;
-  const gpuGaming = gpu ? estimateGpuGaming(gpu.specifications) : 60;
-  const gpuCompute = gpu ? estimateGpuCompute(gpu.specifications) : 40;
+  if (!cpu && !gpu) {
+    return {
+      gamingScore: 0,
+      workstationScore: 0,
+      renderingScore: 0,
+      overallScore: 0,
+      estimatedFps: { fps1080p: 0, fps1440p: 0, fps4k: 0 },
+      isEmptyBuild: true,
+    };
+  }
+
+  const cpuSC = cpu ? estimateCpuSingleCore(cpu.specifications) : 0;
+  const cpuMC = cpu ? estimateCpuMultiCore(cpu.specifications) : 0;
+  const gpuGaming = gpu ? estimateGpuGaming(gpu.specifications) : 0;
+  const gpuCompute = gpu ? estimateGpuCompute(gpu.specifications) : 0;
   const ramFactor = ram ? estimateRamFactor(ram.specifications) : 1.0;
   const gamingScore = Math.round(Math.min((gpuGaming * 0.7 + cpuSC * 0.4 + cpuMC * 0.02) * ramFactor / 10, 100));
   const workstationScore = Math.round(Math.min((cpuMC * 0.008 + cpuSC * 0.3) * ramFactor / 8, 100));
   const renderingScore = Math.round(Math.min((cpuMC * 0.005 + gpuCompute * 0.3 + cpuSC * 0.1) * ramFactor / 8, 100));
   const overallScore = Math.round(gamingScore * 0.4 + workstationScore * 0.3 + renderingScore * 0.3);
-  return { gamingScore, workstationScore, renderingScore, overallScore, estimatedFps: estimateFps(cpuSC, gpuGaming) };
+  return {
+    gamingScore,
+    workstationScore,
+    renderingScore,
+    overallScore,
+    estimatedFps: estimateFps(cpuSC, gpuGaming),
+    isEmptyBuild: false,
+  };
 }
 
 export function getPerformanceLabel(score: number): string {
+  if (score <= 0) return '—';
   if (score >= 90) return 'Экстремальный';
   if (score >= 75) return 'Высокий';
   if (score >= 55) return 'Средний';
   if (score >= 35) return 'Начальный';
   return 'Базовый';
 }
+/** Градации золотой шкалы (без красного «danger» для низких баллов). */
 export function getPerformanceColor(score: number): string {
+  if (score <= 0) return 'performance-none';
   if (score >= 90) return 'performance-extreme';
   if (score >= 75) return 'performance-high';
   if (score >= 55) return 'performance-medium';

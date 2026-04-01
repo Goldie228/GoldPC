@@ -13,7 +13,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import './Modal.css';
 
-export type ModalSize = 'small' | 'medium' | 'large';
+export type ModalSize = 'small' | 'medium' | 'large' | 'xlarge';
 
 export interface ModalProps {
   /** Whether modal is open */

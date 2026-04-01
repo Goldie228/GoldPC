@@ -6,7 +6,7 @@ const routes = [
   { path: '/', name: 'Home', expectedContent: 'GoldPC' },
   { path: '/catalog', name: 'Catalog', expectedContent: 'Каталог' },
   { path: '/login', name: 'Login', expectedContent: 'Войти' },
-  { path: '/pc-builder', name: 'PC Builder', expectedContent: 'Конфигуратор' },
+  { path: '/pc-builder', name: 'PC Builder', expectedContent: 'Конструктор ПК' },
   { path: '/delivery', name: 'Delivery', expectedContent: 'Доставка' },
   { path: '/payment', name: 'Payment', expectedContent: 'Оплата' },
   { path: '/warranty', name: 'Warranty', expectedContent: 'Гарантия' },

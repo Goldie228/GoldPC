@@ -60,6 +60,19 @@
   max-width: 900px;
 }
 
+.modal--xlarge {
+  width: 100%;
+  max-width: min(1200px, 96vw);
+  max-height: min(92vh, 900px);
+}
+
+.modal--xlarge .modal__content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: calc(92vh - 5rem);
+}
+
 /* Header */
 .modal__header {
   display: flex;

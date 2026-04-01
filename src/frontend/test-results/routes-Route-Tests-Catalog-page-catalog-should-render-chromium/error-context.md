@@ -1,0 +1,324 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - link "Перейти к основному контенту" [ref=e4] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e5]:
+    - link "GoldPC" [ref=e6] [cursor=pointer]:
+      - /url: /
+      - img [ref=e8]
+      - generic [ref=e12]: GoldPC
+    - navigation [ref=e13]:
+      - link "Каталог" [ref=e14] [cursor=pointer]:
+        - /url: /catalog
+      - link "Конструктор" [ref=e15] [cursor=pointer]:
+        - /url: /pc-builder
+      - link "Сервис" [ref=e16] [cursor=pointer]:
+        - /url: /services
+      - link "О нас" [ref=e17] [cursor=pointer]:
+        - /url: /about
+    - generic [ref=e18]:
+      - generic [ref=e20]:
+        - img
+        - combobox "Поиск по сайту (/, Ctrl+K)" [ref=e21]
+      - 'link "Избранное: 0 товаров" [ref=e22] [cursor=pointer]':
+        - /url: /wishlist
+        - img [ref=e23]
+      - 'link "Сравнение: 0 товаров" [ref=e25] [cursor=pointer]':
+        - /url: /comparison
+        - img [ref=e26]
+      - 'button "Корзина: 0 товаров" [ref=e31] [cursor=pointer]':
+        - img [ref=e32]
+      - button "Войти" [ref=e37] [cursor=pointer]:
+        - img [ref=e38]
+  - dialog [ref=e41]:
+    - button [ref=e42] [cursor=pointer]:
+      - img [ref=e43]
+    - navigation [ref=e46]:
+      - link [ref=e47] [cursor=pointer]:
+        - /url: /catalog
+        - text: Каталог
+      - link [ref=e48] [cursor=pointer]:
+        - /url: /pc-builder
+        - text: Конструктор
+      - link [ref=e49] [cursor=pointer]:
+        - /url: /services
+        - text: Сервис
+      - link [ref=e50] [cursor=pointer]:
+        - /url: /about
+        - text: О нас
+    - generic [ref=e51]:
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /wishlist
+        - img [ref=e53]
+        - generic [ref=e55]: Избранное
+      - link [ref=e56] [cursor=pointer]:
+        - /url: /comparison
+        - img [ref=e57]
+        - generic [ref=e62]: Сравнение
+      - link [ref=e63] [cursor=pointer]:
+        - /url: /cart
+        - img [ref=e64]
+        - generic [ref=e68]: Корзина
+      - link [ref=e69] [cursor=pointer]:
+        - /url: /account
+        - img [ref=e70]
+        - generic [ref=e73]: Профиль
+  - main [ref=e74]:
+    - main "Каталог товаров GoldPC" [ref=e75]:
+      - complementary [ref=e77]:
+        - heading "Фильтры" [level=2] [ref=e79]:
+          - img [ref=e80]
+          - text: Фильтры
+        - generic [ref=e82]:
+          - button "Категории" [expanded] [ref=e83] [cursor=pointer]:
+            - img [ref=e85]
+            - generic [ref=e87]: Категории
+            - img [ref=e88]
+          - generic [ref=e91]:
+            - button "Все товары" [ref=e92] [cursor=pointer]:
+              - generic [ref=e93]: Все товары
+            - button "Процессоры" [ref=e96] [cursor=pointer]:
+              - generic [ref=e97]: Процессоры
+            - button "Видеокарты" [ref=e100] [cursor=pointer]:
+              - generic [ref=e101]: Видеокарты
+            - button "Мат. платы" [ref=e104] [cursor=pointer]:
+              - generic [ref=e105]: Мат. платы
+            - button "Память" [ref=e108] [cursor=pointer]:
+              - generic [ref=e109]: Память
+            - button "Накопители" [ref=e112] [cursor=pointer]:
+              - generic [ref=e113]: Накопители
+            - button "Блоки питания" [ref=e116] [cursor=pointer]:
+              - generic [ref=e117]: Блоки питания
+            - button "Корпуса" [ref=e120] [cursor=pointer]:
+              - generic [ref=e121]: Корпуса
+            - button "Охлаждение" [ref=e124] [cursor=pointer]:
+              - generic [ref=e125]: Охлаждение
+            - button "Мониторы" [ref=e128] [cursor=pointer]:
+              - generic [ref=e129]: Мониторы
+            - button "Клавиатуры" [ref=e132] [cursor=pointer]:
+              - generic [ref=e133]: Клавиатуры
+            - button "Мыши" [ref=e136] [cursor=pointer]:
+              - generic [ref=e137]: Мыши
+            - button "Наушники" [ref=e140] [cursor=pointer]:
+              - generic [ref=e141]: Наушники
+        - generic [ref=e144]:
+          - button "Цена" [ref=e145] [cursor=pointer]:
+            - img [ref=e147]
+            - generic [ref=e149]: Цена
+            - img [ref=e150]
+          - generic:
+            - generic [ref=e157]:
+              - generic [ref=e158]: 0 BYN
+              - generic [ref=e159]: 0 BYN
+            - generic [ref=e160]:
+              - generic [ref=e161]:
+                - generic [ref=e162]: От
+                - spinbutton [ref=e163]
+              - generic [ref=e164]: —
+              - generic [ref=e165]:
+                - generic [ref=e166]: До
+                - spinbutton [ref=e167]
+        - button "Бренды" [ref=e169] [cursor=pointer]:
+          - img [ref=e171]
+          - generic [ref=e174]: Бренды
+          - img [ref=e175]
+        - generic [ref=e181]:
+          - button "Рейтинг" [ref=e182] [cursor=pointer]:
+            - img [ref=e184]
+            - generic [ref=e186]: Рейтинг
+            - img [ref=e187]
+          - radiogroup "Минимальный рейтинг" [ref=e189]:
+            - generic [ref=e190] [cursor=pointer]:
+              - radio "4★ и выше" [ref=e191]
+              - img [ref=e193]
+              - generic [ref=e195]:
+                - img [ref=e196]
+                - img [ref=e198]
+                - img [ref=e200]
+                - img [ref=e202]
+                - img [ref=e204]
+              - generic [ref=e206]: 4★ и выше
+            - generic [ref=e207] [cursor=pointer]:
+              - radio "3★ и выше" [ref=e208]
+              - img [ref=e210]
+              - generic [ref=e212]:
+                - img [ref=e213]
+                - img [ref=e215]
+                - img [ref=e217]
+                - img [ref=e219]
+                - img [ref=e221]
+              - generic [ref=e223]: 3★ и выше
+            - generic [ref=e224] [cursor=pointer]:
+              - radio "2★ и выше" [ref=e225]
+              - img [ref=e227]
+              - generic [ref=e229]:
+                - img [ref=e230]
+                - img [ref=e232]
+                - img [ref=e234]
+                - img [ref=e236]
+                - img [ref=e238]
+              - generic [ref=e240]: 2★ и выше
+            - generic [ref=e241] [cursor=pointer]:
+              - radio "1★ и выше" [ref=e242]
+              - img [ref=e244]
+              - generic [ref=e246]:
+                - img [ref=e247]
+                - img [ref=e249]
+                - img [ref=e251]
+                - img [ref=e253]
+                - img [ref=e255]
+              - generic [ref=e257]: 1★ и выше
+            - generic [ref=e258] [cursor=pointer]:
+              - radio "Любой рейтинг" [checked] [ref=e259]
+              - img [ref=e261]
+              - generic [ref=e263]: Любой рейтинг
+        - generic [ref=e264]:
+          - button "Наличие" [ref=e265] [cursor=pointer]:
+            - img [ref=e267]
+            - generic [ref=e271]: Наличие
+            - img [ref=e272]
+          - generic [ref=e274]:
+            - generic [ref=e275] [cursor=pointer]:
+              - checkbox "В наличии" [checked] [ref=e276]
+              - img [ref=e278]
+              - generic [ref=e280]: В наличии
+            - generic [ref=e281] [cursor=pointer]:
+              - checkbox "Под заказ" [ref=e282]
+              - img [ref=e284]
+              - generic [ref=e286]: Под заказ
+      - main [ref=e287]:
+        - generic [ref=e288]:
+          - navigation "Хлебные крошки" [ref=e289]:
+            - list [ref=e290]:
+              - listitem [ref=e291]:
+                - link "Главная" [ref=e292] [cursor=pointer]:
+                  - /url: /
+              - listitem [ref=e293]:
+                - img [ref=e294]
+                - generic [ref=e296]: Каталог
+          - heading "Каталог комплектующих" [level=1] [ref=e297]
+          - paragraph [ref=e298]: Товары не найдены
+        - generic [ref=e299]:
+          - generic [ref=e301]:
+            - button "Сетка" [ref=e302] [cursor=pointer]:
+              - img [ref=e303]
+            - button "Список" [ref=e308] [cursor=pointer]:
+              - img [ref=e309]
+            - button "Таблица" [ref=e310] [cursor=pointer]:
+              - img [ref=e311]
+          - generic [ref=e313]:
+            - generic [ref=e315]:
+              - img
+              - textbox "Поиск в каталоге" [ref=e316]:
+                - /placeholder: Поиск в каталоге...
+            - combobox [ref=e317] [cursor=pointer]:
+              - option "По популярности" [selected]
+              - option "Сначала дешевле"
+              - option "Сначала дороже"
+              - option "По рейтингу"
+              - option "По новизне"
+              - option "По названию"
+        - generic [ref=e318]:
+          - article [ref=e319]
+          - article [ref=e333]
+          - article [ref=e347]
+          - article [ref=e361]
+          - article [ref=e375]
+          - article [ref=e389]
+          - article [ref=e403]
+          - article [ref=e417]
+          - article [ref=e431]
+          - article [ref=e445]
+          - article [ref=e459]
+          - article [ref=e473]
+  - contentinfo [ref=e487]:
+    - generic [ref=e488]:
+      - generic [ref=e489]:
+        - generic [ref=e490]:
+          - link "GoldPC" [ref=e491] [cursor=pointer]:
+            - /url: /
+            - img [ref=e493]
+            - generic [ref=e497]: GoldPC
+          - paragraph [ref=e498]: Премиальный магазин компьютерных компонентов с профессиональной сборкой и гарантией качества.
+        - generic [ref=e499]:
+          - heading "Каталог" [level=4] [ref=e500]
+          - list [ref=e501]:
+            - listitem [ref=e502]:
+              - link "Процессоры" [ref=e503] [cursor=pointer]:
+                - /url: /catalog?category=cpu
+            - listitem [ref=e504]:
+              - link "Видеокарты" [ref=e505] [cursor=pointer]:
+                - /url: /catalog?category=gpu
+            - listitem [ref=e506]:
+              - link "Мат. платы" [ref=e507] [cursor=pointer]:
+                - /url: /catalog?category=motherboard
+            - listitem [ref=e508]:
+              - link "Память" [ref=e509] [cursor=pointer]:
+                - /url: /catalog?category=ram
+            - listitem [ref=e510]:
+              - link "Накопители" [ref=e511] [cursor=pointer]:
+                - /url: /catalog?category=storage
+            - listitem [ref=e512]:
+              - link "Блоки питания" [ref=e513] [cursor=pointer]:
+                - /url: /catalog?category=psu
+            - listitem [ref=e514]:
+              - link "Корпуса" [ref=e515] [cursor=pointer]:
+                - /url: /catalog?category=case
+            - listitem [ref=e516]:
+              - link "Охлаждение" [ref=e517] [cursor=pointer]:
+                - /url: /catalog?category=cooling
+            - listitem [ref=e518]:
+              - link "Мониторы" [ref=e519] [cursor=pointer]:
+                - /url: /catalog?category=monitor
+            - listitem [ref=e520]:
+              - link "Клавиатуры" [ref=e521] [cursor=pointer]:
+                - /url: /catalog?category=keyboard
+            - listitem [ref=e522]:
+              - link "Мыши" [ref=e523] [cursor=pointer]:
+                - /url: /catalog?category=mouse
+            - listitem [ref=e524]:
+              - link "Наушники" [ref=e525] [cursor=pointer]:
+                - /url: /catalog?category=headphones
+        - generic [ref=e526]:
+          - heading "Сервис" [level=4] [ref=e527]
+          - list [ref=e528]:
+            - listitem [ref=e529]:
+              - link "Конструктор ПК" [ref=e530] [cursor=pointer]:
+                - /url: /pc-builder
+            - listitem [ref=e531]:
+              - link "Сборка и настройка" [ref=e532] [cursor=pointer]:
+                - /url: /services/assembly
+            - listitem [ref=e533]:
+              - link "Доставка по РБ" [ref=e534] [cursor=pointer]:
+                - /url: /delivery
+            - listitem [ref=e535]:
+              - link "Оплата и рассрочка" [ref=e536] [cursor=pointer]:
+                - /url: /payment
+            - listitem [ref=e537]:
+              - link "Гарантийное обслуживание" [ref=e538] [cursor=pointer]:
+                - /url: /warranty
+            - listitem [ref=e539]:
+              - link "Частые вопросы" [ref=e540] [cursor=pointer]:
+                - /url: /faq
+        - generic [ref=e541]:
+          - heading "Контакты" [level=4] [ref=e542]
+          - list [ref=e543]:
+            - listitem [ref=e544]:
+              - link "Позвонить нам" [ref=e545] [cursor=pointer]:
+                - /url: tel:+375333149283
+                - text: +375 (33) 314-92-83
+            - listitem [ref=e546]:
+              - link "Написать нам на email" [ref=e547] [cursor=pointer]:
+                - /url: mailto:goldpc.team@gmail.com
+                - text: goldpc.team@gmail.com
+            - listitem [ref=e548]: Минск, Улица Казимировская 21
+      - generic [ref=e549]:
+        - generic [ref=e550]: © 2026 GoldPC. Все права защищены.
+        - generic [ref=e551]:
+          - generic "Telegram (скоро)" [ref=e552]:
+            - img [ref=e553]
+          - generic "Instagram (скоро)" [ref=e555]:
+            - img [ref=e556]
+```

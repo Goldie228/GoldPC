@@ -4,3 +4,5 @@ export { BuildSummaryPanel } from './BuildSummaryPanel';
 export type { BuildSummaryPanelProps } from './BuildSummaryPanel';
 export { SaveConfigurationModal } from './SaveConfigurationModal';
 export type { SaveConfigurationModalProps } from './SaveConfigurationModal';
+export { ComponentPickerModal } from './ComponentPickerModal/ComponentPickerModal';
+export type { ComponentPickerModalProps } from './ComponentPickerModal/ComponentPickerModal';
