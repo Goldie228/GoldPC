@@ -5,13 +5,14 @@ namespace PCBuilderService.Models;
 /// </summary>
 public class PCConfiguration
 {
+    /// <summary>Уникальный идентификатор</summary>
     public Guid Id { get; set; }
+    
+    /// <summary>ID пользователя-владельца</summary>
+    public Guid UserId { get; set; }
     
     /// <summary>Название конфигурации</summary>
     public string Name { get; set; } = string.Empty;
-    
-    /// <summary>ID пользователя</summary>
-    public Guid UserId { get; set; }
     
     /// <summary>Назначение ПК (gaming, office, workstation)</summary>
     public string Purpose { get; set; } = "gaming";
@@ -40,11 +41,17 @@ public class PCConfiguration
     /// <summary>ID выбранной системы охлаждения</summary>
     public Guid? CoolerId { get; set; }
     
-    /// <summary>Итоговая стоимость</summary>
+    /// <summary>Итоговая стоимость конфигурации</summary>
     public decimal TotalPrice { get; set; }
     
-    /// <summary>Признак совместимости</summary>
+    /// <summary>Суммарное энергопотребление (Вт)</summary>
+    public int TotalPower { get; set; }
+    
+    /// <summary>Признак совместимости всех компонентов</summary>
     public bool IsCompatible { get; set; }
+    
+    /// <summary>Токен для публичного доступа к конфигурации</summary>
+    public string? ShareToken { get; set; }
     
     /// <summary>Дата создания</summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

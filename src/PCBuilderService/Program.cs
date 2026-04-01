@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using PCBuilderService.Data;
 using PCBuilderService.Controllers;
 using PCBuilderService.Services;
 using Serilog;
@@ -29,6 +31,12 @@ builder.Services.AddSwaggerGen(c =>
         Description = "API конструктора ПК для компьютерного магазина GoldPC"
     });
 });
+
+// Настройка базы данных
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Host=localhost;Port=5432;Database=goldpc_pcbuilder;Username=postgres;Password=postgres";
+builder.Services.AddDbContext<PCBuilderDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
 // Регистрация сервисов
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
