@@ -280,3 +280,30 @@
   }
   .component-slot:hover, .component-slot--priority, .component-slot--priority:hover { transform: none; }
 }
+
+/* ===== TOOLTIP DESCRIPTION ===== */
+.component-slot__tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--bg-elevated, #27272a);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  color: var(--fg-dim, #a1a1aa);
+  max-width: 280px;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 100;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.component-slot:hover .component-slot__tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}

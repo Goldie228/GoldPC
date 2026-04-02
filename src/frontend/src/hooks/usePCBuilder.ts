@@ -750,13 +750,13 @@ export function usePCBuilder(): UsePCBuilderReturn {
   };
 }
 
-export const PC_BUILDER_SLOTS: { key: PCComponentType; label: string }[] = [
-  { key: 'cpu', label: 'Процессор' },
-  { key: 'gpu', label: 'Видеокарта' },
-  { key: 'motherboard', label: 'Материнская плата' },
-  { key: 'ram', label: 'Оперативная память' },
-  { key: 'storage', label: 'Накопитель' },
-  { key: 'psu', label: 'Блок питания' },
-  { key: 'case', label: 'Корпус' },
-  { key: 'cooling', label: 'Охлаждение' },
+export const PC_BUILDER_SLOTS: { key: PCComponentType; label: string; description: string }[] = [
+  { key: 'cpu', label: 'Процессор', description: 'Мозг компьютера. Отвечает за все вычисления. Важные параметры: количество ядер, частота, TDP (тепловыделение).' },
+  { key: 'gpu', label: 'Видеокарта', description: 'Отвечает за вывод изображения и 3D-графику. Ключевая для игр и работы с графикой.' },
+  { key: 'motherboard', label: 'Материнская плата', description: 'Соединяет все компоненты вместе. Определяет сокет процессора, чипсет и доступные слоты расширения.' },
+  { key: 'ram', label: 'Оперативная память', description: 'Быстрая память для временных данных. Объём и тайминги (задержки) влияют на отзывчивость системы.' },
+  { key: 'storage', label: 'Накопитель', description: 'Хранит операционную систему, программы и файлы. SSD быстрее HDD.' },
+  { key: 'psu', label: 'Блок питания', description: 'Поставляет электричество всем компонентам. Мощность (Вт) должна покрывать потребление сборки.' },
+  { key: 'case', label: 'Корпус', description: 'Определяет форм-фактор (размер) сборки: ATX, Micro-ATX или Mini-ITX. Влияет на охлаждение и расширяемость.' },
+  { key: 'cooling', label: 'Охлаждение', description: 'Отводит тепло от процессора. Бывает воздушным или жидкостным.' },
 ];

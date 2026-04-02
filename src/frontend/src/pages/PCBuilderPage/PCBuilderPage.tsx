@@ -99,6 +99,11 @@ const componentTypeToCategory: Record<PCComponentType, ProductCategory> = {
   cooling: 'cooling',
 };
 
+// Short descriptions for each component type slot (shown as tooltip on hover)
+const slotDescriptions: Record<PCComponentType, string> = Object.fromEntries(
+  PC_BUILDER_SLOTS.map((s) => [s.key, s.description]),
+) as Record<PCComponentType, string>;
+
 function getIcon(type: PCComponentType): React.ReactNode {
   return icons[type] || icons.cpu;
 }
@@ -389,6 +394,7 @@ export function PCBuilderPage() {
                         }
                         imageUrl={product?.mainImage?.url}
                         isPriority={row.key === 'cpu' || row.key === 'gpu'}
+                        description={slotDescriptions[row.key]}
                       />
                     );
                   }
@@ -416,6 +422,7 @@ export function PCBuilderPage() {
                         }
                         imageUrl={product?.mainImage?.url}
                         isPriority={false}
+                        description={slotDescriptions.ram}
                       />
                     );
                   }
@@ -440,6 +447,7 @@ export function PCBuilderPage() {
                       }
                       imageUrl={product?.mainImage?.url}
                       isPriority={false}
+                      description={slotDescriptions.storage}
                     />
                   );
                 })}

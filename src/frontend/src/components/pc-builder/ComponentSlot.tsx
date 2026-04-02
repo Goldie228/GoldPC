@@ -41,6 +41,8 @@ export interface ComponentSlotProps {
   imageUrl?: string;
   /** Is this a priority slot (CPU/GPU) - gets 120% size */
   isPriority?: boolean;
+  /** Short description/hint for the component type (e.g., "Мозг компьютера. Отвечает за все вычисления.") */
+  description?: string;
 }
 
 /** Inline StatusBadge for compatibility errors */
@@ -88,7 +90,7 @@ export function ComponentSlot({
   };
 
   return (
-    <motion.div 
+    <motion.div title={description} 
       className={`component-slot component-slot--${state}${isPriority ? ' component-slot--priority' : ''}`}
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
@@ -99,6 +101,9 @@ export function ComponentSlot({
       }}
       layout
     >
+      {description && (
+        <div className="component-slot__tooltip">{description}</div>
+      )}
       <div className="component-slot__inner">
         {/* Icon or Thumbnail */}
         <motion.div 
