@@ -64,8 +64,9 @@ ARG SERVICE_PORT
 # Security: Install required packages
 # - ca-certificates: For TLS/SSL connections
 # - wget: For health checks (lighter than curl)
+# - curl: For advanced health checks (POST requests)
 # - tzdata: For timezone support
-RUN apk add --no-cache ca-certificates wget tzdata && \
+RUN apk add --no-cache ca-certificates wget curl tzdata && \
     update-ca-certificates
 
 # Security: Create non-root user and group

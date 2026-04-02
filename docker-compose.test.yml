@@ -35,10 +35,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5001/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     networks:
       - goldpc-test-network
     restart: "no"
@@ -68,10 +68,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5003/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     networks:
       - goldpc-test-network
     restart: "no"
@@ -89,7 +89,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Testing
       - ASPNETCORE_URLS=http://+:5002
       - ConnectionStrings__DefaultConnection=Host=postgres-test;Port=5432;Database=goldpc_test;Username=test;Password=test
+      - ConnectionStrings__PostgreSQL=Host=postgres-test;Port=5432;Database=goldpc_test;Username=test;Password=test
       - ConnectionStrings__Redis=redis-test:6379
+      - Redis__Host=redis-test
+      - Redis__Port=6379
       - CatalogService__Url=http://backend:5001
     ports:
       - "5002:5002"
@@ -101,11 +104,15 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5002/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      test: >
+        sh -c '
+          wget --no-verbose --tries=1 --spider http://localhost:5002/health &&
+          curl -sf -X POST -H "Content-Type: application/json" -d "{}" http://localhost:5002/api/v1/pcbuilder/check-compatibility > /dev/null
+        '
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     networks:
       - goldpc-test-network
     restart: "no"

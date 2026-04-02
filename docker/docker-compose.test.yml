@@ -65,10 +65,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
-      interval: 10s
-      timeout: 10s
+      interval: 5s
+      timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 15s
     networks:
       - goldpc-test-network
     restart: on-failure
@@ -83,7 +83,10 @@ services:
       - ASPNETCORE_ENVIRONMENT=Testing
       - ASPNETCORE_URLS=http://+:5002
       - ConnectionStrings__DefaultConnection=Server=postgres-test;Port=5432;Database=goldpc_test;User Id=test;Password=test
+      - ConnectionStrings__PostgreSQL=Server=postgres-test;Port=5432;Database=goldpc_test;User Id=test;Password=test
       - ConnectionStrings__Redis=redis-test:6379
+      - Redis__Host=redis-test
+      - Redis__Port=6379
       - CatalogService__Url=http://catalogservice-test:5001
     ports:
       - "5002:5002"
@@ -96,10 +99,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5002/health"]
-      interval: 10s
-      timeout: 10s
+      interval: 5s
+      timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 15s
     networks:
       - goldpc-test-network
     restart: on-failure
@@ -126,10 +129,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
-      interval: 10s
-      timeout: 10s
+      interval: 5s
+      timeout: 5s
       retries: 10
-      start_period: 30s
+      start_period: 15s
     networks:
       - goldpc-test-network
     restart: on-failure
@@ -155,10 +158,10 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 10s
+      interval: 5s
+      timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 15s
     networks:
       - goldpc-test-network
     restart: on-failure
