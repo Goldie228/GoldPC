@@ -1,11 +1,23 @@
 /**
  * usePCBuilder — сборка ПК: одиночные слоты + несколько модулей ОЗУ и накопителей,
  * совместимость, корзина, LocalStorage v2 (миграция с v1).
+ *
+ * v3: мемоизация расчётов, интеграция API /api/v1/pcbuilder/check-compatibility,
+ * мгновенное обновление цены, расчёт bottleneck / FPS / рекомендуемой мощности БП.
  */
 
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { Product, ProductSpecifications } from '../api/types';
 import { useCartStore } from '../store/cartStore';
+import { calculatePerformance, type EstimatedFps, type PerformanceResult } from '../utils/performanceCalculator';
+import { checkCompatibilityAPI } from '../api/pcBuilderService';
+import type { CompatibilityCheckResponse } from '../api/pcBuilderService';
+import compatibilityRules from '../config/compatibilityRules.json';
+import type { CompatibilityRulesConfig } from '../config/compatibilityTypes';
+
+const rules = compatibilityRules as unknown as CompatibilityRulesConfig;
+
+// === Типы ===
 
 export type PCComponentType =
   | 'cpu'
@@ -28,14 +40,22 @@ export interface CompatibilityResult {
   isCompatible: boolean;
   errors: string[];
   warnings: string[];
+  /** Текст bottleneck-рекомендации от API (или пустая строка) */
+  bottleneck?: string;
+  /** Локальный bottleneck CPU/GPU (не зависит от API) */
+  bottleneckSeverity?: 'balanced' | 'cpu-bound' | 'gpu-bound' | null;
+  /** Оценки производительности (мгновенный расчёт) */
+  performanceScores?: PerformanceResult;
+  /** Рекомендуемая мощность БП от API (0 если нет) */
+  apiRecommendedPsu?: number;
+  /** Потребление мощности от API */
+  apiPowerConsumption?: number;
 }
-
 export interface ComponentCompatibility {
   state: ComponentSlotState;
   warning?: string;
 }
 
-/** Состояние выбора (ram / storage — массивы) */
 export interface PCBuilderSelectedState {
   cpu?: SelectedComponent;
   gpu?: SelectedComponent;
@@ -46,6 +66,8 @@ export interface PCBuilderSelectedState {
   ram: SelectedComponent[];
   storage: SelectedComponent[];
 }
+
+// === Сериализация ===
 
 interface SerializedSingle {
   productId: string;
@@ -73,19 +95,27 @@ interface SerializedBuildV1 {
   components: Record<string, SerializedSingle>;
 }
 
-const RAM_TYPES = ['DDR5', 'DDR4', 'DDR3'] as const;
+// === Константы ===
+
+const RAM_TYPES = rules.ramCompatibility.validTypes as readonly string[];
 type RAMType = (typeof RAM_TYPES)[number];
 
 const TOTAL_CATEGORIES = 8;
 export const MAX_RAM_MODULES = 8;
 export const MAX_STORAGE_MODULES = 8;
 
-const BASE_POWER_CONSUMPTION = 50;
+const BASE_POWER_CONSUMPTION = rules.powerCompatibility.baseSystemPower;
+const PSU_BUFFER = rules.powerCompatibility.psuBufferPercent;
 const STORAGE_KEY = 'goldpc-pc-builder';
+
+// Дебаунс для API-запроса совместимости (мс)
+const COMPATIBILITY_DEBOUNCE_MS = 350;
 
 export function emptyPcBuilderState(): PCBuilderSelectedState {
   return { ram: [], storage: [] };
 }
+
+// === Извлечение спецификаций (мемоизируемых) ===
 
 function extractSocket(specs: ProductSpecifications | undefined): string | null {
   if (!specs) return null;
@@ -435,6 +465,10 @@ export interface UsePCBuilderReturn {
   compatibility: CompatibilityResult;
   totalPrice: number;
   powerConsumption: number;
+  recommendedPsu: number;
+  estimatedFps: EstimatedFps;
+  bottleneck: string;
+  isApiLoading: boolean;
   selectedCount: number;
   totalCount: number;
   selectComponent: (
@@ -458,8 +492,13 @@ export function usePCBuilder(): UsePCBuilderReturn {
     useState<PCBuilderSelectedState>(loadFromLocalStorage);
 
   const isFirstRender = useRef(true);
+  const apiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [apiResult, setApiResult] = useState<CompatibilityCheckResponse | null>(null);
+  const [isApiLoading, setIsApiLoading] = useState(false);
 
-  const compatibility = useMemo(
+  // --- Мемоизированные локальные расчёты (мгновенные, без API) ---
+
+  const localCompatibility = useMemo(
     () => checkBuildCompatibility(selectedComponents),
     [selectedComponents]
   );
@@ -468,12 +507,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     let sum = 0;
     const s = selectedComponents;
     const keys: (keyof PCBuilderSelectedState)[] = [
-      'cpu',
-      'gpu',
-      'motherboard',
-      'psu',
-      'case',
-      'cooling',
+      'cpu', 'gpu', 'motherboard', 'psu', 'case', 'cooling',
     ];
     for (const key of keys) {
       const c = s[key];
@@ -491,14 +525,44 @@ export function usePCBuilder(): UsePCBuilderReturn {
     [selectedComponents]
   );
 
-  const selectedCount = countSelectedCategories(selectedComponents);
+  // Мемоизированный расчёт производительности
+  const cpuProduct = selectedComponents.cpu?.product ?? null;
+  const gpuProduct = selectedComponents.gpu?.product ?? null;
+  const ramFirst = selectedComponents.ram[0]?.product ?? null;
+
+  const performance = useMemo(
+    () => calculatePerformance(cpuProduct, gpuProduct, ramFirst),
+    [cpuProduct, gpuProduct, ramFirst]
+  );
+
+  // --- API-интеграция: проверка совместимости через backend с дебаунсом ---
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    const hasComponents =
+      !!selectedComponents.cpu || !!selectedComponents.gpu || !!selectedComponents.motherboard;
+    if (!hasComponents) {
+      setApiResult(null);
       return;
     }
-    saveToLocalStorage(selectedComponents);
+
+    if (apiTimerRef.current) clearTimeout(apiTimerRef.current);
+    apiTimerRef.current = setTimeout(async () => {
+      setIsApiLoading(true);
+      try {
+        const result = await checkCompatibilityAPI(
+          selectedComponents as Parameters<typeof checkCompatibilityAPI>[0]
+        );
+        setApiResult(result);
+      } catch {
+        // API недоступно — работаем на локальной проверке
+      } finally {
+        setIsApiLoading(false);
+      }
+    }, COMPATIBILITY_DEBOUNCE_MS);
+
+    return () => {
+      if (apiTimerRef.current) clearTimeout(apiTimerRef.current);
+    };
   }, [selectedComponents]);
 
   const addItemToCart = useCartStore((s) => s.addItem);
@@ -617,6 +681,40 @@ export function usePCBuilder(): UsePCBuilderReturn {
     for (const st of s.storage) addItemToCart(st.product, 1);
   }, [selectedComponents, addItemToCart]);
 
+  // Итоговый результат совместимости: API приоритетнее, локальная — мгновенный фоллбэк
+  const compatibility: CompatibilityResult = useMemo(() => {
+    if (apiResult) {
+      const apiIssues = apiResult.result;
+      const errors: string[] = apiIssues.issues
+        .filter((i) => i.severity === 'Error')
+        .map((i) => i.message);
+      const warnings: string[] = [
+        ...apiIssues.warnings.map((w) => w.message),
+        ...apiIssues.issues.filter((i) => i.severity === 'Warning').map((i) => i.message),
+      ];
+      const bottleneck = apiIssues.issues.find((i) =>
+        i.message.toLowerCase().includes('bottleneck')
+      )?.message ?? '';
+      return { isCompatible: errors.length === 0, errors, warnings, bottleneck };
+    }
+    return { ...localCompatibility, bottleneck: '' };
+  }, [apiResult, localCompatibility]);
+
+  const recommendedPsu = useMemo(() => {
+    if (apiResult?.recommendedPSU) return apiResult.recommendedPSU;
+    return Math.ceil(powerConsumption * 1.3);
+  }, [apiResult, powerConsumption]);
+
+  const selectedCount = countSelectedCategories(selectedComponents);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    saveToLocalStorage(selectedComponents);
+  }, [selectedComponents]);
+
   const getSlotState = useCallback(
     (type: PCComponentType, multiIndex?: number): ComponentCompatibility => {
       return getComponentState(type, multiIndex, selectedComponents, compatibility);
@@ -633,6 +731,10 @@ export function usePCBuilder(): UsePCBuilderReturn {
     compatibility,
     totalPrice,
     powerConsumption,
+    recommendedPsu,
+    estimatedFps: performance.estimatedFps,
+    bottleneck: compatibility.bottleneck ?? '',
+    isApiLoading,
     selectedCount,
     totalCount: TOTAL_CATEGORIES,
     selectComponent,

@@ -170,6 +170,10 @@ export function PCBuilderPage() {
     getSlotState,
     isCompatible,
     powerConsumption,
+    recommendedPsu,
+    estimatedFps,
+    bottleneck,
+    isApiLoading,
     addToCart,
   } = usePCBuilder();
 
@@ -447,6 +451,7 @@ export function PCBuilderPage() {
                 selectedComponents={selectedComponents}
                 totalPrice={totalPrice}
                 powerConsumption={powerConsumption}
+                recommendedPsu={recommendedPsu}
                 psuWattage={psuWattage}
                 isCompatible={isCompatible}
                 selectedCount={selectedCount}

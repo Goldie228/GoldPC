@@ -1,12 +1,22 @@
 /**
- * Compatibility Utilities - клиентская проверка совместимости компонентов ПК
+ * Compatibility Utilities — клиентская проверка совместимости компонентов ПК
  * 
- * Зеркало backend логики CompatibilityEngine.
+ * Декларативный движок правил загружает правила из JSON-конфигурации.
  * @module utils/compatibilityUtils
  */
 
 import type { Product, ProductSpecifications } from '../api/types';
+import rulesConfig from '../config/compatibilityRules.json';
+import type {
+  CompatibilityRulesConfig,
+  SocketGroup,
+  BottleneckCategory,
+} from '../config/compatibilityTypes';
 
+// ──────────── Loaded config (typed) ────────────
+const config: CompatibilityRulesConfig = rulesConfig as unknown as CompatibilityRulesConfig;
+
+// ──────────── Types ────────────
 export type ComponentCategory = 'cpu' | 'gpu' | 'motherboard' | 'ram' | 'storage' | 'psu' | 'case' | 'cooling';
 export type CompatibilitySeverity = 'Error' | 'Warning' | 'Info';
 
@@ -31,17 +41,26 @@ export interface CompatibilityCheckResult {
   warnings: CompatibilityWarning[];
   powerConsumption: number;
   recommendedPSU: number;
+  bottleneckPercentage: number;
 }
 
 export type ComponentMap = Partial<Record<ComponentCategory, Product | null>>;
 
+// ──────────── Validation constants ────────────
 const VALID_SOCKETS = ['AM4', 'AM5', 'LGA1200', 'LGA1700', 'LGA1851'] as const;
 export type SocketType = typeof VALID_SOCKETS[number];
-const VALID_MEMORY_TYPES = ['DDR4', 'DDR5'] as const;
-export type MemoryType = typeof VALID_MEMORY_TYPES[number];
-const VALID_FORM_FACTORS = ['ATX', 'MicroATX', 'MiniITX', 'EATX'] as const;
-export type FormFactor = typeof VALID_FORM_FACTORS[number];
+const VALID_MEMORY_TYPES = config.ramCompatibility.validTypes as readonly string[];
+export type MemoryType = 'DDR4' | 'DDR5';
+const VALID_FORM_FACTORS = config.formFactorCompatibility.hierarchy as readonly string[];
+export type FormFactor = 'ATX' | 'MicroATX' | 'MiniITX' | 'EATX';
 
+// ──────────── Socket groups from config ────────────
+const SOCKET_GROUPS: SocketGroup[] = config.socketCompatibility.groups;
+
+// ──────────── Bottleneck categories from config ────────────
+const BOTTLENECK_CATEGORIES: Record<string, BottleneckCategory> = config.bottleneckDetection.categories;
+
+// ──────────── Extractors ────────────
 function getNumber(specs: ProductSpecifications | undefined, ...keys: string[]): number | null {
   if (!specs) return null;
   for (const key of keys) {
@@ -92,11 +111,13 @@ export function extractSupportedSockets(specs: ProductSpecifications | undefined
   if (!specs) return [];
   const rec = specs as Record<string, unknown>;
   const sockets = rec.supportedSockets ?? rec.supported_sockets;
-  if (Array.isArray(sockets)) {
-    return sockets.filter((s): s is string => typeof s === 'string').map(s => s.toUpperCase().trim());
-  }
+  if (Array.isArray(sockets)) return sockets.filter((s): s is string => typeof s === 'string').map(s => s.toUpperCase().trim());
   const single = getString(specs, 'socket');
   return single ? [single.toUpperCase().trim()] : [];
+}
+
+export function extractChipset(specs: ProductSpecifications | undefined): string | null {
+  return getString(specs, 'chipset', 'chipsset');
 }
 
 export function extractTDP(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'tdp', 'TDP', 'power_consumption') ?? 0; }
@@ -132,7 +153,95 @@ export function extractMaxGPULength(specs: ProductSpecifications | undefined): n
 export function extractGPULength(specs: ProductSpecifications | undefined): number | null { return getNumber(specs, 'length', 'lengthMm', 'dlina', 'gpuLength'); }
 export function extractRAMCapacity(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'capacity', 'obem', 'size') ?? 0; }
 export function extractMaxMemory(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'maxMemory', 'max_memory', 'maxMemoryGb') ?? 128; }
+export function extractPerformanceScore(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'performanceScore', 'performance_score', 'score') ?? 0; }
+export function extractCoolerHeight(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'height', 'heightMm', 'vysota') ?? 0; }
+export function extractMaxCoolerHeight(specs: ProductSpecifications | undefined): number | null { return getNumber(specs, 'maxCoolerHeight', 'max_cooler_height', 'maxCoolerHeightMm'); }
+export function extractCoolerType(specs: ProductSpecifications | undefined): string | null { return getString(specs, 'type', 'coolerType'); }
+export function extractMaxCoolerTDP(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'maxTdp', 'max_tdp', 'coolingTdp') ?? 0; }
 
+// ──────────── Socket group helpers ────────────
+function findSocketGroup(socket: string): SocketGroup | null {
+  return SOCKET_GROUPS.find(g => g.sockets.some(s => s.toUpperCase() === socket.toUpperCase())) ?? null;
+}
+
+/**
+ * Проверка BIOS warning: вероятностное предупреждение «Возможно потребуется обновление BIOS»
+ */
+export function checkBiosWarning(cpuSocket: string | null, chipset: string | null): CompatibilityWarning | null {
+  if (!cpuSocket) return null;
+  const group = findSocketGroup(cpuSocket);
+  if (!group || !group.biosWarning.enabled) return null;
+  // Если указан чипсет и есть affectedChipsets — проверяем вхождение
+  if (chipset && group.biosWarning.affectedChipsets?.length) {
+    const isAffected = group.biosWarning.affectedChipsets.some(
+      c => c.toUpperCase() === chipset.toUpperCase()
+    );
+    if (!isAffected) return null;
+  }
+  return {
+    severity: 'Warning',
+    component: 'BIOS',
+    message: group.biosWarning.message,
+    suggestion: `Вероятность: ${group.biosWarning.probability}`,
+  };
+}
+
+// ──────────── Bottleneck detection ────────────
+/**
+ * Детекция bottleneck с учётом категории назначения ПК.
+ * @returns процент bottleneck: положительный = CPU-bound, отрицательный = GPU-bound, 0 = сбалансировано
+ */
+export function calculateBottleneck(cpuScore: number, gpuScore: number, purpose?: string): number {
+  if (cpuScore <= 0 || gpuScore <= 0) return 0;
+  const ratio = cpuScore / gpuScore;
+  if (ratio > 1.0) return Math.min(100, ((ratio - 1.0) / ratio) * 100);
+  if (ratio < 1.0) return Math.max(-100, -(1.0 - ratio) * 100);
+  return 0;
+}
+
+/**
+ * Генерация предупреждений bottleneck
+ */
+export function detectBottleneckWarnings(
+  cpuScore: number,
+  gpuScore: number,
+  cpuName: string,
+  gpuName: string,
+  purpose?: string
+): CompatibilityWarning[] {
+  const warnings: CompatibilityWarning[] = [];
+  if (cpuScore <= 0 || gpuScore <= 0) return warnings;
+
+  const ratio = cpuScore / gpuScore;
+  const catKey = (purpose ?? 'gaming').toLowerCase();
+  const category = BOTTLENECK_CATEGORIES[catKey] ?? BOTTLENECK_CATEGORIES['gaming'];
+
+  // CPU-bound: ratio слишком высокий
+  const cpuBoundThreshold = Math.max(2.0, category.idealRatio.max);
+  if (ratio > cpuBoundThreshold) {
+    warnings.push({
+      severity: 'Warning',
+      component: cpuName,
+      message: `CPU-bound bottleneck: ${cpuName} значительно мощнее ${gpuName} (ratio: ${ratio.toFixed(2)})`,
+      suggestion: 'Рассмотрите более мощную видеокарту',
+    });
+  }
+
+  // GPU-bound: ratio слишком низкий
+  const gpuBoundThreshold = Math.min(0.5, category.idealRatio.min);
+  if (ratio < gpuBoundThreshold) {
+    warnings.push({
+      severity: 'Warning',
+      component: gpuName,
+      message: `GPU-bound bottleneck: ${gpuName} значительно мощнее ${cpuName} (ratio: ${ratio.toFixed(2)})`,
+      suggestion: 'Рассмотрите более мощный процессор',
+    });
+  }
+
+  return warnings;
+}
+
+// ──────────── Check functions ────────────
 function checkCPUSocket(cpu: Product, mb: Product): CompatibilityIssue | null {
   const cs = extractSocket(cpu.specifications);
   const ms = extractSocket(mb.specifications);
@@ -154,6 +263,9 @@ function checkCooler(cooling: Product, cpu: Product): CompatibilityWarning | nul
   const cs = extractSocket(cpu.specifications);
   const ss = extractSupportedSockets(cooling.specifications);
   if (cs && ss.length > 0 && !ss.includes(cs)) return { severity: 'Warning', component: cooling.name, message: `Cooler may not support socket ${cs}`, suggestion: `Verify cooler compatibility with ${cs}` };
+  const maxTdp = extractMaxCoolerTDP(cooling.specifications);
+  const cpuTdp = extractTDP(cpu.specifications);
+  if (maxTdp > 0 && cpuTdp > maxTdp) return { severity: 'Warning', component: cooling.name, message: `Cooler (max TDP ${maxTdp}W) may be insufficient for ${cpu.name} (${cpuTdp}W)`, suggestion: `Choose cooler with TDP >= ${cpuTdp}W` };
   return null;
 }
 
@@ -163,8 +275,9 @@ function checkPSU(psu: Product, cpu: Product | null | undefined, gpu: Product | 
   const ct = cpu ? extractTDP(cpu.specifications) : 0;
   const gt = gpu ? extractTDP(gpu.specifications) : 0;
   const total = ct + gt + 50;
-  const rec = Math.ceil(total * 1.3);
-  if (pw < rec) return { severity: 'Warning', component: psu.name, message: `PSU ${pw}W may be insufficient. Recommended ${rec}W`, suggestion: `Choose PSU >= ${rec}W` };
+  const rec = Math.ceil(total * 1.3 / 50) * 50;
+  if (pw < total) return { severity: 'Warning', component: psu.name, message: `PSU ${pw}W insufficient (need ${total}W). Recommended ${rec}W`, suggestion: `Choose PSU >= ${rec}W` };
+  if (pw < rec) return { severity: 'Warning', component: psu.name, message: `PSU ${pw}W meets minimum but recommended ${rec}W`, suggestion: `Consider PSU >= ${rec}W` };
   return null;
 }
 
@@ -182,40 +295,92 @@ function checkGPULen(chassis: Product, gpu: Product): CompatibilityWarning | nul
   return null;
 }
 
+function checkCoolerHeightCheck(cooling: Product, chassis: Product): CompatibilityIssue | null {
+  const coolerType = extractCoolerType(cooling.specifications);
+  if (coolerType && coolerType.toLowerCase() !== 'air' && coolerType.toLowerCase() !== 'tower') return null;
+  const ch = extractCoolerHeight(cooling.specifications);
+  const mch = extractMaxCoolerHeight(chassis.specifications);
+  if (ch > 0 && mch && ch > mch) return { severity: 'Error', component1: cooling.name, component2: chassis.name, message: `Cooler height ${ch}mm exceeds case max ${mch}mm`, suggestion: `Choose cooler <= ${mch}mm, AIO, or larger case` };
+  return null;
+}
+
 function checkIG(cpu: Product, gpu: Product | null | undefined): CompatibilityWarning | null {
   if (gpu || hasIntegratedGraphics(cpu.specifications)) return null;
   return { severity: 'Warning', component: cpu.name, message: 'No GPU selected and CPU has no integrated graphics', suggestion: 'Add a discrete GPU or choose CPU with iGPU' };
 }
 
+// ──────────── Power calculation ────────────
 export function calculatePowerConsumption(components: ComponentMap): number {
-  let t = 0;
+  let t = 50;
   if (components.cpu) t += extractTDP(components.cpu.specifications) || 65;
   if (components.gpu) t += extractTDP(components.gpu.specifications) || 150;
-  if (components.ram) t += 10;
-  if (components.storage) t += 10;
-  if (components.cooling) t += 5;
-  if (components.motherboard) t += 50;
+  if (components.storage) t += 5;
+  if (components.cooling) t += 10;
   return t;
 }
 
 export function calculateRecommendedPSU(components: ComponentMap): number {
-  return Math.ceil(calculatePowerConsumption(components) * 1.3);
+  return Math.ceil(calculatePowerConsumption(components) * 1.4 / 50) * 50;
 }
 
+// ──────────── Main compatibility check ────────────
 export function checkCompatibility(components: ComponentMap): CompatibilityCheckResult {
   const issues: CompatibilityIssue[] = [];
   const warnings: CompatibilityWarning[] = [];
   const { cpu, gpu, motherboard, ram, psu, case: chassis, cooling } = components;
-  if (cpu && motherboard) { const i = checkCPUSocket(cpu, motherboard); if (i) issues.push(i); }
-  if (ram && motherboard) { const i = checkRAM(ram, motherboard); if (i) { if (i.severity === 'Error') issues.push(i); else warnings.push({ severity: i.severity as 'Warning'|'Info', component: i.component1, message: i.message, suggestion: i.suggestion }); } }
+
+  // Socket CPU ↔ MB + BIOS warning
+  if (cpu && motherboard) {
+    const i = checkCPUSocket(cpu, motherboard);
+    if (i) issues.push(i);
+    // BIOS warning
+    const cpuSocket = extractSocket(cpu.specifications);
+    const chipset = extractChipset(motherboard.specifications);
+    const biosW = checkBiosWarning(cpuSocket, chipset);
+    if (biosW) warnings.push(biosW);
+  }
+
+  // RAM compatibility
+  if (ram && motherboard) {
+    const i = checkRAM(ram, motherboard);
+    if (i) {
+      if (i.severity === 'Error') issues.push(i);
+      else warnings.push({ severity: i.severity as 'Warning'|'Info', component: i.component1, message: i.message, suggestion: i.suggestion });
+    }
+  }
+
+  // Cooler
   if (cooling && cpu) { const w = checkCooler(cooling, cpu); if (w) warnings.push(w); }
+  if (cooling && chassis) { const i = checkCoolerHeightCheck(cooling, chassis); if (i) issues.push(i); }
+
+  // PSU
   if (psu) { const w = checkPSU(psu, cpu, gpu); if (w) warnings.push(w); }
+
+  // Case form factor
   if (chassis && motherboard) { const i = checkCaseFF(chassis, motherboard); if (i) issues.push(i); }
   if (chassis && gpu) { const w = checkGPULen(chassis, gpu); if (w) warnings.push(w); }
+
+  // No iGPU
   if (cpu) { const w = checkIG(cpu, gpu); if (w) warnings.push(w); }
+
+  // Bottleneck detection
+  let bottleneckPct = 0;
+  if (cpu && gpu) {
+    const cpuScore = extractPerformanceScore(cpu.specifications);
+    const gpuScore = extractPerformanceScore(gpu.specifications);
+    bottleneckPct = calculateBottleneck(cpuScore, gpuScore);
+    const bnWarnings = detectBottleneckWarnings(cpuScore, gpuScore, cpu.name, gpu.name);
+    warnings.push(...bnWarnings);
+  }
+
+  // RAM capacity warning
+  if (ram && extractRAMCapacity(ram.specifications) > 0 && extractRAMCapacity(ram.specifications) < 16) {
+    warnings.push({ severity: 'Info', component: ram.name, message: `${extractRAMCapacity(ram.specifications)}GB RAM may be insufficient for modern tasks`, suggestion: 'Consider 16GB+' });
+  }
+
   const pc = calculatePowerConsumption(components);
   const rp = calculateRecommendedPSU(components);
-  return { isCompatible: issues.length === 0, issues, warnings, powerConsumption: pc, recommendedPSU: rp };
+  return { isCompatible: issues.length === 0, issues, warnings, powerConsumption: pc, recommendedPSU: rp, bottleneckPercentage: bottleneckPct };
 }
 
 export function getCompatibilityStatus(result: CompatibilityCheckResult): 'ok' | 'warning' | 'error' {

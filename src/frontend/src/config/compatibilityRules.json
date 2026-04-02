@@ -1,13 +1,24 @@
 {
   "$schema": "../schemas/compatibility-rules.schema.json",
   "version": "1.1.0",
-  "description": "Декларативные правила совместимости компонентов ПК",
+  "description": "Declarativnye pravila sovmestimosti frontend",
   "socketCompatibility": {
     "groups": [
       {
         "id": "am4",
-        "sockets": ["AM4"],
-        "chipsets": ["A320","B350","X370","B450","X470","B550","A520","X570"],
+        "sockets": [
+          "AM4"
+        ],
+        "chipsets": [
+          "A320",
+          "B350",
+          "X370",
+          "B450",
+          "X470",
+          "B550",
+          "A520",
+          "X570"
+        ],
         "ramType": "DDR4",
         "maxRamSpeed": 5100,
         "biosWarning": {
@@ -18,8 +29,19 @@
       },
       {
         "id": "am5",
-        "sockets": ["AM5"],
-        "chipsets": ["A620","B650","B650E","X670","X670E","B850","X870","X870E"],
+        "sockets": [
+          "AM5"
+        ],
+        "chipsets": [
+          "A620",
+          "B650",
+          "B650E",
+          "X670",
+          "X670E",
+          "B850",
+          "X870",
+          "X870E"
+        ],
         "ramType": "DDR5",
         "maxRamSpeed": 8400,
         "biosWarning": {
@@ -30,8 +52,20 @@
       },
       {
         "id": "lga1200",
-        "sockets": ["LGA1200"],
-        "chipsets": ["H410","B460","H470","Z490","H510","B560","H570","Z590","W580"],
+        "sockets": [
+          "LGA1200"
+        ],
+        "chipsets": [
+          "H410",
+          "B460",
+          "H470",
+          "Z490",
+          "H510",
+          "B560",
+          "H570",
+          "Z590",
+          "W580"
+        ],
         "ramType": "DDR4",
         "maxRamSpeed": 5333,
         "biosWarning": {
@@ -42,8 +76,17 @@
       },
       {
         "id": "lga1700",
-        "sockets": ["LGA1700"],
-        "chipsets": ["H610","B660","H670","Z690","B760","Z790"],
+        "sockets": [
+          "LGA1700"
+        ],
+        "chipsets": [
+          "H610",
+          "B660",
+          "H670",
+          "Z690",
+          "B760",
+          "Z790"
+        ],
         "ramType": "DDR5",
         "ramTypeAlternate": "DDR4",
         "maxRamSpeed": 7600,
@@ -51,36 +94,91 @@
           "enabled": true,
           "message": "Возможно потребуется обновление BIOS для поддержки процессоров 14-го поколения",
           "probability": "high",
-          "affectedChipsets": ["H610","B660","H670","Z690"]
+          "affectedChipsets": [
+            "H610",
+            "B660",
+            "H670",
+            "Z690"
+          ]
         }
       },
       {
         "id": "lga1851",
-        "sockets": ["LGA1851"],
-        "chipsets": ["Z890","B860","H810"],
+        "sockets": [
+          "LGA1851"
+        ],
+        "chipsets": [
+          "Z890",
+          "B860",
+          "H810"
+        ],
         "ramType": "DDR5",
         "maxRamSpeed": 9600,
-        "biosWarning": { "enabled": false }
+        "biosWarning": {
+          "enabled": false
+        }
       }
     ]
   },
   "formFactorCompatibility": {
-    "hierarchy": ["ITX", "mATX", "ATX", "EATX"],
+    "hierarchy": [
+      "ITX",
+      "mATX",
+      "ATX",
+      "EATX"
+    ],
     "rules": [
-      { "caseFormFactor": "ITX",  "supportedMotherboards": ["ITX"] },
-      { "caseFormFactor": "mATX", "supportedMotherboards": ["ITX","mATX"] },
-      { "caseFormFactor": "ATX",  "supportedMotherboards": ["ITX","mATX","ATX"] },
-      { "caseFormFactor": "EATX", "supportedMotherboards": ["ITX","mATX","ATX","EATX"] }
+      {
+        "caseFormFactor": "ITX",
+        "supportedMotherboards": [
+          "ITX"
+        ]
+      },
+      {
+        "caseFormFactor": "mATX",
+        "supportedMotherboards": [
+          "ITX",
+          "mATX"
+        ]
+      },
+      {
+        "caseFormFactor": "ATX",
+        "supportedMotherboards": [
+          "ITX",
+          "mATX",
+          "ATX"
+        ]
+      },
+      {
+        "caseFormFactor": "EATX",
+        "supportedMotherboards": [
+          "ITX",
+          "mATX",
+          "ATX",
+          "EATX"
+        ]
+      }
     ],
     "aliases": {
-      "MINI-ITX":"ITX","MINI ITX":"ITX","MITX":"ITX",
-      "MICRO-ATX":"mATX","M-ATX":"mATX","MATX":"mATX","MICRO ATX":"mATX",
-      "STANDARD-ATX":"ATX","STANDARD ATX":"ATX",
-      "EXTENDED-ATX":"EATX","E-ATX":"EATX","EXTENDED ATX":"EATX"
+      "MINI-ITX": "ITX",
+      "MINI ITX": "ITX",
+      "MITX": "ITX",
+      "MICRO-ATX": "mATX",
+      "M-ATX": "mATX",
+      "MATX": "mATX",
+      "MICRO ATX": "mATX",
+      "STANDARD-ATX": "ATX",
+      "STANDARD ATX": "ATX",
+      "EXTENDED-ATX": "EATX",
+      "E-ATX": "EATX",
+      "EXTENDED ATX": "EATX"
     }
   },
   "ramCompatibility": {
-    "validTypes": ["DDR4", "DDR5"],
+    "validTypes": [
+      "DDR4",
+      "DDR5"
+    ],
     "generationMismatch": {
       "severity": "Error",
       "messageTemplate": "Несовместимый тип памяти: материнская плата поддерживает {motherboardRamType}, но RAM — {ramType}",
@@ -162,18 +260,55 @@
       "suggestion": "Рассмотрите более мощный процессор"
     },
     "categories": {
-      "gaming": { "cpuWeight": 0.4, "gpuWeight": 0.6, "idealRatio": { "min": 0.7, "max": 1.5 } },
-      "workstation": { "cpuWeight": 0.7, "gpuWeight": 0.3, "idealRatio": { "min": 1.0, "max": 2.5 } },
-      "office": { "cpuWeight": 0.5, "gpuWeight": 0.5, "idealRatio": { "min": 0.8, "max": 2.0 } }
+      "gaming": {
+        "cpuWeight": 0.4,
+        "gpuWeight": 0.6,
+        "idealRatio": {
+          "min": 0.7,
+          "max": 1.5
+        }
+      },
+      "workstation": {
+        "cpuWeight": 0.7,
+        "gpuWeight": 0.3,
+        "idealRatio": {
+          "min": 1.0,
+          "max": 2.5
+        }
+      },
+      "office": {
+        "cpuWeight": 0.5,
+        "gpuWeight": 0.5,
+        "idealRatio": {
+          "min": 0.8,
+          "max": 2.0
+        }
+      }
     }
   },
   "performanceWarnings": {
     "insufficientRam": {
       "thresholds": [
-        { "minCapacity": 0, "maxCapacity": 8, "severity": "Warning", "message": "Объём памяти {capacity} ГБ недостаточен для современных игр", "suggestion": "Рекомендуется минимум 16 ГБ" },
-        { "minCapacity": 8, "maxCapacity": 16, "severity": "Info", "message": "Объём памяти {capacity} ГБ достаточен для базовых задач", "suggestion": "Для игр рекомендуется 32 ГБ" }
+        {
+          "minCapacity": 0,
+          "maxCapacity": 8,
+          "severity": "Warning",
+          "message": "Объём памяти {capacity} ГБ недостаточен для современных игр",
+          "suggestion": "Рекомендуется минимум 16 ГБ"
+        },
+        {
+          "minCapacity": 8,
+          "maxCapacity": 16,
+          "severity": "Info",
+          "message": "Объём памяти {capacity} ГБ достаточен для базовых задач",
+          "suggestion": "Для игр рекомендуется 32 ГБ"
+        }
       ]
     },
-    "noIntegratedGraphics": { "severity": "Warning", "message": "Процессор не имеет встроенной графики", "suggestion": "Убедитесь, что выбрана видеокарта" }
+    "noIntegratedGraphics": {
+      "severity": "Warning",
+      "message": "Процессор не имеет встроенной графики",
+      "suggestion": "Убедитесь, что выбрана видеокарта"
+    }
   }
 }

@@ -491,6 +491,7 @@ public class FormFactorRule
 
 public class RamCompatibilityConfig
 {
+    public List<string> ValidTypes { get; set; } = new() { "DDR4", "DDR5" };
     public RuleTemplate GenerationMismatch { get; set; } = new();
     public RuleTemplate SpeedLimit { get; set; } = new();
     public RuleTemplate SlotOverflow { get; set; } = new();
