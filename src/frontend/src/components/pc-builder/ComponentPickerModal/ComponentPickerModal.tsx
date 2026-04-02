@@ -1,21 +1,26 @@
 /**
- * Модалка выбора комплектующего: сетка, фильтры, предпросмотр с полными характеристиками.
+ * ComponentPickerModal — каталог-стиль: FilterSidebar + карточки + превью
+ * Без корзины/избранного/сравнения/прогресс-бара/текущего товара.
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Search } from 'lucide-react';
+import { Search, List, LayoutGrid, SlidersHorizontal, X, ExternalLink, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Modal } from '../../ui';
-import { Skeleton } from '../../ui/Skeleton';
+import { ProductCardSkeleton } from '../../ui/Skeleton';
 import { ApiErrorBanner } from '../../ui/ApiErrorBanner';
 import { Pagination } from '../../catalog/Pagination/Pagination';
-import { useProducts } from '../../../hooks/useProducts';
-import { catalogApi } from '../../../api/catalog';
-import type { Product, ProductCategory, ProductSummary, ProductSpecifications } from '../../../api/types';
-import type { PCComponentType, PCBuilderSelectedState } from '../../../hooks/usePCBuilder';
+import { FilterSidebar } from '../../catalog';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';
+import { isComponentCompatible } from '../../../utils/compatibilityUtils';
+import { useQuery } from '@tanstack/react-query';
+import { useProducts } from '../../../hooks/useProducts';
+import { catalogApi } from '../../../api/catalog';
+import type { Product, ProductCategory, ProductSpecifications, ProductImage } from '../../../api/types';
+import type { PCComponentType, PCBuilderSelectedState } from '../../../hooks/usePCBuilder';
 import styles from './ComponentPickerModal.module.css';
+
+// ─────────────────────────────────────────────────────────
 
 export interface ComponentPickerModalProps {
   isOpen: boolean;
@@ -24,630 +29,670 @@ export interface ComponentPickerModalProps {
   slotType: PCComponentType;
   slotLabel: string;
   currentProduct?: Product | null;
-  /** Текущая сборка — для узких фильтров (сокет, тип памяти) и facets */
   buildContext?: PCBuilderSelectedState;
   onConfirm: (product: Product) => void;
   onRemoveCurrent?: () => void;
   getDisplaySpecs: (type: PCComponentType, product: Product) => string[];
+  /** Фильтр по подстроке в названии (e.g. "вентилятор для корпуса") */
+  nameFilter?: string;
 }
 
 const BACKEND_SLUG: Record<ProductCategory, string> = {
-  cpu: 'processors',
-  gpu: 'gpu',
-  motherboard: 'motherboards',
-  ram: 'ram',
-  storage: 'storage',
-  psu: 'psu',
-  case: 'cases',
-  cooling: 'coolers',
-  monitor: 'monitors',
-  keyboard: 'keyboards',
-  mouse: 'mice',
-  headphones: 'headphones',
-};
-
-const SPEC_ORDER: Record<string, string[]> = {
-  gpu: [
-    'release_year',
-    'proizvoditel_graficheskogo_protsessora',
-    'graficheskiy_protsessor',
-    'videopamyat',
-    'tip_videopamyati',
-    'shirina_shiny_pamyati',
-    'okhlazhdenie_1',
-    'razyemy_pitaniya',
-    'rekomenduemyy_blok_pitaniya',
-    'interfeys_1',
-    'dlina_videokarty',
-    'vysota_videokarty',
-  ],
-  processors: [
-    'socket',
-    'model_series',
-    'codename',
-    'architecture',
-    'data_vykhoda_na_rynok',
-    'integrated_graphics',
-    'cores',
-    'threads',
-    'base_freq',
-    'max_freq',
-    'max_memory_freq',
-    'tdp',
-    'delivery_type',
-    'cooling_included',
-    'process_nm',
-    'cache_l2',
-    'cache_l3',
-    'memory_support',
-    'memory_channels',
-    'multithreading',
-  ],
-  motherboards: [
-    'socket',
-    'chipset',
-    'form_factor',
-    'memory_type',
-    'memory_mixed_slots',
-    'memory_cudimm',
-    'memory_slots',
-    'max_memory',
-    'max_memory_freq',
-    'data_vykhoda_na_rynok',
-  ],
-  ram: [
-    'capacity',
-    'capacity_per_module',
-    'type',
-    'frequency',
-    'pc_index',
-    'cas_latency',
-    'ecc',
-    'expo',
-    'xmp',
-    'voltage',
-    'data_vykhoda_na_rynok',
-  ],
-  storage: [
-    'capacity',
-    'form_factor',
-    'interface',
-    'protocol',
-    'read_speed',
-    'write_speed',
-    'flash_type',
-    'tbw',
-    'data_vykhoda_na_rynok',
-  ],
-  psu: ['wattage', 'efficiency', 'form_factor', 'modular', 'fan_size', 'data_vykhoda_na_rynok'],
-  cases: [
-    'form_factor',
-    'material',
-    'material_front',
-    'window',
-    'max_cooler_height',
-    'max_gpu_length',
-    'data_vykhoda_na_rynok',
-  ],
-  coolers: ['type', 'socket', 'tdp', 'fan_size', 'fan_count', 'noise', 'data_vykhoda_na_rynok'],
-  monitors: [
-    'diagonal',
-    'aspect_ratio',
-    'curved',
-    'sync_technology',
-    'resolution',
-    'refresh_rate',
-    'matrix',
-    'type',
-    'brightness',
-    'response_time',
-    'data_vykhoda_na_rynok',
-  ],
-  keyboards: [
-    'type',
-    'interface',
-    'connection_type',
-    'wireless_protocols',
-    'color',
-    'data_vykhoda_na_rynok',
-  ],
-  mice: [
-    'type',
-    'interface',
-    'connection_type',
-    'wireless_protocols',
-    'color',
-    'sensor_type',
-    'dpi',
-    'data_vykhoda_na_rynok',
-  ],
-  headphones: [
-    'type',
-    'form_factor',
-    'interface',
-    'connection_type',
-    'driver_size',
-    'frequency_range',
-    'impedance',
-    'color',
-    'data_vykhoda_na_rynok',
-  ],
+  cpu: 'processors', gpu: 'gpu', motherboard: 'motherboards',
+  ram: 'ram', storage: 'storage', psu: 'psu',
+  case: 'cases', cooling: 'coolers', monitor: 'monitors',
+  keyboard: 'keyboards', mouse: 'mice', headphones: 'headphones',
 };
 
 const SORT_PRESETS = [
-  { value: 'price-asc', label: 'Цена: по возрастанию' },
-  { value: 'price-desc', label: 'Цена: по убыванию' },
-  { value: 'name-asc', label: 'Название: А–Я' },
-  { value: 'name-desc', label: 'Название: Я–А' },
-  { value: 'rating-desc', label: 'Рейтинг: выше' },
-  { value: 'createdAt-desc', label: 'Сначала новые' },
+  { value: 'popular', label: 'По популярности' },
+  { value: 'price-asc', label: 'Сначала дешевле' },
+  { value: 'price-desc', label: 'Сначала дороже' },
+  { value: 'name', label: 'По названию' },
+  { value: 'rating', label: 'По рейтингу' },
+  { value: 'newest', label: 'Новые' },
 ] as const;
 
-function parseSort(preset: string): {
-  sortBy: 'price' | 'name' | 'rating' | 'createdAt';
-  sortOrder: 'asc' | 'desc';
-} {
-  if (preset === 'price-asc') return { sortBy: 'price', sortOrder: 'asc' };
-  if (preset === 'price-desc') return { sortBy: 'price', sortOrder: 'desc' };
-  if (preset === 'name-asc') return { sortBy: 'name', sortOrder: 'asc' };
-  if (preset === 'name-desc') return { sortBy: 'name', sortOrder: 'desc' };
-  if (preset === 'rating-desc') return { sortBy: 'rating', sortOrder: 'desc' };
-  if (preset === 'createdAt-desc') return { sortBy: 'createdAt', sortOrder: 'desc' };
-  return { sortBy: 'createdAt', sortOrder: 'desc' };
+function parseSort(p: string) {
+  switch (p) {
+    case 'price-asc': return { sortBy: 'price' as const, sortOrder: 'asc' as const };
+    case 'price-desc': return { sortBy: 'price' as const, sortOrder: 'desc' as const };
+    case 'rating': return { sortBy: 'rating' as const, sortOrder: 'desc' as const };
+    case 'newest': return { sortBy: 'createdAt' as const, sortOrder: 'desc' as const };
+    case 'name': return { sortBy: 'name' as const, sortOrder: 'asc' as const };
+    default: return { sortBy: 'price' as const, sortOrder: 'asc' as const };
+  }
 }
 
-function summaryToProduct(s: ProductSummary): Product {
-  return {
-    ...s,
-    specifications: (s as Product).specifications ?? {},
-  } as Product;
+function summaryToProduct(s: any): Product {
+  return { ...s, specifications: s.specifications ?? {} } as Product;
 }
 
-function extractSocket(specs: ProductSpecifications | undefined): string | null {
+function extractSocket(specs?: ProductSpecifications): string | null {
   if (!specs) return null;
   return (specs.socket as string) || (specs.cpuSocket as string) || null;
 }
 
+// ─── CardImageGallery: image с	prev/next + hover zones + badges ────────
+
+function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }: {
+  product: any;
+  hasDiscount: boolean;
+  discountPercent: number;
+  outOfStock: boolean;
+}) {
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const allImages = useMemo<ProductImage[]>(() => {
+    const imgs = product.images ?? [];
+    if (product.mainImage && !imgs.some((i: ProductImage) => i.id === product.mainImage.id)) {
+      return [product.mainImage, ...imgs];
+    }
+    return imgs;
+  }, [product]);
+
+  const validImages = allImages.filter((i) => hasValidProductImage(i.url));
+  const current = validImages[currentIdx];
+  const url = current && hasValidProductImage(current.url) ? getProductImageUrl(current.url) : null;
+
+  const goPrev = (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); setCurrentIdx((p) => (p <= 0 ? validImages.length - 1 : p - 1)); };
+  const goNext = (e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); setCurrentIdx((p) => (p >= validImages.length - 1 ? 0 : p + 1)); };
+
+  const hasMultiple = validImages.length > 1;
+
+  return (
+    <div className={styles.cardImage} onMouseLeave={() => setCurrentIdx(0)}>
+      <div className={styles.cardImageInner}>
+        {url
+          ? <img src={url} alt={product.name} loading="lazy" className={styles.cardImg} />
+          : <div className={styles.cardPlaceholder} />
+        }
+      </div>
+
+      {/* Navigation arrows */}
+      {hasMultiple && (
+        <>
+          <button type="button" className={`${styles.navBtn} ${styles.prevBtn}`} onClick={goPrev} aria-label="Предыдущее">
+            <ChevronLeft size={18} />
+          </button>
+          <button type="button" className={`${styles.navBtn} ${styles.nextBtn}`} onClick={goNext} aria-label="Следующее">
+            <ChevronRight size={18} />
+          </button>
+          {/* Image indicators */}
+          <div className={styles.imageDots}>
+            {validImages.map((_, i) => (
+              <span key={i} className={`${styles.dot} ${i === currentIdx ? styles.dotActive : ''}`} />
+            ))}
+          </div>
+          {/* Hover zones */}
+          <div className={styles.hoverZones}>
+            {validImages.map((_, i) => (
+              <div key={i} className={styles.zone} onMouseEnter={() => setCurrentIdx(i)} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {hasDiscount && <span className={styles.discountBadge}>-{discountPercent}%</span>}
+      {outOfStock && <span className={styles.oosBadge}>Нет в наличии</span>}
+    </div>
+  );
+}
+
+// ─── PickerProductCard ──────────────────────────────────
+
+interface PickerProductCardProps {
+  product: any;
+  isSelected: boolean;
+  onSelect: (product: any) => void;
+  onOpenProduct: (slug: string) => void;
+  slotType: PCComponentType;
+  getDisplaySpecs: (type: PCComponentType, product: Product) => string[];
+}
+
+function PickerProductCard({ product, isSelected, onSelect, onOpenProduct, slotType, getDisplaySpecs }: PickerProductCardProps) {
+  const specs = getDisplaySpecs(slotType, summaryToProduct(product)).slice(0, 3);
+  const hasDiscount = product.oldPrice !== undefined && product.oldPrice > product.price;
+  const discountPercent = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
+  const outOfStock = product.stock === 0 || !product.isActive;
+
+  return (
+    <div
+      className={`${styles.card} ${isSelected ? styles.cardSelected : ''} ${outOfStock ? styles.cardOutOfStock : ''}`}
+      onClick={() => onSelect(product)}
+    >
+      <CardImageGallery product={product} hasDiscount={hasDiscount} discountPercent={discountPercent} outOfStock={outOfStock} />
+
+      <div className={styles.cardContent}>
+        <h4 className={styles.cardName}>
+          <button type="button" className={styles.cardTitleBtn} onClick={() => onSelect(product)} title={product.name}>
+            {product.name}
+          </button>
+        </h4>
+        {product.slug && (
+          <button type="button" className={styles.openProductLink} onClick={() => onOpenProduct(product.slug)} title="Открыть страницу товара">
+            <ExternalLink size={10} /> Подробнее
+          </button>
+        )}
+        {specs.length > 0 && <ul className={styles.cardSpecs}>{specs.map((s, i) => <li key={i}>{s}</li>)}</ul>}
+        <div className={styles.cardPriceRow}>
+          <div className={styles.cardPrices}>
+            <span className={styles.cardPrice}>{product.price.toLocaleString('ru-BY')} BYN</span>
+            {hasDiscount && product.oldPrice !== undefined && (
+              <span className={styles.cardOldPrice}>{product.oldPrice.toLocaleString('ru-BY')}</span>
+            )}
+          </div>
+          <button type="button" className={`${styles.selectBtn} ${isSelected ? styles.selectBtnSelected : ''}`} onClick={() => onSelect(product)}>
+            {isSelected ? 'Выбрано' : 'Выбрать'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── PickerProductCardCompact ───────────────────────────
+
+function PickerProductCardCompact({ product, isSelected, onSelect, onOpenProduct, slotType, getDisplaySpecs }: PickerProductCardProps) {
+  const url = product.mainImage?.url && hasValidProductImage(product.mainImage.url)
+    ? getProductImageUrl(product.mainImage.url) : null;
+  const specs = getDisplaySpecs(slotType, summaryToProduct(product)).slice(0, 2);
+  const hasDiscount = product.oldPrice !== undefined && product.oldPrice > product.price;
+  const outOfStock = product.stock === 0 || !product.isActive;
+
+  return (
+    <div
+      className={`${styles.cardCompact} ${isSelected ? styles.cardCompactSelected : ''}`}
+      onClick={() => onSelect(product)}
+    >
+      <div className={styles.compactImage}>
+        {url ? <img src={url} alt="" className={styles.compactImg} /> : <div className={styles.compactPlaceholder} />}
+      </div>
+      <div className={styles.compactInfo}>
+        <h4 className={styles.compactName}>
+          <button type="button" className={styles.cardTitleBtn} onClick={() => onSelect(product)} title={product.name}>
+            {product.name}
+          </button>
+        </h4>
+        {product.slug && (
+          <button type="button" className={styles.openProductLink} onClick={() => onOpenProduct(product.slug)} title="Открыть страницу товара">
+            <ExternalLink size={10} /> Подробнее
+          </button>
+        )}
+        {specs.length > 0 && <span className={styles.compactSpecs}>{specs.join(' · ')}</span>}
+      </div>
+      <div className={styles.compactRight}>
+        <div className={styles.compactPrices}>
+          <span className={styles.compactPrice}>{product.price.toLocaleString('ru-BY')} BYN</span>
+          {hasDiscount && product.oldPrice !== undefined && (
+            <span className={styles.compactOldPrice}>{product.oldPrice.toLocaleString('ru-BY')}</span>
+          )}
+        </div>
+        <button type="button" className={`${styles.selectBtn} ${isSelected ? styles.selectBtnSelected : ''}`} onClick={() => onSelect(product)}>
+          {isSelected ? 'Выбрано' : 'Выбрать'}
+        </button>
+        {outOfStock && <span className={styles.compactOos}>Нет в наличии</span>}
+      </div>
+    </div>
+  );
+}
+
+// ─── Image magnifier modal (uses our Modal) ────────────
+
+function ImageMagnifier({ images, initIdx, onClose }: { images: string[]; initIdx: number; onClose: () => void }) {
+  const [idx, setIdx] = useState(initIdx);
+  const cur = images[Math.min(idx, images.length - 1)] ?? images[0] ?? '';
+
+  useEffect(() => { setIdx(initIdx); }, [initIdx]);
+
+  return (
+    <Modal isOpen onClose={onClose} title="Изображение товара" size="large" showCloseButton>
+      <div className={styles.magnifierContent}>
+        <img src={cur} alt="" className={styles.magnifierImage} />
+        {images.length > 1 && (
+          <div className={styles.magnifierNav}>
+            <button type="button" className={styles.magnifierNavBtn}
+              onClick={() => setIdx((i) => (i <= 0 ? images.length - 1 : i - 1))}
+              aria-label="Предыдущее фото">
+              <ChevronLeft size={28} />
+            </button>
+            <div className={styles.magnifierDots}>
+              {images.map((_, i) => (
+                <span key={i} className={`${styles.magDot} ${i === idx ? styles.magDotActive : ''}`}
+                  onClick={() => setIdx(i)} />
+              ))}
+            </div>
+            <button type="button" className={styles.magnifierNavBtn}
+              onClick={() => setIdx((i) => (i >= images.length - 1 ? 0 : i + 1))}
+              aria-label="Следующее фото">
+              <ChevronRight size={28} />
+            </button>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+// ─── SpecList ───────────────────────────────────────────
+
+function SpecList({ specs }: { specs: Record<string, unknown> }) {
+  const entries = useMemo(() => {
+    return Object.entries(specs)
+      .filter(([, v]) => v != null && v !== '' && v !== false)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(0, 12)
+      .map(([k, v]) => ({ label: specLabel(k), value: formatSpecValueForKey(k, v as string | number | boolean) }));
+  }, [specs]);
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div className={styles.previewSpecs}>
+      {entries.map((row) => (
+        <div key={row.label} className={styles.specRow}>
+          <span className={styles.specLabel}>{row.label}</span>
+          <span className={styles.specValue}>{row.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── ComponentPickerModal ───────────────────────────────
+
 export function ComponentPickerModal({
-  isOpen,
-  onClose,
-  category,
-  slotType,
-  slotLabel,
-  currentProduct,
-  buildContext,
-  onConfirm,
-  onRemoveCurrent,
-  getDisplaySpecs,
+  isOpen, onClose, category, slotType, slotLabel,
+  currentProduct, buildContext, onConfirm, onRemoveCurrent, getDisplaySpecs, nameFilter,
 }: ComponentPickerModalProps) {
+  const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(category);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [sortPreset, setSortPreset] = useState<string>('price-asc');
-  const [priceMinStr, setPriceMinStr] = useState('');
-  const [priceMaxStr, setPriceMaxStr] = useState('');
+  const [sortPreset, setSortPreset] = useState('popular');
   const [inStockOnly, setInStockOnly] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
-  const [facetFilters, setFacetFilters] = useState<Record<string, string>>({});
+  const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [magnifierIdx, setMagnifierIdx] = useState<number | null>(null);
+  const [previewImgIdx, setPreviewImgIdx] = useState(0);
 
-  useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedSearch(search.trim()), 300);
-    return () => window.clearTimeout(t);
-  }, [search]);
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 0 });
+  const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<string[]>([]);
+  const [minRating] = useState(0);
+  const [selectedAvailability, setSelectedAvailability] = useState<string[]>(['in_stock']);
+  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | number | string[]>>({});
 
   useEffect(() => {
     if (!isOpen) return;
-    setSearch('');
-    setDebouncedSearch('');
-    setSortPreset('price-asc');
-    setPriceMinStr('');
-    setPriceMaxStr('');
-    setInStockOnly(false);
-    setPage(1);
-    setPageSize(12);
-    setFacetFilters({});
-    setHighlightedId(currentProduct?.id ?? null);
+    setSelectedCategory(category);
+    setSearch(''); setDebouncedSearch(''); setSortPreset('popular'); setPreviewImgIdx(0);
+    setInStockOnly(false); setHighlightedId(currentProduct?.id ?? null);
+    setPage(1); setViewMode('grid');
+    setPriceRange({ min: 0, max: 0 }); setSelectedManufacturerIds([]);
+    setSelectedSpecifications({});
   }, [isOpen, category, currentProduct?.id]);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
+    return () => window.clearTimeout(t);
+  }, [search]);
 
   const { sortBy, sortOrder } = useMemo(() => parseSort(sortPreset), [sortPreset]);
 
-  const priceMin = useMemo(() => {
-    const n = parseFloat(priceMinStr.replace(',', '.'));
-    return Number.isFinite(n) && n > 0 ? n : undefined;
-  }, [priceMinStr]);
+  const priceMin = priceRange.min > 0 ? priceRange.min : undefined;
+  const priceMax = priceRange.max > 0 ? priceRange.max : undefined;
 
-  const priceMax = useMemo(() => {
-    const n = parseFloat(priceMaxStr.replace(',', '.'));
-    return Number.isFinite(n) && n > 0 ? n : undefined;
-  }, [priceMaxStr]);
-
-  const categorySlug = BACKEND_SLUG[category] ?? category;
-
-  const compatibilitySpecs = useMemo(() => {
-    const out: Record<string, string> = { ...facetFilters };
-    const ctx = buildContext;
-    if (!ctx) return out;
-    if (slotType === 'cpu' && ctx.motherboard?.product) {
-      const sock = extractSocket(ctx.motherboard.product.specifications);
-      if (sock) out.socket = sock;
+  const effectiveSpecs = useMemo(() => {
+    const out = { ...selectedSpecifications };
+    if (slotType === 'cpu' && buildContext?.motherboard?.product) {
+      const s = extractSocket(buildContext.motherboard.product.specifications);
+      if (s) out.socket = s;
     }
-    if (slotType === 'motherboard' && ctx.cpu?.product) {
-      const sock = extractSocket(ctx.cpu.product.specifications);
-      if (sock) out.socket = sock;
+    if (slotType === 'motherboard' && buildContext?.cpu?.product) {
+      const s = extractSocket(buildContext.cpu.product.specifications);
+      if (s) out.socket = s;
     }
-    if (slotType === 'ram' && ctx.motherboard?.product) {
-      const mt = ctx.motherboard.product.specifications?.memoryType as string | undefined;
+    if (slotType === 'ram' && buildContext?.motherboard?.product) {
+      const mt = buildContext.motherboard.product.specifications?.memoryType;
       if (mt) out.memoryType = mt;
     }
     return out;
-  }, [buildContext, slotType, facetFilters]);
+  }, [selectedSpecifications, slotType, buildContext]);
 
-  const { data: facetData } = useQuery({
-    queryKey: ['picker-facets', categorySlug, compatibilitySpecs],
-    queryFn: () =>
-      catalogApi.getFilterFacets(categorySlug, {
-        specifications: compatibilitySpecs,
-      }),
-    enabled: isOpen,
-    staleTime: 60_000,
-  });
-
-  const queryParams = useMemo(
-    () => ({
-      category,
-      page,
-      pageSize,
+  const { data: productsResponse, isLoading, error, refetch } = useProducts(
+    useMemo(() => ({
+      category: selectedCategory, page, pageSize: 12,
       search: debouncedSearch || undefined,
-      sortBy,
-      sortOrder,
-      priceMin,
-      priceMax,
+      sortBy, sortOrder, priceMin, priceMax,
       inStock: inStockOnly ? true : undefined,
-      specifications:
-        Object.keys(compatibilitySpecs).length > 0 ? compatibilitySpecs : undefined,
-    }),
-    [
-      category,
-      page,
-      pageSize,
-      debouncedSearch,
-      sortBy,
-      sortOrder,
-      priceMin,
-      priceMax,
-      inStockOnly,
-      compatibilitySpecs,
-    ]
+      specifications: Object.keys(effectiveSpecs).length > 0 ? effectiveSpecs : undefined,
+    }), [selectedCategory, debouncedSearch, sortBy, sortOrder, priceMin, priceMax, inStockOnly, effectiveSpecs, page]),
+    { enabled: isOpen }
   );
-
-  const { data: productsResponse, isLoading, error, refetch } = useProducts(queryParams, {
-    enabled: isOpen,
-  });
 
   const products = productsResponse?.data ?? [];
   const meta = productsResponse?.meta;
 
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, sortPreset, priceMinStr, priceMaxStr, inStockOnly, compatibilitySpecs, pageSize]);
+  // ── Compatibility filtering ──
 
-  const handleFilterSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-  }, []);
+  const componentMap = useMemo(() => {
+    const b = buildContext ?? { ram: [], storage: [], fan: [] };
+    return {
+      cpu: b.cpu?.product ?? null,
+      gpu: b.gpu?.product ?? null,
+      motherboard: b.motherboard?.product ?? null,
+      ram: b.ram[0]?.product ?? null,
+      psu: b.psu?.product ?? null,
+      case: b.case?.product ?? null,
+      cooling: b.cooling?.product ?? null,
+    };
+  }, [buildContext]);
 
-  const highlightedSummary = useMemo(() => {
-    if (!highlightedId) return undefined;
-    const fromList = products.find((p) => p.id === highlightedId);
-    if (fromList) return fromList;
-    if (currentProduct?.id === highlightedId) return currentProduct as ProductSummary;
-    return undefined;
-  }, [products, highlightedId, currentProduct]);
+  const productsWithCompatibility = useMemo(() => {
+    const catMap: Record<string, any> = {
+      cpu: 'cpu', gpu: 'gpu', motherboard: 'motherboard',
+      ram: 'ram', storage: 'storage', psu: 'psu',
+      case: 'case', cooling: 'cooling', monitor: 'cpu',
+      keyboard: 'cpu', mouse: 'cpu', headphones: 'cpu', fan: 'cpu',
+    };
+    const compCat = catMap[slotType] ?? 'cpu';
+    return products.map((p) => {
+      const result = isComponentCompatible(compCat, p, componentMap);
+      return { ...p, isIncompatible: !result.compatible, incompatibilityIssues: result.issues };
+    });
+  }, [products, slotType, componentMap]);
 
-  const highlightedProduct = highlightedSummary ? summaryToProduct(highlightedSummary) : null;
+  const incompatibleCount = productsWithCompatibility.filter((p) => p.isIncompatible).length;
+  const filteredProducts = productsWithCompatibility.filter((p) => {
+    if (p.isIncompatible) return false;
+    if (nameFilter && !p.name.toLowerCase().includes(nameFilter.toLowerCase())) return false;
+    return true;
+  });
 
-  const { data: detailProduct, isLoading: detailLoading } = useQuery({
+  const previewProduct = useMemo(() => {
+    if (!highlightedId) return null;
+    const fromList = productsWithCompatibility.find((p) => p.id === highlightedId);
+    if (fromList) return summaryToProduct(fromList);
+    if (currentProduct?.id === highlightedId) return currentProduct as Product;
+    return null;
+  }, [productsWithCompatibility, highlightedId, currentProduct]);
+
+  const { data: detailProduct } = useQuery({
     queryKey: ['catalog-product', highlightedId],
     queryFn: () => catalogApi.getProduct(highlightedId!),
     enabled: isOpen && !!highlightedId,
     staleTime: 5 * 60_000,
   });
 
-  const previewProduct = detailProduct ?? highlightedProduct;
+  const fullPreview = detailProduct ?? previewProduct;
 
-  const previewSpecEntries = useMemo(() => {
-    if (!previewProduct?.specifications) return [];
-    const specs = previewProduct.specifications as Record<string, unknown>;
-    return Object.keys(specs)
-      .filter((k) => specs[k] != null && specs[k] !== '')
-      .sort((a, b) => a.localeCompare(b))
-      .map((k) => ({
-        key: k,
-        label: specLabel(k),
-        value: formatSpecValueForKey(k, specs[k]),
-      }));
-  }, [previewProduct]);
+  const previewImages = useMemo(() => {
+    if (!fullPreview) return [];
+    const imgs = fullPreview.images ?? [];
+    if (fullPreview.mainImage && !imgs.some((i: ProductImage) => i.id === fullPreview.mainImage?.id)) {
+      return [fullPreview.mainImage, ...imgs];
+    }
+    return imgs;
+  }, [fullPreview]);
 
-  const previewShortSpecs = previewProduct
-    ? getDisplaySpecs(slotType, previewProduct)
-    : [];
+  const previewImageUrls = useMemo(() => {
+    return previewImages
+      .filter((i) => hasValidProductImage(i.url))
+      .map((i) => getProductImageUrl(i.url)!)
+      .filter(Boolean);
+  }, [previewImages]);
 
   const handleConfirm = () => {
-    if (!highlightedProduct) return;
-    onConfirm(highlightedProduct);
+    if (!highlightedId) return;
+    const p = fullPreview || previewProduct;
+    if (p) onConfirm(p as Product);
   };
 
-  const title = `Выбор: ${slotLabel}`;
+  const handleCategoryChange = useCallback((cat: ProductCategory | null) => {
+    setSelectedCategory(cat ?? category); setPage(1); setHighlightedId(null);
+  }, [category]);
 
-  const order = SPEC_ORDER[categorySlug] ?? [];
-  const attrMap = new Map((facetData ?? []).map((a) => [a.key, a]));
-  const orderedKeys = [
-    ...order.filter((k) => attrMap.has(k)),
-  ];
-  
-  const facetSelects = orderedKeys
-    .map((key) => attrMap.get(key))
-    .filter((a): a is FilterFacetAttribute => !!a && a.filterType === 'select' && (a.options?.length ?? 0) > 0);
+  const handleResetFilters = useCallback(() => {
+    setPriceRange({ min: 0, max: 0 }); setSelectedManufacturerIds([]);
+    setSelectedSpecifications({}); setInStockOnly(false); setPage(1);
+  }, []);
+
+  const handleOpenProduct = useCallback((slug: string) => {
+    window.open(`/product/${slug}`, '_blank', 'noopener,noreferrer');
+  }, []);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} size="xlarge" showCloseButton>
+    <Modal isOpen={isOpen} onClose={onClose} title={`Выбор: ${slotLabel}`} size="xlarge" showCloseButton>
+      {/* Hide categories + header inside FilterSidebar (CSS modules use hashed class names) */}
+      <style>{`
+        .${styles.filterSidebarWrap} > aside > div:first-child,
+        .${styles.filterSidebarWrap} > aside > div:nth-child(2) {
+          display: none !important;
+        }
+        /* Override FilterSidebar colors to match picker theme */
+        .${styles.filterSidebarWrap} aside {
+          position: static !important;
+          background: transparent !important;
+          border: none !important;
+          max-height: none !important;
+        }
+        .${styles.filterSidebarWrap} aside [class*="filterGroup"] [class*="filterHeader"] {
+          color: #a1a1aa !important;
+        }
+        .${styles.filterSidebarWrap} aside [class*="categoryItem"] {
+          color: #71717a !important;
+        }
+        .${styles.filterSidebarWrap} aside [class*="priceInput"],
+        .${styles.filterSidebarWrap} aside input[type="number"] {
+          background: rgba(0,0,0,0.25) !important;
+          border-color: rgba(255,255,255,0.08) !important;
+          color: #fafafa !important;
+        }
+        .${styles.filterSidebarWrap} aside [class*="chip"] {
+          background: rgba(255,255,255,0.04) !important;
+          border-color: rgba(255,255,255,0.08) !important;
+          color: #71717a !important;
+        }
+        .${styles.filterSidebarWrap} aside [class*="chip"][class*="active"] {
+          background: rgba(212,165,116,0.12) !important;
+          border-color: rgba(212,165,116,0.35) !important;
+          color: #d4a574 !important;
+        }
+      `}</style>
       <div className={styles.root}>
-        {currentProduct && (
-          <div className={styles.currentBar}>
-            <span className={styles.currentLabel}>
-              В слоте сейчас: <strong>{currentProduct.name}</strong>
-            </span>
-            {onRemoveCurrent && (
-              <button type="button" className={styles.btnDanger} onClick={onRemoveCurrent}>
-                Снять выбор
-              </button>
-            )}
+
+        {mobileFilterOpen && (
+          <div className={styles.mobileOverlay} onClick={() => setMobileFilterOpen(false)}>
+            <div className={styles.mobileFilterContent} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.mobileFilterHeader}>
+                <h3>Фильтры</h3>
+                <button className={styles.mobileFilterClose} onClick={() => setMobileFilterOpen(false)}><X size={24} /></button>
+              </div>
+              <FilterSidebar
+                selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} categoryLocked={false}
+                priceRange={priceRange} onPriceChange={setPriceRange}
+                selectedManufacturerIds={selectedManufacturerIds} onManufacturerIdsChange={setSelectedManufacturerIds}
+                minRating={minRating} onRatingChange={() => {}}
+                selectedAvailability={selectedAvailability} onAvailabilityChange={setSelectedAvailability}
+                selectedSpecifications={effectiveSpecs} onSpecificationsChange={setSelectedSpecifications}
+                onReset={handleResetFilters}
+              />
+            </div>
           </div>
         )}
 
-        <form className={styles.toolbar} onSubmit={handleFilterSubmit}>
-          <div className={styles.searchWrap}>
-            <Search className={styles.searchIcon} size={18} aria-hidden />
-            <input
-              type="search"
-              className={styles.searchInput}
-              placeholder="Поиск по названию…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              aria-label="Поиск по каталогу"
+        <div className={styles.body}>
+          {/* Filter Sidebar */}
+          <div className={styles.filterSidebarWrap}>
+            <FilterSidebar
+              selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} categoryLocked={false}
+              priceRange={priceRange} onPriceChange={setPriceRange}
+              selectedManufacturerIds={selectedManufacturerIds} onManufacturerIdsChange={setSelectedManufacturerIds}
+              minRating={minRating} onRatingChange={() => {}}
+              selectedAvailability={selectedAvailability} onAvailabilityChange={setSelectedAvailability}
+              selectedSpecifications={effectiveSpecs} onSpecificationsChange={setSelectedSpecifications}
+              onReset={handleResetFilters}
             />
           </div>
-          <label className={styles.fieldLabel}>
-            <span className={styles.fieldCaption}>Сортировка</span>
-            <select
-              className={styles.select}
-              value={sortPreset}
-              onChange={(e) => setSortPreset(e.target.value)}
-            >
-              {SORT_PRESETS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={styles.fieldLabel}>
-            <span className={styles.fieldCaption}>Цена от</span>
-            <input
-              type="text"
-              inputMode="decimal"
-              className={styles.inputNum}
-              placeholder="0"
-              value={priceMinStr}
-              onChange={(e) => setPriceMinStr(e.target.value)}
-            />
-          </label>
-          <label className={styles.fieldLabel}>
-            <span className={styles.fieldCaption}>до</span>
-            <input
-              type="text"
-              inputMode="decimal"
-              className={styles.inputNum}
-              placeholder="∞"
-              value={priceMaxStr}
-              onChange={(e) => setPriceMaxStr(e.target.value)}
-            />
-          </label>
-          <label className={styles.checkLabel}>
-            <input
-              type="checkbox"
-              className={styles.checkbox}
-              checked={inStockOnly}
-              onChange={(e) => setInStockOnly(e.target.checked)}
-            />
-            <span>Только в наличии</span>
-          </label>
-        </form>
 
-        {facetSelects.length > 0 && (
-          <div className={styles.facetRow} role="group" aria-label="Фильтры по характеристикам">
-            {facetSelects.map((attr) => (
-              <label key={attr.key} className={styles.facetField}>
-                <span className={styles.fieldCaption}>{attr.displayName}</span>
-                <select
-                  className={styles.selectSm}
-                  value={facetFilters[attr.key] ?? ''}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setFacetFilters((prev) => {
-                      const next = { ...prev };
-                      if (!v) delete next[attr.key];
-                      else next[attr.key] = v;
-                      return next;
-                    });
-                  }}
-                >
-                  <option value="">Все</option>
-                  {(attr.options ?? []).map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.value} ({opt.count})
-                    </option>
-                  ))}
+          {/* Products */}
+          <div className={styles.mainCol}>
+            <div className={styles.toolbar}>
+              <div className={styles.toolbarLeft}>
+                <button className={styles.mobileFilterBtn} onClick={() => setMobileFilterOpen(true)}>
+                  <SlidersHorizontal size={16} /> Фильтры
+                </button>
+                <form className={styles.searchForm} onSubmit={(e) => e.preventDefault()}>
+                  <Search size={16} className={styles.searchIcon} />
+                  <input type="search" className={styles.searchInput} placeholder="Поиск по названию…"
+                    value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); setHighlightedId(null); }} />
+                  {search && <button type="button" className={styles.searchClear} onClick={() => setSearch('')}><X size={14} /></button>}
+                </form>
+              </div>
+              <div className={styles.toolbarRight}>
+                <select className={styles.sortSelect} value={sortPreset} onChange={(e) => setSortPreset(e.target.value)}>
+                  {SORT_PRESETS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
-              </label>
-            ))}
-          </div>
-        )}
+                <label className={styles.stockCheck}>
+                  <span className={styles.stockCheckIndicator}>
+                    {inStockOnly && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                  </span>
+                  <input type="checkbox" className={styles.stockCheckInput} checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
+                  <span>В наличии</span>
+                </label>
+                <div className={styles.viewToggle}>
+                  <button type="button" className={`${styles.viewToggleBtn} ${viewMode === 'grid' ? styles.viewToggleActive : ''}`}
+                    onClick={() => setViewMode('grid')} title="Сетка"><LayoutGrid size={16} /></button>
+                  <button type="button" className={`${styles.viewToggleBtn} ${viewMode === 'list' ? styles.viewToggleActive : ''}`}
+                    onClick={() => setViewMode('list')} title="Список"><List size={16} /></button>
+                </div>
+              </div>
+            </div>
 
-        <div className={`${styles.body} ${highlightedProduct ? styles.bodyWithPreview : styles.bodyFullWidth}`}>
-          <div className={styles.gridCol}>
             {isLoading && (
-              <div className={styles.skeletonGrid}>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className={styles.skeletonCard}>
-                    <Skeleton width="100%" height={120} borderRadius="sm" />
-                    <Skeleton width="80%" height={14} borderRadius="sm" />
-                    <Skeleton width="40%" height={12} borderRadius="sm" />
-                  </div>
-                ))}
+              <div className={`${viewMode === 'grid' ? styles.grid : styles.list}`}>
+                {Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)}
               </div>
             )}
-
-            {error && (
-              <ApiErrorBanner message="Не удалось загрузить список комплектующих." onRetry={() => refetch()} />
-            )}
+            {error && <ApiErrorBanner message="Не удалось загрузить список." onRetry={() => refetch()} />}
 
             {!isLoading && !error && (
               <>
-                {products.length === 0 ? (
-                  <p className={styles.empty}>Нет товаров по заданным условиям.</p>
-                ) : (
-                  <div className={styles.grid} role="listbox" aria-label="Список товаров">
-                    {products.map((p) => {
-                      const url =
-                        p.mainImage?.url && hasValidProductImage(p.mainImage.url)
-                          ? getProductImageUrl(p.mainImage.url)
-                          : null;
-                      const selected = highlightedId === p.id;
-                      const prod = summaryToProduct(p);
-                      const specs = getDisplaySpecs(slotType, prod).slice(0, 2);
-                      return (
-                        <button
-                          key={p.id}
-                          type="button"
-                          role="option"
-                          aria-selected={selected}
-                          className={`${styles.tile} ${selected ? styles.tileSelected : ''}`}
-                          onClick={() => setHighlightedId(p.id)}
-                        >
-                          <div className={styles.tileImageWrap}>
-                            {url ? (
-                              <img src={url} alt="" className={styles.tileImg} loading="lazy" />
-                            ) : (
-                              <div className={styles.tilePlaceholder} aria-hidden />
-                            )}
-                          </div>
-                          <span className={styles.tileName}>{p.name}</span>
-                          {specs.length > 0 && (
-                            <span className={styles.tileSpecs}>{specs.join(' · ')}</span>
-                          )}
-                          <span className={styles.tilePrice}>
-                            {p.price.toLocaleString('ru-BY')} BYN
-                          </span>
-                        </button>
-                      );
-                    })}
+                {filteredProducts.length > 0 && <div className={styles.resultsCount}>{meta ? `Найдено: ${filteredProducts.length} из ${meta.totalItems}` : ''}</div>}
+                {incompatibleCount > 0 && (
+                  <div className={styles.compatibleHint}>
+                    {incompatibleCount} товар(ов) не совместим с выбранной конфигурацией и скрыт
                   </div>
                 )}
-
-                {meta && meta.totalItems > 0 && (
+                {filteredProducts.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <h3>Нет совместимых товаров</h3>
+                    <p>Для данной конфигурации не найдено подходящих компонентов. Попробуйте изменить другие компоненты сборки.</p>
+                  </div>
+                ) : viewMode === 'grid' ? (
+                  <div className={styles.grid}>
+                    {filteredProducts.map((p) => (
+                      <PickerProductCard key={p.id} product={p} isSelected={highlightedId === p.id}
+                        onSelect={(prod) => setHighlightedId(prod.id)}
+                        onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.list}>
+                    {filteredProducts.map((p) => (
+                      <PickerProductCardCompact key={p.id} product={p} isSelected={highlightedId === p.id}
+                        onSelect={(prod) => setHighlightedId(prod.id)}
+                        onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
+                    ))}
+                  </div>
+                )}
+                {meta && meta.totalItems > 0 && meta.totalPages > 1 && (
                   <div className={styles.paginationWrap}>
-                    <Pagination
-                      page={page}
-                      totalPages={meta.totalPages}
-                      totalItems={meta.totalItems}
-                      pageSize={pageSize}
-                      onPageChange={(p) => {
-                        setPage(p);
-                        setHighlightedId(null);
-                      }}
-                      onPageSizeChange={(sz) => {
-                        setPageSize(sz);
-                        setPage(1);
-                        setHighlightedId(null);
-                      }}
-                      showPageSizeSelector
-                      showFirstLast
-                    />
+                    <Pagination page={page} totalPages={meta.totalPages} totalItems={meta.totalItems}
+                      pageSize={12} onPageChange={(p) => { setPage(p); setHighlightedId(null); }} showFirstLast />
                   </div>
                 )}
               </>
             )}
           </div>
 
-          {highlightedProduct && (
-          <aside className={styles.preview} aria-label="Предпросмотр">
-            <div className={styles.previewImageWrap}>
-              {previewProduct &&
-              previewProduct.mainImage?.url &&
-              hasValidProductImage(previewProduct.mainImage.url) ? (
-                <img
-                  src={getProductImageUrl(previewProduct.mainImage.url) ?? undefined}
-                  alt=""
-                  className={styles.previewImg}
-                />
-              ) : (
-                <div className={styles.previewPlaceholder} aria-hidden />
-              )}
-            </div>
-            <h4 className={styles.previewTitle}>{previewProduct?.name ?? highlightedProduct.name}</h4>
-            <p className={styles.previewPrice}>
-              {(previewProduct ?? highlightedProduct).price.toLocaleString('ru-BY')} BYN
-            </p>
-            {typeof (previewProduct ?? highlightedProduct).stock === 'number' && (
-              <p className={styles.previewStock}>
-                {(previewProduct ?? highlightedProduct).stock! > 0
-                  ? `В наличии: ${(previewProduct ?? highlightedProduct).stock}`
-                  : 'Нет в наличии'}
-              </p>
-            )}
-            {detailLoading && (
-              <p className={styles.previewLoading}>Загрузка характеристик…</p>
-            )}
-            {previewShortSpecs.length > 0 && (
-              <ul className={styles.previewSpecsShort}>
-                {previewShortSpecs.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-            )}
-            {previewSpecEntries.length > 0 && (
-              <div className={styles.previewSpecsFull}>
-                <p className={styles.previewSpecsHeading}>Характеристики</p>
-                <ul className={styles.previewSpecsList}>
-                  {previewSpecEntries.map((row) => (
-                    <li key={row.key}>
-                      <span className={styles.specKey}>{row.label}</span>
-                      <span className={styles.specVal}>{row.value}</span>
-                    </li>
-                  ))}
-                </ul>
+          {/* Preview */}
+          <aside className={styles.previewPanel}>
+            {fullPreview ? (
+              <>
+                <div className={styles.previewHeader}>Предпросмотр</div>
+
+                {/* Image gallery for preview */}
+                {previewImageUrls.length > 0 ? (
+                  <>
+                    <div className={styles.previewImageGallery}>
+                      {previewImageUrls.length > 1 && previewImgIdx > 0 && (
+                        <button type="button" className={`${styles.prevNav} ${styles.prevNavPreview}`}
+                          onClick={() => setPreviewImgIdx((i) => i - 1)}>
+                          <ChevronLeft size={18} />
+                        </button>
+                      )}
+                      {previewImageUrls.length > 1 && previewImgIdx < previewImageUrls.length - 1 && (
+                        <button type="button" className={`${styles.nextNav} ${styles.nextNavPreview}`}
+                          onClick={() => setPreviewImgIdx((i) => i + 1)}>
+                          <ChevronRight size={18} />
+                        </button>
+                      )}
+                      <img
+                        src={previewImageUrls[previewImgIdx]}
+                        alt=""
+                        className={styles.previewImg}
+                      />
+                      <button type="button" className={styles.magnifierBtnSmall}
+                        onClick={() => setMagnifierIdx(previewImgIdx)}
+                        title="Увеличить фото" aria-label="Увеличить фото">
+                        <ZoomIn size={20} />
+                      </button>
+                    </div>
+                    {previewImageUrls.length > 1 && (
+                      <div className={styles.previewThumbnails}>
+                        {previewImageUrls.map((img, i) => (
+                          <button key={i} type="button"
+                            className={`${styles.previewThumb} ${i === previewImgIdx ? styles.previewThumbActive : ''}`}
+                            onClick={() => setPreviewImgIdx(i)}
+                          >
+                            <img src={img} alt="" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className={styles.previewPlaceholder} />
+                )}
+
+                <h4 className={styles.previewName}>{fullPreview.name}</h4>
+                <div className={styles.previewPrice}>{fullPreview.price.toLocaleString('ru-BY')} BYN</div>
+
+                {fullPreview.slug && (
+                  <button type="button" className={styles.previewOpenProduct} onClick={() => handleOpenProduct(fullPreview.slug!)}>
+                    <ExternalLink size={14} /> Открыть страницу товара
+                  </button>
+                )}
+
+                {fullPreview.specifications && <SpecList specs={fullPreview.specifications as Record<string, unknown>} />}
+
+                <button type="button" className={styles.confirmBtn} onClick={handleConfirm}>Выбрать</button>
+              </>
+            ) : (
+              <div className={styles.previewEmpty}>
+                <h4>Предпросмотр</h4>
+                <p>Выберите товар из списка, здесь появятся его характеристики.</p>
               </div>
             )}
-            <button
-              type="button"
-              className={styles.btnPrimary}
-              onClick={handleConfirm}
-              disabled={
-                typeof (previewProduct ?? highlightedProduct).stock === 'number' &&
-                (previewProduct ?? highlightedProduct).stock! <= 0
-              }
-            >
-              {typeof (previewProduct ?? highlightedProduct).stock === 'number' &&
-              (previewProduct ?? highlightedProduct).stock! <= 0
-                ? 'Нет в наличии'
-                : 'Выбрать'}
-            </button>
           </aside>
-          )}
         </div>
       </div>
+
+      {/* Magnifier */}
+      {magnifierIdx !== null && previewImageUrls.length > 0 && (
+        <ImageMagnifier images={previewImageUrls} initIdx={magnifierIdx} onClose={() => setMagnifierIdx(null)} />
+      )}
     </Modal>
   );
 }

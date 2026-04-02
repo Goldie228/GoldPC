@@ -26,6 +26,7 @@ export {
   PC_BUILDER_SLOTS,
   MAX_RAM_MODULES,
   MAX_STORAGE_MODULES,
+  MAX_FAN_MODULES,
 } from './usePCBuilder';
 export type {
   PCComponentType,

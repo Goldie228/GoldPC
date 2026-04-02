@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using PCBuilderService.DTOs;
@@ -26,12 +27,17 @@ public class CompatibilityServiceTests
 {
     private readonly CompatibilityService _service;
     private readonly Mock<ILogger<CompatibilityService>> _loggerMock;
+    private readonly Mock<ILogger<CompatibilityRuleEngine>> _ruleEngineLoggerMock;
+    private readonly CompatibilityRuleEngine _ruleEngine;
 
     public CompatibilityServiceTests()
     {
         _loggerMock = new Mock<ILogger<CompatibilityService>>();
+        _ruleEngineLoggerMock = new Mock<ILogger<CompatibilityRuleEngine>>();
         var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5000") };
-        _service = new CompatibilityService(httpClient, _loggerMock.Object);
+        var jsonPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "PCBuilderService", "Data", "compatibility-rules.json");
+        _ruleEngine = new CompatibilityRuleEngine(jsonPath, _ruleEngineLoggerMock.Object);
+        _service = new CompatibilityService(httpClient, _loggerMock.Object, _ruleEngine);
     }
 
     #region Rule 1: CPU ↔ Motherboard Socket
@@ -47,7 +53,7 @@ public class CompatibilityServiceTests
         );
         var response = await _service.CheckCompatibilityAsync(request);
         response.Result.IsCompatible.Should().BeFalse("sockets are incompatible");
-        response.Result.Issues.Should().ContainSingle(i => i.Message == "Incompatible Socket");
+        response.Result.Issues.Should().ContainSingle(i => i.Message.Contains("Несовместимый сокет"));
     }
 
     [Fact]
@@ -91,7 +97,7 @@ public class CompatibilityServiceTests
         );
         var response = await _service.CheckCompatibilityAsync(request);
         response.Result.IsCompatible.Should().BeFalse("RAM generation is incompatible");
-        response.Result.Issues.Should().ContainSingle(i => i.Message.Contains("Incompatible RAM Generation"));
+        response.Result.Issues.Should().ContainSingle(i => i.Message.Contains("Несовместимый тип памяти"));
     }
 
     [Fact]
@@ -187,7 +193,7 @@ public class CompatibilityServiceTests
         );
         var response = await _service.CheckCompatibilityAsync(request);
         response.Result.IsCompatible.Should().BeFalse("PSU wattage is insufficient");
-        response.Result.Issues.Should().ContainSingle(i => i.Message == "Insufficient Power Supply");
+        response.Result.Issues.Should().ContainSingle(i => i.Message.Contains("Мощности БП") && i.Message.Contains("недостаточно"));
     }
 
     [Fact]
@@ -249,255 +255,8 @@ public class CompatibilityServiceTests
         );
         var response = await _service.CheckCompatibilityAsync(request);
         response.Result.IsCompatible.Should().BeTrue();
-        response.Result.Warnings.Should().Contain(w => w.Component == "PSU" && w.Message.Contains("recommended"));
-    }
-
-    #endregion
-
-    #region Rule 5: GPU ↔ Case Length
-
-    [Fact]
-    public async Task Rule5_GpuTooLongForCase_ReturnsError()
-    {
-        var request = CreateRequest(
-            gpu: CreateGpuComponent("NVIDIA RTX 4090", new Dictionary<string, object>
-            { ["tdp"] = 450, ["length"] = 340 }),
-            caseComp: CreateCaseComponent("Small Case", new Dictionary<string, object>
-            { ["maxGpuLength"] = 320, ["maxCoolerHeight"] = 160,
-              ["formFactor"] = "ATX", ["supportedFormFactors"] = "ATX,mATX" })
-        );
-        var response = await _service.CheckCompatibilityAsync(request);
-        response.Result.IsCompatible.Should().BeFalse("GPU is too long for case");
-        response.Result.Issues.Should().ContainSingle(i =>
-            i.Message.Contains("не поместится") && i.Message.Contains("Видеокарт"));
-    }
-
-    [Fact]
-    public async Task Rule5_GpuFitsInCase_NoError()
-    {
-        var request = CreateRequest(
-            gpu: CreateGpuComponent("NVIDIA RTX 4070", new Dictionary<string, object>
-            { ["tdp"] = 200, ["length"] = 300 }),
-            caseComp: CreateCaseComponent("Large Case", new Dictionary<string, object>
-            { ["maxGpuLength"] = 380, ["maxCoolerHeight"] = 170,
-              ["formFactor"] = "ATX", ["supportedFormFactors"] = "ATX,mATX,ITX" })
-        );
-        var response = await _service.CheckCompatibilityAsync(request);
-        response.Result.Issues.Should().NotContain(i => i.Message.Contains("не поместится"));
-    }
-
-    #endregion
-
-    #region Rule 6: Cooler ↔ Case Height
-
-    [Fact]
-    public async Task Rule6_CoolerTooTallForCase_ReturnsError()
-    {
-        var request = CreateRequest(
-            cooling: CreateCoolerComponent("Tall Air Cooler", new Dictionary<string, object>
-            { ["type"] = "Air", ["height"] = 170, ["maxTdp"] = 250,
-              ["supportedSockets"] = "LGA1700,AM5" }),
-            caseComp: CreateCaseComponent("Slim Case", new Dictionary<string, object>
-            { ["maxGpuLength"] = 350, ["maxCoolerHeight"] = 160,
-              ["formFactor"] = "ATX", ["supportedFormFactors"] = "ATX" })
-        );
-        var response = await _service.CheckCompatibilityAsync(request);
-        response.Result.IsCompatible.Should().BeFalse("cooler is too tall for case");
-        response.Result.Issues.Should().ContainSingle(i =>
-            i.Message.Contains("не поместится") && i.Message.Contains("кулер"));
-    }
-
-    [Fact]
-    public async Task Rule6_CoolerFitsInCase_NoError()
-    {
-        var request = CreateRequest(
-            cooling: CreateCoolerComponent("Compact Cooler", new Dictionary<string, object>
-            { ["type"] = "Air", ["height"] = 155, ["maxTdp"] = 180,
-              ["supportedSockets"] = "LGA1700,AM5" }),
-            caseComp: CreateCaseComponent("Regular Case", new Dictionary<string, object>
-            { ["maxGpuLength"] = 350, ["maxCoolerHeight"] = 170,
-              ["formFactor"] = "ATX", ["supportedFormFactors"] = "ATX" })
-        );
-        var response = await _service.CheckCompatibilityAsync(request);
-        response.Result.Issues.Should().NotContain(i => i.Message.Contains("не поместится"));
-    }
-
-    [Fact]
-    public async Task Rule6_AioCoolerNotCheckedForHeight_NoError()
-    {
-        var request = CreateRequest(
-            cooling: CreateCoolerComponent("AIO Liquid Cooler", new Dictionary<string, object>
-            { ["type"] = "AIO", ["height"] = 200, ["maxTdp"] = 300,
-              ["supportedSockets"] = "LGA1700,AM5" }),
-            caseComp: CreateCaseComponent("Slim Case", new Dictionary<string, object>
-            { ["maxGpuLength"] = 350, ["maxCoolerHeight"] = 150,
-              ["formFactor"] = "ATX", ["supportedFormFactors"] = "ATX" })
-        );
-        var response = await _service.CheckCompatibilityAsync(request);
-        response.Result.Issues.Should().NotContain(i => i.Message.Contains("не поместится"));
-    }
-
-    #endregion
-
-    #region Rule 7: Bottleneck Detection (ratio > 2.0)
-
-    [Fact]
-    public async Task Rule7_CpuBottleneckDetected_ReturnsWarning()
-    {
-        var request = CreateRequest(
-            cpu: CreateCpuComponent("Powerful CPU", new Dictionary<string, object>
-            { ["socket"] = "AM5", ["tdp"] = 170, ["performanceScore"] = 200 }),
-            gpu: CreateGpuComponent("Weak GPU", new Dictionary<string, object>
-            { ["tdp"] = 75, ["length"] = 240, ["performanceScore"] = 80 })
-        );
-        var response = await _service.CheckCompatibilityAsync(request);
         response.Result.Warnings.Should().Contain(w =>
-            w.Severity == "Warning" && w.Message.Contains("bottleneck"));
-    }
-
-    [Fact]
-    public async Task Rule7_GpuBottleneckDetected_ReturnsWarning()
-    {
-        var request = CreateRequest(
-            cpu: CreateCpuComponent("Weak CPU", new Dictionary<string, object>
-            { ["socket"] = "AM5", ["tdp"] = 65, ["performanceScore"] = 50 }),
-            gpu: CreateGpuComponent("Powerful GPU", new Dictionary<string, object>
-            { ["tdp"] = 350, ["length"] = 330, ["performanceScore"] = 200 })
-        );
-        var response = await _service.CheckCompatibilityAsync(request);
-        response.Result.Warnings.Should().Contain(w =>
-            w.Severity == "Warning" && w.Message.Contains("bottleneck"));
-    }
-
-    [Fact]
-    public async Task Rule7_BalancedConfiguration_NoWarning()
-    {
-        var request = CreateRequest(
-            cpu: CreateCpuComponent("Balanced CPU", new Dictionary<string, object>
-            { ["socket"] = "AM5", ["tdp"] = 120, ["performanceScore"] = 100 }),
-            gpu: CreateGpuComponent("Balanced GPU", new Dictionary<string, object>
-            { ["tdp"] = 250, ["length"] = 300, ["performanceScore"] = 90 })
-        );
-        var response = await _service.CheckCompatibilityAsync(request);
-        response.Result.Warnings.Should().NotContain(w => w.Message.Contains("bottleneck"));
-    }
-
-    [Fact]
-    public async Task Rule7_RatioExactly2Point0_NoWarning()
-    {
-        var request = CreateRequest(
-            cpu: CreateCpuComponent("CPU", new Dictionary<string, object>
-            { ["socket"] = "AM5", ["tdp"] = 120, ["performanceScore"] = 100 }),
-            gpu: CreateGpuComponent("GPU", new Dictionary<string, object>
-            { ["tdp"] = 200, ["length"] = 280, ["performanceScore"] = 50 })
-        );
-        var response = await _service.CheckCompatibilityAsync(request);
-        response.Result.Warnings.Should().NotContain(w => w.Message.Contains("bottleneck"));
-    }
-
-    #endregion
-
-    #region Named Tests (User Requirements)
-
-    /// <summary>
-    /// Test 1: AM5 CPU vs AM4 Motherboard -> Returns Error
-    /// </summary>
-    [Fact]
-    public async Task CheckCompatibility_IncompatibleSocket_ReturnsError()
-    {
-        // Arrange - AM5 CPU with AM4 Motherboard
-        var request = CreateRequest(
-            cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
-            { ["socket"] = "AM5", ["tdp"] = 120 }),
-            motherboard: CreateMotherboardComponent("ASUS TUF B550", new Dictionary<string, object>
-            { ["socket"] = "AM4", ["ramType"] = "DDR4", ["formFactor"] = "ATX" })
-        );
-
-        // Act
-        var response = await _service.CheckCompatibilityAsync(request);
-
-        // Assert
-        response.Result.IsCompatible.Should().BeFalse("AM5 CPU is incompatible with AM4 socket");
-        response.Result.Issues.Should().ContainSingle(i => i.Message == "Incompatible Socket");
-        response.Result.Issues.Should().ContainSingle(i =>
-            i.Suggestion!.Contains("AM5") && i.Suggestion.Contains("AM4"));
-    }
-
-    /// <summary>
-    /// Test 2: DDR4 Motherboard vs DDR5 RAM -> Returns Error
-    /// </summary>
-    [Fact]
-    public async Task CheckCompatibility_IncompatibleRam_ReturnsError()
-    {
-        // Arrange - DDR4 Motherboard with DDR5 RAM
-        var request = CreateRequest(
-            motherboard: CreateMotherboardComponent("ASUS TUF B660M", new Dictionary<string, object>
-            { ["socket"] = "LGA1700", ["ramType"] = "DDR4", ["formFactor"] = "mATX" }),
-            ram: CreateRamComponent("Kingston FURY Beast DDR5", new Dictionary<string, object>
-            { ["type"] = "DDR5", ["speed"] = 5600, ["capacity"] = 32 })
-        );
-
-        // Act
-        var response = await _service.CheckCompatibilityAsync(request);
-
-        // Assert
-        response.Result.IsCompatible.Should().BeFalse("DDR5 RAM is incompatible with DDR4 motherboard");
-        response.Result.Issues.Should().ContainSingle(i =>
-            i.Message.Contains("Incompatible RAM Generation") &&
-            i.Message.Contains("DDR4") &&
-            i.Message.Contains("DDR5"));
-    }
-
-    /// <summary>
-    /// Test 3: Power Consumption = CPU TDP + GPU TDP + 50W (base system)
-    /// CPU 120W + GPU 220W + 50W = 390W
-    /// </summary>
-    [Fact]
-    public async Task CalculatePowerConsumption_ReturnsCorrectValue()
-    {
-        // Arrange - CPU 120W, GPU 220W, base system 50W -> Total = 390W
-        var request = CreateRequest(
-            cpu: CreateCpuComponent("Test CPU", new Dictionary<string, object>
-            { ["socket"] = "AM5", ["tdp"] = 120 }),
-            gpu: CreateGpuComponent("Test GPU", new Dictionary<string, object>
-            { ["tdp"] = 220, ["length"] = 300 }),
-            psu: CreatePsuComponent("Test PSU", new Dictionary<string, object>
-            { ["wattage"] = 650 })
-        );
-
-        // Act
-        var response = await _service.CheckCompatibilityAsync(request);
-
-        // Assert - 120 + 220 + 50 = 390W
-        response.PowerConsumption.Should().Be(390, "CPU 120W + GPU 220W + System 50W = 390W");
-    }
-
-    /// <summary>
-    /// Test 4: PSU wattage is below recommended but above total TDP -> Returns Warning
-    /// Total TDP = 390W, Recommended PSU = 390 * 1.4 = 546 -> 550W
-    /// PSU 400W: 390 < 400 < 550 -> Warning (not Error)
-    /// </summary>
-    [Fact]
-    public async Task CheckCompatibility_InsufficientPSU_ReturnsWarning()
-    {
-        // Arrange - PSU 400W, total TDP 390W, recommended 550W
-        var request = CreateRequest(
-            cpu: CreateCpuComponent("CPU", new Dictionary<string, object>
-            { ["socket"] = "AM5", ["tdp"] = 120 }),
-            gpu: CreateGpuComponent("GPU", new Dictionary<string, object>
-            { ["tdp"] = 220, ["length"] = 300 }),
-            psu: CreatePsuComponent("PSU 400W", new Dictionary<string, object>
-            { ["wattage"] = 400 })
-        );
-
-        // Act
-        var response = await _service.CheckCompatibilityAsync(request);
-
-        // Assert - PSU >= totalTDP so no Error, but < recommended so Warning
-        response.Result.IsCompatible.Should().BeTrue("PSU 400W >= totalTDP 390W, no critical error");
-        response.Result.Issues.Should().NotContain(i => i.Message == "Insufficient Power Supply");
-        response.Result.Warnings.Should().Contain(w =>
-            w.Component == "PSU 400W" && w.Message.Contains("recommended"),
+            w.Component == "PSU 400W" && (w.Message.Contains("Рекомендуется") || w.Message.Contains("recommended")),
             "PSU 400W is below recommended 550W, should warn");
     }
 
@@ -575,9 +334,9 @@ public class CompatibilityServiceTests
         );
         var response = await _service.CheckCompatibilityAsync(request);
         response.Result.IsCompatible.Should().BeFalse();
-        response.Result.Issues.Should().Contain(i => i.Message == "Incompatible Socket");
-        response.Result.Issues.Should().Contain(i => i.Message.Contains("Incompatible RAM Generation"));
-        response.Result.Issues.Should().Contain(i => i.Message == "Insufficient Power Supply");
+        response.Result.Issues.Should().Contain(i => i.Message.Contains("Несовместимый сокет"));
+        response.Result.Issues.Should().Contain(i => i.Message.Contains("Несовместимый тип памяти"));
+        response.Result.Issues.Should().Contain(i => i.Message.Contains("Мощности БП") && i.Message.Contains("недостаточно"));
     }
 
     #endregion

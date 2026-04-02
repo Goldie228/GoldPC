@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ComponentSlot,
   BuildSummaryPanel,
-  SaveConfigurationModal,
+  PdfExportModal,
   ComponentPickerModal,
 } from '../../components/pc-builder';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
@@ -16,6 +16,7 @@ import {
   PC_BUILDER_SLOTS,
   MAX_RAM_MODULES,
   MAX_STORAGE_MODULES,
+  MAX_FAN_MODULES,
   type PCComponentType,
   type PCBuilderSelectedState,
 } from '../../hooks';
@@ -26,57 +27,75 @@ const icons = {
   cpu: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <rect x="4" y="4" width="16" height="16" rx="2" />
-      <rect x="9" y="9" width="6" height="6" />
-      <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
+      <rect x="9" y="9" width="6" height="6" rx="1" />
+      <path d="M9 1v3M15 1v3M9 20v3M15 20v3" />
+      <path d="M20 9h3M20 14h3M1 9h3M1 14h3" />
     </svg>
   ),
   gpu: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <rect x="2" y="6" width="20" height="12" rx="2" />
-      <path d="M6 10h4v4H6z" />
-      <path d="M14 10h4M14 14h4M18 6V4M6 6V4" />
+      <circle cx="8" cy="12" r="2.5" />
+      <circle cx="16" cy="12" r="2.5" />
+      <path d="M18 6V4M6 6V4" />
+      <path d="M22 9v4" stroke="none" fill="currentColor" opacity="0.5">
+        <animate attributeName="opacity" values="0.3;0.6;0.3" dur="2s" repeatCount="indefinite"/>
+      </path>
     </svg>
   ),
   motherboard: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <rect x="2" y="2" width="20" height="20" rx="2" />
-      <rect x="5" y="5" width="6" height="4" />
-      <rect x="13" y="5" width="4" height="8" />
-      <circle cx="8" cy="14" r="2" />
-      <rect x="5" y="17" width="4" height="3" />
+      <rect x="5" y="5" width="5" height="5" rx="0.5" />
+      <rect x="14" y="5" width="5" height="3" rx="0.5" />
+      <rect x="14" y="10" width="5" height="3" rx="0.5" />
+      <rect x="5" y="12" width="3" height="3" rx="0.5" />
+      <rect x="5" y="17" width="4" height="3" rx="0.5" />
+      <rect x="14" y="15" width="5" height="5" rx="0.5" />
+      <line x1="15" y1="17" x2="18" y2="17" strokeWidth="0.5" />
+      <line x1="15" y1="18.5" x2="18" y2="18.5" strokeWidth="0.5" />
     </svg>
   ),
   ram: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <rect x="2" y="8" width="20" height="8" rx="1" />
-      <path d="M6 8V6M10 8V6M14 8V6M18 8V6" />
-      <rect x="5" y="11" width="3" height="2" />
-      <rect x="10" y="11" width="3" height="2" />
-      <rect x="15" y="11" width="3" height="2" />
+      <line x1="6" y1="8" x2="6" y2="6" />
+      <line x1="10" y1="8" x2="10" y2="6" />
+      <line x1="14" y1="8" x2="14" y2="6" />
+      <line x1="18" y1="8" x2="18" y2="6" />
+      <rect x="4" y="10" width="4" height="3" rx="0.5" />
+      <rect x="9" y="10" width="4" height="3" rx="0.5" />
+      <rect x="14" y="10" width="4" height="3" rx="0.5" />
+      <line x1="4" y1="15" x2="20" y2="15" strokeWidth="1" />
     </svg>
   ),
   storage: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="3" y="6" width="18" height="12" rx="2" />
-      <circle cx="7" cy="12" r="1" />
-      <circle cx="12" cy="12" r="1" />
-      <circle cx="17" cy="12" r="1" />
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <circle cx="7" cy="10" r="2.5" />
+      <circle cx="10" cy="10" r="0.5" fill="currentColor" />
+      <rect x="16" y="7" width="3" height="6" rx="0.5" />
+      <line x1="16" y1="16" x2="20" y2="16" />
+      <line x1="17" y1="14.5" x2="19" y2="14.5" />
     </svg>
   ),
   psu: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="3" y="4" width="18" height="16" rx="2" />
-      <circle cx="8" cy="10" r="2" />
-      <path d="M7 15h2M12 15h2M17 15h2M14 8h4M16 6v4" />
+      <rect x="2" y="4" width="20" height="14" rx="2" />
+      <circle cx="9" cy="11" r="3" />
+      <path d="M9 11l3 3" />
+      <path d="M16 8v2M18 8v2M20 8v2" />
+      <line x1="7" y1="21" x2="11" y2="21" />
+      <line x1="9" y1="18" x2="9" y2="21" />
     </svg>
   ),
   case: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
       <rect x="4" y="2" width="16" height="20" rx="2" />
-      <rect x="7" y="5" width="10" height="6" rx="1" />
-      <circle cx="8" cy="15" r="1" />
-      <circle cx="12" cy="15" r="1" />
-      <path d="M15 14h2v2h-2z" />
+      <rect x="7" y="5" width="10" height="5" rx="1" />
+      <circle cx="9.5" cy="14.5" r="1.2" />
+      <circle cx="14.5" cy="14.5" r="1.2" />
+      <rect x="8" y="18" width="8" height="2" rx="0.5" />
     </svg>
   ),
   cooling: (
@@ -84,6 +103,47 @@ const icons = {
       <circle cx="12" cy="12" r="10" />
       <circle cx="12" cy="12" r="3" />
       <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+      <path d="M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+    </svg>
+  ),
+  fan: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M15 12c.1-2.3 1.5-4.3 3.6-5.2" />
+      <path d="M9 12c-.1 2.3-1.5 4.3-3.6 5.2" />
+      <path d="M12 15c2.3.1 4.3 1.5 5.2 3.6" />
+      <path d="M12 9c-2.3-.1-4.3-1.5-5.2-3.6" />
+      <circle cx="12" cy="12" r="10" />
+    </svg>
+  ),
+  monitor: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="2" y="3" width="20" height="14" rx="2" />
+      <line x1="8" y1="21" x2="16" y2="21" />
+      <line x1="12" y1="17" x2="12" y2="21" />
+    </svg>
+  ),
+  keyboard: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <line x1="6" y1="10" x2="6" y2="10" strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="10" y1="10" x2="10" y2="10" strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="14" y1="10" x2="14" y2="10" strokeWidth="2.5" strokeLinecap="round" />
+      <line x1="18" y1="10" x2="18" y2="10" strokeWidth="2.5" strokeLinecap="round" />
+      <rect x="6" y="14" width="12" height="1.5" rx="0.5" />
+    </svg>
+  ),
+  mouse: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="7" y="2" width="10" height="20" rx="5" />
+      <line x1="12" y1="6" x2="12" y2="10" />
+    </svg>
+  ),
+  headphones: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+      <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z" />
+      <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
     </svg>
   ),
 };
@@ -97,6 +157,28 @@ const componentTypeToCategory: Record<PCComponentType, ProductCategory> = {
   psu: 'psu',
   case: 'case',
   cooling: 'cooling',
+  fan: 'cooling',
+  monitor: 'monitor',
+  keyboard: 'keyboard',
+  mouse: 'mouse',
+  headphones: 'headphones',
+};
+
+/** Тип фильтра в модалке выбора — для вентиляторов vs ОЖС отдельный */
+const componentTypeSlugFilter: Record<PCComponentType, string | null> = {
+  cpu: null,
+  gpu: null,
+  motherboard: null,
+  ram: null,
+  storage: null,
+  psu: null,
+  case: null,
+  cooling: null,
+  fan: 'вентилятор для корпуса',
+  monitor: null,
+  keyboard: null,
+  mouse: null,
+  headphones: null,
 };
 
 // Short descriptions for each component type slot (shown as tooltip on hover)
@@ -111,7 +193,8 @@ function getIcon(type: PCComponentType): React.ReactNode {
 type SlotRow =
   | { kind: 'single'; key: PCComponentType; label: string; anim: number }
   | { kind: 'ram'; rowIndex: number; label: string; anim: number }
-  | { kind: 'storage'; rowIndex: number; label: string; anim: number };
+  | { kind: 'storage'; rowIndex: number; label: string; anim: number }
+  | { kind: 'fan'; rowIndex: number; label: string; anim: number };
 
 function buildSlotRows(state: PCBuilderSelectedState): SlotRow[] {
   const rows: SlotRow[] = [];
@@ -149,6 +232,19 @@ function buildSlotRows(state: PCBuilderSelectedState): SlotRow[] {
     });
   }
 
+  const fanCount =
+    state.fan.length >= MAX_FAN_MODULES
+      ? MAX_FAN_MODULES
+      : state.fan.length + 1;
+  for (let i = 0; i < fanCount; i++) {
+    rows.push({
+      kind: 'fan',
+      rowIndex: i,
+      label: fanCount > 1 ? `Вентилятор (${i + 1})` : 'Вентилятор',
+      anim: anim++,
+    });
+  }
+
   const tail: { key: PCComponentType; label: string }[] = [
     { key: 'psu', label: 'Блок питания' },
     { key: 'case', label: 'Корпус' },
@@ -179,13 +275,14 @@ export function PCBuilderPage() {
     estimatedFps,
     bottleneck,
     isApiLoading,
+    apiFpsData,
     addToCart,
   } = usePCBuilder();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<PCComponentType | null>(null);
   const [multiIndex, setMultiIndex] = useState<number | undefined>(undefined);
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
 
   const slotRows = useMemo(() => buildSlotRows(selectedComponents), [selectedComponents]);
 
@@ -199,9 +296,38 @@ export function PCBuilderPage() {
     removeComponent(type, idx);
   };
 
+  const handleChangeQuantity = (
+    slotType: PCComponentType,
+    rowIndex: number,
+    delta: number,
+  ) => {
+    if (delta < 0) {
+      // Remove — remove from the end (highest index)
+      if (slotType === 'ram' && selectedComponents.ram.length > 0) {
+        removeComponent(slotType, selectedComponents.ram.length - 1);
+      } else if (slotType === 'storage' && selectedComponents.storage.length > 0) {
+        removeComponent(slotType, selectedComponents.storage.length - 1);
+      } else if (slotType === 'fan' && selectedComponents.fan.length > 0) {
+        removeComponent(slotType, selectedComponents.fan.length - 1);
+      }
+    } else {
+      // Add a copy of the module at rowIndex to the next slot
+      if (slotType === 'ram' && rowIndex < selectedComponents.ram.length) {
+        const product = selectedComponents.ram[rowIndex]?.product;
+        if (product) selectComponent(slotType, product);
+      } else if (slotType === 'storage' && rowIndex < selectedComponents.storage.length) {
+        const product = selectedComponents.storage[rowIndex]?.product;
+        if (product) selectComponent(slotType, product);
+      } else if (slotType === 'fan' && rowIndex < selectedComponents.fan.length) {
+        const product = selectedComponents.fan[rowIndex]?.product;
+        if (product) selectComponent(slotType, product);
+      }
+    }
+  };
+
   const handleProductSelect = (product: Product) => {
     if (!selectedSlot) return;
-    if (selectedSlot === 'ram' || selectedSlot === 'storage') {
+    if (selectedSlot === 'ram' || selectedSlot === 'storage' || selectedSlot === 'fan') {
       selectComponent(selectedSlot, product, { multiIndex });
     } else {
       selectComponent(selectedSlot, product);
@@ -253,6 +379,31 @@ export function PCBuilderPage() {
         if (specs.wattage) result.push(`${specs.wattage}W`);
         if (specs.efficiency) result.push(specs.efficiency as string);
         break;
+      case 'fan':
+        if (specs.type) result.push(specs.type as string);
+        if (specs.fanSize) result.push(`${specs.fanSize}mm`);
+        if (specs.rpm) result.push(`${specs.rpm} RPM`);
+        break;
+      case 'case':
+        if (specs.formFactor) result.push(specs.formFactor as string);
+        break;
+      case 'monitor':
+        if (specs.sizeInch) result.push(`${specs.sizeInch}"`);
+        if (specs.resolution) result.push(specs.resolution as string);
+        if (specs.refreshRate) result.push(`${specs.refreshRate}Hz`);
+        break;
+      case 'keyboard':
+        if (specs.layout) result.push(specs.layout as string);
+        if (specs.type) result.push(specs.type as string);
+        break;
+      case 'mouse':
+        if (specs.dpi) result.push(`${specs.dpi} DPI`);
+        if (specs.type) result.push(specs.type as string);
+        break;
+      case 'headphones':
+        if (specs.type) result.push(specs.type as string);
+        if (specs.connectivity) result.push(specs.connectivity as string);
+        break;
       default:
         break;
     }
@@ -278,7 +429,7 @@ export function PCBuilderPage() {
 
   const currentSlotLabel = useMemo(() => {
     if (!selectedSlot) return '';
-    if (selectedSlot === 'ram' || selectedSlot === 'storage') {
+    if (selectedSlot === 'ram' || selectedSlot === 'storage' || selectedSlot === 'fan') {
       const n = (multiIndex ?? 0) + 1;
       return `${PC_BUILDER_SLOTS.find((s) => s.key === selectedSlot)?.label ?? ''} (${n})`;
     }
@@ -293,7 +444,10 @@ export function PCBuilderPage() {
     if (selectedSlot === 'storage' && multiIndex !== undefined) {
       return selectedComponents.storage[multiIndex]?.product ?? null;
     }
-    if (selectedSlot !== 'ram' && selectedSlot !== 'storage') {
+    if (selectedSlot === 'fan' && multiIndex !== undefined) {
+      return (selectedComponents as any).fan[multiIndex]?.product ?? null;
+    }
+    if (selectedSlot !== 'ram' && selectedSlot !== 'storage' && selectedSlot !== 'fan') {
       return selectedComponents[selectedSlot]?.product ?? null;
     }
     return null;
@@ -413,31 +567,104 @@ export function PCBuilderPage() {
                         imageUrl={product?.mainImage?.url}
                         isPriority={false}
                         description={slotDescriptions.ram}
+                        quantity={
+                          row.rowIndex === 0 ? selectedComponents.ram.length : undefined
+                        }
+                        maxQuantity={MAX_RAM_MODULES}
+                        onChangeQuantity={
+                          row.rowIndex === 0
+                            ? (delta) => handleChangeQuantity('ram', row.rowIndex, delta)
+                            : undefined
+                        }
                       />
                     );
                   }
 
-                  const product = selectedComponents.storage[row.rowIndex]?.product;
-                  const slotState = getSlotState('storage', row.rowIndex);
+                  if (row.kind === 'storage') {
+                    const product = selectedComponents.storage[row.rowIndex]?.product;
+                    const slotState = getSlotState('storage', row.rowIndex);
+                    const isEmpty = slotState.state === 'empty';
+                    return (
+                      <ComponentSlot
+                        key={`storage-${row.rowIndex}`}
+                        index={row.anim}
+                        type={row.label}
+                        icon={getIcon('storage')}
+                        name={isEmpty ? 'Выберите компонент' : product?.name || ''}
+                        price={product?.price ?? null}
+                        state={slotState.state}
+                        specs={getDisplaySpecs('storage', product)}
+                        warning={slotState.warning}
+                        onSelect={() => openPicker('storage', row.rowIndex)}
+                        onClear={
+                          !isEmpty ? () => handleRemove('storage', row.rowIndex) : undefined
+                        }
+                        imageUrl={product?.mainImage?.url}
+                        isPriority={false}
+                        description={slotDescriptions.storage}
+                      />
+                    );
+                  }
+
+                  // fan rows
+                  const fans = (selectedComponents as any).fan || [];
+                  const product = fans[row.rowIndex]?.product;
+                  const slotState = getSlotState('fan', row.rowIndex);
                   const isEmpty = slotState.state === 'empty';
                   return (
                     <ComponentSlot
-                      key={`storage-${row.rowIndex}`}
+                      key={`fan-${row.rowIndex}`}
                       index={row.anim}
                       type={row.label}
-                      icon={getIcon('storage')}
+                      icon={getIcon('fan')}
                       name={isEmpty ? 'Выберите компонент' : product?.name || ''}
                       price={product?.price ?? null}
                       state={slotState.state}
-                      specs={getDisplaySpecs('storage', product)}
+                      specs={getDisplaySpecs('fan', product)}
                       warning={slotState.warning}
-                      onSelect={() => openPicker('storage', row.rowIndex)}
+                      onSelect={() => openPicker('fan', row.rowIndex)}
                       onClear={
-                        !isEmpty ? () => handleRemove('storage', row.rowIndex) : undefined
+                        !isEmpty ? () => handleRemove('fan', row.rowIndex) : undefined
                       }
                       imageUrl={product?.mainImage?.url}
                       isPriority={false}
-                      description={slotDescriptions.storage}
+                      description={slotDescriptions.fan}
+                      quantity={
+                        row.rowIndex === 0 ? (selectedComponents as any).fan.length : undefined
+                      }
+                      maxQuantity={MAX_FAN_MODULES}
+                      onChangeQuantity={
+                        row.rowIndex === 0
+                          ? (delta) => handleChangeQuantity('fan', row.rowIndex, delta)
+                          : undefined
+                      }
+                    />
+                  );
+                })}
+              </div>
+
+              {/* Периферия */}
+              <div className="pc-builder__section-header" style={{ marginTop: '16px' }}>
+                <h2 className="pc-builder__section-title" style={{ fontSize: '1.5rem' }}>Периферия</h2>
+              </div>
+              <div className="pc-builder__slots">
+                {(['monitor', 'keyboard', 'mouse', 'headphones'] as const).map((key, idx) => {
+                  const product = selectedComponents[key]?.product;
+                  const slotState = getSlotState(key);
+                  return (
+                    <ComponentSlot
+                      key={key}
+                      type={PC_BUILDER_SLOTS.find((s) => s.key === key)?.label ?? key}
+                      icon={getIcon(key)}
+                      name={slotState.state === 'empty' ? 'Выберите устройство' : product?.name || ''}
+                      price={product?.price ?? null}
+                      state={slotState.state}
+                      specs={getDisplaySpecs(key, product)}
+                      onSelect={() => openPicker(key)}
+                      onClear={slotState.state === 'selected' ? () => handleRemove(key) : undefined}
+                      imageUrl={product?.mainImage?.url}
+                      description={slotDescriptions[key]}
+                      index={slotRows.length + idx}
                     />
                   );
                 })}
@@ -454,9 +681,11 @@ export function PCBuilderPage() {
                 isCompatible={isCompatible}
                 selectedCount={selectedCount}
                 totalCount={totalCount}
+                apiFpsData={apiFpsData}
                 onAddToCart={addToCart}
-                onSave={() => setSaveModalOpen(true)}
+                onSave={() => setPdfModalOpen(true)}
                 onCheckout={handleCheckout}
+                onExportPdf={() => setPdfModalOpen(true)}
               />
             </div>
           </div>
@@ -475,24 +704,27 @@ export function PCBuilderPage() {
           buildContext={selectedComponents}
           onConfirm={handleProductSelect}
           onRemoveCurrent={() => {
-            if (selectedSlot === 'ram' || selectedSlot === 'storage') {
+            if (selectedSlot === 'ram' || selectedSlot === 'storage' || selectedSlot === 'fan') {
               handleRemove(selectedSlot, multiIndex);
             } else {
               handleRemove(selectedSlot);
             }
           }}
           getDisplaySpecs={getDisplaySpecs}
+          nameFilter={componentTypeSlugFilter[selectedSlot] ?? undefined}
+          selectedCount={selectedCount}
+          totalCount={totalCount}
         />
       )}
 
-      <SaveConfigurationModal
-        isOpen={saveModalOpen}
-        onClose={() => setSaveModalOpen(false)}
+      <PdfExportModal
+        isOpen={pdfModalOpen}
+        onClose={() => setPdfModalOpen(false)}
         selectedComponents={selectedComponents}
         totalPrice={totalPrice}
+        powerConsumption={powerConsumption}
+        recommendedPsu={recommendedPsu}
         isCompatible={isCompatible}
-        selectedCount={selectedCount}
-        totalCount={totalCount}
         compatibilityErrors={compatibility.errors}
         compatibilityWarnings={compatibility.warnings}
       />

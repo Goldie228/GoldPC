@@ -7,9 +7,8 @@
 .bsp {
   background: var(--bg-card, #18181b);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: var(--radius-lg, 12px);
   padding: 24px;
-  position: sticky;
-  top: 80px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -53,57 +52,6 @@
   font-family: var(--font-sans);
   font-size: 0.8rem;
   white-space: nowrap;
-}
-
-/* ===== Previews (CPU/GPU) — как ProductCard: белый скруглённый квадрат за картинкой ===== */
-.bsp__previews {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-
-.bsp__preview-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.bsp__preview-img-wrap {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  padding: 16px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #ffffff;
-}
-
-.bsp__preview-img {
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  background: transparent !important;
-}
-
-.bsp__preview-icon {
-  width: 40px;
-  height: 40px;
-  color: var(--fg-dim, #52525b);
-}
-
-.bsp__preview-label {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--fg-dim, #52525b);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
 }
 
 /* ===== Divider ===== */
@@ -191,7 +139,6 @@
   color: var(--fg, #fafafa);
 }
 
-
 .bsp__power-info--ok {
   color: var(--accent, #d4a574);
 }
@@ -270,12 +217,24 @@
   font-size: 0.85rem;
 }
 
-.bsp__score-value.performance-none { color: var(--fg-dim, #52525b); }
-.bsp__score-value.performance-extreme { color: #f0d4a8; }
-.bsp__score-value.performance-high { color: var(--accent, #d4a574); }
-.bsp__score-value.performance-medium { color: #c49a6c; }
-.bsp__score-value.performance-entry { color: #a08060; }
-.bsp__score-value.performance-basic { color: #8a7358; }
+.bsp__score-value.performance-none {
+  color: var(--fg-dim, #52525b);
+}
+.bsp__score-value.performance-extreme {
+  color: #f0d4a8;
+}
+.bsp__score-value.performance-high {
+  color: var(--accent, #d4a574);
+}
+.bsp__score-value.performance-medium {
+  color: #c49a6c;
+}
+.bsp__score-value.performance-entry {
+  color: #a08060;
+}
+.bsp__score-value.performance-basic {
+  color: #8a7358;
+}
 
 .bsp__score-row--overall {
   margin-top: 4px;
@@ -306,6 +265,65 @@
   font-weight: 500;
 }
 
+/* ===== API FPS Section ===== */
+.bsp__api-fps {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bsp__api-fps-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--fg-dim, #52525b);
+  font-weight: 500;
+}
+
+.bsp__api-fps-bottleneck {
+  font-size: 0.68rem;
+  color: var(--fg-muted, #71717a);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-radius: var(--radius-sm, 6px);
+  padding: 4px 8px;
+}
+
+.bsp__api-fps-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.7rem;
+  table-layout: fixed;
+}
+
+.bsp__api-fps-table th {
+  text-align: left;
+  color: var(--fg-muted, #71717a);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+}
+
+.bsp__api-fps-table td {
+  padding: 3px 6px;
+  color: var(--fg, #fafafa);
+}
+
+.bsp__api-fps-table td:first-child {
+  color: var(--fg-muted, #71717a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bsp__api-fps-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
 /* ===== Total ===== */
 .bsp__total {
   display: flex;
@@ -330,8 +348,36 @@
 .bsp__actions {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding-top: 4px;
+}
+
+.bsp__actions-row {
+  display: flex;
   gap: 10px;
   width: 100%;
+}
+
+.bsp__actions-row .bsp__btn {
+  flex: 1;
+}
+
+.bsp__btn--export {
+  background: rgba(212, 165, 116, 0.08);
+  border-color: rgba(212, 165, 116, 0.25);
+  color: var(--accent, #d4a574);
+}
+
+.bsp__btn--export:hover:not(:disabled) {
+  background: rgba(212, 165, 116, 0.15);
+  border-color: rgba(212, 165, 116, 0.4);
+}
+
+.bsp__btn--export svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .bsp__btn {
@@ -346,7 +392,11 @@
   font-weight: 600;
   border-radius: var(--radius-md, 8px);
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
   border: 1px solid transparent;
 }
 

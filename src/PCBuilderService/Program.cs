@@ -45,6 +45,14 @@ builder.Services.AddSingleton(sp =>
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
 
+// Регистрация сервиса расчёта FPS (singleton, загружает benchmarks.json один раз)
+var fpsBenchmarksPath = Path.Combine(builder.Environment.ContentRootPath, "Data", "fps-benchmarks.json");
+builder.Services.AddSingleton<IFpsCalculationService>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<FpsCalculationService>>();
+    return new FpsCalculationService(fpsBenchmarksPath, logger);
+});
+
 var catalogServiceGrpcUrl = builder.Configuration["CatalogService:GrpcUrl"] ?? "http://localhost:5000";
 builder.Services.AddGrpcClient<Shared.Protos.CatalogGrpc.CatalogGrpcClient>(o =>
 {

@@ -140,7 +140,66 @@
   color: var(--fg-dim, #52525b); text-transform: uppercase; letter-spacing: 0.1em;
   line-height: 1.2;
 }
-/* ===== ДЕЙСТВИЯ: «Снять» + «Изменить» — одна группа ===== */
+
+/* ===== QUANTITY SELECTOR ===== */
+.component-slot__qty {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 8px;
+  width: fit-content;
+  border: 1px solid rgba(212, 165, 116, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(18, 18, 20, 0.8);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(212, 165, 116, 0.08);
+}
+.component-slot__qty-btn {
+  width: 34px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #c9a87e;
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+.component-slot__qty-btn:hover:not(:disabled) {
+  background: rgba(212, 165, 116, 0.12);
+  color: #e8c89e;
+}
+.component-slot__qty-btn:active:not(:disabled) {
+  background: rgba(212, 165, 116, 0.22);
+  color: #f0d4a8;
+  transform: scale(0.95);
+}
+.component-slot__qty-btn:disabled {
+  color: #3f3830;
+  cursor: not-allowed;
+}
+.component-slot__qty-value {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 30px;
+  padding: 0 6px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #d4a574;
+  background: rgba(212, 165, 116, 0.06);
+  border-left: 1px solid rgba(212, 165, 116, 0.12);
+  border-right: 1px solid rgba(212, 165, 116, 0.12);
+}
+
+/* Old warning (backward compat) ===== */
 .component-slot__actions {
   display: inline-flex;
   align-items: stretch;

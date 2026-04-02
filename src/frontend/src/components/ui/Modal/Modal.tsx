@@ -140,8 +140,8 @@ export function Modal({
         <div className="modal__header">
           <h3 id="modal-title" className="modal__title">{title}</h3>
           {showCloseButton && (
-            <button 
-              className="modal__close" 
+            <button
+              className="modal__close"
               onClick={onClose}
               aria-label="Закрыть"
             >

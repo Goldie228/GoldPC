@@ -6,3 +6,5 @@ export { SaveConfigurationModal } from './SaveConfigurationModal';
 export type { SaveConfigurationModalProps } from './SaveConfigurationModal';
 export { ComponentPickerModal } from './ComponentPickerModal/ComponentPickerModal';
 export type { ComponentPickerModalProps } from './ComponentPickerModal/ComponentPickerModal';
+export { PdfExportModal } from './PdfExportModal/PdfExportModal';
+export type { PdfExportModalProps } from './PdfExportModal/PdfExportModal';

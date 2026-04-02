@@ -34,8 +34,8 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
 
 describe('compatibilityUtils - performanceCalculator', () => {
   describe('calculatePowerConsumption', () => {
-    it('returns 0 for empty components', () => {
-      expect(calculatePowerConsumption({})).toBe(0);
+    it('returns 50 for empty components', () => {
+      expect(calculatePowerConsumption({})).toBe(50);
     });
 
     it('sums TDP for CPU and GPU', () => {
@@ -43,7 +43,7 @@ describe('compatibilityUtils - performanceCalculator', () => {
         cpu: makeProduct({ specifications: { tdp: 125 } }),
         gpu: makeProduct({ specifications: { tdp: 200 } }),
       };
-      expect(calculatePowerConsumption(components)).toBe(325);
+      expect(calculatePowerConsumption(components)).toBe(375);
     });
 
     it('uses default TDP when not specified', () => {
@@ -51,7 +51,7 @@ describe('compatibilityUtils - performanceCalculator', () => {
         cpu: makeProduct({ specifications: {} }),
         gpu: makeProduct({ specifications: {} }),
       };
-      expect(calculatePowerConsumption(components)).toBe(215);
+      expect(calculatePowerConsumption(components)).toBe(265);
     });
 
     it('adds fixed wattage for RAM, storage, cooling, motherboard', () => {
@@ -62,13 +62,13 @@ describe('compatibilityUtils - performanceCalculator', () => {
         cooling: makeProduct({ specifications: {} }),
         motherboard: makeProduct({ specifications: {} }),
       };
-      expect(calculatePowerConsumption(components)).toBe(175);
+      expect(calculatePowerConsumption(components)).toBe(165);
     });
   });
 
   describe('calculateRecommendedPSU', () => {
-    it('returns 0 for empty', () => {
-      expect(calculateRecommendedPSU({})).toBe(0);
+    it('returns 100 for empty', () => {
+      expect(calculateRecommendedPSU({})).toBe(100);
     });
 
     it('returns 130% rounded up', () => {
@@ -76,7 +76,7 @@ describe('compatibilityUtils - performanceCalculator', () => {
         cpu: makeProduct({ specifications: { tdp: 125 } }),
         gpu: makeProduct({ specifications: { tdp: 200 } }),
       };
-      expect(calculateRecommendedPSU(components)).toBe(423);
+      expect(calculateRecommendedPSU(components)).toBe(550);
     });
   });
 
@@ -90,7 +90,11 @@ describe('compatibilityUtils - performanceCalculator', () => {
     it('detects CPU socket mismatch', () => {
       const components: ComponentMap = {
         cpu: makeProduct({ name: 'Intel CPU', specifications: { socket: 'LGA1700' } }),
-        motherboard: makeProduct({ name: 'AM5 Board', category: 'motherboard', specifications: { socket: 'AM5' } }),
+        motherboard: makeProduct({
+          name: 'AM5 Board',
+          category: 'motherboard',
+          specifications: { socket: 'AM5' },
+        }),
       };
       const result = checkCompatibility(components);
       expect(result.isCompatible).toBe(false);
@@ -113,8 +117,8 @@ describe('compatibilityUtils - performanceCalculator', () => {
         gpu: makeProduct({ specifications: { tdp: 200 } }),
       };
       const result = checkCompatibility(components);
-      expect(result.powerConsumption).toBe(300);
-      expect(result.recommendedPSU).toBe(Math.ceil(300 * 1.3));
+      expect(result.powerConsumption).toBe(350);
+      expect(result.recommendedPSU).toBe(Math.ceil((350 * 1.4) / 50) * 50);
     });
   });
 
@@ -190,7 +194,10 @@ describe('compatibilityUtils - performanceCalculator', () => {
 
   describe('extractSupportedSockets', () => {
     it('extracts array', () => {
-      expect(extractSupportedSockets({ supportedSockets: ['LGA1700', 'AM5'] })).toEqual(['LGA1700', 'AM5']);
+      expect(extractSupportedSockets({ supportedSockets: ['LGA1700', 'AM5'] })).toEqual([
+        'LGA1700',
+        'AM5',
+      ]);
     });
 
     it('returns empty for undefined', () => {

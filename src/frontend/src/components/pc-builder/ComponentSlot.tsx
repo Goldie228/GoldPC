@@ -1,6 +1,6 @@
 /**
  * ComponentSlot - Slot for PC Builder component selection
- * 
+ *
  * Features:
  * - Dark background with gold/gray/red borders (3 states)
  * - 64x64 product thumbnail in white frame
@@ -43,6 +43,12 @@ export interface ComponentSlotProps {
   isPriority?: boolean;
   /** Short description/hint for the component type (e.g., "Мозг компьютера. Отвечает за все вычисления.") */
   description?: string;
+  /** Current quantity for multi-slot types (RAM, fan, storage) */
+  quantity?: number;
+  /** Max quantity for this multi-slot type */
+  maxQuantity?: number;
+  /** Change quantity: negative = remove, positive = add more */
+  onChangeQuantity?: (delta: number) => void;
 }
 
 /** Inline StatusBadge for compatibility errors */
@@ -75,6 +81,10 @@ export function ComponentSlot({
   index = 0,
   imageUrl,
   isPriority = false,
+  description,
+  quantity,
+  maxQuantity,
+  onChangeQuantity,
 }: ComponentSlotProps) {
   const getButtonText = () => {
     if (buttonText) return buttonText;
@@ -90,36 +100,31 @@ export function ComponentSlot({
   };
 
   return (
-    <motion.div title={description} 
+    <motion.div
+      title={description}
       className={`component-slot component-slot--${state}${isPriority ? ' component-slot--priority' : ''}`}
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ 
-        duration: 0.3, 
+      transition={{
+        duration: 0.3,
         delay: index * 0.08,
-        ease: [0.22, 1, 0.36, 1] 
+        ease: [0.22, 1, 0.36, 1],
       }}
       layout
     >
-      {description && (
-        <div className="component-slot__tooltip">{description}</div>
-      )}
+      {description && <div className="component-slot__tooltip">{description}</div>}
       <div className="component-slot__inner">
         {/* Icon or Thumbnail */}
-        <motion.div 
+        <motion.div
           className="component-slot__icon"
-          animate={{ 
+          animate={{
             scale: state === 'selected' ? 1.12 : 1,
           }}
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
         >
           {state !== 'empty' && imageUrl ? (
             <div className="component-slot__thumbnail">
-              <img 
-                src={imageUrl} 
-                alt={name}
-                loading="lazy"
-              />
+              <img src={imageUrl} alt={name} loading="lazy" />
             </div>
           ) : (
             icon
@@ -131,7 +136,29 @@ export function ComponentSlot({
           <div className="component-slot__type-row">
             <span className="component-slot__type">{type}</span>
           </div>
-          <motion.div 
+          {quantity !== undefined && maxQuantity && onChangeQuantity && quantity > 0 && (
+            <div className="component-slot__qty">
+              <button
+                type="button"
+                className="component-slot__qty-btn"
+                onClick={(e) => { e.stopPropagation(); onChangeQuantity(quantity > 1 ? -1 : -999); }}
+                aria-label="Уменьшить количество"
+              >
+                −
+              </button>
+              <span className="component-slot__qty-value">{quantity}</span>
+              <button
+                type="button"
+                className="component-slot__qty-btn"
+                onClick={(e) => { e.stopPropagation(); if (quantity < maxQuantity) onChangeQuantity(1); }}
+                aria-label="Увеличить количество"
+                disabled={quantity >= maxQuantity}
+              >
+                +
+              </button>
+            </div>
+          )}
+          <motion.div
             key={name}
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -141,26 +168,26 @@ export function ComponentSlot({
             {name}
           </motion.div>
           {specs && specs.length > 0 && (
-            <motion.div 
+            <motion.div
               className="component-slot__specs"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.15, duration: 0.3 }}
             >
               {specs.map((spec, i) => (
-                <span key={i} className="component-slot__spec">{spec}</span>
+                <span key={i} className="component-slot__spec">
+                  {spec}
+                </span>
               ))}
             </motion.div>
           )}
           {/* Inline StatusBadge for incompatible state */}
-          {warning && state === 'incompatible' && (
-            <StatusBadge message={warning} />
-          )}
+          {warning && state === 'incompatible' && <StatusBadge message={warning} />}
         </div>
 
         {/* Price */}
         <div className="component-slot__price">
-          <motion.div 
+          <motion.div
             key={price}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -180,7 +207,7 @@ export function ComponentSlot({
             <button
               type="button"
               className="component-slot__clear"
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onClear();
               }}
@@ -188,7 +215,7 @@ export function ComponentSlot({
               Снять
             </button>
           )}
-          <button 
+          <button
             type="button"
             className={`component-slot__btn component-slot__btn--${getButtonVariant()}`}
             onClick={onSelect}

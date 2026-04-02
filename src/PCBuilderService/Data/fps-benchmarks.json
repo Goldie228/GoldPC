@@ -1,0 +1,148 @@
+{
+  "version": "1.0.0",
+  "description": "GPU/CPU performance tiers and game benchmark multipliers for FPS estimation",
+  "gpuTiers": [
+    {"pattern": "rtx\\s*5090", "tier": 950, "relative3dmark": 45000},
+    {"pattern": "rtx\\s*5080", "tier": 870, "relative3dmark": 38000},
+    {"pattern": "rtx\\s*5070\\s*ti", "tier": 840, "relative3dmark": 35000},
+    {"pattern": "rtx\\s*5070", "tier": 800, "relative3dmark": 32000},
+    {"pattern": "rtx\\s*5060\\s*ti", "tier": 680, "relative3dmark": 26000},
+    {"pattern": "rtx\\s*5060", "tier": 620, "relative3dmark": 23000},
+    {"pattern": "rtx\\s*4090", "tier": 920, "relative3dmark": 42000},
+    {"pattern": "rtx\\s*4080\\s*super", "tier": 840, "relative3dmark": 35000},
+    {"pattern": "rtx\\s*4080", "tier": 800, "relative3dmark": 32000},
+    {"pattern": "rtx\\s*4070\\s*ti\\s*super", "tier": 720, "relative3dmark": 28000},
+    {"pattern": "rtx\\s*4070\\s*t[i\u00ed]", "tier": 680, "relative3dmark": 26000},
+    {"pattern": "rtx\\s*4070\\s*super", "tier": 660, "relative3dmark": 25000},
+    {"pattern": "rtx\\s*4070", "tier": 600, "relative3dmark": 22000},
+    {"pattern": "rtx\\s*4060\\s*t[i\u00ed]", "tier": 530, "relative3dmark": 20000},
+    {"pattern": "rtx\\s*4060", "tier": 450, "relative3dmark": 16000},
+    {"pattern": "rtx\\s*3090", "tier": 700, "relative3dmark": 27000},
+    {"pattern": "rtx\\s*3080\\s*ti", "tier": 640, "relative3dmark": 24000},
+    {"pattern": "rtx\\s*3080", "tier": 600, "relative3dmark": 22000},
+    {"pattern": "rtx\\s*3070\\s*ti", "tier": 530, "relative3dmark": 20000},
+    {"pattern": "rtx\\s*3070", "tier": 500, "relative3dmark": 18000},
+    {"pattern": "rtx\\s*3060\\s*t[i\u00ed]", "tier": 430, "relative3dmark": 15500},
+    {"pattern": "rtx\\s*3060", "tier": 380, "relative3dmark": 13500},
+    {"pattern": "rtx\\s*3050", "tier": 280, "relative3dmark": 10000},
+    {"pattern": "rtx\\s*2080", "tier": 380, "relative3dmark": 14000},
+    {"pattern": "rtx\\s*2070", "tier": 320, "relative3dmark": 11500},
+    {"pattern": "rtx\\s*2060", "tier": 270, "relative3dmark": 9500},
+    {"pattern": "gtx\\s*1660", "tier": 230, "relative3dmark": 8000},
+    {"pattern": "gtx\\s*1650", "tier": 170, "relative3dmark": 6000},
+    {"pattern": "gtx\\s*1080\\s*ti", "tier": 280, "relative3dmark": 10500},
+    {"pattern": "gtx\\s*1080", "tier": 250, "relative3dmark": 9000},
+    {"pattern": "gtx\\s*1070", "tier": 210, "relative3dmark": 7500},
+    {"pattern": "gtx\\s*1060", "tier": 170, "relative3dmark": 6000},
+    {"pattern": "rx\\s*9070\\s*xt", "tier": 720, "relative3dmark": 28000},
+    {"pattern": "rx\\s*9070", "tier": 650, "relative3dmark": 25000},
+    {"pattern": "rx\\s*7900\\s*x?tx?", "tier": 780, "relative3dmark": 30000},
+    {"pattern": "rx\\s*7900", "tier": 700, "relative3dmark": 27000},
+    {"pattern": "rx\\s*7800\\s*xt", "tier": 620, "relative3dmark": 23000},
+    {"pattern": "rx\\s*7800", "tier": 600, "relative3dmark": 22000},
+    {"pattern": "rx\\s*7700\\s*xt", "tier": 520, "relative3dmark": 19000},
+    {"pattern": "rx\\s*7700", "tier": 500, "relative3dmark": 18000},
+    {"pattern": "rx\\s*7600", "tier": 400, "relative3dmark": 14500},
+    {"pattern": "rx\\s*6950", "tier": 620, "relative3dmark": 23000},
+    {"pattern": "rx\\s*6900", "tier": 580, "relative3dmark": 21000},
+    {"pattern": "rx\\s*6800", "tier": 520, "relative3dmark": 19000},
+    {"pattern": "rx\\s*6700", "tier": 430, "relative3dmark": 15500},
+    {"pattern": "rx\\s*6600", "tier": 330, "relative3dmark": 12000},
+    {"pattern": "rx\\s*5[89]0", "tier": 170, "relative3dmark": 6000},
+    {"pattern": "rx\\s*570", "tier": 140, "relative3dmark": 5000},
+    {"pattern": "arc\\s*a770", "tier": 350, "relative3dmark": 12500},
+    {"pattern": "arc\\s*a750", "tier": 300, "relative3dmark": 10500},
+    {"pattern": "arc\\s*a380", "tier": 150, "relative3dmark": 5200}
+  ],
+  "cpuTiers": [
+    {"pattern": "ryzen\\s*9\\s*(9950x|9900x|9800x3d|7950x3d|7950x|7900x3d|7900x|7900)", "singleCore": 1.15, "multiCore": 1.15},
+    {"pattern": "ryzen\\s*9\\s*(5950x|5900x|5900)", "singleCore": 1.05, "multiCore": 1.10},
+    {"pattern": "ryzen\\s*9\\s*5900x3d", "singleCore": 1.08, "multiCore": 1.08},
+    {"pattern": "ryzen\\s*7\\s*(9700x|9800x3d|7800x3d|7700x|7700)", "singleCore": 1.12, "multiCore": 1.00},
+    {"pattern": "ryzen\\s*7\\s*(5800x3d|5800x|5700x3d|5700x)", "singleCore": 1.02, "multiCore": 0.95},
+    {"pattern": "ryzen\\s*5\\s*(9600x|7600x|7600|7500f)", "singleCore": 1.08, "multiCore": 0.85},
+    {"pattern": "ryzen\\s*5\\s*(5600x3d|5600x|5600|5500|4500)", "singleCore": 0.95, "multiCore": 0.78},
+    {"pattern": "ryzen\\s*5\\s*(4600h|4600g|3600|3600x|2600)", "singleCore": 0.85, "multiCore": 0.70},
+    {"pattern": "ryzen\\s*3\\s*(4100|4300g|3300x|3100|3200g)", "singleCore": 0.78, "multiCore": 0.55},
+    {"pattern": "core\\s*i9\\s*(14900k|14900|13900k|13900|12900k|12900)", "singleCore": 1.12, "multiCore": 1.12},
+    {"pattern": "core\\s*i9\\s*(11900k|11900|10900k|10900)", "singleCore": 1.00, "multiCore": 1.00},
+    {"pattern": "core\\s*i7\\s*(14700k|14700|13700k|13700|12700k|12700)", "singleCore": 1.08, "multiCore": 1.00},
+    {"pattern": "core\\s*i7\\s*(11700k|11700|10700k|10700)", "singleCore": 0.98, "multiCore": 0.90},
+    {"pattern": "core\\s*i5\\s*(14600k|14600|14500|13600k|13600|13500|12600k|12600|12500|12400)", "singleCore": 1.05, "multiCore": 0.85},
+    {"pattern": "core\\s*i5\\s*(11600k|11600|11500|11400|10600k|10600|10500|10400)", "singleCore": 0.92, "multiCore": 0.78},
+    {"pattern": "core\\s*i5\\s*(9600k|9600|9500|9400|8400)", "singleCore": 0.85, "multiCore": 0.70},
+    {"pattern": "core\\s*i3\\s*(14100|13100|12100|10100|9100|8100)", "singleCore": 0.82, "multiCore": 0.55},
+    {"pattern": "pentium|celeron", "singleCore": 0.50, "multiCore": 0.30}
+  ],
+  "games": [
+    {
+      "id": "cs2",
+      "name": "Counter-Strike 2",
+      "base1080p": 350,
+      "gpuWeight": 0.55,
+      "cpuWeight": 0.45
+    },
+    {
+      "id": "gta5",
+      "name": "Grand Theft Auto V",
+      "base1080p": 120,
+      "gpuWeight": 0.60,
+      "cpuWeight": 0.40
+    },
+    {
+      "id": "cyberpunk2077",
+      "name": "Cyberpunk 2077",
+      "base1080p": 90,
+      "gpuWeight": 0.80,
+      "cpuWeight": 0.20
+    },
+    {
+      "id": "fortnite",
+      "name": "Fortnite",
+      "base1080p": 200,
+      "gpuWeight": 0.50,
+      "cpuWeight": 0.50
+    },
+    {
+      "id": "minecraft",
+      "name": "Minecraft (Vanilla)",
+      "base1080p": 400,
+      "gpuWeight": 0.30,
+      "cpuWeight": 0.70
+    },
+    {
+      "id": "valorant",
+      "name": "Valorant",
+      "base1080p": 400,
+      "gpuWeight": 0.40,
+      "cpuWeight": 0.60
+    },
+    {
+      "id": "rdr2",
+      "name": "Red Dead Redemption 2",
+      "base1080p": 80,
+      "gpuWeight": 0.75,
+      "cpuWeight": 0.25
+    },
+    {
+      "id": "bg3",
+      "name": "Baldur's Gate 3",
+      "base1080p": 100,
+      "gpuWeight": 0.65,
+      "cpuWeight": 0.35
+    }
+  ],
+  "resolutionMultipliers": {
+    "1080p": 1.0,
+    "1440p": 0.7,
+    "4k": 0.45
+  },
+  "ramFactor": {
+    "lowMemoryThreshold": 8,
+    "normalMemoryThreshold": 16,
+    "highMemoryThreshold": 32,
+    "lowFactor": 0.85,
+    "normalFactor": 1.0,
+    "highFactor": 1.05
+  }
+}

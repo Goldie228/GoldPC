@@ -4,13 +4,13 @@
 
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, BarChart3, Check, AlertTriangle, Save } from 'lucide-react';
+import { Zap, BarChart3, Check, AlertTriangle, Save, Gamepad2, Printer } from 'lucide-react';
 import {
   calculatePerformance,
   getPerformanceLabel,
   getPerformanceColor,
 } from '../../utils/performanceCalculator';
-import type { Product } from '../../api/types';
+import type { FpsApiResponse } from '../../api/pcBuilderService';
 import type { PCComponentType, PCBuilderSelectedState } from '../../hooks';
 import { PC_BUILDER_SLOTS } from '../../hooks';
 import './BuildSummaryPanel.css';
@@ -24,20 +24,15 @@ export interface BuildSummaryPanelProps {
   selectedCount: number;
   totalCount: number;
   psuWattage?: number;
+  /** Данные с backend FPS API (если CPU+GPU выбраны) */
+  apiFpsData?: FpsApiResponse;
   onAddToCart: () => void;
   onSave: () => void;
   onCheckout: () => void;
+  onExportPdf?: () => void;
 }
 
 const MAX_POWER = 850;
-
-function getImageUrl(product: Product | undefined): string | null {
-  if (!product) return null;
-  const url = (product as { mainImage?: { url?: string } }).mainImage?.url;
-  if (!url) return null;
-  if (url.startsWith('/uploads/')) return url;
-  return url;
-}
 
 export function BuildSummaryPanel({
   selectedComponents,
@@ -48,9 +43,11 @@ export function BuildSummaryPanel({
   selectedCount,
   totalCount,
   psuWattage,
+  apiFpsData,
   onAddToCart,
   onSave,
   onCheckout,
+  onExportPdf,
 }: BuildSummaryPanelProps) {
   const cpu = selectedComponents.cpu?.product ?? null;
   const gpu = selectedComponents.gpu?.product ?? null;
@@ -98,6 +95,20 @@ export function BuildSummaryPanel({
         }
         continue;
       }
+      if (slot.key === 'fan') {
+        if (selectedComponents.fan.length === 0) {
+          items.push({ key: 'fan-empty', label: slot.label, price: null });
+        } else {
+          selectedComponents.fan.forEach((f, i) => {
+            items.push({
+              key: `fan-${i}`,
+              label: selectedComponents.fan.length > 1 ? `Вентилятор (${i + 1})` : slot.label,
+              price: f.product.price,
+            });
+          });
+        }
+        continue;
+      }
       const comp = selectedComponents[slot.key as Exclude<PCComponentType, 'ram' | 'storage'>];
       const p = comp?.product;
       items.push({
@@ -140,43 +151,6 @@ export function BuildSummaryPanel({
           ))}
         </AnimatePresence>
       </ul>
-
-      {(cpu || gpu) && (
-        <div className="bsp__previews">
-          {cpu && (
-            <div className="bsp__preview-card">
-              <div className="bsp__preview-img-wrap">
-                {getImageUrl(cpu) ? (
-                  <img src={getImageUrl(cpu)!} alt={cpu.name} className="bsp__preview-img" loading="lazy" />
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="bsp__preview-icon">
-                    <rect x="4" y="4" width="16" height="16" rx="2" />
-                    <rect x="9" y="9" width="6" height="6" />
-                    <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3" />
-                  </svg>
-                )}
-              </div>
-              <span className="bsp__preview-label">CPU</span>
-            </div>
-          )}
-          {gpu && (
-            <div className="bsp__preview-card">
-              <div className="bsp__preview-img-wrap">
-                {getImageUrl(gpu) ? (
-                  <img src={getImageUrl(gpu)!} alt={gpu.name} className="bsp__preview-img" loading="lazy" />
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="bsp__preview-icon">
-                    <rect x="2" y="6" width="20" height="12" rx="2" />
-                    <path d="M6 10h4v4H6z" />
-                    <path d="M14 10h4M14 14h4M18 6V4M6 6V4" />
-                  </svg>
-                )}
-              </div>
-              <span className="bsp__preview-label">GPU</span>
-            </div>
-          )}
-        </div>
-      )}
 
       <div className="bsp__divider" />
 
@@ -261,6 +235,42 @@ export function BuildSummaryPanel({
               <span className="bsp__fps-value">{performance.estimatedFps.fps4k}</span>
             </div>
 
+            {apiFpsData && apiFpsData.games.length > 0 && (
+              <div className="bsp__api-fps">
+                <div className="bsp__api-fps-header">
+                  <Gamepad2 size={14} strokeWidth={2} aria-hidden />
+                  <span>FPS по {apiFpsData.games.length} играм</span>
+                </div>
+                {apiFpsData.bottleneck && (
+                  <div className="bsp__api-fps-bottleneck">
+                    {apiFpsData.bottleneck === 'cpu-bound' && 'Упор в CPU'}
+                    {apiFpsData.bottleneck === 'gpu-bound' && 'Упор в GPU'}
+                    {apiFpsData.bottleneck === 'balanced' && 'Баланс CPU/GPU'}
+                  </div>
+                )}
+                <table className="bsp__api-fps-table">
+                  <thead>
+                    <tr>
+                      <th>Игра</th>
+                      <th>1080p</th>
+                      <th>1440p</th>
+                      <th>4K</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {apiFpsData.games.map((game) => (
+                      <tr key={game.gameId}>
+                        <td>{game.gameName}</td>
+                        <td>{game.resolutions.resolution1080p} FPS</td>
+                        <td>{game.resolutions.resolution1440p} FPS</td>
+                        <td>{game.resolutions.resolution4k} FPS</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             <div className="bsp__score-row">
               <span className="bsp__score-label">Работа</span>
               <div className="bsp__score-bar-track">
@@ -314,15 +324,28 @@ export function BuildSummaryPanel({
       </div>
 
       <div className="bsp__actions">
-        <button
-          type="button"
-          className="bsp__btn bsp__btn--save"
-          disabled={selectedCount === 0}
-          onClick={onSave}
-        >
-          <Save size={18} strokeWidth={2} aria-hidden />
-          Сохранить
-        </button>
+        <div className="bsp__actions-row">
+          <button
+            type="button"
+            className="bsp__btn bsp__btn--save"
+            disabled={selectedCount === 0}
+            onClick={onSave}
+          >
+            <Save size={18} strokeWidth={2} aria-hidden />
+            Сохранить
+          </button>
+          {onExportPdf && (
+            <button
+              type="button"
+              className="bsp__btn bsp__btn--export"
+              disabled={selectedCount === 0}
+              onClick={onExportPdf}
+            >
+              <Printer size={18} strokeWidth={2} aria-hidden />
+              Печать
+            </button>
+          )}
+        </div>
         <button
           type="button"
           className="bsp__btn bsp__btn--cart"
