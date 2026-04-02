@@ -61,6 +61,71 @@ public class PCConfiguration
 }
 
 /// <summary>
+/// Правило совместимости компонентов (денормализованная таблица)
+/// </summary>
+public class CompatibilityRule
+{
+    /// <summary>Уникальный идентификатор</summary>
+    public Guid Id { get; set; }
+    
+    /// <summary>Тип правила: cpu_motherboard, motherboard_ram, gpu_case, cooler_cpu, motherboard_case</summary>
+    public string RuleType { get; set; } = string.Empty;
+    
+    // === Денормализованные поля компонента 1 ===
+    
+    /// <summary>ID первого компонента</summary>
+    public Guid Component1Id { get; set; }
+    
+    /// <summary>Тип первого компонента: cpu, motherboard, ram, gpu, psu, case, cooler, storage</summary>
+    public string Component1Type { get; set; } = string.Empty;
+    
+    /// <summary>Название первого компонента</summary>
+    public string Component1Name { get; set; } = string.Empty;
+    
+    // === Денормализованные поля компонента 2 ===
+    
+    /// <summary>ID второго компонента</summary>
+    public Guid Component2Id { get; set; }
+    
+    /// <summary>Тип второго компонента</summary>
+    public string Component2Type { get; set; } = string.Empty;
+    
+    /// <summary>Название второго компонента</summary>
+    public string Component2Name { get; set; } = string.Empty;
+    
+    // === Ключевые характеристики для быстрой фильтрации (индексируемые) ===
+    
+    /// <summary>Сокет процессора/материнской платы (AM5, LGA1700)</summary>
+    public string? Socket { get; set; }
+    
+    /// <summary>Тип памяти (DDR4, DDR5)</summary>
+    public string? MemoryType { get; set; }
+    
+    /// <summary>Форм-фактор (ATX, mATX, ITX)</summary>
+    public string? FormFactor { get; set; }
+    
+    // === Результат проверки ===
+    
+    /// <summary>Совместимы ли компоненты</summary>
+    public bool IsCompatible { get; set; }
+    
+    /// <summary>Тип несовместимости: none, socket_mismatch, memory_mismatch, form_factor_mismatch, insufficient_power, dimension_overflow</summary>
+    public string IncompatibilityType { get; set; } = "none";
+    
+    /// <summary>Сошение о несовместимости</summary>
+    public string? Message { get; set; }
+    
+    /// <summary>Рекомендация по исправлению</summary>
+    public string? Suggestion { get; set; }
+    
+    /// <summary>Дата создания</summary>
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    
+    /// <summary>Дата обновления</summary>
+    public DateTime? UpdatedAt { get; set; }
+}
+
+/// <summary>
 /// Результат проверки совместимости
 /// </summary>
 public class CompatibilityResult

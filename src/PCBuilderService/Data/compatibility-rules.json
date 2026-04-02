@@ -1,0 +1,99 @@
+{
+  "version": "1.0.0",
+  "description": "Декларативные правила совместимости компонентов ПК",
+  "socketCompatibility": {
+    "groups": [
+      {
+        "id": "am4", "sockets": ["AM4"],
+        "chipsets": ["A320","B350","X370","B450","X470","B550","A520","X570"],
+        "ramType": "DDR4", "maxRamSpeed": 5100,
+        "biosWarning": { "enabled": true, "message": "Возможно потребуется обновление BIOS для поддержки данного процессора", "probability": "medium" }
+      },
+      {
+        "id": "am5", "sockets": ["AM5"],
+        "chipsets": ["A620","B650","B650E","X670","X670E","B850","X870","X870E"],
+        "ramType": "DDR5", "maxRamSpeed": 8400,
+        "biosWarning": { "enabled": true, "message": "Возможно потребуется обновление BIOS для поддержки данного процессора", "probability": "low" }
+      },
+      {
+        "id": "lga1200", "sockets": ["LGA1200"],
+        "chipsets": ["H410","B460","H470","Z490","H510","B560","H570","Z590","W580"],
+        "ramType": "DDR4", "maxRamSpeed": 5333,
+        "biosWarning": { "enabled": true, "message": "Возможно потребуется обновление BIOS для поддержки данного процессора", "probability": "medium" }
+      },
+      {
+        "id": "lga1700", "sockets": ["LGA1700"],
+        "chipsets": ["H610","B660","H670","Z690","B760","Z790"],
+        "ramType": "DDR5", "ramTypeAlternate": "DDR4", "maxRamSpeed": 7600,
+        "biosWarning": { "enabled": true, "message": "Возможно потребуется обновление BIOS для поддержки процессоров 14-го поколения", "probability": "high", "affectedChipsets": ["H610","B660","H670","Z690"] }
+      },
+      {
+        "id": "lga1851", "sockets": ["LGA1851"],
+        "chipsets": ["Z890","B860","H810"],
+        "ramType": "DDR5", "maxRamSpeed": 9600,
+        "biosWarning": { "enabled": false }
+      }
+    ]
+  },
+  "formFactorCompatibility": {
+    "hierarchy": ["ITX", "mATX", "ATX", "EATX"],
+    "rules": [
+      { "caseFormFactor": "ITX",  "supportedMotherboards": ["ITX"] },
+      { "caseFormFactor": "mATX", "supportedMotherboards": ["ITX","mATX"] },
+      { "caseFormFactor": "ATX",  "supportedMotherboards": ["ITX","mATX","ATX"] },
+      { "caseFormFactor": "EATX", "supportedMotherboards": ["ITX","mATX","ATX","EATX"] }
+    ],
+    "aliases": {
+      "MINI-ITX":"ITX","MINI ITX":"ITX","MITX":"ITX",
+      "MICRO-ATX":"mATX","M-ATX":"mATX","MATX":"mATX","MICRO ATX":"mATX",
+      "STANDARD-ATX":"ATX","STANDARD ATX":"ATX",
+      "EXTENDED-ATX":"EATX","E-ATX":"EATX","EXTENDED ATX":"EATX"
+    }
+  },
+  "ramCompatibility": {
+    "generationMismatch": { "severity": "Error", "messageTemplate": "Несовместимый тип памяти: материнская плата поддерживает {motherboardRamType}, но RAM — {ramType}", "suggestionTemplate": "Выберите память {motherboardRamType} или материнскую плату с поддержкой {ramType}" },
+    "speedLimit": { "severity": "Warning", "messageTemplate": "Скорость памяти {ramSpeed} МГц превышает максимальную поддерживаемую {maxSpeed} МГц", "suggestionTemplate": "Выберите материнскую плату с поддержкой {ramSpeed} МГц" },
+    "slotOverflow": { "severity": "Error", "messageTemplate": "Невозможно установить {modules} модулей памяти в материнскую плату с {slots} слотами", "suggestionTemplate": "Выберите набор памяти с количеством модулей не более {slots}" }
+  },
+  "powerCompatibility": {
+    "baseSystemPower": 50,
+    "psuBufferPercent": 0.4,
+    "psuMinBufferPercent": 0.2,
+    "roundingStep": 50,
+    "insufficient": { "severity": "Error", "messageTemplate": "Мощности БП ({psuWattage} Вт) недостаточно (требуется {requiredWattage} Вт)", "suggestionTemplate": "Выберите БП мощностью не менее {recommendedPsu} Вт" },
+    "tightMargin": { "severity": "Warning", "messageTemplate": "БП ({psuWattage} Вт) имеет небольшой запас. Рекомендуется {recommendedPsu} Вт", "suggestion": "Рекомендуется БП мощностью не менее указанной" }
+  },
+  "dimensionCompatibility": {
+    "gpuLength": {
+      "error": { "severity": "Error", "messageTemplate": "Видеокарта {gpuName} ({gpuLength} мм) не поместится в корпус {caseName} (макс. {maxGpuLength} мм)", "suggestionTemplate": "Выберите видеокарту короче {maxGpuLength} мм или больший корпус" },
+      "warningThresholdMm": 20,
+      "warning": { "severity": "Warning", "messageTemplate": "Видеокарта {gpuName} ({gpuLength} мм) почти касается стенки корпуса (макс. {maxGpuLength} мм)", "suggestion": "Рассмотрите корпус с большим пространством" }
+    },
+    "coolerHeight": {
+      "airCoolerOnly": true,
+      "error": { "severity": "Error", "messageTemplate": "Кулер {coolerName} ({coolerHeight} мм) не поместится в корпус {caseName} (макс. {maxCoolerHeight} мм)", "suggestionTemplate": "Выберите кулер не выше {maxCoolerHeight} мм, СЖО или другой корпус" }
+    }
+  },
+  "coolerCompatibility": {
+    "socketMismatch": { "severity": "Error", "messageTemplate": "Кулер {coolerName} не поддерживает сокет {cpuSocket}", "suggestionTemplate": "Выберите кулер с поддержкой сокета {cpuSocket}" },
+    "tdpInsufficient": { "severity": "Warning", "messageTemplate": "Кулер {coolerName} (макс. TDP {coolerMaxTdp} Вт) может быть недостаточен для {cpuName} (TDP {cpuTdp} Вт)", "suggestionTemplate": "Рекомендуется кулер с TDP не менее {cpuTdp} Вт" }
+  },
+  "bottleneckDetection": {
+    "cpuBound": { "threshold": 2.0, "severity": "Warning", "messageTemplate": "CPU-bound bottleneck: {cpuName} значительно мощнее {gpuName} (ratio: {ratio})", "suggestion": "Рассмотрите более мощную видеокарту" },
+    "gpuBound": { "threshold": 0.5, "severity": "Warning", "messageTemplate": "GPU-bound bottleneck: {gpuName} значительно мощнее {cpuName} (ratio: {ratio})", "suggestion": "Рассмотрите более мощный процессор" },
+    "categories": {
+      "gaming": { "cpuWeight": 0.4, "gpuWeight": 0.6, "idealRatio": { "min": 0.7, "max": 1.5 } },
+      "workstation": { "cpuWeight": 0.7, "gpuWeight": 0.3, "idealRatio": { "min": 1.0, "max": 2.5 } },
+      "office": { "cpuWeight": 0.5, "gpuWeight": 0.5, "idealRatio": { "min": 0.8, "max": 2.0 } }
+    }
+  },
+  "performanceWarnings": {
+    "insufficientRam": {
+      "thresholds": [
+        { "minCapacity": 0, "maxCapacity": 8, "severity": "Warning", "message": "Объём памяти {capacity} ГБ недостаточен для современных игр", "suggestion": "Рекомендуется минимум 16 ГБ" },
+        { "minCapacity": 8, "maxCapacity": 16, "severity": "Info", "message": "Объём памяти {capacity} ГБ достаточен для базовых задач", "suggestion": "Для игр рекомендуется 32 ГБ" }
+      ]
+    },
+    "noIntegratedGraphics": { "severity": "Warning", "message": "Процессор не имеет встроенной графики", "suggestion": "Убедитесь, что выбрана видеокарта" }
+  }
+}

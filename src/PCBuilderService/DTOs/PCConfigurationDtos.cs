@@ -49,6 +49,74 @@ public class PCConfigurationDto
 
     /// <summary>Дата создания</summary>
     public DateTime? CreatedAt { get; set; }
+    
+    /// <summary>Промокод</summary>
+    public string? PromoCode { get; set; }
+    
+    /// <summary>Сумма скидки</summary>
+    public decimal? DiscountAmount { get; set; }
+    
+    /// <summary>Цена без скидок</summary>
+    public decimal? BasePrice { get; set; }
+    
+    /// <summary>Детали цен компонентов</summary>
+    public List<ComponentPriceDto>? ComponentPrices { get; set; }
+    
+    /// <summary>Недоступные компоненты (нет в наличии)</summary>
+    public List<string>? UnavailableComponents { get; set; }
+}
+
+/// <summary>
+/// DTO цены отдельного компонента
+/// </summary>
+public class ComponentPriceDto
+{
+    public Guid ProductId { get; set; }
+    public string ComponentType { get; set; } = string.Empty;
+    public string ProductName { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public decimal? OldPrice { get; set; }
+    public bool InStock { get; set; }
+    public int StockQuantity { get; set; }
+}
+
+/// <summary>
+/// Запрос расчёта цены с промокодом
+/// </summary>
+public class CalculatePriceRequest
+{
+    public PCConfigurationDto Configuration { get; set; } = null!;
+    public string? PromoCode { get; set; }
+}
+
+/// <summary>
+/// Ответ с расчётом цены
+/// </summary>
+public class ConfigurationPriceResult
+{
+    /// <summary>Общая стоимость (с учётом скидок)</summary>
+    public decimal TotalPrice { get; set; }
+
+    /// <summary>Базовая стоимость (без скидок)</summary>
+    public decimal BasePrice { get; set; }
+    
+    /// <summary>Сумма скидок по акциям</summary>
+    public decimal SaleDiscount { get; set; }
+    
+    /// <summary>Сумма скидки по промокоду</summary>
+    public decimal PromoDiscount { get; set; }
+    
+    /// <summary>Применённый промокод</summary>
+    public string? AppliedPromoCode { get; set; }
+    
+    /// <summary>Стоимости по компонентам</summary>
+    public List<ComponentPriceDto> Components { get; set; } = new();
+    
+    /// <summary>Недоступные компоненты</summary>
+    public List<string> UnavailableComponents { get; set; } = new();
+    
+    /// <summary>Все ли компоненты в наличии</summary>
+    public bool AllComponentsAvailable { get; set; }
 }
 
 /// <summary>
@@ -76,18 +144,6 @@ public class PowerConsumptionResult
 
     /// <summary>Минимальная мощность БП (Вт)</summary>
     public int MinPsuWattage { get; set; }
-}
-
-/// <summary>
-/// Результат расчёта стоимости конфигурации
-/// </summary>
-public class ConfigurationPriceResult
-{
-    /// <summary>Общая стоимость</summary>
-    public decimal TotalPrice { get; set; }
-
-    /// <summary>Стоимости по компонентам</summary>
-    public List<ComponentPrice> Components { get; set; } = new();
 }
 
 /// <summary>

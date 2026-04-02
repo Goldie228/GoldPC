@@ -24,6 +24,14 @@ public interface IConfigurationService
     Task<decimal> CalculateTotalPriceAsync(PCConfigurationDto dto);
 
     /// <summary>
+    /// Рассчитать стоимость конфигурации с учётом скидок, наличия и промокода
+    /// </summary>
+    /// <param name="dto">Конфигурация</param>
+    /// <param name="promoCode">Промокод (опционально)</param>
+    /// <returns>Детальный расчёт цены</returns>
+    Task<ConfigurationPriceResult> CalculatePriceWithDetailsAsync(PCConfigurationDto dto, string? promoCode = null);
+
+    /// <summary>
     /// Получить конфигурацию по токену публичного доступа
     /// </summary>
     /// <param name="shareToken">Токен публичного доступа</param>

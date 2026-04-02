@@ -43,6 +43,8 @@ message ProductResponse {
   double price = 3;
   string category = 4;
   bool is_available = 5;
+  double old_price = 6;   // Старая цена (для расчёта скидки)
+  int32 stock = 7;        // Остаток на складе
 }
 
 message ProductsResponse {

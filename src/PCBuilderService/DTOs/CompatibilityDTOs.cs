@@ -25,6 +25,27 @@ public class CompatibilityCheckResponse
     
     /// <summary>Рекомендуемая мощность БП (Вт)</summary>
     public int RecommendedPsu { get; set; }
+    
+    /// <summary>Процент bottleneck (0-100). Положительное = CPU bottleneck, отрицательное = GPU bottleneck</summary>
+    public double BottleneckPercentage { get; set; }
+    
+    /// <summary>Оценки FPS для различных сценариев (разрешение+качество -> FPS)</summary>
+    public Dictionary<string, FpsEstimateDto> FpsEstimates { get; set; } = new();
+}
+
+/// <summary>
+/// Оценка FPS для конкретного сценария
+/// </summary>
+public class FpsEstimateDto
+{
+    /// <summary>Средний FPS</summary>
+    public int AverageFps { get; set; }
+    
+    /// <summary>Минимальный FPS (1% low)</summary>
+    public int MinFps { get; set; }
+    
+    /// <summary>Качество игрового опыта (Excellent, Good, Fair, Poor)</summary>
+    public string Quality { get; set; } = "";
 }
 
 /// <summary>

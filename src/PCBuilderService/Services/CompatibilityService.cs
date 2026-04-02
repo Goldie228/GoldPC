@@ -4,7 +4,8 @@ using PCBuilderService.Models;
 namespace PCBuilderService.Services;
 
 /// <summary>
-/// Сервис проверки совместимости компонентов ПК
+/// Сервис проверки совместимости компонентов ПК.
+/// Делегирует проверки декларативному движку правил CompatibilityRuleEngine.
 /// </summary>
 public interface ICompatibilityService
 {
@@ -102,6 +103,12 @@ public class CompatibilityService : ICompatibilityService
 
             // 8. Дополнительные предупреждения
             AddPerformanceWarnings(cpuSpecs, gpuSpecs, ramSpecs, result.Result);
+
+            // 9. Расчёт bottleneck между CPU и GPU
+            result.BottleneckPercentage = CalculateBottleneckPercentage(cpuSpecs, gpuSpecs);
+
+            // 10. Оценка FPS для различных сценариев
+            result.FpsEstimates = EstimateFps(cpuSpecs, gpuSpecs, ramSpecs);
 
             return result;
         }
@@ -820,5 +827,73 @@ public class CompatibilityService : ICompatibilityService
         };
     }
 
+
+    private double CalculateBottleneckPercentage(CpuSpecification cpu, GpuSpecification gpu)
+    {
+        if (cpu.PerformanceScore <= 0 || gpu.PerformanceScore <= 0)
+            return 0;
+
+        var ratio = (double)cpu.PerformanceScore / gpu.PerformanceScore;
+
+        if (ratio > 1.0)
+            return Math.Min(100.0, ((ratio - 1.0) / ratio) * 100.0);
+        else if (ratio < 1.0)
+            return Math.Max(-100.0, -((1.0 - ratio)) * 100.0);
+
+        return 0;
+    }
+
+    private Dictionary<string, FpsEstimateDto> EstimateFps(
+        CpuSpecification cpu, GpuSpecification gpu, RamSpecification ram)
+    {
+        var estimates = new Dictionary<string, FpsEstimateDto>();
+
+        if (cpu.PerformanceScore <= 0 && gpu.PerformanceScore <= 0)
+            return estimates;
+
+        var ramMultiplier = ram.Capacity switch
+        {
+            <= 8 => 0.85,
+            <= 16 => 1.0,
+            <= 32 => 1.05,
+            _ => 1.07
+        };
+
+        var effectiveScore = Math.Min(cpu.PerformanceScore, gpu.PerformanceScore) * ramMultiplier;
+
+        var scenarios = new[]
+        {
+            new { Key = "1080p_Ultra",   GpuMult = 0.08 },
+            new { Key = "1080p_High",    GpuMult = 0.10 },
+            new { Key = "1440p_Ultra",   GpuMult = 0.055 },
+            new { Key = "1440p_High",    GpuMult = 0.07 },
+            new { Key = "4K_Ultra",      GpuMult = 0.03 },
+            new { Key = "4K_High",       GpuMult = 0.04 },
+        };
+
+        foreach (var s in scenarios)
+        {
+            var avgFps = (int)(effectiveScore * s.GpuMult);
+            avgFps = Math.Max(avgFps, 0);
+            var minFps = (int)(avgFps * 0.75);
+
+            var quality = avgFps switch
+            {
+                >= 90 => "Excellent",
+                >= 60 => "Good",
+                >= 30 => "Fair",
+                _ => "Poor"
+            };
+
+            estimates[s.Key] = new FpsEstimateDto
+            {
+                AverageFps = avgFps,
+                MinFps = minFps,
+                Quality = quality
+            };
+        }
+
+        return estimates;
+    }
     #endregion
 }

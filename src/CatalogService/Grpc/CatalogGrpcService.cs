@@ -37,7 +37,9 @@ public class CatalogGrpcService : CatalogGrpc.CatalogGrpcBase
             Name = product.Name,
             Price = (double)product.Price,
             Category = product.Category,
-            IsAvailable = product.Stock > 0 && product.IsActive
+            IsAvailable = product.Stock > 0 && product.IsActive,
+            OldPrice = product.OldPrice.HasValue ? (double)product.OldPrice.Value : 0,
+            Stock = product.Stock
         };
     }
 
@@ -63,7 +65,9 @@ public class CatalogGrpcService : CatalogGrpc.CatalogGrpcBase
             Name = p.Name,
             Price = (double)p.Price,
             Category = p.Category,
-            IsAvailable = p.Stock > 0 && p.IsActive
+            IsAvailable = p.Stock > 0 && p.IsActive,
+            OldPrice = p.OldPrice.HasValue ? (double)p.OldPrice.Value : 0,
+            Stock = p.Stock
         }));
 
         return response;
