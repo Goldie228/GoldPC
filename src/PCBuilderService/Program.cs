@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using PCBuilderService.Data;
-using PCBuilderService.Controllers;
 using PCBuilderService.Services;
 using Serilog;
 using Serilog.Events;
@@ -8,7 +7,6 @@ using Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Настройка Serilog
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
@@ -19,7 +17,6 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// Добавление сервисов
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -28,28 +25,32 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "GoldPC PCBuilder Service API",
         Version = "v1",
-        Description = "API конструктора ПК для компьютерного магазина GoldPC"
+        Description = "API constructora PK dlya komputernogo magazina GoldPC"
     });
 });
 
-// Настройка базы данных
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Host=localhost;Port=5432;Database=goldpc_pcbuilder;Username=postgres;Password=postgres";
 builder.Services.AddDbContext<PCBuilderDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-// Регистрация сервисов
+// Загрузка декларативных правил совместимости из JSON
+var rulesPath = Path.Combine(builder.Environment.ContentRootPath, "Data", "compatibility-rules.json");
+builder.Services.AddSingleton(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<CompatibilityRuleEngine>>();
+    return new CompatibilityRuleEngine(rulesPath, logger);
+});
+
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
 
-// Настройка gRPC для Catalog Service
 var catalogServiceGrpcUrl = builder.Configuration["CatalogService:GrpcUrl"] ?? "http://localhost:5000";
 builder.Services.AddGrpcClient<Shared.Protos.CatalogGrpc.CatalogGrpcClient>(o =>
 {
     o.Address = new Uri(catalogServiceGrpcUrl);
 });
 
-// Настройка HttpClient для Catalog Service
 var catalogServiceUrl = builder.Configuration["CatalogService:Url"] ?? "http://localhost:5000";
 builder.Services.AddHttpClient("CatalogService", client =>
 {
@@ -57,21 +58,16 @@ builder.Services.AddHttpClient("CatalogService", client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
-// Настройка CORS
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
 
-// Health checks
 builder.Services.AddHealthChecks();
 
-// Chaos Middleware (только в Development)
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddChaosMiddleware(builder.Configuration);
@@ -79,10 +75,8 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
-// Security Headers Middleware - должен быть в начале pipeline
 app.UseSecurityHeaders();
 
-// Настройка pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -90,8 +84,6 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "PCBuilder Service v1");
     });
-
-    // Включаем Chaos Middleware только в Development
     app.UseChaosMiddleware();
 }
 
@@ -100,177 +92,6 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
-Log.Information("PCBuilder Service запущен");
+Log.Information("PCBuilder Service started");
 
 app.Run();
-
-/// <summary>
-/// Реализация сервиса управления конфигурациями (in-memory для разработки)
-/// </summary>
-public class ConfigurationService : IConfigurationService
-{
-    private readonly List<PCBuilderService.Models.PCConfiguration> _configurations = new();
-    private readonly ILogger<ConfigurationService> _logger;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly Shared.Protos.CatalogGrpc.CatalogGrpcClient _catalogClient;
-
-    public ConfigurationService(
-        ILogger<ConfigurationService> logger,
-        IHttpClientFactory httpClientFactory,
-        Shared.Protos.CatalogGrpc.CatalogGrpcClient catalogClient)
-    {
-        _logger = logger;
-        _httpClientFactory = httpClientFactory;
-        _catalogClient = catalogClient;
-    }
-
-    public Task<PCBuilderService.Models.PCConfiguration?> GetConfigurationAsync(Guid id)
-    {
-        var config = _configurations.FirstOrDefault(c => c.Id == id);
-        return Task.FromResult(config);
-    }
-
-    public Task<IEnumerable<PCBuilderService.Models.PCConfiguration>> GetUserConfigurationsAsync(Guid userId)
-    {
-        var configs = _configurations.Where(c => c.UserId == userId);
-        return Task.FromResult(configs);
-    }
-
-    public Task<PCBuilderService.Models.PCConfiguration> SaveConfigurationAsync(
-        PCBuilderService.Models.PCConfiguration config)
-    {
-        if (config.Id == Guid.Empty)
-        {
-            config.Id = Guid.NewGuid();
-            config.CreatedAt = DateTime.UtcNow;
-            _configurations.Add(config);
-            _logger.LogInformation("Создана новая конфигурация {ConfigId}", config.Id);
-        }
-        else
-        {
-            config.UpdatedAt = DateTime.UtcNow;
-            var existing = _configurations.FirstOrDefault(c => c.Id == config.Id);
-            if (existing != null)
-            {
-                _configurations.Remove(existing);
-                _configurations.Add(config);
-                _logger.LogInformation("Обновлена конфигурация {ConfigId}", config.Id);
-            }
-            else
-            {
-                _configurations.Add(config);
-                _logger.LogInformation("Добавлена конфигурация {ConfigId}", config.Id);
-            }
-        }
-        return Task.FromResult(config);
-    }
-
-    public Task<bool> DeleteConfigurationAsync(Guid id)
-    {
-        var config = _configurations.FirstOrDefault(c => c.Id == id);
-        if (config != null)
-        {
-            _configurations.Remove(config);
-            _logger.LogInformation("Удалена конфигурация {ConfigId}", id);
-            return Task.FromResult(true);
-        }
-        return Task.FromResult(false);
-    }
-
-    public async Task<decimal> CalculateTotalPriceAsync(PCBuilderService.DTOs.PCConfigurationDto dto)
-    {
-        var componentIds = new[]
-        {
-            dto.ProcessorId, dto.MotherboardId, dto.RamId,
-            dto.GpuId, dto.PsuId, dto.StorageId, dto.CaseId, dto.CoolerId
-        }
-        .Where(id => id.HasValue)
-        .Select(id => id!.Value.ToString())
-        .ToList();
-
-        if (!componentIds.Any()) return 0;
-
-        try
-        {
-            var request = new Shared.Protos.GetProductsRequest();
-            request.Ids.AddRange(componentIds);
-
-            var response = await _catalogClient.GetProductsByIdsAsync(request);
-
-            return (decimal)response.Products.Sum(p => p.Price);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "gRPC Error: Failed to calculate total price via Catalog Service");
-            throw new InvalidOperationException("Price calculation currently unavailable", ex);
-        }
-    }
-
-    /// <inheritdoc />
-    public Task<PCBuilderService.Models.PCConfiguration?> GetConfigurationByShareTokenAsync(string shareToken)
-    {
-        if (string.IsNullOrWhiteSpace(shareToken))
-        {
-            return Task.FromResult<PCBuilderService.Models.PCConfiguration?>(null);
-        }
-
-        var config = _configurations.FirstOrDefault(
-            c => string.Equals(c.ShareToken, shareToken, StringComparison.Ordinal));
-
-        return Task.FromResult(config);
-    }
-
-    /// <inheritdoc />
-    public Task<string?> GenerateShareTokenAsync(Guid configurationId, Guid userId)
-    {
-        var config = _configurations.FirstOrDefault(c => c.Id == configurationId);
-
-        if (config == null)
-        {
-            _logger.LogWarning(
-                "Конфигурация {ConfigId} не найдена при генерации share-токена",
-                configurationId);
-            return Task.FromResult<string?>(null);
-        }
-
-        if (config.UserId != userId)
-        {
-            _logger.LogWarning(
-                "Пользователь {UserId} не имеет прав на конфигурацию {ConfigId}",
-                userId, configurationId);
-            return Task.FromResult<string?>(null);
-        }
-
-        // Генерируем уникальный токен
-        if (string.IsNullOrEmpty(config.ShareToken))
-        {
-            config.ShareToken = GenerateUniqueToken();
-            _logger.LogInformation(
-                "Сгенерирован share-токен для конфигурации {ConfigId}",
-                configurationId);
-        }
-        else
-        {
-            _logger.LogInformation(
-                "Возврат существующего share-токена для конфигурации {ConfigId}",
-                configurationId);
-        }
-
-        return Task.FromResult<string?>(config.ShareToken);
-    }
-
-    /// <summary>
-    /// Генерация уникального токена для публичного доступа
-    /// </summary>
-    private static string GenerateUniqueToken()
-    {
-        // Генерируем URL-safe base64 токен длиной 32 символа
-        var bytes = new byte[24];
-        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
-        rng.GetBytes(bytes);
-        return Convert.ToBase64String(bytes)
-            .Replace('+', '-')
-            .Replace('/', '_')
-            .TrimEnd('=');
-    }
-}

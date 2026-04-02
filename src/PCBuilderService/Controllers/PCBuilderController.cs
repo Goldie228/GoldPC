@@ -372,18 +372,17 @@ public class PCBuilderController : ControllerBase
     /// <summary>
     /// Рассчитать стоимость конфигурации (интеграция с Catalog Service)
     /// </summary>
+    /// <remarks>
+    /// Рассчитывает итоговую стоимость с учётом скидок, наличия и промокода.
+    /// </remarks>
     [HttpPost("calculate-price")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(ConfigurationPriceResult), StatusCodes.Status200OK)]
     public async Task<ActionResult<ConfigurationPriceResult>> CalculatePrice(
-        [FromBody] PCConfigurationDto dto)
+        [FromBody] CalculatePriceRequest request)
     {
-        var result = new ConfigurationPriceResult
-        {
-            TotalPrice = await _configurationService.CalculateTotalPriceAsync(dto),
-            Components = new List<ComponentPrice>()
-        };
-
+        var result = await _configurationService.CalculatePriceWithDetailsAsync(
+            request.Configuration, request.PromoCode);
         return Ok(result);
     }
 
