@@ -183,19 +183,37 @@
 }
 
 .facetRow {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px 14px;
   align-items: flex-end;
   padding: 10px 0 4px;
   border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.06));
 }
 
+@media (max-width: 1200px) {
+  .facetRow {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .facetRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .facetRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 .facetField {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 140px;
+  min-width: 0;
 }
 
 .selectSm {
@@ -206,7 +224,7 @@
   background: var(--bg-elevated, #121214);
   color: var(--fg, #fafafa);
   font-size: 0.75rem;
-  max-width: 220px;
+  width: 100%;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;

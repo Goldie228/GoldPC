@@ -219,17 +219,7 @@ export function PCBuilderPage() {
 
   const getDisplaySpecs = (type: PCComponentType, product: Product | undefined): string[] => {
     if (!product?.specifications) {
-      const placeholderSpecs: Record<PCComponentType, string[]> = {
-        cpu: ['AM5', 'LGA1700'],
-        gpu: ['PCIe 4.0', 'Ray Tracing'],
-        motherboard: ['ATX', 'mATX'],
-        ram: ['DDR5', '32GB'],
-        storage: ['NVMe', 'SATA SSD'],
-        psu: ['750W', '80+ Gold'],
-        case: ['Mid Tower', 'ATX'],
-        cooling: ['240mm AIO', 'Air Cooler'],
-      };
-      return placeholderSpecs[type] || [];
+      return [];
     }
 
     const specs = product.specifications;

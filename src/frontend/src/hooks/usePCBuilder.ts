@@ -109,7 +109,7 @@ const PSU_BUFFER = rules.powerCompatibility.psuBufferPercent;
 const STORAGE_KEY = 'goldpc-pc-builder';
 
 // Дебаунс для API-запроса совместимости (мс)
-const COMPATIBILITY_DEBOUNCE_MS = 350;
+const COMPATIBILITY_DEBOUNCE_MS = 120;
 
 export function emptyPcBuilderState(): PCBuilderSelectedState {
   return { ram: [], storage: [] };
@@ -506,19 +506,28 @@ export function usePCBuilder(): UsePCBuilderReturn {
   const totalPrice = useMemo(() => {
     let sum = 0;
     const s = selectedComponents;
-    const keys: (keyof PCBuilderSelectedState)[] = [
-      'cpu', 'gpu', 'motherboard', 'psu', 'case', 'cooling',
-    ];
-    for (const key of keys) {
-      const c = s[key];
-      if (c && typeof c === 'object' && 'product' in c) {
-        sum += (c as SelectedComponent).product.price;
-      }
-    }
+    
+    if (s.cpu) sum += s.cpu.product.price;
+    if (s.gpu) sum += s.gpu.product.price;
+    if (s.motherboard) sum += s.motherboard.product.price;
+    if (s.psu) sum += s.psu.product.price;
+    if (s.case) sum += s.case.product.price;
+    if (s.cooling) sum += s.cooling.product.price;
+    
     for (const r of s.ram) sum += r.product.price;
     for (const st of s.storage) sum += st.product.price;
+    
     return sum;
-  }, [selectedComponents]);
+  }, [
+    selectedComponents.cpu,
+    selectedComponents.gpu,
+    selectedComponents.motherboard,
+    selectedComponents.psu,
+    selectedComponents.case,
+    selectedComponents.cooling,
+    selectedComponents.ram,
+    selectedComponents.storage
+  ]);
 
   const powerConsumption = useMemo(
     () => calculatePowerConsumption(selectedComponents),

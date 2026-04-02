@@ -130,6 +130,27 @@
   position: relative;
 }
 
+@media (min-width: 1024px) {
+  .pc-builder__right {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 16px;
+  }
+  
+  .pc-builder__right::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .pc-builder__right::-webkit-scrollbar-thumb {
+    background: rgba(212, 165, 116, 0.3);
+    border-radius: 2px;
+  }
+}
+
 /* ===== ERRORS ===== */
 .pc-builder__errors {
   display: flex;
