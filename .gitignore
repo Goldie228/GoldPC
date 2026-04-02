@@ -171,3 +171,6 @@ scripts/comparison-audit/audit-notes/
 
 *.turbo/
 *.cursor/
+
+# Claude Code local
+.claude/
