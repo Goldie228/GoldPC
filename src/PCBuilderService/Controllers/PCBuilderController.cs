@@ -17,15 +17,18 @@ public class PCBuilderController : ControllerBase
 {
     private readonly ICompatibilityService _compatibilityService;
     private readonly IConfigurationService _configurationService;
+    private readonly IFpsCalculationService _fpsCalculationService;
     private readonly ILogger<PCBuilderController> _logger;
 
     public PCBuilderController(
         ICompatibilityService compatibilityService,
         IConfigurationService configurationService,
+        IFpsCalculationService fpsCalculationService,
         ILogger<PCBuilderController> logger)
     {
         _compatibilityService = compatibilityService;
         _configurationService = configurationService;
+        _fpsCalculationService = fpsCalculationService;
         _logger = logger;
     }
 
@@ -383,6 +386,51 @@ public class PCBuilderController : ControllerBase
     {
         var result = await _configurationService.CalculatePriceWithDetailsAsync(
             request.Configuration, request.PromoCode);
+        return Ok(result);
+    }
+
+    // ========================================================================
+    // POST /api/v1/pcbuilder/calculate-fps
+    // ========================================================================
+
+    /// <summary>
+    /// Рассчитать примерный FPS для конфигурации ПК по заданным CPU/GPU/RAM
+    /// </summary>
+    /// <remarks>
+    /// Возвращает оценку FPS для популярных игр при разных разрешениях.
+    /// Использует эвристическую модель на основе tiers GPU/CPU из локального файла.
+    /// Если CpuId и GpuId оба null — возвращает нулевые значения.
+    /// </remarks>
+    /// <param name="request">Запрос с ID CPU/GPU и параметрами RAM</param>
+    /// <returns>Оценка FPS для каждой игры и разрешений</returns>
+    /// <response code="200">Результат расчёта FPS</response>
+    /// <response code="400">Некорректный запрос</response>
+    [HttpPost("calculate-fps")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(FpsCalculationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<FpsCalculationResponse>> CalculateFps(
+        [FromBody] FpsCalculationRequest request)
+    {
+        if (request == null)
+        {
+            return BadRequest(new ValidationProblemDetails
+            {
+                Title = "Некорректный запрос",
+                Detail = "Тело запроса не указано"
+            });
+        }
+
+        _logger.LogInformation(
+            "Расчёт FPS: CpuId={CpuId}, GpuId={GpuId}, RamCapacity={RamCapacity}",
+            request.CpuId, request.GpuId, request.RamCapacity);
+
+        var result = await _fpsCalculationService.CalculateFpsAsync(request);
+
+        _logger.LogInformation(
+            "Расчёт FPS: OverallScore={OverallScore}, Bottleneck={Bottleneck}",
+            result.OverallScore, result.Bottleneck);
+
         return Ok(result);
     }
 

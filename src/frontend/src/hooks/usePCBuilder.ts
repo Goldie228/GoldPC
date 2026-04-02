@@ -10,8 +10,8 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { Product, ProductSpecifications } from '../api/types';
 import { useCartStore } from '../store/cartStore';
 import { calculatePerformance, type EstimatedFps, type PerformanceResult } from '../utils/performanceCalculator';
-import { checkCompatibilityAPI } from '../api/pcBuilderService';
-import type { CompatibilityCheckResponse } from '../api/pcBuilderService';
+import { checkCompatibilityAPI, calculateFpsApi } from '../api/pcBuilderService';
+import type { CompatibilityCheckResponse, FpsApiResponse } from '../api/pcBuilderService';
 import compatibilityRules from '../config/compatibilityRules.json';
 import type { CompatibilityRulesConfig } from '../config/compatibilityTypes';
 
@@ -27,7 +27,12 @@ export type PCComponentType =
   | 'storage'
   | 'psu'
   | 'case'
-  | 'cooling';
+  | 'cooling'
+  | 'fan'
+  | 'monitor'
+  | 'keyboard'
+  | 'mouse'
+  | 'headphones';
 
 export type ComponentSlotState = 'empty' | 'selected' | 'incompatible';
 
@@ -65,6 +70,11 @@ export interface PCBuilderSelectedState {
   cooling?: SelectedComponent;
   ram: SelectedComponent[];
   storage: SelectedComponent[];
+  fan: SelectedComponent[];
+  monitor?: SelectedComponent;
+  keyboard?: SelectedComponent;
+  mouse?: SelectedComponent;
+  headphones?: SelectedComponent;
 }
 
 // === Сериализация ===
@@ -87,6 +97,11 @@ interface SerializedBuildV2 {
     cooling?: SerializedSingle;
     ram?: SerializedSingle[];
     storage?: SerializedSingle[];
+    fan?: SerializedSingle[];
+    monitor?: SerializedSingle;
+    keyboard?: SerializedSingle;
+    mouse?: SerializedSingle;
+    headphones?: SerializedSingle;
   };
 }
 
@@ -100,9 +115,10 @@ interface SerializedBuildV1 {
 const RAM_TYPES = rules.ramCompatibility.validTypes as readonly string[];
 type RAMType = (typeof RAM_TYPES)[number];
 
-const TOTAL_CATEGORIES = 8;
+const TOTAL_CATEGORIES = 12;
 export const MAX_RAM_MODULES = 8;
 export const MAX_STORAGE_MODULES = 8;
+export const MAX_FAN_MODULES = 8;
 
 const BASE_POWER_CONSUMPTION = rules.powerCompatibility.baseSystemPower;
 const PSU_BUFFER = rules.powerCompatibility.psuBufferPercent;
@@ -111,8 +127,11 @@ const STORAGE_KEY = 'goldpc-pc-builder';
 // Дебаунс для API-запроса совместимости (мс)
 const COMPATIBILITY_DEBOUNCE_MS = 120;
 
+// Дебаунс для FPS API-запроса (мс) — тяжелее, чем совместимость
+const FPS_DEBOUNCE_MS = 300;
+
 export function emptyPcBuilderState(): PCBuilderSelectedState {
-  return { ram: [], storage: [] };
+  return { ram: [], storage: [], fan: [] };
 }
 
 // === Извлечение спецификаций (мемоизируемых) ===
@@ -241,6 +260,9 @@ function calculatePowerConsumption(components: PCBuilderSelectedState): number {
     total += extractTDP(s.product.specifications) || 5;
   }
   if (cooling) total += extractTDP(cooling.specifications) || 10;
+  for (const f of components.fan) {
+    total += extractTDP(f.product.specifications) || 3;
+  }
 
   return Math.max(0, total);
 }
@@ -254,7 +276,12 @@ function isBuilderEmpty(c: PCBuilderSelectedState): boolean {
     !c.case &&
     !c.cooling &&
     c.ram.length === 0 &&
-    c.storage.length === 0
+    c.storage.length === 0 &&
+    c.fan.length === 0 &&
+    !c.monitor &&
+    !c.keyboard &&
+    !c.mouse &&
+    !c.headphones
   );
 }
 
@@ -272,6 +299,10 @@ function saveToLocalStorage(components: PCBuilderSelectedState): void {
       'psu',
       'case',
       'cooling',
+      'monitor',
+      'keyboard',
+      'mouse',
+      'headphones',
     ];
     for (const key of singleKeys) {
       const comp = components[key];
@@ -296,6 +327,13 @@ function saveToLocalStorage(components: PCBuilderSelectedState): void {
         productId: c.product.id,
         product: c.product,
         type: 'storage' as const,
+      }));
+    }
+    if (components.fan.length > 0) {
+      componentsPayload.fan = components.fan.map((c) => ({
+        productId: c.product.id,
+        product: c.product,
+        type: 'fan' as const,
       }));
     }
 
@@ -326,6 +364,7 @@ function migrateV1ToState(parsed: SerializedBuildV1): PCBuilderSelectedState {
     else if (type === 'psu') out.psu = sc;
     else if (type === 'case') out.case = sc;
     else if (type === 'cooling') out.cooling = sc;
+    else if (type === 'fan') out.fan.push(sc);
   }
   return out;
 }
@@ -352,6 +391,11 @@ function loadFromLocalStorage(): PCBuilderSelectedState {
           product: x.product,
           type: 'storage' as const,
         })),
+        fan: (c.fan ?? []).map((x) => ({ product: x.product, type: 'fan' as const })),
+        monitor: c.monitor ? { product: c.monitor.product, type: 'monitor' } : undefined,
+        keyboard: c.keyboard ? { product: c.keyboard.product, type: 'keyboard' } : undefined,
+        mouse: c.mouse ? { product: c.mouse.product, type: 'mouse' } : undefined,
+        headphones: c.headphones ? { product: c.headphones.product, type: 'headphones' } : undefined,
       };
     }
 
@@ -379,6 +423,9 @@ function getComponentState(
   if (type === 'ram') {
     hasComponent =
       multiIndex !== undefined ? !!components.ram[multiIndex] : components.ram.length > 0;
+  } else if (type === 'fan') {
+    hasComponent =
+      multiIndex !== undefined ? !!components.fan[multiIndex] : components.fan.length > 0;
   } else if (type === 'storage') {
     hasComponent =
       multiIndex !== undefined ? !!components.storage[multiIndex] : components.storage.length > 0;
@@ -453,6 +500,11 @@ function countSelectedCategories(c: PCBuilderSelectedState): number {
   if (c.psu) n++;
   if (c.case) n++;
   if (c.cooling) n++;
+  if (c.fan.length > 0) n++;
+  if (c.monitor) n++;
+  if (c.keyboard) n++;
+  if (c.mouse) n++;
+  if (c.headphones) n++;
   return n;
 }
 
@@ -471,6 +523,8 @@ export interface UsePCBuilderReturn {
   isApiLoading: boolean;
   selectedCount: number;
   totalCount: number;
+  /** Данные с backend FPS API (если CPU+GPU выбраны) */
+  apiFpsData?: FpsApiResponse;
   selectComponent: (
     type: PCComponentType,
     product: Product,
@@ -493,8 +547,10 @@ export function usePCBuilder(): UsePCBuilderReturn {
 
   const isFirstRender = useRef(true);
   const apiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fpsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [apiResult, setApiResult] = useState<CompatibilityCheckResponse | null>(null);
   const [isApiLoading, setIsApiLoading] = useState(false);
+  const [apiFpsData, setApiFpsData] = useState<FpsApiResponse | null>(null);
 
   // --- Мемоизированные локальные расчёты (мгновенные, без API) ---
 
@@ -516,7 +572,12 @@ export function usePCBuilder(): UsePCBuilderReturn {
     
     for (const r of s.ram) sum += r.product.price;
     for (const st of s.storage) sum += st.product.price;
-    
+    for (const f of s.fan) sum += f.product.price;
+    if (s.monitor) sum += s.monitor.product.price;
+    if (s.keyboard) sum += s.keyboard.product.price;
+    if (s.mouse) sum += s.mouse.product.price;
+    if (s.headphones) sum += s.headphones.product.price;
+
     return sum;
   }, [
     selectedComponents.cpu,
@@ -526,7 +587,12 @@ export function usePCBuilder(): UsePCBuilderReturn {
     selectedComponents.case,
     selectedComponents.cooling,
     selectedComponents.ram,
-    selectedComponents.storage
+    selectedComponents.storage,
+    selectedComponents.fan,
+    selectedComponents.monitor,
+    selectedComponents.keyboard,
+    selectedComponents.mouse,
+    selectedComponents.headphones,
   ]);
 
   const powerConsumption = useMemo(
@@ -574,6 +640,42 @@ export function usePCBuilder(): UsePCBuilderReturn {
     };
   }, [selectedComponents]);
 
+  // --- FPS API: debounced call when both CPU and GPU are selected ---
+
+  const ramProduct = selectedComponents.ram[0]?.product ?? null;
+
+  useEffect(() => {
+    const cpuId = selectedComponents.cpu?.product.id;
+    const gpuId = selectedComponents.gpu?.product.id;
+
+    if (!cpuId || !gpuId) {
+      setApiFpsData(null);
+      return;
+    }
+
+    const ramCapacity = (ramProduct?.specifications?.capacity as number) ?? undefined;
+    const ramFrequency = (ramProduct?.specifications?.frequency as number) ?? undefined;
+
+    if (fpsTimerRef.current) clearTimeout(fpsTimerRef.current);
+    fpsTimerRef.current = setTimeout(async () => {
+      try {
+        const fpsResult = await calculateFpsApi({
+          cpuId,
+          gpuId,
+          ramCapacity,
+          ramFrequency,
+        });
+        setApiFpsData(fpsResult);
+      } catch {
+        setApiFpsData(null);
+      }
+    }, FPS_DEBOUNCE_MS);
+
+    return () => {
+      if (fpsTimerRef.current) clearTimeout(fpsTimerRef.current);
+    };
+  }, [selectedComponents.cpu, selectedComponents.gpu, ramProduct]);
+
   const addItemToCart = useCartStore((s) => s.addItem);
 
   const selectComponent = useCallback(
@@ -589,6 +691,11 @@ export function usePCBuilder(): UsePCBuilderReturn {
           cooling: prev.cooling,
           ram: [...prev.ram],
           storage: [...prev.storage],
+          fan: [...prev.fan],
+          monitor: prev.monitor,
+          keyboard: prev.keyboard,
+          mouse: prev.mouse,
+          headphones: prev.headphones,
         };
         const sc: SelectedComponent = { product, type };
 
@@ -616,6 +723,15 @@ export function usePCBuilder(): UsePCBuilderReturn {
           }
           return next;
         }
+        if (type === 'fan') {
+          if (idx !== undefined) {
+            if (idx < next.fan.length) next.fan[idx] = sc;
+            else if (idx === next.fan.length && next.fan.length < MAX_FAN_MODULES) next.fan.push(sc);
+          } else if (next.fan.length < MAX_FAN_MODULES) {
+            next.fan.push(sc);
+          }
+          return next;
+        }
 
         (next as Record<string, unknown>)[type] = sc;
         return next;
@@ -632,6 +748,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
           motherboard: undefined,
           ram: [],
           cooling: undefined,
+          fan: [],
           gpu: prev.gpu,
           storage: [...prev.storage],
           psu: prev.psu,
@@ -657,6 +774,14 @@ export function usePCBuilder(): UsePCBuilderReturn {
         }
         return { ...prev, storage: [] };
       }
+      if (type === 'fan') {
+        if (multiIndex !== undefined) {
+          const fan = [...prev.fan];
+          fan.splice(multiIndex, 1);
+          return { ...prev, fan };
+        }
+        return { ...prev, fan: [] };
+      }
       const next = { ...prev };
       delete (next as Record<string, unknown>)[type];
       return next;
@@ -679,6 +804,11 @@ export function usePCBuilder(): UsePCBuilderReturn {
       'psu',
       'case',
       'cooling',
+      'fan',
+      'monitor',
+      'keyboard',
+      'mouse',
+      'headphones',
     ];
     for (const key of keys) {
       const c = s[key];
@@ -688,6 +818,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     }
     for (const r of s.ram) addItemToCart(r.product, 1);
     for (const st of s.storage) addItemToCart(st.product, 1);
+    for (const f of s.fan) addItemToCart(f.product, 1);
   }, [selectedComponents, addItemToCart]);
 
   // Итоговый результат совместимости: API приоритетнее, локальная — мгновенный фоллбэк
@@ -744,6 +875,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     estimatedFps: performance.estimatedFps,
     bottleneck: compatibility.bottleneck ?? '',
     isApiLoading,
+    apiFpsData: apiFpsData ?? undefined,
     selectedCount,
     totalCount: TOTAL_CATEGORIES,
     selectComponent,
@@ -767,5 +899,10 @@ export const PC_BUILDER_SLOTS: { key: PCComponentType; label: string; descriptio
   { key: 'storage', label: 'Накопитель', description: 'Хранит операционную систему, программы и файлы. SSD быстрее HDD.' },
   { key: 'psu', label: 'Блок питания', description: 'Поставляет электричество всем компонентам. Мощность (Вт) должна покрывать потребление сборки.' },
   { key: 'case', label: 'Корпус', description: 'Определяет форм-фактор (размер) сборки: ATX, Micro-ATX или Mini-ITX. Влияет на охлаждение и расширяемость.' },
+  { key: 'fan', label: 'Вентилятор', description: 'Корпусной вентилятор для охлаждения. Можно установить несколько.' },
   { key: 'cooling', label: 'Охлаждение', description: 'Отводит тепло от процессора. Бывает воздушным или жидкостным.' },
+  { key: 'monitor', label: 'Монитор', description: 'Устройство вывода изображения. Диагональ, разрешение и частота обновления влияют на комфорт.' },
+  { key: 'keyboard', label: 'Клавиатура', description: 'Основное устройство ввода. Механические клавиатуры обеспечивают лучшую тактильность.' },
+  { key: 'mouse', label: 'Мышь', description: 'Основное устройство навигации. DPI и частота опроса влияют на точность.' },
+  { key: 'headphones', label: 'Наушники', description: 'Устройство воспроизведения звука. Качество драйверов и шумоподавление важны.' },
 ];

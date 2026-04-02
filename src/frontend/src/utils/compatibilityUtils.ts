@@ -400,6 +400,8 @@ export function getAllMessages(result: CompatibilityCheckResult): Array<{ severi
 export function isComponentCompatible(componentType: ComponentCategory, product: Product, current: ComponentMap): { compatible: boolean; issues: string[] } {
   const issues: string[] = [];
   const test: ComponentMap = { ...current, [componentType]: product };
+
+  // CPU ↔ MB socket
   if (componentType === 'cpu' && test.motherboard) {
     const cs = extractSocket(product.specifications); const ms = extractSocket(test.motherboard!.specifications);
     if (cs && ms && cs !== ms) issues.push(`Socket ${cs} incompatible with motherboard (${ms})`);
@@ -408,6 +410,8 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     const cs = extractSocket(test.cpu!.specifications); const ms = extractSocket(product.specifications);
     if (cs && ms && cs !== ms) issues.push(`Motherboard socket ${ms} incompatible with CPU (${cs})`);
   }
+
+  // RAM ↔ MB memory type
   if (componentType === 'ram' && test.motherboard) {
     const rt = extractMemoryType(product.specifications); const mt = extractMemoryType(test.motherboard!.specifications);
     if (rt && mt && rt !== mt) issues.push(`RAM ${rt} not supported by motherboard (${mt})`);
@@ -416,6 +420,31 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     const rt = extractMemoryType(test.ram!.specifications); const mt = extractMemoryType(product.specifications);
     if (rt && mt && rt !== mt) issues.push(`Motherboard supports ${mt}, RAM is ${rt}`);
   }
+
+  // CPU socket → RAM type (AM4→DDR4, AM5→DDR5 via socket groups)
+  if (componentType === 'ram' && test.cpu && !test.motherboard) {
+    const cpuSocket = extractSocket(test.cpu.specifications);
+    const group = cpuSocket ? findSocketGroup(cpuSocket) : null;
+    if (group && group.ramType) {
+      const ramType = extractMemoryType(product.specifications);
+      if (ramType && ramType !== group.ramType && ramType !== (group.ramTypeAlternate ?? '')) {
+        issues.push(`RAM ${ramType} несовместима с процессором ${cpuSocket} (требуется ${group.ramType})`);
+      }
+    }
+  }
+
+  // RAM type consistency — all selected RAM should match each other
+  if (componentType === 'ram' && test.ram) {
+    const newRt = extractMemoryType(product.specifications);
+    if (newRt) {
+      const existingType = extractMemoryType(test.ram.specifications);
+      if (existingType && existingType !== newRt) {
+        issues.push(`Несовместимый тип памяти: выбрана ${newRt}, но уже есть ${existingType}`);
+      }
+    }
+  }
+
+  // Case ↔ MB form factor
   if (componentType === 'case' && test.motherboard) {
     const ff = extractFormFactor(test.motherboard!.specifications); const sf = extractSupportedFormFactors(product.specifications);
     if (ff && sf.length > 0 && !sf.includes(ff)) issues.push(`Case does not support ${ff}`);
@@ -424,5 +453,60 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     const ff = extractFormFactor(product.specifications); const sf = extractSupportedFormFactors(test.case!.specifications);
     if (ff && sf.length > 0 && !sf.includes(ff)) issues.push(`Form factor ${ff} not supported by case`);
   }
+
+  // GPU length vs case max GPU length
+  if (componentType === 'gpu' && test.case) {
+    const gpuLen = extractGPULength(product.specifications);
+    const maxLen = extractMaxGPULength(test.case.specifications);
+    if (gpuLen && maxLen && gpuLen > maxLen) {
+      issues.push(`Видеокарта ${gpuLen}мм не поместится в корпус (макс. ${maxLen}мм)`);
+    }
+  }
+  if (componentType === 'case' && test.gpu) {
+    const gpuLen = extractGPULength(test.gpu.specifications);
+    const maxLen = extractMaxGPULength(product.specifications);
+    if (gpuLen && maxLen && gpuLen > maxLen) {
+      issues.push(`Видеокарта ${gpuLen}мм не поместится в этот корпус (макс. ${maxLen}мм)`);
+    }
+  }
+
+  // Cooler socket vs CPU socket
+  if (componentType === 'cooling' && test.cpu) {
+    const cpuSocket = extractSocket(test.cpu.specifications);
+    const supported = extractSupportedSockets(product.specifications);
+    if (cpuSocket && supported.length > 0 && !supported.includes(cpuSocket)) {
+      issues.push(`Кулер не поддерживает сокет ${cpuSocket}`);
+    }
+  }
+  if (componentType === 'cpu' && test.cooling) {
+    const cpuSocket = extractSocket(product.specifications);
+    const supported = extractSupportedSockets(test.cooling.specifications);
+    if (cpuSocket && supported.length > 0 && !supported.includes(cpuSocket)) {
+      issues.push(`Кулер не поддерживает сокет процессора ${cpuSocket}`);
+    }
+  }
+
+  // Cooler height vs case max height
+  if (componentType === 'cooling' && test.case) {
+    const coolerType = extractCoolerType(product.specifications)?.toLowerCase();
+    const isAir = !coolerType || coolerType === 'air' || coolerType === 'tower';
+    if (isAir) {
+      const ch = extractCoolerHeight(product.specifications);
+      const mch = extractMaxCoolerHeight(test.case.specifications);
+      if (ch > 0 && mch && ch > mch) {
+        issues.push(`Кулер ${ch}мм не поместится в корпус (макс. ${mch}мм)`);
+      }
+    }
+  }
+
+  // Cooler TDP vs CPU TDP (warning-level, but we still flag it)
+  if (componentType === 'cooling' && test.cpu) {
+    const maxTdp = extractMaxCoolerTDP(product.specifications);
+    const cpuTdp = extractTDP(test.cpu.specifications);
+    if (maxTdp > 0 && cpuTdp > 0 && cpuTdp > maxTdp) {
+      // Not a hard incompatibility but worth noting; not adding to issues to avoid blocking
+    }
+  }
+
   return { compatible: issues.length === 0, issues };
 }

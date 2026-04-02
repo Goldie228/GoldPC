@@ -412,8 +412,8 @@ describe('usePCBuilder', () => {
   });
 
   describe('PC_BUILDER_SLOTS', () => {
-    it('contains all 8 component types', () => {
-      expect(PC_BUILDER_SLOTS).toHaveLength(8);
+    it('contains all 13 component types including peripherals', () => {
+      expect(PC_BUILDER_SLOTS).toHaveLength(13);
       const keys = PC_BUILDER_SLOTS.map(s => s.key);
       expect(keys).toContain('cpu');
       expect(keys).toContain('gpu');
@@ -423,6 +423,11 @@ describe('usePCBuilder', () => {
       expect(keys).toContain('psu');
       expect(keys).toContain('case');
       expect(keys).toContain('cooling');
+      expect(keys).toContain('fan');
+      expect(keys).toContain('monitor');
+      expect(keys).toContain('keyboard');
+      expect(keys).toContain('mouse');
+      expect(keys).toContain('headphones');
     });
   });
 

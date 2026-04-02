@@ -106,6 +106,44 @@ export function buildComponentsDTO(components: SelectedComponentsState): PCCompo
   return dto;
 }
 
+// === FPS API ===
+
+export interface FpsGameEstimate {
+  gameId: string;
+  gameName: string;
+  resolutions: {
+    resolution1080p: number;
+    resolution1440p: number;
+    resolution4k: number;
+  };
+}
+
+export interface FpsApiResponse {
+  cpuScore: number;
+  gpuScore: number;
+  overallScore: number;
+  bottleneck: string | null;
+  games: FpsGameEstimate[];
+  ramFactor: number;
+}
+
+export async function calculateFpsApi(params: {
+  cpuId?: string;
+  gpuId?: string;
+  ramCapacity?: number;
+  ramFrequency?: number;
+}): Promise<FpsApiResponse> {
+  const { data } = await apiClient.post<FpsApiResponse>(
+    '/pcbuilder/calculate-fps',
+    {
+      components: { cpuId: params.cpuId, gpuId: params.gpuId },
+      ramCapacity: params.ramCapacity,
+      ramFrequency: params.ramFrequency,
+    },
+  );
+  return data;
+}
+
 // === API ===
 
 export async function checkCompatibilityAPI(

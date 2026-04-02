@@ -21,7 +21,7 @@ export interface PagedResponse<T> {
 }
 
 // === Продукт ===
-export type ProductCategory = 
+export type ProductCategory =
   | 'cpu'
   | 'gpu'
   | 'motherboard'
@@ -30,6 +30,7 @@ export type ProductCategory =
   | 'psu'
   | 'case'
   | 'cooling'
+  | 'fan'
   | 'monitor'
   | 'keyboard'
   | 'mouse'
