@@ -530,23 +530,26 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     }
   }
 
-  // GPU ↔ PSU wattage compatibility
-  if (componentType === 'gpu' && test.psu) {
-    const psuWattage = extractPSUWattage(test.psu.specifications);
-    const gpuTdp = extractTDP(product.specifications);
-    const cpuTdp = test.cpu ? extractTDP(test.cpu.specifications) : 0;
-    const totalTdp = gpuTdp + cpuTdp + 50;
-    if (psuWattage > 0 && totalTdp > psuWattage) {
-      issues.push(`БП ${psuWattage}Вт недостаточен для этой конфигурации (нужно минимум ~${totalTdp}Вт)`);
+  // GPU ↔ PSU wattage — GPU selected, PSU candidate
+  if (componentType === 'psu' && (test.gpu?.product || test.cpu?.product)) {
+    const gpuTdp = test.gpu?.product ? extractTDP(test.gpu.product.specifications) : 0;
+    const cpuTdp = test.cpu?.product ? extractTDP(test.cpu.product.specifications) : 0;
+    const minWattage = gpuTdp + cpuTdp + 50;
+    const psuWattage = extractPSUWattage(product.specifications);
+    if (minWattage > 0 && psuWattage > 0 && psuWattage < minWattage) {
+      issues.push(`БП ${psuWattage}Вт недостаточен для сборки (нужно минимум ~${minWattage}Вт)`);
     }
   }
-  if (componentType === 'psu' && test.gpu) {
-    const psuWattage = extractPSUWattage(product.specifications);
-    const gpuTdp = extractTDP(test.gpu.specifications);
-    const cpuTdp = test.cpu ? extractTDP(test.cpu.specifications) : 0;
-    const totalTdp = gpuTdp + cpuTdp + 50;
-    if (psuWattage > 0 && totalTdp > psuWattage) {
-      issues.push(`БП ${psuWattage}Вт недостаточен для сборки с GPU ${test.gpu.name} (нужно минимум ~${totalTdp}Вт)`);
+
+  // GPU ↔ PSU wattage — PSU selected, GPU candidate
+  if (componentType === 'gpu' && test.psu?.product) {
+    const psuWattage = extractPSUWattage(test.psu.product.specifications);
+    const cpuTdp = test.cpu?.product ? extractTDP(test.cpu.product.specifications) : 0;
+    const gpuTdp = extractTDP(product.specifications);
+    const needed = gpuTdp + cpuTdp + 50;
+    if (needed > psuWattage) {
+      issues.push(`GPU TDP ${gpuTdp}Вт превышает бюджет БП ${psuWattage}Вт (нужно ~${needed}Вт)`);
+    }
     }
   }
 
