@@ -25,6 +25,7 @@ import {
   type PCComponentType,
   type PCBuilderSelectedState,
 } from '../../hooks';
+import { extractSocket } from '../../utils/compatibilityUtils';
 import type { Product, ProductCategory } from '../../api/types';
 import './PCBuilderPage.css';
 
@@ -181,6 +182,17 @@ export function PCBuilderPage() {
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
 
   const slotRows = useMemo(() => buildSlotRows(selectedComponents), [selectedComponents]);
+
+  const mfrPlatform = useMemo(() => {
+    // Determine socket from MB or CPU to restrict brands
+    const mbSocket = extractSocket(selectedComponents.motherboard?.product?.specifications);
+    const cpuSocket = extractSocket(selectedComponents.cpu?.product?.specifications);
+    const socket = mbSocket ?? cpuSocket;
+    if (!socket) return undefined;
+    if (socket === 'AM4' || socket === 'AM5') return 'amd' as const;
+    if (socket === 'LGA1200' || socket === 'LGA1700' || socket === 'LGA1851') return 'intel' as const;
+    return undefined;
+  }, [selectedComponents.motherboard?.product, selectedComponents.cpu?.product]);
 
   const openPicker = (type: PCComponentType, idx?: number) => {
     setSelectedSlot(type);
@@ -575,6 +587,8 @@ export function PCBuilderPage() {
                 recommendedPsu={recommendedPsu}
                 psuWattage={psuWattage}
                 isCompatible={isCompatible}
+                compatibilityErrors={compatibility.errors}
+                compatibilityWarnings={compatibility.warnings}
                 selectedCount={selectedCount}
                 totalCount={totalCount}
                 apiFpsData={apiFpsData}
@@ -608,6 +622,7 @@ export function PCBuilderPage() {
           }}
           getDisplaySpecs={getDisplaySpecs}
           typeFilter={componentTypeFilter[selectedSlot] ?? undefined}
+          restrictedManufacturerPlatform={mfrPlatform}
           selectedCount={selectedCount}
           totalCount={totalCount}
         />
