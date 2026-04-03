@@ -550,7 +550,6 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     if (needed > psuWattage) {
       issues.push(`GPU TDP ${gpuTdp}Вт превышает бюджет БП ${psuWattage}Вт (нужно ~${needed}Вт)`);
     }
-    }
   }
 
   return { compatible: issues.length === 0, issues };

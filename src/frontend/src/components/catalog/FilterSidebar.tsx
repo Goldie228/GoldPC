@@ -26,6 +26,13 @@ interface FilterSidebarProps {
   /** Спецификации для контекстных ограничений (например socket=AM4 из билда).
    *  Передаются в API для получения фасетов с учётом текущего билда. */
   effectiveSpecifications?: Record<string, string | number | string[]>;
+  /**
+   * Используется в ComponentPickerModal для исключения несовместимых брендов.
+   * При указании 'amd' оставляем только AMD-бренды (при сокетах AM4/AM5),
+   * при 'intel' — только Intel (LGA1200/LGA1700/LGA1851).
+   * Определяется по вхождению 'AMD'/'Intel' в название производителя.
+   */
+  restrictedManufacturerPlatform?: 'amd' | 'intel';
 }
 
 // Названия категорий (счётчики загружаются динамически)
@@ -274,6 +281,7 @@ export function FilterSidebar({
   onReset,
   restrictedSpecValues,
   effectiveSpecifications,
+  restrictedManufacturerPlatform,
 }: FilterSidebarProps) {
   const PRICE_MIN = 0;
   // Mock catalog prices are in BYN and usually <= ~6000 per category.
@@ -741,29 +749,37 @@ export function FilterSidebar({
           ) : manufacturers.length === 0 ? (
             <span className={styles.emptySpecHint}>Нет производителей</span>
           ) : (
-            manufacturers.map((m) => (
-              <label
-                key={m.id}
-                className={`${styles.checkboxItem} ${selectedManufacturerIds.includes(m.id) ? styles.checked : ''}`}
-              >
-                <input
-                  type="checkbox"
-                  className={styles.filterVisuallyHiddenControl}
-                  checked={selectedManufacturerIds.includes(m.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      onManufacturerIdsChange([...selectedManufacturerIds, m.id]);
-                    } else {
-                      onManufacturerIdsChange(selectedManufacturerIds.filter((id) => id !== m.id));
-                    }
-                  }}
-                />
-                <span className={styles.checkbox} aria-hidden="true">
-                  <Check size={10} className={styles.checkIcon} aria-hidden />
-                </span>
-                <span className={styles.checkboxLabel}>{m.name}</span>
-              </label>
-            ))
+            manufacturers
+              .filter((m) => {
+                if (!restrictedManufacturerPlatform) return true;
+                const name = m.name.toLowerCase();
+                if (restrictedManufacturerPlatform === 'amd') return name.includes('amd');
+                if (restrictedManufacturerPlatform === 'intel') return name.includes('intel');
+                return true;
+              })
+              .map((m) => (
+                <label
+                  key={m.id}
+                  className={`${styles.checkboxItem} ${selectedManufacturerIds.includes(m.id) ? styles.checked : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    className={styles.filterVisuallyHiddenControl}
+                    checked={selectedManufacturerIds.includes(m.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        onManufacturerIdsChange([...selectedManufacturerIds, m.id]);
+                      } else {
+                        onManufacturerIdsChange(selectedManufacturerIds.filter((id) => id !== m.id));
+                      }
+                    }}
+                  />
+                  <span className={styles.checkbox} aria-hidden="true">
+                    <Check size={10} className={styles.checkIcon} aria-hidden />
+                  </span>
+                  <span className={styles.checkboxLabel}>{m.name}</span>
+                </label>
+              ))
           )}
         </div>
       </FilterGroup>

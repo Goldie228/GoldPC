@@ -35,6 +35,10 @@ export interface ComponentPickerModalProps {
   getDisplaySpecs: (type: PCComponentType, product: Product) => string[];
   /** Фильтр по подстроке в названии (e.g. "вентилятор для корпуса") */
   nameFilter?: string;
+  /** Подтип компонента для фильтрации (e.g. 'cooling' vs 'fan' для категории cooling) */
+  typeFilter?: 'fan' | 'cooling';
+  /** Платформа для фильтра производителей: 'amd' или 'intel' */
+  restrictedManufacturerPlatform?: 'amd' | 'intel';
 }
 
 const BACKEND_SLUG: Record<ProductCategory, string> = {
@@ -297,7 +301,7 @@ function SpecList({ specs }: { specs: Record<string, unknown> }) {
 
 export function ComponentPickerModal({
   isOpen, onClose, category, slotType, slotLabel,
-  currentProduct, buildContext, onConfirm, onRemoveCurrent, getDisplaySpecs, nameFilter,
+  currentProduct, buildContext, onConfirm, onRemoveCurrent, getDisplaySpecs, nameFilter, typeFilter, restrictedManufacturerPlatform,
 }: ComponentPickerModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(category);
   const [search, setSearch] = useState('');
@@ -349,7 +353,7 @@ export function ComponentPickerModal({
     }
     if (slotType === 'ram' && buildContext?.motherboard?.product) {
       const mt = buildContext.motherboard.product.specifications?.memoryType;
-      if (mt) out.memoryType = mt;
+      if (mt) { out.memoryType = mt; out.type = mt; }
     }
     // RAM slot: if no MB but CPU selected → derive from CPU socket
     if (slotType === 'ram' && !buildContext?.motherboard?.product && buildContext?.cpu?.product) {
@@ -358,8 +362,33 @@ export function ComponentPickerModal({
         const ramTypes = getRamTypesForSocket(cpuSocket);
         if (ramTypes.length > 0) {
           out.memoryType = ramTypes[0];
+          out.type = ramTypes[0];
         }
       }
+    }
+    // Case picker: restrict to case form factors that fit the selected motherboard
+    if (slotType === 'case' && buildContext?.motherboard?.product) {
+      const raw = ((buildContext.motherboard.product.specifications as any)?.formFactor ??
+        (buildContext.motherboard.product.specifications as any)?.form_factor ?? '') as string;
+      const mbFF = raw.toUpperCase().trim();
+      const caseFFs: string[] = [];
+      if (mbFF.includes('MINI') || mbFF === 'MITX' || mbFF === 'MINIITX' ||
+          mbFF.includes('MICRO') || mbFF === 'MATX' || mbFF === 'M-ATX' ||
+          mbFF === 'ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
+        caseFFs.push('Mini-ITX', 'MiniITX', 'mITX', 'MITX');
+      }
+      if (mbFF.includes('MICRO') || mbFF === 'MATX' || mbFF === 'M-ATX' ||
+          mbFF === 'ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
+        caseFFs.push('Micro-ATX', 'MicroATX', 'mATX', 'M-ATX', 'MATX');
+      }
+      if (mbFF === 'ATX' || mbFF === 'STANDARD ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
+        caseFFs.push('ATX', 'Standard ATX');
+      }
+      if (mbFF.includes('E-ATX') || mbFF.includes('EXTENDED') || mbFF === 'EATX') {
+        caseFFs.push('eATX', 'Extended ATX');
+      }
+      const unique = [...new Set(caseFFs)];
+      if (unique.length > 0) out.formFactor = unique;
     }
     return out;
   }, [selectedSpecifications, slotType, buildContext]);
@@ -461,8 +490,41 @@ export function ComponentPickerModal({
       if (caseFFs.length > 0) { result.formFactor = caseFFs; result.format = caseFFs; }
     }
     if (slotType === 'case' && b.motherboard?.product) {
-      const raw = (b.motherboard.product.specifications as any)?.formFactor ?? (b.motherboard.product.specifications as any)?.form_factor ?? (b.motherboard.product.specifications as any)?.format;
-      if (raw && typeof raw === 'string') { result.formFactor = [raw]; result.format = [raw]; }
+      // Given the MB form factor, find case form factors that support it.
+      // Hierarchy: eATX > ATX > MicroATX > MiniITX
+      // eATX case: supports eATX, ATX, MicroATX, MiniITX
+      // ATX case:  supports ATX, MicroATX, MiniITX
+      // MicroATX case: supports MicroATX, MiniITX
+      // MiniITX case: supports MiniITX only
+      const raw = ((b.motherboard.product.specifications as any)?.formFactor ??
+        (b.motherboard.product.specifications as any)?.form_factor ??
+        (b.motherboard.product.specifications as any)?.format ?? '') as string;
+      const mbFF = raw.toUpperCase().trim();
+      const caseFFsForMB: string[] = [];
+      if (mbFF.includes('E-ATX') || mbFF.includes('EXTENDED') || mbFF === 'EATX') {
+        caseFFsForMB.push('eATX', 'Extended ATX');
+      }
+      if (mbFF === 'ATX' || mbFF === 'STANDARD ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
+        caseFFsForMB.push('ATX', 'Standard ATX', 'eATX', 'Extended ATX');
+      }
+      if (mbFF.includes('MICRO') || mbFF === 'MATX' || mbFF === 'M-ATX' || mbFF === 'MICROATX' ||
+          mbFF === 'ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
+        caseFFsForMB.push('Micro-ATX', 'MicroATX', 'mATX', 'M-ATX', 'MATX',
+          'ATX', 'Standard ATX', 'eATX', 'Extended ATX');
+      }
+      if (mbFF.includes('MINI') || mbFF === 'MITX' || mbFF === 'MINIITX' ||
+          mbFF.includes('MICRO') || mbFF === 'MATX' || mbFF === 'M-ATX' ||
+          mbFF === 'ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
+        caseFFsForMB.push('Mini-ITX', 'MiniITX', 'mITX', 'MITX',
+          'Micro-ATX', 'MicroATX', 'mATX', 'M-ATX', 'MATX',
+          'ATX', 'Standard ATX', 'eATX', 'Extended ATX');
+      }
+      const unique = [...new Set(caseFFsForMB)];
+      if (unique.length > 0) {
+        result.formFactor = unique;
+        result.format = unique;
+        result.form_factor = unique;
+      }
     }
 
     return result;
@@ -511,10 +573,14 @@ export function ComponentPickerModal({
     });
   }, [products, slotType, componentMap]);
 
+  const compatibleProductNameFilter = typeFilter === 'cooling' ? 'cpu cooler' :
+    typeFilter === 'fan' ? 'fan' :
+    nameFilter;
+
   const incompatibleCount = productsWithCompatibility.filter((p) => p.isIncompatible).length;
   const filteredProducts = productsWithCompatibility.filter((p) => {
     if (p.isIncompatible) return false;
-    if (nameFilter && !p.name.toLowerCase().includes(nameFilter.toLowerCase())) return false;
+    if (compatibleProductNameFilter && !p.name.toLowerCase().includes(compatibleProductNameFilter.toLowerCase())) return false;
     return true;
   });
 
@@ -627,6 +693,7 @@ export function ComponentPickerModal({
                 onReset={handleResetFilters}
                 restrictedSpecValues={restrictedSpecValues}
                 effectiveSpecifications={effectiveSpecs}
+                restrictedManufacturerPlatform={restrictedManufacturerPlatform}
               />
             </div>
           </div>
@@ -646,6 +713,7 @@ export function ComponentPickerModal({
               onSpecificationsChange={setSelectedSpecifications}
               onReset={handleResetFilters}
               restrictedSpecValues={restrictedSpecValues}
+              restrictedManufacturerPlatform={restrictedManufacturerPlatform}
             />
           </div>
 

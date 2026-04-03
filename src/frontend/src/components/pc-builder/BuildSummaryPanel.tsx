@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, BarChart3, Check, AlertTriangle, Save, Gamepad2, Printer, ShoppingBag } from 'lucide-react';
+import { Zap, BarChart3, Check, AlertTriangle, Save, Gamepad2, Printer, ShoppingBag, CircleCheck, XCircle } from 'lucide-react';
 import {
   calculatePerformance,
   getPerformanceLabel,
@@ -24,6 +24,10 @@ export interface BuildSummaryPanelProps {
   selectedCount: number;
   totalCount: number;
   psuWattage?: number;
+  /** Ошибки совместимости из usePCBuilder */
+  compatibilityErrors?: string[];
+  /** Предупреждения совместимости из usePCBuilder */
+  compatibilityWarnings?: string[];
   /** Данные с backend FPS API (если CPU+GPU выбраны) */
   apiFpsData?: FpsApiResponse;
   onAddToCart: () => void;
@@ -43,6 +47,8 @@ export function BuildSummaryPanel({
   selectedCount,
   totalCount,
   psuWattage,
+  compatibilityErrors,
+  compatibilityWarnings,
   apiFpsData,
   onAddToCart,
   onSave,
@@ -127,6 +133,51 @@ export function BuildSummaryPanel({
       aria-label={`Итоги сборки, выбрано ${selectedCount} из ${totalCount} категорий`}
     >
       <h2 className="bsp__title">Ваша сборка</h2>
+
+      {selectedCount > 0 && (
+        <div
+          className={`bsp__compat-status ${compatibilityErrors && compatibilityErrors.length > 0 ? 'bsp__compat-status--error' : compatibilityWarnings && compatibilityWarnings.length > 0 ? 'bsp__compat-status--warning' : 'bsp__compat-status--ok'}`}
+          role="status"
+          aria-live="polite"
+        >
+          {compatibilityErrors && compatibilityErrors.length > 0 ? (
+            <XCircle size={18} strokeWidth={2} aria-hidden className="bsp__compat-icon" />
+          ) : compatibilityWarnings && compatibilityWarnings.length > 0 ? (
+            <AlertTriangle size={18} strokeWidth={2} aria-hidden className="bsp__compat-icon" />
+          ) : (
+            <CircleCheck size={18} strokeWidth={2} aria-hidden className="bsp__compat-icon" />
+          )}
+          <span className="bsp__compat-text">
+            {compatibilityErrors && compatibilityErrors.length > 0
+              ? 'Есть проблемы совместимости'
+              : compatibilityWarnings && compatibilityWarnings.length > 0
+                ? 'Обратите внимание на рекомендации'
+                : 'Сборка совместима'}
+          </span>
+        </div>
+      )}
+
+      {(compatibilityErrors && compatibilityErrors.length > 0) && (
+        <ul className="bsp__compat-list" aria-label="Ошибки совместимости">
+          {compatibilityErrors.map((err, index) => (
+            <li key={index} className="bsp__compat-item bsp__compat-item--error">
+              <XCircle size={14} strokeWidth={2} aria-hidden className="bsp__compat-list-icon" />
+              {err}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {(compatibilityWarnings && compatibilityWarnings.length > 0) && (
+        <ul className="bsp__compat-list" aria-label="Предупреждения совместимости">
+          {compatibilityWarnings.map((warn, index) => (
+            <li key={index} className="bsp__compat-item bsp__compat-item--warning">
+              <AlertTriangle size={14} strokeWidth={2} aria-hidden className="bsp__compat-list-icon" />
+              {warn}
+            </li>
+          ))}
+        </ul>
+      )}
 
       <ul className="bsp__component-list">
         <AnimatePresence mode="popLayout">
