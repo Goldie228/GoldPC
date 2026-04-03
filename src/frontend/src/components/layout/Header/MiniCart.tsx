@@ -1,5 +1,6 @@
 import { type ReactElement, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { X, ShoppingBag } from 'lucide-react';
 import { useCart } from '../../../hooks/useCart';
 import { hasValidProductImage } from '../../../utils/image';
 import styles from './MiniCart.module.css';
@@ -88,10 +89,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
         {/* Header */}
         <div className={styles.header}>
           <span className={styles.title}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-              <line x1="3" y1="6" x2="21" y2="6"/>
-            </svg>
+            <ShoppingBag />
             Корзина ({itemCount})
           </span>
           <button
@@ -100,20 +98,14 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
             aria-label="Закрыть"
             type="button"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
+            <X size={18} />
           </button>
         </div>
 
         {/* Content */}
         {isEmpty ? (
           <div className={styles.empty}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-              <line x1="3" y1="6" x2="21" y2="6"/>
-            </svg>
+            <ShoppingBag size={48} />
             <p>Корзина пуста</p>
             <Link to="/catalog" className={styles.catalogLink} onClick={onClose}>
               Перейти в каталог
@@ -166,10 +158,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
                     aria-label={`Удалить ${item.name}`}
                     type="button"
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
+                    <X size={16} />
                   </button>
                 </div>
               ))}

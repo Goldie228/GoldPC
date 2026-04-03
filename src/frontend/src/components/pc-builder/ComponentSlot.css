@@ -75,13 +75,19 @@
 
 /* ===== ICON ===== */
 .component-slot__icon {
-  width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
-  background: var(--bg-elevated, #121214); color: var(--fg-dim, #52525b);
-  flex-shrink: 0; transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1); overflow: hidden;
+  width: 56px; height: 56px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-elevated, #121214);
+  color: var(--fg-dim, #52525b);
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+  border-radius: 10px;
 }
 .component-slot--selected .component-slot__icon { background: rgba(212, 165, 116, 0.15); color: var(--accent, #d4a574); }
 .component-slot--incompatible .component-slot__icon { background: rgba(248, 113, 113, 0.1); color: #f87171; }
-.component-slot__icon svg { width: 24px; height: 24px; }
+.component-slot__icon svg { width: 28px; height: 28px; flex-shrink: 0; }
+.component-slot--priority .component-slot__icon svg { width: 32px; height: 32px; }
 
 /* ===== THUMBNAIL — как карточки каталога: белый скруглённый квадрат (.imageWrapper) ===== */
 .component-slot__thumbnail {

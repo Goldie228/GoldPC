@@ -5,6 +5,11 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  Cpu, Gpu, CircuitBoard, MemoryStick, HardDrive,
+  Zap, Box, Snowflake, Fan, Monitor, Keyboard,
+  Mouse, Headphones,
+} from 'lucide-react';
+import {
   ComponentSlot,
   BuildSummaryPanel,
   PdfExportModal,
@@ -24,128 +29,19 @@ import type { Product, ProductCategory } from '../../api/types';
 import './PCBuilderPage.css';
 
 const icons = {
-  cpu: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="4" y="4" width="16" height="16" rx="2" />
-      <rect x="9" y="9" width="6" height="6" rx="1" />
-      <path d="M9 1v3M15 1v3M9 20v3M15 20v3" />
-      <path d="M20 9h3M20 14h3M1 9h3M1 14h3" />
-    </svg>
-  ),
-  gpu: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="6" width="20" height="12" rx="2" />
-      <circle cx="8" cy="12" r="2.5" />
-      <circle cx="16" cy="12" r="2.5" />
-      <path d="M18 6V4M6 6V4" />
-      <path d="M22 9v4" stroke="none" fill="currentColor" opacity="0.5">
-        <animate attributeName="opacity" values="0.3;0.6;0.3" dur="2s" repeatCount="indefinite"/>
-      </path>
-    </svg>
-  ),
-  motherboard: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="2" width="20" height="20" rx="2" />
-      <rect x="5" y="5" width="5" height="5" rx="0.5" />
-      <rect x="14" y="5" width="5" height="3" rx="0.5" />
-      <rect x="14" y="10" width="5" height="3" rx="0.5" />
-      <rect x="5" y="12" width="3" height="3" rx="0.5" />
-      <rect x="5" y="17" width="4" height="3" rx="0.5" />
-      <rect x="14" y="15" width="5" height="5" rx="0.5" />
-      <line x1="15" y1="17" x2="18" y2="17" strokeWidth="0.5" />
-      <line x1="15" y1="18.5" x2="18" y2="18.5" strokeWidth="0.5" />
-    </svg>
-  ),
-  ram: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="8" width="20" height="8" rx="1" />
-      <line x1="6" y1="8" x2="6" y2="6" />
-      <line x1="10" y1="8" x2="10" y2="6" />
-      <line x1="14" y1="8" x2="14" y2="6" />
-      <line x1="18" y1="8" x2="18" y2="6" />
-      <rect x="4" y="10" width="4" height="3" rx="0.5" />
-      <rect x="9" y="10" width="4" height="3" rx="0.5" />
-      <rect x="14" y="10" width="4" height="3" rx="0.5" />
-      <line x1="4" y1="15" x2="20" y2="15" strokeWidth="1" />
-    </svg>
-  ),
-  storage: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="4" width="20" height="16" rx="2" />
-      <circle cx="7" cy="10" r="2.5" />
-      <circle cx="10" cy="10" r="0.5" fill="currentColor" />
-      <rect x="16" y="7" width="3" height="6" rx="0.5" />
-      <line x1="16" y1="16" x2="20" y2="16" />
-      <line x1="17" y1="14.5" x2="19" y2="14.5" />
-    </svg>
-  ),
-  psu: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="4" width="20" height="14" rx="2" />
-      <circle cx="9" cy="11" r="3" />
-      <path d="M9 11l3 3" />
-      <path d="M16 8v2M18 8v2M20 8v2" />
-      <line x1="7" y1="21" x2="11" y2="21" />
-      <line x1="9" y1="18" x2="9" y2="21" />
-    </svg>
-  ),
-  case: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="4" y="2" width="16" height="20" rx="2" />
-      <rect x="7" y="5" width="10" height="5" rx="1" />
-      <circle cx="9.5" cy="14.5" r="1.2" />
-      <circle cx="14.5" cy="14.5" r="1.2" />
-      <rect x="8" y="18" width="8" height="2" rx="0.5" />
-    </svg>
-  ),
-  cooling: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-      <path d="M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-    </svg>
-  ),
-  fan: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M15 12c.1-2.3 1.5-4.3 3.6-5.2" />
-      <path d="M9 12c-.1 2.3-1.5 4.3-3.6 5.2" />
-      <path d="M12 15c2.3.1 4.3 1.5 5.2 3.6" />
-      <path d="M12 9c-2.3-.1-4.3-1.5-5.2-3.6" />
-      <circle cx="12" cy="12" r="10" />
-    </svg>
-  ),
-  monitor: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="3" width="20" height="14" rx="2" />
-      <line x1="8" y1="21" x2="16" y2="21" />
-      <line x1="12" y1="17" x2="12" y2="21" />
-    </svg>
-  ),
-  keyboard: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="2" y="6" width="20" height="12" rx="2" />
-      <line x1="6" y1="10" x2="6" y2="10" strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="10" y1="10" x2="10" y2="10" strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="14" y1="10" x2="14" y2="10" strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="18" y1="10" x2="18" y2="10" strokeWidth="2.5" strokeLinecap="round" />
-      <rect x="6" y="14" width="12" height="1.5" rx="0.5" />
-    </svg>
-  ),
-  mouse: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="7" y="2" width="10" height="20" rx="5" />
-      <line x1="12" y1="6" x2="12" y2="10" />
-    </svg>
-  ),
-  headphones: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-      <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z" />
-      <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
-    </svg>
-  ),
+  cpu: <Cpu />,
+  gpu: <Gpu />,
+  motherboard: <CircuitBoard />,
+  ram: <MemoryStick />,
+  storage: <HardDrive />,
+  psu: <Zap />,
+  case: <Box />,
+  cooling: <Snowflake />,
+  fan: <Fan />,
+  monitor: <Monitor />,
+  keyboard: <Keyboard />,
+  mouse: <Mouse />,
+  headphones: <Headphones />,
 };
 
 const componentTypeToCategory: Record<PCComponentType, ProductCategory> = {
@@ -164,8 +60,8 @@ const componentTypeToCategory: Record<PCComponentType, ProductCategory> = {
   headphones: 'headphones',
 };
 
-/** Тип фильтра в модалке выбора — для вентиляторов vs ОЖС отдельный */
-const componentTypeSlugFilter: Record<PCComponentType, string | null> = {
+/** Тип фильтра по имени (fan vs cooling) в модалке выбора */
+const componentTypeFilter: Record<PCComponentType, 'fan' | 'cooling' | null> = {
   cpu: null,
   gpu: null,
   motherboard: null,
@@ -173,8 +69,8 @@ const componentTypeSlugFilter: Record<PCComponentType, string | null> = {
   storage: null,
   psu: null,
   case: null,
-  cooling: null,
-  fan: 'вентилятор для корпуса',
+  fan: 'fan',
+  cooling: 'cooling',
   monitor: null,
   keyboard: null,
   mouse: null,
@@ -711,7 +607,7 @@ export function PCBuilderPage() {
             }
           }}
           getDisplaySpecs={getDisplaySpecs}
-          nameFilter={componentTypeSlugFilter[selectedSlot] ?? undefined}
+          typeFilter={componentTypeFilter[selectedSlot] ?? undefined}
           selectedCount={selectedCount}
           totalCount={totalCount}
         />

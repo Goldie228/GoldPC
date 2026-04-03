@@ -1,5 +1,6 @@
 import { forwardRef, useId } from 'react';
 import type { InputHTMLAttributes, ReactNode } from 'react';
+import { AlertCircle } from 'lucide-react';
 import styles from './Input.module.css';
 
 export type InputSize = 'sm' | 'md' | 'lg';
@@ -135,20 +136,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {/* Error message */}
         {hasError && (
           <div id={errorId} className={styles.errorMessage} role="alert">
-            <svg
-              className={styles.errorIcon}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
+            <AlertCircle className={styles.errorIcon} aria-hidden="true" />
             {error}
           </div>
         )}

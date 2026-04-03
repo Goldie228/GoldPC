@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { ArrowLeft, CircleCheck, Truck, Check, AlertCircle } from 'lucide-react';
 import './OrderDetailPage.css';
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';
@@ -223,10 +224,7 @@ export function OrderDetailPage() {
       <header className="order-detail__header">
         <div className="order-detail__title-section">
           <a href="/manager/orders" className="back-link">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
+            <ArrowLeft size={20} />
             Назад к заказам
           </a>
           <h1 className="order-detail__title">#{order.id}</h1>
@@ -371,10 +369,7 @@ export function OrderDetailPage() {
                     onClick={handleProcess}
                     disabled={isUpdating}
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                      <polyline points="22 4 12 14.01 9 11.01" />
-                    </svg>
+                    <CircleCheck size={16} />
                     Обработать
                   </button>
                 )}
@@ -384,12 +379,7 @@ export function OrderDetailPage() {
                     onClick={handleShip}
                     disabled={isUpdating}
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="1" y="3" width="15" height="13" />
-                      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-                      <circle cx="5.5" cy="18.5" r="2.5" />
-                      <circle cx="18.5" cy="18.5" r="2.5" />
-                    </svg>
+                    <Truck size={16} />
                     Отправить
                   </button>
                 )}
@@ -399,9 +389,7 @@ export function OrderDetailPage() {
                     onClick={handleComplete}
                     disabled={isUpdating}
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
+                    <Check size={16} />
                     Завершить
                   </button>
                 )}
@@ -411,11 +399,7 @@ export function OrderDetailPage() {
                     onClick={handleCancel}
                     disabled={isUpdating}
                   >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                    </svg>
+                    <AlertCircle size={16} />
                     Отменить заказ
                   </button>
                 )}

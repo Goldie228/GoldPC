@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { RotateCw, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import './ServerErrorPage.css';
 
@@ -35,11 +36,7 @@ export function ServerErrorPage() {
     <div className="server-error">
       <div className="server-error__card">
         <div className="server-error__icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="15" y1="9" x2="9" y2="15" />
-            <line x1="9" y1="9" x2="15" y2="15" />
-          </svg>
+          <XCircle size={48} />
         </div>
         <h1 className="server-error__title">Произошла ошибка</h1>
         <p className="server-error__message">
@@ -51,10 +48,7 @@ export function ServerErrorPage() {
         </div>
         <div className="server-error__actions">
           <Button variant="primary" onClick={handleRetry}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="server-error__btn-icon">
-              <polyline points="23 4 23 10 17 10" />
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-            </svg>
+            <RotateCw className="server-error__btn-icon" />
             Повторить
           </Button>
           <Button variant="ghost" onClick={handleGoHome}>
