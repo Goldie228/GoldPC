@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './NotFoundPage.css';
 
@@ -54,10 +55,7 @@ export function NotFoundPage() {
         </p>
         <div className="not-found__actions">
           <Link to="/" className="not-found__link not-found__link--primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="not-found__btn-icon">
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <polyline points="9 18 3 12 9 6" />
-            </svg>
+            <ArrowLeft size={24} />
             На главную
           </Link>
           <Link to="/catalog" className="not-found__link not-found__link--ghost">

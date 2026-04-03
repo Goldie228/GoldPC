@@ -1,4 +1,5 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react';
+import { AlertCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import './ErrorBoundary.css';
 
@@ -98,20 +99,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         <div className="error-boundary">
           <div className="error-boundary__container">
             <div className="error-boundary__icon">
-              <svg
-                width="64"
-                height="64"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="8" x2="12" y2="12" />
-                <line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
+              <AlertCircle size={48} />
             </div>
             <h1 className="error-boundary__title">Something went wrong</h1>
             <p className="error-boundary__message">

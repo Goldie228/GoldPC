@@ -12,6 +12,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 import { Modal } from '../../ui/Modal/Modal';
 import { PasswordField } from '../../ui/PasswordField';
 import { useAuth } from '../../../hooks/useAuth';
@@ -125,10 +126,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           disabled={isLoading}
         >
           {isLoading ? 'Вход...' : 'Войти'}
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
+          <ArrowRight size={18} />
         </button>
       </form>
 

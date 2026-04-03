@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, List, LayoutGrid, SlidersHorizontal, X, ExternalLink, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, SlidersHorizontal, X, ExternalLink, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Modal } from '../../ui';
 import { ProductCardSkeleton } from '../../ui/Skeleton';
 import { ApiErrorBanner } from '../../ui/ApiErrorBanner';
@@ -12,11 +12,11 @@ import { Pagination } from '../../catalog/Pagination/Pagination';
 import { FilterSidebar } from '../../catalog';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';
-import { isComponentCompatible } from '../../../utils/compatibilityUtils';
+import { isComponentCompatible, extractSocket as _extractSocket, extractMemoryType as _extractMemoryType, extractSupportedFormFactors } from '../../../utils/compatibilityUtils';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '../../../hooks/useProducts';
 import { catalogApi } from '../../../api/catalog';
-import type { Product, ProductCategory, ProductSpecifications, ProductImage } from '../../../api/types';
+import type { Product, ProductCategory, ProductImage } from '../../../api/types';
 import type { PCComponentType, PCBuilderSelectedState } from '../../../hooks/usePCBuilder';
 import styles from './ComponentPickerModal.module.css';
 
@@ -68,12 +68,18 @@ function summaryToProduct(s: any): Product {
   return { ...s, specifications: s.specifications ?? {} } as Product;
 }
 
-function extractSocket(specs?: ProductSpecifications): string | null {
-  if (!specs) return null;
-  return (specs.socket as string) || (specs.cpuSocket as string) || null;
-}
+// Socket-to-chipset compatibility map
+const SOCKET_CHIPSET_MAP: Record<string, string[]> = {
+  AM4: ['A320', 'B350', 'B450', 'X300', 'X370', 'X470', 'X570', 'A520', 'X570D', 'X570S',
+        'AMD A320', 'AMD B350', 'AMD B450', 'AMD X300', 'AMD X370', 'AMD X470', 'AMD X570', 'AMD A520'],
+  AM5: ['A620', 'B650', 'B650E', 'X670', 'X670E', 'X870', 'X870E', 'A620A', 'B840', 'B850',
+        'AMD A620', 'AMD B650', 'AMD X670', 'AMD X870', 'AMD X870E'],
+  LGA1700: ['H610', 'B660', 'B760', 'H670', 'Z690', 'Z790', 'INTEL H610', 'INTEL B660', 'INTEL Z690', 'INTEL Z790'],
+  LGA1851: ['B860', 'H810', 'Z890', 'INTEL B860', 'INTEL Z890'],
+  LGA1200: ['H410', 'B460', 'H510', 'B560', 'H570', 'Z490', 'Z590', 'W480'],
+};
 
-// ─── CardImageGallery: image с	prev/next + hover zones + badges ────────
+// ─── CardImageGallery: image with prev/next + hover zones + badges ────────
 
 function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }: {
   product: any;
@@ -345,19 +351,96 @@ export function ComponentPickerModal({
   const effectiveSpecs = useMemo(() => {
     const out = { ...selectedSpecifications };
     if (slotType === 'cpu' && buildContext?.motherboard?.product) {
-      const s = extractSocket(buildContext.motherboard.product.specifications);
+      const s = _extractSocket(buildContext.motherboard.product.specifications);
       if (s) out.socket = s;
     }
     if (slotType === 'motherboard' && buildContext?.cpu?.product) {
-      const s = extractSocket(buildContext.cpu.product.specifications);
+      const s = _extractSocket(buildContext.cpu.product.specifications);
       if (s) out.socket = s;
     }
     if (slotType === 'ram' && buildContext?.motherboard?.product) {
       const mt = buildContext.motherboard.product.specifications?.memoryType;
       if (mt) out.memoryType = mt;
     }
+    // RAM slot: if no MB but CPU selected → derive from CPU socket
+    if (slotType === 'ram' && !buildContext?.motherboard?.product && buildContext?.cpu?.product) {
+      const cpuSocket = _extractSocket(buildContext.cpu.product.specifications);
+      const SOCKET_RAM_MAP: Record<string, string[]> = {
+        AM4: ['DDR4'], AM5: ['DDR5'], LGA1700: ['DDR4', 'DDR5'],
+        LGA1851: ['DDR5'], LGA1200: ['DDR4'],
+      };
+      if (cpuSocket) {
+        const ramTypes = SOCKET_RAM_MAP[cpuSocket.toUpperCase()];
+        if (ramTypes) {
+          // Pick first type for single-value filter
+          out.memoryType = ramTypes[0];
+        }
+      }
+    }
     return out;
   }, [selectedSpecifications, slotType, buildContext]);
+
+  // ── Restricted spec values from build context ──
+  // Socket → allowed RAM types (most modern platforms only support specific DDR)
+  const SOCKET_RAM_MAP: Record<string, string[]> = {
+    AM4: ['DDR4'],
+    AM5: ['DDR5'],
+    LGA1700: ['DDR4', 'DDR5'],
+    LGA1851: ['DDR5'],
+    LGA1200: ['DDR4'],
+  };
+
+  const restrictedSpecValues = useMemo(() => {
+    const result: Record<string, string[]> = {};
+    const b = buildContext ?? { ram: [], storage: [], fan: [] };
+
+    if (slotType === 'motherboard' && b.cpu?.product) {
+      const cpuSocket = _extractSocket(b.cpu.product.specifications);
+      if (cpuSocket) {
+        result.socket = [cpuSocket];
+        const chipsets = SOCKET_CHIPSET_MAP[cpuSocket.toUpperCase()];
+        if (chipsets) result.chipset = chipsets;
+        // Restrict RAM type based on CPU socket
+        const ramTypes = SOCKET_RAM_MAP[cpuSocket.toUpperCase()];
+        if (ramTypes) {
+          result.memoryType = ramTypes;
+          result.tip_pamyati = ramTypes;
+          result.type = ramTypes;
+          result.memory_type = ramTypes;
+        }
+      }
+    }
+    if (slotType === 'cpu' && b.motherboard?.product) {
+      const mbSocket = _extractSocket(b.motherboard.product.specifications);
+      if (mbSocket) result.socket = [mbSocket];
+    }
+    if (slotType === 'ram' && b.motherboard?.product) {
+      const memType = _extractMemoryType(b.motherboard.product.specifications);
+      if (memType) { result.memoryType = [memType]; result.tip_pamyati = [memType]; result.type = [memType]; }
+    }
+    if (slotType === 'ram' && b.cpu?.product && !b.motherboard?.product) {
+      const cpuSocket = _extractSocket(b.cpu.product.specifications);
+      const ramTypes = SOCKET_RAM_MAP[cpuSocket?.toUpperCase() ?? ''] ?? [];
+      if (ramTypes.length > 0 && !result.memoryType) {
+        result.memoryType = ramTypes; result.tip_pamyati = ramTypes;
+        result.type = ramTypes; result.memory_type = ramTypes;
+      }
+    }
+    if (slotType === 'cooling' && b.cpu?.product) {
+      const cpuSocket = _extractSocket(b.cpu.product.specifications);
+      if (cpuSocket) result.socket = [cpuSocket];
+    }
+    if (slotType === 'motherboard' && b.case?.product) {
+      const caseFFs = extractSupportedFormFactors(b.case.product.specifications);
+      if (caseFFs.length > 0) { result.formFactor = caseFFs; result.format = caseFFs; }
+    }
+    if (slotType === 'case' && b.motherboard?.product) {
+      const raw = (b.motherboard.product.specifications as any)?.formFactor ?? (b.motherboard.product.specifications as any)?.form_factor ?? (b.motherboard.product.specifications as any)?.format;
+      if (raw && typeof raw === 'string') { result.formFactor = [raw]; result.format = [raw]; }
+    }
+
+    return result;
+  }, [slotType, buildContext]);
 
   const { data: productsResponse, isLoading, error, refetch } = useProducts(
     useMemo(() => ({
@@ -509,13 +592,14 @@ export function ComponentPickerModal({
                 <button className={styles.mobileFilterClose} onClick={() => setMobileFilterOpen(false)}><X size={24} /></button>
               </div>
               <FilterSidebar
-                selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} categoryLocked={false}
+                selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} categoryLocked={true}
                 priceRange={priceRange} onPriceChange={setPriceRange}
                 selectedManufacturerIds={selectedManufacturerIds} onManufacturerIdsChange={setSelectedManufacturerIds}
                 minRating={minRating} onRatingChange={() => {}}
                 selectedAvailability={selectedAvailability} onAvailabilityChange={setSelectedAvailability}
                 selectedSpecifications={effectiveSpecs} onSpecificationsChange={setSelectedSpecifications}
                 onReset={handleResetFilters}
+                restrictedSpecValues={restrictedSpecValues}
               />
             </div>
           </div>
@@ -525,13 +609,14 @@ export function ComponentPickerModal({
           {/* Filter Sidebar */}
           <div className={styles.filterSidebarWrap}>
             <FilterSidebar
-              selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} categoryLocked={false}
+              selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} categoryLocked={true}
               priceRange={priceRange} onPriceChange={setPriceRange}
               selectedManufacturerIds={selectedManufacturerIds} onManufacturerIdsChange={setSelectedManufacturerIds}
               minRating={minRating} onRatingChange={() => {}}
               selectedAvailability={selectedAvailability} onAvailabilityChange={setSelectedAvailability}
               selectedSpecifications={effectiveSpecs} onSpecificationsChange={setSelectedSpecifications}
               onReset={handleResetFilters}
+              restrictedSpecValues={restrictedSpecValues}
             />
           </div>
 
@@ -560,12 +645,6 @@ export function ComponentPickerModal({
                   <input type="checkbox" className={styles.stockCheckInput} checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
                   <span>В наличии</span>
                 </label>
-                <div className={styles.viewToggle}>
-                  <button type="button" className={`${styles.viewToggleBtn} ${viewMode === 'grid' ? styles.viewToggleActive : ''}`}
-                    onClick={() => setViewMode('grid')} title="Сетка"><LayoutGrid size={16} /></button>
-                  <button type="button" className={`${styles.viewToggleBtn} ${viewMode === 'list' ? styles.viewToggleActive : ''}`}
-                    onClick={() => setViewMode('list')} title="Список"><List size={16} /></button>
-                </div>
               </div>
             </div>
 

@@ -37,23 +37,51 @@
   width: 320px; max-width: 85vw;
   background: #18181b;
   border-left: 1px solid rgba(255,255,255,0.06);
-  padding: 16px; overflow-y: auto;
+  padding: 0;
+  overflow-y: auto;
 }
+
 .mobileFilterHeader {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: sticky;
+  top: 0;
+  background: #18181b;
+  z-index: 1;
+  flex-shrink: 0;
 }
-.mobileFilterHeader h3 { margin: 0; font-size: 1rem; color: #fafafa; }
+.mobileFilterHeader h3 { margin: 0; font-size: 0.85rem; font-weight: 600; color: #a1a1aa; text-transform: uppercase; letter-spacing: 0.05em; }
 .mobileFilterClose {
   background: none; border: none; color: #71717a; cursor: pointer; padding: 4px; display: flex;
+  transition: color 0.15s;
+}
+.mobileFilterClose:hover { color: #fafafa; }
+
+/* FilterSidebar inside mobile — reset desktop styles */
+.mobileFilterContent [class*="sidebar"] {
+  position: static !important;
+  top: auto !important;
+  max-height: none !important;
+  padding: 12px 16px 16px !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  background: transparent !important;
+}
+
+/* Hide duplicate title inside mobile */
+.mobileFilterContent [class*="sidebarHeader"] {
+  display: none !important;
 }
 
 /* ─── FilterSidebar wrapper ───────────── */
 .filterSidebarWrap {
-  max-height: calc(96vh - 14rem);
   overflow-y: auto;
   background: #121214;
   padding: 8px;
   align-self: start;
+  max-height: 100%;
 }
 .filterSidebarWrap::-webkit-scrollbar { width: 4px; }
 .filterSidebarWrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
@@ -65,7 +93,6 @@
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
-  max-height: calc(96vh - 14rem);
   padding-right: 4px;
 }
 .mainCol::-webkit-scrollbar { width: 5px; }
@@ -85,6 +112,12 @@
   display: none; align-items: center; gap: 6px;
   padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08);
   background: #121214; color: #fafafa; font-size: 0.78rem; cursor: pointer; flex-shrink: 0;
+}
+
+@media (max-width: 1100px) {
+  .mobileFilterBtn {
+    display: flex;
+  }
 }
 
 /* Search */
@@ -302,15 +335,89 @@
 
 /* ─── Pagination ───────────────────────── */
 .paginationWrap {
-  padding: 12px 0 8px;
+  padding: 8px 0 4px;
   flex-shrink: 0;
-  position: sticky;
-  bottom: 0;
-  background: linear-gradient(180deg, transparent, #0c0c0e 20%);
-  z-index: 2;
   margin: 0 -4px;
   padding-left: 4px;
   padding-right: 4px;
+}
+
+@media (min-width: 769px) {
+  .paginationWrap {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(180deg, transparent, #0c0c0e 20%);
+    z-index: 2;
+  }
+}
+
+/* Compact pagination inside picker */
+.paginationWrap :global {
+  /* Reset the standalone Pagination component's outer spacing */
+}
+.paginationWrap :global(.pagination) {
+  margin-top: 0;
+  padding-top: 0;
+  gap: 8px;
+}
+.paginationWrap :global(.paginationInfo) {
+  gap: 8px;
+}
+.paginationWrap :global(.rangeText) {
+  font-size: 0.72rem;
+}
+.paginationWrap :global(.pageSizeSelect),
+.paginationWrap :global(.pageSizeLabel) {
+  display: none;
+}
+.paginationWrap :global(.navBtn) {
+  min-width: 36px;
+  height: 34px;
+  font-size: 0.78rem;
+  gap: 4px;
+  padding: 0 10px;
+}
+.paginationWrap :global(.pageBtn) {
+  min-width: 32px;
+  height: 32px;
+  font-size: 0.78rem;
+  border-radius: 6px;
+}
+.paginationWrap :global(.ellipsisDots) {
+  min-width: 22px;
+  height: 32px;
+  font-size: 0.95rem;
+}
+.paginationWrap :global(.ellipsisBetween) {
+  min-width: 22px;
+  height: 32px;
+}
+.paginationWrap :global(.jumpForm) {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  gap: 6px;
+}
+.paginationWrap :global(.jumpLabel) {
+  display: none;
+}
+.paginationWrap :global(.jumpInput) {
+  width: 44px;
+  height: 32px;
+  font-size: 0.78rem;
+  border-radius: 6px;
+}
+.paginationWrap :global(.jumpBtn) {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 0.75rem;
+  border-radius: 6px;
+}
+.paginationWrap :global(.jumpHint) {
+  display: none;
+}
+.paginationWrap :global(.paginationControls) {
+  gap: 4px;
 }
 
 /* ─── Preview sidebar ──────────────────── */
@@ -324,7 +431,7 @@
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.06);
   background: #121214;
-  max-height: calc(96vh - 14rem);
+  max-height: 100%;
   overflow-y: auto;
   flex-shrink: 0;
 }
@@ -509,10 +616,58 @@
   .body { grid-template-columns: 1fr 260px; }
   .filterSidebarWrap { display: none; }
 }
+
 @media (max-width: 768px) {
-  .body { grid-template-columns: 1fr; }
-  .previewPanel { position: static; max-height: none; order: -1; }
-  .mobileFilterBtn { display: flex; }
+  .root {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .body {
+    display: flex;
+    flex-direction: column-reverse;
+    overflow: visible;
+    gap: 16px;
+  }
+  .mainCol {
+    max-height: none;
+    overflow: visible;
+    min-height: 200px;
+  }
+  .previewPanel {
+    position: static;
+    max-height: none;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+  .previewImageGallery {
+    max-height: 180px;
+    aspect-ratio: 16 / 9;
+  }
   .sortSelect { max-width: 160px; }
   .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .filterSidebarWrap {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* ─── Toolbar responsiveness ────────────── */
+@media (max-width: 1100px) {
+  .toolbarLeft { gap: 6px; }
+  .toolbarRight { gap: 6px; }
+}
+
+@media (max-width: 860px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .toolbarLeft { min-width: 0; }
+  .toolbarRight {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .viewToggleBtn { padding: 6px 8px; }
 }

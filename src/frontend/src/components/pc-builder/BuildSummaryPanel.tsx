@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, BarChart3, Check, AlertTriangle, Save, Gamepad2, Printer } from 'lucide-react';
+import { Zap, BarChart3, Check, AlertTriangle, Save, Gamepad2, Printer, ShoppingBag } from 'lucide-react';
 import {
   calculatePerformance,
   getPerformanceLabel,
@@ -353,11 +353,7 @@ export function BuildSummaryPanel({
           onClick={onAddToCart}
           aria-disabled={!canAddToCart}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <path d="M16 10a4 4 0 0 1-8 0" />
-          </svg>
+          <ShoppingBag size={18} strokeWidth={2} aria-hidden="true" />
           В корзину
         </button>
         <button
@@ -372,9 +368,6 @@ export function BuildSummaryPanel({
 
       {!canAddToCart && selectedCount > 0 && !isCompatible && (
         <p className="bsp__disabled-hint">Исправьте ошибки совместимости для корзины и оформления</p>
-      )}
-      {!canAddToCart && selectedCount === 0 && (
-        <p className="bsp__disabled-hint">Выберите компоненты для сборки</p>
       )}
     </div>
   );

@@ -426,6 +426,16 @@ public class CatalogService : ICatalogService
                 Count = counts.GetValueOrDefault(v!, 0)
             }).ToList();
 
+            // When filterContext is applied, exclude options with count === 0 — they are incompatible
+            if (filterContext != null)
+            {
+                options = options.Where(o => o.Count > 0).ToList();
+                if (options.Count == 0)
+                {
+                    continue;
+                }
+            }
+
             result.Add(new FilterFacetAttributeDto
             {
                 Key = a.AttributeKey,

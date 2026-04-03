@@ -21,6 +21,8 @@ interface FilterSidebarProps {
   selectedSpecifications: Record<string, string | number | string[]>;
   onSpecificationsChange: (specs: Record<string, string | number | string[]>) => void;
   onReset: () => void;
+  /** Ограничивает опции spec-фильтров указанными значениями. */
+  restrictedSpecValues?: Record<string, string[]>;
 }
 
 // Названия категорий (счётчики загружаются динамически)
@@ -255,7 +257,7 @@ function FilterGroup({ title, icon, defaultOpen = true, children }: FilterGroupP
 export function FilterSidebar({
   selectedCategory,
   onCategoryChange,
-  categoryLocked: _categoryLocked = false,
+  categoryLocked = false,
   priceRange,
   onPriceChange,
   selectedManufacturerIds,
@@ -267,6 +269,8 @@ export function FilterSidebar({
   selectedSpecifications,
   onSpecificationsChange,
   onReset,
+  restrictedSpecValues,
+
 }: FilterSidebarProps) {
   const PRICE_MIN = 0;
   // Mock catalog prices are in BYN and usually <= ~6000 per category.
@@ -371,7 +375,10 @@ export function FilterSidebar({
     const fetchAttrs = async () => {
       setSpecAttrsLoading(true);
       try {
-        const attrs = await catalogApi.getFilterFacets(backendSlug);
+        const specs = selectedSpecifications && Object.keys(selectedSpecifications).length > 0
+          ? selectedSpecifications as Record<string, string>
+          : undefined;
+        const attrs = await catalogApi.getFilterFacets(backendSlug, { specifications: specs });
         setFilterAttributes(attrs);
       } catch (err) {
         console.error('Failed to fetch filter attributes:', err);
@@ -425,9 +432,10 @@ export function FilterSidebar({
       </div>
 
       {/* Categories — открыта по умолчанию для быстрой навигации */}
-      <FilterGroup
-        title="Категории"
-        icon={<Grid3X3 size={14} />}
+      {!categoryLocked && (
+        <FilterGroup
+          title="Категории"
+          icon={<Grid3X3 size={14} />}
         defaultOpen={true}
       >
         <div className={styles.categoryList}>
@@ -456,6 +464,7 @@ export function FilterSidebar({
           ))}
         </div>
       </FilterGroup>
+      )}
 
       {/* Price */}
       <FilterGroup
@@ -592,6 +601,25 @@ export function FilterSidebar({
               ? filteredOptions.filter((o) => !/^\d+$/.test(o.value))
               : filteredOptions;
 
+            // Apply restrictedSpecValues if provided
+            const restrictKey = attr.key;
+            const allowed = restrictedSpecValues?.[restrictKey];
+
+            // Also check if selectedSpecifications has a locked value (single value, not array)
+            // This happens when effectiveSpecs hard-codes a spec (e.g., socket from buildContext)
+            const lockedValue = selectedSpecifications[restrictKey];
+            const isLockArray = Array.isArray(lockedValue);
+            const isLocked = typeof lockedValue === 'string' && !isLockArray;
+
+            let finalOptions = cleanOptions;
+            if (allowed) {
+              finalOptions = cleanOptions.filter((o) => allowed.some(a => a.toLowerCase() === o.value.toLowerCase()));
+            } else if (isLocked && lockedValue) {
+              // Locked to a single value — show only that value, hide all others
+              const lockedUpper = String(lockedValue).toUpperCase();
+              finalOptions = cleanOptions.filter((o) => o.value.toUpperCase() === lockedUpper);
+            }
+
             return (
               <div key={attr.key} className={styles.specFilterBlock}>
                 {!options?.hideLabel && <span className={styles.specFilterLabel}>{attr.displayName}</span>}
@@ -610,8 +638,8 @@ export function FilterSidebar({
                   </div>
                 )}
                 <div className={styles.specFilterValues}>
-                  {cleanOptions.length > 0 ? (
-                    cleanOptions.map(({ value: val, count }) => {
+                  {finalOptions.length > 0 ? (
+                    finalOptions.map(({ value: val, count }) => {
                       const disabled = count === 0 && !isChecked(val);
                       return (
                       <label

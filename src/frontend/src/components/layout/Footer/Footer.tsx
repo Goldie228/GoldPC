@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Instagram } from 'lucide-react';
 import styles from './Footer.module.css';
 
 /**
@@ -105,11 +106,7 @@ export function Footer() {
               </svg>
             </span>
             <span className={styles.disabledSocialLink} aria-label="Instagram (скоро)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="2" y="2" width="20" height="20" rx="5" />
-                <circle cx="12" cy="12" r="4" />
-                <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" />
-              </svg>
+              <Instagram />
             </span>
           </div>
         </div>
