@@ -611,9 +611,24 @@ export function FilterSidebar({
             const isLockArray = Array.isArray(lockedValue);
             const isLocked = typeof lockedValue === 'string' && !isLockArray;
 
+            // Для `type` — умный фильтр: DDR4 должен совпадать с "DDR4 DIMM",
+            // но НЕ с "DDR4 SO-DIMM" / "DDR4 DIMM Registered" / чипами ("1Gx8")
+            const isMatchingDDRType = (optionValue: string, expectedTypes: string[]): boolean => {
+              const upper = optionValue.toUpperCase();
+              // Чип-значения (не DDR-типы)
+              if (/^[0-9]+[GM]x[0-9]+/i.test(optionValue)) return false;
+              if (/\bSO-DIMM\b/i.test(optionValue)) return false;
+              if (/\bREGISTERED\b/i.test(optionValue)) return false;
+              return expectedTypes.some((dt) => upper.startsWith(dt.toUpperCase()) && !/\bSO-DIMM\b/.test(upper) && !/\bREGISTERED\b/.test(upper));
+            };
+
             let finalOptions = cleanOptions;
             if (allowed) {
-              finalOptions = cleanOptions.filter((o) => allowed.some(a => a.toLowerCase() === o.value.toLowerCase()));
+              if (attr.key === 'type') {
+                finalOptions = cleanOptions.filter((o) => isMatchingDDRType(o.value, allowed));
+              } else {
+                finalOptions = cleanOptions.filter((o) => allowed.some(a => a.toLowerCase() === o.value.toLowerCase()));
+              }
             } else if (isLocked && lockedValue) {
               // Locked to a single value — show only that value, hide all others
               const lockedUpper = String(lockedValue).toUpperCase();
