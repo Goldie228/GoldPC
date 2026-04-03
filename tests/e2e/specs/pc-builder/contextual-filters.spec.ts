@@ -1,216 +1,327 @@
-/**
- * E2E tests for context-aware filter facets in PC Builder.
- *
- * Scenarios:
- *   1) API: motherboard facets without filters => has Intel & AMD chipsets
- *   2) API: motherboard facets with socket=AM4 => no Intel chipsets, AMD chipsets present
- *   3) API: motherboard facets with socket=AM4 => DDR3 count = 0 or absent
- *   4) UI: select AM4 CPU => open motherboard picker => chipset filter hides Intel chipsets
- */
+import { test, expect, Page } from '@playwright/test';
+import { PCBuilderPage } from '../../pages/PCBuilderPage';
 
-import { test, expect } from '@playwright/test';
+const cpu_am4 = {
+  id: 'cpu-1', name: 'AMD Ryzen 5 3600', sku: 'R5-3600',
+  category: 'cpu', price: 200, stock: 10, isActive: true,
+  specifications: { socket: 'AM4', cores: 6, threads: 12, tdp: 65 },
+};
+const cpu_am5 = {
+  id: 'cpu-2', name: 'AMD Ryzen 5 7600X', sku: 'R5-7600X',
+  category: 'cpu', price: 300, stock: 10, isActive: true,
+  specifications: { socket: 'AM5', cores: 6, threads: 12, tdp: 105 },
+};
+const cpu_intel = {
+  id: 'cpu-3', name: 'Intel Core i5-13600K', sku: 'i5-13600K',
+  category: 'cpu', price: 280, stock: 10, isActive: true,
+  specifications: { socket: 'LGA1700', cores: 14, threads: 20, tdp: 125 },
+};
+const mb_am4 = {
+  id: 'mb-1', name: 'MSI B550-A PRO', sku: 'B550APRO',
+  category: 'motherboard', price: 150, stock: 10, isActive: true,
+  specifications: { socket: 'AM4', chipset: 'B550', formFactor: 'ATX', memoryType: 'DDR4' },
+};
+const mb_am5 = {
+  id: 'mb-2', name: 'ASUS B650-PLUS', sku: 'B650PLUS',
+  category: 'motherboard', price: 200, stock: 10, isActive: true,
+  specifications: { socket: 'AM5', chipset: 'B650', formFactor: 'ATX', memoryType: 'DDR5' },
+};
+const mb_intel = {
+  id: 'mb-3', name: 'ASUS Z790-P', sku: 'Z790P',
+  category: 'motherboard', price: 220, stock: 10, isActive: true,
+  specifications: { socket: 'LGA1700', chipset: 'Z790', formFactor: 'ATX', memoryType: 'DDR5' },
+};
+const ram_ddr4 = {
+  id: 'ram-1', name: 'G.Skill 16GB DDR4-3200', sku: 'GS-16D4',
+  category: 'ram', price: 60, stock: 10, isActive: true,
+  specifications: { memoryType: 'DDR4', capacity: 16, speed: 3200 },
+};
+const ram_ddr5 = {
+  id: 'ram-2', name: 'Corsair 16GB DDR5-5600', sku: 'COR-16D5',
+  category: 'ram', price: 80, stock: 10, isActive: true,
+  specifications: { memoryType: 'DDR5', capacity: 16, speed: 5600 },
+};
+const ram_ddr3 = {
+  id: 'ram-3', name: 'Kingston 8GB DDR3-1600', sku: 'KNG-8D3',
+  category: 'ram', price: 30, stock: 10, isActive: true,
+  specifications: { memoryType: 'DDR3', capacity: 8, speed: 1600 },
+};
+const gpu_high = {
+  id: 'gpu-1', name: 'RTX 4070 Ti', sku: '4070TI',
+  category: 'gpu', price: 800, stock: 5, isActive: true,
+  specifications: { memory: 12, memoryType: 'GDDR6X', tdp: 285 },
+};
+const psu_high = {
+  id: 'psu-1', name: 'Corsair RM850x', sku: 'RM850X',
+  category: 'psu', price: 150, stock: 10, isActive: true,
+  specifications: { wattage: 850, efficiency: '80+ Gold' },
+};
+const psu_low = {
+  id: 'psu-2', name: 'Generic 300W PSU', sku: '300W',
+  category: 'psu', price: 40, stock: 10, isActive: true,
+  specifications: { wattage: 300 },
+};
+const cooling_item = {
+  id: 'cooling-1', name: 'Deepcool AK400', sku: 'AK400',
+  category: 'cooling', price: 35, stock: 10, isActive: true,
+  specifications: { supportedSockets: ['AM4', 'AM5', 'LGA1700'] },
+};
+const storage_item = {
+  id: 'storage-1', name: 'Samsung 970 EVO 1TB', sku: '970EVO',
+  category: 'storage', price: 100, stock: 10, isActive: true,
+  specifications: { type: 'NVMe', capacity: 1000 },
+};
 
-const BASE_URL = 'http://localhost:5173';
+async function mockProducts(page: Page, catalog: Record<string, Record<string, unknown>[]>) {
+  for (const [category, products] of Object.entries(catalog)) {
+    await page.route(
+      (url) =>
+        url.pathname.includes('/catalog/products') &&
+        url.searchParams.get('category') === category,
+      (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            data: products,
+            meta: { page: 1, pageSize: 50, totalPages: 1, totalItems: products.length, hasNext: false, hasPrevious: false },
+          }),
+        }),
+    );
+  }
+}
 
-// Intel-only chipsets that should NOT appear when socket=AM4 is applied
-const INTEL_CHIPSETS = ['Z790', 'Z690', 'B660', 'H610'];
-// AMD chipsets that SHOULD appear when socket=AM4 is applied
-const AMD_CHIPSETS = ['X570', 'B550', 'B450', 'A520'];
+test.describe('Contextual filters - PC Builder', () => {
+  let pom: PCBuilderPage;
 
-test.describe('Contextual filter facets — PC Builder', () => {
-  // ------------------------------------------------------------------
-  // API tests (direct requests to the backend)
-  // ------------------------------------------------------------------
-  test.describe('API: filter-facets endpoint', () => {
-    test('motherboard facets without filters — chipset facet exists', async ({ request }) => {
-      const response = await request.get(
-        `${BASE_URL}/api/v1/catalog/categories/motherboards/filter-facets`
-      );
-      expect(response.ok()).toBe(true);
-
-      const body = await response.json();
-      // Response is { data: FilterFacetAttribute[] } or FilterFacetAttribute[]
-      const facets: Array<{ key: string; options?: Array<{ value: string; count: number }> }> =
-        Array.isArray(body) ? body : (body.data ?? body.data?.data ?? []);
-
-      expect(facets.length).toBeGreaterThan(0);
-
-      const chipsetFacet = facets.find((f) => f.key === 'chipset');
-      expect(chipsetFacet, 'chipset facet should exist').toBeTruthy();
-      expect(chipsetFacet!.options!.length, 'chipset should have options').toBeGreaterThan(0);
-
-      // Collect all chipset values
-      const chipsetValues = chipsetFacet!.options!.map((o) => o.value.toUpperCase());
-
-      // Both Intel and AMD chipsets should be present in the unfiltered response
-      const hasIntelChipset = INTEL_CHIPSETS.some((c) => chipsetValues.includes(c));
-      const hasAmdChipset = AMD_CHIPSETS.some((c) => chipsetValues.includes(c));
-
-      expect(hasIntelChipset, 'unfiltered should have Intel chipsets').toBe(true);
-      expect(hasAmdChipset, 'unfiltered should have AMD chipsets').toBe(true);
-    });
-
-    test('motherboard facets with socket=AM4 — no Intel chipsets', async ({ request }) => {
-      const response = await request.get(
-        `${BASE_URL}/api/v1/catalog/categories/motherboards/filter-facets`,
-        {
-          params: { 'specifications[socket]': 'AM4' },
-        }
-      );
-      expect(response.ok()).toBe(true);
-
-      const body = await response.json();
-      const facets: Array<{ key: string; options?: Array<{ value: string; count: number }> }> =
-        Array.isArray(body) ? body : (body.data ?? body.data?.data ?? []);
-
-      const chipsetFacet = facets.find((f) => f.key === 'chipset');
-      expect(chipsetFacet, 'chipset facet should exist').toBeTruthy();
-
-      // Option values (case-insensitive check) that appear in response
-      const chipsetValues = chipsetFacet!.options!.map((o) => o.value.toUpperCase());
-
-      // No Intel chipsets
-      for (const chipset of INTEL_CHIPSETS) {
-        expect(
-          chipsetValues.includes(chipset),
-          `chipset facet should NOT contain ${chipset} when socket=AM4`
-        ).toBe(false);
-      }
-
-      // AMD chipsets present
-      for (const chipset of AMD_CHIPSETS) {
-        expect(
-          chipsetValues.includes(chipset),
-          `chipset facet SHOULD contain ${chipset} when socket=AM4`
-        ).toBe(true);
-      }
-    });
-
-    test('motherboard facets with socket=AM4 — DDR3 count = 0 or absent', async ({ request }) => {
-      const response = await request.get(
-        `${BASE_URL}/api/v1/catalog/categories/motherboards/filter-facets`,
-        {
-          params: { 'specifications[socket]': 'AM4' },
-        }
-      );
-      expect(response.ok()).toBe(true);
-
-      const body = await response.json();
-      const facets: Array<{ key: string; options?: Array<{ value: string; count: number }> }> =
-        Array.isArray(body) ? body : (body.data ?? body.data?.data ?? []);
-
-      const memoryTypeFacet = facets.find((f) => f.key === 'memory_type');
-      expect(memoryTypeFacet, 'memory_type facet should exist').toBeTruthy();
-
-      const ddr3Option = memoryTypeFacet!.options!.find(
-        (o) => o.value.toUpperCase() === 'DDR3'
-      );
-
-      // DDR3 should either be absent or have count === 0
-      if (ddr3Option) {
-        expect(ddr3Option.count, 'DDR3 count should be 0 when socket=AM4').toBe(0);
-      }
-      // If DDR3 is absent from the facet options, that's also acceptable
-      // (backends typically omit options with 0 count)
-    });
+  test.beforeEach(({ page }) => {
+    pom = new PCBuilderPage(page);
   });
 
-  // ------------------------------------------------------------------
-  // UI test
-  // ------------------------------------------------------------------
-  test.describe('UI: PC Builder contextual filters', () => {
-    test('selecting AM4 CPU hides Intel chipsets in motherboard picker', async ({ page }) => {
-      await page.goto(`${BASE_URL}/pc-builder`);
-
-      // Wait for CPU slot to appear
-      const cpuSlot = page
-        .locator('.component-slot')
-        .filter({ has: page.getByText(/CPU|Процессор|cpu|процессор/i) })
-        .first();
-      await expect(cpuSlot).toBeVisible({ timeout: 15000 });
-
-      // Click "Выбрать" (Choose) on CPU slot
-      const cpuSelectBtn = cpuSlot.locator('button:has-text("Выбрать")');
-      await cpuSelectBtn.click();
-
-      // Modal should appear
-      const modal = page.locator('.modal, [role="dialog"]');
-      await expect(modal).toBeVisible({ timeout: 10000 });
-
-      // Wait for product list to load
-      const firstProduct = modal.locator('.pc-builder__modal-product').first();
-      await expect(firstProduct).toBeVisible({ timeout: 10000 });
-
-      // Find an AM4 processor and select it
-      const am4Products = modal.locator('.pc-builder__modal-product');
-      let am4Selected = false;
-
-      const count = await am4Products.count();
-      for (let i = 0; i < count; i++) {
-        const product = am4Products.nth(i);
-        const text = (await product.textContent()) ?? '';
-        // Look for AM4 in specs
-        if (text.toUpperCase().includes('AM4') && !text.toUpperCase().includes('AM5')) {
-          await product.click();
-          am4Selected = true;
-          break;
-        }
-      }
-
-      if (!am4Selected) {
-        // Fallback: select first available product, assume it's compatible
-        await firstProduct.click();
-      }
-
-      // Modal should close
-      await expect(modal).not.toBeVisible({ timeout: 8000 });
-
-      // Now open motherboard picker
-      const mbSlot = page
-        .locator('.component-slot')
-        .filter({
-          has: page.getByText(
-            /Мат\.?\s*плата|Материн|Mother|motherboard/i
-          ),
-        })
-        .first();
-      await expect(mbSlot).toBeVisible({ timeout: 10000 });
-
-      const mbSelectBtn = mbSlot.locator('button:has-text("Выбрать")');
-      await mbSelectBtn.click();
-
-      // Motherboard modal opens
-      const mbModal = page.locator('.modal, [role="dialog"]');
-      await expect(mbModal).toBeVisible({ timeout: 10000 });
-
-      // Find and open "Чипсет" (chipset) filter section
-      // Look for filter toggles/sections by text
-      const chipsetFilter = page
-        .locator('.filter-section, .filter-group, [data-filter]')
-        .filter({ has: page.getByText(/Чипсет|Chipset/i) })
-        .first();
-
-      // If explicit filter section found, click to expand
-      if (await chipsetFilter.count() > 0) {
-        await chipsetFilter.click();
-      }
-
-      // Look for any visible element with chipset values
-      const chipsetContainer = page.locator(
-        '.filter-section:has-text("Чипсет"), .filter-group:has-text("Чипсет"), .filter-content'
-      );
-      await expect(chipsetContainer.first()).toBeVisible({ timeout: 10000 });
-
-      // Get full text content of the filter area
-      const filterText = (await chipsetContainer.first().textContent()) ?? '';
-
-      // Intel chipsets should NOT be present
-      for (const chipset of INTEL_CHIPSETS) {
-        expect(
-          filterText.includes(chipset),
-          `Filter should NOT contain ${chipset} after selecting AM4 CPU`
-        ).toBe(false);
-      }
+  test('CPU AM4 hides Intel motherboards in picker', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4, cpu_am5, cpu_intel],
+      motherboards: [mb_am4, mb_am5, mb_intel],
+      ram: [], storage: [], psu: [], gpu: [], cases: [], coolers: [],
     });
+    await pom.goto();
+    await pom.openSlotPicker('Процессор');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Материнская плата');
+    const names = await pom.getModalProductNames();
+    expect(names).toContain('MSI B550-A PRO');
+    expect(names).not.toContain('ASUS Z790-P');
+  });
+
+  test('CPU AM5 hides DDR3 and DDR4 in RAM picker', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am5, cpu_am4],
+      motherboards: [],
+      ram: [ram_ddr3, ram_ddr4, ram_ddr5],
+      psu: [], gpu: [], cases: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Процессор');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Оперативная память');
+    const names = await pom.getModalProductNames();
+    expect(names).toContain('Corsair 16GB DDR5-5600');
+    expect(names).not.toContain('Kingston 8GB DDR3-1600');
+    expect(names).not.toContain('G.Skill 16GB DDR4-3200');
+  });
+
+  test('MB DDR4 hides DDR3 in RAM picker', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4],
+      motherboards: [mb_am4],
+      ram: [ram_ddr3, ram_ddr4],
+      psu: [], gpu: [], cases: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Процессор');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Материнская плата');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Оперативная память');
+    const names = await pom.getModalProductNames();
+    expect(names).toContain('G.Skill 16GB DDR4-3200');
+    expect(names).not.toContain('Kingston 8GB DDR3-1600');
+  });
+
+  test('RAM DDR4 hides AM5-only CPUs in CPU picker', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4, cpu_am5, cpu_intel],
+      motherboards: [],
+      ram: [ram_ddr4, ram_ddr5],
+      psu: [], gpu: [], cases: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Оперативная память');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Процессор');
+    const names = await pom.getModalProductNames();
+    expect(names).toContain('AMD Ryzen 5 3600');
+    expect(names).not.toContain('AMD Ryzen 5 7600X');
+  });
+
+  test('High TDP build hides low wattage PSU', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4],
+      motherboards: [mb_am4],
+      ram: [ram_ddr4],
+      psu: [psu_high, psu_low],
+      gpu: [gpu_high],
+      cases: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Процессор');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Материнская плата');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Оперативная память');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Видеокарта');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Блок питания');
+    const names = await pom.getModalProductNames();
+    expect(names).toContain('Corsair RM850x');
+    expect(names).not.toContain('Generic 300W PSU');
+  });
+
+  test('Incompatible Intel MB hidden after AM4 CPU, hint shown', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4],
+      motherboards: [mb_am4, mb_intel],
+      ram: [], storage: [], psu: [], gpu: [], cases: [], coolers: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Процессор');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Материнская плата');
+    const names = await pom.getModalProductNames();
+    expect(names.some((n) => n && n.includes('Z790'))).toBe(false);
+    const hint = page.locator('[class*="compatibleHint"]');
+    await expect(hint).toBeVisible();
+    await expect(hint).toContainText(/несовместим/i);
+  });
+
+  test('CPU-first entry preserves compatibility through chain', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4, cpu_am5, cpu_intel],
+      motherboards: [mb_am4, mb_am5, mb_intel],
+      ram: [ram_ddr3, ram_ddr4, ram_ddr5],
+      psu: [], gpu: [], cases: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Процессор');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Материнская плата');
+    let names = await pom.getModalProductNames();
+    expect(names).toContain('MSI B550-A PRO');
+    expect(names).not.toContain('ASUS Z790-P');
+    expect(names).not.toContain('ASUS B650-PLUS');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Оперативная память');
+    names = await pom.getModalProductNames();
+    expect(names).toContain('G.Skill 16GB DDR4-3200');
+    expect(names).not.toContain('Kingston 8GB DDR3-1600');
+    expect(names).not.toContain('Corsair 16GB DDR5-5600');
+  });
+
+  test('MB-first entry preserves compatibility through chain', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4, cpu_am5, cpu_intel],
+      motherboards: [mb_am4, mb_am5, mb_intel],
+      ram: [ram_ddr3, ram_ddr4, ram_ddr5],
+      psu: [], gpu: [], cases: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Материнская плата');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Процессор');
+    let names = await pom.getModalProductNames();
+    expect(names).toContain('AMD Ryzen 5 3600');
+    expect(names).not.toContain('AMD Ryzen 5 7600X');
+    expect(names).not.toContain('Intel Core i5-13600K');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Оперативная память');
+    names = await pom.getModalProductNames();
+    expect(names).toContain('G.Skill 16GB DDR4-3200');
+    expect(names).not.toContain('Kingston 8GB DDR3-1600');
+  });
+
+  test('RAM-first entry filters CPU and MB correctly', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4, cpu_am5, cpu_intel],
+      motherboards: [mb_am4, mb_am5, mb_intel],
+      ram: [ram_ddr4, ram_ddr5],
+      psu: [], gpu: [], cases: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Оперативная память');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Процессор');
+    let names = await pom.getModalProductNames();
+    expect(names).not.toContain('AMD Ryzen 5 7600X');
+    expect(names).toContain('AMD Ryzen 5 3600');
+    expect(names).toContain('Intel Core i5-13600K');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Материнская плата');
+    names = await pom.getModalProductNames();
+    expect(names).toContain('MSI B550-A PRO');
+    expect(names).not.toContain('ASUS Z790-P');
+    expect(names).not.toContain('ASUS B650-PLUS');
+  });
+
+  test('AM5 CPU shows only DDR5 in RAM picker', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am5],
+      motherboards: [],
+      ram: [ram_ddr3, ram_ddr4, ram_ddr5],
+      psu: [], gpu: [], cases: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Процессор');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Оперативная память');
+    const names = await pom.getModalProductNames();
+    expect(names).toContain('Corsair 16GB DDR5-5600');
+    expect(names).not.toContain('Kingston 8GB DDR3-1600');
+    expect(names).not.toContain('G.Skill 16GB DDR4-3200');
+  });
+
+  test('All incompatible shows no compatible products message', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4],
+      motherboards: [],
+      ram: [ram_ddr5],
+      psu: [], gpu: [], cases: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Процессор');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Оперативная память');
+    const names = await pom.getModalProductNames();
+    expect(names.length).toBe(0);
+    const emptyState = page.locator('[class*="emptyState"]');
+    await expect(emptyState).toBeVisible();
+  });
+
+  test('Modal results count updates after component selection', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4, cpu_am5, cpu_intel],
+      motherboards: [mb_am4, mb_am5, mb_intel],
+      ram: [], storage: [], psu: [], gpu: [], cases: [], coolers: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Материнская плата');
+    let results = await pom.getModalResultsCount();
+    expect(results).toMatch(/Найдено: 3/);
+    await pom.closeModal();
+    await pom.openSlotPicker('Процессор');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Материнская плата');
+    results = await pom.getModalResultsCount();
+    expect(results).toMatch(/Найдено: 1/);
   });
 });
