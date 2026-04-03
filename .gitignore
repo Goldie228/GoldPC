@@ -174,3 +174,8 @@ scripts/comparison-audit/audit-notes/
 
 # Claude Code local
 .claude/
+
+# MCP and SQLite databases
+.mcp.json
+.mcp-sqlite.db
+sqlite_mcp_server.db

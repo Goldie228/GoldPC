@@ -364,7 +364,7 @@ seed_catalog() {
 # Function to start backend services
 start_backend() {
     echo -e "${CYAN}Starting backend services...${RESET}"
-    
+
     local services=(
         "CatalogService:5000:src/CatalogService:/swagger/index.html"
         "AuthService:5001:src/AuthService:/health"
@@ -375,16 +375,32 @@ start_backend() {
     for service_info in "${services[@]}"; do
         IFS=":" read -r name port path health_path <<< "$service_info"
         echo -e "${CYAN}Launching $name...${RESET}"
-        
+
         cd "$PROJECT_DIR/$path"
         dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
         local pid=$!
         SERVICE_PIDS+=($pid)
-        
+
+        # Quick early-death check: if the process exits within 3 seconds, fail fast
+        sleep 3
+        if ! kill -0 "$pid" 2>/dev/null; then
+            echo -e "${RED}✗ $name exited immediately (PID $pid)${RESET}"
+            echo -e "${CYAN}Last 15 lines of ${name,,}.log:${RESET}"
+            tail -15 "$LOG_DIR/${name,,}.log" 2>/dev/null | sed 's/^/  /'
+            echo -e "${RED}✗ $name failed to start. Fix the errors above and retry.${RESET}"
+            exit 1
+        fi
+
         # Wait for health before starting next service
         wait_for_health "http://localhost:$port$health_path" "$name"
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}✗ $name health check failed${RESET}"
+            echo -e "${CYAN}Last 15 lines of ${name,,}.log:${RESET}"
+            tail -15 "$LOG_DIR/${name,,}.log" 2>/dev/null | sed 's/^/  /'
+            exit 1
+        fi
     done
-    
+
     echo -e "${GREEN}✓ All backend services started${RESET}"
 }
 
@@ -399,21 +415,89 @@ vite_bin() {
     fi
 }
 
+# Check that a critical Vite plugin actually has content (not an empty/broken dir)
+# Checks both root and workspace node_modules since hoisting may vary
+check_critical_dep() {
+    local p1="$PROJECT_DIR/node_modules/@vitejs/plugin-react"
+    local p2="$FRONTEND_SRC/node_modules/@vitejs/plugin-react"
+    if [ -d "$p1" ] && [ -n "$(ls -A "$p1" 2>/dev/null)" ]; then return 0; fi
+    if [ -d "$p2" ] && [ -n "$(ls -A "$p2" 2>/dev/null)" ]; then return 0; fi
+    return 1
+}
+
 ensure_frontend_deps() {
-    if vite_bin >/dev/null 2>&1; then
+    if vite_bin >/dev/null 2>&1 && check_critical_dep; then
         return 0
     fi
-    echo -e "${CYAN}Frontend dependencies missing; running npm install at repo root...${RESET}"
+
+    echo -e "${CYAN}Frontend dependencies missing or corrupted; reinstalling...${RESET}"
+
+    # Try npm install first — npm can overwrite existing files
     if (cd "$PROJECT_DIR" && npm install >> "$LOG_DIR/frontend-setup.log" 2>&1); then
         echo -e "${GREEN}✓ npm install completed${RESET}"
     else
-        echo -e "${RED}✗ npm install failed. See $LOG_DIR/frontend-setup.log${RESET}"
+        # Try removing workspace node_modules for a clean install
+        local fe_nm="$FRONTEND_SRC/node_modules"
+        if [ -d "$fe_nm" ]; then
+            echo -e "${CYAN}Cleaning workspace node_modules for clean install...${RESET}"
+            rm -rf "$fe_nm" 2>/dev/null || true
+            # Still have leftover root-owned files? Ask user for sudo
+            if [ -d "$fe_nm" ] && [ "$(ls -A "$fe_nm" 2>/dev/null)" ]; then
+                echo -e "${YELLOW}⚠ Some files in $fe_nm are owned by root.${RESET}"
+                echo -e "${YELLOW}  Run: sudo rm -rf $fe_nm${RESET}"
+                echo -e "${YELLOW}  Then: npm install${RESET}"
+                return 1
+            fi
+        fi
+        if (cd "$PROJECT_DIR" && npm install >> "$LOG_DIR/frontend-setup.log" 2>&1); then
+            echo -e "${GREEN}✓ npm install completed after cleanup${RESET}"
+        else
+            echo -e "${RED}✗ npm install failed. See $LOG_DIR/frontend-setup.log${RESET}"
+            return 1
+        fi
+    fi
+
+    if ! vite_bin >/dev/null 2>&1 || ! check_critical_dep; then
+        echo -e "${RED}✗ Critical frontend dependencies still missing after npm install${RESET}"
         return 1
     fi
-    if ! vite_bin >/dev/null 2>&1; then
-        echo -e "${RED}✗ vite still not found after npm install${RESET}"
-        return 1
+}
+
+# Smoke-test: briefly try to start vite — if it crashes, show the error immediately
+frontend_smoke_test() {
+    local v_bin
+    v_bin="$(vite_bin)" || return 1
+    echo -e "${CYAN}Running frontend smoke test (starting vite briefly)...${RESET}"
+
+    # Start vite on an unused port for 6 seconds — long enough for config to load
+    local output
+    output=$(cd "$FRONTEND_SRC" && timeout 6 "$v_bin" --port 19999 2>&1 || true)
+
+    # Check for fatal errors (non-fatal warnings are OK)
+    if echo "$output" | grep -qi 'failed to load config\|cannot find.*package\|cannot find module\|error.*cannot\|ERR_MODULE_NOT_FOUND\|ERR_PACKAGE_PATH_NOT_EXPORTED'; then
+        local err
+        err=$(echo "$output" | grep -i 'error\|cannot\|failed\|ERR_' | head -5)
+        echo -e "${RED}✗ Vite failed during smoke test${RESET}"
+        echo "$err" | sed 's/^/  /'
+        echo -e "${CYAN}Attempting auto-repair...${RESET}"
+
+        # Try to fix via reinstall
+        if ensure_frontend_deps; then
+            echo -e "${GREEN}✓ Dependencies reinstalled, re-running smoke test...${RESET}"
+            output=$(cd "$FRONTEND_SRC" && timeout 6 "$v_bin" --port 19998 2>&1 || true)
+            if echo "$output" | grep -qi 'failed to load config\|cannot find.*package\|cannot find module\|error.*cannot\|ERR_MODULE_NOT_FOUND\|ERR_PACKAGE_PATH_NOT_EXPORTED'; then
+                err=$(echo "$output" | grep -i 'error\|cannot\|failed\|ERR_' | head -5)
+                echo -e "${RED}✗ Smoke test still failing after repair${RESET}"
+                echo "$err" | sed 's/^/  /'
+                return 1
+            fi
+        else
+            return 1
+        fi
     fi
+
+    echo -e "${GREEN}✓ Vite smoke test passed${RESET}"
+    return 0
 }
 
 # Function to start frontend
@@ -423,24 +507,30 @@ start_frontend() {
     if ! ensure_frontend_deps; then
         exit 1
     fi
-    
+
+    # Pre-flight smoke test — catch config/dependency issues before timeout
+    if ! frontend_smoke_test; then
+        echo -e "${RED}✗ Frontend failed pre-flight checks. Fix the errors above before starting.${RESET}"
+        exit 1
+    fi
+
     # Check if path contains '#' - Vite cannot handle this
     if [[ "$FRONTEND_SRC" == *"#"* ]]; then
         echo -e "${YELLOW}Path contains '#' character. Using rsync + file watcher...${RESET}"
-        
+
         # Install inotify-tools if not available
         if ! command -v inotifywait &> /dev/null; then
             echo -e "${CYAN}Installing inotify-tools...${RESET}"
             sudo apt-get update -qq && sudo apt-get install -y -qq inotify-tools
         fi
-        
+
         rm -rf "$FRONTEND_TMP"
         echo -e "${CYAN}Copying frontend to /tmp...${RESET}"
         rsync -a --exclude='node_modules' "$FRONTEND_SRC/" "$FRONTEND_TMP/"
-        
+
         echo -e "${CYAN}Installing dependencies...${RESET}"
         (cd "$FRONTEND_TMP" && npm install >> "$LOG_DIR/frontend-setup.log" 2>&1)
-        
+
         echo -e "${CYAN}Starting file watcher...${RESET}"
         (
             while true; do
@@ -449,7 +539,7 @@ start_frontend() {
             done
         ) &
         SERVICE_PIDS+=($!)
-        
+
         echo -e "${CYAN}Starting frontend from /tmp...${RESET}"
         cd "$FRONTEND_TMP"
         npm run dev:api > "$LOG_DIR/frontend.log" 2>&1 &
@@ -460,7 +550,18 @@ start_frontend() {
         npm run dev:api > "$LOG_DIR/frontend.log" 2>&1 &
         SERVICE_PIDS+=($!)
     fi
-    
+
+    # Give the process 2 seconds — if it crashes early, report it now
+    sleep 2
+    local fe_pid=${SERVICE_PIDS[-1]}
+    if ! kill -0 "$fe_pid" 2>/dev/null; then
+        echo -e "${RED}✗ Frontend process exited immediately${RESET}"
+        echo -e "${CYAN}Last 10 lines of frontend.log:${RESET}"
+        tail -10 "$LOG_DIR/frontend.log" 2>/dev/null | sed 's/^/  /'
+        echo -e "${RED}✗ Frontend failed to start. Fix the errors above and retry.${RESET}"
+        exit 1
+    fi
+
     wait_for_health "http://localhost:5173" "Frontend"
     echo -e "${GREEN}✓ Frontend started${RESET}"
 }
