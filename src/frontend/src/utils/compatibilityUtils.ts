@@ -164,6 +164,28 @@ function findSocketGroup(socket: string): SocketGroup | null {
   return SOCKET_GROUPS.find(g => g.sockets.some(s => s.toUpperCase() === socket.toUpperCase())) ?? null;
 }
 
+export function getChipsetsForSocket(socket: string): string[] {
+  const group = findSocketGroup(socket);
+  return group ? group.chipsets : [];
+}
+
+export function getSocketsForRamType(ramType: 'DDR4' | 'DDR5'): string[] {
+  return SOCKET_GROUPS
+    .filter(g => g.ramType === ramType || g.ramTypeAlternate === ramType)
+    .flatMap(g => g.sockets)
+    .map(s => s.toUpperCase());
+}
+
+export function getRamTypesForSocket(socket: string): string[] {
+  const group = findSocketGroup(socket);
+  if (!group) return [];
+  const types = [group.ramType];
+  if (group.ramTypeAlternate) types.push(group.ramTypeAlternate);
+  return types;
+}
+
+// ──────────── BIOS warning ────────────
+
 /**
  * Проверка BIOS warning: вероятностное предупреждение «Возможно потребуется обновление BIOS»
  */
@@ -505,6 +527,26 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     const cpuTdp = extractTDP(test.cpu.specifications);
     if (maxTdp > 0 && cpuTdp > 0 && cpuTdp > maxTdp) {
       // Not a hard incompatibility but worth noting; not adding to issues to avoid blocking
+    }
+  }
+
+  // GPU ↔ PSU wattage compatibility
+  if (componentType === 'gpu' && test.psu) {
+    const psuWattage = extractPSUWattage(test.psu.specifications);
+    const gpuTdp = extractTDP(product.specifications);
+    const cpuTdp = test.cpu ? extractTDP(test.cpu.specifications) : 0;
+    const totalTdp = gpuTdp + cpuTdp + 50;
+    if (psuWattage > 0 && totalTdp > psuWattage) {
+      issues.push(`БП ${psuWattage}Вт недостаточен для этой конфигурации (нужно минимум ~${totalTdp}Вт)`);
+    }
+  }
+  if (componentType === 'psu' && test.gpu) {
+    const psuWattage = extractPSUWattage(product.specifications);
+    const gpuTdp = extractTDP(test.gpu.specifications);
+    const cpuTdp = test.cpu ? extractTDP(test.cpu.specifications) : 0;
+    const totalTdp = gpuTdp + cpuTdp + 50;
+    if (psuWattage > 0 && totalTdp > psuWattage) {
+      issues.push(`БП ${psuWattage}Вт недостаточен для сборки с GPU ${test.gpu.name} (нужно минимум ~${totalTdp}Вт)`);
     }
   }
 

@@ -395,8 +395,8 @@ public class CatalogService : ICatalogService
                 continue;
             }
 
-            // select: full list for category + counts in current context (excluding self)
-            var allValuesDict = await _productRepository.GetDistinctSpecificationValuesAsync(category.Id, new[] { a.AttributeKey }, null);
+            // select: values in current context (excluding self)
+            var allValuesDict = await _productRepository.GetDistinctSpecificationValuesAsync(category.Id, new[] { a.AttributeKey }, filterContext);
             var allValues = allValuesDict.GetValueOrDefault(a.AttributeKey, new List<string>());
 
             // Post-processing same as v1
