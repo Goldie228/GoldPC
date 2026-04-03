@@ -107,6 +107,28 @@ export function extractFormFactor(specs: ProductSpecifications | undefined): For
   return null;
 }
 
+export function normalizeFormFactor(raw: string): FormFactor | null {
+  const upper = raw.toUpperCase().trim();
+  if (upper === 'ATX' || upper === 'STANDARD ATX') return 'ATX';
+  if (upper === 'MICROATX' || upper === 'MICRO-ATX' || upper === 'M-ATX' || upper === 'MATX') return 'MicroATX';
+  if (upper === 'MINIITX' || upper === 'MINI-ITX' || upper === 'MITX') return 'MiniITX';
+  if (upper === 'EATX' || upper === 'E-ATX' || upper === 'EXTENDED ATX') return 'EATX';
+  return null;
+}
+
+/**
+ * Given a motherboard form factor, returns compatible case form factors.
+ * Cases support MBs of their size or smaller, so mATX case → supports ITX/MB,
+ * but ATX case supports ITX/mATX/ATX.
+ */
+export function getCompatibleCaseFormFactors(mbFF: FormFactor): FormFactor[] {
+  const rules = config.formFactorCompatibility.rules;
+  return rules
+    .filter(rule => rule.supportedMotherboards.includes(mbFF))
+    .map(rule => normalizeFormFactor(rule.caseFormFactor))
+    .filter((ff): ff is FormFactor => ff !== null);
+}
+
 export function extractSupportedSockets(specs: ProductSpecifications | undefined): string[] {
   if (!specs) return [];
   const rec = specs as Record<string, unknown>;

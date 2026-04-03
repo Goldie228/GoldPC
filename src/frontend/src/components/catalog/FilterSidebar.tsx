@@ -4,6 +4,7 @@ import { catalogApi } from '../../api/catalog';
 import { RangeSlider } from '../ui/RangeSlider';
 import { Skeleton } from '../ui/Skeleton';
 import type { ProductCategory, Category, FilterFacetAttribute, Manufacturer } from '../../api/types';
+import { normalizeFormFactor } from '../../utils/compatibilityUtils';
 import styles from './FilterSidebar.module.css';
 
 interface FilterSidebarProps {
@@ -612,7 +613,12 @@ export function FilterSidebar({
             const isLocked = typeof lockedValue === 'string' && !isLockArray;
 
             let finalOptions = cleanOptions;
-            if (allowed) {
+            if (allowed && selectedCategory === 'case' && attr.key === 'form_factor') {
+              finalOptions = cleanOptions.filter((o) => {
+                const normalized = normalizeFormFactor(o.value);
+                return normalized && allowed.includes(normalized);
+              });
+            } else if (allowed) {
               finalOptions = cleanOptions.filter((o) => allowed.some(a => a.toLowerCase() === o.value.toLowerCase()));
             } else if (isLocked && lockedValue) {
               // Locked to a single value — show only that value, hide all others

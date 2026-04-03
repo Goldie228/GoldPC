@@ -12,7 +12,7 @@ import { Pagination } from '../../catalog/Pagination/Pagination';
 import { FilterSidebar } from '../../catalog';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';
-import { isComponentCompatible, extractSocket as _extractSocket, extractMemoryType as _extractMemoryType, extractSupportedFormFactors } from '../../../utils/compatibilityUtils';
+import { isComponentCompatible, extractSocket as _extractSocket, extractMemoryType as _extractMemoryType, extractFormFactor as _extractFormFactor, extractSupportedFormFactors, getCompatibleCaseFormFactors } from '../../../utils/compatibilityUtils';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '../../../hooks/useProducts';
 import { catalogApi } from '../../../api/catalog';
@@ -377,6 +377,10 @@ export function ComponentPickerModal({
         }
       }
     }
+    if (slotType === 'case' && buildContext?.motherboard?.product) {
+      const mbFF = _extractFormFactor(buildContext.motherboard.product.specifications);
+      if (mbFF) out.formFactor = mbFF;
+    }
     return out;
   }, [selectedSpecifications, slotType, buildContext]);
 
@@ -435,8 +439,11 @@ export function ComponentPickerModal({
       if (caseFFs.length > 0) { result.formFactor = caseFFs; result.format = caseFFs; }
     }
     if (slotType === 'case' && b.motherboard?.product) {
-      const raw = (b.motherboard.product.specifications as any)?.formFactor ?? (b.motherboard.product.specifications as any)?.form_factor ?? (b.motherboard.product.specifications as any)?.format;
-      if (raw && typeof raw === 'string') { result.formFactor = [raw]; result.format = [raw]; }
+      const mbFF = _extractFormFactor(b.motherboard.product.specifications);
+      if (mbFF) {
+        const caseFFs = getCompatibleCaseFormFactors(mbFF);
+        if (caseFFs.length > 0) { result.formFactor = caseFFs; result.format = caseFFs; }
+      }
     }
 
     return result;
