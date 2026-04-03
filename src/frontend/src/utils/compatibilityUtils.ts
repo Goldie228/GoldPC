@@ -508,5 +508,29 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     }
   }
 
+  // GPU ↔ PSU wattage — GPU selected, PSU candidate
+  if (componentType === 'psu' && (test.gpu?.product || test.cpu?.product)) {
+    const gpuTdp = test.gpu?.product ? extractTDP(test.gpu.product.specifications) : 0;
+    const cpuTdp = test.cpu?.product ? extractTDP(test.cpu.product.specifications) : 0;
+    const minWattage = gpuTdp + cpuTdp + 50;
+    const psuWattage = extractPSUWattage(product.specifications);
+    if (minWattage > 0 && psuWattage > 0 && psuWattage < minWattage) {
+      issues.push(`PSU ${psuWattage}W insufficient for build (need ${minWattage}W)`);
+    }
+  }
+
+  // GPU ↔ PSU wattage — PSU selected, GPU candidate
+  if (componentType === 'gpu' && test.psu?.product) {
+    const psuWattage = extractPSUWattage(test.psu.product.specifications);
+    const cpuTdp = test.cpu?.product ? extractTDP(test.cpu.product.specifications) : 0;
+    const gpuTdp = extractTDP(product.specifications);
+    if (psuWattage > 0 && gpuTdp > 0) {
+      const needed = gpuTdp + cpuTdp + 50;
+      if (needed > psuWattage) {
+        issues.push(`GPU TDP ${gpuTdp}W exceeds PSU ${psuWattage}W budget (need ${needed}W total)`);
+      }
+    }
+  }
+
   return { compatible: issues.length === 0, issues };
 }
