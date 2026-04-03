@@ -12,7 +12,7 @@ import { Pagination } from '../../catalog/Pagination/Pagination';
 import { FilterSidebar } from '../../catalog';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';
-import { isComponentCompatible, extractSocket as _extractSocket, extractMemoryType as _extractMemoryType, extractSupportedFormFactors } from '../../../utils/compatibilityUtils';
+import { isComponentCompatible, extractSocket as _extractSocket, extractMemoryType as _extractMemoryType, extractSupportedFormFactors, getChipsetsForSocket, getSocketsForRamType, getRamTypesForSocket, extractSupportedSockets } from '../../../utils/compatibilityUtils';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '../../../hooks/useProducts';
 import { catalogApi } from '../../../api/catalog';
@@ -67,17 +67,6 @@ function parseSort(p: string) {
 function summaryToProduct(s: any): Product {
   return { ...s, specifications: s.specifications ?? {} } as Product;
 }
-
-// Socket-to-chipset compatibility map
-const SOCKET_CHIPSET_MAP: Record<string, string[]> = {
-  AM4: ['A320', 'B350', 'B450', 'X300', 'X370', 'X470', 'X570', 'A520', 'X570D', 'X570S',
-        'AMD A320', 'AMD B350', 'AMD B450', 'AMD X300', 'AMD X370', 'AMD X470', 'AMD X570', 'AMD A520'],
-  AM5: ['A620', 'B650', 'B650E', 'X670', 'X670E', 'X870', 'X870E', 'A620A', 'B840', 'B850',
-        'AMD A620', 'AMD B650', 'AMD X670', 'AMD X870', 'AMD X870E'],
-  LGA1700: ['H610', 'B660', 'B760', 'H670', 'Z690', 'Z790', 'INTEL H610', 'INTEL B660', 'INTEL Z690', 'INTEL Z790'],
-  LGA1851: ['B860', 'H810', 'Z890', 'INTEL B860', 'INTEL Z890'],
-  LGA1200: ['H410', 'B460', 'H510', 'B560', 'H570', 'Z490', 'Z590', 'W480'],
-};
 
 // ─── CardImageGallery: image with prev/next + hover zones + badges ────────
 
@@ -365,14 +354,9 @@ export function ComponentPickerModal({
     // RAM slot: if no MB but CPU selected → derive from CPU socket
     if (slotType === 'ram' && !buildContext?.motherboard?.product && buildContext?.cpu?.product) {
       const cpuSocket = _extractSocket(buildContext.cpu.product.specifications);
-      const SOCKET_RAM_MAP: Record<string, string[]> = {
-        AM4: ['DDR4'], AM5: ['DDR5'], LGA1700: ['DDR4', 'DDR5'],
-        LGA1851: ['DDR5'], LGA1200: ['DDR4'],
-      };
       if (cpuSocket) {
-        const ramTypes = SOCKET_RAM_MAP[cpuSocket.toUpperCase()];
-        if (ramTypes) {
-          // Pick first type for single-value filter
+        const ramTypes = getRamTypesForSocket(cpuSocket);
+        if (ramTypes.length > 0) {
           out.memoryType = ramTypes[0];
         }
       }
@@ -381,28 +365,21 @@ export function ComponentPickerModal({
   }, [selectedSpecifications, slotType, buildContext]);
 
   // ── Restricted spec values from build context ──
-  // Socket → allowed RAM types (most modern platforms only support specific DDR)
-  const SOCKET_RAM_MAP: Record<string, string[]> = {
-    AM4: ['DDR4'],
-    AM5: ['DDR5'],
-    LGA1700: ['DDR4', 'DDR5'],
-    LGA1851: ['DDR5'],
-    LGA1200: ['DDR4'],
-  };
-
   const restrictedSpecValues = useMemo(() => {
     const result: Record<string, string[]> = {};
     const b = buildContext ?? { ram: [], storage: [], fan: [] };
 
+    // CPU socket sources for MB picker: intersect all constraints
+    const mbSocketSources: string[][] = [];
+
     if (slotType === 'motherboard' && b.cpu?.product) {
       const cpuSocket = _extractSocket(b.cpu.product.specifications);
       if (cpuSocket) {
-        result.socket = [cpuSocket];
-        const chipsets = SOCKET_CHIPSET_MAP[cpuSocket.toUpperCase()];
-        if (chipsets) result.chipset = chipsets;
-        // Restrict RAM type based on CPU socket
-        const ramTypes = SOCKET_RAM_MAP[cpuSocket.toUpperCase()];
-        if (ramTypes) {
+        mbSocketSources.push([cpuSocket]);
+        const chipsets = getChipsetsForSocket(cpuSocket);
+        if (chipsets.length > 0) result.chipset = chipsets;
+        const ramTypes = getRamTypesForSocket(cpuSocket);
+        if (ramTypes.length > 0) {
           result.memoryType = ramTypes;
           result.tip_pamyati = ramTypes;
           result.type = ramTypes;
@@ -410,20 +387,69 @@ export function ComponentPickerModal({
         }
       }
     }
+    if (slotType === 'motherboard' && !b.cpu?.product) {
+      const firstRam = b.ram[0]?.product;
+      if (firstRam) {
+        const ramType = _extractMemoryType(firstRam.specifications);
+        if (ramType === 'DDR4' || ramType === 'DDR5') {
+          const sockets = getSocketsForRamType(ramType);
+          if (sockets.length > 0) mbSocketSources.push(sockets);
+        }
+      }
+    }
+    // Merge MB socket sources by intersection
+    if (mbSocketSources.length > 0) {
+      let merged = [...mbSocketSources[0]];
+      for (let i = 1; i < mbSocketSources.length; i++) {
+        const set = new Set(mbSocketSources[i]);
+        merged = merged.filter(s => set.has(s));
+      }
+      if (merged.length > 0) result.socket = merged;
+    }
+
+    // CPU socket sources for CPU picker: MB socket, RAM-derived, cooler sockets
+    const cpuSocketSources: string[][] = [];
+
     if (slotType === 'cpu' && b.motherboard?.product) {
       const mbSocket = _extractSocket(b.motherboard.product.specifications);
-      if (mbSocket) result.socket = [mbSocket];
+      if (mbSocket) cpuSocketSources.push([mbSocket]);
     }
+    if (slotType === 'cpu' && !b.cpu?.product && !b.motherboard?.product) {
+      const firstRam = b.ram[0]?.product;
+      if (firstRam) {
+        const ramType = _extractMemoryType(firstRam.specifications);
+        if (ramType === 'DDR4' || ramType === 'DDR5') {
+          const sockets = getSocketsForRamType(ramType);
+          if (sockets.length > 0) cpuSocketSources.push(sockets);
+        }
+      }
+    }
+    if (slotType === 'cpu' && b.cooling?.product && !b.cpu?.product && !b.motherboard?.product) {
+      const coolerSockets = extractSupportedSockets(b.cooling.product.specifications);
+      if (coolerSockets.length > 0) cpuSocketSources.push(coolerSockets);
+    }
+    // Merge CPU socket sources by intersection
+    if (cpuSocketSources.length > 0) {
+      let merged = [...cpuSocketSources[0]];
+      for (let i = 1; i < cpuSocketSources.length; i++) {
+        const set = new Set(cpuSocketSources[i]);
+        merged = merged.filter(s => set.has(s));
+      }
+      if (merged.length > 0) result.socket = merged;
+    }
+
     if (slotType === 'ram' && b.motherboard?.product) {
       const memType = _extractMemoryType(b.motherboard.product.specifications);
       if (memType) { result.memoryType = [memType]; result.tip_pamyati = [memType]; result.type = [memType]; }
     }
     if (slotType === 'ram' && b.cpu?.product && !b.motherboard?.product) {
       const cpuSocket = _extractSocket(b.cpu.product.specifications);
-      const ramTypes = SOCKET_RAM_MAP[cpuSocket?.toUpperCase() ?? ''] ?? [];
-      if (ramTypes.length > 0 && !result.memoryType) {
-        result.memoryType = ramTypes; result.tip_pamyati = ramTypes;
-        result.type = ramTypes; result.memory_type = ramTypes;
+      if (cpuSocket) {
+        const ramTypes = getRamTypesForSocket(cpuSocket);
+        if (ramTypes.length > 0 && !result.memoryType) {
+          result.memoryType = ramTypes; result.tip_pamyati = ramTypes;
+          result.type = ramTypes; result.memory_type = ramTypes;
+        }
       }
     }
     if (slotType === 'cooling' && b.cpu?.product) {
@@ -600,6 +626,7 @@ export function ComponentPickerModal({
                 selectedSpecifications={effectiveSpecs} onSpecificationsChange={setSelectedSpecifications}
                 onReset={handleResetFilters}
                 restrictedSpecValues={restrictedSpecValues}
+                effectiveSpecifications={effectiveSpecs}
               />
             </div>
           </div>
@@ -614,7 +641,9 @@ export function ComponentPickerModal({
               selectedManufacturerIds={selectedManufacturerIds} onManufacturerIdsChange={setSelectedManufacturerIds}
               minRating={minRating} onRatingChange={() => {}}
               selectedAvailability={selectedAvailability} onAvailabilityChange={setSelectedAvailability}
-              selectedSpecifications={effectiveSpecs} onSpecificationsChange={setSelectedSpecifications}
+              selectedSpecifications={effectiveSpecs}
+              effectiveSpecifications={effectiveSpecs}
+              onSpecificationsChange={setSelectedSpecifications}
               onReset={handleResetFilters}
               restrictedSpecValues={restrictedSpecValues}
             />

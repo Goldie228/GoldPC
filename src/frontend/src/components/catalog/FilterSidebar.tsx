@@ -23,6 +23,9 @@ interface FilterSidebarProps {
   onReset: () => void;
   /** Ограничивает опции spec-фильтров указанными значениями. */
   restrictedSpecValues?: Record<string, string[]>;
+  /** Спецификации для контекстных ограничений (например socket=AM4 из билда).
+   *  Передаются в API для получения фасетов с учётом текущего билда. */
+  effectiveSpecifications?: Record<string, string | number | string[]>;
 }
 
 // Названия категорий (счётчики загружаются динамически)
@@ -270,7 +273,7 @@ export function FilterSidebar({
   onSpecificationsChange,
   onReset,
   restrictedSpecValues,
-
+  effectiveSpecifications,
 }: FilterSidebarProps) {
   const PRICE_MIN = 0;
   // Mock catalog prices are in BYN and usually <= ~6000 per category.
@@ -375,10 +378,12 @@ export function FilterSidebar({
     const fetchAttrs = async () => {
       setSpecAttrsLoading(true);
       try {
-        const specs = selectedSpecifications && Object.keys(selectedSpecifications).length > 0
-          ? selectedSpecifications as Record<string, string>
-          : undefined;
-        const attrs = await catalogApi.getFilterFacets(backendSlug, { specifications: specs });
+        const ctxSpecs = effectiveSpecifications && Object.keys(effectiveSpecifications).length > 0
+          ? effectiveSpecifications as Record<string, string>
+          : (selectedSpecifications && Object.keys(selectedSpecifications).length > 0
+            ? selectedSpecifications as Record<string, string>
+            : undefined);
+        const attrs = await catalogApi.getFilterFacets(backendSlug, { specifications: ctxSpecs });
         setFilterAttributes(attrs);
       } catch (err) {
         console.error('Failed to fetch filter attributes:', err);
@@ -388,7 +393,7 @@ export function FilterSidebar({
       }
     };
     fetchAttrs();
-  }, [selectedCategory]);
+  }, [selectedCategory, JSON.stringify(effectiveSpecifications), JSON.stringify(selectedSpecifications)]);
 
   // Загрузка производителей: по категории или всех
   useEffect(() => {
