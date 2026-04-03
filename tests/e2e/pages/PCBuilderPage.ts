@@ -92,4 +92,57 @@ export class PCBuilderPage {
   async expectToastMessage(message: string) {
     await expect(this.toastMessage).toContainText(message, { timeout: 5000 });
   }
+
+  async openSlotPicker(slotLabelText: string | RegExp) {
+    const slot = this.page.locator('.component-slot').filter({ hasText: slotLabelText }).first();
+    const btn = slot.locator('.component-slot__btn');
+    await btn.click();
+    const modal = this.page.locator('.modal').first();
+    await expect(modal).toBeVisible({ timeout: 10000 });
+  }
+
+  async getModalProductNames(): Promise<string[]> {
+    const modal = this.page.locator('.modal').first();
+    const names = modal.locator('[class*="cardName"] button, [class*="compactName"] button');
+    const count = await names.count();
+    const result: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const t = await names.nth(i).textContent();
+      if (t) result.push(t);
+    }
+    return result;
+  }
+
+  async getFilterOptions(filterGroupText: string | RegExp): Promise<string[]> {
+    const modal = this.page.locator('.modal').first();
+    const group = modal.locator('[class*="filterGroup"]').filter({ hasText: filterGroupText }).first();
+    if ((await group.count()) === 0) {
+      return [];
+    }
+    const labels = group.locator('[class*="checkboxLabel"], label');
+    const count = await labels.count();
+    const result: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const t = await labels.nth(i).textContent();
+      if (t) result.push(t);
+    }
+    return result;
+  }
+
+  async selectModalProduct(index: number) {
+    const modal = this.page.locator('.modal').first();
+    const cards = modal.locator('[class*="card"], [class*="cardCompact"]');
+    await cards.nth(index).click();
+    await expect(modal).not.toBeVisible({ timeout: 8000 });
+  }
+
+  async closeModal() {
+    await this.page.keyboard.press('Escape');
+  }
+
+  async getModalResultsCount(): Promise<string> {
+    const modal = this.page.locator('.modal').first();
+    const countEl = modal.locator('[class*="resultsCount"]').first();
+    return (await countEl.textContent()) ?? '';
+  }
 }
