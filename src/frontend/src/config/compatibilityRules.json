@@ -51,6 +51,42 @@
         }
       },
       {
+        "id": "lga1156",
+        "sockets": ["LGA1156"],
+        "chipsets": [],
+        "ramType": "DDR3",
+        "maxRamSpeed": 1333,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "lga1155",
+        "sockets": ["LGA1155"],
+        "chipsets": ["B75", "H61", "P67", "Z68", "B75"],
+        "ramType": "DDR3",
+        "maxRamSpeed": 1600,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "lga1151",
+        "sockets": ["LGA1151", "LGA1151 v2"],
+        "chipsets": ["H110", "B150", "H170", "Q170", "Z170", "H270", "B250", "Z270", "H310", "B365", "H370", "Z370", "Z390"],
+        "ramType": "DDR4",
+        "maxRamSpeed": 2666,
+        "biosWarning": {
+          "enabled": true,
+          "message": "Возможно потребуется обновление BIOS для поддержки данного процессора",
+          "probability": "medium"
+        }
+      },
+      {
+        "id": "lga1150",
+        "sockets": ["LGA1150"],
+        "chipsets": ["B85", "H81", "H87", "H97", "Q87", "Z87", "Z97"],
+        "ramType": "DDR3",
+        "maxRamSpeed": 1600,
+        "biosWarning": { "enabled": true, "message": "Возможно потребуется обновление BIOS", "probability": "medium" }
+      },
+      {
         "id": "lga1200",
         "sockets": [
           "LGA1200"
@@ -117,62 +153,137 @@
         "biosWarning": {
           "enabled": false
         }
+      },
+      {
+        "id": "lga1366",
+        "sockets": ["LGA1366"],
+        "chipsets": [],
+        "ramType": "DDR3",
+        "maxRamSpeed": 1066,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "lga1356",
+        "sockets": ["LGA1356"],
+        "chipsets": [],
+        "ramType": "DDR3",
+        "maxRamSpeed": 1333,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "lga2011",
+        "sockets": ["LGA2011"],
+        "chipsets": ["X79", "E5-1600"],
+        "ramType": "DDR3",
+        "maxRamSpeed": 1600,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "lga2011-3",
+        "sockets": ["LGA2011-3"],
+        "chipsets": ["X99", "C612"],
+        "ramType": "DDR4",
+        "maxRamSpeed": 2400,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "lga2066",
+        "sockets": ["LGA2066"],
+        "chipsets": ["X299", "C621"],
+        "ramType": "DDR4",
+        "maxRamSpeed": 2666,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "lga3647",
+        "sockets": ["LGA3647"],
+        "chipsets": [],
+        "ramType": "DDR4",
+        "maxRamSpeed": 2666,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "lga4189",
+        "sockets": ["LGA4189"],
+        "chipsets": [],
+        "ramType": "DDR4",
+        "maxRamSpeed": 3200,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "lga4677",
+        "sockets": ["LGA4677"],
+        "chipsets": [],
+        "ramType": "DDR5",
+        "maxRamSpeed": 4800,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "tr4",
+        "sockets": ["TR4"],
+        "chipsets": ["TRX40", "X399"],
+        "ramType": "DDR4",
+        "maxRamSpeed": 3200,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "tr4",
+        "sockets": ["TR4", "TRX4"],
+        "chipsets": ["X399", "TRX40"],
+        "ramType": "DDR4",
+        "maxRamSpeed": 3200,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "tr5",
+        "sockets": ["TR5", "sWRX8"],
+        "chipsets": ["WRX80", "TRX50"],
+        "ramType": "DDR5",
+        "maxRamSpeed": 6000,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "wrx8",
+        "sockets": ["WRX8"],
+        "chipsets": [],
+        "ramType": "DDR4",
+        "maxRamSpeed": 3200,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "sp3",
+        "sockets": ["SP3"],
+        "chipsets": [],
+        "ramType": "DDR4",
+        "maxRamSpeed": 3200,
+        "biosWarning": { "enabled": false }
+      },
+      {
+        "id": "sp5",
+        "sockets": ["SP5"],
+        "chipsets": [],
+        "ramType": "DDR5",
+        "maxRamSpeed": 3200,
+        "biosWarning": { "enabled": false }
       }
     ]
   },
   "formFactorCompatibility": {
-    "hierarchy": [
-      "ITX",
-      "mATX",
-      "ATX",
-      "EATX"
-    ],
+    "hierarchy": ["Mini-ITX", "micro-ATX", "ATX", "eATX"],
     "rules": [
-      {
-        "caseFormFactor": "ITX",
-        "supportedMotherboards": [
-          "ITX"
-        ]
-      },
-      {
-        "caseFormFactor": "mATX",
-        "supportedMotherboards": [
-          "ITX",
-          "mATX"
-        ]
-      },
-      {
-        "caseFormFactor": "ATX",
-        "supportedMotherboards": [
-          "ITX",
-          "mATX",
-          "ATX"
-        ]
-      },
-      {
-        "caseFormFactor": "EATX",
-        "supportedMotherboards": [
-          "ITX",
-          "mATX",
-          "ATX",
-          "EATX"
-        ]
-      }
+      { "caseFormFactor": "Mini-ITX",  "supportedMotherboards": ["Mini-ITX"] },
+      { "caseFormFactor": "micro-ATX", "supportedMotherboards": ["Mini-ITX", "micro-ATX"] },
+      { "caseFormFactor": "ATX",       "supportedMotherboards": ["Mini-ITX", "micro-ATX", "ATX"] },
+      { "caseFormFactor": "eATX",      "supportedMotherboards": ["Mini-ITX", "micro-ATX", "ATX", "eATX"] }
     ],
     "aliases": {
-      "MINI-ITX": "ITX",
-      "MINI ITX": "ITX",
-      "MITX": "ITX",
-      "MICRO-ATX": "mATX",
-      "M-ATX": "mATX",
-      "MATX": "mATX",
-      "MICRO ATX": "mATX",
-      "STANDARD-ATX": "ATX",
-      "STANDARD ATX": "ATX",
-      "EXTENDED-ATX": "EATX",
-      "E-ATX": "EATX",
-      "EXTENDED ATX": "EATX"
-    }
+      "MINI-ITX": "Mini-ITX", "MINI ITX": "Mini-ITX", "MITX": "Mini-ITX", "MINIITX": "Mini-ITX", "mini-itx": "Mini-ITX", "miniitx": "Mini-ITX", "itx": "Mini-ITX",
+      "MICRO-ATX": "micro-ATX", "M-ATX": "micro-ATX", "MATX": "micro-ATX", "MICRO ATX": "micro-ATX", "MICROATX": "micro-ATX",
+      "micro-atx": "micro-ATX", "microatx": "micro-ATX", "matx": "micro-ATX",
+      "STANDARD-ATX": "ATX", "STANDARD ATX": "ATX", "ATX": "ATX", "atx": "ATX",
+      "EXTENDED-ATX": "eATX", "E-ATX": "eATX", "EXTENDED ATX": "eATX", "EATX": "eATX", "eatx": "eATX", "extended-atx": "eATX", "extended atx": "eATX"
+    },
+    "hierarchy": ["Mini-ITX", "micro-ATX", "ATX", "eATX"]
   },
   "ramCompatibility": {
     "validTypes": [

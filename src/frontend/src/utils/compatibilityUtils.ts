@@ -47,8 +47,6 @@ export interface CompatibilityCheckResult {
 export type ComponentMap = Partial<Record<ComponentCategory, Product | null>>;
 
 // ──────────── Validation constants ────────────
-const VALID_SOCKETS = ['AM4', 'AM5', 'LGA1200', 'LGA1700', 'LGA1851'] as const;
-export type SocketType = typeof VALID_SOCKETS[number];
 const VALID_MEMORY_TYPES = config.ramCompatibility.validTypes as readonly string[];
 export type MemoryType = 'DDR4' | 'DDR5';
 const VALID_FORM_FACTORS = config.formFactorCompatibility.hierarchy as readonly string[];
@@ -80,15 +78,20 @@ function getString(specs: ProductSpecifications | undefined, ...keys: string[]):
   return null;
 }
 
-export function extractSocket(specs: ProductSpecifications | undefined): SocketType | null {
+/** Set of known socket names from compatibility rules (source of truth, no hardcoding) */
+const KNOWN_SOCKETS = new Set(
+  SOCKET_GROUPS.flatMap(g => g.sockets.map(s => s.toUpperCase().trim()))
+);
+
+export function extractSocket(specs: ProductSpecifications | undefined): string | null {
   const raw = getString(specs, 'socket', 'cpuSocket', 'soket');
   if (!raw) return null;
   const upper = raw.toUpperCase().trim();
-  return (VALID_SOCKETS as readonly string[]).includes(upper) ? upper as SocketType : null;
+  return KNOWN_SOCKETS.has(upper) ? upper : null;
 }
 
 export function extractMemoryType(specs: ProductSpecifications | undefined): MemoryType | null {
-  const raw = getString(specs, 'memoryType', 'tip_pamyati', 'type');
+  const raw = getString(specs, 'memoryType', 'memory_type', 'tip_pamyati', 'type');
   if (!raw) return null;
   const upper = raw.toUpperCase().trim();
   if (upper.startsWith('DDR5')) return 'DDR5';
@@ -96,15 +99,11 @@ export function extractMemoryType(specs: ProductSpecifications | undefined): Mem
   return null;
 }
 
-export function extractFormFactor(specs: ProductSpecifications | undefined): FormFactor | null {
+export function extractFormFactor(specs: ProductSpecifications | undefined): string | null {
   const raw = getString(specs, 'formFactor', 'form_factor', 'format');
   if (!raw) return null;
-  const upper = raw.toUpperCase().trim();
-  if (upper === 'ATX' || upper === 'STANDARD ATX') return 'ATX';
-  if (upper === 'MICROATX' || upper === 'MICRO-ATX' || upper === 'M-ATX' || upper === 'MATX') return 'MicroATX';
-  if (upper === 'MINIITX' || upper === 'MINI-ITX' || upper === 'MITX') return 'MiniITX';
-  if (upper === 'EATX' || upper === 'E-ATX' || upper === 'EXTENDED ATX') return 'EATX';
-  return null;
+  const norm = normalizeFormFactor(raw);
+  return norm;
 }
 
 export function extractSupportedSockets(specs: ProductSpecifications | undefined): string[] {
@@ -128,23 +127,30 @@ export function hasIntegratedGraphics(specs: ProductSpecifications | undefined):
   const rec = specs as Record<string, unknown>;
   const ig = rec.integratedGraphics ?? rec.integrated_graphics;
   if (typeof ig === 'boolean') return ig;
-  if (typeof ig === 'string') { const l = ig.toLowerCase(); return l === 'true' || l === 'да' || l === 'yes'; }
+  if (typeof ig === 'string') {
+    const l = ig.trim().toLowerCase();
+    if (l === 'true' || l === 'да' || l === 'yes') return true;
+    // Any non-empty, non-boolean-looking value means a GPU is present (e.g. "Intel HD Graphics 510")
+    if (l.length > 0 && l !== 'false' && l !== 'нет' && l !== 'no' && l !== 'none' && l !== 'отсутствует' && l !== 'нет встроенной' && l !== 'нет графического ядра') return true;
+  }
   return false;
 }
 
-export function extractSupportedFormFactors(specs: ProductSpecifications | undefined): FormFactor[] {
+export function extractSupportedFormFactors(specs: ProductSpecifications | undefined): string[] {
   if (!specs) return [];
   const rec = specs as Record<string, unknown>;
   const raw = rec.supportedFormFactors ?? rec.supported_form_factors;
   if (Array.isArray(raw)) {
-    return raw.filter((s): s is string => typeof s === 'string').map(s => {
-      const u = s.toUpperCase().trim();
-      if (u === 'ATX' || u === 'STANDARD ATX') return 'ATX' as FormFactor;
-      if (u === 'MICROATX' || u === 'MICRO-ATX' || u === 'M-ATX' || u === 'MATX') return 'MicroATX' as FormFactor;
-      if (u === 'MINIITX' || u === 'MINI-ITX' || u === 'MITX') return 'MiniITX' as FormFactor;
-      if (u === 'EATX' || u === 'E-ATX') return 'EATX' as FormFactor;
-      return null;
-    }).filter((s): s is FormFactor => s !== null);
+    return raw
+      .filter((s): s is string => typeof s === 'string')
+      .map(s => normalizeFormFactor(s))
+      .filter((s): s is string => s !== null);
+  }
+  // If it's a single string value, try to extract
+  const single = getString(specs, 'formFactor', 'form_factor', 'format');
+  if (single) {
+    const norm = normalizeFormFactor(single);
+    if (norm) return [norm];
   }
   return [];
 }
@@ -158,6 +164,55 @@ export function extractCoolerHeight(specs: ProductSpecifications | undefined): n
 export function extractMaxCoolerHeight(specs: ProductSpecifications | undefined): number | null { return getNumber(specs, 'maxCoolerHeight', 'max_cooler_height', 'maxCoolerHeightMm'); }
 export function extractCoolerType(specs: ProductSpecifications | undefined): string | null { return getString(specs, 'type', 'coolerType'); }
 export function extractMaxCoolerTDP(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'maxTdp', 'max_tdp', 'coolingTdp') ?? 0; }
+
+// ──────────── FormFactor helpers (from compatibilityRules.json) ────────────
+const FF_RULES = config.formFactorCompatibility.rules;
+const FF_ALIASES: Record<string, string> = config.formFactorCompatibility.aliases;
+
+/** Normalize any raw form-factor string to canonical DB value (Mini-ITX, micro-ATX, ATX, eATX) */
+export function normalizeFormFactor(raw: string): string | null {
+  if (!raw) return null;
+  // Check aliases table first (exact match, case-insensitive)
+  const upper = raw.toUpperCase().trim();
+  if (FF_ALIASES[upper]) return FF_ALIASES[upper];
+  // Direct match with hierarchy (DB values)
+  for (const h of config.formFactorCompatibility.hierarchy) {
+    if (h === raw) return h;
+  }
+  // Fallback: match by known aliases not in table
+  if (upper === 'ATX') return 'ATX';
+  if (upper === 'EATX') return 'eATX';
+  if (upper === 'MINIITX' || upper === 'MINI-ITX' || upper === 'MITX') return 'Mini-ITX';
+  if (upper === 'MICROATX' || upper === 'MICRO-ATX' || upper === 'M-ATX' || upper === 'MATX') return 'micro-ATX';
+  return null;
+}
+
+/** Given a motherboard canonical FF, return all case FF values that can hold it.
+ *  e.g. MB=Mini-ITX → case can be Mini-ITX, micro-ATX, ATX, eATX (any case >= MB size). */
+export function getCaseFormFactorsForMotherboard(mbCanonical: string): string[] {
+  return FF_RULES
+    .filter(rule => rule.supportedMotherboards.includes(mbCanonical))
+    .map(rule => rule.caseFormFactor);
+}
+
+/** Given a case canonical FF, return all motherboard FF values it can hold. */
+export function getMotherboardFormFactorsForCase(caseCanonical: string): string[] {
+  const rule = FF_RULES.find(r => r.caseFormFactor === caseCanonical);
+  return rule ? rule.supportedMotherboards : [];
+}
+
+/** Expand a single MB raw FF string into a list of case form-factor values (canonical DB names). */
+export function caseFormFactorsForMB(raw: string): string[] {
+  const canonical = normalizeFormFactor(raw);
+  if (!canonical) return [];
+  return getCaseFormFactorsForMotherboard(canonical);
+}
+
+export function mbFormFactorsForCase(raw: string): string[] {
+  const canonical = normalizeFormFactor(raw);
+  if (!canonical) return [];
+  return getMotherboardFormFactorsForCase(canonical);
+}
 
 // ──────────── Socket group helpers ────────────
 function findSocketGroup(socket: string): SocketGroup | null {
