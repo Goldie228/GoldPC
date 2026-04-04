@@ -692,7 +692,6 @@ export function PCBuilderPage() {
           }}
           getDisplaySpecs={getDisplaySpecs}
           typeFilter={componentTypeFilter[selectedSlot] ?? undefined}
-          restrictedManufacturerPlatform={mfrPlatform}
           selectedCount={selectedCount}
           totalCount={totalCount}
         />
