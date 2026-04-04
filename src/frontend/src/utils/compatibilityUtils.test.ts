@@ -14,6 +14,9 @@ import {
   extractMaxGPULength,
   extractRAMCapacity,
   extractMaxMemory,
+  normalizeFormFactor,
+  caseFormFactorsForMB,
+  mbFormFactorsForCase,
   type ComponentMap,
 } from './compatibilityUtils';
 import type { Product } from '../api/types';
@@ -174,11 +177,11 @@ describe('compatibilityUtils - performanceCalculator', () => {
     });
 
     it('handles Micro-ATX', () => {
-      expect(extractFormFactor({ formFactor: 'Micro-ATX' })).toBe('MicroATX');
+      expect(extractFormFactor({ formFactor: 'Micro-ATX' })).toBe('micro-ATX');
     });
 
     it('handles Mini-ITX', () => {
-      expect(extractFormFactor({ formFactor: 'Mini-ITX' })).toBe('MiniITX');
+      expect(extractFormFactor({ formFactor: 'Mini-ITX' })).toBe('Mini-ITX');
     });
   });
 
@@ -214,6 +217,18 @@ describe('compatibilityUtils - performanceCalculator', () => {
       expect(hasIntegratedGraphics({ integratedGraphics: false })).toBe(false);
     });
 
+    it('returns true for GPU name string', () => {
+      expect(hasIntegratedGraphics({ integratedGraphics: 'Intel HD Graphics 510' })).toBe(true);
+      expect(hasIntegratedGraphics({ integratedGraphics: 'UHD Graphics 630' })).toBe(true);
+      expect(hasIntegratedGraphics({ integratedGraphics: 'AMD Radeon Graphics' })).toBe(true);
+    });
+
+    it('returns false for negative strings', () => {
+      expect(hasIntegratedGraphics({ integratedGraphics: 'Нет' })).toBe(false);
+      expect(hasIntegratedGraphics({ integratedGraphics: 'false' })).toBe(false);
+      expect(hasIntegratedGraphics({ integratedGraphics: 'none' })).toBe(false);
+    });
+
     it('returns false for undefined', () => {
       expect(hasIntegratedGraphics(undefined)).toBe(false);
     });
@@ -245,6 +260,76 @@ describe('compatibilityUtils - performanceCalculator', () => {
 
     it('defaults max memory to 128', () => {
       expect(extractMaxMemory({})).toBe(128);
+    });
+  });
+
+  describe('normalizeFormFactor', () => {
+    it.each([
+      ['Mini-ITX', 'Mini-ITX'],
+      ['MiniITX', 'Mini-ITX'],
+      ['mITX', 'Mini-ITX'],
+      ['MITX', 'Mini-ITX'],
+      ['MICRO-ATX', 'micro-ATX'],
+      ['MicroATX', 'micro-ATX'],
+      ['micro-ATX', 'micro-ATX'],
+      ['M-ATX', 'micro-ATX'],
+      ['MATX', 'micro-ATX'],
+      ['microatx', 'micro-ATX'],
+      ['ATX', 'ATX'],
+      ['Standard ATX', 'ATX'],
+      ['eATX', 'eATX'],
+      ['Extended ATX', 'eATX'],
+      ['E-ATX', 'eATX'],
+      ['EATX', 'eATX'],
+    ])(`normalizes '%s' to '%s'`, (input, expected) => {
+      expect(normalizeFormFactor(input)).toBe(expected);
+    });
+
+    it('returns null for unknown', () => {
+      expect(normalizeFormFactor('SFX')).toBeNull();
+      expect(normalizeFormFactor('12"x13"')).toBeNull();
+    });
+
+    it('returns null for empty/null', () => {
+      expect(normalizeFormFactor('')).toBeNull();
+      expect(normalizeFormFactor(null as any)).toBeNull();
+    });
+  });
+
+  describe('caseFormFactorsForMB', () => {
+    it('returns all case FFs that can hold Mini-ITX MB', () => {
+      const result = caseFormFactorsForMB('Mini-ITX');
+      expect(result).toEqual(['Mini-ITX', 'micro-ATX', 'ATX', 'eATX']);
+    });
+
+    it('returns ATX and eATX cases for ATX MB', () => {
+      const result = caseFormFactorsForMB('ATX');
+      expect(result).toEqual(['ATX', 'eATX']);
+    });
+
+    it('returns only eATX cases for eATX MB', () => {
+      const result = caseFormFactorsForMB('E-ATX');
+      expect(result).toEqual(['eATX']);
+    });
+
+    it('handles lowercase and extra spaces', () => {
+      expect(caseFormFactorsForMB('  micro-atx  ').length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('mbFormFactorsForCase', () => {
+    it('ATX case supports Mini-ITX, micro-ATX, ATX MBs', () => {
+      const result = mbFormFactorsForCase('ATX');
+      expect(result).toEqual(['Mini-ITX', 'micro-ATX', 'ATX']);
+    });
+
+    it('Mini-ITX case supports only Mini-ITX MB', () => {
+      const result = mbFormFactorsForCase('Mini-ITX');
+      expect(result).toEqual(['Mini-ITX']);
+    });
+
+    it('returns empty for unknown case FF', () => {
+      expect(mbFormFactorsForCase('SFX')).toEqual([]);
     });
   });
 });

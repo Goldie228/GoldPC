@@ -61,8 +61,8 @@ const componentTypeToCategory: Record<PCComponentType, ProductCategory> = {
   headphones: 'headphones',
 };
 
-/** Тип фильтра по имени (fan vs cooling) в модалке выбора */
-const componentTypeFilter: Record<PCComponentType, 'fan' | 'cooling' | null> = {
+/** Тип фильтра по спецификации 'type' в модалке выбора cooling-категории */
+const componentTypeFilter: Record<PCComponentType, string | string[] | null> = {
   cpu: null,
   gpu: null,
   motherboard: null,
@@ -70,8 +70,8 @@ const componentTypeFilter: Record<PCComponentType, 'fan' | 'cooling' | null> = {
   storage: null,
   psu: null,
   case: null,
-  fan: 'fan',
-  cooling: 'cooling',
+  fan: 'Корпусный вентилятор',
+  cooling: ['Башенный кулер', 'Жидкостное охлаждение'],
   monitor: null,
   keyboard: null,
   mouse: null,

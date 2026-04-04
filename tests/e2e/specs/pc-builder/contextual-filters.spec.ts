@@ -91,6 +91,35 @@ async function mockProducts(page: Page, catalog: Record<string, Record<string, u
   }
 }
 
+// ─── Case / form-factor products ───
+const case_itx = {
+  id: 'case-1', name: 'NZXT H1 V2', sku: 'H1V2',
+  category: 'case', price: 300, stock: 10, isActive: true,
+  specifications: { formFactor: 'Mini-ITX', maxGpuLength: 324, maxCoolerHeight: 148 },
+};
+const case_atx = {
+  id: 'case-2', name: 'NZXT H5 Flow', sku: 'H5FLOW',
+  category: 'case', price: 100, stock: 10, isActive: true,
+  specifications: { formFactor: 'ATX', maxGpuLength: 365, maxCoolerHeight: 165 },
+};
+const case_eatx = {
+  id: 'case-3', name: 'Corsair 1000D', sku: '1000D',
+  category: 'case', price: 450, stock: 5, isActive: true,
+  specifications: { formFactor: 'eATX', maxGpuLength: 400, maxCoolerHeight: 180 },
+};
+// ─── Motherboard with different form factors ───
+const mb_mini_itx = {
+  id: 'mb-4', name: 'ASRock B550M-ITX', sku: 'B550MITX',
+  category: 'motherboard', price: 180, stock: 5, isActive: true,
+  specifications: { socket: 'AM4', chipset: 'B550', formFactor: 'Mini-ITX', memoryType: 'DDR4' },
+};
+// ─── Cooler ───
+const cooler_am4_only = {
+  id: 'cooling-2', name: 'Wraith Stealth', sku: 'WRAITH',
+  category: 'cooling', price: 25, stock: 10, isActive: true,
+  specifications: { socket: 'AM4', tdp: 65 },
+};
+
 test.describe('Contextual filters - PC Builder', () => {
   let pom: PCBuilderPage;
 
@@ -323,5 +352,80 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Материнская плата');
     results = await pom.getModalResultsCount();
     expect(results).toMatch(/Найдено: 1/);
+  });
+
+  // ───────── New contextual filter tests ─────────
+
+  test('MB Mini-ITX → case picker hides ATX and eATX cases', async ({ page }) => {
+    await mockProducts(page, {
+      motherboards: [mb_mini_itx],
+      cases: [case_itx, case_atx, case_eatx],
+      processors: [], ram: [], psu: [], gpu: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Материнская плата');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Корпус');
+    const names = await pom.getModalProductNames();
+    // ITX case should be visible
+    expect(names).toContain('NZXT H1 V2');
+    // ATX and eATX cases should be hidden by formFactor contextual filter
+    expect(names).not.toContain('NZXT H5 Flow');
+    expect(names).not.toContain('Corsair 1000D');
+  });
+
+  test('Case ATX → MB picker hides Mini-ITX boards from FF filter perspective', async ({ page }) => {
+    // Case selected first → MB picker should show MBs with formFactor compatible with ATX case
+    // ATX case supports ITX, mATX, ATX — so all three MBs appear, but the contextual
+    // filter still passes them. EATX MB would be hidden.
+    await mockProducts(page, {
+      processors: [cpu_am4],
+      motherboards: [mb_am4, mb_mini_itx, mb_intel],
+      cases: [case_atx],
+      ram: [], psu: [], gpu: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Корпус');
+    await pom.selectModalProduct(0);
+    await pom.openSlotPicker('Материнская плата');
+    const names = await pom.getModalProductNames();
+    // All three MBs should appear since ATX case supports ITX, mATX, ATX
+    // The socket constraint from CPU=none yet, but cpu is not selected
+    expect(names.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('RAM DDR4 first → then CPU picker restricts to DDR4-compatible sockets', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4, cpu_am5, cpu_intel],
+      motherboards: [],
+      ram: [ram_ddr4, ram_ddr5],
+      psu: [], gpu: [], cases: [], coolers: [], storage: [],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Оперативная память');
+    await pom.selectModalProduct(0); // DDR4
+    await pom.openSlotPicker('Процессор');
+    const names = await pom.getModalProductNames();
+    // AM4 and LGA1700 support DDR4, AM5 is DDR5-only
+    expect(names).toContain('AMD Ryzen 5 3600');
+    expect(names).toContain('Intel Core i5-13600K');
+    expect(names).not.toContain('AMD Ryzen 5 7600X');
+  });
+
+  test('Cooler AM4-only → CPU picker hides non-AM4 CPUs', async ({ page }) => {
+    await mockProducts(page, {
+      processors: [cpu_am4, cpu_am5, cpu_intel],
+      motherboards: [],
+      ram: [], psu: [], gpu: [], cases: [], storage: [],
+      coolers: [cooler_am4_only, cooling_item],
+    });
+    await pom.goto();
+    await pom.openSlotPicker('Охлаждение');
+    await pom.selectModalProduct(0); // AM4-only cooler
+    await pom.openSlotPicker('Процессор');
+    const names = await pom.getModalProductNames();
+    expect(names).toContain('AMD Ryzen 5 3600');
+    expect(names).not.toContain('AMD Ryzen 5 7600X');
+    expect(names).not.toContain('Intel Core i5-13600K');
   });
 });

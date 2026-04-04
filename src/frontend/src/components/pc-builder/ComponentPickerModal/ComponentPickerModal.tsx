@@ -12,7 +12,7 @@ import { Pagination } from '../../catalog/Pagination/Pagination';
 import { FilterSidebar } from '../../catalog';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';
-import { isComponentCompatible, extractSocket as _extractSocket, extractMemoryType as _extractMemoryType, extractSupportedFormFactors, getChipsetsForSocket, getSocketsForRamType, getRamTypesForSocket, extractSupportedSockets } from '../../../utils/compatibilityUtils';
+import { isComponentCompatible, extractSocket as _extractSocket, extractMemoryType as _extractMemoryType, extractSupportedFormFactors, getChipsetsForSocket, getSocketsForRamType, getRamTypesForSocket, extractSupportedSockets, extractTDP, caseFormFactorsForMB, mbFormFactorsForCase, normalizeFormFactor } from '../../../utils/compatibilityUtils';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '../../../hooks/useProducts';
 import { catalogApi } from '../../../api/catalog';
@@ -35,8 +35,8 @@ export interface ComponentPickerModalProps {
   getDisplaySpecs: (type: PCComponentType, product: Product) => string[];
   /** Фильтр по подстроке в названии (e.g. "вентилятор для корпуса") */
   nameFilter?: string;
-  /** Подтип компонента для фильтрации (e.g. 'cooling' vs 'fan' для категории cooling) */
-  typeFilter?: 'fan' | 'cooling';
+  /** Значение спецификации 'type' для фильтрации (e.g. 'CPU Кулер', 'Жидкостное охлаждение'). Если массив — OR. */
+  typeFilter?: string | string[];
   /** Платформа для фильтра производителей: 'amd' или 'intel' */
   restrictedManufacturerPlatform?: 'amd' | 'intel';
 }
@@ -328,8 +328,18 @@ export function ComponentPickerModal({
     setInStockOnly(false); setHighlightedId(currentProduct?.id ?? null);
     setPage(1); setViewMode('grid');
     setPriceRange({ min: 0, max: 0 }); setSelectedManufacturerIds([]);
+    // For case slot with a MB selected — pre-check all compatible FF options
+    if (slotType === 'case' && buildContext?.motherboard?.product) {
+      const raw = ((buildContext.motherboard.product.specifications as any)?.formFactor ??
+        (buildContext.motherboard.product.specifications as any)?.form_factor ?? '') as string;
+      const ffValues = caseFormFactorsForMB(raw);
+      if (ffValues.length > 0) {
+        setSelectedSpecifications({ formFactor: ffValues });
+        return;
+      }
+    }
     setSelectedSpecifications({});
-  }, [isOpen, category, currentProduct?.id]);
+  }, [isOpen, category, currentProduct?.id, slotType, buildContext]);
 
   useEffect(() => {
     const t = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
@@ -343,6 +353,10 @@ export function ComponentPickerModal({
 
   const effectiveSpecs = useMemo(() => {
     const out = { ...selectedSpecifications };
+    // typeFilter — фильтрация по спецификации 'type' (e.g. cooling vs fan)
+    if (typeFilter) {
+      out.type = Array.isArray(typeFilter) ? typeFilter : [typeFilter];
+    }
     if (slotType === 'cpu' && buildContext?.motherboard?.product) {
       const s = _extractSocket(buildContext.motherboard.product.specifications);
       if (s) out.socket = s;
@@ -352,7 +366,8 @@ export function ComponentPickerModal({
       if (s) out.socket = s;
     }
     if (slotType === 'ram' && buildContext?.motherboard?.product) {
-      const mt = buildContext.motherboard.product.specifications?.memoryType;
+      const mt = (buildContext.motherboard.product.specifications as any)?.memoryType ??
+                 (buildContext.motherboard.product.specifications as any)?.memory_type ?? '';
       if (mt) { out.memoryType = mt; out.type = mt; }
     }
     // RAM slot: if no MB but CPU selected → derive from CPU socket
@@ -370,25 +385,18 @@ export function ComponentPickerModal({
     if (slotType === 'case' && buildContext?.motherboard?.product) {
       const raw = ((buildContext.motherboard.product.specifications as any)?.formFactor ??
         (buildContext.motherboard.product.specifications as any)?.form_factor ?? '') as string;
-      const mbFF = raw.toUpperCase().trim();
-      const caseFFs: string[] = [];
-      if (mbFF.includes('MINI') || mbFF === 'MITX' || mbFF === 'MINIITX' ||
-          mbFF.includes('MICRO') || mbFF === 'MATX' || mbFF === 'M-ATX' ||
-          mbFF === 'ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
-        caseFFs.push('Mini-ITX', 'MiniITX', 'mITX', 'MITX');
+      const caseFFs = caseFormFactorsForMB(raw);
+      if (caseFFs.length > 0) out.formFactor = caseFFs;
+    }
+    // PSU picker: enforce minimum wattage based on GPU+CPU selection
+    if (slotType === 'psu' && (buildContext?.gpu?.product || buildContext?.cpu?.product)) {
+      const gpuW = buildContext.gpu?.product ? extractTDP(buildContext.gpu.product.specifications) : 0;
+      const cpuW = buildContext.cpu?.product ? extractTDP(buildContext.cpu.product.specifications) : 0;
+      const minWatt = gpuW + cpuW + 50;
+      if (minWatt > 0) {
+        // Use a special marker that FilterSidebar picks up to set the range min
+        out['wattage_min'] = minWatt;
       }
-      if (mbFF.includes('MICRO') || mbFF === 'MATX' || mbFF === 'M-ATX' ||
-          mbFF === 'ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
-        caseFFs.push('Micro-ATX', 'MicroATX', 'mATX', 'M-ATX', 'MATX');
-      }
-      if (mbFF === 'ATX' || mbFF === 'STANDARD ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
-        caseFFs.push('ATX', 'Standard ATX');
-      }
-      if (mbFF.includes('E-ATX') || mbFF.includes('EXTENDED') || mbFF === 'EATX') {
-        caseFFs.push('eATX', 'Extended ATX');
-      }
-      const unique = [...new Set(caseFFs)];
-      if (unique.length > 0) out.formFactor = unique;
     }
     return out;
   }, [selectedSpecifications, slotType, buildContext]);
@@ -469,7 +477,19 @@ export function ComponentPickerModal({
 
     if (slotType === 'ram' && b.motherboard?.product) {
       const memType = _extractMemoryType(b.motherboard.product.specifications);
-      if (memType) { result.memoryType = [memType]; result.tip_pamyati = [memType]; result.type = [memType]; }
+      if (memType) {
+        result.memoryType = [memType];
+        result.tip_pamyati = [memType];
+        result.type = [memType];
+      }
+    }
+    if (slotType === 'ram' && b.ram[0]?.product && !b.motherboard?.product && !result.type) {
+      const memType = _extractMemoryType(b.ram[0].product.specifications);
+      if (memType) {
+        result.memoryType = [memType];
+        result.tip_pamyati = [memType];
+        result.type = [memType];
+      }
     }
     if (slotType === 'ram' && b.cpu?.product && !b.motherboard?.product) {
       const cpuSocket = _extractSocket(b.cpu.product.specifications);
@@ -490,40 +510,25 @@ export function ComponentPickerModal({
       if (caseFFs.length > 0) { result.formFactor = caseFFs; result.format = caseFFs; }
     }
     if (slotType === 'case' && b.motherboard?.product) {
-      // Given the MB form factor, find case form factors that support it.
-      // Hierarchy: eATX > ATX > MicroATX > MiniITX
-      // eATX case: supports eATX, ATX, MicroATX, MiniITX
-      // ATX case:  supports ATX, MicroATX, MiniITX
-      // MicroATX case: supports MicroATX, MiniITX
-      // MiniITX case: supports MiniITX only
       const raw = ((b.motherboard.product.specifications as any)?.formFactor ??
         (b.motherboard.product.specifications as any)?.form_factor ??
         (b.motherboard.product.specifications as any)?.format ?? '') as string;
-      const mbFF = raw.toUpperCase().trim();
-      const caseFFsForMB: string[] = [];
-      if (mbFF.includes('E-ATX') || mbFF.includes('EXTENDED') || mbFF === 'EATX') {
-        caseFFsForMB.push('eATX', 'Extended ATX');
+      const caseFFs = caseFormFactorsForMB(raw);
+      if (caseFFs.length > 0) {
+        result.formFactor = caseFFs;
+        result.format = caseFFs;
+        result.form_factor = caseFFs;
       }
-      if (mbFF === 'ATX' || mbFF === 'STANDARD ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
-        caseFFsForMB.push('ATX', 'Standard ATX', 'eATX', 'Extended ATX');
-      }
-      if (mbFF.includes('MICRO') || mbFF === 'MATX' || mbFF === 'M-ATX' || mbFF === 'MICROATX' ||
-          mbFF === 'ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
-        caseFFsForMB.push('Micro-ATX', 'MicroATX', 'mATX', 'M-ATX', 'MATX',
-          'ATX', 'Standard ATX', 'eATX', 'Extended ATX');
-      }
-      if (mbFF.includes('MINI') || mbFF === 'MITX' || mbFF === 'MINIITX' ||
-          mbFF.includes('MICRO') || mbFF === 'MATX' || mbFF === 'M-ATX' ||
-          mbFF === 'ATX' || mbFF.includes('E-ATX') || mbFF.includes('EXTENDED')) {
-        caseFFsForMB.push('Mini-ITX', 'MiniITX', 'mITX', 'MITX',
-          'Micro-ATX', 'MicroATX', 'mATX', 'M-ATX', 'MATX',
-          'ATX', 'Standard ATX', 'eATX', 'Extended ATX');
-      }
-      const unique = [...new Set(caseFFsForMB)];
-      if (unique.length > 0) {
-        result.formFactor = unique;
-        result.format = unique;
-        result.form_factor = unique;
+    }
+    // Motherboard picker: given a selected case, restrict MB FF to what fits in it
+    if (slotType === 'motherboard' && b.case?.product) {
+      const raw = ((b.case.product.specifications as any)?.formFactor ??
+        (b.case.product.specifications as any)?.format ?? '') as string;
+      const mbFFs = mbFormFactorsForCase(raw);
+      if (mbFFs.length > 0) {
+        result.formFactor = mbFFs;
+        result.format = mbFFs;
+        result.form_factor = mbFFs;
       }
     }
 
@@ -573,14 +578,10 @@ export function ComponentPickerModal({
     });
   }, [products, slotType, componentMap]);
 
-  const compatibleProductNameFilter = typeFilter === 'cooling' ? 'cpu cooler' :
-    typeFilter === 'fan' ? 'fan' :
-    nameFilter;
-
   const incompatibleCount = productsWithCompatibility.filter((p) => p.isIncompatible).length;
   const filteredProducts = productsWithCompatibility.filter((p) => {
     if (p.isIncompatible) return false;
-    if (compatibleProductNameFilter && !p.name.toLowerCase().includes(compatibleProductNameFilter.toLowerCase())) return false;
+    if (nameFilter && !p.name.toLowerCase().includes(nameFilter.toLowerCase())) return false;
     return true;
   });
 

@@ -541,14 +541,23 @@ export function FilterSidebar({
             const isVideoMemory = attr.key === 'videopamyat';
 
             // Бэкенд хранит видеопамять в МБ, но фильтр показывает в ГБ.
+            // Для PSU wattage может быть установлен контекстный минимум из билда.
             // Для остальных числовых характеристик работаем в «сырых» единицах.
             const rawMin = attr.minValue ?? 0;
             const rawMax = attr.maxValue ?? Math.max(rawMin + 1, 100);
 
+            // Контекстный минимум из сборки (GPU+CPU TDP) передан через effectiveSpecifications
+            const effectiveMin = attr.key === 'power' || attr.key === 'wattage'
+              ? (effectiveSpecifications?.['wattage_min'] as number | undefined) ?? null
+              : null;
+            const rangeMin = effectiveMin != null ? Math.max(rawMin, effectiveMin) : rawMin;
+
+            const isWattage = attr.key === 'power' || attr.key === 'wattage';
+
             const toUi = (v: number) => (isVideoMemory ? v / 1024 : v);
             const fromUi = (v: number) => (isVideoMemory ? v * 1024 : v);
 
-            const minValUi = toUi(rawMin);
+            const minValUi = toUi(rangeMin);
             const maxValUi = toUi(rawMax);
 
             const raw = selectedSpecifications[attr.key];
@@ -572,6 +581,11 @@ export function FilterSidebar({
             return (
               <div key={attr.key} className={styles.specFilterBlock}>
                 {!options?.hideLabel && <span className={styles.specFilterLabel}>{attr.displayName}</span>}
+                {effectiveMin != null && isWattage && (
+                  <div className={styles.wattageHint} title={`Минимальная мощность с учётом выбранной конфигурации: ${effectiveMin}Вт`}>
+                    Мин. {effectiveMin}Вт для вашей сборки
+                  </div>
+                )}
                 <RangeSlider
                   min={minValUi}
                   max={maxValUi}
@@ -579,7 +593,10 @@ export function FilterSidebar({
                   value={localRange}
                   onCommit={(r) => {
                     const next = { ...selectedSpecifications };
-                    const committedMinRaw = fromUi(r.min);
+                    // For wattage, don't allow user to set below effectiveMin
+                    const committedMinRaw = effectiveMin != null
+                      ? Math.max(fromUi(r.min), effectiveMin)
+                      : fromUi(r.min);
                     const committedMaxRaw = fromUi(r.max);
 
                     // Возвращаемся в исходные единицы (МБ для видеопамяти)
