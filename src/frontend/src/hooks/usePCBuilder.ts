@@ -12,6 +12,7 @@ import { useCartStore } from '../store/cartStore';
 import { calculatePerformance, type EstimatedFps, type PerformanceResult } from '../utils/performanceCalculator';
 import { checkCompatibilityAPI, calculateFpsApi } from '../api/pcBuilderService';
 import type { CompatibilityCheckResponse, FpsApiResponse } from '../api/pcBuilderService';
+import { hasIntegratedGraphics } from '../utils/compatibilityUtils';
 import compatibilityRules from '../config/compatibilityRules.json';
 import type { CompatibilityRulesConfig } from '../config/compatibilityTypes';
 
@@ -231,8 +232,8 @@ function checkBuildCompatibility(components: PCBuilderSelectedState): Compatibil
   }
 
   if (!gpu && cpu) {
-    const hasIntegratedGraphics = cpu.specifications?.integratedGraphics as boolean;
-    if (!hasIntegratedGraphics) {
+    const igpu = hasIntegratedGraphics(cpu.specifications);
+    if (!igpu) {
       warnings.push('Не выбрана видеокарта, а процессор не имеет встроенной графики');
     }
   }

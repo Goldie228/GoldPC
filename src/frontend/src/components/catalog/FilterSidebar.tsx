@@ -386,12 +386,18 @@ export function FilterSidebar({
     const fetchAttrs = async () => {
       setSpecAttrsLoading(true);
       try {
+        // Only use build-context specs (effectiveSpecifications) for facet filtering.
+        // User's selectedSpecifications should narrow PRODUCTS only, not hide facet options.
         const ctxSpecs = effectiveSpecifications && Object.keys(effectiveSpecifications).length > 0
-          ? effectiveSpecifications as Record<string, string>
-          : (selectedSpecifications && Object.keys(selectedSpecifications).length > 0
-            ? selectedSpecifications as Record<string, string>
-            : undefined);
-        const attrs = await catalogApi.getFilterFacets(backendSlug, { specifications: ctxSpecs });
+          ? effectiveSpecifications
+          : undefined;
+        // Serialize: arrays become comma-separated strings for ASP.NET model binding
+        const serializedSpecs = ctxSpecs
+          ? Object.fromEntries(
+              Object.entries(ctxSpecs).map(([k, v]) => [k, Array.isArray(v) ? v.join(',') : String(v)])
+            ) as Record<string, string>
+          : undefined;
+        const attrs = await catalogApi.getFilterFacets(backendSlug, { specifications: serializedSpecs });
         setFilterAttributes(attrs);
       } catch (err) {
         console.error('Failed to fetch filter attributes:', err);
@@ -401,7 +407,7 @@ export function FilterSidebar({
       }
     };
     fetchAttrs();
-  }, [selectedCategory, JSON.stringify(effectiveSpecifications), JSON.stringify(selectedSpecifications)]);
+  }, [selectedCategory, JSON.stringify(effectiveSpecifications)]);
 
   // Загрузка производителей: по категории или всех
   useEffect(() => {
@@ -410,7 +416,25 @@ export function FilterSidebar({
       try {
         const backendSlug = selectedCategory ? FRONTEND_TO_BACKEND[selectedCategory] : undefined;
         const list = await catalogApi.getManufacturers(backendSlug);
-        setManufacturers(list);
+        if (list.length > 0) {
+          setManufacturers(list);
+          return;
+        }
+        // API не вернул — извлекаем бренды из названий товаров
+        // Паттерн: первое латинское слово в названии товара — производитель
+        const productsResponse = await catalogApi.getProducts(selectedCategory ? { category: selectedCategory, pageSize: 500 } : { pageSize: 500 });
+        const brandSet = new Set<string>();
+        const brandRe = /^[\p{Script=Cyrillic}\p{P}\s]*([A-Za-z][A-Za-z0-9-]+)/u;
+        for (const p of productsResponse.data ?? []) {
+          const m = p.name?.match(brandRe);
+          if (m) brandSet.add(m[1]);
+        }
+        const extracted: Manufacturer[] = Array.from(brandSet)
+          .sort()
+          .map((name, i) => ({ id: `extracted-${i}`, name }));
+        if (extracted.length > 0) {
+          setManufacturers(extracted);
+        }
       } catch (err) {
         console.error('Failed to fetch manufacturers:', err);
         setManufacturers([]);
