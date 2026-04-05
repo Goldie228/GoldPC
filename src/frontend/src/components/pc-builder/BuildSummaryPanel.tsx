@@ -30,6 +30,8 @@ export interface BuildSummaryPanelProps {
   compatibilityWarnings?: string[];
   /** Данные с backend FPS API (если CPU+GPU выбраны) */
   apiFpsData?: FpsApiResponse;
+  /** Показывает, идёт ли сейчас запрос к API совместимости */
+  isApiLoading?: boolean;
   onAddToCart: () => void;
   onSave: () => void;
   onCheckout: () => void;
@@ -50,6 +52,7 @@ export function BuildSummaryPanel({
   compatibilityErrors,
   compatibilityWarnings,
   apiFpsData,
+  isApiLoading,
   onAddToCart,
   onSave,
   onCheckout,
@@ -154,6 +157,12 @@ export function BuildSummaryPanel({
                 ? 'Обратите внимание на рекомендации'
                 : 'Сборка совместима'}
           </span>
+          {isApiLoading && (
+            <span className="bsp__api-loading">
+              <span className="bsp__api-loading-spinner" />
+              Обновление...
+            </span>
+          )}
         </div>
       )}
 
