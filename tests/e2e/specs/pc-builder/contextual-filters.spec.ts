@@ -313,7 +313,7 @@ test.describe('Contextual filters - PC Builder', () => {
     expect(names).toContain('ASUS B650-PLUS');
   });
 
-  test('AM5 CPU shows only DDR5 in RAM picker', async ({ page }) => {
+  test('AM5 CPU shows DDR5 and incompatible DDR3/DDR4 in RAM picker', async ({ page }) => {
     await mockProducts(page, {
       processors: [cpu_am5],
       motherboards: [],
@@ -326,11 +326,12 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Оперативная память');
     const names = await pom.getModalProductNames();
     expect(names).toContain('Corsair 16GB DDR5-5600');
-    expect(names).not.toContain('Kingston 8GB DDR3-1600');
-    expect(names).not.toContain('G.Skill 16GB DDR4-3200');
+    // Incompatible DDR3/DDR4 are now visible
+    expect(names).toContain('Kingston 8GB DDR3-1600');
+    expect(names).toContain('G.Skill 16GB DDR4-3200');
   });
 
-  test('All incompatible shows no compatible products message', async ({ page }) => {
+  test('All incompatible shows incompatible items with toggle', async ({ page }) => {
     await mockProducts(page, {
       processors: [cpu_am4],
       motherboards: [],
@@ -342,9 +343,11 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Оперативная память');
     const names = await pom.getModalProductNames();
-    expect(names.length).toBe(0);
-    const emptyState = page.locator('[class*="emptyState"]');
-    await expect(emptyState).toBeVisible();
+    // Incompatible RAM is now visible (not hidden)
+    expect(names).toContain('Corsair 16GB DDR5-5600');
+    // Toggle button should appear
+    const toggleBtn = page.locator('[class*="toggleIncompatibleBtn"]');
+    await expect(toggleBtn).toBeVisible();
   });
 
   test('Modal results count updates after component selection', async ({ page }) => {
@@ -362,12 +365,13 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Материнская плата');
     results = await pom.getModalResultsCount();
-    expect(results).toMatch(/Найдено: 1/);
+    // All 3 MBs are now visible (compatible + incompatible)
+    expect(results).toMatch(/Найдено: 3/);
   });
 
   // ───────── New contextual filter tests ─────────
 
-  test('MB Mini-ITX → case picker hides ATX and eATX cases', async ({ page }) => {
+  test('MB Mini-ITX → case picker shows ATX and eATX cases as incompatible', async ({ page }) => {
     await mockProducts(page, {
       motherboards: [mb_mini_itx],
       cases: [case_itx, case_atx, case_eatx],
@@ -378,11 +382,10 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Корпус');
     const names = await pom.getModalProductNames();
-    // ITX case should be visible
+    // All cases visible now (ITX compatible, others incompatible)
     expect(names).toContain('NZXT H1 V2');
-    // ATX and eATX cases should be hidden by formFactor contextual filter
-    expect(names).not.toContain('NZXT H5 Flow');
-    expect(names).not.toContain('Corsair 1000D');
+    expect(names).toContain('NZXT H5 Flow');
+    expect(names).toContain('Corsair 1000D');
   });
 
   test('Case ATX → MB picker hides Mini-ITX boards from FF filter perspective', async ({ page }) => {
@@ -417,13 +420,13 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0); // DDR4
     await pom.openSlotPicker('Процессор');
     const names = await pom.getModalProductNames();
-    // AM4 and LGA1700 support DDR4, AM5 is DDR5-only
+    // AM4 and LGA1700 support DDR4 and AM5 is DDR5-only, but now shows incompatible ones too
     expect(names).toContain('AMD Ryzen 5 3600');
+    expect(names).toContain('AMD Ryzen 5 7600X');
     expect(names).toContain('Intel Core i5-13600K');
-    expect(names).not.toContain('AMD Ryzen 5 7600X');
   });
 
-  test('Cooler AM4-only → CPU picker hides non-AM4 CPUs', async ({ page }) => {
+  test('Cooler AM4-only → CPU picker shows non-AM4 CPUs as incompatible', async ({ page }) => {
     await mockProducts(page, {
       processors: [cpu_am4, cpu_am5, cpu_intel],
       motherboards: [],
@@ -435,8 +438,9 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0); // AM4-only cooler
     await pom.openSlotPicker('Процессор');
     const names = await pom.getModalProductNames();
+    // All CPUs visible: AM4 compatible, others incompatible
     expect(names).toContain('AMD Ryzen 5 3600');
-    expect(names).not.toContain('AMD Ryzen 5 7600X');
-    expect(names).not.toContain('Intel Core i5-13600K');
+    expect(names).toContain('AMD Ryzen 5 7600X');
+    expect(names).toContain('Intel Core i5-13600K');
   });
 });
