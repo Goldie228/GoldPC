@@ -392,10 +392,7 @@ export function PCBuilderPage() {
   }, [selectedComponents.motherboard, selectedComponents.ram.length, removeComponent]);
 
   const handleChangeQuantity = useCallback(
-    slotType: PCComponentType,
-    rowIndex: number,
-    delta: number,
-  ) => {
+    (slotType: PCComponentType, rowIndex: number, delta: number) => {
     if (delta < 0) {
       // Remove — remove from the end (highest index)
       if (slotType === 'ram' && selectedComponents.ram.length > 0) {
@@ -418,7 +415,7 @@ export function PCBuilderPage() {
         if (product) selectComponent(slotType, product);
       }
     }
-  };
+  }, [selectedComponents.ram, selectedComponents.storage, selectedComponents.fan, selectComponent, removeComponent]);
 
   const handleProductSelect = (product: Product) => {
     if (!selectedSlot) return;
