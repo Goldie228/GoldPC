@@ -10,7 +10,7 @@
  * - Staggered animations
  */
 
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 import './ComponentSlot.css';
 
@@ -52,14 +52,14 @@ export interface ComponentSlotProps {
 }
 
 /** Inline StatusBadge for compatibility errors */
-function StatusBadge({ message }: { message: string }) {
+function StatusBadge({ message, duration }: { message: string; duration: number }) {
   return (
     <motion.div
       className="component-slot__status-badge"
       initial={{ opacity: 0, scale: 0.8, y: -4 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.8 }}
-      transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration, ease: [0.22, 1, 0.36, 1] }}
     >
       <AlertTriangle size={12} />
       <span>{message}</span>
@@ -86,6 +86,10 @@ export function ComponentSlot({
   maxQuantity,
   onChangeQuantity,
 }: ComponentSlotProps) {
+  /** BUG-24: Respect prefers-reduced-motion to disable JS animations for a11y */
+  const reducedMotion = useReducedMotion();
+  const animDuration = reducedMotion ? 0 : 0.3;
+
   const getButtonText = () => {
     if (buttonText) return buttonText;
     if (state === 'empty') return 'Выбрать';
@@ -106,11 +110,11 @@ export function ComponentSlot({
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{
-        duration: 0.3,
+        duration: animDuration,
         delay: index * 0.08,
         ease: [0.22, 1, 0.36, 1],
       }}
-      layout
+      layout="position"
     >
       {description && <div className="component-slot__tooltip">{description}</div>}
       <div className="component-slot__inner">
@@ -120,7 +124,7 @@ export function ComponentSlot({
           animate={{
             scale: state === 'selected' ? 1.12 : 1,
           }}
-          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: animDuration, ease: [0.22, 1, 0.36, 1] }}
         >
           {state !== 'empty' && imageUrl ? (
             <div className="component-slot__thumbnail">
@@ -141,7 +145,7 @@ export function ComponentSlot({
               <button
                 type="button"
                 className="component-slot__qty-btn"
-                onClick={(e) => { e.stopPropagation(); onChangeQuantity(quantity > 1 ? -1 : -999); }}
+                onClick={(e) => { e.stopPropagation(); if (quantity > 1) { onChangeQuantity(-1); } else { onClear?.(); } }}
                 aria-label="Уменьшить количество"
               >
                 −
@@ -159,10 +163,9 @@ export function ComponentSlot({
             </div>
           )}
           <motion.div
-            key={name}
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: animDuration }}
             className={`component-slot__name ${state === 'empty' ? 'component-slot__name--empty' : ''}`}
           >
             {name}
@@ -172,7 +175,7 @@ export function ComponentSlot({
               className="component-slot__specs"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.15, duration: 0.3 }}
+              transition={{ delay: reducedMotion ? 0 : 0.15, duration: animDuration }}
             >
               {specs.map((spec, i) => (
                 <span key={i} className="component-slot__spec">
@@ -182,16 +185,15 @@ export function ComponentSlot({
             </motion.div>
           )}
           {/* Inline StatusBadge for incompatible state */}
-          {warning && state === 'incompatible' && <StatusBadge message={warning} />}
+          {warning && state === 'incompatible' && <StatusBadge message={warning} duration={animDuration} />}
         </div>
 
         {/* Price */}
         <div className="component-slot__price">
           <motion.div
-            key={price}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: animDuration }}
           >
             {price !== null ? (
               <div className="component-slot__price-value">{price.toLocaleString('ru-BY')} BYN</div>
