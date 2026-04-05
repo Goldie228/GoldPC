@@ -150,6 +150,10 @@ scraper-sync-with-images: ## Удалить товары без фото; выр
 	@echo "$(CYAN)Синхронизация товаров с изображениями...$(RESET)"
 	cd scripts/scraper && npm run sync-with-images
 
+sync-compatibility-rules: ## Скопировать backend compatibility rules в frontend
+	@echo "$(CYAN)Синхронизация правил совместимости...$(RESET)"
+	node scripts/sync-compatibility-rules.mjs
+
 scraper-remap-periphery: ## Переприсвоить slug periphery -> mice/keyboards по categoryPath
 	@echo "$(CYAN)Remap periphery -> mice/keyboards...$(RESET)"
 	cd scripts/scraper && npm run remap-periphery
