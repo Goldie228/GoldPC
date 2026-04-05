@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using PCBuilderService.Data;
 using PCBuilderService.DTOs;
 using PCBuilderService.Services;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace PCBuilderService.Tests;
@@ -37,7 +39,13 @@ public class CompatibilityServiceTests
         var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5000") };
         var jsonPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "PCBuilderService", "Data", "compatibility-rules.json");
         _ruleEngine = new CompatibilityRuleEngine(jsonPath, _ruleEngineLoggerMock.Object);
-        _service = new CompatibilityService(httpClient, _loggerMock.Object, _ruleEngine);
+
+        var dbContextOptions = new DbContextOptionsBuilder<PCBuilderDbContext>()
+            .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
+            .Options;
+        var dbContext = new PCBuilderDbContext(dbContextOptions);
+
+        _service = new CompatibilityService(httpClient, _loggerMock.Object, _ruleEngine, dbContext);
     }
 
     #region Rule 1: CPU ↔ Motherboard Socket

@@ -160,6 +160,11 @@ function extractSupportedSockets(specs: ProductSpecifications | undefined): stri
   return singleSocket ? [singleSocket] : [];
 }
 
+function extractMbRamSlots(specs: ProductSpecifications | undefined): number {
+  if (!specs) return 4;
+  return (specs.ramSlots as number) || 4;
+}
+
 function extractTDP(specs: ProductSpecifications | undefined): number {
   if (!specs) return 0;
   return (specs.tdp as number) || (specs.powerDraw as number) || 0;
@@ -204,6 +209,14 @@ function checkBuildCompatibility(components: PCBuilderSelectedState): Compatibil
           break;
         }
         refType = ramType;
+      }
+    }
+
+    // Check motherboard RAM slot limit for selected RAM modules
+    if (rams.length > 0) {
+      const mbRamSlots = extractMbRamSlots(motherboard.specifications);
+      if (rams.length > mbRamSlots) {
+        errors.push(`Выбрано ${rams.length} модулей ОЗУ, но материнская плата имеет только ${mbRamSlots} слотов`);
       }
     }
   }
@@ -842,8 +855,10 @@ export function usePCBuilder(): UsePCBuilderReturn {
 
   const recommendedPsu = useMemo(() => {
     if (apiResult?.recommendedPSU) return apiResult.recommendedPSU;
-    return Math.ceil(powerConsumption * 1.3);
-  }, [apiResult, powerConsumption]);
+    const gpuRecommendedPsu = selectedComponents.gpu?.product?.specifications?.recommendedPsu as number | undefined;
+    const calculated = Math.ceil(powerConsumption * 1.3);
+    return gpuRecommendedPsu ? Math.max(calculated, gpuRecommendedPsu) : calculated;
+  }, [apiResult, powerConsumption, selectedComponents.gpu]);
 
   const selectedCount = countSelectedCategories(selectedComponents);
 
