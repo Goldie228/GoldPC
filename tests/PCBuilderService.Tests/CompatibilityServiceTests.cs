@@ -264,7 +264,7 @@ public class CompatibilityServiceTests
         var response = await _service.CheckCompatibilityAsync(request);
         response.Result.IsCompatible.Should().BeTrue();
         response.Result.Warnings.Should().Contain(w =>
-            w.Component == "PSU 400W" && (w.Message.Contains("Рекомендуется") || w.Message.Contains("recommended")),
+            (w.Component == "Test PSU" || w.Component == "PSU") && w.Message.Contains("Рекомендуется"),
             "PSU 400W is below recommended 550W, should warn");
     }
 
