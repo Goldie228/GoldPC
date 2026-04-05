@@ -461,9 +461,13 @@ function getComponentState(
             ? 'памят'
             : type === 'cooling'
               ? 'охлажден'
-              : type === 'psu'
-                ? 'блок питания'
-                : '';
+              : type === 'gpu'
+                ? 'видеокарт'
+                : type === 'psu'
+                  ? 'блок питания'
+                  : type === 'storage'
+                    ? 'накопител'
+                    : '';
     return errorLower.includes(typeName);
   });
 
@@ -761,7 +765,8 @@ export function usePCBuilder(): UsePCBuilderReturn {
           motherboard: undefined,
           ram: [],
           cooling: undefined,
-          fan: [],
+          // Fans are case-mounted and not CPU-dependent — preserve them
+          fan: [...prev.fan],
           gpu: prev.gpu,
           storage: [...prev.storage],
           psu: prev.psu,
@@ -908,7 +913,6 @@ export function usePCBuilder(): UsePCBuilderReturn {
 
 export const PC_BUILDER_SLOTS: { key: PCComponentType; label: string; description: string }[] = [
   { key: 'cpu', label: 'Процессор', description: 'Мозг компьютера. Отвечает за все вычисления. Важные параметры: количество ядер, частота, TDP (тепловыделение).' },
-  { key: 'gpu', label: 'Видеокарта', description: 'Отвечает за вывод изображения и 3D-графику. Ключевая для игр и работы с графикой.' },
   { key: 'motherboard', label: 'Материнская плата', description: 'Соединяет все компоненты вместе. Определяет сокет процессора, чипсет и доступные слоты расширения.' },
   { key: 'ram', label: 'Оперативная память', description: 'Быстрая память для временных данных. Объём и тайминги (задержки) влияют на отзывчивость системы.' },
   { key: 'storage', label: 'Накопитель', description: 'Хранит операционную систему, программы и файлы. SSD быстрее HDD.' },
@@ -916,6 +920,7 @@ export const PC_BUILDER_SLOTS: { key: PCComponentType; label: string; descriptio
   { key: 'case', label: 'Корпус', description: 'Определяет форм-фактор (размер) сборки: ATX, Micro-ATX или Mini-ITX. Влияет на охлаждение и расширяемость.' },
   { key: 'fan', label: 'Вентилятор', description: 'Корпусной вентилятор для охлаждения. Можно установить несколько.' },
   { key: 'cooling', label: 'Охлаждение', description: 'Отводит тепло от процессора. Бывает воздушным или жидкостным.' },
+  { key: 'gpu', label: 'Видеокарта', description: 'Отвечает за вывод изображения и 3D-графику. Ключевая для игр и работы с графикой.' },
   { key: 'monitor', label: 'Монитор', description: 'Устройство вывода изображения. Диагональ, разрешение и частота обновления влияют на комфорт.' },
   { key: 'keyboard', label: 'Клавиатура', description: 'Основное устройство ввода. Механические клавиатуры обеспечивают лучшую тактильность.' },
   { key: 'mouse', label: 'Мышь', description: 'Основное устройство навигации. DPI и частота опроса влияют на точность.' },

@@ -120,7 +120,7 @@ export function ComponentSlot({
       <div className="component-slot__inner">
         {/* Icon or Thumbnail */}
         <motion.div
-          className="component-slot__icon"
+          className={`component-slot__icon${state !== 'empty' && imageUrl ? ' component-slot__icon--has-thumbnail' : ''}`}
           animate={{
             scale: state === 'selected' ? 1.12 : 1,
           }}

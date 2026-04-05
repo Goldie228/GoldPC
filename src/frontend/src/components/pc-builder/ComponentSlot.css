@@ -20,11 +20,11 @@
 }
 
 /* ===== PRIORITY (CPU/GPU 120%) ===== */
-.component-slot--priority { padding: 24px; transform: scale(1.02); }
+.component-slot--priority { padding: 24px; }
 .component-slot--priority .component-slot__icon { width: 56px; height: 56px; }
 .component-slot--priority .component-slot__name { font-size: 1.05rem; }
 .component-slot--priority .component-slot__price-value { font-size: 1.1rem; }
-.component-slot--priority:hover { transform: scale(1.02) translateY(-1px); }
+.component-slot--priority:hover { transform: translateY(-1px); }
 
 /* ===== INNER ===== */
 .component-slot__inner { display: flex; align-items: center; gap: 20px; }
@@ -46,7 +46,7 @@
 }
 
 .component-slot--priority.component-slot--empty:hover {
-  transform: scale(1.02) translateY(-2px);
+  transform: translateY(-2px);
 }
 
 /* ===== SELECTED (gold) ===== */
@@ -115,7 +115,8 @@
 .component-slot:hover .component-slot__thumbnail img {
   transform: scale(1.05);
 }
-.component-slot__icon:has(.component-slot__thumbnail) {
+/* Thumbnail with product image — explicit class rather than :has() */
+.component-slot__icon--has-thumbnail {
   width: auto;
   height: auto;
   background: transparent;
@@ -258,7 +259,7 @@
 .component-slot__name--empty { color: var(--fg-muted, #71717a); font-weight: 400; }
 
 /* ===== SPECS ===== */
-.component-slot__specs { display: flex; flex-wrap: wrap; gap: 12px; font-family: var(--font-sans); font-size: 0.7rem; color: var(--fg-muted, #71717a); }
+.component-slot__specs { display: flex; flex-wrap: wrap; gap: 12px; font-family: var(--font-sans); font-size: 0.75rem; color: var(--fg-muted, #71717a); }
 .component-slot__spec { display: flex; align-items: center; gap: 6px; }
 .component-slot__spec:not(:first-child)::before { content: ''; width: 4px; height: 4px; background: var(--fg-dim, #52525b); border-radius: 50%; margin-right: 6px; }
 

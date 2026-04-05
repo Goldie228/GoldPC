@@ -3,7 +3,7 @@
  */
 
 import { useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Zap, BarChart3, Check, AlertTriangle, Save, Gamepad2, Printer, ShoppingBag, CircleCheck, XCircle } from 'lucide-react';
 import {
   calculatePerformance,
@@ -72,6 +72,10 @@ export function BuildSummaryPanel({
   const psuOk = psuWattage !== undefined && psuWattage >= Math.max(0, powerConsumption) * 1.2;
   const canAddToCart = isCompatible && selectedCount > 0;
   const canCheckout = canAddToCart;
+  const reducedMotion = useReducedMotion();
+  const barDur = reducedMotion ? 0 : 0.6;
+  const scoreDur = reducedMotion ? 0 : 0.5;
+  const priceDur = reducedMotion ? 0 : 0.3;
 
   const listItems = useMemo(() => {
     const items: { key: string; label: string; price: number | null }[] = [];
@@ -158,7 +162,7 @@ export function BuildSummaryPanel({
                 : 'Сборка совместима'}
           </span>
           {isApiLoading && (
-            <span className="bsp__api-loading">
+            <span className="bsp__api-loading" aria-hidden>
               <span className="bsp__api-loading-spinner" />
               Обновление...
             </span>
@@ -231,7 +235,7 @@ export function BuildSummaryPanel({
             className="bsp__power-bar-fill"
             initial={{ width: 0 }}
             animate={{ width: `${powerPercent}%` }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+            transition={{ duration: barDur, ease: 'easeOut' }}
           />
         </div>
         <div className="bsp__power-info">
@@ -278,7 +282,7 @@ export function BuildSummaryPanel({
                   className={`bsp__score-bar-fill ${getPerformanceColor(performance.gamingScore)}`}
                   initial={{ width: 0 }}
                   animate={{ width: `${performance.gamingScore}%` }}
-                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                  transition={{ duration: scoreDur, ease: 'easeOut' }}
                 />
               </div>
               <span className={`bsp__score-value ${getPerformanceColor(performance.gamingScore)}`}>
@@ -338,7 +342,7 @@ export function BuildSummaryPanel({
                   className={`bsp__score-bar-fill ${getPerformanceColor(performance.workstationScore)}`}
                   initial={{ width: 0 }}
                   animate={{ width: `${performance.workstationScore}%` }}
-                  transition={{ duration: 0.5, ease: 'easeOut', delay: 0.1 }}
+                  transition={{ duration: scoreDur, ease: 'easeOut', delay: 0.1 }}
                 />
               </div>
               <span className={`bsp__score-value ${getPerformanceColor(performance.workstationScore)}`}>
@@ -353,7 +357,7 @@ export function BuildSummaryPanel({
                   className={`bsp__score-bar-fill ${getPerformanceColor(performance.overallScore)}`}
                   initial={{ width: 0 }}
                   animate={{ width: `${performance.overallScore}%` }}
-                  transition={{ duration: 0.5, ease: 'easeOut', delay: 0.2 }}
+                  transition={{ duration: scoreDur, ease: 'easeOut', delay: 0.2 }}
                 />
               </div>
               <span
@@ -377,7 +381,7 @@ export function BuildSummaryPanel({
           className="bsp__total-value"
           initial={{ scale: 1 }}
           animate={{ scale: [1, 1.06, 1] }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: priceDur }}
         >
           {totalPrice.toLocaleString('ru-BY')} BYN
         </motion.span>
