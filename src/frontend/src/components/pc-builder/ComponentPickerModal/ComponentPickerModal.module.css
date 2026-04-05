@@ -323,6 +323,58 @@
 .compactOldPrice { font-size: 0.62rem; color: #52525b; text-decoration: line-through; }
 .compactOos { font-size: 0.62rem; color: #f87171; }
 
+/* ─── Incompatible product cards ───────── */
+.cardIncompatible {
+  opacity: 0.45;
+  pointer-events: none;
+  position: relative;
+}
+
+.cardIncompatible::after {
+  content: '⚠ Несовместимо';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #f87171;
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 5;
+}
+
+.incompatibleWrapper {
+  position: relative;
+}
+
+.incompatibleReason {
+  font-size: 0.7rem;
+  color: #f87171;
+  padding: 6px 10px;
+  background: rgba(248, 113, 113, 0.05);
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.toggleIncompatibleBtn {
+  margin-top: 12px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: #a1a1aa;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleIncompatibleBtn:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fafafa;
+}
+
 /* ─── Empty state ──────────────────────── */
 .emptyState { text-align: center; padding: 32px 16px; color: #71717a; }
 .emptyState h3 { margin: 0 0 6px 0; font-size: 1rem; color: #fafafa; }

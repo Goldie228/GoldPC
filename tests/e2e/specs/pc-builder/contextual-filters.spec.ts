@@ -139,10 +139,10 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Материнская плата');
     const names = await pom.getModalProductNames();
     expect(names).toContain('MSI B550-A PRO');
-    expect(names).not.toContain('ASUS Z790-P');
+    // Incompatible items are now shown (not filtered out)
   });
 
-  test('CPU AM5 hides DDR3 and DDR4 in RAM picker', async ({ page }) => {
+  test('CPU AM5 shows compatible DDR5 and incompatible DDR3/DDR4 in RAM picker', async ({ page }) => {
     await mockProducts(page, {
       processors: [cpu_am5, cpu_am4],
       motherboards: [],
@@ -155,8 +155,9 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Оперативная память');
     const names = await pom.getModalProductNames();
     expect(names).toContain('Corsair 16GB DDR5-5600');
-    expect(names).not.toContain('Kingston 8GB DDR3-1600');
-    expect(names).not.toContain('G.Skill 16GB DDR4-3200');
+    // Incompatible items are now visible instead of hidden
+    expect(names).toContain('Kingston 8GB DDR3-1600');
+    expect(names).toContain('G.Skill 16GB DDR4-3200');
   });
 
   test('MB DDR4 hides DDR3 in RAM picker', async ({ page }) => {
@@ -174,10 +175,11 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Оперативная память');
     const names = await pom.getModalProductNames();
     expect(names).toContain('G.Skill 16GB DDR4-3200');
-    expect(names).not.toContain('Kingston 8GB DDR3-1600');
+    // Incompatible DDR3 is now visible instead of hidden
+    expect(names).toContain('Kingston 8GB DDR3-1600');
   });
 
-  test('RAM DDR4 hides AM5-only CPUs in CPU picker', async ({ page }) => {
+  test('RAM DDR4 shows compatible CPUs and incompatible ones in CPU picker', async ({ page }) => {
     await mockProducts(page, {
       processors: [cpu_am4, cpu_am5, cpu_intel],
       motherboards: [],
@@ -190,10 +192,11 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Процессор');
     const names = await pom.getModalProductNames();
     expect(names).toContain('AMD Ryzen 5 3600');
-    expect(names).not.toContain('AMD Ryzen 5 7600X');
+    // Incompatible items are now visible
+    expect(names).toContain('AMD Ryzen 5 7600X');
   });
 
-  test('High TDP build hides low wattage PSU', async ({ page }) => {
+  test('High TDP build shows compatible and incompatible PSU', async ({ page }) => {
     await mockProducts(page, {
       processors: [cpu_am4],
       motherboards: [mb_am4],
@@ -214,10 +217,11 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Блок питания');
     const names = await pom.getModalProductNames();
     expect(names).toContain('Corsair RM850x');
-    expect(names).not.toContain('Generic 300W PSU');
+    // Incompatible low-wattage PSU is now visible
+    expect(names).toContain('Generic 300W PSU');
   });
 
-  test('Incompatible Intel MB hidden after AM4 CPU, hint shown', async ({ page }) => {
+  test('Incompatible Intel MB shown after AM4 CPU with toggle', async ({ page }) => {
     await mockProducts(page, {
       processors: [cpu_am4],
       motherboards: [mb_am4, mb_intel],
@@ -228,10 +232,12 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Материнская плата');
     const names = await pom.getModalProductNames();
-    expect(names.some((n) => n && n.includes('Z790'))).toBe(false);
-    const hint = page.locator('[class*="compatibleHint"]');
-    await expect(hint).toBeVisible();
-    await expect(hint).toContainText(/несовместим/i);
+    // Both MBs should be visible now (incompatible shown with badge)
+    expect(names).toContain('MSI B550-A PRO');
+    expect(names).toContain('ASUS Z790-P');
+    // Toggle button should be present
+    const toggleBtn = page.locator('[class*="toggleIncompatibleBtn"]');
+    await expect(toggleBtn).toBeVisible();
   });
 
   test('CPU-first entry preserves compatibility through chain', async ({ page }) => {
@@ -247,14 +253,16 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Материнская плата');
     let names = await pom.getModalProductNames();
     expect(names).toContain('MSI B550-A PRO');
-    expect(names).not.toContain('ASUS Z790-P');
-    expect(names).not.toContain('ASUS B650-PLUS');
+    // Incompatible MBs are now visible
+    expect(names).toContain('ASUS Z790-P');
+    expect(names).toContain('ASUS B650-PLUS');
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Оперативная память');
     names = await pom.getModalProductNames();
     expect(names).toContain('G.Skill 16GB DDR4-3200');
-    expect(names).not.toContain('Kingston 8GB DDR3-1600');
-    expect(names).not.toContain('Corsair 16GB DDR5-5600');
+    // Incompatible RAM items now visible
+    expect(names).toContain('Kingston 8GB DDR3-1600');
+    expect(names).toContain('Corsair 16GB DDR5-5600');
   });
 
   test('MB-first entry preserves compatibility through chain', async ({ page }) => {
@@ -270,13 +278,15 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Процессор');
     let names = await pom.getModalProductNames();
     expect(names).toContain('AMD Ryzen 5 3600');
-    expect(names).not.toContain('AMD Ryzen 5 7600X');
-    expect(names).not.toContain('Intel Core i5-13600K');
+    // Incompatible CPUs are now visible
+    expect(names).toContain('AMD Ryzen 5 7600X');
+    expect(names).toContain('Intel Core i5-13600K');
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Оперативная память');
     names = await pom.getModalProductNames();
     expect(names).toContain('G.Skill 16GB DDR4-3200');
-    expect(names).not.toContain('Kingston 8GB DDR3-1600');
+    // Incompatible RAM is now visible
+    expect(names).toContain('Kingston 8GB DDR3-1600');
   });
 
   test('RAM-first entry filters CPU and MB correctly', async ({ page }) => {
@@ -291,15 +301,16 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Процессор');
     let names = await pom.getModalProductNames();
-    expect(names).not.toContain('AMD Ryzen 5 7600X');
+    expect(names).toContain('AMD Ryzen 5 7600X');
     expect(names).toContain('AMD Ryzen 5 3600');
     expect(names).toContain('Intel Core i5-13600K');
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Материнская плата');
     names = await pom.getModalProductNames();
     expect(names).toContain('MSI B550-A PRO');
-    expect(names).not.toContain('ASUS Z790-P');
-    expect(names).not.toContain('ASUS B650-PLUS');
+    // Incompatible MBs are now visible
+    expect(names).toContain('ASUS Z790-P');
+    expect(names).toContain('ASUS B650-PLUS');
   });
 
   test('AM5 CPU shows only DDR5 in RAM picker', async ({ page }) => {

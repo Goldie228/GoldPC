@@ -184,6 +184,15 @@
   }
 }
 
+/* ===== SECTION HEADER —Periph ===== */
+.pc-builder__section-header--periph {
+  margin-top: 16px;
+}
+
+.pc-builder__section-title--periph {
+  font-size: 1.5rem;
+}
+
 /* ===== ACCESSIBILITY ===== */
 .pc-builder button:focus-visible,
 .pc-builder a:focus-visible {

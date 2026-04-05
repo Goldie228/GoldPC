@@ -96,12 +96,12 @@ type SlotRow =
 function buildSlotRows(state: PCBuilderSelectedState): SlotRow[] {
   const rows: SlotRow[] = [];
   let anim = 0;
-  const singles: { key: PCComponentType; label: string }[] = [
-    { key: 'cpu', label: 'Процессор' },
-    { key: 'gpu', label: 'Видеокарта' },
-    { key: 'motherboard', label: 'Материнская плата' },
-  ];
-  for (const s of singles) {
+
+  // cpu -> motherboard (single slots)
+  for (const s of [
+    { key: 'cpu', label: 'Процессор' as const },
+    { key: 'motherboard', label: 'Материнская плата' as const },
+  ]) {
     rows.push({ kind: 'single', key: s.key, label: s.label, anim: anim++ });
   }
 
@@ -129,6 +129,20 @@ function buildSlotRows(state: PCBuilderSelectedState): SlotRow[] {
     });
   }
 
+  // cooling (single)
+  rows.push({ kind: 'single', key: 'cooling' as PCComponentType, label: 'Охлаждение' as const, anim: anim++ });
+
+  // gpu (single)
+  rows.push({ kind: 'single', key: 'gpu' as PCComponentType, label: 'Видеокарта' as const, anim: anim++ });
+
+  // psu, case (single slots)
+  for (const s of [
+    { key: 'psu', label: 'Блок питания' as const },
+    { key: 'case', label: 'Корпус' as const },
+  ]) {
+    rows.push({ kind: 'single', key: s.key, label: s.label, anim: anim++ });
+  }
+
   const fanCount =
     state.fan.length >= MAX_FAN_MODULES
       ? MAX_FAN_MODULES
@@ -140,15 +154,6 @@ function buildSlotRows(state: PCBuilderSelectedState): SlotRow[] {
       label: fanCount > 1 ? `Вентилятор (${i + 1})` : 'Вентилятор',
       anim: anim++,
     });
-  }
-
-  const tail: { key: PCComponentType; label: string }[] = [
-    { key: 'psu', label: 'Блок питания' },
-    { key: 'case', label: 'Корпус' },
-    { key: 'cooling', label: 'Охлаждение' },
-  ];
-  for (const s of tail) {
-    rows.push({ kind: 'single', key: s.key, label: s.label, anim: anim++ });
   }
 
   return rows;
@@ -201,6 +206,28 @@ export function PCBuilderPage() {
   };
 
   const handleRemove = (type: PCComponentType, idx?: number) => {
+    // Confirm before removing CPU or motherboard if they have dependent components
+    if (type === 'cpu') {
+      const hasMb = !!selectedComponents.motherboard;
+      const hasRam = selectedComponents.ram.length > 0;
+      if (hasMb || hasRam) {
+        const msg = 'Удаление процессора также удалит материнскую плату и оперативную память. Продолжить?';
+        if (window.confirm(msg)) {
+          removeComponent(type, idx);
+        }
+        return;
+      }
+    }
+    if (type === 'motherboard') {
+      const hasRam = selectedComponents.ram.length > 0;
+      if (hasRam) {
+        const msg = 'Удаление материнской платы также удалит оперативную память. Продолжить?';
+        if (window.confirm(msg)) {
+          removeComponent(type, idx);
+        }
+        return;
+      }
+    }
     removeComponent(type, idx);
   };
 
@@ -353,7 +380,7 @@ export function PCBuilderPage() {
       return selectedComponents.storage[multiIndex]?.product ?? null;
     }
     if (selectedSlot === 'fan' && multiIndex !== undefined) {
-      return (selectedComponents as any).fan[multiIndex]?.product ?? null;
+      return selectedComponents.fan[multiIndex]?.product ?? null;
     }
     if (selectedSlot !== 'ram' && selectedSlot !== 'storage' && selectedSlot !== 'fan') {
       return selectedComponents[selectedSlot]?.product ?? null;
@@ -510,12 +537,21 @@ export function PCBuilderPage() {
                         imageUrl={product?.mainImage?.url}
                         isPriority={false}
                         description={slotDescriptions.storage}
+                        quantity={
+                          row.rowIndex === 0 ? selectedComponents.storage.length : undefined
+                        }
+                        maxQuantity={MAX_STORAGE_MODULES}
+                        onChangeQuantity={
+                          row.rowIndex === 0
+                            ? (delta) => handleChangeQuantity('storage', row.rowIndex, delta)
+                            : undefined
+                        }
                       />
                     );
                   }
 
                   // fan rows
-                  const fans = (selectedComponents as any).fan || [];
+                  const fans = selectedComponents.fan;
                   const product = fans[row.rowIndex]?.product;
                   const slotState = getSlotState('fan', row.rowIndex);
                   const isEmpty = slotState.state === 'empty';
@@ -538,7 +574,7 @@ export function PCBuilderPage() {
                       isPriority={false}
                       description={slotDescriptions.fan}
                       quantity={
-                        row.rowIndex === 0 ? (selectedComponents as any).fan.length : undefined
+                        row.rowIndex === 0 ? selectedComponents.fan.length : undefined
                       }
                       maxQuantity={MAX_FAN_MODULES}
                       onChangeQuantity={
@@ -552,8 +588,8 @@ export function PCBuilderPage() {
               </div>
 
               {/* Периферия */}
-              <div className="pc-builder__section-header" style={{ marginTop: '16px' }}>
-                <h2 className="pc-builder__section-title" style={{ fontSize: '1.5rem' }}>Периферия</h2>
+              <div className="pc-builder__section-header pc-builder__section-header--periph">
+                <h2 className="pc-builder__section-title pc-builder__section-title--periph">Периферия</h2>
               </div>
               <div className="pc-builder__slots">
                 {(['monitor', 'keyboard', 'mouse', 'headphones'] as const).map((key, idx) => {
@@ -569,7 +605,11 @@ export function PCBuilderPage() {
                       state={slotState.state}
                       specs={getDisplaySpecs(key, product)}
                       onSelect={() => openPicker(key)}
-                      onClear={slotState.state === 'selected' ? () => handleRemove(key) : undefined}
+                      onClear={
+                        slotState.state === 'selected' || slotState.state === 'incompatible'
+                          ? () => handleRemove(key)
+                          : undefined
+                      }
                       imageUrl={product?.mainImage?.url}
                       description={slotDescriptions[key]}
                       index={slotRows.length + idx}
@@ -592,6 +632,7 @@ export function PCBuilderPage() {
                 selectedCount={selectedCount}
                 totalCount={totalCount}
                 apiFpsData={apiFpsData}
+                isApiLoading={isApiLoading}
                 onAddToCart={addToCart}
                 onSave={() => setPdfModalOpen(true)}
                 onCheckout={handleCheckout}

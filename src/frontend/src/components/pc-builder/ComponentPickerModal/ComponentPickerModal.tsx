@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, SlidersHorizontal, X, ExternalLink, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, SlidersHorizontal, X, ExternalLink, ZoomIn, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import { Modal } from '../../ui';
 import { ProductCardSkeleton } from '../../ui/Skeleton';
 import { ApiErrorBanner } from '../../ui/ApiErrorBanner';
@@ -12,7 +12,7 @@ import { Pagination } from '../../catalog/Pagination/Pagination';
 import { FilterSidebar } from '../../catalog';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';
-import { isComponentCompatible, extractSocket as _extractSocket, extractMemoryType as _extractMemoryType, extractSupportedFormFactors, getChipsetsForSocket, getSocketsForRamType, getRamTypesForSocket, extractSupportedSockets, extractTDP, caseFormFactorsForMB, mbFormFactorsForCase, normalizeFormFactor } from '../../../utils/compatibilityUtils';
+import { isComponentCompatible, extractSocket as _extractSocket, extractMemoryType as _extractMemoryType, extractSupportedFormFactors, getChipsetsForSocket, getSocketsForRamType, getRamTypesForSocket, extractSupportedSockets, extractTDP, caseFormFactorsForMB, mbFormFactorsForCase } from '../../../utils/compatibilityUtils';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '../../../hooks/useProducts';
 import { catalogApi } from '../../../api/catalog';
@@ -31,7 +31,6 @@ export interface ComponentPickerModalProps {
   currentProduct?: Product | null;
   buildContext?: PCBuilderSelectedState;
   onConfirm: (product: Product) => void;
-  onRemoveCurrent?: () => void;
   getDisplaySpecs: (type: PCComponentType, product: Product) => string[];
   /** Фильтр по подстроке в названии (e.g. "вентилятор для корпуса") */
   nameFilter?: string;
@@ -40,13 +39,6 @@ export interface ComponentPickerModalProps {
   /** Платформа для фильтра производителей: 'amd' или 'intel' */
   restrictedManufacturerPlatform?: 'amd' | 'intel';
 }
-
-const BACKEND_SLUG: Record<ProductCategory, string> = {
-  cpu: 'processors', gpu: 'gpu', motherboard: 'motherboards',
-  ram: 'ram', storage: 'storage', psu: 'psu',
-  case: 'cases', cooling: 'coolers', monitor: 'monitors',
-  keyboard: 'keyboards', mouse: 'mice', headphones: 'headphones',
-};
 
 const SORT_PRESETS = [
   { value: 'popular', label: 'По популярности' },
@@ -142,13 +134,14 @@ function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }:
 interface PickerProductCardProps {
   product: any;
   isSelected: boolean;
+  isCompatible?: boolean;
   onSelect: (product: any) => void;
   onOpenProduct: (slug: string) => void;
   slotType: PCComponentType;
   getDisplaySpecs: (type: PCComponentType, product: Product) => string[];
 }
 
-function PickerProductCard({ product, isSelected, onSelect, onOpenProduct, slotType, getDisplaySpecs }: PickerProductCardProps) {
+function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpenProduct, slotType, getDisplaySpecs }: PickerProductCardProps) {
   const specs = getDisplaySpecs(slotType, summaryToProduct(product)).slice(0, 3);
   const hasDiscount = product.oldPrice !== undefined && product.oldPrice > product.price;
   const discountPercent = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
@@ -156,14 +149,14 @@ function PickerProductCard({ product, isSelected, onSelect, onOpenProduct, slotT
 
   return (
     <div
-      className={`${styles.card} ${isSelected ? styles.cardSelected : ''} ${outOfStock ? styles.cardOutOfStock : ''}`}
-      onClick={() => onSelect(product)}
+      className={`${styles.card} ${isSelected ? styles.cardSelected : ''} ${outOfStock ? styles.cardOutOfStock : ''} ${isCompatible === false ? styles.cardIncompatible : ''}`}
+      onClick={isCompatible === false ? undefined : () => onSelect(product)}
     >
       <CardImageGallery product={product} hasDiscount={hasDiscount} discountPercent={discountPercent} outOfStock={outOfStock} />
 
       <div className={styles.cardContent}>
         <h4 className={styles.cardName}>
-          <button type="button" className={styles.cardTitleBtn} onClick={() => onSelect(product)} title={product.name}>
+          <button type="button" className={styles.cardTitleBtn} onClick={isCompatible === false ? undefined : () => onSelect(product)} title={product.name}>
             {product.name}
           </button>
         </h4>
@@ -180,8 +173,8 @@ function PickerProductCard({ product, isSelected, onSelect, onOpenProduct, slotT
               <span className={styles.cardOldPrice}>{product.oldPrice.toLocaleString('ru-BY')}</span>
             )}
           </div>
-          <button type="button" className={`${styles.selectBtn} ${isSelected ? styles.selectBtnSelected : ''}`} onClick={() => onSelect(product)}>
-            {isSelected ? 'Выбрано' : 'Выбрать'}
+          <button type="button" className={`${styles.selectBtn} ${isSelected ? styles.selectBtnSelected : ''}`} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
+            {isSelected ? 'Выбрано' : outOfStock ? 'Нет в наличии' : 'Выбрать'}
           </button>
         </div>
       </div>
@@ -191,7 +184,7 @@ function PickerProductCard({ product, isSelected, onSelect, onOpenProduct, slotT
 
 // ─── PickerProductCardCompact ───────────────────────────
 
-function PickerProductCardCompact({ product, isSelected, onSelect, onOpenProduct, slotType, getDisplaySpecs }: PickerProductCardProps) {
+function PickerProductCardCompact({ product, isSelected, isCompatible, onSelect, onOpenProduct, slotType, getDisplaySpecs }: PickerProductCardProps) {
   const url = product.mainImage?.url && hasValidProductImage(product.mainImage.url)
     ? getProductImageUrl(product.mainImage.url) : null;
   const specs = getDisplaySpecs(slotType, summaryToProduct(product)).slice(0, 2);
@@ -200,15 +193,15 @@ function PickerProductCardCompact({ product, isSelected, onSelect, onOpenProduct
 
   return (
     <div
-      className={`${styles.cardCompact} ${isSelected ? styles.cardCompactSelected : ''}`}
-      onClick={() => onSelect(product)}
+      className={`${styles.cardCompact} ${isSelected ? styles.cardCompactSelected : ''} ${isCompatible === false ? styles.cardIncompatible : ''}`}
+      onClick={isCompatible === false ? undefined : () => onSelect(product)}
     >
       <div className={styles.compactImage}>
         {url ? <img src={url} alt="" className={styles.compactImg} /> : <div className={styles.compactPlaceholder} />}
       </div>
       <div className={styles.compactInfo}>
         <h4 className={styles.compactName}>
-          <button type="button" className={styles.cardTitleBtn} onClick={() => onSelect(product)} title={product.name}>
+          <button type="button" className={styles.cardTitleBtn} onClick={isCompatible === false ? undefined : () => onSelect(product)} title={product.name}>
             {product.name}
           </button>
         </h4>
@@ -226,8 +219,8 @@ function PickerProductCardCompact({ product, isSelected, onSelect, onOpenProduct
             <span className={styles.compactOldPrice}>{product.oldPrice.toLocaleString('ru-BY')}</span>
           )}
         </div>
-        <button type="button" className={`${styles.selectBtn} ${isSelected ? styles.selectBtnSelected : ''}`} onClick={() => onSelect(product)}>
-          {isSelected ? 'Выбрано' : 'Выбрать'}
+        <button type="button" className={`${styles.selectBtn} ${isSelected ? styles.selectBtnSelected : ''}`} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
+          {isSelected ? 'Выбрано' : outOfStock ? 'Нет в наличии' : 'Выбрать'}
         </button>
         {outOfStock && <span className={styles.compactOos}>Нет в наличии</span>}
       </div>
@@ -301,7 +294,7 @@ function SpecList({ specs }: { specs: Record<string, unknown> }) {
 
 export function ComponentPickerModal({
   isOpen, onClose, category, slotType, slotLabel,
-  currentProduct, buildContext, onConfirm, onRemoveCurrent, getDisplaySpecs, nameFilter, typeFilter, restrictedManufacturerPlatform,
+  currentProduct, buildContext, onConfirm, getDisplaySpecs, nameFilter, typeFilter, restrictedManufacturerPlatform,
 }: ComponentPickerModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory>(category);
   const [search, setSearch] = useState('');
@@ -314,6 +307,7 @@ export function ComponentPickerModal({
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [magnifierIdx, setMagnifierIdx] = useState<number | null>(null);
   const [previewImgIdx, setPreviewImgIdx] = useState(0);
+  const [showIncompatible, setShowIncompatible] = useState(true);
 
   const [priceRange, setPriceRange] = useState({ min: 0, max: 0 });
   const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<string[]>([]);
@@ -578,12 +572,19 @@ export function ComponentPickerModal({
     });
   }, [products, slotType, componentMap]);
 
-  const incompatibleCount = productsWithCompatibility.filter((p) => p.isIncompatible).length;
-  const filteredProducts = productsWithCompatibility.filter((p) => {
-    if (p.isIncompatible) return false;
-    if (nameFilter && !p.name.toLowerCase().includes(nameFilter.toLowerCase())) return false;
-    return true;
-  });
+  const incompatibleCount = useMemo(
+    () => productsWithCompatibility.filter((p) => p.isIncompatible).length,
+    [productsWithCompatibility],
+  );
+
+  // Keep incompatible items in the visible list, but filter by nameFilter
+  const filteredProducts = useMemo(() => {
+    return productsWithCompatibility.filter((p) => {
+      if (!showIncompatible && p.isIncompatible) return false;
+      if (nameFilter && !p.name.toLowerCase().includes(nameFilter.toLowerCase())) return false;
+      return true;
+    });
+  }, [productsWithCompatibility, showIncompatible, nameFilter]);
 
   const previewProduct = useMemo(() => {
     if (!highlightedId) return null;
@@ -755,31 +756,57 @@ export function ComponentPickerModal({
 
             {!isLoading && !error && (
               <>
-                {filteredProducts.length > 0 && <div className={styles.resultsCount}>{meta ? `Найдено: ${filteredProducts.length} из ${meta.totalItems}` : ''}</div>}
+                {filteredProducts.length > 0 && <div className={styles.resultsCount}>{`Найдено: ${filteredProducts.length}${meta && meta.totalItems !== filteredProducts.length ? ` из ${meta.totalItems}` : ''}`}</div>}
+
+                {/* Toggle incompatible visibility */}
                 {incompatibleCount > 0 && (
-                  <div className={styles.compatibleHint}>
-                    {incompatibleCount} товар(ов) не совместим с выбранной конфигурацией и скрыт
-                  </div>
+                  <button
+                    className={styles.toggleIncompatibleBtn}
+                    onClick={() => setShowIncompatible(!showIncompatible)}
+                  >
+                    {showIncompatible
+                      ? `Скрыть несовместимые (${incompatibleCount})`
+                      : `Показать несовместимые (${incompatibleCount})`}
+                  </button>
                 )}
+
                 {filteredProducts.length === 0 ? (
                   <div className={styles.emptyState}>
-                    <h3>Нет совместимых товаров</h3>
-                    <p>Для данной конфигурации не найдено подходящих компонентов. Попробуйте изменить другие компоненты сборки.</p>
+                    <h3>Нет товаров</h3>
+                    <p>Не найдено подходящих компонентов. Попробуйте изменить параметры поиска.</p>
                   </div>
                 ) : viewMode === 'grid' ? (
                   <div className={styles.grid}>
                     {filteredProducts.map((p) => (
-                      <PickerProductCard key={p.id} product={p} isSelected={highlightedId === p.id}
-                        onSelect={(prod) => setHighlightedId(prod.id)}
-                        onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
+                      <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
+                        <PickerProductCard product={p} isSelected={false}
+                          isCompatible={!p.isIncompatible}
+                          onSelect={() => {}}
+                          onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
+                        {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
+                          <div className={styles.incompatibleReason}>
+                            <Lock size={12} style={{ display: 'inline', marginRight: 4, verticalAlign: 'text-bottom' }} />
+                            {p.incompatibilityIssues.join('; ')}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 ) : (
                   <div className={styles.list}>
                     {filteredProducts.map((p) => (
-                      <PickerProductCardCompact key={p.id} product={p} isSelected={highlightedId === p.id}
-                        onSelect={(prod) => setHighlightedId(prod.id)}
-                        onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
+                      <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
+                        <PickerProductCardCompact product={p} isSelected={false}
+                          isCompatible={!p.isIncompatible}
+                          onSelect={() => {}}
+                          onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
+                        {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
+                          <div className={styles.incompatibleReason}>
+                            <Lock size={12} style={{ display: 'inline', marginRight: 4, verticalAlign: 'text-bottom' }} />
+                            {p.incompatibilityIssues.join('; ')}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
