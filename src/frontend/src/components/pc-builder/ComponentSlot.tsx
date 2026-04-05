@@ -10,6 +10,7 @@
  * - Staggered animations
  */
 
+import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { AlertTriangle } from 'lucide-react';
 import './ComponentSlot.css';
@@ -67,25 +68,26 @@ function StatusBadge({ message, duration }: { message: string; duration: number 
   );
 }
 
-export function ComponentSlot({
-  type,
-  name,
-  price,
-  state,
-  icon,
-  specs,
-  warning,
-  onSelect,
-  onClear,
-  buttonText,
-  index = 0,
-  imageUrl,
-  isPriority = false,
-  description,
-  quantity,
-  maxQuantity,
-  onChangeQuantity,
-}: ComponentSlotProps) {
+export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProps: ComponentSlotProps) {
+  const {
+    type,
+    name,
+    price,
+    state,
+    icon,
+    specs,
+    warning,
+    onSelect,
+    onClear,
+    buttonText,
+    index = 0,
+    imageUrl,
+    isPriority = false,
+    description,
+    quantity,
+    maxQuantity,
+    onChangeQuantity,
+  } = componentSlotProps;
   /** BUG-24: Respect prefers-reduced-motion to disable JS animations for a11y */
   const reducedMotion = useReducedMotion();
   const animDuration = reducedMotion ? 0 : 0.3;
@@ -228,4 +230,4 @@ export function ComponentSlot({
       </div>
     </motion.div>
   );
-}
+});

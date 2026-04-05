@@ -2,7 +2,7 @@
  * PCBuilderPage — конструктор ПК: слоты слева, итог справа, модалка выбора из каталога.
  */
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Cpu, Gpu, CircuitBoard, MemoryStick, HardDrive,
@@ -84,7 +84,7 @@ const slotDescriptions: Record<PCComponentType, string> = Object.fromEntries(
 ) as Record<PCComponentType, string>;
 
 function getIcon(type: PCComponentType): React.ReactNode {
-  return icons[type] || icons.cpu;
+  return icons[type] ?? icons.cpu;
 }
 
 type SlotRow =
@@ -92,6 +92,166 @@ type SlotRow =
   | { kind: 'ram'; rowIndex: number; label: string; anim: number }
   | { kind: 'storage'; rowIndex: number; label: string; anim: number }
   | { kind: 'fan'; rowIndex: number; label: string; anim: number };
+
+export interface MemoizedSlotRowProps {
+  row: SlotRow;
+  selectedComponents: import('../../hooks').PCBuilderSelectedState;
+  getSlotState: (type: import('../../hooks').PCComponentType, index?: number) => import('../../hooks').ComponentCompatibility;
+  getDisplaySpecs: (type: import('../../hooks').PCComponentType, product: Product | undefined) => string[];
+  onSelect: (type: import('../../hooks').PCComponentType, index?: number) => void;
+  onRemove: (type: import('../../hooks').PCComponentType, index?: number) => void;
+  onChangeQuantity: (slotType: import('../../hooks').PCComponentType, rowIndex: number, delta: number) => void;
+  maxRamModules: number;
+  maxStorageModules: number;
+  maxFanModules: number;
+}
+
+export const MemoizedSlotRow = React.memo(function MemoizedSlotRow({
+  row,
+  selectedComponents,
+  getSlotState,
+  getDisplaySpecs,
+  onSelect,
+  onRemove,
+  onChangeQuantity,
+  maxRamModules,
+  maxStorageModules,
+  maxFanModules,
+}: MemoizedSlotRowProps) {
+  if (row.kind === 'single') {
+    const product = selectedComponents[row.key]?.product;
+    const slotState = getSlotState(row.key);
+    return (
+      <ComponentSlot
+        key={row.key}
+        index={row.anim}
+        type={row.label}
+        icon={getIcon(row.key)}
+        name={slotState.state === 'empty' ? 'Выберите компонент' : product?.name || ''}
+        price={product?.price ?? null}
+        state={slotState.state}
+        specs={getDisplaySpecs(row.key, product)}
+        warning={slotState.warning}
+        onSelect={() => onSelect(row.key)}
+        onClear={
+          slotState.state === 'selected' || slotState.state === 'incompatible'
+            ? () => onRemove(row.key)
+            : undefined
+        }
+        imageUrl={product?.mainImage?.url}
+        isPriority={row.key === 'cpu' || row.key === 'gpu'}
+        description={slotDescriptions[row.key]}
+      />
+    );
+  }
+
+  if (row.kind === 'ram') {
+    const product = selectedComponents.ram[row.rowIndex]?.product;
+    const slotState = getSlotState('ram', row.rowIndex);
+    const isEmpty = slotState.state === 'empty';
+    return (
+      <ComponentSlot
+        key={`ram-${row.rowIndex}`}
+        index={row.anim}
+        type={row.label}
+        icon={getIcon('ram')}
+        name={isEmpty ? 'Выберите компонент' : product?.name || ''}
+        price={product?.price ?? null}
+        state={slotState.state}
+        specs={getDisplaySpecs('ram', product)}
+        warning={slotState.warning}
+        onSelect={() => onSelect('ram', row.rowIndex)}
+        onClear={
+          !isEmpty
+            ? () => onRemove('ram', row.rowIndex)
+            : undefined
+        }
+        imageUrl={product?.mainImage?.url}
+        isPriority={false}
+        description={slotDescriptions.ram}
+        quantity={
+          row.rowIndex === 0 ? selectedComponents.ram.length : undefined
+        }
+        maxQuantity={maxRamModules}
+        onChangeQuantity={
+          row.rowIndex === 0
+            ? (delta) => onChangeQuantity('ram', row.rowIndex, delta)
+            : undefined
+        }
+      />
+    );
+  }
+
+  if (row.kind === 'storage') {
+    const product = selectedComponents.storage[row.rowIndex]?.product;
+    const slotState = getSlotState('storage', row.rowIndex);
+    const isEmpty = slotState.state === 'empty';
+    return (
+      <ComponentSlot
+        key={`storage-${row.rowIndex}`}
+        index={row.anim}
+        type={row.label}
+        icon={getIcon('storage')}
+        name={isEmpty ? 'Выберите компонент' : product?.name || ''}
+        price={product?.price ?? null}
+        state={slotState.state}
+        specs={getDisplaySpecs('storage', product)}
+        warning={slotState.warning}
+        onSelect={() => onSelect('storage', row.rowIndex)}
+        onClear={
+          !isEmpty ? () => onRemove('storage', row.rowIndex) : undefined
+        }
+        imageUrl={product?.mainImage?.url}
+        isPriority={false}
+        description={slotDescriptions.storage}
+        quantity={
+          row.rowIndex === 0 ? selectedComponents.storage.length : undefined
+        }
+        maxQuantity={maxStorageModules}
+        onChangeQuantity={
+          row.rowIndex === 0
+            ? (delta) => onChangeQuantity('storage', row.rowIndex, delta)
+            : undefined
+        }
+      />
+    );
+  }
+
+  // fan rows
+  const fans = selectedComponents.fan;
+  const product = fans[row.rowIndex]?.product;
+  const slotState = getSlotState('fan', row.rowIndex);
+  const isEmpty = slotState.state === 'empty';
+  return (
+    <ComponentSlot
+      key={`fan-${row.rowIndex}`}
+      index={row.anim}
+      type={row.label}
+      icon={getIcon('fan')}
+      name={isEmpty ? 'Выберите компонент' : product?.name || ''}
+      price={product?.price ?? null}
+      state={slotState.state}
+      specs={getDisplaySpecs('fan', product)}
+      warning={slotState.warning}
+      onSelect={() => onSelect('fan', row.rowIndex)}
+      onClear={
+        !isEmpty ? () => onRemove('fan', row.rowIndex) : undefined
+      }
+      imageUrl={product?.mainImage?.url}
+      isPriority={false}
+      description={slotDescriptions.fan}
+      quantity={
+        row.rowIndex === 0 ? selectedComponents.fan.length : undefined
+      }
+      maxQuantity={maxFanModules}
+      onChangeQuantity={
+        row.rowIndex === 0
+          ? (delta) => onChangeQuantity('fan', row.rowIndex, delta)
+          : undefined
+      }
+    />
+  );
+});
 
 function buildSlotRows(state: PCBuilderSelectedState): SlotRow[] {
   const rows: SlotRow[] = [];
@@ -199,13 +359,13 @@ export function PCBuilderPage() {
     return undefined;
   }, [selectedComponents.motherboard?.product, selectedComponents.cpu?.product]);
 
-  const openPicker = (type: PCComponentType, idx?: number) => {
+  const openPicker = useCallback((type: PCComponentType, idx?: number) => {
     setSelectedSlot(type);
     setMultiIndex(idx);
     setModalOpen(true);
-  };
+  }, []);
 
-  const handleRemove = (type: PCComponentType, idx?: number) => {
+  const handleRemove = useCallback((type: PCComponentType, idx?: number) => {
     // Confirm before removing CPU or motherboard if they have dependent components
     if (type === 'cpu') {
       const hasMb = !!selectedComponents.motherboard;
@@ -229,9 +389,9 @@ export function PCBuilderPage() {
       }
     }
     removeComponent(type, idx);
-  };
+  }, [selectedComponents.motherboard, selectedComponents.ram.length, removeComponent]);
 
-  const handleChangeQuantity = (
+  const handleChangeQuantity = useCallback(
     slotType: PCComponentType,
     rowIndex: number,
     delta: number,
@@ -278,7 +438,7 @@ export function PCBuilderPage() {
     setMultiIndex(undefined);
   };
 
-  const getDisplaySpecs = (type: PCComponentType, product: Product | undefined): string[] => {
+  const getDisplaySpecs = useCallback((type: PCComponentType, product: Product | undefined): string[] => {
     if (!product?.specifications) {
       return [];
     }
@@ -344,7 +504,8 @@ export function PCBuilderPage() {
     }
 
     return result;
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- getDisplaySpecs is pure, no external deps needed
+  }, []);
 
   const psuWattageRaw = selectedComponents.psu?.product.specifications?.wattage;
   const psuWattage =
@@ -450,141 +611,21 @@ export function PCBuilderPage() {
               )}
 
               <div className="pc-builder__slots">
-                {slotRows.map((row) => {
-                  if (row.kind === 'single') {
-                    const product = selectedComponents[row.key]?.product;
-                    const slotState = getSlotState(row.key);
-                    return (
-                      <ComponentSlot
-                        key={row.key}
-                        index={row.anim}
-                        type={row.label}
-                        icon={getIcon(row.key)}
-                        name={slotState.state === 'empty' ? 'Выберите компонент' : product?.name || ''}
-                        price={product?.price ?? null}
-                        state={slotState.state}
-                        specs={getDisplaySpecs(row.key, product)}
-                        warning={slotState.warning}
-                        onSelect={() => openPicker(row.key)}
-                        onClear={
-                          slotState.state === 'selected' || slotState.state === 'incompatible'
-                            ? () => handleRemove(row.key)
-                            : undefined
-                        }
-                        imageUrl={product?.mainImage?.url}
-                        isPriority={row.key === 'cpu' || row.key === 'gpu'}
-                        description={slotDescriptions[row.key]}
-                      />
-                    );
-                  }
-
-                  if (row.kind === 'ram') {
-                    const product = selectedComponents.ram[row.rowIndex]?.product;
-                    const slotState = getSlotState('ram', row.rowIndex);
-                    const isEmpty = slotState.state === 'empty';
-                    return (
-                      <ComponentSlot
-                        key={`ram-${row.rowIndex}`}
-                        index={row.anim}
-                        type={row.label}
-                        icon={getIcon('ram')}
-                        name={isEmpty ? 'Выберите компонент' : product?.name || ''}
-                        price={product?.price ?? null}
-                        state={slotState.state}
-                        specs={getDisplaySpecs('ram', product)}
-                        warning={slotState.warning}
-                        onSelect={() => openPicker('ram', row.rowIndex)}
-                        onClear={
-                          !isEmpty
-                            ? () => handleRemove('ram', row.rowIndex)
-                            : undefined
-                        }
-                        imageUrl={product?.mainImage?.url}
-                        isPriority={false}
-                        description={slotDescriptions.ram}
-                        quantity={
-                          row.rowIndex === 0 ? selectedComponents.ram.length : undefined
-                        }
-                        maxQuantity={MAX_RAM_MODULES}
-                        onChangeQuantity={
-                          row.rowIndex === 0
-                            ? (delta) => handleChangeQuantity('ram', row.rowIndex, delta)
-                            : undefined
-                        }
-                      />
-                    );
-                  }
-
-                  if (row.kind === 'storage') {
-                    const product = selectedComponents.storage[row.rowIndex]?.product;
-                    const slotState = getSlotState('storage', row.rowIndex);
-                    const isEmpty = slotState.state === 'empty';
-                    return (
-                      <ComponentSlot
-                        key={`storage-${row.rowIndex}`}
-                        index={row.anim}
-                        type={row.label}
-                        icon={getIcon('storage')}
-                        name={isEmpty ? 'Выберите компонент' : product?.name || ''}
-                        price={product?.price ?? null}
-                        state={slotState.state}
-                        specs={getDisplaySpecs('storage', product)}
-                        warning={slotState.warning}
-                        onSelect={() => openPicker('storage', row.rowIndex)}
-                        onClear={
-                          !isEmpty ? () => handleRemove('storage', row.rowIndex) : undefined
-                        }
-                        imageUrl={product?.mainImage?.url}
-                        isPriority={false}
-                        description={slotDescriptions.storage}
-                        quantity={
-                          row.rowIndex === 0 ? selectedComponents.storage.length : undefined
-                        }
-                        maxQuantity={MAX_STORAGE_MODULES}
-                        onChangeQuantity={
-                          row.rowIndex === 0
-                            ? (delta) => handleChangeQuantity('storage', row.rowIndex, delta)
-                            : undefined
-                        }
-                      />
-                    );
-                  }
-
-                  // fan rows
-                  const fans = selectedComponents.fan;
-                  const product = fans[row.rowIndex]?.product;
-                  const slotState = getSlotState('fan', row.rowIndex);
-                  const isEmpty = slotState.state === 'empty';
-                  return (
-                    <ComponentSlot
-                      key={`fan-${row.rowIndex}`}
-                      index={row.anim}
-                      type={row.label}
-                      icon={getIcon('fan')}
-                      name={isEmpty ? 'Выберите компонент' : product?.name || ''}
-                      price={product?.price ?? null}
-                      state={slotState.state}
-                      specs={getDisplaySpecs('fan', product)}
-                      warning={slotState.warning}
-                      onSelect={() => openPicker('fan', row.rowIndex)}
-                      onClear={
-                        !isEmpty ? () => handleRemove('fan', row.rowIndex) : undefined
-                      }
-                      imageUrl={product?.mainImage?.url}
-                      isPriority={false}
-                      description={slotDescriptions.fan}
-                      quantity={
-                        row.rowIndex === 0 ? selectedComponents.fan.length : undefined
-                      }
-                      maxQuantity={MAX_FAN_MODULES}
-                      onChangeQuantity={
-                        row.rowIndex === 0
-                          ? (delta) => handleChangeQuantity('fan', row.rowIndex, delta)
-                          : undefined
-                      }
-                    />
-                  );
-                })}
+                {slotRows.map((row) => (
+                  <MemoizedSlotRow
+                    key={`slot-${row.kind}-${row.kind === 'single' ? row.key : row.rowIndex}`}
+                    row={row}
+                    selectedComponents={selectedComponents}
+                    getSlotState={getSlotState}
+                    getDisplaySpecs={getDisplaySpecs}
+                    onSelect={openPicker}
+                    onRemove={handleRemove}
+                    onChangeQuantity={handleChangeQuantity}
+                    maxRamModules={MAX_RAM_MODULES}
+                    maxStorageModules={MAX_STORAGE_MODULES}
+                    maxFanModules={MAX_FAN_MODULES}
+                  />
+                ))}
               </div>
 
               {/* Периферия */}
@@ -592,30 +633,21 @@ export function PCBuilderPage() {
                 <h2 className="pc-builder__section-title pc-builder__section-title--periph">Периферия</h2>
               </div>
               <div className="pc-builder__slots">
-                {(['monitor', 'keyboard', 'mouse', 'headphones'] as const).map((key, idx) => {
-                  const product = selectedComponents[key]?.product;
-                  const slotState = getSlotState(key);
-                  return (
-                    <ComponentSlot
-                      key={key}
-                      type={PC_BUILDER_SLOTS.find((s) => s.key === key)?.label ?? key}
-                      icon={getIcon(key)}
-                      name={slotState.state === 'empty' ? 'Выберите устройство' : product?.name || ''}
-                      price={product?.price ?? null}
-                      state={slotState.state}
-                      specs={getDisplaySpecs(key, product)}
-                      onSelect={() => openPicker(key)}
-                      onClear={
-                        slotState.state === 'selected' || slotState.state === 'incompatible'
-                          ? () => handleRemove(key)
-                          : undefined
-                      }
-                      imageUrl={product?.mainImage?.url}
-                      description={slotDescriptions[key]}
-                      index={slotRows.length + idx}
-                    />
-                  );
-                })}
+                {(['monitor', 'keyboard', 'mouse', 'headphones'] as const).map((key, idx) => (
+                  <MemoizedSlotRow
+                    key={key}
+                    row={{ kind: 'single', key, label: PC_BUILDER_SLOTS.find((s) => s.key === key)?.label ?? key, anim: slotRows.length + idx }}
+                    selectedComponents={selectedComponents}
+                    getSlotState={getSlotState}
+                    getDisplaySpecs={getDisplaySpecs}
+                    onSelect={openPicker}
+                    onRemove={handleRemove}
+                    onChangeQuantity={handleChangeQuantity}
+                    maxRamModules={MAX_RAM_MODULES}
+                    maxStorageModules={MAX_STORAGE_MODULES}
+                    maxFanModules={MAX_FAN_MODULES}
+                  />
+                ))}
               </div>
             </div>
 

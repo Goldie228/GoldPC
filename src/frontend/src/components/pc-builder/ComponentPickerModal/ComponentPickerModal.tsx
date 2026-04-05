@@ -20,6 +20,10 @@ import type { Product, ProductCategory, ProductImage } from '../../../api/types'
 import type { PCComponentType, PCBuilderSelectedState } from '../../../hooks/usePCBuilder';
 import styles from './ComponentPickerModal.module.css';
 
+const noopSelect = () => {};
+
+const LOCK_ICON_STYLE = { display: 'inline', marginRight: 4, verticalAlign: 'text-bottom' as const } satisfies React.CSSProperties;
+
 // ─────────────────────────────────────────────────────────
 
 export interface ComponentPickerModalProps {
@@ -781,11 +785,11 @@ export function ComponentPickerModal({
                       <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
                         <PickerProductCard product={p} isSelected={false}
                           isCompatible={!p.isIncompatible}
-                          onSelect={() => {}}
+                          onSelect={noopSelect}
                           onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
                         {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
                           <div className={styles.incompatibleReason}>
-                            <Lock size={12} style={{ display: 'inline', marginRight: 4, verticalAlign: 'text-bottom' }} />
+                            <Lock size={12} style={LOCK_ICON_STYLE} />
                             {p.incompatibilityIssues.join('; ')}
                           </div>
                         )}
@@ -798,11 +802,11 @@ export function ComponentPickerModal({
                       <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
                         <PickerProductCardCompact product={p} isSelected={false}
                           isCompatible={!p.isIncompatible}
-                          onSelect={() => {}}
+                          onSelect={noopSelect}
                           onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
                         {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
                           <div className={styles.incompatibleReason}>
-                            <Lock size={12} style={{ display: 'inline', marginRight: 4, verticalAlign: 'text-bottom' }} />
+                            <Lock size={12} style={LOCK_ICON_STYLE} />
                             {p.incompatibilityIssues.join('; ')}
                           </div>
                         )}
