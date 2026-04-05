@@ -2,7 +2,7 @@
  * BuildSummaryPanel — правая панель итогов сборки
  */
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Zap, BarChart3, Check, AlertTriangle, Save, Gamepad2, Printer, ShoppingBag, CircleCheck, XCircle } from 'lucide-react';
 import {
@@ -40,7 +40,7 @@ export interface BuildSummaryPanelProps {
 
 const MAX_POWER = 850;
 
-export function BuildSummaryPanel({
+export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
   selectedComponents,
   totalPrice,
   powerConsumption,
@@ -192,7 +192,7 @@ export function BuildSummaryPanel({
         </ul>
       )}
 
-      <ul className="bsp__component-list" key={`list-${listItems.length}`}>
+      <ul className="bsp__component-list">
         <AnimatePresence mode="popLayout">
           {listItems.map((row) => (
             <motion.li
@@ -435,4 +435,4 @@ export function BuildSummaryPanel({
       )}
     </div>
   );
-}
+});

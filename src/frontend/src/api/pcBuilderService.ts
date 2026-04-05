@@ -146,13 +146,19 @@ export async function calculateFpsApi(params: {
 
 // === API ===
 
+export interface ApiOptions {
+  signal?: AbortSignal;
+}
+
 export async function checkCompatibilityAPI(
   components: SelectedComponentsState,
+  options?: ApiOptions,
 ): Promise<CompatibilityCheckResponse> {
   const dto = buildComponentsDTO(components);
   const { data } = await apiClient.post<CompatibilityCheckResponse>(
     '/pcbuilder/check-compatibility',
     { components: dto },
+    { signal: options?.signal },
   );
   return data;
 }

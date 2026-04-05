@@ -11,6 +11,8 @@ public class CompatibilityRuleEngine
 {
     private readonly RulesConfig _config;
     private readonly ILogger<CompatibilityRuleEngine> _logger;
+    private readonly Dictionary<string, SocketGroup> _socketLookup;
+    private readonly Dictionary<string, FormFactorRule> _formFactorLookup;
 
     public CompatibilityRuleEngine(string jsonPath, ILogger<CompatibilityRuleEngine> logger)
     {
@@ -20,12 +22,39 @@ public class CompatibilityRuleEngine
         _config = JsonSerializer.Deserialize<RulesConfig>(json, options)
             ?? throw new InvalidOperationException("Failed to load compatibility rules");
         _logger.LogInformation("Compatibility rules v{Version} loaded", _config.Version);
+        _socketLookup = BuildSocketLookup();
+        _formFactorLookup = BuildFormFactorLookup();
     }
 
     public CompatibilityRuleEngine(RulesConfig config, ILogger<CompatibilityRuleEngine> logger)
     {
         _config = config;
         _logger = logger;
+        _socketLookup = BuildSocketLookup();
+        _formFactorLookup = BuildFormFactorLookup();
+    }
+
+    private Dictionary<string, SocketGroup> BuildSocketLookup()
+    {
+        var lookup = new Dictionary<string, SocketGroup>(StringComparer.OrdinalIgnoreCase);
+        foreach (var group in _config.SocketCompatibility.Groups)
+        {
+            foreach (var socket in group.Sockets)
+            {
+                lookup[socket] = group;
+            }
+        }
+        return lookup;
+    }
+
+    private Dictionary<string, FormFactorRule> BuildFormFactorLookup()
+    {
+        var lookup = new Dictionary<string, FormFactorRule>(StringComparer.OrdinalIgnoreCase);
+        foreach (var rule in _config.FormFactorCompatibility.Rules)
+        {
+            lookup[rule.CaseFormFactor] = rule;
+        }
+        return lookup;
     }
 
     public RulesConfig Config => _config;
@@ -35,8 +64,7 @@ public class CompatibilityRuleEngine
     public SocketGroup? FindSocketGroup(string socket)
     {
         if (string.IsNullOrEmpty(socket)) return null;
-        return _config.SocketCompatibility.Groups.FirstOrDefault(g =>
-            g.Sockets.Any(s => string.Equals(s, socket, StringComparison.OrdinalIgnoreCase)));
+        return _socketLookup.GetValueOrDefault(socket);
     }
 
     public (bool match, string? primaryRamType, string? alternateRamType) CheckSocketMatch(
@@ -96,9 +124,8 @@ public class CompatibilityRuleEngine
     {
         var normalizedCase = NormalizeFormFactor(caseFormFactor);
         var normalizedMb = NormalizeFormFactor(mbFormFactor);
-        var rule = _config.FormFactorCompatibility.Rules.FirstOrDefault(r =>
-            string.Equals(r.CaseFormFactor, normalizedCase, StringComparison.OrdinalIgnoreCase));
-        if (rule == null) return true; // неизвестный форм-фактор — не блокируем
+        if (!_formFactorLookup.TryGetValue(normalizedCase, out var rule))
+            return true; // неизвестный форм-фактор — не блокируем
         return rule.SupportedMotherboards.Contains(normalizedMb, StringComparer.OrdinalIgnoreCase);
     }
 
