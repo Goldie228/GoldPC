@@ -179,7 +179,7 @@ export function BuildSummaryPanel({
         </ul>
       )}
 
-      <ul className="bsp__component-list">
+      <ul className="bsp__component-list" key={`list-${listItems.length}`}>
         <AnimatePresence mode="popLayout">
           {listItems.map((row) => (
             <motion.li
