@@ -785,7 +785,7 @@ export function ComponentPickerModal({
                       <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
                         <PickerProductCard product={p} isSelected={false}
                           isCompatible={!p.isIncompatible}
-                          onSelect={noopSelect}
+                          onSelect={p.isIncompatible ? noopSelect : handleConfirm}
                           onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
                         {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
                           <div className={styles.incompatibleReason}>
@@ -802,7 +802,7 @@ export function ComponentPickerModal({
                       <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
                         <PickerProductCardCompact product={p} isSelected={false}
                           isCompatible={!p.isIncompatible}
-                          onSelect={noopSelect}
+                          onSelect={p.isIncompatible ? noopSelect : handleConfirm}
                           onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
                         {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
                           <div className={styles.incompatibleReason}>
