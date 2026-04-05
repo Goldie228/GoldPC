@@ -165,6 +165,17 @@ export function extractMaxCoolerHeight(specs: ProductSpecifications | undefined)
 export function extractCoolerType(specs: ProductSpecifications | undefined): string | null { return getString(specs, 'type', 'coolerType'); }
 export function extractMaxCoolerTDP(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'maxTdp', 'max_tdp', 'coolingTdp') ?? 0; }
 
+export function extractStorageType(specs: ProductSpecifications | undefined): 'm2' | 'sata' | 'other' {
+  if (!specs) return 'other';
+  const type = getString(specs, 'type', 'storageType', 'storage_type');
+  const iface = getString(specs, 'interface', 'form_factor');
+  if (type && (type.toUpperCase() === 'NVME' || type.toUpperCase() === 'PCIe')) return 'm2';
+  if (type && type.toUpperCase() === 'SATA') return 'sata';
+  if (iface && (iface.toUpperCase() === 'M.2' || iface.toUpperCase() === 'NVME')) return 'm2';
+  if (iface && iface.toUpperCase() === 'SATA') return 'sata';
+  return 'other';
+}
+
 // ──────────── FormFactor helpers (from compatibilityRules.json) ────────────
 const FF_RULES = config.formFactorCompatibility.rules;
 const FF_ALIASES: Record<string, string> = config.formFactorCompatibility.aliases;
@@ -455,6 +466,32 @@ export function checkCompatibility(components: ComponentMap): CompatibilityCheck
     warnings.push({ severity: 'Info', component: ram.name, message: `${extractRAMCapacity(ram.specifications)}GB RAM may be insufficient for modern tasks`, suggestion: 'Consider 16GB+' });
   }
 
+  // Storage slot compatibility
+  const storageProduct = components.storage;
+  if (storageProduct && motherboard) {
+    const storageType = extractStorageType(storageProduct.specifications);
+    const mbM2Slots = config.storageDefaults?.mbDefaultM2Slots ?? 2;
+    const mbSataPorts = config.storageDefaults?.mbDefaultSataPorts ?? 4;
+    if (storageType === 'm2' && mbM2Slots < 1) {
+      issues.push({
+        severity: 'Error',
+        component1: storageProduct.name,
+        component2: motherboard.name,
+        message: `Накопитель ${storageProduct.name} требует M.2 слот, на материнской плате нет доступных слотов`,
+        suggestion: 'Выберите материнскую плату с поддержкой M.2 или SATA-накопитель',
+      });
+    }
+    if (storageType === 'sata' && mbSataPorts < 1) {
+      issues.push({
+        severity: 'Error',
+        component1: storageProduct.name,
+        component2: motherboard.name,
+        message: `Накопитель ${storageProduct.name} требует SATA-порт, на материнской плате нет доступных портов`,
+        suggestion: 'Выберите материнскую плату с достаточным количеством SATA-портов или M.2-накопитель',
+      });
+    }
+  }
+
   const pc = calculatePowerConsumption(components);
   const rp = calculateRecommendedPSU(components);
   return { isCompatible: issues.length === 0, issues, warnings, powerConsumption: pc, recommendedPSU: rp, bottleneckPercentage: bottleneckPct };
@@ -474,8 +511,9 @@ export function getAllMessages(result: CompatibilityCheckResult): Array<{ severi
   return msgs.sort((a, b) => order[a.severity] - order[b.severity]);
 }
 
-export function isComponentCompatible(componentType: ComponentCategory, product: Product, current: ComponentMap): { compatible: boolean; issues: string[] } {
+export function isComponentCompatible(componentType: ComponentCategory, product: Product, current: ComponentMap): { compatible: boolean; issues: string[]; warnings: string[] } {
   const issues: string[] = [];
+  const warnings: string[] = [];
   const test: ComponentMap = { ...current, [componentType]: product };
 
   // CPU ↔ MB socket
@@ -576,12 +614,12 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     }
   }
 
-  // Cooler TDP vs CPU TDP (warning-level, but we still flag it)
+  // Cooler TDP vs CPU TDP (warning-level)
   if (componentType === 'cooling' && test.cpu) {
     const maxTdp = extractMaxCoolerTDP(product.specifications);
     const cpuTdp = extractTDP(test.cpu.specifications);
     if (maxTdp > 0 && cpuTdp > 0 && cpuTdp > maxTdp) {
-      // Not a hard incompatibility but worth noting; not adding to issues to avoid blocking
+      warnings.push(`Кулер может не справиться с TDP процессора (TDP ${cpuTdp}W > макс. ${maxTdp}W)`);
     }
   }
 
@@ -607,5 +645,5 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     }
   }
 
-  return { compatible: issues.length === 0, issues };
+  return { compatible: issues.length === 0, issues, warnings };
 }

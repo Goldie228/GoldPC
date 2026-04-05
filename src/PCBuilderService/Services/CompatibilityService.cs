@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using PCBuilderService.Data;
 using PCBuilderService.DTOs;
 using PCBuilderService.Models;
 
@@ -24,15 +26,18 @@ public class CompatibilityService : ICompatibilityService
     private readonly HttpClient _catalogClient;
     private readonly ILogger<CompatibilityService> _logger;
     private readonly CompatibilityRuleEngine _ruleEngine;
+    private readonly PCBuilderDbContext _dbContext;
 
     public CompatibilityService(
         HttpClient catalogClient,
         ILogger<CompatibilityService> logger,
-        CompatibilityRuleEngine ruleEngine)
+        CompatibilityRuleEngine ruleEngine,
+        PCBuilderDbContext dbContext)
     {
         _catalogClient = catalogClient;
         _logger = logger;
         _ruleEngine = ruleEngine;
+        _dbContext = dbContext;
     }
 
     public async Task<CompatibilityCheckResponse> CheckCompatibilityAsync(CompatibilityCheckRequest request)
@@ -98,8 +103,27 @@ public class CompatibilityService : ICompatibilityService
         };
     }
 
-    public async Task<IEnumerable<Guid>> GetCompatibleMotherboardsAsync(Guid processorId) => Enumerable.Empty<Guid>();
-    public async Task<IEnumerable<Guid>> GetCompatibleRamAsync(Guid motherboardId) => Enumerable.Empty<Guid>();
+    #region BUG-14: Compatible component lookups
+
+    public async Task<IEnumerable<Guid>> GetCompatibleMotherboardsAsync(Guid processorId)
+    {
+        return await _dbContext.CompatibilityRules
+            .Where(r => r.RuleType == "cpu_motherboard" && r.IsCompatible)
+            .Where(r => r.Component1Id == processorId || r.Component2Id == processorId)
+            .Select(r => r.Component1Id == processorId ? r.Component2Id : r.Component1Id)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Guid>> GetCompatibleRamAsync(Guid motherboardId)
+    {
+        return await _dbContext.CompatibilityRules
+            .Where(r => r.RuleType == "motherboard_ram" && r.IsCompatible)
+            .Where(r => r.Component1Id == motherboardId || r.Component2Id == motherboardId)
+            .Select(r => r.Component1Id == motherboardId ? r.Component2Id : r.Component1Id)
+            .ToListAsync();
+    }
+
+    #endregion
 
     public async Task<int> CalculateTotalPowerConsumptionAsync(PCConfiguration config)
     {
@@ -109,27 +133,29 @@ public class CompatibilityService : ICompatibilityService
     }
 
     #region Спецификации компонентов
-    private class CpuSpecification { public string Name { get; set; } = ""; public string Socket { get; set; } = ""; public int Tdp { get; set; } public int PerformanceScore { get; set; } public bool HasIntegratedGraphics { get; set; } }
-    private class MotherboardSpecification { public string Name { get; set; } = ""; public string Socket { get; set; } = ""; public string RamType { get; set; } = ""; public int RamSlots { get; set; } public int MaxRamSpeed { get; set; } public string FormFactor { get; set; } = ""; public string? Chipset { get; set; } }
-    private class RamSpecification { public string Name { get; set; } = ""; public string Type { get; set; } = ""; public int Speed { get; set; } public int Capacity { get; set; } public int Modules { get; set; } }
-    private class GpuSpecification { public string Name { get; set; } = ""; public int Length { get; set; } public int Tdp { get; set; } public int RecommendedPsu { get; set; } public int PerformanceScore { get; set; } }
-    private class PsuSpecification { public string Name { get; set; } = ""; public int Wattage { get; set; } public string Certification { get; set; } = ""; public bool Modular { get; set; } }
-    private class CaseSpecification { public string Name { get; set; } = ""; public int MaxGpuLength { get; set; } public int MaxCoolerHeight { get; set; } public List<string> SupportedFormFactors { get; set; } = new(); }
-    private class CoolerSpecification { public string Name { get; set; } = ""; public string Type { get; set; } = ""; public int Height { get; set; } public int MaxTdp { get; set; } public List<string> SupportedSockets { get; set; } = new(); }
+    private sealed class CpuSpecification { public string Name { get; set; } = ""; public string Socket { get; set; } = ""; public int Tdp { get; set; } public int PerformanceScore { get; set; } public bool HasIntegratedGraphics { get; set; } }
+    private sealed class MotherboardSpecification { public string Name { get; set; } = ""; public string Socket { get; set; } = ""; public string RamType { get; set; } = ""; public int RamSlots { get; set; } public int MaxRamSpeed { get; set; } public string FormFactor { get; set; } = ""; public string? Chipset { get; set; } }
+    private sealed class RamSpecification { public string Name { get; set; } = ""; public string Type { get; set; } = ""; public int Speed { get; set; } public int Capacity { get; set; } public int Modules { get; set; } }
+    private sealed class GpuSpecification { public string Name { get; set; } = ""; public int Length { get; set; } public int Tdp { get; set; } public int RecommendedPsu { get; set; } public int PerformanceScore { get; set; } }
+    private sealed class PsuSpecification { public string Name { get; set; } = ""; public int Wattage { get; set; } public string Certification { get; set; } = ""; public bool Modular { get; set; } }
+    private sealed class CaseSpecification { public string Name { get; set; } = ""; public int MaxGpuLength { get; set; } public int MaxCoolerHeight { get; set; } public List<string> SupportedFormFactors { get; set; } = new(); }
+    private sealed class CoolerSpecification { public string Name { get; set; } = ""; public string Type { get; set; } = ""; public int Height { get; set; } public int MaxTdp { get; set; } public List<string> SupportedSockets { get; set; } = new(); }
     #endregion
 
     #region Извлечение спецификаций
+
     private CpuSpecification ExtractCpuSpecs(SelectedComponentDto? cpu)
     {
         if (cpu == null) return new CpuSpecification();
         var s = cpu.Specifications;
+        var name = cpu.Name;
         return new CpuSpecification
         {
-            Name = cpu.Name,
-            Socket = GetSpecValue(s, "socket", ""),
-            Tdp = GetSpecValueInt(s, "tdp", 65),
-            PerformanceScore = GetSpecValueInt(s, "performanceScore", 0),
-            HasIntegratedGraphics = GetSpecValueBool(s, "integratedGraphics", false)
+            Name = name,
+            Socket = GetSpecValue(s, "socket", "", componentName: name),
+            Tdp = GetSpecValueInt(s, "tdp", 65, componentName: name),
+            PerformanceScore = GetSpecValueInt(s, "performanceScore", 0, componentName: name),
+            HasIntegratedGraphics = GetSpecValueBool(s, "integratedGraphics", false, componentName: name)
         };
     }
 
@@ -137,14 +163,15 @@ public class CompatibilityService : ICompatibilityService
     {
         if (mb == null) return new MotherboardSpecification();
         var s = mb.Specifications;
+        var name = mb.Name;
         return new MotherboardSpecification
         {
-            Name = mb.Name,
-            Socket = GetSpecValue(s, "socket", ""),
+            Name = name,
+            Socket = GetSpecValue(s, "socket", "", componentName: name),
             RamType = GetSpecValue(s, "ramType", ""),
-            RamSlots = GetSpecValueInt(s, "ramSlots", 4),
-            MaxRamSpeed = GetSpecValueInt(s, "maxRamSpeed", 3200),
-            FormFactor = GetSpecValue(s, "formFactor", "ATX"),
+            RamSlots = GetSpecValueInt(s, "ramSlots", 4, componentName: name),
+            MaxRamSpeed = GetSpecValueInt(s, "maxRamSpeed", 3200, componentName: name),
+            FormFactor = GetSpecValue(s, "formFactor", "ATX", componentName: name),
             Chipset = GetSpecValue(s, "chipset", "")
         };
     }
@@ -153,13 +180,14 @@ public class CompatibilityService : ICompatibilityService
     {
         if (ram == null) return new RamSpecification();
         var s = ram.Specifications;
+        var name = ram.Name;
         return new RamSpecification
         {
-            Name = ram.Name,
-            Type = GetSpecValue(s, "type", ""),
-            Speed = GetSpecValueInt(s, "speed", 3200),
-            Capacity = GetSpecValueInt(s, "capacity", 16),
-            Modules = GetSpecValueInt(s, "modules", 1)
+            Name = name,
+            Type = GetSpecValue(s, "type", "", componentName: name),
+            Speed = GetSpecValueInt(s, "speed", 3200, componentName: name),
+            Capacity = GetSpecValueInt(s, "capacity", 16, componentName: name),
+            Modules = GetSpecValueInt(s, "modules", 1, componentName: name)
         };
     }
 
@@ -167,13 +195,14 @@ public class CompatibilityService : ICompatibilityService
     {
         if (gpu == null) return new GpuSpecification();
         var s = gpu.Specifications;
+        var name = gpu.Name;
         return new GpuSpecification
         {
-            Name = gpu.Name,
-            Length = GetSpecValueInt(s, "length", 300),
-            Tdp = GetSpecValueInt(s, "tdp", 200),
-            RecommendedPsu = GetSpecValueInt(s, "recommendedPsu", 550),
-            PerformanceScore = GetSpecValueInt(s, "performanceScore", 0)
+            Name = name,
+            Length = GetSpecValueInt(s, "length", 300, componentName: name),
+            Tdp = GetSpecValueInt(s, "tdp", 200, componentName: name),
+            RecommendedPsu = GetSpecValueInt(s, "recommendedPsu", 550, componentName: name),
+            PerformanceScore = GetSpecValueInt(s, "performanceScore", 0, componentName: name)
         };
     }
 
@@ -181,12 +210,13 @@ public class CompatibilityService : ICompatibilityService
     {
         if (psu == null) return new PsuSpecification();
         var s = psu.Specifications;
+        var name = psu.Name;
         return new PsuSpecification
         {
-            Name = psu.Name,
-            Wattage = GetSpecValueInt(s, "wattage", 550),
-            Certification = GetSpecValue(s, "certification", "80+ Bronze"),
-            Modular = GetSpecValueBool(s, "modular", false)
+            Name = name,
+            Wattage = GetSpecValueInt(s, "wattage", 550, componentName: name),
+            Certification = GetSpecValue(s, "certification", "80+ Bronze", componentName: name),
+            Modular = GetSpecValueBool(s, "modular", false, componentName: name)
         };
     }
 
@@ -194,12 +224,13 @@ public class CompatibilityService : ICompatibilityService
     {
         if (c == null) return new CaseSpecification();
         var s = c.Specifications;
+        var name = c.Name;
         return new CaseSpecification
         {
-            Name = c.Name,
-            MaxGpuLength = GetSpecValueInt(s, "maxGpuLength", 320),
-            MaxCoolerHeight = GetSpecValueInt(s, "maxCoolerHeight", 160),
-            SupportedFormFactors = GetSpecValue(s, "supportedFormFactors", "ATX,mATX,ITX").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+            Name = name,
+            MaxGpuLength = GetSpecValueInt(s, "maxGpuLength", 320, componentName: name),
+            MaxCoolerHeight = GetSpecValueInt(s, "maxCoolerHeight", 160, componentName: name),
+            SupportedFormFactors = GetSpecValue(s, "supportedFormFactors", "ATX,mATX,ITX", componentName: name).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
         };
     }
 
@@ -207,19 +238,69 @@ public class CompatibilityService : ICompatibilityService
     {
         if (cooler == null) return new CoolerSpecification();
         var s = cooler.Specifications;
+        var name = cooler.Name;
         return new CoolerSpecification
         {
-            Name = cooler.Name,
-            Type = GetSpecValue(s, "type", "Air"),
-            Height = GetSpecValueInt(s, "height", 160),
-            MaxTdp = GetSpecValueInt(s, "maxTdp", 150),
-            SupportedSockets = GetSpecValue(s, "supportedSockets", "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+            Name = name,
+            Type = GetSpecValue(s, "type", "Air", componentName: name),
+            Height = GetSpecValueInt(s, "height", 160, componentName: name),
+            MaxTdp = GetSpecValueInt(s, "maxTdp", 150, componentName: name),
+            SupportedSockets = GetSpecValue(s, "supportedSockets", "", componentName: name).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
         };
     }
 
-    private static string GetSpecValue(Dictionary<string, object>? specs, string key, string defaultValue) { if (specs == null || !specs.TryGetValue(key, out var value)) return defaultValue; return value?.ToString() ?? defaultValue; }
-    private static int GetSpecValueInt(Dictionary<string, object>? specs, string key, int defaultValue) { if (specs == null || !specs.TryGetValue(key, out var value)) return defaultValue; if (value is int i) return i; if (value is long l) return (int)l; if (int.TryParse(value?.ToString(), out var p)) return p; return defaultValue; }
-    private static bool GetSpecValueBool(Dictionary<string, object>? specs, string key, bool defaultValue) { if (specs == null || !specs.TryGetValue(key, out var value)) return defaultValue; if (value is bool b) return b; if (bool.TryParse(value?.ToString(), out var p)) return p; return defaultValue; }
+    #endregion
+
+    #region BUG-22: Spec value helpers with logging
+
+    private string GetSpecValue(Dictionary<string, object>? specs, string key, string defaultValue, string componentName = "")
+    {
+        if (specs == null || !specs.TryGetValue(key, out var value))
+        {
+            if (!string.IsNullOrEmpty(defaultValue) && !string.IsNullOrEmpty(componentName))
+            {
+                _logger.LogWarning("Spec '{Key}' not found for {Component}, defaulting to '{Default}'", key, componentName, defaultValue);
+            }
+            return defaultValue;
+        }
+        return value?.ToString() ?? defaultValue;
+    }
+
+    private int GetSpecValueInt(Dictionary<string, object>? specs, string key, int defaultValue, string componentName = "")
+    {
+        if (specs == null || !specs.TryGetValue(key, out var value))
+        {
+            if (defaultValue != 0 && !string.IsNullOrEmpty(componentName))
+            {
+                _logger.LogWarning("Spec '{Key}' not found for {Component}, defaulting to {Default}", key, componentName, defaultValue);
+            }
+            return defaultValue;
+        }
+        if (value is int i) return i;
+        if (value is long l) return (int)l;
+        if (int.TryParse(value?.ToString(), out var p)) return p;
+        if (defaultValue != 0 && !string.IsNullOrEmpty(componentName))
+        {
+            _logger.LogWarning("Spec '{Key}' for {Component} has unparseable value, defaulting to {Default}", key, componentName, defaultValue);
+        }
+        return defaultValue;
+    }
+
+    private bool GetSpecValueBool(Dictionary<string, object>? specs, string key, bool defaultValue, string componentName = "")
+    {
+        if (specs == null || !specs.TryGetValue(key, out var value))
+        {
+            if (defaultValue && !string.IsNullOrEmpty(componentName))
+            {
+                _logger.LogWarning("Spec '{Key}' not found for {Component}, defaulting to {Default}", key, componentName, defaultValue);
+            }
+            return defaultValue;
+        }
+        if (value is bool b) return b;
+        if (bool.TryParse(value?.ToString(), out var p)) return p;
+        return defaultValue;
+    }
+
     #endregion
 
     #region Проверки совместимости (делегирование движку правил)
@@ -240,7 +321,6 @@ public class CompatibilityService : ICompatibilityService
                 Suggestion = $"Выберите материнскую плату с сокетом {cpu.Socket} или CPU с сокетом {mb.Socket}"
             });
         }
-        // BIOS warning
         var biosWarning = _ruleEngine.CheckBiosWarning(cpu.Socket, mb.Chipset);
         if (biosWarning.HasWarning)
         {
@@ -281,7 +361,12 @@ public class CompatibilityService : ICompatibilityService
     {
         if (psu.Wattage == 0) return;
         var err = _ruleEngine.CheckPsuInsufficient(psu.Wattage, totalTdp, psu.Name);
-        if (err != null) { result.IsCompatible = false; err.Component2 = "System"; result.Issues.Add(err); }
+        if (err != null)
+        {
+            result.IsCompatible = false;
+            err.Component2 = "System";
+            result.Issues.Add(err);
+        }
         else
         {
             var warn = _ruleEngine.CheckPsuTightMargin(psu.Wattage, totalTdp, psu.Name);
@@ -312,7 +397,11 @@ public class CompatibilityService : ICompatibilityService
     {
         if (gpu.Length == 0 || caseSpec.MaxGpuLength == 0) return;
         var err = _ruleEngine.CheckGpuLength(gpu.Length, caseSpec.MaxGpuLength, gpu.Name, caseSpec.Name);
-        if (err != null) { result.IsCompatible = false; result.Issues.Add(err); }
+        if (err != null)
+        {
+            result.IsCompatible = false;
+            result.Issues.Add(err);
+        }
         else
         {
             var warn = _ruleEngine.CheckGpuLengthWarning(gpu.Length, caseSpec.MaxGpuLength, gpu.Name);
@@ -324,7 +413,12 @@ public class CompatibilityService : ICompatibilityService
     {
         if (string.IsNullOrEmpty(cpu.Socket) || cooler.SupportedSockets.Count == 0) return;
         var err = _ruleEngine.CheckCoolerSocket(cooler.SupportedSockets, cpu.Socket, cooler.Name);
-        if (err != null) { result.IsCompatible = false; err.Component2 = cpu.Name; result.Issues.Add(err); }
+        if (err != null)
+        {
+            result.IsCompatible = false;
+            err.Component2 = cpu.Name;
+            result.Issues.Add(err);
+        }
         else if (cooler.MaxTdp > 0 && cpu.Tdp > cooler.MaxTdp)
         {
             var warn = _ruleEngine.CheckCoolerTdp(cooler.MaxTdp, cpu.Tdp, cooler.Name, cpu.Name);
@@ -336,7 +430,11 @@ public class CompatibilityService : ICompatibilityService
     {
         if (cooler.Height == 0 || caseSpec.MaxCoolerHeight == 0) return;
         var err = _ruleEngine.CheckCoolerHeight(cooler.Height, caseSpec.MaxCoolerHeight, cooler.Name, caseSpec.Name, cooler.Type);
-        if (err != null) { result.IsCompatible = false; result.Issues.Add(err); }
+        if (err != null)
+        {
+            result.IsCompatible = false;
+            result.Issues.Add(err);
+        }
     }
 
     private void DetectBottleneck(CpuSpecification cpu, GpuSpecification gpu, string? purpose, CompatibilityResultDto result)
@@ -348,11 +446,9 @@ public class CompatibilityService : ICompatibilityService
 
     private void AddPerformanceWarnings(CpuSpecification cpu, GpuSpecification gpu, RamSpecification ram, CompatibilityResultDto result)
     {
-        // RAM capacity warning
         var ramWarn = _ruleEngine.CheckRamCapacity(ram.Capacity, ram.Name);
         if (ramWarn != null) result.Warnings.Add(ramWarn);
 
-        // No integrated graphics warning
         if (!cpu.HasIntegratedGraphics && gpu.Length == 0)
         {
             var igWarn = _ruleEngine.CheckNoIntegratedGraphics(cpu.Name);

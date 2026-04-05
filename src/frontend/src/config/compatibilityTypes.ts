@@ -145,6 +145,13 @@ export interface PerformanceWarningsConfig {
   noIntegratedGraphics: NoIntegratedGraphicsConfig;
 }
 
+// ──────────── Storage Defaults ────────────
+
+export interface StorageDefaultsConfig {
+  mbDefaultM2Slots: number;
+  mbDefaultSataPorts: number;
+}
+
 // ──────────── Root Config ────────────
 
 export interface CompatibilityRulesConfig {
@@ -158,4 +165,5 @@ export interface CompatibilityRulesConfig {
   coolerCompatibility: CoolerCompatibilityConfig;
   bottleneckDetection: BottleneckDetectionConfig;
   performanceWarnings: PerformanceWarningsConfig;
+  storageDefaults: StorageDefaultsConfig;
 }

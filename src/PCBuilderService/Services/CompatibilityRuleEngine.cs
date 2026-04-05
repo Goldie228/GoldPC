@@ -28,6 +28,8 @@ public class CompatibilityRuleEngine
         _logger = logger;
     }
 
+    public RulesConfig Config => _config;
+
     #region Socket Compatibility
 
     public SocketGroup? FindSocketGroup(string socket)
@@ -427,6 +429,42 @@ public class CompatibilityRuleEngine
     }
 
     #endregion
+
+    #region Storage Compatibility
+
+    /// <summary>
+    /// Проверка M.2 слотов: если кол-во NVMe накопителей превышает доступные слоты
+    /// </summary>
+    public CompatibilityIssueDto? CheckM2Slots(int m2Count, int maxM2Slots, string mbName, string storageNames)
+    {
+        if (m2Count <= 0 || maxM2Slots <= 0 || m2Count <= maxM2Slots) return null;
+        return new CompatibilityIssueDto
+        {
+            Severity = "Error",
+            Component1 = storageNames,
+            Component2 = mbName,
+            Message = $"Недостаточно слотов M.2 на материнской плате {mbName}: требуется {m2Count}, доступно {maxM2Slots}",
+            Suggestion = $"Выберите не более {maxM2Slots} M.2 накопителей или материнскую плату с большим количеством слотов M.2"
+        };
+    }
+
+    /// <summary>
+    /// Проверка SATA-портов: если кол-во SATA накопителей превышает доступные порты
+    /// </summary>
+    public CompatibilityIssueDto? CheckSataPorts(int sataCount, int maxSataPorts, string mbName, string storageNames)
+    {
+        if (sataCount <= 0 || maxSataPorts <= 0 || sataCount <= maxSataPorts) return null;
+        return new CompatibilityIssueDto
+        {
+            Severity = "Error",
+            Component1 = storageNames,
+            Component2 = mbName,
+            Message = $"Недостаточно SATA-портов на материнской плате {mbName}: требуется {sataCount}, доступно {maxSataPorts}",
+            Suggestion = $"Выберите не более {maxSataPorts} SATA накопителей или материнскую плату с большим количеством SATA-портов"
+        };
+    }
+
+    #endregion
 }
 
 #region Configuration Models
@@ -442,6 +480,10 @@ public class RulesConfig
     public CoolerCompatibilityConfig CoolerCompatibility { get; set; } = new();
     public BottleneckDetectionConfig BottleneckDetection { get; set; } = new();
     public PerformanceWarningsConfig PerformanceWarnings { get; set; } = new();
+    public StorageDefaultsConfig StorageDefaults { get; set; } = new();
+
+    public int M2Slots => StorageDefaults.MbDefaultM2Slots;
+    public int SataPorts => StorageDefaults.MbDefaultSataPorts;
 }
 
 public class SocketCompatibilityConfig
@@ -578,6 +620,12 @@ public class RamThreshold
     public string Severity { get; set; } = "Warning";
     public string Message { get; set; } = "";
     public string Suggestion { get; set; } = "";
+}
+
+public class StorageDefaultsConfig
+{
+    public int MbDefaultM2Slots { get; set; } = 2;
+    public int MbDefaultSataPorts { get; set; } = 4;
 }
 
 public class RuleTemplate

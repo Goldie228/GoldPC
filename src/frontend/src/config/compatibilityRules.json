@@ -220,14 +220,6 @@
       },
       {
         "id": "tr4",
-        "sockets": ["TR4"],
-        "chipsets": ["TRX40", "X399"],
-        "ramType": "DDR4",
-        "maxRamSpeed": 3200,
-        "biosWarning": { "enabled": false }
-      },
-      {
-        "id": "tr4",
         "sockets": ["TR4", "TRX4"],
         "chipsets": ["X399", "TRX40"],
         "ramType": "DDR4",
@@ -282,8 +274,7 @@
       "micro-atx": "micro-ATX", "microatx": "micro-ATX", "matx": "micro-ATX",
       "STANDARD-ATX": "ATX", "STANDARD ATX": "ATX", "ATX": "ATX", "atx": "ATX",
       "EXTENDED-ATX": "eATX", "E-ATX": "eATX", "EXTENDED ATX": "eATX", "EATX": "eATX", "eatx": "eATX", "extended-atx": "eATX", "extended atx": "eATX"
-    },
-    "hierarchy": ["Mini-ITX", "micro-ATX", "ATX", "eATX"]
+    }
   },
   "ramCompatibility": {
     "validTypes": [

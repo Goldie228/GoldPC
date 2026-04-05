@@ -184,6 +184,10 @@
       "office": { "cpuWeight": 0.5, "gpuWeight": 0.5, "idealRatio": { "min": 0.8, "max": 2.0 } }
     }
   },
+  "storageDefaults": {
+    "mbDefaultM2Slots": 2,
+    "mbDefaultSataPorts": 4
+  },
   "performanceWarnings": {
     "insufficientRam": {
       "thresholds": [
