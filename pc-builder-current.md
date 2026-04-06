@@ -1,0 +1,386 @@
+- generic [ref=e17]:
+  - link "Перейти к основному контенту" [ref=e18] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e19]:
+    - link "GoldPC" [ref=e20] [cursor=pointer]:
+      - /url: /
+      - img [ref=e22]
+      - generic [ref=e26]: GoldPC
+    - navigation [ref=e27]:
+      - link "Каталог" [ref=e28] [cursor=pointer]:
+        - /url: /catalog
+      - link "Конструктор" [ref=e29] [cursor=pointer]:
+        - /url: /pc-builder
+      - link "Сервис" [ref=e30] [cursor=pointer]:
+        - /url: /services
+      - link "О нас" [ref=e31] [cursor=pointer]:
+        - /url: /about
+    - generic [ref=e32]:
+      - generic [ref=e34]:
+        - img
+        - combobox "Поиск по сайту (/, Ctrl+K)" [ref=e35]
+      - 'link "Избранное: 0 товаров" [ref=e36] [cursor=pointer]':
+        - /url: /wishlist
+        - img [ref=e37]
+      - 'link "Сравнение: 0 товаров" [ref=e39] [cursor=pointer]':
+        - /url: /comparison
+        - img [ref=e40]
+      - 'button "Корзина: 32 товара" [ref=e45] [cursor=pointer]':
+        - img [ref=e46]
+        - generic [ref=e50]: "32"
+      - button "Войти" [ref=e52] [cursor=pointer]:
+        - img [ref=e53]
+  - dialog [ref=e56]:
+    - button [ref=e57] [cursor=pointer]:
+      - img [ref=e58]
+    - navigation [ref=e61]:
+      - link [ref=e62] [cursor=pointer]:
+        - /url: /catalog
+        - text: Каталог
+      - link [ref=e63] [cursor=pointer]:
+        - /url: /pc-builder
+        - text: Конструктор
+      - link [ref=e64] [cursor=pointer]:
+        - /url: /services
+        - text: Сервис
+      - link [ref=e65] [cursor=pointer]:
+        - /url: /about
+        - text: О нас
+    - generic [ref=e66]:
+      - link [ref=e67] [cursor=pointer]:
+        - /url: /wishlist
+        - img [ref=e68]
+        - generic [ref=e70]: Избранное
+      - link [ref=e71] [cursor=pointer]:
+        - /url: /comparison
+        - img [ref=e72]
+        - generic [ref=e77]: Сравнение
+      - link [ref=e78] [cursor=pointer]:
+        - /url: /cart
+        - img [ref=e79]
+        - generic [ref=e83]: Корзина
+        - generic [ref=e84]: "32"
+      - link [ref=e85] [cursor=pointer]:
+        - /url: /account
+        - img [ref=e86]
+        - generic [ref=e89]: Профиль
+  - main [ref=e90]:
+    - region "Конструктор ПК" [ref=e91]:
+      - paragraph [ref=e92]: "Клавиатура: Tab — переход между слотами и кнопками. Enter или пробел — выбрать или изменить компонент в слоте."
+      - heading "Конструктор ПК" [level=1] [ref=e93]
+      - generic [ref=e94]:
+        - navigation "Хлебные крошки" [ref=e96]:
+          - list [ref=e97]:
+            - listitem [ref=e98]:
+              - link "Главная" [ref=e99] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e100]:
+              - img [ref=e101]
+              - generic [ref=e103]: Конструктор ПК
+        - main [ref=e104]:
+          - generic [ref=e105]:
+            - generic [ref=e106]:
+              - heading "Комплектующие" [level=2] [ref=e108]
+              - generic [ref=e109]:
+                - 'generic "Мозг компьютера. Отвечает за все вычисления. Важные параметры: количество ядер, частота, TDP (тепловыделение)." [ref=e110]':
+                  - generic [ref=e111]:
+                    - img "Процессор AMD Athlon X4 970" [ref=e114]
+                    - generic [ref=e115]
+                    - generic [ref=e124]: 41,48 BYN
+                    - generic [ref=e125]
+                - generic "Соединяет все компоненты вместе. Определяет сокет процессора, чипсет и доступные слоты расширения." [ref=e128]:
+                  - generic [ref=e129]:
+                    - img "Материнская плата BIOSTAR A520MHP Ver. 6.0" [ref=e132]
+                    - generic [ref=e133]
+                    - generic [ref=e141]: 205,46 BYN
+                    - generic [ref=e142]
+                - generic "Быстрая память для временных данных. Объём и тайминги (задержки) влияют на отзывчивость системы." [ref=e145]:
+                  - generic [ref=e146]:
+                    - img "Оперативная память AMD Radeon R7 Performance 4GB DDR4 PC4-17000 [R744G2133U1S-UO]" [ref=e149]
+                    - generic [ref=e150]
+                    - generic [ref=e160]: 158,44 BYN
+                    - generic [ref=e161]
+                - generic "Быстрая память для временных данных. Объём и тайминги (задержки) влияют на отзывчивость системы." [ref=e164]:
+                  - generic [ref=e165]:
+                    - img "Оперативная память AMD Radeon R7 Performance 4GB DDR4 PC4-17000 [R744G2133U1S-UO]" [ref=e168]
+                    - generic [ref=e169]
+                    - generic [ref=e175]: 158,44 BYN
+                    - generic [ref=e176]
+                - generic "Быстрая память для временных данных. Объём и тайминги (задержки) влияют на отзывчивость системы." [ref=e179]:
+                  - generic [ref=e180]:
+                    - img "Оперативная память AMD Radeon R7 Performance 4GB DDR4 PC4-17000 [R744G2133U1S-UO]" [ref=e183]
+                    - generic [ref=e184]
+                    - generic [ref=e190]: 158,44 BYN
+                    - generic [ref=e191]
+                - generic "Быстрая память для временных данных. Объём и тайминги (задержки) влияют на отзывчивость системы." [ref=e194]:
+                  - generic [ref=e195]:
+                    - img "Оперативная память AMD Radeon R7 Performance 4GB DDR4 PC4-17000 [R744G2133U1S-UO]" [ref=e198]
+                    - generic [ref=e199]
+                    - generic [ref=e205]: 158,44 BYN
+                    - generic [ref=e206]
+                - generic "Хранит операционную систему, программы и файлы. SSD быстрее HDD." [ref=e209]:
+                  - generic [ref=e210]:
+                    - img "SSD KingSpec P4-120 120GB" [ref=e213]
+                    - generic [ref=e214]
+                    - generic [ref=e226]: 115,44 BYN
+                    - generic [ref=e227]
+                - generic "Хранит операционную систему, программы и файлы. SSD быстрее HDD." [ref=e230]:
+                  - generic [ref=e231]:
+                    - img [ref=e233]
+                    - generic [ref=e235]
+                    - generic [ref=e241]: —
+                    - button "Выбрать" [ref=e243] [cursor=pointer]
+                - generic "Отводит тепло от процессора. Бывает воздушным или жидкостным." [ref=e244]:
+                  - generic [ref=e245]:
+                    - img "Кулер для процессора ID-Cooling DK-01S [ID-CPU-DK-01S]" [ref=e248]
+                    - generic [ref=e249]
+                    - generic [ref=e255]: 12,48 BYN
+                    - generic [ref=e256]
+                - generic "Отвечает за вывод изображения и 3D-графику. Ключевая для игр и работы с графикой." [ref=e259]:
+                  - generic [ref=e260]:
+                    - img [ref=e262]
+                    - generic [ref=e267]
+                    - generic [ref=e273]: —
+                    - button "Выбрать" [ref=e275] [cursor=pointer]
+                - generic "Поставляет электричество всем компонентам. Мощность (Вт) должна покрывать потребление сборки." [ref=e276]:
+                  - generic [ref=e277]:
+                    - img "Блок питания ExeGate ATX-XP350" [ref=e280]
+                    - generic [ref=e281]
+                    - generic [ref=e289]: 35,42 BYN
+                    - generic [ref=e290]
+                - 'generic "Определяет форм-фактор (размер) сборки: ATX, Micro-ATX или Mini-ITX. Влияет на охлаждение и расширяемость." [ref=e293]':
+                  - generic [ref=e294]:
+                    - img [ref=e296]
+                    - generic [ref=e299]
+                    - generic [ref=e305]: —
+                    - button "Выбрать" [ref=e307] [cursor=pointer]
+                - generic "Корпусной вентилятор для охлаждения. Можно установить несколько." [ref=e308]:
+                  - generic [ref=e309]:
+                    - img [ref=e311]
+                    - generic [ref=e313]
+                    - generic [ref=e319]: —
+                    - button "Выбрать" [ref=e321] [cursor=pointer]
+              - heading "Периферия" [level=2] [ref=e323]
+              - generic [ref=e324]:
+                - generic "Устройство вывода изображения. Диагональ, разрешение и частота обновления влияют на комфорт." [ref=e325]:
+                  - generic [ref=e326]:
+                    - img "Монитор ExeGate EB2400 EX294424RUS" [ref=e329]
+                    - generic [ref=e330]
+                    - generic [ref=e336]: 240,31 BYN
+                    - generic [ref=e337]
+                - generic "Основное устройство ввода. Механические клавиатуры обеспечивают лучшую тактильность." [ref=e340]:
+                  - generic [ref=e341]:
+                    - img [ref=e343]
+                    - generic [ref=e345]
+                    - generic [ref=e351]: —
+                    - button "Выбрать" [ref=e353] [cursor=pointer]
+                - generic "Основное устройство навигации. DPI и частота опроса влияют на точность." [ref=e354]:
+                  - generic [ref=e355]:
+                    - img "Мышь Defender Patch MS-759" [ref=e358]
+                    - generic [ref=e359]
+                    - generic [ref=e365]: 7,48 BYN
+                    - generic [ref=e366]
+                - generic "Устройство воспроизведения звука. Качество драйверов и шумоподавление важны." [ref=e369]:
+                  - generic [ref=e370]:
+                    - img [ref=e372]
+                    - generic [ref=e374]
+                    - generic [ref=e380]: —
+                    - button "Выбрать" [ref=e382] [cursor=pointer]
+            - complementary "Итоги сборки, выбрано 8 из 12 категорий" [ref=e384]:
+              - heading "Ваша сборка" [level=2] [ref=e385]
+              - status [ref=e386]:
+                - img [ref=e387]
+                - generic [ref=e389]: Обратите внимание на рекомендации
+              - list "Предупреждения совместимости" [ref=e390]:
+                - listitem [ref=e391]:
+                  - img [ref=e392]
+                  - text: Возможно потребуется обновление BIOS для поддержки данного процессора
+                - listitem [ref=e394]:
+                  - img [ref=e395]
+                  - text: Процессор не имеет встроенной графики
+              - list [ref=e397]:
+                - listitem [ref=e398]:
+                  - generic [ref=e399]: Процессор
+                  - generic [ref=e400]: 41,48 BYN
+                - listitem [ref=e401]:
+                  - generic [ref=e402]: Материнская плата
+                  - generic [ref=e403]: 205,46 BYN
+                - listitem [ref=e404]:
+                  - generic [ref=e405]: ОЗУ (1)
+                  - generic [ref=e406]: 158,44 BYN
+                - listitem [ref=e407]:
+                  - generic [ref=e408]: ОЗУ (2)
+                  - generic [ref=e409]: 158,44 BYN
+                - listitem [ref=e410]:
+                  - generic [ref=e411]: ОЗУ (3)
+                  - generic [ref=e412]: 158,44 BYN
+                - listitem [ref=e413]:
+                  - generic [ref=e414]: ОЗУ (4)
+                  - generic [ref=e415]: 158,44 BYN
+                - listitem [ref=e416]:
+                  - generic [ref=e417]: Накопитель
+                  - generic [ref=e418]: 115,44 BYN
+                - listitem [ref=e419]:
+                  - generic [ref=e420]: Блок питания
+                  - generic [ref=e421]: 35,42 BYN
+                - listitem [ref=e422]:
+                  - generic [ref=e423]: Корпус
+                  - generic [ref=e424]: —
+                - listitem [ref=e425]:
+                  - generic [ref=e426]: Вентилятор
+                  - generic [ref=e427]: —
+                - listitem [ref=e428]:
+                  - generic [ref=e429]: Охлаждение
+                  - generic [ref=e430]: 12,48 BYN
+                - listitem [ref=e431]:
+                  - generic [ref=e432]: Видеокарта
+                  - generic [ref=e433]: —
+                - listitem [ref=e434]:
+                  - generic [ref=e435]: Монитор
+                  - generic [ref=e436]: 240,31 BYN
+                - listitem [ref=e437]:
+                  - generic [ref=e438]: Клавиатура
+                  - generic [ref=e439]: —
+                - listitem [ref=e440]:
+                  - generic [ref=e441]: Мышь
+                  - generic [ref=e442]: 7,48 BYN
+                - listitem [ref=e443]:
+                  - generic [ref=e444]: Наушники
+                  - generic [ref=e445]: —
+              - region "Энергопотребление" [ref=e447]:
+                - heading "Питание" [level=3] [ref=e448]:
+                  - img [ref=e449]
+                  - text: Питание
+                - progressbar "Потребление около 130 Вт" [ref=e451]
+                - generic [ref=e453]:
+                  - generic [ref=e454]: "Потребление (оценочно):"
+                  - strong [ref=e455]: ~130 Вт
+                - generic [ref=e456]:
+                  - generic [ref=e457]: "Блок питания:"
+                  - strong [ref=e458]:
+                    - text: 350 Вт
+                    - img [ref=e459]
+              - region "Производительность" [ref=e462]:
+                - heading "Производительность" [level=3] [ref=e463]:
+                  - img [ref=e464]
+                  - text: Производительность
+                - generic [ref=e466]:
+                  - generic [ref=e467]: Игры
+                  - generic [ref=e470]: "18"
+                - generic [ref=e471]:
+                  - generic [ref=e472]: "1080p:"
+                  - generic [ref=e473]: 0 FPS
+                  - generic [ref=e474]: "1440p:"
+                  - generic [ref=e475]: "0"
+                  - generic [ref=e476]: "4K:"
+                  - generic [ref=e477]: "0"
+                - generic [ref=e478]:
+                  - generic [ref=e479]: Работа
+                  - generic [ref=e482]: "16"
+                - generic [ref=e483]:
+                  - generic [ref=e484]: Итого
+                  - generic [ref=e487]: "14"
+                - generic [ref=e488]: Базовый
+              - generic [ref=e490]:
+                - generic [ref=e491]: "Итого:"
+                - generic [ref=e492]: 1 291,83 BYN
+              - generic [ref=e493]:
+                - generic [ref=e494]:
+                  - button "Сохранить" [ref=e495] [cursor=pointer]:
+                    - img [ref=e496]
+                    - text: Сохранить
+                  - button "Печать" [ref=e500] [cursor=pointer]:
+                    - img [ref=e501]
+                    - text: Печать
+                - button "В корзину" [ref=e505] [cursor=pointer]:
+                  - img [ref=e506]
+                  - text: В корзину
+                - button "Оформить" [ref=e509] [cursor=pointer]
+  - contentinfo [ref=e510]:
+    - generic [ref=e511]:
+      - generic [ref=e512]:
+        - generic [ref=e513]:
+          - link "GoldPC" [ref=e514] [cursor=pointer]:
+            - /url: /
+            - img [ref=e516]
+            - generic [ref=e520]: GoldPC
+          - paragraph [ref=e521]: Премиальный магазин компьютерных компонентов с профессиональной сборкой и гарантией качества.
+        - generic [ref=e522]:
+          - heading "Каталог" [level=4] [ref=e523]
+          - list [ref=e524]:
+            - listitem [ref=e525]:
+              - link "Процессоры" [ref=e526] [cursor=pointer]:
+                - /url: /catalog?category=cpu
+            - listitem [ref=e527]:
+              - link "Видеокарты" [ref=e528] [cursor=pointer]:
+                - /url: /catalog?category=gpu
+            - listitem [ref=e529]:
+              - link "Мат. платы" [ref=e530] [cursor=pointer]:
+                - /url: /catalog?category=motherboard
+            - listitem [ref=e531]:
+              - link "Память" [ref=e532] [cursor=pointer]:
+                - /url: /catalog?category=ram
+            - listitem [ref=e533]:
+              - link "Накопители" [ref=e534] [cursor=pointer]:
+                - /url: /catalog?category=storage
+            - listitem [ref=e535]:
+              - link "Блоки питания" [ref=e536] [cursor=pointer]:
+                - /url: /catalog?category=psu
+            - listitem [ref=e537]:
+              - link "Корпуса" [ref=e538] [cursor=pointer]:
+                - /url: /catalog?category=case
+            - listitem [ref=e539]:
+              - link "Охлаждение" [ref=e540] [cursor=pointer]:
+                - /url: /catalog?category=cooling
+            - listitem [ref=e541]:
+              - link "Мониторы" [ref=e542] [cursor=pointer]:
+                - /url: /catalog?category=monitor
+            - listitem [ref=e543]:
+              - link "Клавиатуры" [ref=e544] [cursor=pointer]:
+                - /url: /catalog?category=keyboard
+            - listitem [ref=e545]:
+              - link "Мыши" [ref=e546] [cursor=pointer]:
+                - /url: /catalog?category=mouse
+            - listitem [ref=e547]:
+              - link "Наушники" [ref=e548] [cursor=pointer]:
+                - /url: /catalog?category=headphones
+        - generic [ref=e549]:
+          - heading "Сервис" [level=4] [ref=e550]
+          - list [ref=e551]:
+            - listitem [ref=e552]:
+              - link "Конструктор ПК" [ref=e553] [cursor=pointer]:
+                - /url: /pc-builder
+            - listitem [ref=e554]:
+              - link "Сборка и настройка" [ref=e555] [cursor=pointer]:
+                - /url: /services/assembly
+            - listitem [ref=e556]:
+              - link "Доставка по РБ" [ref=e557] [cursor=pointer]:
+                - /url: /delivery
+            - listitem [ref=e558]:
+              - link "Оплата и рассрочка" [ref=e559] [cursor=pointer]:
+                - /url: /payment
+            - listitem [ref=e560]:
+              - link "Гарантийное обслуживание" [ref=e561] [cursor=pointer]:
+                - /url: /warranty
+            - listitem [ref=e562]:
+              - link "Частые вопросы" [ref=e563] [cursor=pointer]:
+                - /url: /faq
+        - generic [ref=e564]:
+          - heading "Контакты" [level=4] [ref=e565]
+          - list [ref=e566]:
+            - listitem [ref=e567]:
+              - link "Позвонить нам" [ref=e568] [cursor=pointer]:
+                - /url: tel:+375333149283
+                - text: +375 (33) 314-92-83
+            - listitem [ref=e569]:
+              - link "Написать нам на email" [ref=e570] [cursor=pointer]:
+                - /url: mailto:goldpc.team@gmail.com
+                - text: goldpc.team@gmail.com
+            - listitem [ref=e571]: Минск, Улица Казимировская 21
+      - generic [ref=e572]:
+        - generic [ref=e573]: © 2026 GoldPC. Все права защищены.
+        - generic [ref=e574]:
+          - generic "Telegram (скоро)" [ref=e575]:
+            - img [ref=e576]
+          - generic "Instagram (скоро)" [ref=e578]:
+            - img [ref=e579]

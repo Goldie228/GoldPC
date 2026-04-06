@@ -118,7 +118,9 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
       }}
       layout="position"
     >
-      {description && <div className="component-slot__tooltip">{description}</div>}
+      {description && (
+        <div className="component-slot__tooltip">{description}</div>
+      )}
       <div className="component-slot__inner">
         {/* Icon or Thumbnail */}
         <motion.div

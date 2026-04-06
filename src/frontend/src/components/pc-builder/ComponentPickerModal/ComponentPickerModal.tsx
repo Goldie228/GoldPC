@@ -314,6 +314,7 @@ export function ComponentPickerModal({
   const [showIncompatible, setShowIncompatible] = useState(true);
 
   const [priceRange, setPriceRange] = useState({ min: 0, max: 0 });
+  const [priceBoundsReady, setPriceBoundsReady] = useState(false);
   const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<string[]>([]);
   const [minRating] = useState(0);
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>(['in_stock']);
@@ -325,7 +326,8 @@ export function ComponentPickerModal({
     setSearch(''); setDebouncedSearch(''); setSortPreset('popular'); setPreviewImgIdx(0);
     setInStockOnly(false); setHighlightedId(currentProduct?.id ?? null);
     setPage(1); setViewMode('grid');
-    setPriceRange({ min: 0, max: 0 }); setSelectedManufacturerIds([]);
+    setPriceRange({ min: 0, max: 0 }); setPriceBoundsReady(false);
+    setSelectedManufacturerIds([]);
     // For case slot with a MB selected — pre-check all compatible FF options
     if (slotType === 'case' && buildContext?.motherboard?.product) {
       const raw = ((buildContext.motherboard.product.specifications as any)?.formFactor ??
@@ -343,6 +345,11 @@ export function ComponentPickerModal({
     const t = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
     return () => window.clearTimeout(t);
   }, [search]);
+
+  // Sync FilterSidebar availability changes → inStockOnly (the flag useProducts reads)
+  useEffect(() => {
+    setInStockOnly(selectedAvailability.length > 0 && selectedAvailability.includes('in_stock'));
+  }, [selectedAvailability]);
 
   const { sortBy, sortOrder } = useMemo(() => parseSort(sortPreset), [sortPreset]);
 
@@ -540,12 +547,23 @@ export function ComponentPickerModal({
       sortBy, sortOrder, priceMin, priceMax,
       inStock: inStockOnly ? true : undefined,
       specifications: Object.keys(effectiveSpecs).length > 0 ? effectiveSpecs : undefined,
-    }), [selectedCategory, debouncedSearch, sortBy, sortOrder, priceMin, priceMax, inStockOnly, effectiveSpecs, page]),
+      manufacturerIds: selectedManufacturerIds.length > 0 ? selectedManufacturerIds : undefined,
+    }), [selectedCategory, debouncedSearch, sortBy, sortOrder, priceMin, priceMax, inStockOnly, effectiveSpecs, selectedManufacturerIds, page]),
     { enabled: isOpen }
   );
 
   const products = productsResponse?.data ?? [];
   const meta = productsResponse?.meta;
+
+  // Derive price range from loaded products so the filter slider isn't stuck at 0–0
+  useEffect(() => {
+    if (!products.length || priceBoundsReady) return;
+    const prices = products.map((p: any) => p.price).filter((v: number) => typeof v === 'number' && v > 0);
+    if (prices.length > 0) {
+      setPriceRange({ min: Math.min(...prices), max: Math.max(...prices) });
+      setPriceBoundsReady(true);
+    }
+  }, [products, priceBoundsReady]);
 
   // ── Compatibility filtering ──
 
@@ -634,8 +652,10 @@ export function ComponentPickerModal({
   }, [category]);
 
   const handleResetFilters = useCallback(() => {
-    setPriceRange({ min: 0, max: 0 }); setSelectedManufacturerIds([]);
-    setSelectedSpecifications({}); setInStockOnly(false); setPage(1);
+    // Keep the computed price bounds, just reset min/max to full range
+    setPriceRange((prev) => prev); // don't zero out — keep derived bounds
+    setSelectedManufacturerIds([]);
+    setSelectedSpecifications({}); setSelectedAvailability([]); setInStockOnly(false); setPage(1);
   }, []);
 
   const handleOpenProduct = useCallback((slug: string) => {
@@ -783,7 +803,7 @@ export function ComponentPickerModal({
                   <div className={styles.grid}>
                     {filteredProducts.map((p) => (
                       <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
-                        <PickerProductCard product={p} isSelected={false}
+                        <PickerProductCard product={p} isSelected={p.id === highlightedId}
                           isCompatible={!p.isIncompatible}
                           onSelect={p.isIncompatible ? noopSelect : (prod: any) => setHighlightedId(prod.id)}
                           onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
@@ -800,7 +820,7 @@ export function ComponentPickerModal({
                   <div className={styles.list}>
                     {filteredProducts.map((p) => (
                       <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
-                        <PickerProductCardCompact product={p} isSelected={false}
+                        <PickerProductCardCompact product={p} isSelected={p.id === highlightedId}
                           isCompatible={!p.isIncompatible}
                           onSelect={p.isIncompatible ? noopSelect : (prod: any) => setHighlightedId(prod.id)}
                           onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />

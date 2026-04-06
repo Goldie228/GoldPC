@@ -1,0 +1,96 @@
+- generic [ref=e17]:
+  - link "Перейти к основному контенту" [ref=e18] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e19]:
+    - link "GoldPC" [ref=e20] [cursor=pointer]:
+      - /url: /
+      - img [ref=e22]
+      - generic [ref=e26]: GoldPC
+    - navigation [ref=e27]:
+      - link "Каталог" [ref=e28] [cursor=pointer]:
+        - /url: /catalog
+      - link "Конструктор" [ref=e29] [cursor=pointer]:
+        - /url: /pc-builder
+      - link "Сервис" [ref=e30] [cursor=pointer]:
+        - /url: /services
+      - link "О нас" [ref=e31] [cursor=pointer]:
+        - /url: /about
+    - generic [ref=e32]:
+      - generic [ref=e34]:
+        - img
+        - combobox "Поиск по сайту (/, Ctrl+K)" [ref=e35]
+      - 'link "Избранное: 0 товаров" [ref=e36] [cursor=pointer]':
+        - /url: /wishlist
+        - img [ref=e37]
+      - 'link "Сравнение: 0 товаров" [ref=e39] [cursor=pointer]':
+        - /url: /comparison
+        - img [ref=e40]
+      - 'button "Корзина: 32 товара" [ref=e45] [cursor=pointer]':
+        - img [ref=e46]
+        - generic [ref=e50]: "32"
+      - button "Войти" [ref=e52] [cursor=pointer]:
+        - img [ref=e53]
+  - dialog [ref=e56]:
+    - button [ref=e57] [cursor=pointer]:
+      - img [ref=e58]
+    - navigation [ref=e61]:
+      - link [ref=e62] [cursor=pointer]:
+        - /url: /catalog
+        - text: Каталог
+      - link [ref=e63] [cursor=pointer]:
+        - /url: /pc-builder
+        - text: Конструктор
+      - link [ref=e64] [cursor=pointer]:
+        - /url: /services
+        - text: Сервис
+      - link [ref=e65] [cursor=pointer]:
+        - /url: /about
+        - text: О нас
+    - generic [ref=e66]:
+      - link [ref=e67] [cursor=pointer]:
+        - /url: /wishlist
+        - img [ref=e68]
+        - generic [ref=e70]: Избранное
+      - link [ref=e71] [cursor=pointer]:
+        - /url: /comparison
+        - img [ref=e72]
+        - generic [ref=e77]: Сравнение
+      - link [ref=e78] [cursor=pointer]:
+        - /url: /cart
+        - img [ref=e79]
+        - generic [ref=e83]: Корзина
+        - generic [ref=e84]: "32"
+      - link [ref=e85] [cursor=pointer]:
+        - /url: /account
+        - img [ref=e86]
+        - generic [ref=e89]: Профиль
+  - main [ref=e90]:
+    - region "Конструктор ПК" [ref=e91]:
+      - paragraph [ref=e92]: "Клавиатура: Tab — переход между слотами и кнопками. Enter или пробел — выбрать или изменить компонент в слоте."
+      - heading "Конструктор ПК" [level=1] [ref=e93]
+      - generic [ref=e94]:
+        - navigation "Хлебные крошки" [ref=e96]:
+          - list [ref=e97]
+        - main [ref=e104]:
+          - generic [ref=e105]
+  - contentinfo [ref=e582]:
+    - generic [ref=e583]:
+      - generic [ref=e584]:
+        - generic [ref=e585]:
+          - link "GoldPC" [ref=e586] [cursor=pointer]:
+            - /url: /
+          - paragraph [ref=e593]: Премиальный магазин компьютерных компонентов с профессиональной сборкой и гарантией качества.
+        - generic [ref=e594]:
+          - heading "Каталог" [level=4] [ref=e595]
+          - list [ref=e596]
+        - generic [ref=e621]:
+          - heading "Сервис" [level=4] [ref=e622]
+          - list [ref=e623]
+        - generic [ref=e636]:
+          - heading "Контакты" [level=4] [ref=e637]
+          - list [ref=e638]
+      - generic [ref=e644]:
+        - generic [ref=e645]: © 2026 GoldPC. Все права защищены.
+        - generic [ref=e646]:
+          - generic "Telegram (скоро)" [ref=e647]
+          - generic "Instagram (скоро)" [ref=e650]

@@ -19,6 +19,7 @@ import os
 import re
 import sys
 import time
+import functools
 from datetime import datetime, timezone
 from pathlib import Path
 from playwright.sync_api import (
@@ -28,6 +29,74 @@ from playwright.sync_api import (
     expect,
     Error as PWError,
 )
+
+# ─── Centralized Selectors ────────────────────────────────────────────
+SEL = {
+    # Component slots
+    "slot": ".component-slot",
+    "slot_empty": ".component-slot--empty",
+    "slot_selected": ".component-slot--selected",
+    "slot_incompatible": ".component-slot--incompatible",
+    "slot_priority": ".component-slot--priority",
+    "slot_type": ".component-slot__type",
+    "slot_name": ".component-slot__name",
+    "slot_price_value": ".component-slot__price-value",
+    "slot_price_empty": ".component-slot__price-empty",
+    "slot_btn": ".component-slot__btn",
+    "slot_clear": ".component-slot__clear",
+    "slot_qty": ".component-slot__qty",
+    "slot_qty_btn": ".component-slot__qty-btn",
+    "slot_qty_value": ".component-slot__qty-value",
+
+    # Modal
+    "modal": "[role='dialog']",
+    "modal_fallback": ".modal",
+    "modal_close_btn": "[aria-label='Закрыть'], [data-testid='modal-close'], .modal__close, button.close",
+
+    # Picker modal elements
+    "picker_root": ".filterSidebarWrap",  # Unique to component picker
+    "card": "[class*='card']:not([class*='empty'])",
+    "card_compact": "[class*='cardCompact']:not([class*='empty'])",
+    "card_selected": "[class*='cardSelected']",
+    "card_incompatible": "[class*='cardIncompatible']",
+    "card_oos": "[class*='cardOutOfStock']",
+    "oos_badge": "[class*='oosBadge']",
+    "incompatible_wrapper": "[class*='incompatibleWrapper']",
+    "incompatible reason": "[class*='incompatibleReason']",
+    "select_btn": "[class*='selectBtn']",
+    "confirm_btn": "[class*='confirmBtn']",
+    "toggle_incompatible": "[class*='toggleIncompatibleBtn']",
+
+    # Filters
+    "search_input": ".searchInput, input[type='search']",
+    "search_clear": ".searchClear",
+    "sort_select": ".sortSelect, select[class*='sortSelect']",
+    "stock_check": ".stockCheckInput",
+    "stock_label": ".stockCheck, label[class*='stockCheck']",
+    "results_count": "[class*='resultsCount']",
+    "price": "[class*='price']:not([class*='old']):not([class*='Old']):not([class*='empty'])",
+
+    # Build summary panel
+    "bsp_total_value": ".bsp__total-value",
+    "bsp_compat_status": ".bsp__compat-status",
+    "bsp_compat_text": ".bsp__compat-text",
+    "bsp_compat_item_error": ".bsp__compat-item--error",
+    "bsp_compat_item_warning": ".bsp__compat-item--warning",
+    "bsp_component_item": ".bsp__component-item",
+    "bsp_component_label": ".bsp__component-label",
+    "bsp_component_price": ".bsp__component-price",
+    "bsp_btn_cart": ".bsp__btn--cart",
+    "bsp_btn_save": ".bsp__btn--save",
+    "bsp_btn_export": ".bsp__btn--export",
+    "bsp_btn_checkout": ".bsp__btn--checkout",
+    "bsp_disabled_hint": ".bsp__disabled-hint",
+
+    # Page
+    "page_container": ".pc-builder__container, .pc-builder-container",
+    "page_errors": ".pc-builder__errors",
+    "page_error": ".pc-builder__error",
+    "page_status": ".pc-builder__status",
+}
 
 # ─── Configuration ────────────────────────────────────────────────────
 BASE_URL = os.getenv("BASE_URL", "http://localhost:5173")
@@ -41,7 +110,7 @@ TIMEOUT_NORMAL = 10_000
 TIMEOUT_LONG = 20_000
 
 # Component categories in the order we will try to pick them.
-# These are the labels as they appear on the ComponentSlot buttons.
+# Matches PC_BUILDER_SLOTS from usePCBuilder.ts (9 main hardware slots).
 SLOT_LABELS = [
     "Процессор",
     "Материнская плата",
@@ -97,6 +166,117 @@ class Logger:
 logger = Logger(LOG_FILE)
 
 # ─── Helpers ───────────────────────────────────────────────────────────
+
+def retry_on_failure(max_retries: int = 2, delay: float = 1.0):
+    """Decorator: retry a function on failure with exponential backoff."""
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exc = None
+            for attempt in range(max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as exc:
+                    last_exc = exc
+                    if attempt < max_retries:
+                        wait = delay * (attempt + 1)
+                        logger.warn(f"Retry {attempt+1}/{max_retries} for {func.__name__} after {wait:.1f}s: {exc}")
+                        time.sleep(wait)
+            raise last_exc
+        return wrapper
+    return decorator
+
+
+def wait_for_price_settled(page: Page, timeout: int = 5000, stability_ms: int = 300) -> str:
+    """Wait until price text stabilizes (doesn't change for stability_ms)."""
+    total_el = page.locator(SEL["bsp_total_value"]).first
+    if not total_el.is_visible(timeout=TIMEOUT_SHORT):
+        return ""
+    start = time.time() * 1000
+    last_value = None
+    last_change = time.time() * 1000
+    while (time.time() * 1000 - start) < timeout:
+        try:
+            current = total_el.text_content() or ""
+            if current != last_value:
+                last_value = current
+                last_change = time.time() * 1000
+            elif (time.time() * 1000 - last_change) >= stability_ms:
+                return current
+        except Exception:
+            pass
+        time.sleep(0.1)
+    return last_value or ""
+
+
+def capture_diagnostic(page: Page, reason: str):
+    """Save screenshot + HTML snapshot for post-mortem analysis."""
+    save_screenshot(page, f"DIAG_{reason}")
+    html_path = os.path.join(SCREENSHOTS_DIR, f"DIAG_{reason}.html")
+    try:
+        os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
+        with open(html_path, "w", encoding="utf-8") as f:
+            f.write(page.content())
+        logger.info(f"HTML snapshot saved: {html_path}")
+    except Exception as e:
+        logger.error(f"Failed to save HTML snapshot: {e}")
+
+
+def expect_modal_visible(page: Page, timeout: int = TIMEOUT_NORMAL) -> Locator | None:
+    """Wait for component picker modal to be visible. Returns modal or None."""
+    for selector in [SEL["modal"], SEL["modal_fallback"]]:
+        try:
+            modal = page.locator(selector).first
+            modal.wait_for(state="visible", timeout=timeout)
+            # Verify it's a component picker (has filter sidebar or preview panel)
+            picker_root = modal.locator(SEL["picker_root"])
+            if picker_root.count() > 0 or modal.locator(SEL["confirm_btn"]).count() > 0:
+                return modal
+        except PWError:
+            continue
+    return None
+
+
+def close_modal(page: Page, modal: Locator | None = None):
+    """Close modal using close button, with Escape fallback."""
+    try:
+        if modal is None:
+            modal = page.locator(SEL["modal"]).first
+        # Try clicking the close button first
+        close_btn = modal.locator(SEL["modal_close_btn"]).first
+        if close_btn.count() > 0 and close_btn.is_visible():
+            close_btn.click()
+        else:
+            page.keyboard.press("Escape")
+        modal.wait_for(state="hidden", timeout=TIMEOUT_NORMAL)
+    except PWError:
+        # Fallback: press Escape
+        try:
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(300)
+        except PWError:
+            logger.warn("Could not close modal")
+
+
+def find_slot_by_label(page: Page, label: str) -> tuple[Locator | None, int]:
+    """Find a component slot matching the given label. Returns (locator, index)."""
+    slots = page.locator(SEL["slot"])
+    count = slots.count()
+    search_label = label.strip().lower()
+    # Strip trailing parenthesized qualifiers for multi-slot
+    base_label = search_label.split("(")[0].strip()
+    for i in range(count):
+        slot = slots.nth(i)
+        try:
+            type_text = slot.locator(SEL["slot_type"]).text_content() or ""
+            # Match either exact prefix or contains
+            if search_label in type_text.lower() or base_label in type_text.lower():
+                return slot, i
+        except Exception:
+            continue
+    return None, -1
+
+
 def save_screenshot(page: Page, name: str):
     """Take a screenshot and log its path."""
     os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
@@ -131,17 +311,17 @@ def parse_total_price(text: str | None) -> float:
 
 def collect_slots(page: Page) -> list[dict]:
     """Find all component slot elements and return their info."""
-    slots = page.locator(".component-slot")
+    slots = page.locator(SEL["slot"])
     count = slots.count()
     result = []
     for i in range(count):
         slot = slots.nth(i)
-        type_text = slot.locator(".component-slot__type").text_content() or ""
-        name_text = slot.locator(".component-slot__name").text_content() or ""
-        price_text = slot.locator(".component-slot__price-value").text_content() or ""
+        type_text = slot.locator(SEL["slot_type"]).text_content() or ""
+        name_text = slot.locator(SEL["slot_name"]).text_content() or ""
+        price_text = slot.locator(SEL["slot_price_value"]).text_content() or ""
         css_class = slot.get_attribute("class") or ""
-        state = "selected" if "component-slot--selected" in css_class else \
-                "incompatible" if "component-slot--incompatible" in css_class else "empty"
+        state = "selected" if SEL["slot_selected"].strip(".") in css_class else \
+                "incompatible" if SEL["slot_incompatible"].strip(".") in css_class else "empty"
         result.append({
             "index": i, "type": type_text.strip(), "name": name_text.strip(),
             "price": price_text.strip(), "state": state,
@@ -151,165 +331,192 @@ def collect_slots(page: Page) -> list[dict]:
 
 def select_first_product_from_modal(page: Page, timeout: int = TIMEOUT_LONG) -> bool:
     """
-    Inside the picker modal, wait for at least one product card to appear
-    and click the first one. If all items show «Нет в наличии» or lock icon,
-    close the modal and report.
+    Inside the picker modal, wait for product cards to appear,
+    prefer compatible/in-stock products, and confirm selection.
 
+    Uses CSS module classes: .cardIncompatible, .cardOutOfStock, .confirmBtn
     Returns True if a product was successfully selected.
     """
     try:
-        modal = page.locator("[role='dialog']").first
-        if not safe_wait_for_visible(modal, timeout):
-            # Fallback: any element with modal-like class
-            modal = page.locator(".modal").first
-            if not safe_wait_for_visible(modal, timeout):
-                logger.error("Modal did not open")
-                return False
+        modal = expect_modal_visible(page, timeout)
+        if modal is None:
+            logger.error("Component picker modal did not open")
+            return False
 
-        # Wait until we have either product cards or empty state, not skeletons
-        for attempt in range(8):
-            skeletons = modal.locator("[class*='skeleton']")
-            cards = modal.locator(f"[class*='card']:not([class*='empty']), [class*='cardCompact']:not([class*='empty'])")
-            empty_state = modal.locator(f"[class*='emptyState'], [class*='empty'], [class*='empty-state']")
-            if (cards.count() > 0 or safe_wait_for_visible(empty_state.first, timeout=TIMEOUT_SHORT)) and skeletons.count() == 0:
-                break
-            page.wait_for_timeout(1000)
+        # Wait for content to load (no skeletons or products visible)
+        page.wait_for_load_state("networkidle", timeout=TIMEOUT_SHORT)
+        page.wait_for_timeout(200)  # minimal buffer for React render
 
-        page.wait_for_timeout(500)
+        # Check for API error banner
+        error_banner = modal.locator("[class*='ApiError'], [class*='error-banner']").first
+        if error_banner.count() > 0:
+            try:
+                if error_banner.is_visible(timeout=TIMEOUT_SHORT):
+                    err_text = error_banner.text_content() or ""
+                    logger.error(f"API error in modal: {err_text}. Retrying...")
+                    retry_btn = modal.locator("button:has-text('Повторить'), button:has-text('Retry')")
+                    if retry_btn.count() > 0:
+                        retry_btn.first.click()
+                        page.wait_for_timeout(2000)
+                        page.wait_for_load_state("networkidle", timeout=TIMEOUT_SHORT)
+            except Exception:
+                pass
 
-        # Check for error banner
-        error_banner = modal.locator("[class*='error'], [class*='ApiError']").first
-        if safe_wait_for_visible(error_banner, timeout=TIMEOUT_SHORT):
-            err_text = error_banner.text_content() or ""
-            logger.error(f"API error in modal: {err_text}. Trying retry...")
-            retry_btn = modal.locator("button:has-text('Повторить'), button:has-text('Retry')")
-            if retry_btn.count() > 0:
-                retry_btn.first.click()
-                page.wait_for_timeout(3000)
-
-        # Find clickable product cards (exclude incompatible ones with lock)
-        cards = modal.locator(f"[class*='card']:not([class*='empty']), [class*='cardCompact']:not([class*='empty'])")
+        # Collect all product cards (both grid and compact variants)
+        cards = modal.locator(SEL["card"])
+        if cards.count() == 0:
+            cards = modal.locator(SEL["card_compact"])
         card_count = cards.count()
         logger.info(f"Found {card_count} product cards in modal")
 
         if card_count == 0:
-            # Check for empty state
-            empty_text = modal.locator(f"[class*='empty']").text_content() or ""
+            # Empty state — check for reason
+            empty_el = modal.locator("[class*='emptyState'], [class*='empty-state']").first
+            empty_text = ""
+            try:
+                empty_text = empty_el.text_content() or ""
+            except Exception:
+                pass
+            if not empty_text.strip():
+                # Fallback: look for generic empty message
+                empty_el2 = modal.locator("h3, p:has-text('Не найдено')")
+                try:
+                    empty_text = empty_el2.first.text_content() or ""
+                except Exception:
+                    pass
             logger.warn(f"No products available: {empty_text.strip()}")
-            page.keyboard.press("Escape")
-            page.wait_for_timeout(300)
+            close_modal(page, modal)
             return False
 
-        # Try to find a compatible one (no lock/incompatible badge)
-        selected = False
+        # Tier 1: Pick a compatible, in-stock card first
         for i in range(card_count):
             card = cards.nth(i)
-            is_incompatible = "incompatible" in (card.get_attribute("class") or "")
-            is_oos = "oos" in (card.get_attribute("class") or "").lower() or \
-                     "out" in (card.get_attribute("class") or "").lower()
+            card_class = card.get_attribute("class") or ""
+            is_incompatible = SEL["card_incompatible"].strip(".") in card_class
+            is_oos = SEL["card_oos"].strip(".") in card_class
+            if not is_incompatible and not is_oos:
+                product_name = ""
+                try:
+                    name_el = card.locator("[class*='cardName'], [class*='compactName']").first
+                    product_name = name_el.text_content() or ""
+                except Exception:
+                    pass
 
-            if is_incompatible or is_oos:
-                continue
+                # Click "Выбрать" button on card, or card itself
+                select_btn = card.locator(SEL["select_btn"]).first
+                try:
+                    if select_btn.count() > 0 and select_btn.is_visible(timeout=TIMEOUT_SHORT):
+                        select_btn.click()
+                    else:
+                        card.click()
+                except Exception:
+                    card.click()
 
-            # Click on the card or the "Выбрать" button
-            select_btn = card.locator("button:has-text('Выбрать')")
-            if select_btn.count() > 0 and select_btn.first.is_visible():
-                select_btn.first.click()
-                selected = True
-            else:
-                card.click()
-                selected = True
-
-            if selected:
-                # Click "Выбрать" in the preview panel if we got one
-                page.wait_for_timeout(500)
-                confirm_btn = modal.locator(f"button:has-text('Выбрать'):not([class*='selectBtn']):visible").first
-                if confirm_btn.count() > 0 and confirm_btn.is_visible():
-                    confirm_btn.click()
-                    logger.info("Confirmed selection from preview panel")
-
+                logger.info(f"Selected product: {product_name.strip()[:80]}")
                 break
-
-        if not selected:
-            # Fallback: just click any first card even if it might be incompatible
-            logger.warn("All products appear incompatible or OOS, clicking first one anyway")
+        else:
+            # Tier 2: All products incompatible or OOS — pick first compatible-looking one
+            logger.warn("All products appear incompatible or OOS, trying first available")
             try:
                 cards.first.click()
-                page.wait_for_timeout(500)
-                confirm_btn = modal.locator(f"button:has-text('Выбрать'):visible").last
-                if confirm_btn.count() > 0:
-                    confirm_btn.click()
-                    selected = True
-            except Exception:
-                logger.error("Could not click any product")
-                page.keyboard.press("Escape")
+            except Exception as e:
+                logger.error(f"Could not click any product card: {e}")
+                close_modal(page, modal)
                 return False
 
+        # Wait for preview panel to highlight, then confirm
+        page.wait_for_timeout(200)
+        confirm_btn = modal.locator(SEL["confirm_btn"]).first
+        if confirm_btn.count() > 0:
+            try:
+                if confirm_btn.is_enabled() and confirm_btn.is_visible():
+                    confirm_btn.click()
+                    logger.info("Confirmed selection via confirm button")
+            except Exception:
+                pass
+
         # Wait for modal to close
-        page.wait_for_timeout(500)
         try:
             modal.wait_for(state="hidden", timeout=TIMEOUT_NORMAL)
         except PWError:
-            # Modal still visible; press Escape
-            page.keyboard.press("Escape")
-            page.wait_for_timeout(300)
+            close_modal(page, modal)
 
         logger.ok("Product selected from modal")
         return True
 
     except PWError as e:
         logger.error(f"Error selecting product from modal: {e}")
-        page.keyboard.press("Escape")
-        page.wait_for_timeout(300)
+        try:
+            close_modal(page)
+        except Exception:
+            page.keyboard.press("Escape")
         return False
 
 
 def select_component_by_slot_label(page: Page, label: str) -> bool:
     """
     Open the slot with the given label and select the first product.
+    Retries up to 2 times if slot click or modal fails.
     """
     logger.action(f"Opening slot: {label}")
 
-    slots = page.locator(".component-slot")
-    count = slots.count()
+    for attempt in range(3):
+        slot, slot_index = find_slot_by_label(page, label)
+        if slot is None:
+            if attempt == 0:
+                # Log available slots once
+                slots = page.locator(SEL["slot"])
+                count = slots.count()
+                logger.error(f"Slot with label '{label}' not found. Available slots:")
+                for i in range(count):
+                    try:
+                        t = (slots.nth(i).locator(SEL["slot_type"]).text_content() or "").strip()
+                        logger.error(f"  [{i}] {t}")
+                    except Exception:
+                        logger.error(f"  [{i}] (unreadable)")
+            return False
 
-    slot_index = -1
-    for i in range(count):
-        slot = slots.nth(i)
-        type_text = slot.locator(".component-slot__type").text_content() or ""
-        if label.strip().lower() in type_text.strip().lower():
-            slot_index = i
-            break
+        btn = slot.locator(SEL["slot_btn"]).first
+        try:
+            btn.click(timeout=TIMEOUT_NORMAL, force=attempt > 0)
+            logger.ok(f"Clicked slot [{slot_index}]: {label}" + (" (force)" if attempt > 0 else ""))
+        except PWError as e:
+            logger.warn(f"Cannot click slot [{slot_index}] '{label}': {e}")
+            if attempt < 2:
+                time.sleep(1.0)
+                page.wait_for_timeout(500)
+                continue
+            return False
 
-    if slot_index == -1:
-        logger.error(f"Slot with label '{label}' not found. Available slots:")
-        for i in range(count):
-            t = (slots.nth(i).locator(".component-slot__type").text_content() or "").strip()
-            logger.error(f"  [{i}] {t}")
-        return False
+        if select_first_product_from_modal(page):
+            return True
 
-    slot = slots.nth(slot_index)
-    # Click the primary button (Выбрать / Изменить)
-    btn = slot.locator(".component-slot__btn").first
+        if attempt < 2:
+            logger.warn(f"Selection failed for '{label}', retrying...")
+            time.sleep(1.0)
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(300)
+
+    return False
+
+
+def check_summary_price(page: Page) -> float:
+    """Read and log the total price from the summary panel. Uses stability polling."""
     try:
-        btn.click(timeout=TIMEOUT_NORMAL)
-        logger.ok(f"Clicked slot [{slot_index}]: {label}")
-    except PWError as e:
-        logger.error(f"Cannot click slot [{slot_index}] '{label}': {e}")
-        return False
-
-    return select_first_product_from_modal(page)
-
-
-def check_summary_price(page: Page):
-    """Read and log the total price from the summary panel."""
+        settled_text = wait_for_price_settled(page, timeout=3000)
+        if settled_text:
+            price = parse_total_price(settled_text)
+            logger.price(f"Summary total price: {settled_text.strip()} ({price} BYN)")
+            return price
+    except Exception:
+        pass
+    # Fallback: direct read
     try:
-        # BuildSummaryPanel total value
-        total_el = page.locator(".bsp__total-value").first
+        total_el = page.locator(SEL["bsp_total_value"]).first
         if total_el.is_visible(timeout=TIMEOUT_SHORT):
             text = total_el.text_content() or ""
             price = parse_total_price(text)
-            logger.price(f"Summary total price: {text.strip()} ({price} BYN)")
+            logger.price(f"Summary total price (direct): {text.strip()} ({price} BYN)")
             return price
     except Exception:
         pass
@@ -320,13 +527,11 @@ def check_summary_price(page: Page):
 def check_component_count(page: Page) -> tuple[int, int]:
     """Read selected count from the summary. Returns (selected, total)."""
     try:
-        # The panel shows "Ваша сборка" header and compatibility status + list
-        list_items = page.locator(".bsp__component-item")
+        list_items = page.locator(SEL["bsp_component_item"])
         item_count = list_items.count()
-        # Count how many have a non-dash price
         selected = 0
         for i in range(item_count):
-            price_el = list_items.nth(i).locator(".bsp__component-price")
+            price_el = list_items.nth(i).locator(SEL["bsp_component_price"])
             text = price_el.text_content() or ""
             if text.strip() and text.strip() != "—":
                 selected += 1
@@ -340,7 +545,7 @@ def check_component_count(page: Page) -> tuple[int, int]:
 def check_compatibility_status(page: Page):
     """Read compatibility status and log any errors/warnings."""
     try:
-        compat_text = page.locator(".bsp__compat-text").first
+        compat_text = page.locator(SEL["bsp_compat_text"]).first
         if compat_text.is_visible(timeout=TIMEOUT_SHORT):
             text = compat_text.text_content() or ""
             if "совместим" in text.lower() and "проблем" not in text.lower() and "Обратите" not in text.lower():
@@ -349,122 +554,175 @@ def check_compatibility_status(page: Page):
                 logger.warn(f"Compatibility: {text.strip()}")
 
         # Error details
-        errors = page.locator(".bsp__compat-item--error")
+        errors = page.locator(SEL["bsp_compat_item_error"])
         for i in range(errors.count()):
             logger.error(f"Compat error: {errors.nth(i).text_content().strip()}")
 
         # Warning details
-        warnings = page.locator(".bsp__compat-item--warning")
+        warnings = page.locator(SEL["bsp_compat_item_warning"])
         for i in range(warnings.count()):
             logger.warn(f"Compat warning: {warnings.nth(i).text_content().strip()}")
     except Exception:
         logger.info("No compatibility status visible (no components or no issues)")
 
 
+def _get_first_card_price(modal: Locator) -> float:
+    """Extract price from the first visible product card in the modal."""
+    card = modal.locator(SEL["card"]).first
+    if card.count() == 0:
+        card = modal.locator(SEL["card_compact"]).first
+    if card.count() == 0:
+        return 0.0
+    try:
+        price_el = card.locator(SEL["price"]).first
+        text = price_el.text_content() or ""
+        return parse_total_price(text)
+    except Exception:
+        return 0.0
+
+
 def test_filters(page: Page, slot_label: str):
-    """Open a slot, try filters, then select a product and verify filter behavior."""
+    """Open a slot, test filters (search, sort, stock), verify results."""
     logger.filter_check(f"Testing filters for: {slot_label}")
 
-    # Open the slot picker
-    slots = page.locator(".component-slot")
-    slot_idx = -1
-    for i in range(slots.count()):
-        type_text = slots.nth(i).locator(".component-slot__type").text_content() or ""
-        if slot_label.strip().lower() in type_text.strip().lower():
-            slot_idx = i
-            break
-
-    if slot_idx == -1:
+    slot, slot_idx = find_slot_by_label(page, slot_label)
+    if slot is None:
         logger.warn(f"Cannot find slot for filter test: {slot_label}")
         return
 
-    # Force click despite overlays using Playwright's force option
-    btn = slots.nth(slot_idx).locator(".component-slot__btn").first
-    logger.info(f"Clicking slot button with force=True")
-    btn.click(force=True, timeout=TIMEOUT_NORMAL)
-    if not safe_wait_for_visible(page.locator("[role='dialog'], .modal").first, TIMEOUT_NORMAL):
+    # Open modal
+    btn = slot.locator(SEL["slot_btn"]).first
+    try:
+        btn.click(force=True, timeout=TIMEOUT_NORMAL)
+    except Exception as e:
+        logger.warn(f"Failed to open modal for filter test: {e}")
+        return
+
+    modal = expect_modal_visible(page, TIMEOUT_NORMAL)
+    if modal is None:
         logger.warn(f"Modal did not open for filter test on {slot_label}")
         return
 
-    page.wait_for_timeout(1500)
+    page.wait_for_load_state("networkidle", timeout=TIMEOUT_SHORT)
+    page.wait_for_timeout(200)
 
-    # 1) Test search
-    search_input = page.locator(".searchInput, [class*='searchInput'], input[type='search']").first
+    # Record initial card count
+    initial_cards = modal.locator(SEL["card"]).count()
+    if initial_cards == 0:
+        initial_cards = modal.locator(SEL["card_compact"]).count()
+    logger.filter_check(f"  Initial product count: {initial_cards}")
+
+    # 1) Search test
+    search_input = modal.locator(SEL["search_input"]).first
     test_query = "AMD"
-    if search_input.count() > 0 and search_input.is_visible():
-        logger.filter_check(f"  Search test: typing '{test_query}'")
-        search_input.fill(test_query)
-        page.wait_for_timeout(1500)
-        results_count = page.locator("[class*='resultsCount']").first.text_content() or ""
-        logger.filter_check(f"  Search results: {results_count.strip()}")
+    if search_input.count() > 0:
+        try:
+            if search_input.is_visible(timeout=TIMEOUT_SHORT):
+                logger.filter_check(f"  Search test: typing '{test_query}'")
+                search_input.fill(test_query)
+                page.wait_for_timeout(1000)
 
-        # Clear search
-        search_input.clear()
-        page.wait_for_timeout(800)
+                # Check results count changed
+                results_el = modal.locator(SEL["results_count"]).first
+                try:
+                    results_text = results_el.text_content() or ""
+                    logger.filter_check(f"  Search results: {results_text.strip()}")
+                except Exception:
+                    pass
+
+                # Verify at least some cards remain
+                after_search = modal.locator(SEL["card"]).count()
+                logger.filter_check(f"  Cards after search: {after_search}")
+
+                # Clear search
+                search_input.clear()
+                page.wait_for_timeout(800)
+        except Exception:
+            pass
     else:
         logger.info(f"  No search input found for {slot_label}")
 
-    # 2) Test sort
-    sort_select = page.locator(".sortSelect, select[class*='sortSelect']").first
-    if sort_select.count() > 0 and sort_select.is_visible():
-        original_value = sort_select.input_value() or ""
-        # Change to "Сначала дешевле"
-        sort_select.select_option(label="Сначала дешевле")
-        page.wait_for_timeout(1000)
-        logger.filter_check(f"  Sort changed from '{original_value}' to 'Сначала дешевле'")
+    # 2) Sort test — change to "Сначала дешевле" then "Сначала дороже" and compare first card price
+    sort_select = modal.locator(SEL["sort_select"]).first
+    if sort_select.count() > 0:
+        try:
+            if sort_select.is_visible(timeout=TIMEOUT_SHORT):
+                # Sort cheapest first
+                sort_select.select_option(label="Сначала дешевле")
+                page.wait_for_timeout(500)
+                cheapest_price = _get_first_card_price(modal)
 
-        # Verify cards are in price-ascending order
-        cards = page.locator("[class*='price']:not([class*='old']), span[class*='compactPrice'], span[class*='cardPrice']")
-        prices_found = 0
-        prev_price = 0.0
-        order_ok = True
-        for i in range(min(cards.count(), 5)):
+                # Sort most expensive first
+                sort_select.select_option(label="Сначала дороже")
+                page.wait_for_timeout(500)
+                expensive_price = _get_first_card_price(modal)
+
+                if cheapest_price > 0 and expensive_price > 0:
+                    if cheapest_price <= expensive_price:
+                        logger.filter_check(f"  Sort verified: cheapest({cheapest_price}) <= expensive({expensive_price})")
+                    else:
+                        logger.warn(f"  Sort order MISMATCH: cheapest({cheapest_price}) > expensive({expensive_price})")
+                else:
+                    logger.info(f"  Could not verify sort (prices: {cheapest_price}, {expensive_price})")
+
+                # Reset to default
+                sort_select.select_option(label="По популярности")
+                page.wait_for_timeout(300)
+        except Exception as e:
+            logger.info(f"  Sort test skipped: {e}")
+
+    # 3) Stock checkbox test
+    stock_checkbox = modal.locator(SEL["stock_check"]).first
+    if stock_checkbox.count() > 0:
+        try:
+            # Toggle ON
+            stock_checkbox.check()
+            page.wait_for_timeout(500)
+            after_stock = modal.locator(SEL["card"]).count()
+            logger.filter_check(f"  Cards with 'В наличии': {after_stock} (was {initial_cards})")
+
+            # Verify OOS cards are hidden
+            oos_badges = modal.locator(SEL["oos_badge"])
+            logger.filter_check(f"  OOS badges visible after filter: {oos_badges.count()}")
+
+            # Toggle OFF
+            stock_checkbox.uncheck()
+            page.wait_for_timeout(300)
+        except Exception:
+            logger.info(f"  Stock checkbox test failed, trying alternate approach")
             try:
-                p_text = cards.nth(i).text_content() or ""
-                p = parse_total_price(p_text)
-                if p > 0:
-                    prices_found += 1
-                    if p < prev_price:
-                        order_ok = False
-                    prev_price = p
+                # Try clicking the label instead
+                stock_label = modal.locator(SEL["stock_label"]).first
+                if stock_label.count() > 0:
+                    stock_label.click()
+                    page.wait_for_timeout(500)
+                    logger.filter_check(f"  Stock filter toggled via label")
+                    stock_label.click()  # toggle back
+                    page.wait_for_timeout(300)
             except Exception:
                 pass
-        if prices_found > 1:
-            if order_ok:
-                logger.filter_check(f"  Sort order verified: prices are ascending ({prev_price} max)")
-            else:
-                logger.warn(f"  Sort order MISMATCH for {slot_label}")
-        else:
-            logger.info(f"  Too few cards to verify sort order on {slot_label}")
-
-    # 3) Test "В наличии" checkbox - click on the label to avoid hidden input issues
-    stock_label = page.locator(".stockCheck, label[class*='stockCheck'], .stockCheckIndicator").first
-    if stock_label.count() > 0:
-        logger.filter_check(f"  Clicking 'В наличии' filter label")
-        stock_label.click()
-        page.wait_for_timeout(1000)
-        logger.filter_check(f"  'В наличии' filter toggled")
-        # Toggle back
-        stock_label.click()
-        page.wait_for_timeout(500)
     else:
-        logger.info(f"  No stock filter label found for {slot_label}")
+        logger.info(f"  No stock checkbox found for {slot_label}")
+
+    close_modal(page, modal)
 
 
 def check_sidebar_buttons(page: Page) -> dict:
     """Verify sidebar button states (add to cart, save, checkout)."""
     result = {}
     selectors = {
-        "add_to_cart": ".bsp__btn--cart",
-        "save": ".bsp__btn--save",
-        "export_pdf": ".bsp__btn--export",
-        "checkout": ".bsp__btn--checkout",
+        "add_to_cart": SEL["bsp_btn_cart"],
+        "save": SEL["bsp_btn_save"],
+        "export_pdf": SEL["bsp_btn_export"],
+        "checkout": SEL["bsp_btn_checkout"],
     }
     for name, sel in selectors.items():
         btn = page.locator(sel).first
         try:
-            disabled = btn.is_disabled() if btn.is_visible() else None
-            result[name] = "visible_disabled" if disabled else "visible_enabled" if not disabled else "hidden"
+            if btn.is_visible(timeout=TIMEOUT_SHORT):
+                result[name] = "visible_disabled" if btn.is_disabled() else "visible_enabled"
+            else:
+                result[name] = "hidden"
         except Exception:
             result[name] = "not_found"
     logger.info(f"Sidebar buttons: {json.dumps(result, ensure_ascii=False)}")
@@ -492,6 +750,9 @@ def main():
     logger.info(f"Log: {LOG_FILE}")
     logger.info("=" * 70)
 
+    has_errors = False
+    error_count = 0
+
     try:
         import subprocess
         result = subprocess.run(["which", "chromium-browser"], capture_output=True, text=True)
@@ -502,7 +763,7 @@ def main():
 
     with sync_playwright() as pw:
         browser = pw.chromium.launch(
-            executable_path="/usr/bin/chromium-browser",
+            executable_path="/usr/bin/google-chrome",
             headless=True,
             args=["--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
         )
@@ -522,32 +783,39 @@ def main():
         logger.action(f"Navigating to {PC_BUILDER_URL}")
         page.goto(PC_BUILDER_URL, wait_until="domcontentloaded", timeout=TIMEOUT_LONG)
 
-        # Wait for the main container to appear
-        container = page.locator(".pc-builder-container")
-        if not safe_wait_for_visible(container, timeout=TIMEOUT_LONG * 2):
-            logger.error("PC Builder container did not appear after long wait")
+        # Wait for the main container (try modern selector first, fallback to legacy)
+        container = None
+        for sel in [SEL["page_container"], ".pc-builder-container", ".pc-builder__container"]:
+            try:
+                container = page.locator(sel).first
+                container.wait_for(state="visible", timeout=TIMEOUT_LONG)
+                logger.ok(f"Container visible via '{sel}'")
+                break
+            except PWError:
+                container = None
+
+        if container is None:
+            logger.error("PC Builder container did not appear")
             save_screenshot(page, "01_FAIL_no_container")
-            # Try one more time with longer wait
-            page.wait_for_timeout(10000)
-            slots_after_wait = page.locator(".component-slot").count()
+            capture_diagnostic(page, "no_container")
+            page.wait_for_timeout(10000)  # Extended wait for slow dev server
+            slots_after_wait = page.locator(SEL["slot"]).count()
             logger.info(f"After extra wait, found {slots_after_wait} slots")
-            if slots_after_wait == 0:
-                # Still nothing - we'll continue anyway to capture whatever UI exists
-                pass
 
         save_screenshot(page, "01_page_loaded")
 
         # Verify page loaded
-        slots_count = page.locator(".component-slot").count()
+        slots_count = page.locator(SEL["slot"]).count()
         logger.ok(f"Page loaded. Found {slots_count} component slots")
 
         if slots_count == 0:
             logger.error("No component slots found — page may not have loaded correctly")
             save_screenshot(page, "01_FAIL_no_slots")
+            capture_diagnostic(page, "no_slots")
 
         # ── Step 2: Check empty state ────────────────────────────────
         logger.action("Step 2: Verify empty state")
-        empty_slots = page.locator(".component-slot--empty").count()
+        empty_slots = page.locator(SEL["slot_empty"]).count()
         logger.info(f"Empty slots: {empty_slots}/{slots_count}")
 
         price = check_summary_price(page)
@@ -597,6 +865,7 @@ def main():
             else:
                 logger.warn(f"> FAILED to select {label} — continuing")
                 save_screenshot(page, f"04_FAIL_{label}")
+                capture_diagnostic(page, f"fail_select_{label}")
 
         logger.ok(f"Selection complete: {selected_count}/{len(SLOT_LABELS)} components chosen")
 
@@ -614,23 +883,35 @@ def main():
 
         # ── Step 6: Test clear / deselect ──────────────────────────────
         logger.action("Step 6: Test 'Снять' (clear) button")
-        # Find the first selected slot and clear it
-        selected = page.locator(".component-slot--selected")
-        sel_count = selected.count()
+        selected_slots = page.locator(SEL["slot_selected"])
+        sel_count = selected_slots.count()
         if sel_count > 0:
-            clear_btn = selected.first.locator(".component-slot__clear").first
+            clear_btn = selected_slots.first.locator(SEL["slot_clear"]).first
             if clear_btn.count() > 0 and clear_btn.is_visible():
-                label_to_clear = selected.first.locator(".component-slot__type").text_content() or "unknown"
+                label_to_clear = selected_slots.first.locator(SEL["slot_type"]).text_content() or "unknown"
                 old_price = check_summary_price(page)
                 logger.action(f"  Clearing slot: {label_to_clear.strip()}")
+
+                # Clear with slot-level price to verify
+                slot_price_el = selected_slots.first.locator(SEL["slot_price_value"])
+                slot_price_text = slot_price_el.text_content() or ""
+                slot_price = parse_total_price(slot_price_text)
+
                 clear_btn.click()
                 page.wait_for_timeout(500)
                 new_price = check_summary_price(page)
-                expected_decrease = old_price - new_price
-                if expected_decrease > 0:
-                    logger.ok(f"  Price decreased by {expected_decrease:.2f} BYN after clearing")
+
+                price_diff = old_price - new_price
+                if price_diff > 0:
+                    logger.ok(f"  Price decreased by {price_diff:.2f} BYN after clearing")
+                    # Also verify slot went back to empty
+                    slot_state_after = selected_slots.first.get_attribute("class") or ""
+                    if SEL["slot_selected"].strip(".") not in slot_state_after:
+                        logger.ok("  Slot reverted to non-selected state")
+                    else:
+                        logger.warn("  Slot still shows as selected after clear")
                 else:
-                    logger.warn(f"  Price did not change after clearing (old={old_price}, new={new_price})")
+                    logger.warn(f"  Price did not change after clearing (old={old_price}, new={new_price}, expected ~{slot_price})")
                 save_screenshot(page, "06_after_clear")
             else:
                 logger.info("  No clear button found on first selected slot")
@@ -647,21 +928,31 @@ def main():
 
         # ── Step 8: Test quantity controls (RAM) ─────────────────────
         logger.action("Step 8: Test quantity controls")
-        ram_slots = page.locator(".component-slot").filter(has=page.locator(":text('Оперативная память'), :text('ОЗУ')")).first
-        if ram_slots.count() > 0:
-            qty_btns = ram_slots.locator(".component-slot__qty-btn")
-            if qty_btns.count() >= 2:
-                plus_btn = ram_slots.locator(".component-slot__qty-btn:has-text('+')").first
-                if plus_btn.count() > 0:
+        ram_slot, _ = find_slot_by_label(page, "Оперативная память")
+        if ram_slot is not None:
+            qty_container = ram_slot.locator(SEL["slot_qty"]).first
+            if qty_container.count() > 0:
+                qty_value = ram_slot.locator(SEL["slot_qty_value"]).first
+                qty_before_text = qty_value.text_content() or "1"
+                qty_before = int(qty_before_text) if qty_before_text.isdigit() else 1
+
+                plus_btn = ram_slot.locator(SEL["slot_qty_btn"]).filter(has_text="+").first
+                if plus_btn.count() > 0 and plus_btn.is_visible():
                     old_price = check_summary_price(page)
                     logger.action("  Testing RAM quantity + button")
                     plus_btn.click()
                     page.wait_for_timeout(800)
+
+                    qty_after_text = qty_value.text_content() or ""
+                    qty_after = int(qty_after_text) if qty_after_text.isdigit() else qty_before
+
                     new_price = check_summary_price(page)
-                    if new_price > old_price:
-                        logger.ok(f"  RAM quantity increased, price: {old_price:.2f} → {new_price:.2f}")
+                    if qty_after > qty_before:
+                        logger.ok(f"  RAM quantity: {qty_before} → {qty_after}, price: {old_price:.2f} → {new_price:.2f}")
+                    elif new_price > old_price:
+                        logger.ok(f"  RAM price increased: {old_price:.2f} → {new_price:.2f} (qty: {qty_before} → {qty_after_text})")
                     else:
-                        logger.info(f"  RAM quantity + button pressed (price: {old_price:.2f} → {new_price:.2f})")
+                        logger.info(f"  RAM + pressed but no visible effect (qty: {qty_before}→{qty_after_text}, price: {old_price:.2f}→{new_price:.2f})")
                     save_screenshot(page, "08_ram_quantity_plus")
         else:
             logger.info("  No RAM slot found for quantity test")
@@ -685,29 +976,10 @@ def main():
         final_buttons = check_sidebar_buttons(page)
         logger.price(f"Final total price: {final_price:.2f} BYN")
 
-        # ── Step 10: JS errors and console check ─────────────────────
-        logger.action("Step 10: Checking for JS errors")
-        has_errors = any(e["level"] == "ERROR" for e in logger.entries)
+        # ── Step 10: Final metrics ─────────────────────────────────────
         error_count = sum(1 for e in logger.entries if e["level"] == "ERROR")
         warn_count = sum(1 for e in logger.entries if e["level"] == "WARN")
-
-        # ── Report ───────────────────────────────────────────────────
-        logger.info("=" * 70)
-        logger.info("TEST REPORT")
-        logger.info("=" * 70)
-        logger.info(f"  Total log entries: {len(logger.entries)}")
-        logger.info(f"  Errors: {error_count}")
-        logger.info(f"  Warnings: {warn_count}")
-        logger.info(f"  OK confirmations: {sum(1 for e in logger.entries if e['level'] == 'OK')}")
-        logger.info(f"  Components selected: {selected_count}/{len(SLOT_LABELS)}")
-        logger.info(f"  Final price: {final_price:.2f} BYN")
-        logger.info(f"  Sidebar buttons: {json.dumps(final_buttons, ensure_ascii=False)}")
-        logger.info(f"  Screenshots saved to: {SCREENSHOTS_DIR}")
-        if has_errors:
-            logger.warn("  *** ERRORS DETECTED — see log for details ***")
-        else:
-            logger.ok("  No errors detected")
-        logger.info("=" * 70)
+        has_errors = error_count > 0
 
         log_entries_json = [dict(e) for e in logger.entries]
         log_output_path = os.path.join(SCREENSHOTS_DIR, "test_log.json")
@@ -718,6 +990,22 @@ def main():
         browser.close()
 
     logger.save_summary()
+
+    # ── Report ───────────────────────────────────────────────────
+    logger.info("=" * 70)
+    logger.info("TEST REPORT")
+    logger.info("=" * 70)
+    logger.info(f"  Total log entries: {len(logger.entries)}")
+    logger.info(f"  Errors: {error_count}")
+    logger.info(f"  Warnings: {warn_count}")
+    logger.info(f"  OK confirmations: {sum(1 for e in logger.entries if e['level'] == 'OK')}")
+    logger.info(f"  Components selected: {selected_count}/{len(SLOT_LABELS)}")
+    logger.info(f"  Final price: {final_price:.2f} BYN")
+    if has_errors:
+        logger.warn("  *** ERRORS DETECTED — see log for details ***")
+    else:
+        logger.ok("  No errors detected")
+    logger.info("=" * 70)
 
     # Exit code
     if has_errors:

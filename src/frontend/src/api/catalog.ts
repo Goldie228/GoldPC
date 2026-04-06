@@ -27,6 +27,7 @@ const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
   keyboard: 'keyboards',
   mouse: 'mice',
   headphones: 'headphones',
+  fan: 'fans',
 };
 
 /**
@@ -239,7 +240,11 @@ export const catalogApi = {
    */
   async getManufacturers(category?: string): Promise<Manufacturer[]> {
     const params = category ? { category } : {};
-    const response = await api.get<{ data?: Manufacturer[] }>('/catalog/manufacturers', { params });
-    return response.data?.data ?? [];
+    const response = await api.get<{ data?: Manufacturer[] } | Manufacturer[]>('/catalog/manufacturers', { params });
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return data;
+    }
+    return data?.data ?? [];
   },
 };
