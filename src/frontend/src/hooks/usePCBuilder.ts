@@ -557,6 +557,7 @@ export interface UsePCBuilderReturn {
   isCompatible: boolean;
   maxRamModules: number;
   maxStorageModules: number;
+  maxFanModules: number;
 }
 
 export function usePCBuilder(): UsePCBuilderReturn {
@@ -718,13 +719,17 @@ export function usePCBuilder(): UsePCBuilderReturn {
         const sc: SelectedComponent = { product, type };
 
         if (type === 'ram') {
+          // Compute dynamic limit inside setState to avoid stale dependency
+          const maxRam = selectedComponents.motherboard
+            ? extractMbRamSlots(selectedComponents.motherboard.product.specifications)
+            : MAX_RAM_MODULES;
           if (idx !== undefined) {
             if (idx < next.ram.length) {
               next.ram[idx] = sc;
-            } else if (idx === next.ram.length && next.ram.length < MAX_RAM_MODULES) {
+            } else if (idx === next.ram.length && next.ram.length < maxRam) {
               next.ram.push(sc);
             }
-          } else if (next.ram.length < MAX_RAM_MODULES) {
+          } else if (next.ram.length < maxRam) {
             next.ram.push(sc);
           }
           return next;
@@ -887,6 +892,24 @@ export function usePCBuilder(): UsePCBuilderReturn {
     return checkBuildCompatibility(selectedComponents);
   }, [selectedComponents]);
 
+  // Dynamic RAM slot limit based on selected motherboard
+  const maxRamModules = useMemo(() => {
+    if (selectedComponents.motherboard) {
+      return extractMbRamSlots(selectedComponents.motherboard.product.specifications);
+    }
+    return MAX_RAM_MODULES;
+  }, [selectedComponents.motherboard]);
+
+  // Trim excess RAM modules if motherboard is swapped to one with fewer slots
+  useEffect(() => {
+    if (selectedComponents.ram.length > maxRamModules) {
+      setSelectedComponents((prev) => ({
+        ...prev,
+        ram: prev.ram.slice(0, maxRamModules),
+      }));
+    }
+  }, [maxRamModules]);
+
   return {
     selectedComponents,
     compatibility,
@@ -907,8 +930,9 @@ export function usePCBuilder(): UsePCBuilderReturn {
     getSlotState,
     checkCompatibility,
     isCompatible: compatibility.isCompatible,
-    maxRamModules: MAX_RAM_MODULES,
+    maxRamModules,
     maxStorageModules: MAX_STORAGE_MODULES,
+    maxFanModules: MAX_FAN_MODULES,
   };
 }
 

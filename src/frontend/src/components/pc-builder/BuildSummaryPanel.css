@@ -348,6 +348,18 @@
   text-align: right;
 }
 
+/* ===== Performance Hint (no GPU, no iGPU) ===== */
+.bsp__perf-hint {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--fg-muted, #71717a);
+  margin: 0;
+  padding: 10px 12px;
+  background: rgba(212, 165, 116, 0.06);
+  border: 1px solid rgba(212, 165, 116, 0.18);
+  border-radius: var(--radius-sm, 6px);
+}
+
 /* ===== FPS Row ===== */
 .bsp__fps-row {
   display: flex;

@@ -47,9 +47,7 @@ export interface CompatibilityCheckResult {
 export type ComponentMap = Partial<Record<ComponentCategory, Product | null>>;
 
 // ──────────── Validation constants ────────────
-const VALID_MEMORY_TYPES = config.ramCompatibility.validTypes as readonly string[];
 export type MemoryType = 'DDR4' | 'DDR5';
-const VALID_FORM_FACTORS = config.formFactorCompatibility.hierarchy as readonly string[];
 export type FormFactor = 'ATX' | 'MicroATX' | 'MiniITX' | 'EATX';
 
 // ──────────── Socket groups from config ────────────
@@ -269,7 +267,7 @@ export function checkBiosWarning(cpuSocket: string | null, chipset: string | nul
   return {
     severity: 'Warning',
     component: 'BIOS',
-    message: group.biosWarning.message,
+    message: group.biosWarning.message ?? 'Требуется обновление BIOS',
     suggestion: `Вероятность: ${group.biosWarning.probability}`,
   };
 }
@@ -279,7 +277,7 @@ export function checkBiosWarning(cpuSocket: string | null, chipset: string | nul
  * Детекция bottleneck с учётом категории назначения ПК.
  * @returns процент bottleneck: положительный = CPU-bound, отрицательный = GPU-bound, 0 = сбалансировано
  */
-export function calculateBottleneck(cpuScore: number, gpuScore: number, purpose?: string): number {
+export function calculateBottleneck(cpuScore: number, gpuScore: number): number {
   if (cpuScore <= 0 || gpuScore <= 0) return 0;
   const ratio = cpuScore / gpuScore;
   if (ratio > 1.0) return Math.min(100, ((ratio - 1.0) / ratio) * 100);
@@ -624,9 +622,9 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
   }
 
   // GPU ↔ PSU wattage — GPU selected, PSU candidate
-  if (componentType === 'psu' && (test.gpu?.product || test.cpu?.product)) {
-    const gpuTdp = test.gpu?.product ? extractTDP(test.gpu.product.specifications) : 0;
-    const cpuTdp = test.cpu?.product ? extractTDP(test.cpu.product.specifications) : 0;
+  if (componentType === 'psu' && (test.gpu || test.cpu)) {
+    const gpuTdp = test.gpu ? extractTDP(test.gpu.specifications) : 0;
+    const cpuTdp = test.cpu ? extractTDP(test.cpu.specifications) : 0;
     const minWattage = gpuTdp + cpuTdp + 50;
     const psuWattage = extractPSUWattage(product.specifications);
     if (minWattage > 0 && psuWattage > 0 && psuWattage < minWattage) {
@@ -635,9 +633,9 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
   }
 
   // GPU ↔ PSU wattage — PSU selected, GPU candidate
-  if (componentType === 'gpu' && test.psu?.product) {
-    const psuWattage = extractPSUWattage(test.psu.product.specifications);
-    const cpuTdp = test.cpu?.product ? extractTDP(test.cpu.product.specifications) : 0;
+  if (componentType === 'gpu' && test.psu) {
+    const psuWattage = extractPSUWattage(test.psu.specifications);
+    const cpuTdp = test.cpu ? extractTDP(test.cpu.specifications) : 0;
     const gpuTdp = extractTDP(product.specifications);
     const needed = gpuTdp + cpuTdp + 50;
     if (needed > psuWattage) {

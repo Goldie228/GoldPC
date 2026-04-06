@@ -1,0 +1,1088 @@
+- generic [ref=e17]:
+  - link "Перейти к основному контенту" [ref=e18] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e19]:
+    - link "GoldPC" [ref=e20] [cursor=pointer]:
+      - /url: /
+      - img [ref=e22]
+      - generic [ref=e26]: GoldPC
+    - navigation [ref=e27]:
+      - link "Каталог" [ref=e28] [cursor=pointer]:
+        - /url: /catalog
+      - link "Конструктор" [ref=e29] [cursor=pointer]:
+        - /url: /pc-builder
+      - link "Сервис" [ref=e30] [cursor=pointer]:
+        - /url: /services
+      - link "О нас" [ref=e31] [cursor=pointer]:
+        - /url: /about
+    - generic [ref=e32]:
+      - generic [ref=e34]:
+        - img
+        - combobox "Поиск по сайту (/, Ctrl+K)" [ref=e35]
+      - 'link "Избранное: 0 товаров" [ref=e36] [cursor=pointer]':
+        - /url: /wishlist
+        - img [ref=e37]
+      - 'link "Сравнение: 0 товаров" [ref=e39] [cursor=pointer]':
+        - /url: /comparison
+        - img [ref=e40]
+      - 'button "Корзина: 0 товаров" [ref=e45] [cursor=pointer]':
+        - img [ref=e46]
+      - button "Войти" [ref=e51] [cursor=pointer]:
+        - img [ref=e52]
+  - dialog [ref=e55]:
+    - button [ref=e56] [cursor=pointer]:
+      - img [ref=e57]
+    - navigation [ref=e60]:
+      - link [ref=e61] [cursor=pointer]:
+        - /url: /catalog
+        - text: Каталог
+      - link [ref=e62] [cursor=pointer]:
+        - /url: /pc-builder
+        - text: Конструктор
+      - link [ref=e63] [cursor=pointer]:
+        - /url: /services
+        - text: Сервис
+      - link [ref=e64] [cursor=pointer]:
+        - /url: /about
+        - text: О нас
+    - generic [ref=e65]:
+      - link [ref=e66] [cursor=pointer]:
+        - /url: /wishlist
+        - img [ref=e67]
+        - generic [ref=e69]: Избранное
+      - link [ref=e70] [cursor=pointer]:
+        - /url: /comparison
+        - img [ref=e71]
+        - generic [ref=e76]: Сравнение
+      - link [ref=e77] [cursor=pointer]:
+        - /url: /cart
+        - img [ref=e78]
+        - generic [ref=e82]: Корзина
+      - link [ref=e83] [cursor=pointer]:
+        - /url: /account
+        - img [ref=e84]
+        - generic [ref=e87]: Профиль
+  - main [ref=e88]:
+    - region "Конструктор ПК" [ref=e89]:
+      - paragraph [ref=e90]: "Клавиатура: Tab — переход между слотами и кнопками. Enter или пробел — выбрать или изменить компонент в слоте."
+      - heading "Конструктор ПК" [level=1] [ref=e91]
+      - generic [ref=e92]:
+        - navigation "Хлебные крошки" [ref=e94]:
+          - list [ref=e95]:
+            - listitem [ref=e96]:
+              - link "Главная" [ref=e97] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e98]:
+              - img [ref=e99]
+              - generic [ref=e101]: Конструктор ПК
+        - main [ref=e102]:
+          - generic [ref=e103]:
+            - generic [ref=e104]:
+              - heading "Комплектующие" [level=2] [ref=e106]
+              - generic [ref=e107]:
+                - 'generic "Мозг компьютера. Отвечает за все вычисления. Важные параметры: количество ядер, частота, TDP (тепловыделение)." [ref=e108]':
+                  - generic [ref=e109]:
+                    - img [ref=e111]
+                    - generic [ref=e114]:
+                      - generic [ref=e116]: Процессор
+                      - generic [ref=e117]: Выберите компонент
+                    - generic [ref=e120]: —
+                    - button "Выбрать" [ref=e122] [cursor=pointer]
+                - generic "Соединяет все компоненты вместе. Определяет сокет процессора, чипсет и доступные слоты расширения." [ref=e123]:
+                  - generic [ref=e124]:
+                    - img [ref=e126]
+                    - generic [ref=e132]:
+                      - generic [ref=e134]: Материнская плата
+                      - generic [ref=e135]: Выберите компонент
+                    - generic [ref=e138]: —
+                    - button "Выбрать" [ref=e140] [cursor=pointer]
+                - generic "Быстрая память для временных данных. Объём и тайминги (задержки) влияют на отзывчивость системы." [ref=e141]:
+                  - generic [ref=e142]:
+                    - img [ref=e144]
+                    - generic [ref=e146]:
+                      - generic [ref=e148]: Оперативная память
+                      - generic [ref=e149]: Выберите компонент
+                    - generic [ref=e152]: —
+                    - button "Выбрать" [ref=e154] [cursor=pointer]
+                - generic "Хранит операционную систему, программы и файлы. SSD быстрее HDD." [ref=e155]:
+                  - generic [ref=e156]:
+                    - img [ref=e158]
+                    - generic [ref=e160]:
+                      - generic [ref=e162]: Накопитель
+                      - generic [ref=e163]: Выберите компонент
+                    - generic [ref=e166]: —
+                    - button "Выбрать" [ref=e168] [cursor=pointer]
+                - generic "Отводит тепло от процессора. Бывает воздушным или жидкостным." [ref=e169]:
+                  - generic [ref=e170]:
+                    - img [ref=e172]
+                    - generic [ref=e185]:
+                      - generic [ref=e187]: Охлаждение
+                      - generic [ref=e188]: Выберите компонент
+                    - generic [ref=e191]: —
+                    - button "Выбрать" [ref=e193] [cursor=pointer]
+                - generic "Отвечает за вывод изображения и 3D-графику. Ключевая для игр и работы с графикой." [ref=e194]:
+                  - generic [ref=e195]:
+                    - img [ref=e197]
+                    - generic [ref=e202]:
+                      - generic [ref=e204]: Видеокарта
+                      - generic [ref=e205]: Выберите компонент
+                    - generic [ref=e208]: —
+                    - button "Выбрать" [ref=e210] [cursor=pointer]
+                - generic "Поставляет электричество всем компонентам. Мощность (Вт) должна покрывать потребление сборки." [ref=e211]:
+                  - generic [ref=e212]:
+                    - img [ref=e214]
+                    - generic [ref=e216]:
+                      - generic [ref=e218]: Блок питания
+                      - generic [ref=e219]: Выберите компонент
+                    - generic [ref=e222]: —
+                    - button "Выбрать" [ref=e224] [cursor=pointer]
+                - 'generic "Определяет форм-фактор (размер) сборки: ATX, Micro-ATX или Mini-ITX. Влияет на охлаждение и расширяемость." [ref=e225]':
+                  - generic [ref=e226]:
+                    - img [ref=e228]
+                    - generic [ref=e231]:
+                      - generic [ref=e233]: Корпус
+                      - generic [ref=e234]: Выберите компонент
+                    - generic [ref=e237]: —
+                    - button "Выбрать" [ref=e239] [cursor=pointer]
+                - generic "Корпусной вентилятор для охлаждения. Можно установить несколько." [ref=e240]:
+                  - generic [ref=e241]:
+                    - img [ref=e243]
+                    - generic [ref=e245]:
+                      - generic [ref=e247]: Вентилятор
+                      - generic [ref=e248]: Выберите компонент
+                    - generic [ref=e251]: —
+                    - button "Выбрать" [ref=e253] [cursor=pointer]
+              - heading "Периферия" [level=2] [ref=e255]
+              - generic [ref=e256]:
+                - generic "Устройство вывода изображения. Диагональ, разрешение и частота обновления влияют на комфорт." [ref=e257]:
+                  - generic [ref=e258]:
+                    - img [ref=e260]
+                    - generic [ref=e262]:
+                      - generic [ref=e264]: Монитор
+                      - generic [ref=e265]: Выберите компонент
+                    - generic [ref=e268]: —
+                    - button "Выбрать" [ref=e270] [cursor=pointer]
+                - generic "Основное устройство ввода. Механические клавиатуры обеспечивают лучшую тактильность." [ref=e271]:
+                  - generic [ref=e272]:
+                    - img [ref=e274]
+                    - generic [ref=e276]:
+                      - generic [ref=e278]: Клавиатура
+                      - generic [ref=e279]: Выберите компонент
+                    - generic [ref=e282]: —
+                    - button "Выбрать" [ref=e284] [cursor=pointer]
+                - generic "Основное устройство навигации. DPI и частота опроса влияют на точность." [ref=e285]:
+                  - generic [ref=e286]:
+                    - img [ref=e288]
+                    - generic [ref=e290]:
+                      - generic [ref=e292]: Мышь
+                      - generic [ref=e293]: Выберите компонент
+                    - generic [ref=e296]: —
+                    - button "Выбрать" [ref=e298] [cursor=pointer]
+                - generic "Устройство воспроизведения звука. Качество драйверов и шумоподавление важны." [ref=e299]:
+                  - generic [ref=e300]:
+                    - img [ref=e302]
+                    - generic [ref=e304]:
+                      - generic [ref=e306]: Наушники
+                      - generic [ref=e307]: Выберите компонент
+                    - generic [ref=e310]: —
+                    - button "Выбрать" [ref=e312] [cursor=pointer]
+            - complementary "Итоги сборки, выбрано 0 из 12 категорий" [ref=e314]:
+              - heading "Ваша сборка" [level=2] [ref=e315]
+              - list [ref=e316]:
+                - listitem [ref=e317]:
+                  - generic [ref=e318]: Процессор
+                  - generic [ref=e319]: —
+                - listitem [ref=e320]:
+                  - generic [ref=e321]: Материнская плата
+                  - generic [ref=e322]: —
+                - listitem [ref=e323]:
+                  - generic [ref=e324]: Оперативная память
+                  - generic [ref=e325]: —
+                - listitem [ref=e326]:
+                  - generic [ref=e327]: Накопитель
+                  - generic [ref=e328]: —
+                - listitem [ref=e329]:
+                  - generic [ref=e330]: Блок питания
+                  - generic [ref=e331]: —
+                - listitem [ref=e332]:
+                  - generic [ref=e333]: Корпус
+                  - generic [ref=e334]: —
+                - listitem [ref=e335]:
+                  - generic [ref=e336]: Вентилятор
+                  - generic [ref=e337]: —
+                - listitem [ref=e338]:
+                  - generic [ref=e339]: Охлаждение
+                  - generic [ref=e340]: —
+                - listitem [ref=e341]:
+                  - generic [ref=e342]: Видеокарта
+                  - generic [ref=e343]: —
+                - listitem [ref=e344]:
+                  - generic [ref=e345]: Монитор
+                  - generic [ref=e346]: —
+                - listitem [ref=e347]:
+                  - generic [ref=e348]: Клавиатура
+                  - generic [ref=e349]: —
+                - listitem [ref=e350]:
+                  - generic [ref=e351]: Мышь
+                  - generic [ref=e352]: —
+                - listitem [ref=e353]:
+                  - generic [ref=e354]: Наушники
+                  - generic [ref=e355]: —
+              - region "Энергопотребление" [ref=e357]:
+                - heading "Питание" [level=3] [ref=e358]:
+                  - img [ref=e359]
+                  - text: Питание
+                - progressbar "Потребление около 50 Вт" [ref=e361]
+                - generic [ref=e363]:
+                  - generic [ref=e364]: "Потребление (оценочно):"
+                  - strong [ref=e365]: ~50 Вт
+                - generic [ref=e366]:
+                  - text: Рекомендуется БП от
+                  - strong [ref=e367]: 65 Вт
+              - region "Производительность" [ref=e369]:
+                - heading "Производительность" [level=3] [ref=e370]:
+                  - img [ref=e371]
+                  - text: Производительность
+                - paragraph [ref=e373]: Выберите процессор и/или видеокарту — тогда появится оценка игровой и рабочей нагрузки.
+              - generic [ref=e375]:
+                - generic [ref=e376]: "Итого:"
+                - generic [ref=e377]: 0 BYN
+              - generic [ref=e378]:
+                - generic [ref=e379]:
+                  - button "Сохранить" [disabled] [ref=e380]:
+                    - img [ref=e381]
+                    - text: Сохранить
+                  - button "Печать" [disabled] [ref=e385]:
+                    - img [ref=e386]
+                    - text: Печать
+                - button "В корзину" [disabled] [ref=e390]:
+                  - img [ref=e391]
+                  - text: В корзину
+                - button "Оформить" [disabled] [ref=e394]
+      - 'dialog "Выбор: Материнская плата" [ref=e467]':
+        - generic [ref=e468]:
+          - 'heading "Выбор: Материнская плата" [level=3] [ref=e469]'
+          - button "Закрыть" [active] [ref=e470] [cursor=pointer]:
+            - img [ref=e471]
+        - generic [ref=e476]:
+          - complementary [ref=e478]:
+            - generic [ref=e479]:
+              - button "Сокет" [ref=e480] [cursor=pointer]:
+                - img [ref=e482]
+                - generic [ref=e485]: Сокет
+                - img [ref=e486]
+              - generic [ref=e490]:
+                - generic [ref=e491] [cursor=pointer]:
+                  - checkbox "AM4 (34)" [ref=e492]
+                  - img [ref=e494]
+                  - generic [ref=e496]:
+                    - text: AM4
+                    - generic [ref=e497]: (34)
+                - generic [ref=e498] [cursor=pointer]:
+                  - checkbox "AM5 (154)" [ref=e499]
+                  - img [ref=e501]
+                  - generic [ref=e503]:
+                    - text: AM5
+                    - generic [ref=e504]: (154)
+                - generic [ref=e505] [cursor=pointer]:
+                  - checkbox "LGA1150 (1)" [ref=e506]
+                  - img [ref=e508]
+                  - generic [ref=e510]:
+                    - text: LGA1150
+                    - generic [ref=e511]: (1)
+                - generic [ref=e512] [cursor=pointer]:
+                  - checkbox "LGA1151 (2)" [ref=e513]
+                  - img [ref=e515]
+                  - generic [ref=e517]:
+                    - text: LGA1151
+                    - generic [ref=e518]: (2)
+                - generic [ref=e519] [cursor=pointer]:
+                  - checkbox "LGA1200 (13)" [ref=e520]
+                  - img [ref=e522]
+                  - generic [ref=e524]:
+                    - text: LGA1200
+                    - generic [ref=e525]: (13)
+                - generic [ref=e526] [cursor=pointer]:
+                  - checkbox "LGA1700 (103)" [ref=e527]
+                  - img [ref=e529]
+                  - generic [ref=e531]:
+                    - text: LGA1700
+                    - generic [ref=e532]: (103)
+                - generic [ref=e533] [cursor=pointer]:
+                  - checkbox "LGA1851 (56)" [ref=e534]
+                  - img [ref=e536]
+                  - generic [ref=e538]:
+                    - text: LGA1851
+                    - generic [ref=e539]: (56)
+                - generic [ref=e540] [cursor=pointer]:
+                  - checkbox "LGA2011-3 (1)" [ref=e541]
+                  - img [ref=e543]
+                  - generic [ref=e545]:
+                    - text: LGA2011-3
+                    - generic [ref=e546]: (1)
+                - generic [ref=e547] [cursor=pointer]:
+                  - checkbox "LGA2066 (1)" [ref=e548]
+                  - img [ref=e550]
+                  - generic [ref=e552]:
+                    - text: LGA2066
+                    - generic [ref=e553]: (1)
+                - generic [ref=e554] [cursor=pointer]:
+                  - checkbox "LGA4189 (2)" [ref=e555]
+                  - img [ref=e557]
+                  - generic [ref=e559]:
+                    - text: LGA4189
+                    - generic [ref=e560]: (2)
+                - generic [ref=e561] [cursor=pointer]:
+                  - checkbox "LGA4677 (4)" [ref=e562]
+                  - img [ref=e564]
+                  - generic [ref=e566]:
+                    - text: LGA4677
+                    - generic [ref=e567]: (4)
+                - generic [ref=e568] [cursor=pointer]:
+                  - checkbox "SP3 (1)" [ref=e569]
+                  - img [ref=e571]
+                  - generic [ref=e573]:
+                    - text: SP3
+                    - generic [ref=e574]: (1)
+            - generic [ref=e575]:
+              - button "Чипсет" [ref=e576] [cursor=pointer]:
+                - img [ref=e578]
+                - generic [ref=e581]: Чипсет
+                - img [ref=e582]
+              - generic [ref=e585]:
+                - generic [ref=e586]:
+                  - img
+                  - searchbox "Поиск..." [ref=e587]
+                - generic [ref=e588]:
+                  - generic [ref=e589] [cursor=pointer]:
+                    - checkbox "A520 (13)" [ref=e590]
+                    - img [ref=e592]
+                    - generic [ref=e594]:
+                      - text: A520
+                      - generic [ref=e595]: (13)
+                  - generic [ref=e596] [cursor=pointer]:
+                    - checkbox "A620 (8)" [ref=e597]
+                    - img [ref=e599]
+                    - generic [ref=e601]:
+                      - text: A620
+                      - generic [ref=e602]: (8)
+                  - generic [ref=e603] [cursor=pointer]:
+                    - checkbox "A620A (5)" [ref=e604]
+                    - img [ref=e606]
+                    - generic [ref=e608]:
+                      - text: A620A
+                      - generic [ref=e609]: (5)
+                  - generic [ref=e610] [cursor=pointer]:
+                    - checkbox "B250 (1)" [ref=e611]
+                    - img [ref=e613]
+                    - generic [ref=e615]:
+                      - text: B250
+                      - generic [ref=e616]: (1)
+                  - generic [ref=e617] [cursor=pointer]:
+                    - checkbox "B450 (4)" [ref=e618]
+                    - img [ref=e620]
+                    - generic [ref=e622]:
+                      - text: B450
+                      - generic [ref=e623]: (4)
+                  - generic [ref=e624] [cursor=pointer]:
+                    - checkbox "B550 (17)" [ref=e625]
+                    - img [ref=e627]
+                    - generic [ref=e629]:
+                      - text: B550
+                      - generic [ref=e630]: (17)
+                  - generic [ref=e631] [cursor=pointer]:
+                    - checkbox "B650 (48)" [ref=e632]
+                    - img [ref=e634]
+                    - generic [ref=e636]:
+                      - text: B650
+                      - generic [ref=e637]: (48)
+                  - generic [ref=e638] [cursor=pointer]:
+                    - checkbox "B650E (5)" [ref=e639]
+                    - img [ref=e641]
+                    - generic [ref=e643]:
+                      - text: B650E
+                      - generic [ref=e644]: (5)
+                  - generic [ref=e645] [cursor=pointer]:
+                    - checkbox "B660 (3)" [ref=e646]
+                    - img [ref=e648]
+                    - generic [ref=e650]:
+                      - text: B660
+                      - generic [ref=e651]: (3)
+                  - generic [ref=e652] [cursor=pointer]:
+                    - checkbox "B760 (49)" [ref=e653]
+                    - img [ref=e655]
+                    - generic [ref=e657]:
+                      - text: B760
+                      - generic [ref=e658]: (49)
+                  - generic [ref=e659] [cursor=pointer]:
+                    - checkbox "B840 (11)" [ref=e660]
+                    - img [ref=e662]
+                    - generic [ref=e664]:
+                      - text: B840
+                      - generic [ref=e665]: (11)
+                  - generic [ref=e666] [cursor=pointer]:
+                    - checkbox "B850 (51)" [ref=e667]
+                    - img [ref=e669]
+                    - generic [ref=e671]:
+                      - text: B850
+                      - generic [ref=e672]: (51)
+                  - generic [ref=e673] [cursor=pointer]:
+                    - checkbox "B860 (23)" [ref=e674]
+                    - img [ref=e676]
+                    - generic [ref=e678]:
+                      - text: B860
+                      - generic [ref=e679]: (23)
+                  - generic [ref=e680] [cursor=pointer]:
+                    - checkbox "C226 (1)" [ref=e681]
+                    - img [ref=e683]
+                    - generic [ref=e685]:
+                      - text: C226
+                      - generic [ref=e686]: (1)
+                  - generic [ref=e687] [cursor=pointer]:
+                    - checkbox "C252 (2)" [ref=e688]
+                    - img [ref=e690]
+                    - generic [ref=e692]:
+                      - text: C252
+                      - generic [ref=e693]: (2)
+                  - generic [ref=e694] [cursor=pointer]:
+                    - checkbox "C262 (1)" [ref=e695]
+                    - img [ref=e697]
+                    - generic [ref=e699]:
+                      - text: C262
+                      - generic [ref=e700]: (1)
+                  - generic [ref=e701] [cursor=pointer]:
+                    - checkbox "C422 (1)" [ref=e702]
+                    - img [ref=e704]
+                    - generic [ref=e706]:
+                      - text: C422
+                      - generic [ref=e707]: (1)
+                  - generic [ref=e708] [cursor=pointer]:
+                    - checkbox "C612 (1)" [ref=e709]
+                    - img [ref=e711]
+                    - generic [ref=e713]:
+                      - text: C612
+                      - generic [ref=e714]: (1)
+                  - generic [ref=e715] [cursor=pointer]:
+                    - checkbox "C621 (2)" [ref=e716]
+                    - img [ref=e718]
+                    - generic [ref=e720]:
+                      - text: C621
+                      - generic [ref=e721]: (2)
+                  - generic [ref=e722] [cursor=pointer]:
+                    - checkbox "C741 (3)" [ref=e723]
+                    - img [ref=e725]
+                    - generic [ref=e727]:
+                      - text: C741
+                      - generic [ref=e728]: (3)
+                  - generic [ref=e729] [cursor=pointer]:
+                    - checkbox "H310 (1)" [ref=e730]
+                    - img [ref=e732]
+                    - generic [ref=e734]:
+                      - text: H310
+                      - generic [ref=e735]: (1)
+                  - generic [ref=e736] [cursor=pointer]:
+                    - checkbox "H470 (3)" [ref=e737]
+                    - img [ref=e739]
+                    - generic [ref=e741]:
+                      - text: H470
+                      - generic [ref=e742]: (3)
+                  - generic [ref=e743] [cursor=pointer]:
+                    - checkbox "H510 (2)" [ref=e744]
+                    - img [ref=e746]
+                    - generic [ref=e748]:
+                      - text: H510
+                      - generic [ref=e749]: (2)
+                  - generic [ref=e750] [cursor=pointer]:
+                    - checkbox "H610 (27)" [ref=e751]
+                    - img [ref=e753]
+                    - generic [ref=e755]:
+                      - text: H610
+                      - generic [ref=e756]: (27)
+                  - generic [ref=e757] [cursor=pointer]:
+                    - checkbox "H770 (2)" [ref=e758]
+                    - img [ref=e760]
+                    - generic [ref=e762]:
+                      - text: H770
+                      - generic [ref=e763]: (2)
+                  - generic [ref=e764] [cursor=pointer]:
+                    - checkbox "H810 (4)" [ref=e765]
+                    - img [ref=e767]
+                    - generic [ref=e769]:
+                      - text: H810
+                      - generic [ref=e770]: (4)
+                  - generic [ref=e771] [cursor=pointer]:
+                    - checkbox "HM65 (1)" [ref=e772]
+                    - img [ref=e774]
+                    - generic [ref=e776]:
+                      - text: HM65
+                      - generic [ref=e777]: (1)
+                  - generic [ref=e778] [cursor=pointer]:
+                    - checkbox "Q470 (2)" [ref=e779]
+                    - img [ref=e781]
+                    - generic [ref=e783]:
+                      - text: Q470
+                      - generic [ref=e784]: (2)
+                  - generic [ref=e785] [cursor=pointer]:
+                    - checkbox "Q570 (1)" [ref=e786]
+                    - img [ref=e788]
+                    - generic [ref=e790]:
+                      - text: Q570
+                      - generic [ref=e791]: (1)
+                  - generic [ref=e792] [cursor=pointer]:
+                    - checkbox "Q670 (1)" [ref=e793]
+                    - img [ref=e795]
+                    - generic [ref=e797]:
+                      - text: Q670
+                      - generic [ref=e798]: (1)
+                  - generic [ref=e799] [cursor=pointer]:
+                    - checkbox "Q870 (1)" [ref=e800]
+                    - img [ref=e802]
+                    - generic [ref=e804]:
+                      - text: Q870
+                      - generic [ref=e805]: (1)
+                  - generic [ref=e806] [cursor=pointer]:
+                    - checkbox "TRX50 (1)" [ref=e807]
+                    - img [ref=e809]
+                    - generic [ref=e811]:
+                      - text: TRX50
+                      - generic [ref=e812]: (1)
+                  - generic [ref=e813] [cursor=pointer]:
+                    - checkbox "W480 (4)" [ref=e814]
+                    - img [ref=e816]
+                    - generic [ref=e818]:
+                      - text: W480
+                      - generic [ref=e819]: (4)
+                  - generic [ref=e820] [cursor=pointer]:
+                    - checkbox "W680 (2)" [ref=e821]
+                    - img [ref=e823]
+                    - generic [ref=e825]:
+                      - text: W680
+                      - generic [ref=e826]: (2)
+                  - generic [ref=e827] [cursor=pointer]:
+                    - checkbox "W790 (1)" [ref=e828]
+                    - img [ref=e830]
+                    - generic [ref=e832]:
+                      - text: W790
+                      - generic [ref=e833]: (1)
+                  - generic [ref=e834] [cursor=pointer]:
+                    - checkbox "W880 (1)" [ref=e835]
+                    - img [ref=e837]
+                    - generic [ref=e839]:
+                      - text: W880
+                      - generic [ref=e840]: (1)
+                  - generic [ref=e841] [cursor=pointer]:
+                    - checkbox "WRX90 (1)" [ref=e842]
+                    - img [ref=e844]
+                    - generic [ref=e846]:
+                      - text: WRX90
+                      - generic [ref=e847]: (1)
+                  - generic [ref=e848] [cursor=pointer]:
+                    - checkbox "X670E (1)" [ref=e849]
+                    - img [ref=e851]
+                    - generic [ref=e853]:
+                      - text: X670E
+                      - generic [ref=e854]: (1)
+                  - generic [ref=e855] [cursor=pointer]:
+                    - checkbox "X870 (9)" [ref=e856]
+                    - img [ref=e858]
+                    - generic [ref=e860]:
+                      - text: X870
+                      - generic [ref=e861]: (9)
+                  - generic [ref=e862] [cursor=pointer]:
+                    - checkbox "X870E (16)" [ref=e863]
+                    - img [ref=e865]
+                    - generic [ref=e867]:
+                      - text: X870E
+                      - generic [ref=e868]: (16)
+                  - generic [ref=e869] [cursor=pointer]:
+                    - checkbox "Z690 (1)" [ref=e870]
+                    - img [ref=e872]
+                    - generic [ref=e874]:
+                      - text: Z690
+                      - generic [ref=e875]: (1)
+                  - generic [ref=e876] [cursor=pointer]:
+                    - checkbox "Z790 (17)" [ref=e877]
+                    - img [ref=e879]
+                    - generic [ref=e881]:
+                      - text: Z790
+                      - generic [ref=e882]: (17)
+                  - generic [ref=e883] [cursor=pointer]:
+                    - checkbox "Z890 (27)" [ref=e884]
+                    - img [ref=e886]
+                    - generic [ref=e888]:
+                      - text: Z890
+                      - generic [ref=e889]: (27)
+            - generic [ref=e890]:
+              - button "Форм-фактор" [ref=e891] [cursor=pointer]:
+                - img [ref=e893]
+                - generic [ref=e896]: Форм-фактор
+                - img [ref=e897]
+              - generic [ref=e901]:
+                - generic [ref=e902] [cursor=pointer]:
+                  - checkbox "ATX (152)" [ref=e903]
+                  - img [ref=e905]
+                  - generic [ref=e907]:
+                    - text: ATX
+                    - generic [ref=e908]: (152)
+                - generic [ref=e909] [cursor=pointer]:
+                  - checkbox "eATX (8)" [ref=e910]
+                  - img [ref=e912]
+                  - generic [ref=e914]:
+                    - text: eATX
+                    - generic [ref=e915]: (8)
+                - generic [ref=e916] [cursor=pointer]:
+                  - checkbox "micro-ATX (195)" [ref=e917]
+                  - img [ref=e919]
+                  - generic [ref=e921]:
+                    - text: micro-ATX
+                    - generic [ref=e922]: (195)
+                - generic [ref=e923] [cursor=pointer]:
+                  - checkbox "Mini-ITX (19)" [ref=e924]
+                  - img [ref=e926]
+                  - generic [ref=e928]:
+                    - text: Mini-ITX
+                    - generic [ref=e929]: (19)
+            - generic [ref=e930]:
+              - button "Тип памяти" [ref=e931] [cursor=pointer]:
+                - img [ref=e933]
+                - generic [ref=e936]: Тип памяти
+                - img [ref=e937]
+              - generic [ref=e941]:
+                - generic [ref=e942] [cursor=pointer]:
+                  - checkbox "DDR3 (2)" [ref=e943]
+                  - img [ref=e945]
+                  - generic [ref=e947]:
+                    - text: DDR3
+                    - generic [ref=e948]: (2)
+                - generic [ref=e949] [cursor=pointer]:
+                  - checkbox "DDR4 (90)" [ref=e950]
+                  - img [ref=e952]
+                  - generic [ref=e954]:
+                    - text: DDR4
+                    - generic [ref=e955]: (90)
+                - generic [ref=e956] [cursor=pointer]:
+                  - checkbox "DDR5 (285)" [ref=e957]
+                  - img [ref=e959]
+                  - generic [ref=e961]:
+                    - text: DDR5
+                    - generic [ref=e962]: (285)
+            - generic [ref=e963]:
+              - button "Слоты DDR4+DDR5" [ref=e964] [cursor=pointer]:
+                - img [ref=e966]
+                - generic [ref=e969]: Слоты DDR4+DDR5
+                - img [ref=e970]
+              - generic [ref=e974]:
+                - generic [ref=e975] [cursor=pointer]:
+                  - checkbox "Нет (373)" [ref=e976]
+                  - img [ref=e978]
+                  - generic [ref=e980]:
+                    - text: Нет
+                    - generic [ref=e981]: (373)
+                - generic [ref=e982] [cursor=pointer]:
+                  - checkbox "Да (1)" [ref=e983]
+                  - img [ref=e985]
+                  - generic [ref=e987]:
+                    - text: Да
+                    - generic [ref=e988]: (1)
+            - generic [ref=e989]:
+              - button "DDR5 CUDIMM" [ref=e990] [cursor=pointer]:
+                - img [ref=e992]
+                - generic [ref=e995]: DDR5 CUDIMM
+                - img [ref=e996]
+              - generic [ref=e1000]:
+                - generic [ref=e1001] [cursor=pointer]:
+                  - checkbox "Нет (306)" [ref=e1002]
+                  - img [ref=e1004]
+                  - generic [ref=e1006]:
+                    - text: Нет
+                    - generic [ref=e1007]: (306)
+                - generic [ref=e1008] [cursor=pointer]:
+                  - checkbox "Да (68)" [ref=e1009]
+                  - img [ref=e1011]
+                  - generic [ref=e1013]:
+                    - text: Да
+                    - generic [ref=e1014]: (68)
+            - generic [ref=e1015]:
+              - button "Слотов памяти" [ref=e1016] [cursor=pointer]:
+                - img [ref=e1018]
+                - generic [ref=e1021]: Слотов памяти
+                - img [ref=e1022]
+              - generic [ref=e1032]:
+                - generic [ref=e1033]: "2"
+                - generic [ref=e1034]: "8"
+            - generic [ref=e1035]:
+              - button "Частота памяти, МГц" [ref=e1036] [cursor=pointer]:
+                - img [ref=e1038]
+                - generic [ref=e1041]: Частота памяти, МГц
+                - img [ref=e1042]
+              - generic [ref=e1052]:
+                - generic [ref=e1053]: "2133"
+                - generic [ref=e1054]: "9600"
+            - generic [ref=e1055]:
+              - button "Дата выхода, г" [ref=e1056] [cursor=pointer]:
+                - img [ref=e1058]
+                - generic [ref=e1061]: Дата выхода, г
+                - img [ref=e1062]
+              - generic [ref=e1072]:
+                - generic [ref=e1073]: "2020"
+                - generic [ref=e1074]: "2025"
+            - generic [ref=e1075]:
+              - button "Бренды" [ref=e1076] [cursor=pointer]:
+                - img [ref=e1078]
+                - generic [ref=e1081]: Бренды
+                - img [ref=e1082]
+              - generic [ref=e1084]:
+                - generic [ref=e1085] [cursor=pointer]:
+                  - checkbox "AFOX" [ref=e1086]
+                  - img [ref=e1088]
+                  - generic [ref=e1090]: AFOX
+                - generic [ref=e1091] [cursor=pointer]:
+                  - checkbox "ASRock" [ref=e1092]
+                  - img [ref=e1094]
+                  - generic [ref=e1096]: ASRock
+                - generic [ref=e1097] [cursor=pointer]:
+                  - checkbox "ASUS" [ref=e1098]
+                  - img [ref=e1100]
+                  - generic [ref=e1102]: ASUS
+                - generic [ref=e1103] [cursor=pointer]:
+                  - checkbox "Arktek" [ref=e1104]
+                  - img [ref=e1106]
+                  - generic [ref=e1108]: Arktek
+                - generic [ref=e1109] [cursor=pointer]:
+                  - checkbox "BIOSTAR" [ref=e1110]
+                  - img [ref=e1112]
+                  - generic [ref=e1114]: BIOSTAR
+                - generic [ref=e1115] [cursor=pointer]:
+                  - checkbox "Colorful" [ref=e1116]
+                  - img [ref=e1118]
+                  - generic [ref=e1120]: Colorful
+                - generic [ref=e1121] [cursor=pointer]:
+                  - checkbox "Gigabyte" [ref=e1122]
+                  - img [ref=e1124]
+                  - generic [ref=e1126]: Gigabyte
+                - generic [ref=e1127] [cursor=pointer]:
+                  - checkbox "MSI" [ref=e1128]
+                  - img [ref=e1130]
+                  - generic [ref=e1132]: MSI
+                - generic [ref=e1133] [cursor=pointer]:
+                  - checkbox "Maxsun" [ref=e1134]
+                  - img [ref=e1136]
+                  - generic [ref=e1138]: Maxsun
+                - generic [ref=e1139] [cursor=pointer]:
+                  - checkbox "Sapphire" [ref=e1140]
+                  - img [ref=e1142]
+                  - generic [ref=e1144]: Sapphire
+                - generic [ref=e1145] [cursor=pointer]:
+                  - checkbox "Supermicro" [ref=e1146]
+                  - img [ref=e1148]
+                  - generic [ref=e1150]: Supermicro
+            - generic [ref=e1151]:
+              - button "Рейтинг" [ref=e1152] [cursor=pointer]:
+                - img [ref=e1154]
+                - generic [ref=e1156]: Рейтинг
+                - img [ref=e1157]
+              - radiogroup "Минимальный рейтинг" [ref=e1159]:
+                - generic [ref=e1160] [cursor=pointer]:
+                  - radio "4★ и выше" [ref=e1161]
+                  - img [ref=e1163]
+                  - generic [ref=e1165]:
+                    - img [ref=e1166]
+                    - img [ref=e1168]
+                    - img [ref=e1170]
+                    - img [ref=e1172]
+                    - img [ref=e1174]
+                  - generic [ref=e1176]: 4★ и выше
+                - generic [ref=e1177] [cursor=pointer]:
+                  - radio "3★ и выше" [ref=e1178]
+                  - img [ref=e1180]
+                  - generic [ref=e1182]:
+                    - img [ref=e1183]
+                    - img [ref=e1185]
+                    - img [ref=e1187]
+                    - img [ref=e1189]
+                    - img [ref=e1191]
+                  - generic [ref=e1193]: 3★ и выше
+                - generic [ref=e1194] [cursor=pointer]:
+                  - radio "2★ и выше" [ref=e1195]
+                  - img [ref=e1197]
+                  - generic [ref=e1199]:
+                    - img [ref=e1200]
+                    - img [ref=e1202]
+                    - img [ref=e1204]
+                    - img [ref=e1206]
+                    - img [ref=e1208]
+                  - generic [ref=e1210]: 2★ и выше
+                - generic [ref=e1211] [cursor=pointer]:
+                  - radio "1★ и выше" [ref=e1212]
+                  - img [ref=e1214]
+                  - generic [ref=e1216]:
+                    - img [ref=e1217]
+                    - img [ref=e1219]
+                    - img [ref=e1221]
+                    - img [ref=e1223]
+                    - img [ref=e1225]
+                  - generic [ref=e1227]: 1★ и выше
+                - generic [ref=e1228] [cursor=pointer]:
+                  - radio "Любой рейтинг" [checked] [ref=e1229]
+                  - img [ref=e1231]
+                  - generic [ref=e1233]: Любой рейтинг
+            - generic [ref=e1234]:
+              - button "Наличие" [ref=e1235] [cursor=pointer]:
+                - img [ref=e1237]
+                - generic [ref=e1241]: Наличие
+                - img [ref=e1242]
+              - generic [ref=e1244]:
+                - generic [ref=e1245] [cursor=pointer]:
+                  - checkbox "В наличии" [checked] [ref=e1246]
+                  - img [ref=e1248]
+                  - generic [ref=e1250]: В наличии
+                - generic [ref=e1251] [cursor=pointer]:
+                  - checkbox "Под заказ" [ref=e1252]
+                  - img [ref=e1254]
+                  - generic [ref=e1256]: Под заказ
+            - button "Сбросить фильтры" [ref=e1257] [cursor=pointer]:
+              - img [ref=e1258]
+              - text: Сбросить фильтры
+          - generic [ref=e1261]:
+            - generic [ref=e1262]:
+              - generic [ref=e1264]:
+                - img
+                - searchbox "Поиск по названию…" [ref=e1265]
+              - generic [ref=e1266]:
+                - combobox [ref=e1267] [cursor=pointer]:
+                  - option "По популярности" [selected]
+                  - option "Сначала дешевле"
+                  - option "Сначала дороже"
+                  - option "По названию"
+                  - option "По рейтингу"
+                  - option "Новые"
+                - generic [ref=e1268] [cursor=pointer]:
+                  - img [ref=e1270]
+                  - checkbox "В наличии" [checked]
+                  - generic [ref=e1272]: В наличии
+            - generic [ref=e1273]: "Найдено: 12"
+            - generic [ref=e1274]:
+              - generic [ref=e1276] [cursor=pointer]:
+                - img "Материнская плата AFOX AFB250-BTC12EX" [ref=e1279]
+                - generic [ref=e1280]:
+                  - heading "Материнская плата AFOX AFB250-BTC12EX" [level=4] [ref=e1281]:
+                    - button "Материнская плата AFOX AFB250-BTC12EX" [ref=e1282]
+                  - button "Подробнее" [ref=e1283]:
+                    - img [ref=e1284]
+                    - text: Подробнее
+                  - generic [ref=e1288]:
+                    - generic [ref=e1290]: 95,02 BYN
+                    - button "Выбрать" [ref=e1291]
+              - generic [ref=e1293] [cursor=pointer]:
+                - img "Материнская плата AFOX AFHM65-ETH8EX" [ref=e1296]
+                - generic [ref=e1297]:
+                  - heading "Материнская плата AFOX AFHM65-ETH8EX" [level=4] [ref=e1298]:
+                    - button "Материнская плата AFOX AFHM65-ETH8EX" [ref=e1299]
+                  - button "Подробнее" [ref=e1300]:
+                    - img [ref=e1301]
+                    - text: Подробнее
+                  - generic [ref=e1305]:
+                    - generic [ref=e1307]: 123,68 BYN
+                    - button "Выбрать" [ref=e1308]
+              - generic [ref=e1310] [cursor=pointer]:
+                - img "Материнская плата Maxsun Challenger H610M-H V1" [ref=e1313]
+                - generic [ref=e1314]:
+                  - heading "Материнская плата Maxsun Challenger H610M-H V1" [level=4] [ref=e1315]:
+                    - button "Материнская плата Maxsun Challenger H610M-H V1" [ref=e1316]
+                  - button "Подробнее" [ref=e1317]:
+                    - img [ref=e1318]
+                    - text: Подробнее
+                  - generic [ref=e1322]:
+                    - generic [ref=e1324]: 203,22 BYN
+                    - button "Выбрать" [ref=e1325]
+              - generic [ref=e1327] [cursor=pointer]:
+                - img "Материнская плата Arktek AK-H310M EG" [ref=e1330]
+                - generic [ref=e1331]:
+                  - heading "Материнская плата Arktek AK-H310M EG" [level=4] [ref=e1332]:
+                    - button "Материнская плата Arktek AK-H310M EG" [ref=e1333]
+                  - button "Подробнее" [ref=e1334]:
+                    - img [ref=e1335]
+                    - text: Подробнее
+                  - generic [ref=e1339]:
+                    - generic [ref=e1341]: 205,43 BYN
+                    - button "Выбрать" [ref=e1342]
+              - generic [ref=e1344] [cursor=pointer]:
+                - img "Материнская плата BIOSTAR A520MHP Ver. 6.0" [ref=e1347]
+                - generic [ref=e1348]:
+                  - heading "Материнская плата BIOSTAR A520MHP Ver. 6.0" [level=4] [ref=e1349]:
+                    - button "Материнская плата BIOSTAR A520MHP Ver. 6.0" [ref=e1350]
+                  - button "Подробнее" [ref=e1351]:
+                    - img [ref=e1352]
+                    - text: Подробнее
+                  - generic [ref=e1356]:
+                    - generic [ref=e1358]: 205,46 BYN
+                    - button "Выбрать" [ref=e1359]
+              - generic [ref=e1361] [cursor=pointer]:
+                - img "Материнская плата BIOSTAR H610MHP 2.0 Ver. 6.0" [ref=e1364]
+                - generic [ref=e1365]:
+                  - heading "Материнская плата BIOSTAR H610MHP 2.0 Ver. 6.0" [level=4] [ref=e1366]:
+                    - button "Материнская плата BIOSTAR H610MHP 2.0 Ver. 6.0" [ref=e1367]
+                  - button "Подробнее" [ref=e1368]:
+                    - img [ref=e1369]
+                    - text: Подробнее
+                  - generic [ref=e1373]:
+                    - generic [ref=e1375]: 212,07 BYN
+                    - button "Выбрать" [ref=e1376]
+              - generic [ref=e1378] [cursor=pointer]:
+                - img "Материнская плата Gigabyte A520M K V2 (rev. 1.1)" [ref=e1381]
+                - generic [ref=e1382]:
+                  - heading "Материнская плата Gigabyte A520M K V2 (rev. 1.1)" [level=4] [ref=e1383]:
+                    - button "Материнская плата Gigabyte A520M K V2 (rev. 1.1)" [ref=e1384]
+                  - button "Подробнее" [ref=e1385]:
+                    - img [ref=e1386]
+                    - text: Подробнее
+                  - generic [ref=e1390]:
+                    - generic [ref=e1392]: 221,52 BYN
+                    - button "Выбрать" [ref=e1393]
+              - generic [ref=e1395] [cursor=pointer]:
+                - img "Материнская плата Gigabyte A520M K V2 (rev. 1.0)" [ref=e1398]
+                - generic [ref=e1399]:
+                  - heading "Материнская плата Gigabyte A520M K V2 (rev. 1.0)" [level=4] [ref=e1400]:
+                    - button "Материнская плата Gigabyte A520M K V2 (rev. 1.0)" [ref=e1401]
+                  - button "Подробнее" [ref=e1402]:
+                    - img [ref=e1403]
+                    - text: Подробнее
+                  - generic [ref=e1407]:
+                    - generic [ref=e1409]: 222,98 BYN
+                    - button "Выбрать" [ref=e1410]
+              - generic [ref=e1412] [cursor=pointer]:
+                - img "Материнская плата ASRock H610M-HVS/M.2 R2.0" [ref=e1415]
+                - generic [ref=e1416]:
+                  - heading "Материнская плата ASRock H610M-HVS/M.2 R2.0" [level=4] [ref=e1417]:
+                    - button "Материнская плата ASRock H610M-HVS/M.2 R2.0" [ref=e1418]
+                  - button "Подробнее" [ref=e1419]:
+                    - img [ref=e1420]
+                    - text: Подробнее
+                  - generic [ref=e1424]:
+                    - generic [ref=e1426]: 234,16 BYN
+                    - button "Выбрать" [ref=e1427]
+              - generic [ref=e1429] [cursor=pointer]:
+                - img "Материнская плата MSI A520M-A PRO" [ref=e1432]
+                - generic [ref=e1433]:
+                  - heading "Материнская плата MSI A520M-A PRO" [level=4] [ref=e1434]:
+                    - button "Материнская плата MSI A520M-A PRO" [ref=e1435]
+                  - button "Подробнее" [ref=e1436]:
+                    - img [ref=e1437]
+                    - text: Подробнее
+                  - generic [ref=e1441]:
+                    - generic [ref=e1443]: 237,04 BYN
+                    - button "Выбрать" [ref=e1444]
+              - generic [ref=e1446] [cursor=pointer]:
+                - img "Материнская плата ASUS Prime A520M-R" [ref=e1449]
+                - generic [ref=e1450]:
+                  - heading "Материнская плата ASUS Prime A520M-R" [level=4] [ref=e1451]:
+                    - button "Материнская плата ASUS Prime A520M-R" [ref=e1452]
+                  - button "Подробнее" [ref=e1453]:
+                    - img [ref=e1454]
+                    - text: Подробнее
+                  - generic [ref=e1458]:
+                    - generic [ref=e1460]: 238,46 BYN
+                    - button "Выбрать" [ref=e1461]
+              - generic [ref=e1463] [cursor=pointer]:
+                - img "Материнская плата BIOSTAR H610MHP Ver. 6.1" [ref=e1466]
+                - generic [ref=e1467]:
+                  - heading "Материнская плата BIOSTAR H610MHP Ver. 6.1" [level=4] [ref=e1468]:
+                    - button "Материнская плата BIOSTAR H610MHP Ver. 6.1" [ref=e1469]
+                  - button "Подробнее" [ref=e1470]:
+                    - img [ref=e1471]
+                    - text: Подробнее
+                  - generic [ref=e1475]:
+                    - generic [ref=e1477]: 244,07 BYN
+                    - button "Выбрать" [ref=e1478]
+          - complementary [ref=e1479]:
+            - generic [ref=e1480]:
+              - heading "Предпросмотр" [level=4] [ref=e1481]
+              - paragraph [ref=e1482]: Выберите товар из списка, здесь появятся его характеристики.
+  - contentinfo [ref=e395]:
+    - generic [ref=e396]:
+      - generic [ref=e397]:
+        - generic [ref=e398]:
+          - link "GoldPC" [ref=e399] [cursor=pointer]:
+            - /url: /
+            - img [ref=e401]
+            - generic [ref=e405]: GoldPC
+          - paragraph [ref=e406]: Премиальный магазин компьютерных компонентов с профессиональной сборкой и гарантией качества.
+        - generic [ref=e407]:
+          - heading "Каталог" [level=4] [ref=e408]
+          - list [ref=e409]:
+            - listitem [ref=e410]:
+              - link "Процессоры" [ref=e411] [cursor=pointer]:
+                - /url: /catalog?category=cpu
+            - listitem [ref=e412]:
+              - link "Видеокарты" [ref=e413] [cursor=pointer]:
+                - /url: /catalog?category=gpu
+            - listitem [ref=e414]:
+              - link "Мат. платы" [ref=e415] [cursor=pointer]:
+                - /url: /catalog?category=motherboard
+            - listitem [ref=e416]:
+              - link "Память" [ref=e417] [cursor=pointer]:
+                - /url: /catalog?category=ram
+            - listitem [ref=e418]:
+              - link "Накопители" [ref=e419] [cursor=pointer]:
+                - /url: /catalog?category=storage
+            - listitem [ref=e420]:
+              - link "Блоки питания" [ref=e421] [cursor=pointer]:
+                - /url: /catalog?category=psu
+            - listitem [ref=e422]:
+              - link "Корпуса" [ref=e423] [cursor=pointer]:
+                - /url: /catalog?category=case
+            - listitem [ref=e424]:
+              - link "Охлаждение" [ref=e425] [cursor=pointer]:
+                - /url: /catalog?category=cooling
+            - listitem [ref=e426]:
+              - link "Мониторы" [ref=e427] [cursor=pointer]:
+                - /url: /catalog?category=monitor
+            - listitem [ref=e428]:
+              - link "Клавиатуры" [ref=e429] [cursor=pointer]:
+                - /url: /catalog?category=keyboard
+            - listitem [ref=e430]:
+              - link "Мыши" [ref=e431] [cursor=pointer]:
+                - /url: /catalog?category=mouse
+            - listitem [ref=e432]:
+              - link "Наушники" [ref=e433] [cursor=pointer]:
+                - /url: /catalog?category=headphones
+        - generic [ref=e434]:
+          - heading "Сервис" [level=4] [ref=e435]
+          - list [ref=e436]:
+            - listitem [ref=e437]:
+              - link "Конструктор ПК" [ref=e438] [cursor=pointer]:
+                - /url: /pc-builder
+            - listitem [ref=e439]:
+              - link "Сборка и настройка" [ref=e440] [cursor=pointer]:
+                - /url: /services/assembly
+            - listitem [ref=e441]:
+              - link "Доставка по РБ" [ref=e442] [cursor=pointer]:
+                - /url: /delivery
+            - listitem [ref=e443]:
+              - link "Оплата и рассрочка" [ref=e444] [cursor=pointer]:
+                - /url: /payment
+            - listitem [ref=e445]:
+              - link "Гарантийное обслуживание" [ref=e446] [cursor=pointer]:
+                - /url: /warranty
+            - listitem [ref=e447]:
+              - link "Частые вопросы" [ref=e448] [cursor=pointer]:
+                - /url: /faq
+        - generic [ref=e449]:
+          - heading "Контакты" [level=4] [ref=e450]
+          - list [ref=e451]:
+            - listitem [ref=e452]:
+              - link "Позвонить нам" [ref=e453] [cursor=pointer]:
+                - /url: tel:+375333149283
+                - text: +375 (33) 314-92-83
+            - listitem [ref=e454]:
+              - link "Написать нам на email" [ref=e455] [cursor=pointer]:
+                - /url: mailto:goldpc.team@gmail.com
+                - text: goldpc.team@gmail.com
+            - listitem [ref=e456]: Минск, Улица Казимировская 21
+      - generic [ref=e457]:
+        - generic [ref=e458]: © 2026 GoldPC. Все права защищены.
+        - generic [ref=e459]:
+          - generic "Telegram (скоро)" [ref=e460]:
+            - img [ref=e461]
+          - generic "Instagram (скоро)" [ref=e463]:
+            - img [ref=e464]

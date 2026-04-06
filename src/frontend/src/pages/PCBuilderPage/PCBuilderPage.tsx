@@ -19,14 +19,12 @@ import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
 import {
   usePCBuilder,
   PC_BUILDER_SLOTS,
-  MAX_RAM_MODULES,
-  MAX_STORAGE_MODULES,
-  MAX_FAN_MODULES,
   type PCComponentType,
   type PCBuilderSelectedState,
 } from '../../hooks';
 import { extractSocket } from '../../utils/compatibilityUtils';
 import type { Product, ProductCategory } from '../../api/types';
+import { useToastStore } from '../../store/toastStore';
 import './PCBuilderPage.css';
 
 const icons = {
@@ -253,7 +251,12 @@ export const MemoizedSlotRow = React.memo(function MemoizedSlotRow({
   );
 });
 
-function buildSlotRows(state: PCBuilderSelectedState): SlotRow[] {
+function buildSlotRows(
+  state: PCBuilderSelectedState,
+  maxRam: number,
+  maxStorage: number,
+  maxFan: number,
+): SlotRow[] {
   const rows: SlotRow[] = [];
   let anim = 0;
 
@@ -265,8 +268,7 @@ function buildSlotRows(state: PCBuilderSelectedState): SlotRow[] {
     rows.push({ kind: 'single', key: s.key, label: s.label, anim: anim++ });
   }
 
-  const ramCount =
-    state.ram.length >= MAX_RAM_MODULES ? MAX_RAM_MODULES : state.ram.length + 1;
+  const ramCount = state.ram.length >= maxRam ? maxRam : state.ram.length + 1;
   for (let i = 0; i < ramCount; i++) {
     rows.push({
       kind: 'ram',
@@ -276,10 +278,7 @@ function buildSlotRows(state: PCBuilderSelectedState): SlotRow[] {
     });
   }
 
-  const stCount =
-    state.storage.length >= MAX_STORAGE_MODULES
-      ? MAX_STORAGE_MODULES
-      : state.storage.length + 1;
+  const stCount = state.storage.length >= maxStorage ? maxStorage : state.storage.length + 1;
   for (let i = 0; i < stCount; i++) {
     rows.push({
       kind: 'storage',
@@ -303,10 +302,7 @@ function buildSlotRows(state: PCBuilderSelectedState): SlotRow[] {
     rows.push({ kind: 'single', key: s.key, label: s.label, anim: anim++ });
   }
 
-  const fanCount =
-    state.fan.length >= MAX_FAN_MODULES
-      ? MAX_FAN_MODULES
-      : state.fan.length + 1;
+  const fanCount = state.fan.length >= maxFan ? maxFan : state.fan.length + 1;
   for (let i = 0; i < fanCount; i++) {
     rows.push({
       kind: 'fan',
@@ -339,14 +335,19 @@ export function PCBuilderPage() {
     isApiLoading,
     apiFpsData,
     addToCart,
+    maxRamModules,
+    maxStorageModules,
+    maxFanModules,
   } = usePCBuilder();
+
+  const showToast = useToastStore((s) => s.showToast);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<PCComponentType | null>(null);
   const [multiIndex, setMultiIndex] = useState<number | undefined>(undefined);
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
 
-  const slotRows = useMemo(() => buildSlotRows(selectedComponents), [selectedComponents]);
+  const slotRows = useMemo(() => buildSlotRows(selectedComponents, maxRamModules, maxStorageModules, maxFanModules), [selectedComponents, maxRamModules, maxStorageModules, maxFanModules]);
 
   const mfrPlatform = useMemo(() => {
     // Determine socket from MB or CPU to restrict brands
@@ -520,6 +521,14 @@ export function PCBuilderPage() {
     navigate('/cart');
   };
 
+  const handleAddToCart = () => {
+    const count = selectedCount;
+    addToCart();
+    const ending = count === 1 ? 'добавлен в корзину' : count < 5 ? 'добавлены в корзину' : 'добавлены в корзину';
+    const noun = count === 1 ? 'товар' : count < 5 ? 'товара' : 'товаров';
+    showToast(`${count} ${noun} ${ending}`, 'success', 4000);
+  };
+
   const currentSlotLabel = useMemo(() => {
     if (!selectedSlot) return '';
     if (selectedSlot === 'ram' || selectedSlot === 'storage' || selectedSlot === 'fan') {
@@ -618,9 +627,9 @@ export function PCBuilderPage() {
                     onSelect={openPicker}
                     onRemove={handleRemove}
                     onChangeQuantity={handleChangeQuantity}
-                    maxRamModules={MAX_RAM_MODULES}
-                    maxStorageModules={MAX_STORAGE_MODULES}
-                    maxFanModules={MAX_FAN_MODULES}
+                    maxRamModules={maxRamModules}
+                    maxStorageModules={maxStorageModules}
+                    maxFanModules={maxFanModules}
                   />
                 ))}
               </div>
@@ -640,9 +649,9 @@ export function PCBuilderPage() {
                     onSelect={openPicker}
                     onRemove={handleRemove}
                     onChangeQuantity={handleChangeQuantity}
-                    maxRamModules={MAX_RAM_MODULES}
-                    maxStorageModules={MAX_STORAGE_MODULES}
-                    maxFanModules={MAX_FAN_MODULES}
+                    maxRamModules={maxRamModules}
+                    maxStorageModules={maxStorageModules}
+                    maxFanModules={maxFanModules}
                   />
                 ))}
               </div>
@@ -662,10 +671,13 @@ export function PCBuilderPage() {
                 totalCount={totalCount}
                 apiFpsData={apiFpsData}
                 isApiLoading={isApiLoading}
-                onAddToCart={addToCart}
-                onSave={() => setPdfModalOpen(true)}
+                onAddToCart={handleAddToCart}
+                onSave={() => showToast('Сборка сохранена', 'success', 3000)}
                 onCheckout={handleCheckout}
-                onExportPdf={() => setPdfModalOpen(true)}
+                onExportPdf={() => {
+                  setPdfModalOpen(true);
+                  showToast('Подготовка к печати...', 'info', 3000);
+                }}
               />
             </div>
           </div>
