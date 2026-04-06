@@ -169,7 +169,7 @@ export const catalogApi = {
    */
   async getFilterAttributes(
     categorySlug: string,
-    filterParams?: { manufacturerIds?: string[]; specifications?: Record<string, string>; specificationRanges?: Record<string, string> }
+    filterParams?: { manufacturerIds?: string[]; specifications?: Record<string, string>; specificationRanges?: Record<string, string>; inStock?: boolean }
   ): Promise<FilterAttribute[]> {
     const apiParams: Record<string, string | number | boolean> = {};
     if (filterParams?.manufacturerIds?.length) {
@@ -185,6 +185,7 @@ export const catalogApi = {
         if (value) apiParams[`specificationRanges[${key}]`] = value;
       }
     }
+    if (filterParams?.inStock != null) apiParams.inStock = filterParams.inStock;
     const paramsSerializer = (params: Record<string, unknown>) => {
       const pairs: [string, string][] = [];
       for (const [k, v] of Object.entries(params)) {
@@ -203,7 +204,7 @@ export const catalogApi = {
 
   async getFilterFacets(
     categorySlug: string,
-    filterParams?: { manufacturerIds?: string[]; specifications?: Record<string, string>; specificationRanges?: Record<string, string> }
+    filterParams?: { manufacturerIds?: string[]; specifications?: Record<string, string>; specificationRanges?: Record<string, string>; inStock?: boolean }
   ): Promise<FilterFacetAttribute[]> {
     const apiParams: Record<string, string | number | boolean> = {};
     if (filterParams?.manufacturerIds?.length) {
@@ -219,6 +220,7 @@ export const catalogApi = {
         if (value) apiParams[`specificationRanges[${key}]`] = value;
       }
     }
+    if (filterParams?.inStock != null) apiParams.inStock = filterParams.inStock;
     const paramsSerializer = (params: Record<string, unknown>) => {
       const pairs: [string, string][] = [];
       for (const [k, v] of Object.entries(params)) {

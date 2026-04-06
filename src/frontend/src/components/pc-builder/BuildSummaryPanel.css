@@ -15,9 +15,9 @@
 }
 
 .bsp__compat-status--ok {
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  color: #22c55e;
+  background: rgba(212, 165, 116, 0.08);
+  border: 1px solid rgba(212, 165, 116, 0.25);
+  color: var(--accent, #d4a574);
 }
 
 .bsp__compat-status--warning {

@@ -279,6 +279,8 @@ public class ProductRepository : IProductRepository
             var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
             if (manIds != null && manIds.Count > 0)
                 baseProductsQuery = baseProductsQuery.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
+            if (filterContext.InStock == true)
+                baseProductsQuery = baseProductsQuery.Where(p => p.Stock > 0);
         }
         var productIds = await baseProductsQuery.Select(p => p.Id).ToListAsync();
 
@@ -358,6 +360,8 @@ public class ProductRepository : IProductRepository
             var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
             if (manIds != null && manIds.Count > 0)
                 baseProductsQuery = baseProductsQuery.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
+            if (filterContext.InStock == true)
+                baseProductsQuery = baseProductsQuery.Where(p => p.Stock > 0);
         }
         var productIds = await baseProductsQuery.Select(p => p.Id).ToListAsync();
 
@@ -441,6 +445,8 @@ public class ProductRepository : IProductRepository
             {
                 baseProductsQuery = baseProductsQuery.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
             }
+            if (filterContext.InStock == true)
+                baseProductsQuery = baseProductsQuery.Where(p => p.Stock > 0);
         }
         var productIds = await baseProductsQuery.Select(p => p.Id).ToListAsync();
 

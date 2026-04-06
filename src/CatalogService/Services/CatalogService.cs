@@ -283,7 +283,8 @@ public class CatalogService : ICatalogService
             {
                 ManufacturerIds = filterParams.ManufacturerIds,
                 Specifications = filterParams.Specifications,
-                SpecificationRanges = filterParams.SpecificationRanges
+                SpecificationRanges = filterParams.SpecificationRanges,
+                InStock = filterParams.InStock
             }
             : null;
 
@@ -359,7 +360,8 @@ public class CatalogService : ICatalogService
             {
                 ManufacturerIds = filterParams.ManufacturerIds,
                 Specifications = filterParams.Specifications,
-                SpecificationRanges = filterParams.SpecificationRanges
+                SpecificationRanges = filterParams.SpecificationRanges,
+                InStock = filterParams.InStock
             }
             : null;
 

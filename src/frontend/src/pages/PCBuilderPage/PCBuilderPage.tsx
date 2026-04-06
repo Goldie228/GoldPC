@@ -268,15 +268,14 @@ function buildSlotRows(
     rows.push({ kind: 'single', key: s.key, label: s.label, anim: anim++ });
   }
 
-  const ramCount = state.ram.length >= maxRam ? maxRam : state.ram.length + 1;
-  for (let i = 0; i < ramCount; i++) {
-    rows.push({
-      kind: 'ram',
-      rowIndex: i,
-      label: ramCount > 1 ? `ОЗУ (${i + 1})` : 'Оперативная память',
-      anim: anim++,
-    });
-  }
+  // RAM: всегда 1 слот, количество управляется через qty контроллер
+  const ramQty = state.ram.length;
+  rows.push({
+    kind: 'ram',
+    rowIndex: 0,
+    label: ramQty > 0 ? `Оперативная память (×${ramQty})` : 'Оперативная память',
+    anim: anim++,
+  });
 
   const stCount = state.storage.length >= maxStorage ? maxStorage : state.storage.length + 1;
   for (let i = 0; i < stCount; i++) {
@@ -302,15 +301,14 @@ function buildSlotRows(
     rows.push({ kind: 'single', key: s.key, label: s.label, anim: anim++ });
   }
 
-  const fanCount = state.fan.length >= maxFan ? maxFan : state.fan.length + 1;
-  for (let i = 0; i < fanCount; i++) {
-    rows.push({
-      kind: 'fan',
-      rowIndex: i,
-      label: fanCount > 1 ? `Вентилятор (${i + 1})` : 'Вентилятор',
-      anim: anim++,
-    });
-  }
+  // Fan: всегда 1 слот, количество управляется через qty контроллер
+  const fanQty = state.fan.length;
+  rows.push({
+    kind: 'fan',
+    rowIndex: 0,
+    label: fanQty > 0 ? `Вентилятор (×${fanQty})` : 'Вентилятор',
+    anim: anim++,
+  });
 
   return rows;
 }
@@ -325,6 +323,7 @@ export function PCBuilderPage() {
     selectedCount,
     totalCount,
     selectComponent,
+    duplicateModule,
     removeComponent,
     getSlotState,
     isCompatible,
@@ -336,6 +335,7 @@ export function PCBuilderPage() {
     apiFpsData,
     addToCart,
     maxRamModules,
+    maxRamQty,
     maxStorageModules,
     maxFanModules,
   } = usePCBuilder();
@@ -347,7 +347,7 @@ export function PCBuilderPage() {
   const [multiIndex, setMultiIndex] = useState<number | undefined>(undefined);
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
 
-  const slotRows = useMemo(() => buildSlotRows(selectedComponents, maxRamModules, maxStorageModules, maxFanModules), [selectedComponents, maxRamModules, maxStorageModules, maxFanModules]);
+  const slotRows = useMemo(() => buildSlotRows(selectedComponents, maxRamQty, maxStorageModules, maxFanModules), [selectedComponents, maxRamQty, maxStorageModules, maxFanModules]);
 
   const mfrPlatform = useMemo(() => {
     // Determine socket from MB or CPU to restrict brands
@@ -395,28 +395,26 @@ export function PCBuilderPage() {
   const handleChangeQuantity = useCallback(
     (slotType: PCComponentType, rowIndex: number, delta: number) => {
     if (delta < 0) {
-      // Remove — remove from the end (highest index)
+      // Remove — clear all (single-slot types) or remove last (storage)
       if (slotType === 'ram' && selectedComponents.ram.length > 0) {
-        removeComponent(slotType, selectedComponents.ram.length - 1);
+        removeComponent(slotType);
       } else if (slotType === 'storage' && selectedComponents.storage.length > 0) {
         removeComponent(slotType, selectedComponents.storage.length - 1);
       } else if (slotType === 'fan' && selectedComponents.fan.length > 0) {
-        removeComponent(slotType, selectedComponents.fan.length - 1);
+        removeComponent(slotType);
       }
     } else {
-      // Add a copy of the module at rowIndex to the next slot
-      if (slotType === 'ram' && rowIndex < selectedComponents.ram.length) {
-        const product = selectedComponents.ram[rowIndex]?.product;
-        if (product) selectComponent(slotType, product);
-      } else if (slotType === 'storage' && rowIndex < selectedComponents.storage.length) {
+      // Add — duplicate first module
+      if (slotType === 'ram' && selectedComponents.ram.length > 0) {
+        duplicateModule('ram');
+      } else if (slotType === 'storage' && selectedComponents.storage.length > 0) {
         const product = selectedComponents.storage[rowIndex]?.product;
         if (product) selectComponent(slotType, product);
-      } else if (slotType === 'fan' && rowIndex < selectedComponents.fan.length) {
-        const product = selectedComponents.fan[rowIndex]?.product;
-        if (product) selectComponent(slotType, product);
+      } else if (slotType === 'fan' && selectedComponents.fan.length > 0) {
+        duplicateModule('fan');
       }
     }
-  }, [selectedComponents.ram, selectedComponents.storage, selectedComponents.fan, selectComponent, removeComponent]);
+  }, [selectedComponents.ram, selectedComponents.storage, selectedComponents.fan, selectComponent, duplicateModule, removeComponent]);
 
   const handleProductSelect = (product: Product) => {
     if (!selectedSlot) return;
