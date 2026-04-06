@@ -42,17 +42,8 @@ const queryClient = new QueryClient({
 })
 
 async function enableMocking() {
-  // Пропускаем MSW если нужны реальные данные (VITE_USE_REAL_API=true)
-  if (import.meta.env.VITE_USE_REAL_API === 'true') {
-    return
-  }
-  // Включаем MSW только в режиме разработки
-  if (import.meta.env.DEV) {
-    const { worker } = await import('./mocks/browser')
-    return worker.start({
-      onUnhandledRequest: 'bypass',
-    })
-  }
+  // MSW permanently disabled — always use real API in dev
+  return undefined
 }
 
 // Инициализация мониторинга производительности

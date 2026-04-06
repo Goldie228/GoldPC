@@ -166,6 +166,18 @@ function extractMbRamSlots(specs: ProductSpecifications | undefined): number {
   return (specs.ramSlots as number) || 4;
 }
 
+/**
+ * Парсит количество плашек из спецификации modules (например "2 модуля" → 2).
+ * Используется для RAM-продуктов с заводскими комплектами.
+ */
+function extractModulesCount(specs: ProductSpecifications | undefined): number {
+  if (!specs) return 1;
+  const raw = specs.modules as string | undefined;
+  if (!raw) return 1;
+  const match = raw.match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : 1;
+}
+
 function extractTDP(specs: ProductSpecifications | undefined): number {
   if (!specs) return 0;
   return (specs.tdp as number) || (specs.powerDraw as number) || 0;
@@ -213,11 +225,13 @@ function checkBuildCompatibility(components: PCBuilderSelectedState): Compatibil
       }
     }
 
-    // Check motherboard RAM slot limit for selected RAM modules
+    // Check motherboard RAM slot limit accounting for modules per unit (e.g. "2 модуля" kit)
     if (rams.length > 0) {
       const mbRamSlots = extractMbRamSlots(motherboard.specifications);
-      if (rams.length > mbRamSlots) {
-        errors.push(`Выбрано ${rams.length} модулей ОЗУ, но материнская плата имеет только ${mbRamSlots} слотов`);
+      const modulesPerUnit = extractModulesCount(rams[0].product.specifications);
+      const totalSticks = rams.length * modulesPerUnit;
+      if (totalSticks > mbRamSlots) {
+        errors.push(`Выбрано ${rams.length} комплект(ов) ОЗУ (×${modulesPerUnit} плашек), итого ${totalSticks} плашек, но материнская плата имеет только ${mbRamSlots} слотов`);
       }
     }
   }
@@ -548,6 +562,8 @@ export interface UsePCBuilderReturn {
     product: Product,
     options?: SelectComponentOptions
   ) => void;
+  /** Увеличить количество модулей типа (RAM/fan) за счёт дублирования первого */
+  duplicateModule: (type: 'ram' | 'storage' | 'fan') => void;
   removeComponent: (type: PCComponentType, multiIndex?: number) => void;
   resetBuild: () => void;
   clearBuild: () => void;
@@ -556,6 +572,8 @@ export interface UsePCBuilderReturn {
   checkCompatibility: () => CompatibilityResult;
   isCompatible: boolean;
   maxRamModules: number;
+  /** Макс. количество комплектов ОЗУ (с учётом modulesPerUnit и слотов материнки) */
+  maxRamQty: number;
   maxStorageModules: number;
   maxFanModules: number;
 }
@@ -719,19 +737,8 @@ export function usePCBuilder(): UsePCBuilderReturn {
         const sc: SelectedComponent = { product, type };
 
         if (type === 'ram') {
-          // Compute dynamic limit inside setState to avoid stale dependency
-          const maxRam = selectedComponents.motherboard
-            ? extractMbRamSlots(selectedComponents.motherboard.product.specifications)
-            : MAX_RAM_MODULES;
-          if (idx !== undefined) {
-            if (idx < next.ram.length) {
-              next.ram[idx] = sc;
-            } else if (idx === next.ram.length && next.ram.length < maxRam) {
-              next.ram.push(sc);
-            }
-          } else if (next.ram.length < maxRam) {
-            next.ram.push(sc);
-          }
+          // Single-slot + qty: always one product, user controls quantity via UI
+          next.ram = [sc];
           return next;
         }
         if (type === 'storage') {
@@ -747,12 +754,8 @@ export function usePCBuilder(): UsePCBuilderReturn {
           return next;
         }
         if (type === 'fan') {
-          if (idx !== undefined) {
-            if (idx < next.fan.length) next.fan[idx] = sc;
-            else if (idx === next.fan.length && next.fan.length < MAX_FAN_MODULES) next.fan.push(sc);
-          } else if (next.fan.length < MAX_FAN_MODULES) {
-            next.fan.push(sc);
-          }
+          // Single-slot + qty: always one product
+          next.fan = [sc];
           return next;
         }
 
@@ -762,6 +765,16 @@ export function usePCBuilder(): UsePCBuilderReturn {
     },
     []
   );
+
+  const duplicateModule = useCallback((type: 'ram' | 'storage' | 'fan') => {
+    setSelectedComponents((prev) => {
+      const arr = prev[type];
+      if (arr.length === 0 || arr.length >= MAX_RAM_MODULES) return prev;
+      const first = arr[0];
+      if (!first) return prev;
+      return { ...prev, [type]: [...arr, { ...first }] };
+    });
+  }, []);
 
   const removeComponent = useCallback((type: PCComponentType, multiIndex?: number) => {
     setSelectedComponents((prev) => {
@@ -900,6 +913,15 @@ export function usePCBuilder(): UsePCBuilderReturn {
     return MAX_RAM_MODULES;
   }, [selectedComponents.motherboard]);
 
+  // Max quantity of RAM *units* that fit in MB slots (accounting for modules per unit)
+  const maxRamQty = useMemo(() => {
+    if (selectedComponents.ram.length > 0) {
+      const modulesPerUnit = extractModulesCount(selectedComponents.ram[0]?.product.specifications);
+      return Math.min(MAX_RAM_MODULES, Math.floor(maxRamModules / Math.max(1, modulesPerUnit)));
+    }
+    return MAX_RAM_MODULES;
+  }, [selectedComponents.ram.length, maxRamModules]);
+
   // Trim excess RAM modules if motherboard is swapped to one with fewer slots
   useEffect(() => {
     if (selectedComponents.ram.length > maxRamModules) {
@@ -923,6 +945,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     selectedCount,
     totalCount: TOTAL_CATEGORIES,
     selectComponent,
+    duplicateModule,
     removeComponent,
     resetBuild,
     clearBuild,
@@ -931,6 +954,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     checkCompatibility,
     isCompatible: compatibility.isCompatible,
     maxRamModules,
+    maxRamQty,
     maxStorageModules: MAX_STORAGE_MODULES,
     maxFanModules: MAX_FAN_MODULES,
   };

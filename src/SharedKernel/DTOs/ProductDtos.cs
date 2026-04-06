@@ -331,6 +331,9 @@ public record FilterAttributesQueryDto
     public Dictionary<string, string>? Specifications { get; init; }
 
     public Dictionary<string, string>? SpecificationRanges { get; init; }
+
+    /// <summary>Фильтр по наличию на складе. Используется для согласования фасетов с выдачей товаров.</summary>
+    public bool? InStock { get; init; }
 }
 
 /// <summary>

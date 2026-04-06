@@ -134,7 +134,6 @@ function generatePdf(props: PdfExportModalProps): Blob {
   const dark = [24, 24, 27]; // #18181b
   const text = [250, 250, 250]; // #fafafa
   const muted = [113, 113, 122]; // #71717a
-  const green = [34, 197, 94]; // #22c55e
   const red = [239, 68, 68]; // #ef4444
   const yellow = [234, 179, 8]; // #eab308
   let y = 0;
@@ -170,9 +169,9 @@ function generatePdf(props: PdfExportModalProps): Blob {
   y += 6;
 
   if (isCompatible) {
-    doc.setFillColor(...green);
+    doc.setFillColor(...accent);
     doc.roundedRect(margin, y - 4, 8, 8, 2, 2, 'F');
-    doc.setTextColor(...green);
+    doc.setTextColor(...accent);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text('  Все компоненты совместимы', margin + 10, y + 1);
@@ -436,16 +435,16 @@ export function PdfExportModal({
 
         <div className={styles.checklist}>
           <div className={styles.checkItem}>
-            <CheckCircle size={16} color="#22c55e" />
+            <CheckCircle size={16} color="#d4a574" />
             <span>Список всех компонентов ({Object.values(selectedComponents).flat().filter(Boolean).length || selectedComponents.cpu ? '✓' : '—'})</span>
           </div>
           <div className={styles.checkItem}>
-            <CheckCircle size={16} color="#22c55e" />
+            <CheckCircle size={16} color="#d4a574" />
             <span>Цена компонентов: {totalPrice.toLocaleString('ru-BY')} BYN</span>
           </div>
           <div className={styles.checkItem}>
             {isCompatible
-              ? <CheckCircle size={16} color="#22c55e" />
+              ? <CheckCircle size={16} color="#d4a574" />
               : <AlertTriangle size={16} color="#eab308" />
             }
             <span>Совместимость: {isCompatible ? 'Все совместимо' : `Ошибки: ${compatibilityErrors.length}`}</span>

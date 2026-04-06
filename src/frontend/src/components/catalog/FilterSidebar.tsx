@@ -397,7 +397,8 @@ export function FilterSidebar({
               Object.entries(ctxSpecs).map(([k, v]) => [k, Array.isArray(v) ? v.join(',') : String(v)])
             ) as Record<string, string>
           : undefined;
-        const attrs = await catalogApi.getFilterFacets(backendSlug, { specifications: serializedSpecs });
+        const isInStock = selectedAvailability.includes('in_stock');
+        const attrs = await catalogApi.getFilterFacets(backendSlug, { specifications: serializedSpecs, inStock: isInStock });
         setFilterAttributes(attrs);
       } catch (err) {
         console.error('Failed to fetch filter attributes:', err);
@@ -407,7 +408,7 @@ export function FilterSidebar({
       }
     };
     fetchAttrs();
-  }, [selectedCategory, JSON.stringify(effectiveSpecifications)]);
+  }, [selectedCategory, JSON.stringify(effectiveSpecifications), selectedAvailability]);
 
   // Загрузка производителей: по категории или всех
   useEffect(() => {
