@@ -1,0 +1,109 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontSize 13
+skinparam defaultFontName Arial
+skinparam dpi 150
+skinparam padding 10
+skinparam linetype ortho
+
+skinparam usecase {
+    BackgroundColor #E8F0FA
+    BorderColor #4472C4
+    BorderThickness 1.5
+    FontColor #222222
+}
+skinparam actor {
+    FontColor #222222
+    FontSize 13
+}
+skinparam package {
+    BorderColor #888888
+    BorderStyle dashed
+    FontColor #555555
+}
+skinparam stereotype {
+    FontColor #0055B3
+}
+
+package "GoldPC — компьютерный магазин с сервисным центром" as Sys {
+
+    usecase "Просмотр каталога\ntоваров" as UC_Catalog
+    usecase "Использование\nконфигуратора ПК" as UC_Builder
+
+    usecase "Оформление\nзаказа" as UC_Order
+    usecase "Оплата\nзаказа" as UC_Payment
+    usecase "Отслеживание\nстатуса заказа" as UC_Track
+
+    usecase "Подача заявки\nв сервисный центр" as UC_Service
+    usecase "Аутентификация\nпользователя" as UC_Auth
+
+    usecase "Изменение\nкорзины" as UC_Cart
+
+    usecase "Управление\nкаталогом" as UC_CatalogMgmt
+    usecase "Управление\nзаказами" as UC_OrderMgmt
+    usecase "Выполнение\nремонтных работ" as UC_Repair
+    usecase "Управление\nпользователями" as UC_Users
+    usecase "Администрирование\nсистемы" as UC_AdminSys
+}
+
+actor "Посетитель" as Visitor
+actor "Клиент" as Client
+actor "Сотрудник" as Staff
+actor "Менеджер" as Manager
+actor "Мастер" as Master
+actor "Администратор" as Admin
+actor "Платёжная\nсистема" as PaySystem
+
+'=== Hidden ordering constraints ===
+UC_Catalog -[hidden]down-> UC_Builder
+UC_Builder -[hidden]down-> UC_Order
+UC_Order -[hidden]down-> UC_Payment
+UC_Payment -[hidden]down-> UC_Track
+
+UC_CatalogMgmt -[hidden]down-> UC_OrderMgmt
+UC_OrderMgmt -[hidden]down-> UC_Service
+UC_Service -[hidden]down-> UC_Auth
+
+UC_CatalogMgmt -[hidden]up-> UC_Catalog
+
+UC_Repair -[hidden]down-> UC_Users
+UC_Users -[hidden]down-> UC_AdminSys
+
+'=== Generalizations ===
+Client -up->|> Visitor : extends
+Manager -up->|> Staff : extends
+Master -up->|> Staff : extends
+
+'=== Associations: Visitor ===
+Visitor --> UC_Catalog
+Visitor --> UC_Builder
+
+'=== Associations: Client ===
+Client --> UC_Order
+Client --> UC_Track
+Client --> UC_Service
+
+'=== Associations: Manager ===
+Manager --> UC_CatalogMgmt
+Manager --> UC_OrderMgmt
+
+'=== Association: Master ===
+Master --> UC_Repair
+
+'=== Association: Admin ===
+Admin --> UC_Users
+Admin --> UC_AdminSys
+
+'=== Payment system ===
+PaySystem --> UC_Payment
+
+'=== Include ===
+UC_Order ..> UC_Payment : <<include>>
+UC_Order ..> UC_Auth : <<include>>
+UC_Track ..> UC_Auth : <<include>>
+UC_Service ..> UC_Auth : <<include>>
+
+'=== Extend ===
+UC_Cart ..> UC_Order : <<extend>>
+
+@enduml
