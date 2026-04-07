@@ -41,11 +41,6 @@ const queryClient = new QueryClient({
   },
 })
 
-async function enableMocking() {
-  // MSW permanently disabled — always use real API in dev
-  return undefined
-}
-
 // Инициализация мониторинга производительности
 // Монитор автоматически начинает сбор Core Web Vitals при импорте
 // В режиме разработки проверяем бюджеты при загрузке страницы
@@ -67,17 +62,15 @@ if (enablePerformanceBudgetChecks) {
   })
 }
 
-enableMocking().then(() => {
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <App />
-        {enableReactQueryDevtools && (
-          <Suspense fallback={null}>
-            <ReactQueryDevtools initialIsOpen={false} />
-          </Suspense>
-        )}
-      </QueryClientProvider>
-    </StrictMode>,
-  )
-})
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <App />
+      {enableReactQueryDevtools && (
+        <Suspense fallback={null}>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </Suspense>
+      )}
+    </QueryClientProvider>
+  </StrictMode>,
+)

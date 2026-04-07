@@ -1,0 +1,1272 @@
+- generic [ref=e3]:
+  - link "Перейти к основному контенту" [ref=e4] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e5]:
+    - link "GoldPC" [ref=e6] [cursor=pointer]:
+      - /url: /
+      - img [ref=e8]
+      - generic [ref=e12]: GoldPC
+    - navigation [ref=e13]:
+      - link "Каталог" [ref=e14] [cursor=pointer]:
+        - /url: /catalog
+      - link "Конструктор" [ref=e15] [cursor=pointer]:
+        - /url: /pc-builder
+      - link "Сервис" [ref=e16] [cursor=pointer]:
+        - /url: /services
+      - link "О нас" [ref=e17] [cursor=pointer]:
+        - /url: /about
+    - generic [ref=e18]:
+      - generic [ref=e20]:
+        - img
+        - combobox "Поиск по сайту (/, Ctrl+K)" [ref=e21]
+      - 'link "Избранное: 0 товаров" [ref=e22] [cursor=pointer]':
+        - /url: /wishlist
+        - img [ref=e23]
+      - 'link "Сравнение: 0 товаров" [ref=e25] [cursor=pointer]':
+        - /url: /comparison
+        - img [ref=e26]
+      - 'button "Корзина: 0 товаров" [ref=e31] [cursor=pointer]':
+        - img [ref=e32]
+      - button "Войти" [ref=e37] [cursor=pointer]:
+        - img [ref=e38]
+  - dialog [ref=e41]:
+    - button [ref=e42] [cursor=pointer]:
+      - img [ref=e43]
+    - navigation [ref=e46]:
+      - link [ref=e47] [cursor=pointer]:
+        - /url: /catalog
+        - text: Каталог
+      - link [ref=e48] [cursor=pointer]:
+        - /url: /pc-builder
+        - text: Конструктор
+      - link [ref=e49] [cursor=pointer]:
+        - /url: /services
+        - text: Сервис
+      - link [ref=e50] [cursor=pointer]:
+        - /url: /about
+        - text: О нас
+    - generic [ref=e51]:
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /wishlist
+        - img [ref=e53]
+        - generic [ref=e55]: Избранное
+      - link [ref=e56] [cursor=pointer]:
+        - /url: /comparison
+        - img [ref=e57]
+        - generic [ref=e62]: Сравнение
+      - link [ref=e63] [cursor=pointer]:
+        - /url: /cart
+        - img [ref=e64]
+        - generic [ref=e68]: Корзина
+      - link [ref=e69] [cursor=pointer]:
+        - /url: /account
+        - img [ref=e70]
+        - generic [ref=e73]: Профиль
+  - main [ref=e74]:
+    - region "Конструктор ПК" [ref=e75]:
+      - paragraph [ref=e76]: "Клавиатура: Tab — переход между слотами и кнопками. Enter или пробел — выбрать или изменить компонент в слоте."
+      - heading "Конструктор ПК" [level=1] [ref=e77]
+      - generic [ref=e78]:
+        - navigation "Хлебные крошки" [ref=e80]:
+          - list [ref=e81]:
+            - listitem [ref=e82]:
+              - link "Главная" [ref=e83] [cursor=pointer]:
+                - /url: /
+            - listitem [ref=e84]:
+              - img [ref=e85]
+              - generic [ref=e87]: Конструктор ПК
+        - main [ref=e88]:
+          - generic [ref=e89]:
+            - generic [ref=e90]:
+              - heading "Комплектующие" [level=2] [ref=e92]
+              - generic [ref=e93]:
+                - 'generic "Мозг компьютера. Отвечает за все вычисления. Важные параметры: количество ядер, частота, TDP (тепловыделение)." [ref=e94]':
+                  - generic [ref=e95]:
+                    - img [ref=e97]
+                    - generic [ref=e100]
+                    - generic [ref=e106]: —
+                    - button "Выбрать" [ref=e108] [cursor=pointer]
+                - generic "Соединяет все компоненты вместе. Определяет сокет процессора, чипсет и доступные слоты расширения." [ref=e109]:
+                  - generic [ref=e110]:
+                    - img [ref=e112]
+                    - generic [ref=e118]
+                    - generic [ref=e124]: —
+                    - button "Выбрать" [ref=e126] [cursor=pointer]
+                - generic "Быстрая память для временных данных. Объём и тайминги (задержки) влияют на отзывчивость системы." [ref=e127]:
+                  - generic [ref=e128]:
+                    - img [ref=e130]
+                    - generic [ref=e132]
+                    - generic [ref=e138]: —
+                    - button "Выбрать" [ref=e140] [cursor=pointer]
+                - generic "Хранит операционную систему, программы и файлы. SSD быстрее HDD." [ref=e141]:
+                  - generic [ref=e142]:
+                    - img [ref=e144]
+                    - generic [ref=e146]
+                    - generic [ref=e152]: —
+                    - button "Выбрать" [ref=e154] [cursor=pointer]
+                - generic "Отводит тепло от процессора. Бывает воздушным или жидкостным." [ref=e155]:
+                  - generic [ref=e156]:
+                    - img [ref=e158]
+                    - generic [ref=e171]
+                    - generic [ref=e177]: —
+                    - button "Выбрать" [ref=e179] [cursor=pointer]
+                - generic "Отвечает за вывод изображения и 3D-графику. Ключевая для игр и работы с графикой." [ref=e180]:
+                  - generic [ref=e181]:
+                    - img [ref=e183]
+                    - generic [ref=e188]
+                    - generic [ref=e194]: —
+                    - button "Выбрать" [ref=e196] [cursor=pointer]
+                - generic "Поставляет электричество всем компонентам. Мощность (Вт) должна покрывать потребление сборки." [ref=e197]:
+                  - generic [ref=e198]:
+                    - img [ref=e200]
+                    - generic [ref=e202]
+                    - generic [ref=e208]: —
+                    - button "Выбрать" [ref=e210] [cursor=pointer]
+                - 'generic "Определяет форм-фактор (размер) сборки: ATX, Micro-ATX или Mini-ITX. Влияет на охлаждение и расширяемость." [ref=e211]':
+                  - generic [ref=e212]:
+                    - img [ref=e214]
+                    - generic [ref=e217]
+                    - generic [ref=e223]: —
+                    - button "Выбрать" [ref=e225] [cursor=pointer]
+                - generic "Корпусной вентилятор для охлаждения. Можно установить несколько." [ref=e226]:
+                  - generic [ref=e227]:
+                    - img [ref=e229]
+                    - generic [ref=e231]
+                    - generic [ref=e237]: —
+                    - button "Выбрать" [ref=e239] [cursor=pointer]
+              - heading "Периферия" [level=2] [ref=e241]
+              - generic [ref=e242]:
+                - generic "Устройство вывода изображения. Диагональ, разрешение и частота обновления влияют на комфорт." [ref=e243]:
+                  - generic [ref=e244]:
+                    - img [ref=e246]
+                    - generic [ref=e248]
+                    - generic [ref=e254]: —
+                    - button "Выбрать" [ref=e256] [cursor=pointer]
+                - generic "Основное устройство ввода. Механические клавиатуры обеспечивают лучшую тактильность." [ref=e257]:
+                  - generic [ref=e258]:
+                    - img [ref=e260]
+                    - generic [ref=e262]
+                    - generic [ref=e268]: —
+                    - button "Выбрать" [ref=e270] [cursor=pointer]
+                - generic "Основное устройство навигации. DPI и частота опроса влияют на точность." [ref=e271]:
+                  - generic [ref=e272]:
+                    - img [ref=e274]
+                    - generic [ref=e276]
+                    - generic [ref=e282]: —
+                    - button "Выбрать" [ref=e284] [cursor=pointer]
+                - generic "Устройство воспроизведения звука. Качество драйверов и шумоподавление важны." [ref=e285]:
+                  - generic [ref=e286]:
+                    - img [ref=e288]
+                    - generic [ref=e290]
+                    - generic [ref=e296]: —
+                    - button "Выбрать" [ref=e298] [cursor=pointer]
+            - complementary "Итоги сборки, выбрано 0 из 12 категорий" [ref=e300]:
+              - heading "Ваша сборка" [level=2] [ref=e301]
+              - list [ref=e302]:
+                - listitem [ref=e303]:
+                  - generic [ref=e304]: Процессор
+                  - generic [ref=e305]: —
+                - listitem [ref=e306]:
+                  - generic [ref=e307]: Материнская плата
+                  - generic [ref=e308]: —
+                - listitem [ref=e309]:
+                  - generic [ref=e310]: Оперативная память
+                  - generic [ref=e311]: —
+                - listitem [ref=e312]:
+                  - generic [ref=e313]: Накопитель
+                  - generic [ref=e314]: —
+                - listitem [ref=e315]:
+                  - generic [ref=e316]: Блок питания
+                  - generic [ref=e317]: —
+                - listitem [ref=e318]:
+                  - generic [ref=e319]: Корпус
+                  - generic [ref=e320]: —
+                - listitem [ref=e321]:
+                  - generic [ref=e322]: Вентилятор
+                  - generic [ref=e323]: —
+                - listitem [ref=e324]:
+                  - generic [ref=e325]: Охлаждение
+                  - generic [ref=e326]: —
+                - listitem [ref=e327]:
+                  - generic [ref=e328]: Видеокарта
+                  - generic [ref=e329]: —
+                - listitem [ref=e330]:
+                  - generic [ref=e331]: Монитор
+                  - generic [ref=e332]: —
+                - listitem [ref=e333]:
+                  - generic [ref=e334]: Клавиатура
+                  - generic [ref=e335]: —
+                - listitem [ref=e336]:
+                  - generic [ref=e337]: Мышь
+                  - generic [ref=e338]: —
+                - listitem [ref=e339]:
+                  - generic [ref=e340]: Наушники
+                  - generic [ref=e341]: —
+              - region "Энергопотребление" [ref=e343]:
+                - heading "Питание" [level=3] [ref=e344]:
+                  - img [ref=e345]
+                  - text: Питание
+                - progressbar "Потребление около 50 Вт" [ref=e347]
+                - generic [ref=e349]:
+                  - generic [ref=e350]: "Потребление (оценочно):"
+                  - strong [ref=e351]: ~50 Вт
+                - generic [ref=e352]:
+                  - text: Рекомендуется БП от
+                  - strong [ref=e353]: 65 Вт
+              - region "Производительность" [ref=e355]:
+                - heading "Производительность" [level=3] [ref=e356]:
+                  - img [ref=e357]
+                  - text: Производительность
+                - paragraph [ref=e359]: Выберите процессор и/или видеокарту — тогда появится оценка игровой и рабочей нагрузки.
+              - generic [ref=e361]:
+                - generic [ref=e362]: "Итого:"
+                - generic [ref=e363]: 0 BYN
+              - generic [ref=e364]:
+                - generic [ref=e365]:
+                  - button "Сохранить" [disabled] [ref=e366]:
+                    - img [ref=e367]
+                    - text: Сохранить
+                  - button "Печать" [disabled] [ref=e371]:
+                    - img [ref=e372]
+                    - text: Печать
+                - button "В корзину" [disabled] [ref=e376]:
+                  - img [ref=e377]
+                  - text: В корзину
+                - button "Оформить" [disabled] [ref=e380]
+      - 'dialog "Выбор: Процессор" [ref=e381]':
+        - generic [ref=e382]:
+          - 'heading "Выбор: Процессор" [level=3] [ref=e383]'
+          - button "Закрыть" [active] [ref=e384] [cursor=pointer]:
+            - img [ref=e385]
+        - generic [ref=e390]:
+          - complementary [ref=e392]:
+            - generic [ref=e393]:
+              - button "Сокет" [ref=e394] [cursor=pointer]:
+                - img [ref=e396]
+                - generic [ref=e399]: Сокет
+                - img [ref=e400]
+              - generic [ref=e404]:
+                - generic [ref=e405] [cursor=pointer]:
+                  - checkbox "AM4 (16)" [ref=e406]
+                  - img [ref=e408]
+                  - generic [ref=e410]:
+                    - text: AM4
+                    - generic [ref=e411]: (16)
+                - generic [ref=e412] [cursor=pointer]:
+                  - checkbox "AM5 (17)" [ref=e413]
+                  - img [ref=e415]
+                  - generic [ref=e417]:
+                    - text: AM5
+                    - generic [ref=e418]: (17)
+                - generic [ref=e419] [cursor=pointer]:
+                  - checkbox "LGA1151 (1)" [ref=e420]
+                  - img [ref=e422]
+                  - generic [ref=e424]:
+                    - text: LGA1151
+                    - generic [ref=e425]: (1)
+                - generic [ref=e426] [cursor=pointer]:
+                  - checkbox "LGA1151 v2 (5)" [ref=e427]
+                  - img [ref=e429]
+                  - generic [ref=e431]:
+                    - text: LGA1151 v2
+                    - generic [ref=e432]: (5)
+                - generic [ref=e433] [cursor=pointer]:
+                  - checkbox "LGA1200 (16)" [ref=e434]
+                  - img [ref=e436]
+                  - generic [ref=e438]:
+                    - text: LGA1200
+                    - generic [ref=e439]: (16)
+                - generic [ref=e440] [cursor=pointer]:
+                  - checkbox "LGA1700 (40)" [ref=e441]
+                  - img [ref=e443]
+                  - generic [ref=e445]:
+                    - text: LGA1700
+                    - generic [ref=e446]: (40)
+                - generic [ref=e447] [cursor=pointer]:
+                  - checkbox "LGA1851 (3)" [ref=e448]
+                  - img [ref=e450]
+                  - generic [ref=e452]:
+                    - text: LGA1851
+                    - generic [ref=e453]: (3)
+                - generic [ref=e454] [cursor=pointer]:
+                  - checkbox "LGA2066 (1)" [ref=e455]
+                  - img [ref=e457]
+                  - generic [ref=e459]:
+                    - text: LGA2066
+                    - generic [ref=e460]: (1)
+                - generic [ref=e461] [cursor=pointer]:
+                  - checkbox "LGA3647 (11)" [ref=e462]
+                  - img [ref=e464]
+                  - generic [ref=e466]:
+                    - text: LGA3647
+                    - generic [ref=e467]: (11)
+                - generic [ref=e468] [cursor=pointer]:
+                  - checkbox "LGA4189 (15)" [ref=e469]
+                  - img [ref=e471]
+                  - generic [ref=e473]:
+                    - text: LGA4189
+                    - generic [ref=e474]: (15)
+                - generic [ref=e475] [cursor=pointer]:
+                  - checkbox "LGA4677 (14)" [ref=e476]
+                  - img [ref=e478]
+                  - generic [ref=e480]:
+                    - text: LGA4677
+                    - generic [ref=e481]: (14)
+                - generic [ref=e482] [cursor=pointer]:
+                  - checkbox "SP3 (10)" [ref=e483]
+                  - img [ref=e485]
+                  - generic [ref=e487]:
+                    - text: SP3
+                    - generic [ref=e488]: (10)
+                - generic [ref=e489] [cursor=pointer]:
+                  - checkbox "SP5 (14)" [ref=e490]
+                  - img [ref=e492]
+                  - generic [ref=e494]:
+                    - text: SP5
+                    - generic [ref=e495]: (14)
+                - generic [ref=e496] [cursor=pointer]:
+                  - checkbox "sWRX8 (2)" [ref=e497]
+                  - img [ref=e499]
+                  - generic [ref=e501]:
+                    - text: sWRX8
+                    - generic [ref=e502]: (2)
+                - generic [ref=e503] [cursor=pointer]:
+                  - checkbox "TR5 (2)" [ref=e504]
+                  - img [ref=e506]
+                  - generic [ref=e508]:
+                    - text: TR5
+                    - generic [ref=e509]: (2)
+            - generic [ref=e510]:
+              - button "Модельный ряд" [ref=e511] [cursor=pointer]:
+                - img [ref=e513]
+                - generic [ref=e516]: Модельный ряд
+                - img [ref=e517]
+              - generic [ref=e520]:
+                - generic [ref=e521]:
+                  - img
+                  - searchbox "Поиск..." [ref=e522]
+                - generic [ref=e523]:
+                  - generic [ref=e524] [cursor=pointer]:
+                    - checkbox "AMD Epyc 9005 (4)" [ref=e525]
+                    - img [ref=e527]
+                    - generic [ref=e529]
+                  - generic [ref=e531] [cursor=pointer]:
+                    - checkbox "AMD Ryzen 7 (2)" [ref=e532]
+                    - img [ref=e534]
+                    - generic [ref=e536]
+                  - generic [ref=e538] [cursor=pointer]:
+                    - checkbox "Athlon (1)" [ref=e539]
+                    - img [ref=e541]
+                    - generic [ref=e543]
+                  - generic [ref=e545] [cursor=pointer]:
+                    - checkbox "Athlon Pro (1)" [ref=e546]
+                    - img [ref=e548]
+                    - generic [ref=e550]
+                  - generic [ref=e552] [cursor=pointer]:
+                    - checkbox "Athlon X4 (1)" [ref=e553]
+                    - img [ref=e555]
+                    - generic [ref=e557]
+                  - generic [ref=e559] [cursor=pointer]:
+                    - checkbox "Celeron (1)" [ref=e560]
+                    - img [ref=e562]
+                    - generic [ref=e564]
+                  - generic [ref=e566] [cursor=pointer]:
+                    - checkbox "Core i3 (12)" [ref=e567]
+                    - img [ref=e569]
+                    - generic [ref=e571]
+                  - generic [ref=e573] [cursor=pointer]:
+                    - checkbox "Core i5 (20)" [ref=e574]
+                    - img [ref=e576]
+                    - generic [ref=e578]
+                  - generic [ref=e580] [cursor=pointer]:
+                    - checkbox "Core i7 (8)" [ref=e581]
+                    - img [ref=e583]
+                    - generic [ref=e585]
+                  - generic [ref=e587] [cursor=pointer]:
+                    - checkbox "Core i9 (9)" [ref=e588]
+                    - img [ref=e590]
+                    - generic [ref=e592]
+                  - generic [ref=e594] [cursor=pointer]:
+                    - checkbox "Core Ultra 5 (2)" [ref=e595]
+                    - img [ref=e597]
+                    - generic [ref=e599]
+                  - generic [ref=e601] [cursor=pointer]:
+                    - checkbox "Core Ultra 7 (1)" [ref=e602]
+                    - img [ref=e604]
+                    - generic [ref=e606]
+                  - generic [ref=e608] [cursor=pointer]:
+                    - checkbox "Epyc 7000 (8)" [ref=e609]
+                    - img [ref=e611]
+                    - generic [ref=e613]
+                  - generic [ref=e615] [cursor=pointer]:
+                    - checkbox "Epyc 7003 (2)" [ref=e616]
+                    - img [ref=e618]
+                    - generic [ref=e620]
+                  - generic [ref=e622] [cursor=pointer]:
+                    - checkbox "Epyc 9004 (10)" [ref=e623]
+                    - img [ref=e625]
+                    - generic [ref=e627]
+                  - generic [ref=e629] [cursor=pointer]:
+                    - checkbox "Intel Core i7 (1)" [ref=e630]
+                    - img [ref=e632]
+                    - generic [ref=e634]
+                  - generic [ref=e636] [cursor=pointer]:
+                    - checkbox "Intel Core i9 (1)" [ref=e637]
+                    - img [ref=e639]
+                    - generic [ref=e641]
+                  - generic [ref=e643] [cursor=pointer]:
+                    - checkbox "Pentium (4)" [ref=e644]
+                    - img [ref=e646]
+                    - generic [ref=e648]
+                  - generic [ref=e650] [cursor=pointer]:
+                    - checkbox "Ryzen 5 (16)" [ref=e651]
+                    - img [ref=e653]
+                    - generic [ref=e655]
+                  - generic [ref=e657] [cursor=pointer]:
+                    - checkbox "Ryzen 7 (5)" [ref=e658]
+                    - img [ref=e660]
+                    - generic [ref=e662]
+                  - generic [ref=e664] [cursor=pointer]:
+                    - checkbox "Ryzen 9 (5)" [ref=e665]
+                    - img [ref=e667]
+                    - generic [ref=e669]
+                  - generic [ref=e671] [cursor=pointer]:
+                    - checkbox "Ryzen Threadripper (4)" [ref=e672]
+                    - img [ref=e674]
+                    - generic [ref=e676]
+                  - generic [ref=e678] [cursor=pointer]:
+                    - checkbox "Xeon (40)" [ref=e679]
+                    - img [ref=e681]
+                    - generic [ref=e683]
+                  - generic [ref=e685] [cursor=pointer]:
+                    - checkbox "Xeon E (6)" [ref=e686]
+                    - img [ref=e688]
+                    - generic [ref=e690]
+            - generic [ref=e692]:
+              - button "Кодовое название" [ref=e693] [cursor=pointer]:
+                - img [ref=e695]
+                - generic [ref=e698]: Кодовое название
+                - img [ref=e699]
+              - generic [ref=e702]:
+                - generic [ref=e703]:
+                  - img
+                  - searchbox "Поиск..." [ref=e704]
+                - generic [ref=e705]:
+                  - generic [ref=e706] [cursor=pointer]:
+                    - checkbox "Alder Lake (13)" [ref=e707]
+                    - img [ref=e709]
+                    - generic [ref=e711]
+                  - generic [ref=e713] [cursor=pointer]:
+                    - checkbox "Arrow Lake (3)" [ref=e714]
+                    - img [ref=e716]
+                    - generic [ref=e718]
+                  - generic [ref=e720] [cursor=pointer]:
+                    - checkbox "Bristol Ridge (1)" [ref=e721]
+                    - img [ref=e723]
+                    - generic [ref=e725]
+                  - generic [ref=e727] [cursor=pointer]:
+                    - checkbox "Cascade Lake (11)" [ref=e728]
+                    - img [ref=e730]
+                    - generic [ref=e732]
+                  - generic [ref=e734] [cursor=pointer]:
+                    - checkbox "Cezanne (4)" [ref=e735]
+                    - img [ref=e737]
+                    - generic [ref=e739]
+                  - generic [ref=e741] [cursor=pointer]:
+                    - checkbox "Cezanne (Zen 3) (1)" [ref=e742]
+                    - img [ref=e744]
+                    - generic [ref=e746]
+                  - generic [ref=e748] [cursor=pointer]:
+                    - checkbox "Coffee Lake (5)" [ref=e749]
+                    - img [ref=e751]
+                    - generic [ref=e753]
+                  - generic [ref=e755] [cursor=pointer]:
+                    - checkbox "Comet Lake (11)" [ref=e756]
+                    - img [ref=e758]
+                    - generic [ref=e760]
+                  - generic [ref=e762] [cursor=pointer]:
+                    - checkbox "Emerald Rapids (3)" [ref=e763]
+                    - img [ref=e765]
+                    - generic [ref=e767]
+                  - generic [ref=e769] [cursor=pointer]:
+                    - checkbox "Genoa (10)" [ref=e770]
+                    - img [ref=e772]
+                    - generic [ref=e774]
+                  - generic [ref=e776] [cursor=pointer]:
+                    - checkbox "Granite Ridge (5)" [ref=e777]
+                    - img [ref=e779]
+                    - generic [ref=e781]
+                  - generic [ref=e783] [cursor=pointer]:
+                    - checkbox "Granite Ridge (Zen 5) (5)" [ref=e784]
+                    - img [ref=e786]
+                    - generic [ref=e788]
+                  - generic [ref=e790] [cursor=pointer]:
+                    - checkbox "Ice Lake (15)" [ref=e791]
+                    - img [ref=e793]
+                    - generic [ref=e795]
+                  - generic [ref=e797] [cursor=pointer]:
+                    - checkbox "Matisse (1)" [ref=e798]
+                    - img [ref=e800]
+                    - generic [ref=e802]
+                  - generic [ref=e804] [cursor=pointer]:
+                    - checkbox "Milan (3)" [ref=e805]
+                    - img [ref=e807]
+                    - generic [ref=e809]
+                  - generic [ref=e811] [cursor=pointer]:
+                    - checkbox "Phoenix (4)" [ref=e812]
+                    - img [ref=e814]
+                    - generic [ref=e816]
+                  - generic [ref=e818] [cursor=pointer]:
+                    - checkbox "Picasso (2)" [ref=e819]
+                    - img [ref=e821]
+                    - generic [ref=e823]
+                  - generic [ref=e825] [cursor=pointer]:
+                    - checkbox "Raphael (5)" [ref=e826]
+                    - img [ref=e828]
+                    - generic [ref=e830]
+                  - generic [ref=e832] [cursor=pointer]:
+                    - checkbox "Raptor Lake (14)" [ref=e833]
+                    - img [ref=e835]
+                    - generic [ref=e837]
+                  - generic [ref=e839] [cursor=pointer]:
+                    - checkbox "Raptor Lake-R (12)" [ref=e840]
+                    - img [ref=e842]
+                    - generic [ref=e844]
+                  - generic [ref=e846] [cursor=pointer]:
+                    - checkbox "Raven Ridge (1)" [ref=e847]
+                    - img [ref=e849]
+                    - generic [ref=e851]
+                  - generic [ref=e853] [cursor=pointer]:
+                    - checkbox "Renoir (1)" [ref=e854]
+                    - img [ref=e856]
+                    - generic [ref=e858]
+                  - generic [ref=e860] [cursor=pointer]:
+                    - checkbox "Rocket Lake (5)" [ref=e861]
+                    - img [ref=e863]
+                    - generic [ref=e865]
+                  - generic [ref=e867] [cursor=pointer]:
+                    - checkbox "Rome (3)" [ref=e868]
+                    - img [ref=e870]
+                    - generic [ref=e872]
+                  - generic [ref=e874] [cursor=pointer]:
+                    - checkbox "Sapphire Rapids (11)" [ref=e875]
+                    - img [ref=e877]
+                    - generic [ref=e879]
+                  - generic [ref=e881] [cursor=pointer]:
+                    - checkbox "Skylake (2)" [ref=e882]
+                    - img [ref=e884]
+                    - generic [ref=e886]
+                  - generic [ref=e888] [cursor=pointer]:
+                    - checkbox "Storm Peak (2)" [ref=e889]
+                    - img [ref=e891]
+                    - generic [ref=e893]
+                  - generic [ref=e895] [cursor=pointer]:
+                    - checkbox "Vermeer (4)" [ref=e896]
+                    - img [ref=e898]
+                    - generic [ref=e900]
+                  - generic [ref=e902] [cursor=pointer]:
+                    - checkbox "Zen 3 (2)" [ref=e903]
+                    - img [ref=e905]
+                    - generic [ref=e907]
+            - generic [ref=e909]:
+              - button "Архитектура" [ref=e910] [cursor=pointer]:
+                - img [ref=e912]
+                - generic [ref=e915]: Архитектура
+                - img [ref=e916]
+              - generic [ref=e919]:
+                - generic [ref=e920]:
+                  - img
+                  - searchbox "Поиск..." [ref=e921]
+                - generic [ref=e922]:
+                  - generic [ref=e923] [cursor=pointer]:
+                    - checkbox "Alder Lake (13)" [ref=e924]
+                    - img [ref=e926]
+                    - generic [ref=e928]
+                  - generic [ref=e930] [cursor=pointer]:
+                    - checkbox "Arrow Lake (3)" [ref=e931]
+                    - img [ref=e933]
+                    - generic [ref=e935]
+                  - generic [ref=e937] [cursor=pointer]:
+                    - checkbox "Cascade Lake (11)" [ref=e938]
+                    - img [ref=e940]
+                    - generic [ref=e942]
+                  - generic [ref=e944] [cursor=pointer]:
+                    - checkbox "Coffee Lake (5)" [ref=e945]
+                    - img [ref=e947]
+                    - generic [ref=e949]
+                  - generic [ref=e951] [cursor=pointer]:
+                    - checkbox "Comet Lake (11)" [ref=e952]
+                    - img [ref=e954]
+                    - generic [ref=e956]
+                  - generic [ref=e958] [cursor=pointer]:
+                    - checkbox "Emerald Rapids (3)" [ref=e959]
+                    - img [ref=e961]
+                    - generic [ref=e963]
+                  - generic [ref=e965] [cursor=pointer]:
+                    - checkbox "Genoa (10)" [ref=e966]
+                    - img [ref=e968]
+                    - generic [ref=e970]
+                  - generic [ref=e972] [cursor=pointer]:
+                    - checkbox "Ice Lake (15)" [ref=e973]
+                    - img [ref=e975]
+                    - generic [ref=e977]
+                  - generic [ref=e979] [cursor=pointer]:
+                    - checkbox "Milan (3)" [ref=e980]
+                    - img [ref=e982]
+                    - generic [ref=e984]
+                  - generic [ref=e986] [cursor=pointer]:
+                    - checkbox "Raptor Lake (26)" [ref=e987]
+                    - img [ref=e989]
+                    - generic [ref=e991]
+                  - generic [ref=e993] [cursor=pointer]:
+                    - checkbox "Rocket Lake (5)" [ref=e994]
+                    - img [ref=e996]
+                    - generic [ref=e998]
+                  - generic [ref=e1000] [cursor=pointer]:
+                    - checkbox "Rome (3)" [ref=e1001]
+                    - img [ref=e1003]
+                    - generic [ref=e1005]
+                  - generic [ref=e1007] [cursor=pointer]:
+                    - checkbox "Sapphire Rapids (11)" [ref=e1008]
+                    - img [ref=e1010]
+                    - generic [ref=e1012]
+                  - generic [ref=e1014] [cursor=pointer]:
+                    - checkbox "Skylake (2)" [ref=e1015]
+                    - img [ref=e1017]
+                    - generic [ref=e1019]
+                  - generic [ref=e1021] [cursor=pointer]:
+                    - checkbox "Zen 3 (12)" [ref=e1022]
+                    - img [ref=e1024]
+                    - generic [ref=e1026]
+                  - generic [ref=e1028] [cursor=pointer]:
+                    - checkbox "Zen 4 (10)" [ref=e1029]
+                    - img [ref=e1031]
+                    - generic [ref=e1033]
+                  - generic [ref=e1035] [cursor=pointer]:
+                    - checkbox "Zen 5 (10)" [ref=e1036]
+                    - img [ref=e1038]
+                    - generic [ref=e1040]
+            - generic [ref=e1042]:
+              - button "Дата выхода, г" [ref=e1043] [cursor=pointer]:
+                - img [ref=e1045]
+                - generic [ref=e1048]: Дата выхода, г
+                - img [ref=e1049]
+              - generic [ref=e1059]:
+                - generic [ref=e1060]: "2017"
+                - generic [ref=e1061]: "2025"
+            - generic [ref=e1062]:
+              - button "Встроенная графика" [ref=e1063] [cursor=pointer]:
+                - img [ref=e1065]
+                - generic [ref=e1068]: Встроенная графика
+                - img [ref=e1069]
+              - generic [ref=e1072]:
+                - generic [ref=e1073]:
+                  - img
+                  - searchbox "Поиск..." [ref=e1074]
+                - generic [ref=e1075]:
+                  - generic [ref=e1076] [cursor=pointer]:
+                    - checkbox "Нет (109)" [ref=e1077]
+                    - img [ref=e1079]
+                    - generic [ref=e1081]
+                  - generic [ref=e1083] [cursor=pointer]:
+                    - checkbox "Есть (2)" [ref=e1084]
+                    - img [ref=e1086]
+                    - generic [ref=e1088]
+                  - generic [ref=e1090] [cursor=pointer]:
+                    - checkbox "AMD Radeon Graphics (1)" [ref=e1091]
+                    - img [ref=e1093]
+                    - generic [ref=e1095]
+                  - generic [ref=e1097] [cursor=pointer]:
+                    - checkbox "Intel Graphics (2 ядра Xe) (1)" [ref=e1098]
+                    - img [ref=e1100]
+                    - generic [ref=e1102]
+                  - generic [ref=e1104] [cursor=pointer]:
+                    - checkbox "Intel HD Graphics 510 (1)" [ref=e1105]
+                    - img [ref=e1107]
+                    - generic [ref=e1109]
+                  - generic [ref=e1111] [cursor=pointer]:
+                    - checkbox "Intel UHD 630 (4)" [ref=e1112]
+                    - img [ref=e1114]
+                    - generic [ref=e1116]
+                  - generic [ref=e1118] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 610 (2)" [ref=e1119]
+                    - img [ref=e1121]
+                    - generic [ref=e1123]
+                  - generic [ref=e1125] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 630 (5)" [ref=e1126]
+                    - img [ref=e1128]
+                    - generic [ref=e1130]
+                  - generic [ref=e1132] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 710, 1.3 ГГц (1)" [ref=e1133]
+                    - img [ref=e1135]
+                    - generic [ref=e1137]
+                  - generic [ref=e1139] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 710, 1.35 ГГц (1)" [ref=e1140]
+                    - img [ref=e1142]
+                    - generic [ref=e1144]
+                  - generic [ref=e1146] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 730 1.5 ГГц, 24EU (1)" [ref=e1147]
+                    - img [ref=e1149]
+                    - generic [ref=e1151]
+                  - generic [ref=e1153] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 730 1.55 ГГц, 24EU (2)" [ref=e1154]
+                    - img [ref=e1156]
+                    - generic [ref=e1158]
+                  - generic [ref=e1160] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 730, 1.4 ГГц (1)" [ref=e1161]
+                    - img [ref=e1163]
+                    - generic [ref=e1165]
+                  - generic [ref=e1167] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 730, 1.45 ГГц (1)" [ref=e1168]
+                    - img [ref=e1170]
+                    - generic [ref=e1172]
+                  - generic [ref=e1174] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 770 (3)" [ref=e1175]
+                    - img [ref=e1177]
+                    - generic [ref=e1179]
+                  - generic [ref=e1181] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 770 1.5 ГГц, 32EU (1)" [ref=e1182]
+                    - img [ref=e1184]
+                    - generic [ref=e1186]
+                  - generic [ref=e1188] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 770 1.55 ГГц, 32EU (3)" [ref=e1189]
+                    - img [ref=e1191]
+                    - generic [ref=e1193]
+                  - generic [ref=e1195] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 770, 1.45 ГГц (1)" [ref=e1196]
+                    - img [ref=e1198]
+                    - generic [ref=e1200]
+                  - generic [ref=e1202] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 770, 1.6 ГГц, 32EU (3)" [ref=e1203]
+                    - img [ref=e1205]
+                    - generic [ref=e1207]
+                  - generic [ref=e1209] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics 770, 1.65 ГГц, 32EU (3)" [ref=e1210]
+                    - img [ref=e1212]
+                    - generic [ref=e1214]
+                  - generic [ref=e1216] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics P630 (1)" [ref=e1217]
+                    - img [ref=e1219]
+                    - generic [ref=e1221]
+                  - generic [ref=e1223] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics P750 (1)" [ref=e1224]
+                    - img [ref=e1226]
+                    - generic [ref=e1228]
+                  - generic [ref=e1230] [cursor=pointer]:
+                    - checkbox "Intel UHD Graphics P750, 1.3 ГГц (1)" [ref=e1231]
+                    - img [ref=e1233]
+                    - generic [ref=e1235]
+                  - generic [ref=e1237] [cursor=pointer]:
+                    - checkbox "Radeon Vega 3 (1)" [ref=e1238]
+                    - img [ref=e1240]
+                    - generic [ref=e1242]
+                  - generic [ref=e1244] [cursor=pointer]:
+                    - checkbox "Radeon Vega 3 Graphics (1)" [ref=e1245]
+                    - img [ref=e1247]
+                    - generic [ref=e1249]
+            - generic [ref=e1251]:
+              - button "Количество ядер" [ref=e1252] [cursor=pointer]:
+                - img [ref=e1254]
+                - generic [ref=e1257]: Количество ядер
+                - img [ref=e1258]
+              - generic [ref=e1268]:
+                - generic [ref=e1269]: "2"
+                - generic [ref=e1270]: "128"
+            - generic [ref=e1271]:
+              - button "Потоков" [ref=e1272] [cursor=pointer]:
+                - img [ref=e1274]
+                - generic [ref=e1277]: Потоков
+                - img [ref=e1278]
+              - generic [ref=e1288]:
+                - generic [ref=e1289]: "4"
+                - generic [ref=e1290]: "256"
+            - generic [ref=e1291]:
+              - button "Базовая частота, ГГц" [ref=e1292] [cursor=pointer]:
+                - img [ref=e1294]
+                - generic [ref=e1297]: Базовая частота, ГГц
+                - img [ref=e1298]
+              - generic [ref=e1308]:
+                - generic [ref=e1309]: "1.5"
+                - generic [ref=e1310]: "4.7"
+            - generic [ref=e1311]:
+              - button "Макс. частота, ГГц" [ref=e1312] [cursor=pointer]:
+                - img [ref=e1314]
+                - generic [ref=e1317]: Макс. частота, ГГц
+                - img [ref=e1318]
+              - generic [ref=e1328]:
+                - generic [ref=e1329]: "3"
+                - generic [ref=e1330]: "5.8"
+            - generic [ref=e1331]:
+              - button "Макс. частота памяти, МГц" [ref=e1332] [cursor=pointer]:
+                - img [ref=e1334]
+                - generic [ref=e1337]: Макс. частота памяти, МГц
+                - img [ref=e1338]
+              - generic [ref=e1348]:
+                - generic [ref=e1349]: "2400"
+                - generic [ref=e1350]: "6400"
+            - generic [ref=e1351]:
+              - button "TDP, Вт" [ref=e1352] [cursor=pointer]:
+                - img [ref=e1354]
+                - generic [ref=e1357]: TDP, Вт
+                - img [ref=e1358]
+              - generic [ref=e1368]:
+                - generic [ref=e1369]: "35"
+                - generic [ref=e1370]: "400"
+            - generic [ref=e1371]:
+              - button "Тип поставки" [ref=e1372] [cursor=pointer]:
+                - img [ref=e1374]
+                - generic [ref=e1377]: Тип поставки
+                - img [ref=e1378]
+              - generic [ref=e1382]:
+                - generic [ref=e1383] [cursor=pointer]:
+                  - checkbox "BOX (6)" [ref=e1384]
+                  - img [ref=e1386]
+                  - generic [ref=e1388]:
+                    - text: BOX
+                    - generic [ref=e1389]: (6)
+                - generic [ref=e1390] [cursor=pointer]:
+                  - checkbox "OEM (139)" [ref=e1391]
+                  - img [ref=e1393]
+                  - generic [ref=e1395]:
+                    - text: OEM
+                    - generic [ref=e1396]: (139)
+                - generic [ref=e1397] [cursor=pointer]:
+                  - checkbox "OEM (без коробки, без кулера) (8)" [ref=e1398]
+                  - img [ref=e1400]
+                  - generic [ref=e1402]:
+                    - text: OEM (без коробки, без кулера)
+                    - generic [ref=e1403]: (8)
+                - generic [ref=e1404] [cursor=pointer]:
+                  - checkbox "WOF (1)" [ref=e1405]
+                  - img [ref=e1407]
+                  - generic [ref=e1409]:
+                    - text: WOF
+                    - generic [ref=e1410]: (1)
+            - generic [ref=e1411]:
+              - button "Охлаждение в комплекте" [ref=e1412] [cursor=pointer]:
+                - img [ref=e1414]
+                - generic [ref=e1417]: Охлаждение в комплекте
+                - img [ref=e1418]
+              - generic [ref=e1422]:
+                - generic [ref=e1423] [cursor=pointer]:
+                  - checkbox "Нет (150)" [ref=e1424]
+                  - img [ref=e1426]
+                  - generic [ref=e1428]:
+                    - text: Нет
+                    - generic [ref=e1429]: (150)
+                - generic [ref=e1430] [cursor=pointer]:
+                  - checkbox "(Wraith Spire) (2)" [ref=e1431]
+                  - img [ref=e1433]
+                  - generic [ref=e1435]:
+                    - text: (Wraith Spire)
+                    - generic [ref=e1436]: (2)
+                - generic [ref=e1437] [cursor=pointer]:
+                  - checkbox "Да (2)" [ref=e1438]
+                  - img [ref=e1440]
+                  - generic [ref=e1442]:
+                    - text: Да
+                    - generic [ref=e1443]: (2)
+            - generic [ref=e1444]:
+              - button "Техпроцесс, нм" [ref=e1445] [cursor=pointer]:
+                - img [ref=e1447]
+                - generic [ref=e1450]: Техпроцесс, нм
+                - img [ref=e1451]
+              - generic [ref=e1461]:
+                - generic [ref=e1462]: "3"
+                - generic [ref=e1463]: "14"
+            - generic [ref=e1464]:
+              - button "Кэш L2, МБ" [ref=e1465] [cursor=pointer]:
+                - img [ref=e1467]
+                - generic [ref=e1470]: Кэш L2, МБ
+                - img [ref=e1471]
+              - generic [ref=e1481]:
+                - generic [ref=e1482]: "1"
+                - generic [ref=e1483]: "36"
+            - generic [ref=e1484]:
+              - button "Кэш L3, МБ" [ref=e1485] [cursor=pointer]:
+                - img [ref=e1487]
+                - generic [ref=e1490]: Кэш L3, МБ
+                - img [ref=e1491]
+              - generic [ref=e1501]:
+                - generic [ref=e1502]: "4"
+                - generic [ref=e1503]: "384"
+            - generic [ref=e1504]:
+              - button "Поддержка памяти" [ref=e1505] [cursor=pointer]:
+                - img [ref=e1507]
+                - generic [ref=e1510]: Поддержка памяти
+                - img [ref=e1511]
+              - generic [ref=e1515]:
+                - generic [ref=e1516] [cursor=pointer]:
+                  - checkbox "DDR3, DDR4 (1)" [ref=e1517]
+                  - img [ref=e1519]
+                  - generic [ref=e1521]:
+                    - text: DDR3, DDR4
+                    - generic [ref=e1522]: (1)
+                - generic [ref=e1523] [cursor=pointer]:
+                  - checkbox "DDR4 (73)" [ref=e1524]
+                  - img [ref=e1526]
+                  - generic [ref=e1528]:
+                    - text: DDR4
+                    - generic [ref=e1529]: (73)
+                - generic [ref=e1530] [cursor=pointer]:
+                  - checkbox "DDR4, DDR5 (33)" [ref=e1531]
+                  - img [ref=e1533]
+                  - generic [ref=e1535]:
+                    - text: DDR4, DDR5
+                    - generic [ref=e1536]: (33)
+                - generic [ref=e1537] [cursor=pointer]:
+                  - checkbox "DDR5 (49)" [ref=e1538]
+                  - img [ref=e1540]
+                  - generic [ref=e1542]:
+                    - text: DDR5
+                    - generic [ref=e1543]: (49)
+            - generic [ref=e1544]:
+              - button "Каналы памяти" [ref=e1545] [cursor=pointer]:
+                - img [ref=e1547]
+                - generic [ref=e1550]: Каналы памяти
+                - img [ref=e1551]
+              - generic [ref=e1561]:
+                - generic [ref=e1562]: "2"
+                - generic [ref=e1563]: "12"
+            - generic [ref=e1564]:
+              - button "Многопоточность" [ref=e1565] [cursor=pointer]:
+                - img [ref=e1567]
+                - generic [ref=e1570]: Многопоточность
+                - img [ref=e1571]
+              - generic [ref=e1575]:
+                - generic [ref=e1576] [cursor=pointer]:
+                  - checkbox "Нет (12)" [ref=e1577]
+                  - img [ref=e1579]
+                  - generic [ref=e1581]:
+                    - text: Нет
+                    - generic [ref=e1582]: (12)
+                - generic [ref=e1583] [cursor=pointer]:
+                  - checkbox "Да (152)" [ref=e1584]
+                  - img [ref=e1586]
+                  - generic [ref=e1588]:
+                    - text: Да
+                    - generic [ref=e1589]: (152)
+            - generic [ref=e1590]:
+              - button "Бренды" [ref=e1591] [cursor=pointer]:
+                - img [ref=e1593]
+                - generic [ref=e1596]: Бренды
+                - img [ref=e1597]
+              - generic [ref=e1599]:
+                - generic [ref=e1600] [cursor=pointer]:
+                  - checkbox "AMD" [ref=e1601]
+                  - img [ref=e1603]
+                  - generic [ref=e1605]: AMD
+                - generic [ref=e1606] [cursor=pointer]:
+                  - checkbox "Intel" [ref=e1607]
+                  - img [ref=e1609]
+                  - generic [ref=e1611]: Intel
+            - generic [ref=e1612]:
+              - button "Рейтинг" [ref=e1613] [cursor=pointer]:
+                - img [ref=e1615]
+                - generic [ref=e1617]: Рейтинг
+                - img [ref=e1618]
+              - radiogroup "Минимальный рейтинг" [ref=e1620]:
+                - generic [ref=e1621] [cursor=pointer]:
+                  - radio "4★ и выше" [ref=e1622]
+                  - img [ref=e1624]
+                  - generic [ref=e1626]:
+                    - img [ref=e1627]
+                    - img [ref=e1629]
+                    - img [ref=e1631]
+                    - img [ref=e1633]
+                    - img [ref=e1635]
+                  - generic [ref=e1637]: 4★ и выше
+                - generic [ref=e1638] [cursor=pointer]:
+                  - radio "3★ и выше" [ref=e1639]
+                  - img [ref=e1641]
+                  - generic [ref=e1643]:
+                    - img [ref=e1644]
+                    - img [ref=e1646]
+                    - img [ref=e1648]
+                    - img [ref=e1650]
+                    - img [ref=e1652]
+                  - generic [ref=e1654]: 3★ и выше
+                - generic [ref=e1655] [cursor=pointer]:
+                  - radio "2★ и выше" [ref=e1656]
+                  - img [ref=e1658]
+                  - generic [ref=e1660]:
+                    - img [ref=e1661]
+                    - img [ref=e1663]
+                    - img [ref=e1665]
+                    - img [ref=e1667]
+                    - img [ref=e1669]
+                  - generic [ref=e1671]: 2★ и выше
+                - generic [ref=e1672] [cursor=pointer]:
+                  - radio "1★ и выше" [ref=e1673]
+                  - img [ref=e1675]
+                  - generic [ref=e1677]:
+                    - img [ref=e1678]
+                    - img [ref=e1680]
+                    - img [ref=e1682]
+                    - img [ref=e1684]
+                    - img [ref=e1686]
+                  - generic [ref=e1688]: 1★ и выше
+                - generic [ref=e1689] [cursor=pointer]:
+                  - radio "Любой рейтинг" [checked] [ref=e1690]
+                  - img [ref=e1692]
+                  - generic [ref=e1694]: Любой рейтинг
+            - generic [ref=e1695]:
+              - button "Наличие" [ref=e1696] [cursor=pointer]:
+                - img [ref=e1698]
+                - generic [ref=e1702]: Наличие
+                - img [ref=e1703]
+              - generic [ref=e1705]:
+                - generic [ref=e1706] [cursor=pointer]:
+                  - checkbox "В наличии" [checked] [ref=e1707]
+                  - img [ref=e1709]
+                  - generic [ref=e1711]: В наличии
+                - generic [ref=e1712] [cursor=pointer]:
+                  - checkbox "Под заказ" [ref=e1713]
+                  - img [ref=e1715]
+                  - generic [ref=e1717]: Под заказ
+            - button "Сбросить фильтры" [ref=e1718] [cursor=pointer]:
+              - img [ref=e1719]
+              - text: Сбросить фильтры
+          - generic [ref=e1722]:
+            - generic [ref=e1723]:
+              - generic [ref=e1725]:
+                - img
+                - searchbox "Поиск по названию…" [ref=e1726]
+              - generic [ref=e1727]:
+                - combobox [ref=e1728] [cursor=pointer]:
+                  - option "По популярности" [selected]
+                  - option "Сначала дешевле"
+                  - option "Сначала дороже"
+                  - option "По названию"
+                  - option "По рейтингу"
+                  - option "Новые"
+                - generic [ref=e1729] [cursor=pointer]:
+                  - img [ref=e1731]
+                  - checkbox "В наличии" [checked]
+                  - generic [ref=e1733]: В наличии
+            - generic [ref=e1734]: "Найдено: 12"
+            - generic [ref=e1735]:
+              - generic [ref=e1737] [cursor=pointer]:
+                - img "Процессор AMD Athlon X4 970" [ref=e1740]
+                - generic [ref=e1741]:
+                  - heading "Процессор AMD Athlon X4 970" [level=4] [ref=e1742]:
+                    - button "Процессор AMD Athlon X4 970" [ref=e1743]
+                  - button "Подробнее" [ref=e1744]:
+                    - img [ref=e1745]
+                    - text: Подробнее
+                  - generic [ref=e1749]:
+                    - generic [ref=e1751]: 41,48 BYN
+                    - button "Выбрать" [ref=e1752]
+              - generic [ref=e1754] [cursor=pointer]:
+                - img "Процессор Intel Pentium G4400" [ref=e1757]
+                - generic [ref=e1758]:
+                  - heading "Процессор Intel Pentium G4400" [level=4] [ref=e1759]:
+                    - button "Процессор Intel Pentium G4400" [ref=e1760]
+                  - button "Подробнее" [ref=e1761]:
+                    - img [ref=e1762]
+                    - text: Подробнее
+                  - generic [ref=e1766]:
+                    - generic [ref=e1768]: 62,78 BYN
+                    - button "Выбрать" [ref=e1769]
+              - generic [ref=e1771] [cursor=pointer]:
+                - img "Процессор AMD Athlon Pro 300GE" [ref=e1774]
+                - generic [ref=e1775]:
+                  - heading "Процессор AMD Athlon Pro 300GE" [level=4] [ref=e1776]:
+                    - button "Процессор AMD Athlon Pro 300GE" [ref=e1777]
+                  - button "Подробнее" [ref=e1778]:
+                    - img [ref=e1779]
+                    - text: Подробнее
+                  - generic [ref=e1783]:
+                    - generic [ref=e1785]: 143,35 BYN
+                    - button "Выбрать" [ref=e1786]
+              - generic [ref=e1788] [cursor=pointer]:
+                - img "Процессор AMD Athlon 300GE" [ref=e1791]
+                - generic [ref=e1792]:
+                  - heading "Процессор AMD Athlon 300GE" [level=4] [ref=e1793]:
+                    - button "Процессор AMD Athlon 300GE" [ref=e1794]
+                  - button "Подробнее" [ref=e1795]:
+                    - img [ref=e1796]
+                    - text: Подробнее
+                  - generic [ref=e1800]:
+                    - generic [ref=e1802]: 144,62 BYN
+                    - button "Выбрать" [ref=e1803]
+              - generic [ref=e1805] [cursor=pointer]:
+                - img "Процессор Intel Xeon Silver 4208" [ref=e1808]
+                - generic [ref=e1809]:
+                  - heading "Процессор Intel Xeon Silver 4208" [level=4] [ref=e1810]:
+                    - button "Процессор Intel Xeon Silver 4208" [ref=e1811]
+                  - button "Подробнее" [ref=e1812]:
+                    - img [ref=e1813]
+                    - text: Подробнее
+                  - generic [ref=e1817]:
+                    - generic [ref=e1819]: 206,16 BYN
+                    - button "Выбрать" [ref=e1820]
+              - generic [ref=e1822] [cursor=pointer]:
+                - img "Процессор Intel Pentium Gold G6405" [ref=e1825]
+                - generic [ref=e1826]:
+                  - heading "Процессор Intel Pentium Gold G6405" [level=4] [ref=e1827]:
+                    - button "Процессор Intel Pentium Gold G6405" [ref=e1828]
+                  - button "Подробнее" [ref=e1829]:
+                    - img [ref=e1830]
+                    - text: Подробнее
+                  - generic [ref=e1834]:
+                    - generic [ref=e1836]: 209,04 BYN
+                    - button "Выбрать" [ref=e1837]
+              - generic [ref=e1839] [cursor=pointer]:
+                - img "Процессор Intel Pentium Gold G6400" [ref=e1842]
+                - generic [ref=e1843]:
+                  - heading "Процессор Intel Pentium Gold G6400" [level=4] [ref=e1844]:
+                    - button "Процессор Intel Pentium Gold G6400" [ref=e1845]
+                  - button "Подробнее" [ref=e1846]:
+                    - img [ref=e1847]
+                    - text: Подробнее
+                  - generic [ref=e1851]:
+                    - generic [ref=e1853]: 211,83 BYN
+                    - button "Выбрать" [ref=e1854]
+              - generic [ref=e1856] [cursor=pointer]:
+                - img "Процессор Intel Core i3-10100F" [ref=e1859]
+                - generic [ref=e1860]:
+                  - heading "Процессор Intel Core i3-10100F" [level=4] [ref=e1861]:
+                    - button "Процессор Intel Core i3-10100F" [ref=e1862]
+                  - button "Подробнее" [ref=e1863]:
+                    - img [ref=e1864]
+                    - text: Подробнее
+                  - generic [ref=e1868]:
+                    - generic [ref=e1870]: 224,52 BYN
+                    - button "Выбрать" [ref=e1871]
+              - generic [ref=e1873] [cursor=pointer]:
+                - img "Процессор Intel Core i3-8100" [ref=e1876]
+                - generic [ref=e1877]:
+                  - heading "Процессор Intel Core i3-8100" [level=4] [ref=e1878]:
+                    - button "Процессор Intel Core i3-8100" [ref=e1879]
+                  - button "Подробнее" [ref=e1880]:
+                    - img [ref=e1881]
+                    - text: Подробнее
+                  - generic [ref=e1885]:
+                    - generic [ref=e1887]: 228,01 BYN
+                    - button "Выбрать" [ref=e1888]
+              - generic [ref=e1890] [cursor=pointer]:
+                - img "Процессор AMD Ryzen 5 3600" [ref=e1893]
+                - generic [ref=e1894]:
+                  - heading "Процессор AMD Ryzen 5 3600" [level=4] [ref=e1895]:
+                    - button "Процессор AMD Ryzen 5 3600" [ref=e1896]
+                  - button "Подробнее" [ref=e1897]:
+                    - img [ref=e1898]
+                    - text: Подробнее
+                  - generic [ref=e1902]:
+                    - generic [ref=e1904]: 263,64 BYN
+                    - button "Выбрать" [ref=e1905]
+              - generic [ref=e1907] [cursor=pointer]:
+                - img "Процессор Intel Core i3-10105F" [ref=e1910]
+                - generic [ref=e1911]:
+                  - heading "Процессор Intel Core i3-10105F" [level=4] [ref=e1912]:
+                    - button "Процессор Intel Core i3-10105F" [ref=e1913]
+                  - button "Подробнее" [ref=e1914]:
+                    - img [ref=e1915]
+                    - text: Подробнее
+                  - generic [ref=e1919]:
+                    - generic [ref=e1921]: 267,55 BYN
+                    - button "Выбрать" [ref=e1922]
+              - generic [ref=e1924] [cursor=pointer]:
+                - img "Процессор Intel Core i3-8100T" [ref=e1927]
+                - generic [ref=e1928]:
+                  - heading "Процессор Intel Core i3-8100T" [level=4] [ref=e1929]:
+                    - button "Процессор Intel Core i3-8100T" [ref=e1930]
+                  - button "Подробнее" [ref=e1931]:
+                    - img [ref=e1932]
+                    - text: Подробнее
+                  - generic [ref=e1936]:
+                    - generic [ref=e1938]: 282,79 BYN
+                    - button "Выбрать" [ref=e1939]
+          - complementary [ref=e1940]:
+            - generic [ref=e1941]:
+              - heading "Предпросмотр" [level=4] [ref=e1942]
+              - paragraph [ref=e1943]: Выберите товар из списка, здесь появятся его характеристики.
+  - contentinfo [ref=e1944]:
+    - generic [ref=e1945]:
+      - generic [ref=e1946]:
+        - generic [ref=e1947]:
+          - link "GoldPC" [ref=e1948] [cursor=pointer]:
+            - /url: /
+            - img [ref=e1950]
+            - generic [ref=e1954]: GoldPC
+          - paragraph [ref=e1955]: Премиальный магазин компьютерных компонентов с профессиональной сборкой и гарантией качества.
+        - generic [ref=e1956]:
+          - heading "Каталог" [level=4] [ref=e1957]
+          - list [ref=e1958]:
+            - listitem [ref=e1959]:
+              - link "Процессоры" [ref=e1960] [cursor=pointer]:
+                - /url: /catalog?category=cpu
+            - listitem [ref=e1961]:
+              - link "Видеокарты" [ref=e1962] [cursor=pointer]:
+                - /url: /catalog?category=gpu
+            - listitem [ref=e1963]:
+              - link "Мат. платы" [ref=e1964] [cursor=pointer]:
+                - /url: /catalog?category=motherboard
+            - listitem [ref=e1965]:
+              - link "Память" [ref=e1966] [cursor=pointer]:
+                - /url: /catalog?category=ram
+            - listitem [ref=e1967]:
+              - link "Накопители" [ref=e1968] [cursor=pointer]:
+                - /url: /catalog?category=storage
+            - listitem [ref=e1969]:
+              - link "Блоки питания" [ref=e1970] [cursor=pointer]:
+                - /url: /catalog?category=psu
+            - listitem [ref=e1971]:
+              - link "Корпуса" [ref=e1972] [cursor=pointer]:
+                - /url: /catalog?category=case
+            - listitem [ref=e1973]:
+              - link "Охлаждение" [ref=e1974] [cursor=pointer]:
+                - /url: /catalog?category=cooling
+            - listitem [ref=e1975]:
+              - link "Мониторы" [ref=e1976] [cursor=pointer]:
+                - /url: /catalog?category=monitor
+            - listitem [ref=e1977]:
+              - link "Клавиатуры" [ref=e1978] [cursor=pointer]:
+                - /url: /catalog?category=keyboard
+            - listitem [ref=e1979]:
+              - link "Мыши" [ref=e1980] [cursor=pointer]:
+                - /url: /catalog?category=mouse
+            - listitem [ref=e1981]:
+              - link "Наушники" [ref=e1982] [cursor=pointer]:
+                - /url: /catalog?category=headphones
+        - generic [ref=e1983]:
+          - heading "Сервис" [level=4] [ref=e1984]
+          - list [ref=e1985]:
+            - listitem [ref=e1986]:
+              - link "Конструктор ПК" [ref=e1987] [cursor=pointer]:
+                - /url: /pc-builder
+            - listitem [ref=e1988]:
+              - link "Сборка и настройка" [ref=e1989] [cursor=pointer]:
+                - /url: /services/assembly
+            - listitem [ref=e1990]:
+              - link "Доставка по РБ" [ref=e1991] [cursor=pointer]:
+                - /url: /delivery
+            - listitem [ref=e1992]:
+              - link "Оплата и рассрочка" [ref=e1993] [cursor=pointer]:
+                - /url: /payment
+            - listitem [ref=e1994]:
+              - link "Гарантийное обслуживание" [ref=e1995] [cursor=pointer]:
+                - /url: /warranty
+            - listitem [ref=e1996]:
+              - link "Частые вопросы" [ref=e1997] [cursor=pointer]:
+                - /url: /faq
+        - generic [ref=e1998]:
+          - heading "Контакты" [level=4] [ref=e1999]
+          - list [ref=e2000]:
+            - listitem [ref=e2001]:
+              - link "Позвонить нам" [ref=e2002] [cursor=pointer]:
+                - /url: tel:+375333149283
+                - text: +375 (33) 314-92-83
+            - listitem [ref=e2003]:
+              - link "Написать нам на email" [ref=e2004] [cursor=pointer]:
+                - /url: mailto:goldpc.team@gmail.com
+                - text: goldpc.team@gmail.com
+            - listitem [ref=e2005]: Минск, Улица Казимировская 21
+      - generic [ref=e2006]:
+        - generic [ref=e2007]: © 2026 GoldPC. Все права защищены.
+        - generic [ref=e2008]:
+          - generic "Telegram (скоро)" [ref=e2009]:
+            - img [ref=e2010]
+          - generic "Instagram (скоро)" [ref=e2012]:
+            - img [ref=e2013]

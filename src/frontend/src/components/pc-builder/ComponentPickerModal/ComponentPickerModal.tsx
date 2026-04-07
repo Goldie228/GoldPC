@@ -314,7 +314,6 @@ export function ComponentPickerModal({
   const [showIncompatible, setShowIncompatible] = useState(true);
 
   const [priceRange, setPriceRange] = useState({ min: 0, max: 0 });
-  const [priceBoundsReady, setPriceBoundsReady] = useState(false);
   const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<string[]>([]);
   const [minRating] = useState(0);
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>(['in_stock']);
@@ -326,7 +325,7 @@ export function ComponentPickerModal({
     setSearch(''); setDebouncedSearch(''); setSortPreset('popular'); setPreviewImgIdx(0);
     setInStockOnly(false); setHighlightedId(currentProduct?.id ?? null);
     setPage(1); setViewMode('grid');
-    setPriceRange({ min: 0, max: 0 }); setPriceBoundsReady(false);
+    setPriceRange({ min: 0, max: 0 });
     setSelectedManufacturerIds([]);
     // For case slot with a MB selected — pre-check all compatible FF options
     if (slotType === 'case' && buildContext?.motherboard?.product) {
@@ -544,26 +543,18 @@ export function ComponentPickerModal({
     useMemo(() => ({
       category: selectedCategory, page, pageSize: 12,
       search: debouncedSearch || undefined,
-      sortBy, sortOrder, priceMin, priceMax,
+      sortBy, sortOrder,
       inStock: inStockOnly ? true : undefined,
+      priceMin: priceRange.min > 0 ? priceRange.min : undefined,
+      priceMax: priceRange.max > 0 ? priceRange.max : undefined,
       specifications: Object.keys(effectiveSpecs).length > 0 ? effectiveSpecs : undefined,
       manufacturerIds: selectedManufacturerIds.length > 0 ? selectedManufacturerIds : undefined,
-    }), [selectedCategory, debouncedSearch, sortBy, sortOrder, priceMin, priceMax, inStockOnly, effectiveSpecs, selectedManufacturerIds, page]),
+    }), [selectedCategory, debouncedSearch, sortBy, sortOrder, inStockOnly, effectiveSpecs, selectedManufacturerIds, page, priceRange.min, priceRange.max]),
     { enabled: isOpen }
   );
 
   const products = productsResponse?.data ?? [];
   const meta = productsResponse?.meta;
-
-  // Derive price range from loaded products so the filter slider isn't stuck at 0–0
-  useEffect(() => {
-    if (!products.length || priceBoundsReady) return;
-    const prices = products.map((p: any) => p.price).filter((v: number) => typeof v === 'number' && v > 0);
-    if (prices.length > 0) {
-      setPriceRange({ min: Math.min(...prices), max: Math.max(...prices) });
-      setPriceBoundsReady(true);
-    }
-  }, [products, priceBoundsReady]);
 
   // ── Compatibility filtering ──
 
@@ -664,10 +655,9 @@ export function ComponentPickerModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Выбор: ${slotLabel}`} size="xlarge" showCloseButton>
-      {/* Hide categories + header inside FilterSidebar (CSS modules use hashed class names) */}
+      {/* Hide sidebar header (title "Фильтры") inside FilterSidebar */}
       <style>{`
-        .${styles.filterSidebarWrap} > aside > div:first-child,
-        .${styles.filterSidebarWrap} > aside > div:nth-child(2) {
+        .${styles.filterSidebarWrap} > aside > div:first-child {
           display: none !important;
         }
         /* Override FilterSidebar colors to match picker theme */
@@ -780,7 +770,7 @@ export function ComponentPickerModal({
 
             {!isLoading && !error && (
               <>
-                {filteredProducts.length > 0 && <div className={styles.resultsCount}>{`Найдено: ${filteredProducts.length}${meta && meta.totalItems !== filteredProducts.length ? ` из ${meta.totalItems}` : ''}`}</div>}
+                {meta && meta.totalItems > 0 && <div className={styles.resultsCount}>Найдено: {meta.totalItems}</div>}
 
                 {/* Toggle incompatible visibility */}
                 {incompatibleCount > 0 && (
