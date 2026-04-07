@@ -1,0 +1,10 @@
+[GET] http://localhost:5173/api/v1/catalog/products?pageSize=5 => [200] OK
+[GET] http://localhost:5173/api/v1/catalog/categories => [200] OK
+[GET] http://localhost:5173/api/v1/catalog/categories/processors/filter-facets?inStock=true => [200] OK
+[GET] http://localhost:5173/api/v1/catalog/manufacturers?category=processors => [200] OK
+[GET] http://localhost:5173/api/v1/catalog/products?page=1&pageSize=12&category=processors&sortBy=price&sortOrder=asc => [200] OK
+[GET] http://localhost:5173/api/v1/catalog/categories => [200] OK
+[GET] http://localhost:5173/api/v1/catalog/categories/processors/filter-facets?inStock=true => [200] OK
+[GET] http://localhost:5173/api/v1/catalog/manufacturers?category=processors => [200] OK
+[GET] http://localhost:5173/api/v1/catalog/products?page=1&pageSize=12&category=processors&sortBy=price&sortOrder=asc&inStock=true => [200] OK
+[GET] http://localhost:5173/api/v1/catalog/products?page=1&pageSize=12&category=processors&priceMin=41.48&priceMax=282.79&sortBy=price&sortOrder=asc&inStock=true => [200] OK

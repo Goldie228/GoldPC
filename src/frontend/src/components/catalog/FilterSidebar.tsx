@@ -283,11 +283,10 @@ export function FilterSidebar({
   effectiveSpecifications,
   restrictedManufacturerPlatform,
 }: FilterSidebarProps) {
-  const PRICE_MIN = 0;
-  // Mock catalog prices are in BYN and usually <= ~6000 per category.
-  // Huge max (500000) makes the slider "jump" too aggressively.
-  const PRICE_MAX = 10000;
-  const PRICE_STEP = 25;
+  const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>({ min: 0, max: 50000 });
+  const PRICE_MIN = priceBounds.min;
+  const PRICE_MAX = priceBounds.max;
+  const PRICE_STEP = Math.max(1, Math.ceil((PRICE_MAX - PRICE_MIN) / 200));
 
   const clampNumber = (value: number, min: number, max: number): number =>
     Math.min(max, Math.max(min, value));
@@ -301,6 +300,9 @@ export function FilterSidebar({
     const minUnset = range.min === 0;
     const maxUnset = range.max === 0;
     if (minUnset || maxUnset) {
+      if (minUnset && maxUnset) {
+        return { min: PRICE_MIN, max: PRICE_MAX };
+      }
       return { min: minUnset ? 0 : min, max: maxUnset ? 0 : max };
     }
 
@@ -409,6 +411,33 @@ export function FilterSidebar({
     };
     fetchAttrs();
   }, [selectedCategory, JSON.stringify(effectiveSpecifications), selectedAvailability]);
+
+  // Fetch real price bounds from catalog API (cheapest + most expensive item in category)
+  useEffect(() => {
+    if (!selectedCategory) {
+      setPriceBounds({ min: 0, max: 50000 });
+      return;
+    }
+    let cancelled = false;
+    const fetchPriceBounds = async () => {
+      try {
+        const [minRes, maxRes] = await Promise.all([
+          catalogApi.getProducts({ category: selectedCategory, pageSize: 1, sortBy: 'price', sortOrder: 'asc', inStock: true }),
+          catalogApi.getProducts({ category: selectedCategory, pageSize: 1, sortBy: 'price', sortOrder: 'desc', inStock: true }),
+        ]);
+        if (cancelled) return;
+        const minP = minRes.data[0]?.price;
+        const maxP = maxRes.data[0]?.price;
+        if (minP != null && maxP != null) {
+          setPriceBounds({ min: Math.floor(minP), max: Math.ceil(maxP) });
+        }
+      } catch (err) {
+        console.error('Failed to fetch price bounds:', err);
+      }
+    };
+    fetchPriceBounds();
+    return () => { cancelled = true; };
+  }, [selectedCategory]);
 
   // Загрузка производителей: по категории или всех
   useEffect(() => {
