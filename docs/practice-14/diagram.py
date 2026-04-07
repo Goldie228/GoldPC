@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a clean UML Use Case diagram PNG using Cairo."""
+"""UML Use Case diagram with Cairo. Pixel-perfect control."""
 import cairo, math, os
 
 W, H = 2800, 1950
@@ -9,250 +9,297 @@ DKGRAY  = (0.22, 0.22, 0.22)
 GRAY    = (0.55, 0.55, 0.55)
 UC_FILL = (0.91, 0.95, 0.98)
 UC_STR  = (0.18, 0.40, 0.72)
-INC     = (0.0, 0.33, 0.72)
-EXT     = (0.78, 0.33, 0.0)
-BDY     = (0.44, 0.44, 0.44)
+INC_CLR = (0.0, 0.33, 0.72)
+EXT_CLR = (0.78, 0.33, 0.0)
+BDY_CLR = (0.44, 0.44, 0.44)
 WHITE   = (1.0, 1.0, 1.0)
 
 UC_RX = 110
-UC_RY = 42
+UC_FH = 52  # full height of use case ellipse
 
-def ellipse(ctx, cx, cy, lines):
-    n = len(lines); ry = max(UC_RY, n * 13)
+def draw_uc(ctx, cx, cy, text_lines):
+    """Draw a single use-case ellipse with text. Returns ry."""
+    n = len(text_lines)
+    ry = max(UC_FH // 2, n * 13)
+
+    # Fill
     ctx.set_source_rgb(*UC_FILL)
-    ctx.save(); ctx.translate(cx, cy); ctx.scale(UC_RX / ry, 1)
-    ctx.arc(0, 0, ry, 0, 2 * math.pi); ctx.fill(); ctx.restore()
+    ctx.new_path(); ctx.save(); ctx.translate(cx, cy); ctx.scale(UC_RX / ry, 1)
+    ctx.arc(0, 0, ry, 0, 2 * math.pi)
+    ctx.restore(); ctx.fill()
+
+    # Stroke
     ctx.set_source_rgb(*UC_STR); ctx.set_line_width(1.6)
-    ctx.save(); ctx.translate(cx, cy); ctx.scale(UC_RX / ry, 1)
-    ctx.arc(0, 0, ry, 0, 2 * math.pi); ctx.stroke(); ctx.restore()
+    ctx.new_path(); ctx.save(); ctx.translate(cx, cy); ctx.scale(UC_RX / ry, 1)
+    ctx.arc(0, 0, ry, 0, 2 * math.pi)
+    ctx.restore(); ctx.stroke()
+
+    # Text - centered
     ctx.set_source_rgb(*BLACK)
     ctx.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
     ctx.set_font_size(14)
-    sy = cy - n * 19 / 2 + 14
-    for ln in lines:
-        _, _, tw, _, _, _ = ctx.text_extents(ln)
-        ctx.move_to(cx - tw / 2, sy); ctx.show_text(ln); sy += 19
+    total_lines = n * 19
+    y0 = cy - total_lines / 2 + 15
+    for i, ln in enumerate(text_lines):
+        ext = ctx.text_extents(ln)
+        tw = ext.width
+        ctx.move_to(cx - tw / 2, y0 + i * 19)
+        ctx.show_text(ln)
     return ry
 
-def ept(cx, cy, rx, ry, tx, ty):
-    """Point on ellipse perimeter toward target (tx,ty). Returns (x, y, angle)."""
+def ellipse_edge(cx, cy, rx, ry, tx, ty):
+    """Find point on ellipse perimeter towards target."""
     a = math.atan2(ty - cy, tx - cx)
-    d = math.sqrt((math.cos(a) / rx) ** 2 + (math.sin(a) / ry) ** 2)
-    if d < 1e-8: return cx, cy, a
-    r = 1 / d
+    denom = math.sqrt((math.cos(a) / rx) ** 2 + (math.sin(a) / ry) ** 2)
+    if denom < 1e-10:
+        return cx, cy, a
+    r = 1.0 / denom
     return cx + r * math.cos(a), cy + r * math.sin(a), a
 
-def sline(ctx, x1, y1, x2, y2, col, w=1.2, dash=False):
-    ctx.save(); ctx.set_source_rgb(*col); ctx.set_line_width(w)
+def line(ctx, x1, y1, x2, y2, col, w=1.2, dash=False):
+    """Draw a line with optional dashes and arrow."""
+    ctx.set_source_rgb(*col); ctx.set_line_width(w)
     ctx.set_dash([8, 5] if dash else [])
     ctx.move_to(x1, y1); ctx.line_to(x2, y2); ctx.stroke()
-    ctx.restore()
 
-def arr_v(ctx, tx, ty, col, w=1.3, empty=False):
-    """Vertical arrow (pointing up or down). angle is exactly +/-pi/2."""
-    ctx.save(); ctx.set_dash([]); ctx.set_line_width(2.2 if empty else w)
+def arrowhead(ctx, tx, ty, angle, col, w=1.3, empty=False):
+    """Draw an arrow head at the target point."""
+    ctx.set_dash([]); ctx.set_line_width(2.2 if empty else w)
     ctx.set_source_rgb(*col)
-    al = 14; aa = 0.42
-    # angle = -pi/2 means pointing up (arrowhead at top, line comes from below)
-    ax = -math.pi / 2
-    ax1 = tx - al * math.cos(ax - aa); ay1 = ty - al * math.sin(ax - aa)
-    ax2 = tx - al * math.cos(ax + aa); ay2 = ty - al * math.sin(ax + aa)
-    ctx.move_to(ax1, ay1); ctx.line_to(tx, ty); ctx.line_to(ax2, ay2)
+    sz = 14; half = 0.42
+    x1 = tx - sz * math.cos(angle - half); y1 = ty - sz * math.sin(angle - half)
+    x2 = tx - sz * math.cos(angle + half); y2 = ty - sz * math.sin(angle + half)
+    ctx.move_to(x1, y1); ctx.line_to(tx, ty); ctx.line_to(x2, y2)
     if empty:
-        ctx.line_to(ax1 + (ax2 - ax1) * 0.3, ay1 + (ay2 - ay1) * 0.3)
+        ctx.line_to(x1 + (x2 - x1) * 0.3, y1 + (y2 - y1) * 0.3)
         ctx.close_path()
-    ctx.stroke(); ctx.restore()
+    ctx.stroke()
 
-def arr(ctx, tx, ty, angle, col, w=1.3):
-    ctx.save(); ctx.set_dash([]); ctx.set_line_width(w)
-    ctx.set_source_rgb(*col)
-    al = 14; aa = 0.42
-    ax1 = tx - al * math.cos(angle - aa); ay1 = ty - al * math.sin(angle - aa)
-    ax2 = tx - al * math.cos(angle + aa); ay2 = ty - al * math.sin(angle + aa)
-    ctx.move_to(ax1, ay1); ctx.line_to(tx, ty); ctx.line_to(ax2, ay2)
-    ctx.stroke(); ctx.restore()
-
-def lbl(ctx, mx, my, txt, col):
+def label(ctx, mx, my, txt, col):
+    """Draw italic label with white background."""
     ctx.select_font_face("sans-serif", cairo.FONT_SLANT_ITALIC, cairo.FONT_WEIGHT_NORMAL)
     ctx.set_font_size(11)
-    _, _, tw, th, _, _ = ctx.text_extents(txt)
-    # white background
+    ext = ctx.text_extents(txt)
+    tw, th = ext.width, ext.height
+
     ctx.set_source_rgb(*WHITE)
-    ctx.rectangle(mx - tw/2 - 6, my - th/2 - 5, tw + 12, th + 10)
+    ctx.rectangle(mx - tw / 2 - 6, my - th / 2 - 5, tw + 12, th + 10)
     ctx.fill()
-    # text
+
     ctx.set_source_rgb(*col)
-    ctx.move_to(mx - tw/2, my + th * 0.35)
+    ctx.move_to(mx - tw / 2, my + th * 0.35)
     ctx.show_text(txt)
 
-def stick(ctx, ax, ay):
+def draw_stick(ctx, ax, ay):
+    """Draw stick figure. Returns (head_y, feet_y, feet_bottom_y)."""
     ctx.set_source_rgb(*BLACK)
     ctx.set_line_width(2.2); ctx.set_dash([])
     r = 10
-    hy = ay + r + 2
-    ctx.arc(ax, hy, r, 0, 2 * math.pi); ctx.stroke()
-    bt = hy + r + 2; bb = bt + 28
-    ctx.move_to(ax, bt); ctx.line_to(ax, bb); ctx.stroke()
-    arm_y = bt + 7; aw = 18
+    head_y = ay + r + 2
+    ctx.arc(ax, head_y, r, 0, 2 * math.pi)
+    ctx.stroke()
+    body_top = head_y + r + 2
+    body_bot = body_top + 28
+    ctx.move_to(ax, body_top); ctx.line_to(ax, body_bot); ctx.stroke()
+    arm_y = body_top + 7; aw = 18
     ctx.move_to(ax - aw, arm_y); ctx.line_to(ax + aw, arm_y); ctx.stroke()
-    ll = 20; lw = 12
-    ctx.move_to(ax, bb); ctx.line_to(ax - lw, bb + ll); ctx.stroke()
-    ctx.move_to(ax, bb); ctx.line_to(ax + lw, bb + ll); ctx.stroke()
-    return bb + ll + 5
+    ll, lw = 20, 12
+    ctx.move_to(ax, body_bot); ctx.line_to(ax - lw, body_bot + ll); ctx.stroke()
+    ctx.move_to(ax, body_bot); ctx.line_to(ax + lw, body_bot + ll); ctx.stroke()
+    feet_y = body_bot + ll + 5
+    return head_y, feet_y
 
 def main():
-    s = cairo.ImageSurface(cairo.FORMAT_ARGB32, W, H)
-    ctx = cairo.Context(s)
-    ctx.set_source_rgb(1, 1, 1); ctx.rectangle(0, 0, W, H); ctx.fill()
+    surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, W, H)
+    ctx = cairo.Context(surf)
 
-    # ===== System boundary =====
-    bx, by, bw, bh = 480, 50, 1720, 1830
+    # Background
+    ctx.set_source_rgb(1, 1, 1)
+    ctx.paint()
+
+    # ================================
+    # SYSTEM BOUNDARY
+    # ================================
+    bx, by, bw, bh = 500, 50, 1700, 1830
     ctx.set_source_rgb(*DKGRAY)
     ctx.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     ctx.set_font_size(15)
-    title = "GoldPC \u2014 компьютерный магазин с сервисным центром"
-    _, _, tw, _, _, _ = ctx.text_extents(title)
-    ctx.move_to(bx + (bw - tw) / 2, by + 22); ctx.show_text(title)
-    ctx.set_source_rgb(*BDY); ctx.set_line_width(1.8); ctx.set_dash([10, 5])
-    ctx.rectangle(bx, by, bw, bh); ctx.stroke(); ctx.set_dash([])
+    title = "GoldPC \u2014 \u043a\u043e\u043c\u043f\u044c\u044e\u0442\u0435\u0440\u043d\u044b\u0439 \u043c\u0430\u0433\u0430\u0437\u0438\u043d \u0441 \u0441\u0435\u0440\u0432\u0438\u0441\u043d\u044b\u043c \u0446\u0435\u043d\u0442\u0440\u043e\u043c"
+    ext = ctx.text_extents(title)
+    ctx.move_to(bx + (bw - ext.width) / 2, by + 24)
+    ctx.show_text(title)
 
-    # ===== Use case positions =====
-    col0 = bx + 230   # visitor-facing
-    col1 = bx + 590   # order-related
-    col2 = bx + 970   # service/auth
-    col3 = bx + 1390  # staff functions
+    # Dashed border
+    ctx.set_source_rgb(*BDY_CLR); ctx.set_line_width(1.8); ctx.set_dash([10, 5])
+    ctx.rectangle(bx, by, bw, bh)
+    ctx.stroke(); ctx.set_dash([])
 
-    uc_data = [
-        # (key, cx, cy, lines)
-        ("catalog",      col0, 155,  ["Просмотр каталога", "товаров"]),
-        ("builder",      col0, 400,  ["Использование", "конфигуратора ПК"]),
-        ("order",        col1, 360,  ["Оформление", "заказа"]),
-        ("cart",         col1, 670,  ["Изменение", "корзины"]),
-        ("payment",      col1, 930,  ["Оплата", "заказа"]),
-        ("track",        col1, 1160, ["Отслеживание", "статуса заказа"]),
-        ("service",      col2, 740,  ["Подача заявки", "в сервисный центр"]),
-        ("auth",         col2, 1060, ["Аутентификация", "пользователя"]),
-        ("catalog_mgmt", col3, 200,  ["Управление", "каталогом"]),
-        ("order_mgmt",   col3, 460,  ["Управление", "заказами"]),
-        ("repair",       col3, 710,  ["Выполнение", "ремонтных работ"]),
-        ("users",        col3, 970,  ["Управление", "пользователями"]),
-        ("admin_sys",    col3, 1160, ["Администрирование", "системы"]),
-    ]
+    # ================================
+    # USE CASES - positions (4 columns)
+    # ================================
+    left_x  = bx + 240  # col 0 - visitor-facing
+    mid_x   = bx + 620  # col 1 - order-related
+    svc_x   = bx + 1000 # col 2 - service/auth
+    staff_x = bx + 1400 # col 3 - staff functions
 
-    ucs = {}
+    uc_positions = {
+        "catalog":      (left_x, 155),
+        "builder":      (left_x, 400),
+        "order":        (mid_x,  340),
+        "cart":         (mid_x,  640),
+        "payment":      (mid_x,  920),
+        "track":        (mid_x, 1160),
+        "service":      (svc_x,  740),
+        "auth":         (svc_x, 1060),
+        "catalog_mgmt": (staff_x, 200),
+        "order_mgmt":   (staff_x, 460),
+        "repair":       (staff_x, 710),
+        "users":        (staff_x, 970),
+        "admin_sys":    (staff_x,1160),
+    }
+    uc_texts = {
+        "catalog":      ["\u041f\u0440\u043e\u0441\u043c\u043e\u0442\u0440 \u043a\u0430\u0442\u0430\u043b\u043e\u0433\u0430", "\u0442\u043e\u0432\u0430\u0440\u043e\u0432"],
+        "builder":      ["\u0418\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u0438\u0435", "\u043a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0442\u043e\u0440\u0430 \u041f\u041a"],
+        "order":        ["\u041e\u0444\u043e\u0440\u043c\u043b\u0435\u043d\u0438\u0435", "\u0437\u0430\u043a\u0430\u0437\u0430"],
+        "cart":         ["\u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435", "\u043a\u043e\u0440\u0437\u0438\u043d\u044b"],
+        "payment":      ["\u041e\u043f\u043b\u0430\u0442\u0430", "\u0437\u0430\u043a\u0430\u0437\u0430"],
+        "track":        ["\u041e\u0442\u0441\u043b\u0435\u0436\u0438\u0432\u0430\u043d\u0438\u0435", "\u0441\u0442\u0430\u0442\u0443\u0441\u0430 \u0437\u0430\u043a\u0430\u0437\u0430"],
+        "service":      ["\u041f\u043e\u0434\u0430\u0447\u0430 \u0437\u0430\u044f\u0432\u043a\u0438", "\u0432 \u0441\u0435\u0440\u0432\u0438\u0441\u043d\u044b\u0439 \u0446\u0435\u043d\u0442\u0440"],
+        "auth":         ["\u0410\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f", "\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f"],
+        "catalog_mgmt": ["\u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435", "\u043a\u0430\u0442\u0430\u043b\u043e\u0433\u043e\u043c"],
+        "order_mgmt":   ["\u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435", "\u0437\u0430\u043a\u0430\u0437\u0430\u043c\u0438"],
+        "repair":       ["\u0412\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435", "\u0440\u0435\u043c\u043e\u043d\u0442\u043d\u044b\u0445 \u0440\u0430\u0431\u043e\u0442"],
+        "users":        ["\u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435", "\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044f\u043c\u0438"],
+        "admin_sys":    ["\u0410\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435", "\u0441\u0438\u0441\u0442\u0435\u043c\u044b"],
+    }
+
     rh = {}
-    for key, cx, cy, lines in uc_data:
-        ucs[key] = (cx, cy)
-        rh[key] = ellipse(ctx, cx, cy, lines)
+    for key, (cx, cy) in uc_positions.items():
+        rh[key] = draw_uc(ctx, cx, cy, uc_texts[key])
 
-    # ===== Actors (LEFT) =====
-    acts = [
-        ("visitor", 255, 140),
-        ("client",  255, 580),
-        ("staff",   255, 960),
-        ("manager", 255, 1160),
-        ("master",  255, 1380),
-        ("admin",   255, 1580),
+    # ================================
+    # ACTORS (LEFT)
+    # ================================
+    actor_x = 260
+    actors = [
+        ("visitor", actor_x, 140,  "\u041f\u043e\u0441\u0435\u0442\u0438\u0442\u0435\u043b\u044c"),
+        ("client",  actor_x, 560,  "\u041a\u043b\u0438\u0435\u043d\u0442"),
+        ("staff",   actor_x, 960,  "\u0421\u043e\u0442\u0440\u0443\u0434\u043d\u0438\u043a"),
+        ("manager", actor_x, 1150, "\u041c\u0435\u043d\u0435\u0434\u0436\u0435\u0440"),
+        ("master",  actor_x, 1360, "\u041c\u0430\u0441\u0442\u0435\u0440"),
+        ("admin",   actor_x, 1560, "\u0410\u0434\u043c\u0438\u043d\u0438\u0441\u0442\u0440\u0430\u0442\u043e\u0440"),
     ]
-    ft = {}
-    actor_labels = dict(
-        visitor="Посетитель", client="Клиент", staff="Сотрудник",
-        manager="Менеджер", master="Мастер", admin="Администратор",
-    )
-    for nm, ax, ay in acts:
-        fy = stick(ctx, ax, ay)
-        ft[nm] = (ax, fy + 5)
-        _, _, tw, _, _, _ = ctx.text_extents(actor_labels[nm])
+    actor_data = {}
+    for name, ax, ay, label_text in actors:
+        _, feet_y = draw_stick(ctx, ax, ay)
         ctx.set_source_rgb(*BLACK)
         ctx.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
         ctx.set_font_size(13)
-        ctx.move_to(ax - tw / 2, fy + 6); ctx.show_text(actor_labels[nm])
+        ext = ctx.text_extents(label_text)
+        ctx.move_to(ax - ext.width / 2, feet_y + 6)
+        ctx.show_text(label_text)
+        # Store actor center as middle of body (~head_y + body_length/2)
+        actor_data[name] = {"ax": ax, "feet_y": feet_y, "center_y": ay + 30}
 
-    # ===== Payment system (RIGHT) =====
-    pay_x = bx + bw + 165; pay_y = ucs["payment"][1]
-    pw, ph = 135, 58
+    # ================================
+    # PAYMENT SYSTEM (RIGHT)
+    # ================================
+    pay_x = bx + bw + 170
+    pay_y = uc_positions["payment"][1]
+    pw, ph = 140, 60
     ctx.set_source_rgb(*BLACK); ctx.set_line_width(1.5); ctx.set_dash([])
     ctx.rectangle(pay_x - pw / 2, pay_y - ph / 2, pw, ph); ctx.stroke()
     ctx.select_font_face("sans-serif", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
     ctx.set_font_size(12)
-    p1, p2 = "Платёжная", "система"
-    _, _, tw1, _, _, _ = ctx.text_extents(p1)
-    _, _, tw2, _, _, _ = ctx.text_extents(p2)
-    ctx.move_to(pay_x - tw1 / 2, pay_y - 5); ctx.show_text(p1)
-    ctx.move_to(pay_x - tw2 / 2, pay_y + 14); ctx.show_text(p2)
+    p1, p2 = "\u041f\u043b\u0430\u0442\u0451\u0436\u043d\u0430\u044f", "\u0441\u0438\u0441\u0442\u0435\u043c\u0430"
+    ext1 = ctx.text_extents(p1)
+    ext2 = ctx.text_extents(p2)
+    ctx.move_to(pay_x - ext1.width / 2, pay_y - 5); ctx.show_text(p1)
+    ctx.move_to(pay_x - ext2.width / 2, pay_y + 14); ctx.show_text(p2)
 
-    # ===== Helper: actor-to-UC association =====
-    def a2u(ak, uk, col=BLACK):
-        fx, fy = ft[ak]
-        cx, cy = ucs[uk]; ry = rh[uk]
-        ex, ey, _ = ept(cx, cy, UC_RX, ry, fx, fy)
-        sline(ctx, fx, fy, ex, ey, col, 1.3)
+    # ================================
+    # ASSOCIATIONS: actors -> UCs
+    # ================================
+    def actor_to_uc(ak, uk, col=BLACK):
+        ax = actor_data[ak]["ax"]
+        fy = actor_data[ak]["feet_y"]
+        cx, cy = uc_positions[uk]; ry = rh[uk]
+        ex, ey, _ = ellipse_edge(cx, cy, UC_RX, ry, ax, fy)
+        line(ctx, ax, fy, ex, ey, col, 1.3)
 
-    # ===== ASSOCIATIONS =====
-    a2u("visitor", "catalog")
-    a2u("visitor", "builder")
-    a2u("client", "order")
-    a2u("client", "track")
-    a2u("client", "service")
-    a2u("manager", "catalog_mgmt")
-    a2u("manager", "order_mgmt")
-    a2u("master", "repair")
-    a2u("admin", "users")
-    a2u("admin", "admin_sys")
+    # Visitor
+    actor_to_uc("visitor", "catalog")
+    actor_to_uc("visitor", "builder")
+    # Client
+    actor_to_uc("client", "order")
+    actor_to_uc("client", "track")
+    actor_to_uc("client", "service")
+    # Manager
+    actor_to_uc("manager", "catalog_mgmt")
+    actor_to_uc("manager", "order_mgmt")
+    # Master
+    actor_to_uc("master", "repair")
+    # Admin
+    actor_to_uc("admin", "users")
+    actor_to_uc("admin", "admin_sys")
 
-    # Payment -> payment UC
-    ex, ey, ea = ept(ucs["payment"][0], ucs["payment"][1], UC_RX, rh["payment"],
-                     pay_x - pw / 2, pay_y)
-    sline(ctx, pay_x - pw / 2, pay_y, ex, ey, BLACK, 1.3)
-    arr(ctx, ex, ey, ea, BLACK)
+    # Payment system -> payment
+    ex, ey, ea = ellipse_edge(uc_positions["payment"][0], uc_positions["payment"][1],
+                               UC_RX, rh["payment"], pay_x - pw / 2, pay_y)
+    line(ctx, pay_x - pw / 2, pay_y, ex, ey, BLACK, 1.3)
+    arrowhead(ctx, ex, ey, ea, BLACK)
 
-    # ===== GENERALIZATIONS =====
-    def gen_arrow(off_x, child_key, parent_key):
-        _, cy_child = ft[child_key]
-        _, cy_parent = ft[parent_key]
-        y1 = cy_child - 44
-        y2 = cy_parent + 14
-        # line + arrowhead
-        sline(ctx, off_x, y1, off_x, y2, GRAY, 2.0)
-        arr_v(ctx, off_x, y2, GRAY, 2.0, empty=True)
-        lbl(ctx, off_x + 10, (y1 + y2) / 2, "extends", GRAY)
+    # ================================
+    # GENERALIZATION arrows (vertical, left side)
+    # ================================
+    def gen_arrow(x_offset, child, parent):
+        child_fy = actor_data[child]["feet_y"]
+        parent_cy = actor_data[parent]["center_y"]
+        y1 = child_fy - 48   # start below child's head
+        y2 = parent_cy + 24  # end above parent's feet
 
-    gen_arrow(440, "client",  "visitor")
-    gen_arrow(500, "manager", "staff")
+        # Draw solid line
+        line(ctx, x_offset, y1, x_offset, y2, GRAY, 2.0)
+        # Draw empty triangle at parent end (pointing up)
+        arrowhead(ctx, x_offset, y2, -math.pi / 2, GRAY, 2.0, empty=True)
+        # Label
+        label(ctx, x_offset + 12, (y1 + y2) / 2, "extends", GRAY)
+
+    gen_arrow(420, "client",  "visitor")
+    gen_arrow(490, "manager", "staff")
     gen_arrow(560, "master",  "staff")
 
-    # ===== INCLUDE / EXTEND =====
-    def u2u(k1, k2, col, txt):
-        c1x, c1y = ucs[k1]; c2x, c2y = ucs[k2]
-        x1, y1, angle1 = ept(c1x, c1y, UC_RX, rh[k1], c2x, c2y)
-        x2, y2, angle2 = ept(c2x, c2y, UC_RX, rh[k2], c1x, c1y)
-        # Draw dashed line from edge of UC1 to edge of UC2 (stop 3px before edge)
-        tx = x2 - 3 * math.cos(angle2)
-        ty = y2 - 3 * math.sin(angle2)
-        sline(ctx, x1, y1, tx, ty, col, 1.3, dash=True)
-        # Filled arrow at UC2 edge
-        arr(ctx, x2, y2, angle2, col)
-        # Label
-        mx = (x1 + tx) / 2
-        my = (y1 + ty) / 2
-        lbl(ctx, mx, my - 10, txt, col)
+    # ================================
+    # INCLUDE / EXTEND between UCs
+    # ================================
+    def uc_to_uc(k1, k2, col, label_text, label_dx=0, label_dy=-10):
+        c1x, c1y = uc_positions[k1]; c2x, c2y = uc_positions[k2]
+        x1, y1, _ = ellipse_edge(c1x, c1y, UC_RX, rh[k1], c2x, c2y)
+        x2, y2, a = ellipse_edge(c2x, c2y, UC_RX, rh[k2], c1x, c1y)
+        tx = x2 - 3 * math.cos(a); ty = y2 - 3 * math.sin(a)
 
-    u2u("order", "payment", INC, "\u00abinclude\u00bb")
-    u2u("order", "auth", INC, "\u00abinclude\u00bb")
-    u2u("track", "auth", INC, "\u00abinclude\u00bb")
-    u2u("service", "auth", INC, "\u00abinclude\u00bb")
+        line(ctx, x1, y1, tx, ty, col, 1.3, dash=True)
+        arrowhead(ctx, x2, y2, a, col)
+        label(ctx, (x1 + tx) / 2 + label_dx, (y1 + ty) / 2 + label_dy, label_text, col)
 
-    # extend: cart -> order (manual routing to avoid text crossing)
-    c1x, c1y = ucs["cart"]; c2x, c2y = ucs["order"]
-    # Route from top of cart to bottom of order
+    uc_to_uc("order",   "payment", INC_CLR, "\u00abinclude\u00bb", label_dx=40)
+    uc_to_uc("order",   "auth",    INC_CLR, "\u00abinclude\u00bb", label_dx=45)
+    uc_to_uc("track",   "auth",    INC_CLR, "\u00abinclude\u00bb", label_dx=35)
+    uc_to_uc("service", "auth",    INC_CLR, "\u00abinclude\u00bb", label_dx=35)
+
+    # Extend: cart -> order (manual vertical routing)
+    c1x, c1y = uc_positions["cart"]; c2x, c2y = uc_positions["order"]
     sx1 = c1x; sy1 = c1y - rh["cart"]
-    tx2 = c2x; ty2 = c2y + rh["order"] + 3
-    sline(ctx, sx1, sy1, tx2, ty2, EXT, 1.3, dash=True)
-    arr(ctx, tx2, c2y + rh["order"], -math.pi / 2, EXT)
-    lbl(ctx, sx1 + 55, (sy1 + ty2) / 2, "\u00abextend\u00bb", EXT)
+    tx2 = c2x; ty2 = c2y + rh["order"]
+    line(ctx, sx1, sy1, tx2, ty2 - 3, EXT_CLR, 1.3, dash=True)
+    arrowhead(ctx, tx2, ty2, -math.pi / 2, EXT_CLR)
+    label(ctx, sx1 + 70, (sy1 + ty2) / 2, "\u00abextend\u00bb", EXT_CLR)
 
+    # ================================
+    # SAVE
+    # ================================
     out = "docs/practice-14/use-case-diagram.png"
-    s.write_to_png(out)
-    print(f"OK: {out} ({os.path.getsize(out):,} bytes)")
+    surf.write_to_png(out)
+    print(f"OK: {os.path.getsize(out):,} bytes")
 
 main()
