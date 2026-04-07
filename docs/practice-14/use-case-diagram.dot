@@ -1,0 +1,146 @@
+digraph UseCaseDiagram {
+    // Graph settings
+    rankdir=TB;
+    compound=true;
+    splines=polyline;
+    overlap=false;
+    pad=1.5;
+    nodesep=0.5;
+    ranksep=1.5;
+    fontname="Arial";
+    bgcolor="white";
+    size="22,18";
+
+    // System boundary box
+    subgraph cluster_system {
+        label="GoldPC \n Автоматизация деятельности компьютерного магазина с сервисным центром";
+        style=dashed;
+        color="#888888";
+        fontsize=13;
+        fontname="Arial";
+        pencolor="#888888";
+        penwidth=1.5;
+
+        // Use Cases - oval shapes with light blue fill
+        node [shape=ellipse, fontname="Arial", fontsize=10.5, width=1.9, height=0.85,
+              style=filled, fillcolor="#e8f0fa", penwidth=1.2,
+              color="#4472C4", margin="0.3,0.1"];
+
+        uc_catalog [label="Просмотр каталога\ntоваров"];
+        uc_builder [label="Использование\nконфигуратора ПК"];
+        uc_order [label="Оформление\nзаказа"];
+        uc_payment [label="Оплата заказа"];
+        uc_track [label="Отслеживание\nстатуса заказа"];
+        uc_auth [label="Аутентификация\nпользователя"];
+        uc_cart [label="Изменение\nкорзины"];
+        uc_service [label="Подача заявки\nв сервисный центр"];
+        uc_catalog_mgmt [label="Управление\nкаталогом"];
+        uc_order_mgmt [label="Управление\nзаказами"];
+        uc_repair [label="Выполнение\nремонтных работ"];
+        uc_users [label="Управление\nпользователями"];
+        uc_admin_sys [label="Администрирование\nсистемы"];
+    }
+
+    // ============ GENERALIZATIONS (before actors to help layout) ============
+    subgraph cluster_left {
+        label="";
+        style=invis;
+        actor_visitor;
+        actor_staff [style=invis];
+        actor_visitor -> actor_staff [style=invis];
+    }
+
+    // ============ ACTORS ============
+    node [shape=plaintext, fontname="Arial", fontsize=10.5];
+
+    // Abstract actor: Посетитель (left side, upper)
+    actor_visitor [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">
+        <TR><TD><FONT POINT-SIZE="35" FACE="Arial" COLOR="#222222">&#128155;</FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="10" FACE="Arial"><B>Посетитель</B></FONT></TD></TR>
+    </TABLE>>];
+
+    // Abstract actor: Сотрудник (left side, lower-mid)
+    actor_staff [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">
+        <TR><TD><FONT POINT-SIZE="35" FACE="Arial" COLOR="#222222">&#128155;</FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="10" FACE="Arial"><B>Сотрудник</B></FONT></TD></TR>
+    </TABLE>>];
+
+    // Concrete actors - right side
+    actor_client [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">
+        <TR><TD><FONT POINT-SIZE="35" FACE="Arial" COLOR="#222222">&#128155;</FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="10" FACE="Arial"><B>Клиент</B></FONT></TD></TR>
+    </TABLE>>];
+
+    actor_manager [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">
+        <TR><TD><FONT POINT-SIZE="35" FACE="Arial" COLOR="#222222">&#128155;</FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="10" FACE="Arial"><B>Менеджер</B></FONT></TD></TR>
+    </TABLE>>];
+
+    actor_master [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">
+        <TR><TD><FONT POINT-SIZE="35" FACE="Arial" COLOR="#222222">&#128155;</FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="10" FACE="Arial"><B>Мастер</B></FONT></TD></TR>
+    </TABLE>>];
+
+    actor_admin [label=<<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0">
+        <TR><TD><FONT POINT-SIZE="35" FACE="Arial" COLOR="#222222">&#128106;</FONT></TD></TR>
+        <TR><TD><FONT POINT-SIZE="10" FACE="Arial"><B>Администратор</B></FONT></TD></TR>
+    </TABLE>>];
+
+    // External system
+    actor_payment [label=<<TABLE BORDER="1" BORDERCOLOR="#555" CELLPADDING="3">
+        <TR><TD><FONT POINT-SIZE="10" FACE="Arial" COLOR="#333"><B>Платёжная&#10;система</B></FONT></TD></TR>
+    </TABLE>>];
+
+    // ============ ASSOCIATIONS (Visitor) ============
+    actor_visitor -> uc_catalog [style=solid, color="#333333", penwidth=1.2, weight=2];
+    actor_visitor -> uc_builder [style=solid, color="#333333", penwidth=1.2, weight=2];
+
+    // ============ GENERALIZATION: Client -> Visitor ============
+    actor_client -> actor_visitor [arrowhead=empty, style=solid, color="#888888", penwidth=1.5,
+        xlabel=< <FONT POINT-SIZE="8" FACE="Arial" COLOR="#888888">extends</FONT> >];
+
+    // ============ ASSOCIATIONS (Client) ============
+    actor_client -> uc_order [style=solid, color="#333333", penwidth=1.2, weight=2];
+    actor_client -> uc_track [style=solid, color="#333333", penwidth=1.2, weight=2];
+    actor_client -> uc_service [style=solid, color="#333333", penwidth=1.2, weight=2];
+
+    // ============ GENERALIZATIONS: Manager,Master -> Staff ============
+    actor_manager -> actor_staff [arrowhead=empty, style=solid, color="#888888", penwidth=1.5,
+        xlabel=< <FONT POINT-SIZE="8" FACE="Arial" COLOR="#888888">extends</FONT> >];
+    actor_master -> actor_staff [arrowhead=empty, style=solid, color="#888888", penwidth=1.5,
+        xlabel=< <FONT POINT-SIZE="8" FACE="Arial" COLOR="#888888">extends</FONT> >];
+
+    // ============ ASSOCIATIONS (Manager) ============
+    actor_manager -> uc_catalog_mgmt [style=solid, color="#333333", penwidth=1.2, weight=2];
+    actor_manager -> uc_order_mgmt [style=solid, color="#333333", penwidth=1.2, weight=2];
+
+    // ============ ASSOCIATIONS (Master) ============
+    actor_master -> uc_repair [style=solid, color="#333333", penwidth=1.2, weight=2];
+
+    // ============ ASSOCIATIONS (Admin) ============
+    actor_admin -> uc_users [style=solid, color="#333333", penwidth=1.2, weight=2];
+    actor_admin -> uc_admin_sys [style=solid, color="#333333", penwidth=1.2, weight=2];
+
+    // ============ ASSOCIATIONS (Payment System) ============
+    actor_payment -> uc_payment [style=solid, arrowhead=vee, color="#333333", penwidth=1.2, weight=2];
+
+    // ============ INCLUDE relationships ============
+    uc_order -> uc_payment [style=dashed, arrowhead=vee, color="#0066cc", penwidth=1.2,
+        xlabel=< <FONT POINT-SIZE="8" FACE="Arial" COLOR="#0066cc">include</FONT> >];
+    uc_order -> uc_auth [style=dashed, arrowhead=vee, color="#0066cc", penwidth=1.2,
+        xlabel=< <FONT POINT-SIZE="8" FACE="Arial" COLOR="#0066cc">include</FONT> >];
+    uc_track -> uc_auth [style=dashed, arrowhead=vee, color="#0066cc", penwidth=1.2,
+        xlabel=< <FONT POINT-SIZE="8" FACE="Arial" COLOR="#0066cc">include</FONT> >];
+    uc_service -> uc_auth [style=dashed, arrowhead=vee, color="#0066cc", penwidth=1.2,
+        xlabel=< <FONT POINT-SIZE="8" FACE="Arial" COLOR="#0066cc">include</FONT> >];
+
+    // ============ EXTEND relationships ============
+    uc_cart -> uc_order [style=dashed, arrowhead=vee, color="#cc6600", penwidth=1.2,
+        xlabel=< <FONT POINT-SIZE="8" FACE="Arial" COLOR="#cc6600">extend</FONT> >];
+
+    // ============ RANK CONSTRAINTS ============
+    {rank=same; uc_catalog; uc_builder; uc_order; uc_track; uc_service}
+    {rank=same; uc_payment; uc_auth; uc_cart}
+    {rank=same; uc_order_mgmt; uc_catalog_mgmt; uc_repair}
+    {rank=same; uc_users; uc_admin_sys}
+}
