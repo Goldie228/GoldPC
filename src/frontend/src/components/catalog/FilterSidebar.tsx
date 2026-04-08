@@ -687,7 +687,18 @@ export function FilterSidebar({
 
             // Apply restrictedSpecValues if provided
             const restrictKey = attr.key;
-            const allowed = restrictedSpecValues?.[restrictKey];
+            // Check multiple key variants for form factor and memory type
+            const keyVariants: Record<string, string[]> = {
+              formFactor: ['formFactor', 'format', 'form_factor'],
+              format: ['formFactor', 'format', 'form_factor'],
+              form_factor: ['formFactor', 'format', 'form_factor'],
+              type: ['type', 'memoryType', 'tip_pamyati', 'memory_type'],
+              memoryType: ['type', 'memoryType', 'tip_pamyati', 'memory_type'],
+              tip_pamyati: ['type', 'memoryType', 'tip_pamyati', 'memory_type'],
+              memory_type: ['type', 'memoryType', 'tip_pamyati', 'memory_type'],
+            };
+            const variants = keyVariants[restrictKey] ?? [restrictKey];
+            const allowed = variants.find(k => restrictedSpecValues?.[k]) ? restrictedSpecValues?.[variants.find(k => restrictedSpecValues?.[k])!] : undefined;
 
             // Also check if selectedSpecifications has a locked value (single value, not array)
             // This happens when effectiveSpecs hard-codes a spec (e.g., socket from buildContext)
@@ -703,7 +714,7 @@ export function FilterSidebar({
               if (/^[0-9]+[GM]x[0-9]+/i.test(optionValue)) return false;
               if (/\bSO-DIMM\b/i.test(optionValue)) return false;
               if (/\bREGISTERED\b/i.test(optionValue)) return false;
-              return expectedTypes.some((dt) => upper.startsWith(dt.toUpperCase()) && !/\bSO-DIMM\b/.test(upper) && !/\bREGISTERED\b/.test(upper));
+              return expectedTypes.some((dt) => upper.includes(dt.toUpperCase()));
             };
 
             let finalOptions = cleanOptions;
