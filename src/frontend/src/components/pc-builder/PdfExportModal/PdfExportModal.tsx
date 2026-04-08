@@ -27,9 +27,10 @@ const FONT_BASE_URL = import.meta.env.BASE_URL;
  * Loads Roboto Cyrillic fonts into jsPDF's virtual file system.
  * Must be called before generating PDFs with Cyrillic text.
  */
+let cyrillicFontsLoaded = false;
+
 async function loadCyrillicFonts(): Promise<void> {
-  // Check if fonts are already loaded
-  if (jsPDF.API.getFont(CYRILLIC_FONT, 'normal')) return;
+  if (cyrillicFontsLoaded) return;
 
   const [regularRes, boldRes] = await Promise.all([
     fetch(`${FONT_BASE_URL}Roboto-Regular.ttf`),
@@ -49,6 +50,8 @@ async function loadCyrillicFonts(): Promise<void> {
   pdf.addFileToVFS('Roboto-Bold.ttf', boldBytes);
   pdf.addFont('Roboto-Regular.ttf', CYRILLIC_FONT, 'normal');
   pdf.addFont('Roboto-Bold.ttf', CYRILLIC_FONT, 'bold');
+
+  cyrillicFontsLoaded = true;
 }
 
 export interface PdfExportModalProps {
