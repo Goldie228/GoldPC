@@ -497,7 +497,8 @@
 .previewImageGallery {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  min-height: 160px;
+  max-height: 280px;
   border-radius: 10px;
   background: #ffffff;
   padding: 12px;
