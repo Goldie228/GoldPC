@@ -477,12 +477,12 @@
   flex-direction: column;
   gap: 10px;
   padding: 14px;
-  padding-bottom: 60px;
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.06);
   background: #121214;
   max-height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   flex-shrink: 0;
 }
 .previewPanel::-webkit-scrollbar { width: 4px; }
@@ -600,21 +600,16 @@
 .specValue { color: #fafafa; flex: 1 1 60%; text-align: right; word-break: break-word; }
 
 .confirmBtn {
-  position: sticky;
-  bottom: 0;
   margin-top: auto;
-  padding: 10px 16px;
-  padding-bottom: 14px;
-  margin-bottom: -14px;
+  padding: 12px 16px;
   border: none;
-  border-radius: 0 0 8px 8px;
+  border-radius: 8px;
   background: #d4a574;
   color: #121214;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, transform 0.12s;
-  z-index: 5;
 }
 .confirmBtn:hover { background: #e0b68a; transform: translateY(-1px); }
 
@@ -701,7 +696,6 @@
     max-height: none;
     flex-shrink: 0;
     min-width: 0;
-    padding-bottom: 50px;
   }
   .previewImageGallery {
     max-height: 180px;
