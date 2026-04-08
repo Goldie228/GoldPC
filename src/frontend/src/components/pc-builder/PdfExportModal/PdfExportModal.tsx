@@ -19,6 +19,38 @@ import {
 import { Download, FileText, CheckCircle, AlertTriangle, Zap, BarChart3 } from 'lucide-react';
 import styles from './PdfExportModal.module.css';
 
+// Cyrillic-compatible font configuration for jsPDF
+const CYRILLIC_FONT = 'Roboto';
+const FONT_BASE_URL = import.meta.env.BASE_URL;
+
+/**
+ * Loads Roboto Cyrillic fonts into jsPDF's virtual file system.
+ * Must be called before generating PDFs with Cyrillic text.
+ */
+async function loadCyrillicFonts(): Promise<void> {
+  // Check if fonts are already loaded
+  if (jsPDF.API.getFont(CYRILLIC_FONT, 'normal')) return;
+
+  const [regularRes, boldRes] = await Promise.all([
+    fetch(`${FONT_BASE_URL}Roboto-Regular.ttf`),
+    fetch(`${FONT_BASE_URL}Roboto-Bold.ttf`),
+  ]);
+
+  if (!regularRes.ok || !boldRes.ok) {
+    throw new Error('Failed to load Cyrillic fonts for PDF export');
+  }
+
+  const regularBytes = new Uint8Array(await regularRes.arrayBuffer());
+  const boldBytes = new Uint8Array(await boldRes.arrayBuffer());
+
+  // Add fonts to jsPDF VFS and register them
+  const pdf = new jsPDF();
+  pdf.addFileToVFS('Roboto-Regular.ttf', regularBytes);
+  pdf.addFileToVFS('Roboto-Bold.ttf', boldBytes);
+  pdf.addFont('Roboto-Regular.ttf', CYRILLIC_FONT, 'normal');
+  pdf.addFont('Roboto-Bold.ttf', CYRILLIC_FONT, 'bold');
+}
+
 export interface PdfExportModalProps {
   isOpen: boolean;
   onClose: () => void;
