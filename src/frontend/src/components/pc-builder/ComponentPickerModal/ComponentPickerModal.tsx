@@ -555,11 +555,11 @@ export function ComponentPickerModal({
       search: debouncedSearch || undefined,
       sortBy, sortOrder,
       inStock: inStockOnly ? true : undefined,
-      priceMin: priceRange.min > 0 ? priceRange.min : undefined,
-      priceMax: priceRange.max > 0 ? priceRange.max : undefined,
+      priceMin,
+      priceMax,
       specifications: Object.keys(effectiveSpecs).length > 0 ? effectiveSpecs : undefined,
       manufacturerIds: selectedManufacturerIds.length > 0 ? selectedManufacturerIds : undefined,
-    }), [selectedCategory, debouncedSearch, sortBy, sortOrder, inStockOnly, effectiveSpecs, selectedManufacturerIds, page, priceRange.min, priceRange.max]),
+    }), [selectedCategory, debouncedSearch, sortBy, sortOrder, inStockOnly, effectiveSpecs, selectedManufacturerIds, page, priceMin, priceMax]),
     { enabled: isOpen }
   );
 
