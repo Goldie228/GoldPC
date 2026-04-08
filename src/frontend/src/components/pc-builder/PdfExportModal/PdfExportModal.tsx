@@ -23,35 +23,42 @@ import styles from './PdfExportModal.module.css';
 const CYRILLIC_FONT = 'Roboto';
 const FONT_BASE_URL = import.meta.env.BASE_URL;
 
+// Cached font data (loaded once, reused across PDF generations)
+let cachedRegularFont: Uint8Array | null = null;
+let cachedBoldFont: Uint8Array | null = null;
+let fontsFetchPromise: Promise<void> | null = null;
+
 /**
- * Loads Roboto Cyrillic fonts into jsPDF's virtual file system.
- * Must be called before generating PDFs with Cyrillic text.
+ * Fetches and caches Roboto font files. Called once, then the cached
+ * data is injected into each new jsPDF instance in generatePdf().
  */
-let cyrillicFontsLoaded = false;
+function preloadFonts(): Promise<void> {
+  if (fontsFetchPromise) return fontsFetchPromise;
+  fontsFetchPromise = (async () => {
+    const [regularRes, boldRes] = await Promise.all([
+      fetch(`${FONT_BASE_URL}Roboto-Regular.ttf`),
+      fetch(`${FONT_BASE_URL}Roboto-Bold.ttf`),
+    ]);
+    if (!regularRes.ok || !boldRes.ok) {
+      throw new Error('Failed to load Cyrillic fonts for PDF export');
+    }
+    cachedRegularFont = new Uint8Array(await regularRes.arrayBuffer());
+    cachedBoldFont = new Uint8Array(await boldRes.arrayBuffer());
+  })();
+  return fontsFetchPromise;
+}
 
-async function loadCyrillicFonts(): Promise<void> {
-  if (cyrillicFontsLoaded) return;
-
-  const [regularRes, boldRes] = await Promise.all([
-    fetch(`${FONT_BASE_URL}Roboto-Regular.ttf`),
-    fetch(`${FONT_BASE_URL}Roboto-Bold.ttf`),
-  ]);
-
-  if (!regularRes.ok || !boldRes.ok) {
-    throw new Error('Failed to load Cyrillic fonts for PDF export');
+/**
+ * Injects cached font data into a jsPDF instance's VFS and registers them.
+ */
+function injectFonts(doc: jsPDF): void {
+  if (!cachedRegularFont || !cachedBoldFont) {
+    throw new Error('Fonts not preloaded. Call preloadFonts() first.');
   }
-
-  const regularBytes = new Uint8Array(await regularRes.arrayBuffer());
-  const boldBytes = new Uint8Array(await boldRes.arrayBuffer());
-
-  // Add fonts to jsPDF VFS and register them
-  const pdf = new jsPDF();
-  pdf.addFileToVFS('Roboto-Regular.ttf', regularBytes);
-  pdf.addFileToVFS('Roboto-Bold.ttf', boldBytes);
-  pdf.addFont('Roboto-Regular.ttf', CYRILLIC_FONT, 'normal');
-  pdf.addFont('Roboto-Bold.ttf', CYRILLIC_FONT, 'bold');
-
-  cyrillicFontsLoaded = true;
+  doc.addFileToVFS('Roboto-Regular.ttf', cachedRegularFont);
+  doc.addFileToVFS('Roboto-Bold.ttf', cachedBoldFont);
+  doc.addFont('Roboto-Regular.ttf', CYRILLIC_FONT, 'normal');
+  doc.addFont('Roboto-Bold.ttf', CYRILLIC_FONT, 'bold');
 }
 
 export interface PdfExportModalProps {
@@ -162,6 +169,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   const performance = computePerformance(selectedComponents);
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  injectFonts(doc);
   doc.setFont(CYRILLIC_FONT, 'normal');
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
@@ -414,7 +422,7 @@ export function PdfExportModal({
 
   // Load Cyrillic fonts on mount
   useEffect(() => {
-    loadCyrillicFonts().then(() => setFontsLoaded(true)).catch(console.error);
+    preloadFonts().then(() => setFontsLoaded(true)).catch(console.error);
   }, []);
 
   const handleGenerate = useCallback(async () => {
@@ -423,7 +431,7 @@ export function PdfExportModal({
     }
     // Ensure fonts are loaded before generating PDF
     if (!fontsLoaded) {
-      await loadCyrillicFonts();
+      await preloadFonts();
     }
     const blob = generatePdf({
       selectedComponents, totalPrice, powerConsumption, recommendedPsu,
