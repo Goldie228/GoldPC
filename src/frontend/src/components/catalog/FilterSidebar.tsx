@@ -410,7 +410,7 @@ export function FilterSidebar({
       }
     };
     fetchAttrs();
-  }, [selectedCategory, JSON.stringify(effectiveSpecifications), selectedAvailability]);
+  }, [selectedCategory, serializedEffectiveSpecs, selectedAvailability]);
 
   // Fetch real price bounds from catalog API (cheapest + most expensive item in category)
   useEffect(() => {

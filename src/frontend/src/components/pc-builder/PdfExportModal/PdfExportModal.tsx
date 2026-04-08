@@ -5,7 +5,7 @@
  * Без промежуточных форм — один клик «Сохранить» = скачивание.
  */
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Modal } from '../../ui/Modal/Modal';
@@ -127,6 +127,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   const performance = computePerformance(selectedComponents);
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  doc.setFont(CYRILLIC_FONT, 'normal');
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
   const contentW = pageW - margin * 2;
@@ -146,11 +147,11 @@ function generatePdf(props: PdfExportModalProps): Blob {
 
   doc.setTextColor(...accent);
   doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(CYRILLIC_FONT, "bold");
   doc.text('GOLDPC', margin, 20);
 
   doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(CYRILLIC_FONT, "normal");
   doc.setTextColor(...muted);
   const autoName = generateAutoname(selectedComponents);
   doc.text(autoName, margin, 30);
@@ -163,7 +164,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
 
   // === Compatibility Status ===
   doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(CYRILLIC_FONT, "bold");
   doc.setTextColor(...text);
   doc.text('Совместимость', margin, y);
   y += 6;
@@ -173,14 +174,14 @@ function generatePdf(props: PdfExportModalProps): Blob {
     doc.roundedRect(margin, y - 4, 8, 8, 2, 2, 'F');
     doc.setTextColor(...accent);
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(CYRILLIC_FONT, "bold");
     doc.text('  Все компоненты совместимы', margin + 10, y + 1);
   } else {
     doc.setFillColor(...red);
     doc.roundedRect(margin, y - 4, 8, 8, 2, 2, 'F');
     doc.setTextColor(...red);
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(CYRILLIC_FONT, "bold");
     doc.text(`  Ошибки: ${compatibilityErrors.length}`, margin + 10, y + 1);
   }
   y += 12;
@@ -188,7 +189,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   if (compatibilityErrors.length > 0) {
     doc.setFontSize(8.5);
     doc.setTextColor(...red);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(CYRILLIC_FONT, "normal");
     compatibilityErrors.forEach((err) => {
       doc.text(`— ${err}`, margin + 4, y);
       y += 4.5;
@@ -209,7 +210,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   // === Component Table ===
   const rows = getComponentRows(selectedComponents);
   doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(CYRILLIC_FONT, "bold");
   doc.setTextColor(...text);
   doc.text('Компоненты', margin, y);
   y += 4;
@@ -264,12 +265,12 @@ function generatePdf(props: PdfExportModalProps): Blob {
   doc.roundedRect(margin, y, sectionW, 36, 3, 3, 'S');
 
   doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(CYRILLIC_FONT, "bold");
   doc.setTextColor(...accent);
   doc.text('Затраты электричества', margin + 6, y + 9);
 
   doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(CYRILLIC_FONT, "normal");
   doc.setTextColor(...text);
   doc.text(`Потребление: ~${Math.round(powerConsumption)} Вт`, margin + 6, y + 17);
   doc.text(`Рекомендуемый БП: ${recommendedPsu ?? Math.ceil(powerConsumption * 1.3)} Вт`, margin + 6, y + 25);
@@ -282,12 +283,12 @@ function generatePdf(props: PdfExportModalProps): Blob {
   doc.roundedRect(perfX, y, sectionW, 36, 3, 3, 'S');
 
   doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(CYRILLIC_FONT, "bold");
   doc.setTextColor(...accent);
   doc.text('Производительность', perfX + 6, y + 9);
 
   doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(CYRILLIC_FONT, "normal");
   doc.setTextColor(...text);
   doc.text(`Игры: ${performance.gamingScore}/100`, perfX + 6, y + 17);
   doc.text(`Работа: ${performance.workstationScore}/100`, perfX + 6, y + 25);
@@ -297,7 +298,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   // FPS estimates
   if (performance.estimatedFps.fps1080p > 0) {
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(CYRILLIC_FONT, "bold");
     doc.setTextColor(...text);
     doc.text('Оценка FPS', margin, y);
     y += 6;
@@ -347,19 +348,19 @@ function generatePdf(props: PdfExportModalProps): Blob {
   doc.roundedRect(margin, y, contentW, 22, 3, 3, 'S');
 
   doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(CYRILLIC_FONT, "normal");
   doc.setTextColor(...text);
   doc.text('Итого:', margin + 8, y + 14);
 
   doc.setFontSize(16);
   doc.setTextColor(...accent);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont(CYRILLIC_FONT, "bold");
   doc.text(`${totalPrice.toLocaleString('ru-BY')} BYN`, pageW - margin - 8, y + 14, { align: 'right' });
 
   // === Footer ===
   const footerY = doc.internal.pageSize.getHeight() - 14;
   doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(CYRILLIC_FONT, "normal");
   doc.setTextColor(...muted);
   doc.text('GoldPC — Конструктор ПК  |  goldpc.by', margin, footerY);
   doc.text(`Сгенерировано ${now.toLocaleString('ru-BY')}`, pageW - margin, footerY, { align: 'right' });
@@ -374,10 +375,20 @@ export function PdfExportModal({
   const perf = computePerformance(selectedComponents);
   const generatedBlobRef = useRef<Blob | null>(null);
   const generatedUrlRef = useRef<string | null>(null);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
 
-  const handleGenerate = useCallback(() => {
+  // Load Cyrillic fonts on mount
+  useEffect(() => {
+    loadCyrillicFonts().then(() => setFontsLoaded(true)).catch(console.error);
+  }, []);
+
+  const handleGenerate = useCallback(async () => {
     if (generatedUrlRef.current) {
       URL.revokeObjectURL(generatedUrlRef.current);
+    }
+    // Ensure fonts are loaded before generating PDF
+    if (!fontsLoaded) {
+      await loadCyrillicFonts();
     }
     const blob = generatePdf({
       selectedComponents, totalPrice, powerConsumption, recommendedPsu,
@@ -386,7 +397,7 @@ export function PdfExportModal({
     generatedBlobRef.current = blob;
     generatedUrlRef.current = URL.createObjectURL(blob);
   }, [selectedComponents, totalPrice, powerConsumption, recommendedPsu,
-    isCompatible, compatibilityErrors, compatibilityWarnings]);
+    isCompatible, compatibilityErrors, compatibilityWarnings, fontsLoaded]);
 
   const handleDownload = useCallback(() => {
     const url = generatedUrlRef.current;
