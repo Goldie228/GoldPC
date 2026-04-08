@@ -594,10 +594,18 @@
 .previewOpenProduct:hover { background: rgba(212,165,116,0.1); }
 
 .previewSpecs { display: flex; flex-direction: column; gap: 0; }
-.specRow { display: flex; flex-wrap: wrap; gap: 4px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 6px; font-size: 0.74rem; }
+.specRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding-bottom: 6px;
+  font-size: 0.74rem;
+  align-items: baseline;
+}
 .specRow:last-child { border-bottom: none; }
-.specLabel { color: #71717a; flex: 1 1 40%; }
-.specValue { color: #fafafa; flex: 1 1 60%; text-align: right; word-break: break-word; }
+.specLabel { color: #71717a; white-space: nowrap; }
+.specValue { color: #fafafa; text-align: right; word-break: break-word; }
 
 .confirmBtn {
   margin-top: auto;
