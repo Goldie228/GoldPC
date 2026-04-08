@@ -301,11 +301,17 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
             ) : (
               <div className="bsp__fps-row">
                 <span className="bsp__fps-label">1080p:</span>
-                <span className="bsp__fps-value">{performance.estimatedFps.fps1080p} FPS</span>
+                <span className="bsp__fps-value">
+                  {performance.estimatedFps.fps1080p > 0 ? `${performance.estimatedFps.fps1080p} FPS` : '—'}
+                </span>
                 <span className="bsp__fps-label">1440p:</span>
-                <span className="bsp__fps-value">{performance.estimatedFps.fps1440p}</span>
+                <span className="bsp__fps-value">
+                  {performance.estimatedFps.fps1440p > 0 ? `${performance.estimatedFps.fps1440p} FPS` : '—'}
+                </span>
                 <span className="bsp__fps-label">4K:</span>
-                <span className="bsp__fps-value">{performance.estimatedFps.fps4k}</span>
+                <span className="bsp__fps-value">
+                  {performance.estimatedFps.fps4k > 0 ? `${performance.estimatedFps.fps4k} FPS` : '—'}
+                </span>
               </div>
             )}
 

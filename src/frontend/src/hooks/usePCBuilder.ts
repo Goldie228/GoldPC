@@ -702,8 +702,10 @@ export function usePCBuilder(): UsePCBuilderReturn {
           ramCapacity,
           ramFrequency,
         });
+        console.log('FPS API response:', fpsResult);
         setApiFpsData(fpsResult);
-      } catch {
+      } catch (error) {
+        console.error('FPS API error:', error);
         setApiFpsData(null);
       }
     }, FPS_DEBOUNCE_MS);
