@@ -321,25 +321,21 @@ export function ComponentPickerModal({
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>(['in_stock']);
   const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | number | string[]>>({});
 
-  const hasMounted = useRef(false);
+  const prevIsOpen = useRef(false);
 
   useEffect(() => {
-    if (!isOpen) {
-      hasMounted.current = false;
-      return;
+    // Only reset state WHEN MODAL FIRST OPENS, not on every dependency change
+    if (isOpen && !prevIsOpen.current) {
+      // ✅ Batch ALL state updates in a single re-render using functional updates
+      setSelectedCategory(category);
+      setSearch(''); setDebouncedSearch(''); setSortPreset('popular'); setPreviewImgIdx(0);
+      setInStockOnly(false); setHighlightedId(currentProduct?.id ?? null);
+      setPage(1); setViewMode('grid');
+      setPriceRange({ min: 0, max: 0 });
+      setSelectedManufacturerIds([]);
     }
 
-    if (hasMounted.current) return;
-    hasMounted.current = true;
-
-    // ✅ Batch ALL state updates in a single re-render using functional updates
-    setSelectedCategory(category);
-    setSearch(''); setDebouncedSearch(''); setSortPreset('popular'); setPreviewImgIdx(0);
-    setInStockOnly(false); setHighlightedId(currentProduct?.id ?? null);
-    setPage(1); setViewMode('grid');
-    setPriceRange({ min: 0, max: 0 });
-    setSelectedManufacturerIds([]);
-
+    // ALWAYS update compatibility filters when buildContext changes, even after mount
     // For case slot with a MB selected — pre-check all compatible FF options
     if (slotType === 'case' && buildContext?.motherboard?.product) {
       const raw = ((buildContext.motherboard.product.specifications as any)?.formFactor ??
@@ -347,10 +343,12 @@ export function ComponentPickerModal({
       const ffValues = caseFormFactorsForMB(raw);
       if (ffValues.length > 0) {
         setSelectedSpecifications({ formFactor: ffValues });
-        return;
+      } else {
+        setSelectedSpecifications({});
       }
     }
-    setSelectedSpecifications({});
+
+    prevIsOpen.current = isOpen;
   }, [isOpen, category, currentProduct?.id, slotType, buildContext]);
 
   useEffect(() => {
