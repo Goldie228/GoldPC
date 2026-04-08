@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, Grid3X3, DollarSign, Package, Check, Star, Tag, Search } from 'lucide-react';
 import { catalogApi } from '../../api/catalog';
 import { RangeSlider } from '../ui/RangeSlider';
@@ -283,6 +283,12 @@ export function FilterSidebar({
   effectiveSpecifications,
   restrictedManufacturerPlatform,
 }: FilterSidebarProps) {
+  // Memoize a serialized version of effectiveSpecifications for stable useEffect deps
+  const serializedEffectiveSpecs = useMemo(() => {
+    if (!effectiveSpecifications) return '';
+    return JSON.stringify(effectiveSpecifications, Object.keys(effectiveSpecifications).sort());
+  }, [effectiveSpecifications]);
+
   const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>({ min: 0, max: 50000 });
   const PRICE_MIN = priceBounds.min;
   const PRICE_MAX = priceBounds.max;
