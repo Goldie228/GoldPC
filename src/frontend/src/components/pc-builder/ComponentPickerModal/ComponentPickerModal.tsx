@@ -355,11 +355,21 @@ export function ComponentPickerModal({
   const priceMin = priceRange.min > 0 ? priceRange.min : undefined;
   const priceMax = priceRange.max > 0 ? priceRange.max : undefined;
 
+  // Маппинг русских названий типов охлаждения в английские ключи для backend API
+  const coolingTypeMapping: Record<string, string> = {
+    'Башенный кулер': 'Tower',
+    'Жидкостное охлаждение': 'Liquid',
+    'Корпусный вентилятор': 'Case Fan',
+  };
+
   const effectiveSpecs = useMemo(() => {
     const out = { ...selectedSpecifications };
     // typeFilter — фильтрация по спецификации 'type' (e.g. cooling vs fan)
     if (typeFilter) {
-      out.type = Array.isArray(typeFilter) ? typeFilter : [typeFilter];
+      const types = Array.isArray(typeFilter) ? typeFilter : [typeFilter];
+      // Map Russian display names to English facet values for cooling category
+      const mappedTypes = types.map(t => coolingTypeMapping[t] ?? t);
+      out.type = mappedTypes;
     }
     if (slotType === 'cpu' && buildContext?.motherboard?.product) {
       const s = _extractSocket(buildContext.motherboard.product.specifications);
