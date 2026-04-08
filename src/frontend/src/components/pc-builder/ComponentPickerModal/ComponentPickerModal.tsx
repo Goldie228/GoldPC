@@ -321,23 +321,28 @@ export function ComponentPickerModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    setSelectedCategory(category);
-    setSearch(''); setDebouncedSearch(''); setSortPreset('popular'); setPreviewImgIdx(0);
-    setInStockOnly(false); setHighlightedId(currentProduct?.id ?? null);
-    setPage(1); setViewMode('grid');
-    setPriceRange({ min: 0, max: 0 });
-    setSelectedManufacturerIds([]);
+    
+    let newSpecs = {};
+    
     // For case slot with a MB selected — pre-check all compatible FF options
     if (slotType === 'case' && buildContext?.motherboard?.product) {
       const raw = ((buildContext.motherboard.product.specifications as any)?.formFactor ??
         (buildContext.motherboard.product.specifications as any)?.form_factor ?? '') as string;
       const ffValues = caseFormFactorsForMB(raw);
       if (ffValues.length > 0) {
-        setSelectedSpecifications({ formFactor: ffValues });
-        return;
+        newSpecs = { formFactor: ffValues };
       }
     }
-    setSelectedSpecifications({});
+
+    // ✅ Исправление тройного запроса: все стейты обновляются за один проход
+    setSelectedCategory(category);
+    setSearch(''); setDebouncedSearch(''); setSortPreset('popular'); setPreviewImgIdx(0);
+    setInStockOnly(false); setHighlightedId(currentProduct?.id ?? null);
+    setPage(1); setViewMode('grid');
+    setPriceRange({ min: 0, max: 0 });
+    setSelectedManufacturerIds([]);
+    setSelectedSpecifications(newSpecs);
+    setSelectedAvailability([]);
   }, [isOpen, category, currentProduct?.id, slotType, buildContext]);
 
   useEffect(() => {

@@ -144,28 +144,28 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
           <div className="component-slot__type-row">
             <span className="component-slot__type">{type}</span>
           </div>
-          {quantity !== undefined && maxQuantity && onChangeQuantity && quantity > 0 && (
-            <div className="component-slot__qty">
-              <button
-                type="button"
-                className="component-slot__qty-btn"
-                onClick={(e) => { e.stopPropagation(); if (quantity > 1) { onChangeQuantity(-1); } else { onClear?.(); } }}
-                aria-label="Уменьшить количество"
-              >
-                −
-              </button>
-              <span className="component-slot__qty-value">{quantity}</span>
-              <button
-                type="button"
-                className="component-slot__qty-btn"
-                onClick={(e) => { e.stopPropagation(); if (quantity < maxQuantity) onChangeQuantity(1); }}
-                aria-label="Увеличить количество"
-                disabled={quantity >= maxQuantity}
-              >
-                +
-              </button>
-            </div>
-          )}
+           {quantity !== undefined && maxQuantity && onChangeQuantity && quantity > 0 && (
+             <div className="component-slot__qty">
+               <button
+                 type="button"
+                 className="component-slot__qty-btn component-slot__btn"
+                 onClick={(e) => { e.stopPropagation(); if (quantity > 1) { onChangeQuantity(-1); } else { onClear?.(); } }}
+                 aria-label="Уменьшить количество"
+               >
+                 −
+               </button>
+               <span className="component-slot__qty-value">{quantity}</span>
+               <button
+                 type="button"
+                 className="component-slot__qty-btn component-slot__btn component-slot__btn--primary"
+                 onClick={(e) => { e.stopPropagation(); if (quantity < maxQuantity) onChangeQuantity(1); }}
+                 aria-label="Увеличить количество"
+                 disabled={quantity >= maxQuantity}
+               >
+                 +
+               </button>
+             </div>
+           )}
           <motion.div
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}

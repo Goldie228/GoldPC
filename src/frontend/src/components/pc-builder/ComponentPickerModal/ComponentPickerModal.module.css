@@ -387,19 +387,22 @@
 
 /* ─── Pagination ───────────────────────── */
 .paginationWrap {
-  padding: 8px 0 4px;
+  padding: 12px 0 8px;
   flex-shrink: 0;
   margin: 0 -4px;
   padding-left: 4px;
   padding-right: 4px;
+  position: relative;
+  z-index: 10;
+  background: linear-gradient(180deg, transparent, #121214 25%, #121214 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 8px;
 }
 
 @media (min-width: 769px) {
   .paginationWrap {
     position: sticky;
     bottom: 0;
-    background: linear-gradient(180deg, transparent, #0c0c0e 20%);
-    z-index: 2;
   }
 }
 
