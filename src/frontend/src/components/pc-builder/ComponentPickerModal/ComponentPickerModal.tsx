@@ -3,7 +3,9 @@
  * Без корзины/избранного/сравнения/прогресс-бара/текущего товара.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useTransition, useRef } from 'react';
+import useDeepCompareEffect from 'use-deep-compare-effect';
+import { useDebouncedCallback } from 'use-debounce';
 import { Search, SlidersHorizontal, X, ExternalLink, ZoomIn, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import { Modal } from '../../ui';
 import { ProductCardSkeleton } from '../../ui/Skeleton';
@@ -319,14 +321,25 @@ export function ComponentPickerModal({
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>(['in_stock']);
   const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | number | string[]>>({});
 
+  const hasMounted = useRef(false);
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      hasMounted.current = false;
+      return;
+    }
+
+    if (hasMounted.current) return;
+    hasMounted.current = true;
+
+    // ✅ Batch ALL state updates in a single re-render using functional updates
     setSelectedCategory(category);
     setSearch(''); setDebouncedSearch(''); setSortPreset('popular'); setPreviewImgIdx(0);
     setInStockOnly(false); setHighlightedId(currentProduct?.id ?? null);
     setPage(1); setViewMode('grid');
     setPriceRange({ min: 0, max: 0 });
     setSelectedManufacturerIds([]);
+
     // For case slot with a MB selected — pre-check all compatible FF options
     if (slotType === 'case' && buildContext?.motherboard?.product) {
       const raw = ((buildContext.motherboard.product.specifications as any)?.formFactor ??
@@ -349,6 +362,8 @@ export function ComponentPickerModal({
   useEffect(() => {
     setInStockOnly(selectedAvailability.length > 0 && selectedAvailability.includes('in_stock'));
   }, [selectedAvailability]);
+
+  const [isPending, startTransition] = useTransition();
 
   const { sortBy, sortOrder } = useMemo(() => parseSort(sortPreset), [sortPreset]);
 
@@ -403,7 +418,34 @@ export function ComponentPickerModal({
       }
     }
     return out;
-  }, [selectedSpecifications, slotType, buildContext]);
+  // ✅ Fix slider reset bug: deep compare dependencies to prevent new object instance on every render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(selectedSpecifications), slotType, buildContext]);
+
+  // 🔹 Single consolidated filters object - ALL dependencies go HERE
+  const filters = useMemo(() => ({
+    category: selectedCategory,
+    search: debouncedSearch,
+    sortBy,
+    sortOrder,
+    inStockOnly,
+    specifications: Object.keys(effectiveSpecs).length > 0 ? effectiveSpecs : undefined,
+    manufacturerIds: selectedManufacturerIds.length > 0 ? selectedManufacturerIds : undefined,
+    page,
+    priceMin,
+    priceMax,
+  }), [
+    selectedCategory,
+    debouncedSearch,
+    sortBy,
+    sortOrder,
+    inStockOnly,
+    effectiveSpecs,
+    selectedManufacturerIds,
+    page,
+    priceMin,
+    priceMax
+  ]);
 
   // ── Restricted spec values from build context ──
   const restrictedSpecValues = useMemo(() => {
@@ -539,22 +581,34 @@ export function ComponentPickerModal({
     return result;
   }, [slotType, buildContext]);
 
-  const { data: productsResponse, isLoading, error, refetch } = useProducts(
-    useMemo(() => ({
-      category: selectedCategory, page, pageSize: 12,
-      search: debouncedSearch || undefined,
-      sortBy, sortOrder,
-      inStock: inStockOnly ? true : undefined,
-      priceMin: priceRange.min > 0 ? priceRange.min : undefined,
-      priceMax: priceRange.max > 0 ? priceRange.max : undefined,
-      specifications: Object.keys(effectiveSpecs).length > 0 ? effectiveSpecs : undefined,
-      manufacturerIds: selectedManufacturerIds.length > 0 ? selectedManufacturerIds : undefined,
-    }), [selectedCategory, debouncedSearch, sortBy, sortOrder, inStockOnly, effectiveSpecs, selectedManufacturerIds, page, priceRange.min, priceRange.max]),
-    { enabled: isOpen }
-  );
+  // 🔹 Debounced fetch function - 300ms delay for user input
+  const fetchProducts = useDebouncedCallback((filters) => {
+    startTransition(() => {
+      refetch(filters);
+    });
+  }, 300);
 
-  const products = productsResponse?.data ?? [];
-  const meta = productsResponse?.meta;
+  const { data: productsResponse, isLoading, error, refetch } = useProducts(filters, { enabled: isOpen });
+
+  // 🔹 Single effect with DEEP comparison - EXACTLY ONE request when filters change
+  useDeepCompareEffect(() => {
+    if (!isOpen) return;
+    fetchProducts(filters);
+  }, [filters, isOpen, fetchProducts]);
+
+  // 🔹 Keep old products during loading to prevent layout shift
+  const [cachedProducts, setCachedProducts] = useState([]);
+  const [cachedMeta, setCachedMeta] = useState(null);
+
+  useEffect(() => {
+    if (productsResponse?.data) {
+      setCachedProducts(productsResponse.data);
+      setCachedMeta(productsResponse.meta);
+    }
+  }, [productsResponse?.data, productsResponse?.meta]);
+
+  const products = isPending ? cachedProducts : (productsResponse?.data ?? cachedProducts);
+  const meta = isPending ? cachedMeta : (productsResponse?.meta ?? cachedMeta);
 
   // ── Compatibility filtering ──
 
@@ -761,14 +815,52 @@ export function ComponentPickerModal({
               </div>
             </div>
 
-            {isLoading && (
-              <div className={`${viewMode === 'grid' ? styles.grid : styles.list}`}>
-                {Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)}
-              </div>
-            )}
+            {/* ✅ Keep old products visible while loading - overlay skeletons on top */}
+            <div className={`${viewMode === 'grid' ? styles.grid : styles.list}`} style={{ position: 'relative' }}>
+              {/* Render existing products first */}
+              {filteredProducts.length > 0 ? (viewMode === 'grid' ? (
+                filteredProducts.map((p) => (
+                  <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
+                    <PickerProductCard product={p} isSelected={p.id === highlightedId}
+                      isCompatible={!p.isIncompatible}
+                      onSelect={p.isIncompatible ? noopSelect : (prod: any) => setHighlightedId(prod.id)}
+                      onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
+                    {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
+                      <div className={styles.incompatibleReason}>
+                        <Lock size={12} style={LOCK_ICON_STYLE} />
+                        {p.incompatibilityIssues.join('; ')}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                filteredProducts.map((p) => (
+                  <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
+                    <PickerProductCardCompact product={p} isSelected={p.id === highlightedId}
+                      isCompatible={!p.isIncompatible}
+                      onSelect={p.isIncompatible ? noopSelect : (prod: any) => setHighlightedId(prod.id)}
+                      onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
+                    {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
+                      <div className={styles.incompatibleReason}>
+                        <Lock size={12} style={LOCK_ICON_STYLE} />
+                        {p.incompatibilityIssues.join('; ')}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )) : null}
+
+              {/* Render skeletons over top during pending state */}
+              {isPending && (
+                <>
+                  {Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)}
+                </>
+              )}
+            </div>
+
             {error && <ApiErrorBanner message="Не удалось загрузить список." onRetry={() => refetch()} />}
 
-            {!isLoading && !error && (
+            {!error && (
               <>
                 {meta && meta.totalItems > 0 && <div className={styles.resultsCount}>Найдено: {meta.totalItems}</div>}
 
@@ -784,46 +876,13 @@ export function ComponentPickerModal({
                   </button>
                 )}
 
-                {filteredProducts.length === 0 ? (
+                {filteredProducts.length === 0 && !isPending && (
                   <div className={styles.emptyState}>
                     <h3>Нет товаров</h3>
                     <p>Не найдено подходящих компонентов. Попробуйте изменить параметры поиска.</p>
                   </div>
-                ) : viewMode === 'grid' ? (
-                  <div className={styles.grid}>
-                    {filteredProducts.map((p) => (
-                      <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
-                        <PickerProductCard product={p} isSelected={p.id === highlightedId}
-                          isCompatible={!p.isIncompatible}
-                          onSelect={p.isIncompatible ? noopSelect : (prod: any) => setHighlightedId(prod.id)}
-                          onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
-                        {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
-                          <div className={styles.incompatibleReason}>
-                            <Lock size={12} style={LOCK_ICON_STYLE} />
-                            {p.incompatibilityIssues.join('; ')}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={styles.list}>
-                    {filteredProducts.map((p) => (
-                      <div key={p.id} className={p.isIncompatible ? styles.incompatibleWrapper : ''}>
-                        <PickerProductCardCompact product={p} isSelected={p.id === highlightedId}
-                          isCompatible={!p.isIncompatible}
-                          onSelect={p.isIncompatible ? noopSelect : (prod: any) => setHighlightedId(prod.id)}
-                          onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
-                        {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
-                          <div className={styles.incompatibleReason}>
-                            <Lock size={12} style={LOCK_ICON_STYLE} />
-                            {p.incompatibilityIssues.join('; ')}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
                 )}
+
                 {meta && meta.totalItems > 0 && meta.totalPages > 1 && (
                   <div className={styles.paginationWrap}>
                     <Pagination page={page} totalPages={meta.totalPages} totalItems={meta.totalItems}
