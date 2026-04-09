@@ -156,6 +156,7 @@ const SPEC_ORDER: Record<string, string[]> = {
   ram: [
     'capacity',
     'capacity_per_module',
+    'memory_type',
     'type',
     'frequency',
     'pc_index',
@@ -187,7 +188,7 @@ const SPEC_ORDER: Record<string, string[]> = {
     'max_gpu_length',
     'data_vykhoda_na_rynok',
   ],
-  coolers: ['type', 'socket', 'tdp', 'fan_size', 'fan_count', 'noise', 'data_vykhoda_na_rynok'],
+  coolers: ['cooler_type', 'socket', 'tdp', 'fan_size', 'fan_count', 'noise', 'data_vykhoda_na_rynok'],
   monitors: [
     'diagonal',
     'aspect_ratio',

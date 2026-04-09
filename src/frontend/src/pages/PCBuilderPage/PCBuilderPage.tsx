@@ -395,16 +395,17 @@ export function PCBuilderPage() {
   const handleChangeQuantity = useCallback(
     (slotType: PCComponentType, rowIndex: number, delta: number) => {
     if (delta < 0) {
-      // Remove — clear all (single-slot types) or remove last (storage)
-      if (slotType === 'ram' && selectedComponents.ram.length > 0) {
-        removeComponent(slotType);
-      } else if (slotType === 'storage' && selectedComponents.storage.length > 0) {
+      // Decrement quantity: only remove last module when we have > 1
+      if (slotType === 'ram' && selectedComponents.ram.length > 1) {
+        removeComponent(slotType, selectedComponents.ram.length - 1);
+      } else if (slotType === 'storage' && selectedComponents.storage.length > 1) {
         removeComponent(slotType, selectedComponents.storage.length - 1);
-      } else if (slotType === 'fan' && selectedComponents.fan.length > 0) {
-        removeComponent(slotType);
+      } else if (slotType === 'fan' && selectedComponents.fan.length > 1) {
+        removeComponent(slotType, selectedComponents.fan.length - 1);
       }
+      // DO NOT delete when only 1 remains
     } else {
-      // Add — duplicate first module
+      // Increment quantity: add duplicate module
       if (slotType === 'ram' && selectedComponents.ram.length > 0) {
         duplicateModule('ram');
       } else if (slotType === 'storage' && selectedComponents.storage.length > 0) {

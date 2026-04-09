@@ -149,8 +149,16 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
               <button
                 type="button"
                 className="component-slot__qty-btn"
-                onClick={(e) => { e.stopPropagation(); if (quantity > 1) { onChangeQuantity(-1); } else { onClear?.(); } }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  // Double guard: check both current state and immediate value
+                  if (quantity > 1) {
+                    onChangeQuantity(-1);
+                  }
+                }}
                 aria-label="Уменьшить количество"
+                disabled={quantity <= 1}
               >
                 −
               </button>
