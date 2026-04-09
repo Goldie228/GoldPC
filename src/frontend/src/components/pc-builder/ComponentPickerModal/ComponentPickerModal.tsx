@@ -386,6 +386,11 @@ export function ComponentPickerModal({
       const mt = (buildContext.motherboard.product.specifications as any)?.memoryType ??
                  (buildContext.motherboard.product.specifications as any)?.memory_type ?? '';
       if (mt) { out.memoryType = mt; out.type = mt; }
+
+      // Form factor filtering for RAM
+      const mff = (buildContext.motherboard.product.specifications as any)?.memoryFormFactor ??
+                  (buildContext.motherboard.product.specifications as any)?.memory_form_factor ?? 'DIMM';
+      if (mff) out.memoryFormFactor = mff;
     }
     // RAM slot: if no MB but CPU selected → derive from CPU socket
     if (slotType === 'ram' && !buildContext?.motherboard?.product && buildContext?.cpu?.product) {
@@ -457,8 +462,6 @@ export function ComponentPickerModal({
       const cpuSocket = _extractSocket(b.cpu.product.specifications);
       if (cpuSocket) {
         mbSocketSources.push([cpuSocket]);
-        const chipsets = getChipsetsForSocket(cpuSocket);
-        if (chipsets.length > 0) result.chipset = chipsets;
         const ramTypes = getRamTypesForSocket(cpuSocket);
         if (ramTypes.length > 0) {
           result.memoryType = ramTypes;
@@ -586,7 +589,7 @@ export function ComponentPickerModal({
     });
   }, 300);
 
-  const { data: productsResponse, isLoading, error, refetch } = useProducts(filters, { enabled: isOpen });
+  const { data: productsResponse, isLoading, error, refetch } = useProducts(filters, { enabled: false });
 
   // 🔹 Single effect with DEEP comparison - EXACTLY ONE request when filters change
   useDeepCompareEffect(() => {

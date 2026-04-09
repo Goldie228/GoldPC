@@ -226,6 +226,7 @@ public class CaseSpecs
     public int MaxGpuLength { get; set; }                       // Макс. длина видеокарты (мм)
     public int MaxCoolerHeight { get; set; }                    // Макс. высота кулера (мм)
     public List<string> SupportedMotherboards { get; set; } = new(); // Поддерживаемые форм-факторы
+    public List<string> SupportedPSUFormFactors { get; set; } = new(); // Поддерживаемые форм-факторы БП (ATX, SFX, TFX и т.д.)
 }
 
 /// <summary>
