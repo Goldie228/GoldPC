@@ -25,7 +25,7 @@ function str(specs: ProductSpecifications | undefined, ...keys: string[]): strin
   return null;
 }
 
-function estimateCpuSingleCore(specs: ProductSpecifications | undefined): number {
+export function estimateCpuSingleCore(specs: ProductSpecifications | undefined): number {
   const freq = num(specs, 'boostFrequency', 'boost_frequency', 'maksimalnaya_chastota') ?? num(specs, 'baseFrequency', 'base_frequency', 'bazovaya_chastota') ?? 3000;
   let score = freq * 0.13;
   const info = ((str(specs, 'model_series', 'modelSeries') ?? '') + ' ' + (str(specs, 'description') ?? '')).toLowerCase();
@@ -67,7 +67,7 @@ const GPU_SCORES: [RegExp, number][] = [
   [/arc\s*a770/, 350], [/arc\s*a750/, 300], [/arc\s*a380/, 150],
 ];
 
-function estimateGpuGaming(specs: ProductSpecifications | undefined): number {
+export function estimateGpuGaming(specs: ProductSpecifications | undefined): number {
   if (!specs) return 0;
   const info = ((str(specs, 'gpu', 'graficheskiy_protsessor', 'chip') ?? '') + ' ' + (str(specs, 'name') ?? '')).toLowerCase();
   for (const [re, score] of GPU_SCORES) { if (re.test(info)) return score; }
@@ -99,7 +99,16 @@ function estimateRamFactor(specs: ProductSpecifications | undefined): number {
 }
 
 function estimateFps(cpuScore: number, gpuScore: number): EstimatedFps {
-  return { fps1080p: Math.round(Math.min(gpuScore * 0.14, cpuScore * 0.035)), fps1440p: Math.round(Math.min(gpuScore * 0.10, cpuScore * 0.045)), fps4k: Math.round(Math.min(gpuScore * 0.06, cpuScore * 0.063)) };
+  // Balanced realistic FPS calculation with real world values
+  const cpuLimit1080p = cpuScore * 0.18;
+  const cpuLimit1440p = cpuScore * 0.13;
+  const cpuLimit4k = cpuScore * 0.08;
+
+  return {
+    fps1080p: Math.round(Math.min(gpuScore * 0.09, cpuLimit1080p)),
+    fps1440p: Math.round(Math.min(gpuScore * 0.065, cpuLimit1440p)),
+    fps4k: Math.round(Math.min(gpuScore * 0.04, cpuLimit4k))
+  };
 }
 
 export function calculatePerformance(cpu: Product | null, gpu: Product | null, ram: Product | null): PerformanceResult {
@@ -142,6 +151,42 @@ export function getPerformanceLabel(score: number): string {
   return 'Базовый';
 }
 /** Градации золотой шкалы (без красного «danger» для низких баллов). */
+export interface GameFpsEntry {
+  gameId: string;
+  gameName: string;
+  resolutions: {
+    resolution1080p: number;
+    resolution1440p: number;
+    resolution4k: number;
+  };
+}
+
+const GAME_FPS_SCALES: [string, number, number, number][] = [
+  ['counter-strike-2', 'Counter-Strike 2', 1.25, 0.95, 0.65],
+  ['grand-theft-auto-v', 'Grand Theft Auto V', 1.10, 0.80, 0.50],
+  ['cyberpunk-2077', 'Cyberpunk 2077', 0.75, 0.55, 0.35],
+  ['fortnite', 'Fortnite', 1.15, 0.85, 0.55],
+  ['minecraft-vanilla', 'Minecraft (Vanilla)', 1.35, 1.10, 0.80],
+  ['valorant', 'Valorant', 1.30, 1.00, 0.70],
+  ['red-dead-redemption-2', 'Red Dead Redemption 2', 0.70, 0.50, 0.30],
+  ['baldurs-gate-3', "Baldur's Gate 3", 0.75, 0.55, 0.35],
+];
+
+export function calculateLocalGameFps(gpuScore: number, cpuSingleCore: number): GameFpsEntry[] {
+  const cpuLimit = cpuSingleCore * 0.18;
+  const baseFps = Math.min(gpuScore * 0.09, cpuLimit);
+
+  return GAME_FPS_SCALES.map(([gameId, gameName, scale1080p, scale1440p, scale4k]) => ({
+    gameId,
+    gameName,
+    resolutions: {
+      resolution1080p: Math.max(0, Math.round(baseFps * scale1080p)),
+      resolution1440p: Math.max(0, Math.round(baseFps * scale1440p)),
+      resolution4k: Math.max(0, Math.round(baseFps * scale4k)),
+    }
+  }));
+}
+
 export function getPerformanceColor(score: number): string {
   if (score <= 0) return 'performance-none';
   if (score >= 90) return 'performance-extreme';

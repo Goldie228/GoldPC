@@ -9,6 +9,9 @@ import {
   calculatePerformance,
   getPerformanceLabel,
   getPerformanceColor,
+  calculateLocalGameFps,
+  estimateGpuGaming,
+  estimateCpuSingleCore,
 } from '../../utils/performanceCalculator';
 import type { FpsApiResponse } from '../../api/pcBuilderService';
 import type { PCComponentType, PCBuilderSelectedState } from '../../hooks';
@@ -76,6 +79,14 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
   const barDur = reducedMotion ? 0 : 0.6;
   const scoreDur = reducedMotion ? 0 : 0.5;
   const priceDur = reducedMotion ? 0 : 0.3;
+
+  // Calculate local game FPS when API data is not available
+  const localGameFps = useMemo(() => {
+    if (!gpu || !cpu) return null;
+    const gpuScore = estimateGpuGaming(gpu.specifications);
+    const cpuSingleCore = estimateCpuSingleCore(cpu.specifications);
+    return calculateLocalGameFps(gpuScore, cpuSingleCore);
+  }, [cpu, gpu, ramFirst]);
 
   const listItems = useMemo(() => {
     const items: { key: string; label: string; price: number | null }[] = [];
@@ -309,13 +320,14 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
               </div>
             )}
 
-            {apiFpsData && apiFpsData.games.length > 0 && (
+            {( (apiFpsData && apiFpsData.games?.length > 0) || localGameFps) && (
               <div className="bsp__api-fps">
                 <div className="bsp__api-fps-header">
                   <Gamepad2 size={14} strokeWidth={2} aria-hidden />
-                  <span>FPS по {apiFpsData.games.length} играм</span>
+                  <span>FPS по {(apiFpsData?.games.length ?? localGameFps?.length ?? 0)} играм</span>
+                  {!apiFpsData && <span className="bsp__fps-local-note">(локальный расчёт)</span>}
                 </div>
-                {apiFpsData.bottleneck && (
+                {apiFpsData?.bottleneck && (
                   <div className="bsp__api-fps-bottleneck">
                     {apiFpsData.bottleneck === 'cpu-bound' && 'Упор в CPU'}
                     {apiFpsData.bottleneck === 'gpu-bound' && 'Упор в GPU'}
@@ -332,7 +344,7 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
                     </tr>
                   </thead>
                   <tbody>
-                    {apiFpsData.games.map((game) => (
+                    {( localGameFps && localGameFps.length > 0 ? localGameFps : (apiFpsData?.games ?? []) ).map((game) => (
                       <tr key={game.gameId}>
                         <td>{game.gameName}</td>
                         <td>{game.resolutions.resolution1080p} FPS</td>
