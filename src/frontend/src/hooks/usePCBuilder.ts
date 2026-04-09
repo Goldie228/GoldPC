@@ -679,11 +679,10 @@ export function usePCBuilder(): UsePCBuilderReturn {
 
   // --- FPS API: debounced call when both CPU and GPU are selected ---
 
-  const ramProduct = selectedComponents.ram[0]?.product ?? null;
-
   useEffect(() => {
     const cpuId = selectedComponents.cpu?.product.id;
     const gpuId = selectedComponents.gpu?.product.id;
+    const ramProduct = selectedComponents.ram[0]?.product ?? null;
 
     if (!cpuId || !gpuId) {
       setApiFpsData(null);
@@ -711,7 +710,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     return () => {
       if (fpsTimerRef.current) clearTimeout(fpsTimerRef.current);
     };
-  }, [selectedComponents.cpu, selectedComponents.gpu, ramProduct]);
+  }, [selectedComponents.cpu?.product.id, selectedComponents.gpu?.product.id, selectedComponents.ram]);
 
   const addItemToCart = useCartStore((s) => s.addItem);
 
