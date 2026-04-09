@@ -49,6 +49,7 @@ export type ComponentMap = Partial<Record<ComponentCategory, Product | null>>;
 // ──────────── Validation constants ────────────
 export type MemoryType = 'DDR4' | 'DDR5';
 export type FormFactor = 'ATX' | 'MicroATX' | 'MiniITX' | 'EATX';
+export type MemoryFormFactor = 'DIMM' | 'SO-DIMM';
 
 // ──────────── Socket groups from config ────────────
 const SOCKET_GROUPS: SocketGroup[] = config.socketCompatibility.groups;
@@ -114,7 +115,7 @@ export function extractSupportedSockets(specs: ProductSpecifications | undefined
 }
 
 export function extractChipset(specs: ProductSpecifications | undefined): string | null {
-  return getString(specs, 'chipset', 'chipsset');
+  return getString(specs, 'chipset');
 }
 
 export function extractTDP(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'tdp', 'TDP', 'power_consumption') ?? 0; }
@@ -153,6 +154,25 @@ export function extractSupportedFormFactors(specs: ProductSpecifications | undef
   return [];
 }
 
+export function extractSupportedPSUFormFactors(specs: ProductSpecifications | undefined): string[] {
+  if (!specs) return [];
+  const rec = specs as Record<string, unknown>;
+  const raw = rec.supportedPSUFormFactors ?? rec.supported_psu_form_factors ?? rec.psuFormFactorSupport ?? rec.psu_form_factor_support;
+  if (Array.isArray(raw)) {
+    return raw
+      .filter((s): s is string => typeof s === 'string')
+      .map(s => normalizeFormFactor(s))
+      .filter((s): s is string => s !== null);
+  }
+  // If it's a single string value, try to extract
+  const single = getString(specs, 'supportedPSUFormFactors', 'supported_psu_form_factors', 'psuFormFactorSupport', 'psu_form_factor_support', 'formFactor', 'form_factor', 'format');
+  if (single) {
+    const norm = normalizeFormFactor(single);
+    if (norm) return [norm];
+  }
+  return [];
+}
+
 export function extractMaxGPULength(specs: ProductSpecifications | undefined): number | null { return getNumber(specs, 'maxGPULength', 'max_gpu_length', 'maxGpuLength', 'maxGpuLengthMm'); }
 export function extractGPULength(specs: ProductSpecifications | undefined): number | null { return getNumber(specs, 'length', 'lengthMm', 'dlina', 'gpuLength'); }
 export function extractRAMCapacity(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'capacity', 'obem', 'size') ?? 0; }
@@ -162,6 +182,23 @@ export function extractCoolerHeight(specs: ProductSpecifications | undefined): n
 export function extractMaxCoolerHeight(specs: ProductSpecifications | undefined): number | null { return getNumber(specs, 'maxCoolerHeight', 'max_cooler_height', 'maxCoolerHeightMm'); }
 export function extractCoolerType(specs: ProductSpecifications | undefined): string | null { return getString(specs, 'type', 'coolerType'); }
 export function extractMaxCoolerTDP(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'maxTdp', 'max_tdp', 'coolingTdp') ?? 0; }
+export function extractMemorySlots(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'memorySlots', 'memory_slots', 'slots', 'numberOfSlots') ?? 2; }
+export function extractMemoryFormFactor(specs: ProductSpecifications | undefined): MemoryFormFactor | null {
+  const raw = getString(specs, 'memoryFormFactor', 'formFactor', 'form_factor', 'type');
+  if (!raw) return null;
+  const upper = raw.toUpperCase().trim();
+  if (upper.includes('SO-DIMM') || upper.includes('SODIMM')) return 'SO-DIMM';
+  if (upper.includes('DIMM')) return 'DIMM';
+  return null;
+}
+
+export function extractSataPorts(specs: ProductSpecifications | undefined): number {
+  return getNumber(specs, 'sataPorts', 'sata_ports', 'sata', 'sata3', 'sata 3.0', 'sata ports') ?? 0;
+}
+
+export function extractM2Slots(specs: ProductSpecifications | undefined): number {
+  return getNumber(specs, 'm2Slots', 'm2_slots', 'm.2', 'm2', 'nvme slots', 'nvme') ?? 0;
+}
 
 export function extractStorageType(specs: ProductSpecifications | undefined): 'm2' | 'sata' | 'other' {
   if (!specs) return 'other';
@@ -335,13 +372,23 @@ function checkCPUSocket(cpu: Product, mb: Product): CompatibilityIssue | null {
   return null;
 }
 
-function checkRAM(ram: Product, mb: Product): CompatibilityIssue | null {
+function checkRAM(ram: Product, mb: Product, quantity: number = 1): CompatibilityIssue | null {
   const rt = extractMemoryType(ram.specifications);
   const mt = extractMemoryType(mb.specifications);
   if (rt && mt && rt !== mt) return { severity: 'Error', component1: ram.name, component2: mb.name, message: `RAM type ${rt} not supported by motherboard (${mt})`, suggestion: `Choose ${mt} memory` };
+
+  const rff = extractMemoryFormFactor(ram.specifications);
+  const mff = extractMemoryFormFactor(mb.specifications) ?? 'DIMM'; // Default to DIMM if not specified
+  if (rff && rff !== mff) return { severity: 'Error', component1: ram.name, component2: mb.name, message: `RAM form factor ${rff} incompatible with motherboard (${mff})`, suggestion: `Choose ${mff} memory modules` };
+
+  const slots = extractMemorySlots(mb.specifications);
+  if (quantity > slots) return { severity: 'Error', component1: ram.name, component2: mb.name, message: `Cannot select ${quantity} sticks — motherboard only has ${slots} memory slots`, suggestion: `Maximum ${slots} modules` };
+
   const rc = extractRAMCapacity(ram.specifications);
   const mm = extractMaxMemory(mb.specifications);
-  if (rc > mm) return { severity: 'Warning', component1: ram.name, component2: mb.name, message: `RAM capacity ${rc}GB exceeds motherboard max ${mm}GB`, suggestion: `Choose motherboard supporting ${rc}+ GB` };
+  const totalCapacity = rc * quantity;
+  if (totalCapacity > mm) return { severity: 'Warning', component1: ram.name, component2: mb.name, message: `Total RAM capacity ${totalCapacity}GB exceeds motherboard max ${mm}GB`, suggestion: `Choose smaller modules or motherboard supporting ${totalCapacity}+ GB` };
+
   return null;
 }
 
@@ -355,15 +402,57 @@ function checkCooler(cooling: Product, cpu: Product): CompatibilityWarning | nul
   return null;
 }
 
-function checkPSU(psu: Product, cpu: Product | null | undefined, gpu: Product | null | undefined): CompatibilityWarning | null {
+function checkPSU(psu: Product, cpu: Product | null | undefined, gpu: Product | null | undefined, caseComponent: Product | null = null): CompatibilityIssue | null {
   const pw = extractPSUWattage(psu.specifications);
   if (!pw) return null;
-  const ct = cpu ? extractTDP(cpu.specifications) : 0;
-  const gt = gpu ? extractTDP(gpu.specifications) : 0;
-  const total = ct + gt + 50;
-  const rec = Math.ceil(total * 1.3 / 50) * 50;
-  if (pw < total) return { severity: 'Warning', component: psu.name, message: `PSU ${pw}W insufficient (need ${total}W). Recommended ${rec}W`, suggestion: `Choose PSU >= ${rec}W` };
-  if (pw < rec) return { severity: 'Warning', component: psu.name, message: `PSU ${pw}W meets minimum but recommended ${rec}W`, suggestion: `Consider PSU >= ${rec}W` };
+
+  // Calculate total power consumption using the fixed function
+  const components: ComponentMap = { cpu, gpu };
+  const totalPowerConsumption = calculatePowerConsumption(components);
+
+  // Add 20% headroom as specified in requirements
+  const requiredPower = totalPowerConsumption * 1.2;
+  const recommendedPSU = Math.ceil(requiredPower / 50) * 50; // Round to nearest 50W
+
+  // Check if PSU has sufficient wattage
+  if (pw < requiredPower) {
+    return {
+      severity: 'Error',
+      component1: psu.name,
+      component2: 'Система',
+      message: `Мощности БП (${pw} Вт) недостаточно (требуется ${Math.round(requiredPower)} Вт).`,
+      suggestion: `Выберите БП мощностью не менее ${recommendedPSU} Вт`
+    };
+  }
+
+  // Check PSU form factor compatibility with case (if case is selected)
+  if (caseComponent) {
+    const psuFormFactor = extractFormFactor(psu.specifications);
+    const caseSupportedPSUFormFactors = extractSupportedPSUFormFactors(caseComponent.specifications);
+
+    if (psuFormFactor && caseSupportedPSUFormFactors.length > 0 && !caseSupportedPSUFormFactors.includes(psuFormFactor)) {
+      return {
+        severity: 'Error',
+        component1: psu.name,
+        component2: caseComponent.name,
+        message: `БП с форм-фактором ${psuFormFactor} не поддерживается корпусом ${caseComponent.name}.`,
+        suggestion: `Поддерживаемые форм-факторы БП: ${caseSupportedPSUFormFactors.join(', ')}`
+      };
+    }
+  }
+
+  // PSU is sufficient - check if it has tight margin (warning)
+  const tightMarginThreshold = totalPowerConsumption * 1.1; // 10% headroom warning
+  if (pw < tightMarginThreshold) {
+    return {
+      severity: 'Warning',
+      component1: psu.name,
+      component2: 'Система',
+      message: `БП (${pw} Вт) имеет небольшой запас мощности. Рекомендуется БП мощностью не менее ${recommendedPSU} Вт`,
+      suggestion: `Рассмотрите БП с большим запасом мощности для будущих апгрейдов`
+    };
+  }
+
   return null;
 }
 
@@ -397,12 +486,56 @@ function checkIG(cpu: Product, gpu: Product | null | undefined): CompatibilityWa
 
 // ──────────── Power calculation ────────────
 export function calculatePowerConsumption(components: ComponentMap): number {
-  let t = 50;
-  if (components.cpu) t += extractTDP(components.cpu.specifications) || 65;
-  if (components.gpu) t += extractTDP(components.gpu.specifications) || 150;
-  if (components.storage) t += 5;
-  if (components.cooling) t += 10;
+  let t = 50; // Base motherboard + system power
+
+  // CPU: TDP from database
+  if (components.cpu) {
+    const cpuTDP = extractTDP(components.cpu.specifications);
+    t += cpuTDP !== null ? cpuTDP : 65; // Default 65W if not specified
+  }
+
+  // GPU: TDP from database
+  if (components.gpu) {
+    const gpuTDP = extractTDP(components.gpu.specifications);
+    t += gpuTDP !== null ? gpuTDP : 150; // Default 150W if not specified
+  }
+
+  // RAM: 5W per stick
+  if (components.ram) {
+    const ramCapacity = extractRAMCapacity(components.ram.specifications); // GB per stick
+    const ramSlots = extractMemorySlots(components.ram.specifications) || 1; // Number of sticks
+    const ramCount = Math.max(1, ramSlots); // At least 1 stick if slots specified
+    t += ramCapacity * ramCount * 0.005; // 5W per GB (conservative estimate)
+  }
+
+  // Storage: 10W per SSD, 3W per HDD
+  if (components.storage) {
+    const storageType = extractStorageType(components.storage.specifications);
+    t += storageType === 'm2' || storageType === 'sata' ? 10 : 3; // 10W for SSD/NVMe, 3W for HDD
+  }
+
+  // Cooling/Fans: 3W per fan or pump
+  if (components.cooling) {
+    // Try to extract fan count, default to 1 if not specified
+    const fanCount = extractNumberFromSpecs(components.cooling.specifications, 'fanCount', 'fans', 'fan') || 1;
+    t += fanCount * 3; // 3W per fan
+  }
+
   return t;
+}
+
+// Helper function to extract numeric values with fallback
+function extractNumberFromSpecs(specs: ProductSpecifications | undefined, ...keys: string[]): number {
+  if (!specs) return 0;
+  for (const key of keys) {
+    const val = specs[key];
+    if (typeof val === 'number' && !isNaN(val)) return val;
+    if (typeof val === 'string') {
+      const n = parseFloat(val);
+      if (!isNaN(n)) return n;
+    }
+  }
+  return 0;
 }
 
 export function calculateRecommendedPSU(components: ComponentMap): number {
@@ -440,7 +573,7 @@ export function checkCompatibility(components: ComponentMap): CompatibilityCheck
   if (cooling && chassis) { const i = checkCoolerHeightCheck(cooling, chassis); if (i) issues.push(i); }
 
   // PSU
-  if (psu) { const w = checkPSU(psu, cpu, gpu); if (w) warnings.push(w); }
+  if (psu) { const w = checkPSU(psu, cpu, gpu, chassis); if (w) warnings.push(w); }
 
   // Case form factor
   if (chassis && motherboard) { const i = checkCaseFF(chassis, motherboard); if (i) issues.push(i); }
@@ -465,27 +598,38 @@ export function checkCompatibility(components: ComponentMap): CompatibilityCheck
   }
 
   // Storage slot compatibility
-  const storageProduct = components.storage;
-  if (storageProduct && motherboard) {
-    const storageType = extractStorageType(storageProduct.specifications);
-    const mbM2Slots = config.storageDefaults?.mbDefaultM2Slots ?? 2;
-    const mbSataPorts = config.storageDefaults?.mbDefaultSataPorts ?? 4;
-    if (storageType === 'm2' && mbM2Slots < 1) {
+  const storageProducts = Object.values(components).filter(c => c?.category === 'storage');
+  if (motherboard) {
+    const mbM2Slots = extractM2Slots(motherboard.specifications);
+    const mbSataPorts = extractSataPorts(motherboard.specifications);
+
+    // Count used slots
+    let usedM2 = 0;
+    let usedSata = 0;
+
+    for (const storage of storageProducts) {
+      const type = extractStorageType(storage.specifications);
+      if (type === 'm2') usedM2++;
+      if (type === 'sata') usedSata++;
+    }
+
+    if (usedM2 > mbM2Slots) {
       issues.push({
         severity: 'Error',
-        component1: storageProduct.name,
+        component1: 'Накопители',
         component2: motherboard.name,
-        message: `Накопитель ${storageProduct.name} требует M.2 слот, на материнской плате нет доступных слотов`,
-        suggestion: 'Выберите материнскую плату с поддержкой M.2 или SATA-накопитель',
+        message: `Выбрано ${usedM2} M.2 накопителей, но материнская плата поддерживает только ${mbM2Slots}`,
+        suggestion: `Удалите ${usedM2 - mbM2Slots} M.2 накопителя или выберите другую материнскую плату`,
       });
     }
-    if (storageType === 'sata' && mbSataPorts < 1) {
+
+    if (usedSata > mbSataPorts) {
       issues.push({
         severity: 'Error',
-        component1: storageProduct.name,
+        component1: 'Накопители',
         component2: motherboard.name,
-        message: `Накопитель ${storageProduct.name} требует SATA-порт, на материнской плате нет доступных портов`,
-        suggestion: 'Выберите материнскую плату с достаточным количеством SATA-портов или M.2-накопитель',
+        message: `Выбрано ${usedSata} SATA накопителей, но материнская плата поддерживает только ${mbSataPorts}`,
+        suggestion: `Удалите ${usedSata - mbSataPorts} SATA накопителя или выберите другую материнскую плату`,
       });
     }
   }
@@ -524,14 +668,39 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     if (cs && ms && cs !== ms) issues.push(`Motherboard socket ${ms} incompatible with CPU (${cs})`);
   }
 
-  // RAM ↔ MB memory type
+  // RAM ↔ MB compatibility (full validation)
   if (componentType === 'ram' && test.motherboard) {
     const rt = extractMemoryType(product.specifications); const mt = extractMemoryType(test.motherboard!.specifications);
     if (rt && mt && rt !== mt) issues.push(`RAM ${rt} not supported by motherboard (${mt})`);
+
+    const rff = extractMemoryFormFactor(product.specifications);
+    const mff = extractMemoryFormFactor(test.motherboard!.specifications) ?? 'DIMM';
+    if (rff && rff !== mff) issues.push(`RAM form factor ${rff} incompatible with motherboard (${mff})`);
+
+    const slots = extractMemorySlots(test.motherboard!.specifications);
+    // Check if this would exceed maximum slot count (assuming 1 stick for browsing, final check uses actual quantity)
+    if (slots === 0) issues.push(`Motherboard has no memory slots`);
+
+    const rc = extractRAMCapacity(product.specifications);
+    const mm = extractMaxMemory(test.motherboard!.specifications);
+    if (rc > mm) issues.push(`Single RAM module ${rc}GB exceeds motherboard max ${mm}GB`);
   }
   if (componentType === 'motherboard' && test.ram) {
     const rt = extractMemoryType(test.ram!.specifications); const mt = extractMemoryType(product.specifications);
     if (rt && mt && rt !== mt) issues.push(`Motherboard supports ${mt}, RAM is ${rt}`);
+
+    const rff = extractMemoryFormFactor(test.ram!.specifications);
+    const mff = extractMemoryFormFactor(product.specifications) ?? 'DIMM';
+    if (rff && rff !== mff) issues.push(`Motherboard uses ${mff}, selected RAM is ${rff}`);
+
+    const slots = extractMemorySlots(product.specifications);
+    const selectedCount = Object.values(current).filter(c => c?.category === 'ram').length + 1;
+    if (selectedCount > slots) issues.push(`Motherboard only has ${slots} slots, cannot fit ${selectedCount} RAM modules`);
+
+    const rc = extractRAMCapacity(test.ram!.specifications);
+    const mm = extractMaxMemory(product.specifications);
+    const totalCapacity = rc * selectedCount;
+    if (totalCapacity > mm) issues.push(`Total RAM capacity ${totalCapacity}GB exceeds motherboard max ${mm}GB`);
   }
 
   // CPU socket → RAM type (AM4→DDR4, AM5→DDR5 via socket groups)
@@ -640,6 +809,26 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     const needed = gpuTdp + cpuTdp + 50;
     if (needed > psuWattage) {
       issues.push(`GPU TDP ${gpuTdp}Вт превышает бюджет БП ${psuWattage}Вт (нужно ~${needed}Вт)`);
+    }
+  }
+
+  // Storage slot limit validation
+  if (componentType === 'storage' && test.motherboard) {
+    const storageType = extractStorageType(product.specifications);
+    const mbM2Slots = extractM2Slots(test.motherboard.specifications);
+    const mbSataPorts = extractSataPorts(test.motherboard.specifications);
+
+    // Count already selected storage
+    const existingStorage = Object.values(current).filter(c => c?.category === 'storage');
+    let usedM2 = existingStorage.filter(s => extractStorageType(s.specifications) === 'm2').length;
+    let usedSata = existingStorage.filter(s => extractStorageType(s.specifications) === 'sata').length;
+
+    if (storageType === 'm2' && usedM2 >= mbM2Slots) {
+      issues.push(`Нет свободных M.2 слотов на материнской плате (всего ${mbM2Slots}, уже используется ${usedM2})`);
+    }
+
+    if (storageType === 'sata' && usedSata >= mbSataPorts) {
+      issues.push(`Нет свободных SATA портов на материнской плате (всего ${mbSataPorts}, уже используется ${usedSata})`);
     }
   }
 
