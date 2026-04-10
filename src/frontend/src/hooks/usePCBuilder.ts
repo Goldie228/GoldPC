@@ -510,10 +510,20 @@ function getComponentState(
             ? 'видеокарт'
           : type === 'psu'
             ? 'блок питания'
+          : type === 'storage'
+            ? 'накопител'
           : null;
 
     return typeName ? warningLower.includes(typeName) : false;
   });
+
+  // PSU power warnings should be treated as incompatible state (red border)
+  if (componentWarnings.length > 0 && type === 'psu') {
+    return {
+      state: 'incompatible',
+      warning: componentWarnings[0],
+    };
+  }
 
   if (componentWarnings.length > 0 && type === 'cooling') {
     return {
