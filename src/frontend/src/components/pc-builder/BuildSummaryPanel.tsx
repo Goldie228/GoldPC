@@ -152,27 +152,6 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
     >
       <h2 className="bsp__title">Ваша сборка</h2>
 
-      {selectedCount > 0 && (
-        <div
-          className={`bsp__compat-status ${compatibilityErrors && compatibilityErrors.length > 0 ? 'bsp__compat-status--error' : compatibilityWarnings && compatibilityWarnings.length > 0 ? 'bsp__compat-status--warning' : 'bsp__compat-status--ok'}`}
-          role="status"
-          aria-live="polite"
-        >
-          {compatibilityErrors && compatibilityErrors.length > 0 ? (
-            <XCircle size={18} strokeWidth={2} aria-hidden className="bsp__compat-icon" />
-          ) : compatibilityWarnings && compatibilityWarnings.length > 0 ? (
-            <AlertTriangle size={18} strokeWidth={2} aria-hidden className="bsp__compat-icon" />
-          ) : (
-            <CircleCheck size={18} strokeWidth={2} aria-hidden className="bsp__compat-icon" />
-          )}
-          {isApiLoading && (
-            <span className="bsp__api-loading" aria-hidden>
-              <span className="bsp__api-loading-spinner" />
-              Обновление...
-            </span>
-          )}
-        </div>
-      )}
 
       {(compatibilityErrors && compatibilityErrors.length > 0) && (
         <ul className="bsp__compat-list" aria-label="Ошибки совместимости">
