@@ -165,13 +165,6 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
           ) : (
             <CircleCheck size={18} strokeWidth={2} aria-hidden className="bsp__compat-icon" />
           )}
-          <span className="bsp__compat-text">
-            {compatibilityErrors && compatibilityErrors.length > 0
-              ? 'Есть проблемы совместимости'
-              : compatibilityWarnings && compatibilityWarnings.length > 0
-                ? 'Обратите внимание на рекомендации'
-                : 'Сборка совместима'}
-          </span>
           {isApiLoading && (
             <span className="bsp__api-loading" aria-hidden>
               <span className="bsp__api-loading-spinner" />
