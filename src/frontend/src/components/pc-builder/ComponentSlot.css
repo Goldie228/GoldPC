@@ -270,10 +270,18 @@
   display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 10px;
   background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2);
   border-radius: 4px; font-size: 0.7rem; font-weight: 500; color: #f87171;
-  max-width: 100%; overflow: hidden;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
 }
-.component-slot__status-badge svg { flex-shrink: 0; color: #fbbf24; }
-.component-slot__status-badge span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.component-slot__status-badge svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-right: 6px;
+  color: inherit;
+}
+.component-slot__status-badge span { white-space: normal; }
 
 /* Old warning (backward compat) */
 .component-slot__warning {
