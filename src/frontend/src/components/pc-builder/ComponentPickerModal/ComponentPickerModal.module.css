@@ -500,6 +500,7 @@
   position: relative;
   width: 100%;
   aspect-ratio: 1;
+  min-height: 180px;
   border-radius: 10px;
   background: #ffffff;
   padding: 12px;

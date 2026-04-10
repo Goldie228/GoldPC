@@ -252,18 +252,16 @@ function checkBuildCompatibility(components: PCBuilderSelectedState): Compatibil
     }
   }
 
-  if (psu && (cpu || gpu)) {
+  if (psu) {
     const psuWattage = psu.specifications?.wattage as number | undefined;
-    const cpuTdp = extractTDP(cpu?.specifications);
-    const gpuTdp = extractTDP(gpu?.specifications);
 
     if (psuWattage) {
-      const totalTdp = cpuTdp + gpuTdp + BASE_POWER_CONSUMPTION;
+      const totalTdp = calculatePowerConsumption(components);
       const recommendedPsu = totalTdp * 1.3;
 
       if (psuWattage < recommendedPsu) {
         warnings.push(
-          `Рекомендуется блок питания мощнее (${Math.ceil(recommendedPsu)}W), текущий: ${psuWattage}W`
+          `Мощности БП (${psuWattage} Вт) недостаточно (требуется ${Math.ceil(recommendedPsu)} Вт)`
         );
       }
     }
@@ -284,6 +282,9 @@ function calculatePowerConsumption(components: PCBuilderSelectedState): number {
 
   if (cpu) total += extractTDP(cpu.specifications);
   if (gpu) total += extractTDP(gpu.specifications);
+  for (const r of components.ram) {
+    total += extractTDP(r.product.specifications) || 3;
+  }
   for (const s of components.storage) {
     total += extractTDP(s.product.specifications) || 5;
   }
@@ -474,16 +475,17 @@ function getComponentState(
           ? 'материнск'
           : type === 'ram'
             ? 'памят'
-            : type === 'cooling'
-              ? 'охлажден'
-              : type === 'gpu'
-                ? 'видеокарт'
-                : type === 'psu'
-                  ? 'блок питания'
-                  : type === 'storage'
-                    ? 'накопител'
-                    : '';
-    return errorLower.includes(typeName);
+          : type === 'cooling'
+            ? 'охлажден'
+          : type === 'gpu'
+            ? 'видеокарт'
+          : type === 'psu'
+            ? 'блок питания'
+          : type === 'storage'
+            ? 'накопител'
+          : null;
+
+    return typeName ? errorLower.includes(typeName) : false;
   });
 
   if (componentErrors.length > 0) {
@@ -502,14 +504,15 @@ function getComponentState(
           ? 'материнск'
           : type === 'ram'
             ? 'памят'
-            : type === 'cooling'
-              ? 'охлажден'
-              : type === 'gpu'
-                ? 'видеокарт'
-                : type === 'psu'
-                  ? 'блок питания'
-                  : '';
-    return warningLower.includes(typeName);
+          : type === 'cooling'
+            ? 'охлажден'
+          : type === 'gpu'
+            ? 'видеокарт'
+          : type === 'psu'
+            ? 'блок питания'
+          : null;
+
+    return typeName ? warningLower.includes(typeName) : false;
   });
 
   if (componentWarnings.length > 0 && type === 'cooling') {

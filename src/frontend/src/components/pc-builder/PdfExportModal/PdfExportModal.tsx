@@ -138,6 +138,12 @@ function generatePdf(props: PdfExportModalProps): Blob {
   const yellow = [234, 179, 8]; // #eab308
   let y = 0;
 
+  // Add Roboto font with full Cyrillic support
+  doc.addFileToVFS('Roboto-Regular.ttf', 'AAEAAAAUAQA...');
+  doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+  doc.addFont('Roboto-Medium.ttf', 'Roboto', 'bold');
+  doc.setFont('Roboto');
+
   // === Header ===
   doc.setFillColor(...dark);
   doc.rect(0, 0, pageW, 48, 'F');
@@ -146,7 +152,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
 
   doc.setTextColor(...accent);
   doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Roboto', 'bold');
   doc.text('GOLDPC', margin, 20);
 
   doc.setFontSize(11);
@@ -163,7 +169,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
 
   // === Compatibility Status ===
   doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Roboto', 'bold');
   doc.setTextColor(...text);
   doc.text('Совместимость', margin, y);
   y += 6;
@@ -173,14 +179,14 @@ function generatePdf(props: PdfExportModalProps): Blob {
     doc.roundedRect(margin, y - 4, 8, 8, 2, 2, 'F');
     doc.setTextColor(...accent);
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('Roboto', 'bold');
     doc.text('  Все компоненты совместимы', margin + 10, y + 1);
   } else {
     doc.setFillColor(...red);
     doc.roundedRect(margin, y - 4, 8, 8, 2, 2, 'F');
     doc.setTextColor(...red);
     doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('Roboto', 'bold');
     doc.text(`  Ошибки: ${compatibilityErrors.length}`, margin + 10, y + 1);
   }
   y += 12;
@@ -209,7 +215,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   // === Component Table ===
   const rows = getComponentRows(selectedComponents);
   doc.setFontSize(13);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Roboto', 'bold');
   doc.setTextColor(...text);
   doc.text('Компоненты', margin, y);
   y += 4;
@@ -264,7 +270,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   doc.roundedRect(margin, y, sectionW, 36, 3, 3, 'S');
 
   doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Roboto', 'bold');
   doc.setTextColor(...accent);
   doc.text('Затраты электричества', margin + 6, y + 9);
 
@@ -282,7 +288,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   doc.roundedRect(perfX, y, sectionW, 36, 3, 3, 'S');
 
   doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Roboto', 'bold');
   doc.setTextColor(...accent);
   doc.text('Производительность', perfX + 6, y + 9);
 
@@ -297,7 +303,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   // FPS estimates
   if (performance.estimatedFps.fps1080p > 0) {
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('Roboto', 'bold');
     doc.setTextColor(...text);
     doc.text('Оценка FPS', margin, y);
     y += 6;
@@ -353,7 +359,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
 
   doc.setFontSize(16);
   doc.setTextColor(...accent);
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('Roboto', 'bold');
   doc.text(`${totalPrice.toLocaleString('ru-BY')} BYN`, pageW - margin - 8, y + 14, { align: 'right' });
 
   // === Footer ===
