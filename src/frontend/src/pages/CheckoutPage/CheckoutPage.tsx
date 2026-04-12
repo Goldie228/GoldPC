@@ -6,12 +6,14 @@ import { useAuthStore } from '../../store/authStore';
 import { extractApiErrorMessage, ordersApi } from '../../api/orders';
 import { addressesApi, type UserAddress } from '../../api/addresses';
 import { useToastStore } from '../../store/toastStore';
+import { parsePhone, isValidPhone } from '../../utils/phone';
 import { AddressMap } from '../../components/checkout/AddressMap';
 import { DeliveryTimeSlotPicker } from '../../components/checkout/DeliveryTimeSlotPicker';
 import { PaymentForm, type PaymentData } from '../../components/checkout/PaymentForm';
 import { QRCodePayment } from '../../components/checkout/QRCodePayment';
 import { Icon } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
+import { PhoneInput } from '../../components/ui/PhoneInput';
 import styles from './CheckoutPage.module.css';
 
 type Step = 'delivery' | 'contacts' | 'payment' | 'confirm';
@@ -40,12 +42,7 @@ interface DeliveryData {
 const FREE_DELIVERY_THRESHOLD = 200;
 const NAME_REGEX = /^[A-Za-zА-Яа-яЁё-]{2,50}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_REGEX = /^((\+375|80)(17|25|29|33|44)\d{7})$/;
 const CONTACT_FIELDS: ContactField[] = ['firstName', 'phone', 'email'];
-
-function normalizePhone(value: string): string {
-  return value.replace(/[\s()-]/g, '');
-}
 
 function isOnlinePaymentMethod(method: PaymentMethod): boolean {
   return method === 'CardOnline' || method === 'SBP';
@@ -133,11 +130,10 @@ export function CheckoutPage() {
     }
 
     if (field === 'phone') {
-      const normalizedPhone = normalizePhone(value);
       if (!value) {
         error = 'Укажите номер телефона';
-      } else if (!PHONE_REGEX.test(normalizedPhone)) {
-        error = 'Введите номер в формате +375291234567 или 80291234567';
+      } else if (!isValidPhone(value)) {
+        error = 'Введите корректный номер телефона';
       }
     }
 
@@ -241,7 +237,7 @@ export function CheckoutPage() {
         const order = await ordersApi.createOrder({
         firstName: contactData.firstName.trim(),
         lastName: '',
-        phone: normalizePhone(contactData.phone.trim()),
+        phone: parsePhone(contactData.phone.trim()),
         email: contactData.email.trim(),
         deliveryMethod: deliveryData.method,
         paymentMethod: isOnlinePaymentMethod(paymentMethod) ? 'Online' : 'OnReceipt',
@@ -548,13 +544,12 @@ export function CheckoutPage() {
                   </div>
                   <div className={styles.formGroup}>
                     <label>Телефон*</label>
-                    <input
-                      type="tel"
+                    <PhoneInput
                       value={contactData.phone}
-                      onChange={(e) => handleContactChange('phone', e.target.value)}
+                      onChange={(value) => handleContactChange('phone', value)}
                       onBlur={() => handleContactBlur('phone')}
-                      className={`${styles.input} ${contactTouched.phone && contactErrors.phone ? styles.inputError : ''}`}
-                      placeholder="+375 29 123-45-67"
+                      className={contactTouched.phone && contactErrors.phone ? styles.inputError : ''}
+                      placeholder="+375 (29) 123-45-67"
                       autoComplete="tel"
                     />
                     {contactTouched.phone && contactErrors.phone && (
