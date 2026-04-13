@@ -268,4 +268,4 @@ kursovaya/
 
 ---
 
-*© 2025 GoldPC. All rights reserved.*
+*© 2026 GoldPC. All rights reserved.*
