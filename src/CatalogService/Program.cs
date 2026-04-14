@@ -128,11 +128,12 @@ builder.Services.AddStackExchangeRedisCache(options =>
 });
 
 // Messaging (Consumers for OrderPaidEvent and OrderPlacedEvent)
-builder.Services.AddMessaging(builder.Configuration, x =>
-{
-    x.AddConsumer<OrderPaidConsumer>();
-    x.AddConsumer<OrderPlacedConsumer>();
-});
+// TEMPORARILY DISABLED for performance testing - MassTransit/RabbitMQ not required for catalog reads
+// builder.Services.AddMessaging(builder.Configuration, x =>
+// {
+//     x.AddConsumer<OrderPaidConsumer>();
+//     x.AddConsumer<OrderPlacedConsumer>();
+// });
 
 // Настройка CORS
 builder.Services.AddCors(options =>

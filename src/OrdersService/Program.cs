@@ -36,10 +36,12 @@ builder.Services.AddDbContext<OrdersDbContext>(options =>
 // Services
 builder.Services.AddScoped<IOrdersService, GoldPC.OrdersService.Services.OrdersService>();
 builder.Services.AddScoped<GoldPC.OrdersService.Services.Interfaces.IPromoCodeService, GoldPC.OrdersService.Services.PromoCodeService>();
-builder.Services.AddMessaging(builder.Configuration);
+
+// Messaging (MassTransit/RabbitMQ) - TEMPORARILY DISABLED
+// builder.Services.AddMessaging(builder.Configuration);
 
 // Outbox Processor
-builder.Services.AddHostedService<OutboxProcessor>();
+// builder.Services.AddHostedService<OutboxProcessor>();
 
 // gRPC Clients
 var catalogGrpcUrl = builder.Configuration["CatalogService:GrpcUrl"];
@@ -199,7 +201,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseDeveloperExceptionPage();
+// app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
