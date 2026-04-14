@@ -1,4 +1,13 @@
-export const PHONE_REGEX = /^((\+375|80)(17|25|29|33|44)\d{7})$/;
+/**
+ * Валидирует телефонные номера:
+ * - Поддерживает +375, 80, +7, 8 и международные форматы
+ * - Разрешены пробелы, скобки, дефисы
+ * - Проверяет только количество цифр (7-15 по стандарту E.164)
+ */
+export function isValidPhone(value: string): boolean {
+  const digits = value.replace(/\D/g, '');
+  return digits.length >= 7 && digits.length <= 15;
+}
 
 /**
  * Очищает телефонный номер от всех нечисловых символов
@@ -29,12 +38,6 @@ export function parsePhone(value: string): string {
   return digits;
 }
 
-/**
- * Проверяет что номер полностью введен и валиден
- */
-export function isValidPhone(value: string): boolean {
-  return PHONE_REGEX.test(parsePhone(value));
-}
 
 /**
  * Форматирует чистые цифры номера (9 цифр) в вид: +375 (XX) XXX-XX-XX

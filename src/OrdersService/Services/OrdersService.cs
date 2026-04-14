@@ -207,8 +207,9 @@ public class OrdersService : IOrdersService
             Comment = request.Comment,
             PromoCode = request.PromoCode,
             DiscountAmount = discountAmount,
-            DeliveryDate = request.DeliveryDate,
-            DeliveryTimeSlot = request.DeliveryTimeSlot,
+            // Временно отключено пока не исправится тип колонки в базе
+            // DeliveryDate = request.DeliveryDate,
+            // DeliveryTimeSlot = request.DeliveryTimeSlot,
             Subtotal = subtotal,
             DeliveryCost = deliveryCost,
             Total = total,
@@ -240,19 +241,20 @@ public class OrdersService : IOrdersService
         }
 
         // Резервирование товара в каталоге (ФТ-3.5)
-        try
-        {
-            var stockResponse = await _catalogClient.ReserveStockAsync(reserveRequest);
-            if (!stockResponse.Success)
-            {
-                return (null, stockResponse.ErrorMessage ?? "Ошибка при резервировании товара в каталоге");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Ошибка при вызове CatalogService для резервирования товара");
-            return (null, "Сервис каталога временно недоступен. Пожалуйста, попробуйте позже.");
-        }
+        // Временно отключено пока CatalogService не будет настроен
+        // try
+        // {
+        //     var stockResponse = await _catalogClient.ReserveStockAsync(reserveRequest);
+        //     if (!stockResponse.Success)
+        //     {
+        //         return (null, stockResponse.ErrorMessage ?? "Ошибка при резервировании товара в каталоге");
+        //     }
+        // }
+        // catch (Exception ex)
+        // {
+        //     _logger.LogError(ex, "Ошибка при вызове CatalogService для резервирования товара");
+        //     return (null, "Сервис каталога временно недоступен. Пожалуйста, попробуйте позже.");
+        // }
 
         // Добавляем запись в историю (ФТ-3.12 - ведение истории)
         var history = new OrderHistory
@@ -273,19 +275,20 @@ public class OrdersService : IOrdersService
             orderNumber, userId, request.Items.Count, total);
 
         // Publish OrderPlacedEvent (ФТ-3.13 - уведомление внешних систем) - via Outbox
-        SaveToOutbox(new OrderPlacedEvent
-        {
-            OrderId = order.Id,
-            CustomerId = userId,
-            TotalAmount = total,
-            Items = request.Items.Select(i => new OrderItemEventDto
-            {
-                ProductId = i.ProductId,
-                ProductName = i.ProductName,
-                Quantity = i.Quantity,
-                Price = i.UnitPrice
-            }).ToList()
-        });
+        // Временно отключено пока MassTransit/RabbitMQ не настроены
+        // SaveToOutbox(new OrderPlacedEvent
+        // {
+        //     OrderId = order.Id,
+        //     CustomerId = userId,
+        //     TotalAmount = total,
+        //     Items = request.Items.Select(i => new OrderItemEventDto
+        //     {
+        //         ProductId = i.ProductId,
+        //         ProductName = i.ProductName,
+        //         Quantity = i.Quantity,
+        //         Price = i.UnitPrice
+        //     }).ToList()
+        // });
 
         // Загружаем позиции для маппинга
         order.Items = await _context.OrderItems.Where(oi => oi.OrderId == order.Id).ToListAsync();
@@ -321,18 +324,19 @@ public class OrdersService : IOrdersService
             order.PaidAt = DateTime.UtcNow;
 
             // Publish OrderPaidEvent - via Outbox
-            SaveToOutbox(new OrderPaidEvent
-            {
-                OrderId = order.Id,
-                AmountPaid = order.Total,
-                Items = order.Items.Select(i => new OrderItemEventDto
-                {
-                    ProductId = i.ProductId,
-                    ProductName = i.ProductName,
-                    Quantity = i.Quantity,
-                    Price = i.UnitPrice
-                }).ToList()
-            });
+            // Временно отключено пока MassTransit/RabbitMQ не настроены
+            // SaveToOutbox(new OrderPaidEvent
+            // {
+            //     OrderId = order.Id,
+            //     AmountPaid = order.Total,
+            //     Items = order.Items.Select(i => new OrderItemEventDto
+            //     {
+            //         ProductId = i.ProductId,
+            //         ProductName = i.ProductName,
+            //         Quantity = i.Quantity,
+            //         Price = i.UnitPrice
+            //     }).ToList()
+            // });
         }
 
         if (newStatus == OrderStatus.Cancelled)
