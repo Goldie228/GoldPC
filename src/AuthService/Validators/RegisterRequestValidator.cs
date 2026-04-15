@@ -107,14 +107,13 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
 
         // === LAST NAME VALIDATION ===
         RuleFor(x => x.LastName)
-            .NotEmpty()
-                .WithMessage("Фамилия обязательна")
             .MinimumLength(2)
                 .WithMessage("Фамилия должна содержать минимум 2 символа")
             .MaximumLength(100)
                 .WithMessage("Фамилия не может превышать 100 символов")
             .Matches(@"^[a-zA-Zа-яА-ЯёЁ\s\-'`]+$")
-                .WithMessage("Фамилия может содержать только буквы, пробелы, дефисы и апострофы");
+                .WithMessage("Фамилия может содержать только буквы, пробелы, дефисы и апострофы")
+            .When(x => !string.IsNullOrWhiteSpace(x.LastName));
 
         // === PHONE VALIDATION (Belarus Format) ===
         RuleFor(x => x.Phone)

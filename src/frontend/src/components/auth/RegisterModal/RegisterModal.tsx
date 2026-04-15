@@ -14,7 +14,8 @@
 import { useState, useMemo } from 'react';
 import type { FormEvent } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { Modal } from '../../ui/Modal/Modal';
+import { AuthModalBase } from '../AuthModalBase/AuthModalBase';
+import { PasswordField } from '../../ui/PasswordField/PasswordField';
 import { useAuth } from '../../../hooks/useAuth';
 import { useAuthModalStore } from '../../../store/authModalStore';
 import styles from './RegisterModal.module.css';
@@ -29,14 +30,97 @@ export interface RegisterModalProps {
 export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const { register, isLoading } = useAuth();
   const { switchAuthModal } = useAuthModalStore();
-  
+
   const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
+  const [lastName, setLastName] = useState(''); // Опционально
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState(''); // Опционально
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    const value = input.value;
+    const deleting = value.length < phone.length;
+
+    // ✅ ЕСЛИ СТИРАЕМ - НИКАКОЙ МАСКИ, НИЧЕГО. СТИРАЙ СКОЛЬКО ХОЧЕШЬ.
+    if (deleting) {
+      setPhone(value);
+      return;
+    }
+
+    // ✅ ТОЛЬКО ЕСЛИ ВВОДИМ НОВЫЕ ЦИФРЫ - ФОРМАТИРУЕМ
+    const clean = value.replace(/\D/g, '');
+    let digits = clean;
+
+    if (digits.startsWith('375')) digits = digits.slice(3);
+
+    let formatted = '+375 ';
+    if (digits.length > 0) formatted += '(' + digits.slice(0, Math.min(2, digits.length));
+    if (digits.length >= 2) formatted += ') ';
+    if (digits.length >= 3) formatted += digits.slice(2, 5);
+    if (digits.length >= 5) formatted += '-';
+    if (digits.length >= 6) formatted += digits.slice(5, 7);
+    if (digits.length >= 7) formatted += '-';
+    if (digits.length >= 8) formatted += digits.slice(7, 9);
+
+    setPhone(formatted);
+  };
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const validateEmail = (value: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!value) return 'Email не может быть пустым';
+    if (!emailRegex.test(value)) return 'Введите корректный email адрес';
+    return '';
+  };
+
+  const validatePassword = (value: string): string => {
+    if (!value) return 'Пароль не может быть пустым';
+    if (value.length < 8) return 'Пароль должен содержать минимум 8 символов';
+    if (value.length > 64) return 'Пароль не может быть длиннее 64 символов';
+    if (!/[A-Z]/.test(value)) return 'Пароль должен содержать минимум одну заглавную букву';
+    if (!/[a-z]/.test(value)) return 'Пароль должен содержать минимум одну строчную букву';
+    if (!/[0-9]/.test(value)) return 'Пароль должен содержать минимум одну цифру';
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) return 'Пароль должен содержать минимум один специальный символ';
+    if (/(.)\1{2,}/.test(value)) return 'Пароль не может содержать 3 и более одинаковых символов подряд';
+    if (/012|123|234|345|456|567|678|789|890|abc|bcd|cde|def/i.test(value)) return 'Пароль не может содержать последовательные символы';
+    return '';
+  };
+
+  const validateConfirmPassword = (value: string) => {
+    if (password && value !== password) return 'Пароли не совпадают';
+    return '';
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    const err = validateEmail(value);
+    setFieldErrors(prev => ({ ...prev, email: err }));
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    const err = validatePassword(value);
+    setFieldErrors(prev => ({ ...prev, password: err }));
+
+    // Re-validate confirm password if it was already entered
+    if (confirmPassword) {
+      const confirmErr = validateConfirmPassword(confirmPassword);
+      setFieldErrors(prev => ({ ...prev, confirmPassword: confirmErr }));
+    }
+  };
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setConfirmPassword(value);
+    const err = validateConfirmPassword(value);
+    setFieldErrors(prev => ({ ...prev, confirmPassword: err }));
+  };
 
   // Password strength calculation
   const passwordStrength = useMemo(() => {
@@ -86,8 +170,31 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       setPassword('');
       setConfirmPassword('');
       setTermsAccepted(false);
-    } catch {
-      setError('Ошибка регистрации. Попробуйте другой email');
+      setFieldErrors({});
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      const backendErrors = error?.response?.data?.errors;
+
+      if (backendErrors && typeof backendErrors === 'object') {
+        // Set field-specific errors from backend validation
+        const newFieldErrors: Record<string, string> = {};
+        Object.entries(backendErrors).forEach(([field, messages]) => {
+          newFieldErrors[field] = Array.isArray(messages) ? messages[0] : String(messages);
+        });
+        setFieldErrors(newFieldErrors);
+
+        // If there are multiple errors, show generic message
+        const fieldCount = Object.keys(newFieldErrors).length;
+        if (fieldCount === 1) {
+          setError(`Ошибка в поле ${Object.keys(newFieldErrors)[0]}: ${Object.values(newFieldErrors)[0]}`);
+        } else {
+          setError('Пожалуйста, исправьте ошибки в полях формы');
+        }
+      } else {
+        // Generic fallback error
+        setError(error?.response?.data?.title || 'Ошибка регистрации. Попробуйте позже.');
+        setFieldErrors({});
+      }
     }
   };
 
@@ -101,11 +208,16 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   };
 
   return (
-    <Modal
+    <AuthModalBase
       isOpen={isOpen}
       onClose={handleClose}
       title="Создать аккаунт"
       size="medium"
+      switchLink={{
+        text: 'Уже есть аккаунт?',
+        actionText: 'Войти',
+        onClick: handleSwitchToLogin
+      }}
     >
       <form className={styles.form} onSubmit={handleSubmit}>
         {error && (
@@ -131,18 +243,20 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="register-lastName">
-            Фамилия
+          <label className={styles.label} htmlFor="register-phone">
+            Телефон
           </label>
           <input
-            id="register-lastName"
-            type="text"
+            id="register-phone"
+            type="tel"
             className={styles.input}
-            placeholder="Ваша фамилия"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
+            placeholder="+375 (29) 123-45-67"
+            value={phone}
+            onChange={handlePhoneChange}
             required
-            autoComplete="family-name"
+            autoComplete="tel"
+            inputMode="numeric"
+            maxLength={19}
           />
         </div>
 
@@ -163,19 +277,21 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="register-password">
-            Пароль
-          </label>
-          <input
+          <PasswordField
             id="register-password"
-            type="password"
-            className={styles.input}
-            placeholder="Минимум 8 символов"
+            label="Пароль"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(value) => {
+              setPassword(value);
+              const err = validatePassword(value);
+              setFieldErrors(prev => ({ ...prev, password: err }));
+            }}
             required
             minLength={8}
+            maxLength={64}
             autoComplete="new-password"
+            labelClassName={styles.label}
+            inputClassName={styles.input}
           />
           <p className={styles.hint}>Минимум 8 символов, буквы и цифры</p>
           {password && (
@@ -243,20 +359,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         <div className={styles.dividerLine} />
       </div>
 
-      {/* Footer */}
-      <div className={styles.footer}>
-        <p className={styles.footerText}>
-          Уже есть аккаунт?{' '}
-          <button
-            type="button"
-            className={styles.footerLink}
-            onClick={handleSwitchToLogin}
-          >
-            Войти
-          </button>
-        </p>
-      </div>
-    </Modal>
+    </AuthModalBase>
   );
 }
 

@@ -13,7 +13,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { Modal } from '../../ui/Modal/Modal';
+import { AuthModalBase } from '../AuthModalBase/AuthModalBase';
 import { PasswordField } from '../../ui/PasswordField';
 import { useAuth } from '../../../hooks/useAuth';
 import { useAuthModalStore } from '../../../store/authModalStore';
@@ -29,15 +29,41 @@ export interface LoginModalProps {
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const { login, isLoading } = useAuth();
   const { switchAuthModal } = useAuthModalStore();
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const validateEmail = (value: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!value) return 'Email не может быть пустым';
+    if (!emailRegex.test(value)) return 'Введите корректный email адрес';
+    return '';
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    const err = validateEmail(value);
+    setFieldErrors(prev => ({ ...prev, email: err }));
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
+
+    // Client-side validation
+    const emailError = validateEmail(email);
+    if (emailError || !password) {
+      setFieldErrors({
+        email: emailError,
+        password: !password ? 'Пароль не может быть пустым' : ''
+      });
+      return;
+    }
 
     try {
       await login({ email, password }, remember);
@@ -61,11 +87,16 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   };
 
   return (
-    <Modal
+    <AuthModalBase
       isOpen={isOpen}
       onClose={handleClose}
       title="Вход в аккаунт"
       size="small"
+      switchLink={{
+        text: 'Нет аккаунта?',
+        actionText: 'Зарегистрироваться',
+        onClick: handleSwitchToRegister
+      }}
     >
       <form className={styles.form} onSubmit={handleSubmit}>
         {error && (
@@ -81,13 +112,21 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           <input
             id="login-email"
             type="email"
-            className={styles.input}
+            className={`${styles.input} ${fieldErrors.email ? styles.inputError : ''}`}
             placeholder="your@email.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
             required
             autoComplete="email"
+            aria-invalid={!!fieldErrors.email}
+            aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
+            disabled={isLoading}
           />
+          {fieldErrors.email && (
+            <span id="login-email-error" className={styles.fieldError} role="alert">
+              {fieldErrors.email}
+            </span>
+          )}
         </div>
 
         <PasswordField
@@ -124,33 +163,22 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           type="submit"
           className={styles.submitBtn}
           disabled={isLoading}
+          aria-busy={isLoading}
         >
-          {isLoading ? 'Вход...' : 'Войти'}
-          <ArrowRight size={18} />
+          {isLoading ? (
+            <>
+              <div className={styles.loadingSpinner} />
+              <span>Вход...</span>
+            </>
+          ) : (
+            <>
+              Войти
+              <ArrowRight size={18} />
+            </>
+          )}
         </button>
       </form>
-
-      {/* Divider */}
-      <div className={styles.divider}>
-        <div className={styles.dividerLine} />
-        <span className={styles.dividerText}>или</span>
-        <div className={styles.dividerLine} />
-      </div>
-
-      {/* Footer */}
-      <div className={styles.footer}>
-        <p className={styles.footerText}>
-          Нет аккаунта?{' '}
-          <button
-            type="button"
-            className={styles.footerLink}
-            onClick={handleSwitchToRegister}
-          >
-            Зарегистрироваться
-          </button>
-        </p>
-      </div>
-    </Modal>
+    </AuthModalBase>
   );
 }
 
