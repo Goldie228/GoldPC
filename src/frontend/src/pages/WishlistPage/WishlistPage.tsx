@@ -192,13 +192,13 @@ export function WishlistPage(): ReactElement {
               <span>Избранное</span>
             </div>
             <h1 className={styles.title}>Избранное</h1>
-            <p className={styles.stats}>
+            <div className={styles.stats}>
               {loading ? (
                 <Skeleton width={160} height={18} borderRadius="sm" />
               ) : (
                 formatCountRu(filteredProducts.length, RU_FORMS.tovar)
               )}
-            </p>
+            </div>
           </header>
 
           {/* Упрощенный Toolbar */}

@@ -1,0 +1,60 @@
+/**
+ * AuthModalBase Styles
+ * Общие стили для всех модальных окон аутентификации
+ */
+
+.content {
+  padding: 24px;
+}
+
+.switchContainer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.switchText {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+.switchButton {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s ease;
+}
+
+.switchButton:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.footer {
+  padding: 16px 24px 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}
+
+.dividerText {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  text-transform: uppercase;
+}

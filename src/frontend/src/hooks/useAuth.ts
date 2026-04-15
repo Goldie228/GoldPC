@@ -27,15 +27,16 @@ export function useAuth(): UseAuthReturn {
    * Сохранение токенов в хранилище
    */
   const saveTokens = useCallback((accessToken: string, refreshToken: string, remember: boolean) => {
+    // Clear both storage locations first to prevent leftover tokens
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('accessToken');
+    sessionStorage.removeItem('refreshToken');
+
+    // Save to appropriate storage based on remember flag
     const storage = remember ? localStorage : sessionStorage;
     storage.setItem('accessToken', accessToken);
     storage.setItem('refreshToken', refreshToken);
-    
-    // Если "запомнить" - дублируем в localStorage для персистентности
-    if (remember) {
-      localStorage.setItem('accessToken', accessToken);
-      localStorage.setItem('refreshToken', refreshToken);
-    }
   }, []);
 
   /**
@@ -87,6 +88,12 @@ export function useAuth(): UseAuthReturn {
     try {
       await authService.logout();
     } finally {
+      // Clear tokens from both storage locations
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      sessionStorage.removeItem('accessToken');
+      sessionStorage.removeItem('refreshToken');
+
       storeLogout();
       navigate('/login');
     }
