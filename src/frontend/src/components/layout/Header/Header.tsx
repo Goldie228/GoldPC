@@ -35,7 +35,7 @@ export function Header() {
   const wishlistCount = useWishlistCount();
   const comparisonCount = useComparisonCount();
   const prevCartCountRef = useRef(cartCount);
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, logout, currentRole, switchRole } = useAuthStore();
   const { openLoginModal, openRegisterModal } = useAuthModalStore();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -333,6 +333,31 @@ export function Header() {
                         <span className={styles.profileEmail}>{user?.email}</span>
                       </div>
                     </div>
+                    <div className={styles.profileDivider} />
+
+                    {/* Ролевой переключатель - показываем только если у пользователя больше одной роли */}
+                    {user && (user.roles?.length > 1 || (user.role && user.roles === undefined)) && (
+                      <div className={styles.roleSwitcher}>
+                        <div className={styles.roleSwitcherLabel}>Текущая роль:</div>
+                        <div className={styles.roleList}>
+                          {(user.roles ?? [user.role]).map((role) => (
+                            <button
+                              key={role}
+                              className={`${styles.roleOption} ${currentRole === role ? styles.roleOptionActive : ''}`}
+                              onClick={() => {
+                                switchRole(role);
+                                // После переключения роли обновляем страницу без перезагрузки
+                                window.dispatchEvent(new CustomEvent('roleChanged', { detail: role }));
+                              }}
+                              type="button"
+                            >
+                              {role}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className={styles.profileDivider} />
                     <nav className={styles.profileNav}>
                       <Link

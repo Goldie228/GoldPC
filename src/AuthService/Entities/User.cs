@@ -19,9 +19,23 @@ public class User : BaseEntity
     public string PasswordHash { get; set; } = string.Empty;
     
     /// <summary>
-    /// Роль пользователя
+    /// Роль пользователя (устарело, используйте Roles для множественных ролей)
     /// </summary>
-    public UserRole Role { get; set; } = UserRole.Client;
+    [Obsolete("Use Roles collection instead")]
+    public UserRole Role
+    {
+        get => Roles.FirstOrDefault(UserRole.Client);
+        set
+        {
+            Roles.Clear();
+            Roles.Add(value);
+        }
+    }
+
+    /// <summary>
+    /// Множественные роли пользователя
+    /// </summary>
+    public ICollection<UserRole> Roles { get; set; } = new List<UserRole> { UserRole.Client };
     
     /// <summary>
     /// Имя
