@@ -6,6 +6,7 @@ import { AuthModalContainer } from './components/auth';
 import { ModalContainer } from './components/ui/Modal/ModalContainer';
 import { RouteMeta } from './components/seo/RouteMeta';
 import { ProductCardSkeleton, SimplePageLoader } from './components/ui/Skeleton';
+import OfflineBanner from './components/OfflineBanner';
 import { useAuthStore } from './store/authStore';
 import { useWishlistStore } from './store/wishlistStore';
 import './App.css';
@@ -263,6 +264,7 @@ function App() {
 
   return (
     <Suspense fallback={<RouteAwarePageLoader />}>
+      <OfflineBanner />
       <RouterProvider router={router} />
     </Suspense>
   );
