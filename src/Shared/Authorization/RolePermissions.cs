@@ -139,6 +139,31 @@ public static class RolePermissions
 
             // Warranty
             Permissions.WarrantyView
+        },
+
+        // Master - выполнение ремонтных и сборочных работ
+        [Roles.Master] = new[]
+        {
+            // Products
+            Permissions.ProductsView,
+
+            // Orders
+            Permissions.OrdersView,
+            Permissions.OrdersManage,
+
+            // Categories
+            Permissions.CategoriesView,
+
+            // Services
+            Permissions.ServicesView,
+            Permissions.ServicesManage,
+
+            // PC Builder
+            Permissions.PcBuilderUse,
+
+            // Warranty
+            Permissions.WarrantyView,
+            Permissions.WarrantyManage
         }
     };
 

@@ -26,7 +26,12 @@ public static class Roles
     public const string Customer = "Customer";
 
     /// <summary>
+    /// Мастер. Выполнение ремонтных и сборочных работ.
+    /// </summary>
+    public const string Master = "Master";
+
+    /// <summary>
     /// Возвращает список всех доступных ролей.
     /// </summary>
-    public static readonly string[] AllRoles = { Admin, Manager, Employee, Customer };
+    public static readonly string[] AllRoles = { Customer, Manager, Master, Admin, Employee };
 }
