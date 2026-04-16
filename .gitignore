@@ -179,3 +179,4 @@ scripts/comparison-audit/audit-notes/
 .mcp.json
 .mcp-sqlite.db
 sqlite_mcp_server.db
+worktrees/
