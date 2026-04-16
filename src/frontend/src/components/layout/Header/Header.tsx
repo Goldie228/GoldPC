@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, User, Menu, X, LogOut, ShoppingBag, Heart, GitCompare } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, LogOut, ShoppingBag, Heart, GitCompare, LayoutDashboard, Bell, Moon, Settings } from 'lucide-react';
 import { useCartTotalItems } from '../../../store/cartStore';
 import { useWishlistCount } from '../../../store/wishlistStore';
 import { useComparisonCount } from '../../../store/comparisonStore';
@@ -336,6 +336,14 @@ export function Header() {
                     <div className={styles.profileDivider} />
                     <nav className={styles.profileNav}>
                       <Link
+                        to="/dashboard"
+                        className={styles.profileNavLink}
+                        onClick={handleProfileDropdownClose}
+                      >
+                        <LayoutDashboard />
+                        <span>Панель управления</span>
+                      </Link>
+                      <Link
                         to="/account"
                         className={styles.profileNavLink}
                         onClick={handleProfileDropdownClose}
@@ -352,12 +360,38 @@ export function Header() {
                         <span>Заказы</span>
                       </Link>
                       <Link
+                        to="/notifications"
+                        className={styles.profileNavLink}
+                        onClick={handleProfileDropdownClose}
+                      >
+                        <Bell />
+                        <span>Уведомления</span>
+                      </Link>
+                      <Link
                         to="/wishlist"
                         className={styles.profileNavLink}
                         onClick={handleProfileDropdownClose}
                       >
                         <Heart />
                         <span>Избранное</span>
+                      </Link>
+                      <button
+                        className={styles.profileNavLink}
+                        onClick={() => {
+                          // Theme toggle will be implemented
+                          // implemented here
+                        }}
+                      >
+                        <Moon />
+                        <span>Тёмная тема</span>
+                      </button>
+                      <Link
+                        to="/account/settings"
+                        className={styles.profileNavLink}
+                        onClick={handleProfileDropdownClose}
+                      >
+                        <Settings />
+                        <span>Настройки</span>
                       </Link>
                     </nav>
                     <div className={styles.profileDivider} />

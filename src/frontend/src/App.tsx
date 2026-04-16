@@ -35,6 +35,7 @@ const WarrantyPage = lazy(() => import('./pages/info/WarrantyPage').then(m => ({
 const ReturnsPage = lazy(() => import('./pages/info/ReturnsPage').then(m => ({ default: m.ReturnsPage })));
 const FaqPage = lazy(() => import('./pages/info/FaqPage').then(m => ({ default: m.FaqPage })));
 const AccountLayout = lazy(() => import('./pages/AccountPage/AccountLayout').then(m => ({ default: m.AccountLayout })));
+const CustomerDashboard = lazy(() => import('./pages/CustomerDashboard/CustomerDashboard').then(m => ({ default: m.CustomerDashboard })));
 const AccountOverview = lazy(() => import('./pages/AccountPage/AccountOverview').then(m => ({ default: m.AccountOverview })));
 const AccountProfile = lazy(() => import('./pages/AccountPage/AccountProfile').then(m => ({ default: m.AccountProfile })));
 const AccountOrders = lazy(() => import('./pages/AccountPage/AccountOrders').then(m => ({ default: m.AccountOrders })));
@@ -182,6 +183,7 @@ const router = createBrowserRouter([
       {
         element: <AuthGuard />,
         children: [
+          { path: '/dashboard', element: <CustomerDashboard /> },
           {
             path: '/account',
             element: <AccountLayout />,
