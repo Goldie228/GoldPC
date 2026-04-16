@@ -45,6 +45,7 @@ const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage')
 const UserFormPage = lazy(() => import('./pages/admin/UserFormPage').then(m => ({ default: m.UserFormPage })));
 const CatalogManagementPage = lazy(() => import('./pages/admin/CatalogManagementPage').then(m => ({ default: m.CatalogManagementPage })));
 const CoordinatorDashboard = lazy(() => import('./pages/admin/CoordinatorDashboard').then(m => ({ default: m.CoordinatorDashboard })));
+const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
 const StubManager = lazy(() => import('./components/admin').then(m => ({ default: m.StubManager })));
 const OrdersPage = lazy(() => import('./pages/manager/OrdersPage').then(m => ({ default: m.OrdersPage })));
 const OrderDetailPage = lazy(() => import('./pages/manager/OrderDetailPage').then(m => ({ default: m.OrderDetailPage })));
@@ -213,6 +214,7 @@ const router = createBrowserRouter([
           { path: '/admin/users/:id/edit', element: <UserFormPage /> },
           { path: '/admin/catalog', element: <CatalogManagementPage /> },
           { path: '/admin/coordinator', element: <CoordinatorDashboard /> },
+          { path: '/admin/audit-log', element: <AuditLogPage /> },
           { path: '/admin/stubs', element: <StubManager /> },
         ],
       },
