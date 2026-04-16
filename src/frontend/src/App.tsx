@@ -48,6 +48,8 @@ const CoordinatorDashboard = lazy(() => import('./pages/admin/CoordinatorDashboa
 const StubManager = lazy(() => import('./components/admin').then(m => ({ default: m.StubManager })));
 const OrdersPage = lazy(() => import('./pages/manager/OrdersPage').then(m => ({ default: m.OrdersPage })));
 const OrderDetailPage = lazy(() => import('./pages/manager/OrderDetailPage').then(m => ({ default: m.OrderDetailPage })));
+const ManagerDashboard = lazy(() => import('./pages/manager/ManagerDashboard').then(m => ({ default: m.ManagerDashboard })));
+const InventoryPage = lazy(() => import('./pages/manager/InventoryPage').then(m => ({ default: m.InventoryPage })));
 const TicketsPage = lazy(() => import('./pages/master').then(m => ({ default: m.TicketsPage })));
 const TicketDetailPage = lazy(() => import('./pages/master').then(m => ({ default: m.TicketDetailPage })));
 const ReportsPage = lazy(() => import('./pages/accountant').then(m => ({ default: m.ReportsPage })));
@@ -217,8 +219,11 @@ const router = createBrowserRouter([
       {
         element: <RoleGuard allowedRoles={['Manager', 'Admin', 'Master']} />,
         children: [
+          { path: '/manager', element: <Navigate to="/manager/dashboard" replace /> },
+          { path: '/manager/dashboard', element: <ManagerDashboard /> },
           { path: '/manager/orders', element: <OrdersPage /> },
           { path: '/manager/orders/:id', element: <OrderDetailPage /> },
+          { path: '/manager/inventory', element: <InventoryPage /> },
         ],
       },
       {

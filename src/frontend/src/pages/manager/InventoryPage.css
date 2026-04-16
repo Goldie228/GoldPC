@@ -1,0 +1,84 @@
+/**
+ * Inventory Page Styles
+ */
+
+.inventory-page {
+  padding: 0;
+}
+
+.inventory-page__header {
+  margin-bottom: 1.5rem;
+}
+
+.inventory-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.inventory-stat {
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.inventory-stat--warning { border-left: 3px solid var(--warning-500); }
+.inventory-stat--danger { border-left: 3px solid var(--danger-500); }
+.inventory-stat--success { border-left: 3px solid var(--success-500); }
+
+.inventory-stat__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.inventory-stat__label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.inventory-table .inventory-sku {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.inventory-table .inventory-name {
+  font-weight: 500;
+}
+
+.inventory-table .inventory-category {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.inventory-stock {
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+}
+
+.inventory-stock--outofstock { background: var(--danger-100); color: var(--danger-700); }
+.inventory-stock--critical { background: var(--danger-100); color: var(--danger-700); }
+.inventory-stock--warning { background: var(--warning-100); color: var(--warning-700); }
+.inventory-stock--ok { background: var(--success-100); color: var(--success-700); }
+
+.stock-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.stock-status--outofstock { background: var(--danger-100); color: var(--danger-700); }
+.stock-status--critical { background: var(--danger-100); color: var(--danger-700); }
+.stock-status--warning { background: var(--warning-100); color: var(--warning-700); }
+.stock-status--ok { background: var(--success-100); color: var(--success-700); }
+
+.inventory-row--outofstock { background-color: rgba(239, 68, 68, 0.05); }
+.inventory-row--critical { background-color: rgba(239, 68, 68, 0.03); }
+.inventory-row--warning { background-color: rgba(245, 158, 11, 0.03); }
