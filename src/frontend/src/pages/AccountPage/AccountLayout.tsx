@@ -51,6 +51,19 @@ export function AccountLayout() {
       label: 'Заказы',
     },
     {
+      to: '/account/repairs',
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M14.7 6.3l-1.4 1.4 2.6 2.6 1.4-1.4c.4-.4.4-1 0-1.4l-1.2-1.2c-.4-.4-1-.4-1.4 0z" />
+          <path d="M11 11l-2 2" />
+          <path d="M9 19v-4a2 2 0 0 0-2-2H3" />
+          <path d="M5 3l4 4" />
+          <path d="M12.5 8.5l-9 9" />
+        </svg>
+      ),
+      label: 'Ремонты',
+    },
+    {
       to: '/wishlist',
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

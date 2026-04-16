@@ -1,0 +1,229 @@
+.ticket-detail {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ticket-detail__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ticket-detail__title {
+  margin: 0;
+  font-size: 24px;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.ticket-detail__timeline {
+  margin-bottom: 24px;
+  background: var(--color-white);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.timeline-track {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  position: relative;
+}
+
+.timeline-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.timeline-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid var(--color-gray-300);
+  background: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 2;
+}
+
+.timeline-dot.completed {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: white;
+}
+
+.timeline-dot.current {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+}
+
+.timeline-label {
+  margin-top: 8px;
+  font-size: 12px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.timeline-line {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 100%;
+  height: 3px;
+  background: var(--color-gray-200);
+  z-index: 1;
+}
+
+.timeline-line.completed {
+  background: var(--color-success);
+}
+
+.ticket-detail__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.card {
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.details-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.detail-label {
+  color: var(--color-gray-600);
+}
+
+.detail-value {
+  font-weight: 500;
+}
+
+.problem-description,
+.technician-notes {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-gray-200);
+}
+
+.subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--color-gray-700);
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.photo-placeholder {
+  aspect-ratio: 1;
+  background: var(--color-gray-100);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-gray-500);
+  font-size: 12px;
+  gap: 4px;
+}
+
+.messages-card {
+  background: var(--color-white);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.messages-list {
+  height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  padding-right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message {
+  max-width: 75%;
+  align-self: flex-start;
+  background: var(--color-gray-100);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.message.my-message {
+  align-self: flex-end;
+  background: var(--color-primary);
+  color: white;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.message-author {
+  font-weight: 600;
+}
+
+.message-time {
+  opacity: 0.7;
+}
+
+.message-form {
+  display: flex;
+  gap: 8px;
+}
+
+.message-input {
+  flex: 1;
+}
+
+.attach-btn,
+.send-btn {
+  padding: 10px 14px;
+}
