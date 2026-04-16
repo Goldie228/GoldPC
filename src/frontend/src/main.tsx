@@ -15,6 +15,10 @@ import './styles/staff.css'
 import './index.css'
 import App from './App.tsx'
 import { performanceMonitor } from './utils/performance'
+import { initializePWA } from './lib/pwa'
+
+// Initialize PWA service worker
+initializePWA()
 
 // Lazy load React Query DevTools - only in development and only when needed
 const ReactQueryDevtools = lazy(() => 
@@ -26,17 +30,20 @@ const ReactQueryDevtools = lazy(() =>
 const enableReactQueryDevtools =
   import.meta.env.DEV && import.meta.env.VITE_ENABLE_QUERY_DEVTOOLS === 'true'
 
-// Создаем QueryClient с настройками по умолчанию
+// Создаем QueryClient с настройками по умолчанию + PWA оффлайн поддержка
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 минут - данные считаются свежими
-      gcTime: 5 * 60 * 1000, // 5 минут - время жизни в кэше (ранее cacheTime)
+      gcTime: 24 * 60 * 60 * 1000, // 24 часа для оффлайн доступа
       retry: 1, // Одна попытка повторного запроса при ошибке
       refetchOnWindowFocus: false, // Не обновлять при фокусе окна
+      networkMode: 'offlineFirst' // Оффлайн-first режим для PWA
     },
     mutations: {
-      retry: 1, // Одна попытка повторного запроса при ошибке мутации
+      retry: 3, // 3 попытки повторного запроса при ошибке мутации
+      networkMode: 'offlineFirst',
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
   },
 })
