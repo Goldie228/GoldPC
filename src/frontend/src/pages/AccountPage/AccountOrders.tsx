@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ordersApi, type Order } from '../../api/orders';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ordersApi, type Order, type OrderItem } from '../../api/orders';
 import { useToastStore } from '../../store/toastStore';
+import { Modal } from '../../components/ui/Modal/Modal';
 import './AccountOrders.css';
 
 function getStatusLabel(status: string): string {
@@ -15,6 +16,19 @@ function getStatusLabel(status: string): string {
     'Cancelled': 'Отменён',
   };
   return labels[status] || status;
+}
+
+function getStatusProgress(status: string): number {
+  const progress: Record<string, number> = {
+    'New': 0,
+    'Processing': 33,
+    'Paid': 50,
+    'InProgress': 75,
+    'Ready': 85,
+    'Completed': 100,
+    'Cancelled': 0,
+  };
+  return progress[status] ?? 0;
 }
 
 /**
@@ -54,8 +68,51 @@ export function AccountOrders() {
     processing: orders.filter(o => o.status === 'Processing').length,
   };
 
-  const handleRepeatOrder = async () => {
-    showToast(`Товары из заказа добавлены в корзину`, 'success');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orderDetails, setOrderDetails] = useState<Order | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+  const handleViewDetails = async (order: Order) => {
+    setSelectedOrder(order);
+    setDetailsLoading(true);
+    setShowDetailsModal(true);
+
+    try {
+      const details = await ordersApi.getOrder(order.id);
+      setOrderDetails(details);
+    } catch {
+      showToast('Ошибка загрузки деталей заказа', 'error');
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  // Simple polling for status updates (every 30 seconds)
+  const refreshOrderStatus = useCallback(async () => {
+    if (selectedOrder && showDetailsModal) {
+      try {
+        const details = await ordersApi.getOrder(selectedOrder.id);
+        setOrderDetails(details);
+
+        // Update order in list
+        setOrders(prev => prev.map(o => o.id === details.id ? details : o));
+      } catch {
+        // Silently fail on polling errors
+      }
+    }
+  }, [selectedOrder, showDetailsModal]);
+
+  useEffect(() => {
+    if (!showDetailsModal) return;
+
+    const interval = setInterval(refreshOrderStatus, 30000);
+    return () => clearInterval(interval);
+  }, [showDetailsModal, refreshOrderStatus]);
+
+  const handleRepeatOrder = async (orderId: string) => {
+    // TODO: Actual implementation to copy items to cart
+    showToast(`Товары из заказа ${orderId} добавлены в корзину`, 'success');
     navigate('/cart');
   };
 
@@ -64,7 +121,7 @@ export function AccountOrders() {
     items: order.items.slice(0, 2).map(i => ({ name: i.productName, quantity: i.quantity })),
     date: new Date(order.createdAt).toLocaleDateString('ru-RU'),
     total: `${order.total.toFixed(2)} BYN`,
-    status: order.status.toLowerCase(),
+    status: order.status,
     statusLabel: getStatusLabel(order.status),
     moreItems: order.items.length > 2 ? order.items.length - 2 : undefined,
   }));
@@ -180,7 +237,11 @@ export function AccountOrders() {
     },
   ];
 
-  const filteredOrders = ordersFormatted.length > 0 ? ordersFormatted : oldOrdersMock;
+  const filteredOrders = ordersFormatted.length > 0
+    ? activeFilter === 'all'
+      ? ordersFormatted
+      : ordersFormatted.filter(order => order.status === activeFilter)
+    : oldOrdersMock;
 
   return (
     <div className="account-orders">
@@ -300,6 +361,92 @@ export function AccountOrders() {
           </svg>
         </button>
       </div>
+
+      {/* Order Details Modal */}
+      <Modal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedOrder(null);
+          setOrderDetails(null);
+        }}
+        title={`Заказ #${selectedOrder?.orderNumber}`}
+        size="large"
+      >
+        {detailsLoading ? (
+          <div className="modal-loading">Загрузка деталей заказа...</div>
+        ) : orderDetails && (
+          <div className="order-details-modal">
+            <div className="order-details-section">
+              <h4>Статус заказа</h4>
+              <div className="order-status-timeline">
+                {[
+                  { status: 'New', label: 'Создан' },
+                  { status: 'Processing', label: 'В обработке' },
+                  { status: 'Paid', label: 'Оплачен' },
+                  { status: 'InProgress', label: 'В пути' },
+                  { status: 'Ready', label: 'Готов к выдаче' },
+                  { status: 'Completed', label: 'Получен' },
+                ].map((step, index, arr) => (
+                  <div key={step.status} className={`timeline-item ${
+                    getStatusProgress(orderDetails.status) >= getStatusProgress(step.status) ? 'timeline-item--completed' : ''
+                  } ${step.status === orderDetails.status ? 'timeline-item--active' : ''}`}>
+                    <div className="timeline-dot"></div>
+                    <div className="timeline-label">{step.label}</div>
+                    {index < arr.length - 1 && <div className="timeline-line"></div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="order-details-grid">
+              <div className="order-details-col">
+                <h4>Состав заказа</h4>
+                <div className="order-items-list">
+                  {orderDetails.items.map((item: OrderItem) => (
+                    <div key={item.id} className="order-item-row">
+                      <span className="item-name">{item.productName}</span>
+                      <span className="item-quantity">× {item.quantity}</span>
+                      <span className="item-price">{item.totalPrice.toFixed(2)} BYN</span>
+                    </div>
+                  ))}
+                  <div className="order-item-row order-item-row--total">
+                    <span>Итого</span>
+                    <span></span>
+                    <span>{orderDetails.total.toFixed(2)} BYN</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="order-details-col">
+                <h4>Данные доставки</h4>
+                <div className="order-info-list">
+                  <div className="info-row">
+                    <span className="info-label">Метод доставки:</span>
+                    <span className="info-value">{orderDetails.deliveryMethod === 'Delivery' ? 'Курьер' : 'Самовывоз'}</span>
+                  </div>
+                  {orderDetails.address && (
+                    <div className="info-row">
+                      <span className="info-label">Адрес:</span>
+                      <span className="info-value">{orderDetails.address}</span>
+                    </div>
+                  )}
+                  <div className="info-row">
+                    <span className="info-label">Оплата:</span>
+                    <span className="info-value">{orderDetails.paymentMethod === 'Online' ? 'Онлайн' : 'При получении'}</span>
+                  </div>
+                  {orderDetails.trackingNumber && (
+                    <div className="info-row">
+                      <span className="info-label">Трек номер:</span>
+                      <span className="info-value">{orderDetails.trackingNumber}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
