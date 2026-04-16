@@ -2,7 +2,7 @@ import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Input } from '../../components/ui';
 import { useToastStore } from '../../store/toastStore';
-import apiClient from '../../api/client';
+import { serviceTicketsApi, type CreateTicketRequest } from '../../api/service-tickets';
 import styles from './ServiceRequestPage.module.css';
 
 /**
@@ -35,6 +35,7 @@ interface ServiceRequestFormData {
   phone: string;
   email: string;
   urgency: string;
+  preferredContact: string;
 }
 
 /**
@@ -61,8 +62,13 @@ interface FormErrors {
  * Отправка заявки на ремонт
  */
 async function submitServiceRequest(data: ServiceRequestFormData): Promise<ServiceRequestResponse> {
-  const response = await apiClient.post<ServiceRequestResponse>('/service-requests', data);
-  return response.data;
+  return serviceTicketsApi.createTicket({
+    deviceType: data.deviceType,
+    brand: data.brand,
+    serialNumber: data.serial,
+    issueDescription: data.problem,
+    preferredContact: data.preferredContact,
+  });
 }
 
 /**
@@ -82,6 +88,7 @@ export function ServiceRequestPage() {
     phone: '',
     email: '',
     urgency: 'normal',
+    preferredContact: 'phone',
   });
 
   // Ошибки валидации
@@ -102,6 +109,7 @@ export function ServiceRequestPage() {
         phone: '',
         email: '',
         urgency: 'normal',
+        preferredContact: 'phone',
       });
       setErrors({});
     },
@@ -349,6 +357,25 @@ export function ServiceRequestPage() {
           />
         </div>
 
+        {/* Способ связи */}
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel} htmlFor="preferredContact">
+            Предпочитаемый способ связи
+          </label>
+          <select
+            id="preferredContact"
+            name="preferredContact"
+            className={styles.select}
+            value={formData.preferredContact}
+            onChange={handleChange}
+          >
+            <option value="phone">По телефону</option>
+            <option value="email">По email</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="telegram">Telegram</option>
+          </select>
+        </div>
+
         {/* Срочность */}
         <div className={styles.formGroup}>
           <label className={styles.formLabel} htmlFor="urgency">
@@ -389,6 +416,7 @@ export function ServiceRequestPage() {
             phone: '',
             email: '',
             urgency: 'normal',
+            preferredContact: 'phone',
           })}>
             Очистить форму
           </Button>

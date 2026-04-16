@@ -29,6 +29,8 @@ const AboutPage = lazy(() => import('./pages/AboutPage/AboutPage').then(m => ({ 
 const ServicesPage = lazy(() => import('./pages/ServicesPage').then(m => ({ default: m.ServicesPage })));
 const ServiceDetailPage = lazy(() => import('./pages/ServiceDetailPage').then(m => ({ default: m.ServiceDetailPage })));
 const ServiceRequestPage = lazy(() => import('./pages/ServiceRequestPage').then(m => ({ default: m.ServiceRequestPage })));
+const AccountRepairs = lazy(() => import('./pages/AccountPage/AccountRepairs').then(m => ({ default: m.AccountRepairs })));
+const TicketDetailPage = lazy(() => import('./pages/MyRepairs/TicketDetailPage').then(m => ({ default: m.TicketDetailPage })));
 const DeliveryPage = lazy(() => import('./pages/info/DeliveryPage').then(m => ({ default: m.DeliveryPage })));
 const PaymentPage = lazy(() => import('./pages/info/PaymentPage').then(m => ({ default: m.PaymentPage })));
 const WarrantyPage = lazy(() => import('./pages/info/WarrantyPage').then(m => ({ default: m.WarrantyPage })));
@@ -174,6 +176,7 @@ const router = createBrowserRouter([
       { path: '/services', element: <ServicesPage /> },
       { path: '/services/:slug', element: <ServiceDetailPage /> },
       { path: '/service-request', element: <ServiceRequestPage /> },
+      { path: '/my-repairs', element: <Navigate to="/account/repairs" replace /> },
       { path: '/about', element: <AboutPage /> },
       { path: '/delivery', element: <DeliveryPage /> },
       { path: '/payment', element: <PaymentPage /> },
@@ -191,6 +194,7 @@ const router = createBrowserRouter([
               { index: true, element: <AccountOverview /> },
               { path: 'profile', element: <AccountProfile /> },
               { path: 'orders', element: <AccountOrders /> },
+              { path: 'repairs', element: <AccountRepairs /> },
               { path: 'wishlist', element: <Navigate to="/wishlist" replace /> },
               { path: 'settings', element: <AccountProfile /> },
             ],
@@ -233,6 +237,7 @@ const router = createBrowserRouter([
       },
       { path: '/orders/:orderNumber/success', element: <OrderSuccessPage /> },
       { path: '/orders/:orderNumber/tracking', element: <OrderTrackingPage /> },
+      { path: '/my-repairs/:ticketId', element: <TicketDetailPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
