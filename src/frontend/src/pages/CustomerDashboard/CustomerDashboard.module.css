@@ -1,0 +1,271 @@
+.dashboard {
+  min-height: calc(100vh - 120px);
+  padding: 2rem 0;
+  background: linear-gradient(180deg, #0f0f11 0%, #151518 100%);
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.welcomeSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+  gap: 2rem;
+}
+
+.welcomeTitle {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin: 0 0 0.5rem 0;
+}
+
+.welcomeSubtitle {
+  color: #a1a1aa;
+  font-size: 1rem;
+  margin: 0;
+  max-width: 600px;
+  line-height: 1.5;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #27272a;
+  background: #18181b;
+  color: #a1a1aa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.iconBtn:hover {
+  background: #27272a;
+  color: #fafafa;
+  border-color: #3f3f46;
+}
+
+.notificationBadge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #d4a574;
+  color: #0f0f11;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section {
+  margin-bottom: 2rem;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fafafa;
+  margin: 0 0 1rem 0;
+}
+
+.actionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.actionCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 16px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.actionCard:hover {
+  background: #1f1f23;
+  border-color: #3f3f46;
+  transform: translateY(-2px);
+}
+
+.actionIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #d4a574 0%, #c89666 100%);
+  color: #0f0f11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.actionContent {
+  flex: 1;
+}
+
+.actionLabel {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fafafa;
+  margin: 0 0 0.25rem 0;
+}
+
+.actionDescription {
+  font-size: 0.875rem;
+  color: #71717a;
+  margin: 0;
+}
+
+.actionArrow {
+  color: #52525b;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.actionCard:hover .actionArrow {
+  transform: translateX(4px);
+  color: #a1a1aa;
+}
+
+.widgetsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+.widgetCard {
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.widgetHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.viewAllLink {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #d4a574;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.viewAllLink:hover {
+  opacity: 0.8;
+}
+
+.viewAllLink svg {
+  width: 16px;
+  height: 16px;
+}
+
+.placeholderList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.placeholderItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem;
+  background: #1f1f23;
+  border-radius: 12px;
+  opacity: 0.7;
+}
+
+.placeholderIcon {
+  color: #52525b;
+  flex-shrink: 0;
+}
+
+.placeholderContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.placeholderLine {
+  height: 12px;
+  background: #27272a;
+  border-radius: 4px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.widgetNotice {
+  margin-top: 1.25rem;
+  padding: 0.75rem;
+  background: rgba(212, 165, 116, 0.1);
+  border-radius: 8px;
+  color: #d4a574;
+  font-size: 0.8125rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem 0;
+  }
+
+  .welcomeSection {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .welcomeTitle {
+    font-size: 1.5rem;
+  }
+
+  .actionsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .widgetsGrid {
+    grid-template-columns: 1fr;
+  }
+}

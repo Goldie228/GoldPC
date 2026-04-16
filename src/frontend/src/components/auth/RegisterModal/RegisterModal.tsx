@@ -161,7 +161,9 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     }
 
     try {
-      await register({ firstName, lastName, email, password });
+      // Clean phone number for backend: remove all non-digit characters except leading +
+      const cleanPhone = phone.replace(/[^\d+]/g, '');
+      await register({ firstName, email, password, phone: cleanPhone });
       onClose();
       // Reset form
       setFirstName('');

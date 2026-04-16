@@ -23,9 +23,6 @@ public class RegisterRequest
     [MaxLength(50, ErrorMessage = "Имя не должно превышать 50 символов")]
     public string FirstName { get; set; } = string.Empty;
 
-    [MinLength(2, ErrorMessage = "Фамилия должна содержать минимум 2 символа")]
-    [MaxLength(50, ErrorMessage = "Фамилия не должна превышать 50 символов")]
-    public string? LastName { get; set; }
 
     [Required(ErrorMessage = "Телефон обязателен")]
     [RegularExpression(@"^\+375\d{9}$", ErrorMessage = "Телефон должен быть в формате +375XXXXXXXXX")]

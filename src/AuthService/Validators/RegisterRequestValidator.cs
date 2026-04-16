@@ -105,15 +105,6 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
             .Matches(@"^[a-zA-Zа-яА-ЯёЁ\s\-'`]+$")
                 .WithMessage("Имя может содержать только буквы, пробелы, дефисы и апострофы");
 
-        // === LAST NAME VALIDATION ===
-        RuleFor(x => x.LastName)
-            .MinimumLength(2)
-                .WithMessage("Фамилия должна содержать минимум 2 символа")
-            .MaximumLength(100)
-                .WithMessage("Фамилия не может превышать 100 символов")
-            .Matches(@"^[a-zA-Zа-яА-ЯёЁ\s\-'`]+$")
-                .WithMessage("Фамилия может содержать только буквы, пробелы, дефисы и апострофы")
-            .When(x => !string.IsNullOrWhiteSpace(x.LastName));
 
         // === PHONE VALIDATION (Belarus Format) ===
         RuleFor(x => x.Phone)
@@ -224,15 +215,8 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
         }
 
         // Проверяем, что пароль не содержит имя
-        if (!string.IsNullOrWhiteSpace(request.FirstName) && 
+        if (!string.IsNullOrWhiteSpace(request.FirstName) &&
             lowerPassword.Contains(request.FirstName.ToLowerInvariant()))
-        {
-            return false;
-        }
-
-        // Проверяем, что пароль не содержит фамилию
-        if (!string.IsNullOrWhiteSpace(request.LastName) &&
-            lowerPassword.Contains(request.LastName.ToLowerInvariant()))
         {
             return false;
         }

@@ -40,7 +40,7 @@ public class AuthService : IAuthService
             Email = request.Email.ToLower(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12),
             FirstName = StringSanitizer.SanitizeText(request.FirstName),
-            LastName = StringSanitizer.SanitizeText(request.LastName),
+            LastName = StringSanitizer.SanitizeText(request.LastName ?? string.Empty),
             Phone = StringSanitizer.SanitizeText(request.Phone),
             Role = UserRole.Client,
             IsActive = true,
