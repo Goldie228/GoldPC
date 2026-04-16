@@ -13,14 +13,29 @@ interface UseAuthReturn {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isImpersonating: boolean;
+  originalUser: User | null;
   login: (credentials: LoginRequest, remember?: boolean) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
+  startImpersonation: (targetUser: User) => void;
+  stopImpersonation: () => void;
 }
 
 export function useAuth(): UseAuthReturn {
   const navigate = useNavigate();
-  const { user, isAuthenticated, isLoading, setUser, setLoading, logout: storeLogout } = useAuthStore();
+  const {
+    user,
+    isAuthenticated,
+    isLoading,
+    isImpersonating,
+    originalUser,
+    setUser,
+    setLoading,
+    logout: storeLogout,
+    startImpersonation: storeStartImpersonation,
+    stopImpersonation: storeStopImpersonation
+  } = useAuthStore();
   const syncWishlistWithServer = useWishlistStore((state) => state.syncWithServer);
 
   /**
@@ -103,9 +118,13 @@ export function useAuth(): UseAuthReturn {
     user,
     isAuthenticated,
     isLoading,
+    isImpersonating,
+    originalUser,
     login,
     register,
     logout,
+    startImpersonation: storeStartImpersonation,
+    stopImpersonation: storeStopImpersonation,
   };
 }
 
