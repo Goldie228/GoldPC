@@ -11,6 +11,7 @@ interface AuthState {
   isLoading: boolean;
   isImpersonating: boolean;
   originalUser: User | null;
+  currentRole: string | null;
 
   // Actions
   setUser: (user: User | null) => void;
@@ -18,12 +19,14 @@ interface AuthState {
   logout: () => void;
   startImpersonation: (targetUser: User) => void;
   stopImpersonation: () => void;
+  switchRole: (role: string) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
+      currentRole: null,
       // isAuthenticated is derived automatically from user presence - NOT PERSISTED
       get isAuthenticated() {
         return !!this.user;
@@ -36,6 +39,8 @@ export const useAuthStore = create<AuthState>()(
         set({
           user,
           isLoading: false,
+          // Автоматически выбираем первую роль при входе
+          currentRole: user ? (user.roles?.[0] ?? user.role ?? null) : null,
         }),
 
       setLoading: (isLoading) =>
@@ -70,6 +75,25 @@ export const useAuthStore = create<AuthState>()(
           user: currentState.originalUser,
           originalUser: null,
           isImpersonating: false,
+          // Reset current role when stopping impersonation
+          currentRole: currentState.originalUser?.roles?.[0] ?? currentState.originalUser?.role ?? null,
+        });
+      },
+
+      switchRole: (role: string) => {
+        const currentState = get();
+
+        if (!currentState.user) return;
+
+        // Validate that user actually has this role
+        const userRoles = currentState.user.roles ?? [currentState.user.role];
+        if (!userRoles.includes(role)) {
+          console.error(`User does not have role: ${role}`);
+          return;
+        }
+
+        set({
+          currentRole: role,
         });
       },
 
