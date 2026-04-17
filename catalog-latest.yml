@@ -1,0 +1,72 @@
+- generic [ref=e17]:
+  - link "Перейти к основному контенту" [ref=e18] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e19]:
+    - link "GoldPC" [ref=e20] [cursor=pointer]:
+      - /url: /
+      - img [ref=e22]
+      - generic [ref=e26]: GoldPC
+    - generic [ref=e27]:
+      - generic [ref=e29]:
+        - img
+        - combobox "Поиск по сайту (/, Ctrl+K)" [ref=e30]
+      - 'button "Корзина: 0 товаров" [ref=e31] [cursor=pointer]':
+        - img [ref=e32]
+      - button "Войти" [ref=e37] [cursor=pointer]:
+        - img [ref=e38]
+      - button "Открыть меню" [ref=e41] [cursor=pointer]:
+        - img [ref=e42]
+  - dialog [ref=e43]:
+    - button [ref=e44] [cursor=pointer]:
+      - img [ref=e45]
+    - navigation [ref=e48]:
+      - link [ref=e49] [cursor=pointer]:
+        - /url: /catalog
+        - text: Каталог
+      - link [ref=e50] [cursor=pointer]:
+        - /url: /pc-builder
+        - text: Конструктор
+      - link [ref=e51] [cursor=pointer]:
+        - /url: /services
+        - text: Сервис
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /about
+        - text: О нас
+    - generic [ref=e53]:
+      - link [ref=e54] [cursor=pointer]:
+        - /url: /wishlist
+        - img [ref=e55]
+        - generic [ref=e57]: Избранное
+      - link [ref=e58] [cursor=pointer]:
+        - /url: /comparison
+        - img [ref=e59]
+        - generic [ref=e64]: Сравнение
+      - link [ref=e65] [cursor=pointer]:
+        - /url: /cart
+        - img [ref=e66]
+        - generic [ref=e70]: Корзина
+      - link [ref=e71] [cursor=pointer]:
+        - /url: /account
+        - img [ref=e72]
+        - generic [ref=e75]: Профиль
+  - main [ref=e76]:
+    - main "Каталог товаров GoldPC" [ref=e77]:
+      - button "Открыть фильтры" [ref=e78] [cursor=pointer]:
+        - img [ref=e79]
+        - generic [ref=e80]: Фильтры
+      - main [ref=e81]:
+        - generic [ref=e82]
+        - generic [ref=e93]
+        - generic "Активные фильтры" [ref=e114]
+        - generic [ref=e129]
+        - navigation "Навигация по страницам каталога" [ref=e454]
+  - contentinfo [ref=e493]:
+    - generic [ref=e494]:
+      - generic [ref=e495]:
+        - generic [ref=e496]
+        - generic [ref=e505]
+        - generic [ref=e532]
+        - generic [ref=e547]
+      - generic [ref=e555]:
+        - generic [ref=e556]: © 2026 GoldPC. Все права защищены.
+        - generic [ref=e557]

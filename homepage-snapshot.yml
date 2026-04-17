@@ -1,0 +1,43 @@
+- generic [ref=e17]:
+  - link "Перейти к основному контенту" [ref=e18] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=e19]:
+    - link "GoldPC" [ref=e20] [cursor=pointer]:
+      - /url: /
+      - img [ref=e22]
+      - generic [ref=e26]: GoldPC
+    - generic [ref=e27]:
+      - generic [ref=e29]
+      - 'button "Корзина: 0 товаров" [ref=e31] [cursor=pointer]'
+      - button "Войти" [ref=e37] [cursor=pointer]
+      - button "Открыть меню" [ref=e41] [cursor=pointer]
+  - dialog [ref=e43]:
+    - button [ref=e44] [cursor=pointer]:
+      - img [ref=e45]
+    - navigation [ref=e48]:
+      - link [ref=e49] [cursor=pointer]:
+        - /url: /catalog
+      - link [ref=e50] [cursor=pointer]:
+        - /url: /pc-builder
+      - link [ref=e51] [cursor=pointer]:
+        - /url: /services
+      - link [ref=e52] [cursor=pointer]:
+        - /url: /about
+    - generic [ref=e53]:
+      - link [ref=e54] [cursor=pointer]:
+        - /url: /wishlist
+      - link [ref=e58] [cursor=pointer]:
+        - /url: /comparison
+      - link [ref=e65] [cursor=pointer]:
+        - /url: /cart
+      - link [ref=e71] [cursor=pointer]:
+        - /url: /account
+  - main [ref=e76]:
+    - generic [ref=e77]:
+      - generic [ref=e82]
+      - generic [ref=e108]
+      - generic [ref=e193]
+  - contentinfo [ref=e386]:
+    - generic [ref=e387]:
+      - generic [ref=e388]
+      - generic [ref=e448]
