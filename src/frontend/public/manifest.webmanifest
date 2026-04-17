@@ -1,0 +1,16 @@
+{
+  "name": "GoldPC",
+  "short_name": "GoldPC",
+  "description": "Интернет-магазин компьютерных комплектующих",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#165DFF",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
