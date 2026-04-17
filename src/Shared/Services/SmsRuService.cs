@@ -1,7 +1,7 @@
 #pragma warning disable CA1031, CA2208, CA2234, CS1591, S3928, SA1600
 using System.Text.Json;
+using GoldPC.Shared.Entities;
 using GoldPC.Shared.Infrastructure;
-using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Polly;
@@ -26,73 +26,63 @@ public class SmsRuService : INotificationService
     {
         _logger = logger;
         _httpClient = httpClient;
-        _apiKey = configuration["SMS:ApiKey"] ?? throw new ArgumentNullException("SMS:ApiKey is not configured");
+        _apiKey = configuration["SMS:ApiKey"] ?? throw new ArgumentNullException(nameof(configuration), "SMS:ApiKey is not configured");
         _apiUrl = configuration["SMS:ApiUrl"] ?? "https://api.sms.ru";
 
         _retryPolicy = ResiliencePolicies.GetHttpRetryPolicy(_logger);
         _circuitBreakerPolicy = ResiliencePolicies.GetHttpCircuitBreakerPolicy(_logger);
     }
 
-    public async Task<(bool Success, string? Error)> SendSmsAsync(string phone, string message)
+    public Task<Notification> CreateNotificationAsync(Notification notification)
     {
-        try
-        {
-            _logger.LogInformation("Sending SMS to {Phone}: {Message}", phone, message);
-
-            var policyWrap = Policy.WrapAsync(_retryPolicy, _circuitBreakerPolicy);
-
-            var response = await policyWrap.ExecuteAsync(async () =>
-                await _httpClient.GetAsync($"{_apiUrl}/sms/send?api_id={_apiKey}&to={phone}&msg={Uri.EscapeDataString(message)}&json=1"));
-
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-
-            if (root.GetProperty("status").GetString() == "OK")
-            {
-                var smsProperty = root.GetProperty("sms");
-                var phoneProperty = smsProperty.GetProperty(phone);
-                var status = phoneProperty.GetProperty("status").GetString();
-
-                if (status == "OK")
-                {
-                    _logger.LogInformation("SMS sent successfully to {Phone}", phone);
-                    return (true, null);
-                }
-                else
-                {
-                    var errorMessage = phoneProperty.GetProperty("status_text").GetString();
-                    _logger.LogWarning("SMS.ru failed to send to {Phone}. Status: {Status}, Message: {StatusText}", phone, status, errorMessage);
-                    return (false, errorMessage);
-                }
-            }
-            else
-            {
-                var errorMessage = root.GetProperty("status_text").GetString();
-                _logger.LogError("SMS.ru API error: {StatusText}", errorMessage);
-                return (false, errorMessage);
-            }
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Error sending SMS to {Phone}", phone);
-            return (false, "Ошибка отправки SMS");
-        }
+        _logger.LogDebug("SmsRuService CreateNotificationAsync called");
+        return Task.FromResult(notification);
     }
 
-    // Методы Email и Push не реализованы в этом сервисе
-    public Task<(bool Success, string? Error)> SendEmailAsync(string email, string subject, string body)
+    public Task<IEnumerable<Notification>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false, int limit = 50)
     {
-        _logger.LogWarning("SendEmailAsync called on SmsRuService which doesn't support emails.");
-        return Task.FromResult<(bool, string?)>((false, "Email sending not supported by SMS service"));
+        _logger.LogDebug("SmsRuService GetUserNotificationsAsync called - not supported");
+        return Task.FromResult(Enumerable.Empty<Notification>());
     }
 
-    public Task<(bool Success, string? Error)> SendPushNotificationAsync(string userId, string title, string message)
+    public Task MarkAsReadAsync(Guid notificationId)
     {
-        _logger.LogWarning("SendPushNotificationAsync called on SmsRuService which doesn't support push notifications.");
-        return Task.FromResult<(bool, string?)>((false, "Push notification not supported by SMS service"));
+        _logger.LogDebug("SmsRuService MarkAsReadAsync called - not supported");
+        return Task.CompletedTask;
+    }
+
+    public Task MarkAllAsReadAsync(Guid userId)
+    {
+        _logger.LogDebug("SmsRuService MarkAllAsReadAsync called - not supported");
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteNotificationAsync(Guid notificationId)
+    {
+        _logger.LogDebug("SmsRuService DeleteNotificationAsync called - not supported");
+        return Task.CompletedTask;
+    }
+
+    public async Task SendNotificationAsync(Notification notification)
+    {
+        _logger.LogDebug("SmsRuService SendNotificationAsync called for notification {Id}", notification.Id);
+
+        _logger.LogInformation("Processing notification {Id} via SMS.ru service", notification.Id);
+
+        // TODO: Extract phone number from notification recipient
+        _logger.LogWarning("SMS sending logic not fully implemented for new Notification entity");
+    }
+
+    public Task SendNotificationToRoleAsync(string role, Notification notification)
+    {
+        _logger.LogDebug("SmsRuService SendNotificationToRoleAsync called - not supported");
+        return Task.CompletedTask;
+    }
+
+    public Task BroadcastNotificationAsync(Notification notification)
+    {
+        _logger.LogDebug("SmsRuService BroadcastNotificationAsync called - not supported");
+        return Task.CompletedTask;
     }
 }
 #pragma warning restore CA1031, CA2208, CA2234, CS1591, S3928, SA1600

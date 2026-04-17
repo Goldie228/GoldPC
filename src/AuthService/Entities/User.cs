@@ -35,7 +35,7 @@ public class User : BaseEntity
     /// <summary>
     /// Множественные роли пользователя
     /// </summary>
-    public ICollection<UserRole> Roles { get; set; } = new List<UserRole> { UserRole.Client };
+    public List<UserRole> Roles { get; set; } = new List<UserRole> { UserRole.Client };
     
     /// <summary>
     /// Имя

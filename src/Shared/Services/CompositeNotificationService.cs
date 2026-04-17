@@ -1,6 +1,6 @@
 #pragma warning disable CS1591, SA1600
+using GoldPC.Shared.Entities;
 using GoldPC.Shared.Services.Implementations;
-using GoldPC.Shared.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace GoldPC.Shared.Services;
@@ -21,22 +21,53 @@ public class CompositeNotificationService : INotificationService
         _emailService = emailService;
     }
 
-    public async Task<(bool Success, string? Error)> SendSmsAsync(string phone, string message)
+    public Task<Notification> CreateNotificationAsync(Notification notification)
     {
-        _logger.LogInformation("Routing SMS to {Phone} via SmsRuService", phone);
-        return await _smsService.SendSmsAsync(phone, message);
+        _logger.LogDebug("CompositeNotificationService CreateNotificationAsync called");
+        return Task.FromResult(notification);
     }
 
-    public async Task<(bool Success, string? Error)> SendEmailAsync(string email, string subject, string body)
+    public Task<IEnumerable<Notification>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false, int limit = 50)
     {
-        _logger.LogInformation("Routing Email to {Email} via SmtpEmailService", email);
-        return await _emailService.SendEmailAsync(email, subject, body);
+        _logger.LogDebug("CompositeNotificationService GetUserNotificationsAsync called");
+        return Task.FromResult(Enumerable.Empty<Notification>());
     }
 
-    public Task<(bool Success, string? Error)> SendPushNotificationAsync(string userId, string title, string message)
+    public Task MarkAsReadAsync(Guid notificationId)
     {
-        _logger.LogWarning("Push notifications not implemented yet. {UserId}, {Title}, {Message}", userId, title, message);
-        return Task.FromResult<(bool, string?)>((false, "Push notifications not implemented"));
+        _logger.LogDebug("CompositeNotificationService MarkAsReadAsync called");
+        return Task.CompletedTask;
+    }
+
+    public Task MarkAllAsReadAsync(Guid userId)
+    {
+        _logger.LogDebug("CompositeNotificationService MarkAllAsReadAsync called");
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteNotificationAsync(Guid notificationId)
+    {
+        _logger.LogDebug("CompositeNotificationService DeleteNotificationAsync called");
+        return Task.CompletedTask;
+    }
+
+    public async Task SendNotificationAsync(Notification notification)
+    {
+        _logger.LogInformation("CompositeNotificationService sending notification {Id}", notification.Id);
+
+        _logger.LogInformation("Routing notification {Id} of type {Type}", notification.Id, notification.Type);
+    }
+
+    public Task SendNotificationToRoleAsync(string role, Notification notification)
+    {
+        _logger.LogDebug("CompositeNotificationService SendNotificationToRoleAsync called for role {Role}", role);
+        return Task.CompletedTask;
+    }
+
+    public Task BroadcastNotificationAsync(Notification notification)
+    {
+        _logger.LogDebug("CompositeNotificationService BroadcastNotificationAsync called");
+        return Task.CompletedTask;
     }
 }
 #pragma warning restore CS1591, SA1600

@@ -1,4 +1,5 @@
 using GoldPC.AuthService.Entities;
+using GoldPC.SharedKernel.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace GoldPC.AuthService.Data;
@@ -48,6 +49,7 @@ public class AuthDbContext : DbContext
             entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Phone).IsRequired().HasMaxLength(20);
             entity.Property(e => e.Role).HasConversion<string>().HasMaxLength(20);
+            entity.Ignore(e => e.Roles);
             entity.Property(e => e.CreatedAt).IsRequired();
         });
         

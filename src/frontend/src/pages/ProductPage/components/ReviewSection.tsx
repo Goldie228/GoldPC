@@ -102,8 +102,12 @@ export function ReviewSection({
   useEffect(() => {
     catalogApi
       .getProductReviews(productId, 1, 20)
-      .then((res) => setReviews(res.data))
-      .catch(() => {})
+      .then((res) => setReviews(res?.data || []))
+      .catch(() => {
+        // Gracefully handle missing reviews endpoint - default to empty list
+        setReviews([]);
+        console.warn('Reviews endpoint not available, showing empty state');
+      })
       .finally(() => setLoading(false));
   }, [productId]);
 

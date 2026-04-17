@@ -216,7 +216,7 @@ public record FilterFacetsResponse
 /// </summary>
 [ApiController]
 [Route("api/v1/admin")]
-[Authorize(Roles = "Manager,Admin")]
+[Authorize(Roles = "Manager,Admin,Master")]
 public class AdminCatalogController : ControllerBase
 {
     private readonly ICatalogService _catalogService;
@@ -267,7 +267,7 @@ public class AdminCatalogController : ControllerBase
     /// Удалить товар (мягкое удаление, требуются права админа)
     /// </summary>
     [HttpDelete("products/{productId:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Master")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteProduct(Guid productId)
@@ -286,7 +286,7 @@ public class AdminCatalogController : ControllerBase
 /// </summary>
 [ApiController]
 [Route("api/v1/admin/data")]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Master")]
 public class AdminDataController : ControllerBase
 {
     private readonly ICatalogService _catalogService;

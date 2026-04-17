@@ -92,11 +92,11 @@ export function Header() {
     };
 
     if (isProfileDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('click', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
     };
   }, [isProfileDropdownOpen, handleProfileDropdownClose]);
 
@@ -283,13 +283,14 @@ export function Header() {
           {/* Profile Button / Auth Dropdown */}
           <div className={styles.profileWrapper} ref={profileDropdownRef}>
             <button
-              className={styles.iconBtn}
+              className={`${styles.iconBtn} ${isAuthenticated ? styles.iconBtnActive : ''}`}
               aria-label={isAuthenticated ? 'Профиль' : 'Войти'}
               onClick={handleProfileDropdownToggle}
               aria-expanded={isProfileDropdownOpen}
               type="button"
             >
               <User />
+              {isAuthenticated && <span className={styles.authIndicator} />}
             </button>
 
             {/* Profile Dropdown */}
@@ -300,7 +301,8 @@ export function Header() {
                   <div className={styles.authButtons}>
                     <button
                       className={styles.authBtn}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         openLoginModal();
                         handleProfileDropdownClose();
                       }}
@@ -310,7 +312,8 @@ export function Header() {
                     </button>
                     <button
                       className={`${styles.authBtn} ${styles.authBtnPrimary}`}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         openRegisterModal();
                         handleProfileDropdownClose();
                       }}

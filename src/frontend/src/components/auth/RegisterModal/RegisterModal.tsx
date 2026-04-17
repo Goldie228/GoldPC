@@ -87,6 +87,21 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value)) return 'Пароль должен содержать минимум один специальный символ';
     if (/(.)\1{2,}/.test(value)) return 'Пароль не может содержать 3 и более одинаковых символов подряд';
     if (/012|123|234|345|456|567|678|789|890|abc|bcd|cde|def/i.test(value)) return 'Пароль не может содержать последовательные символы';
+
+    // Проверка на наличие персональных данных в пароле
+    if (firstName && value.toLowerCase().includes(firstName.toLowerCase())) {
+      return 'Пароль не должен содержать ваше имя';
+    }
+    if (lastName && value.toLowerCase().includes(lastName.toLowerCase())) {
+      return 'Пароль не должен содержать вашу фамилию';
+    }
+    if (email) {
+      const emailUsername = email.split('@')[0];
+      if (value.toLowerCase().includes(emailUsername.toLowerCase())) {
+        return 'Пароль не должен содержать имя пользователя из email';
+      }
+    }
+
     return '';
   };
 
@@ -163,7 +178,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     try {
       // Clean phone number for backend: remove all non-digit characters except leading +
       const cleanPhone = phone.replace(/[^\d+]/g, '');
-      await register({ firstName, email, password, phone: cleanPhone });
+      await register({ firstName, lastName, email, password, phone: cleanPhone });
       onClose();
       // Reset form
       setFirstName('');
@@ -332,13 +347,29 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             checked={termsAccepted}
             onChange={(e) => setTermsAccepted(e.target.checked)}
           />
-          <label htmlFor="register-terms" className={styles.checkboxLabel}>
+          <label htmlFor="register-terms" className={styles.checkboxLabel} onClick={(e) => {
+            // Prevent label click from triggering nested links
+            if ((e.target as HTMLElement).tagName !== 'A') {
+              e.preventDefault();
+              setTermsAccepted(!termsAccepted);
+            }
+          }}>
             Я принимаю{' '}
-            <a href="/terms" target="_blank" rel="noopener noreferrer">
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
               условия использования
             </a>{' '}
             и{' '}
-            <a href="/privacy" target="_blank" rel="noopener noreferrer">
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
               политику конфиденциальности
             </a>
           </label>

@@ -27,10 +27,7 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       user: null,
       currentRole: null,
-      // isAuthenticated is derived automatically from user presence - NOT PERSISTED
-      get isAuthenticated() {
-        return !!this.user;
-      },
+      isAuthenticated: false,
       isLoading: false,
       isImpersonating: false,
       originalUser: null,
@@ -38,6 +35,7 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) =>
         set({
           user,
+          isAuthenticated: !!user,
           isLoading: false,
           // Автоматически выбираем первую роль при входе
           currentRole: user ? (user.roles?.[0] ?? user.role ?? null) : null,
@@ -113,6 +111,7 @@ export const useAuthStore = create<AuthState>()(
 
           set({
             user: null,
+            isAuthenticated: false,
             isLoading: false,
           });
         }

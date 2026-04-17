@@ -1,1 +1,0 @@
-[GET] http://localhost:5173/api/v1/catalog/products?pageSize=5 => [200] OK

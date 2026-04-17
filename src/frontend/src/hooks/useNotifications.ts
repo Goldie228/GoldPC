@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, createContext, useContext } from 'react';
+import React, { useEffect, useCallback, useState, createContext, useContext } from 'react';
 import * as signalR from '@microsoft/signalr';
 
 export interface Notification {
