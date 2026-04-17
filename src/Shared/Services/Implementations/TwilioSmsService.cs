@@ -1,6 +1,6 @@
 #pragma warning disable CA1031, CA1859, CS1591, SA1117, SA1203, SA1204, SA1600
 using System.Collections.Concurrent;
-using GoldPC.Shared.Services.Interfaces;
+using GoldPC.Shared.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Polly;
@@ -45,75 +45,76 @@ public class TwilioSmsService : INotificationService
                     onReset: () => _logger.LogInformation("Twilio Circuit Breaker CLOSED")));
     }
 
-    public async Task<(bool Success, string? Error)> SendSmsAsync(string phone, string message)
+    public Task<Notification> CreateNotificationAsync(Notification notification)
     {
-        if (string.IsNullOrEmpty(phone))
-        {
-            return (false, "Phone number is empty");
-        }
-
-        // Anti-spam check (FT-2.5.2.3)
-        if (IsRateLimited(phone))
-        {
-            _logger.LogWarning("SMS rate limit exceeded for {Phone}", phone);
-            return (false, "Превышен лимит отправки SMS. Попробуйте позже.");
-        }
-
-        _logger.LogInformation("Sending SMS to {Phone}", phone);
-
-        try
-        {
-            return await _resiliencePolicy.ExecuteAsync<(bool Success, string? Error)>(async () =>
-            {
-                var fromNumber = _configuration["Twilio:FromNumber"] ?? "+1234567890";
-                var result = await MessageResource.CreateAsync(
-                    body: message,
-                    from: new PhoneNumber(fromNumber),
-                    to: new PhoneNumber(phone));
-
-                if (result.ErrorCode != null)
-                {
-                    _logger.LogError("Twilio error {Code}: {Message}", result.ErrorCode, result.ErrorMessage);
-                    return (false, result.ErrorMessage);
-                }
-
-                _logger.LogInformation("SMS sent successfully to {Phone}. SID: {Sid}", phone, result.Sid);
-                return (true, null);
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to send SMS to {Phone} after retries", phone);
-            return (false, "Ошибка отправки SMS. Сервис временно недоступен.");
-        }
+        _logger.LogDebug("TwilioSmsService CreateNotificationAsync called");
+        return Task.FromResult(notification);
     }
 
-    // Эти методы реализуются в EmailService (NotificationServiceMock объединяет их, но в продакшене лучше разделять)
-    public Task<(bool Success, string? Error)> SendEmailAsync(string email, string subject, string body)
-        => Task.FromResult<(bool, string?)>((false, "TwilioSmsService handles only SMS"));
+    public Task<IEnumerable<Notification>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false, int limit = 50)
+    {
+        _logger.LogDebug("TwilioSmsService GetUserNotificationsAsync called - not supported");
+        return Task.FromResult(Enumerable.Empty<Notification>());
+    }
 
-    public Task<(bool Success, string? Error)> SendPushNotificationAsync(string userId, string title, string message)
-        => Task.FromResult<(bool, string?)>((false, "TwilioSmsService handles only SMS"));
+    public Task MarkAsReadAsync(Guid notificationId)
+    {
+        _logger.LogDebug("TwilioSmsService MarkAsReadAsync called - not supported");
+        return Task.CompletedTask;
+    }
+
+    public Task MarkAllAsReadAsync(Guid userId)
+    {
+        _logger.LogDebug("TwilioSmsService MarkAllAsReadAsync called - not supported");
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteNotificationAsync(Guid notificationId)
+    {
+        _logger.LogDebug("TwilioSmsService DeleteNotificationAsync called - not supported");
+        return Task.CompletedTask;
+    }
+
+    public async Task SendNotificationAsync(Notification notification)
+    {
+        _logger.LogDebug("TwilioSmsService SendNotificationAsync called for notification {Id}", notification.Id);
+
+        _logger.LogInformation("Processing notification {Id} via Twilio service", notification.Id);
+
+        // TODO: Extract phone number from notification recipient
+        _logger.LogWarning("SMS sending logic not fully implemented for new Notification entity");
+    }
+
+    public Task SendNotificationToRoleAsync(string role, Notification notification)
+    {
+        _logger.LogDebug("TwilioSmsService SendNotificationToRoleAsync called - not supported");
+        return Task.CompletedTask;
+    }
+
+    public Task BroadcastNotificationAsync(Notification notification)
+    {
+        _logger.LogDebug("TwilioSmsService BroadcastNotificationAsync called - not supported");
+        return Task.CompletedTask;
+    }
 
     private static bool IsRateLimited(string phone)
     {
         var now = DateTime.UtcNow;
-        var limitTime = now.AddHours(-1);
-
-        var history = _rateLimiter.GetOrAdd(phone, _ => new List<DateTime>());
-        lock (history)
+        if (!_rateLimiter.TryGetValue(phone, out var timestamps))
         {
-            // Убираем старые записи
-            history.RemoveAll(t => t < limitTime);
-
-            if (history.Count >= MaxSmsPerHourPerNumber)
-            {
-                return true;
-            }
-
-            history.Add(now);
-            return false;
+            timestamps = new List<DateTime>();
+            _rateLimiter[phone] = timestamps;
         }
+
+        timestamps.RemoveAll(t => t < now.AddHours(-1));
+
+        if (timestamps.Count >= MaxSmsPerHourPerNumber)
+        {
+            return true;
+        }
+
+        timestamps.Add(now);
+        return false;
     }
 }
 #pragma warning restore CA1031, CA1859, CS1591, SA1117, SA1203, SA1204, SA1600

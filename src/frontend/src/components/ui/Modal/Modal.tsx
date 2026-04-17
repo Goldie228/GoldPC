@@ -67,7 +67,7 @@ export function Modal({
         }
       };
     }
-  }, [isOpen]);
+  }, [isOpen, handleKeyDown]);
 
   if (!isOpen) {
     return null;

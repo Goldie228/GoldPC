@@ -1,7 +1,7 @@
 #pragma warning disable CA1307, CA1716, CS1591, SA1117, SA1600
 using System.Diagnostics;
 using System.Text.Json;
-using GoldPC.Shared.Services.Interfaces;
+using GoldPC.Shared.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace GoldPC.Shared.Services.Implementations;
@@ -23,72 +23,54 @@ public class NotificationServiceLoggingDecorator : INotificationService
         _logger = logger;
     }
 
-    public async Task<(bool Success, string? Error)> SendSmsAsync(string phone, string message)
+    public async Task<Notification> CreateNotificationAsync(Notification notification)
     {
-        var stopwatch = Stopwatch.StartNew();
-        var maskedPhone = MaskPhone(phone);
-
-        _logger.LogInformation(
-            "Outgoing SMS Request: To={Phone}, Message='{Message}'",
-            maskedPhone, message.Length > 20 ? message[..20] + "..." : message);
-
-        var result = await _inner.SendSmsAsync(phone, message);
-        stopwatch.Stop();
-
-        if (result.Success)
-        {
-            _logger.LogInformation("SMS Response SUCCESS in {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
-        }
-        else
-        {
-            _logger.LogError("SMS Response FAILURE in {ElapsedMs}ms: {Error}", stopwatch.ElapsedMilliseconds, result.Error);
-        }
-
+        _logger.LogInformation("Creating notification: Id={NotificationId}, Type={NotificationType}", notification.Id, notification.Type);
+        var result = await _inner.CreateNotificationAsync(notification);
+        _logger.LogInformation("Notification created successfully: Id={NotificationId}", result.Id);
         return result;
     }
 
-    public async Task<(bool Success, string? Error)> SendEmailAsync(string email, string subject, string body)
+    public async Task<IEnumerable<Notification>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false, int limit = 50)
     {
-        var stopwatch = Stopwatch.StartNew();
-        var maskedEmail = MaskEmail(email);
-
-        _logger.LogInformation(
-            "Outgoing Email Request: To={Email}, Subject='{Subject}'",
-            maskedEmail, subject);
-
-        var result = await _inner.SendEmailAsync(email, subject, body);
-        stopwatch.Stop();
-
-        if (result.Success)
-        {
-            _logger.LogInformation("Email Response SUCCESS in {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
-        }
-        else
-        {
-            _logger.LogError("Email Response FAILURE in {ElapsedMs}ms: {Error}", stopwatch.ElapsedMilliseconds, result.Error);
-        }
-
-        return result;
+        _logger.LogDebug("Getting notifications for user: UserId={UserId}, UnreadOnly={UnreadOnly}, Limit={Limit}", userId, unreadOnly, limit);
+        return await _inner.GetUserNotificationsAsync(userId, unreadOnly, limit);
     }
 
-    public async Task<(bool Success, string? Error)> SendPushNotificationAsync(string userId, string title, string message)
+    public async Task MarkAsReadAsync(Guid notificationId)
     {
-        var stopwatch = Stopwatch.StartNew();
-        _logger.LogInformation("Outgoing Push Request: UserId={UserId}, Title='{Title}'", userId, title);
+        _logger.LogDebug("Marking notification as read: Id={NotificationId}", notificationId);
+        await _inner.MarkAsReadAsync(notificationId);
+    }
 
-        var result = await _inner.SendPushNotificationAsync(userId, title, message);
-        stopwatch.Stop();
+    public async Task MarkAllAsReadAsync(Guid userId)
+    {
+        _logger.LogDebug("Marking all notifications as read for user: UserId={UserId}", userId);
+        await _inner.MarkAllAsReadAsync(userId);
+    }
 
-        if (result.Success)
-        {
-            _logger.LogInformation("Push Response SUCCESS in {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
-        }
-        else
-        {
-            _logger.LogError("Push Response FAILURE in {ElapsedMs}ms: {Error}", stopwatch.ElapsedMilliseconds, result.Error);
-        }
+    public async Task DeleteNotificationAsync(Guid notificationId)
+    {
+        _logger.LogInformation("Deleting notification: Id={NotificationId}", notificationId);
+        await _inner.DeleteNotificationAsync(notificationId);
+    }
 
-        return result;
+    public async Task SendNotificationAsync(Notification notification)
+    {
+        _logger.LogInformation("Sending notification: Id={NotificationId}, Type={NotificationType}, UserId={UserId}", notification.Id, notification.Type, notification.UserId);
+        await _inner.SendNotificationAsync(notification);
+    }
+
+    public async Task SendNotificationToRoleAsync(string role, Notification notification)
+    {
+        _logger.LogInformation("Sending notification to role: Role={Role}, NotificationId={NotificationId}", role, notification.Id);
+        await _inner.SendNotificationToRoleAsync(role, notification);
+    }
+
+    public async Task BroadcastNotificationAsync(Notification notification)
+    {
+        _logger.LogInformation("Broadcasting notification: Id={NotificationId}, Type={NotificationType}", notification.Id, notification.Type);
+        await _inner.BroadcastNotificationAsync(notification);
     }
 
     private static string MaskPhone(string phone)
@@ -98,24 +80,19 @@ public class NotificationServiceLoggingDecorator : INotificationService
             return phone;
         }
 
-        return phone[..3] + "****" + phone[^3..];
+        return phone[..3] + "****" + phone[^2..];
     }
 
     private static string MaskEmail(string email)
     {
-        if (string.IsNullOrEmpty(email) || !email.Contains('@'))
-        {
+        if (string.IsNullOrEmpty(email))
             return email;
-        }
 
         var parts = email.Split('@');
-        var local = parts[0];
-        if (local.Length <= 2)
-        {
-            return "***@" + parts[1];
-        }
+        if (parts.Length != 2)
+            return email;
 
-        return local[..2] + "***@" + parts[1];
+        var username = parts[0].Length > 2 ? parts[0][..2] + "****" : parts[0];
+        return username + "@" + parts[1];
     }
 }
-#pragma warning restore CA1307, CA1716, CS1591, SA1117, SA1600

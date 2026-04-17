@@ -1,6 +1,6 @@
 #pragma warning disable CS1591, SA1201, SA1204, SA1402, SA1600, SA1616
 using System.Collections.Concurrent;
-using GoldPC.Shared.Services.Interfaces;
+using GoldPC.Shared.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace GoldPC.Shared.Services.Mocks;
@@ -16,17 +16,22 @@ public class NotificationServiceMock : INotificationService
     /// <summary>
     /// Статический список всех отправленных уведомлений для проверки в тестах
     /// </summary>
-    private static readonly ConcurrentBag<SentNotification> _sentNotifications = new();
+    private static readonly ConcurrentBag<Notification> _sentNotifications = new();
+    private static readonly ConcurrentDictionary<Guid, Notification> _storedNotifications = new();
 
     /// <summary>
     /// Gets получить все отправленные уведомления (для тестирования)
     /// </summary>
-    public static IReadOnlyList<SentNotification> SentNotifications => _sentNotifications.ToList().AsReadOnly();
+    public static IReadOnlyList<Notification> SentNotifications => _sentNotifications.ToList().AsReadOnly();
 
     /// <summary>
     /// Очистить историю отправленных уведомлений (использовать в [TestSetup])
     /// </summary>
-    public static void ClearHistory() => _sentNotifications.Clear();
+    public static void ClearHistory()
+    {
+        _sentNotifications.Clear();
+        _storedNotifications.Clear();
+    }
 
     /// <summary>
     /// Gets or sets a value indicating whether включить логирование в консоль
@@ -43,149 +48,139 @@ public class NotificationServiceMock : INotificationService
         _logger = logger;
     }
 
-    public async Task<(bool Success, string? Error)> SendSmsAsync(string phone, string message)
+    public async Task<Notification> CreateNotificationAsync(Notification notification)
     {
         if (SimulatedDelayMs > 0)
         {
             await Task.Delay(SimulatedDelayMs);
         }
 
-        var notification = new SentNotification
-        {
-            Id = Guid.NewGuid(),
-            Type = NotificationType.Sms,
-            Recipient = phone,
-            Message = message,
-            SentAt = DateTime.UtcNow,
-            Success = true
-        };
+        notification.Id = notification.Id == Guid.Empty ? Guid.NewGuid() : notification.Id;
+        notification.CreatedAt = DateTime.UtcNow;
 
-        _sentNotifications.Add(notification);
+        _storedNotifications[notification.Id] = notification;
 
         if (EnableConsoleLogging)
         {
-            _logger.LogInformation("[Mock NotificationService] 📱 SMS sent to {Phone}: {Message}", phone, message);
+            _logger.LogInformation("[Mock NotificationService] Created notification: Id={Id}, Type={Type}", notification.Id, notification.Type);
         }
 
-        return (true, null);
+        return notification;
     }
 
-    public async Task<(bool Success, string? Error)> SendEmailAsync(string email, string subject, string body)
+    public async Task<IEnumerable<Notification>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false, int limit = 50)
     {
         if (SimulatedDelayMs > 0)
         {
             await Task.Delay(SimulatedDelayMs);
         }
 
-        var notification = new SentNotification
-        {
-            Id = Guid.NewGuid(),
-            Type = NotificationType.Email,
-            Recipient = email,
-            Subject = subject,
-            Message = body,
-            SentAt = DateTime.UtcNow,
-            Success = true
-        };
+        var notifications = _storedNotifications.Values
+            .Where(n => n.UserId == userId)
+            .Where(n => !unreadOnly || !n.IsRead)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(limit);
 
-        _sentNotifications.Add(notification);
-
-        if (EnableConsoleLogging)
-        {
-            _logger.LogInformation("[Mock NotificationService] 📧 Email sent to {Email} with subject: {Subject}", email, subject);
-        }
-
-        return (true, null);
+        return notifications;
     }
 
-    public async Task<(bool Success, string? Error)> SendPushNotificationAsync(string userId, string title, string message)
+    public async Task MarkAsReadAsync(Guid notificationId)
     {
         if (SimulatedDelayMs > 0)
         {
             await Task.Delay(SimulatedDelayMs);
         }
 
-        var notification = new SentNotification
+        if (_storedNotifications.TryGetValue(notificationId, out var notification))
         {
-            Id = Guid.NewGuid(),
-            Type = NotificationType.Push,
-            Recipient = userId,
-            Subject = title,
-            Message = message,
-            SentAt = DateTime.UtcNow,
-            Success = true
-        };
+            notification.IsRead = true;
+            notification.ReadAt = DateTime.UtcNow;
+        }
+
+        if (EnableConsoleLogging)
+        {
+            _logger.LogInformation("[Mock NotificationService] Marked notification as read: Id={Id}", notificationId);
+        }
+    }
+
+    public async Task MarkAllAsReadAsync(Guid userId)
+    {
+        if (SimulatedDelayMs > 0)
+        {
+            await Task.Delay(SimulatedDelayMs);
+        }
+
+        foreach (var notification in _storedNotifications.Values.Where(n => n.UserId == userId))
+        {
+            notification.IsRead = true;
+            notification.ReadAt = DateTime.UtcNow;
+        }
+
+        if (EnableConsoleLogging)
+        {
+            _logger.LogInformation("[Mock NotificationService] Marked all notifications as read for user: UserId={UserId}", userId);
+        }
+    }
+
+    public async Task DeleteNotificationAsync(Guid notificationId)
+    {
+        if (SimulatedDelayMs > 0)
+        {
+            await Task.Delay(SimulatedDelayMs);
+        }
+
+        _storedNotifications.TryRemove(notificationId, out _);
+
+        if (EnableConsoleLogging)
+        {
+            _logger.LogInformation("[Mock NotificationService] Deleted notification: Id={Id}", notificationId);
+        }
+    }
+
+    public async Task SendNotificationAsync(Notification notification)
+    {
+        if (SimulatedDelayMs > 0)
+        {
+            await Task.Delay(SimulatedDelayMs);
+        }
 
         _sentNotifications.Add(notification);
 
         if (EnableConsoleLogging)
         {
-            _logger.LogInformation("[Mock NotificationService] 🔔 Push notification sent to User {UserId}: {Title} - {Message}", userId, title, message);
+            _logger.LogInformation("[Mock NotificationService] Sent notification: Id={Id}, Type={Type}, Recipient={UserId}",
+                notification.Id, notification.Type, notification.UserId);
+        }
+    }
+
+    public async Task SendNotificationToRoleAsync(string role, Notification notification)
+    {
+        if (SimulatedDelayMs > 0)
+        {
+            await Task.Delay(SimulatedDelayMs);
         }
 
-        return (true, null);
-    }
+        _sentNotifications.Add(notification);
 
-    /// <summary>
-    /// Получить уведомления по типу (для тестирования)
-    /// </summary>
-    /// <returns></returns>
-    public static IEnumerable<SentNotification> GetByType(NotificationType type)
-    {
-        return _sentNotifications.Where(n => n.Type == type);
-    }
-
-    /// <summary>
-    /// Получить уведомления по получателю (для тестирования)
-    /// </summary>
-    /// <returns></returns>
-    public static IEnumerable<SentNotification> GetByRecipient(string recipient)
-    {
-        return _sentNotifications.Where(n => n.Recipient == recipient);
-    }
-
-    /// <summary>
-    /// Получить последние N уведомлений (для тестирования)
-    /// </summary>
-    /// <returns></returns>
-    public static IEnumerable<SentNotification> GetRecent(int count = 10)
-    {
-        return _sentNotifications.OrderByDescending(n => n.SentAt).Take(count);
-    }
-}
-
-/// <summary>
-/// Запись об отправленном уведомлении (для тестирования)
-/// </summary>
-public class SentNotification
-{
-    public Guid Id { get; set; }
-
-    public NotificationType Type { get; set; }
-
-    public string Recipient { get; set; } = string.Empty;
-
-    public string? Subject { get; set; }
-
-    public string Message { get; set; } = string.Empty;
-
-    public DateTime SentAt { get; set; }
-
-    public bool Success { get; set; }
-
-    public string? Error { get; set; }
-
-    public override string ToString()
-    {
-        var typeEmoji = Type switch
+        if (EnableConsoleLogging)
         {
-            NotificationType.Sms => "📱",
-            NotificationType.Email => "📧",
-            NotificationType.Push => "🔔",
-            _ => "📨"
-        };
-        var msgPreview = Message.Length > 50 ? Message[..50] + "..." : Message;
-        return $"{typeEmoji} [{Type}] To: {Recipient} | {(Subject != null ? $"Subject: {Subject} | " : string.Empty)}Message: {msgPreview}";
+            _logger.LogInformation("[Mock NotificationService] Sent notification to role: Role={Role}, NotificationId={Id}", role, notification.Id);
+        }
+    }
+
+    public async Task BroadcastNotificationAsync(Notification notification)
+    {
+        if (SimulatedDelayMs > 0)
+        {
+            await Task.Delay(SimulatedDelayMs);
+        }
+
+        _sentNotifications.Add(notification);
+
+        if (EnableConsoleLogging)
+        {
+            _logger.LogInformation("[Mock NotificationService] Broadcasted notification: Id={Id}, Type={Type}", notification.Id, notification.Type);
+        }
     }
 }
 #pragma warning restore CS1591, SA1201, SA1204, SA1402, SA1600, SA1616

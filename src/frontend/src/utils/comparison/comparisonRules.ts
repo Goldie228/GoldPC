@@ -62,6 +62,12 @@ export const CATEGORY_ALIASES: Record<string, ProductCategory> = {
   мыши: 'mouse',
   наушник: 'headphones',
   наушники: 'headphones',
+  fan: 'fan',
+  fans: 'fan',
+  вентилятор: 'fan',
+  вентиляторы: 'fan',
+  корпусный_вентилятор: 'fan',
+  корпусные_вентиляторы: 'fan',
   /** Имя категории с витрины API (`Category.Name`), напр. «Системы охлаждения» → `системы_охлаждения`. */
   системы_охлаждения: 'cooling',
 };
@@ -75,6 +81,7 @@ const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
   psu: 'psu',
   case: 'cases',
   cooling: 'coolers',
+  fan: 'fans',
   monitor: 'monitors',
   keyboard: 'keyboards',
   mouse: 'mice',
@@ -215,6 +222,17 @@ const CATEGORY_RULES: Record<ProductCategory, RuleMap> = {
     fan_count: rule('none', 'number'),
     type: rule('none', 'text'),
     waterblock_display: rule('max', 'boolean'),
+    antivibration_pads: rule('max', 'boolean'),
+  },
+  fan: {
+    fan_size: rule('none', 'number'),
+    airflow_cfm: rule('max', 'number'),
+    noise_dba: rule('min', 'number'),
+    rpm: rule('none', 'number'),
+    static_pressure: rule('max', 'number'),
+    pwm: rule('max', 'boolean'),
+    rgb: rule('none', 'boolean'),
+    bearing_type: rule('none', 'text'),
     antivibration_pads: rule('max', 'boolean'),
   },
   monitor: {

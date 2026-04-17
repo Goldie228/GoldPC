@@ -59,15 +59,24 @@ export function useAuth(): UseAuthReturn {
    */
   const login = useCallback(async (credentials: LoginRequest, remember = false) => {
     setLoading(true);
-    
+
     try {
       const response = await authService.login(credentials);
-      
+
       saveTokens(response.accessToken, response.refreshToken, remember);
       setUser(response.user);
-      await syncWishlistWithServer();
-      
+
+      // Сначала редиректим пользователя на главную
       navigate('/');
+
+      // А потом уже в фоне синхронизируем избранное
+      // Не используем await чтобы не блокировать поток логина
+      // Если запрос упадет - это не должно ломать сам вход
+      syncWishlistWithServer().catch(() => {
+        // Игнорируем ошибки синхронизации избранного при входе
+        console.debug('Wishlist sync failed on login, will retry on next page load');
+      });
+
     } catch (error) {
       storeLogout();
       throw error;
@@ -79,17 +88,25 @@ export function useAuth(): UseAuthReturn {
    */
   const register = useCallback(async (data: RegisterRequest) => {
     setLoading(true);
-    
+
     try {
       const response = await authService.register(data);
-      
+
       // При регистрации всегда сохраняем в localStorage
       localStorage.setItem('accessToken', response.accessToken);
       localStorage.setItem('refreshToken', response.refreshToken);
       setUser(response.user);
-      await syncWishlistWithServer();
-      
+
+      // Сначала редиректим пользователя на главную
       navigate('/');
+
+      // А потом уже в фоне синхронизируем избранное
+      // Не используем await чтобы не блокировать поток регистрации
+      syncWishlistWithServer().catch(() => {
+        // Игнорируем ошибки синхронизации избранного при регистрации
+        console.debug('Wishlist sync failed on register, will retry on next page load');
+      });
+
     } catch (error) {
       storeLogout();
       throw error;

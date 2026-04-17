@@ -4,6 +4,7 @@ using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
 using GoldPC.SharedKernel.Utilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace GoldPC.AuthService.Services;
 
@@ -15,15 +16,17 @@ public class AuthService : IAuthService
     private readonly AuthDbContext _context;
     private readonly IJwtService _jwtService;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthService> _logger;
     private const int MaxFailedAttempts = 5;
     private const int LockoutMinutes = 15;
     private const int RefreshTokenExpirationDays = 7;
 
-    public AuthService(AuthDbContext context, IJwtService jwtService, IConfiguration configuration)
+    public AuthService(AuthDbContext context, IJwtService jwtService, IConfiguration configuration, ILogger<AuthService> logger)
     {
         _context = context;
         _jwtService = jwtService;
         _configuration = configuration;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -40,16 +43,12 @@ public class AuthService : IAuthService
             Email = request.Email.ToLower(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12),
             FirstName = StringSanitizer.SanitizeText(request.FirstName),
-            LastName = StringSanitizer.SanitizeText(request.LastName ?? string.Empty),
             Phone = StringSanitizer.SanitizeText(request.Phone),
-            Role = UserRole.Client,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
 
         _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
         var accessToken = _jwtService.GenerateAccessToken(user);
         var refreshToken = await CreateRefreshTokenAsync(user.Id, null);
 
@@ -65,57 +64,69 @@ public class AuthService : IAuthService
     /// <inheritdoc />
     public async Task<(AuthResponse? Response, string? Error)> LoginAsync(LoginRequest request, string ipAddress)
     {
-        var user = await _context.Users
-            .Include(u => u.RefreshTokens)
-            .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
-
-        if (user == null)
+        try
         {
-            return (null, "Неверные учётные данные");
-        }
+            var user = await _context.Users
+                .Include(u => u.RefreshTokens)
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
 
-        if (user.LockedUntil.HasValue && user.LockedUntil.Value > DateTime.UtcNow)
-        {
-            var remainingMinutes = (int)(user.LockedUntil.Value - DateTime.UtcNow).TotalMinutes;
-            return (null, $"Учётная запись заблокирована. Попробуйте через {remainingMinutes} минут");
-        }
-
-        if (!user.IsActive)
-        {
-            return (null, "Учётная запись деактивирована");
-        }
-
-        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-        {
-            user.FailedLoginAttempts++;
-            
-            if (user.FailedLoginAttempts >= MaxFailedAttempts)
+            // Explicitly load Roles collection (EF Core does not load it automatically)
+            if (user != null)
             {
-                user.LockedUntil = DateTime.UtcNow.AddMinutes(LockoutMinutes);
-                await _context.SaveChangesAsync();
-                return (null, $"Превышено количество попыток входа. Учётная запись заблокирована на {LockoutMinutes} минут");
+                await _context.Entry(user).Collection(u => u.Roles).LoadAsync();
             }
-            
-            await _context.SaveChangesAsync();
-            return (null, "Неверные учётные данные");
+
+            if (user == null)
+            {
+                return (null, "Неверные учётные данные");
+            }
+
+            if (user.LockedUntil.HasValue && user.LockedUntil.Value > DateTime.UtcNow)
+            {
+                var remainingMinutes = (int)(user.LockedUntil.Value - DateTime.UtcNow).TotalMinutes;
+                return (null, $"Учётная запись заблокирована. Попробуйте через {remainingMinutes} минут");
+            }
+
+            if (!user.IsActive)
+            {
+                return (null, "Учётная запись деактивирована");
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            {
+                user.FailedLoginAttempts++;
+
+                if (user.FailedLoginAttempts >= MaxFailedAttempts)
+                {
+                    user.LockedUntil = DateTime.UtcNow.AddMinutes(LockoutMinutes);
+                    await _context.SaveChangesAsync();
+                    return (null, $"Превышено количество попыток входа. Учётная запись заблокирована на {LockoutMinutes} минут");
+                }
+
+                await _context.SaveChangesAsync();
+                return (null, "Неверные учётные данные");
+            }
+
+            user.FailedLoginAttempts = 0;
+            user.LockedUntil = null;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            var accessToken = _jwtService.GenerateAccessToken(user);
+            var refreshToken = await CreateRefreshTokenAsync(user.Id, ipAddress);
+
+            return (new AuthResponse
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken.Token,
+                ExpiresIn = 900,
+                User = MapToUserDto(user)
+            }, null);
         }
-
-        user.FailedLoginAttempts = 0;
-        user.LockedUntil = null;
-        user.UpdatedAt = DateTime.UtcNow;
-
-        var accessToken = _jwtService.GenerateAccessToken(user);
-        var refreshToken = await CreateRefreshTokenAsync(user.Id, ipAddress);
-
-        await _context.SaveChangesAsync();
-
-        return (new AuthResponse
+        catch (Exception ex)
         {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken.Token,
-            ExpiresIn = 900,
-            User = MapToUserDto(user)
-        }, null);
+            _logger.LogError(ex, "Критическая ошибка при входе пользователя {Email}", request.Email);
+            return (null, "Произошла ошибка при входе в систему. Пожалуйста, попробуйте позже.");
+        }
     }
 
     /// <inheritdoc />
@@ -136,8 +147,6 @@ public class AuthService : IAuthService
 
         var newRefreshToken = await CreateRefreshTokenAsync(refreshToken.UserId, ipAddress);
         var accessToken = _jwtService.GenerateAccessToken(refreshToken.User);
-
-        await _context.SaveChangesAsync();
 
         return (new AuthResponse
         {
@@ -220,7 +229,7 @@ public class AuthService : IAuthService
         return (true, null);
     }
 
-    private Task<RefreshToken> CreateRefreshTokenAsync(Guid userId, string? ipAddress)
+    private async Task<RefreshToken> CreateRefreshTokenAsync(Guid userId, string? ipAddress)
     {
         var refreshToken = new RefreshToken
         {
@@ -233,7 +242,8 @@ public class AuthService : IAuthService
         };
 
         _context.RefreshTokens.Add(refreshToken);
-        return Task.FromResult(refreshToken);
+        await _context.SaveChangesAsync();
+        return refreshToken;
     }
 
     private static UserDto MapToUserDto(User user)

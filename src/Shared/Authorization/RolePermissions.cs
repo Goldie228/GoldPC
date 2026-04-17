@@ -151,6 +151,10 @@ public static class RolePermissions
             Permissions.OrdersView,
             Permissions.OrdersManage,
 
+            // Users
+            Permissions.UsersView,
+            Permissions.UsersManageRoles,
+
             // Categories
             Permissions.CategoriesView,
 

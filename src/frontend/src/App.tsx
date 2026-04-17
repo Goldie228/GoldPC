@@ -24,14 +24,13 @@ const ComparisonPage = lazy(() => import('./pages/ComparisonPage/ComparisonPage'
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
 const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage/OrderSuccessPage').then(m => ({ default: m.OrderSuccessPage })));
 const OrderTrackingPage = lazy(() => import('./pages/OrderTrackingPage/OrderTrackingPage').then(m => ({ default: m.OrderTrackingPage })));
-const LoginPage = lazy(() => import('./pages/LoginPage/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage/AboutPage').then(m => ({ default: m.AboutPage })));
 const ServicesPage = lazy(() => import('./pages/ServicesPage').then(m => ({ default: m.ServicesPage })));
 const ServiceDetailPage = lazy(() => import('./pages/ServiceDetailPage').then(m => ({ default: m.ServiceDetailPage })));
 const ServiceRequestPage = lazy(() => import('./pages/ServiceRequestPage').then(m => ({ default: m.ServiceRequestPage })));
 const AccountRepairs = lazy(() => import('./pages/AccountPage/AccountRepairs').then(m => ({ default: m.AccountRepairs })));
-const TicketDetailPage = lazy(() => import('./pages/MyRepairs/TicketDetailPage').then(m => ({ default: m.TicketDetailPage })));
+const ClientTicketDetailPage = lazy(() => import('./pages/MyRepairs/TicketDetailPage').then(m => ({ default: m.TicketDetailPage })));
 const DeliveryPage = lazy(() => import('./pages/info/DeliveryPage').then(m => ({ default: m.DeliveryPage })));
 const PaymentPage = lazy(() => import('./pages/info/PaymentPage').then(m => ({ default: m.PaymentPage })));
 const WarrantyPage = lazy(() => import('./pages/info/WarrantyPage').then(m => ({ default: m.WarrantyPage })));
@@ -46,7 +45,8 @@ const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage')
 const UserFormPage = lazy(() => import('./pages/admin/UserFormPage').then(m => ({ default: m.UserFormPage })));
 const CatalogManagementPage = lazy(() => import('./pages/admin/CatalogManagementPage').then(m => ({ default: m.CatalogManagementPage })));
 const CoordinatorDashboard = lazy(() => import('./pages/admin/CoordinatorDashboard').then(m => ({ default: m.CoordinatorDashboard })));
-const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
+// AuditLogPage temporarily commented out - missing page file
+// const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
 const StubManager = lazy(() => import('./components/admin').then(m => ({ default: m.StubManager })));
 const OrdersPage = lazy(() => import('./pages/manager/OrdersPage').then(m => ({ default: m.OrdersPage })));
 const OrderDetailPage = lazy(() => import('./pages/manager/OrderDetailPage').then(m => ({ default: m.OrderDetailPage })));
@@ -191,6 +191,9 @@ const router = createBrowserRouter([
         element: <AuthGuard />,
         children: [
           { path: '/dashboard', element: <CustomerDashboard /> },
+          { path: '/orders', element: <Navigate to="/account/orders" replace /> },
+          { path: '/repairs', element: <Navigate to="/account/repairs" replace /> },
+          { path: '/profile', element: <Navigate to="/account/profile" replace /> },
           {
             path: '/account',
             element: <AccountLayout />,
@@ -205,17 +208,30 @@ const router = createBrowserRouter([
           },
         ],
       },
-      { path: '/login', element: <LoginPage /> },
-      { path: '/register', element: <RegisterPage /> },
+      { path: '/login', element: <Navigate to="/" replace /> },
+      { path: '/register', element: <Navigate to="/" replace /> },
+      {
+        path: '/admin',
+        element: () => {
+          const { user } = useAuthStore();
+          if (!user) return <Navigate to="/" replace />;
+          if (user.role === 'Admin') return <Navigate to="/admin/users" replace />;
+          if (['Manager', 'Master'].includes(user.role)) return <Navigate to="/manager/dashboard" replace />;
+          if (user.role === 'Accountant') return <Navigate to="/accountant/reports" replace />;
+          return <Navigate to="/dashboard" replace />;
+        }
+      },
       {
         element: <RoleGuard allowedRoles={['Admin']} />,
         children: [
+          { path: '/admin', element: <Navigate to="/admin/users" replace /> },
+          { path: '/admin/users', element: <UserManagementPage /> },
           { path: '/admin/users', element: <UserManagementPage /> },
           { path: '/admin/users/new', element: <UserFormPage /> },
           { path: '/admin/users/:id/edit', element: <UserFormPage /> },
           { path: '/admin/catalog', element: <CatalogManagementPage /> },
           { path: '/admin/coordinator', element: <CoordinatorDashboard /> },
-          { path: '/admin/audit-log', element: <AuditLogPage /> },
+          // { path: '/admin/audit-log', element: <AuditLogPage /> },
           { path: '/admin/stubs', element: <StubManager /> },
         ],
       },
