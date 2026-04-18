@@ -113,7 +113,7 @@ export function SearchDropdown() {
         inputRef.current?.blur();
         return;
       }
-      if (e.key === '/' || (e.key.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey))) {
+      if (e.key === '/' || (e.key?.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey))) {
         const t = e.target as HTMLElement | null;
         if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) {
           return;
