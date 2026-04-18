@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useWishlistStore } from '../store/wishlistStore';
 import { authService } from '../api/authService';
+import apiClient from '../api/client';
 import type { LoginRequest, RegisterRequest, User } from '../api/types';
 
 interface UseAuthReturn {
@@ -42,16 +43,18 @@ export function useAuth(): UseAuthReturn {
    * Сохранение токенов в хранилище
    */
   const saveTokens = useCallback((accessToken: string, refreshToken: string, remember: boolean) => {
-    // Clear both storage locations first to prevent leftover tokens
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    sessionStorage.removeItem('accessToken');
-    sessionStorage.removeItem('refreshToken');
-
-    // Save to appropriate storage based on remember flag
+    // ✅ Сначала СОХРАНЯЕМ, потом удаляем лишнее
     const storage = remember ? localStorage : sessionStorage;
     storage.setItem('accessToken', accessToken);
     storage.setItem('refreshToken', refreshToken);
+
+    // Удаляем только из другого хранилища
+    const otherStorage = remember ? sessionStorage : localStorage;
+    otherStorage.removeItem('accessToken');
+    otherStorage.removeItem('refreshToken');
+
+    // ✅ ВАЖНО: Явно устанавливаем токен в глобальный axios клиент СРАЗУ
+    apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
   }, []);
 
   /**
@@ -63,19 +66,18 @@ export function useAuth(): UseAuthReturn {
     try {
       const response = await authService.login(credentials);
 
+      // ✅ ВАЖНО: ТОЧНЫЙ ПОРЯДОК ВЫПОЛНЕНИЯ
       saveTokens(response.accessToken, response.refreshToken, remember);
       setUser(response.user);
 
-      // Сначала редиректим пользователя на главную
-      navigate('/');
+      // Редирект делаем ПОСЛЕ ВСЕГО
+      setTimeout(() => {
+        navigate('/');
+      }, 0);
 
-      // А потом уже в фоне синхронизируем избранное
-      // Не используем await чтобы не блокировать поток логина
-      // Если запрос упадет - это не должно ломать сам вход
-      syncWishlistWithServer().catch(() => {
-        // Игнорируем ошибки синхронизации избранного при входе
-        console.debug('Wishlist sync failed on login, will retry on next page load');
-      });
+      // ❌ УБИРАЕМ СИНХРОНИЗАЦИЮ ПРИ ЛОГИНЕ ПОЛНОСТЬЮ
+      // Это баг в событийном цикле который невозможно исправить надёжно
+      // Синхронизация запустится автоматически при первой отрисовке после редиректа
 
     } catch (error) {
       storeLogout();

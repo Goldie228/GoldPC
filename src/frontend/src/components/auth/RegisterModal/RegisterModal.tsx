@@ -190,6 +190,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       setFieldErrors({});
     } catch (error: any) {
       console.error('Registration error:', error);
+      console.error('Full error response:', error.response?.data);
       const backendErrors = error?.response?.data?.errors;
 
       if (backendErrors && typeof backendErrors === 'object') {
@@ -250,13 +251,17 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
           <input
             id="register-firstName"
             type="text"
-            className={styles.input}
+            className={`${styles.input} ${fieldErrors.firstName ? styles.inputError : ''}`}
             placeholder="Ваше имя"
             value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
+            onChange={(e) => {
+              setFirstName(e.target.value);
+              setFieldErrors(prev => ({ ...prev, firstName: undefined }));
+            }}
             required
             autoComplete="given-name"
           />
+          {fieldErrors.firstName && <div className={styles.fieldError}>{fieldErrors.firstName}</div>}
         </div>
 
         <div className={styles.field}>
@@ -266,15 +271,19 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
           <input
             id="register-phone"
             type="tel"
-            className={styles.input}
+            className={`${styles.input} ${fieldErrors.phone ? styles.inputError : ''}`}
             placeholder="+375 (29) 123-45-67"
             value={phone}
-            onChange={handlePhoneChange}
+            onChange={(e) => {
+              handlePhoneChange(e);
+              setFieldErrors(prev => ({ ...prev, phone: undefined }));
+            }}
             required
             autoComplete="tel"
             inputMode="numeric"
             maxLength={19}
           />
+          {fieldErrors.phone && <div className={styles.fieldError}>{fieldErrors.phone}</div>}
         </div>
 
         <div className={styles.field}>
@@ -284,13 +293,17 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
           <input
             id="register-email"
             type="email"
-            className={styles.input}
+            className={`${styles.input} ${fieldErrors.email ? styles.inputError : ''}`}
             placeholder="your@email.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setFieldErrors(prev => ({ ...prev, email: undefined }));
+            }}
             required
             autoComplete="email"
           />
+          {fieldErrors.email && <div className={styles.fieldError}>{fieldErrors.email}</div>}
         </div>
 
         <div className={styles.field}>
@@ -330,13 +343,17 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
           <input
             id="register-confirmPassword"
             type="password"
-            className={styles.input}
+            className={`${styles.input} ${fieldErrors.confirmPassword ? styles.inputError : ''}`}
             placeholder="Повторите пароль"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              setFieldErrors(prev => ({ ...prev, confirmPassword: undefined }));
+            }}
             required
             autoComplete="new-password"
           />
+          {fieldErrors.confirmPassword && <div className={styles.fieldError}>{fieldErrors.confirmPassword}</div>}
         </div>
 
         <div className={styles.checkboxGroup}>

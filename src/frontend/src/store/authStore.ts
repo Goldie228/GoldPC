@@ -22,109 +22,128 @@ interface AuthState {
   switchRole: (role: string) => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set, get) => ({
-      user: null,
-      currentRole: null,
-      isAuthenticated: false,
-      isLoading: false,
-      isImpersonating: false,
-      originalUser: null,
-
-      setUser: (user) =>
-        set({
-          user,
-          isAuthenticated: !!user,
-          isLoading: false,
-          // Автоматически выбираем первую роль при входе
-          currentRole: user ? (user.roles?.[0] ?? user.role ?? null) : null,
-        }),
-
-      setLoading: (isLoading) =>
-        set({ isLoading }),
-
-      startImpersonation: (targetUser: User) => {
-        const currentState = get();
-
-        // Only Admin users are allowed to perform impersonation
-        if (!currentState.user || currentState.user.role !== 'Admin') {
-          console.error('Security violation: Insufficient permissions for user impersonation');
-          return;
-        }
-
-        set({
-          originalUser: currentState.user,
-          user: targetUser,
-          isImpersonating: true,
-        });
-      },
-
-      stopImpersonation: () => {
-        const currentState = get();
-
-        // Only allow stopping impersonation if actually impersonating
-        if (!currentState.isImpersonating) {
-          console.error('Cannot stop impersonation: not currently impersonating');
-          return;
-        }
-
-        set({
-          user: currentState.originalUser,
-          originalUser: null,
-          isImpersonating: false,
-          // Reset current role when stopping impersonation
-          currentRole: currentState.originalUser?.roles?.[0] ?? currentState.originalUser?.role ?? null,
-        });
-      },
-
-      switchRole: (role: string) => {
-        const currentState = get();
-
-        if (!currentState.user) return;
-
-        // Validate that user actually has this role
-        const userRoles = currentState.user.roles ?? [currentState.user.role];
-        if (!userRoles.includes(role)) {
-          console.error(`User does not have role: ${role}`);
-          return;
-        }
-
-        set({
-          currentRole: role,
-        });
-      },
-
-      logout: async () => {
-        try {
-          // В Production делаем logout через Keycloak first
-          if (import.meta.env.PROD) {
-            const keycloakModule = await import('../services/keycloak');
-            await keycloakModule.doLogout();
-          }
-        } finally {
-          // Always clear local storage and state regardless of server outcome
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          sessionStorage.removeItem('accessToken');
-          sessionStorage.removeItem('refreshToken');
-
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-        }
-      },
-    }),
-    {
-      name: 'auth-storage',
-      partialize: (state) => ({
-        user: state.user,
-      }),
-      migrate: (persistedState: unknown, _version: number) => {
-        return persistedState as AuthState;
-      },
+// ✅ ВРУЧНУЮ ВОССТАНАВЛИВАЕМ СОСТОЯНИЕ БЕЗ БАГАНУТОГО PERSIST MIDDLEWARE
+const getInitialState = (): Partial<AuthState> => {
+  try {
+    const saved = localStorage.getItem('auth-storage');
+    if (saved) {
+      const data = JSON.parse(saved);
+      return {
+        user: data.user ?? null,
+        isAuthenticated: !!data.user,
+        currentRole: data.user ? (data.user.roles?.[0] ?? data.user.role ?? null) : null,
+      };
     }
-  )
+  } catch {}
+
+  return {
+    user: null,
+    isAuthenticated: false,
+    currentRole: null,
+  };
+};
+
+const initialState = getInitialState();
+
+export const useAuthStore = create<AuthState>()(
+  (set, get) => ({
+    ...initialState,
+    isLoading: false,
+    isImpersonating: false,
+    originalUser: null,
+
+    setUser: (user) => {
+      const newState = {
+        user,
+        isAuthenticated: !!user,
+        isLoading: false,
+        currentRole: user ? (user.roles?.[0] ?? user.role ?? null) : null,
+      };
+
+      // ✅ ВРУЧНУЮ СОХРАНЯЕМ В LOCALSTORAGE
+      localStorage.setItem('auth-storage', JSON.stringify({
+        user: newState.user,
+        currentRole: newState.currentRole,
+      }));
+
+      set(newState);
+    },
+
+    setLoading: (isLoading) =>
+      set({ isLoading }),
+
+    startImpersonation: (targetUser: User) => {
+      const currentState = get();
+
+      // Only Admin users are allowed to perform impersonation
+      if (!currentState.user || currentState.user.role !== 'Admin') {
+        console.error('Security violation: Insufficient permissions for user impersonation');
+        return;
+      }
+
+      set({
+        originalUser: currentState.user,
+        user: targetUser,
+        isImpersonating: true,
+      });
+    },
+
+    stopImpersonation: () => {
+      const currentState = get();
+
+      // Only allow stopping impersonation if actually impersonating
+      if (!currentState.isImpersonating) {
+        console.error('Cannot stop impersonation: not currently impersonating');
+        return;
+      }
+
+      set({
+        user: currentState.originalUser,
+        originalUser: null,
+        isImpersonating: false,
+        // Reset current role when stopping impersonation
+        currentRole: currentState.originalUser?.roles?.[0] ?? currentState.originalUser?.role ?? null,
+      });
+    },
+
+    switchRole: (role: string) => {
+      const currentState = get();
+
+      if (!currentState.user) return;
+
+      // Validate that user actually has this role
+      const userRoles = currentState.user.roles ?? [currentState.user.role];
+      if (!userRoles.includes(role)) {
+        console.error(`User does not have role: ${role}`);
+        return;
+      }
+
+      set({
+        currentRole: role,
+      });
+    },
+
+    logout: async () => {
+      try {
+        // В Production делаем logout через Keycloak first
+        if (import.meta.env.PROD) {
+          const keycloakModule = await import('../services/keycloak');
+          await keycloakModule.doLogout();
+        }
+      } finally {
+        // Always clear local storage and state regardless of server outcome
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        sessionStorage.removeItem('accessToken');
+        sessionStorage.removeItem('refreshToken');
+        localStorage.removeItem('auth-storage');
+
+        set({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
+      }
+    },
+  })
 );

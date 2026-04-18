@@ -35,7 +35,8 @@ export function Header() {
   const wishlistCount = useWishlistCount();
   const comparisonCount = useComparisonCount();
   const prevCartCountRef = useRef(cartCount);
-  const { isAuthenticated, user, logout, currentRole, switchRole } = useAuthStore();
+  const { user, logout, currentRole, switchRole } = useAuthStore();
+  const isAuthenticated = !!user;
   const { openLoginModal, openRegisterModal } = useAuthModalStore();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);

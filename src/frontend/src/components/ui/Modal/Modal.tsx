@@ -54,20 +54,22 @@ export function Modal({
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
-      previousActiveElement.current = document.activeElement as HTMLElement;
-      document.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden';
+    if (!isOpen) return;
 
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-        document.body.style.overflow = '';
-        if (previousActiveElement.current) {
-          previousActiveElement.current.focus();
-        }
-      };
-    }
-  }, [isOpen, handleKeyDown]);
+    previousActiveElement.current = document.activeElement as HTMLElement;
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+      if (previousActiveElement.current && document.contains(previousActiveElement.current)) {
+        previousActiveElement.current.focus();
+      }
+    };
+    // ✅ Убираем handleKeyDown из зависимостей
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;

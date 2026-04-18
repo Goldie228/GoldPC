@@ -60,6 +60,24 @@
   border-color: var(--border-accent);
 }
 
+.inputError {
+  border-color: var(--error);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.inputError:focus {
+  border-color: var(--error);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+/* Field error message */
+.fieldError {
+  font-size: 0.75rem;
+  color: var(--error);
+  margin-top: -4px;
+  margin-left: 2px;
+}
+
 /* Hint text */
 .hint {
   font-size: 0.7rem;

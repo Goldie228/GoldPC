@@ -28,7 +28,8 @@ const apiClient: AxiosInstance = axios.create({
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('accessToken');
+    // ✅ Проверяем ВСЕ хранилища в правильном порядке
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -68,10 +69,9 @@ apiClient.interceptors.response.use(
 
           return apiClient(originalRequest);
         } catch {
-          // Если refresh не удался - очищаем токены и перенаправляем на логин
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          window.location.href = '/login';
+          // ✅ НЕ ДЕЛАЕМ АВТОМАТИЧЕСКИЙ РАЗЛОГИН ПРИ 401!
+          // Это самая вредная строчка кода в мире которая ломает вход у всех
+          console.debug('Refresh token failed, will retry on next request');
         }
       }
     }

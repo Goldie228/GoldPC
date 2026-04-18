@@ -49,6 +49,8 @@ public class AuthService : IAuthService
         };
 
         _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
         var accessToken = _jwtService.GenerateAccessToken(user);
         var refreshToken = await CreateRefreshTokenAsync(user.Id, null);
 
@@ -70,11 +72,6 @@ public class AuthService : IAuthService
                 .Include(u => u.RefreshTokens)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
 
-            // Explicitly load Roles collection (EF Core does not load it automatically)
-            if (user != null)
-            {
-                await _context.Entry(user).Collection(u => u.Roles).LoadAsync();
-            }
 
             if (user == null)
             {
