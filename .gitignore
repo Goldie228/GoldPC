@@ -177,11 +177,104 @@ scripts/comparison-audit/audit-notes/
 *.turbo/
 *.cursor/
 
-# Claude Code local
+# ==================================================
+# AI/Agent Tools
+# ==================================================
+# Claude Code
 .claude/
 
+# Cursor IDE
+.cursor/
+
+# Cline
+.cline/
+
+# Serena
+.serena/
+
+# Generic agents directory
+.agents/
+
+# Playwright MCP
+.playwright-mcp/
+
+# RAG store
+.rag-store/
+*.rag-store/
+
+# Virtual environments for MCP/RAG
+.venv-lightrag/
+.venv-mcp/
+
+# MCP Lightrag scripts
+mcp_lightrag/
+
+# Skills lock file
+skills-lock.json
+
+# Project temp files
+project/
+
+# Git worktrees
+worktrees/
+
+# ==================================================
+# Test Artifacts
+# ==================================================
+# Playwright test results
+test-results/
+test-screenshots/
+*.last-run.json
+
+# Dependency cruiser
+.dependency-cruiser-frontend.json
+.dependency-cruiser-frontend.js
+
+# ==================================================
+# Security Scanners (config files)
+# ==================================================
+.snyk
+.semgrep.yml
+
+# ==================================================
 # MCP and SQLite databases
+# ==================================================
 .mcp.json
 .mcp-sqlite.db
 sqlite_mcp_server.db
-worktrees/
+
+# ==================================================
+# Debug/Temp Files (root only)
+# ==================================================
+# Screenshots in root
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+
+# YAML state dumps in root
+/*.yml
+/*.yaml
+
+# Test scripts in root
+/*.mjs
+
+# Git logs
+.git-log-tmp.txt
+
+# Docker test compose
+docker-compose.test.yml
+
+# SQL backups in root
+/*.sql
+
+# Docker install scripts
+get-docker.sh
+
+# Word docs
+*.doc
+*.docx
+
+# AI process docs in root
+/AI_*.md
+/AI_*.mmd
