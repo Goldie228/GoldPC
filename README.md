@@ -108,11 +108,35 @@ docker compose -f docker/docker-compose.yml ps
 
 | Сервис | URL |
 |--------|-----|
-| **Frontend** | http://localhost:3000 |
-| **Catalog API** | http://localhost:5001/swagger |
-| **PC Builder API** | http://localhost:5002/swagger |
-| **Auth API** | http://localhost:5003/swagger |
-| **Adminer (DB UI)** | http://localhost:8080 |
+| **Frontend** | http://localhost:3002 |
+| **Catalog API** | http://localhost:9081/swagger |
+| **Auth API** | http://localhost:9082/swagger |
+| **Adminer (DB UI)** | http://localhost:9090 |
+
+> **Примечание:** Сервисы PCBuilder, Orders, Services, Warranty и Reporting существуют в коде (`src/`), но не включены в `docker-compose.yml` для базовой конфигурации.
+
+---
+
+## 🐰 Message Broker
+
+Для асинхронного взаимодействия между сервисами используется RabbitMQ:
+
+| Сервис | URL |
+|--------|-----|
+| **RabbitMQ Management** | http://localhost:15672 |
+| **RabbitMQ AMQP** | amqp://localhost:5672 |
+
+**Логин/пароль:** `guest` / `guest`
+
+---
+
+## 🗄️ Базы данных
+
+| База данных | Порт | Описание |
+|-------------|------|----------|
+| **PostgreSQL (Primary)** | 5434 | Основная БД (`goldpc`, `goldpc_catalog`) |
+| **PostgreSQL (Replica)** | 5435 | Реплика для чтения |
+| **Redis** | 6379 | Кэш и сессии |
 
 ### Остановка проекта
 
