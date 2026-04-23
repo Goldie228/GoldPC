@@ -16,7 +16,7 @@
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(212, 165, 116, 0.05) 100%);
+  background: linear-gradient(135deg, var(--border-brand) 0%, var(--border-brand) 100%);
   margin-bottom: 1.5rem;
   border: 1px solid var(--border);
 }
@@ -55,14 +55,14 @@
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-base);
-  box-shadow: 0 2px 8px rgba(212, 165, 116, 0.25);
+  box-shadow: 0 2px 8px var(--border-brand);
 }
 
 .resetButton:hover {
   background: var(--accent-hover);
-  border-color: rgba(212, 165, 116, 0.4);
+  border-color: var(--border-brand);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+  box-shadow: 0 4px 12px var(--border-brand);
 }
 
 .resetButton:active {
@@ -98,8 +98,8 @@
 }
 
 .actionButton:hover {
-  background: rgba(212, 165, 116, 0.08);
-  border-color: rgba(212, 165, 116, 0.35);
+  background: var(--border-brand);
+  border-color: var(--border-brand);
 }
 
 /* Responsive */

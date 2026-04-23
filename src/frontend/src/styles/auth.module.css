@@ -1,0 +1,114 @@
+/**
+ * Auth Module Styles
+ * Использует только CSS custom properties из styles/tokens.css
+ * Не содержит хардкода цветов или отступов
+ */
+
+/* === Base === */
+.auth-container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-md);
+}
+
+/* === Form === */
+.form-group {
+  margin-bottom: var(--space-md);
+}
+
+.form-label {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--fg-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+/* === Buttons === */
+.form-actions {
+  margin-top: var(--space-md);
+}
+
+/* === Footer === */
+.login-footer,
+.register-footer {
+  margin-top: var(--space-md);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+}
+
+.login-link,
+.register-link {
+  color: var(--brand-primary);
+  text-decoration: none;
+  font-weight: var(--font-medium);
+}
+
+.login-link:hover,
+.register-link:hover {
+  color: var(--brand-hover);
+  text-decoration: underline;
+}
+
+/* === Password Field === */
+.password-toggle {
+  position: absolute;
+  right: var(--space-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--fg-muted);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+}
+
+.password-toggle:hover {
+  color: var(--fg-primary);
+}
+
+/* === Responsive === */
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+
+  .auth-container {
+    padding: var(--space-sm);
+  }
+}
+
+/* === Accessibility === */
+/* Focus states using brand colors */
+.form-input:focus,
+.form-input:focus-visible {
+  outline-color: var(--brand-primary);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .auth-container {
+    transition: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .form-label {
+    color: var(--fg-primary);
+  }
+
+  .login-link,
+  .register-link {
+    color: var(--brand-primary);
+  }
+}

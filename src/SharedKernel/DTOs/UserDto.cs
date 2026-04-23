@@ -14,7 +14,15 @@ public class UserDto
 
     public string Email { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Дефолтная роль (устарело, используйте Roles для множественных ролей)
+    /// </summary>
     public UserRole Role { get; set; }
+
+    /// <summary>
+    /// Множественные роли пользователя
+    /// </summary>
+    public List<UserRole> Roles { get; set; } = new List<UserRole>();
 
     public string FirstName { get; set; } = string.Empty;
 

@@ -9,13 +9,14 @@ const AUTH_BASE_URL = '/auth';
 
 /**
  * Извлекает полезные данные из обёрнутого ответа ApiResponse<T>
+ * Безопасно: если данных нет, возвращает undefined
  */
 function extractData<T>(payload: T | { data?: T; success?: boolean; message?: string }): T {
   if (payload && typeof payload === 'object' && 'data' in payload) {
     const wrapped = payload as { data?: T; success?: boolean; message?: string };
     if (wrapped.data !== undefined) return wrapped.data;
   }
-  return payload as T;
+  throw new Error('Unable to extract data from API response: data is undefined');
 }
 
 /**

@@ -11,7 +11,7 @@ import styles from './RegisterPage.module.css';
 export function RegisterPage() {
   const { register, isLoading } = useAuth();
   const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -57,7 +57,7 @@ export function RegisterPage() {
     }
 
     try {
-      await register({ firstName, lastName, email, password });
+      await register({ firstName, phone, email, password });
     } catch {
       setError('Ошибка регистрации. Попробуйте другой email');
     }
@@ -129,18 +129,18 @@ export function RegisterPage() {
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="lastName">
-              Фамилия
+            <label className={styles.label} htmlFor="phone">
+              Телефон
             </label>
             <input
-              id="lastName"
-              type="text"
+              id="phone"
+              type="tel"
               className={styles.input}
-              placeholder="Ваша фамилия"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              placeholder={"+375 (XX) XXX-XX-XX"}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               required
-              autoComplete="family-name"
+              autoComplete="tel"
             />
           </div>
 

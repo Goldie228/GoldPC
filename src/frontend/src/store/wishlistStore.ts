@@ -113,8 +113,15 @@ export const useWishlistStore = create<WishlistState>()(
         try {
           const synced = await wishlistApi.sync(localItems);
           set({ items: synced });
-        } catch (error) {
-          console.error('Wishlist sync failed:', error);
+        } catch (error: unknown) {
+          // Если 401 — токен недействителен, очищаем локальное избранное
+          const axiosError = error as { response?: { status: number } };
+          if (axiosError?.response?.status === 401) {
+            console.warn('Wishlist sync: unauthorized, clearing local items');
+            set({ items: [] });
+          } else {
+            console.error('Wishlist sync failed:', error);
+          }
         }
       },
     }),

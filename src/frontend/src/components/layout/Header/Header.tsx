@@ -269,7 +269,7 @@ export function Header() {
             type="button"
             animate={cartFlash ? {
               scale: [1, 1.2, 1],
-              color: ['#a1a1aa', '#d4a574', '#a1a1aa']
+              color: ['var(--fg-muted)', 'var(--accent)', 'var(--fg-muted)']
             } : {}}
             transition={{ duration: 0.4, ease: 'easeInOut' }}
           >
@@ -410,6 +410,7 @@ export function Header() {
                           // Theme toggle will be implemented
                           // implemented here
                         }}
+                        aria-label="Переключить тему"
                       >
                         <Moon />
                         <span>Тёмная тема</span>

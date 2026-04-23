@@ -49,16 +49,6 @@ public interface IAuthService
 }
 
 /// <summary>
-/// Запрос на обновление пользователя
-/// </summary>
-public class UpdateUserRequest
-{
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
-    public string? Phone { get; set; }
-}
-
-/// <summary>
 /// Запрос на смену пароля
 /// </summary>
 public class ChangePasswordRequest
@@ -66,3 +56,4 @@ public class ChangePasswordRequest
     public string CurrentPassword { get; set; } = string.Empty;
     public string NewPassword { get; set; } = string.Empty;
 }
+

@@ -66,7 +66,7 @@ function parseSort(p: string) {
   }
 }
 
-function summaryToProduct(s: any): Product {
+function summaryToProduct(s: ProductSummary): Product {
   return { ...s, specifications: s.specifications ?? {} } as Product;
 }
 
@@ -141,7 +141,7 @@ interface PickerProductCardProps {
   product: any;
   isSelected: boolean;
   isCompatible?: boolean;
-  onSelect: (product: any) => void;
+  onSelect: (product: Product) => void;
   onOpenProduct: (slug: string) => void;
   slotType: PCComponentType;
   getDisplaySpecs: (type: PCComponentType, product: Product) => string[];
@@ -627,7 +627,7 @@ export function ComponentPickerModal({
   }, [buildContext]);
 
   const productsWithCompatibility = useMemo(() => {
-    const catMap: Record<string, any> = {
+    const catMap: Record<string, ProductSummary> = {
       cpu: 'cpu', gpu: 'gpu', motherboard: 'motherboard',
       ram: 'ram', storage: 'storage', psu: 'psu',
       case: 'case', cooling: 'cooling', monitor: 'cpu',

@@ -3,11 +3,11 @@
    ======================================== */
 
 .card {
-  background: var(--bg-elevated, #121214);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
-  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.04);
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-elevated-sm);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -22,11 +22,11 @@
 }
 
 .card:hover {
-  border-color: rgba(212, 165, 116, 0.25);
+  border-color: var(--border-brand);
   box-shadow:
-    0 0 0 1px rgba(212, 165, 116, 0.12),
-    0 8px 28px rgba(212, 165, 116, 0.12),
-    0 4px 12px rgba(0, 0, 0, 0.25);
+    var(--shadow-elevated-sm),
+    var(--shadow-elevated-md),
+    var(--shadow-md);
   transform: translateY(-2px);
 }
 
@@ -71,7 +71,7 @@
   padding: 16px;
   border-radius: 12px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--color-white);
 }
 
 .image {
@@ -102,7 +102,7 @@
   justify-content: center;
   width: 100%;
   height: 100%;
-  color: var(--fg-dim, #71717a);
+  color: var(--fg-dim);
   opacity: 0.6;
 }
 
@@ -119,21 +119,27 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--border-muted), 0.9);
+  border: 1px solid var(--border-muted);
   border-radius: 50%;
-  color: #333;
+  color: var(--color-black);
   cursor: pointer;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   z-index: 4;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .card:hover .navBtn {
   opacity: 1;
   visibility: visible;
+}
+
+.navBtn:hover {
+  background: var(--color-white);
+  color: var(--accent);
+  transform: translateY(-50%) scale(1.1);
 }
 
 .prevBtn {
@@ -142,12 +148,6 @@
 
 .nextBtn {
   right: 20px;
-}
-
-.navBtn:hover {
-  background: #ffffff;
-  color: var(--accent);
-  transform: translateY(-50%) scale(1.1);
 }
 
 .hoverZones {
@@ -167,14 +167,14 @@
 
 .imageLines {
   position: absolute;
-  bottom: 15px; /* Поднял чуть выше, чтобы точно не попасть в скругленный угол */
+  bottom: 15px;
   left: 20px;
   right: 20px;
   display: flex;
   gap: 4px;
   z-index: 4;
   opacity: 0.5;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--transition-fast);
 }
 
 .card:hover .imageLines {
@@ -183,15 +183,15 @@
 
 .line {
   flex: 1;
-  height: 3px; /* Сделал чуть толще для лучшей видимости */
-  background: rgba(0, 0, 0, 0.1);
+  height: 3px;
+  background: var(--border-muted);
   border-radius: 2px;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
 .lineActive {
-  background: var(--accent, #d4a574);
-  box-shadow: 0 0 4px rgba(212, 165, 116, 0.4);
+  background: var(--accent);
+  box-shadow: var(--shadow-gold);
 }
 
 /* ========================================
@@ -209,13 +209,13 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: rgba(9, 9, 11, 0.85);
-  border: 1px solid #d4a574;
-  color: #d4a574;
+  background: var(--bg), 0.85);
+  border: 1px solid var(--accent);
+  color: var(--accent);
   border-radius: 2px;
   backdrop-filter: blur(4px);
   z-index: 2;
-  box-shadow: 0 2px 8px rgba(212, 165, 116, 0.2);
+  box-shadow: var(--shadow-elevated-sm);
 }
 
 .discountBadge {
@@ -244,16 +244,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 15, 18, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-muted);
   border-radius: 50%;
-  color: rgba(250, 250, 250, 0.88);
+  color: var(--fg-muted);
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all var(--transition-fast);
   z-index: 3;
   opacity: 0;
   visibility: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-md);
 }
 
 .card:hover .wishlistCornerBtn {
@@ -262,20 +262,20 @@
 }
 
 .wishlistCornerBtn:hover:not(:disabled) {
-  background: rgba(24, 24, 27, 0.92);
-  border-color: rgba(212, 165, 116, 0.45);
-  color: #d4a574;
+  background: var(--bg-elevated);
+  border-color: var(--border-brand);
+  color: var(--accent);
 }
 
 .wishlistCornerActive {
   opacity: 1 !important;
   visibility: visible !important;
-  background: rgba(15, 15, 18, 0.96);
-  border-color: rgba(212, 165, 116, 0.85);
-  color: #d4a574;
+  background: var(--bg-elevated);
+  border-color: var(--border-brand);
+  color: var(--accent);
   box-shadow:
-    0 0 0 1px rgba(212, 165, 116, 0.35),
-    0 6px 18px rgba(0, 0, 0, 0.6);
+    var(--shadow-accent-glow),
+    var(--shadow-lg);
 }
 
 @media (hover: none), (pointer: coarse) {
@@ -301,7 +301,7 @@
 .manufacturer {
   font-size: 0.6rem;
   font-weight: 600;
-  color: var(--fg-dim, #52525b);
+  color: var(--fg-dim);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 4px;
@@ -320,13 +320,13 @@
 }
 
 .link {
-  color: var(--fg, #fafafa);
+  color: var(--fg);
   text-decoration: none;
-  transition: color 0.2s;
+  transition: color var(--transition-base);
 }
 
 .link:hover {
-  color: var(--accent, #d4a574);
+  color: var(--accent);
 }
 
 /* ========================================
@@ -341,14 +341,14 @@
 }
 
 .stars {
-  color: var(--accent, #d4a574);
+  color: var(--accent);
   font-size: 12px;
   letter-spacing: 1px;
 }
 
 .ratingValue {
   font-size: 0.7rem;
-  color: var(--fg-dim, #52525b);
+  color: var(--fg-dim);
 }
 
 /* ========================================
@@ -381,16 +381,16 @@
   font-family: var(--font-sans);
   font-size: 1rem;
   font-weight: 500;
-  color: var(--accent, #d4a574);
+  color: var(--accent);
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 4px rgba(212, 165, 116, 0.3), 0 0 1px rgba(255, 255, 255, 0.2);
+  text-shadow: var(--shadow-gold);
 }
 
 .oldPrice {
   font-family: var(--font-sans);
   font-size: 0.875rem;
-  color: #a1a1aa;
+  color: var(--fg-muted);
   text-decoration: line-through;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
@@ -419,18 +419,18 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--fg-dim, #71717a);
+  transition: all var(--transition-fast);
+  color: var(--fg-dim);
   flex-shrink: 0;
 }
 
 .wishlistBtn:hover:not(:disabled) {
-  border-color: rgba(212, 165, 116, 0.4);
-  color: #d4a574;
-  box-shadow: 0 0 8px rgba(212, 165, 116, 0.2);
+  border-color: var(--border-brand);
+  color: var(--accent);
+  box-shadow: var(--shadow-gold);
 }
 
 .wishlistBtn:disabled {
@@ -440,15 +440,15 @@
 
 /* Wishlist Active State - filled Gold */
 .wishlistActive {
-  background: rgba(212, 165, 116, 0.15);
-  border-color: #d4a574;
-  color: #d4a574;
+  background: var(--border-brand);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .wishlistActive:hover {
-  background: rgba(212, 165, 116, 0.25);
-  border-color: #e6b98b;
-  color: #e6b98b;
+  background: var(--border-brand);
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
 }
 
 /* ========================================
@@ -462,18 +462,18 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
+  border: 1px solid var(--border-muted);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
-  color: var(--fg-dim, #71717a);
+  transition: all var(--transition-fast);
+  color: var(--fg-dim);
   flex-shrink: 0;
 }
 
 .compareBtn:hover:not(:disabled) {
-  border-color: rgba(212, 165, 116, 0.4);
-  color: #d4a574;
-  box-shadow: 0 0 8px rgba(212, 165, 116, 0.2);
+  border-color: var(--border-brand);
+  color: var(--accent);
+  box-shadow: var(--shadow-gold);
 }
 
 .compareBtn:disabled {
@@ -482,15 +482,15 @@
 }
 
 .compareActive {
-  background: rgba(212, 165, 116, 0.15);
-  border-color: #d4a574;
-  color: #d4a574;
+  background: var(--border-brand);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .compareActive:hover {
-  background: rgba(212, 165, 116, 0.25);
-  border-color: #e6b98b;
-  color: #e6b98b;
+  background: var(--border-brand);
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
 }
 
 /* ========================================
@@ -505,39 +505,39 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: #d4a574;
-  color: var(--bg, #09090b);
+  background: var(--accent);
+  color: var(--bg);
   font-weight: 500;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease-out;
+  transition: all var(--transition-base);
   flex-shrink: 0;
   font-size: 0.8rem;
   white-space: nowrap;
-  border-radius: 4px;
-  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.3);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-gold);
   letter-spacing: 0.02em;
 }
 
 /* Hover: Gold Glow */
 .addToCartBtn:hover:not(:disabled) {
-  background: #e6b98b;
+  background: var(--accent-hover);
   transform: scale(1.02);
   box-shadow:
-    0 0 0 1px rgba(212, 165, 116, 0.5),
-    0 0 16px rgba(212, 165, 116, 0.4),
-    0 0 32px rgba(212, 165, 116, 0.2);
+    var(--shadow-accent-glow),
+    var(--shadow-gold),
+    0 0 32px var(--border-brand);
 }
 
 .addToCartBtn:active:not(:disabled) {
-  background: #c99763;
-  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.4);
+  background: var(--color-gold-500);
+  box-shadow: var(--shadow-gold);
   transform: scale(1);
 }
 
 .addToCartBtn:disabled {
-  background: var(--fg-dim, #52525b);
-  color: var(--bg, #09090b);
+  background: var(--fg-dim);
+  color: var(--bg);
   cursor: not-allowed;
   box-shadow: none;
   opacity: 0.5;
@@ -548,11 +548,11 @@
    ======================================== */
 
 .addToCartBtn.adding {
-  background: rgba(212, 165, 116, 0.2);
-  border-color: #d4a574;
-  color: #d4a574;
+  background: var(--border-brand);
+  border-color: var(--accent);
+  color: var(--accent);
   pointer-events: none;
-  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.3);
+  box-shadow: var(--shadow-gold);
 }
 
 /* ========================================
@@ -561,18 +561,18 @@
 
 .addToCartBtn.inCart {
   background: transparent;
-  border: 2px solid #d4a574;
-  color: #d4a574;
-  box-shadow: 0 0 0 1px rgba(212, 165, 116, 0.2);
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  box-shadow: var(--shadow-gold);
 }
 
 .addToCartBtn.inCart:hover:not(:disabled) {
-  background: rgba(212, 165, 116, 0.1);
-  border-color: #e6b98b;
-  color: #e6b98b;
+  background: var(--border-brand);
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
   box-shadow:
-    0 0 0 1px rgba(212, 165, 116, 0.3),
-    0 0 12px rgba(212, 165, 116, 0.2);
+    var(--shadow-accent-glow),
+    var(--shadow-gold);
   transform: scale(1.02);
 }
 
@@ -594,19 +594,19 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 2px solid #d4a574;
-  border-radius: 4px;
-  color: #d4a574;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
   flex-shrink: 0;
 }
 
 .quantityButton:hover:not(:disabled) {
-  background: rgba(212, 165, 116, 0.1);
-  border-color: #e6b98b;
-  color: #e6b98b;
-  box-shadow: 0 0 8px rgba(212, 165, 116, 0.2);
+  background: var(--border-brand);
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
+  box-shadow: var(--shadow-gold);
 }
 
 .quantityButton:disabled {
@@ -619,7 +619,7 @@
   font-family: var(--font-sans);
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--fg, #fafafa);
+  color: var(--fg);
   text-align: center;
   font-variant-numeric: tabular-nums;
 }

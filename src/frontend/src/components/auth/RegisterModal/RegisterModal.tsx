@@ -188,7 +188,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       setConfirmPassword('');
       setTermsAccepted(false);
       setFieldErrors({});
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration error:', error);
       console.error('Full error response:', error.response?.data);
       const backendErrors = error?.response?.data?.errors;

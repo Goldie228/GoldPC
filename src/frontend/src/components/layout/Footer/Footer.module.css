@@ -5,7 +5,7 @@
 
 .footer {
   padding: 80px 24px 40px;
-  background: #09090b;
+  background: var(--bg);
   border-top: 1px solid var(--border);
 }
 
@@ -36,7 +36,7 @@
 .logoIcon {
   width: 36px;
   height: 36px;
-  background: #d4a574;
+  background: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,23 +46,23 @@
 .logoIcon svg {
   width: 20px;
   height: 20px;
-  color: #09090b;
+  color: var(--bg);
 }
 
 .logoText {
   font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: #fafafa;
+  color: var(--fg);
 }
 
 .logoAccent {
-  color: #d4a574;
+  color: var(--accent);
 }
 
 .description {
   font-size: 0.875rem;
-  color: #71717a;
+  color: var(--fg-muted);
   line-height: 1.7;
   margin-top: 16px;
   max-width: 300px;
@@ -75,7 +75,7 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 20px;
-  color: #52525b;
+  color: var(--fg-dim);
 }
 
 /* Links */
@@ -90,17 +90,17 @@
 
 .link {
   font-size: 0.875rem;
-  color: #71717a;
+  color: var(--fg-muted);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .link:hover {
-  color: #fafafa;
+  color: var(--fg);
 }
 
 .link:focus-visible {
-  outline: 2px solid var(--brand-primary, #d4a574);
+  outline: 2px solid var(--brand-primary, var(--accent));
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -108,7 +108,7 @@
 /* Disabled/placeholder links */
 .disabledLink {
   font-size: 0.875rem;
-  color: #71717a;
+  color: var(--fg-muted);
   cursor: not-allowed;
   opacity: 0.5;
 }
@@ -120,8 +120,8 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: #52525b;
+  border: 1px solid var(--border-muted);
+  color: var(--fg-dim);
   cursor: not-allowed;
   opacity: 0.5;
 }
@@ -137,12 +137,12 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 40px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border-muted), 0.06);
 }
 
 .copyright {
   font-size: 0.875rem;
-  color: #52525b;
+  color: var(--fg-dim);
   line-height: 1.7;
 }
 
@@ -159,14 +159,14 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  color: #52525b;
+  border: 1px solid var(--border-muted);
+  color: var(--fg-dim);
   transition: all 0.2s;
 }
 
 .socialLink:hover {
-  border-color: #d4a574;
-  color: #d4a574;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .socialLink svg {

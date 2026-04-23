@@ -105,11 +105,11 @@
 }
 
 .medium {
-  background: #f59e0b;
+  background: var(--color-amber-500);
 }
 
 .strong {
-  background: #22c55e;
+  background: var(--color-green-500);
 }
 
 /* Checkbox */

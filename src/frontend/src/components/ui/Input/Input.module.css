@@ -58,7 +58,7 @@
 
 .input:focus {
   border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
+  box-shadow: 0 0 0 3px var(--border-brand);
   background: var(--bg-elevated);
 }
 
@@ -73,15 +73,15 @@
    ======================================== */
 
 .inputError {
-  border-color: #ef4444;
+  border-color: var(--error);
 }
 
 .inputError:hover:not(:disabled) {
-  border-color: #f87171;
+  border-color: var(--error);
 }
 
 .inputError:focus {
-  border-color: #ef4444;
+  border-color: var(--error);
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
 }
 
@@ -91,7 +91,7 @@
   gap: 6px;
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  color: #ef4444;
+  color: var(--error);
 }
 
 .errorIcon {
@@ -107,7 +107,7 @@
 .helperText {
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  color: var(--fg-dim, #52525b);
+  color: var(--fg-dim, var(--fg-dim));
 }
 
 /* ========================================
@@ -148,7 +148,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--fg-dim, #52525b);
+  color: var(--fg-dim, var(--fg-dim));
   pointer-events: none;
   transition: color 0.2s ease;
 }
@@ -160,7 +160,7 @@
 
 .input:focus ~ .leftIconWrapper,
 .inputWrapper:has(.input:focus) .leftIconWrapper {
-  color: var(--accent, #d4a574);
+  color: var(--accent, var(--accent));
 }
 
 /* ========================================
@@ -184,7 +184,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--fg-dim, #52525b);
+  color: var(--fg-dim, var(--fg-dim));
 }
 
 .rightIconWrapper svg {
