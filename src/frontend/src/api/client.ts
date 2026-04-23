@@ -41,6 +41,17 @@ apiClient.interceptors.request.use(
 );
 
 /**
+ * Извлекает полезные данные из обёрнутого ответа ApiResponse<T>
+ */
+function extractData<T>(payload: T | { data?: T; success?: boolean; message?: string }): T {
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    const wrapped = payload as { data?: T; success?: boolean; message?: string };
+    if (wrapped.data !== undefined) return wrapped.data;
+  }
+  return payload as T;
+}
+
+/**
  * Перехватчик ответов для обработки ошибок авторизации
  */
 apiClient.interceptors.response.use(
@@ -52,16 +63,37 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      const refreshToken = localStorage.getItem('refreshToken');
+      // ✅ Ищем refresh token в ОБОИХ хранилищах
+      let refreshTokenSource: 'local' | 'session' | null = null;
+      let refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        refreshTokenSource = 'local';
+      } else {
+        refreshToken = sessionStorage.getItem('refreshToken');
+        if (refreshToken) {
+          refreshTokenSource = 'session';
+        }
+      }
+
       if (refreshToken) {
         try {
           const response = await axios.post(`${BASE_URL}/auth/refresh`, {
             refreshToken,
           });
 
-          const { accessToken, refreshToken: newRefreshToken } = response.data;
-          localStorage.setItem('accessToken', accessToken);
-          localStorage.setItem('refreshToken', newRefreshToken);
+          const { accessToken, refreshToken: newRefreshToken } = extractData<{
+            accessToken: string;
+            refreshToken: string;
+          }>(response.data);
+
+          // ✅ Сохраняем обратно в ТО ЖЕ хранилище, откуда пришёл токен
+          if (refreshTokenSource === 'session') {
+            sessionStorage.setItem('accessToken', accessToken);
+            sessionStorage.setItem('refreshToken', newRefreshToken);
+          } else {
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('refreshToken', newRefreshToken);
+          }
 
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
@@ -69,9 +101,13 @@ apiClient.interceptors.response.use(
 
           return apiClient(originalRequest);
         } catch {
-          // ✅ НЕ ДЕЛАЕМ АВТОМАТИЧЕСКИЙ РАЗЛОГИН ПРИ 401!
-          // Это самая вредная строчка кода в мире которая ломает вход у всех
-          console.debug('Refresh token failed, will retry on next request');
+          // ✅ При провале refresh очищаем токены и перезагружаем на /login
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          sessionStorage.removeItem('accessToken');
+          sessionStorage.removeItem('refreshToken');
+          window.location.href = '/login';
+          return Promise.reject(error);
         }
       }
     }

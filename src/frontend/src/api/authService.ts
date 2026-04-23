@@ -8,6 +8,17 @@ import { AxiosError } from 'axios';
 const AUTH_BASE_URL = '/auth';
 
 /**
+ * Извлекает полезные данные из обёрнутого ответа ApiResponse<T>
+ */
+function extractData<T>(payload: T | { data?: T; success?: boolean; message?: string }): T {
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    const wrapped = payload as { data?: T; success?: boolean; message?: string };
+    if (wrapped.data !== undefined) return wrapped.data;
+  }
+  return payload as T;
+}
+
+/**
  * Стандартизированные сообщения об ошибках аутентификации
  * Маппинг HTTP статус кодов на понятные пользователю сообщения
  */
@@ -40,16 +51,16 @@ export const authService = {
    * Авторизация пользователя
    */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>(`${AUTH_BASE_URL}/login`, credentials);
-    return response.data;
+    const response = await apiClient.post(`${AUTH_BASE_URL}/login`, credentials);
+    return extractData<AuthResponse>(response.data);
   },
 
   /**
    * Регистрация нового пользователя
    */
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>(`${AUTH_BASE_URL}/register`, data);
-    return response.data;
+    const response = await apiClient.post(`${AUTH_BASE_URL}/register`, data);
+    return extractData<AuthResponse>(response.data);
   },
 
   /**
@@ -67,15 +78,15 @@ export const authService = {
    * Обновление токенов
    */
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>(`${AUTH_BASE_URL}/refresh`, { refreshToken });
-    return response.data;
+    const response = await apiClient.post(`${AUTH_BASE_URL}/refresh`, { refreshToken });
+    return extractData<AuthResponse>(response.data);
   },
 
   /**
    * Получение текущего пользователя
    */
   async getCurrentUser(): Promise<AuthResponse['user']> {
-    const response = await apiClient.get<AuthResponse['user']>(`${AUTH_BASE_URL}/me`);
-    return response.data;
+    const response = await apiClient.get(`${AUTH_BASE_URL}/me`);
+    return extractData<AuthResponse['user']>(response.data);
   },
 };
