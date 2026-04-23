@@ -28,6 +28,8 @@ export interface AuthModalBaseProps {
   };
   /** Modal size override */
   size?: 'small' | 'medium' | 'large';
+  /** Optional show close button */
+  showCloseButton?: boolean;
 }
 
 export const AuthModalBase: React.FC<AuthModalBaseProps> = ({
@@ -37,7 +39,8 @@ export const AuthModalBase: React.FC<AuthModalBaseProps> = ({
   children,
   footer,
   switchLink,
-  size = 'medium'
+  size = 'medium',
+  showCloseButton = true
 }) => {
   return (
     <Modal
@@ -45,6 +48,7 @@ export const AuthModalBase: React.FC<AuthModalBaseProps> = ({
       onClose={onClose}
       title={title}
       size={size}
+      showCloseButton={showCloseButton}
     >
       <div className={styles.content}>
         {children}

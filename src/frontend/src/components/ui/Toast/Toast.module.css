@@ -26,12 +26,12 @@
 
 /* Error - Red border */
 .error {
-  border-left: 3px solid #ef4444;
+  border-left: 3px solid var(--error);
 }
 
 /* Warning - Amber border */
 .warning {
-  border-left: 3px solid #f59e0b;
+  border-left: 3px solid var(--color-amber-500);
 }
 
 /* ===== ICON ===== */
@@ -49,23 +49,23 @@
 }
 
 .success .icon {
-  background: rgba(212, 165, 116, 0.2);
-  color: var(--accent, #d4a574);
+  background: var(--border-brand);
+  color: var(--accent, var(--accent));
 }
 
 .info .icon {
-  background: color-mix(in srgb, var(--accent, #d4a574) 20%, transparent);
-  color: var(--accent, #d4a574);
+  background: color-mix(in srgb, var(--accent, var(--accent)) 20%, transparent);
+  color: var(--accent, var(--accent));
 }
 
 .error .icon {
   background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  color: var(--error);
 }
 
 .warning .icon {
   background: rgba(245, 158, 11, 0.2);
-  color: #f59e0b;
+  color: var(--color-amber-500);
 }
 
 /* ===== MESSAGE ===== */
@@ -75,7 +75,7 @@
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.4;
-  color: var(--fg, #fafafa);
+  color: var(--fg, var(--fg));
 }
 
 /* ===== CLOSE BUTTON ===== */
@@ -89,7 +89,7 @@
   padding: 0;
   background: transparent;
   border: none;
-  color: var(--fg-dim, #52525b);
+  color: var(--fg-dim, var(--fg-dim));
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
@@ -97,12 +97,12 @@
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--fg, #fafafa);
+  background: var(--border-muted), 0.1);
+  color: var(--fg, var(--fg));
 }
 
 .closeButton:focus-visible {
-  outline: 2px solid var(--accent, #d4a574);
+  outline: 2px solid var(--accent, var(--accent));
   outline-offset: 2px;
 }
 

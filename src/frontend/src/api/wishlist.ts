@@ -9,7 +9,7 @@ function extractData<T>(payload: T | ApiResponse<T>): T {
     const wrapped = payload as ApiResponse<T>;
     if (wrapped.data !== undefined) return wrapped.data;
   }
-  return payload as T;
+  throw new Error('Unable to extract data from API response: data is undefined');
 }
 
 export const wishlistApi = {

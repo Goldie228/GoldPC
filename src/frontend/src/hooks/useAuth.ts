@@ -70,14 +70,19 @@ export function useAuth(): UseAuthReturn {
       saveTokens(response.accessToken, response.refreshToken, remember);
       setUser(response.user);
 
+      // ✅ Синхронизируем избранное ПОСЛЕ сохранения токенов и пользователя
+      // Используем setTimeout(0) чтобы попасть в следующий цикл событий
+      // когда состояние уже обновится и токены гарантированно будут в хранилище
+      setTimeout(() => {
+        syncWishlistWithServer().catch(() => {
+          console.debug('Wishlist sync failed on login, will retry on next page load');
+        });
+      }, 0);
+
       // Редирект делаем ПОСЛЕ ВСЕГО
       setTimeout(() => {
         navigate('/');
       }, 0);
-
-      // ❌ УБИРАЕМ СИНХРОНИЗАЦИЮ ПРИ ЛОГИНЕ ПОЛНОСТЬЮ
-      // Это баг в событийном цикле который невозможно исправить надёжно
-      // Синхронизация запустится автоматически при первой отрисовке после редиректа
 
     } catch (error) {
       storeLogout();

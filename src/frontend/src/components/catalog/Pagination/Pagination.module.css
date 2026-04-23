@@ -6,7 +6,7 @@
   gap: 16px;
   margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border-top: 1px solid var(--border, var(--border-muted), 0.06));
 }
 
 .paginationInfo {
@@ -19,7 +19,7 @@
 
 .rangeText {
   font-size: 0.85rem;
-  color: var(--fg-muted, #71717a);
+  color: var(--fg-muted, var(--fg-muted));
 }
 
 .pageSizeGroup {
@@ -30,17 +30,17 @@
 
 .pageSizeLabel {
   font-size: 0.8rem;
-  color: var(--fg-dim, #52525b);
+  color: var(--fg-dim, var(--fg-dim));
   white-space: nowrap;
 }
 
 .pageSizeSelect {
   height: 36px;
   padding: 0 32px 0 12px;
-  background: var(--bg-elevated, #121214);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  background: var(--bg-elevated, var(--color-black-soft));
+  border: 1px solid var(--border, var(--border-muted), 0.06));
   border-radius: 6px;
-  color: var(--fg, #fafafa);
+  color: var(--fg, var(--fg));
   font-size: 0.85rem;
   cursor: pointer;
   transition: border-color 0.2s;
@@ -54,12 +54,12 @@
 }
 
 .pageSizeSelect:hover:not(:disabled) {
-  border-color: var(--fg-dim, #52525b);
+  border-color: var(--fg-dim, var(--fg-dim));
 }
 
 .pageSizeSelect:focus {
   outline: none;
-  border-color: var(--accent, #d4a574);
+  border-color: var(--accent, var(--accent));
 }
 
 .paginationControls {
@@ -77,10 +77,10 @@
   min-width: 44px;
   min-height: 44px;
   padding: 0 14px;
-  background: var(--bg-card, #18181b);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  background: var(--bg-card, var(--bg-card));
+  border: 1px solid var(--border, var(--border-muted), 0.06));
   border-radius: 8px;
-  color: var(--fg, #fafafa);
+  color: var(--fg, var(--fg));
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -89,8 +89,8 @@
 }
 
 .navBtn:hover:not(:disabled) {
-  border-color: var(--accent, #d4a574);
-  color: var(--accent, #d4a574);
+  border-color: var(--accent, var(--accent));
+  color: var(--accent, var(--accent));
 }
 
 .navBtn:disabled {
@@ -99,7 +99,7 @@
 }
 
 .navBtn:focus-visible {
-  outline: 2px solid var(--accent, #d4a574);
+  outline: 2px solid var(--accent, var(--accent));
   outline-offset: 2px;
 }
 
@@ -140,7 +140,7 @@
 }
 
 .ellipsisDots {
-  color: var(--fg-dim, #52525b);
+  color: var(--fg-dim, var(--fg-dim));
   font-size: 1.1rem;
   letter-spacing: 0.12em;
   user-select: none;
@@ -154,9 +154,9 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--border, var(--border-muted), 0.06));
   border-radius: 8px;
-  color: var(--fg-muted, #71717a);
+  color: var(--fg-muted, var(--fg-muted));
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -164,18 +164,18 @@
 }
 
 .pageBtn:hover:not(:disabled) {
-  border-color: var(--accent, #d4a574);
-  color: var(--fg, #fafafa);
+  border-color: var(--accent, var(--accent));
+  color: var(--fg, var(--fg));
 }
 
 .pageBtn.active {
-  background: rgba(212, 165, 116, 0.15);
-  border-color: var(--accent, #d4a574);
-  color: var(--accent, #d4a574);
+  background: var(--border-brand);
+  border-color: var(--accent, var(--accent));
+  color: var(--accent, var(--accent));
 }
 
 .pageBtn:focus-visible {
-  outline: 2px solid var(--accent, #d4a574);
+  outline: 2px solid var(--accent, var(--accent));
   outline-offset: 2px;
 }
 
@@ -187,29 +187,29 @@
   gap: 10px;
   margin-top: 8px;
   padding-top: 12px;
-  border-top: 1px dashed var(--border, rgba(255, 255, 255, 0.06));
+  border-top: 1px dashed var(--border, var(--border-muted), 0.06));
 }
 
 .jumpLabel {
   font-size: 0.85rem;
-  color: var(--fg-muted, #71717a);
+  color: var(--fg-muted, var(--fg-muted));
 }
 
 .jumpInput {
   width: 56px;
   height: 40px;
   text-align: center;
-  background: var(--bg-elevated, #121214);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  background: var(--bg-elevated, var(--color-black-soft));
+  border: 1px solid var(--border, var(--border-muted), 0.06));
   border-radius: 8px;
-  color: var(--fg, #fafafa);
+  color: var(--fg, var(--fg));
   font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
 }
 
 .jumpInput:focus {
   outline: none;
-  border-color: var(--accent, #d4a574);
+  border-color: var(--accent, var(--accent));
 }
 
 .jumpInput:disabled {
@@ -218,16 +218,16 @@
 
 .jumpHint {
   font-size: 0.8rem;
-  color: var(--fg-dim, #52525b);
+  color: var(--fg-dim, var(--fg-dim));
 }
 
 .jumpBtn {
   height: 40px;
   padding: 0 16px;
-  background: var(--bg-card, #18181b);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
+  background: var(--bg-card, var(--bg-card));
+  border: 1px solid var(--border, var(--border-muted), 0.06));
   border-radius: 8px;
-  color: var(--fg, #fafafa);
+  color: var(--fg, var(--fg));
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -235,8 +235,8 @@
 }
 
 .jumpBtn:hover:not(:disabled) {
-  border-color: var(--accent, #d4a574);
-  color: var(--accent, #d4a574);
+  border-color: var(--accent, var(--accent));
+  color: var(--accent, var(--accent));
 }
 
 .jumpBtn:disabled {
@@ -245,7 +245,7 @@
 }
 
 .jumpBtn:focus-visible {
-  outline: 2px solid var(--accent, #d4a574);
+  outline: 2px solid var(--accent, var(--accent));
   outline-offset: 2px;
 }
 

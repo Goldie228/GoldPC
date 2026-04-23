@@ -1,11 +1,7 @@
-/**
- * Auth Components - Компоненты аутентификации
- */
+export { LoginModal } from './LoginModal/LoginModal';
+export type { LoginModalProps } from './LoginModal/LoginModal';
 
-export { LoginModal } from './LoginModal';
-export type { LoginModalProps } from './LoginModal';
-
-export { RegisterModal } from './RegisterModal';
-export type { RegisterModalProps } from './RegisterModal';
+export { RegisterModal } from './RegisterModal/RegisterModal';
+export type { RegisterModalProps } from './RegisterModal/RegisterModal';
 
 export { AuthModalContainer } from './AuthModalContainer';

@@ -54,7 +54,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.03),
+    var(--border-muted), 0.03),
     transparent
   );
   animation: skeletonShimmer 2s ease-in-out infinite;

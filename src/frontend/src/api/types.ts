@@ -217,6 +217,7 @@ export interface User {
   lastName: string;
   phone?: string;
   role: 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant';
+  roles?: ('Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant')[];
   isActive: boolean;
   createdAt: string;
 }

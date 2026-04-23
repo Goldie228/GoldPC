@@ -320,20 +320,31 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0);
+  background: var(--shadow-lg), 0);
   z-index: 150;
   pointer-events: none;
   transition: background 0.3s ease-in-out;
 }
 
 .overlayVisible {
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--shadow-lg), 0.6);
   pointer-events: auto;
 }
 
 /* Profile Wrapper & Dropdown */
 .profileWrapper {
   position: relative;
+}
+
+.authIndicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+  border: 2px solid var(--bg);
 }
 
 .profileDropdown {
@@ -344,7 +355,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-lg), var(--shadow-gold);
   z-index: 200;
   overflow: hidden;
   animation: dropdownFadeIn 0.2s ease-out;
@@ -528,6 +539,7 @@
 .profileNavLink:hover {
   color: var(--fg);
   background: var(--bg-elevated);
+  border-radius: var(--radius);
 }
 
 .profileNavLink svg {
@@ -554,7 +566,7 @@
 
 .logoutBtn:hover {
   color: var(--error);
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(248, 113, 113, 0.1);
 }
 
 .logoutBtn svg {

@@ -38,7 +38,7 @@
 
 .tabHeader:hover {
   color: var(--fg-primary);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--border-muted), 0.02);
 }
 
 .tabHeader:focus-visible {
@@ -52,7 +52,7 @@
 }
 
 .tabHeaderActive:hover {
-  color: var(--accent, #d4a574);
+  color: var(--accent, var(--accent));
   background: transparent;
 }
 

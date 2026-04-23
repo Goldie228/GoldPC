@@ -70,6 +70,10 @@
   --border-muted: rgba(255, 255, 255, 0.08);
   --border-brand: rgba(212, 165, 116, 0.4);
   --color-error: #f87171;
+  --color-amber-500: #f59e0b;
+  --color-emerald-500: #10b981;
+  --color-green-500: #22c55e;
+  --color-error-dark: #dc2626;
   --error: var(--color-error);
 
   /* App-wide aliases (globals.css, App.css, legacy) */

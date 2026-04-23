@@ -15,8 +15,8 @@
 }
 
 .bsp__compat-status--ok {
-  background: rgba(212, 165, 116, 0.1);
-  border: 1px solid rgba(212, 165, 116, 0.25);
+  background: var(--border-brand);
+  border: 1px solid var(--border-brand);
   color: var(--accent, #d4a574);
 }
 
@@ -258,8 +258,8 @@
   font-size: 0.75rem;
   color: var(--fg-muted, #71717a);
   padding: 8px 10px;
-  background: rgba(212, 165, 116, 0.08);
-  border: 1px solid rgba(212, 165, 116, 0.15);
+  background: var(--border-brand);
+  border: 1px solid var(--border-brand);
 }
 
 .bsp__power-suggestion strong {
@@ -361,8 +361,8 @@
   color: var(--fg-muted, #71717a);
   margin: 0;
   padding: 10px 12px;
-  background: rgba(212, 165, 116, 0.06);
-  border: 1px solid rgba(212, 165, 116, 0.18);
+  background: var(--border-brand);
+  border: 1px solid var(--border-brand);
   border-radius: var(--radius-sm, 6px);
 }
 
@@ -489,14 +489,14 @@
 }
 
 .bsp__btn--export {
-  background: rgba(212, 165, 116, 0.08);
-  border-color: rgba(212, 165, 116, 0.25);
+  background: var(--border-brand);
+  border-color: var(--border-brand);
   color: var(--accent, #d4a574);
 }
 
 .bsp__btn--export:hover:not(:disabled) {
-  background: rgba(212, 165, 116, 0.15);
-  border-color: rgba(212, 165, 116, 0.4);
+  background: var(--border-brand);
+  border-color: var(--border-brand);
 }
 
 .bsp__btn--export svg {
@@ -532,14 +532,14 @@
 }
 
 .bsp__btn--save {
-  background: rgba(212, 165, 116, 0.1);
-  border-color: rgba(212, 165, 116, 0.35);
+  background: var(--border-brand);
+  border-color: var(--border-brand);
   color: var(--accent, #d4a574);
 }
 
 .bsp__btn--save:hover:not(:disabled) {
-  background: rgba(212, 165, 116, 0.18);
-  border-color: rgba(212, 165, 116, 0.5);
+  background: var(--border-brand);
+  border-color: var(--border-brand);
 }
 
 .bsp__btn--cart {
@@ -549,7 +549,7 @@
 }
 
 .bsp__btn--cart:hover:not(:disabled) {
-  border-color: rgba(212, 165, 116, 0.35);
+  border-color: var(--border-brand);
   transform: translateY(-1px);
 }
 
