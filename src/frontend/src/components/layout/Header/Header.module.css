@@ -320,14 +320,14 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: var(--shadow-lg), 0);
+  background: rgba(var(--shadow-rgb), 0);
   z-index: 150;
   pointer-events: none;
   transition: background 0.3s ease-in-out;
 }
 
 .overlayVisible {
-  background: var(--shadow-lg), 0.6);
+  background: rgba(var(--shadow-rgb), 0.6);
   pointer-events: auto;
 }
 

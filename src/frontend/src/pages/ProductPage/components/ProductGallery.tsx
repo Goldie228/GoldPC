@@ -85,7 +85,7 @@ export function ProductGallery({ product }: ProductGalleryProps): ReactElement {
     root.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
     return () => {
-      root.removeEventListener('scroll', update as any);
+      root.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
     };
   }, [images.length]);

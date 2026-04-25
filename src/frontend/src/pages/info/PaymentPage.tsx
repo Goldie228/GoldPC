@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react';
-import './InfoPage.css';
+import styles from './InfoPage.module.css';
 
 export function PaymentPage(): ReactElement {
   return (

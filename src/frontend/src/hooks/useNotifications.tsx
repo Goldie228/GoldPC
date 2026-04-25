@@ -6,8 +6,8 @@ export interface Notification {
   userId: string;
   title: string;
   message: string;
-  type: NotificationType;
-  priority: NotificationPriority;
+  type: NotificationTypeValue;
+  priority: NotificationPriorityValue;
   isRead: boolean;
   createdAt: string;
   readAt?: string;
@@ -15,22 +15,26 @@ export interface Notification {
   metadata?: string;
 }
 
-export enum NotificationType {
-  OrderStatusChanged = 'OrderStatusChanged',
-  RepairTicketUpdated = 'RepairTicketUpdated',
-  LowStockAlert = 'LowStockAlert',
-  NewSupportMessage = 'NewSupportMessage',
-  SystemAnnouncement = 'SystemAnnouncement',
-  TaskAssigned = 'TaskAssigned',
-  InventoryAlert = 'InventoryAlert'
-}
+export type NotificationTypeValue = 'OrderStatusChanged' | 'RepairTicketUpdated' | 'LowStockAlert' | 'NewSupportMessage' | 'SystemAnnouncement' | 'TaskAssigned' | 'InventoryAlert';
 
-export enum NotificationPriority {
-  Low = 'Low',
-  Medium = 'Medium',
-  High = 'High',
-  Critical = 'Critical'
-}
+export const NotificationType = {
+  OrderStatusChanged: 'OrderStatusChanged' as const,
+  RepairTicketUpdated: 'RepairTicketUpdated' as const,
+  LowStockAlert: 'LowStockAlert' as const,
+  NewSupportMessage: 'NewSupportMessage' as const,
+  SystemAnnouncement: 'SystemAnnouncement' as const,
+  TaskAssigned: 'TaskAssigned' as const,
+  InventoryAlert: 'InventoryAlert' as const,
+} as const;
+
+export type NotificationPriorityValue = 'Low' | 'Medium' | 'High' | 'Critical';
+
+export const NotificationPriority = {
+  Low: 'Low' as const,
+  Medium: 'Medium' as const,
+  High: 'High' as const,
+  Critical: 'Critical' as const,
+} as const;
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -70,7 +74,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
         // Play notification sound if enabled
         const soundEnabled = localStorage.getItem('notification_sound') !== 'false';
-        if (soundEnabled && (notification.priority === NotificationPriority.High || notification.priority === NotificationPriority.Critical)) {
+        const priority = notification.priority as unknown as string;
+        if (soundEnabled && (priority === 'High' || priority === 'Critical')) {
           const audio = new Audio('/notification-sound.mp3');
           audio.volume = 0.3;
           audio.play().catch(() => {});

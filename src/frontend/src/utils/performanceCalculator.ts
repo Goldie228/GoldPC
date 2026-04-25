@@ -161,7 +161,7 @@ export interface GameFpsEntry {
   };
 }
 
-const GAME_FPS_SCALES: [string, number, number, number][] = [
+const GAME_FPS_SCALES: [string, string, number, number, number][] = [
   ['counter-strike-2', 'Counter-Strike 2', 1.25, 0.95, 0.65],
   ['grand-theft-auto-v', 'Grand Theft Auto V', 1.10, 0.80, 0.50],
   ['cyberpunk-2077', 'Cyberpunk 2077', 0.75, 0.55, 0.35],

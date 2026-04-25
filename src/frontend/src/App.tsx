@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { MainLayout } from './components/layout/MainLayout';
-import { AuthGuard, RoleGuard } from './components/guards';
+import { AuthGuard, RoleGuard, AdminRedirect } from './components/guards';
 import { AuthModalContainer } from './components/auth';
 import { ModalContainer } from './components/ui/Modal/ModalContainer';
 import { RouteMeta } from './components/seo/RouteMeta';
@@ -212,14 +212,7 @@ const router = createBrowserRouter([
       { path: '/register', element: <Navigate to="/" replace /> },
       {
         path: '/admin',
-        element: () => {
-          const { user } = useAuthStore();
-          if (!user) return <Navigate to="/" replace />;
-          if (user.role === 'Admin') return <Navigate to="/admin/users" replace />;
-          if (['Manager', 'Master'].includes(user.role)) return <Navigate to="/manager/dashboard" replace />;
-          if (user.role === 'Accountant') return <Navigate to="/accountant/reports" replace />;
-          return <Navigate to="/dashboard" replace />;
-        }
+        element: <AdminRedirect />
       },
       {
         element: <RoleGuard allowedRoles={['Admin']} />,

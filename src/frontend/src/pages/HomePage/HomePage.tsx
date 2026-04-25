@@ -1,19 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Cpu,
-  Monitor,
-  MemoryStick,
-  HardDrive,
-  Zap,
-  Box,
-  ThermometerSun,
-  Keyboard,
-  Mouse,
-  Headphones,
-  ArrowRight,
-  ChevronRight,
-} from 'lucide-react';
+import { Cpu, Gpu, MemoryStick, HardDrive, Zap, Box, ThermometerSun, Fan, Monitor, Keyboard, Mouse, Headphones, ArrowRight, Star, Truck, Shield, CreditCard, Users, ChevronRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from '../../components/ProductCard';
@@ -47,13 +34,14 @@ const BACKEND_TO_FRONTEND: Record<string, ProductCategory> = {
 // Маппинг frontend id -> иконка
 const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
   cpu: Cpu,
-  gpu: Monitor,
+  gpu: Gpu,
   motherboard: Cpu,
   ram: MemoryStick,
   storage: HardDrive,
   psu: Zap,
   case: Box,
   cooling: ThermometerSun,
+  fan: Fan,
   monitor: Monitor,
   keyboard: Keyboard,
   mouse: Mouse,

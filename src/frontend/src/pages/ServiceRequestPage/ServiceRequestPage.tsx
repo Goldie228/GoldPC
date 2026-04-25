@@ -11,7 +11,8 @@ import styles from './ServiceRequestPage.module.css';
 const DEVICE_TYPES = [
   { value: 'pc', label: 'ПК', icon: '🖥️' },
   { value: 'laptop', label: 'Ноутбук', icon: '💻' },
-  { value: 'monitor', label: 'Монитор', icon: '🖥️' },
+  { value: 'printer', label: 'Принтер', icon: '🖨️' },
+  { value: 'other', label: 'Другое', icon: '📦' },
 ] as const;
 
 /**
@@ -27,15 +28,15 @@ const URGENCY_OPTIONS = [
  * Интерфейс данных формы
  */
 interface ServiceRequestFormData {
-  deviceType: string;
+  deviceType: 'pc' | 'laptop' | 'printer' | 'other';
   brand: string;
   serial: string;
   problem: string;
   name: string;
   phone: string;
   email: string;
-  urgency: string;
-  preferredContact: string;
+  urgency: 'low' | 'normal' | 'high';
+  preferredContact: 'email' | 'phone' | 'whatsapp' | 'telegram';
 }
 
 /**
@@ -164,7 +165,7 @@ export function ServiceRequestPage() {
   /**
    * Обработчик выбора типа устройства
    */
-  const handleDeviceTypeChange = (value: string) => {
+  const handleDeviceTypeChange = (value: 'pc' | 'laptop' | 'printer' | 'other') => {
     setFormData((prev) => ({ ...prev, deviceType: value }));
     if (errors.deviceType) {
       setErrors((prev) => ({ ...prev, deviceType: undefined }));

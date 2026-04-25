@@ -1,27 +1,27 @@
 import { useState } from 'react';
 import { BellIcon, CheckIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { useNotifications, Notification, NotificationPriority, NotificationType } from '../../hooks/useNotifications';
-import { Toast } from '../Toast/Toast';
+import { useNotifications } from '../../hooks/useNotifications';
+import type { Notification, NotificationPriorityValue, NotificationTypeValue } from '../../hooks/useNotifications';
 
 export const NotificationCenter = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, connectionStatus } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
-  const getPriorityColor = (priority: NotificationPriority) => {
+  const getPriorityColor = (priority: NotificationPriorityValue) => {
     switch (priority) {
-      case NotificationPriority.Critical: return 'bg-red-100 border-red-400 text-red-800';
-      case NotificationPriority.High: return 'bg-orange-100 border-orange-400 text-orange-800';
-      case NotificationPriority.Medium: return 'bg-yellow-100 border-yellow-400 text-yellow-800';
-      case NotificationPriority.Low: return 'bg-blue-100 border-blue-400 text-blue-800';
+      case 'Critical': return 'bg-red-100 border-red-400 text-red-800';
+      case 'High': return 'bg-orange-100 border-orange-400 text-orange-800';
+      case 'Medium': return 'bg-yellow-100 border-yellow-400 text-yellow-800';
+      case 'Low': return 'bg-blue-100 border-blue-400 text-blue-800';
     }
   };
 
-  const getTypeIcon = (type: NotificationType) => {
+  const getTypeIcon = (type: NotificationTypeValue) => {
     switch (type) {
-      case NotificationType.OrderStatusChanged: return '📦';
-      case NotificationType.RepairTicketUpdated: return '🔧';
-      case NotificationType.LowStockAlert: return '⚠️';
-      case NotificationType.NewSupportMessage: return '💬';
+      case 'OrderStatusChanged': return '📦';
+      case 'RepairTicketUpdated': return '🔧';
+      case 'LowStockAlert': return '⚠️';
+      case 'NewSupportMessage': return '💬';
       default: return '🔔';
     }
   };

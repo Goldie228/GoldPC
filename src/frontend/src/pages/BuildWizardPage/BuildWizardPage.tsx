@@ -1,5 +1,5 @@
 import { BuildWizard } from '../../components/wizard/BuildWizard';
-import './BuildWizardPage.css';
+import styles from './BuildWizardPage.module.css';
 
 export function BuildWizardPage() {
   return <BuildWizard />;

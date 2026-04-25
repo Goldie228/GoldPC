@@ -25,7 +25,7 @@ import {
 import { extractSocket } from '../../utils/compatibilityUtils';
 import type { Product, ProductCategory } from '../../api/types';
 import { useToastStore } from '../../store/toastStore';
-import './PCBuilderPage.css';
+import styles from './PCBuilderPage.module.css';
 
 const icons = {
   cpu: <Cpu />,
@@ -117,7 +117,8 @@ export const MemoizedSlotRow = React.memo(function MemoizedSlotRow({
   maxFanModules,
 }: MemoizedSlotRowProps) {
   if (row.kind === 'single') {
-    const product = selectedComponents[row.key]?.product;
+    const comp = selectedComponents[row.key];
+    const product = comp && !Array.isArray(comp) ? comp.product : null;
     const slotState = getSlotState(row.key);
     return (
       <ComponentSlot
@@ -128,7 +129,7 @@ export const MemoizedSlotRow = React.memo(function MemoizedSlotRow({
         name={slotState.state === 'empty' ? 'Выберите компонент' : product?.name || ''}
         price={product?.price ?? null}
         state={slotState.state}
-        specs={getDisplaySpecs(row.key, product)}
+        specs={getDisplaySpecs(row.key, product ?? undefined)}
         warning={slotState.warning}
         onSelect={() => onSelect(row.key)}
         onClear={
@@ -262,8 +263,8 @@ function buildSlotRows(
 
   // cpu -> motherboard (single slots)
   for (const s of [
-    { key: 'cpu', label: 'Процессор' as const },
-    { key: 'motherboard', label: 'Материнская плата' as const },
+    { key: 'cpu' as PCComponentType, label: 'Процессор' as const },
+    { key: 'motherboard' as PCComponentType, label: 'Материнская плата' as const },
   ]) {
     rows.push({ kind: 'single', key: s.key, label: s.label, anim: anim++ });
   }
@@ -288,15 +289,15 @@ function buildSlotRows(
   }
 
   // cooling (single)
-  rows.push({ kind: 'single', key: 'cooling' as PCComponentType, label: 'Охлаждение' as const, anim: anim++ });
+  rows.push({ kind: 'single', key: 'cooling' as PCComponentType as PCComponentType, label: 'Охлаждение' as const, anim: anim++ });
 
   // gpu (single)
-  rows.push({ kind: 'single', key: 'gpu' as PCComponentType, label: 'Видеокарта' as const, anim: anim++ });
+  rows.push({ kind: 'single', key: 'gpu' as PCComponentType as PCComponentType, label: 'Видеокарта' as const, anim: anim++ });
 
   // psu, case (single slots)
   for (const s of [
-    { key: 'psu', label: 'Блок питания' as const },
-    { key: 'case', label: 'Корпус' as const },
+    { key: 'psu' as PCComponentType, label: 'Блок питания' as const },
+    { key: 'case' as PCComponentType, label: 'Корпус' as const },
   ]) {
     rows.push({ kind: 'single', key: s.key, label: s.label, anim: anim++ });
   }
@@ -659,19 +660,12 @@ export function PCBuilderPage() {
           key={`${selectedSlot}-${multiIndex ?? 'x'}`}
           isOpen={modalOpen}
           onClose={handleCloseModal}
-          category={componentTypeToCategory[selectedSlot]}
+          category={selectedSlot as ProductCategory}
           slotType={selectedSlot}
           slotLabel={currentSlotLabel}
           currentProduct={modalCurrentProduct}
           buildContext={selectedComponents}
           onConfirm={handleProductSelect}
-          onRemoveCurrent={() => {
-            if (selectedSlot === 'ram' || selectedSlot === 'storage' || selectedSlot === 'fan') {
-              handleRemove(selectedSlot, multiIndex);
-            } else {
-              handleRemove(selectedSlot);
-            }
-          }}
           getDisplaySpecs={getDisplaySpecs}
           typeFilter={componentTypeFilter[selectedSlot] ?? undefined}
           selectedCount={selectedCount}

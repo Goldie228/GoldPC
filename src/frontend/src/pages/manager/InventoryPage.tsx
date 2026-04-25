@@ -3,8 +3,9 @@
  * Страница управления запасами для менеджера
  */
 
-import { useState, useMemo } from 'react';
-import './InventoryPage.css';
+import { useState, useEffect, useMemo } from 'react';
+import styles from './InventoryPage.module.css';
+import { managerApi } from '../../api/manager';
 
 interface InventoryItem {
   id: string;
@@ -17,120 +18,6 @@ interface InventoryItem {
   reserved: number;
   lastUpdated: string;
 }
-
-// Mock inventory data
-const MOCK_INVENTORY: InventoryItem[] = [
-  {
-    id: '1',
-    name: 'Процессор Intel Core i5-12400F',
-    sku: 'CPU-INT-0012',
-    category: 'cpu',
-    price: 850,
-    stock: 2,
-    minStock: 5,
-    reserved: 1,
-    lastUpdated: '2025-03-17 08:30'
-  },
-  {
-    id: '2',
-    name: 'Видеокарта NVIDIA RTX 4060',
-    sku: 'GPU-NVD-0042',
-    category: 'gpu',
-    price: 2100,
-    stock: 1,
-    minStock: 3,
-    reserved: 0,
-    lastUpdated: '2025-03-17 09:15'
-  },
-  {
-    id: '3',
-    name: 'Материнская плата MSI B760',
-    sku: 'MB-MSI-0018',
-    category: 'motherboard',
-    price: 520,
-    stock: 3,
-    minStock: 5,
-    reserved: 2,
-    lastUpdated: '2025-03-16 14:45'
-  },
-  {
-    id: '4',
-    name: 'ОЗУ Corsair 16GB DDR4 3200MHz',
-    sku: 'RAM-COR-0007',
-    category: 'ram',
-    price: 185,
-    stock: 4,
-    minStock: 10,
-    reserved: 0,
-    lastUpdated: '2025-03-17 07:20'
-  },
-  {
-    id: '5',
-    name: 'SSD Kingston NV2 1TB',
-    sku: 'SSD-KIN-0023',
-    category: 'storage',
-    price: 145,
-    stock: 12,
-    minStock: 8,
-    reserved: 3,
-    lastUpdated: '2025-03-17 10:00'
-  },
-  {
-    id: '6',
-    name: 'Блок питания Corsair CX650M',
-    sku: 'PSU-COR-0011',
-    category: 'psu',
-    price: 220,
-    stock: 7,
-    minStock: 5,
-    reserved: 1,
-    lastUpdated: '2025-03-16 16:30'
-  },
-  {
-    id: '7',
-    name: 'Корпус NZXT H5 Flow',
-    sku: 'CASE-NZX-0004',
-    category: 'case',
-    price: 310,
-    stock: 6,
-    minStock: 4,
-    reserved: 0,
-    lastUpdated: '2025-03-15 11:20'
-  },
-  {
-    id: '8',
-    name: 'Процессор AMD Ryzen 5 7600X',
-    sku: 'CPU-AMD-0009',
-    category: 'cpu',
-    price: 920,
-    stock: 15,
-    minStock: 5,
-    reserved: 2,
-    lastUpdated: '2025-03-17 09:45'
-  },
-  {
-    id: '9',
-    name: 'Видеокарта AMD RX 7600',
-    sku: 'GPU-AMD-0015',
-    category: 'gpu',
-    price: 1650,
-    stock: 8,
-    minStock: 3,
-    reserved: 1,
-    lastUpdated: '2025-03-17 08:15'
-  },
-  {
-    id: '10',
-    name: 'Материнская плата ASUS B650',
-    sku: 'MB-ASU-0021',
-    category: 'motherboard',
-    price: 610,
-    stock: 0,
-    minStock: 5,
-    reserved: 0,
-    lastUpdated: '2025-03-16 13:00'
-  }
-];
 
 const CATEGORY_LABELS: Record<string, string> = {
   cpu: 'Процессоры',
@@ -206,10 +93,10 @@ export function InventoryPage() {
 
   // Stats calculation
   const stats = useMemo(() => {
-    const totalItems = MOCK_INVENTORY.length;
-    const lowStockItems = MOCK_INVENTORY.filter(i => i.stock <= i.minStock).length;
-    const outOfStockItems = MOCK_INVENTORY.filter(i => i.stock === 0).length;
-    const totalValue = MOCK_INVENTORY.reduce((sum, item) => sum + (item.stock * item.price), 0);
+    const totalItems = inventory.length;
+    const lowStockItems = inventory.filter(i => i.stock <= i.minStock).length;
+    const outOfStockItems = inventory.filter(i => i.stock === 0).length;
+    const totalValue = inventory.reduce((sum, item) => sum + (item.stock * item.price), 0);
 
     return { totalItems, lowStockItems, outOfStockItems, totalValue };
   }, []);

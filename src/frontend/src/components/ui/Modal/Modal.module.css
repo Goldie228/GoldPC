@@ -9,7 +9,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--shadow-lg), 0.75);
+  background: rgba(var(--shadow-rgb), 0.75);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -29,10 +29,10 @@
 
 /* Modal container - dark card */
 .modal {
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg, 8px);
-  box-shadow: var(--shadow-xl, 0 16px 48px var(--shadow-lg), 0.12));
+  box-shadow: 0 16px 48px rgba(var(--shadow-rgb), 0.12);
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
@@ -85,7 +85,7 @@
   width: 32px;
   height: 32px;
   background: transparent;
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  border: 1px solid var(--border);
   border-radius: var(--radius, 4px);
   color: var(--fg-muted, var(--fg-muted));
   cursor: pointer;

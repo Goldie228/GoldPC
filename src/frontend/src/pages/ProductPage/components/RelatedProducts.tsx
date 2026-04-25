@@ -18,7 +18,7 @@ const itemVariants = {
     y: 0,
     transition: {
       duration: 0.5,
-      ease: [0.33, 1, 0.68, 1]
+      ease: [0.33, 1, 0.68, 1] as const
     }
   }
 };
@@ -97,8 +97,8 @@ export function RelatedProducts({ product, productId }: RelatedProductsProps): R
     el.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('resize', update);
     return () => {
-      el.removeEventListener('scroll', update as any);
-      el.removeEventListener('wheel', onWheel as any);
+      el.removeEventListener('scroll', update);
+      el.removeEventListener('wheel', onWheel);
       if (wheelRafRef.current != null) {
         window.cancelAnimationFrame(wheelRafRef.current);
         wheelRafRef.current = null;

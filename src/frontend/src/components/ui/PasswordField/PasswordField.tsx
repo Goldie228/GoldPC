@@ -9,6 +9,8 @@ export interface PasswordFieldProps {
   onChange: (value: string) => void;
   placeholder?: string;
   required?: boolean;
+  minLength?: number;
+  maxLength?: number;
   autoComplete?: string;
   className?: string;
   labelClassName?: string;
@@ -25,6 +27,8 @@ export function PasswordField({
   onChange,
   placeholder = 'Введите пароль',
   required,
+  minLength,
+  maxLength,
   autoComplete = 'current-password',
   className,
   labelClassName,
@@ -48,6 +52,8 @@ export function PasswordField({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           required={required}
+          minLength={minLength}
+          maxLength={maxLength}
           autoComplete={autoComplete}
         />
         <button

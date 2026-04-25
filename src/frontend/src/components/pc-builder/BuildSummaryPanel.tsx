@@ -134,7 +134,7 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
         continue;
       }
       const comp = selectedComponents[slot.key as Exclude<PCComponentType, 'ram' | 'storage'>];
-      const p = comp?.product;
+      const p = comp && 'product' in comp ? comp.product : null;
       items.push({
         key: slot.key,
         label: slot.label,

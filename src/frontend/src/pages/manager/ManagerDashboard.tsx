@@ -5,7 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import './ManagerDashboard.css';
+import styles from './ManagerDashboard.module.css';
+import { managerApi } from '../../api/manager';
 
 // Dashboard Widget Interface
 interface DashboardWidget {
@@ -35,94 +36,8 @@ interface PendingTicket {
   priority: 'low' | 'medium' | 'high';
 }
 
-// Mock data for demo
-const MOCK_WIDGETS: DashboardWidget[] = [
-  {
-    id: 'today-orders',
-    title: 'Заказы сегодня',
-    value: 12,
-    change: '+23%',
-    icon: '📦',
-    trend: 'up',
-    color: 'blue',
-    link: '/manager/orders'
-  },
-  {
-    id: 'pending-orders',
-    title: 'Ожидают обработки',
-    value: 5,
-    icon: '⏳',
-    trend: 'neutral',
-    color: 'yellow',
-    link: '/manager/orders?status=pending'
-  },
-  {
-    id: 'low-stock',
-    title: 'Товары с низким остатком',
-    value: 8,
-    icon: '⚠️',
-    trend: 'neutral',
-    color: 'red',
-    link: '/manager/inventory'
-  },
-  {
-    id: 'pending-tickets',
-    title: 'Запросы в поддержку',
-    value: 3,
-    icon: '🎫',
-    trend: 'neutral',
-    color: 'purple',
-    link: '/master/tickets'
-  },
-  {
-    id: 'revenue-today',
-    title: 'Выручка сегодня',
-    value: '12 450 BYN',
-    change: '+15%',
-    icon: '💰',
-    trend: 'up',
-    color: 'green'
-  },
-  {
-    id: 'completed-orders',
-    title: 'Завершено сегодня',
-    value: 7,
-    icon: '✅',
-    trend: 'neutral',
-    color: 'green'
-  }
-];
 
-const MOCK_LOW_STOCK: LowStockItem[] = [
-  { id: '1', name: 'Процессор Intel Core i5-12400F', sku: 'CPU-INT-0012', stock: 2, threshold: 5 },
-  { id: '2', name: 'Видеокарта NVIDIA RTX 4060', sku: 'GPU-NVD-0042', stock: 1, threshold: 3 },
-  { id: '3', name: 'Материнская плата MSI B760', sku: 'MB-MSI-0018', stock: 3, threshold: 5 },
-  { id: '4', name: 'ОЗУ Corsair 16GB DDR4', sku: 'RAM-COR-0007', stock: 4, threshold: 10 },
-];
 
-const MOCK_PENDING_TICKETS: PendingTicket[] = [
-  {
-    id: 'TKT-0012',
-    customer: 'Александр Петров',
-    subject: 'Проблема с заказом ORD-2025-0012',
-    createdAt: '2025-03-17 09:15',
-    priority: 'high'
-  },
-  {
-    id: 'TKT-0013',
-    customer: 'Мария Иванова',
-    subject: 'Вопрос по возврату товара',
-    createdAt: '2025-03-17 10:45',
-    priority: 'medium'
-  },
-  {
-    id: 'TKT-0014',
-    customer: 'Дмитрий Сидоров',
-    subject: 'Техническая консультация',
-    createdAt: '2025-03-17 11:30',
-    priority: 'low'
-  }
-];
 
 const PRIORITY_LABELS: Record<string, string> = {
   low: 'Низкий',
@@ -143,16 +58,18 @@ export function ManagerDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load dashboard data
     const loadDashboardData = async () => {
       setIsLoading(true);
-      // TODO: Replace with real API calls
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      setWidgets(MOCK_WIDGETS);
-      setLowStock(MOCK_LOW_STOCK);
-      setPendingTickets(MOCK_PENDING_TICKETS);
-      setIsLoading(false);
+      try {
+        const data = await managerApi.getDashboardData();
+        setWidgets(data.widgets);
+        setLowStock(data.lowStock);
+        setPendingTickets(data.pendingTickets);
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     void loadDashboardData();

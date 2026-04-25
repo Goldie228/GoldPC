@@ -4,9 +4,11 @@
  * Основано на prototypes/manager-order-detail.html
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { ArrowLeft, CircleCheck, Truck, Check, AlertCircle } from 'lucide-react';
-import './OrderDetailPage.css';
+import styles from './OrderDetailPage.module.css';
+import { managerApi } from '../../api/manager';
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';
 
@@ -146,7 +148,33 @@ function formatDateTimeShort(dateStr: string): string {
 }
 
 export function OrderDetailPage() {
-  const [order, setOrder] = useState<Order>(MOCK_ORDER);
+  const { orderId } = useParams<{ orderId: string }>();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadOrder = async () => {
+      if (!orderId) return;
+      setIsLoading(true);
+      try {
+        const data = await managerApi.getOrderById(orderId);
+        setOrder(data);
+      } catch (error) {
+        console.error('Failed to load order:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    void loadOrder();
+  }, [orderId]);
+
+  if (isLoading) {
+    return <div className="loading">Загрузка заказа...</div>;
+  }
+
+  if (!order) {
+    return <div className="error">Заказ не найден</div>;
+  }
   const [isUpdating, setIsUpdating] = useState(false);
 
   // Обработчики действий

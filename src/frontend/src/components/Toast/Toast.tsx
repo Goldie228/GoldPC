@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { XMarkIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/outline';
-import { Notification, NotificationPriority } from '../../hooks/useNotifications';
+import type { Notification, NotificationPriorityValue } from '../../hooks/useNotifications';
 
 interface ToastProps {
   notification: Notification;
@@ -15,12 +15,12 @@ export const Toast: React.FC<ToastProps> = ({ notification, onClose }) => {
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const getBackgroundColor = (priority: NotificationPriority) => {
+  const getBackgroundColor = (priority: NotificationPriorityValue) => {
     switch (priority) {
-      case NotificationPriority.Critical: return 'bg-red-600';
-      case NotificationPriority.High: return 'bg-orange-500';
-      case NotificationPriority.Medium: return 'bg-yellow-500';
-      case NotificationPriority.Low: return 'bg-blue-500';
+      case 'Critical': return 'bg-red-600';
+      case 'High': return 'bg-orange-500';
+      case 'Medium': return 'bg-yellow-500';
+      case 'Low': return 'bg-blue-500';
     }
   };
 

@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import './ReportsPage.css';
+import styles from './ReportsPage.module.css';
 
 // Моковые данные финансовой статистики
 const MOCK_STATS = {

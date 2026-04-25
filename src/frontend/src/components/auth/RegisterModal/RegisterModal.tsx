@@ -190,8 +190,9 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       setFieldErrors({});
     } catch (error: unknown) {
       console.error('Registration error:', error);
-      console.error('Full error response:', error.response?.data);
-      const backendErrors = error?.response?.data?.errors;
+      const err = error as { response?: { data?: { errors?: Record<string, string[]>, title?: string } } };
+      console.error('Full error response:', err.response?.data);
+      const backendErrors = err.response?.data?.errors;
 
       if (backendErrors && typeof backendErrors === 'object') {
         // Set field-specific errors from backend validation
@@ -210,7 +211,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         }
       } else {
         // Generic fallback error
-        setError(error?.response?.data?.title || 'Ошибка регистрации. Попробуйте позже.');
+        setError(err.response?.data?.title || 'Ошибка регистрации. Попробуйте позже.');
         setFieldErrors({});
       }
     }
