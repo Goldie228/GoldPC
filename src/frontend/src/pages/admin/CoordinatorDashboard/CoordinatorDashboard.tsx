@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { StatCard } from '../../../components/admin';
 import { statsApi } from '../../../api/admin';
-import './CoordinatorDashboard.css';
+import styles from './CoordinatorDashboard.module.css';
 
 // ===== Types =====
 type AgentTier = 'TIER-1' | 'TIER-2' | 'TIER-3';

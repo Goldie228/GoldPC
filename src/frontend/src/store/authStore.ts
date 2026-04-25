@@ -2,6 +2,7 @@
  * Auth Store - Zustand store для управления состоянием аутентификации
  */
 import { create } from 'zustand';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { persist } from 'zustand/middleware';
 import type { User } from '../api/types';
 
@@ -29,7 +30,7 @@ interface AuthState {
 }
 
 // ✅ ВРУЧНУЮ ВОССТАНАВЛИВАЕМ СОСТОЯНИЕ БЕЗ БАГАНУТОГО PERSIST MIDDLEWARE
-const getInitialState = (): Partial<AuthState> => {
+const getInitialState = (): Pick<AuthState, 'user' | 'isAuthenticated' | 'currentRole'> => {
   try {
     const saved = localStorage.getItem('auth-storage');
     if (saved) {

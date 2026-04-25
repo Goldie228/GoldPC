@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { serviceTicketsApi, type ServiceTicket, TICKET_STATUSES } from '../../api/service-tickets';
 import { useToastStore } from '../../store/toastStore';
 import { Wrench, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import './AccountRepairs.css';
+import styles from "./AccountRepairs.module.css";
 
 function getStatusLabel(status: string): string {
   const statusItem = TICKET_STATUSES.find(s => s.key === status);

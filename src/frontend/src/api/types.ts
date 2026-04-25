@@ -36,6 +36,8 @@ export type ProductCategory =
   | 'mouse'
   | 'headphones';
 
+export type PCComponentType = ProductCategory;
+
 export interface Manufacturer {
   id: Uuid;
   name: string;
@@ -200,6 +202,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   firstName: string;
+  lastName: string;
   phone: string;
 }
 

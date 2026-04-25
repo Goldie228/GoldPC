@@ -4,8 +4,9 @@
  * Основано на prototypes/manager-orders.html
  */
 
-import { useState, useMemo } from 'react';
-import './OrdersPage.css';
+import { useState, useEffect, useMemo } from 'react';
+import styles from './OrdersPage.module.css';
+import { managerApi } from '../../api/manager';
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';
 
@@ -18,73 +19,6 @@ interface Order {
   date: string;
 }
 
-// Моковые данные для демонстрации
-const MOCK_ORDERS: Order[] = [
-  {
-    id: 'ORD-2025-001',
-    customerName: 'Александр Петров',
-    customerEmail: 'alex@example.com',
-    total: 5430,
-    status: 'processing',
-    date: '2025-03-17',
-  },
-  {
-    id: 'ORD-2025-002',
-    customerName: 'Мария Иванова',
-    customerEmail: 'maria@example.com',
-    total: 2180,
-    status: 'pending',
-    date: '2025-03-17',
-  },
-  {
-    id: 'ORD-2025-003',
-    customerName: 'Дмитрий Сидоров',
-    customerEmail: 'dmitry@example.com',
-    total: 8920,
-    status: 'shipped',
-    date: '2025-03-16',
-  },
-  {
-    id: 'ORD-2025-004',
-    customerName: 'Елена Козлова',
-    customerEmail: 'elena@example.com',
-    total: 1450,
-    status: 'completed',
-    date: '2025-03-15',
-  },
-  {
-    id: 'ORD-2025-005',
-    customerName: 'Игорь Новик',
-    customerEmail: 'igor@example.com',
-    total: 3750,
-    status: 'cancelled',
-    date: '2025-03-14',
-  },
-  {
-    id: 'ORD-2025-006',
-    customerName: 'Анна Морозова',
-    customerEmail: 'anna@example.com',
-    total: 4200,
-    status: 'processing',
-    date: '2025-03-14',
-  },
-  {
-    id: 'ORD-2025-007',
-    customerName: 'Сергей Волков',
-    customerEmail: 'sergey@example.com',
-    total: 6100,
-    status: 'completed',
-    date: '2025-03-13',
-  },
-  {
-    id: 'ORD-2025-008',
-    customerName: 'Ольга Белова',
-    customerEmail: 'olga@example.com',
-    total: 2890,
-    status: 'shipped',
-    date: '2025-03-12',
-  },
-];
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   pending: 'Ожидает',
@@ -123,9 +57,28 @@ export function OrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      setIsLoading(true);
+      try {
+        const data = await managerApi.getOrders(currentPage, itemsPerPage, statusFilter || undefined);
+        setOrders(data.items || []);
+      } catch (error) {
+        console.error('Failed to load orders:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    void loadOrders();
+  }, [currentPage, statusFilter]);
+
   const filteredOrders = useMemo(() => {
-    return MOCK_ORDERS.filter((order) => {
-      // Поиск по ID или клиенту
+    return orders.filter((order) => {
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
         searchQuery === '' ||
@@ -133,22 +86,12 @@ export function OrdersPage() {
         order.customerName.toLowerCase().includes(searchLower) ||
         order.customerEmail.toLowerCase().includes(searchLower);
 
-      // Фильтр по статусу
-      const matchesStatus = statusFilter === '' || order.status === statusFilter;
-
-      // Фильтр по дате
       const matchesDateFrom = dateFrom === '' || order.date >= dateFrom;
       const matchesDateTo = dateTo === '' || order.date <= dateTo;
 
-      return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
+      return matchesSearch && matchesDateFrom && matchesDateTo;
     });
-  }, [searchQuery, statusFilter, dateFrom, dateTo]);
-
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const paginatedOrders = filteredOrders.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  }, [orders, searchQuery, dateFrom, dateTo]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));

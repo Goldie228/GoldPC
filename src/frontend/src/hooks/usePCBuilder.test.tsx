@@ -97,7 +97,7 @@ function createCooling(overrides: Partial<Product> = {}): Product {
     price: 8000,
     specifications: {
       supportedSockets: ['LGA1700', 'AM5'],
-    } as Product['specifications'],
+    } as unknown as Product['specifications'],
     ...overrides,
   });
 }

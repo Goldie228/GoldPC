@@ -74,11 +74,11 @@ function getComponentRows(s: PCBuilderSelectedState): ComponentRow[] {
       continue;
     }
     if (slot.key === 'fan') {
-      const fans = (s as any).fan;
+      const fans = s.fan;
       if (!fans || fans.length === 0) {
         rows.push({ category: slot.label, name: '—', price: '—' });
       } else {
-        fans.forEach((f: any, i: number) => {
+        fans.forEach((f: SelectedComponent, i: number) => {
           rows.push({
             category: fans.length > 1 ? `Вентилятор (${i + 1})` : slot.label,
             name: f.product.name,
@@ -88,7 +88,7 @@ function getComponentRows(s: PCBuilderSelectedState): ComponentRow[] {
       }
       continue;
     }
-    const comp = (s as Record<string, any>)[slot.key];
+    const comp = (s as Record<string, SelectedComponent | undefined>)[slot.key];
     if (comp?.product) {
       rows.push({
         category: slot.label,
@@ -145,19 +145,19 @@ function generatePdf(props: PdfExportModalProps): Blob {
   doc.setFont('Roboto');
 
   // === Header ===
-  doc.setFillColor(...dark);
+  doc.setFillColor(dark[0], dark[1], dark[2]);
   doc.rect(0, 0, pageW, 48, 'F');
-  doc.setFillColor(...accent);
+  doc.setFillColor(accent[0], accent[1], accent[2]);
   doc.rect(0, 48, pageW, 1.2, 'F');
 
-  doc.setTextColor(...accent);
+  doc.setTextColor(accent[0], accent[1], accent[2]);
   doc.setFontSize(22);
   doc.setFont('Roboto', 'bold');
   doc.text('GOLDPC', margin, 20);
 
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...muted);
+  doc.setTextColor(muted[0], muted[1], muted[2]);
   const autoName = generateAutoname(selectedComponents);
   doc.text(autoName, margin, 30);
 
@@ -170,21 +170,21 @@ function generatePdf(props: PdfExportModalProps): Blob {
   // === Compatibility Status ===
   doc.setFontSize(13);
   doc.setFont('Roboto', 'bold');
-  doc.setTextColor(...text);
+  doc.setTextColor(...(text as [number, number, number]));
   doc.text('Совместимость', margin, y);
   y += 6;
 
   if (isCompatible) {
-    doc.setFillColor(...accent);
+    doc.setFillColor(accent[0], accent[1], accent[2]);
     doc.roundedRect(margin, y - 4, 8, 8, 2, 2, 'F');
-    doc.setTextColor(...accent);
+    doc.setTextColor(accent[0], accent[1], accent[2]);
     doc.setFontSize(10);
     doc.setFont('Roboto', 'bold');
     doc.text('  Все компоненты совместимы', margin + 10, y + 1);
   } else {
-    doc.setFillColor(...red);
+    doc.setFillColor(red[0], red[1], red[2]);
     doc.roundedRect(margin, y - 4, 8, 8, 2, 2, 'F');
-    doc.setTextColor(...red);
+    doc.setTextColor(red[0], red[1], red[2]);
     doc.setFontSize(10);
     doc.setFont('Roboto', 'bold');
     doc.text(`  Ошибки: ${compatibilityErrors.length}`, margin + 10, y + 1);
@@ -193,7 +193,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
 
   if (compatibilityErrors.length > 0) {
     doc.setFontSize(8.5);
-    doc.setTextColor(...red);
+    doc.setTextColor(red[0], red[1], red[2]);
     doc.setFont('helvetica', 'normal');
     compatibilityErrors.forEach((err) => {
       doc.text(`— ${err}`, margin + 4, y);
@@ -203,7 +203,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   }
   if (compatibilityWarnings.length > 0) {
     doc.setFontSize(8.5);
-    doc.setTextColor(...yellow);
+    doc.setTextColor(yellow[0], yellow[1], yellow[2]);
     compatibilityWarnings.forEach((w) => {
       doc.text(`! ${w}`, margin + 4, y);
       y += 4.5;
@@ -216,7 +216,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   const rows = getComponentRows(selectedComponents);
   doc.setFontSize(13);
   doc.setFont('Roboto', 'bold');
-  doc.setTextColor(...text);
+  doc.setTextColor(...(text as [number, number, number]));
   doc.text('Компоненты', margin, y);
   y += 4;
 
@@ -251,7 +251,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
     margin: { left: margin, right: margin },
   });
 
-  y = (doc as any).lastAutoTable.finalY + 10;
+  y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
   // Check if we need a new page
   if (y > 220) {
@@ -265,18 +265,18 @@ function generatePdf(props: PdfExportModalProps): Blob {
   // Power Section
   doc.setFillColor(20, 20, 23);
   doc.roundedRect(margin, y, sectionW, 36, 3, 3, 'F');
-  doc.setDrawColor(...accent);
+  doc.setDrawColor(...(accent as [number, number, number]));
   doc.setLineWidth(0.5);
   doc.roundedRect(margin, y, sectionW, 36, 3, 3, 'S');
 
   doc.setFontSize(9);
   doc.setFont('Roboto', 'bold');
-  doc.setTextColor(...accent);
+  doc.setTextColor(accent[0], accent[1], accent[2]);
   doc.text('Затраты электричества', margin + 6, y + 9);
 
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...text);
+  doc.setTextColor(...(text as [number, number, number]));
   doc.text(`Потребление: ~${Math.round(powerConsumption)} Вт`, margin + 6, y + 17);
   doc.text(`Рекомендуемый БП: ${recommendedPsu ?? Math.ceil(powerConsumption * 1.3)} Вт`, margin + 6, y + 25);
 
@@ -284,17 +284,17 @@ function generatePdf(props: PdfExportModalProps): Blob {
   const perfX = margin + sectionW + 10;
   doc.setFillColor(20, 20, 23);
   doc.roundedRect(perfX, y, sectionW, 36, 3, 3, 'F');
-  doc.setDrawColor(...accent);
+  doc.setDrawColor(...(accent as [number, number, number]));
   doc.roundedRect(perfX, y, sectionW, 36, 3, 3, 'S');
 
   doc.setFontSize(9);
   doc.setFont('Roboto', 'bold');
-  doc.setTextColor(...accent);
+  doc.setTextColor(accent[0], accent[1], accent[2]);
   doc.text('Производительность', perfX + 6, y + 9);
 
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...text);
+  doc.setTextColor(...(text as [number, number, number]));
   doc.text(`Игры: ${performance.gamingScore}/100`, perfX + 6, y + 17);
   doc.text(`Работа: ${performance.workstationScore}/100`, perfX + 6, y + 25);
 
@@ -304,7 +304,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   if (performance.estimatedFps.fps1080p > 0) {
     doc.setFontSize(11);
     doc.setFont('Roboto', 'bold');
-    doc.setTextColor(...text);
+    doc.setTextColor(...(text as [number, number, number]));
     doc.text('Оценка FPS', margin, y);
     y += 6;
 
@@ -318,7 +318,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
       ],
       theme: 'grid',
       headStyles: {
-        fillColor: dark as [number, number, number],
+        fillColor: [dark[0], dark[1], dark[2]],
         textColor: accent as [number, number, number],
         fontStyle: 'bold',
         fontSize: 9,
@@ -326,9 +326,9 @@ function generatePdf(props: PdfExportModalProps): Blob {
       },
       bodyStyles: {
         fontSize: 9,
-        textColor: text as [number, number, number],
+        textColor: [text[0], text[1], text[2]],
         cellPadding: 4,
-        lineColor: [60, 60, 66] as [number, number, number],
+        lineColor: [60, 60, 66],
         lineWidth: 0.2,
       },
       columnStyles: {
@@ -337,7 +337,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
       },
       margin: { left: margin, right: margin },
     });
-    y = (doc as any).lastAutoTable.finalY + 10;
+    y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
   }
 
   // === Total Price ===
@@ -346,19 +346,19 @@ function generatePdf(props: PdfExportModalProps): Blob {
     y = 20;
   }
 
-  doc.setFillColor(...dark);
+  doc.setFillColor(20, 20, 23);
   doc.roundedRect(margin, y, contentW, 22, 3, 3, 'F');
-  doc.setDrawColor(...accent);
+  doc.setDrawColor(...(accent as [number, number, number]));
   doc.setLineWidth(1);
   doc.roundedRect(margin, y, contentW, 22, 3, 3, 'S');
 
   doc.setFontSize(11);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...text);
+  doc.setTextColor(...(text as [number, number, number]));
   doc.text('Итого:', margin + 8, y + 14);
 
   doc.setFontSize(16);
-  doc.setTextColor(...accent);
+  doc.setTextColor(accent[0], accent[1], accent[2]);
   doc.setFont('Roboto', 'bold');
   doc.text(`${totalPrice.toLocaleString('ru-BY')} BYN`, pageW - margin - 8, y + 14, { align: 'right' });
 
@@ -366,7 +366,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   const footerY = doc.internal.pageSize.getHeight() - 14;
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...muted);
+  doc.setTextColor(muted[0], muted[1], muted[2]);
   doc.text('GoldPC — Конструктор ПК  |  goldpc.by', margin, footerY);
   doc.text(`Сгенерировано ${now.toLocaleString('ru-BY')}`, pageW - margin, footerY, { align: 'right' });
 
@@ -386,8 +386,15 @@ export function PdfExportModal({
       URL.revokeObjectURL(generatedUrlRef.current);
     }
     const blob = generatePdf({
-      selectedComponents, totalPrice, powerConsumption, recommendedPsu,
-      isCompatible, compatibilityErrors, compatibilityWarnings,
+      isOpen: true,
+      onClose: () => {},
+      selectedComponents,
+      totalPrice,
+      powerConsumption,
+      recommendedPsu,
+      isCompatible,
+      compatibilityErrors,
+      compatibilityWarnings,
     });
     generatedBlobRef.current = blob;
     generatedUrlRef.current = URL.createObjectURL(blob);

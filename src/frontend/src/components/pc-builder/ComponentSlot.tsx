@@ -60,7 +60,7 @@ function StatusBadge({ message, duration }: { message: string; duration: number 
       initial={{ opacity: 0, scale: 0.8, y: -4 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.8 }}
-      transition={{ duration, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration, ease: [0.22, 1, 0.36, 1] as const }}
     >
       <AlertTriangle size={12} />
       <span>{message}</span>
@@ -114,7 +114,7 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
       transition={{
         duration: animDuration,
         delay: index * 0.08,
-        ease: [0.22, 1, 0.36, 1],
+        ease: [0.22, 1, 0.36, 1] as const,
       }}
       layout="position"
     >
@@ -128,7 +128,7 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
           animate={{
             scale: state === 'selected' ? 1.12 : 1,
           }}
-          transition={{ duration: animDuration, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: animDuration, ease: [0.22, 1, 0.36, 1] as const }}
         >
           {state !== 'empty' && imageUrl ? (
             <div className="component-slot__thumbnail">

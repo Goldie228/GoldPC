@@ -57,7 +57,7 @@ export function RegisterPage() {
     }
 
     try {
-      await register({ firstName, phone, email, password });
+      await register({ firstName, lastName: '', phone, email, password });
     } catch {
       setError('Ошибка регистрации. Попробуйте другой email');
     }

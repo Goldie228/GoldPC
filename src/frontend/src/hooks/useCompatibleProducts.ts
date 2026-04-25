@@ -6,8 +6,9 @@
 
 import { useMemo } from 'react';
 import { useProducts } from './useProducts';
-import type { ProductSummary, ProductCategory, ProductSpecifications } from '../api/types';
-import type { PCComponentType, SelectedComponent } from './usePCBuilder';
+import type { ProductSummary } from '../api/types';
+import type { ProductSpecifications } from '../api/types';
+import type { PCComponentType } from './index';
 
 export interface CompatibleProductsFilters {
   manufacturerIds?: string[];
@@ -28,7 +29,7 @@ export interface CompatibleProductsResult {
   refetch: () => void;
 }
 
-const componentTypeToCategory: Record<PCComponentType, ProductCategory> = {
+const componentTypeToCategory: Record<PCComponentType, PCComponentType> = {
   cpu: 'cpu',
   gpu: 'gpu',
   motherboard: 'motherboard',
@@ -37,6 +38,11 @@ const componentTypeToCategory: Record<PCComponentType, ProductCategory> = {
   psu: 'psu',
   case: 'case',
   cooling: 'cooling',
+  fan: 'fan',
+  monitor: 'monitor',
+  keyboard: 'keyboard',
+  mouse: 'mouse',
+  headphones: 'headphones',
 };
 
 function extractSocket(specs: ProductSpecifications | undefined): string | null {

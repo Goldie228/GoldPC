@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { RotateCw, XCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import './ServerErrorPage.css';
+import styles from "./ServerErrorPage.module.css";
 
 /**
  * ServerErrorPage Component

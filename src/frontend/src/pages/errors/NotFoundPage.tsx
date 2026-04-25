@@ -1,6 +1,6 @@
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import './NotFoundPage.css';
+import styles from "./NotFoundPage.module.css";
 
 /**
  * 404 — запоминающаяся страница с лёгкой анимацией и метафорой «сигнал потерян».

@@ -1,35 +1,35 @@
-.info-page {
-  max-width: 980px;
+/* InfoPage.module.css - Styles for static info pages */
+.infoPage {
+  max-width: 900px;
   margin: 0 auto;
-  padding: 24px 16px 56px;
-  color: var(--text-primary, #f4f4f5);
+  padding: var(--space-xl);
 }
 
-.info-page h1 {
-  margin: 0 0 16px;
-  font-size: 2rem;
+.infoPage h1 {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-lg);
+  color: var(--fg);
 }
 
-.info-page section {
-  border: 1px solid var(--border-primary, #27272a);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 12px;
-  background: var(--bg-card, #111113);
+.infoPage h2 {
+  font-size: var(--text-2xl);
+  margin-top: var(--space-xl);
+  margin-bottom: var(--space-md);
+  color: var(--fg);
 }
 
-.info-page h2 {
-  margin: 0 0 8px;
-  font-size: 1.2rem;
+.infoPage p {
+  line-height: 1.6;
+  color: var(--fg-muted);
+  margin-bottom: var(--space-md);
 }
 
-.info-page p,
-.info-page li {
-  color: var(--text-secondary, #d4d4d8);
-  line-height: 1.5;
+.infoPage ul {
+  list-style: disc;
+  padding-left: var(--space-lg);
+  color: var(--fg-muted);
 }
 
-.info-page ul {
-  margin: 0;
-  padding-left: 18px;
+.infoPage li {
+  margin-bottom: var(--space-sm);
 }

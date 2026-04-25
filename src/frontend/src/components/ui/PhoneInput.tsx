@@ -1,4 +1,4 @@
-import { forwardRef, InputHTMLAttributes } from 'react';
+import { forwardRef, type InputHTMLAttributes } from 'react';
 import { usePhoneFormat } from '../../hooks/usePhoneFormat';
 import styles from './Input/Input.module.css';
 
@@ -12,7 +12,7 @@ interface PhoneInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'o
  * Форматирует ввод по шаблону +375 (XX) XXX-XX-XX
  */
 export const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
-  ({ value, onChange, className, placeholder = '+375 (29) 123-45-67', ...props }, ref) => {
+  ({ value, onChange, className, placeholder = '+375 (29) 123-45-67', ...props }, _ref) => {
     const {
       displayValue,
       inputRef,

@@ -10,7 +10,7 @@ import {
 import { useToastStore } from '../../store/toastStore';
 import { Button, Input } from '../../components/ui';
 import { ArrowLeft, Send, Paperclip, Image } from 'lucide-react';
-import './TicketDetailPage.css';
+import styles from './TicketDetailPage.module.css';
 
 function getStatusLabel(status: string): string {
   const statusItem = TICKET_STATUSES.find(s => s.key === status);

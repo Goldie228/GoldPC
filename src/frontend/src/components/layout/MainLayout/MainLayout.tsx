@@ -39,7 +39,7 @@ export function MainLayout() {
           exit={reduceMotion ? undefined : { opacity: 0 }}
           transition={{
             duration: reduceMotion ? 0 : 0.2,
-            ease: [0.33, 1, 0.68, 1],
+            ease: [0.33, 1, 0.68, 1] as const,
           }}
         >
           <Outlet />

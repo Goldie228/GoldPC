@@ -10,6 +10,7 @@ export const CATEGORY_LABELS_RU: Record<ProductCategory, string> = {
   psu: 'Блоки питания',
   case: 'Корпуса',
   cooling: 'Охлаждение',
+  fan: 'Вентиляторы',
   monitor: 'Мониторы',
   keyboard: 'Клавиатуры',
   mouse: 'Мыши',

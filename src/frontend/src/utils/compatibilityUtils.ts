@@ -608,6 +608,7 @@ export function checkCompatibility(components: ComponentMap): CompatibilityCheck
     let usedSata = 0;
 
     for (const storage of storageProducts) {
+      if (!storage) continue;
       const type = extractStorageType(storage.specifications);
       if (type === 'm2') usedM2++;
       if (type === 'sata') usedSata++;
@@ -819,7 +820,7 @@ export function isComponentCompatible(componentType: ComponentCategory, product:
     const mbSataPorts = extractSataPorts(test.motherboard.specifications);
 
     // Count already selected storage
-    const existingStorage = Object.values(current).filter(c => c?.category === 'storage');
+    const existingStorage = Object.values(current).filter((c): c is Product => !!c && c?.category === 'storage');
     let usedM2 = existingStorage.filter(s => extractStorageType(s.specifications) === 'm2').length;
     let usedSata = existingStorage.filter(s => extractStorageType(s.specifications) === 'sata').length;
 

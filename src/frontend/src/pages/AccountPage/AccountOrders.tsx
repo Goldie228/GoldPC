@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ordersApi, type Order, type OrderItem } from '../../api/orders';
 import { useToastStore } from '../../store/toastStore';
 import { Modal } from '../../components/ui/Modal/Modal';
-import './AccountOrders.css';
+import styles from './AccountOrders.module.css';
 
 function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {
@@ -73,13 +73,13 @@ export function AccountOrders() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  const handleViewDetails = async (order: Order) => {
-    setSelectedOrder(order);
+  const handleViewDetails = async (currentOrderId: Order) => {
+    setSelectedOrder(currentOrderId);
     setDetailsLoading(true);
     setShowDetailsModal(true);
 
     try {
-      const details = await ordersApi.getOrder(order.id);
+      const details = await ordersApi.getOrder(currentOrderId.id);
       setOrderDetails(details);
     } catch {
       showToast('Ошибка загрузки деталей заказа', 'error');
@@ -95,7 +95,7 @@ export function AccountOrders() {
         const details = await ordersApi.getOrder(selectedOrder.id);
         setOrderDetails(details);
 
-        // Update order in list
+        // Update currentOrderId in list
         setOrders(prev => prev.map(o => o.id === details.id ? details : o));
       } catch {
         // Silently fail on polling errors
@@ -111,19 +111,20 @@ export function AccountOrders() {
   }, [showDetailsModal, refreshOrderStatus]);
 
   const handleRepeatOrder = async (orderId: string) => {
+    const currentOrderId = orderId;
     // TODO: Actual implementation to copy items to cart
-    showToast(`Товары из заказа ${orderId} добавлены в корзину`, 'success');
+    showToast(`Товары из заказа ${currentOrderId} добавлены в корзину`, 'success');
     navigate('/cart');
   };
 
-  const ordersFormatted = orders.map(order => ({
-    id: order.orderNumber,
-    items: order.items.slice(0, 2).map(i => ({ name: i.productName, quantity: i.quantity })),
-    date: new Date(order.createdAt).toLocaleDateString('ru-RU'),
-    total: `${order.total.toFixed(2)} BYN`,
-    status: order.status,
-    statusLabel: getStatusLabel(order.status),
-    moreItems: order.items.length > 2 ? order.items.length - 2 : undefined,
+  const ordersFormatted = orders.map(currentOrderId => ({
+    id: currentOrderId.orderNumber,
+    items: currentOrderId.items.slice(0, 2).map(i => ({ name: i.productName, quantity: i.quantity })),
+    date: new Date(currentOrderId.createdAt).toLocaleDateString('ru-RU'),
+    total: `${currentOrderId.total.toFixed(2)} BYN`,
+    status: currentOrderId.status,
+    statusLabel: getStatusLabel(currentOrderId.status),
+    moreItems: currentOrderId.items.length > 2 ? currentOrderId.items.length - 2 : undefined,
   }));
 
   if (loading) {
@@ -240,7 +241,7 @@ export function AccountOrders() {
   const filteredOrders = ordersFormatted.length > 0
     ? activeFilter === 'all'
       ? ordersFormatted
-      : ordersFormatted.filter(order => order.status === activeFilter)
+      : ordersFormatted.filter(currentOrderId => currentOrderId.status === activeFilter)
     : oldOrdersMock;
 
   return (
@@ -300,39 +301,39 @@ export function AccountOrders() {
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.map((order) => (
-              <tr key={order.id}>
+            {filteredOrders.map((currentOrderId) => (
+              <tr key={currentOrderId.id}>
                 <td>
-                  <a href="#" className="order-id">#{order.id}</a>
+                  <a href="#" className="currentOrderId-id">#{currentOrderId.id}</a>
                 </td>
-                <td className="order-items">
-                  <div className="order-items-list">
-                    {order.items.map((item, index) => (
-                      <span key={index} className="order-item">{item.name}</span>
+                <td className="currentOrderId-items">
+                  <div className="currentOrderId-items-list">
+                    {currentOrderId.items.map((item, index) => (
+                      <span key={index} className="currentOrderId-item">{item.name}</span>
                     ))}
-                    {order.moreItems && (
-                      <span className="order-item-more">+{order.moreItems} товара</span>
+                    {currentOrderId.moreItems && (
+                      <span className="currentOrderId-item-more">+{currentOrderId.moreItems} товара</span>
                     )}
                   </div>
                 </td>
-                <td className="order-date">{order.date}</td>
-                <td className="order-total">{order.total}</td>
+                <td className="currentOrderId-date">{currentOrderId.date}</td>
+                <td className="currentOrderId-total">{currentOrderId.total}</td>
                 <td>
-                  <span className={`status-badge status-badge--${order.status}`}>
+                  <span className={`status-badge status-badge--${currentOrderId.status}`}>
                     <span className="status-badge__dot"></span>
-                    {order.statusLabel}
+                    {currentOrderId.statusLabel}
                   </span>
                 </td>
                 <td>
-                  <div className="order-actions">
-                    <button className="action-btn" aria-label="Отследить" onClick={() => navigate(`/orders/${order.id}/tracking`)}>
+                  <div className="currentOrderId-actions">
+                    <button className="action-btn" aria-label="Отследить" onClick={() => navigate(`/orders/${currentOrderId.id}/tracking`)}>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="10" />
                         <line x1="12" y1="16" x2="12" y2="12" />
                         <line x1="12" y1="8" x2="12.01" y2="8" />
                       </svg>
                     </button>
-                    <button className="action-btn" aria-label="Повторить" onClick={handleRepeatOrder}>
+                    <button className="action-btn" aria-label="Повторить" onClick={() => void handleRepeatOrder(currentOrderId.id)}>
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
                       </svg>
@@ -376,10 +377,10 @@ export function AccountOrders() {
         {detailsLoading ? (
           <div className="modal-loading">Загрузка деталей заказа...</div>
         ) : orderDetails && (
-          <div className="order-details-modal">
-            <div className="order-details-section">
+          <div className="currentOrderId-details-modal">
+            <div className="currentOrderId-details-section">
               <h4>Статус заказа</h4>
-              <div className="order-status-timeline">
+              <div className="currentOrderId-status-timeline">
                 {[
                   { status: 'New', label: 'Создан' },
                   { status: 'Processing', label: 'В обработке' },
@@ -399,18 +400,18 @@ export function AccountOrders() {
               </div>
             </div>
 
-            <div className="order-details-grid">
-              <div className="order-details-col">
+            <div className="currentOrderId-details-grid">
+              <div className="currentOrderId-details-col">
                 <h4>Состав заказа</h4>
-                <div className="order-items-list">
+                <div className="currentOrderId-items-list">
                   {orderDetails.items.map((item: OrderItem) => (
-                    <div key={item.id} className="order-item-row">
+                    <div key={item.id} className="currentOrderId-item-row">
                       <span className="item-name">{item.productName}</span>
                       <span className="item-quantity">× {item.quantity}</span>
                       <span className="item-price">{item.totalPrice.toFixed(2)} BYN</span>
                     </div>
                   ))}
-                  <div className="order-item-row order-item-row--total">
+                  <div className="currentOrderId-item-row currentOrderId-item-row--total">
                     <span>Итого</span>
                     <span></span>
                     <span>{orderDetails.total.toFixed(2)} BYN</span>
@@ -418,9 +419,9 @@ export function AccountOrders() {
                 </div>
               </div>
 
-              <div className="order-details-col">
+              <div className="currentOrderId-details-col">
                 <h4>Данные доставки</h4>
-                <div className="order-info-list">
+                <div className="currentOrderId-info-list">
                   <div className="info-row">
                     <span className="info-label">Метод доставки:</span>
                     <span className="info-value">{orderDetails.deliveryMethod === 'Delivery' ? 'Курьер' : 'Самовывоз'}</span>

@@ -16,7 +16,7 @@ import { hasIntegratedGraphics } from '../utils/compatibilityUtils';
 import compatibilityRules from '../config/compatibilityRules.json';
 import type { CompatibilityRulesConfig } from '../config/compatibilityTypes';
 
-const rules = compatibilityRules as unknown as CompatibilityRulesConfig;
+const rules = compatibilityRules as CompatibilityRulesConfig;
 
 // === Типы ===
 
@@ -122,7 +122,7 @@ export const MAX_STORAGE_MODULES = 8;
 export const MAX_FAN_MODULES = 8;
 
 const BASE_POWER_CONSUMPTION = rules.powerCompatibility.baseSystemPower;
-const PSU_BUFFER = rules.powerCompatibility.psuBufferPercent;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const STORAGE_KEY = 'goldpc-pc-builder';
 
 // Дебаунс для API-запроса совместимости (мс)
@@ -771,7 +771,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
           return next;
         }
 
-        (next as Record<string, unknown>)[type] = sc;
+        (next as PCBuilderSelectedState)[type as keyof PCBuilderSelectedState] = sc;
         return next;
       });
     },

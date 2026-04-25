@@ -18,6 +18,7 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
   psu: 'Блоки питания',
   case: 'Корпуса',
   cooling: 'Охлаждение',
+  fan: 'Вентиляторы',
   monitor: 'Мониторы',
   keyboard: 'Клавиатуры',
   mouse: 'Мыши',
@@ -25,7 +26,7 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
 };
 
 const CATEGORY_OPTIONS: ProductCategory[] = [
-  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'keyboard', 'mouse', 'headphones'
+  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'fan', 'monitor', 'keyboard', 'mouse', 'headphones'
 ];
 
 interface EditFormData {

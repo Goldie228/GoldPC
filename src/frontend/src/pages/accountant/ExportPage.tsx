@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import './ExportPage.css';
+import styles from './ExportPage.module.css';
 
 type ExportFormat = 'csv' | 'xlsx' | 'pdf';
 

@@ -12,7 +12,7 @@ interface UsePhoneFormatOptions {
 
 interface UsePhoneFormatResult {
   displayValue: string;
-  inputRef: React.RefObject<HTMLInputElement>;
+  inputRef: React.RefObject<HTMLInputElement | null>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   handlePaste: (e: React.ClipboardEvent<HTMLInputElement>) => void;
@@ -66,7 +66,8 @@ export function usePhoneFormat({ value, onChange }: UsePhoneFormatOptions = {}):
   }
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    const cursorPos = e.target.selectionStart || 0;
+    const target = e.target as HTMLInputElement;
+    const cursorPos = target.selectionStart || 0;
 
     // Блокируем удаление префикса +375
     if (e.key === 'Backspace' && cursorPos <= PREFIX.length) {
@@ -81,7 +82,8 @@ export function usePhoneFormat({ value, onChange }: UsePhoneFormatOptions = {}):
       if (charBeforeCursor && !/\d/.test(charBeforeCursor)) {
         // Перемещаем курсор влево за форматирующий символ
         const newPos = findPrevDigitPosition(cursorPos, displayValue);
-        inputRef.current.setSelectionRange(newPos, newPos);
+        const current = inputRef.current;
+        if (current) current.setSelectionRange(newPos, newPos);
         // НЕ вызываем e.preventDefault() — даём браузеру обработать Backspace
         return;
       }
@@ -93,7 +95,8 @@ export function usePhoneFormat({ value, onChange }: UsePhoneFormatOptions = {}):
       if (prevChar && !/\d/.test(prevChar)) {
         e.preventDefault();
         const newPos = Math.max(PREFIX.length, cursorPos - 1);
-        setTimeout(() => inputRef.current?.setSelectionRange(newPos, newPos), 0);
+        const current = inputRef.current;
+        if (current) setTimeout(() => current.setSelectionRange(newPos, newPos), 0);
       }
     }
 
@@ -103,7 +106,8 @@ export function usePhoneFormat({ value, onChange }: UsePhoneFormatOptions = {}):
       if (nextChar && !/\d/.test(nextChar)) {
         e.preventDefault();
         const newPos = Math.min(displayValue.length, cursorPos + 1);
-        setTimeout(() => inputRef.current?.setSelectionRange(newPos, newPos), 0);
+        const current = inputRef.current;
+        if (current) setTimeout(() => current.setSelectionRange(newPos, newPos), 0);
       }
     }
   }, [displayValue]);
@@ -122,7 +126,8 @@ export function usePhoneFormat({ value, onChange }: UsePhoneFormatOptions = {}):
     // При вставке ставим курсор в конец
     setTimeout(() => {
       const newFormatted = formatPhone(newNumberDigits);
-      inputRef.current?.setSelectionRange(newFormatted.length, newFormatted.length);
+      const current = inputRef.current;
+      if (current) current.setSelectionRange(newFormatted.length, newFormatted.length);
     }, 0);
   }, [onChange]);
 
@@ -130,7 +135,8 @@ export function usePhoneFormat({ value, onChange }: UsePhoneFormatOptions = {}):
     // При фокусе на пустое поле ставим курсор после префикса
     if (numberDigits.length === 0) {
       setTimeout(() => {
-        inputRef.current?.setSelectionRange(PREFIX.length, PREFIX.length);
+        const current = inputRef.current;
+        if (current) current.setSelectionRange(PREFIX.length, PREFIX.length);
       }, 0);
     }
   }, [numberDigits.length]);

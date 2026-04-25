@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import './TicketDetailPage.css';
+import styles from './TicketDetailPage.module.css';
 
 type TicketPriority = 'high' | 'medium' | 'low';
 type TicketStatus = 'new' | 'progress' | 'waiting' | 'done' | 'cancelled';

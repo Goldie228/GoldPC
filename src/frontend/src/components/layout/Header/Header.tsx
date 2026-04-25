@@ -340,7 +340,7 @@ export function Header() {
                     <div className={styles.profileDivider} />
 
                     {/* Ролевой переключатель - показываем только если у пользователя больше одной роли */}
-                    {user && (user.roles?.length > 1 || (user.role && user.roles === undefined)) && (
+                    {user && ((user.roles ?? []).length > 1 || (user.role && user.roles === undefined)) && (
                       <div className={styles.roleSwitcher}>
                         <div className={styles.roleSwitcherLabel}>Текущая роль:</div>
                         <div className={styles.roleList}>
