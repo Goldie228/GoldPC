@@ -1,136 +1,111 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback, type ReactElement } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ShoppingCart, User, Menu, X, LogOut, ShoppingBag, Heart, GitCompare, LayoutDashboard, Bell, Moon, Settings } from 'lucide-react';
-import { useCartTotalItems } from '../../../store/cartStore';
-import { useWishlistCount } from '../../../store/wishlistStore';
-import { useComparisonCount } from '../../../store/comparisonStore';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ShoppingCart,
+  User,
+  Menu,
+  X,
+  LogOut,
+  ShoppingBag,
+  Heart,
+  GitCompare,
+  LayoutDashboard,
+  Settings,
+} from 'lucide-react';
+import { useCart } from '../../../hooks/useCart';
+import { useWishlistStore } from '../../../store/wishlistStore';
+import { useComparisonStore } from '../../../store/comparisonStore';
 import { useAuthStore } from '../../../store/authStore';
-import { useAuthModalStore } from '../../../store/authModalStore';
-import { MiniCart } from './MiniCart';
-import { SearchDropdown } from './SearchDropdown';
-import { formatCountRu, RU_FORMS } from '../../../utils/pluralizeRu';
+import { useModal } from '../../../hooks/useModal';
+import { LoginModal } from '../../auth/LoginModal';
+import { RegisterModal } from '../../auth/RegisterModal';
+import { decodeHtmlEntities } from '../../../utils/decodeHtml';
+import { CATEGORY_LABELS_RU } from '../../../utils/categoryLabels';
 import styles from './Header.module.css';
 
-/**
- * Header Component
- *
- * Features:
- * - Fixed positioning with blur backdrop
- * - Logo "GoldPC" with gold accent on "PC"
- * - Navigation links (Catalog, Builder, Service, About)
- * - Action buttons (Search, Cart, Profile)
- * - Mobile slide-out menu drawer (dark background)
- * - Responsive padding adaptation
- *
- * Source: prototypes/home.html .header
- */
+const NAV_ITEMS = [
+  { to: '/catalog', label: 'Каталог' },
+  { to: '/pc-builder', label: 'Конструктор' },
+  { to: '/services', label: 'Сервис' },
+  { to: '/about', label: 'О нас' },
+];
 
-export function Header() {
+const RU_FORMS = ['роль', 'роли', 'ролей'] as const;
+
+function formatCountRu(count: number, forms: readonly [string, string, string]): string {
+  const abs = Math.abs(count) % 100;
+  const last = abs % 10;
+  if (abs > 10 && abs < 20) return `${count} ${forms[2]}`;
+  if (last === 1) return `${count} ${forms[0]}`;
+  if (last >= 2 && last <= 4) return `${count} ${forms[1]}`;
+  return `${count} ${forms[2]}`;
+}
+
+export function Header(): ReactElement {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [cartFlash, setCartFlash] = useState(false);
-  const cartCount = useCartTotalItems();
-  const wishlistCount = useWishlistCount();
-  const comparisonCount = useComparisonCount();
-  const prevCartCountRef = useRef(cartCount);
-  const { user, logout, currentRole, switchRole } = useAuthStore();
-  const isAuthenticated = !!user;
-  const { openLoginModal, openRegisterModal } = useAuthModalStore();
-  const profileDropdownRef = useRef<HTMLDivElement>(null);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const mobileDrawerRef = useRef<HTMLDivElement>(null);
+  const prevCartCountRef = useRef(0);
 
-  // Flash cart icon when items are added
+  const { itemCount: cartCount } = useCart();
+  const wishlistCount = useWishlistStore((s) => s.items.length);
+  const comparisonCount = useComparisonStore((s) => s.items.length);
+  const { isAuthenticated, user, logout, currentRole, switchRole } = useAuthStore();
+  const { openModal, closeModal } = useModal();
+
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+
+  const openLoginModal = () => setIsLoginModalOpen(true);
+  const openRegisterModal = () => setIsRegisterModalOpen(true);
+
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileDrawerRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Cart flash animation
   useEffect(() => {
     if (cartCount > prevCartCountRef.current) {
       setCartFlash(true);
       const timer = setTimeout(() => setCartFlash(false), 400);
       return () => clearTimeout(timer);
     }
+  }, [cartCount]);
+
+  useEffect(() => {
     prevCartCountRef.current = cartCount;
   }, [cartCount]);
 
-  const handleCartToggle = () => {
-    setIsCartOpen((prev) => !prev);
-  };
-
-  const handleCartClose = useCallback(() => {
-    setIsCartOpen(false);
-  }, []);
-
-  const handleMenuToggle = () => {
-    setIsMobileMenuOpen((prev) => !prev);
-  };
-
-  const handleCloseMenu = useCallback(() => {
-    setIsMobileMenuOpen(false);
-  }, []);
-
-  const handleProfileDropdownToggle = () => {
-    setIsProfileDropdownOpen((prev) => !prev);
-  };
-
-  const handleProfileDropdownClose = useCallback(() => {
-    setIsProfileDropdownOpen(false);
-  }, []);
-
-  const handleLogout = useCallback(() => {
-    logout();
-    handleProfileDropdownClose();
-  }, [logout]);
-
-  // Close profile dropdown on click outside
+  // Close dropdowns on outside click
   useEffect(() => {
+    if (!isProfileDropdownOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        profileDropdownRef.current &&
-        !profileDropdownRef.current.contains(event.target as Node)
-      ) {
-        handleProfileDropdownClose();
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
       }
     };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [isProfileDropdownOpen]);
 
-    if (isProfileDropdownOpen) {
-      document.addEventListener('click', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, [isProfileDropdownOpen, handleProfileDropdownClose]);
-
-  // Close profile dropdown on Escape key
+  // Keyboard navigation for profile dropdown
   useEffect(() => {
+    if (!isProfileDropdownOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isProfileDropdownOpen) {
-        handleProfileDropdownClose();
-      }
+      if (e.key === 'Escape') setIsProfileDropdownOpen(false);
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isProfileDropdownOpen, handleProfileDropdownClose]);
+  }, [isProfileDropdownOpen]);
 
-  // Close menu on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isMobileMenuOpen) {
-        handleCloseMenu();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isMobileMenuOpen, handleCloseMenu]);
-
-  // Фокус при открытии мобильного меню, ловушка Tab, возврат фокуса на кнопку при закрытии
+  // Mobile menu keyboard navigation
   useEffect(() => {
     if (!isMobileMenuOpen) return;
-
     const container = mobileDrawerRef.current;
     if (!container) return;
+
+    document.body.style.overflow = 'hidden';
 
     const getFocusable = (): HTMLElement[] => {
       const selector = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -139,149 +114,106 @@ export function Header() {
       );
     };
 
-    const focusables = getFocusable();
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-
-    const raf = requestAnimationFrame(() => {
-      first?.focus();
+    requestAnimationFrame(() => {
+      const focusablesList = getFocusable();
+      focusablesList[0]?.focus();
     });
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab' || focusables.length === 0) return;
+      if (e.key !== 'Tab') return;
+      const focusablesList = getFocusable();
+      if (focusablesList.length === 0) return;
+      const first = focusablesList[0];
+      const last = focusablesList[focusablesList.length - 1];
       if (e.shiftKey) {
         if (document.activeElement === first) {
           e.preventDefault();
-          last?.focus();
+          last.focus();
         }
       } else if (document.activeElement === last) {
         e.preventDefault();
-        first?.focus();
+        first.focus();
       }
     };
 
     document.addEventListener('keydown', onKeyDown, true);
     return () => {
-      cancelAnimationFrame(raf);
+      document.body.style.overflow = '';
       document.removeEventListener('keydown', onKeyDown, true);
       menuButtonRef.current?.focus();
     };
   }, [isMobileMenuOpen]);
 
-  // Prevent body scroll when menu is open
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isMobileMenuOpen]);
+  const handleProfileDropdownToggle = () => {
+    setIsProfileDropdownOpen((prev) => !prev);
+  };
 
-  const navLinks = [
-    { to: '/catalog', label: 'Каталог' },
-    { to: '/pc-builder', label: 'Конструктор' },
-    { to: '/services', label: 'Сервис' },
-    { to: '/about', label: 'О нас' },
-  ];
+  const handleProfileDropdownClose = () => {
+    setIsProfileDropdownOpen(false);
+  };
+
+  const handleLogout = () => {
+    logout();
+    handleProfileDropdownClose();
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleMobileMenuToggle = () => {
+    setIsMobileMenuOpen((prev) => !prev);
+  };
+
+  const handleCloseMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <>
       <header className={styles.header}>
         {/* Logo */}
         <Link to="/" className={styles.logo}>
-          <div className={styles.logoIcon}>
-            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M29,3H3C2.4,3,2,3.4,2,4v19c0,0.6,0.4,1,1,1h26c0.6,0,1-0.4,1-1V4C30,3.4,29.6,3,29,3z M18,21h-4c-0.6,0-1-0.4-1-1s0.4-1,1-1h4c0.6,0,1,0.4,1,1S18.6,21,18,21z"
-                fill="currentColor"
-              />
-              <path
-                d="M18,21h-4c-0.6,0-1-0.4-1-1s0.4-1,1-1h4c0.6,0,1,0.4,1,1S18.6,21,18,21z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M20.7,26.3C20.5,26.1,20.3,26,20,26h-8c-0.3,0-0.5,0.1-0.7,0.3l-2,2C9,28.6,8.9,29,9.1,29.4C9.2,29.8,9.6,30,10,30h12c0.4,0,0.8-0.2,0.9-0.6c0.2-0.4,0.1-0.8-0.2-1.1L20.7,26.3z"
-                fill="currentColor"
-              />
-            </svg>
-          </div>
-          <span className={styles.logoText}>
-            Gold<span className={styles.logoAccent}>PC</span>
-          </span>
+          <svg className={styles.logoIcon} viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="32" height="32" rx="6" fill="var(--accent)" />
+            <path
+              d="M8,12h16v2H8z M8,15h16v2H8z M8,18h12v2H8z"
+              fill="var(--bg)"
+            />
+          </svg>
+          <span className={styles.logoText}>GoldPC</span>
         </Link>
 
         {/* Desktop Navigation */}
         <nav className={styles.nav}>
-          {navLinks.map((link) => (
+          {NAV_ITEMS.map((item) => (
             <NavLink
-              key={link.to}
-              to={link.to}
+              key={item.to}
+              to={item.to}
               className={({ isActive }) =>
                 `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
               }
             >
-              {link.label}
+              {item.label}
             </NavLink>
           ))}
         </nav>
 
-        {/* Action Buttons */}
+        {/* Actions */}
         <div className={styles.actions}>
-          {/* Search Dropdown */}
-          <SearchDropdown />
+          <Link to="/catalog" className={`${styles.iconBtn} ${cartFlash ? styles.iconBtnFlash : ''}`} aria-label="Корзина">
+            <ShoppingCart />
+            {cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
+          </Link>
 
-          {/* Wishlist Button */}
-          <Link
-            to="/wishlist"
-            className={styles.iconBtn}
-            aria-label={`Избранное: ${formatCountRu(wishlistCount, RU_FORMS.tovar)}`}
-            title="Избранное"
-          >
+          <Link to="/wishlist" className={styles.iconBtn} aria-label="Избранное">
             <Heart />
             {wishlistCount > 0 && <span className={styles.cartBadge}>{wishlistCount}</span>}
           </Link>
 
-          {/* Comparison Button */}
-          <Link
-            to="/comparison"
-            className={styles.iconBtn}
-            aria-label={`Сравнение: ${formatCountRu(comparisonCount, RU_FORMS.tovar)}`}
-            title="Сравнение"
-          >
+          <Link to="/comparison" className={styles.iconBtn} aria-label="Сравнение">
             <GitCompare />
             {comparisonCount > 0 && <span className={styles.cartBadge}>{comparisonCount}</span>}
           </Link>
 
-          {/* Cart Button */}
-          <motion.button
-            className={styles.iconBtn}
-            aria-label={`Корзина: ${formatCountRu(cartCount, RU_FORMS.tovar)}`}
-            onClick={handleCartToggle}
-            type="button"
-            animate={cartFlash ? {
-              scale: [1, 1.2, 1],
-              color: ['var(--fg-muted)', 'var(--accent)', 'var(--fg-muted)']
-            } : {}}
-            transition={{ duration: 0.4, ease: 'easeInOut' }}
-          >
-            <ShoppingCart />
-            {cartCount > 0 && (
-              <span className={styles.cartBadge} aria-live="polite">
-                {cartCount}
-              </span>
-            )}
-          </motion.button>
-
-          {/* Profile Button / Auth Dropdown */}
+          {/* Profile / Auth */}
           <div className={styles.profileWrapper} ref={profileDropdownRef}>
             <button
               className={`${styles.iconBtn} ${isAuthenticated ? styles.iconBtnActive : ''}`}
@@ -298,7 +230,6 @@ export function Header() {
             {isProfileDropdownOpen && (
               <div className={styles.profileDropdown}>
                 {!isAuthenticated ? (
-                  // Not authenticated: Show Login and Register
                   <div className={styles.authButtons}>
                     <button
                       className={styles.authBtn}
@@ -324,22 +255,19 @@ export function Header() {
                     </button>
                   </div>
                 ) : (
-                  // Authenticated: Show user menu
                   <>
                     <div className={styles.profileHeader}>
                       <div className={styles.profileAvatar}>
-                        {user?.firstName?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                        {((decodeHtmlEntities(user?.firstName) ?? '') || (decodeHtmlEntities(user?.email) ?? ''))?.charAt(0) || 'U'}
                       </div>
                       <div className={styles.profileInfo}>
                         <span className={styles.profileName}>
-                          {user?.firstName} {user?.lastName}
+                          {(decodeHtmlEntities(user?.firstName) ?? '')} {(decodeHtmlEntities(user?.lastName) ?? '')}
                         </span>
-                        <span className={styles.profileEmail}>{user?.email}</span>
+                        <span className={styles.profileEmail}>{(decodeHtmlEntities(user?.email) ?? '')}</span>
                       </div>
                     </div>
-                    <div className={styles.profileDivider} />
 
-                    {/* Ролевой переключатель - показываем только если у пользователя больше одной роли */}
                     {user && ((user.roles ?? []).length > 1 || (user.role && user.roles === undefined)) && (
                       <div className={styles.roleSwitcher}>
                         <div className={styles.roleSwitcherLabel}>Текущая роль:</div>
@@ -350,7 +278,6 @@ export function Header() {
                               className={`${styles.roleOption} ${currentRole === role ? styles.roleOptionActive : ''}`}
                               onClick={() => {
                                 switchRole(role);
-                                // После переключения роли обновляем страницу без перезагрузки
                                 window.dispatchEvent(new CustomEvent('roleChanged', { detail: role }));
                               }}
                               type="button"
@@ -363,73 +290,32 @@ export function Header() {
                     )}
 
                     <div className={styles.profileDivider} />
+
                     <nav className={styles.profileNav}>
-                      <Link
-                        to="/dashboard"
-                        className={styles.profileNavLink}
-                        onClick={handleProfileDropdownClose}
-                      >
+                      <Link to="/dashboard" className={styles.profileNavLink} onClick={handleProfileDropdownClose}>
                         <LayoutDashboard />
                         <span>Панель управления</span>
                       </Link>
-                      <Link
-                        to="/account"
-                        className={styles.profileNavLink}
-                        onClick={handleProfileDropdownClose}
-                      >
+                      <Link to="/account" className={styles.profileNavLink} onClick={handleProfileDropdownClose}>
                         <User />
                         <span>Профиль</span>
                       </Link>
-                      <Link
-                        to="/account/orders"
-                        className={styles.profileNavLink}
-                        onClick={handleProfileDropdownClose}
-                      >
+                      <Link to="/account/orders" className={styles.profileNavLink} onClick={handleProfileDropdownClose}>
                         <ShoppingBag />
                         <span>Заказы</span>
                       </Link>
-                      <Link
-                        to="/notifications"
-                        className={styles.profileNavLink}
-                        onClick={handleProfileDropdownClose}
-                      >
-                        <Bell />
-                        <span>Уведомления</span>
-                      </Link>
-                      <Link
-                        to="/wishlist"
-                        className={styles.profileNavLink}
-                        onClick={handleProfileDropdownClose}
-                      >
+                      <Link to="/wishlist" className={styles.profileNavLink} onClick={handleProfileDropdownClose}>
                         <Heart />
                         <span>Избранное</span>
                       </Link>
-                      <button
-                        className={styles.profileNavLink}
-                        onClick={() => {
-                          // Theme toggle will be implemented
-                          // implemented here
-                        }}
-                        aria-label="Переключить тему"
-                      >
-                        <Moon />
-                        <span>Тёмная тема</span>
-                      </button>
-                      <Link
-                        to="/account/settings"
-                        className={styles.profileNavLink}
-                        onClick={handleProfileDropdownClose}
-                      >
+                      <Link to="/account/settings" className={styles.profileNavLink} onClick={handleProfileDropdownClose}>
                         <Settings />
                         <span>Настройки</span>
                       </Link>
                     </nav>
+
                     <div className={styles.profileDivider} />
-                    <button
-                      className={styles.logoutBtn}
-                      onClick={handleLogout}
-                      type="button"
-                    >
+                    <button className={styles.logoutBtn} onClick={handleLogout} type="button">
                       <LogOut />
                       <span>Выйти</span>
                     </button>
@@ -439,95 +325,159 @@ export function Header() {
             )}
           </div>
 
-          {/* Mobile Menu Toggle - Hamburger Button */}
+          {/* Mobile Menu Toggle */}
           <button
             ref={menuButtonRef}
-            className={styles.menuToggle}
+            className={styles.mobileToggle}
+            onClick={handleMobileMenuToggle}
             aria-label={isMobileMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
             aria-expanded={isMobileMenuOpen}
-            aria-controls="mobile-navigation-drawer"
             type="button"
-            onClick={handleMenuToggle}
           >
             {isMobileMenuOpen ? <X /> : <Menu />}
           </button>
         </div>
       </header>
 
-      {/* Mobile Slide-out Menu Drawer */}
-      <div
-        ref={mobileDrawerRef}
-        id="mobile-navigation-drawer"
-        className={`${styles.mobileDrawer} ${isMobileMenuOpen ? styles.mobileDrawerOpen : ''}`}
-        aria-hidden={!isMobileMenuOpen}
-        inert={!isMobileMenuOpen ? true : undefined}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Мобильная навигация"
-      >
-        {/* Close Button */}
-        <button
-          className={styles.drawerClose}
-          onClick={handleCloseMenu}
-          aria-label="Закрыть меню"
-          type="button"
-        >
-          <X />
-        </button>
-
-        {/* Mobile Navigation Links */}
-        <nav className={styles.mobileNav}>
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              className={({ isActive }) =>
-                `${styles.mobileNavLink} ${isActive ? styles.mobileNavLinkActive : ''}`
-              }
-              onClick={handleCloseMenu}
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <div className={styles.mobileOverlay} onClick={handleCloseMenu} />
+            <motion.div
+              ref={mobileDrawerRef}
+              className={styles.mobileDrawer}
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ duration: 0.3, ease: [0.33, 1, 0.68, 1] }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Мобильное меню"
             >
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
+              <div className={styles.mobileHeader}>
+                <span className={styles.mobileTitle}>Меню</span>
+                <button className={styles.mobileClose} onClick={handleCloseMenu} type="button" aria-label="Закрыть">
+                  <X size={20} />
+                </button>
+              </div>
 
-        {/* Mobile Actions */}
-        <div className={styles.mobileActions}>
-          <Link to="/wishlist" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
-            <Heart />
-            <span>Избранное</span>
-            {wishlistCount > 0 && <span className={styles.mobileBadge}>{wishlistCount}</span>}
-          </Link>
-          <Link to="/comparison" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
-            <GitCompare />
-            <span>Сравнение</span>
-            {comparisonCount > 0 && <span className={styles.mobileBadge}>{comparisonCount}</span>}
-          </Link>
-          <Link to="/cart" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
-            <ShoppingCart />
-            <span>Корзина</span>
-            {cartCount > 0 && (
-              <span className={styles.mobileBadge} aria-live="polite">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-          <Link to="/account" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
-            <User />
-            <span>Профиль</span>
-          </Link>
-        </div>
-      </div>
+              <nav className={styles.mobileNav}>
+                {NAV_ITEMS.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={styles.mobileNavLink}
+                    onClick={handleCloseMenu}
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </nav>
 
-      {/* Mobile Overlay Background */}
-      <div
-        className={`${styles.overlay} ${isMobileMenuOpen ? styles.overlayVisible : ''}`}
-        onClick={handleCloseMenu}
-        aria-hidden="true"
+              <div className={styles.mobileDivider} />
+
+              <Link to="/catalog" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+                <ShoppingCart size={18} />
+                <span>Корзина</span>
+                {cartCount > 0 && <span className={styles.mobileBadge}>{cartCount}</span>}
+              </Link>
+              <Link to="/wishlist" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+                <Heart size={18} />
+                <span>Избранное</span>
+                {wishlistCount > 0 && <span className={styles.mobileBadge}>{wishlistCount}</span>}
+              </Link>
+              <Link to="/comparison" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+                <GitCompare size={18} />
+                <span>Сравнение</span>
+                {comparisonCount > 0 && <span className={styles.mobileBadge}>{comparisonCount}</span>}
+              </Link>
+
+              {isAuthenticated ? (
+                <>
+                  <div className={styles.mobileDivider} />
+                  <div className={styles.mobileProfileInfo}>
+                    <div className={styles.profileAvatar}>
+                      {((decodeHtmlEntities(user?.firstName) ?? '') || (decodeHtmlEntities(user?.email) ?? ''))?.charAt(0) || 'U'}
+                    </div>
+                    <div>
+                      <div className={styles.profileName}>
+                        {(decodeHtmlEntities(user?.firstName) ?? '')} {(decodeHtmlEntities(user?.lastName) ?? '')}
+                      </div>
+                      <div className={styles.profileEmail}>{(decodeHtmlEntities(user?.email) ?? '')}</div>
+                    </div>
+                  </div>
+                  <Link to="/dashboard" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+                    <LayoutDashboard size={18} />
+                    <span>Панель управления</span>
+                  </Link>
+                  <Link to="/account" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+                    <User size={18} />
+                    <span>Профиль</span>
+                  </Link>
+                  <Link to="/account/orders" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+                    <ShoppingBag size={18} />
+                    <span>Заказы</span>
+                  </Link>
+                  <Link to="/account/settings" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+                    <Settings size={18} />
+                    <span>Настройки</span>
+                  </Link>
+                  <button className={styles.mobileLogoutBtn} onClick={handleLogout} type="button">
+                    <LogOut size={18} />
+                    <span>Выйти</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className={styles.mobileDivider} />
+                  <button
+                    className={styles.mobileActionBtn}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openLoginModal();
+                      handleCloseMenu();
+                    }}
+                    type="button"
+                  >
+                    <User size={18} />
+                    <span>Войти</span>
+                  </button>
+                  <button
+                    className={`${styles.mobileActionBtn} ${styles.mobileActionBtnPrimary}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openRegisterModal();
+                      handleCloseMenu();
+                    }}
+                    type="button"
+                  >
+                    <span>Регистрация</span>
+                  </button>
+                </>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Modals */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSwitchToRegister={() => {
+          setIsLoginModalOpen(false);
+          setIsRegisterModalOpen(true);
+        }}
       />
-
-      {/* MiniCart Dropdown */}
-      <MiniCart isOpen={isCartOpen} onClose={handleCartClose} />
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        onSwitchToLogin={() => {
+          setIsRegisterModalOpen(false);
+          setIsLoginModalOpen(true);
+        }}
+      />
     </>
   );
 }

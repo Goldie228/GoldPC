@@ -210,14 +210,17 @@ export function OrderDetailPage() {
   const handleComplete = async () => {
     setIsUpdating(true);
     await new Promise((resolve) => setTimeout(resolve, 500));
-    setOrder((prev) => ({
-      ...prev,
-      status: 'completed',
-      timeline: [
-        { status: 'Завершён', date: new Date().toISOString(), active: true },
-        ...prev.timeline.map((t) => ({ ...t, active: false })),
-      ],
-    }));
+    setOrder((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        status: 'completed',
+        timeline: [
+          { status: 'Завершён', date: new Date().toISOString(), active: true },
+          ...prev.timeline.map((t) => ({ ...t, active: false })),
+        ],
+      };
+    });
     setIsUpdating(false);
   };
 
@@ -227,14 +230,17 @@ export function OrderDetailPage() {
     }
     setIsUpdating(true);
     await new Promise((resolve) => setTimeout(resolve, 500));
-    setOrder((prev) => ({
-      ...prev,
-      status: 'cancelled',
-      timeline: [
-        { status: 'Отменён', date: new Date().toISOString(), active: true },
-        ...prev.timeline.map((t) => ({ ...t, active: false })),
-      ],
-    }));
+    setOrder((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        status: 'cancelled',
+        timeline: [
+          { status: 'Отменён', date: new Date().toISOString(), active: true },
+          ...prev.timeline.map((t) => ({ ...t, active: false })),
+        ],
+      };
+    });
     setIsUpdating(false);
   };
 

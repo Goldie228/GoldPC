@@ -1,6 +1,6 @@
 import { type ReactElement, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { X, ShoppingBag } from 'lucide-react';
+import { X, ShoppingBag, ArrowRight } from 'lucide-react';
 import { useCart } from '../../../hooks/useCart';
 import { hasValidProductImage } from '../../../utils/image';
 import styles from './MiniCart.module.css';
@@ -11,7 +11,7 @@ interface MiniCartProps {
 }
 
 /**
- * MiniCart - Dropdown корзины в хедере
+ * MiniCart - Dropdown корзины в хедере (Modern 2026 Redesign)
  *
  * Features:
  * - Список товаров с миниатюрами, названием, количеством и ценой
@@ -89,7 +89,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
         {/* Header */}
         <div className={styles.header}>
           <span className={styles.title}>
-            <ShoppingBag />
+            <ShoppingBag size={20} />
             Корзина ({itemCount})
           </span>
           <button
@@ -98,17 +98,21 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
             aria-label="Закрыть"
             type="button"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
         {/* Content */}
         {isEmpty ? (
           <div className={styles.empty}>
-            <ShoppingBag size={48} />
+            <ShoppingBag size={32} strokeWidth={1.5} />
             <p>Корзина пуста</p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--fg-dim)', margin: 0 }}>
+              Добавьте товары из каталога
+            </p>
             <Link to="/catalog" className={styles.catalogLink} onClick={onClose}>
               Перейти в каталог
+              <ArrowRight size={14} style={{ marginLeft: 6 }} />
             </Link>
           </div>
         ) : (
@@ -158,7 +162,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
                     aria-label={`Удалить ${item.name}`}
                     type="button"
                   >
-                    <X size={16} />
+                    <X size={14} />
                   </button>
                 </div>
               ))}
@@ -178,6 +182,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
                 </Link>
                 <Link to="/cart" className={styles.btnPrimary} onClick={onClose}>
                   Перейти в корзину
+                  <ArrowRight size={14} style={{ marginLeft: 6 }} />
                 </Link>
               </div>
             </div>

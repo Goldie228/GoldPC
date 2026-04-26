@@ -23,3 +23,5 @@ export {
   formatCountRu,
   RU_FORMS,
 } from './pluralizeRu';
+
+export { decodeHtmlEntities } from './decodeHtml';
