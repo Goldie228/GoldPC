@@ -228,7 +228,9 @@ export function ProductPage(): ReactElement {
           items={[
             { label: 'Главная', to: '/' },
             { label: 'Каталог', to: '/catalog' },
-            { label: CATEGORY_LABELS_RU[product.category], to: `/catalog/${product.category}` },
+            ...(CATEGORY_LABELS_RU[product.category]
+              ? [{ label: CATEGORY_LABELS_RU[product.category], to: `/catalog/${product.category}` }]
+              : []),
             { label: product.name },
           ]}
         />

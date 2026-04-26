@@ -16,15 +16,38 @@
   width: 100%;
   aspect-ratio: 1;
   border-radius: 12px;
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  background: var(--color-white);
+  border: 1px solid color-mix(in srgb, var(--border-muted) 6%, transparent);
+  background: #FFFFFF;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow:
-    0 10px 30px var(--shadow-lg), 0.4);
+    0 10px 30px color-mix(in srgb, var(--shadow-lg) 40%, transparent);
   cursor: zoom-in;
+  position: relative;
+}
+
+.imageBox::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  background: color-mix(in srgb, var(--bg-elevated) 90%, transparent);
+  border-radius: 6px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F59E0B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 18px;
+  opacity: 0.7;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.imageBox:hover::after {
+  opacity: 1;
 }
 
 .image {
@@ -40,7 +63,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--shadow-lg), 0.04);
+  background: color-mix(in srgb, var(--shadow-lg) 4%, transparent);
 }
 
 .fullPageBtn {
@@ -52,22 +75,18 @@
   font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
-  color: var(--bg, var(--bg));
-  background: var(--accent, var(--accent));
-  border: 2px solid transparent;
-  box-shadow: 0 0 0 1px var(--border-brand);
+  color: var(--bg-primary);
+  background: var(--color-gold-500);
+  border: 2px solid var(--color-gold-500);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-gold-500) 40%, transparent);
   letter-spacing: 0.02em;
-  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .fullPageBtn:hover {
-  background: var(--accent-hover);
-  color: var(--bg, var(--bg));
-  transform: scale(1.02);
-  box-shadow:
-    0 0 0 1px var(--border-brand),
-    0 0 16px var(--border-brand),
-    0 0 32px var(--border-brand);
+  background: var(--color-gold-400);
+  border-color: var(--color-gold-400);
+  color: var(--bg-primary);
 }
 
 .right {
@@ -78,17 +97,17 @@
 }
 
 .manufacturer {
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-secondary);
   font-size: 0.85rem;
 }
 
 .metaLine {
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-secondary);
   font-size: 0.82rem;
 }
 
 .price {
-  color: var(--accent, var(--accent));
+  color: var(--color-gold-400);
   font-size: 1.35rem;
   font-weight: 700;
   margin-top: 2px;
@@ -101,12 +120,12 @@
 }
 
 .stockIn {
-  color: var(--accent, var(--accent));
+  color: var(--color-gold-400);
   font-weight: 600;
 }
 
 .stockOut {
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-secondary);
 }
 
 .ratingRow {
@@ -115,32 +134,32 @@
   align-items: center;
   gap: 8px;
   font-size: 0.9rem;
-  color: var(--fg, var(--fg));
+  color: var(--fg-primary);
 }
 
 .stars {
-  color: var(--accent, var(--accent));
+  color: var(--color-gold-400);
   letter-spacing: 1px;
 }
 
 .reviewCount {
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-secondary);
   font-size: 0.82rem;
 }
 
 .categoryRow {
   font-size: 0.82rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-secondary);
 }
 
 .warranty {
   font-size: 0.84rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-secondary);
 }
 
 .description {
   margin: 4px 0 0;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-secondary);
   line-height: 1.45;
   font-size: 0.88rem;
 }
@@ -150,7 +169,7 @@
   display: grid;
   gap: 8px;
   padding-top: 10px;
-  border-top: 1px solid var(--border-muted), 0.06);
+  border-top: 1px solid color-mix(in srgb, var(--border-muted) 6%, transparent);
 }
 
 .specRow {
@@ -162,11 +181,11 @@
 }
 
 .specKey {
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-secondary);
 }
 
 .specVal {
-  color: var(--fg, var(--fg));
+  color: var(--fg-primary);
   word-break: break-word;
 }
 
@@ -178,27 +197,30 @@
 
 .primaryAction {
   flex: 1;
-  min-height: 38px;
-  padding: 8px 12px;
+  min-height: 48px;
+  padding: 12px 20px;
   border-radius: 8px;
-  border: 1px solid var(--border-muted), 0.12);
-  background: var(--border-muted), 0.06);
-  color: var(--fg, var(--fg));
+  border: 2px solid var(--color-gold-500);
+  background: var(--color-gold-500);
+  color: #000000;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-gold-500) 40%, transparent);
 }
 
 .primaryAction:hover:not(:disabled) {
-  border-color: var(--border-brand);
-  background: var(--border-brand);
-  color: var(--accent, var(--accent));
+  background: var(--color-gold-400);
+  border-color: var(--color-gold-400);
+  color: #000000;
 }
+
+
 
 .primaryAction:disabled {
   opacity: 0.55;
@@ -206,29 +228,36 @@
 }
 
 .iconAction {
-  width: 40px;
-  height: 40px;
+  width: 52px;
+  height: 52px;
   border-radius: 8px;
-  border: 1px solid var(--border-muted), 0.12);
-  background: var(--border-muted), 0.04);
+  border: 2px solid var(--color-gold-500);
+  background: var(--bg-elevated);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--fg, var(--fg));
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  color: var(--color-gold-500);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.iconAction svg {
+  width: 22px;
+  height: 22px;
 }
 
 .iconAction:hover {
-  border-color: var(--border-brand);
-  background: var(--border-brand);
-  color: var(--accent, var(--accent));
+  background: color-mix(in srgb, var(--color-gold-500) 15%, transparent);
+  border-color: var(--color-gold-400);
+  color: var(--color-gold-400);
 }
 
+
+
 .iconActionActive {
-  border-color: var(--border-brand);
-  background: var(--border-brand);
-  color: var(--accent, var(--accent));
+  border-color: color-mix(in srgb, var(--color-gold-500) 40%, transparent);
+  background: color-mix(in srgb, var(--color-gold-500) 40%, transparent);
+  color: var(--color-gold-400);
 }
 
 /* Мини-галерея в quick view */
@@ -246,29 +275,28 @@
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  border: 1px solid rgba(15, 15, 18, 0.85);
-  background: rgba(15, 15, 18, 0.82);
+  border: 1px solid color-mix(in srgb, var(--color-black-soft) 85%, transparent);
+  background: color-mix(in srgb, var(--color-black-soft) 82%, transparent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--fg-muted), 0.88);
+  color: color-mix(in srgb, var(--fg-muted) 88%, transparent);
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 .galleryNav:hover {
-  background: var(--bg-elevated), 0.95);
-  border-color: var(--border-brand);
-  color: var(--accent);
-  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
+  border-color: color-mix(in srgb, var(--color-gold-500) 40%, transparent);
+  color: var(--color-gold-400);
 }
 
 .galleryCounter {
   min-width: 52px;
   padding: 4px 8px;
   border-radius: 999px;
-  background: var(--bg), 0.9);
-  color: var(--fg-muted, var(--fg-muted));
+  background: color-mix(in srgb, var(--bg) 9%, transparent);
+  color: var(--fg-secondary);
   font-size: 0.75rem;
   text-align: center;
 }
@@ -286,16 +314,16 @@
   width: 54px;
   height: 54px;
   border-radius: 8px;
-  border: 1px solid var(--bg-elevated), 0.9);
+  border: 1px solid color-mix(in srgb, var(--bg-elevated) 9%, transparent);
   overflow: hidden;
-  background: var(--bg);
+  background: #FFFFFF;
   padding: 2px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   opacity: 0.7;
-  transition: border-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+  transition: border-color 0.15s ease, opacity 0.15s ease;
 }
 
 .thumb img {
@@ -305,15 +333,14 @@
 }
 
 .thumb:hover {
-  opacity: 0.95;
-  border-color: var(--border-brand);
-  transform: translateY(-1px);
+  opacity: 1;
+  border-color: color-mix(in srgb, var(--color-gold-500) 40%, transparent);
 }
 
 .thumbActive {
   opacity: 1;
-  border-color: var(--border-brand);
-  box-shadow: 0 0 0 1px var(--border-brand);
+  border-color: color-mix(in srgb, var(--color-gold-500) 40%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-gold-500) 40%, transparent);
 }
 
 .viewerModal {

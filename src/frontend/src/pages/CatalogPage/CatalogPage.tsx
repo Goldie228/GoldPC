@@ -514,6 +514,7 @@ export function CatalogPage() {
                 </button>
               </div>
               <FilterSidebar
+                mobile
                 selectedCategory={selectedCategory}
                 onCategoryChange={handleCategoryChange}
                 categoryLocked={isCategoryLocked}
@@ -581,13 +582,6 @@ export function CatalogPage() {
         {/* Toolbar — якорь для прокрутки при смене страницы */}
         <div ref={catalogScrollAnchorRef} className={styles.toolbar}>
           <div className={styles.toolbarLeft}>
-            <button 
-              className={styles.mobileFilterBtn}
-              onClick={() => setMobileFilterOpen(true)}
-            >
-              <SlidersHorizontal size={16} />
-              Фильтры
-            </button>
             <div className={styles.viewToggle}>
               <button 
                 className={`${styles.viewToggleBtn} ${viewMode === 'grid' ? styles.active : ''}`}
