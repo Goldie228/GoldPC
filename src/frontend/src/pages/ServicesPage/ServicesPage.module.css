@@ -25,12 +25,12 @@
 }
 
 .pageTitle .accent {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 .pageDesc {
   font-size: 1rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   max-width: 600px;
   line-height: 1.7;
 }
@@ -56,8 +56,8 @@
 
 /* Service Card */
 .serviceCard {
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   padding: 32px;
   transition: all 0.3s;
   position: relative;
@@ -73,14 +73,14 @@
   left: 0;
   width: 100%;
   height: 3px;
-  background: var(--accent, var(--accent));
+  background: var(--accent);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s;
 }
 
 .serviceCard:hover {
-  border-color: var(--border-accent, var(--border-brand), 0.2));
+  border-color: var(--border-accent);
   transform: translateY(-4px);
 }
 
@@ -94,14 +94,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-elevated, var(--color-black-soft));
+  background: var(--bg-elevated);
   margin-bottom: 24px;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   transition: color 0.3s;
 }
 
 .serviceCard:hover .serviceIcon {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 .serviceName {
@@ -113,7 +113,7 @@
 
 .serviceDesc {
   font-size: 0.9rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   line-height: 1.6;
   margin-bottom: 24px;
   flex-grow: 1;
@@ -124,17 +124,17 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 20px;
-  border-top: 1px solid var(--border, var(--border-muted), 0.06));
+  border-top: 1px solid var(--border);
 }
 
 .servicePrice {
   font-family: var(--font-sans);
   font-size: 0.85rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
 }
 
 .servicePrice span {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   font-weight: 500;
 }
 
@@ -144,13 +144,13 @@
   gap: 6px;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .serviceLink:hover {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 .serviceLink svg {
@@ -167,8 +167,8 @@
 .benefits {
   margin-top: 80px;
   padding: 48px;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
 }
 
 .benefitsTitle {
@@ -208,20 +208,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-glow, var(--border-brand), 0.15));
-  border: 1px solid var(--border-accent, var(--border-brand), 0.2));
-  color: var(--accent, var(--accent));
+  background: var(--accent-glow);
+  border: 1px solid var(--border-accent);
+  color: var(--accent);
   flex-shrink: 0;
 }
 
 .benefitText {
   font-size: 0.85rem;
   line-height: 1.6;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 .benefitText strong {
-  color: var(--fg, var(--fg));
+  color: var(--fg);
   display: block;
   margin-bottom: 4px;
 }
@@ -230,8 +230,8 @@
 .cta {
   margin-top: 80px;
   padding: 48px;
-  background: linear-gradient(135deg, var(--bg-card, var(--bg-card)) 0%, var(--bg-elevated, var(--color-black-soft)) 100%);
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+  border: 1px solid var(--border);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -244,7 +244,7 @@
   right: -100px;
   width: 300px;
   height: 300px;
-  background: radial-gradient(circle, var(--accent-glow, var(--border-brand), 0.15)) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
   filter: blur(60px);
 }
 
@@ -261,7 +261,7 @@
 
 .ctaDesc {
   font-size: 0.9rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   margin-bottom: 24px;
 }
 
@@ -280,8 +280,8 @@
 }
 
 .btnPrimary {
-  background: var(--accent, var(--accent));
-  color: var(--bg, var(--bg));
+  background: var(--accent);
+  color: var(--bg);
 }
 
 .btnPrimary:hover {
@@ -304,7 +304,7 @@
 
 .loadingSpinner {
   animation: spin 1s linear infinite;
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 @keyframes spin {
@@ -320,7 +320,7 @@
 .error {
   text-align: center;
   padding: 48px;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 .retryBtn {
@@ -329,16 +329,16 @@
   gap: 8px;
   padding: 12px 24px;
   margin-top: 16px;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--fg, var(--fg));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--fg);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .retryBtn:hover {
-  border-color: var(--accent, var(--accent));
-  color: var(--accent, var(--accent));
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Responsive */

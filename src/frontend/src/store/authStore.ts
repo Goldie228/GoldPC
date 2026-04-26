@@ -138,7 +138,7 @@ export const useAuthStore = create<AuthState>()(
       if (!currentState.user) return;
 
       // Validate that user actually has this role
-      const userRoles = currentState.user.roles ?? [currentState.user.role];
+      const userRoles: string[] = (currentState.user.roles ?? [currentState.user.role]).filter(Boolean) as string[];
       if (!userRoles.includes(role)) {
         console.error(`User does not have role: ${role}`);
         return;

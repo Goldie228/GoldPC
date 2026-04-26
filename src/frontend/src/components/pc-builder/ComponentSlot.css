@@ -51,7 +51,7 @@
 
 /* ===== SELECTED (gold) ===== */
 .component-slot--selected {
-  border-color: var(--border-accent, var(--border-brand));
+  border-color: var(--border-accent);
   background: linear-gradient(135deg, var(--border-brand) 0%, var(--bg-card, #18181b) 100%);
   border-style: solid;
 }
@@ -312,7 +312,7 @@
 .component-slot__btn--primary { background: var(--accent, #d4a574); border-color: var(--accent, #d4a574); color: var(--bg, #09090b); }
 .component-slot__btn--primary:hover { background: #e0b68a; border-color: #e0b68a; }
 .component-slot__btn--ghost { color: var(--fg-muted, #71717a); }
-.component-slot__btn--ghost:hover { color: var(--accent, #d4a574); border-color: var(--border-accent, var(--border-brand)); }
+.component-slot__btn--ghost:hover { color: var(--accent, #d4a574); border-color: var(--border-accent); }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {

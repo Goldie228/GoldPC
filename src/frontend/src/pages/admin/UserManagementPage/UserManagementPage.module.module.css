@@ -15,13 +15,13 @@
   font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: var(--fg, var(--fg));
+  color: var(--fg);
   margin: 0 0 4px 0;
 }
 
 .subtitle {
   font-size: 0.85rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   margin: 0;
 }
 
@@ -36,8 +36,8 @@
   gap: 8px;
   padding: 10px 20px;
   background: transparent;
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--fg, var(--fg));
+  border: 1px solid var(--border);
+  color: var(--fg);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: 500;
@@ -46,8 +46,8 @@
 }
 
 .exportBtn:hover {
-  border-color: var(--border-accent, var(--border-brand), 0.2));
-  color: var(--accent, var(--accent));
+  border-color: var(--border-accent);
+  color: var(--accent);
 }
 
 .exportBtn svg {
@@ -60,9 +60,9 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: var(--accent, var(--accent));
+  background: var(--accent);
   border: none;
-  color: var(--bg, var(--bg));
+  color: var(--bg);
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: 600;
@@ -85,8 +85,8 @@
   gap: 24px;
   margin-bottom: 24px;
   padding: 16px 20px;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
 }
 
 .statItem {
@@ -99,12 +99,12 @@
   font-family: var(--font-sans);
   font-size: 1.25rem;
   font-weight: 500;
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 .statLabel {
   font-size: 0.8rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 /* Filters */
@@ -134,35 +134,35 @@
   transform: translateY(-50%);
   width: 16px;
   height: 16px;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   pointer-events: none;
 }
 
 .searchInput {
   width: 100%;
   padding: 8px 12px 8px 36px;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--fg, var(--fg));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--fg);
   font-family: inherit;
   font-size: 0.85rem;
   transition: border-color 0.2s;
 }
 
 .searchInput::placeholder {
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
 }
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--accent, var(--accent));
+  border-color: var(--accent);
 }
 
 .searchBtn {
   padding: 8px 16px;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--fg, var(--fg));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--fg);
   font-family: inherit;
   font-size: 0.85rem;
   cursor: pointer;
@@ -170,8 +170,8 @@
 }
 
 .searchBtn:hover {
-  border-color: var(--accent, var(--accent));
-  color: var(--accent, var(--accent));
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .filterGroup {
@@ -182,16 +182,16 @@
 
 .filterLabel {
   font-size: 0.75rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .filterSelect {
   padding: 8px 32px 8px 12px;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--fg, var(--fg));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--fg);
   font-family: inherit;
   font-size: 0.85rem;
   cursor: pointer;
@@ -203,13 +203,13 @@
 
 .filterSelect:focus {
   outline: none;
-  border-color: var(--accent, var(--accent));
+  border-color: var(--accent);
 }
 
 /* Table */
 .tableWrapper {
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   overflow: hidden;
 }
 
@@ -225,15 +225,15 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--fg-dim, var(--fg-dim));
-  background: var(--bg-elevated, var(--color-black-soft));
-  border-bottom: 1px solid var(--border, var(--border-muted), 0.06));
+  color: var(--fg-dim);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
 }
 
 .table td {
   padding: 16px;
   font-size: 0.85rem;
-  border-bottom: 1px solid var(--border, var(--border-muted), 0.06));
+  border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 
@@ -242,7 +242,7 @@
 }
 
 .table tbody tr:hover {
-  background: var(--bg-elevated, var(--color-black-soft));
+  background: var(--bg-elevated);
 }
 
 .table tbody tr:last-child td {
@@ -266,8 +266,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent-glow, var(--border-brand), 0.15));
-  color: var(--accent, var(--accent));
+  background: var(--accent-glow);
+  color: var(--accent);
   font-weight: 600;
   font-size: 0.9rem;
   flex-shrink: 0;
@@ -281,18 +281,18 @@
 
 .userName {
   font-weight: 500;
-  color: var(--fg, var(--fg));
+  color: var(--fg);
 }
 
 .userEmail {
   font-size: 0.75rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
 }
 
 .userId {
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
 }
 
 /* Role Badge */
@@ -308,8 +308,8 @@
 }
 
 .roleAdmin {
-  background: var(--border-brand), 0.15);
-  color: var(--accent, var(--accent));
+  background: var(--border-muted);
+  color: var(--accent);
 }
 
 .roleManager {
@@ -324,7 +324,7 @@
 
 .roleClient {
   background: rgba(113, 113, 122, 0.15);
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 .roleAccountant {
@@ -358,7 +358,7 @@
 .date {
   font-family: var(--font-sans);
   font-size: 0.8rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 /* Actions */
@@ -376,15 +376,15 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--fg-dim, var(--fg-dim));
+  border: 1px solid var(--border);
+  color: var(--fg-dim);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .editBtn:hover {
-  border-color: var(--accent, var(--accent));
-  color: var(--accent, var(--accent));
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .deleteBtn:hover {
@@ -413,9 +413,9 @@
   justify-content: center;
   padding: 48px;
   text-align: center;
-  color: var(--fg-muted, var(--fg-muted));
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  color: var(--fg-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
 }
 
 .loading p,
@@ -426,8 +426,8 @@
 .spinner {
   width: 32px;
   height: 32px;
-  border: 2px solid var(--border, var(--border-muted), 0.06));
-  border-top-color: var(--accent, var(--accent));
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -446,9 +446,9 @@
 .clearFiltersBtn {
   margin-top: 16px;
   padding: 8px 16px;
-  background: var(--bg-elevated, var(--color-black-soft));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--fg, var(--fg));
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--fg);
   font-family: inherit;
   font-size: 0.85rem;
   cursor: pointer;
@@ -457,14 +457,14 @@
 
 .retryBtn:hover,
 .clearFiltersBtn:hover {
-  border-color: var(--accent, var(--accent));
-  color: var(--accent, var(--accent));
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .empty svg {
   width: 48px;
   height: 48px;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
 }
 
 /* Pagination */
@@ -473,12 +473,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  border-top: 1px solid var(--border, var(--border-muted), 0.06));
+  border-top: 1px solid var(--border);
 }
 
 .paginationInfo {
   font-size: 0.8rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 .paginationPages {
@@ -493,8 +493,8 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--fg-muted, var(--fg-muted));
+  border: 1px solid var(--border);
+  color: var(--fg-muted);
   font-family: var(--font-sans);
   font-size: 0.8rem;
   cursor: pointer;
@@ -502,8 +502,8 @@
 }
 
 .pageBtn:hover:not(:disabled) {
-  border-color: var(--fg-dim, var(--fg-dim));
-  color: var(--fg, var(--fg));
+  border-color: var(--fg-dim);
+  color: var(--fg);
 }
 
 .pageBtn:disabled {
@@ -512,9 +512,9 @@
 }
 
 .pageBtnActive {
-  background: var(--accent, var(--accent));
-  border-color: var(--accent, var(--accent));
-  color: var(--bg, var(--bg));
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
 }
 
 /* Responsive */

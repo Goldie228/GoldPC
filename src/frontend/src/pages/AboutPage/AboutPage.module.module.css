@@ -76,7 +76,7 @@
   justify-content: center;
   background: linear-gradient(135deg, var(--gold, #d4a84b) 0%, #b8963f 100%);
   border-radius: 12px;
-  color: var(--bg, var(--bg));
+  color: var(--bg);
 }
 
 .statValue {
@@ -145,7 +145,7 @@
   justify-content: center;
   background: linear-gradient(135deg, var(--gold, #d4a84b) 0%, #b8963f 100%);
   border-radius: 12px;
-  color: var(--bg, var(--bg));
+  color: var(--bg);
   margin-bottom: 1rem;
 }
 

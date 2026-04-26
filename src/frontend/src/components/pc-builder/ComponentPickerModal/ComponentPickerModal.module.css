@@ -28,7 +28,7 @@
 .mobileOverlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--shadow-lg), 0.7);
+  background: var(--border-muted);
   z-index: 1100;
   display: flex;
   justify-content: flex-end;
@@ -630,7 +630,7 @@
   border-radius: 16px;
   padding: 24px;
   box-sizing: border-box;
-  box-shadow: 0 4px 24px var(--shadow-lg), 0.3);
+  box-shadow: 0 4px 24px var(--border-muted);
 }
 .magnifierNav {
   display: flex;

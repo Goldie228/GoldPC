@@ -238,7 +238,7 @@
 .widgetNotice {
   margin-top: 1.25rem;
   padding: 0.75rem;
-  background: var(--border-brand), 0.1);
+  background: var(--border-muted);
   border-radius: 8px;
   color: var(--accent);
   font-size: 0.8125rem;

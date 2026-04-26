@@ -1,296 +1,145 @@
-/**
- * SearchDropdown — живой поиск с выпадающим списком результатов
- *
- * Features:
- * - Debounce input (300ms)
- * - Search by name, brand, manufacturer
- * - Top 5 results with thumbnail, highlighted name, price
- * - Empty state: "Popular queries" when input is empty
- * - Footer link: "View all results" → /catalog?search=...
- * - Click outside / Escape to close
- * - Keyboard navigation support
- */
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Search, X, TrendingUp, Loader2, Image } from 'lucide-react';
-import { useDebounce } from '../../../../hooks/useDebounce';
-import { hasValidProductImage } from '../../../../utils/image';
-import { useProducts } from '../../../../hooks/useProducts';
-import { CATEGORY_LABELS_RU } from '../../../../utils/categoryLabels';
+import { Search, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { searchProducts } from '../../../../api/catalogService';
+import type { ProductSummary } from '../../../../api/types';
 import styles from './SearchDropdown.module.css';
 
-/** Популярные запросы для empty state */
-const POPULAR_QUERIES = [
-  'RTX 4090',
-  'Процессор AMD',
-  'Оперативная память DDR5',
-  'SSD NVMe',
-  'Монитор 27"',
-];
-
-/** Подсветка совпадений в тексте */
-function highlightMatch(text: string, query: string): React.ReactNode {
-  if (!query.trim()) return text;
-
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(`(${escaped})`, 'gi');
-  const parts = text.split(regex);
-
-  return parts.map((part, i) =>
-    regex.test(part) ? (
-      <mark key={i} className={styles.highlight}>
-        {part}
-      </mark>
-    ) : (
-      part
-    )
-  );
+interface SearchDropdownProps {
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-export function SearchDropdown() {
+export function SearchDropdown({ isOpen, onToggle }: SearchDropdownProps) {
   const [query, setQuery] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
+  const [results, setResults] = useState<ProductSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const debouncedQuery = useDebounce(query, 300);
-
-  // Запрос продуктов при наличии debounced запроса
-  const { data, isLoading } = useProducts({
-    search: debouncedQuery.trim() || undefined,
-    pageSize: 5,
-  });
-
-  const results = data?.data ?? [];
-  const hasQuery = debouncedQuery.trim().length > 0;
-  const showResults = isOpen && hasQuery && results.length > 0;
-  const showEmpty = isOpen && hasQuery && !isLoading && results.length === 0;
-  const showPopular = isOpen && !hasQuery;
-
-  // Открытие dropdown при фокусе
-  const handleFocus = useCallback(() => {
-    setIsFocused(true);
-    setIsOpen(true);
-  }, []);
-
-  // Закрытие dropdown
-  const handleClose = useCallback(() => {
-    setIsOpen(false);
-    setIsFocused(false);
-    setQuery('');
-  }, []);
-
-  // Клик по результату
-  const handleResultClick = useCallback(
-    (productSlug: string) => {
-      navigate(`/product/${productSlug}`);
-      handleClose();
-    },
-    [navigate, handleClose]
-  );
-
-  // Клик по популярному запросу
-  const handlePopularClick = useCallback((popularQuery: string) => {
-    setQuery(popularQuery);
-    inputRef.current?.focus();
-  }, []);
-
-  // Переход ко всем результатам
-  const handleViewAll = useCallback(() => {
-    if (debouncedQuery.trim()) {
-      navigate(`/catalog?search=${encodeURIComponent(debouncedQuery.trim())}`);
+  const doSearch = useCallback(async (q: string) => {
+    if (q.trim().length < 2) {
+      setResults([]);
+      return;
     }
-    handleClose();
-  }, [navigate, debouncedQuery, handleClose]);
-
-  // Escape + глобально: / или Ctrl+K — фокус в поиск
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        handleClose();
-        inputRef.current?.blur();
-        return;
-      }
-      if (e.key === '/' || (e.key?.toLowerCase() === 'k' && (e.ctrlKey || e.metaKey))) {
-        const t = e.target as HTMLElement | null;
-        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) {
-          return;
-        }
-        e.preventDefault();
-        setIsOpen(true);
-        inputRef.current?.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleClose]);
-
-  // Клик вне компонента
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(e.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    setIsLoading(true);
+    try {
+      const res = await searchProducts(q.trim(), { page: 1, pageSize: 5 });
+      setResults(res.products ?? []);
+    } catch {
+      setResults([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  const onChange = (q: string) => {
+    setQuery(q);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => doSearch(q), 300);
+  };
+
+  const onSelect = (slug: string) => {
+    navigate(`/product/${slug}`);
+    setQuery('');
+    setResults([]);
+    onToggle();
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && query.trim().length >= 2) {
+      navigate(`/catalog?search=${encodeURIComponent(query.trim())}`);
+      setQuery('');
+      setResults([]);
+      onToggle();
+    }
+  };
+
+  // Close on outside click
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        onToggle();
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen, onToggle]);
+
+  // Focus input when opened
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   return (
-    <div className={styles.container} ref={dropdownRef}>
-      <div className={`${styles.inputWrapper} ${isFocused ? styles.inputWrapperFocused : ''}`}>
-        <Search className={styles.searchIcon} />
+    <div className={styles.container} ref={containerRef}>
+      <div className={styles.inputWrapper}>
+        <Search size={16} className={styles.searchIcon} />
         <input
           ref={inputRef}
           type="text"
-          className={styles.input}
-          placeholder="Поиск..."
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={handleFocus}
-          aria-label="Поиск по сайту (/, Ctrl+K)"
-          role="combobox"
-          aria-expanded={isOpen}
-          aria-haspopup="listbox"
-          autoComplete="off"
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={onKeyDown}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholder="Поиск товаров..."
+          className={styles.input}
         />
         {query && (
           <button
             className={styles.clearBtn}
-            onClick={() => {
-              setQuery('');
-              inputRef.current?.focus();
-            }}
-            aria-label="Очистить поиск"
+            onClick={() => { setQuery(''); setResults([]); inputRef.current?.focus(); }}
             type="button"
+            aria-label="Очистить"
           >
-            <X />
+            <X size={14} />
           </button>
         )}
       </div>
 
-      {/* Dropdown */}
-      {isOpen && (
-        <div className={styles.dropdown} role="listbox">
-          {/* Loading */}
-          {isLoading && hasQuery && (
-            <div className={styles.loading}>
-              <Loader2 className={styles.spinner} />
-              <span>Поиск...</span>
-            </div>
-          )}
-
-          {/* Search Results */}
-          {showResults && (
-            <>
-              <ul className={styles.resultsList}>
-                {results.map((product) => (
-                  <li key={product.id}>
-                    <button
-                      className={styles.resultItem}
-                      onClick={() => handleResultClick(product.slug ?? product.id)}
-                      type="button"
-                      role="option"
-                    >
-                      {/* Thumbnail */}
-                      <div className={styles.thumbnail}>
-                        {hasValidProductImage(product.mainImage?.url) && product.mainImage ? (
-                          <img
-                            src={product.mainImage.url}
-                            alt={product.mainImage.alt || product.name}
-                            className={styles.thumbnailImg}
-                          />
-                        ) : (
-                          <div className={styles.thumbnailPlaceholder}>
-                            <Image size={20} strokeWidth={1.5} />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Info */}
-                      <div className={styles.resultInfo}>
-                        <span className={styles.resultCategory}>{CATEGORY_LABELS_RU[product.category]}</span>
-                        <span className={styles.resultName}>
-                          {highlightMatch(product.name, debouncedQuery)}
-                        </span>
-                        {product.manufacturer && (
-                          <span className={styles.resultBrand}>
-                            {highlightMatch(product.manufacturer.name, debouncedQuery)}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Price */}
-                      <div className={styles.resultPrice}>
-                        {product.oldPrice && (
-                          <span className={styles.oldPrice}>
-                            {product.oldPrice.toLocaleString('ru-RU')} BYN
-                          </span>
-                        )}
-                        <span className={styles.price}>
-                          {product.price.toLocaleString('ru-RU')} BYN
-                        </span>
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-
-              {/* Footer */}
-              <button className={styles.footer} onClick={handleViewAll} type="button">
-                Все результаты →
-              </button>
-            </>
-          )}
-
-          {/* Empty State */}
-          {showEmpty && (
-            <div className={styles.emptyState}>
-              <p className={styles.emptyText}>
-                По запросу «{debouncedQuery}» ничего не найдено
-              </p>
-              <p className={styles.emptyHint}>Попробуйте изменить запрос или откройте полный каталог.</p>
-              <Link
-                className={styles.emptyCatalogLink}
-                to={`/catalog?search=${encodeURIComponent(debouncedQuery.trim())}`}
-                onClick={handleClose}
-              >
-                Смотреть в каталоге →
-              </Link>
-            </div>
-          )}
-
-          {/* Popular Queries */}
-          {showPopular && (
-            <div className={styles.popularSection}>
-              <div className={styles.popularHeader}>
-                <TrendingUp />
-                <span>Популярные запросы</span>
+      {(isLoading || results.length > 0) && (
+        <div className={styles.results}>
+          {isLoading && <div className={styles.loading}>Поиск...</div>}
+          {!isLoading && results.map((p) => (
+            <button
+              key={p.id}
+              className={styles.resultItem}
+              onClick={() => onSelect(p.slug)}
+              type="button"
+            >
+              <img
+                src={p.mainImageUrl || '/placeholder.png'}
+                alt={p.name}
+                className={styles.resultImg}
+              />
+              <div className={styles.resultInfo}>
+                <div className={styles.resultName}>{p.name}</div>
+                <div className={styles.resultPrice}>{p.price?.toLocaleString('ru-RU')} ₽</div>
               </div>
-              <ul className={styles.popularList}>
-                {POPULAR_QUERIES.map((q) => (
-                  <li key={q}>
-                    <button
-                      className={styles.popularItem}
-                      onClick={() => handlePopularClick(q)}
-                      type="button"
-                    >
-                      <Search className={styles.popularIcon} />
-                      {q}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            </button>
+          ))}
+          {!isLoading && results.length > 0 && (
+            <button
+              className={styles.viewAll}
+              onClick={() => {
+                navigate(`/catalog?search=${encodeURIComponent(query.trim())}`);
+                setQuery('');
+                setResults([]);
+                onToggle();
+              }}
+              type="button"
+            >
+              Все результаты
+            </button>
           )}
         </div>
       )}

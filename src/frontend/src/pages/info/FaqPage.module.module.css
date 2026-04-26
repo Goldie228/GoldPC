@@ -28,7 +28,7 @@
   padding: 10px 16px;
   border: 1px solid var(--border-primary, #27272a);
   background: var(--bg-card, #111113);
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   cursor: pointer;
   border-radius: 8px;
   transition:
@@ -37,12 +37,12 @@
 }
 
 .toolbarBtn:hover {
-  border-color: var(--border-brand), 0.45);
-  background: var(--border-brand), 0.08);
+  border-color: var(--border-muted);
+  background: var(--border-muted);
 }
 
 .toolbarBtn:focus-visible {
-  outline: 2px solid var(--accent, var(--accent));
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -83,11 +83,11 @@
 }
 
 .trigger:hover {
-  background: var(--border-brand), 0.06);
+  background: var(--border-muted);
 }
 
 .trigger:focus-visible {
-  outline: 2px solid var(--accent, var(--accent));
+  outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
 
@@ -98,7 +98,7 @@
 
 .chevron {
   flex-shrink: 0;
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   transition: transform 0.25s ease;
 }
 
@@ -142,7 +142,7 @@
 }
 
 .permalinkLink {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -151,6 +151,6 @@
 }
 
 .permalinkLink:focus-visible {
-  outline: 2px solid var(--accent, var(--accent));
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }

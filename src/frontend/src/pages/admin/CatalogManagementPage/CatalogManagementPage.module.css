@@ -67,7 +67,7 @@
   overflow-x: auto;
   background: white;
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px var(--shadow-lg), 0.1);
+  box-shadow: 0 1px 3px var(--border-muted);
   border: 1px solid var(--border-color, #e5e7eb);
 }
 
@@ -213,7 +213,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--shadow-lg), 0.5);
+  background: var(--border-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -227,7 +227,7 @@
   width: 100%;
   max-width: 480px;
   margin: 1rem;
-  box-shadow: 0 20px 25px -5px var(--shadow-lg), 0.1);
+  box-shadow: 0 20px 25px -5px var(--border-muted);
 }
 
 .modalTitle {

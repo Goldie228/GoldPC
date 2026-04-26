@@ -66,7 +66,7 @@
   background: white;
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 1px 3px var(--shadow-lg), 0.05);
+  box-shadow: 0 1px 3px var(--border-muted);
 }
 
 .statNumber {
@@ -157,7 +157,7 @@
 .tableWrapper {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 1px 3px var(--shadow-lg), 0.05);
+  box-shadow: 0 1px 3px var(--border-muted);
   overflow: hidden;
 }
 

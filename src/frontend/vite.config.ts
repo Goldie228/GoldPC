@@ -8,6 +8,9 @@ export default defineConfig({
     react(),
     // VitePWA temporarily disabled - install vite-plugin-pwa package to enable
   ],
+  build: {
+    cssMinify: false,
+  },
   base: './',
   resolve: {
     alias: {

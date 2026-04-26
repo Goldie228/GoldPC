@@ -93,10 +93,10 @@ export function InventoryPage() {
 
   // Stats calculation
   const stats = useMemo(() => {
-    const totalItems = inventory.length;
-    const lowStockItems = inventory.filter(i => i.stock <= i.minStock).length;
-    const outOfStockItems = inventory.filter(i => i.stock === 0).length;
-    const totalValue = inventory.reduce((sum, item) => sum + (item.stock * item.price), 0);
+    const totalItems = MOCK_INVENTORY.length;
+    const lowStockItems = MOCK_INVENTORY.filter((i: InventoryItem) => i.stock <= i.minStock).length;
+    const outOfStockItems = MOCK_INVENTORY.filter((i: InventoryItem) => i.stock === 0).length;
+    const totalValue = MOCK_INVENTORY.reduce((sum: number, item: InventoryItem) => sum + (item.stock * item.price), 0);
 
     return { totalItems, lowStockItems, outOfStockItems, totalValue };
   }, []);

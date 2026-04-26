@@ -21,20 +21,20 @@
 }
 
 .previewIcon {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   opacity: 0.9;
 }
 
 .fileName {
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--fg, var(--fg));
+  color: var(--fg);
   margin: 0;
 }
 
 .fileInfo {
   font-size: 0.8rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   margin: 0;
   text-align: center;
 }
@@ -50,7 +50,7 @@
   align-items: center;
   gap: 10px;
   font-size: 0.85rem;
-  color: var(--fg, var(--fg));
+  color: var(--fg);
 }
 
 .checkItem > span {
@@ -65,5 +65,5 @@
   gap: 12px;
   justify-content: flex-end;
   padding-top: 8px;
-  border-top: 1px solid var(--border, var(--border-muted), 0.06));
+  border-top: 1px solid var(--border);
 }

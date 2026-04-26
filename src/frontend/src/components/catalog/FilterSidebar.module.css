@@ -446,7 +446,7 @@
 
 .stockOption.checked .stockRadio {
   border-color: var(--accent);
-  background: var(--accent-dim, var(--border-brand));
+  background: var(--accent-dim);
   box-shadow: 0 0 8px var(--border-brand);
 }
 
@@ -706,7 +706,7 @@
 
 .ratingOption.checked .ratingRadio {
   border-color: var(--accent);
-  background: var(--accent-dim, var(--border-brand));
+  background: var(--accent-dim);
   box-shadow: 0 0 8px var(--border-brand);
 }
 
