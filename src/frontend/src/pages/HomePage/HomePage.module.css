@@ -22,18 +22,6 @@
   overflow: hidden;
 }
 
-.gridPattern {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image: 
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 60px 60px;
-  mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
-  opacity: 0.03;
-}
 
 .glow1 {
   position: absolute;

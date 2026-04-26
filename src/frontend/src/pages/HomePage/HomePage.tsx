@@ -93,7 +93,6 @@ export function HomePage() {
     <div className={styles.homePage}>
       <section className={styles.hero}>
         <div className={styles.heroBg}>
-          <div className={styles.gridPattern} />
           <div className={styles.glow1} />
           <div className={styles.glow2} />
         </div>

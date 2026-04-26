@@ -100,7 +100,7 @@
 }
 
 .link:focus-visible {
-  outline: 2px solid var(--brand-primary, var(--accent));
+  outline: 2px solid var(--brand-primary);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -137,7 +137,7 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 40px;
-  border-top: 1px solid var(--border-muted), 0.06);
+  border-top: 1px solid var(--border-muted);
 }
 
 .copyright {

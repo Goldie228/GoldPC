@@ -144,6 +144,18 @@ export function Header(): ReactElement {
     };
   }, [isMobileMenuOpen]);
 
+  // Close mobile menu on resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768 && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobileMenuOpen]);
+
+
   const handleProfileDropdownToggle = () => {
     setIsProfileDropdownOpen((prev) => !prev);
   };
@@ -159,7 +171,11 @@ export function Header(): ReactElement {
   };
 
   const handleMobileMenuToggle = () => {
-    setIsMobileMenuOpen((prev) => !prev);
+    const newState = !isMobileMenuOpen;
+    setIsMobileMenuOpen(newState);
+    if (newState) {
+      setIsProfileDropdownOpen(false);
+    }
   };
 
   const handleCloseMenu = () => {
@@ -172,10 +188,23 @@ export function Header(): ReactElement {
         {/* Logo */}
         <Link to="/" className={styles.logo}>
           <svg className={styles.logoIcon} viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect width="32" height="32" rx="6" fill="var(--accent)" />
             <path
-              d="M8,12h16v2H8z M8,15h16v2H8z M8,18h12v2H8z"
-              fill="var(--bg)"
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M29,3H3C2.4,3,2,3.4,2,4v19c0,0.6,0.4,1,1,1h26c0.6,0,1-0.4,1-1V4C30,3.4,29.6,3,29,3z M18,21h-4c-0.6,0-1-0.4-1-1s0.4-1,1-1h4c0.6,0,1,0.4,1,1S18.6,21,18,21z"
+              fill="currentColor"
+            />
+            <path
+              d="M18,21h-4c-0.6,0-1-0.4-1-1s0.4-1,1-1h4c0.6,0,1,0.4,1,1S18.6,21,18,21z"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M20.7,26.3C20.5,26.1,20.3,26,20,26h-8c-0.3,0-0.5,0.1-0.7,0.3l-2,2C9,28.6,8.9,29,9.1,29.4C9.2,29.8,9.6,30,10,30h12c0.4,0,0.8-0.2,0.9-0.6c0.2-0.4,0.1-0.8-0.2-1.1L20.7,26.3z"
+              fill="currentColor"
             />
           </svg>
           <span className={styles.logoText}>GoldPC</span>
@@ -268,30 +297,7 @@ export function Header(): ReactElement {
                       </div>
                     </div>
 
-                    {user && ((user.roles ?? []).length > 1 || (user.role && user.roles === undefined)) && (
-                      <div className={styles.roleSwitcher}>
-                        <div className={styles.roleSwitcherLabel}>Текущая роль:</div>
-                        <div className={styles.roleList}>
-                          {(user.roles ?? [user.role]).map((role) => (
-                            <button
-                              key={role}
-                              className={`${styles.roleOption} ${currentRole === role ? styles.roleOptionActive : ''}`}
-                              onClick={() => {
-                                switchRole(role);
-                                window.dispatchEvent(new CustomEvent('roleChanged', { detail: role }));
-                              }}
-                              type="button"
-                            >
-                              {role}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className={styles.profileDivider} />
-
-                    <nav className={styles.profileNav}>
+<nav className={styles.profileNav}>
                       <Link to="/dashboard" className={styles.profileNavLink} onClick={handleProfileDropdownClose}>
                         <LayoutDashboard />
                         <span>Панель управления</span>
@@ -313,9 +319,7 @@ export function Header(): ReactElement {
                         <span>Настройки</span>
                       </Link>
                     </nav>
-
-                    <div className={styles.profileDivider} />
-                    <button className={styles.logoutBtn} onClick={handleLogout} type="button">
+<button className={styles.logoutBtn} onClick={handleLogout} type="button">
                       <LogOut />
                       <span>Выйти</span>
                     </button>
