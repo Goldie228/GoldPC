@@ -302,3 +302,19 @@ export interface ServiceRequest {
   problemDescription?: string;
   preferredDate?: string;
 }
+
+    
+export interface Order {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  status: string;
+  total: number;
+  date: string;
+  items?: Array<{
+    productId: string;
+    name: string;
+    quantity: number;
+    price: number;
+  }>;
+}

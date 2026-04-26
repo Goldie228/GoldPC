@@ -5,6 +5,7 @@ import { create } from 'zustand';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { persist } from 'zustand/middleware';
 import type { User } from '../api/types';
+import { decodeHtmlEntities } from '../utils/decodeHtml';
 
 export type UserRole = 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant';
 
@@ -35,6 +36,15 @@ const getInitialState = (): Pick<AuthState, 'user' | 'isAuthenticated' | 'curren
     const saved = localStorage.getItem('auth-storage');
     if (saved) {
       const data = JSON.parse(saved);
+      // Decode HTML entities in user data
+      if (data.user) {
+        data.user = {
+          ...data.user,
+          firstName: decodeHtmlEntities(data.user.firstName),
+          lastName: decodeHtmlEntities(data.user.lastName),
+          email: decodeHtmlEntities(data.user.email),
+        };
+      }
       return {
         user: data.user ?? null,
         isAuthenticated: !!data.user,
@@ -60,6 +70,15 @@ export const useAuthStore = create<AuthState>()(
     originalUser: null,
 
     setUser: (user) => {
+      // Decode HTML entities in user data
+      if (user) {
+        user = {
+          ...user,
+          firstName: decodeHtmlEntities(user.firstName),
+          lastName: decodeHtmlEntities(user.lastName),
+          email: decodeHtmlEntities(user.email),
+        };
+      }
       const newState = {
         user,
         isAuthenticated: !!user,

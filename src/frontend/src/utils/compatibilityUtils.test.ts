@@ -197,7 +197,7 @@ describe('compatibilityUtils - performanceCalculator', () => {
 
   describe('extractSupportedSockets', () => {
     it('extracts array', () => {
-      expect(extractSupportedSockets({ supportedSockets: ['LGA1700', 'AM5'] as unknown as string[])).toEqual([
+      expect(extractSupportedSockets({ supportedSockets: ['LGA1700', 'AM5'] } as Record<string, unknown>)).toEqual([
         'LGA1700',
         'AM5',
       ]);
