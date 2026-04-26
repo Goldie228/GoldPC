@@ -31,7 +31,7 @@
 /* Gold accent on hover/focus within */
 .sidebar:hover,
 .sidebar:focus-within {
-  border-left-color: var(--border-brand);
+  border-left-color: var(--color-gold-500);
   box-shadow: 
     0 4px 32px var(--shadow-lg),
     0 0 20px var(--border-brand),
@@ -48,13 +48,13 @@
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background: var(--border-brand);
+  background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
   border-radius: 3px;
   transition: background 0.2s;
 }
 
 .sidebar::-webkit-scrollbar-thumb:hover {
-  background: var(--border-brand);
+  background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
 }
 
 .sidebarHeader {
@@ -74,8 +74,8 @@
   height: 2px;
   background: linear-gradient(
     90deg,
-    var(--border-brand) 0%,
-    var(--border-brand) 100%
+    var(--color-gold-500) 0%,
+    var(--color-gold-500) 100%
   );
   border-radius: 1px;
 }
@@ -87,14 +87,14 @@
   font-family: var(--font-sans);
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--fg);
+  color: var(--fg-primary);
   margin: 0;
   letter-spacing: 0.02em;
 }
 
 .sidebarTitle svg {
-  color: var(--accent, var(--accent));
-  filter: drop-shadow(0 0 4px var(--border-brand));
+  color: var(--accent);
+  filter: drop-shadow(0 0 4px var(--accent-gold));
 }
 
 /* ========================================
@@ -107,8 +107,8 @@
   padding-bottom: 12px;
   margin-left: -14px;
   margin-right: -14px;
-  /* Enhanced visual separator line */
-  border-bottom: 1px solid var(--border-brand);
+  /* Subtle separator line */
+  border-bottom: 1px solid var(--border-muted);
   /* Gold border accent on hover/focus */
   border-left: 2px solid transparent;
   border-top: 1px solid var(--border-muted);
@@ -131,8 +131,8 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--border-brand) 20%,
-    var(--border-brand) 80%,
+    var(--border-muted) 20%,
+    var(--border-muted) 80%,
     transparent 100%
   );
   pointer-events: none;
@@ -145,7 +145,7 @@
   inset: 0;
   background: linear-gradient(
     135deg,
-    var(--border-brand) 0%,
+    color-mix(in srgb, var(--color-gold-600) 10%, transparent) 0%,
     transparent 50%
   );
   opacity: 0;
@@ -162,10 +162,10 @@
 /* Gold accent border on hover/focus */
 .filterGroup:hover,
 .filterGroup:focus-within {
-  border-left-color: var(--border-brand);
+  border-left-color: var(--color-gold-500);
   border-top-color: var(--border-muted);
   border-right-color: var(--border-muted);
-  background: var(--border-brand);
+  background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
 }
 
 .filterGroup:last-of-type {
@@ -185,33 +185,33 @@
   font-family: inherit;
   font-size: 0.65rem;
   font-weight: 600;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-secondary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   transition: color 0.2s;
 }
 
 .filterHeaderOpen {
-  color: var(--accent, var(--accent));
+  color: var(--color-gold-500);
 }
 
 .filterHeaderOpen .filterHeaderChevron {
-  color: var(--accent, var(--accent));
+  color: var(--color-gold-500);
 }
 
 .filterHeaderOpen .filterHeaderIcon {
-  color: var(--accent, var(--accent));
+  color: var(--color-gold-400);
 }
 
 .filterHeader:hover {
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-primary);
 }
 
 .filterHeaderIcon {
   display: flex;
   align-items: center;
   margin-right: 8px;
-  color: var(--accent, var(--accent));
+  color: var(--color-gold-400);
 }
 
 .filterHeaderTitle {
@@ -220,7 +220,7 @@
 }
 
 .filterHeaderChevron {
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   transition: transform 0.2s;
 }
 
@@ -267,7 +267,7 @@
   cursor: pointer;
   font-family: inherit;
   font-size: 0.8rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   text-align: left;
   transition: all 0.2s ease;
   border-radius: 0 4px 4px 0;
@@ -282,14 +282,14 @@
   transform: translateY(-50%);
   width: 2px;
   height: 0;
-  background: var(--accent, var(--accent));
+  background: var(--accent);
   transition: height 0.2s ease;
   border-radius: 1px;
 }
 
 .categoryItem:hover {
-  background: var(--border-brand);
-  color: var(--fg);
+  background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
+  color: var(--fg-primary);
   padding-left: 16px;
 }
 
@@ -299,20 +299,20 @@
 
 .categoryItem.active {
   background: transparent;
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   padding-left: 24px;
   font-weight: 600;
-  border-left: 2px solid var(--accent, var(--accent));
+  border-left: 2px solid var(--accent);
 }
 
 .categoryItem.active::before {
   height: 100%;
-  box-shadow: 0 0 12px var(--border-brand);
+  box-shadow: 0 0 12px var(--color-gold-600);
 }
 
 /* Enhanced active state with subtle glow */
 .categoryItem.active .categoryName {
-  text-shadow: 0 0 20px var(--border-brand);
+  text-shadow: 0 0 20px var(--color-gold-600);
 }
 
 .categoryName {
@@ -322,7 +322,7 @@
 .categoryCount {
   font-family: var(--font-sans);
   font-size: 0.65rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   padding: 2px 6px;
   background: var(--border-muted);
   border-radius: 3px;
@@ -331,8 +331,8 @@
 
 .categoryItem:hover .categoryCount,
 .categoryItem.active .categoryCount {
-  background: var(--border-brand);
-  color: var(--accent, var(--accent));
+  background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
+  color: var(--accent);
 }
 
 /* ========================================
@@ -355,7 +355,7 @@
   display: block;
   font-size: 0.6rem;
   font-weight: 500;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-secondary);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 6px;
@@ -371,7 +371,7 @@
   padding: 10px 12px;
   background: var(--bg-elevated);
   border: 1px solid var(--border-muted);
-  color: var(--fg);
+  color: var(--fg-primary);
   font-family: var(--font-sans);
   font-size: 0.8rem;
   transition: all 0.2s ease;
@@ -385,18 +385,18 @@
 
 .priceInput:focus {
   outline: none;
-  border-color: var(--accent, var(--accent));
+  border-color: var(--accent);
   background: var(--bg-elevated);
-  box-shadow: 0 0 12px var(--border-brand);
+  box-shadow: 0 0 12px var(--color-gold-600);
 }
 
 .priceInput::placeholder {
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
 }
 
 .priceSeparator {
   font-size: 0.8rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   margin-bottom: 10px;
   opacity: 0.5;
 }
@@ -423,14 +423,14 @@
 }
 
 .stockOption:hover {
-  background: var(--border-brand);
-  border-left-color: var(--border-brand);
+  background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
+  border-left-color: var(--color-gold-500);
 }
 
 .stockRadio {
   width: 16px;
   height: 16px;
-  border: 1px solid var(--fg-dim, var(--fg-dim));
+  border: 1px solid var(--fg-dim);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -445,14 +445,14 @@
 }
 
 .stockOption.checked .stockRadio {
-  border-color: var(--accent, var(--accent));
+  border-color: var(--accent);
   background: var(--accent-dim, var(--border-brand));
   box-shadow: 0 0 8px var(--border-brand);
 }
 
 .checkIcon {
   opacity: 0;
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   transition: opacity 0.2s;
 }
 
@@ -462,16 +462,16 @@
 
 .stockLabel {
   font-size: 0.8rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   transition: color 0.2s;
 }
 
 .stockOption:hover .stockLabel {
-  color: var(--fg);
+  color: var(--fg-primary);
 }
 
 .stockOption.checked .stockLabel {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 /* ========================================
@@ -514,7 +514,7 @@
 .emptySpecHint {
   display: block;
   font-size: 0.75rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   padding: 8px 12px;
   font-style: italic;
 }
@@ -523,7 +523,7 @@
   display: block;
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 8px;
@@ -531,10 +531,10 @@
 
 .wattageHint {
   font-size: 0.7rem;
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   margin-bottom: 8px;
   padding: 4px 8px;
-  background: var(--border-brand);
+  background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
   border-radius: 4px;
 }
 
@@ -548,7 +548,7 @@
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   pointer-events: none;
 }
 
@@ -557,19 +557,19 @@
   padding: 8px 12px 8px 32px;
   background: var(--bg-elevated);
   border: 1px solid var(--border-muted);
-  color: var(--fg);
+  color: var(--fg-primary);
   font-size: 0.8rem;
   border-radius: 4px;
   transition: border-color 0.2s, background 0.2s;
 }
 
 .specSearchInput::placeholder {
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
 }
 
 .specSearchInput:focus {
   outline: none;
-  border-color: var(--accent, var(--accent));
+  border-color: var(--accent);
   background: var(--bg-elevated);
 }
 
@@ -586,7 +586,7 @@
 }
 
 .checkboxItem:focus-within {
-  outline: 2px solid var(--accent, var(--accent));
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -602,14 +602,14 @@
 }
 
 .checkboxItem:hover {
-  background: var(--border-brand);
-  border-left-color: var(--border-brand);
+  background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
+  border-left-color: var(--color-gold-500);
 }
 
 .checkbox {
   width: 16px;
   height: 16px;
-  border: 1px solid var(--fg-dim, var(--fg-dim));
+  border: 1px solid var(--fg-dim);
   border-radius: 3px;
   display: flex;
   align-items: center;
@@ -624,8 +624,8 @@
 }
 
 .checkboxItem.checked .checkbox {
-  border-color: var(--accent, var(--accent));
-  background: var(--accent, var(--accent));
+  border-color: var(--accent);
+  background: var(--accent);
   box-shadow: 0 0 8px var(--border-brand);
 }
 
@@ -641,16 +641,16 @@
 
 .checkboxLabel {
   font-size: 0.8rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   transition: color 0.2s;
 }
 
 .checkboxItem:hover .checkboxLabel {
-  color: var(--fg);
+  color: var(--fg-primary);
 }
 
 .checkboxItem.checked .checkboxLabel {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 /* ========================================
@@ -667,7 +667,7 @@
 }
 
 .ratingOption:focus-within {
-  outline: 2px solid var(--accent, var(--accent));
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -683,14 +683,14 @@
 }
 
 .ratingOption:hover {
-  background: var(--border-brand);
-  border-left-color: var(--border-brand);
+  background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
+  border-left-color: var(--color-gold-500);
 }
 
 .ratingRadio {
   width: 16px;
   height: 16px;
-  border: 1px solid var(--fg-dim, var(--fg-dim));
+  border: 1px solid var(--fg-dim);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -705,7 +705,7 @@
 }
 
 .ratingOption.checked .ratingRadio {
-  border-color: var(--accent, var(--accent));
+  border-color: var(--accent);
   background: var(--accent-dim, var(--border-brand));
   box-shadow: 0 0 8px var(--border-brand);
 }
@@ -725,27 +725,27 @@
 }
 
 .starFilled {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   filter: drop-shadow(0 0 2px var(--border-brand));
 }
 
 .starEmpty {
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   opacity: 0.3;
 }
 
 .ratingLabel {
   font-size: 0.8rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   transition: color 0.2s;
 }
 
 .ratingOption:hover .ratingLabel {
-  color: var(--fg);
+  color: var(--fg-primary);
 }
 
 .ratingOption.checked .ratingLabel {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 /* ========================================
@@ -762,7 +762,7 @@
   margin-top: 16px;
   background: transparent;
   border: 1px solid var(--border-brand);
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 500;
@@ -801,7 +801,7 @@
 
 .resetBtn:hover {
   border-color: var(--border-brand);
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 .resetBtn:hover::before {
@@ -857,4 +857,37 @@
       var(--bg-elevated) 100%
     );
   }
+}
+
+/* ========================================
+   Mobile Overlay Context
+   ======================================== */
+
+.sidebarMobile {
+  position: static;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+/* ========================================
+   Hide Number Input Spin Buttons
+   ======================================== */
+
+/* Chrome, Safari, Edge, Opera */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
 }

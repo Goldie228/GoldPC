@@ -10,6 +10,8 @@ interface FilterSidebarProps {
   selectedCategory: ProductCategory | null;
   onCategoryChange: (category: ProductCategory | null) => void;
   categoryLocked?: boolean;
+  /** Render in mobile overlay mode (no sticky, no borders) */
+  mobile?: boolean;
   priceRange: { min: number; max: number };
   onPriceChange: (range: { min: number; max: number }) => void;
   selectedManufacturerIds: string[];
@@ -268,7 +270,7 @@ function FilterGroup({ title, icon, defaultOpen = true, children }: FilterGroupP
   );
 }
 
-export function FilterSidebar({
+export function FilterSidebar({ mobile = false, 
   selectedCategory,
   onCategoryChange,
   categoryLocked = false,
@@ -494,7 +496,7 @@ export function FilterSidebar({
     Object.keys(selectedSpecifications).length > 0;
 
   return (
-    <aside className={styles.sidebar}>
+    <aside className={`${styles.sidebar} ${mobile ? styles.sidebarMobile : ""}`}>
       <div className={styles.sidebarHeader}>
         <h2 className={styles.sidebarTitle}>
           <Grid3X3 size={16} />

@@ -59,8 +59,6 @@ export function OrdersPage() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -92,6 +90,12 @@ export function OrdersPage() {
       return matchesSearch && matchesDateFrom && matchesDateTo;
     });
   }, [orders, searchQuery, dateFrom, dateTo]);
+
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage) || 1;
+  const paginatedOrders = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredOrders.slice(start, start + itemsPerPage);
+  }, [filteredOrders, currentPage, itemsPerPage]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
@@ -189,8 +193,8 @@ export function OrdersPage() {
                     <span className="order-total">{formatPrice(order.total)}</span>
                   </td>
                   <td>
-                    <span className={'status-badge ' + STATUS_CLASSES[order.status]}>
-                      {STATUS_LABELS[order.status]}
+                    <span className={'status-badge ' + STATUS_CLASSES[order.status as OrderStatus]}>
+                      {STATUS_LABELS[order.status as OrderStatus]}
                     </span>
                   </td>
                   <td>{formatDate(order.date)}</td>

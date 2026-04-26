@@ -71,7 +71,7 @@
   padding: 16px;
   border-radius: 12px;
   overflow: hidden;
-  background: var(--color-white);
+  background: #FFFFFF;
 }
 
 .image {
@@ -119,7 +119,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--border-muted), 0.9);
+  background: color-mix(in srgb, #FFFFFF 90%, transparent);
   border: 1px solid var(--border-muted);
   border-radius: 50%;
   color: var(--color-black);
@@ -209,7 +209,7 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: var(--bg), 0.85);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
   border: 1px solid var(--accent);
   color: var(--accent);
   border-radius: 2px;
@@ -521,12 +521,10 @@
 
 /* Hover: Gold Glow */
 .addToCartBtn:hover:not(:disabled) {
-  background: var(--accent-hover);
-  transform: scale(1.02);
-  box-shadow:
-    var(--shadow-accent-glow),
-    var(--shadow-gold),
-    0 0 32px var(--border-brand);
+  background: var(--color-gold-600);
+  border-color: var(--color-gold-600);
+  transform: translateY(-1px);
+  /* no shadow */
 }
 
 .addToCartBtn:active:not(:disabled) {

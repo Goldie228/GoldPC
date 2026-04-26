@@ -97,45 +97,35 @@ export function HomePage() {
           <div className={styles.glow1} />
           <div className={styles.glow2} />
         </div>
-
+        <div className={styles.heroGlass} />
+        
         <div className={styles.heroContent}>
-          <div className={styles.heroText}>
-            <h1 className={styles.heroTitle}>
-              <span className={styles.heroTitleLine}>Собери свой</span>
-              <span className={`${styles.heroTitleLine} ${styles.heroTitleLine2}`}>
-                <span className={styles.heroTitleAccent}>идеальный</span>&nbsp;ПК
-              </span>
-            </h1>
-            <p className={styles.heroDesc}>
-              Интеллектуальный конфигуратор с проверкой совместимости в реальном времени.
-              Профессиональная сборка за 24 часа.
-            </p>
-            <div className={styles.heroActions}>
-              <Link to="/pc-builder">
-                <Button variant="primary" icon={<ArrowRight size={16} />}>
-                  Начать сборку
-                </Button>
-              </Link>
-              <Link to="/catalog">
-                <Button variant="ghost">Каталог</Button>
-              </Link>
-            </div>
-
-            <div className={styles.heroStats}>
-              <div className={styles.stat}>
-                <span className={styles.statValue}>12K+</span>
-                <span className={styles.statLabel}>Сборок</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statValue}>98%</span>
-                <span className={styles.statLabel}>Совместимость</span>
-              </div>
-              <div className={styles.stat}>
-                <span className={styles.statValue}>24ч</span>
-                <span className={styles.statLabel}>Сборка</span>
-              </div>
-            </div>
+          <div className={styles.heroBadge}>Конфигуратор ПК нового поколения</div>
+          
+          <h1 className={styles.heroTitle}>
+            <span className={styles.heroTitleLine}>Собери</span>
+            <span className={`${styles.heroTitleLine} ${styles.heroTitleLine2}`}>
+              <span className={styles.heroTitleAccent}>идеальный</span> компьютер
+            </span>
+            <span className={styles.heroTitleLine}>за 24 часа</span>
+          </h1>
+          
+          <p className={styles.heroDesc}>
+            Умный подбор комплектующих с автоматической проверкой совместимости. 
+            Гарантия качества и бесплатная доставка.
+          </p>
+          
+          <div className={styles.heroActions}>
+            <Link to="/pc-builder">
+              <Button variant="primary" size="lg" icon={<ArrowRight size={18} />}>
+                Собрать свой ПК
+              </Button>
+            </Link>
+            <Link to="/catalog">
+              <Button variant="outline" size="lg">Каталог</Button>
+            </Link>
           </div>
+
         </div>
       </section>
 

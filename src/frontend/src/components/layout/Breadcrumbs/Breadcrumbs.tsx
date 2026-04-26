@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { Link } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 import styles from './Breadcrumbs.module.css';
 
 export interface BreadcrumbItem {

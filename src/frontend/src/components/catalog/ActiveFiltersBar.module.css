@@ -1,6 +1,3 @@
-:root {
-}
-
 .bar {
   display: flex;
   align-items: center;
@@ -31,8 +28,8 @@
   padding: 6px 10px;
   border-radius: 999px;
   border: 1px solid var(--border-brand);
-  background: rgba(20, 20, 20, 0.55);
-  color: var(--fg-muted);
+  background: color-mix(in srgb, var(--bg-card) 85%, transparent);
+  color: var(--fg-primary);
   font-size: 12px;
   line-height: 1;
   max-width: 360px;
@@ -58,7 +55,7 @@
 }
 
 .chipBtn:hover {
-  background: var(--border-brand);
+  background: color-mix(in srgb, var(--bg-elevated) 50%, transparent);
 }
 
 .clearBtn {
@@ -68,14 +65,14 @@
   padding: 8px 12px;
   border-radius: 12px;
   border: 1px solid var(--border-brand);
-  background: var(--border-brand);
-  color: var(--fg-muted);
+  background: color-mix(in srgb, var(--bg-elevated) 50%, transparent);
+  color: var(--fg-primary);
   cursor: pointer;
   font-size: 13px;
 }
 
 .clearBtn:hover {
-  background: rgba(255, 215, 0, 0.12);
+  background: color-mix(in srgb, var(--accent-gold) 12%, transparent);
 }
 
 .muted {

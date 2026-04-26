@@ -113,7 +113,7 @@ export function ProductQuickViewContent({
       ),
       data: {
         className: styles.viewerModal,
-        showCloseButton: false,
+        showCloseButton: true,  // Enable close button
         closeOnOverlayClick: true,
       },
     });
@@ -145,7 +145,7 @@ export function ProductQuickViewContent({
             <div className={styles.quickGalleryNav}>
               <button
                 type="button"
-                className={`${styles.galleryNav} ${styles.prevBtn}`}
+                className={styles.galleryNav}
                 aria-label="Предыдущее фото"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -159,7 +159,7 @@ export function ProductQuickViewContent({
               </div>
               <button
                 type="button"
-                className={`${styles.galleryNav} ${styles.nextBtn}`}
+                className={styles.galleryNav}
                 aria-label="Следующее фото"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -187,7 +187,7 @@ export function ProductQuickViewContent({
           </>
         )}
         {slug ? (
-          <Link to={`/product/${slug}`} className={styles.fullPageBtn}>
+          <Link to={`/product/${slug}`} className={styles.fullPageBtn} onClick={closeModal}>
             На страницу товара
           </Link>
         ) : null}

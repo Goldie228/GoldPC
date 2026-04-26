@@ -11,7 +11,7 @@
 .label {
   font-size: 0.65rem;
   font-weight: 600;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -19,13 +19,13 @@
 .trackContainer {
   position: relative;
   padding: 16px 16px;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .track {
   position: relative;
   height: 4px;
-  background: var(--border-muted), 0.06);
+  background: color-mix(in srgb, var(--border-muted) 6%, transparent);
   border-radius: 2px;
   cursor: pointer;
 }
@@ -70,11 +70,11 @@
     var(--color-gold-600) 100%
   );
   border-radius: 50%;
-  border: 2px solid var(--border-muted), 0.2);
+  border: 2px solid color-mix(in srgb, var(--border-muted) 20%, transparent);
   box-shadow: 
     var(--shadow-md),
     var(--shadow-gold),
-    inset 0 1px 0 var(--border-muted), 0.3);
+    inset 0 1px 0 color-mix(in srgb, var(--border-muted) 30%, transparent);
   transition: all var(--transition-fast);
 }
 
@@ -86,7 +86,7 @@
   width: 6px;
   height: 6px;
   transform: translate(-50%, -50%);
-  background: var(--border-muted), 0.8);
+  background: color-mix(in srgb, var(--border-muted) 80%, transparent);
   border-radius: 50%;
   box-shadow: 0 0 4px var(--border-brand);
 }
@@ -94,9 +94,9 @@
 .thumb:hover::before {
   transform: scale(1.15);
   box-shadow: 
-    0 4px 16px var(--shadow-lg), 0.5),
+    0 4px 16px color-mix(in srgb, var(--shadow-lg) 50%, transparent),
     0 0 20px var(--border-brand),
-    inset 0 1px 0 var(--border-muted), 0.4);
+    inset 0 1px 0 color-mix(in srgb, var(--border-muted) 40%, transparent);
 }
 
 .thumb:active,
@@ -108,9 +108,9 @@
 .thumb.active::before {
   transform: scale(1.2);
   box-shadow: 
-    0 4px 20px var(--shadow-lg), 0.6),
+    0 4px 20px color-mix(in srgb, var(--shadow-lg) 60%, transparent),
     0 0 28px var(--border-brand),
-    inset 0 1px 0 var(--border-muted), 0.5);
+    inset 0 1px 0 color-mix(in srgb, var(--border-muted) 50%, transparent);
 }
 
 /* ========================================
@@ -123,7 +123,7 @@
   left: 50%;
   transform: translateX(-50%);
   padding: 4px 8px;
-  background: var(--bg-elevated), 0.95);
+  background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border-brand);
@@ -131,13 +131,13 @@
   font-family: var(--font-sans);
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
   transition: all 0.15s ease;
   box-shadow: 
-    0 4px 12px var(--shadow-lg), 0.4),
+    0 4px 12px color-mix(in srgb, var(--shadow-lg) 40%, transparent),
     0 0 8px var(--border-brand);
 }
 
@@ -148,7 +148,7 @@
   left: 50%;
   transform: translateX(-50%);
   border: 4px solid transparent;
-  border-top-color: var(--bg-elevated), 0.95);
+  border-top-color: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
 }
 
 .thumb:hover .thumbTooltip,
@@ -173,17 +173,17 @@
   font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 500;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   padding: 4px 8px;
-  background: var(--border-muted), 0.03);
+  background: color-mix(in srgb, var(--border-muted) 3%, transparent);
   border-radius: 3px;
-  border: 1px solid var(--border-muted), 0.04);
+  border: 1px solid color-mix(in srgb, var(--border-muted) 4%, transparent);
   transition: all 0.2s ease;
 }
 
 .valueMin:hover,
 .valueMax:hover {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   background: var(--border-brand);
   border-color: var(--border-brand);
 }
