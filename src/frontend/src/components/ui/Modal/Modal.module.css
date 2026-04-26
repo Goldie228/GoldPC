@@ -9,7 +9,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(var(--shadow-rgb), 0.75);
+  background: rgba(var(--border-muted);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -32,7 +32,7 @@
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg, 8px);
-  box-shadow: 0 16px 48px rgba(var(--shadow-rgb), 0.12);
+  box-shadow: 0 16px 48px rgba(var(--border-muted);
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
@@ -65,14 +65,14 @@
   align-items: center;
   justify-content: space-between;
   padding: var(--space-sm, 16px) var(--space-md, 24px);
-  border-bottom: 1px solid var(--border, var(--border-muted), 0.06));
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .title {
   font-size: 18px;
   font-weight: 600;
-  color: var(--fg, var(--fg));
+  color: var(--fg);
   margin: 0;
   line-height: 1.4;
 }
@@ -87,19 +87,19 @@
   background: transparent;
   border: 1px solid var(--border);
   border-radius: var(--radius, 4px);
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   cursor: pointer;
   transition: all var(--transition-fast, 150ms ease-out);
 }
 
 .closeButton:hover {
-  background: var(--bg-elevated, var(--color-black-soft));
-  color: var(--fg, var(--fg));
-  border-color: var(--border-accent, var(--border-brand));
+  background: var(--bg-elevated);
+  color: var(--fg);
+  border-color: var(--border-accent);
 }
 
 .closeButton:focus-visible {
-  outline: 2px solid var(--accent, var(--accent));
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -108,7 +108,7 @@
   padding: var(--space-md, 24px);
   overflow-y: auto;
   flex: 1;
-  color: var(--fg, var(--fg));
+  color: var(--fg);
 }
 
 /* Footer (optional) */
@@ -118,7 +118,7 @@
   justify-content: flex-end;
   gap: var(--space-xs, 8px);
   padding: var(--space-sm, 16px) var(--space-md, 24px);
-  border-top: 1px solid var(--border, var(--border-muted), 0.06));
+  border-top: 1px solid var(--border);
   flex-shrink: 0;
 }
 

@@ -9,7 +9,7 @@
   border-radius: 1rem;
   border: 1px solid rgba(248, 113, 113, 0.35);
   background: rgba(248, 113, 113, 0.06);
-  box-shadow: 0 8px 32px var(--shadow-lg), 0.25);
+  box-shadow: 0 8px 32px var(--border-muted);
 }
 
 .iconWrap {
@@ -21,7 +21,7 @@
   margin-bottom: 1rem;
   border-radius: 50%;
   background: rgba(248, 113, 113, 0.12);
-  color: var(--error, var(--error));
+  color: var(--error);
 }
 
 .icon {
@@ -33,7 +33,7 @@
   margin: 0 0 1.25rem;
   font-size: 0.95rem;
   line-height: 1.5;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 .actions {
@@ -52,7 +52,7 @@
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  color: var(--error, var(--error));
+  color: var(--error);
   background: rgba(248, 113, 113, 0.12);
   border: 1px solid rgba(248, 113, 113, 0.4);
   border-radius: 0.5rem;

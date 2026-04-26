@@ -1,8 +1,8 @@
 .checkoutPage {
   min-height: calc(100vh - 200px);
-  background: var(--bg, var(--bg));
+  background: var(--bg);
   padding-top: 80px;
-  color: var(--fg, var(--fg));
+  color: var(--fg);
 }
 
 .checkoutPageContainer {
@@ -17,17 +17,17 @@
   align-items: center;
   gap: 8px;
   font-size: 0.7rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   margin-bottom: 8px;
 }
 
 .breadcrumb a {
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   text-decoration: none;
 }
 
 .breadcrumb a:hover {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 .orderSuccess {
@@ -36,8 +36,8 @@
   gap: 28px;
   text-align: center;
   padding: 48px 40px;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 12px;
   max-width: 620px;
   margin: 0 auto;
@@ -57,9 +57,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent, var(--accent));
-  background: var(--border-brand), 0.08);
-  border: 1px solid var(--border-brand), 0.28);
+  color: var(--accent);
+  background: var(--border-muted);
+  border: 1px solid var(--border-muted);
 }
 
 .orderSuccessIcon svg {
@@ -78,8 +78,8 @@
   display: grid;
   gap: 10px;
   padding: 20px;
-  background: var(--border-muted), 0.02);
-  border: 1px solid var(--border-muted), 0.05);
+  background: var(--border-muted);
+  border: 1px solid var(--border-muted);
   border-radius: 10px;
 }
 
@@ -87,7 +87,7 @@
   margin: 0;
   font-size: 0.95rem;
   line-height: 1.6;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 .orderSuccessNumber {
@@ -96,9 +96,9 @@
   margin-left: 6px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: var(--border-brand), 0.12);
-  border: 1px solid var(--border-brand), 0.32);
-  color: var(--accent, var(--accent));
+  background: var(--border-muted);
+  border: 1px solid var(--border-muted);
+  color: var(--accent);
   font-family: var(--font-mono);
   font-size: 0.86rem;
   font-weight: 700;
@@ -108,7 +108,7 @@
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.55;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 .orderSuccessActions {
@@ -124,7 +124,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  border: 1px solid var(--border);
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 600;
@@ -132,15 +132,15 @@
 }
 
 .checkoutBtnPrimary {
-  background: var(--accent, var(--accent));
-  border-color: var(--accent, var(--accent));
-  color: var(--bg, var(--bg));
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
 }
 
 .checkoutBtnGhost {
-  background: var(--border-muted), 0.03);
-  border-color: var(--border, var(--border-muted), 0.08));
-  color: var(--fg, var(--fg));
+  background: var(--border-muted);
+  border-color: var(--border);
+  color: var(--fg);
 }
 
 .checkoutBtn:hover {

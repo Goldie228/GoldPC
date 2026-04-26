@@ -197,7 +197,7 @@ describe('compatibilityUtils - performanceCalculator', () => {
 
   describe('extractSupportedSockets', () => {
     it('extracts array', () => {
-      expect(extractSupportedSockets({ supportedSockets: ['LGA1700', 'AM5'] } as Record<string, unknown>)).toEqual([
+      expect(extractSupportedSockets({ supportedSockets: ['LGA1700', 'AM5'] } as any)).toEqual([
         'LGA1700',
         'AM5',
       ]);
@@ -292,7 +292,7 @@ describe('compatibilityUtils - performanceCalculator', () => {
 
     it('returns null for empty/null', () => {
       expect(normalizeFormFactor('')).toBeNull();
-      expect(normalizeFormFactor(null as unknown as string | null)).toBeNull();
+      expect(normalizeFormFactor(null as unknown as string)).toBeNull();
     });
   });
 

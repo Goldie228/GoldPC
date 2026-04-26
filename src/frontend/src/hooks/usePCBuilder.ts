@@ -771,7 +771,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
           return next;
         }
 
-        (next as PCBuilderSelectedState)[type as keyof PCBuilderSelectedState] = sc;
+        (next as PCBuilderSelectedState)[type as keyof PCBuilderSelectedState] = sc as any;
         return next;
       });
     },

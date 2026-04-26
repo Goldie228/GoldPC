@@ -5,7 +5,7 @@
  */
 
 .stat-card {
-  background: var(--bg-elevated, var(--color-black-soft));
+  background: var(--bg-elevated);
   border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: 0 0 0 1px var(--border-brand);
   border-radius: 12px;

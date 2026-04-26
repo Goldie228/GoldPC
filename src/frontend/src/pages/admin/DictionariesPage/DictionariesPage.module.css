@@ -19,7 +19,7 @@
 .title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--text-primary, var(--fg));
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
   letter-spacing: -0.02em;
 }
@@ -29,24 +29,24 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.8rem;
-  color: var(--text-dim, var(--fg-dim));
+  color: var(--text-dim);
 }
 
 .breadcrumb a {
-  color: var(--text-muted, var(--fg-muted));
+  color: var(--text-muted);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .breadcrumb a:hover {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 /* Tabs */
 .tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid var(--border, var(--border-muted), 0.06));
+  border-bottom: 1px solid var(--border);
   margin-bottom: 2rem;
 }
 
@@ -54,7 +54,7 @@
   padding: 0.75rem 1.5rem;
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--text-muted, var(--fg-muted));
+  color: var(--text-muted);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -63,11 +63,11 @@
 }
 
 .tab:hover {
-  color: var(--text-primary, var(--fg));
+  color: var(--text-primary);
 }
 
 .tab.active {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 .tab.active::after {
@@ -77,7 +77,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--accent, var(--accent));
+  background: var(--accent);
 }
 
 /* Toolbar */
@@ -95,26 +95,26 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.625rem 1rem;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   min-width: 320px;
 }
 
 .searchBox span {
-  color: var(--text-dim, var(--fg-dim));
+  color: var(--text-dim);
 }
 
 .searchBox input {
   flex: 1;
   background: transparent;
   border: none;
-  color: var(--text-primary, var(--fg));
+  color: var(--text-primary);
   font-size: 0.85rem;
   outline: none;
 }
 
 .searchBox input::placeholder {
-  color: var(--text-dim, var(--fg-dim));
+  color: var(--text-dim);
 }
 
 .addBtn {
@@ -122,8 +122,8 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
-  background: var(--accent, var(--accent));
-  color: var(--bg, var(--bg));
+  background: var(--accent);
+  color: var(--bg);
   border: none;
   font-size: 0.85rem;
   font-weight: 600;
@@ -137,8 +137,8 @@
 
 /* Table Card */
 .tableCard {
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
 }
 
 .table {
@@ -155,16 +155,16 @@
 .table th {
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--text-dim, var(--fg-dim));
+  color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: var(--bg-elevated, var(--color-black-soft));
-  border-bottom: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
 }
 
 .table td {
   font-size: 0.85rem;
-  border-bottom: 1px solid var(--border, var(--border-muted), 0.06));
+  border-bottom: 1px solid var(--border);
 }
 
 .table tr:last-child td {
@@ -172,31 +172,31 @@
 }
 
 .table tr:hover td {
-  background: var(--bg-elevated, var(--color-black-soft));
+  background: var(--bg-elevated);
 }
 
 /* Item Styles */
 .itemId {
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  color: var(--text-dim, var(--fg-dim));
+  color: var(--text-dim);
 }
 
 .itemName {
   font-weight: 500;
-  color: var(--text-primary, var(--fg));
+  color: var(--text-primary);
 }
 
 .itemSlug {
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  color: var(--text-dim, var(--fg-dim));
+  color: var(--text-dim);
 }
 
 .itemCount {
   font-family: var(--font-sans);
   font-size: 0.8rem;
-  color: var(--text-muted, var(--fg-muted));
+  color: var(--text-muted);
 }
 
 .itemStatus {
@@ -233,21 +233,21 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--text-dim, var(--fg-dim));
+  border: 1px solid var(--border);
+  color: var(--text-dim);
   cursor: pointer;
   transition: all 0.2s;
   font-size: 0.875rem;
 }
 
 .actionBtn:hover {
-  border-color: var(--border-accent, var(--border-brand), 0.2));
-  background: var(--accent-glow, var(--border-brand), 0.15));
+  border-color: var(--border-accent);
+  background: var(--accent-glow);
 }
 
 .actionBtn.delete:hover {
   border-color: rgba(239, 68, 68, 0.3);
-  color: var(--error, var(--error));
+  color: var(--error);
   background: rgba(239, 68, 68, 0.1);
 }
 
@@ -255,7 +255,7 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: var(--shadow-lg), 0.8);
+  background: var(--border-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -263,8 +263,8 @@
 }
 
 .modal {
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   width: 100%;
   max-width: 480px;
 }
@@ -274,7 +274,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--border, var(--border-muted), 0.06));
+  border-bottom: 1px solid var(--border);
 }
 
 .modalTitle {
@@ -291,13 +291,13 @@
   justify-content: center;
   background: transparent;
   border: none;
-  color: var(--text-muted, var(--fg-muted));
+  color: var(--text-muted);
   cursor: pointer;
   transition: color 0.2s;
 }
 
 .modalClose:hover {
-  color: var(--text-primary, var(--fg));
+  color: var(--text-primary);
 }
 
 .modalBody {
@@ -316,27 +316,27 @@
   display: block;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--text-muted, var(--fg-muted));
+  color: var(--text-muted);
   margin-bottom: 0.5rem;
 }
 
 .formInput {
   width: 100%;
   padding: 0.75rem 1rem;
-  background: var(--bg-elevated, var(--color-black-soft));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--text-primary, var(--fg));
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
   font-size: 0.9rem;
   transition: border-color 0.2s;
 }
 
 .formInput:focus {
   outline: none;
-  border-color: var(--accent, var(--accent));
+  border-color: var(--accent);
 }
 
 .formInput::placeholder {
-  color: var(--text-dim, var(--fg-dim));
+  color: var(--text-dim);
 }
 
 .modalFooter {
@@ -344,14 +344,14 @@
   justify-content: flex-end;
   gap: 0.75rem;
   padding: 1.25rem 1.5rem;
-  border-top: 1px solid var(--border, var(--border-muted), 0.06));
+  border-top: 1px solid var(--border);
 }
 
 .cancelBtn {
   padding: 0.625rem 1.25rem;
   background: transparent;
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--text-muted, var(--fg-muted));
+  border: 1px solid var(--border);
+  color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -359,14 +359,14 @@
 }
 
 .cancelBtn:hover {
-  border-color: var(--text-dim, var(--fg-dim));
-  color: var(--text-primary, var(--fg));
+  border-color: var(--text-dim);
+  color: var(--text-primary);
 }
 
 .saveBtn {
   padding: 0.625rem 1.25rem;
-  background: var(--accent, var(--accent));
-  color: var(--bg, var(--bg));
+  background: var(--accent);
+  color: var(--bg);
   border: none;
   font-size: 0.85rem;
   font-weight: 600;
@@ -393,14 +393,14 @@
   justify-content: center;
   padding: 3rem;
   text-align: center;
-  color: var(--text-muted, var(--fg-muted));
+  color: var(--text-muted);
 }
 
 .spinner {
   width: 2rem;
   height: 2rem;
-  border: 2px solid var(--border, var(--border-muted), 0.06));
-  border-top-color: var(--accent, var(--accent));
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 1rem;
@@ -413,14 +413,14 @@
 }
 
 .error {
-  color: var(--error, var(--error));
+  color: var(--error);
 }
 
 .retryBtn {
   margin-top: 1rem;
   padding: 0.5rem 1rem;
-  background: var(--accent, var(--accent));
-  color: var(--bg, var(--bg));
+  background: var(--accent);
+  color: var(--bg);
   border: none;
   cursor: pointer;
   font-size: 0.875rem;

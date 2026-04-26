@@ -107,7 +107,7 @@
 .helperText {
   font-family: var(--font-sans);
   font-size: 0.75rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
 }
 
 /* ========================================
@@ -148,7 +148,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   pointer-events: none;
   transition: color 0.2s ease;
 }
@@ -160,7 +160,7 @@
 
 .input:focus ~ .leftIconWrapper,
 .inputWrapper:has(.input:focus) .leftIconWrapper {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 /* ========================================
@@ -184,7 +184,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
 }
 
 .rightIconWrapper svg {

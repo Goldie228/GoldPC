@@ -50,12 +50,12 @@
 
 .success .icon {
   background: var(--border-brand);
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 .info .icon {
-  background: color-mix(in srgb, var(--accent, var(--accent)) 20%, transparent);
-  color: var(--accent, var(--accent));
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  color: var(--accent);
 }
 
 .error .icon {
@@ -75,7 +75,7 @@
   margin: 0;
   font-size: 0.875rem;
   line-height: 1.4;
-  color: var(--fg, var(--fg));
+  color: var(--fg);
 }
 
 /* ===== CLOSE BUTTON ===== */
@@ -89,7 +89,7 @@
   padding: 0;
   background: transparent;
   border: none;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s;
@@ -97,12 +97,12 @@
 }
 
 .closeButton:hover {
-  background: var(--border-muted), 0.1);
-  color: var(--fg, var(--fg));
+  background: var(--border-muted);
+  color: var(--fg);
 }
 
 .closeButton:focus-visible {
-  outline: 2px solid var(--accent, var(--accent));
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 

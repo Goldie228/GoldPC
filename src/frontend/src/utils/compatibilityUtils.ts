@@ -573,7 +573,7 @@ export function checkCompatibility(components: ComponentMap): CompatibilityCheck
   if (cooling && chassis) { const i = checkCoolerHeightCheck(cooling, chassis); if (i) issues.push(i); }
 
   // PSU
-  if (psu) { const w = checkPSU(psu, cpu, gpu, chassis); if (w) warnings.push(w); }
+  if (psu) { const w = checkPSU(psu, cpu, gpu, chassis); if (w && w.severity !== 'Error') warnings.push(w as unknown as CompatibilityWarning); }
 
   // Case form factor
   if (chassis && motherboard) { const i = checkCaseFF(chassis, motherboard); if (i) issues.push(i); }

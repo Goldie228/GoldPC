@@ -4,8 +4,8 @@
    ======================================== */
 
 .card {
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -20,7 +20,7 @@
   position: relative;
   /* Совпадает с OptimizedImage aspectRatio в ProductCard (1.2) */
   aspect-ratio: 1.2;
-  background: var(--bg-elevated, var(--color-black-soft));
+  background: var(--bg-elevated);
 }
 
 /* ========================================

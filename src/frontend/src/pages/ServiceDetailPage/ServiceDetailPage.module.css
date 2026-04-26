@@ -24,18 +24,18 @@
   align-items: center;
   gap: 8px;
   font-size: 0.7rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   margin-bottom: 24px;
 }
 
 .breadcrumb a {
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .breadcrumb a:hover {
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 /* Service Layout */
@@ -60,8 +60,8 @@
 
 .serviceImage {
   aspect-ratio: 4/3;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -77,7 +77,7 @@
   right: -50%;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, var(--accent-glow, var(--border-brand), 0.15)) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
   filter: blur(40px);
 }
 
@@ -93,8 +93,8 @@
   top: 16px;
   left: 16px;
   padding: 6px 12px;
-  background: var(--accent, var(--accent));
-  color: var(--bg, var(--bg));
+  background: var(--accent);
+  color: var(--bg);
   font-family: var(--font-sans);
   font-size: 0.65rem;
   font-weight: 600;
@@ -119,7 +119,7 @@
 .serviceInfoCategory {
   font-size: 0.65rem;
   font-weight: 600;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -134,7 +134,7 @@
 .serviceInfoDesc {
   font-size: 0.95rem;
   line-height: 1.7;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 /* Service Meta */
@@ -143,8 +143,8 @@
   flex-wrap: wrap;
   gap: 24px;
   padding: 20px;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
 }
 
 .metaItem {
@@ -159,8 +159,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-elevated, var(--color-black-soft));
-  color: var(--accent, var(--accent));
+  background: var(--bg-elevated);
+  color: var(--accent);
 }
 
 .metaText {
@@ -171,7 +171,7 @@
 
 .metaLabel {
   font-size: 0.65rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -187,8 +187,8 @@
   flex-direction: column;
   gap: 12px;
   padding: 24px;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
 }
 
 .priceHeader {
@@ -199,21 +199,21 @@
 
 .priceLabel {
   font-size: 0.8rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 .priceValue {
   font-family: var(--font-sans);
   font-size: 2rem;
   font-weight: 600;
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 .priceNote {
   font-size: 0.75rem;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   padding-top: 12px;
-  border-top: 1px solid var(--border, var(--border-muted), 0.06));
+  border-top: 1px solid var(--border);
 }
 
 /* Actions */
@@ -232,9 +232,9 @@
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: 600;
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  border: 1px solid var(--border);
   background: transparent;
-  color: var(--fg, var(--fg));
+  color: var(--fg);
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
@@ -246,9 +246,9 @@
 }
 
 .btnPrimary {
-  background: var(--accent, var(--accent));
-  border-color: var(--accent, var(--accent));
-  color: var(--bg, var(--bg));
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
 }
 
 .btnPrimary:hover {
@@ -257,13 +257,13 @@
 }
 
 .btnGhost {
-  border-color: var(--border, var(--border-muted), 0.06));
-  color: var(--fg-muted, var(--fg-muted));
+  border-color: var(--border);
+  color: var(--fg-muted);
 }
 
 .btnGhost:hover {
-  border-color: var(--fg-dim, var(--fg-dim));
-  color: var(--fg, var(--fg));
+  border-color: var(--fg-dim);
+  color: var(--fg);
 }
 
 .btnFull {
@@ -285,24 +285,24 @@
 .priceTable {
   width: 100%;
   border-collapse: collapse;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
 }
 
 .priceTable th,
 .priceTable td {
   padding: 16px 20px;
   text-align: left;
-  border-bottom: 1px solid var(--border, var(--border-muted), 0.06));
+  border-bottom: 1px solid var(--border);
 }
 
 .priceTable th {
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--fg-dim, var(--fg-dim));
+  color: var(--fg-dim);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  background: var(--bg-elevated, var(--color-black-soft));
+  background: var(--bg-elevated);
 }
 
 .priceTable td {
@@ -314,22 +314,22 @@
 }
 
 .priceTable tr:hover td {
-  background: var(--bg-elevated, var(--color-black-soft));
+  background: var(--bg-elevated);
 }
 
 .priceTableName {
-  color: var(--fg, var(--fg));
+  color: var(--fg);
 }
 
 .priceTableDesc {
   font-size: 0.8rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   margin-top: 4px;
 }
 
 .priceTablePrice {
   font-family: var(--font-sans);
-  color: var(--accent, var(--accent));
+  color: var(--accent);
   font-weight: 500;
 }
 
@@ -352,13 +352,13 @@
 
 .featureCard {
   padding: 24px;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   transition: all 0.3s;
 }
 
 .featureCard:hover {
-  border-color: var(--border-accent, var(--border-brand), 0.2));
+  border-color: var(--border-accent);
 }
 
 .featureIcon {
@@ -367,9 +367,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-elevated, var(--color-black-soft));
+  background: var(--bg-elevated);
   margin-bottom: 16px;
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 .featureTitle {
@@ -380,7 +380,7 @@
 
 .featureDesc {
   font-size: 0.85rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   line-height: 1.6;
 }
 
@@ -394,7 +394,7 @@
 
 .loadingSpinner {
   animation: spin 1s linear infinite;
-  color: var(--accent, var(--accent));
+  color: var(--accent);
 }
 
 @keyframes spin {
@@ -410,7 +410,7 @@
 .error {
   text-align: center;
   padding: 48px;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
 }
 
 .retryBtn {
@@ -419,16 +419,16 @@
   gap: 8px;
   padding: 12px 24px;
   margin-top: 16px;
-  background: var(--bg-card, var(--bg-card));
-  border: 1px solid var(--border, var(--border-muted), 0.06));
-  color: var(--fg, var(--fg));
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--fg);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .retryBtn:hover {
-  border-color: var(--accent, var(--accent));
-  color: var(--accent, var(--accent));
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Responsive */

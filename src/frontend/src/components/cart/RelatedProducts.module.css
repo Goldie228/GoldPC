@@ -13,7 +13,7 @@
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
-  color: var(--fg, var(--fg));
+  color: var(--fg);
   position: relative;
   display: inline-block;
 }
@@ -25,7 +25,7 @@
   left: 0;
   width: 40px;
   height: 2px;
-  background: var(--accent, var(--accent));
+  background: var(--accent);
 }
 
 .loading {
@@ -34,15 +34,15 @@
   justify-content: center;
   gap: 12px;
   padding: 3rem 1rem;
-  color: var(--fg-muted, var(--fg-muted));
+  color: var(--fg-muted);
   font-size: 0.9rem;
 }
 
 .loadingSpinner {
   width: 24px;
   height: 24px;
-  border: 2px solid var(--border, var(--border-muted), 0.1));
-  border-top-color: var(--accent, var(--accent));
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -73,7 +73,7 @@
   font-family: var(--font-sans);
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--fg, var(--fg));
+  color: var(--fg);
   margin-bottom: 0;
   position: relative;
   display: inline-block;
@@ -86,7 +86,7 @@
   left: 0;
   width: 40px;
   height: 2px;
-  background: var(--accent, var(--accent));
+  background: var(--accent);
 }
 
 .relatedNav {
@@ -105,16 +105,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--border-muted), 0.04);
-  border: 1px solid var(--border-muted), 0.10);
-  color: var(--border-muted), 0.85);
+  background: var(--border-muted);
+  border: 1px solid var(--border-muted);
+  color: var(--border-muted);
   cursor: pointer;
   transition: transform 120ms ease, background 120ms ease, border-color 120ms ease, opacity 120ms ease;
 }
 
 .relatedNavBtn:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: var(--border-muted), 0.06);
+  background: var(--border-muted);
   border-color: var(--border-brand);
 }
 
@@ -192,6 +192,6 @@
 }
 
 .relatedTrack::-webkit-scrollbar-thumb {
-  background: var(--border, var(--border-muted), 0.1));
+  background: var(--border);
   border-radius: 2px;
 }

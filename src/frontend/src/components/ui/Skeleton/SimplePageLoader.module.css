@@ -9,15 +9,15 @@
 .shimmer {
   height: 56px;
   border-radius: 10px;
-  border: 1px solid var(--border, var(--border-muted), 0.06));
+  border: 1px solid var(--border);
   background:
     linear-gradient(
       110deg,
-      var(--border-muted), 0.03) 8%,
+      var(--border-muted)) 8%,
       var(--border-brand) 18%,
-      var(--border-muted), 0.03) 33%
+      var(--border-muted)) 33%
     ),
-    var(--bg-card, var(--bg-card));
+    var(--bg-card);
   background-size: 200% 100%;
   animation: simplePageLoaderShimmer 1.4s linear infinite;
 }
