@@ -154,7 +154,7 @@
   align-items: center;
   gap: 16px;
   padding: 60px 20px;
-  color: var(--fg-muted);
+  color: var(--fg-primary);
 }
 
 .emptyBtn {
@@ -203,7 +203,7 @@
 .stickyCol {
   position: sticky;
   left: 0;
-  z-index: 10;
+  z-index: 15;
   width: 240px;
   min-width: 200px;
   padding: 20px;
@@ -211,7 +211,7 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--fg-muted);
-  background: var(--bg-card);
+  background: var(--bg-primary);
   border-bottom: 1px solid var(--border-muted);
   border-right: 1px solid var(--border-muted);
 }
@@ -238,6 +238,7 @@
 
 .table thead th.stickyCol {
   z-index: 30;
+  background: var(--bg-card);
 }
 
 .cornerHeader {
@@ -484,20 +485,14 @@
 
 .bestValue {
   position: relative;
-  background: var(--border-muted)) !important;
-  color: var(--accent) !important;
-  font-weight: 600;
+  background: transparent !important;
+  color: var(--fg-primary) !important;
+  font-weight: 700;
+  border: 2px solid var(--accent) !important;
+  border-radius: 4px;
 }
 
-.bestValue::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 2px;
-  height: 100%;
-  background: var(--accent);
-}
+
 
 .ratingBox {
   display: inline-flex;

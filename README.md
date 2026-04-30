@@ -200,8 +200,7 @@ dotnet run --project src/CatalogService -- seed-catalog-reset
 
 ### Дополнительные ресурсы
 
-- [Техническое задание](./development-plan/appendices/ТЗ_GoldPC.md) — полное ТЗ проекта
-- [План разработки](./development-plan/README.md) — этапы и сроки
+- [Техническое задание](./docs/ТЗ_GoldPC.md) — полное ТЗ проекта
 - [Контракты API](./contracts/README.md) — OpenAPI спецификации
 
 ---

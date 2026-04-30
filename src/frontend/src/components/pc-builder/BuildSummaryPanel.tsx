@@ -151,6 +151,7 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
       aria-label={`Итоги сборки, выбрано ${selectedCount} из ${totalCount} категорий`}
     >
       <h2 className="bsp__title">Ваша сборка</h2>
+      <div className="bsp__progress">{selectedCount} / {totalCount} категорий выбрано</div>
 
 
       {(compatibilityErrors && compatibilityErrors.length > 0) && (
