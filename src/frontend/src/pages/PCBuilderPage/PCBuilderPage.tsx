@@ -580,6 +580,8 @@ export function PCBuilderPage() {
           />
         </div>
 
+        <h1 className="pc-builder__page-title">Конструктор ПК</h1>
+
         <main className="pc-builder__main">
           <div className="pc-builder__content">
             <div className="pc-builder__left">

@@ -123,10 +123,16 @@
 }
 
 .bsp__title {
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--fg, #fafafa);
   margin: 0;
+}
+
+.bsp__progress {
+  font-size: var(--text-sm);
+  color: var(--fg-muted, #9a9aa3);
+  margin-top: 4px;
 }
 
 /* ===== Component List ===== */
@@ -147,17 +153,18 @@
 }
 
 .bsp__component-label {
-  color: var(--fg-muted, #71717a);
+  color: var(--fg-muted, #9a9aa3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 55%;
+  font-size: var(--text-sm);
 }
 
 .bsp__component-price {
   color: var(--fg, #fafafa);
   font-family: var(--font-sans);
-  font-size: 0.8rem;
+  font-size: var(--text-base);
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -543,12 +550,13 @@
 }
 
 .bsp__btn--cart {
-  background: var(--bg-elevated, #121214);
-  border-color: var(--border, rgba(255, 255, 255, 0.1));
-  color: var(--fg, #fafafa);
+  background: transparent;
+  border-color: var(--border-brand);
+  color: var(--accent, #d4a574);
 }
 
 .bsp__btn--cart:hover:not(:disabled) {
+  background: var(--border-brand);
   border-color: var(--border-brand);
   transform: translateY(-1px);
 }

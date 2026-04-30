@@ -387,10 +387,6 @@ version: ## Show versions
 dev-quick: infra ## Quick dev: start infra only (run backend locally)
 	@echo "$(GREEN)Infrastructure ready. Run backend with: dotnet run$(RESET)"
 
-dev-stubs: ## Start with stub services
-	@echo "$(CYAN)Starting stub services...$(RESET)"
-	docker compose -f docker/docker-compose.stubs.yml up -d
-
 dev-test: ## Start test environment
 	@echo "$(CYAN)Starting test environment...$(RESET)"
 	docker compose -f docker-compose.test.yml up -d

@@ -17,6 +17,7 @@
 .component-slot:hover {
   border-color: rgba(255, 255, 255, 0.12);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 /* ===== PRIORITY (CPU/GPU 120%) ===== */
@@ -143,8 +144,8 @@
   min-height: 1.25em;
 }
 .component-slot__type {
-  display: block; font-size: 0.65rem; font-weight: 600;
-  color: var(--fg-dim, #52525b); text-transform: uppercase; letter-spacing: 0.1em;
+  display: block; font-size: var(--text-sm); font-weight: 600;
+  color: var(--fg-muted, #9a9aa3); text-transform: uppercase; letter-spacing: 0.1em;
   line-height: 1.2;
 }
 
@@ -254,7 +255,7 @@
   background: rgba(248, 113, 113, 0.06);
 }
 .component-slot__name {
-  font-size: 0.95rem; font-weight: 500; margin-bottom: 6px;
+  font-size: var(--text-base); font-weight: 500; margin-bottom: 6px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   color: var(--fg, #fafafa); transition: color 0.3s ease;
 }

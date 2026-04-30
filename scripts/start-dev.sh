@@ -8,7 +8,7 @@
 #   --infra-only     Start only infrastructure (postgres, redis)
 #   --backend-only   Start only backend services (requires infra running)
 #   --frontend-only  Start only frontend service
-#   --with-stubs     Start with mock/stub services
+
 #   --skip-build     Skip building images
 #   --detach, -d     Run in detached mode
 #   --logs           Show logs after startup
@@ -30,7 +30,7 @@ RESET='\033[0m'
 INFRA_ONLY=false
 BACKEND_ONLY=false
 FRONTEND_ONLY=false
-WITH_STUBS=false
+
 SKIP_BUILD=false
 DETACH=false
 SHOW_LOGS=false
@@ -52,10 +52,7 @@ while [[ $# -gt 0 ]]; do
             FRONTEND_ONLY=true
             shift
             ;;
-        --with-stubs)
-            WITH_STUBS=true
-            shift
-            ;;
+        
         --skip-build)
             SKIP_BUILD=true
             shift
@@ -85,7 +82,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --infra-only     Start only infrastructure (postgres, redis)"
             echo "  --backend-only   Start only backend services (requires infra running)"
             echo "  --frontend-only Start only frontend service"
-            echo "  --with-stubs     Start with mock/stub services"
+            
             echo "  --skip-build    Skip building images"
             echo "  --detach, -d    Run in detached mode"
             echo "  --logs          Show logs after startup"
@@ -105,7 +102,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 DOCKER_COMPOSE="docker compose -f $PROJECT_DIR/docker/docker-compose.yml"
-DOCKER_COMPOSE_STUBS="docker compose -f $PROJECT_DIR/docker/docker-compose.stubs.yml"
+
 
 # Change to project directory
 cd "$PROJECT_DIR"
@@ -221,14 +218,6 @@ start_frontend() {
     echo -e "${GREEN}✓ Frontend: http://localhost:3000${RESET}"
 }
 
-# Start with stubs
-start_with_stubs() {
-    echo -e "${CYAN}Starting with stub services...${RESET}"
-    $DOCKER_COMPOSE_STUBS up -d
-    
-    echo -e "${GREEN}✓ Stub services started${RESET}"
-}
-
 # Show logs
 show_logs() {
     echo -e "${CYAN}Showing logs (Ctrl+C to exit)...${RESET}"
@@ -270,9 +259,7 @@ main() {
     build_images
     
     # Start services based on options
-    if [ "$WITH_STUBS" = true ]; then
-        start_with_stubs
-    elif [ "$INFRA_ONLY" = true ]; then
+    if [ "$INFRA_ONLY" = true ]; then
         start_infra
     elif [ "$BACKEND_ONLY" = true ]; then
         start_backend

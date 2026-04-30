@@ -233,12 +233,6 @@ jobs:
 - Error rate
 - Throughput (RPS)
 
-## 🔗 Связанные документы
-
-- [08-testing.md](../development-plan/08-testing.md) — Стратегия тестирования
-- [10-e2e-and-load-testing.md](../development-plan/10-e2e-and-load-testing.md) — E2E и нагрузочные тесты
-- [04-stub-generation.md](../development-plan/04-stub-generation.md) — Заглушки и моки
-
 ## ✅ Критерии готовности
 
 - [ ] Все модульные тесты проходят

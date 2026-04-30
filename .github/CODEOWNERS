@@ -20,10 +20,7 @@
 # ===========================================
 # Infrastructure - Agent E (DevOps)
 # ===========================================
-/infrastructure/  @agent-e
 /docker/          @agent-e
-/kubernetes/      @agent-e
-/vault/           @agent-e
 
 # ===========================================
 # API Documentation - Architect
