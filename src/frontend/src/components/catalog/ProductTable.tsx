@@ -2,14 +2,14 @@ import { type ReactElement, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Heart, GitCompare, ShoppingCart, Check, Loader2 } from 'lucide-react';
-import type { ProductSummary } from '../../../api/types';
-import { useCart } from '../../../hooks/useCart';
-import { useWishlist } from '../../../hooks/useWishlist';
-import { useComparison } from '../../../hooks/useComparison';
-import { useToast } from '../../../hooks/useToast';
-import { Icon } from '../../ui/Icon/Icon';
-import { telemetryTrack } from '../../../utils/telemetry';
-import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
+import type { ProductSummary } from '../../api/types';
+import { useCart } from '../../hooks/useCart';
+import { useWishlist } from '../../hooks/useWishlist';
+import { useComparison } from '../../hooks/useComparison';
+import { useToast } from '../../hooks/useToast';
+import { Icon } from '../ui/Icon/Icon';
+import { telemetryTrack } from '../../utils/telemetry';
+import { getProductImageUrl, hasValidProductImage } from '../../utils/image';
 import styles from './ProductTable.module.css';
 
 interface ProductTableProps {

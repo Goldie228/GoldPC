@@ -15,7 +15,7 @@ import {
   PdfExportModal,
   ComponentPickerModal,
 } from '../../components/pc-builder';
-import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
+import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
 import {
   usePCBuilder,
   PC_BUILDER_SLOTS,

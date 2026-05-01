@@ -16,7 +16,6 @@ import {
   STORAGE_KEY,
   emptyPcBuilderState,
 } from './constants';
-import type { PCBuilderSelectedState } from './types';
 
 export function isBuilderEmpty(c: PCBuilderSelectedState): boolean {
   return (

@@ -18,7 +18,7 @@ import { useToastStore } from '../../store/toastStore';
 import { RelatedProducts } from '../../components/cart/RelatedProducts';
 import { Button } from '../../components/ui/Button';
 import { Icon } from '../../components/ui/Icon';
-import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
+import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
 import styles from './CartPage.module.css';
 
 const CATEGORY_LABELS: Record<string, string> = {

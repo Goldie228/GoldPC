@@ -7,7 +7,7 @@ import { useProduct } from '../../hooks/useProduct';
 import { useToastStore } from '../../store/toastStore';
 import { useAuth } from '../../hooks/useAuth';
 import type { Product } from '../../api/types';
-import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
+import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
 import { ProductGallery } from './components/ProductGallery';
 import { ProductInfo } from './components/ProductInfo';

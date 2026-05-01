@@ -137,8 +137,9 @@ export function ReviewSection({
       const newReview = await addProductReview(productId, form);
       if (newReview) {
         setReviews((prev) => [newReview, ...prev]);
-      setForm({ rating: 5, comment: '', pros: '', cons: '' });
-      showToast('Отзыв успешно добавлен', 'success');
+        setForm({ rating: 5, comment: '', pros: '', cons: '' });
+        showToast('Отзыв успешно добавлен', 'success');
+      }
     } catch {
       showToast('Не удалось отправить отзыв', 'error');
     } finally {

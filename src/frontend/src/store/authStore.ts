@@ -153,7 +153,7 @@ export const useAuthStore = create<AuthState>()(
       try {
         // В Production делаем logout через Keycloak first
         if (import.meta.env.PROD) {
-          const keycloakModule = await import('../services/keycloak');
+          const keycloakModule = await import('../api/keycloak');
           await keycloakModule.doLogout();
         }
       } finally {

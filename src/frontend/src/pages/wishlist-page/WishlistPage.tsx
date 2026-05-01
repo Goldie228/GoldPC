@@ -5,7 +5,7 @@ import { Search, Heart } from 'lucide-react';
 import { useWishlistStore } from '../../store/wishlistStore';
 import { useCatalog } from '../../hooks/useCatalog';
 import { EmptyState } from '../../components/catalog';
-import { ProductCard } from '../../components/ProductCard';
+import { ProductCard } from '../../components/product-card/ProductCard';
 import { Skeleton, ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import type { ProductSummary, ProductCategory } from '../../api/types';
