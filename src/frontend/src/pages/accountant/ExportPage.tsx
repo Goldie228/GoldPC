@@ -90,8 +90,7 @@ export function ExportPage() {
     // Имитация экспорта
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // В реальном приложении здесь будет запрос к API
-    console.log('Exporting:', {
+    // Export logic here
       format: selectedFormat,
       data: selectedData.map((d) => d.id),
     });

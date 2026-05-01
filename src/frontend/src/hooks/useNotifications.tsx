@@ -123,8 +123,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const showToast = (notification: Notification) => {
-    // This will integrate with existing toast system
-    console.log('Notification received:', notification);
+    // Integrate with toast system here
   };
 
   const markAsRead = useCallback(async (id: string) => {

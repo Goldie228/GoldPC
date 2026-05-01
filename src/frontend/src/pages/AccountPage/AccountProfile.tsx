@@ -27,8 +27,6 @@ export function AccountProfile() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement form submission
-    console.log('Form submitted:', formData);
   };
 
   return (
