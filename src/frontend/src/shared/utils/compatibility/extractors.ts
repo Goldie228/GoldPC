@@ -3,10 +3,9 @@
  * Pure functions for extracting and normalizing product specifications
  */
 
-import type { ProductSpecifications } from '../../../../api/types';
-import type { MemoryType, MemoryFormFactor } from './types';
-import rulesConfig from '../../../../config/compatibilityRules.json';
-import type { CompatibilityRulesConfig, SocketGroup } from '../../../../config/compatibilityTypes';
+import type { ProductSpecifications } from '../../../api/types';
+import type { CompatibilityRulesConfig, SocketGroup, MemoryType, MemoryFormFactor } from './types';
+import rulesConfig from '../../../config/compatibilityRules.json';
 
 const config: CompatibilityRulesConfig = rulesConfig as unknown as CompatibilityRulesConfig;
 const SOCKET_GROUPS: SocketGroup[] = config.socketCompatibility.groups;
@@ -174,6 +173,21 @@ function normalizeFormFactor(raw: string): string | null {
   if (upper === 'MINIITX' || upper === 'MINI-ITX' || upper === 'MITX') return 'Mini-ITX';
   if (upper === 'MICROATX' || upper === 'MICRO-ATX' || upper === 'M-ATX' || upper === 'MATX') return 'micro-ATX';
   return null;
+}
+
+export function caseFormFactorsForMB(mbFormFactor: string): string[] {
+  const normalized = normalizeFormFactor(mbFormFactor);
+  if (!normalized) return [];
+  return config.formFactorCompatibility.rules
+    .filter(rule => rule.supportedMotherboards.includes(normalized))
+    .map(rule => rule.caseFormFactor);
+}
+
+export function mbFormFactorsForCase(caseFormFactor: string): string[] {
+  const normalized = normalizeFormFactor(caseFormFactor);
+  if (!normalized) return [];
+  const rule = config.formFactorCompatibility.rules.find(r => r.caseFormFactor === normalized);
+  return rule ? rule.supportedMotherboards : [];
 }
 
 export { normalizeFormFactor };

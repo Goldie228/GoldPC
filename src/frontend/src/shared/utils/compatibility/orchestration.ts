@@ -3,11 +3,11 @@
  * Coordinates compatibility checks for component groups
  */
 
-import type { Product } from '../../../../api/types';
-import type { CompatibilityIssue, CompatibilityWarning } from './types';
-import { checkCPUSocket, checkRAM, checkCooler, checkCoolerHeightCheck, checkPSU, checkCaseFF, checkGPULen, checkIG } from './checks';
+import type { Product } from '../../../api/types';
+import type { CompatibilityIssue, CompatibilityWarning, CompatibilityCheckResult, ComponentMap } from './types';
+import { checkCPUSocket, checkRAM, checkCooler, checkCoolerHeightCheck, checkPSU, checkCaseFF, checkGPULen, checkIG, calculatePowerConsumption } from './checks';
 import { checkBiosWarning } from './bios';
-import { extractSocket, extractChipset, extractPerformanceScore, extractRAMCapacity } from './extractors';
+import { extractSocket, extractChipset, extractPerformanceScore, extractRAMCapacity, extractM2Slots, extractSataPorts, extractStorageType } from './extractors';
 import { calculateBottleneck, detectBottleneckWarnings } from './bottleneck';
 
 export function runRAMCompatibilityCheck(
@@ -114,4 +114,70 @@ export function runRAMCapacityWarning(
   if (ram && extractRAMCapacity(ram.specifications) > 0 && extractRAMCapacity(ram.specifications) < 16) {
     warnings.push({ severity: 'Info', component: ram.name, message: `${extractRAMCapacity(ram.specifications)}GB RAM may be insufficient for modern tasks`, suggestion: 'Consider 16GB+' });
   }
+}
+
+export function checkCompatibility(components: ComponentMap): CompatibilityCheckResult {
+  const issues: CompatibilityIssue[] = [];
+  const warnings: CompatibilityWarning[] = [];
+
+  const { cpu, gpu, motherboard, ram, psu, case: chassis, cooling } = components;
+
+  runCPUMotherboardCompatibilityCheck(cpu, motherboard, issues, warnings);
+  runRAMCompatibilityCheck(ram, motherboard, issues, warnings);
+  runCoolerCompatibilityCheck(cooling, cpu, chassis, issues, warnings);
+  runPSUCompatibilityCheck(psu, cpu, gpu, chassis, issues, warnings);
+  runCaseCompatibilityCheck(chassis, motherboard, issues, warnings);
+  runGPUCompatibilityCheck(chassis, gpu, issues, warnings);
+  runIntegratedGraphicsCheck(cpu, gpu, issues, warnings);
+
+  const bottleneckPct = runBottleneckAnalysis(cpu, gpu, warnings);
+  runRAMCapacityWarning(ram, motherboard, warnings);
+
+  const storageProducts = Object.values(components).filter(c => c?.category === 'storage');
+  if (motherboard) {
+    const mbM2Slots = extractM2Slots(motherboard.specifications);
+    const mbSataPorts = extractSataPorts(motherboard.specifications);
+
+    let usedM2 = 0;
+    let usedSata = 0;
+
+    for (const storage of storageProducts) {
+      if (!storage) continue;
+      const type = extractStorageType(storage.specifications);
+      if (type === 'm2') usedM2++;
+      if (type === 'sata') usedSata++;
+    }
+
+    if (usedM2 > mbM2Slots) {
+      issues.push({
+        severity: 'Error',
+        component1: 'Накопители',
+        component2: motherboard.name,
+        message: `Выбрано ${usedM2} M.2 накопителей, но материнская плата поддерживает только ${mbM2Slots}`,
+        suggestion: `Удалите ${usedM2 - mbM2Slots} M.2 накопителя или выберите другую материнскую плату`,
+      });
+    }
+
+    if (usedSata > mbSataPorts) {
+      issues.push({
+        severity: 'Error',
+        component1: 'Накопители',
+        component2: motherboard.name,
+        message: `Выбрано ${usedSata} SATA накопителей, но материнская плата поддерживает только ${mbSataPorts}`,
+        suggestion: `Удалите ${usedSata - mbSataPorts} SATA накопителя или выберите другую материнскую плату`,
+      });
+    }
+  }
+
+  const pc = calculatePowerConsumption(components);
+  const rp = Math.ceil(pc * 1.4 / 50) * 50;
+
+  return {
+    isCompatible: issues.length === 0,
+    issues,
+    warnings,
+    powerConsumption: pc,
+    recommendedPSU: rp,
+    bottleneckPercentage: bottleneckPct,
+  };
 }

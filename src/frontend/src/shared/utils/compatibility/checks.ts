@@ -3,7 +3,7 @@
  * Validation logic for component compatibility
  */
 
-import type { Product, ProductSpecifications } from '../../../../api/types';
+import type { Product, ProductSpecifications } from '../../../api/types';
 import type { CompatibilityIssue, CompatibilityWarning, ComponentMap } from './types';
 import {
   extractSocket,
@@ -173,6 +173,11 @@ export function calculatePowerConsumption(components: ComponentMap): number {
   }
 
   return t;
+}
+
+export function calculateRecommendedPSU(components: ComponentMap): number {
+  const pc = calculatePowerConsumption(components);
+  return Math.ceil(pc * 1.4 / 50) * 50;
 }
 
 function extractNumberFromSpecs(specs: ProductSpecifications | undefined, ...keys: string[]): number {
