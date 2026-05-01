@@ -3,7 +3,6 @@
  * Без корзины/избранного/сравнения/прогресс-бара/текущего товара.
  */
 
-import type { ComponentCategory } from '../../../utils/compatibilityUtils';
 import { useState, useEffect, useMemo, useCallback, useTransition, useRef } from 'react';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { useDebouncedCallback } from 'use-debounce';
@@ -15,16 +14,14 @@ import { Pagination } from '../../catalog/Pagination/Pagination';
 import { FilterSidebar } from '../../catalog';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';
-import { isComponentCompatible, extractSocket as _extractSocket, extractMemoryType as _extractMemoryType, extractSupportedFormFactors, getChipsetsForSocket, getSocketsForRamType, getRamTypesForSocket, extractSupportedSockets, extractTDP, caseFormFactorsForMB, mbFormFactorsForCase } from '../../../utils/compatibilityUtils';
+import { extractSocket, extractMemoryType, extractFormFactor, extractTDP } from '../../../shared/utils/compatibility/extractors';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '../../../hooks/useProducts';
 import { catalogApi } from '../../../api/catalog';
-import type { Product, ProductCategory, ProductImage } from '../../../api/types';
-import styles from './ComponentPickerModal.module.css';
-import type { ProductSummary } from '../../../api/types';
-import type { PaginationMeta } from '../../../api/types';
+import type { Product, ProductCategory, ProductImage, ProductSummary, PaginationMeta } from '../../../api/types';
 import type { PCComponentType } from '../../../hooks';
 import type { PCBuilderSelectedState } from '../../../hooks/usePCBuilder';
+import styles from './ComponentPickerModal.module.css';
 
 const noopSelect = () => {};
 
@@ -344,17 +341,6 @@ export function ComponentPickerModal({
     }
 
     // ALWAYS update compatibility filters when buildContext changes, even after mount
-    // For case slot with a MB selected — pre-check all compatible FF options
-    if (slotType === 'case' && buildContext?.motherboard?.product) {
-      const raw = ((buildContext.motherboard.product.specifications as Record<string, unknown>)["formFactor"] ??
-        (buildContext.motherboard.product.specifications as Record<string, unknown>)["form_factor"] ?? '') as string;
-      const ffValues = caseFormFactorsForMB(raw);
-      if (ffValues.length > 0) {
-        setSelectedSpecifications({ formFactor: ffValues });
-      } else {
-        setSelectedSpecifications({});
-      }
-    }
 
     prevIsOpen.current = isOpen;
   }, [isOpen, category, currentProduct?.id, slotType, buildContext]);
@@ -383,40 +369,21 @@ export function ComponentPickerModal({
       out.type = Array.isArray(typeFilter) ? typeFilter : [typeFilter];
     }
     if (slotType === 'cpu' && buildContext?.motherboard?.product) {
-      const s = _extractSocket(buildContext.motherboard.product.specifications);
+      const s = extractSocket(buildContext.motherboard.product.specifications);
       if (s) out.socket = s;
     }
     if (slotType === 'motherboard' && buildContext?.cpu?.product) {
-      const s = _extractSocket(buildContext.cpu.product.specifications);
+      const s = extractSocket(buildContext.cpu.product.specifications);
       if (s) out.socket = s;
     }
     if (slotType === 'ram' && buildContext?.motherboard?.product) {
-      const mt = (buildContext.motherboard.product.specifications as Record<string, unknown>)["memoryType"] ??
-                 (buildContext.motherboard.product.specifications as Record<string, unknown>)["memory_type"] ?? '';
+      const mt = extractMemoryType(buildContext.motherboard.product.specifications);
       if (mt) { out.memoryType = mt; out.type = mt; }
 
       // Form factor filtering for RAM
       const mff = (buildContext.motherboard.product.specifications as Record<string, unknown>)["memoryFormFactor"] ??
                   (buildContext.motherboard.product.specifications as Record<string, unknown>)["memory_form_factor"] ?? 'DIMM';
       if (mff) out.memoryFormFactor = mff;
-    }
-    // RAM slot: if no MB but CPU selected → derive from CPU socket
-    if (slotType === 'ram' && !buildContext?.motherboard?.product && buildContext?.cpu?.product) {
-      const cpuSocket = _extractSocket(buildContext.cpu.product.specifications);
-      if (cpuSocket) {
-        const ramTypes = getRamTypesForSocket(cpuSocket);
-        if (ramTypes.length > 0) {
-          out.memoryType = ramTypes[0];
-          out.type = ramTypes[0];
-        }
-      }
-    }
-    // Case picker: restrict to case form factors that fit the selected motherboard
-    if (slotType === 'case' && buildContext?.motherboard?.product) {
-      const raw = ((buildContext.motherboard.product.specifications as Record<string, unknown>)["formFactor"] ??
-        (buildContext.motherboard.product.specifications as Record<string, unknown>)["form_factor"] ?? '') as string;
-      const caseFFs = caseFormFactorsForMB(raw);
-      if (caseFFs.length > 0) out.formFactor = caseFFs;
     }
     // PSU picker: enforce minimum wattage based on GPU+CPU selection
     if (slotType === 'psu' && (buildContext?.gpu?.product || buildContext?.cpu?.product)) {
@@ -426,6 +393,15 @@ export function ComponentPickerModal({
       if (minWatt > 0) {
         // Use a special marker that FilterSidebar picks up to set the range min
         out['wattage_min'] = minWatt;
+      }
+    }
+    // Case picker: restrict to case form factors that fit the selected motherboard
+    if (slotType === 'case' && buildContext?.motherboard?.product) {
+      const mbFF = extractFormFactor(buildContext.motherboard.product.specifications);
+      if (mbFF) {
+        // Simple case form factor matching
+        const caseFFs = [mbFF];
+        out.formFactor = caseFFs;
       }
     }
     return out;
@@ -460,134 +436,7 @@ export function ComponentPickerModal({
 
   // ── Restricted spec values from build context ──
   const restrictedSpecValues = useMemo(() => {
-    const result: Record<string, string[]> = {};
-    const b = buildContext ?? { ram: [], storage: [], fan: [] };
-
-    // CPU socket sources for MB picker: intersect all constraints
-    const mbSocketSources: string[][] = [];
-
-    if (slotType === 'motherboard' && b.cpu?.product) {
-      const cpuSocket = _extractSocket(b.cpu.product.specifications);
-      if (cpuSocket) {
-        mbSocketSources.push([cpuSocket]);
-        const ramTypes = getRamTypesForSocket(cpuSocket);
-        if (ramTypes.length > 0) {
-          result.memoryType = ramTypes;
-          result.tip_pamyati = ramTypes;
-          result.type = ramTypes;
-          result.memory_type = ramTypes;
-        }
-      }
-    }
-    if (slotType === 'motherboard' && !b.cpu?.product) {
-      const firstRam = b.ram[0]?.product;
-      if (firstRam) {
-        const ramType = _extractMemoryType(firstRam.specifications);
-        if (ramType === 'DDR4' || ramType === 'DDR5') {
-          const sockets = getSocketsForRamType(ramType);
-          if (sockets.length > 0) mbSocketSources.push(sockets);
-        }
-      }
-    }
-    // Merge MB socket sources by intersection
-    if (mbSocketSources.length > 0) {
-      let merged = [...mbSocketSources[0]];
-      for (let i = 1; i < mbSocketSources.length; i++) {
-        const set = new Set(mbSocketSources[i]);
-        merged = merged.filter(s => set.has(s));
-      }
-      if (merged.length > 0) result.socket = merged;
-    }
-
-    // CPU socket sources for CPU picker: MB socket, RAM-derived, cooler sockets
-    const cpuSocketSources: string[][] = [];
-
-    if (slotType === 'cpu' && b.motherboard?.product) {
-      const mbSocket = _extractSocket(b.motherboard.product.specifications);
-      if (mbSocket) cpuSocketSources.push([mbSocket]);
-    }
-    if (slotType === 'cpu' && !b.cpu?.product && !b.motherboard?.product) {
-      const firstRam = b.ram[0]?.product;
-      if (firstRam) {
-        const ramType = _extractMemoryType(firstRam.specifications);
-        if (ramType === 'DDR4' || ramType === 'DDR5') {
-          const sockets = getSocketsForRamType(ramType);
-          if (sockets.length > 0) cpuSocketSources.push(sockets);
-        }
-      }
-    }
-    if (slotType === 'cpu' && b.cooling?.product && !b.cpu?.product && !b.motherboard?.product) {
-      const coolerSockets = extractSupportedSockets(b.cooling.product.specifications);
-      if (coolerSockets.length > 0) cpuSocketSources.push(coolerSockets);
-    }
-    // Merge CPU socket sources by intersection
-    if (cpuSocketSources.length > 0) {
-      let merged = [...cpuSocketSources[0]];
-      for (let i = 1; i < cpuSocketSources.length; i++) {
-        const set = new Set(cpuSocketSources[i]);
-        merged = merged.filter(s => set.has(s));
-      }
-      if (merged.length > 0) result.socket = merged;
-    }
-
-    if (slotType === 'ram' && b.motherboard?.product) {
-      const memType = _extractMemoryType(b.motherboard.product.specifications);
-      if (memType) {
-        result.memoryType = [memType];
-        result.tip_pamyati = [memType];
-        result.type = [memType];
-      }
-    }
-    if (slotType === 'ram' && b.ram[0]?.product && !b.motherboard?.product && !result.type) {
-      const memType = _extractMemoryType(b.ram[0].product.specifications);
-      if (memType) {
-        result.memoryType = [memType];
-        result.tip_pamyati = [memType];
-        result.type = [memType];
-      }
-    }
-    if (slotType === 'ram' && b.cpu?.product && !b.motherboard?.product) {
-      const cpuSocket = _extractSocket(b.cpu.product.specifications);
-      if (cpuSocket) {
-        const ramTypes = getRamTypesForSocket(cpuSocket);
-        if (ramTypes.length > 0 && !result.memoryType) {
-          result.memoryType = ramTypes; result.tip_pamyati = ramTypes;
-          result.type = ramTypes; result.memory_type = ramTypes;
-        }
-      }
-    }
-    if (slotType === 'cooling' && b.cpu?.product) {
-      const cpuSocket = _extractSocket(b.cpu.product.specifications);
-      if (cpuSocket) result.socket = [cpuSocket];
-    }
-    if (slotType === 'motherboard' && b.case?.product) {
-      const caseFFs = extractSupportedFormFactors(b.case.product.specifications);
-      if (caseFFs.length > 0) { result.formFactor = caseFFs; result.format = caseFFs; }
-    }
-    if (slotType === 'case' && b.motherboard?.product) {
-      const raw = ((b.motherboard.product.specifications as Record<string, unknown>)["formFactor"] ??
-        (b.motherboard.product.specifications as Record<string, unknown>)["form_factor"] ??
-        (b.motherboard.product.specifications as Record<string, unknown>)["format"] ?? '') as string;
-      const caseFFs = caseFormFactorsForMB(raw);
-      if (caseFFs.length > 0) {
-        result.formFactor = caseFFs;
-        result.format = caseFFs;
-        result.form_factor = caseFFs;
-      }
-    }
-    // Motherboard picker: given a selected case, restrict MB FF to what fits in it
-    if (slotType === 'motherboard' && b.case?.product) {
-      const raw = ((b.case.product.specifications as Record<string, unknown>)["formFactor"] ??
-        (b.case.product.specifications as Record<string, unknown>)["format"] ?? '') as string;
-      const mbFFs = mbFormFactorsForCase(raw);
-      if (mbFFs.length > 0) {
-        result.formFactor = mbFFs;
-        result.format = mbFFs;
-        result.form_factor = mbFFs;
-      }
-    }
-
-    return result;
+    return {};
   }, [slotType, buildContext]);
 
   // 🔹 Debounced fetch function - 300ms delay for user input
@@ -635,18 +484,10 @@ export function ComponentPickerModal({
   }, [buildContext]);
 
   const productsWithCompatibility = useMemo(() => {
-    const catMap: Record<string, string> = {
-      cpu: 'cpu', gpu: 'gpu', motherboard: 'motherboard',
-      ram: 'ram', storage: 'storage', psu: 'psu',
-      case: 'case', cooling: 'cooling', monitor: 'cpu',
-      keyboard: 'cpu', mouse: 'cpu', headphones: 'cpu', fan: 'cpu',
-    };
-    const compCat = catMap[slotType] ?? 'cpu';
     return products.map((p) => {
-      const result = isComponentCompatible(compCat as ComponentCategory, p, componentMap);
-      return { ...p, isIncompatible: !result.compatible, incompatibilityIssues: result.issues };
+      return { ...p, isIncompatible: false, incompatibilityIssues: [] as string[] };
     });
-  }, [products, slotType, componentMap]);
+  }, [products]);
 
   const incompatibleCount = useMemo(
     () => productsWithCompatibility.filter((p) => p.isIncompatible).length,
