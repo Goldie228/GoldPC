@@ -14,10 +14,10 @@
 import { useState, useMemo } from 'react';
 import type { FormEvent } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { AuthModalBase } from '../AuthModalBase/AuthModalBase';
-import { PasswordField } from '../../ui/PasswordField/PasswordField';
-import { useAuth } from '../../../hooks/useAuth';
-import { useAuthModal } from '../../../hooks/useAuthModal';
+import { AuthModalBase } from './AuthModalBase';
+import { PasswordField } from '@/components/ui/PasswordField';
+import { useAuth } from '@/hooks/useAuth';
+import { useAuthModal } from '@/hooks/useAuthModal';
 import styles from './RegisterModal.module.css';
 
 export interface RegisterModalProps {

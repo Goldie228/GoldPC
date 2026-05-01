@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Modal } from '../../../components/ui/Modal/Modal';
+import { Modal } from '@/components/ui/Modal';
 import styles from './AuthModalBase.module.css';
 
 export interface AuthModalBaseProps {
