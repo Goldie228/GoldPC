@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Plus, Check, Minus } from 'lucide-react';
-import { useCartStore } from '../../../store/cartStore';
+import { useCart } from '../../../hooks/useCart';
 import type { ProductCategory } from '../../../api/types';
 import styles from './Card.module.css';
 
@@ -54,10 +54,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
-  const addItem = useCartStore((state) => state.addItem);
-  const removeItem = useCartStore((state) => state.removeItem);
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const cartItems = useCartStore((state) => state.items);
+  const { addToCart: addItem, removeFromCart: removeItem, updateQuantity, items: cartItems } = useCart();
   
   // Get cart item for quantity
   const cartItem = id ? cartItems.find((item) => item.productId === id) : null;

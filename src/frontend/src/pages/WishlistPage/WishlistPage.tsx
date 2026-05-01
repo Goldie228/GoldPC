@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Heart } from 'lucide-react';
 import { useWishlistStore } from '../../store/wishlistStore';
-import { catalogApi } from '../../api/catalog';
+import { useCatalog } from '../../hooks/useCatalog';
 import { EmptyState } from '../../components/catalog';
 import { ProductCard } from '../../components/ProductCard';
 import { Skeleton, ProductCardSkeleton } from '../../components/ui/Skeleton';
@@ -45,6 +45,7 @@ const itemVariants = {
  */
 export function WishlistPage(): ReactElement {
   const items = useWishlistStore((state) => state.items);
+  const { getProductsByIds } = useCatalog();
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -84,12 +85,8 @@ export function WishlistPage(): ReactElement {
 
     const fetchAll = async () => {
       try {
-        const results = await Promise.allSettled(items.map((id) => catalogApi.getProduct(id)));
+        const loaded = await getProductsByIds(items);
         if (cancelled) return;
-        
-        const loaded = results
-          .filter((r): r is PromiseFulfilledResult<ProductSummary> => r.status === 'fulfilled')
-          .map((r) => r.value);
         
         setProducts(loaded);
         setError(null);
@@ -106,7 +103,7 @@ export function WishlistPage(): ReactElement {
     return () => {
       cancelled = true;
     };
-  }, [items]);
+  }, [items, getProductsByIds]);
 
   // Извлекаем уникальные категории из загруженных товаров
   const availableCategories = useMemo(() => {

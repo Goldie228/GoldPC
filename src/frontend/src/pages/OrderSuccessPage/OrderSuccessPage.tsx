@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ordersApi, type Order } from '../../api/orders';
+import { useOrders } from '../../hooks/useOrders';
+import type { Order } from '../../api/orders';
 import styles from './OrderSuccessPage.module.css';
 
 export function OrderSuccessPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
+  const { getOrderByNumber } = useOrders();
   const [order, setOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (orderNumber) {
-      ordersApi.getOrderByNumber(orderNumber)
-        .then(setOrder)
+      getOrderByNumber(orderNumber)
+        .then((result) => result && setOrder(result))
         .catch(() => {});
     }
-  }, [orderNumber]);
+  }, [orderNumber, getOrderByNumber]);
 
   return (
     <div className={styles.checkoutPage}>

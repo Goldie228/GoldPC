@@ -12,7 +12,7 @@ import {
   calculateLocalGameFps,
   estimateGpuGaming,
   estimateCpuSingleCore,
-} from '../../utils/performanceCalculator';
+} from '../../features/pc-builder/logic/performance';
 import type { FpsApiResponse } from '../../api/pcBuilderService';
 import type { PCComponentType, PCBuilderSelectedState } from '../../hooks';
 import { PC_BUILDER_SLOTS } from '../../hooks';

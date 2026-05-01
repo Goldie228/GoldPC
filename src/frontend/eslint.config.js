@@ -7,6 +7,8 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   globalIgnores(['dist', 'coverage', 'node_modules']),
+
+  // Основная конфигурация
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

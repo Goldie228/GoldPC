@@ -6,7 +6,7 @@
  * Если роль соответствует - рендерит дочерние маршруты через Outlet.
  */
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
+import { useAuth } from '../../hooks/useAuth';
 import type { User } from '../../api/types';
 
 type UserRole = User['role'];
@@ -22,7 +22,7 @@ export function RoleGuard({
   redirectTo = '/',
   showForbidden = true 
 }: RoleGuardProps) {
-  const { user, isAuthenticated, isLoading } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   // Пока загружается состояние авторизации
   if (isLoading) {

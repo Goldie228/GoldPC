@@ -1,4 +1,6 @@
-import { useCartStore } from '../store/cartStore';
+import { useState, useCallback } from 'react';
+import { useCartStore, type PromoValidationResult } from '../store/cartStore';
+import { promoApi } from '../api/promo';
 import type { ProductSummary } from '../api/types';
 
 /**
@@ -7,6 +9,9 @@ import type { ProductSummary } from '../api/types';
  */
 export function useCart() {
   const store = useCartStore();
+
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false);
+  const [promoError, setPromoError] = useState<string | null>(null);
 
   // Вычисляемые значения
   const totalPrice = store.getTotal();
@@ -39,9 +44,36 @@ export function useCart() {
     store.updateQuantity(productId, quantity);
   };
 
-  const validateAndApplyPromo = async (code: string): Promise<{ success: boolean; message: string }> => {
-    return store.validateAndApplyPromoCode(code);
-  };
+  const validateAndApplyPromo = useCallback(async (code: string): Promise<{ success: boolean; message: string }> => {
+    setIsValidatingPromo(true);
+    setPromoError(null);
+
+    try {
+      const total = store.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+      const result = await promoApi.validatePromoCode({
+        code,
+        orderAmount: total,
+      });
+
+      const promoResult: PromoValidationResult = {
+        valid: result.valid,
+        discount: result.discount,
+        message: result.message,
+        discountAmount: result.discountAmount,
+      };
+
+      store.setPromoResult(promoResult);
+
+      return { success: result.valid, message: result.message };
+    } catch (error) {
+      const errorMessage = 'Ошибка проверки промокода';
+      setPromoError(errorMessage);
+      return { success: false, message: errorMessage };
+    } finally {
+      setIsValidatingPromo(false);
+    }
+  }, [store]);
 
   const clearPromoCode = () => {
     store.clearPromo();
@@ -72,6 +104,10 @@ export function useCart() {
     itemCount,
     discountedTotal,
     discountAmount,
+
+    // Состояние валидации промокода
+    isValidatingPromo,
+    promoError,
 
     // Действия
     addToCart,

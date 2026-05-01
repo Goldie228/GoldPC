@@ -5,7 +5,7 @@ import { Tabs, type Tab } from '../../components/ui/Tabs';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { useProduct } from '../../hooks/useProduct';
 import { useToastStore } from '../../store/toastStore';
-import { useAuthStore } from '../../store/authStore';
+import { useAuth } from '../../hooks/useAuth';
 import type { Product } from '../../api/types';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
@@ -159,7 +159,7 @@ export function ProductPage(): ReactElement {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading, error } = useProduct(slug);
   const showToast = useToastStore((state) => state.showToast);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { isAuthenticated } = useAuth();
 
   const tabs = useMemo<Tab[]>(() => {
     if (!product) return [];

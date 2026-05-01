@@ -16,7 +16,7 @@ import { ArrowRight } from 'lucide-react';
 import { AuthModalBase } from '../AuthModalBase/AuthModalBase';
 import { PasswordField } from '../../ui/PasswordField';
 import { useAuth } from '../../../hooks/useAuth';
-import { useAuthModalStore } from '../../../store/authModalStore';
+import { useAuthModal } from '../../../hooks/useAuthModal';
 import styles from './LoginModal.module.css';
 
 export interface LoginModalProps {
@@ -28,7 +28,7 @@ export interface LoginModalProps {
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const { login, isLoading } = useAuth();
-  const { switchAuthModal } = useAuthModalStore();
+  const { switchAuthModal } = useAuthModal();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

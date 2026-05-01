@@ -1,12 +1,12 @@
 import { Navigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Redirects admin users to the appropriate dashboard based on their role.
  * Must be used as a component (not inline function) to follow Rules of Hooks.
  */
 export function AdminRedirect() {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   
   if (!user) return <Navigate to="/" replace />;
   if (user.role === 'Admin') return <Navigate to="/admin/users" replace />;

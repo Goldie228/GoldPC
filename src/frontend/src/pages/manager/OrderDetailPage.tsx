@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ArrowLeft, CircleCheck, Truck, Check, AlertCircle } from 'lucide-react';
 import styles from './OrderDetailPage.module.css';
-import { managerApi } from '../../api/manager';
+import { useManager } from '../../hooks/useManager';
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';
 
@@ -148,6 +148,7 @@ function formatDateTimeShort(dateStr: string): string {
 }
 
 export function OrderDetailPage() {
+  const { getOrderById } = useManager();
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -157,8 +158,8 @@ export function OrderDetailPage() {
       if (!orderId) return;
       setIsLoading(true);
       try {
-        const data = await managerApi.getOrderById(orderId);
-        setOrder(data);
+        const data = await getOrderById(orderId);
+        if (data) setOrder(data);
       } catch (error) {
         console.error('Failed to load order:', error);
       } finally {
@@ -166,7 +167,7 @@ export function OrderDetailPage() {
       }
     };
     void loadOrder();
-  }, [orderId]);
+  }, [orderId, getOrderById]);
 
   if (isLoading) {
     return <div className="loading">Загрузка заказа...</div>;

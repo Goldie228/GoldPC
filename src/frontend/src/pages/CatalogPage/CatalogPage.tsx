@@ -13,7 +13,7 @@ import { FilterSidebar, EmptyState, Pagination, ProductTable, ActiveFiltersBar, 
 import { ProductCard } from '../../components/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
-import { catalogApi } from '../../api/catalog';
+import { useCatalog } from '../../hooks/useCatalog';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
 import type { ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
@@ -92,6 +92,7 @@ export function CatalogPage() {
   const [error, setError] = useState<string | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const { openModal, closeModal } = useModal();
+  const { getProducts, getProduct } = useCatalog();
   
   // Инициализация и синхронизация категории из URL (path или query)
   const resolvedCategory = resolveCategoryFromUrl(categoryParam, searchParams.get('category'));
@@ -339,32 +340,34 @@ export function CatalogPage() {
       if (Object.keys(specsSelect).length > 0) params.specifications = specsSelect;
       if (Object.keys(specsRange).length > 0) params.specificationRanges = specsRange;
       
-      const response = await catalogApi.getProducts(params);
-      
-      setProducts(response.data);
-      setTotalPages(response.meta.totalPages);
-      setTotalItems(response.meta.totalItems);
-      setHasLoadedOnce(true);
+const response = await getProducts(params);
+        
+        if (response) {
+          setProducts(response.data);
+          setTotalPages(response.meta.totalPages);
+          setTotalItems(response.meta.totalItems);
+          setHasLoadedOnce(true);
 
-      if (response.data.length === 0) {
-        telemetryTrack('catalog_empty_state', {
-          category: selectedCategory ?? 'all',
-          filterChangeCount: filterChangeCountRef.current,
-        });
+          if (response.data.length === 0) {
+            telemetryTrack('catalog_empty_state', {
+              category: selectedCategory ?? 'all',
+              filterChangeCount: filterChangeCountRef.current,
+            });
+          }
+        }
+      } catch (err) {
+        setError('Не удалось загрузить товары. Попробуйте позже.');
+        console.error('Failed to fetch products:', err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError('Не удалось загрузить товары. Попробуйте позже.');
-      console.error('Failed to fetch products:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   const openQuickView = useCallback(
     async (productId: string) => {
       telemetryTrack('catalog_quick_view_open', { productId, category: selectedCategory ?? 'all' });
       try {
-        const product = await catalogApi.getProduct(productId);
+        const product = await getProduct(productId);
         openModal({
           title: product.name ?? 'Быстрый просмотр',
           size: 'large',

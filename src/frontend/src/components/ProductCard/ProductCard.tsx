@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import { getProductImageUrl, hasValidProductImage } from '../../utils/image';
 import type { ProductSummary, ProductCategory } from '../../api/types';
 import { useCart } from '../../hooks/useCart';
-import { useToastStore } from '../../store/toastStore';
-import { useWishlistStore } from '../../store/wishlistStore';
-import { useComparisonStore } from '../../store/comparisonStore';
+import { useToast } from '../../hooks/useToast';
+import { useWishlist } from '../../hooks/useWishlist';
+import { useComparison } from '../../hooks/useComparison';
 import { useProduct } from '../../hooks/useProduct';
 import { Icon } from '../ui/Icon/Icon';
 import { OptimizedImage } from '../ui/Image/OptimizedImage';
@@ -452,9 +452,9 @@ export function ProductCard({
   imageFetchPriority,
 }: ProductCardProps): ReactElement {
   const { addToCart, changeQuantity, isInCart, getItemQuantity } = useCart();
-  const showToast = useToastStore((state) => state.showToast);
-  const { isInWishlist, toggleWishlist } = useWishlistStore();
-  const { isInComparison, toggleComparison } = useComparisonStore();
+  const { showToast } = useToast();
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { isInComparison, toggleComparison } = useComparison();
 
   const [isAdding, setIsAdding] = useState(false);
 

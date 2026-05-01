@@ -15,7 +15,7 @@ import { PC_BUILDER_SLOTS } from '../../../hooks';
 import {
   calculatePerformance,
   getPerformanceLabel,
-} from '../../../utils/performanceCalculator';
+} from '../../../features/pc-builder/logic/performance';
 import { Download, FileText, CheckCircle, AlertTriangle, Zap, BarChart3 } from 'lucide-react';
 import styles from './PdfExportModal.module.css';
 

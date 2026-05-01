@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ordersApi, type Order } from '../../api/orders';
+import { useOrders } from '../../hooks/useOrders';
+import type { Order } from '../../api/orders';
 import styles from './OrderTrackingPage.module.css';
 
 const STATUS_STEPS = [
@@ -14,17 +15,18 @@ const STATUS_STEPS = [
 
 export function OrderTrackingPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
+  const { getOrderByNumber } = useOrders();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (orderNumber) {
-      ordersApi.getOrderByNumber(orderNumber)
-        .then(setOrder)
+      getOrderByNumber(orderNumber)
+        .then((result) => setOrder(result))
         .catch(() => {})
         .finally(() => setLoading(false));
     }
-  }, [orderNumber]);
+  }, [orderNumber, getOrderByNumber]);
 
   if (loading) {
     return <div className={styles.container}>Загрузка...</div>;

@@ -5,7 +5,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usersAdminApi, type UserRole, type GetUsersParams } from '../../../api/admin';
+import { useAdmin } from '../../../hooks/useAdmin';
+import type { UserRole, GetUsersParams } from '../../../api/admin';
 import type { User } from '../../../api/types';
 import styles from './UserManagementPage.module.css';
 
@@ -30,6 +31,7 @@ const STATUS_FILTERS = [
  */
 export function UserManagementPage() {
   const navigate = useNavigate();
+  const { getUsers, deleteUser } = useAdmin();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,9 +65,10 @@ export function UserManagementPage() {
         params.isActive = statusFilter === 'true';
       }
       
-      const response = await usersAdminApi.getUsers(params);
-      setUsers(response.data);
-      setTotalPages(response.meta.totalPages);
+      const response = await getUsers(params);
+      if (response) {
+        setUsers(response.data);
+        setTotalPages(response.meta.totalPages);
       setTotalItems(response.meta.totalItems);
     } catch (err) {
       setError('Не удалось загрузить пользователей. Попробуйте позже.');
@@ -96,7 +99,7 @@ export function UserManagementPage() {
 
     setDeleting(user.id);
     try {
-      await usersAdminApi.deleteUser(user.id);
+      await deleteUser(user.id);
       setUsers(users.filter(u => u.id !== user.id));
       setTotalItems(prev => prev - 1);
     } catch (err) {
