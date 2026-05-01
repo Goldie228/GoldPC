@@ -10,6 +10,7 @@ import type {
   CompatibilityResult,
   PCBuilderSelectedState,
 } from './types';
+import type { ComponentMap } from '@/shared/utils/compatibility/types';
 
 export function getComponentState(
   type: PCComponentType,
@@ -104,7 +105,7 @@ export function getComponentState(
 }
 
 export function countSelectedCategories(c: PCBuilderSelectedState): number {
-  let n = 0;
+  let n =0;
   if (c.cpu) n++;
   if (c.gpu) n++;
   if (c.motherboard) n++;
@@ -119,4 +120,21 @@ export function countSelectedCategories(c: PCBuilderSelectedState): number {
   if (c.mouse) n++;
   if (c.headphones) n++;
   return n;
+}
+
+/**
+ * Build ComponentMap from selected components state
+ * Used for compatibility checks and power consumption calculations
+ */
+export function buildComponentMap(components: PCBuilderSelectedState): ComponentMap {
+  return {
+    cpu: components.cpu?.product ?? null,
+    gpu: components.gpu?.product ?? null,
+    motherboard: components.motherboard?.product ?? null,
+    ram: components.ram[0]?.product ?? null,
+    storage: components.storage[0]?.product ?? null,
+    psu: components.psu?.product ?? null,
+    case: components.case?.product ?? null,
+    cooling: components.cooling?.product ?? null,
+  };
 }

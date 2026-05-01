@@ -135,7 +135,7 @@ export const useCartStore = create<CartStore>()(
 
       getDiscountedTotal: () => {
         const state = get();
-        const total = state.items.reduce((total, item) => total + item.price * item.quantity, 0);
+        const total = state.getTotal();
         return Math.round(total - state.discountAmount);
       },
 

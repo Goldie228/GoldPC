@@ -9,33 +9,31 @@
  * NO business logic, NO API calls, NO localStorage
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { Product } from '../api/types';
 import { useCartStore } from '../store/cartStore';
 import { calculatePerformance, type EstimatedFps } from '@/features/pc-builder/logic/performance';
-import type { CompatibilityCheckResponse, FpsApiResponse } from '../api/pcBuilderService';
+import type { FpsApiResponse } from '../api/pcBuilderService';
 
 import type {
   PCComponentType,
-  SelectedComponent,
   CompatibilityResult,
   ComponentCompatibility,
   PCBuilderSelectedState,
   SelectComponentOptions,
 } from '@/features/pc-builder/logic/types';
 import {
-  MAX_RAM_MODULES,
   MAX_STORAGE_MODULES,
   MAX_FAN_MODULES,
   TOTAL_CATEGORIES,
 } from '@/features/pc-builder/logic/constants';
 import { checkCompatibility } from '@/shared/utils/compatibility/orchestration';
-import type { ComponentMap } from '@/shared/utils/compatibility/types';
 import { calculatePowerConsumption } from '@/shared/utils/compatibility/checks';
-import { loadFromLocalStorage, clearLocalStorage } from '@/features/pc-builder/logic/persistence';
+import { loadFromLocalStorage } from '@/features/pc-builder/logic/persistence';
 import {
   getComponentState,
   countSelectedCategories,
+  buildComponentMap,
 } from '@/features/pc-builder/logic/slotHelpers';
 import {
   selectComponent,
@@ -97,16 +95,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
 
   // === Derived Data (pure logic) ===
   const localCompatibility = useMemo(() => {
-    const componentMap: ComponentMap = {
-      cpu: selectedComponents.cpu?.product ?? null,
-      gpu: selectedComponents.gpu?.product ?? null,
-      motherboard: selectedComponents.motherboard?.product ?? null,
-      ram: selectedComponents.ram[0]?.product ?? null,
-      storage: selectedComponents.storage[0]?.product ?? null,
-      psu: selectedComponents.psu?.product ?? null,
-      case: selectedComponents.case?.product ?? null,
-      cooling: selectedComponents.cooling?.product ?? null,
-    };
+    const componentMap = buildComponentMap(selectedComponents);
     const result = checkCompatibility(componentMap);
     return {
       isCompatible: result.isCompatible,
@@ -122,16 +111,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
   );
 
   const powerConsumption = useMemo(() => {
-    const componentMap: ComponentMap = {
-      cpu: selectedComponents.cpu?.product ?? null,
-      gpu: selectedComponents.gpu?.product ?? null,
-      motherboard: selectedComponents.motherboard?.product ?? null,
-      ram: selectedComponents.ram[0]?.product ?? null,
-      storage: selectedComponents.storage[0]?.product ?? null,
-      psu: selectedComponents.psu?.product ?? null,
-      case: selectedComponents.case?.product ?? null,
-      cooling: selectedComponents.cooling?.product ?? null,
-    };
+    const componentMap = buildComponentMap(selectedComponents);
     return calculatePowerConsumption(componentMap);
   }, [selectedComponents]);
 
@@ -224,16 +204,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
   );
 
   const checkCompatibilityAction = useCallback(() => {
-    const componentMap: ComponentMap = {
-      cpu: selectedComponents.cpu?.product ?? null,
-      gpu: selectedComponents.gpu?.product ?? null,
-      motherboard: selectedComponents.motherboard?.product ?? null,
-      ram: selectedComponents.ram[0]?.product ?? null,
-      storage: selectedComponents.storage[0]?.product ?? null,
-      psu: selectedComponents.psu?.product ?? null,
-      case: selectedComponents.case?.product ?? null,
-      cooling: selectedComponents.cooling?.product ?? null,
-    };
+    const componentMap = buildComponentMap(selectedComponents);
     const result = checkCompatibility(componentMap);
     return {
       isCompatible: result.isCompatible,
