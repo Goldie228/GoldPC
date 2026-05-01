@@ -8,10 +8,6 @@ import type { CompatibilityRulesConfig } from '../../config/compatibilityTypes';
 
 const rules = compatibilityRules as CompatibilityRulesConfig;
 
-export const RAM_TYPES = rules.ramCompatibility.validTypes as readonly string[];
-
-export type RAMType = (typeof RAM_TYPES)[number];
-
 export const TOTAL_CATEGORIES = 12;
 
 export const MAX_RAM_MODULES = 8;

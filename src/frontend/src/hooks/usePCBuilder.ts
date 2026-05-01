@@ -29,10 +29,9 @@ import {
   MAX_FAN_MODULES,
   TOTAL_CATEGORIES,
 } from '@/features/pc-builder/logic/constants';
-import {
-  checkBuildCompatibility,
-  calculatePowerConsumption,
-} from '@/features/pc-builder/logic/compatibility';
+import { checkCompatibility } from '@/utils/compatibilityUtils';
+import type { ComponentMap } from '@/shared/utils/compatibility/types';
+import { calculatePowerConsumption } from '@/shared/utils/compatibility/checks';
 import { loadFromLocalStorage, clearLocalStorage } from '@/features/pc-builder/logic/persistence';
 import {
   getComponentState,
@@ -97,20 +96,44 @@ export function usePCBuilder(): UsePCBuilderReturn {
   const cartAddItem = useCartStore((s) => s.addItem);
 
   // === Derived Data (pure logic) ===
-  const localCompatibility = useMemo(
-    () => checkBuildCompatibility(selectedComponents),
-    [selectedComponents]
-  );
+  const localCompatibility = useMemo(() => {
+    const componentMap: ComponentMap = {
+      cpu: selectedComponents.cpu?.product ?? null,
+      gpu: selectedComponents.gpu?.product ?? null,
+      motherboard: selectedComponents.motherboard?.product ?? null,
+      ram: selectedComponents.ram[0]?.product ?? null,
+      storage: selectedComponents.storage[0]?.product ?? null,
+      psu: selectedComponents.psu?.product ?? null,
+      case: selectedComponents.case?.product ?? null,
+      cooling: selectedComponents.cooling?.product ?? null,
+    };
+    const result = checkCompatibility(componentMap);
+    return {
+      isCompatible: result.isCompatible,
+      errors: result.issues.map(i => i.message),
+      warnings: result.warnings.map(w => w.message),
+      bottleneck: result.bottleneckPercentage > 0 ? `${result.bottleneckPercentage}%` : undefined,
+    };
+  }, [selectedComponents]);
 
   const totalPrice = useMemo(
     () => calculateTotalPrice(selectedComponents),
     [selectedComponents]
   );
 
-  const powerConsumption = useMemo(
-    () => calculatePowerConsumption(selectedComponents),
-    [selectedComponents]
-  );
+  const powerConsumption = useMemo(() => {
+    const componentMap: ComponentMap = {
+      cpu: selectedComponents.cpu?.product ?? null,
+      gpu: selectedComponents.gpu?.product ?? null,
+      motherboard: selectedComponents.motherboard?.product ?? null,
+      ram: selectedComponents.ram[0]?.product ?? null,
+      storage: selectedComponents.storage[0]?.product ?? null,
+      psu: selectedComponents.psu?.product ?? null,
+      case: selectedComponents.case?.product ?? null,
+      cooling: selectedComponents.cooling?.product ?? null,
+    };
+    return calculatePowerConsumption(componentMap);
+  }, [selectedComponents]);
 
   const cpuProduct = selectedComponents.cpu?.product ?? null;
   const gpuProduct = selectedComponents.gpu?.product ?? null;
@@ -144,7 +167,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
   const recommendedPsu = useMemo(() => {
     if (apiResult?.recommendedPSU) return apiResult.recommendedPSU;
     const gpuRecommendedPsu = selectedComponents.gpu?.product?.specifications?.recommendedPsu as number | undefined;
-    const calculated = Math.ceil(powerConsumption * 1.3);
+    const calculated = Math.ceil(powerConsumption * 1.2); // Unified 1.2x margin
     return gpuRecommendedPsu ? Math.max(calculated, gpuRecommendedPsu) : calculated;
   }, [apiResult, powerConsumption, selectedComponents.gpu]);
 
@@ -201,7 +224,23 @@ export function usePCBuilder(): UsePCBuilderReturn {
   );
 
   const checkCompatibilityAction = useCallback(() => {
-    return checkBuildCompatibility(selectedComponents);
+    const componentMap: ComponentMap = {
+      cpu: selectedComponents.cpu?.product ?? null,
+      gpu: selectedComponents.gpu?.product ?? null,
+      motherboard: selectedComponents.motherboard?.product ?? null,
+      ram: selectedComponents.ram[0]?.product ?? null,
+      storage: selectedComponents.storage[0]?.product ?? null,
+      psu: selectedComponents.psu?.product ?? null,
+      case: selectedComponents.case?.product ?? null,
+      cooling: selectedComponents.cooling?.product ?? null,
+    };
+    const result = checkCompatibility(componentMap);
+    return {
+      isCompatible: result.isCompatible,
+      errors: result.issues.map(i => i.message),
+      warnings: result.warnings.map(w => w.message),
+      bottleneck: result.bottleneckPercentage > 0 ? `${result.bottleneckPercentage}%` : undefined,
+    };
   }, [selectedComponents]);
 
   // === Return ===

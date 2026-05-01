@@ -16,7 +16,25 @@ import {
   STORAGE_KEY,
   emptyPcBuilderState,
 } from './constants';
-import { isBuilderEmpty } from './compatibility';
+import type { PCBuilderSelectedState } from './types';
+
+export function isBuilderEmpty(c: PCBuilderSelectedState): boolean {
+  return (
+    !c.cpu &&
+    !c.gpu &&
+    !c.motherboard &&
+    !c.psu &&
+    !c.case &&
+    !c.cooling &&
+    c.ram.length === 0 &&
+    c.storage.length === 0 &&
+    c.fan.length === 0 &&
+    !c.monitor &&
+    !c.keyboard &&
+    !c.mouse &&
+    !c.headphones
+  );
+}
 
 export function saveToLocalStorage(components: PCBuilderSelectedState): void {
   try {
