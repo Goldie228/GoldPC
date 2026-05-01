@@ -14,7 +14,7 @@ export default defineConfig({
   base: './',
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, 'src'),
       'leaflet': path.resolve(__dirname, '../../node_modules/leaflet'),
     },
   },

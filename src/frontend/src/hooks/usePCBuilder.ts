@@ -29,7 +29,7 @@ import {
   MAX_FAN_MODULES,
   TOTAL_CATEGORIES,
 } from '@/features/pc-builder/logic/constants';
-import { checkCompatibility } from '@/utils/compatibilityUtils';
+import { checkCompatibility } from '@/shared/utils/compatibility/orchestration';
 import type { ComponentMap } from '@/shared/utils/compatibility/types';
 import { calculatePowerConsumption } from '@/shared/utils/compatibility/checks';
 import { loadFromLocalStorage, clearLocalStorage } from '@/features/pc-builder/logic/persistence';
