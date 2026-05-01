@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import styles from './OrdersPage.module.css';
-import { managerApi } from '../../api/manager';
+import { useManager } from '../../hooks/useManager';
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';
 
@@ -50,6 +50,7 @@ function formatDate(dateStr: string): string {
 }
 
 export function OrdersPage() {
+  const { getOrders } = useManager();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('');
   const [dateFrom, setDateFrom] = useState('');
@@ -64,8 +65,10 @@ export function OrdersPage() {
     const loadOrders = async () => {
       setIsLoading(true);
       try {
-        const data = await managerApi.getOrders(currentPage, itemsPerPage, statusFilter || undefined);
-        setOrders(data.items || []);
+        const data = await getOrders(currentPage, itemsPerPage, statusFilter || undefined);
+        if (data) {
+          setOrders(data.items || []);
+        }
       } catch (error) {
         console.error('Failed to load orders:', error);
       } finally {
@@ -73,7 +76,7 @@ export function OrdersPage() {
       }
     };
     void loadOrders();
-  }, [currentPage, statusFilter]);
+  }, [currentPage, statusFilter, getOrders]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {

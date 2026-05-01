@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ordersApi, type Order, type OrderItem } from '../../api/orders';
-import { useToastStore } from '../../store/toastStore';
+import { useOrders } from '../../hooks/useOrders';
+import { useToast } from '../../hooks/useToast';
+import type { Order, OrderItem } from '../../api/orders';
 import { Modal } from '../../components/ui/Modal/Modal';
 import styles from './AccountOrders.module.css';
 
@@ -42,7 +43,8 @@ function getStatusProgress(status: string): number {
  */
 export function AccountOrders() {
   const navigate = useNavigate();
-  const showToast = useToastStore(state => state.showToast);
+  const { showToast } = useToast();
+  const { getMyOrders } = useOrders();
   
   const [activeFilter, setActiveFilter] = useState('all');
   const [orders, setOrders] = useState<Order[]>([]);
@@ -53,13 +55,15 @@ export function AccountOrders() {
 
   useEffect(() => {
     setLoading(true);
-    ordersApi.getMyOrders(page, pageSize, activeFilter === 'all' ? undefined : activeFilter)
-      .then(result => {
-        setOrders(result.items);
+    getMyOrders(page, pageSize, activeFilter === 'all' ? undefined : activeFilter)
+      .then((result) => {
+        if (result) {
+          setOrders(result.items);
+        }
       })
       .catch(() => showToast('Ошибка загрузки заказов', 'error'))
       .finally(() => setLoading(false));
-  }, [page, activeFilter, showToast]);
+  }, [page, activeFilter, showToast, getMyOrders]);
 
   const stats = {
     total: orders.length,

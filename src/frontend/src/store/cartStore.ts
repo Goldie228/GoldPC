@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ProductSummary } from '../api/types';
-import { promoApi } from '../api/promo';
 
 export interface CartItem {
   id: string;
@@ -15,6 +14,13 @@ export interface CartItem {
   product?: ProductSummary;
 }
 
+export interface PromoValidationResult {
+  valid: boolean;
+  discount: number;
+  message: string;
+  discountAmount: number;
+}
+
 interface CartState {
   items: CartItem[];
   promoCode: string | null;
@@ -26,7 +32,7 @@ interface CartActions {
   addItem: (product: ProductSummary, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
-  validateAndApplyPromoCode: (code: string) => Promise<{ success: boolean; message: string }>;
+  setPromoResult: (result: PromoValidationResult) => void;
   clearPromo: () => void;
   clearCart: () => void;
   getTotal: () => number;
@@ -93,28 +99,19 @@ export const useCartStore = create<CartStore>()(
         });
       },
 
-      validateAndApplyPromoCode: async (code) => {
-        const state = get();
-        const total = state.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-
-        try {
-          const result = await promoApi.validatePromoCode({
-            code,
-            orderAmount: total,
+      setPromoResult: (result) => {
+        if (result.valid) {
+          set({
+            promoCode: result.discount > 0 ? result.message.split(' ')[0] : null,
+            discount: result.discount,
+            discountAmount: result.discountAmount,
           });
-
-          if (result.valid) {
-            set({
-              promoCode: code.toUpperCase(),
-              discount: result.discount,
-              discountAmount: result.discountAmount,
-            });
-            return { success: true, message: result.message };
-          } else {
-            return { success: false, message: result.message };
-          }
-        } catch (error) {
-          return { success: false, message: 'Ошибка проверки промокода' };
+        } else {
+          set({
+            promoCode: null,
+            discount: 0,
+            discountAmount: 0,
+          });
         }
       },
 

@@ -17,7 +17,7 @@ import { ArrowRight } from 'lucide-react';
 import { AuthModalBase } from '../AuthModalBase/AuthModalBase';
 import { PasswordField } from '../../ui/PasswordField/PasswordField';
 import { useAuth } from '../../../hooks/useAuth';
-import { useAuthModalStore } from '../../../store/authModalStore';
+import { useAuthModal } from '../../../hooks/useAuthModal';
 import styles from './RegisterModal.module.css';
 
 export interface RegisterModalProps {
@@ -29,7 +29,7 @@ export interface RegisterModalProps {
 
 export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   const { register, isLoading } = useAuth();
-  const { switchAuthModal } = useAuthModalStore();
+  const { switchAuthModal } = useAuthModal();
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState(''); // Опционально

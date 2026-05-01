@@ -4,17 +4,15 @@
  */
 
 import { useState, useEffect } from 'react';
-import {
-  settingsApi,
-  type SiteSettings,
-  type UpdateSettingsRequest,
-} from '../../../api/admin';
+import { useAdmin } from '../../../hooks/useAdmin';
+import type { SiteSettings, UpdateSettingsRequest } from '../../../api/admin';
 import styles from './SettingsPage.module.css';
 
 /**
  * Страница настроек системы
  */
 export function SettingsPage() {
+  const { getSettings, updateSettings, resetSettings } = useAdmin();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +31,7 @@ export function SettingsPage() {
     setError(null);
     
     try {
-      const data = await settingsApi.getSettings();
+      const data = await getSettings();
       setSettings(data);
       setFormData(data);
     } catch (err) {
@@ -62,7 +60,7 @@ export function SettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const updated = await settingsApi.updateSettings(formData);
+      const updated = await updateSettings(formData);
       setSettings(updated);
       alert('Настройки успешно сохранены');
     } catch (err) {
@@ -78,7 +76,7 @@ export function SettingsPage() {
     
     setResetting(true);
     try {
-      const defaultSettings = await settingsApi.resetSettings();
+      const defaultSettings = await resetSettings();
       setSettings(defaultSettings);
       setFormData(defaultSettings);
       alert('Настройки сброшены к значениям по умолчанию');

@@ -1,8 +1,9 @@
 import { useState, type FormEvent, type ChangeEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Input } from '../../components/ui';
-import { useToastStore } from '../../store/toastStore';
-import { serviceTicketsApi, type CreateTicketRequest } from '../../api/service-tickets';
+import { useToast } from '../../hooks/useToast';
+import { useServiceTickets } from '../../hooks/useServiceTickets';
+import type { CreateTicketRequest } from '../../api/service-tickets';
 import styles from './ServiceRequestPage.module.css';
 
 /**
@@ -62,8 +63,11 @@ interface FormErrors {
 /**
  * Отправка заявки на ремонт
  */
-async function submitServiceRequest(data: ServiceRequestFormData): Promise<ServiceRequestResponse> {
-  return serviceTicketsApi.createTicket({
+async function submitServiceRequest(
+  data: ServiceRequestFormData,
+  createTicketFn: (req: CreateTicketRequest) => Promise<ServiceRequestResponse>
+): Promise<ServiceRequestResponse> {
+  return createTicketFn({
     deviceType: data.deviceType,
     brand: data.brand,
     serialNumber: data.serial,
@@ -77,7 +81,8 @@ async function submitServiceRequest(data: ServiceRequestFormData): Promise<Servi
  * Соответствует прототипу prototypes/service-request.html
  */
 export function ServiceRequestPage() {
-  const showToast = useToastStore((state) => state.showToast);
+  const { showToast } = useToast();
+  const { createTicket } = useServiceTickets();
 
   // Состояние формы
   const [formData, setFormData] = useState<ServiceRequestFormData>({
@@ -97,7 +102,7 @@ export function ServiceRequestPage() {
 
   // Мутация для отправки формы
   const mutation = useMutation({
-    mutationFn: submitServiceRequest,
+    mutationFn: (data: ServiceRequestFormData) => submitServiceRequest(data, createTicket),
     onSuccess: (data) => {
       showToast(`Заявка #${data.ticketNumber} успешно создана!`, 'success');
       // Сброс формы

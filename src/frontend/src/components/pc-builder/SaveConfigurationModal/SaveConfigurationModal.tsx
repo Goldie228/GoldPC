@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Modal } from '../../ui/Modal/Modal';
 import { Button } from '../../ui/Button';
 import { Input } from '../../ui/Input';
-import { useToastStore } from '../../../store/toastStore';
+import { useToast } from '../../../hooks/useToast';
 import apiClient from '../../../api/client';
 import type { PCBuilderSelectedState } from '../../../hooks';
 import styles from './SaveConfigurationModal.module.css';
@@ -84,7 +84,7 @@ export function SaveConfigurationModal({
   const [purpose, setPurpose] = useState<PCPurpose>('Gaming');
   const [nameError, setNameError] = useState('');
 
-  const showToast = useToastStore((state) => state.showToast);
+  const { showToast } = useToast();
 
   /** Формируем components map для API (несколько ОЗУ/накопителей — id через запятую). */
   const buildComponentsMap = useCallback((): Record<string, string> => {

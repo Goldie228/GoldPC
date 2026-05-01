@@ -5,7 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { usersAdminApi, type UserRole, type UpdateUserRequest } from '../../../api/admin';
+import { useAdmin } from '../../../hooks/useAdmin';
+import type { UserRole, UpdateUserRequest } from '../../../api/admin';
 import type { User } from '../../../api/types';
 import styles from './UserFormPage.module.css';
 
@@ -58,6 +59,7 @@ export function UserFormPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isNewUser = id === 'new';
+  const { getUser, updateUser, deleteUser } = useAdmin();
 
   const [loading, setLoading] = useState(!isNewUser);
   const [saving, setSaving] = useState(false);
@@ -84,7 +86,7 @@ export function UserFormPage() {
     setError(null);
     
     try {
-      const userData = await usersAdminApi.getUser(id!);
+      const userData = await getUser(id!);
       setUser(userData);
       setFirstName(userData.firstName);
       setLastName(userData.lastName);

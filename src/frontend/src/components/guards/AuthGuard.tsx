@@ -6,10 +6,10 @@
  * Если авторизован - рендерит дочерние маршруты через Outlet.
  */
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
+import { useAuth } from '../../hooks/useAuth';
 
 export function AuthGuard() {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
   // Пока загружается состояние авторизации, можно показать загрузку

@@ -22,7 +22,7 @@ import {
   type PCComponentType,
   type PCBuilderSelectedState,
 } from '../../hooks';
-import { extractSocket } from '../../utils/compatibilityUtils';
+import { extractSocket } from '../../features/pc-builder/logic/specExtractors';
 import type { Product, ProductCategory } from '../../api/types';
 import { useToastStore } from '../../store/toastStore';
 import styles from './PCBuilderPage.module.css';

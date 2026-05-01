@@ -1,10 +1,10 @@
 import type { ReactElement } from 'react';
-import { useToastStore } from '../../../store/toastStore';
+import { useToast } from '../../../hooks/useToast';
 import { Toast } from './Toast';
 import styles from './ToastContainer.module.css';
 
 export function ToastContainer(): ReactElement | null {
-  const { toasts, removeToast } = useToastStore();
+  const { toasts, removeToast } = useToast();
 
   if (toasts.length === 0) {
     return null;

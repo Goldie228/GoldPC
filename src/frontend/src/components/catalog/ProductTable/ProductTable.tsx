@@ -4,9 +4,9 @@ import { motion } from 'framer-motion';
 import { Heart, GitCompare, ShoppingCart, Check, Loader2 } from 'lucide-react';
 import type { ProductSummary } from '../../../api/types';
 import { useCart } from '../../../hooks/useCart';
-import { useWishlistStore } from '../../../store/wishlistStore';
-import { useComparisonStore } from '../../../store/comparisonStore';
-import { useToastStore } from '../../../store/toastStore';
+import { useWishlist } from '../../../hooks/useWishlist';
+import { useComparison } from '../../../hooks/useComparison';
+import { useToast } from '../../../hooks/useToast';
 import { Icon } from '../../ui/Icon/Icon';
 import { telemetryTrack } from '../../../utils/telemetry';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
@@ -38,9 +38,9 @@ function getStockStatus(stock: number) {
 
 export function ProductTable({ products, onAddToCart }: ProductTableProps): ReactElement {
   const { addToCart, isInCart, getItemQuantity } = useCart();
-  const { isInWishlist, toggleWishlist } = useWishlistStore();
-  const { isInComparison, toggleComparison } = useComparisonStore();
-  const showToast = useToastStore((state) => state.showToast);
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { isInComparison, toggleComparison } = useComparison();
+  const { showToast } = useToast();
   const [addingId, setAddingId] = useState<string | null>(null);
 
   const handleAddToCart = (product: ProductSummary) => {

@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './ManagerDashboard.module.css';
-import { managerApi } from '../../api/manager';
+import { useManager } from '../../hooks/useManager';
 
 // Dashboard Widget Interface
 interface DashboardWidget {
@@ -52,6 +52,7 @@ const PRIORITY_CLASSES: Record<string, string> = {
 };
 
 export function ManagerDashboard() {
+  const { getDashboardData } = useManager();
   const [widgets, setWidgets] = useState<DashboardWidget[]>([]);
   const [lowStock, setLowStock] = useState<LowStockItem[]>([]);
   const [pendingTickets, setPendingTickets] = useState<PendingTicket[]>([]);
@@ -61,10 +62,12 @@ export function ManagerDashboard() {
     const loadDashboardData = async () => {
       setIsLoading(true);
       try {
-        const data = await managerApi.getDashboardData();
-        setWidgets(data.widgets);
-        setLowStock(data.lowStock);
-        setPendingTickets(data.pendingTickets);
+        const data = await getDashboardData();
+        if (data) {
+          setWidgets(data.widgets);
+          setLowStock(data.lowStock);
+          setPendingTickets(data.pendingTickets);
+        }
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
       } finally {

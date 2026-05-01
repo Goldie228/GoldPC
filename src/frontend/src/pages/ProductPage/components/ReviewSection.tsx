@@ -1,7 +1,7 @@
 import { useId, useState, useEffect, type KeyboardEvent, type ReactElement } from 'react';
 import { Button } from '../../../components/ui/Button';
 import { Skeleton } from '../../../components/ui/Skeleton';
-import { catalogApi } from '../../../api/catalog';
+import { useCatalog } from '../../../hooks/useCatalog';
 import type { Product, ProductReview } from '../../../api/types';
 import { ProductReviewCard } from './ProductReviewCard';
 import styles from '../ProductPage.module.css';
@@ -94,15 +94,19 @@ export function ReviewSection({
   isAuthenticated,
   showToast,
 }: ReviewSectionProps): ReactElement {
+  const { getProductReviews, addProductReview } = useCatalog();
   const [reviews, setReviews] = useState<ProductReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ rating: 5, comment: '', pros: '', cons: '' });
 
   useEffect(() => {
-    catalogApi
-      .getProductReviews(productId, 1, 20)
-      .then((res) => setReviews(res?.data || []))
+    getProductReviews(productId, 1, 20)
+      .then((res) => {
+        if (res) {
+          setReviews(res.data || []);
+        }
+      })
       .catch(() => {
         // Gracefully handle missing reviews endpoint - default to empty list
         setReviews([]);
@@ -130,8 +134,9 @@ export function ReviewSection({
     }
     setSubmitting(true);
     try {
-      const newReview = await catalogApi.addProductReview(productId, form);
-      setReviews((prev) => [newReview, ...prev]);
+      const newReview = await addProductReview(productId, form);
+      if (newReview) {
+        setReviews((prev) => [newReview, ...prev]);
       setForm({ rating: 5, comment: '', pros: '', cons: '' });
       showToast('Отзыв успешно добавлен', 'success');
     } catch {

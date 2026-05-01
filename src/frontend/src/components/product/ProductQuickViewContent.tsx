@@ -5,9 +5,9 @@ import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
 import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
 import { formatCountRu } from '../../utils/pluralizeRu';
 import { useCart } from '../../hooks/useCart';
-import { useWishlistStore } from '../../store/wishlistStore';
-import { useComparisonStore } from '../../store/comparisonStore';
-import { useToastStore } from '../../store/toastStore';
+import { useWishlist } from '../../hooks/useWishlist';
+import { useComparison } from '../../hooks/useComparison';
+import { useToast } from '../../hooks/useToast';
 import { hasValidProductImage } from '../../utils/image';
 import { useModal } from '../../hooks/useModal';
 import { ProductImageViewerModal } from '../../pages/ProductPage/components/ProductImageViewerModal';
@@ -49,9 +49,9 @@ export function ProductQuickViewContent({
   const slug = product.slug;
 
   const { addToCart, isInCart } = useCart();
-  const { isInWishlist, toggleWishlist } = useWishlistStore();
-  const { isInComparison, toggleComparison } = useComparisonStore();
-  const showToast = useToastStore((state) => state.showToast);
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { isInComparison, toggleComparison } = useComparison();
+  const { showToast } = useToast();
   const { openModal, closeModal } = useModal();
 
   const images = (product.images && product.images.length > 0

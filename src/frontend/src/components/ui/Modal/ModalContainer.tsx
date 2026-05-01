@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { useModalStore } from '../../../store/modalStore';
+import { useModal } from '../../../hooks/useModal';
 import { Modal, type ModalSize } from './Modal';
 
 function mapStoreSize(size: 'small' | 'default' | 'large' | 'fullWidth' | undefined): ModalSize {
@@ -19,9 +19,7 @@ function mapStoreSize(size: 'small' | 'default' | 'large' | 'fullWidth' | undefi
 }
 
 export function ModalContainer(): ReactElement | null {
-  const isOpen = useModalStore((s) => s.isOpen);
-  const modalContent = useModalStore((s) => s.modalContent);
-  const closeModal = useModalStore((s) => s.closeModal);
+  const { isOpen, modalContent, closeModal } = useModal();
 
   if (!isOpen || !modalContent) return null;
 

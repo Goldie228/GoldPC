@@ -1,13 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import {
-  serviceTicketsApi,
-  type ServiceTicket,
-  type TicketStatusHistory,
-  type TicketMessage,
-  TICKET_STATUSES
-} from '../../api/service-tickets';
-import { useToastStore } from '../../store/toastStore';
+import { useServiceTickets } from '../../hooks/useServiceTickets';
+import { useToast } from '../../hooks/useToast';
+import { TICKET_STATUSES } from '../../api/service-tickets';
+import type { ServiceTicket, TicketStatusHistory, TicketMessage } from '../../api/service-tickets';
 import { Button, Input } from '../../components/ui';
 import { ArrowLeft, Send, Paperclip, Image } from 'lucide-react';
 import styles from './TicketDetailPage.module.css';
@@ -30,7 +26,8 @@ function getStatusLabel(status: string): string {
  */
 export function TicketDetailPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
-  const showToast = useToastStore(state => state.showToast);
+  const { showToast } = useToast();
+  const { getTicket, getTicketHistory, getTicketMessages, sendMessage } = useServiceTickets();
 
   const [ticket, setTicket] = useState<ServiceTicket | null>(null);
   const [history, setHistory] = useState<TicketStatusHistory[]>([]);
@@ -60,12 +57,12 @@ export function TicketDetailPage() {
 
     try {
       const [ticketData, historyData, messagesData] = await Promise.all([
-        serviceTicketsApi.getTicket(ticketId),
-        serviceTicketsApi.getTicketHistory(ticketId),
-        serviceTicketsApi.getTicketMessages(ticketId)
+        getTicket(ticketId),
+        getTicketHistory(ticketId),
+        getTicketMessages(ticketId)
       ]);
 
-      setTicket(ticketData);
+      if (ticketData) setTicket(ticketData);
       setHistory(historyData);
       setMessages(messagesData);
     } catch {
@@ -86,8 +83,10 @@ export function TicketDetailPage() {
 
     setSendingMessage(true);
     try {
-      const message = await serviceTicketsApi.sendMessage(ticketId, newMessage.trim());
-      setMessages(prev => [...prev, message]);
+      const message = await sendMessage(ticketId, newMessage.trim());
+      if (message) {
+        setMessages(prev => [...prev, message]);
+      }
       setNewMessage('');
     } catch {
       showToast('Ошибка отправки сообщения', 'error');

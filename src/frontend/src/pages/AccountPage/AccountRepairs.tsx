@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { serviceTicketsApi, type ServiceTicket, TICKET_STATUSES } from '../../api/service-tickets';
-import { useToastStore } from '../../store/toastStore';
+import { useServiceTickets } from '../../hooks/useServiceTickets';
+import { useToast } from '../../hooks/useToast';
+import { TICKET_STATUSES } from '../../api/service-tickets';
+import type { ServiceTicket } from '../../api/service-tickets';
 import { Wrench, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import styles from "./AccountRepairs.module.css";
 
@@ -27,7 +29,8 @@ function getStatusColor(status: string): string {
  */
 export function AccountRepairs() {
   const navigate = useNavigate();
-  const showToast = useToastStore(state => state.showToast);
+  const { showToast } = useToast();
+  const { getMyTickets } = useServiceTickets();
 
   const [activeFilter, setActiveFilter] = useState('all');
   const [tickets, setTickets] = useState<ServiceTicket[]>([]);
@@ -47,14 +50,16 @@ export function AccountRepairs() {
   const loadTickets = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await serviceTicketsApi.getMyTickets(page, pageSize, activeFilter === 'all' ? undefined : activeFilter);
-      setTickets(result.items);
+      const result = await getMyTickets(page, pageSize, activeFilter === 'all' ? undefined : activeFilter);
+      if (result) {
+        setTickets(result.items);
+      }
     } catch {
       showToast('Ошибка загрузки списка ремонтов', 'error');
     } finally {
       setLoading(false);
     }
-  }, [page, activeFilter, showToast]);
+  }, [page, activeFilter, showToast, getMyTickets]);
 
   const stats = {
     total: tickets.length,

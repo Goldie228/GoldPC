@@ -63,6 +63,26 @@ export default {
           path: '^src/api/'
         }
       }
+    },
+
+    /**
+     * Правило 4: Запрет импортов между feature-ами
+     * Features должны быть изолированы друг от друга
+     */
+    {
+      name: 'no-cross-feature',
+      severity: 'error',
+      comment: 'Features должны быть изолированы. Один feature не должен импортировать из другого feature.',
+      rule: {
+        type: 'no-external-to',
+        from: {
+          path: '^src/features/([^/]+)/'
+        },
+        to: {
+          path: '^src/features/',
+          pathNot: '^src/features/$1/'
+        }
+      }
     }
   ],
 

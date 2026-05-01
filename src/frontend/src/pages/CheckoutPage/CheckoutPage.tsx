@@ -3,9 +3,11 @@ import { isAxiosError } from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../../store/cartStore';
 import { useAuthStore } from '../../store/authStore';
-import { extractApiErrorMessage, ordersApi } from '../../api/orders';
-import { addressesApi, type UserAddress } from '../../api/addresses';
-import { useToastStore } from '../../store/toastStore';
+import { extractApiErrorMessage } from '../../api/orders';
+import { useOrders } from '../../hooks/useOrders';
+import { useAddresses } from '../../hooks/useAddresses';
+import type { UserAddress } from '../../api/addresses';
+import { useToast } from '../../hooks/useToast';
 import { parsePhone, isValidPhone } from '../../utils/phone';
 import { AddressMap } from '../../components/checkout/AddressMap';
 import { DeliveryTimeSlotPicker } from '../../components/checkout/DeliveryTimeSlotPicker';
@@ -68,7 +70,9 @@ export function CheckoutPage() {
   const navigate = useNavigate();
   const { items, getTotal, getDiscountAmount, promoCode, clearCart } = useCartStore();
   const { user } = useAuthStore();
-  const showToast = useToastStore(state => state.showToast);
+  const { showToast } = useToast();
+  const { getDeliveryQuote, createOrder } = useOrders();
+  const { getAddresses, createAddress } = useAddresses();
 
   const [currentStep, setCurrentStep] = useState<Step>('delivery');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -102,7 +106,7 @@ export function CheckoutPage() {
   // Load saved addresses
   useEffect(() => {
     if (user) {
-      addressesApi.getAddresses()
+      getAddresses()
         .then(setSavedAddresses)
         .catch(() => {});
     }
@@ -110,7 +114,7 @@ export function CheckoutPage() {
 
   // Calculate delivery cost
   useEffect(() => {
-    ordersApi.getDeliveryQuote({
+    getDeliveryQuote({
       deliveryMethod: deliveryData.method,
       subtotal,
       city: deliveryData.city,
@@ -223,7 +227,7 @@ export function CheckoutPage() {
       // Сохранить адрес если нужно
       if (deliveryData.saveAddress && user && deliveryData.method === 'Delivery') {
         try {
-          await addressesApi.createAddress({
+          await createAddress({
             name: 'Адрес доставки',
             city: deliveryData.city,
             address: deliveryData.address,
@@ -234,7 +238,7 @@ export function CheckoutPage() {
         }
       }
 
-        const order = await ordersApi.createOrder({
+        const order = await createOrder({
         firstName: contactData.firstName.trim(),
         lastName: '',
         phone: parsePhone(contactData.phone.trim()),

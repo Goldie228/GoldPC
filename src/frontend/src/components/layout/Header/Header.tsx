@@ -14,9 +14,9 @@ import {
   Settings,
 } from 'lucide-react';
 import { useCart } from '../../../hooks/useCart';
-import { useWishlistStore } from '../../../store/wishlistStore';
-import { useComparisonStore } from '../../../store/comparisonStore';
-import { useAuthStore } from '../../../store/authStore';
+import { useWishlist } from '../../../hooks/useWishlist';
+import { useComparison } from '../../../hooks/useComparison';
+import { useAuth } from '../../../hooks/useAuth';
 import { useModal } from '../../../hooks/useModal';
 import { LoginModal } from '../../auth/LoginModal';
 import { RegisterModal } from '../../auth/RegisterModal';
@@ -49,10 +49,13 @@ export function Header(): ReactElement {
   const prevCartCountRef = useRef(0);
 
   const { itemCount: cartCount } = useCart();
-  const wishlistCount = useWishlistStore((s) => s.items.length);
-  const comparisonCount = useComparisonStore((s) => s.items.length);
-  const { isAuthenticated, user, logout, currentRole, switchRole } = useAuthStore();
+  const { items: wishlistItems } = useWishlist();
+  const { items: comparisonItems } = useComparison();
+  const { isAuthenticated, user, logout } = useAuth();
   const { openModal, closeModal } = useModal();
+
+  const wishlistCount = wishlistItems.length;
+  const comparisonCount = comparisonItems.length;
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);

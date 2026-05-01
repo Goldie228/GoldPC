@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { useComparisonStore } from '../../store/comparisonStore';
-import { catalogApi } from '../../api/catalog';
+import { useCatalog } from '../../hooks/useCatalog';
 import { getProductImageUrl } from '../../utils/image';
 import { useCart } from '../../hooks/useCart';
 import { useToastStore } from '../../store/toastStore';
@@ -53,6 +53,7 @@ export function ComparisonPage(): ReactElement {
   const { addToCart, changeQuantity, isInCart, getItemQuantity } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlistStore();
   const showToast = useToastStore((state) => state.showToast);
+  const { getProductsByIds, getFilterFacets } = useCatalog();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,12 +87,9 @@ export function ComparisonPage(): ReactElement {
     setLoading(true);
     setError(null);
 
-    Promise.allSettled(itemIds.map((id) => catalogApi.getProduct(id)))
-      .then((results) => {
+    getProductsByIds(itemIds)
+      .then((loaded) => {
         if (cancelled) return;
-        const loaded = results
-          .filter((r): r is PromiseFulfilledResult<Product> => r.status === 'fulfilled')
-          .map((r) => r.value);
         setProducts(loaded);
         if (loaded.length === 0 && itemIds.length > 0) {
           setError('Не удалось загрузить товары для сравнения.');
@@ -206,8 +204,7 @@ export function ComparisonPage(): ReactElement {
       return;
     }
     let cancelled = false;
-    catalogApi
-      .getFilterFacets(backendSlug)
+    getFilterFacets(backendSlug)
       .then((facets) => {
         if (cancelled) return;
         const next: Record<string, string> = {};
