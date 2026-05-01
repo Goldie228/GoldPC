@@ -10,13 +10,13 @@ import {
   Table
 } from 'lucide-react';
 import { FilterSidebar, EmptyState, Pagination, ProductTable, ActiveFiltersBar, buildCatalogFilterChips } from '../../components/catalog';
-import { ProductCard } from '../../components/ProductCard';
+import { ProductCard } from '../../components/product-card/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { useCatalog } from '../../hooks/useCatalog';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
 import type { ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
-import { Breadcrumbs } from '../../components/layout/Breadcrumbs/Breadcrumbs';
+import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
 import { ProductQuickViewContent } from '../../components/product/ProductQuickViewContent';
 import { useModal } from '../../hooks/useModal';

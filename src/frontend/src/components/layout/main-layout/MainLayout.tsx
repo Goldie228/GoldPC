@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Header } from '../Header';
-import { Footer } from '../Footer';
+import { Header } from '../header/Header';
+import { Footer } from '../footer/Footer';
 import { ToastContainer } from '../../ui/Toast';
 import { ScrollToTop } from '../../ui';
 import './MainLayout.css';

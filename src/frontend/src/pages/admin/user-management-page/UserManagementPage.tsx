@@ -69,7 +69,8 @@ export function UserManagementPage() {
       if (response) {
         setUsers(response.data);
         setTotalPages(response.meta.totalPages);
-      setTotalItems(response.meta.totalItems);
+        setTotalItems(response.meta.totalItems);
+      }
     } catch (err) {
       setError('Не удалось загрузить пользователей. Попробуйте позже.');
       console.error('Failed to fetch users:', err);

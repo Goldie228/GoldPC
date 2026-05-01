@@ -10,7 +10,7 @@ import { useComparison } from '../../hooks/useComparison';
 import { useToast } from '../../hooks/useToast';
 import { hasValidProductImage } from '../../utils/image';
 import { useModal } from '../../hooks/useModal';
-import { ProductImageViewerModal } from '../../pages/ProductPage/components/ProductImageViewerModal';
+import { ProductImageViewerModal } from '../../pages/product-page/components/ProductImageViewerModal';
 import { Icon } from '../ui/Icon/Icon';
 import styles from './ProductQuickViewContent.module.css';
 

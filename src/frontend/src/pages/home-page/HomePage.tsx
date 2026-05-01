@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Cpu, Gpu, MemoryStick, HardDrive, Zap, Box, ThermometerSun, Fan, Monitor, Keyboard, Mouse, Headphones, ArrowRight, Star, Truck, Shield, CreditCard, Users, ChevronRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { ProductCard } from '../../components/ProductCard';
+import { ProductCard } from '../../components/product-card/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton/ProductCardSkeleton';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { useProducts } from '../../hooks/useProducts';

@@ -10,7 +10,7 @@ import { Search, SlidersHorizontal, X, ExternalLink, ZoomIn, ChevronLeft, Chevro
 import { Modal } from '../../ui';
 import { ProductCardSkeleton } from '../../ui/Skeleton';
 import { ApiErrorBanner } from '../../ui/ApiErrorBanner';
-import { Pagination } from '../../catalog/Pagination/Pagination';
+import { Pagination } from '../../catalog/Pagination';
 import { FilterSidebar } from '../../catalog';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';

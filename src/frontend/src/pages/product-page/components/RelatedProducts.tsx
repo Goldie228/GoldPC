@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { ProductCard } from '../../../components/ProductCard/ProductCard';
+import { ProductCard } from '../../../components/product-card/ProductCard';
 import { useProducts } from '../../../hooks/useProducts';
 import type { Product } from '../../../api/types';
 import styles from '../ProductPage.module.css';

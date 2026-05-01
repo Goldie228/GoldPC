@@ -45,10 +45,10 @@ import {
 import { calculateTotalPrice } from '@/features/pc-builder/logic/pricing';
 import { getMaxRamModules, getMaxRamQty } from '@/features/pc-builder/logic/slotLimits';
 
-import { useCompatibilityApi } from './pcBuilder/useCompatibilityApi';
-import { useFpsApi } from './pcBuilder/useFpsApi';
-import { usePersistence } from './pcBuilder/usePersistence';
-import { useRamTrim } from './pcBuilder/useRamTrim';
+import { useCompatibilityApi } from './pc-builder/useCompatibilityApi';
+import { useFpsApi } from './pc-builder/useFpsApi';
+import { usePersistence } from './pc-builder/usePersistence';
+import { useRamTrim } from './pc-builder/useRamTrim';
 
 export interface UsePCBuilderReturn {
   selectedComponents: PCBuilderSelectedState;

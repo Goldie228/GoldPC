@@ -91,9 +91,11 @@ export function ExportPage() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Export logic here
-      format: selectedFormat,
-      data: selectedData.map((d) => d.id),
-    });
+    // TODO: Implement actual export logic
+    // const exportPayload = {
+    //   format: selectedFormat,
+    //   data: selectedData.map((d) => d.id),
+    // };
 
     alert(
       `Экспорт в формате ${selectedFormat.toUpperCase()} будет скачан.\n` +

@@ -21,13 +21,9 @@ export { useServices, useService, useServiceBySlug, servicesKeys, servicesApi } 
 export type { ServiceListResponse, GetServicesParams, Service } from './useServices';
 
 // PC Builder
-export {
-  usePCBuilder,
-  PC_BUILDER_SLOTS,
-  MAX_RAM_MODULES,
-  MAX_STORAGE_MODULES,
-  MAX_FAN_MODULES,
-} from './usePCBuilder';
+export { usePCBuilder } from './usePCBuilder';
+export { PC_BUILDER_SLOTS } from '../features/pc-builder/logic/slotConfig';
+export { MAX_RAM_MODULES, MAX_STORAGE_MODULES, MAX_FAN_MODULES } from '../features/pc-builder/logic/constants';
 export type {
   PCComponentType,
   ComponentSlotState,

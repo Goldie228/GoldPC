@@ -15,7 +15,7 @@ import './styles/staff.css'
 import './index.css'
 import App from './App.tsx'
 import { performanceMonitor } from './utils/performance'
-import { initializePWA } from './lib/pwa'
+import { initializePWA } from './utils/pwa'
 
 // Initialize PWA service worker
 initializePWA()
