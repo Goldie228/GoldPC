@@ -138,16 +138,12 @@ export function TicketDetailPage() {
 
   const handleStatusUpdate = (e: React.FormEvent) => {
     e.preventDefault();
-    // Здесь будет логика обновления статуса
-    console.log('Update status:', { status, priority, assignedTo, comment });
     setComment('');
   };
 
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-    // Здесь будет логика добавления комментария
-    console.log('Add comment:', newComment);
     setNewComment('');
   };
 

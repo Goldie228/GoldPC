@@ -109,7 +109,6 @@ export function WishlistPage(): ReactElement {
   const availableCategories = useMemo(() => {
     const unique = new Set(products.map(p => p.category));
     const result = Array.from(unique).sort();
-    console.log('Available categories:', result);
     return result;
   }, [products]);
 
@@ -234,7 +233,6 @@ export function WishlistPage(): ReactElement {
               {availableCategories.map((cat) => {
                 const label = CATEGORY_LABELS_RU[cat];
                 const count = categoryCounts.get(cat) || 0;
-                console.log(`Category: ${cat}, Label: ${label}, Count: ${count}`);
                 return (
                   <button
                     key={cat}

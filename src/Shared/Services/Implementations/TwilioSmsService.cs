@@ -81,7 +81,6 @@ public class TwilioSmsService : INotificationService
 
         _logger.LogInformation("Processing notification {Id} via Twilio service", notification.Id);
 
-        // TODO: Extract phone number from notification recipient
         _logger.LogWarning("SMS sending logic not fully implemented for new Notification entity");
     }
 

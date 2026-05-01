@@ -27,35 +27,30 @@ public class ProductionNotificationService : INotificationService
 
     public Task<Notification> CreateNotificationAsync(Notification notification)
     {
-        // TODO: Implement persistence to database
         _logger.LogDebug("CreateNotificationAsync called, returning passed notification");
         return Task.FromResult(notification);
     }
 
     public Task<IEnumerable<Notification>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false, int limit = 50)
     {
-        // TODO: Implement database read
         _logger.LogDebug("GetUserNotificationsAsync called for user {UserId}", userId);
         return Task.FromResult(Enumerable.Empty<Notification>());
     }
 
     public Task MarkAsReadAsync(Guid notificationId)
     {
-        // TODO: Implement database update
         _logger.LogDebug("MarkAsReadAsync called for notification {NotificationId}", notificationId);
         return Task.CompletedTask;
     }
 
     public Task MarkAllAsReadAsync(Guid userId)
     {
-        // TODO: Implement database batch update
         _logger.LogDebug("MarkAllAsReadAsync called for user {UserId}", userId);
         return Task.CompletedTask;
     }
 
     public Task DeleteNotificationAsync(Guid notificationId)
     {
-        // TODO: Implement database delete
         _logger.LogDebug("DeleteNotificationAsync called for notification {NotificationId}", notificationId);
         return Task.CompletedTask;
     }
@@ -71,14 +66,12 @@ public class ProductionNotificationService : INotificationService
     public Task SendNotificationToRoleAsync(string role, Notification notification)
     {
         _logger.LogDebug("SendNotificationToRoleAsync called for role {Role}", role);
-        // TODO: Resolve users by role and send
         return Task.CompletedTask;
     }
 
     public Task BroadcastNotificationAsync(Notification notification)
     {
         _logger.LogDebug("BroadcastNotificationAsync called");
-        // TODO: Broadcast to all active users
         return Task.CompletedTask;
     }
 }

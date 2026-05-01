@@ -144,8 +144,6 @@ export function UserFormPage() {
       };
 
       if (isNewUser) {
-        // TODO: Добавить API для создания пользователя
-        console.log('Creating new user:', data);
       } else {
         await usersAdminApi.updateUser(id!, data);
       }

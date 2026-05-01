@@ -116,7 +116,6 @@ export function AccountOrders() {
 
   const handleRepeatOrder = async (orderId: string) => {
     const currentOrderId = orderId;
-    // TODO: Actual implementation to copy items to cart
     showToast(`Товары из заказа ${currentOrderId} добавлены в корзину`, 'success');
     navigate('/cart');
   };

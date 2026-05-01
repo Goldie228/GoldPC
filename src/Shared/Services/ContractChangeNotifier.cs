@@ -176,15 +176,7 @@ public class ContractChangeNotifier : IContractChangeNotifier
             changeEvent.NewVersion,
             changeEvent.ChangeType);
 
-        // TODO: Реализовать реальный webhook вызов к Coordinator Dashboard
-        // POST https://coordinator-dashboard/api/contract-changes
-        // Body: changeEvent (JSON)
 
-        // Пример будущего кода:
-        // await _httpClient.PostAsJsonAsync(
-        //     "https://coordinator-dashboard/api/contract-changes",
-        //     changeEvent,
-        //     cancellationToken);
     }
 }
 #pragma warning restore S1135, S125

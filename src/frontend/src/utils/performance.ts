@@ -122,9 +122,6 @@ class PerformanceMonitor {
     if (this.shouldLogDev) {
       const budget = PERFORMANCE_BUDGETS[name as keyof PerformanceMetrics];
       const status = value <= budget ? '✅' : '⚠️';
-      console.log(
-        `[PerformanceMonitor] ${status} ${name}: ${value.toFixed(2)} (budget: ${budget})`
-      );
     }
   }
 
@@ -157,7 +154,6 @@ class PerformanceMonitor {
     // Логирование в режиме разработки
     if (this.shouldLogDev) {
       if (passed) {
-        console.log('[PerformanceMonitor] ✅ All performance budgets passed');
       } else {
         console.warn(
           '[PerformanceMonitor] ⚠️ Performance budget violations:\n',

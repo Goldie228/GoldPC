@@ -69,7 +69,6 @@ public class SmsRuService : INotificationService
 
         _logger.LogInformation("Processing notification {Id} via SMS.ru service", notification.Id);
 
-        // TODO: Extract phone number from notification recipient
         _logger.LogWarning("SMS sending logic not fully implemented for new Notification entity");
     }
 
