@@ -1,4 +1,5 @@
 import { SPEC_LABELS_GENERATED } from './specLabels.generated';
+import { normalizeSpecKey } from './comparison/comparisonRules';
 
 export type SpecValue = string | number | boolean | undefined | null;
 
@@ -95,38 +96,19 @@ const SNAKE_TO_RU: Record<string, string> = {
   fan_size: 'Размер вентилятора',
 };
 
-function normalizeSpecKey(rawKey: string): string {
-  const trimmed = rawKey.trim();
-  if (!trimmed) return '';
-
-  // Convert "Okhlazhdenie 1" / "Release Year" / "some-key" to snake_case-like key.
-  const spacedToUnderscore = trimmed
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .replace(/[\s-]+/g, '_')
-    .replace(/[^\w]+/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '');
-
-  return spacedToUnderscore.toLowerCase();
-}
-
 export function specLabel(key: string): string {
   const lower = key.toLowerCase();
-  const normalized = key.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '');
-  const normalizedLoose = normalizeSpecKey(key);
+  const normalized = normalizeSpecKey(key);
 
   return (
     SPEC_LABELS_GENERATED[key] ??
     SPEC_LABELS_GENERATED[normalized] ??
-    SPEC_LABELS_GENERATED[normalizedLoose] ??
     SPEC_LABELS_GENERATED[lower] ??
     SPEC_LABELS[key] ??
     SPEC_LABELS[normalized] ??
-    SPEC_LABELS[normalizedLoose] ??
     SPEC_LABELS[lower] ??
     SNAKE_TO_RU[lower] ??
     SNAKE_TO_RU[normalized] ??
-    SNAKE_TO_RU[normalizedLoose] ??
     key
       .split('_')
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())

@@ -49,7 +49,7 @@ export function useCart() {
     setPromoError(null);
 
     try {
-      const total = store.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const total = store.getTotal();
 
       const result = await promoApi.validatePromoCode({
         code,
