@@ -1,6 +1,5 @@
 import { useId, useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import styles from './PasswordField.module.css';
 
 export interface PasswordFieldProps {
   id?: string;
@@ -39,15 +38,15 @@ export function PasswordField({
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className={`${styles.field} ${className ?? ''}`}>
-      <label className={labelClassName ?? styles.label} htmlFor={id}>
+    <div className={`flex flex-col gap-1.5 ${className ?? ''}`}>
+      <label className={labelClassName ?? "flex items-center gap-1 font-sans text-xs font-medium uppercase tracking-wider text-body-text"} htmlFor={id}>
         {label}
       </label>
-      <div className={styles.inputWrap}>
+      <div className="relative">
         <input
           id={id}
           type={showPassword ? 'text' : 'password'}
-          className={`${styles.input} ${inputClassName ?? ''}`}
+          className={`w-full px-4 py-3 font-sans text-base text-body-text bg-surface-elevated border border-hairline-dark rounded-md outline-none transition-all focus:border-gold focus:shadow-[0_0_0_3px_var(--border-brand)] focus:bg-surface-card pr-11 ${inputClassName ?? ''}`}
           placeholder={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -58,7 +57,7 @@ export function PasswordField({
         />
         <button
           type="button"
-          className={styles.toggleBtn}
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-muted-text hover:text-body-text transition-colors"
           onClick={() => setShowPassword((v) => !v)}
           aria-label={showPassword ? 'Скрыть введённый пароль' : 'Показать введённый пароль'}
           aria-pressed={showPassword}

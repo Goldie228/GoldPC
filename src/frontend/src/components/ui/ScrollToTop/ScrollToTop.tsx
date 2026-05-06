@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import styles from './ScrollToTop.module.css';
 
 interface ScrollToTopProps {
   threshold?: number;
@@ -42,7 +41,7 @@ export function ScrollToTop({ threshold = 300 }: ScrollToTopProps) {
     <AnimatePresence>
       {isVisible && (
         <motion.button
-          className={`${styles.button} ${isNearFooter ? styles.nearFooter : ''}`}
+          className={`fixed bottom-6 right-6 w-12 h-12 rounded-full bg-gold text-gold-ink flex items-center justify-center shadow-lg transition-all hover:bg-gold-active hover:shadow-xl z-50 ${isNearFooter ? 'bottom-20' : ''}`}
           onClick={scrollToTop}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -52,7 +51,7 @@ export function ScrollToTop({ threshold = 300 }: ScrollToTopProps) {
           aria-label="Прокрутить наверх"
           title="Наверх"
         >
-          <ArrowUp size={24} className={styles.icon} />
+          <ArrowUp size={24} className="w-6 h-6" />
         </motion.button>
       )}
     </AnimatePresence>

@@ -18,7 +18,6 @@ import { AuthModalBase } from './AuthModalBase';
 import { PasswordField } from '@/components/ui/PasswordField';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthModal } from '@/hooks/useAuthModal';
-import styles from './RegisterModal.module.css';
 
 export interface RegisterModalProps {
   /** Whether modal is open */
@@ -149,10 +148,10 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   }, [password]);
 
   const getStrengthClass = (index: number) => {
-    if (index >= passwordStrength) return '';
-    if (passwordStrength === 1) return styles.weak;
-    if (passwordStrength === 2) return styles.medium;
-    return styles.strong;
+    if (index >= passwordStrength) return 'bg-[var(--border)]';
+    if (passwordStrength === 1) return 'bg-[var(--error)]';
+    if (passwordStrength === 2) return 'bg-[var(--color-amber-500)]';
+    return 'bg-[var(--color-green-500)]';
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -238,21 +237,21 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         onClick: handleSwitchToLogin
       }}
     >
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         {error && (
-          <div className={styles.error} role="alert">
+          <div className="p-3 bg-red-500/10 border border-red-500/30 text-[var(--error)] text-sm rounded-[var(--radius)]" role="alert">
             {error}
           </div>
         )}
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="register-firstName">
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider" htmlFor="register-firstName">
             Имя
           </label>
           <input
             id="register-firstName"
             type="text"
-            className={`${styles.input} ${fieldErrors.firstName ? styles.inputError : ''}`}
+            className={`w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)] ${fieldErrors.firstName ? 'border-[var(--error)] bg-red-500/5' : ''}`}
             placeholder="Ваше имя"
             value={firstName}
             onChange={(e) => {
@@ -262,17 +261,17 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             required
             autoComplete="given-name"
           />
-          {fieldErrors.firstName && <div className={styles.fieldError}>{fieldErrors.firstName}</div>}
+          {fieldErrors.firstName && <div className="text-xs text-[var(--error)] -mt-1 ml-0.5">{fieldErrors.firstName}</div>}
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="register-phone">
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider" htmlFor="register-phone">
             Телефон
           </label>
           <input
             id="register-phone"
             type="tel"
-            className={`${styles.input} ${fieldErrors.phone ? styles.inputError : ''}`}
+            className={`w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)] ${fieldErrors.phone ? 'border-[var(--error)] bg-red-500/5' : ''}`}
             placeholder="+375 (29) 123-45-67"
             value={phone}
             onChange={(e) => {
@@ -284,17 +283,17 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             inputMode="numeric"
             maxLength={19}
           />
-          {fieldErrors.phone && <div className={styles.fieldError}>{fieldErrors.phone}</div>}
+          {fieldErrors.phone && <div className="text-xs text-[var(--error)] -mt-1 ml-0.5">{fieldErrors.phone}</div>}
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="register-email">
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider" htmlFor="register-email">
             Email
           </label>
           <input
             id="register-email"
             type="email"
-            className={`${styles.input} ${fieldErrors.email ? styles.inputError : ''}`}
+            className={`w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)] ${fieldErrors.email ? 'border-[var(--error)] bg-red-500/5' : ''}`}
             placeholder="your@email.com"
             value={email}
             onChange={(e) => {
@@ -304,10 +303,10 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             required
             autoComplete="email"
           />
-          {fieldErrors.email && <div className={styles.fieldError}>{fieldErrors.email}</div>}
+          {fieldErrors.email && <div className="text-xs text-[var(--error)] -mt-1 ml-0.5">{fieldErrors.email}</div>}
         </div>
 
-        <div className={styles.field}>
+        <div className="flex flex-col gap-2">
           <PasswordField
             id="register-password"
             label="Пароль"
@@ -321,30 +320,30 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             minLength={8}
             maxLength={64}
             autoComplete="new-password"
-            labelClassName={styles.label}
-            inputClassName={styles.input}
+            labelClassName="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider"
+            inputClassName="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)]"
           />
-          <p className={styles.hint}>Минимум 8 символов, буквы и цифры</p>
+          <p className="text-[10px] text-[var(--fg-dim)] mt-1">Минимум 8 символов, буквы и цифры</p>
           {password && (
-            <div className={styles.passwordStrength}>
+            <div className="flex gap-1 mt-2">
               {[0, 1, 2].map((index) => (
                 <div
                   key={index}
-                  className={`${styles.strengthBar} ${getStrengthClass(index)}`}
+                  className={`flex-1 h-[3px] bg-[var(--border)] rounded-sm transition-colors duration-200 ${getStrengthClass(index)}`}
                 />
               ))}
             </div>
           )}
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="register-confirmPassword">
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider" htmlFor="register-confirmPassword">
             Подтверждение пароля
           </label>
           <input
             id="register-confirmPassword"
             type="password"
-            className={`${styles.input} ${fieldErrors.confirmPassword ? styles.inputError : ''}`}
+            className={`w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)] ${fieldErrors.confirmPassword ? 'border-[var(--error)] bg-red-500/5 focus:border-[var(--error)] focus:shadow-[0_0_0_2px_rgba(239,68,68,0.2)]' : ''}`}
             placeholder="Повторите пароль"
             value={confirmPassword}
             onChange={(e) => {
@@ -354,19 +353,22 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             required
             autoComplete="new-password"
           />
-          {fieldErrors.confirmPassword && <div className={styles.fieldError}>{fieldErrors.confirmPassword}</div>}
+          {fieldErrors.confirmPassword && <div className="text-xs text-[var(--error)] -mt-1 ml-0.5">{fieldErrors.confirmPassword}</div>}
         </div>
 
-        <div className={styles.checkboxGroup}>
-          <input
-            type="checkbox"
-            id="register-terms"
-            className={styles.checkbox}
-            checked={termsAccepted}
-            onChange={(e) => setTermsAccepted(e.target.checked)}
-          />
-          <label htmlFor="register-terms" className={styles.checkboxLabel} onClick={(e) => {
-            // Prevent label click from triggering nested links
+        <div className="flex items-start gap-2.5 my-1">
+          <div className="relative flex items-center">
+            <input
+              type="checkbox"
+              id="register-terms"
+              className="peer absolute w-[18px] h-[18px] opacity-0 cursor-pointer z-10"
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+            />
+            <div className="w-[18px] h-[18px] border-2 border-[var(--border)] rounded bg-[var(--bg-elevated)] transition-all duration-200 peer-hover:border-[var(--border-accent)] peer-checked:bg-[var(--accent)] peer-checked:border-[var(--accent)] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-[var(--accent)] peer-focus-visible:outline-offset-2"></div>
+            <div className="absolute left-[6px] top-[3px] w-[5px] h-[9px] border-r-2 border-b-2 border-[var(--bg)] rotate-45 opacity-0 transition-opacity duration-200 peer-checked:opacity-100"></div>
+          </div>
+          <label htmlFor="register-terms" className="cursor-pointer text-sm text-[var(--fg-muted)] leading-6" onClick={(e) => {
             if ((e.target as HTMLElement).tagName !== 'A') {
               e.preventDefault();
               setTermsAccepted(!termsAccepted);
@@ -375,6 +377,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             Я принимаю{' '}
             <a
               href="/terms"
+              className="text-[var(--accent)] no-underline transition-colors hover:text-[var(--accent-bright)]"
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
@@ -384,6 +387,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             и{' '}
             <a
               href="/privacy"
+              className="text-[var(--accent)] no-underline transition-colors hover:text-[var(--accent-bright)]"
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
@@ -395,7 +399,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
 
         <button
           type="submit"
-          className={styles.submitBtn}
+          className="inline-flex items-center justify-center gap-2.5 w-full p-3.5 bg-[var(--accent)] text-[var(--bg)] font-sans text-sm font-semibold border-none rounded-[var(--radius)] cursor-pointer transition-all duration-200 hover:not(:disabled):bg-[var(--accent-bright)] hover:not(:disabled):translate-y-[-2px] active:not(:disabled):translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed mt-1"
           disabled={isLoading}
         >
           {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
@@ -404,10 +408,10 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       </form>
 
       {/* Divider */}
-      <div className={styles.divider}>
-        <div className={styles.dividerLine} />
-        <span className={styles.dividerText}>или</span>
-        <div className={styles.dividerLine} />
+      <div className="flex items-center gap-4 my-2">
+        <div className="flex-1 h-px bg-[var(--border)]" />
+        <span className="text-[10px] text-[var(--fg-dim)] uppercase tracking-wider">или</span>
+        <div className="flex-1 h-px bg-[var(--border)]" />
       </div>
 
     </AuthModalBase>

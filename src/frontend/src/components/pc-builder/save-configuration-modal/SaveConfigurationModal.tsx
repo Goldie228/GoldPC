@@ -6,7 +6,6 @@ import { Input } from '../../ui/Input';
 import { useToast } from '../../../hooks/useToast';
 import apiClient from '../../../api/client';
 import type { PCBuilderSelectedState } from '../../../hooks';
-import styles from './SaveConfigurationModal.module.css';
 
 /** Назначение ПК (соответствует PCPurpose из API) */
 type PCPurpose = 'Gaming' | 'Office' | 'Workstation';
@@ -167,15 +166,15 @@ export function SaveConfigurationModal({
   /** Статус совместимости */
   const getCompatibilityStatus = (): { label: string; className: string } => {
     if (selectedCount === 0) {
-      return { label: 'Нет компонентов', className: styles.statusNeutral };
+      return { label: 'Нет компонентов', className: 'text-[var(--fg-secondary)]' };
     }
     if (compatibilityErrors.length > 0) {
-      return { label: `Ошибки: ${compatibilityErrors.length}`, className: styles.statusError };
+      return { label: `Ошибки: ${compatibilityErrors.length}`, className: 'text-[var(--error)]' };
     }
     if (compatibilityWarnings.length > 0) {
-      return { label: `Предупреждения: ${compatibilityWarnings.length}`, className: styles.statusWarning };
+      return { label: `Предупреждения: ${compatibilityWarnings.length}`, className: 'text-[#fbbf24]' };
     }
-    return { label: 'Все совместимо', className: styles.statusSuccess };
+    return { label: 'Все совместимо', className: 'text-[#4ade80]' };
   };
 
   const compatibilityStatus = getCompatibilityStatus();
@@ -187,11 +186,10 @@ export function SaveConfigurationModal({
       onClose={handleClose}
       title="Сохранить сборку"
       size="small"
-      className={styles.modal}
     >
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         {/* Название сборки */}
-        <div className={styles.field}>
+        <div className="flex flex-col gap-1.5">
           <Input
             label="Название сборки"
             placeholder="Моя игровая сборка"
@@ -209,13 +207,13 @@ export function SaveConfigurationModal({
         </div>
 
         {/* Назначение */}
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="purpose-select">
+        <div className="flex flex-col gap-1.5">
+          <label className="flex items-center gap-1 text-xs font-medium text-[var(--fg-secondary)] uppercase tracking-wider" htmlFor="purpose-select">
             Назначение
           </label>
           <select
             id="purpose-select"
-            className={styles.select}
+            className="w-full px-3.5 py-2.5 font-inherit text-[0.95rem] text-[var(--fg-primary)] bg-[var(--bg-tertiary)] border border-[var(--border-default)] rounded-md outline-none cursor-pointer transition-colors appearance-none"
             value={purpose}
             onChange={(e) => setPurpose(e.target.value as PCPurpose)}
             disabled={saveMutation.isPending}
@@ -229,30 +227,30 @@ export function SaveConfigurationModal({
         </div>
 
         {/* Summary */}
-        <div className={styles.summary}>
-          <h3 className={styles.summaryTitle}>Сводка сборки</h3>
+        <div className="bg-[var(--bg-primary)] border border-[var(--border-default)] rounded-md p-4">
+          <h3 className="m-0 mb-3 text-sm font-semibold text-[var(--fg-secondary)] uppercase tracking-wider">Сводка сборки</h3>
 
-          <div className={styles.summaryGrid}>
+          <div className="flex flex-col gap-2 divide-y divide-[var(--border-default)]">
             {/* Компонентов */}
-            <div className={styles.summaryItem}>
-              <span className={styles.summaryLabel}>Компонентов</span>
-              <span className={styles.summaryValue}>
+            <div className="flex justify-between items-center py-1.5">
+              <span className="text-sm text-[var(--fg-secondary)]">Компонентов</span>
+              <span className="text-[0.95rem] font-semibold text-[var(--fg-primary)]">
                 {selectedCount}/{totalCount}
               </span>
             </div>
 
             {/* Совместимость */}
-            <div className={styles.summaryItem}>
-              <span className={styles.summaryLabel}>Совместимость</span>
-              <span className={`${styles.summaryValue} ${compatibilityStatus.className}`}>
+            <div className="flex justify-between items-center py-1.5">
+              <span className="text-sm text-[var(--fg-secondary)]">Совместимость</span>
+              <span className={`text-[0.95rem] font-semibold ${compatibilityStatus.className}`}>
                 {compatibilityStatus.label}
               </span>
             </div>
 
             {/* Цена */}
-            <div className={styles.summaryItem}>
-              <span className={styles.summaryLabel}>Стоимость</span>
-              <span className={`${styles.summaryValue} ${styles.price}`}>
+            <div className="flex justify-between items-center py-1.5">
+              <span className="text-sm text-[var(--fg-secondary)]">Стоимость</span>
+              <span className="text-[1.05rem] font-semibold text-[var(--brand-primary)]">
                 {formatPrice(totalPrice)}
               </span>
             </div>
@@ -260,14 +258,14 @@ export function SaveConfigurationModal({
 
           {/* Детали ошибок/предупреждений */}
           {(compatibilityErrors.length > 0 || compatibilityWarnings.length > 0) && (
-            <div className={styles.compatibilityDetails}>
+            <div className="mt-3 pt-3 border-t border-[var(--border-default)] flex flex-col gap-1.5">
               {compatibilityErrors.map((err, i) => (
-                <p key={`err-${i}`} className={styles.errorDetail}>
+                <p key={`err-${i}`} className="m-0 text-sm leading-normal text-[var(--error)]">
                   ✕ {err}
                 </p>
               ))}
               {compatibilityWarnings.map((warn, i) => (
-                <p key={`warn-${i}`} className={styles.warningDetail}>
+                <p key={`warn-${i}`} className="m-0 text-sm leading-normal text-[#fbbf24]">
                   ⚠ {warn}
                 </p>
               ))}
@@ -276,7 +274,7 @@ export function SaveConfigurationModal({
         </div>
 
         {/* Действия */}
-        <div className={styles.actions}>
+        <div className="flex justify-end gap-3 pt-1">
           <Button
             type="button"
             variant="ghost"

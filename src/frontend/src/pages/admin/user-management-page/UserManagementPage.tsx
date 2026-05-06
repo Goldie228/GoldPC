@@ -8,8 +8,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '../../../hooks/useAdmin';
 import type { UserRole, GetUsersParams } from '../../../api/admin';
 import type { User } from '../../../api/types';
-import styles from './UserManagementPage.module.css';
-
 const ROLE_LABELS: Record<UserRole, string> = {
   Client: 'Клиент',
   Manager: 'Менеджер',
@@ -19,6 +17,19 @@ const ROLE_LABELS: Record<UserRole, string> = {
 };
 
 const ROLE_OPTIONS: UserRole[] = ['Client', 'Manager', 'Master', 'Admin', 'Accountant'];
+
+const ROLE_BADGE_CLASSES: Record<string, string> = {
+  Admin: 'bg-border-muted text-accent',
+  Manager: 'bg-indigo-500/15 text-indigo-400',
+  Master: 'bg-green-500/15 text-green-500',
+  Client: 'bg-zinc-500/15 text-muted-foreground',
+  Accountant: 'bg-pink-500/15 text-pink-400',
+};
+
+const STATUS_BADGE_CLASSES: Record<string, string> = {
+  active: 'bg-green-500/15 text-green-500',
+  inactive: 'bg-red-500/15 text-red-500',
+};
 
 const STATUS_FILTERS = [
   { value: '', label: 'Все статусы' },
@@ -125,30 +136,30 @@ export function UserManagementPage() {
 
   return (
     <div className="staff-page">
-      <header className={`${styles.header} staff-page__header`}>
+      <header className="flex justify-between items-start mb-8 staff-page__header">
         <div>
-          <h1 className={`${styles.title} staff-page__title`}>Пользователи</h1>
-          <p className={`${styles.subtitle} staff-page__subtitle`}>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground mb-1 staff-page__title">Пользователи</h1>
+          <p className="text-sm text-muted-foreground staff-page__subtitle">
             Управление пользователями системы
           </p>
         </div>
-        <div className={styles.headerActions}>
-          <button 
-            className={styles.exportBtn}
+        <div className="flex gap-3">
+          <button
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-transparent border border-border text-foreground text-sm font-medium cursor-pointer transition-all hover:border-accent hover:text-accent"
             onClick={() => {}}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
               <line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
             Экспорт
           </button>
-          <button 
-            className={styles.addBtn}
+          <button
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent border-none text-background text-sm font-semibold cursor-pointer transition-all hover:bg-accent-bright"
             onClick={() => navigate('/admin/users/new')}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -158,46 +169,46 @@ export function UserManagementPage() {
       </header>
 
       {/* Stats Bar */}
-      <div className={styles.statsBar}>
-        <div className={styles.statItem}>
-          <span className={styles.statNumber}>{totalItems.toLocaleString('ru-RU')}</span>
-          <span className={styles.statLabel}>Всего пользователей</span>
+      <div className="flex gap-6 mb-6 p-4 px-5 bg-card border border-border">
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-xl font-medium text-accent">{totalItems.toLocaleString('ru-RU')}</span>
+          <span className="text-xs text-muted-foreground">Всего пользователей</span>
         </div>
-        <div className={styles.statItem}>
-          <span className={styles.statNumber}>{users.filter(u => u.isActive).length}</span>
-          <span className={styles.statLabel}>Активных на странице</span>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-xl font-medium text-accent">{users.filter(u => u.isActive).length}</span>
+          <span className="text-xs text-muted-foreground">Активных на странице</span>
         </div>
-        <div className={styles.statItem}>
-          <span className={styles.statNumber}>{users.filter(u => u.role === 'Admin').length}</span>
-          <span className={styles.statLabel}>Администраторов</span>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-xl font-medium text-accent">{users.filter(u => u.role === 'Admin').length}</span>
+          <span className="text-xs text-muted-foreground">Администраторов</span>
         </div>
       </div>
 
       {/* Filters */}
-      <div className={styles.filters}>
-        <form className={styles.searchForm} onSubmit={handleSearch}>
-          <div className={styles.searchWrapper}>
-            <svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <div className="flex gap-3 mb-6 flex-wrap">
+        <form className="flex gap-2 flex-1 min-w-[300px]" onSubmit={handleSearch}>
+          <div className="relative flex-1">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-dim pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/>
               <path d="M21 21l-4.35-4.35"/>
             </svg>
             <input
               type="text"
-              className={styles.searchInput}
+              className="w-full py-2 pl-9 pr-3 bg-card border border-border text-foreground text-sm transition-colors focus:outline-none focus:border-accent"
               placeholder="Поиск по имени или email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <button type="submit" className={styles.searchBtn}>
+          <button type="submit" className="px-4 py-2 bg-card border border-border text-foreground text-sm cursor-pointer transition-all hover:border-accent hover:text-accent">
             Найти
           </button>
         </form>
 
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>Роль</label>
+        <div className="flex items-center gap-2">
+          <label className="text-[0.75rem] text-foreground-dim uppercase tracking-wider">Роль</label>
           <select
-            className={styles.filterSelect}
+            className="px-3 py-2 pr-8 bg-card border border-border text-foreground text-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_8px_center] focus:outline-none focus:border-accent"
             value={roleFilter}
             onChange={(e) => {
               setRoleFilter(e.target.value as UserRole | '');
@@ -213,10 +224,10 @@ export function UserManagementPage() {
           </select>
         </div>
 
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>Статус</label>
+        <div className="flex items-center gap-2">
+          <label className="text-[0.75rem] text-foreground-dim uppercase tracking-wider">Статус</label>
           <select
-            className={styles.filterSelect}
+            className="px-3 py-2 pr-8 bg-card border border-border text-foreground text-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_8px_center] focus:outline-none focus:border-accent"
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
@@ -233,16 +244,16 @@ export function UserManagementPage() {
       </div>
 
       {loading && (
-        <div className={styles.loading}>
-          <div className={styles.spinner}></div>
-          <p>Загрузка пользователей...</p>
+        <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground bg-card border border-border">
+          <div className="w-8 h-8 border-2 border-border border-t-accent rounded-full animate-spin"></div>
+          <p className="mt-4">Загрузка пользователей...</p>
         </div>
       )}
 
       {error && (
-        <div className={styles.error}>
+        <div className="flex flex-col items-center justify-center p-12 text-center text-error bg-card border border-border">
           <p>{error}</p>
-          <button onClick={fetchUsers} className={styles.retryBtn}>
+          <button onClick={fetchUsers} className="mt-4 px-4 py-2 bg-elevated border border-border text-foreground text-sm cursor-pointer transition-all hover:border-accent hover:text-accent">
             Попробовать снова
           </button>
         </div>
@@ -250,71 +261,71 @@ export function UserManagementPage() {
 
       {!loading && !error && (
         <>
-          <div className={styles.tableWrapper}>
-            <table className={styles.table}>
+          <div className="bg-card border border-border overflow-hidden">
+            <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th>Пользователь</th>
-                  <th>ID</th>
-                  <th>Роль</th>
-                  <th>Статус</th>
-                  <th>Регистрация</th>
-                  <th></th>
+                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border">Пользователь</th>
+                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border">ID</th>
+                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border">Роль</th>
+                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border">Статус</th>
+                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border">Регистрация</th>
+                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border"></th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user.id} className={!user.isActive ? styles.inactiveRow : ''}>
-                    <td>
-                      <div className={styles.userCell}>
-                        <div className={styles.userAvatar}>
+                  <tr key={user.id} className={!user.isActive ? 'opacity-60' : ''}>
+                    <td className="p-4 text-sm border-b border-border align-middle">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 flex items-center justify-center bg-accent-glow text-accent font-semibold text-[0.9rem] flex-shrink-0">
                           {getInitials(user)}
                         </div>
-                        <div className={styles.userInfo}>
-                          <span className={styles.userName}>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium text-foreground">
                             {user.firstName} {user.lastName}
                           </span>
-                          <span className={styles.userEmail}>{user.email}</span>
+                          <span className="text-[0.75rem] text-foreground-dim">{user.email}</span>
                         </div>
                       </div>
                     </td>
-                    <td>
-                      <span className={styles.userId}>
+                    <td className="p-4 text-sm border-b border-border align-middle">
+                      <span className="font-mono text-[0.75rem] text-foreground-dim">
                         {user.id.substring(0, 8).toUpperCase()}
                       </span>
                     </td>
-                    <td>
-                      <span className={`${styles.roleBadge} ${styles[`role${user.role}`]}`}>
+                    <td className="p-4 text-sm border-b border-border align-middle">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium uppercase tracking-wider ${ROLE_BADGE_CLASSES[user.role] || ''}`}>
                         {ROLE_LABELS[user.role]}
                       </span>
                     </td>
-                    <td>
-                      <span className={`${styles.statusBadge} ${user.isActive ? styles.statusActive : styles.statusInactive}`}>
+                    <td className="p-4 text-sm border-b border-border align-middle">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium uppercase tracking-wider ${user.isActive ? STATUS_BADGE_CLASSES.active : STATUS_BADGE_CLASSES.inactive}`}>
                         {user.isActive ? 'Активен' : 'Неактивен'}
                       </span>
                     </td>
-                    <td>
-                      <span className={styles.date}>{formatDate(user.createdAt)}</span>
+                    <td className="p-4 text-sm border-b border-border align-middle">
+                      <span className="font-mono text-sm text-muted-foreground">{formatDate(user.createdAt)}</span>
                     </td>
-                    <td>
-                      <div className={styles.actions}>
+                    <td className="p-4 text-sm border-b border-border align-middle">
+                      <div className="flex gap-2 justify-end">
                         <button
-                          className={styles.editBtn}
+                          className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-foreground-dim cursor-pointer transition-all hover:border-accent hover:text-accent"
                           onClick={() => handleEdit(user.id)}
                           title="Редактировать"
                         >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                           </svg>
                         </button>
                         <button
-                          className={styles.deleteBtn}
+                          className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-foreground-dim cursor-pointer transition-all hover:border-error hover:text-error disabled:opacity-50 disabled:cursor-not-allowed"
                           onClick={() => handleDelete(user)}
                           disabled={deleting === user.id}
                           title="Удалить"
                         >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
                             <polyline points="3 6 5 6 21 6"/>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                           </svg>
@@ -328,15 +339,15 @@ export function UserManagementPage() {
           </div>
 
           {users.length === 0 && (
-            <div className={styles.empty}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground bg-card border border-border">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-12 h-12 text-foreground-dim">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
               <p>Пользователи не найдены</p>
-              <button className={styles.clearFiltersBtn} onClick={() => {
+              <button className="mt-4 px-4 py-2 bg-elevated border border-border text-foreground text-sm cursor-pointer transition-all hover:border-accent hover:text-accent" onClick={() => {
                 setSearchQuery('');
                 setRoleFilter('');
                 setStatusFilter('');
@@ -348,13 +359,13 @@ export function UserManagementPage() {
           )}
 
           {totalPages > 1 && (
-            <div className={styles.pagination}>
-              <span className={styles.paginationInfo}>
+            <div className="flex justify-between items-center p-4 border-t border-border">
+              <span className="text-sm text-muted-foreground">
                 Показано {((page - 1) * 10) + 1}-{Math.min(page * 10, totalItems)} из {totalItems} пользователей
               </span>
-              <div className={styles.paginationPages}>
+              <div className="flex gap-1">
                 <button
-                  className={styles.pageBtn}
+                  className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground font-mono text-sm cursor-pointer transition-all hover:border-foreground-dim hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={page === 1}
                   onClick={() => setPage(page - 1)}
                 >
@@ -374,7 +385,7 @@ export function UserManagementPage() {
                   return (
                     <button
                       key={pageNum}
-                      className={`${styles.pageBtn} ${page === pageNum ? styles.pageBtnActive : ''}`}
+                      className={`w-8 h-8 flex items-center justify-center border font-mono text-sm cursor-pointer transition-all hover:border-foreground-dim hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed ${page === pageNum ? 'bg-accent border-accent text-background' : 'bg-transparent border-border text-muted-foreground'}`}
                       onClick={() => setPage(pageNum)}
                     >
                       {pageNum}
@@ -382,7 +393,7 @@ export function UserManagementPage() {
                   );
                 })}
                 <button
-                  className={styles.pageBtn}
+                  className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground font-mono text-sm cursor-pointer transition-all hover:border-foreground-dim hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={page === totalPages}
                   onClick={() => setPage(page + 1)}
                 >

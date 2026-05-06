@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import styles from './InventoryPage.module.css';
 import { managerApi } from '../../api/manager';
 
 interface InventoryItem {

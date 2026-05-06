@@ -16,7 +16,6 @@ import { QRCodePayment } from '../../components/checkout/QRCodePayment';
 import { Icon } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { PhoneInput } from '../../components/ui/PhoneInput';
-import styles from './CheckoutPage.module.css';
 
 type Step = 'delivery' | 'contacts' | 'payment' | 'confirm';
 type DeliveryMethod = 'Delivery' | 'Pickup';
@@ -288,9 +287,9 @@ export function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className={styles.checkoutPage}>
-        <div className={styles.checkoutPageContainer}>
-          <div className={styles.orderSuccess}>
+      <div className="min-h-[calc(100vh-200px)] bg-background pt-20 text-foreground">
+        <div className="w-full max-w-7xl mx-auto px-6">
+          <div className="flex flex-col gap-7 text-center p-12 bg-card border border-border rounded-xl max-w-[620px] mx-auto shadow-lg relative overflow-hidden">
             <h1>Корзина пуста</h1>
             <Link to="/catalog">
               <Button variant="primary" size="lg" fullWidth>
@@ -305,10 +304,10 @@ export function CheckoutPage() {
 
   if (showPaymentForm) {
     return (
-      <div className={styles.checkoutPage}>
-        <div className={styles.checkoutPageContainer}>
-          <h1 className={styles.pageTitle}>Оплата картой</h1>
-          <div className={styles.paymentFormContainer}>
+      <div className="min-h-[calc(100vh-200px)] bg-background pt-20 text-foreground">
+        <div className="w-full max-w-7xl mx-auto px-6">
+          <h1 className="font-sans text-[clamp(1.5rem,4vw,2rem)] font-semibold tracking-tight text-foreground mb-2">Оплата картой</h1>
+          <div className="max-w-[600px] mx-auto py-8">
             <PaymentForm
               onSubmit={handlePaymentFormSubmit}
               onCancel={() => setShowPaymentForm(false)}
@@ -321,10 +320,10 @@ export function CheckoutPage() {
 
   if (showQRPayment) {
     return (
-      <div className={styles.checkoutPage}>
-        <div className={styles.checkoutPageContainer}>
-          <h1 className={styles.pageTitle}>Оплата через СБП</h1>
-          <div className={styles.paymentFormContainer}>
+      <div className="min-h-[calc(100vh-200px)] bg-background pt-20 text-foreground">
+        <div className="w-full max-w-7xl mx-auto px-6">
+          <h1 className="font-sans text-[clamp(1.5rem,4vw,2rem)] font-semibold tracking-tight text-foreground mb-2">Оплата через СБП</h1>
+          <div className="max-w-[600px] mx-auto py-8">
             <QRCodePayment
               amount={total}
               orderNumber={`TEMP-${Date.now()}`}
@@ -339,19 +338,19 @@ export function CheckoutPage() {
   }
 
   return (
-    <div className={styles.checkoutPage}>
-      <div className={styles.checkoutPageContainer}>
+    <div className="min-h-[calc(100vh-200px)] bg-background pt-20 text-foreground">
+      <div className="w-full max-w-7xl mx-auto px-[var(--layout-page-pad-x)]">
         {/* Breadcrumb */}
-        <nav className={styles.breadcrumb}>
-          <Link to="/">Главная</Link>
+        <nav className="flex items-center gap-2 text-[0.7rem] text-foreground-dim mb-2">
+          <Link to="/" className="text-muted-foreground no-underline transition-colors hover:text-accent">Главная</Link>
           <span>/</span>
           <span>Оформление заказа</span>
         </nav>
 
-        <h1 className={styles.pageTitle}>Оформление заказа</h1>
+        <h1 className="font-sans text-[clamp(1.5rem,4vw,2rem)] font-semibold tracking-tight text-foreground mb-2">Оформление заказа</h1>
 
         {/* Steps Indicator */}
-        <nav className={styles.stepsIndicator}>
+        <nav className="flex items-center gap-0 mb-8 p-3.5 px-4.5 bg-card border border-border rounded-lg shadow">
           {[
             { id: 'delivery', label: 'Доставка', num: 1 },
             { id: 'contacts', label: 'Контакты', num: 2 },
@@ -364,57 +363,69 @@ export function CheckoutPage() {
             const isCurrent = step.id === currentStep;
 
             return (
-              <div key={step.id} className={styles.stepWrapper}>
-                <div className={`${styles.stepBlock} ${isCurrent ? styles.stepBlockActive : ''} ${isCompleted ? styles.stepBlockCompleted : ''}`}>
-                  <span className={styles.stepNumber}>
+              <div key={step.id} className="flex items-center">
+                <div className={`flex items-center gap-2.5 ${isCurrent ? '' : ''} ${isCompleted ? '' : ''}`}>
+                  <span className={`w-8 h-8 flex items-center justify-center border rounded-md font-mono text-sm transition-all
+                    ${isCurrent ? 'bg-accent border-accent text-background shadow' : ''}
+                    ${isCompleted ? 'bg-border-muted border-border-muted text-accent' : ''}
+                    ${!isCurrent && !isCompleted ? 'bg-elevated border-border text-muted-foreground' : ''}
+                  `}>
                     {isCompleted ? <Icon name="check" size="sm" color="accent" /> : step.num}
                   </span>
-                  <span className={styles.stepLabel}>{step.label}</span>
+                  <span className={`text-sm font-medium transition-colors ml-2.5
+                    ${isCurrent || isCompleted ? 'text-foreground' : 'text-muted-foreground'}
+                  `}>{step.label}</span>
                 </div>
                 {i < arr.length - 1 && (
-                  <div className={`${styles.stepConnector} ${isCompleted ? styles.stepConnectorActive : ''}`} />
+                  <div className={`w-12 h-px mx-3 transition-colors ${isCompleted ? 'bg-accent' : 'bg-border'}`} />
                 )}
               </div>
             );
           })}
         </nav>
 
-        <div className={styles.checkoutLayout}>
-          <div className={styles.formSection}>
-            
+        <div className="grid grid-cols-[1fr_400px] gap-8 items-start">
+          <div className="flex flex-col gap-6">
+
             {/* Step 1: Delivery */}
             {currentStep === 'delivery' && (
-              <div className={styles.formCard}>
-                <h2>Способ доставки</h2>
-                <div className={styles.paymentMethods}>
-                  <label className={`${styles.paymentMethod} ${deliveryData.method === 'Delivery' ? styles.paymentMethodSelected : ''}`}>
+              <div className="bg-card border border-border rounded-xl p-6 shadow">
+                <h2 className="text-[0.95rem] font-semibold text-foreground mb-5 pb-3.5 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Спосо доставки</h2>
+                <div className="flex flex-col gap-3">
+                  <label className={`flex items-center gap-4 p-4 bg-elevated border rounded-lg cursor-pointer transition-all
+                    ${deliveryData.method === 'Delivery' ? 'border-accent bg-border-muted shadow-sm shadow-accent/20' : 'border-border hover:border-border-muted'}
+                  `}>
                     <input
                       type="radio"
                       checked={deliveryData.method === 'Delivery'}
                       onChange={() => setDeliveryData(prev => ({ ...prev, method: 'Delivery', pickupPointId: undefined }))}
+                      className="w-5 h-5 cursor-pointer accent-accent"
                     />
-                    <span>
+                    <span className="flex items-center gap-2.5 text-foreground">
                       <Icon name="package" size="sm" color="accent" /> Курьерская доставка
                     </span>
                   </label>
-                  <label className={`${styles.paymentMethod} ${deliveryData.method === 'Pickup' ? styles.paymentMethodSelected : ''}`}>
+                  <label className={`flex items-center gap-4 p-4 bg-elevated border rounded-lg cursor-pointer transition-all
+                    ${deliveryData.method === 'Pickup' ? 'border-accent bg-border-muted shadow-sm shadow-accent/20' : 'border-border hover:border-border-muted'}
+                  `}>
                     <input
                       type="radio"
                       checked={deliveryData.method === 'Pickup'}
-                      onChange={() => setDeliveryData(prev => ({ ...prev, method: 'Pickup' }))}
+                      onChange={() => setDeliveryData(prev => ({...prev, method: 'Pickup' }))}
+                      className="w-5 h-5 cursor-pointer accent-accent"
                     />
-                    <span>
+                    <span className="flex items-center gap-2.5 text-foreground">
                       <Icon name="package" size="sm" color="accent" /> Самовывоз (бесплатно)
                     </span>
                   </label>
                 </div>
 
-                <div className={styles.formGroupWithTopMargin}>
-                  <label>Город</label>
+                <div className="flex flex-col gap-2 mt-3">
+                  <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Город</label>
                   <select
                     value={deliveryData.city}
                     onChange={(e) => setDeliveryData(prev => ({...prev, city: e.target.value}))}
-                    className={styles.select}
+                    className="w-full p-3 bg-elevated border border-border rounded-lg text-foreground text-sm transition-all appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_12px_center] bg-[length:16px] pr-10 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--border-muted))]"
                   >
                     <option value="Минск">Минск</option>
                     <option value="Брест">Брест</option>
@@ -426,8 +437,8 @@ export function CheckoutPage() {
                 </div>
 
                 {deliveryData.method === 'Delivery' && user && savedAddresses.length > 0 && (
-                  <div className={styles.formGroup}>
-                    <label>Сохранённые адреса</label>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Сохранённые адреса</label>
                     <select
                       onChange={(e) => {
                         const addr = savedAddresses.find(a => a.id === e.target.value);
@@ -440,7 +451,7 @@ export function CheckoutPage() {
                           }));
                         }
                       }}
-                      className={styles.select}
+                      className="w-full p-3 bg-elevated border border-border rounded-lg text-foreground text-sm transition-all appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_12px_center] bg-[length:16px] pr-10 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--border-muted))]"
                     >
                       <option value="">Выберите адрес или введите новый</option>
                       {savedAddresses.map(addr => (
@@ -470,25 +481,26 @@ export function CheckoutPage() {
 
                 {deliveryData.method === 'Delivery' && (
                   <>
-                    <div className={styles.formGroup}>
-                      <label>Адрес доставки</label>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Адрес доставки</label>
                       <input
                         type="text"
                         placeholder="ул. Примерная, д. 1, кв. 1"
                         value={deliveryData.address}
                         onChange={(e) => setDeliveryData(prev => ({...prev, address: e.target.value}))}
-                        className={styles.input}
+                        className="w-full p-3 bg-elevated border border-border rounded-lg text-foreground text-sm transition-all focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--border-muted)]"
                       />
                     </div>
 
                     {user && (
-                      <label className={styles.checkbox}>
+                      <label className="flex items-center gap-3 p-3 cursor-pointer rounded-lg transition-all hover:bg-border-muted">
                         <input
                           type="checkbox"
                           checked={deliveryData.saveAddress}
                           onChange={(e) => setDeliveryData(prev => ({...prev, saveAddress: e.target.checked}))}
+                          className="w-5 h-5 cursor-pointer accent-accent"
                         />
-                        <span>Сохранить адрес в профиль</span>
+                        <span className="text-foreground text-sm">Сохранить адрес в профиль</span>
                       </label>
                     )}
 
@@ -508,13 +520,13 @@ export function CheckoutPage() {
                 )}
 
                 {deliveryData.method === 'Pickup' && deliveryData.pickupPointName && (
-                  <div className={styles.selectedPoint}>
-                    <strong>Выбранный пункт выдачи:</strong>
-                    <p>{deliveryData.pickupPointName}</p>
+                  <div className="p-4 bg-border-muted border border-border-muted rounded-lg my-4">
+                    <strong className="block mb-2 text-foreground text-sm">Выбранный пункт выдачи:</strong>
+                    <p className="text-muted-foreground m-0 text-sm leading-1.5">{deliveryData.pickupPointName}</p>
                   </div>
                 )}
 
-                <div className={styles.formActions}>
+                <div className="flex justify-between items-center mt-6 pt-5 border-t border-border gap-4">
                   <Link to="/cart">
                     <Button variant="ghost" size="md" leftIcon={<Icon name="arrow-left" size="sm" />}>
                       Назад в корзину
@@ -529,54 +541,58 @@ export function CheckoutPage() {
 
             {/* Step 2: Contacts */}
             {currentStep === 'contacts' && (
-              <div className={styles.formCard}>
-                <h2>Контактные данные</h2>
-                <div className={styles.formGrid}>
-                  <div className={styles.formGroup}>
-                    <label>Имя*</label>
+              <div className="bg-card border border-border rounded-xl p-6 shadow">
+                <h2 className="text-[0.95rem] font-semibold text-foreground mb-5 pb-3.5 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Контактные данные</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Имя*</label>
                     <input
                       value={contactData.firstName}
                       onChange={(e) => handleContactChange('firstName', e.target.value)}
                       onBlur={() => handleContactBlur('firstName')}
-                      className={`${styles.input} ${contactTouched.firstName && contactErrors.firstName ? styles.inputError : ''}`}
+                      className={`w-full p-3 bg-elevated border text-foreground text-sm transition-all rounded-lg focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--border-muted)]
+                        ${contactTouched.firstName && contactErrors.firstName ? 'border-error/65 shadow-[0_0_0_1px_rgba(239,68,68,0.25)]' : 'border-border'}
+                      `}
                       placeholder="Иван"
                       autoComplete="given-name"
                     />
                     {contactTouched.firstName && contactErrors.firstName && (
-                      <span className={styles.errorMessage}>{contactErrors.firstName}</span>
+                      <span className="text-[0.78rem] leading-1.4 text-red-300">{contactErrors.firstName}</span>
                     )}
                   </div>
-                  <div className={styles.formGroup}>
-                    <label>Телефон*</label>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Телефон*</label>
                     <PhoneInput
                       value={contactData.phone}
                       onChange={(value) => handleContactChange('phone', value)}
                       onBlur={() => handleContactBlur('phone')}
-                      className={contactTouched.phone && contactErrors.phone ? styles.inputError : ''}
+                      className={`${contactTouched.phone && contactErrors.phone ? 'border-error/65' : ''}`}
                       placeholder="+375 (29) 123-45-67"
                       autoComplete="tel"
                     />
                     {contactTouched.phone && contactErrors.phone && (
-                      <span className={styles.errorMessage}>{contactErrors.phone}</span>
+                      <span className="text-[0.78rem] leading-1.4 text-red-300">{contactErrors.phone}</span>
                     )}
                   </div>
-                  <div className={styles.formGroup}>
-                    <label>Email*</label>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Email*</label>
                     <input
                       type="email"
                       value={contactData.email}
                       onChange={(e) => handleContactChange('email', e.target.value)}
                       onBlur={() => handleContactBlur('email')}
-                      className={`${styles.input} ${contactTouched.email && contactErrors.email ? styles.inputError : ''}`}
+                      className={`w-full p-3 bg-elevated border text-foreground text-sm transition-all rounded-lg focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--border-muted)]
+                        ${contactTouched.email && contactErrors.email ? 'border-error/65 shadow-[0_0_0_1px_rgba(239,68,68,0.25)]' : 'border-border'}
+                      `}
                       placeholder="example@mail.com"
                       autoComplete="email"
                     />
                     {contactTouched.email && contactErrors.email && (
-                      <span className={styles.errorMessage}>{contactErrors.email}</span>
+                      <span className="text-[0.78rem] leading-1.4 text-red-300">{contactErrors.email}</span>
                     )}
                   </div>
                 </div>
-                <div className={styles.formActions}>
+                <div className="flex justify-between items-center mt-6 pt-5 border-t border-border gap-4">
                   <Button variant="ghost" size="md" onClick={handlePrevStep} leftIcon={<Icon name="arrow-left" size="sm" />}>
                     Назад
                   </Button>
@@ -589,55 +605,67 @@ export function CheckoutPage() {
 
             {/* Step 3: Payment */}
             {currentStep === 'payment' && (
-              <div className={styles.formCard}>
-                <h2>Способ оплаты</h2>
-                <div className={styles.paymentMethods}>
-                  <label className={`${styles.paymentMethod} ${paymentMethod === 'CardOnline' ? styles.paymentMethodSelected : ''}`}>
+              <div className="bg-card border border-border rounded-xl p-6 shadow">
+                <h2 className="text-[0.95rem] font-semibold text-foreground mb-5 pb-3.5 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Спосо оплаты</h2>
+                <div className="flex flex-col gap-3">
+                  <label className={`flex items-center gap-4 p-4 bg-elevated border rounded-lg cursor-pointer transition-all
+                    ${paymentMethod === 'CardOnline' ? 'border-accent bg-border-muted shadow-[0_0_0_1px_accent]' : 'border-border hover:border-border-muted hover:bg-border-muted'}
+                  `}>
                     <input
                       type="radio"
                       checked={paymentMethod === 'CardOnline'}
                       onChange={() => setPaymentMethod('CardOnline')}
+                      className="w-5 h-5 cursor-pointer accent-accent"
                     />
-                    <div className={styles.paymentMethodContent}>
-                      <span><Icon name="credit-card" size="sm" color="accent" /> Карта онлайн</span>
-                      <small>Visa, Mastercard, МИР</small>
+                    <div className="flex flex-col gap-1">
+                      <span className="flex items-center gap-2.5 text-foreground"><Icon name="credit-card" size="sm" color="accent" /> Карта онлайн</span>
+                      <small className="text-[0.75rem] text-muted-foreground font-normal">Visa, Mastercard, МИР</small>
                     </div>
                   </label>
-                  <label className={`${styles.paymentMethod} ${paymentMethod === 'SBP' ? styles.paymentMethodSelected : ''}`}>
+                  <label className={`flex items-center gap-4 p-4 bg-elevated border rounded-lg cursor-pointer transition-all
+                    ${paymentMethod === 'SBP' ? 'border-accent bg-border-muted shadow-[0_0_0_1px_accent]' : 'border-border hover:border-border-muted hover:bg-border-muted'}
+                  `}>
                     <input
                       type="radio"
                       checked={paymentMethod === 'SBP'}
                       onChange={() => setPaymentMethod('SBP')}
+                      className="w-5 h-5 cursor-pointer accent-accent"
                     />
-                    <div className={styles.paymentMethodContent}>
-                      <span><Icon name="phone" size="sm" color="accent" /> СБП (Система быстрых платежей)</span>
-                      <small>Оплата через приложение банка</small>
+                    <div className="flex flex-col gap-1">
+                      <span className="flex items-center gap-2.5 text-foreground"><Icon name="phone" size="sm" color="accent" /> СБП (Система быстрых платежей)</span>
+                      <small className="text-[0.75rem] text-muted-foreground font-normal">Оплата через приложение банка</small>
                     </div>
                   </label>
-                  <label className={`${styles.paymentMethod} ${paymentMethod === 'Cash' ? styles.paymentMethodSelected : ''}`}>
+                  <label className={`flex items-center gap-4 p-4 bg-elevated border rounded-lg cursor-pointer transition-all
+                    ${paymentMethod === 'Cash' ? 'border-accent bg-border-muted shadow-[0_0_0_1px_accent]' : 'border-border hover:border-border-muted hover:bg-border-muted'}
+                  `}>
                     <input
                       type="radio"
                       checked={paymentMethod === 'Cash'}
                       onChange={() => setPaymentMethod('Cash')}
+                      className="w-5 h-5 cursor-pointer accent-accent"
                     />
-                    <div className={styles.paymentMethodContent}>
-                      <span><Icon name="credit-card" size="sm" color="accent" /> Наличными при получении</span>
-                      <small>Оплата курьеру</small>
+                    <div className="flex flex-col gap-1">
+                      <span className="flex items-center gap-2.5 text-foreground"><Icon name="credit-card" size="sm" color="accent" /> Наличными при получении</span>
+                      <small className="text-[0.75rem] text-muted-foreground font-normal">Оплата курьеру</small>
                     </div>
                   </label>
-                  <label className={`${styles.paymentMethod} ${paymentMethod === 'CardOnDelivery' ? styles.paymentMethodSelected : ''}`}>
+                  <label className={`flex items-center gap-4 p-4 bg-elevated border rounded-lg cursor-pointer transition-all
+                    ${paymentMethod === 'CardOnDelivery' ? 'border-accent bg-border-muted shadow-[0_0_0_1px_accent]' : 'border-border hover:border-border-muted hover:bg-border-muted'}
+                  `}>
                     <input
                       type="radio"
                       checked={paymentMethod === 'CardOnDelivery'}
                       onChange={() => setPaymentMethod('CardOnDelivery')}
+                      className="w-5 h-5 cursor-pointer accent-accent"
                     />
-                    <div className={styles.paymentMethodContent}>
-                      <span><Icon name="credit-card" size="sm" color="accent" /> Картой при получении</span>
-                      <small>Терминал у курьера</small>
+                    <div className="flex flex-col gap-1">
+                      <span className="flex items-center gap-2.5 text-foreground"><Icon name="credit-card" size="sm" color="accent" /> Картой при получении</span>
+                      <small className="text-[0.75rem] text-muted-foreground font-normal">Терминал у курьера</small>
                     </div>
                   </label>
                 </div>
-                <div className={styles.formActions}>
+                <div className="flex justify-between items-center mt-6 pt-5 border-t border-border gap-4">
                   <Button variant="ghost" size="md" onClick={handlePrevStep} leftIcon={<Icon name="arrow-left" size="sm" />}>
                     Назад
                   </Button>
@@ -650,21 +678,21 @@ export function CheckoutPage() {
 
             {/* Step 4: Confirmation */}
             {currentStep === 'confirm' && (
-              <div className={styles.formCard}>
-                <h2>Подтверждение заказа</h2>
-                
-                <div className={styles.confirmSection}>
-                  <h3><Icon name="package" size="sm" color="accent" /> Доставка</h3>
+              <div className="bg-card border border-border rounded-xl p-6 shadow">
+                <h2 className="text-[0.95rem] font-semibold text-foreground mb-5 pb-3.5 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Подтверждение заказа</h2>
+
+                <div className="mb-6 pb-5 border-b border-border">
+                  <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold text-foreground mb-3"><Icon name="package" size="sm" color="accent" /> Доставка</h3>
                   {deliveryData.method === 'Pickup' ? (
-                    <p>{deliveryData.pickupPointName || 'Самовывоз'}</p>
+                    <p className="text-muted-foreground leading-1.5 m-0">{deliveryData.pickupPointName || 'Самовывоз'}</p>
                   ) : (
                     <>
-                      <p><strong>Адрес:</strong> {deliveryData.city}, {deliveryData.address}</p>
+                      <p className="text-muted-foreground leading-1.5 m-0"><strong className="text-foreground">Адрес:</strong> {deliveryData.city}, {deliveryData.address}</p>
                       {deliveryData.deliveryDate && (
-                        <p><strong>Дата:</strong> {new Date(deliveryData.deliveryDate).toLocaleDateString('ru-RU')}</p>
+                        <p className="text-muted-foreground leading-1.5 m-0"><strong className="text-foreground">Дата:</strong> {new Date(deliveryData.deliveryDate).toLocaleDateString('ru-RU')}</p>
                       )}
                       {deliveryData.timeSlot && (
-                        <p><strong>Время:</strong> {deliveryData.timeSlot === 'morning' ? 'Утро (9:00-13:00)' :
+                        <p className="text-muted-foreground leading-1.5 m-0"><strong className="text-foreground">Время:</strong> {deliveryData.timeSlot === 'morning' ? 'Утро (9:00-13:00)' :
                           deliveryData.timeSlot === 'afternoon' ? 'День (13:00-18:00)' :
                           deliveryData.timeSlot === 'evening' ? 'Вечер (18:00-21:00)' : 'Как можно скорее'}</p>
                       )}
@@ -672,31 +700,31 @@ export function CheckoutPage() {
                   )}
                 </div>
 
-                <div className={styles.confirmSection}>
-                  <h3><Icon name="user" size="sm" color="accent" /> Контакты</h3>
-                  <p>{contactData.firstName.trim()}</p>
-                  <p>{contactData.phone.trim()}</p>
-                  <p>{contactData.email.trim()}</p>
+                <div className="mb-6 pb-5 border-b border-border">
+                  <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold text-foreground mb-3"><Icon name="user" size="sm" color="accent" /> Контакты</h3>
+                  <p className="text-muted-foreground leading-1.5 m-0">{contactData.firstName.trim()}</p>
+                  <p className="text-muted-foreground leading-1.5 m-0">{contactData.phone.trim()}</p>
+                  <p className="text-muted-foreground leading-1.5 m-0">{contactData.email.trim()}</p>
                 </div>
 
-                <div className={styles.confirmSection}>
-                  <h3><Icon name="credit-card" size="sm" color="accent" /> Оплата</h3>
-                  <p>{getPaymentMethodLabel(paymentMethod, paymentData)}</p>
+                <div className="mb-6 pb-5 border-b border-border">
+                  <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold text-foreground mb-3"><Icon name="credit-card" size="sm" color="accent" /> Оплата</h3>
+                  <p className="text-muted-foreground leading-1.5 m-0">{getPaymentMethodLabel(paymentMethod, paymentData)}</p>
                 </div>
 
-                <div className={styles.confirmSection}>
-                  <h3><Icon name="cart" size="sm" color="accent" /> Товары ({items.length})</h3>
+                <div className="mb-6 pb-5 border-b border-border last:border-b-0 last:mb-0 last:pb-0">
+                  <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold text-foreground mb-3"><Icon name="cart" size="sm" color="accent" /> Товары ({items.length})</h3>
                   {items.slice(0, 3).map(item => (
-                    <p key={item.id}>
+                    <p key={item.id} className="text-muted-foreground leading-1.5 m-0">
                       {item.name} × {item.quantity} — {(item.price * item.quantity).toFixed(2)} BYN
                     </p>
                   ))}
                   {items.length > 3 && (
-                    <p className={styles.moreItems}>... и ещё {items.length - 3} товар(ов)</p>
+                    <p className="italic text-foreground-dim mt-2 text-sm">... и ещё {items.length - 3} товар(ов)</p>
                   )}
                 </div>
 
-                <div className={styles.formActions}>
+                <div className="flex justify-between items-center mt-6 pt-5 border-t border-border gap-4 max-sm:flex-col max-sm:gap-3 max-sm:w-full">
                   <Button variant="ghost" size="md" onClick={handlePrevStep} disabled={isProcessing} leftIcon={<Icon name="arrow-left" size="sm" />}>
                     Назад
                   </Button>
@@ -709,65 +737,65 @@ export function CheckoutPage() {
           </div>
 
           {/* Order Summary */}
-          <aside className={styles.orderSummary}>
-            <h2>Ваш заказ</h2>
-            
-            <div className={styles.summaryItems}>
+          <aside className="sticky top-24 bg-card border border-border rounded-xl p-6 shadow-lg max-h-[calc(100vh-120px)] overflow-y-auto">
+            <h2 className="text-[0.85rem] font-semibold uppercase tracking-[0.05em] text-foreground mb-5 pb-4 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Ваш заказ</h2>
+
+            <div className="flex flex-col gap-3 mb-4">
               {items.slice(0, 3).map(item => (
-                <div key={item.id} className={styles.summaryItem}>
-                  <span className={styles.summaryItemName}>
+                <div key={item.id} className="flex justify-between items-start gap-3 pb-2.5 border-b border-border-muted last:border-b-0">
+                  <span className="flex-1 text-sm text-muted-foreground leading-1.4">
                     {item.name} × {item.quantity}
                   </span>
-                  <span className={styles.summaryItemPrice}>
+                  <span className="font-mono text-sm font-semibold text-foreground whitespace-nowrap">
                     {(item.price * item.quantity).toFixed(2)} BYN
                   </span>
                 </div>
               ))}
               {items.length > 3 && (
-                <div className={styles.summaryMoreItems}>
+                <div className="text-center text-sm italic text-foreground-dim">
                   ... и ещё {items.length - 3} товар(ов)
                 </div>
               )}
             </div>
 
-            <div className={styles.summaryDivider} />
+            <div className="h-px bg-border my-4"></div>
 
-            <div className={styles.summaryRow}>
-              <span>Товары ({items.length})</span>
-              <span>{subtotal.toFixed(2)} BYN</span>
+            <div className="flex justify-between items-center mb-3 text-sm">
+              <span className="text-muted-foreground">Товары ({items.length})</span>
+              <span className="font-mono text-foreground">{subtotal.toFixed(2)} BYN</span>
             </div>
-            
+
             {discountAmount > 0 && (
-              <div className={styles.summaryRow}>
-                <span>Скидка ({promoCode})</span>
-                <span className={styles.discountValue}>-{discountAmount.toFixed(2)} BYN</span>
+              <div className="flex justify-between items-center mb-3 text-sm">
+                <span className="text-muted-foreground">Скидка ({promoCode})</span>
+                <span className="font-mono text-green-500 font-semibold">-{discountAmount.toFixed(2)} BYN</span>
               </div>
             )}
-            
-            <div className={styles.summaryRow}>
-              <span>Доставка</span>
-              <span style={deliveryCost === 0 ? { color: 'var(--accent, #d4a574)' } : undefined}>
+
+            <div className="flex justify-between items-center mb-3 text-sm">
+              <span className="text-muted-foreground">Доставка</span>
+              <span className="font-mono text-foreground" style={deliveryCost === 0 ? { color: 'var(--accent, #d4a574)' } : undefined}>
                 {deliveryCost === 0 ? 'Бесплатно' : `${deliveryCost.toFixed(2)} BYN`}
               </span>
             </div>
-            
+
             {subtotal < FREE_DELIVERY_THRESHOLD && deliveryData.method === 'Delivery' && (
-              <div className={styles.freeDeliveryProgress}>
-                <p className={styles.progressLabel}>
+              <div className="my-4 p-3.5 bg-border-muted border border-border-muted rounded-lg">
+                <p className="text-sm text-muted-foreground m-0 mb-2.5">
                   До бесплатной доставки: {(FREE_DELIVERY_THRESHOLD - subtotal).toFixed(2)} BYN
                 </p>
-                <div className={styles.progressBar}>
+                <div className="h-1.5 bg-elevated rounded-full overflow-hidden">
                   <div
-                    className={styles.progressFill}
+                    className="h-full bg-gradient-to-r from-accent to-accent-bright rounded-full transition-all duration-400"
                     style={{ width: `${Math.min((subtotal / FREE_DELIVERY_THRESHOLD) * 100, 100)}%` }}
                   />
                 </div>
               </div>
             )}
 
-            <div className={styles.summaryTotal}>
-              <span>Итого</span>
-              <span>{total.toFixed(2)} BYN</span>
+            <div className="flex flex-col gap-1.5 mt-5 pt-5 border-t border-border">
+              <span className="text-[0.75rem] uppercase tracking-[0.05em] text-muted-foreground">Итого</span>
+              <span className="font-mono text-2xl font-bold text-accent">{total.toFixed(2)} BYN</span>
             </div>
           </aside>
         </div>

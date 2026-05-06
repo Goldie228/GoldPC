@@ -17,7 +17,6 @@ import { AuthModalBase } from './AuthModalBase';
 import { PasswordField } from '@/components/ui/PasswordField';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthModal } from '@/hooks/useAuthModal';
-import styles from './LoginModal.module.css';
 
 export interface LoginModalProps {
   /** Whether modal is open */
@@ -98,21 +97,21 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         onClick: handleSwitchToRegister
       }}
     >
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         {error && (
-          <div className={styles.error} role="alert">
+          <div className="p-3 bg-price-rise/10 border border-price-rise/30 text-price-rise text-sm rounded-md" role="alert">
             {error}
           </div>
         )}
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="login-email">
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider" htmlFor="login-email">
             Email
           </label>
           <input
             id="login-email"
             type="email"
-            className={`${styles.input} ${fieldErrors.email ? styles.inputError : ''}`}
+            className={`w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)] ${fieldErrors.email ? 'border-[var(--error)] shadow-[0_0_0_1px_var(--error)]' : ''}`}
             placeholder="your@email.com"
             value={email}
             onChange={handleEmailChange}
@@ -123,51 +122,52 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             disabled={isLoading}
           />
           {fieldErrors.email && (
-            <span id="login-email-error" className={styles.fieldError} role="alert">
+            <span id="login-email-error" className="text-xs text-[var(--error)] mt-1" role="alert">
               {fieldErrors.email}
             </span>
           )}
         </div>
 
         <PasswordField
-          className={styles.field}
+          className="flex flex-col gap-2"
           id="login-password"
           label="Пароль"
           value={password}
           onChange={setPassword}
           required
           autoComplete="current-password"
-          labelClassName={styles.label}
-          inputClassName={styles.input}
+          labelClassName="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider"
+          inputClassName="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)]"
         />
 
-        <div className={styles.options}>
-          <div className={styles.checkboxGroup}>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
             <input
               type="checkbox"
               id="login-remember"
-              className={styles.checkbox}
+              className="peer absolute opacity-0 w-0 h-0"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
             />
-            <label htmlFor="login-remember" className={styles.checkboxLabel}>
+            <label htmlFor="login-remember" className="relative cursor-pointer pl-7 select-none text-sm text-[var(--fg-muted)] peer-hover:&+::before:border-[var(--border-accent)] peer-checked:&+::before:bg-[var(--accent)] peer-checked:&+::before:border-[var(--accent)] peer-focus-visible:&+::before:outline peer-focus-visible:&+::before:outline-2 peer-focus-visible:&+::before:outline-[var(--accent)] peer-focus-visible:&+::before:outline-offset-2">
+              <span className="peer-checked:&::after:content-[''] peer-checked:&::after:absolute peer-checked:&::after:left-[6px] peer-checked:&::after:top-[3px] peer-checked:&::after:w-[5px] peer-checked:&::after:h-[9px] peer-checked:&::after:border peer-checked:&::after:border-[var(--bg)] peer-checked:&::after:border-r-2 peer-checked:&::after:border-b-2 peer-checked:&::after:rotate-45"></span>
               Запомнить меня
             </label>
           </div>
-          <Link to="/forgot-password" className={styles.forgotLink} onClick={handleClose}>
+          <Link to="/forgot-password" className="text-sm text-[var(--accent)] no-underline transition-colors hover:text-[var(--accent-bright)]" onClick={handleClose}>
             Забыли пароль?
           </Link>
         </div>
 
         <button
           type="submit"
-          className={styles.submitBtn}
+          className="inline-flex items-center justify-center gap-2.5 w-full p-3.5 bg-[var(--accent)] text-[var(--bg)] font-sans text-sm font-semibold border-none rounded-[var(--radius)] cursor-pointer transition-all duration-200 hover:not(:disabled):bg-[var(--accent-bright)] hover:not(:disabled):translate-y-[-2px] active:not(:disabled):translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed"
           disabled={isLoading}
           aria-busy={isLoading}
         >
           {isLoading ? (
             <>
-              <div className={styles.loadingSpinner} />
+              <div className="w-4 h-4 border-2 border-transparent border-t-[var(--bg)] rounded-full animate-spin" />
               <span>Вход...</span>
             </>
           ) : (

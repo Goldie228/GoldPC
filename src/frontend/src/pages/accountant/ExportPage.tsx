@@ -5,7 +5,6 @@
  */
 
 import { useState } from 'react';
-import styles from './ExportPage.module.css';
 
 type ExportFormat = 'csv' | 'xlsx' | 'pdf';
 
@@ -117,21 +116,23 @@ export function ExportPage() {
   };
 
   return (
-    <div className="staff-page export-page">
-      <header className="staff-page__header export-page__header">
-        <div className="export-page__title-section">
-          <h1 className="staff-page__title export-page__title">Экспорт данных</h1>
-          <p className="staff-page__subtitle export-page__subtitle">
+    <div className="pt-[100px] px-[var(--space-md)] pb-12 mx-auto min-h-screen bg-[var(--bg)] text-[var(--fg)] max-w-[800px]">
+      <header className="flex items-center justify-between gap-[var(--space-md)] mb-[var(--space-lg)] flex-wrap">
+        <div>
+          <h1 className="font-[var(--font-display)] text-[var(--text-3xl)] font-[var(--font-semibold)] tracking-[-0.02em] mb-1 text-[var(--fg)]">
+            Экспорт данных
+          </h1>
+          <p className="text-[var(--text-sm)] text-[var(--fg-muted)] m-0">
             Выберите формат и данные для экспорта
           </p>
         </div>
       </header>
 
       {/* Format Selection Card */}
-      <div className="export-card">
-        <div className="export-card__title">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 mb-6">
+        <div className="text-sm font-semibold mb-5 flex items-center gap-3 pb-4 border-b border-[var(--border)]">
           <svg
-            className="export-card__icon"
+            className="w-[18px] h-[18px] text-[var(--accent)]"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -143,34 +144,40 @@ export function ExportPage() {
           Формат экспорта
         </div>
 
-        <div className="export-options">
+        <div className="flex flex-col gap-3">
           {EXPORT_OPTIONS.map((option) => (
             <label
               key={option.value}
-              className={`export-option ${
-                selectedFormat === option.value ? 'export-option--selected' : ''
+              className={`flex items-start gap-4 p-5 bg-[var(--bg-elevated)] border border-[var(--border)] cursor-pointer transition-all duration-[var(--transition-base)] ${
+                selectedFormat === option.value ? 'border-[var(--accent)] bg-[var(--accent-glow)]' : 'hover:border-[var(--border-accent)]'
               }`}
             >
-              <div className="export-option__radio">
+              <div className="relative w-5 h-5 flex-shrink-0 mt-0.5">
                 <input
                   type="radio"
                   name="format"
                   value={option.value}
                   checked={selectedFormat === option.value}
                   onChange={() => setSelectedFormat(option.value)}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 />
-                <span className="radio-mark"></span>
+                <span className="absolute inset-0 bg-[var(--bg-card)] border border-[var(--border)] rounded-full"></span>
+                <span
+                  className={`absolute top-1/2 left-1/2 w-2 h-2 bg-[var(--accent)] rounded-full -translate-x-1/2 -translate-y-1/2 transition-transform duration-[var(--transition-base)] ${
+                    selectedFormat === option.value ? 'scale-100' : 'scale-0'
+                  }`}
+                ></span>
               </div>
               <div
-                className={`export-option__icon ${
-                  selectedFormat === option.value ? 'export-option__icon--active' : ''
+                className={`w-10 h-10 flex items-center justify-center bg-[var(--bg-card)] flex-shrink-0 ${
+                  selectedFormat === option.value ? 'text-[var(--accent)]' : 'text-[var(--fg-dim)]'
                 }`}
               >
                 {option.icon}
               </div>
-              <div className="export-option__info">
-                <div className="export-option__name">{option.name}</div>
-                <div className="export-option__desc">{option.description}</div>
+              <div className="flex-1">
+                <div className="text-[0.95rem] font-medium mb-1">{option.name}</div>
+                <div className="text-[0.8rem] text-[var(--fg-muted)]">{option.description}</div>
               </div>
             </label>
           ))}
@@ -178,10 +185,10 @@ export function ExportPage() {
       </div>
 
       {/* Data Selection Card */}
-      <div className="export-card">
-        <div className="export-card__title">
+      <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 mb-6">
+        <div className="text-sm font-semibold mb-5 flex items-center gap-3 pb-4 border-b border-[var(--border)]">
           <svg
-            className="export-card__icon"
+            className="w-[18px] h-[18px] text-[var(--accent)]"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -194,36 +201,42 @@ export function ExportPage() {
           Данные для экспорта
         </div>
 
-        <div className="checkbox-group">
+        <div className="mt-6">
           {dataOptions.map((option) => (
-            <label key={option.id} className="checkbox-item">
-              <div className="checkbox">
+            <label key={option.id} className="flex items-center gap-3 py-3 border-b border-[var(--border)] cursor-pointer last:border-b-0">
+              <div className="relative w-[18px] h-[18px]">
                 <input
                   type="checkbox"
                   checked={option.checked}
                   onChange={() => handleToggleDataOption(option.id)}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 />
-                <span className="checkbox-mark"></span>
+                <span className="absolute inset-0 bg-[var(--bg-elevated)] border border-[var(--border)]"></span>
+                <span
+                  className={`absolute left-[5px] top-[2px] w-[5px] h-[9px] border-solid border-[var(--bg)] border-r-2 border-b-2 -rotate-45 transition-transform duration-[var(--transition-base)] ${
+                    option.checked ? 'scale-100 bg-[var(--accent)] border-[var(--accent)]' : 'scale-0'
+                  }`}
+                ></span>
               </div>
-              <span className="checkbox-label">{option.label}</span>
+              <span className="text-[0.85rem]">{option.label}</span>
             </label>
           ))}
         </div>
 
-        <div className="form-actions">
+        <div className="flex gap-3 mt-6 pt-6 border-t border-[var(--border)]">
           <button
-            className="btn btn--primary"
+            className="inline-flex items-center gap-2.5 px-6 py-3.5 font-[var(--font-sans)] text-[0.85rem] font-semibold border-none cursor-pointer transition-all duration-[var(--transition-base)] bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-bright)] disabled:opacity-70 disabled:cursor-not-allowed"
             onClick={handleExport}
             disabled={isExporting}
           >
             {isExporting ? (
               <>
-                <span className="loading-spinner"></span>
+                <span className="w-4 h-4 border-2 border-[var(--bg)] border-t-transparent rounded-full animate-spin"></span>
                 Экспорт...
               </>
             ) : (
               <>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
@@ -232,7 +245,10 @@ export function ExportPage() {
               </>
             )}
           </button>
-          <button className="btn btn--ghost" onClick={handleCancel}>
+          <button
+            className="inline-flex items-center gap-2.5 px-6 py-3.5 font-[var(--font-sans)] text-[0.85rem] font-semibold border-none cursor-pointer transition-all duration-[var(--transition-base)] bg-transparent text-[var(--fg-muted)] border border-[var(--border)] hover:border-[var(--fg-dim)] hover:text-[var(--fg)]"
+            onClick={handleCancel}
+          >
             Отмена
           </button>
         </div>

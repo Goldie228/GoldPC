@@ -5,7 +5,6 @@ import { useToast } from '../../hooks/useToast';
 import { TICKET_STATUSES } from '../../api/service-tickets';
 import type { ServiceTicket } from '../../api/service-tickets';
 import { Wrench, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import styles from "./AccountRepairs.module.css";
 
 function getStatusLabel(status: string): string {
   const statusItem = TICKET_STATUSES.find(s => s.key === status);

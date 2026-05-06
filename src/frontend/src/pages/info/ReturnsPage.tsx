@@ -1,5 +1,4 @@
 import { type ReactElement } from 'react';
-import styles from './InfoPage.module.css';
 
 export function ReturnsPage(): ReactElement {
   return (

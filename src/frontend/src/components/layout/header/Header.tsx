@@ -22,7 +22,6 @@ import { LoginModal } from '../../auth/LoginModal';
 import { RegisterModal } from '../../auth/RegisterModal';
 import { decodeHtmlEntities } from '../../../utils/decodeHtml';
 import { CATEGORY_LABELS_RU } from '../../../utils/categoryLabels';
-import styles from './Header.module.css';
 
 const NAV_ITEMS = [
   { to: '/catalog', label: 'Каталог' },
@@ -187,41 +186,25 @@ export function Header(): ReactElement {
 
   return (
     <>
-      <header className={styles.header}>
+      <header className="sticky top-0 z-[100] bg-[#0b0e11] border-b border-[#2b3139] flex items-center justify-between px-6 h-16 gap-4">
         {/* Logo */}
-        <Link to="/" className={styles.logo}>
-          <svg className={styles.logoIcon} viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M29,3H3C2.4,3,2,3.4,2,4v19c0,0.6,0.4,1,1,1h26c0.6,0,1-0.4,1-1V4C30,3.4,29.6,3,29,3z M18,21h-4c-0.6,0-1-0.4-1-1s0.4-1,1-1h4c0.6,0,1,0.4,1,1S18.6,21,18,21z"
-              fill="currentColor"
-            />
-            <path
-              d="M18,21h-4c-0.6,0-1-0.4-1-1s0.4-1,1-1h4c0.6,0,1,0.4,1,1S18.6,21,18,21z"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M20.7,26.3C20.5,26.1,20.3,26,20,26h-8c-0.3,0-0.5,0.1-0.7,0.3l-2,2C9,28.6,8.9,29,9.1,29.4C9.2,29.8,9.6,30,10,30h12c0.4,0,0.8-0.2,0.9-0.6c0.2-0.4,0.1-0.8-0.2-1.1L20.7,26.3z"
-              fill="currentColor"
-            />
-          </svg>
-          <span className={styles.logoText}>GoldPC</span>
+        <Link to="/" className="flex items-center gap-2.5 text-decoration-none flex-shrink-0">
+            <span className="text-xl font-bold text-gold tracking-tight">Gold<span className="text-body-text">PC</span></span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className={styles.nav}>
+        <nav className="hidden md:flex items-center gap-1">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
-              }
+                 `px-4 py-2 text-sm font-medium rounded-lg transition-colors no-underline ${
+                   isActive
+                     ? 'text-gold bg-gold/10'
+                     : 'text-muted-text hover:bg-surface-elevated hover:text-body-text'
+                 }`
+               }
             >
               {item.label}
             </NavLink>
@@ -229,100 +212,100 @@ export function Header(): ReactElement {
         </nav>
 
         {/* Actions */}
-        <div className={styles.actions}>
-          <Link to="/catalog" className={`${styles.iconBtn} ${cartFlash ? styles.iconBtnFlash : ''}`} aria-label="Корзина">
+        <div className="flex items-center gap-1">
+          <Link to="/catalog" className={`relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-body-text hover:bg-surface-elevated ${cartFlash ? 'animate-pulse' : ''}`} aria-label="Корзина">
             <ShoppingCart />
-            {cartCount > 0 && <span className={styles.cartBadge}>{cartCount}</span>}
+            {cartCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 flex items-center justify-center bg-gold text-gold-ink text-[9px] font-bold rounded-md">{cartCount}</span>}
           </Link>
 
-          <Link to="/wishlist" className={styles.iconBtn} aria-label="Избранное">
+          <Link to="/wishlist" className="relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-body-text hover:bg-surface-elevated" aria-label="Избранное">
             <Heart />
-            {wishlistCount > 0 && <span className={styles.cartBadge}>{wishlistCount}</span>}
+            {wishlistCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 flex items-center justify-center bg-gold text-gold-ink text-[9px] font-bold rounded-md">{wishlistCount}</span>}
           </Link>
 
-          <Link to="/comparison" className={styles.iconBtn} aria-label="Сравнение">
+          <Link to="/comparison" className="relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-body-text hover:bg-surface-elevated" aria-label="Сравнение">
             <GitCompare />
-            {comparisonCount > 0 && <span className={styles.cartBadge}>{comparisonCount}</span>}
+            {comparisonCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 flex items-center justify-center bg-gold text-gold-ink text-[9px] font-bold rounded-md">{comparisonCount}</span>}
           </Link>
 
           {/* Profile / Auth */}
-          <div className={styles.profileWrapper} ref={profileDropdownRef}>
+          <div className="relative" ref={profileDropdownRef}>
             <button
-              className={`${styles.iconBtn} ${isAuthenticated ? styles.iconBtnActive : ''}`}
+              className={`relative w-10 h-10 flex items-center justify-center bg-transparent border rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-body-text hover:bg-surface-elevated ${isAuthenticated ? 'border-gold/30 text-gold' : 'border-transparent'}`}
               aria-label={isAuthenticated ? 'Профиль' : 'Войти'}
               onClick={handleProfileDropdownToggle}
               aria-expanded={isProfileDropdownOpen}
               type="button"
             >
               <User />
-              {isAuthenticated && <span className={styles.authIndicator} />}
+              {isAuthenticated && <span className="absolute bottom-0.5 right-0.5 w-2 h-2 bg-gold rounded-full border-2 border-surface-card" />}
             </button>
 
             {/* Profile Dropdown */}
             {isProfileDropdownOpen && (
-              <div className={styles.profileDropdown}>
+                <div className="absolute top-[calc(100%+8px)] right-0 w-[300px] bg-surface-card border border-hairline-dark rounded-xl shadow-xl z-[200] overflow-hidden">
                 {!isAuthenticated ? (
-                  <div className={styles.authButtons}>
-                    <button
-                      className={styles.authBtn}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openLoginModal();
-                        handleProfileDropdownClose();
-                      }}
-                      type="button"
-                    >
-                      Войти
-                    </button>
-                    <button
-                      className={`${styles.authBtn} ${styles.authBtnPrimary}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openRegisterModal();
-                        handleProfileDropdownClose();
-                      }}
-                      type="button"
-                    >
-                      Регистрация
-                    </button>
+                    <div className="flex flex-col gap-2 p-4">
+                      <button
+                       className="w-full px-4 py-2.5 bg-transparent border border-hairline-dark rounded-lg text-body-text text-sm font-medium cursor-pointer transition-colors hover:border-gold/40 hover:bg-gold/5"
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         openLoginModal();
+                         handleProfileDropdownClose();
+                       }}
+                       type="button"
+                     >
+                       Войти
+                     </button>
+                     <button
+                       className="w-full px-4 py-2.5 bg-gold text-gold-ink border-gold rounded-lg text-sm font-medium cursor-pointer transition-colors hover:bg-gold-active"
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         openRegisterModal();
+                         handleProfileDropdownClose();
+                       }}
+                       type="button"
+                     >
+                       Регистрация
+                     </button>
                   </div>
                 ) : (
                   <>
-                    <div className={styles.profileHeader}>
-                      <div className={styles.profileAvatar}>
+                    <div className="flex items-center gap-3 p-4 bg-surface-elevated rounded-t-xl">
+                      <div className="w-11 h-11 bg-gold rounded-full flex items-center justify-center text-gold-ink font-semibold text-lg uppercase flex-shrink-0">
                         {((decodeHtmlEntities(user?.firstName) ?? '') || (decodeHtmlEntities(user?.email) ?? ''))?.charAt(0) || 'U'}
                       </div>
-                      <div className={styles.profileInfo}>
-                        <span className={styles.profileName}>
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="text-sm font-semibold text-body-text whitespace-nowrap overflow-hidden text-overflow-ellipsis">
                           {(decodeHtmlEntities(user?.firstName) ?? '')} {(decodeHtmlEntities(user?.lastName) ?? '')}
                         </span>
-                        <span className={styles.profileEmail}>{(decodeHtmlEntities(user?.email) ?? '')}</span>
+                        <span className="text-sm text-muted-text whitespace-nowrap overflow-hidden text-overflow-ellipsis max-w-[200px]">{(decodeHtmlEntities(user?.email) ?? '')}</span>
                       </div>
                     </div>
 
-<nav className={styles.profileNav}>
-                      <Link to="/dashboard" className={styles.profileNavLink} onClick={handleProfileDropdownClose}>
+<nav className="flex flex-col py-2">
+                      <Link to="/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
                         <LayoutDashboard />
                         <span>Панель управления</span>
                       </Link>
-                      <Link to="/account" className={styles.profileNavLink} onClick={handleProfileDropdownClose}>
+                      <Link to="/account" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
                         <User />
                         <span>Профиль</span>
                       </Link>
-                      <Link to="/account/orders" className={styles.profileNavLink} onClick={handleProfileDropdownClose}>
+                      <Link to="/account/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
                         <ShoppingBag />
                         <span>Заказы</span>
                       </Link>
-                      <Link to="/wishlist" className={styles.profileNavLink} onClick={handleProfileDropdownClose}>
+                      <Link to="/wishlist" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
                         <Heart />
                         <span>Избранное</span>
                       </Link>
-                      <Link to="/account/settings" className={styles.profileNavLink} onClick={handleProfileDropdownClose}>
+                      <Link to="/account/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
                         <Settings />
                         <span>Настройки</span>
                       </Link>
                     </nav>
-<button className={styles.logoutBtn} onClick={handleLogout} type="button">
+<button className="flex items-center gap-3 w-full px-4 py-3 bg-transparent border-t border-hairline-dark text-muted-text text-sm cursor-pointer transition-colors hover:text-red-500 hover:bg-red-50" onClick={handleLogout} type="button">
                       <LogOut />
                       <span>Выйти</span>
                     </button>
@@ -335,7 +318,7 @@ export function Header(): ReactElement {
           {/* Mobile Menu Toggle */}
           <button
             ref={menuButtonRef}
-            className={styles.mobileToggle}
+            className="md:hidden w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text cursor-pointer ml-auto hover:border-gold/30 hover:text-body-text"
             onClick={handleMobileMenuToggle}
             aria-label={isMobileMenuOpen ? 'Закрыть меню' : 'Открыть меню'}
             aria-expanded={isMobileMenuOpen}
@@ -350,10 +333,10 @@ export function Header(): ReactElement {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
-            <div className={styles.mobileOverlay} onClick={handleCloseMenu} />
+            <div className="fixed inset-0 bg-black/50 z-[190]" onClick={handleCloseMenu} />
             <motion.div
               ref={mobileDrawerRef}
-              className={styles.mobileDrawer}
+              className="fixed top-16 right-0 w-[300px] bg-surface-card border-b border-hairline-dark shadow-xl z-[200] max-h-[calc(100vh-64px)] overflow-y-auto"
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
@@ -362,19 +345,19 @@ export function Header(): ReactElement {
               aria-modal="true"
               aria-label="Мобильное меню"
             >
-              <div className={styles.mobileHeader}>
-                <span className={styles.mobileTitle}>Меню</span>
-                <button className={styles.mobileClose} onClick={handleCloseMenu} type="button" aria-label="Закрыть">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-hairline-dark">
+                <span className="text-sm font-semibold text-body-text">Меню</span>
+                <button className="w-8 h-8 flex items-center justify-center bg-transparent border-none text-muted-text cursor-pointer hover:text-body-text" onClick={handleCloseMenu} type="button" aria-label="Закрыть">
                   <X size={20} />
                 </button>
               </div>
 
-              <nav className={styles.mobileNav}>
+              <nav className="flex flex-col py-2">
                 {NAV_ITEMS.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    className={styles.mobileNavLink}
+                    className="block px-5 py-3 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text"
                     onClick={handleCloseMenu}
                   >
                     {item.label}
@@ -382,64 +365,64 @@ export function Header(): ReactElement {
                 ))}
               </nav>
 
-              <div className={styles.mobileDivider} />
+              <div className="h-px bg-hairline-dark my-2" />
 
-              <Link to="/catalog" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+              <Link to="/catalog" className="flex items-center gap-3 px-5 py-3.5 text-body-text no-underline text-sm border-b border-hairline-dark w-full text-left cursor-pointer bg-transparent font-sans transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                 <ShoppingCart size={18} />
                 <span>Корзина</span>
-                {cartCount > 0 && <span className={styles.mobileBadge}>{cartCount}</span>}
+                {cartCount > 0 && <span className="absolute top-2 right-4 min-w-5 h-5 px-1.5 flex items-center justify-center bg-gold text-gold-ink text-[11px] font-bold rounded-md">{cartCount}</span>}
               </Link>
-              <Link to="/wishlist" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+              <Link to="/wishlist" className="flex items-center gap-3 px-5 py-3.5 text-body-text no-underline text-sm border-b border-hairline-dark w-full text-left cursor-pointer bg-transparent font-sans transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                 <Heart size={18} />
                 <span>Избранное</span>
-                {wishlistCount > 0 && <span className={styles.mobileBadge}>{wishlistCount}</span>}
+                {wishlistCount > 0 && <span className="absolute top-2 right-4 min-w-5 h-5 px-1.5 flex items-center justify-center bg-gold text-gold-ink text-[11px] font-bold rounded-md">{wishlistCount}</span>}
               </Link>
-              <Link to="/comparison" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+              <Link to="/comparison" className="flex items-center gap-3 px-5 py-3.5 text-body-text no-underline text-sm border-b border-hairline-dark w-full text-left cursor-pointer bg-transparent font-sans transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                 <GitCompare size={18} />
                 <span>Сравнение</span>
-                {comparisonCount > 0 && <span className={styles.mobileBadge}>{comparisonCount}</span>}
+                {comparisonCount > 0 && <span className="absolute top-2 right-4 min-w-5 h-5 px-1.5 flex items-center justify-center bg-gold text-gold-ink text-[11px] font-bold rounded-md">{comparisonCount}</span>}
               </Link>
 
               {isAuthenticated ? (
                 <>
-                  <div className={styles.mobileDivider} />
-                  <div className={styles.mobileProfileInfo}>
-                    <div className={styles.profileAvatar}>
+                  <div className="h-px bg-hairline-dark my-2" />
+                  <div className="flex items-center gap-3 px-5 py-4 bg-surface-elevated">
+                    <div className="w-11 h-11 bg-gold rounded-full flex items-center justify-center text-gold-ink font-semibold text-lg uppercase flex-shrink-0">
                       {((decodeHtmlEntities(user?.firstName) ?? '') || (decodeHtmlEntities(user?.email) ?? ''))?.charAt(0) || 'U'}
                     </div>
                     <div>
-                      <div className={styles.profileName}>
+                      <div className="text-sm font-semibold text-body-text whitespace-nowrap overflow-hidden text-overflow-ellipsis">
                         {(decodeHtmlEntities(user?.firstName) ?? '')} {(decodeHtmlEntities(user?.lastName) ?? '')}
                       </div>
-                      <div className={styles.profileEmail}>{(decodeHtmlEntities(user?.email) ?? '')}</div>
+                      <div className="text-sm text-muted-text whitespace-nowrap overflow-hidden text-overflow-ellipsis max-w-[200px]">{(decodeHtmlEntities(user?.email) ?? '')}</div>
                     </div>
                   </div>
-                  <Link to="/dashboard" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+                  <Link to="/dashboard" className="flex items-center gap-3 px-5 py-3.5 text-body-text no-underline text-sm border-b border-hairline-dark w-full text-left cursor-pointer bg-transparent font-sans transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                     <LayoutDashboard size={18} />
                     <span>Панель управления</span>
                   </Link>
-                  <Link to="/account" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+                  <Link to="/account" className="flex items-center gap-3 px-5 py-3.5 text-body-text no-underline text-sm border-b border-hairline-dark w-full text-left cursor-pointer bg-transparent font-sans transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                     <User size={18} />
                     <span>Профиль</span>
                   </Link>
-                  <Link to="/account/orders" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+                  <Link to="/account/orders" className="flex items-center gap-3 px-5 py-3.5 text-body-text no-underline text-sm border-b border-hairline-dark w-full text-left cursor-pointer bg-transparent font-sans transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                     <ShoppingBag size={18} />
                     <span>Заказы</span>
                   </Link>
-                  <Link to="/account/settings" className={styles.mobileActionBtn} onClick={handleCloseMenu}>
+                  <Link to="/account/settings" className="flex items-center gap-3 px-5 py-3.5 text-body-text no-underline text-sm border-b border-hairline-dark w-full text-left cursor-pointer bg-transparent font-sans transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                     <Settings size={18} />
                     <span>Настройки</span>
                   </Link>
-                  <button className={styles.mobileLogoutBtn} onClick={handleLogout} type="button">
+                  <button className="flex items-center gap-3 w-full px-5 py-3.5 bg-transparent border-t border-hairline-dark text-muted-text text-sm cursor-pointer transition-colors hover:text-red-500 hover:bg-red-50 font-sans" onClick={handleLogout} type="button">
                     <LogOut size={18} />
                     <span>Выйти</span>
                   </button>
                 </>
               ) : (
                 <>
-                  <div className={styles.mobileDivider} />
+                  <div className="h-px bg-hairline-dark my-2" />
                   <button
-                    className={styles.mobileActionBtn}
+                    className="flex items-center gap-3 px-5 py-3.5 text-body-text no-underline text-sm border-b border-hairline-dark w-full text-left cursor-pointer bg-transparent font-sans transition-colors hover:bg-surface-elevated"
                     onClick={(e) => {
                       e.stopPropagation();
                       openLoginModal();
@@ -451,7 +434,7 @@ export function Header(): ReactElement {
                     <span>Войти</span>
                   </button>
                   <button
-                    className={`${styles.mobileActionBtn} ${styles.mobileActionBtnPrimary}`}
+                    className="flex items-center gap-3 px-5 py-3.5 text-gold-ink bg-gold border-gold text-sm w-full text-left cursor-pointer font-sans transition-colors hover:bg-gold-active"
                     onClick={(e) => {
                       e.stopPropagation();
                       openRegisterModal();

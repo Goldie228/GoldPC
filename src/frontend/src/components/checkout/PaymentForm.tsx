@@ -10,7 +10,6 @@ import {
 } from '../../utils/cardValidation';
 import { Icon } from '../ui/Icon';
 import { Button } from '../ui/Button';
-import styles from './PaymentForm.module.css';
 
 interface PaymentFormProps {
   onSubmit: (data: PaymentData) => Promise<void>;
@@ -187,11 +186,11 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
   };
 
   return (
-    <form className={styles.paymentForm} onSubmit={handleSubmit}>
-      <div className={styles.formGroup}>
-        <label htmlFor="cardNumber" className={styles.formLabel}>
+    <form className="bg-[var(--bg-card)] p-6 rounded-xl border border-[var(--border)]" onSubmit={handleSubmit}>
+      <div className="mb-5">
+        <label htmlFor="cardNumber" className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">
           Номер карты
-          {cardType !== 'unknown' && <span className={styles.cardType}>{getCardIcon()}</span>}
+          {cardType !== 'unknown' && <span className="ml-2 text-sm">{getCardIcon()}</span>}
         </label>
         <input
           id="cardNumber"
@@ -200,17 +199,17 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
           value={formatCardNumber(cardNumber)}
           onChange={handleCardNumberChange}
           onBlur={() => handleBlur('cardNumber')}
-          className={touched.cardNumber && errors.cardNumber ? styles.inputError : ''}
+          className={`w-full p-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--bg-elevated)] text-[var(--fg)] font-[var(--font-sans)] transition-all duration-200 hover:border-[var(--border-brand)] focus:outline-none focus:border-[var(--accent)] focus:ring-3 focus:ring-[var(--border-brand)] placeholder:text-[var(--fg-dim)] ${touched.cardNumber && errors.cardNumber ? 'border-[var(--error)] focus:ring-[rgba(239,68,68,0.1)]' : ''}`}
           disabled={isProcessing}
           maxLength={19}
         />
         {touched.cardNumber && errors.cardNumber && (
-          <span className={styles.errorMessage}>{errors.cardNumber}</span>
+          <span className="block mt-1.5 text-xs text-[var(--error)]">{errors.cardNumber}</span>
         )}
       </div>
 
-      <div className={styles.formGroup}>
-        <label htmlFor="cardHolder" className={styles.formLabel}>Имя держателя (как на карте)</label>
+      <div className="mb-5">
+        <label htmlFor="cardHolder" className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Имя держателя (как на карте)</label>
         <input
           id="cardHolder"
           type="text"
@@ -218,17 +217,17 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
           value={cardHolder}
           onChange={handleCardHolderChange}
           onBlur={() => handleBlur('cardHolder')}
-          className={touched.cardHolder && errors.cardHolder ? styles.inputError : ''}
+          className={`w-full p-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--bg-elevated)] text-[var(--fg)] font-[var(--font-sans)] transition-all duration-200 hover:border-[var(--border-brand)] focus:outline-none focus:border-[var(--accent)] focus:ring-3 focus:ring-[var(--border-brand)] placeholder:text-[var(--fg-dim)] ${touched.cardHolder && errors.cardHolder ? 'border-[var(--error)] focus:ring-[rgba(239,68,68,0.1)]' : ''}`}
           disabled={isProcessing}
         />
         {touched.cardHolder && errors.cardHolder && (
-          <span className={styles.errorMessage}>{errors.cardHolder}</span>
+          <span className="block mt-1.5 text-xs text-[var(--error)]">{errors.cardHolder}</span>
         )}
       </div>
 
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label htmlFor="expiry" className={styles.formLabel}>Срок действия</label>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="mb-5">
+          <label htmlFor="expiry" className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Срок действия</label>
           <input
             id="expiry"
             type="text"
@@ -236,17 +235,17 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
             value={formatCardExpiry(expiry)}
             onChange={handleExpiryChange}
             onBlur={() => handleBlur('expiry')}
-            className={touched.expiry && errors.expiry ? styles.inputError : ''}
+            className={`w-full p-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--bg-elevated)] text-[var(--fg)] font-[var(--font-sans)] transition-all duration-200 hover:border-[var(--border-brand)] focus:outline-none focus:border-[var(--accent)] focus:ring-3 focus:ring-[var(--border-brand)] placeholder:text-[var(--fg-dim)] ${touched.expiry && errors.expiry ? 'border-[var(--error)] focus:ring-[rgba(239,68,68,0.1)]' : ''}`}
             disabled={isProcessing}
             maxLength={5}
           />
           {touched.expiry && errors.expiry && (
-            <span className={styles.errorMessage}>{errors.expiry}</span>
+            <span className="block mt-1.5 text-xs text-[var(--error)]">{errors.expiry}</span>
           )}
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="cvv" className={styles.formLabel}>CVV</label>
+        <div className="mb-5">
+          <label htmlFor="cvv" className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">CVV</label>
           <input
             id="cvv"
             type="password"
@@ -254,26 +253,27 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
             value={cvv}
             onChange={handleCvvChange}
             onBlur={() => handleBlur('cvv')}
-            className={touched.cvv && errors.cvv ? styles.inputError : ''}
+            className={`w-full p-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--bg-elevated)] text-[var(--fg)] font-[var(--font-sans)] transition-all duration-200 hover:border-[var(--border-brand)] focus:outline-none focus:border-[var(--accent)] focus:ring-3 focus:ring-[var(--border-brand)] placeholder:text-[var(--fg-dim)] ${touched.cvv && errors.cvv ? 'border-[var(--error)] focus:ring-[rgba(239,68,68,0.1)]' : ''}`}
             disabled={isProcessing}
             maxLength={4}
           />
           {touched.cvv && errors.cvv && (
-            <span className={styles.errorMessage}>{errors.cvv}</span>
+            <span className="block mt-1.5 text-xs text-[var(--error)]">{errors.cvv}</span>
           )}
         </div>
       </div>
 
-      <div className={styles.securityNote}>
+      <div className="flex items-center gap-2 p-3 bg-[var(--border-brand)] border border-[var(--border-brand)] rounded-lg text-sm text-[var(--fg-muted)] text-center my-5">
         <Icon name="lock" size="sm" color="accent" /> Ваши платёжные данные защищены и не сохраняются на наших серверах
       </div>
 
-      <div className={styles.formActions}>
+      <div className="flex gap-3 mt-6">
         <Button
           type="button"
           variant="ghost"
           onClick={onCancel}
           disabled={isProcessing}
+          className="flex-1"
         >
           Отмена
         </Button>
@@ -281,6 +281,7 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
           type="submit"
           variant="primary"
           disabled={isProcessing}
+          className="flex-1"
         >
           {isProcessing ? 'Обработка платежа...' : 'Оплатить'}
         </Button>

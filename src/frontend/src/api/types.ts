@@ -81,6 +81,8 @@ export interface ProductSummary {
   /** Краткое описание для QuickView (первые 300 символов) */
   descriptionShort?: string;
   images?: ProductImage[];
+  /** Краткое имя для водяного знака за изображением */
+  shortName?: string;
 }
 
 export interface Product extends ProductSummary {

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useOrders } from '../../hooks/useOrders';
 import type { Order } from '../../api/orders';
-import styles from './OrderTrackingPage.module.css';
 
 const STATUS_STEPS = [
   { key: 'New', label: 'Новый' },
@@ -29,12 +28,12 @@ export function OrderTrackingPage() {
   }, [orderNumber, getOrderByNumber]);
 
   if (loading) {
-    return <div className={styles.container}>Загрузка...</div>;
+    return <div className="max-w-[900px] mx-auto my-8 p-8">Загрузка...</div>;
   }
 
   if (!order) {
     return (
-      <div className={styles.container}>
+      <div className="max-w-[900px] mx-auto my-8 p-8">
         <h1>Заказ не найден</h1>
         <Link to="/account">Вернуться к заказам</Link>
       </div>
@@ -44,23 +43,31 @@ export function OrderTrackingPage() {
   const currentStepIndex = STATUS_STEPS.findIndex(s => s.key === order.status);
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>Отслеживание заказа #{order.orderNumber}</h1>
+    <div className="max-w-[900px] mx-auto my-8 p-8">
+      <h1 className="text-2xl mb-8 text-[var(--color-text)]">Отслеживание заказа #{order.orderNumber}</h1>
 
       {/* Timeline */}
-      <div className={styles.timeline}>
+      <div className="flex justify-between my-12 relative">
         {STATUS_STEPS.map((step, index) => {
           const isCompleted = index <= currentStepIndex;
           const isCurrent = index === currentStepIndex;
 
           return (
-            <div key={step.key} className={styles.timelineItem}>
-              <div className={`${styles.timelineDot} ${isCompleted ? styles.completed : ''} ${isCurrent ? styles.current : ''}`}>
+            <div key={step.key} className="flex flex-col items-center flex-1 relative">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center z-2 ${
+                isCompleted
+                  ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white border-2'
+                  : isCurrent
+                  ? 'bg-[var(--color-bg-secondary)] border-[var(--color-accent)] border-[3px]'
+                  : 'bg-[var(--color-bg-secondary)] border-2 border-[var(--color-border)]'
+              }`}>
                 {isCompleted && <span>✓</span>}
               </div>
-              <div className={styles.timelineLabel}>{step.label}</div>
+              <div className="mt-2 text-sm text-center">{step.label}</div>
               {index < STATUS_STEPS.length - 1 && (
-                <div className={`${styles.timelineLine} ${isCompleted ? styles.completed : ''}`} />
+                <div className={`absolute top-5 left-1/2 right-[-50%] h-0.5 z-1 ${
+                  isCompleted ? 'bg-[var(--color-accent)]' : 'bg-[var(--color-border)]'
+                }`} />
               )}
             </div>
           );
@@ -68,30 +75,30 @@ export function OrderTrackingPage() {
       </div>
 
       {/* Order Details */}
-      <div className={styles.details}>
-        <h2>Детали заказа</h2>
-        <p><strong>Покупатель:</strong> {order.customerFirstName} {order.customerLastName}</p>
-        <p><strong>Телефон:</strong> {order.customerPhone}</p>
-        <p><strong>Email:</strong> {order.customerEmail}</p>
-        <p><strong>Адрес:</strong> {order.address || 'Самовывоз'}</p>
-        <p><strong>Сумма:</strong> {order.total.toFixed(2)} BYN</p>
+      <div className="bg-[var(--color-bg-secondary)] p-6 rounded-lg my-6">
+        <h2 className="mb-4">Детали заказа</h2>
+        <p className="my-2"><strong>Покупатель:</strong> {order.customerFirstName} {order.customerLastName}</p>
+        <p className="my-2"><strong>Телефон:</strong> {order.customerPhone}</p>
+        <p className="my-2"><strong>Email:</strong> {order.customerEmail}</p>
+        <p className="my-2"><strong>Адрес:</strong> {order.address || 'Самовывоз'}</p>
+        <p className="my-2"><strong>Сумма:</strong> {order.total.toFixed(2)} BYN</p>
         {order.trackingNumber && (
-          <p><strong>Трек-номер:</strong> {order.trackingNumber}</p>
+          <p className="my-2"><strong>Трек-номер:</strong> {order.trackingNumber}</p>
         )}
       </div>
 
       {/* Items */}
-      <div className={styles.items}>
-        <h2>Товары</h2>
+      <div className="bg-[var(--color-bg-secondary)] p-6 rounded-lg my-6">
+        <h2 className="mb-4">Товары</h2>
         {order.items.map(item => (
-          <div key={item.id} className={styles.item}>
+          <div key={item.id} className="flex justify-between py-3 border-b border-[var(--color-border)] last:border-b-0">
             <span>{item.productName}</span>
             <span>{item.quantity} × {item.unitPrice.toFixed(2)} BYN</span>
           </div>
         ))}
       </div>
 
-      <Link to="/account" className={styles.backLink}>← Вернуться к заказам</Link>
+      <Link to="/account" className="inline-block mt-8 text-[var(--color-accent)] no-underline hover:underline">← Вернуться к заказам</Link>
     </div>
   );
 }

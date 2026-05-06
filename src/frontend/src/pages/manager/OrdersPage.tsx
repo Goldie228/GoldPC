@@ -5,7 +5,6 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import styles from './OrdersPage.module.css';
 import { useManager } from '../../hooks/useManager';
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';

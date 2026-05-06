@@ -1,7 +1,6 @@
 import { X, RotateCcw } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
-import styles from './ActiveFiltersBar.module.css';
 
 type Chip = {
   id: string;
@@ -11,10 +10,10 @@ type Chip = {
 
 function ChipView({ chip }: { chip: Chip }): ReactElement {
   return (
-    <span className={styles.chip} title={chip.label}>
-      <span className={styles.chipText}>{chip.label}</span>
+    <span className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-[var(--border-brand)] bg-[color-mix(in_srgb,var(--bg-card)_85%,transparent)] text-[var(--fg-primary)] text-xs leading-none max-w-[360px]" title={chip.label}>
+      <span className="overflow-hidden text-ellipsis whitespace-nowrap">{chip.label}</span>
       {chip.onRemove && (
-        <button type="button" className={styles.chipBtn} onClick={chip.onRemove} aria-label="Удалить фильтр">
+        <button type="button" className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full border border-[var(--border-brand)] bg-transparent text-[var(--fg-muted)] cursor-pointer hover:bg-[color-mix(in_srgb,var(--bg-elevated)_50%,transparent)]" onClick={chip.onRemove} aria-label="Удалить фильтр">
           <X size={12} />
         </button>
       )}
@@ -30,40 +29,52 @@ export function ActiveFiltersBar(props: {
   if (props.chips.length === 0) return null;
 
   return (
-    <div className={styles.bar} aria-label="Активные фильтры">
-      <div className={styles.left}>
-        {props.chips.map((c) => (
-          <ChipView key={c.id} chip={c} />
-        ))}
-      </div>
-      <div className={styles.right}>
-        <button type="button" className={styles.clearBtn} onClick={props.onClearAll}>
-          <RotateCcw size={16} />
-          <span>Сбросить ({props.activeCount})</span>
-        </button>
-      </div>
+    <div className="flex items-center gap-2 my-3 flex-wrap" aria-label="Активные фильтры">
+      {props.chips.map((c) => (
+        <ChipView key={c.id} chip={c} />
+      ))}
     </div>
   );
 }
 
 export function buildCatalogFilterChips(args: {
-  isCategoryLocked: boolean;
-  selectedCategory: string | null;
-  searchQuery: string;
-  priceRange: { min: number; max: number };
-  selectedManufacturerIds: string[];
-  manufacturersById: Map<string, string>;
-  minRating: number;
-  selectedAvailability: string[];
-  selectedSpecifications: Record<string, string | number | string[]>;
-  onClearSearch: () => void;
-  onClearPrice: () => void;
-  onClearManufacturers: () => void;
-  onClearRating: () => void;
-  onClearAvailability: () => void;
-  onClearSpecKey: (key: string) => void;
-  onClearCategory: () => void;
+  isCategoryLocked?: boolean;
+  selectedCategory?: string | null;
+  searchQuery?: string;
+  priceRange?: { min: number; max: number };
+  selectedManufacturerIds?: string[];
+  manufacturersById?: Map<string, string>;
+  minRating?: number;
+  selectedAvailability?: string[];
+  selectedSpecifications?: Record<string, string | number | string[]>;
+  onClearSearch?: () => void;
+  onClearPrice?: () => void;
+  onClearManufacturers?: () => void;
+  onClearRating?: () => void;
+  onClearAvailability?: () => void;
+  onClearSpecKey?: (key: string) => void;
+  onClearCategory?: () => void;
 }): Chip[] {
+  // Set defaults
+  const {
+    isCategoryLocked = false,
+    selectedCategory = null,
+    searchQuery = '',
+    priceRange = { min: 0, max: 0 },
+    selectedManufacturerIds = [],
+    manufacturersById = new Map<string, string>(),
+    minRating = 0,
+    selectedAvailability = [],
+    selectedSpecifications = {},
+    onClearSearch = () => {},
+    onClearPrice = () => {},
+    onClearManufacturers = () => {},
+    onClearRating = () => {},
+    onClearAvailability = () => {},
+    onClearSpecKey = (_key: string) => {},
+    onClearCategory = () => {},
+  } = args;
+  
   const chips: Chip[] = [];
 
   if (args.selectedCategory && !args.isCategoryLocked) {
@@ -74,7 +85,7 @@ export function buildCatalogFilterChips(args: {
     });
   }
 
-  if (args.searchQuery.trim()) {
+  if (args.searchQuery && args.searchQuery.trim()) {
     chips.push({ id: 'search', label: `Поиск: ${args.searchQuery.trim()}`, onRemove: args.onClearSearch });
   }
 

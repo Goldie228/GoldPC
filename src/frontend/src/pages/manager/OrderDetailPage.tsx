@@ -7,7 +7,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ArrowLeft, CircleCheck, Truck, Check, AlertCircle } from 'lucide-react';
-import styles from './OrderDetailPage.module.css';
 import { useManager } from '../../hooks/useManager';
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';

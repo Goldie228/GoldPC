@@ -1,5 +1,4 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import styles from './AccountLayout.module.css';
 
 /**
  * AccountLayout - Layout for account pages with sidebar navigation

@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import styles from "./AccountOverview.module.css";
 
 /**
  * AccountOverview - Main dashboard page for account

@@ -3,7 +3,6 @@ import { useMutation } from '@tanstack/react-query';
 import { Modal } from '../ui/Modal/Modal';
 import { Button } from '../ui/Button';
 import apiClient from '../../api/client';
-import styles from './ShareConfigModal.module.css';
 
 /** Ответ API на запрос генерации ссылки */
 interface ShareResponse {

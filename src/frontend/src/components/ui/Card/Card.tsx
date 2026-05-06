@@ -1,6 +1,16 @@
 import type { ReactNode, ReactElement } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import styles from './Card.module.css';
+
+const baseClasses = "bg-surface-card border border-hairline-dark shadow-[inset_0_0_20px_var(--hairline-dark)] transition-all relative overflow-hidden rounded-lg";
+
+const variantClasses: Record<string, string> = {
+  default: "",
+  category: "p-6 md:p-6 relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-gold after:scale-x-0 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100",
+  product: "relative",
+  elevated: "shadow-lg hover:shadow-xl",
+};
+
+const hoverableClass = "hover:border-gold hover:shadow-[var(--shadow-lg),var(--shadow-gold)] hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2";
 
 export type CardVariant = 'default' | 'category' | 'product' | 'elevated';
 export type CardAs = 'article' | 'div' | 'section';
@@ -42,9 +52,9 @@ export function Card({
   onClick,
 }: CardProps) {
   const classNames = [
-    styles.card,
-    variant !== 'default' ? styles[variant] : '',
-    hoverable ? styles.hoverable : '',
+    baseClasses,
+    variant !== 'default' ? variantClasses[variant] : '',
+    hoverable ? hoverableClass : '',
     className,
   ]
     .filter(Boolean)
@@ -53,25 +63,25 @@ export function Card({
   const Component = as;
 
   return (
-    <Component 
-      className={classNames} 
+    <Component
+      className={classNames}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
       {icon && (
-        <div className={styles.iconWrapper}>
+        <div className="w-12 h-12 flex items-center justify-center bg-surface-elevated mb-6 text-muted-text">
           {icon}
         </div>
       )}
-      
+
       {(title || badge) && (
-        <div className={styles.header}>
-          {title && <span className={styles.title}>{title}</span>}
-          {badge && <span className={styles.badge}>{badge}</span>}
+        <div className="flex justify-between items-center mb-5">
+          {title && <span className="text-xs font-semibold uppercase tracking-wider text-body-text">{title}</span>}
+          {badge && <span className="font-sans text-[11px] px-2 py-1 bg-gold/10 text-gold border border-gold/30">{badge}</span>}
         </div>
       )}
-      
+
       {children}
     </Component>
   );
@@ -86,7 +96,7 @@ export interface CardBodyProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function CardBody({ children, className = '', ...props }: CardBodyProps) {
   return (
-    <div className={`${styles.body} ${className}`.trim()} {...props}>
+    <div className={`p-6 border-t border-hairline-dark ${className}`.trim()} {...props}>
       {children}
     </div>
   );
@@ -99,7 +109,7 @@ export interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function CardHeader({ children, className = '', ...props }: CardHeaderProps) {
   return (
-    <div className={`${styles.header} ${className}`.trim()} {...props}>
+    <div className={`flex justify-between items-center mb-5 ${className}`.trim()} {...props}>
       {children}
     </div>
   );
@@ -112,7 +122,7 @@ export interface CardTitleProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 export function CardTitle({ children, className = '', ...props }: CardTitleProps) {
   return (
-    <span className={`${styles.title} ${className}`.trim()} {...props}>
+    <span className={`text-xs font-semibold uppercase tracking-wider text-body-text ${className}`.trim()} {...props}>
       {children}
     </span>
   );

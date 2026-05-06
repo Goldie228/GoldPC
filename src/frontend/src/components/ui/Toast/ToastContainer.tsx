@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import { useToast } from '../../../hooks/useToast';
 import { Toast } from './Toast';
-import styles from './ToastContainer.module.css';
 
 export function ToastContainer(): ReactElement | null {
   const { toasts, removeToast } = useToast();
@@ -11,7 +10,7 @@ export function ToastContainer(): ReactElement | null {
   }
 
   return (
-    <div className={styles.container} aria-label="Уведомления">
+    <div className="fixed top-20 right-4 z-[1000] flex flex-col gap-2" aria-label="Уведомления">
       {toasts.map((toast) => (
         <Toast
           key={toast.id}

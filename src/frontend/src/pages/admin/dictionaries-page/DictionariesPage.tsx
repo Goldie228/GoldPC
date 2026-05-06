@@ -10,7 +10,6 @@ import {
   type DictionaryManufacturer,
   type DictionaryItem,
 } from '../../../api/admin';
-import styles from './DictionariesPage.module.css';
 
 type TabType = 'categories' | 'manufacturers' | 'attributes';
 
@@ -126,8 +125,8 @@ export function DictionariesPage() {
   const renderTable = () => {
     if (loading) {
       return (
-        <div className={styles.loading}>
-          <div className={styles.spinner}></div>
+        <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+          <div className="w-8 h-8 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin mb-4"></div>
           <p>Загрузка...</p>
         </div>
       );
@@ -135,9 +134,9 @@ export function DictionariesPage() {
 
     if (error) {
       return (
-        <div className={styles.error}>
+        <div className="text-center py-12 text-red-600">
           <p>{error}</p>
-          <button onClick={fetchData} className={styles.retryBtn}>
+          <button onClick={fetchData} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
             Попробовать снова
           </button>
         </div>
@@ -167,64 +166,56 @@ export function DictionariesPage() {
 
     if (filteredItems.length === 0) {
       return (
-        <div className={styles.empty}>
+        <div className="flex flex-col items-center justify-center py-12 text-gray-400">
           <p>Нет записей</p>
         </div>
       );
     }
 
     return (
-      <div className={styles.tableCard}>
-        <table className={styles.table}>
+      <div className="bg-gray-800 border border-gray-700">
+        <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Название</th>
-              <th>Slug</th>
-              {activeTab !== 'attributes' && <th>Товаров</th>}
-              <th>Статус</th>
-              <th></th>
+              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700">ID</th>
+              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700">Название</th>
+              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700">Slug</th>
+              {activeTab !== 'attributes' && <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700">Товаров</th>}
+              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700">Статус</th>
+              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700"></th>
             </tr>
           </thead>
           <tbody>
             {filteredItems.map((item, index) => (
-              <tr key={item.id}>
-                <td>
-                  <span className={styles.itemId}>#{String(index + 1).padStart(3, '0')}</span>
-                </td>
-                <td>
-                  <span className={styles.itemName}>{item.name}</span>
-                </td>
-                <td>
-                  <span className={styles.itemSlug}>{item.slug}</span>
-                </td>
+              <tr key={item.id} className="hover:bg-gray-700">
+                <td className="px-5 py-3.5 text-sm font-mono text-xs text-gray-400">#{String(index + 1).padStart(3, '0')}</td>
+                <td className="px-5 py-3.5 text-sm font-medium text-gray-900">{item.name}</td>
+                <td className="px-5 py-3.5 text-sm font-mono text-xs text-gray-400">{item.slug}</td>
                 {activeTab !== 'attributes' && (
-                  <td>
-                    <span className={styles.itemCount}>
-                      {itemCounts[item.id] || 0}
-                    </span>
+                  <td className="px-5 py-3.5 text-sm font-mono text-xs text-gray-400">
+                    {itemCounts[item.id] || 0}
                   </td>
                 )}
-                <td>
-                  <span
-                    className={`${styles.itemStatus} ${
-                      item.isActive ? styles.active : styles.inactive
-                    }`}
-                  >
+                <td className="px-5 py-3.5 text-sm">
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[0.7rem] font-medium uppercase tracking-[0.05em] rounded ${
+                    item.isActive
+                      ? 'bg-green-500/15 text-green-500'
+                      : 'bg-amber-500/15 text-amber-500'
+                  }`}>
                     {item.isActive ? 'Активна' : 'Скрыта'}
                   </span>
                 </td>
-                <td>
-                  <div className={styles.itemActions}>
+                <td className="px-5 py-3.5 text-sm">
+                  <div className="flex gap-1">
                     <button
-                      className={styles.actionBtn}
+                      className="w-8 h-8 flex items-center justify-center bg-transparent border border-gray-600 text-gray-400 cursor-pointer hover:border-blue-500 hover:bg-blue-500/10 transition-colors text-sm"
                       title="Редактировать"
                       onClick={() => handleEdit(item)}
                     >
                       ✏️
                     </button>
                     <button
-                      className={`${styles.actionBtn} ${styles.delete}`}
+                      className="w-8 h-8 flex items-center justify-center bg-transparent border border-gray-600 text-gray-400 cursor-pointer hover:border-red-300 hover:text-red-500 hover:bg-red-500/10 transition-colors text-sm"
                       title="Удалить"
                       onClick={() => handleDelete(item.id)}
                     >
@@ -241,52 +232,62 @@ export function DictionariesPage() {
   };
 
   return (
-    <div className={styles.container}>
-      <header className={styles.header}>
+    <div className="p-8 max-w-[1400px] mx-auto">
+      <header className="flex justify-between items-start mb-8">
         <div>
-          <h1 className={styles.title}>Справочники</h1>
-          <div className={styles.breadcrumb}>
-            <a href="#">Admin</a>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2 tracking-tight">Справочники</h1>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <a href="#" className="text-gray-400 hover:text-blue-500 transition-colors no-underline">Admin</a>
             <span>→</span>
-            <span>Справочники</span>
+            <span className="text-gray-400">Справочники</span>
           </div>
         </div>
       </header>
 
       {/* Tabs */}
-      <div className={styles.tabs}>
+      <div className="flex gap-0 border-b border-gray-200 mb-8">
         <button
-          className={`${styles.tab} ${activeTab === 'categories' ? styles.active : ''}`}
+          className={`px-6 py-3 text-sm font-medium bg-transparent border-none cursor-pointer relative transition-colors ${
+            activeTab === 'categories' ? 'text-blue-500' : 'text-gray-400 hover:text-gray-900'
+          }`}
           onClick={() => setActiveTab('categories')}
         >
           Категории
+          {activeTab === 'categories' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-blue-500"></div>}
         </button>
         <button
-          className={`${styles.tab} ${activeTab === 'manufacturers' ? styles.active : ''}`}
+          className={`px-6 py-3 text-sm font-medium bg-transparent border-none cursor-pointer relative transition-colors ${
+            activeTab === 'manufacturers' ? 'text-blue-500' : 'text-gray-400 hover:text-gray-900'
+          }`}
           onClick={() => setActiveTab('manufacturers')}
         >
           Производители
+          {activeTab === 'manufacturers' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-blue-500"></div>}
         </button>
         <button
-          className={`${styles.tab} ${activeTab === 'attributes' ? styles.active : ''}`}
+          className={`px-6 py-3 text-sm font-medium bg-transparent border-none cursor-pointer relative transition-colors ${
+            activeTab === 'attributes' ? 'text-blue-500' : 'text-gray-400 hover:text-gray-900'
+          }`}
           onClick={() => setActiveTab('attributes')}
         >
           Характеристики
+          {activeTab === 'attributes' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-blue-500"></div>}
         </button>
       </div>
 
       {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <div className={styles.searchBox}>
-          <span>🔍</span>
+      <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-800 border border-gray-700 min-w-[320px]">
+          <span className="text-gray-400">🔍</span>
           <input
             type="text"
+            className="flex-1 bg-transparent border-none text-gray-900 text-sm outline-none placeholder-gray-400"
             placeholder="Поиск по названию..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <button className={styles.addBtn} onClick={handleAdd}>
+        <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white border-none text-sm font-semibold cursor-pointer hover:bg-blue-600 transition-colors" onClick={handleAdd}>
           <span>+</span> Добавить
         </button>
       </div>
@@ -296,53 +297,53 @@ export function DictionariesPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowModal(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200]" onClick={() => setShowModal(false)}>
+          <div className="bg-gray-800 border border-gray-700 w-full max-w-[480px]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-6 py-5 border-b border-gray-700">
+              <h3 className="text-base font-semibold m-0">
                 {editingItem ? 'Редактировать' : 'Новая запись'}
               </h3>
-              <button className={styles.modalClose} onClick={() => setShowModal(false)}>
+              <button className="w-8 h-8 flex items-center justify-center bg-transparent border-none text-gray-400 cursor-pointer hover:text-gray-900 transition-colors" onClick={() => setShowModal(false)}>
                 ✕
               </button>
             </div>
-            <div className={styles.modalBody}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Название</label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  placeholder="Введите название"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Slug (URL)</label>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  placeholder="auto-generated-slug"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className={styles.modalFooter}>
-              <button
-                className={styles.cancelBtn}
-                onClick={() => setShowModal(false)}
-              >
-                Отмена
-              </button>
-              <button
-                className={styles.saveBtn}
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? 'Сохранение...' : 'Сохранить'}
-              </button>
-            </div>
+             <div className="p-6">
+               <div className="mb-5">
+                 <label className="block text-sm font-medium text-gray-400 mb-2">Название</label>
+                 <input
+                   type="text"
+                   className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-gray-900 text-sm transition-colors focus:outline-none focus:border-blue-500"
+                   placeholder="Введите название"
+                   value={formData.name}
+                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                 />
+               </div>
+               <div className="mb-5">
+                 <label className="block text-sm font-medium text-gray-400 mb-2">Slug (URL)</label>
+                 <input
+                   type="text"
+                   className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-gray-900 text-sm transition-colors focus:outline-none focus:border-blue-500"
+                   placeholder="auto-generated-slug"
+                   value={formData.slug}
+                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                 />
+               </div>
+             </div>
+             <div className="flex justify-end gap-3 px-6 py-5 border-t border-gray-700">
+               <button
+                 className="px-5 py-2.5 bg-transparent border border-gray-600 text-gray-400 text-sm font-semibold cursor-pointer hover:border-gray-400 hover:text-gray-900 transition-colors"
+                 onClick={() => setShowModal(false)}
+               >
+                 Отмена
+               </button>
+               <button
+                 className="px-5 py-2.5 bg-blue-500 text-white border-none text-sm font-semibold cursor-pointer hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                 onClick={handleSave}
+                 disabled={saving}
+               >
+                 {saving ? 'Сохранение...' : 'Сохранить'}
+               </button>
+             </div>
           </div>
         </div>
       )}

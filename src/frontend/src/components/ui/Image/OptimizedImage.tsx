@@ -1,6 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import styles from './OptimizedImage.module.css';
 
 interface OptimizedImageProps {
   src: string;
@@ -95,19 +94,19 @@ export function OptimizedImage({
   }, [effectiveSrc, decoding]);
 
   return (
-    <div 
-      className={`${styles.container} ${className}`} 
+    <div
+      className={`relative overflow-hidden bg-[var(--bg-card)] rounded-[var(--radius-md)] w-full ${className}`}
       style={{ aspectRatio: String(aspectRatio) }}
     >
       <AnimatePresence>
         {!isLoaded && !error && (
-          <motion.div 
-            className={styles.placeholder}
+          <motion.div
+            className="absolute top-0 left-0 w-full h-full z-10"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            {placeholder || <div className={styles.skeleton} />}
+            {placeholder || <div className="w-full h-full animate-pulse bg-[var(--border-muted)]" />}
           </motion.div>
         )}
       </AnimatePresence>
@@ -122,18 +121,18 @@ export function OptimizedImage({
           width={width}
           height={height}
           fetchPriority={fetchPriority}
-          className={`${styles.image} ${isLoaded ? styles.loaded : ''}`}
+          className={`w-full h-full object-contain transition-opacity duration-500 ease-in-out ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
           onLoad={() => setIsLoaded(true)}
           onError={() => setError(true)}
           sizes={sizes}
           srcSet={srcSet}
         />
       ) : (
-        <div className={styles.error}>
+        <div className="w-full h-full flex flex-col items-center justify-center gap-[10px] text-[var(--fg-muted)] text-sm bg-[var(--bg-card)]">
           <span>Не удалось загрузить изображение</span>
           <button
             type="button"
-            className={styles.retryButton}
+            className="inline-flex items-center justify-center px-3 py-2 rounded-[10px] border border-[rgba(255,215,0,0.22)] bg-[rgba(255,215,0,0.08)] text-[var(--fg)] cursor-pointer text-[0.85rem] hover:bg-[rgba(255,215,0,0.12)]"
             onClick={() => {
               setError(false);
               setIsLoaded(false);

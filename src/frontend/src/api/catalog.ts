@@ -30,6 +30,23 @@ const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
   fan: 'fans',
 };
 
+/** Маппинг русских названий категорий из API -> frontend slug */
+const CATEGORY_NAME_TO_SLUG: Record<string, ProductCategory> = {
+  'Процессоры': 'cpu',
+  'Видеокарты': 'gpu',
+  'Материнские платы': 'motherboard',
+  'Оперативная память': 'ram',
+  'Накопители': 'storage',
+  'Блоки питания': 'psu',
+  'Корпуса': 'case',
+  'Охлаждение': 'cooling',
+  'Вентиляторы': 'fan',
+  'Мониторы': 'monitor',
+  'Клавиатуры': 'keyboard',
+  'Мыши': 'mouse',
+  'Наушники': 'headphones',
+};
+
 /**
  * API сервиса каталога
  */
@@ -62,7 +79,15 @@ export const catalogApi = {
     const apiParams: Record<string, string | number | boolean | undefined> = {};
     if (!params) {
       const response = await api.get<ProductListResponse>('/catalog/products');
-      return response.data;
+      const data = response.data;
+      if (data?.data && Array.isArray(data.data)) {
+        for (const p of data.data) {
+          if (typeof (p as any).category === 'string') {
+            (p as any).category = CATEGORY_NAME_TO_SLUG[(p as any).category] ?? (p as any).category;
+          }
+        }
+      }
+      return data;
     }
     if (params.page != null) apiParams.page = params.page;
     if (params.pageSize != null) apiParams.pageSize = params.pageSize;
@@ -116,20 +141,36 @@ export const catalogApi = {
       params: apiParams as Record<string, unknown>,
       paramsSerializer,
     });
-    return response.data;
+    const data = response.data;
+    if (data?.data && Array.isArray(data.data)) {
+      for (const p of data.data) {
+        if (typeof (p as any).category === 'string') {
+          (p as any).category = CATEGORY_NAME_TO_SLUG[(p as any).category] ?? (p as any).category;
+        }
+      }
+    }
+    return data;
   },
 
   /**
    * Получить товар по ID
    */
-  async getProduct(productId: string): Promise<Product> {
+ async getProduct(productId: string): Promise<Product> {
     const response = await api.get<Product>(`/catalog/products/${productId}`);
-    return response.data;
+    const p = response.data;
+    if (p && typeof (p as any).category === 'string') {
+      (p as any).category = CATEGORY_NAME_TO_SLUG[(p as any).category] ?? (p as any).category;
+    }
+    return p;
   },
 
   async getProductBySlug(slug: string): Promise<Product> {
     const response = await api.get<Product>(`/catalog/products/by-slug/${slug}`);
-    return response.data;
+    const p = response.data;
+    if (p && typeof (p as any).category === 'string') {
+      (p as any).category = CATEGORY_NAME_TO_SLUG[(p as any).category] ?? (p as any).category;
+    }
+    return p;
   },
 
   /**

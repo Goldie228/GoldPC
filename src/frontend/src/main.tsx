@@ -9,10 +9,10 @@ import '@fontsource/jetbrains-mono/400.css'
 import '@fontsource/jetbrains-mono/500.css'
 import '@fontsource-variable/fraunces/index.css'
 import 'leaflet/dist/leaflet.css'
-import './styles/tokens.css'
+import './index.css'          // 新的原型tokens + Tailwind (第1个!)
+import './styles/tokens.css' // 旧设计tokens（保留空壳）
 import './styles/globals.css'
 import './styles/staff.css'
-import './index.css'
 import App from './App.tsx'
 import { performanceMonitor } from './utils/performance'
 import { initializePWA } from './utils/pwa'

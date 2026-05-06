@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import styles from './AddressMap.module.css';
 
 // Fix для иконок Leaflet в Webpack/Vite
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -115,12 +114,12 @@ export function AddressMap({ onAddressSelect, onPickupPointSelect, mode, city }:
   };
 
   return (
-    <div className={styles.mapContainer}>
+    <div className="my-4">
       <MapContainer
         center={center}
         zoom={13}
         style={{ height: '400px', width: '100%', borderRadius: '8px' }}
-        className={styles.map}
+        className="border border-[var(--border)] rounded-lg overflow-hidden relative z-0"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -146,10 +145,10 @@ export function AddressMap({ onAddressSelect, onPickupPointSelect, mode, city }:
             }}
           >
             <Popup>
-              <div className={styles.popupContent}>
-                <h4>{point.name}</h4>
-                <p>{point.address}</p>
-                <p className={styles.workingHours}>{point.workingHours}</p>
+              <div className="p-2">
+                <h4 className="m-0 mb-2 text-sm font-semibold text-[var(--fg)]">{point.name}</h4>
+                <p className="m-1 text-xs text-[var(--fg-muted)]">{point.address}</p>
+                <p className="m-1 text-xs text-[var(--fg-muted)] mt-1">{point.workingHours}</p>
               </div>
             </Popup>
           </Marker>
@@ -157,23 +156,23 @@ export function AddressMap({ onAddressSelect, onPickupPointSelect, mode, city }:
       </MapContainer>
 
       {mode === 'delivery' && (
-        <p className={styles.hint}>
+        <p className="mt-2 text-xs text-[var(--fg-muted)] text-center">
           Нажмите на карту, чтобы выбрать адрес доставки
         </p>
       )}
 
       {mode === 'pickup' && pickupPoints.length > 0 && (
-        <div className={styles.pointsList}>
-          <div className={styles.pointsListTitle}>Пункты выдачи:</div>
+        <div className="mt-4">
+          <div className="mb-3 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Пункты выдачи:</div>
           {pickupPoints.map((point) => (
             <button
               key={point.id}
-              className={styles.pointItem}
+              className="flex flex-col items-start w-full p-3 mb-2 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg cursor-pointer transition-all duration-200 text-left hover:border-[var(--border-brand)] hover:bg-[var(--border-brand)]"
               onClick={() => handlePickupPointClick(point)}
             >
-              <strong>{point.name}</strong>
-              <span>{point.address}</span>
-              <span className={styles.workingHours}>{point.workingHours}</span>
+              <strong className="block mb-1 text-[var(--fg)] text-sm">{point.name}</strong>
+              <span className="block text-sm text-[var(--fg-muted)] mb-1">{point.address}</span>
+              <span className="block text-xs text-[var(--fg-muted)] mt-1">{point.workingHours}</span>
             </button>
           ))}
         </div>

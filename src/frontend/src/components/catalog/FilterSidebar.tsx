@@ -4,7 +4,6 @@ import { catalogApi } from '../../api/catalog';
 import { RangeSlider } from '../ui/RangeSlider';
 import { Skeleton } from '../ui/Skeleton';
 import type { ProductCategory, Category, FilterFacetAttribute, Manufacturer } from '../../api/types';
-import styles from './FilterSidebar.module.css';
 
 interface FilterSidebarProps {
   selectedCategory: ProductCategory | null;
@@ -249,21 +248,21 @@ function FilterGroup({ title, icon, defaultOpen = true, children }: FilterGroupP
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className={styles.filterGroup}>
+    <div className="mb-4 pb-3 pt-2.5 px-3.5 -mx-3.5 border-b border-[var(--border-muted)] border-l-2 border-transparent border-t border-[var(--border-muted)] border-r border-[var(--border-muted)] rounded-sm relative">
       <button
-        className={`${styles.filterHeader} ${isOpen ? styles.filterHeaderOpen : ''}`}
+        className={`flex items-center w-full py-2 bg-transparent border-none cursor-pointer text-[0.65rem] font-semibold text-[var(--fg-secondary)] uppercase tracking-[0.1em] transition-colors ${isOpen ? 'text-[var(--color-gold-500)]' : ''}`}
         onClick={() => setIsOpen((prev) => !prev)}
         aria-expanded={isOpen}
         type="button"
       >
-        <span className={styles.filterHeaderIcon}>{icon}</span>
-        <span className={styles.filterHeaderTitle}>{title}</span>
+        <span className="flex items-center mr-2 text-[var(--color-gold-400)]">{icon}</span>
+        <span className="flex-1 text-left">{title}</span>
         <ChevronDown
           size={14}
-          className={`${styles.filterHeaderChevron} ${isOpen ? '' : styles.rotated}`}
+          className={`text-[var(--fg-dim)] transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
         />
       </button>
-      <div className={`${styles.filterContent} ${isOpen ? styles.open : ''}`}>
+      <div className={`max-h-0 overflow-hidden pt-0 transition-all duration-250 ${isOpen ? 'max-h-[1200px] overflow-visible pt-3' : ''}`}>
         {children}
       </div>
     </div>
@@ -496,9 +495,9 @@ export function FilterSidebar({ mobile = false,
     Object.keys(selectedSpecifications).length > 0;
 
   return (
-    <aside className={`${styles.sidebar} ${mobile ? styles.sidebarMobile : ""}`}>
-      <div className={styles.sidebarHeader}>
-        <h2 className={styles.sidebarTitle}>
+    <aside className={`sticky top-[100px] w-full bg-[var(--bg-elevated)] border-r border-[var(--border-muted)] border-t border-[var(--border-muted)] border-b border-[var(--border-muted)] border-l-2 border-l-transparent py-5 px-4 overflow-y-auto overflow-x-visible max-h-[calc(100vh-120px)] shadow-lg ${mobile ? 'relative top-auto left-auto w-full h-auto max-h-none overflow-visible bg-transparent backdrop-filter-none border-none shadow-none p-0' : ''}`}>
+      <div className="mb-4 pb-2.5 border-b border-[var(--border-muted)] relative">
+        <h2 className="flex items-center gap-[10px] text-[0.95rem] font-semibold text-[var(--fg-primary)] tracking-[0.02em]">
           <Grid3X3 size={16} />
           Фильтры
         </h2>
@@ -511,26 +510,26 @@ export function FilterSidebar({ mobile = false,
           icon={<Grid3X3 size={14} />}
         defaultOpen={true}
       >
-        <div className={styles.categoryList}>
+        <div className="flex flex-col gap-1.5 max-h-[240px] overflow-y-auto overflow-x-hidden">
           <button
             type="button"
-            className={`${styles.categoryItem} ${!selectedCategory ? styles.active : ''}`}
+            className={`flex items-center w-full py-2.5 px-3 pl-6 bg-transparent border-none border-l-2 border-transparent cursor-pointer text-[0.8rem] text-[var(--fg-muted)] text-left transition-all duration-200 rounded-r-md relative ${!selectedCategory ? 'text-[var(--accent)] font-semibold border-l-2 border-[var(--accent)] pl-6' : ''}`}
             onClick={() => onCategoryChange(null)}
           >
-            <span className={styles.categoryName}>Все товары</span>
-            <span className={styles.categoryCount} aria-hidden={loading ? true : undefined}>
-              {loading ? <Skeleton width={44} height={12} borderRadius="sm" /> : totalCount}
-            </span>
-          </button>
-          {CATEGORY_ORDER.map((category) => (
-            <button
-              key={category}
-              type="button"
-              className={`${styles.categoryItem} ${selectedCategory === category ? styles.active : ''}`}
-              onClick={() => onCategoryChange(category)}
-            >
-              <span className={styles.categoryName}>{CATEGORY_LABELS[category]}</span>
-              <span className={styles.categoryCount}>
+            <span className="flex-1">Все товары</span>
+            <span className="flex items-center justify-center text-[0.65rem] text-[var(--fg-dim)] py-0.5 px-1.5 bg-[var(--border-muted)] rounded-sm transition-colors" aria-hidden={loading ? true : undefined}>
+                {loading ? <Skeleton width={44} height={12} borderRadius="sm" /> : totalCount}
+              </span>
+            </button>
+            {CATEGORY_ORDER.map((category) => (
+              <button
+                key={category}
+                type="button"
+                className={`flex items-center w-full py-2.5 px-3 pl-6 bg-transparent border-none border-l-2 border-transparent cursor-pointer text-[0.8rem] text-[var(--fg-muted)] text-left transition-all duration-200 rounded-r-md relative ${selectedCategory === category ? 'text-[var(--accent)] font-semibold border-l-2 border-[var(--accent)] pl-6' : ''}`}
+                onClick={() => onCategoryChange(category)}
+              >
+                <span className="flex-1">{CATEGORY_LABELS[category]}</span>
+                <span className="flex items-center justify-center text-[0.65rem] text-[var(--fg-dim)] py-0.5 px-1.5 bg-[var(--border-muted)] rounded-sm transition-colors">
                 {loading ? <Skeleton width={36} height={12} borderRadius="sm" /> : (categoryCounts[category] || 0)}
               </span>
             </button>
@@ -553,12 +552,12 @@ export function FilterSidebar({ mobile = false,
           onChange={setLocalPriceRange}
           formatValue={(v) => `${v.toLocaleString('ru-RU')} BYN`}
         />
-        <div className={styles.priceInputs}>
-          <div className={styles.inputGroup}>
-            <label className={styles.inputLabel}>От</label>
+        <div className="flex items-end gap-3 mt-5">
+          <div className="flex-1 relative">
+            <label className="block text-[0.6rem] font-medium text-[var(--fg-secondary)] uppercase tracking-[0.1em] mb-1.5">От</label>
             <input
               type="number"
-              className={styles.priceInput}
+              className="w-full py-2.5 px-3 bg-[var(--bg-elevated)] border border-[var(--border-muted)] text-[var(--fg-primary)] text-[0.8rem] rounded-sm transition-all duration-200"
               value={localPriceRange.min || ''}
               onChange={(e) => setLocalPriceRange({ ...localPriceRange, min: parseInt(e.target.value) || 0 })}
               min={PRICE_MIN}
@@ -567,12 +566,12 @@ export function FilterSidebar({ mobile = false,
               placeholder="Мин"
             />
           </div>
-          <span className={styles.priceSeparator}>—</span>
-          <div className={styles.inputGroup}>
-            <label className={styles.inputLabel}>До</label>
+          <span className="text-[0.8rem] text-[var(--fg-dim)] mb-2.5 opacity-50">—</span>
+          <div className="flex-1 relative">
+            <label className="block text-[0.6rem] font-medium text-[var(--fg-secondary)] uppercase tracking-[0.1em] mb-1.5">До</label>
             <input
               type="number"
-              className={styles.priceInput}
+              className="w-full py-2.5 px-3 bg-[var(--bg-elevated)] border border-[var(--border-muted)] text-[var(--fg-primary)] text-[0.8rem] rounded-sm transition-all duration-200"
               value={localPriceRange.max || ''}
               onChange={(e) => setLocalPriceRange({ ...localPriceRange, max: parseInt(e.target.value) || 0 })}
               min={PRICE_MIN}
@@ -638,11 +637,11 @@ export function FilterSidebar({ mobile = false,
                 ? 1
                 : Math.max(1, Math.floor(rangeSpanUi / 100) || 1);
 
-            return (
-              <div key={attr.key} className={styles.specFilterBlock}>
-                {!options?.hideLabel && <span className={styles.specFilterLabel}>{attr.displayName}</span>}
+             return (
+              <div key={attr.key} className="mb-3 pb-3 border-b border-[var(--border-muted)]">
+                {!options?.hideLabel && <span className="block text-[0.7rem] font-semibold text-[var(--fg-secondary)] uppercase tracking-[0.05em] mb-2">{attr.displayName}</span>}
                 {effectiveMin != null && isWattage && (
-                  <div className={styles.wattageHint} title={`Минимальная мощность с учётом выбранной конфигурации: ${effectiveMin}Вт`}>
+                  <div className="text-[0.7rem] text-[var(--accent)] mb-2 py-1 px-2 bg-[color-mix(in_srgb,var(--bg-elevated)_95%,transparent)] rounded-sm" title={`Минимальная мощность с учётом выбранной конфигурации: ${effectiveMin}Вт`}>
                     Мин. {effectiveMin}Вт для вашей сборки
                   </div>
                 )}
@@ -726,11 +725,11 @@ export function FilterSidebar({ mobile = false,
             }
 
             return (
-              <div key={attr.key} className={styles.specFilterBlock}>
-                {!options?.hideLabel && <span className={styles.specFilterLabel}>{attr.displayName}</span>}
+              <div key={attr.key} className="mb-3 pb-3 border-b border-[var(--border-muted)]">
+                {!options?.hideLabel && <span className="block text-[0.7rem] font-semibold text-[var(--fg-secondary)] uppercase tracking-[0.05em] mb-2">{attr.displayName}</span>}
                 {showSearch && (
-                  <div className={styles.specSearchWrap}>
-                    <Search size={14} className={styles.specSearchIcon} aria-hidden />
+                  <div className="relative mb-2">
+                    <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-dim)] pointer-events-none" aria-hidden />
                     <input
                       type="search"
                       placeholder="Поиск..."
@@ -738,24 +737,24 @@ export function FilterSidebar({ mobile = false,
                       onChange={(e) =>
                         setSpecSearchQuery((prev) => ({ ...prev, [attr.key]: e.target.value }))
                       }
-                      className={styles.specSearchInput}
+                      className="w-full py-2 px-3 pl-8 bg-[var(--bg-elevated)] border border-[var(--border-muted)] text-[var(--fg-primary)] text-[0.8rem] rounded-sm transition-colors"
                     />
                   </div>
                 )}
-                <div className={styles.specFilterValues}>
+                <div className="flex flex-col gap-0.5 max-h-[160px] overflow-y-auto overflow-x-hidden">
                   {finalOptions.length > 0 ? (
                     finalOptions.map(({ value: val, count }) => {
                       const disabled = count === 0 && !isChecked(val);
                       return (
                       <label
                         key={val}
-                        className={`${styles.checkboxItem} ${isChecked(val) ? styles.checked : ''}`}
+                        className={`flex items-center py-2.5 px-3 cursor-pointer transition-all duration-200 rounded-sm border-l-2 border-transparent relative ${isChecked(val) ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]' : ''}`}
                         aria-disabled={disabled ? true : undefined}
                         style={disabled ? { opacity: 0.55 } : undefined}
                       >
                         <input
                           type="checkbox"
-                          className={styles.filterVisuallyHiddenControl}
+                          className="absolute inset-0 w-full h-full m-0 opacity-0 cursor-pointer z-10"
                           checked={isChecked(val)}
                           disabled={disabled}
                           onChange={() => {
@@ -768,15 +767,15 @@ export function FilterSidebar({ mobile = false,
                             onSpecificationsChange(next);
                           }}
                         />
-                        <span className={styles.checkbox} aria-hidden="true">
-                          <Check size={10} className={styles.checkIcon} aria-hidden />
+                        <span className="w-4 h-4 border border-[var(--fg-dim)] rounded-sm flex items-center justify-center mr-3 transition-all duration-200 flex-shrink-0" aria-hidden="true">
+                          <Check size={10} className={`opacity-0 text-[var(--accent)] transition-opacity duration-200 ${isChecked(val) ? 'opacity-100' : ''}`} aria-hidden />
                         </span>
-                        <span className={styles.checkboxLabel}>{val} <span style={{ opacity: 0.7 }}>({count})</span></span>
+                        <span className="text-[0.8rem] text-[var(--fg-muted)] transition-colors">{val} <span style={{ opacity: 0.7 }}>({count})</span></span>
                       </label>
                     );
                     })
                   ) : (
-                    <span className={styles.emptySpecHint}>
+                    <span className="block text-[0.75rem] text-[var(--fg-dim)] py-2 px-3 italic">
                       {showSearch && query ? 'Ничего не найдено' : 'Нет вариантов'}
                     </span>
                   )}
@@ -789,7 +788,7 @@ export function FilterSidebar({ mobile = false,
 
         return specAttrsLoading ? (
           <FilterGroup title="Характеристики" icon={<Tag size={14} />} defaultOpen={false}>
-            <div className={styles.checkboxList}>
+            <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto overflow-x-hidden">
               <Skeleton width="100%" height={24} borderRadius="sm" />
               <Skeleton width="100%" height={24} borderRadius="sm" />
             </div>
@@ -803,7 +802,7 @@ export function FilterSidebar({ mobile = false,
             const title = attrsInGroup[0]?.displayName ?? group.keys[0];
             return (
               <FilterGroup key={group.keys[0]} title={title} icon={<Tag size={14} />} defaultOpen={false}>
-                <div className={styles.checkboxList}>{rendered}</div>
+                <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto overflow-x-hidden">{rendered}</div>
               </FilterGroup>
             );
           })
@@ -816,7 +815,7 @@ export function FilterSidebar({ mobile = false,
         icon={<Tag size={14} />}
         defaultOpen={false}
       >
-        <div className={styles.checkboxList}>
+        <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto overflow-x-hidden">
           {manufacturersLoading ? (
             <>
               <Skeleton width="100%" height={24} borderRadius="sm" />
@@ -824,7 +823,7 @@ export function FilterSidebar({ mobile = false,
               <Skeleton width="100%" height={24} borderRadius="sm" />
             </>
           ) : manufacturers.length === 0 ? (
-            <span className={styles.emptySpecHint}>Нет производителей</span>
+            <span className="block text-[0.75rem] text-[var(--fg-dim)] py-2 px-3 italic">Нет производителей</span>
           ) : (
             manufacturers
               .filter((m) => {
@@ -837,11 +836,11 @@ export function FilterSidebar({ mobile = false,
               .map((m) => (
                 <label
                   key={m.id}
-                  className={`${styles.checkboxItem} ${selectedManufacturerIds.includes(m.id) ? styles.checked : ''}`}
+                  className={`flex items-center py-2.5 px-3 cursor-pointer transition-all duration-200 rounded-sm border-l-2 border-transparent relative ${selectedManufacturerIds.includes(m.id) ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]' : ''}`}
                 >
                   <input
                     type="checkbox"
-                    className={styles.filterVisuallyHiddenControl}
+                    className="absolute inset-0 w-full h-full m-0 opacity-0 cursor-pointer z-10"
                     checked={selectedManufacturerIds.includes(m.id)}
                     onChange={(e) => {
                       if (e.target.checked) {
@@ -851,136 +850,136 @@ export function FilterSidebar({ mobile = false,
                       }
                     }}
                   />
-                  <span className={styles.checkbox} aria-hidden="true">
-                    <Check size={10} className={styles.checkIcon} aria-hidden />
+                  <span className="w-4 h-4 border border-[var(--fg-dim)] rounded-sm flex items-center justify-center mr-3 transition-all duration-200 flex-shrink-0" aria-hidden="true">
+                    <Check size={10} className={`opacity-0 text-[var(--accent)] transition-opacity duration-200 ${selectedManufacturerIds.includes(m.id) ? 'opacity-100' : ''}`} aria-hidden />
                   </span>
-                  <span className={styles.checkboxLabel}>{m.name}</span>
+                  <span className="text-[0.8rem] text-[var(--fg-muted)] transition-colors">{m.name}</span>
                 </label>
               ))
           )}
         </div>
       </FilterGroup>
 
-      {/* Rating */}
-      <FilterGroup
-        title="Рейтинг"
-        icon={<Star size={14} />}
-        defaultOpen={false}
-      >
-        <div className={styles.ratingOptions} role="radiogroup" aria-label="Минимальный рейтинг">
-          {[4, 3, 2, 1].map((rating) => {
-            const labelText = `${rating}★ и выше`;
-            return (
-              <label
-                key={rating}
-                className={`${styles.ratingOption} ${minRating === rating ? styles.checked : ''}`}
-              >
-                <input
-                  type="radio"
-                  name="rating"
-                  className={styles.filterVisuallyHiddenControl}
-                  checked={minRating === rating}
-                  onChange={() => onRatingChange(rating)}
-                  aria-label={labelText}
-                />
-                <span className={styles.ratingRadio} aria-hidden="true">
-                  <Check size={10} className={styles.checkIcon} aria-hidden />
-                </span>
-                <span className={styles.ratingStars} aria-hidden="true">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      size={12}
-                      className={i < rating ? styles.starFilled : styles.starEmpty}
-                      aria-hidden
-                    />
-                  ))}
-                </span>
-                <span className={styles.ratingLabel} aria-hidden="true">
-                  {labelText}
-                </span>
-              </label>
-            );
-          })}
-          <label
-            className={`${styles.ratingOption} ${minRating === 0 ? styles.checked : ''}`}
-          >
-            <input
-              type="radio"
-              name="rating"
-              className={styles.filterVisuallyHiddenControl}
-              checked={minRating === 0}
-              onChange={() => onRatingChange(0)}
-              aria-label="Любой рейтинг"
-            />
-            <span className={styles.ratingRadio} aria-hidden="true">
-              <Check size={10} className={styles.checkIcon} aria-hidden />
-            </span>
-            <span className={styles.ratingLabel} aria-hidden="true">Любой рейтинг</span>
-          </label>
-        </div>
-      </FilterGroup>
+       {/* Rating */}
+       <FilterGroup
+         title="Рейтинг"
+         icon={<Star size={14} />}
+         defaultOpen={false}
+       >
+         <div className="flex flex-col gap-0.5 max-h-[180px] overflow-y-auto overflow-x-hidden" role="radiogroup" aria-label="Минимальный рейтинг">
+           {[4, 3, 2, 1].map((rating) => {
+             const labelText = `${rating}★ и выше`;
+             return (
+               <label
+                 key={rating}
+                 className={`flex items-center py-2.5 px-3 cursor-pointer transition-all duration-200 rounded-sm border-l-2 border-transparent relative ${minRating === rating ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]' : ''}`}
+               >
+                 <input
+                   type="radio"
+                   name="rating"
+                   className="absolute inset-0 w-full h-full m-0 opacity-0 cursor-pointer z-10"
+                   checked={minRating === rating}
+                   onChange={() => onRatingChange(rating)}
+                   aria-label={labelText}
+                 />
+                 <span className="w-4 h-4 border border-[var(--fg-dim)] rounded-full flex items-center justify-center mr-3 transition-all duration-200 flex-shrink-0" aria-hidden="true">
+                   <Check size={10} className={`opacity-0 text-[var(--accent)] transition-opacity duration-200 ${minRating === rating ? 'opacity-100' : ''}`} aria-hidden />
+                 </span>
+                 <span className="flex gap-0.5 mr-2" aria-hidden="true">
+                   {Array.from({ length: 5 }).map((_, i) => (
+                     <Star
+                       key={i}
+                       size={12}
+                       className={i < rating ? 'text-[var(--accent)] drop-shadow-[0_0_2px_var(--border-brand)]' : 'text-[var(--fg-dim)] opacity-30'}
+                       aria-hidden
+                     />
+                   ))}
+                 </span>
+                 <span className="text-[0.8rem] text-[var(--fg-muted)] transition-colors" aria-hidden="true">
+                   {labelText}
+                 </span>
+               </label>
+             );
+           })}
+           <label
+             className={`flex items-center py-2.5 px-3 cursor-pointer transition-all duration-200 rounded-sm border-l-2 border-transparent relative ${minRating === 0 ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]' : ''}`}
+           >
+             <input
+               type="radio"
+               name="rating"
+               className="absolute inset-0 w-full h-full m-0 opacity-0 cursor-pointer z-10"
+               checked={minRating === 0}
+               onChange={() => onRatingChange(0)}
+               aria-label="Любой рейтинг"
+             />
+             <span className="w-4 h-4 border border-[var(--fg-dim)] rounded-full flex items-center justify-center mr-3 transition-all duration-200 flex-shrink-0" aria-hidden="true">
+               <Check size={10} className={`opacity-0 text-[var(--accent)] transition-opacity duration-200 ${minRating === 0 ? 'opacity-100' : ''}`} aria-hidden />
+             </span>
+             <span className="text-[0.8rem] text-[var(--fg-muted)] transition-colors" aria-hidden="true">Любой рейтинг</span>
+           </label>
+         </div>
+       </FilterGroup>
 
-      {/* Stock Status */}
-      <FilterGroup
-        title="Наличие"
-        icon={<Package size={14} />}
-        defaultOpen={false}
-      >
-        <div className={styles.checkboxList}>
-          <label
-            className={`${styles.checkboxItem} ${selectedAvailability.includes('in_stock') ? styles.checked : ''}`}
-          >
-            <input
-              type="checkbox"
-              className={styles.filterVisuallyHiddenControl}
-              checked={selectedAvailability.includes('in_stock')}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  onAvailabilityChange([...selectedAvailability, 'in_stock']);
-                } else {
-                  onAvailabilityChange(selectedAvailability.filter((a) => a !== 'in_stock'));
-                }
-              }}
-            />
-            <span className={styles.checkbox} aria-hidden="true">
-              <Check size={10} className={styles.checkIcon} aria-hidden />
-            </span>
-            <span className={styles.checkboxLabel}>В наличии</span>
-          </label>
-          <label
-            className={`${styles.checkboxItem} ${selectedAvailability.includes('on_order') ? styles.checked : ''}`}
-          >
-            <input
-              type="checkbox"
-              className={styles.filterVisuallyHiddenControl}
-              checked={selectedAvailability.includes('on_order')}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  onAvailabilityChange([...selectedAvailability, 'on_order']);
-                } else {
-                  onAvailabilityChange(selectedAvailability.filter((a) => a !== 'on_order'));
-                }
-              }}
-            />
-            <span className={styles.checkbox} aria-hidden="true">
-              <Check size={10} className={styles.checkIcon} aria-hidden />
-            </span>
-            <span className={styles.checkboxLabel}>Под заказ</span>
-          </label>
-        </div>
-      </FilterGroup>
+       {/* Stock Status */}
+       <FilterGroup
+         title="Наличие"
+         icon={<Package size={14} />}
+         defaultOpen={false}
+       >
+         <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto overflow-x-hidden">
+           <label
+             className={`flex items-center py-2.5 px-3 cursor-pointer transition-all duration-200 rounded-sm border-l-2 border-transparent relative ${selectedAvailability.includes('in_stock') ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]' : ''}`}
+           >
+             <input
+               type="checkbox"
+               className="absolute inset-0 w-full h-full m-0 opacity-0 cursor-pointer z-10"
+               checked={selectedAvailability.includes('in_stock')}
+               onChange={(e) => {
+                 if (e.target.checked) {
+                   onAvailabilityChange([...selectedAvailability, 'in_stock']);
+                 } else {
+                   onAvailabilityChange(selectedAvailability.filter((a) => a !== 'in_stock'));
+                 }
+               }}
+             />
+             <span className="w-4 h-4 border border-[var(--fg-dim)] rounded-sm flex items-center justify-center mr-3 transition-all duration-200 flex-shrink-0" aria-hidden="true">
+               <Check size={10} className={`opacity-0 text-[var(--accent)] transition-opacity duration-200 ${selectedAvailability.includes('in_stock') ? 'opacity-100' : ''}`} aria-hidden />
+             </span>
+             <span className="text-[0.8rem] text-[var(--fg-muted)] transition-colors">В наличии</span>
+           </label>
+           <label
+             className={`flex items-center py-2.5 px-3 cursor-pointer transition-all duration-200 rounded-sm border-l-2 border-transparent relative ${selectedAvailability.includes('on_order') ? 'text-[var(--accent)] border-l-2 border-[var(--accent)]' : ''}`}
+           >
+             <input
+               type="checkbox"
+               className="absolute inset-0 w-full h-full m-0 opacity-0 cursor-pointer z-10"
+               checked={selectedAvailability.includes('on_order')}
+               onChange={(e) => {
+                 if (e.target.checked) {
+                   onAvailabilityChange([...selectedAvailability, 'on_order']);
+                 } else {
+                   onAvailabilityChange(selectedAvailability.filter((a) => a !== 'on_order'));
+                 }
+               }}
+             />
+             <span className="w-4 h-4 border border-[var(--fg-dim)] rounded-sm flex items-center justify-center mr-3 transition-all duration-200 flex-shrink-0" aria-hidden="true">
+               <Check size={10} className={`opacity-0 text-[var(--accent)] transition-opacity duration-200 ${selectedAvailability.includes('on_order') ? 'opacity-100' : ''}`} aria-hidden />
+             </span>
+             <span className="text-[0.8rem] text-[var(--fg-muted)] transition-colors">Под заказ</span>
+           </label>
+         </div>
+       </FilterGroup>
 
-      {/* Reset Button - показывается только при активных фильтрах */}
-      {hasActiveFilters && (
-        <button type="button" className={styles.resetBtn} onClick={onReset}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-            <polyline points="1 4 1 10 7 10" />
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-          </svg>
-          Сбросить фильтры
-        </button>
-      )}
-    </aside>
-  );
-}
+       {/* Reset Button - показывается только при активных фильтрах */}
+       {hasActiveFilters && (
+         <button type="button" className="flex items-center justify-center gap-2 w-full py-2.5 px-4 mt-4 bg-transparent border border-[var(--border-brand)] text-[var(--accent)] text-[0.75rem] font-medium cursor-pointer transition-all duration-250 rounded-md relative overflow-hidden" onClick={onReset}>
+           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+             <polyline points="1 4 1 10 7 10" />
+             <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+           </svg>
+           Сбросить фильтры
+         </button>
+       )}
+     </aside>
+   );
+ }

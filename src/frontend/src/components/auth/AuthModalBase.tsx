@@ -7,7 +7,6 @@
 
 import React from 'react';
 import { Modal } from '@/components/ui/Modal';
-import styles from './AuthModalBase.module.css';
 
 export interface AuthModalBaseProps {
   /** Whether modal is open */
@@ -50,18 +49,18 @@ export const AuthModalBase: React.FC<AuthModalBaseProps> = ({
       size={size}
       showCloseButton={showCloseButton}
     >
-      <div className={styles.content}>
+      <div className="p-6">
         {children}
       </div>
 
       {switchLink && (
-        <div className={styles.switchContainer}>
-          <span className={styles.switchText}>
+        <div className="px-6 py-4 border-t border-[var(--color-border)] text-center">
+          <span className="text-[14px] text-[var(--color-text-secondary)] mr-1">
             {switchLink.text}
           </span>
           <button
             type="button"
-            className={styles.switchButton}
+            className="bg-none border-none text-[var(--color-primary)] text-[14px] font-medium cursor-pointer p-0 transition-opacity duration-200 hover:opacity-80 hover:underline"
             onClick={switchLink.onClick}
           >
             {switchLink.actionText}
@@ -70,7 +69,7 @@ export const AuthModalBase: React.FC<AuthModalBaseProps> = ({
       )}
 
       {footer && (
-        <div className={styles.footer}>
+        <div className="px-6 pt-4 pb-6 border-t border-[var(--color-border)]">
           {footer}
         </div>
       )}

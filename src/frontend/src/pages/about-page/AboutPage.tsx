@@ -15,8 +15,6 @@ import {
   Heart,
   Target,
 } from 'lucide-react';
-import styles from './AboutPage.module.css';
-
 // Статистика компании
 const stats = [
   { id: 1, value: '10+', label: 'лет на рынке', icon: Clock },
@@ -89,18 +87,18 @@ const itemVariants = {
 
 export function AboutPage() {
   return (
-    <div className={styles.container}>
+    <div className="min-h-screen bg-canvas-dark">
       {/* Hero Section */}
       <motion.header
-        className={styles.hero}
+        className="pt-32 pb-20 px-4 md:px-8 max-w-[1440px] mx-auto"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className={styles.heroTitle}>
-          О компании <span className={styles.accent}>GoldPC</span>
+        <h1 className="text-3xl md:text-4xl font-bold text-body-text mb-6">
+          О компании <span className="text-gold">GoldPC</span>
         </h1>
-        <p className={styles.heroDesc}>
+        <p className="text-lg text-muted-text max-w-3xl">
           Мы создаём компьютеры мечты с 2014 года. От геймерских монстров до рабочих станций
           профессионалов — каждая сборка выполнена с любовью к деталям.
         </p>
@@ -108,21 +106,21 @@ export function AboutPage() {
 
       {/* Stats Section */}
       <motion.section
-        className={styles.stats}
+        className="py-20 px-4 md:px-8 max-w-[1440px] mx-auto"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <div className={styles.statsGrid}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat) => {
             const IconComponent = stat.icon;
             return (
-              <motion.div key={stat.id} className={styles.statCard} variants={itemVariants}>
-                <div className={styles.statIcon}>
+              <motion.div key={stat.id} className="p-6 bg-surface-card rounded-xl border border-hairline-dark flex flex-col items-center text-center" variants={itemVariants}>
+                <div className="w-12 h-12 flex items-center justify-center bg-gold/10 text-gold rounded-lg mb-4">
                   <IconComponent size={24} />
                 </div>
-                <div className={styles.statValue}>{stat.value}</div>
-                <div className={styles.statLabel}>{stat.label}</div>
+                <div className="text-2xl font-bold text-gold mb-2">{stat.value}</div>
+                <div className="text-sm text-muted-text">{stat.label}</div>
               </motion.div>
             );
           })}
@@ -131,19 +129,19 @@ export function AboutPage() {
 
       {/* Mission Section */}
       <motion.section
-        className={styles.mission}
+        className="py-20 px-4 md:px-8 max-w-[1440px] mx-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-        <div className={styles.missionContent}>
-          <h2 className={styles.sectionTitle}>Наша миссия</h2>
-          <p className={styles.missionText}>
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-2xl font-bold text-body-text mb-8">Наша миссия</h2>
+          <p className="text-lg text-muted-text mb-4">
             Мы верим, что каждый заслуживает компьютер, который идеально соответствует его
             потребностям. Наша миссия — сделать высокопроизводительные компьютеры доступными
             и понятными для каждого клиента.
           </p>
-          <p className={styles.missionText}>
+          <p className="text-lg text-muted-text mb-4">
             Команда GoldPC объединяет энтузиастов, которые сами увлечены технологиями.
             Мы не просто продаём комплектующие — мы помогаем воплотить ваши идеи в реальность.
           </p>
@@ -152,28 +150,28 @@ export function AboutPage() {
 
       {/* Advantages Section */}
       <motion.section
-        className={styles.advantages}
+        className="py-20 px-4 md:px-8 max-w-[1440px] mx-auto"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-100px' }}
       >
-        <h2 className={styles.sectionTitle}>Почему выбирают нас</h2>
-        <div className={styles.advantagesGrid}>
+        <h2 className="text-2xl font-bold text-body-text mb-8">Почему выбирают нас</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {advantages.map((advantage) => {
             const IconComponent = advantage.icon;
             return (
               <motion.div
                 key={advantage.id}
-                className={styles.advantageCard}
+                className="p-6 bg-surface-card rounded-xl border border-hairline-dark"
                 variants={itemVariants}
                 whileHover={{ y: -4 }}
               >
-                <div className={styles.advantageIcon}>
+                <div className="w-14 h-14 flex items-center justify-center bg-gold/10 text-gold rounded-xl mb-4">
                   <IconComponent size={28} />
                 </div>
-                <h3 className={styles.advantageTitle}>{advantage.title}</h3>
-                <p className={styles.advantageDesc}>{advantage.description}</p>
+                <h3 className="text-xl font-semibold text-body-text mb-3">{advantage.title}</h3>
+                <p className="text-muted-text">{advantage.description}</p>
               </motion.div>
             );
           })}
@@ -182,24 +180,24 @@ export function AboutPage() {
 
       {/* Contact Section */}
       <motion.section
-        className={styles.contacts}
+        className="py-20 px-4 md:px-8 max-w-[1440px] mx-auto"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className={styles.sectionTitle}>Связаться с нами</h2>
-        <div className={styles.contactsList}>
+        <h2 className="text-2xl font-bold text-body-text mb-8">Связаться с нами</h2>
+        <div className="pt-20 pb-16 px-4 md:px-8 max-w-[1440px] mx-auto">
           {contacts.map((contact) => {
             const IconComponent = contact.icon;
             return (
-              <div key={contact.id} className={styles.contactItem}>
-                <div className={styles.contactIcon}>
+              <div key={contact.id} className="flex items-center gap-4 p-4 bg-surface-card rounded-xl border border-hairline-dark">
+                <div className="w-10 h-10 flex items-center justify-center bg-gold/10 text-gold rounded-lg flex-shrink-0">
                   <IconComponent size={20} />
                 </div>
-                <div className={styles.contactInfo}>
-                  <span className={styles.contactLabel}>{contact.label}</span>
-                  <span className={styles.contactValue}>{contact.value}</span>
+                <div>
+                  <span className="text-sm text-muted-text">{contact.label}</span>
+                  <span className="text-body-text">{contact.value}</span>
                 </div>
               </div>
             );
