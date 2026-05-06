@@ -328,7 +328,7 @@ export function CatalogPage() {
     <div className="min-h-screen bg-[#0b0e11] flex flex-col">
       {/* Header */}
       <div className="bg-[#1e2329] border-b border-[#2b3139]">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-3 md:py-4">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-2 md:py-3">
           <Breadcrumbs
             items={
               selectedCategory
@@ -347,7 +347,7 @@ export function CatalogPage() {
           <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mt-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline gap-3">
-                <h1 className="text-xl md:text-2xl font-bold text-body-text tracking-tight">{categoryName}</h1>
+                <h1 style={{ fontSize: '24px' }} className="font-bold text-body-text tracking-tight">{categoryName}</h1>
                 <span className="text-sm text-muted-text font-tabular">
                   {totalItems > 0 ? `${formatCountRu(totalItems, RU_FORMS.tovar)}` : 'Товары не найдены'}
                 </span>
@@ -388,7 +388,7 @@ export function CatalogPage() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 w-full max-w-[1440px] mx-auto px-4 md:px-8 py-4" ref={catalogScrollAnchorRef}>
+      <div className="flex-1 w-full max-w-[1440px] mx-auto px-6 md:px-10 py-3">
         <div className="flex gap-6">
           {/* Desktop Sidebar - 280px width */}
           <div className="hidden lg:block w-[280px] flex-shrink-0">
@@ -424,7 +424,7 @@ export function CatalogPage() {
                     <h2 className="text-sm font-bold text-body-text flex items-center gap-2">
                       Фильтры
                       {activeFilterCount > 0 && (
-                        <span className="h-5 min-w-5 px-1.5 bg-gold text-gold-ink text-[10px] font-bold rounded-full flex items-center justify-center">
+                        <span className="h-5 min-w-5 px-1.5 bg-gold text-gold-ink text-[12px] font-bold rounded-full flex items-center justify-center">
                           {activeFilterCount}
                         </span>
                       )}

@@ -34,8 +34,8 @@ export function Toolbar({
   onFilterClick: () => void;
 }): JSX.Element {
   return (
-    <div className="bg-surface-card/95 backdrop-blur-md border-b border-hairline-dark sticky top-0 z-30 shadow-lg shadow-black/10">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-8 h-12 flex items-center gap-3">
+    <div className="bg-surface-card/95 backdrop-blur-md border-b border-hairline-dark sticky top-0 z-30">
+      <div className="max-w-[1440px] mx-auto px-6 md:px-10 h-10 flex items-center gap-3">
         {/* Сортировка */}
         <div className="flex items-center gap-2">
           <ArrowUpDown size={14} className="text-muted-text flex-shrink-0" />
@@ -60,7 +60,7 @@ export function Toolbar({
           <SlidersHorizontal size={14} />
           <span>Фильтры</span>
           {activeFilterCount > 0 && (
-            <span className="h-5 min-w-5 px-1.5 bg-gold text-gold-ink text-[10px] font-bold rounded-full flex items-center justify-center">
+            <span className="h-5 min-w-5 px-1.5 bg-gold text-gold-ink text-[12px] font-bold rounded-full flex items-center justify-center">
               {activeFilterCount}
             </span>
           )}
