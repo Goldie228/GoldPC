@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useId, useMemo, useState, type ReactElement } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ChevronDown } from 'lucide-react';
-import styles from './FaqPage.module.css';
 
 type FaqItem = {
   id: string;
@@ -68,18 +67,18 @@ export function FaqPage(): ReactElement {
     });
   }, [location.hash]);
 
-  return (
-    <main className={styles.page}>
-      <h1 className={styles.title}>FAQ</h1>
-      <p className={styles.lead}>
+    return (
+    <main className="min-h-screen bg-canvas-dark">
+      <h1 className="text-3xl md:text-4xl font-bold text-body-text mb-6">FAQ</h1>
+      <p className="text-lg text-muted-text max-w-3xl mb-8">
         Ответы на частые вопросы. Ссылку на конкретный вопрос можно скопировать из адресной строки
         после выбора пункта.
       </p>
 
-      <div className={styles.toolbar}>
+      <div className="mb-6">
         <button
           type="button"
-          className={styles.toolbarBtn}
+          className="px-4 py-2 text-sm font-medium rounded-lg border border-hairline-dark bg-surface-elevated hover:bg-surface-card transition-colors"
           onClick={allExpanded ? collapseAll : expandAll}
           aria-pressed={allExpanded}
         >
@@ -87,26 +86,26 @@ export function FaqPage(): ReactElement {
         </button>
       </div>
 
-      <div className={styles.list}>
+      <div className="space-y-4">
         {FAQ_ITEMS.map((item) => {
           const panelId = `${baseId}-${item.id}-panel`;
           const headerId = `${baseId}-${item.id}-header`;
           const expanded = openIds.has(item.id);
           return (
-            <section key={item.id} id={item.id} className={styles.item} aria-labelledby={headerId}>
-              <h2 className={styles.questionHeading}>
+            <section key={item.id} id={item.id} className="bg-surface-card rounded-xl border border-hairline-dark" aria-labelledby={headerId}>
+              <h2 className="text-lg font-semibold text-body-text">
                 <button
                   type="button"
                   id={headerId}
-                  className={styles.trigger}
+                  className="w-full flex items-center justify-between p-5 text-left hover:bg-surface-elevated transition-colors rounded-xl"
                   aria-expanded={expanded}
                   aria-controls={panelId}
                   onClick={() => toggle(item.id)}
                 >
-                  <span className={styles.triggerLabel}>{item.question}</span>
+                  <span className="text-body-text">{item.question}</span>
                   <ChevronDown
                     size={20}
-                    className={`${styles.chevron} ${expanded ? styles.chevronOpen : ''}`}
+                    className={`transition-transform ${expanded ? 'rotate-180' : ''}`}
                     aria-hidden
                   />
                 </button>
@@ -117,19 +116,20 @@ export function FaqPage(): ReactElement {
                 aria-labelledby={headerId}
                 aria-hidden={!expanded}
                 inert={!expanded ? true : undefined}
-                className={`${styles.panelWrap} ${expanded ? styles.panelWrapOpen : ''}`}
+                className={`overflow-hidden transition-all ${expanded ? 'max-h-screen' : 'max-h-0'}`}
               >
-                <div className={styles.panelInner}>
-                  <p className={styles.answer}>{item.answer}</p>
-                  <p className={styles.permalink}>
-                    <a href={`/faq#${item.id}`} className={styles.permalinkLink}>
+                <div className="px-5 pb-5">
+                  <p className="text-body-text mb-4">{item.answer}</p>
+                  <p className="text-sm text-muted-text">
+                    <a href={`#${item.id}`} className="text-gold hover:text-gold-active transition-colors">
                       Ссылка на этот вопрос
                     </a>
                   </p>
                 </div>
               </div>
             </section>
-          );
+ );
+
         })}
       </div>
     </main>

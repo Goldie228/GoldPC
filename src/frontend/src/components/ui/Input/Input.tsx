@@ -1,7 +1,6 @@
 import { forwardRef, useId } from 'react';
 import type { InputHTMLAttributes, ReactNode } from 'react';
 import { AlertCircle } from 'lucide-react';
-import styles from './Input.module.css';
 
 export type InputSize = 'sm' | 'md' | 'lg';
 
@@ -68,19 +67,20 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
     // Build input class names
     const inputClassNames = [
-      styles.input,
-      hasError && styles.inputError,
-      size !== 'md' && styles[size],
-      hasLeftIcon && styles.hasLeftIcon,
-      hasRightIcon && styles.hasRightIcon,
+      "w-full px-4 py-3 font-sans text-base text-body-text bg-surface-elevated border border-hairline-dark rounded-md outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-canvas-dark focus:border-gold focus:shadow-[0_0_0_3px_var(--border-brand)] focus:bg-surface-card",
+      hasError && "border-price-rise focus:border-price-rise focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]",
+      size === 'sm' && "px-3 py-2 text-sm",
+      size === 'lg' && "px-5 py-4 text-lg",
+      hasLeftIcon && "pl-11",
+      hasRightIcon && "pr-11",
     ]
       .filter(Boolean)
       .join(' ');
 
     // Build wrapper class names
     const wrapperClassNames = [
-      styles.wrapper,
-      fullWidth && styles.fullWidth,
+      "flex flex-col gap-1.5",
+      fullWidth && "w-full",
       className,
     ]
       .filter(Boolean)
@@ -98,14 +98,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       <div className={wrapperClassNames}>
         {/* Label */}
         {label && (
-          <label htmlFor={inputId} className={styles.label}>
+          <label htmlFor={inputId} className="flex items-center gap-1 font-sans text-xs font-medium uppercase tracking-wider text-body-text">
             {label}
-            {required && <span className={styles.required} aria-hidden="true">*</span>}
+            {required && <span className="text-gold" aria-hidden="true">*</span>}
           </label>
         )}
 
         {/* Input wrapper for icons */}
-        <div className={styles.inputWrapper}>
+        <div className="relative w-full">
           <input
             ref={ref}
             id={inputId}
@@ -120,14 +120,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
           {/* Left icon */}
           {hasLeftIcon && (
-            <span className={styles.leftIconWrapper} aria-hidden="true">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-text pointer-events-none transition-colors peer-focus:text-gold" aria-hidden="true">
               {leftIcon}
             </span>
           )}
 
           {/* Right icon */}
           {hasRightIcon && (
-            <span className={styles.rightIconWrapper} aria-hidden="true">
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-muted-text" aria-hidden="true">
               {rightIcon}
             </span>
           )}
@@ -135,15 +135,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         {/* Error message */}
         {hasError && (
-          <div id={errorId} className={styles.errorMessage} role="alert">
-            <AlertCircle className={styles.errorIcon} aria-hidden="true" />
+          <div id={errorId} className="flex items-center gap-1.5 font-sans text-xs text-price-rise" role="alert">
+            <AlertCircle className="flex-shrink-0 w-3.5 h-3.5" aria-hidden="true" />
             {error}
           </div>
         )}
 
         {/* Helper text */}
         {hasHelper && (
-          <div id={helperId} className={styles.helperText}>
+          <div id={helperId} className="font-sans text-xs text-muted-text">
             {helperText}
           </div>
         )}

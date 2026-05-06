@@ -10,7 +10,31 @@ import type {
   ProductListResponse,
   GetProductsParams,
   Category,
+  ProductCategory,
 } from './types';
+
+const CATEGORY_NAME_TO_SLUG: Record<string, ProductCategory> = {
+  'Процессоры': 'cpu',
+  'Видеокарты': 'gpu',
+  'Материнские платы': 'motherboard',
+  'Оперативная память': 'ram',
+  'Накопители': 'storage',
+  'Блоки питания': 'psu',
+  'Корпуса': 'case',
+  'Охлаждение': 'cooling',
+  'Вентиляторы': 'fan',
+  'Мониторы': 'monitor',
+  'Клавиатуры': 'keyboard',
+  'Мыши': 'mouse',
+  'Наушники': 'headphones',
+};
+
+function normalizeCategory<T extends { category?: unknown }>(item: T): T {
+  if (item && typeof item.category === 'string') {
+    (item as any).category = CATEGORY_NAME_TO_SLUG[(item as any).category] ?? (item as any).category;
+  }
+  return item;
+}
 
 /**
  * Получить список товаров с пагинацией и фильтрацией
@@ -23,7 +47,13 @@ export async function getProducts(
   const response = await apiClient.get<ProductListResponse>('/catalog/products', {
     params,
   });
-  return response.data;
+  const data = response.data;
+  if (data?.data && Array.isArray(data.data)) {
+    for (const p of data.data) {
+      normalizeCategory(p);
+    }
+  }
+  return data;
 }
 
 /**
@@ -33,7 +63,7 @@ export async function getProducts(
  */
 export async function getProductById(id: string): Promise<Product> {
   const response = await apiClient.get<Product>(`/catalog/products/${id}`);
-  return response.data;
+  return normalizeCategory(response.data);
 }
 
 /**
@@ -57,7 +87,11 @@ export async function getFeaturedProducts(limit?: number): Promise<ProductSummar
       pageSize: limit || 10,
     },
   });
-  return response.data.data;
+  const items = response.data.data ?? [];
+  for (const p of items) {
+    normalizeCategory(p);
+  }
+  return items;
 }
 
 /**
@@ -76,7 +110,13 @@ export async function searchProducts(
       search: query,
     },
   });
-  return response.data;
+  const data = response.data;
+  if (data?.data && Array.isArray(data.data)) {
+    for (const p of data.data) {
+      normalizeCategory(p);
+    }
+  }
+  return data;
 }
 
 /**

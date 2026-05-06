@@ -17,7 +17,7 @@ import {
   getPerformanceLabel,
 } from '../../../features/pc-builder/logic/performance';
 import { Download, FileText, CheckCircle, AlertTriangle, Zap, BarChart3 } from 'lucide-react';
-import styles from './PdfExportModal.module.css';
+
 
 export interface PdfExportModalProps {
   isOpen: boolean;
@@ -437,42 +437,42 @@ export function PdfExportModal({
       title="Экспорт сборки в PDF"
       size="medium"
     >
-      <div className={styles.container}>
-        <div className={styles.preview}>
-          <FileText size={48} strokeWidth={1.5} className={styles.previewIcon} />
-          <p className={styles.fileName}>{buildName}.pdf</p>
-          <p className={styles.fileInfo}>
+      <div className="flex flex-col gap-5 py-2">
+        <div className="flex flex-col items-center gap-2 p-6 bg-[var(--border-brand)] border border-dashed border-[var(--border-brand)] rounded-lg">
+          <FileText size={48} strokeWidth={1.5} className="text-[var(--accent)] opacity-90" />
+          <p className="text-sm font-semibold text-[var(--fg)] m-0">{buildName}.pdf</p>
+          <p className="text-xs text-[var(--fg-muted)] m-0 text-center">
             Готовый PDF-файл с конфигурацией вашей сборки
           </p>
         </div>
 
-        <div className={styles.checklist}>
-          <div className={styles.checkItem}>
+        <div className="flex flex-col gap-[10px]">
+          <div className="flex items-center gap-2.5 text-sm text-[var(--fg)]">
             <CheckCircle size={16} color="#d4a574" />
             <span>Список всех компонентов ({Object.values(selectedComponents).flat().filter(Boolean).length || selectedComponents.cpu ? '✓' : '—'})</span>
           </div>
-          <div className={styles.checkItem}>
+          <div className="flex items-center gap-2.5 text-sm text-[var(--fg)]">
             <CheckCircle size={16} color="#d4a574" />
             <span>Цена компонентов: {totalPrice.toLocaleString('ru-BY')} BYN</span>
           </div>
-          <div className={styles.checkItem}>
+          <div className="flex items-center gap-2.5 text-sm text-[var(--fg)]">
             {isCompatible
               ? <CheckCircle size={16} color="#d4a574" />
               : <AlertTriangle size={16} color="#eab308" />
             }
             <span>Совместимость: {isCompatible ? 'Все совместимо' : `Ошибки: ${compatibilityErrors.length}`}</span>
           </div>
-          <div className={styles.checkItem}>
+          <div className="flex items-center gap-2.5 text-sm text-[var(--fg)]">
             <Zap size={16} color="#d4a574" />
             <span>Энергопотребление: ~{Math.round(powerConsumption)} Вт</span>
           </div>
-          <div className={styles.checkItem}>
+          <div className="flex items-center gap-2.5 text-sm text-[var(--fg)]">
             <BarChart3 size={16} color="#d4a574" />
             <span>Игровой рейтинг: {perf.gamingScore}/100</span>
           </div>
         </div>
 
-        <div className={styles.actions}>
+        <div className="flex items-center gap-3 justify-end pt-2 border-t border-[var(--border)]">
           <Button variant="ghost" onClick={onClose}>
             Отмена
           </Button>

@@ -5,7 +5,6 @@
 
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import styles from './ManagerDashboard.module.css';
 import { useManager } from '../../hooks/useManager';
 
 // Dashboard Widget Interface

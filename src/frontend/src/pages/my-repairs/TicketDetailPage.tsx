@@ -6,7 +6,6 @@ import { TICKET_STATUSES } from '../../api/service-tickets';
 import type { ServiceTicket, TicketStatusHistory, TicketMessage } from '../../api/service-tickets';
 import { Button, Input } from '../../components/ui';
 import { ArrowLeft, Send, Paperclip, Image } from 'lucide-react';
-import styles from './TicketDetailPage.module.css';
 
 function getStatusLabel(status: string): string {
   const statusItem = TICKET_STATUSES.find(s => s.key === status);

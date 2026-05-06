@@ -10,10 +10,12 @@ const XCORE_PLACEHOLDER_PATTERNS = [
  * Допустимы только пути к файлам на нашем бэкенде (/uploads/...).
  * Внешние URL (x-core и др.) с API не приходят и в img не подставляем.
  */
-function isLocalCatalogImagePath(url: string): boolean {
-  const normalized = url.trim();
-  if (!normalized) return false;
-
+function isLocalCatalogImagePath(url: unknown): boolean {
+  if (typeof url !== 'string') return false;
+  const str = url as string;
+  if (!str) return false;
+  const normalized = str.replace(/^\s+|\s+$/g, ''); // trim без .trim()
+  
   if (
     normalized.startsWith('http://') ||
     normalized.startsWith('https://') ||
@@ -25,8 +27,10 @@ function isLocalCatalogImagePath(url: string): boolean {
   return normalized.startsWith('/uploads/') || normalized.startsWith('uploads/');
 }
 
-export function isXCorePlaceholderUrl(url: string | null | undefined): boolean {
-  const u = url?.trim();
+export function isXCorePlaceholderUrl(url: unknown): boolean {
+  if (typeof url !== 'string') return true;
+  const str = url as string;
+  const u = str.replace(/^\s+|\s+$/g, '');
   if (!u) return true;
   return XCORE_PLACEHOLDER_PATTERNS.some((p) => u.includes(p));
 }
@@ -34,8 +38,10 @@ export function isXCorePlaceholderUrl(url: string | null | undefined): boolean {
 /**
  * Возвращает true, если в API пришёл локальный путь к файлу на нашем сервере.
  */
-export function hasValidProductImage(url: string | null | undefined): boolean {
-  const u = url?.trim();
+export function hasValidProductImage(url: unknown): boolean {
+  if (typeof url !== 'string') return false;
+  const str = url as string;
+  const u = str.replace(/^\s+|\s+$/g, '');
   if (!u) return false;
   return isLocalCatalogImagePath(u) && !isXCorePlaceholderUrl(u);
 }
@@ -43,8 +49,15 @@ export function hasValidProductImage(url: string | null | undefined): boolean {
 /**
  * Абсолютный адрес для img src: только для путей /uploads/ (прокси Vite → CatalogService или origin).
  */
-export function getProductImageUrl(url: string | null | undefined): string | null {
-  const u = url?.trim();
+export function getProductImageUrl(url: unknown): string | null {
+  // Handle if url is an object (e.g., ProductImage) instead of string
+  if (url && typeof url === 'object' && 'url' in url) {
+    return getProductImageUrl((url as Record<string, unknown>).url);
+  }
+  
+  if (typeof url !== 'string') return null;
+  const str = url as string;
+  const u = str.replace(/^\s+|\s+$/g, '');
   if (!u) return null;
   if (!isLocalCatalogImagePath(u)) return null;
   if (u.startsWith('/')) return `${window.location.origin}${u}`;

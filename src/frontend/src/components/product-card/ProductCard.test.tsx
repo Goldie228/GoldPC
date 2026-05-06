@@ -1,11 +1,32 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, type RenderOptions } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom/vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
 import { ProductCard } from './ProductCard';
 import type { ProductSummary } from '../../api/types';
 
-// Mock useCart hook
+// Create a custom render function that wraps with required providers
+function renderWithProviders(ui: React.ReactElement, options?: RenderOptions) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  
+  return render(
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>
+    </BrowserRouter>,
+    options
+  );
+}
+
+// Mock hooks
 vi.mock('../../hooks/useCart', () => ({
   useCart: vi.fn(() => ({
     addToCart: vi.fn(),
@@ -15,20 +36,21 @@ vi.mock('../../hooks/useCart', () => ({
   })),
 }));
 
-// Mock other stores if needed
-vi.mock('../../store/toastStore', () => ({
-  useToastStore: vi.fn(() => vi.fn()),
+vi.mock('../../hooks/useToast', () => ({
+  useToast: vi.fn(() => ({
+    showToast: vi.fn(),
+  })),
 }));
 
-vi.mock('../../store/wishlistStore', () => ({
-  useWishlistStore: vi.fn(() => ({
+vi.mock('../../hooks/useWishlist', () => ({
+  useWishlist: vi.fn(() => ({
     isInWishlist: vi.fn(() => false),
     toggleWishlist: vi.fn(),
   })),
 }));
 
-vi.mock('../../store/comparisonStore', () => ({
-  useComparisonStore: vi.fn(() => ({
+vi.mock('../../hooks/useComparison', () => ({
+  useComparison: vi.fn(() => ({
     isInComparison: vi.fn(() => false),
     toggleComparison: vi.fn(() => ({ success: true })),
   })),
@@ -37,6 +59,7 @@ vi.mock('../../store/comparisonStore', () => ({
 describe('ProductCard', () => {
   const mockProduct: ProductSummary = {
     id: 'test-product-1',
+    slug: 'amd-ryzen-9-7950x',
     name: 'AMD Ryzen 9 7950X',
     sku: 'SKU-12345',
     category: 'cpu',
@@ -47,12 +70,12 @@ describe('ProductCard', () => {
 
   describe('рендеринг имени и цены', () => {
     it('отображает название товара', () => {
-      render(<ProductCard product={mockProduct} />);
+      renderWithProviders(<ProductCard product={mockProduct} />);
       expect(screen.getByText('AMD Ryzen 9 7950X')).toBeInTheDocument();
     });
 
     it('отображает цену в формате российской валюты', () => {
-      render(<ProductCard product={mockProduct} />);
+      renderWithProviders(<ProductCard product={mockProduct} />);
       expect(screen.getByText(/59\s*999/)).toBeInTheDocument();
       expect(screen.getByText(/BYN/)).toBeInTheDocument();
     });
@@ -66,7 +89,7 @@ describe('ProductCard', () => {
         },
       };
 
-      render(<ProductCard product={productWithManufacturer} />);
+      renderWithProviders(<ProductCard product={productWithManufacturer} />);
       expect(screen.getByText('AMD')).toBeInTheDocument();
     });
   });
@@ -78,7 +101,7 @@ describe('ProductCard', () => {
         stock: 0,
       };
 
-      render(<ProductCard product={outOfStockProduct} />);
+      renderWithProviders(<ProductCard product={outOfStockProduct} />);
       expect(screen.getByText('Нет в наличии')).toBeInTheDocument();
     });
 
@@ -88,7 +111,7 @@ describe('ProductCard', () => {
         stock: 2,
       };
 
-      render(<ProductCard product={lowStockProduct} />);
+      renderWithProviders(<ProductCard product={lowStockProduct} />);
       expect(screen.getByText(/Мало \(2 шт\)/)).toBeInTheDocument();
     });
 
@@ -98,7 +121,7 @@ describe('ProductCard', () => {
         stock: 15,
       };
 
-      render(<ProductCard product={inStockProduct} />);
+      renderWithProviders(<ProductCard product={inStockProduct} />);
       expect(screen.getByText(/В наличии \(15 шт\)/)).toBeInTheDocument();
     });
   });
@@ -108,7 +131,7 @@ describe('ProductCard', () => {
       const user = userEvent.setup();
       const mockAddToCart = vi.fn();
 
-      render(<ProductCard product={mockProduct} onAddToCart={mockAddToCart} />);
+      renderWithProviders(<ProductCard product={mockProduct} onAddToCart={mockAddToCart} />);
 
       const addToCartButton = screen.getByRole('button', { name: /добавить в корзину/i });
       await user.click(addToCartButton);
@@ -126,7 +149,7 @@ describe('ProductCard', () => {
         stock: 0,
       };
 
-      render(<ProductCard product={outOfStockProduct} onAddToCart={mockAddToCart} />);
+      renderWithProviders(<ProductCard product={outOfStockProduct} onAddToCart={mockAddToCart} />);
 
       const addToCartButton = screen.getByRole('button', { name: /добавить в корзину/i });
       expect(addToCartButton).toBeDisabled();
@@ -143,7 +166,7 @@ describe('ProductCard', () => {
         isActive: false,
       };
 
-      render(<ProductCard product={inactiveProduct} onAddToCart={mockAddToCart} />);
+      renderWithProviders(<ProductCard product={inactiveProduct} onAddToCart={mockAddToCart} />);
 
       const addToCartButton = screen.getByRole('button', { name: /добавить в корзину/i });
       expect(addToCartButton).toBeDisabled();
@@ -158,7 +181,7 @@ describe('ProductCard', () => {
         oldPrice: 59999,
       };
 
-      render(<ProductCard product={discountedProduct} />);
+      renderWithProviders(<ProductCard product={discountedProduct} />);
       expect(screen.getByText(/-17%/)).toBeInTheDocument();
     });
 
@@ -169,7 +192,7 @@ describe('ProductCard', () => {
         oldPrice: 59999,
       };
 
-      render(<ProductCard product={discountedProduct} />);
+      renderWithProviders(<ProductCard product={discountedProduct} />);
       expect(screen.getByText(/49\s*999/)).toBeInTheDocument();
       expect(screen.getByText(/59\s*999/)).toBeInTheDocument();
     });
@@ -180,7 +203,7 @@ describe('ProductCard', () => {
         rating: 4.9,
       };
 
-      render(<ProductCard product={hitProduct} />);
+      renderWithProviders(<ProductCard product={hitProduct} />);
       expect(screen.getByText('Хит')).toBeInTheDocument();
     });
 
@@ -190,15 +213,15 @@ describe('ProductCard', () => {
         rating: 4.5,
       };
 
-      render(<ProductCard product={normalProduct} />);
+      renderWithProviders(<ProductCard product={normalProduct} />);
       expect(screen.queryByText('Хит')).not.toBeInTheDocument();
     });
 
     it('отображает ссылку на страницу товара', () => {
-      render(<ProductCard product={mockProduct} />);
+      renderWithProviders(<ProductCard product={mockProduct} />);
 
       const productLink = screen.getByRole('link', { name: mockProduct.name });
-      expect(productLink).toHaveAttribute('href', `/product/${mockProduct.id}`);
+      expect(productLink).toHaveAttribute('href', `/product/${mockProduct.slug}`);
     });
   });
 });

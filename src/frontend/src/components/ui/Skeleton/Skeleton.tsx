@@ -1,5 +1,4 @@
 import type { CSSProperties, ReactElement } from 'react';
-import styles from './Skeleton.module.css';
 
 export interface SkeletonProps {
   /**
@@ -41,11 +40,11 @@ function toCssValue(value: number | string | undefined): string | undefined {
  */
 function getBorderRadiusClass(radius: SkeletonProps['borderRadius']): string | undefined {
   const radiusMap: Record<string, string> = {
-    none: styles.radiusNone,
-    sm: styles.radiusSm,
-    md: styles.radiusMd,
-    lg: styles.radiusLg,
-    full: styles.radiusFull,
+    none: 'rounded-none',
+    sm: 'rounded',
+    md: 'rounded-md',
+    lg: 'rounded-lg',
+    full: 'rounded-full',
   };
   return radiusMap[radius ?? 'md'];
 }
@@ -66,8 +65,7 @@ export function Skeleton({
   const cssHeight = toCssValue(height);
 
   const combinedClassName = [
-    styles.skeleton,
-    animate ? styles.animate : '',
+    "bg-surface-elevated animate-pulse",
     getBorderRadiusClass(borderRadius),
     className,
   ]

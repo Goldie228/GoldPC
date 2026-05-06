@@ -1,56 +1,26 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, 
-  SlidersHorizontal,
-  X,
-  LayoutGrid,
-  List,
-  Table
-} from 'lucide-react';
-import { FilterSidebar, EmptyState, Pagination, ProductTable, ActiveFiltersBar, buildCatalogFilterChips } from '../../components/catalog';
+import { Search, X } from 'lucide-react';
+import { FilterSidebar } from '../../components/filter-sidebar/FilterSidebar';
+import { Pagination } from '../../components/catalog/Pagination';
+import { ProductTable } from '../../components/catalog/ProductTable';
+import { buildCatalogFilterChips } from '../../components/catalog/ActiveFiltersBar';
+import { Toolbar } from '../../components/toolbar/Toolbar';
 import { ProductCard } from '../../components/product-card/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton';
-import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
+import { ProductGrid } from '../../components/catalog/ProductGrid';
+import { ProductList } from '../../components/catalog/ProductList';
 import { useCatalog } from '../../hooks/useCatalog';
+import { useDebounce } from '../../hooks/useDebounce';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
 import type { ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
-import { ProductQuickViewContent } from '../../components/product/ProductQuickViewContent';
-import { useModal } from '../../hooks/useModal';
-import styles from './CatalogPage.module.css';
 import { telemetryInitAutoFlush, telemetryTrack } from '../../utils/telemetry';
 
-/**
- * Страница каталога товаров с Dark Gold темой
- */
 const VALID_CATEGORIES: ProductCategory[] = [
   'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'keyboard', 'mouse', 'headphones'
 ];
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.4,
-      ease: [0.33, 1, 0.68, 1] as const
-    }
-  }
-};
 
 function resolveCategoryFromUrl(
   categoryParam: string | undefined,
@@ -69,9 +39,6 @@ export function CatalogPage() {
   const normalizePriceRange = (range: { min: number; max: number }) => {
     const min = clampNumber(range.min, PRICE_MIN, PRICE_MAX);
     const max = clampNumber(range.max, PRICE_MIN, PRICE_MAX);
-    // Treat `0` as "not set" for our filtering UI.
-    // Otherwise, entering only `min` (e.g. {min: 1000, max: 0}) would swap
-    // and accidentally turn it into {min: 0, max: 1000}.
     const minUnset = range.min === 0;
     const maxUnset = range.max === 0;
     if (minUnset || maxUnset) {
@@ -91,20 +58,19 @@ export function CatalogPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const { openModal, closeModal } = useModal();
-  const { getProducts, getProduct } = useCatalog();
+  const { getProducts } = useCatalog();
   
-  // Инициализация и синхронизация категории из URL (path или query)
   const resolvedCategory = resolveCategoryFromUrl(categoryParam, searchParams.get('category'));
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | null>(resolvedCategory);
   
-  // Синхронизация selectedCategory при навигации (path или query изменились извне)
   useEffect(() => {
     setSelectedCategory(resolvedCategory);
   }, [resolvedCategory]);
+
   const [searchQuery, setSearchQuery] = useState(
     () => searchParams.get('search') || ''
   );
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [page, setPage] = useState(() => {
     const p = parseInt(searchParams.get('page') || '1', 10);
     return isNaN(p) || p < 1 ? 1 : p;
@@ -117,12 +83,14 @@ export function CatalogPage() {
     const v = searchParams.get('view');
     return (v === 'list' || v === 'table') ? v : 'grid';
   });
+
   const [priceRange, setPriceRange] = useState(() => ({
     ...normalizePriceRange({
       min: parseInt(searchParams.get('priceMin') || '0'),
       max: parseInt(searchParams.get('priceMax') || '0'),
     }),
   }));
+  const debouncedPriceRange = useDebounce(priceRange, 300);
   const [sortBy, setSortBy] = useState(
     () => searchParams.get('sortBy') || 'popular'
   );
@@ -133,317 +101,183 @@ export function CatalogPage() {
     () => parseInt(searchParams.get('rating') || '0')
   );
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>(
-    () => searchParams.get('availability')?.split(',').filter(Boolean) || ['in_stock']
+    () => searchParams.get('availability')?.split(',').filter(Boolean) || []
   );
-  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | number | string[]>>(() => {
-    const specStr = searchParams.get('specs');
-    if (!specStr) return {};
-    try {
-      return JSON.parse(decodeURIComponent(specStr)) as Record<string, string | number | string[]>;
-    } catch {
-      return {};
+  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string[]>>(
+    () => {
+      const specParam = searchParams.get('specs');
+      if (!specParam) return {};
+      try {
+        return JSON.parse(decodeURIComponent(specParam));
+      } catch {
+        return {};
+      }
     }
-  });
+  );
 
-  // === Telemetry (engagement baseline) ===
-  const catalogStartTsRef = useRef<number>(performance.now());
-  const filterChangeCountRef = useRef<number>(0);
-  const firstInteractionSentRef = useRef<boolean>(false);
+  const catalogScrollAnchorRef = useRef<HTMLDivElement>(null);
+
+  const buildApiParams = useCallback((): GetProductsParams => {
+    const params: GetProductsParams = {
+      page,
+      pageSize,
+    };
+
+    if (selectedCategory) params.category = selectedCategory;
+    if (debouncedSearchQuery.trim()) params.search = debouncedSearchQuery.trim();
+    if (debouncedPriceRange.min > 0) params.priceMin = debouncedPriceRange.min;
+    if (debouncedPriceRange.max > 0 && debouncedPriceRange.max < PRICE_MAX) params.priceMax = debouncedPriceRange.max;
+    if (selectedManufacturerIds.length > 0) params.manufacturerIds = selectedManufacturerIds;
+    if (minRating > 0) params.minRating = minRating;
+    if (selectedAvailability.length > 0) {
+      params.inStock = selectedAvailability.includes('in_stock');
+      params.lowStock = selectedAvailability.includes('low_stock');
+    }
+    if (Object.keys(selectedSpecifications).length > 0) {
+      params.specifications = selectedSpecifications;
+    }
+
+    switch (sortBy) {
+      case 'price-asc':
+        params.sortBy = 'price';
+        params.sortOrder = 'asc';
+        break;
+      case 'price-desc':
+        params.sortBy = 'price';
+        params.sortOrder = 'desc';
+        break;
+      case 'rating':
+        params.sortBy = 'rating';
+        params.sortOrder = 'desc';
+        break;
+      case 'newest':
+        params.sortBy = 'createdAt';
+        params.sortOrder = 'desc';
+        break;
+      case 'name':
+        params.sortBy = 'name';
+        params.sortOrder = 'asc';
+        break;
+      default:
+        params.sortBy = 'popularity';
+        params.sortOrder = 'desc';
+    }
+
+    return params;
+  }, [selectedCategory, debouncedSearchQuery, debouncedPriceRange, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, sortBy, page, pageSize]);
+
+  const fetchProducts = useCallback(async (pageNum?: number) => {
+    const targetPage = pageNum ?? page;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const params = buildApiParams();
+      params.page = targetPage;
+      
+      const result = await getProducts(params);
+      
+      // Defensive: ensure result has expected structure
+      const items = result?.data ?? [];
+      const meta = result?.meta ?? { totalPages: 1, totalItems: 0 };
+      
+      setProducts(items);
+      setTotalPages(meta.totalPages ?? 1);
+      setTotalItems(meta.totalItems ?? 0);
+      setHasLoadedOnce(true);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load products';
+      setError(message);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [buildApiParams, getProducts, page]);
 
   useEffect(() => {
-    telemetryInitAutoFlush();
-  }, []);
+    fetchProducts();
+  }, [fetchProducts]);
 
-  useEffect(() => {
-    catalogStartTsRef.current = performance.now();
-    filterChangeCountRef.current = 0;
-    firstInteractionSentRef.current = false;
-    telemetryTrack('catalog_view', {
-      category: selectedCategory ?? 'all',
-      viewMode,
-    });
-  }, [selectedCategory, viewMode]);
-
-  // Синхронизация фильтров и страницы с URL (path + query)
-  useEffect(() => {
+  const updateUrl = useCallback(() => {
     const params = new URLSearchParams();
-    // When category is fixed via path (/catalog/:category), don't duplicate it in query string.
-    if (selectedCategory && !isCategoryLocked) params.set('category', selectedCategory);
-    if (searchQuery) params.set('search', searchQuery);
-    if (priceRange.min > 0) params.set('priceMin', priceRange.min.toString());
-    if (priceRange.max > 0) params.set('priceMax', priceRange.max.toString());
+    
+    if (selectedCategory && !isCategoryLocked) {
+      params.set('category', selectedCategory);
+    }
+    if (searchQuery.trim()) params.set('search', searchQuery.trim());
+    if (page > 1) params.set('page', page.toString());
+    if (viewMode !== 'grid') params.set('view', viewMode);
     if (sortBy !== 'popular') params.set('sortBy', sortBy);
+    if (priceRange.min > 0) params.set('priceMin', priceRange.min.toString());
+    if (priceRange.max > 0 && priceRange.max < PRICE_MAX) params.set('priceMax', priceRange.max.toString());
     if (selectedManufacturerIds.length > 0) params.set('manufacturerIds', selectedManufacturerIds.join(','));
     if (minRating > 0) params.set('rating', minRating.toString());
     if (selectedAvailability.length > 0) params.set('availability', selectedAvailability.join(','));
     if (Object.keys(selectedSpecifications).length > 0) {
       params.set('specs', encodeURIComponent(JSON.stringify(selectedSpecifications)));
     }
-    if (viewMode !== 'grid') params.set('view', viewMode);
-    if (page > 1) params.set('page', page.toString());
 
-    // Stay on current path if we are at /catalog/:category and THAT category is selected.
-    // Otherwise (if at /catalog OR if category changed while on a locked path), stay on /catalog.
-    const path = (isCategoryLocked && selectedCategory === categoryParam)
-      ? `/catalog/${categoryParam}`
+    const queryString = params.toString();
+    const path = selectedCategory && isCategoryLocked 
+      ? `/catalog/${selectedCategory}` 
       : '/catalog';
-
-    // If we are NOT on a locked path, but a category is selected, add it to query params
-    if (selectedCategory && path === '/catalog') {
-      params.set('category', selectedCategory);
-    }
-
-    const finalQueryString = params.toString();
-    const fullPath = finalQueryString ? `${path}?${finalQueryString}` : path;
-    navigate(fullPath, { replace: true });
-  }, [selectedCategory, isCategoryLocked, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, page, navigate, viewMode, categoryParam]);
-
-  const filterDeps = [
-    selectedCategory,
-    searchQuery,
-    priceRange,
-    sortBy,
-    selectedManufacturerIds,
-    minRating,
-    selectedAvailability,
-    selectedSpecifications,
-  ];
-
-  const isInitialMount = useRef(true);
-
-  // Сброс на стр. 1 при изменении фильтров или pageSize (не на первый рендер — чтим page из URL)
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-    setPage(1);
-  }, [...filterDeps, pageSize]);
-
-  useEffect(() => {
-    if (isInitialMount.current) return;
-    filterChangeCountRef.current += 1;
-    if (!firstInteractionSentRef.current) {
-      firstInteractionSentRef.current = true;
-      telemetryTrack('catalog_first_interaction', {
-        msSinceView: Math.round(performance.now() - catalogStartTsRef.current),
-        category: selectedCategory ?? 'all',
-      });
-    }
-    telemetryTrack('catalog_filters_changed', {
-      count: filterChangeCountRef.current,
-      category: selectedCategory ?? 'all',
-    });
-  }, [selectedCategory, searchQuery, priceRange, sortBy, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications]);
-
-  // Загрузка при смене страницы, фильтров или pageSize
-  useEffect(() => {
-    fetchProducts(page);
-  }, [page, pageSize, ...filterDeps]);
-
-  const manufacturersById = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const p of products) {
-      if (p.manufacturer?.id && p.manufacturer?.name) {
-        map.set(p.manufacturer.id, p.manufacturer.name);
-      }
-    }
-    return map;
-  }, [products]);
-
-  const fetchProducts = async (pageNum: number) => {
-    setLoading(true);
-    setError(null);
     
-    try {
-      const params: GetProductsParams = {
-        page: pageNum,
-        pageSize,
-      };
-      
-      if (selectedCategory) {
-        params.category = selectedCategory;
-      }
-      
-      if (searchQuery) {
-        params.search = searchQuery;
-      }
+    navigate(queryString ? `${path}?${queryString}` : path, { replace: true });
+  }, [selectedCategory, isCategoryLocked, searchQuery, page, viewMode, sortBy, priceRange, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, navigate]);
 
-      if (priceRange.min > 0) {
-        params.priceMin = priceRange.min;
-      }
+  useEffect(() => {
+    updateUrl();
+  }, [updateUrl]);
 
-      if (priceRange.max > 0) {
-        params.priceMax = priceRange.max;
-      }
-
-      if (selectedManufacturerIds.length > 0) {
-        params.manufacturerIds = selectedManufacturerIds;
-      }
-
-      // Маппинг sortBy на API параметры
-      if (sortBy === 'price-asc') {
-        params.sortBy = 'price';
-        params.sortOrder = 'asc';
-      } else if (sortBy === 'price-desc') {
-        params.sortBy = 'price';
-        params.sortOrder = 'desc';
-      } else if (sortBy === 'rating') {
-        params.sortBy = 'rating';
-        params.sortOrder = 'desc';
-      } else if (sortBy === 'newest') {
-        params.sortBy = 'createdAt';
-        params.sortOrder = 'desc';
-      } else if (sortBy === 'name') {
-        params.sortBy = 'name';
-        params.sortOrder = 'asc';
-      }
-
-      // Фильтр по минимальному рейтингу
-      if (minRating > 0) {
-        params.rating = minRating;
-      }
-
-      // Фильтр по наличию: при выборе обоих (in_stock + on_order) — не передаём inStock (показать всё)
-      const hasInStock = selectedAvailability.includes('in_stock');
-      const hasOnOrder = selectedAvailability.includes('on_order');
-      if (hasInStock && !hasOnOrder) {
-        params.inStock = true;
-      } else if (hasOnOrder && !hasInStock) {
-        params.inStock = false;
-      }
-      // selectedAvailability.length === 0 — по умолчанию только в наличии
-      if (selectedAvailability.length === 0) {
-        params.inStock = true;
-      }
-
-      // Фильтр по характеристикам: разделяем select (в т.ч. мультивыбор) и range
-      const specsSelect: Record<string, string | number | string[]> = {};
-      const specsRange: Record<string, string> = {};
-      for (const [k, v] of Object.entries(selectedSpecifications)) {
-        if (Array.isArray(v)) {
-          if (v.length > 0) specsSelect[k] = v.length === 1 ? v[0] : v.join(',');
-        } else {
-          const str = String(v);
-          if (str.includes(',')) {
-            const parts = str.split(',');
-            if (parts.length === 2 && !Number.isNaN(parseFloat(parts[0])) && !Number.isNaN(parseFloat(parts[1]))) {
-              specsRange[k] = str;
-            } else {
-              specsSelect[k] = str;
-            }
-          } else {
-            specsSelect[k] = typeof v === 'number' ? v : str;
-          }
-        }
-      }
-      if (Object.keys(specsSelect).length > 0) params.specifications = specsSelect;
-      if (Object.keys(specsRange).length > 0) params.specificationRanges = specsRange;
-      
-const response = await getProducts(params);
-        
-        if (response) {
-          setProducts(response.data);
-          setTotalPages(response.meta.totalPages);
-          setTotalItems(response.meta.totalItems);
-          setHasLoadedOnce(true);
-
-          if (response.data.length === 0) {
-            telemetryTrack('catalog_empty_state', {
-              category: selectedCategory ?? 'all',
-              filterChangeCount: filterChangeCountRef.current,
-            });
-          }
-        }
-      } catch (err) {
-        setError('Не удалось загрузить товары. Попробуйте позже.');
-        console.error('Failed to fetch products:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-  const openQuickView = useCallback(
-    async (productId: string) => {
-      telemetryTrack('catalog_quick_view_open', { productId, category: selectedCategory ?? 'all' });
-      try {
-        const product = await getProduct(productId);
-        openModal({
-          title: product.name ?? 'Быстрый просмотр',
-          size: 'large',
-          content: (
-            <ProductQuickViewContent
-              product={product}
-              onClose={closeModal}
-            />
-          ),
-        });
-      } catch (err) {
-        console.error('Failed to load product for quick view:', err);
-      }
-    },
-    [selectedCategory, openModal, closeModal]
-  );
-
-  const catalogScrollAnchorRef = useRef<HTMLDivElement>(null);
+  const handleSearch = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(1);
+    telemetryTrack('catalog_search', { query: searchQuery, category: selectedCategory });
+  }, [searchQuery, selectedCategory]);
 
   const handlePageChange = useCallback((newPage: number) => {
-    const clamped = Math.max(1, Math.min(newPage, totalPages));
-    setPage(clamped);
-    requestAnimationFrame(() => {
-      catalogScrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }, [totalPages]);
+    setPage(newPage);
+    catalogScrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
 
   const handlePageSizeChange = useCallback((newSize: number) => {
     setPageSize(newSize);
     setPage(1);
-    requestAnimationFrame(() => {
-      catalogScrollAnchorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    fetchProducts(1);
-  };
-
-  const handleCategoryChange = (category: ProductCategory | null) => {
+  const handleCategoryChange = useCallback((category: ProductCategory | null) => {
     setSelectedCategory(category);
-    setSelectedSpecifications({});
     setPage(1);
-    setMobileFilterOpen(false);
-  };
+    telemetryTrack('catalog_category_change', { category });
+  }, []);
 
   const handlePriceChange = useCallback((range: { min: number; max: number }) => {
-    // Prevent feedback loop:
-    // FilterSidebar -> onPriceChange -> CatalogPage -> re-render -> FilterSidebar sync -> ...
-    // If values didn't actually change, don't touch state (keeps references stable).
-    setPriceRange((prev) => {
-      if (prev.min === range.min && prev.max === range.max) return prev;
-      return range;
-    });
+    setPriceRange(range);
+    setPage(1);
   }, []);
 
-  const handleResetFilters = () => {
-    setSelectedCategory(null);
+  const handleResetFilters = useCallback(() => {
+    setSelectedCategory(isCategoryLocked ? selectedCategory : null);
     setPriceRange({ min: 0, max: 0 });
     setSelectedManufacturerIds([]);
     setMinRating(0);
-    setSelectedAvailability(['in_stock']);
+    setSelectedAvailability([]);
     setSelectedSpecifications({});
-    setPage(1);
     setSearchQuery('');
-  };
+    setPage(1);
+    telemetryTrack('catalog_filters_reset');
+  }, [isCategoryLocked, selectedCategory]);
 
-  const activeFilterCount =
-    (searchQuery.trim() ? 1 : 0) +
-    (priceRange.min > 0 || priceRange.max > 0 ? 1 : 0) +
-    (selectedManufacturerIds.length > 0 ? 1 : 0) +
-    (minRating > 0 ? 1 : 0) +
-    ((selectedAvailability.length !== 1 || selectedAvailability[0] !== 'in_stock') ? 1 : 0) +
-    (Object.keys(selectedSpecifications).length > 0 ? 1 : 0);
+  // Build manufacturersById map for filter chips
+  const manufacturersById = useMemo(() => {
+    const map = new Map<string, string>();
+    // This would normally come from API, but for chips we just need the selected ones
+    selectedManufacturerIds.forEach(id => {
+      // In real app, you'd look up the name from a manufacturers list
+      map.set(id, id); // placeholder: use id as name
+    });
+    return map;
+  }, [selectedManufacturerIds]);
 
   const chips = buildCatalogFilterChips({
     isCategoryLocked,
@@ -459,109 +293,42 @@ const response = await getProducts(params);
     onClearPrice: () => setPriceRange({ min: 0, max: 0 }),
     onClearManufacturers: () => setSelectedManufacturerIds([]),
     onClearRating: () => setMinRating(0),
-    onClearAvailability: () => setSelectedAvailability(['in_stock']),
-    onClearSpecKey: (key) => {
-      setSelectedSpecifications((prev) => {
-        const next = { ...prev };
-        delete next[key];
-        return next;
-      });
-    },
-    onClearCategory: () => setSelectedCategory(null),
+    onClearAvailability: () => setSelectedAvailability([]),
+    onClearSpecKey: (key: string) => setSelectedSpecifications(prev => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    }),
+    onClearCategory: () => handleCategoryChange(null),
   });
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (selectedCategory && !isCategoryLocked) count++;
+    if (priceRange.min > 0 || priceRange.max > 0) count++;
+    if (selectedManufacturerIds.length > 0) count++;
+    if (minRating > 0) count++;
+    if (selectedAvailability.length > 0) count++;
+    if (Object.keys(selectedSpecifications).length > 0) count++;
+    return count;
+  }, [selectedCategory, isCategoryLocked, priceRange, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications]);
+
   const handleAddToCart = (_productId: string) => {
-    // ProductCard already adds to cart via useCart; callback for optional analytics
     telemetryTrack('catalog_add_to_cart', {
       category: selectedCategory ?? 'all',
       viewMode,
     });
   };
 
+  const categoryName = selectedCategory 
+    ? CATEGORY_LABELS_RU[selectedCategory] 
+    : 'Все товары';
+
   return (
-    <div className={styles.container} role="main" aria-label="Каталог товаров GoldPC">
-      {/* Mobile Filter Toggle */}
-      <button 
-        className={styles.mobileFilterToggle}
-        onClick={() => setMobileFilterOpen(true)}
-        aria-label="Открыть фильтры"
-        aria-expanded={mobileFilterOpen}
-        aria-controls="mobile-filter-sidebar"
-      >
-        <SlidersHorizontal size={20} />
-        <span>Фильтры</span>
-      </button>
-
-      {/* Mobile Filter Overlay */}
-      <AnimatePresence>
-        {mobileFilterOpen && (
-          <div className={styles.mobileOverlay} onClick={() => setMobileFilterOpen(false)}>
-            <motion.div 
-              id="mobile-filter-sidebar"
-              className={styles.mobileSidebar}
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              role="complementary"
-              aria-label="Боковая панель фильтров"
-            >
-              <div className={styles.mobileSidebarHeader}>
-                <h2 className={styles.mobileSidebarTitle}>Фильтры</h2>
-                <button 
-                  className={styles.closeBtn}
-                  onClick={() => setMobileFilterOpen(false)}
-                  aria-label="Закрыть панель фильтров"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-              <FilterSidebar
-                mobile
-                selectedCategory={selectedCategory}
-                onCategoryChange={handleCategoryChange}
-                categoryLocked={isCategoryLocked}
-                priceRange={priceRange}
-                onPriceChange={handlePriceChange}
-                selectedManufacturerIds={selectedManufacturerIds}
-                onManufacturerIdsChange={setSelectedManufacturerIds}
-                minRating={minRating}
-                onRatingChange={setMinRating}
-                selectedAvailability={selectedAvailability}
-                onAvailabilityChange={setSelectedAvailability}
-                selectedSpecifications={selectedSpecifications}
-                onSpecificationsChange={setSelectedSpecifications}
-                onReset={handleResetFilters}
-              />
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Desktop Sidebar - 20% width */}
-      <div className={styles.sidebarWrapper}>
-        <FilterSidebar
-          selectedCategory={selectedCategory}
-          onCategoryChange={handleCategoryChange}
-          categoryLocked={isCategoryLocked}
-          priceRange={priceRange}
-          onPriceChange={handlePriceChange}
-          selectedManufacturerIds={selectedManufacturerIds}
-          onManufacturerIdsChange={setSelectedManufacturerIds}
-          minRating={minRating}
-          onRatingChange={setMinRating}
-          selectedAvailability={selectedAvailability}
-          onAvailabilityChange={setSelectedAvailability}
-          selectedSpecifications={selectedSpecifications}
-          onSpecificationsChange={setSelectedSpecifications}
-          onReset={handleResetFilters}
-        />
-      </div>
-
-      {/* Main Content - 80% width */}
-      <main className={styles.main}>
-        {/* Page Header */}
-        <header className={styles.header}>
+    <div className="min-h-screen bg-[#0b0e11] flex flex-col">
+      {/* Header */}
+      <div className="bg-[#1e2329] border-b border-[#2b3139]">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-3 md:py-4">
           <Breadcrumbs
             items={
               selectedCategory
@@ -576,168 +343,220 @@ const response = await getProducts(params);
                   ]
             }
           />
-          <h1 className={styles.title}>Каталог комплектующих</h1>
-          <p className={styles.stats}>
-            {totalItems > 0 ? `Всего ${formatCountRu(totalItems, RU_FORMS.tovar)}` : 'Товары не найдены'}
-          </p>
-        </header>
 
-        {/* Toolbar — якорь для прокрутки при смене страницы */}
-        <div ref={catalogScrollAnchorRef} className={styles.toolbar}>
-          <div className={styles.toolbarLeft}>
-            <div className={styles.viewToggle}>
-              <button 
-                className={`${styles.viewToggleBtn} ${viewMode === 'grid' ? styles.active : ''}`}
-                onClick={() => setViewMode('grid')}
-                aria-label="Сетка"
-              >
-                <LayoutGrid size={16} />
-              </button>
-              <button 
-                className={`${styles.viewToggleBtn} ${viewMode === 'list' ? styles.active : ''}`}
-                onClick={() => setViewMode('list')}
-                aria-label="Список"
-              >
-                <List size={16} />
-              </button>
-              <button 
-                className={`${styles.viewToggleBtn} ${viewMode === 'table' ? styles.active : ''}`}
-                onClick={() => setViewMode('table')}
-                aria-label="Таблица"
-              >
-                <Table size={16} />
-              </button>
+          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mt-3">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-3">
+                <h1 className="text-xl md:text-2xl font-bold text-body-text tracking-tight">{categoryName}</h1>
+                <span className="text-sm text-muted-text font-tabular">
+                  {totalItems > 0 ? `${formatCountRu(totalItems, RU_FORMS.tovar)}` : 'Товары не найдены'}
+                </span>
+              </div>
             </div>
-          </div>
-          <div className={styles.toolbarRight}>
-            <form className={styles.searchForm} onSubmit={handleSearch}>
-              <div className={styles.searchWrapper}>
-                <Search size={18} className={styles.searchIcon} />
+
+            <div className="flex items-center w-full md:w-auto md:min-w-[360px]">
+              <form className="relative w-full flex" onSubmit={handleSearch}>
                 <input
                   type="text"
-                  className={styles.searchInput}
-                  placeholder="Поиск в каталоге..."
+                  className="w-full h-10 bg-surface-elevated text-body-text text-sm rounded-l-lg py-2.5 pl-4 pr-3 placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-gold/30 border border-hairline-dark border-r-0 focus:border-gold/40 transition-all"
+                  placeholder={`Искать в «${categoryName}»...`}
                   aria-label="Поиск в каталоге"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              </div>
-            </form>
-            <select 
-              className={styles.sortSelect}
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-            >
-              <option value="popular">По популярности</option>
-              <option value="price-asc">Сначала дешевле</option>
-              <option value="price-desc">Сначала дороже</option>
-              <option value="rating">По рейтингу</option>
-              <option value="newest">По новизне</option>
-              <option value="name">По названию</option>
-            </select>
+                <button
+                  type="submit"
+                  className="h-10 px-6 bg-gold text-gold-ink text-sm font-semibold rounded-r-lg hover:bg-gold-active transition-colors flex items-center gap-2 active:scale-[0.98]"
+                >
+                  <Search size={14} />
+                  <span className="hidden sm:inline">Найти</span>
+                </button>
+              </form>
+            </div>
           </div>
         </div>
+      </div>
 
-        <ActiveFiltersBar
-          chips={chips}
-          activeCount={activeFilterCount}
-          onClearAll={handleResetFilters}
-        />
+      {/* Toolbar — sticky */}
+      <Toolbar
+        sortBy={sortBy as any}
+        onSortChange={(s) => setSortBy(s)}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        activeFilterCount={activeFilterCount}
+        onFilterClick={() => setMobileFilterOpen(true)}
+      />
 
-        {/* Loading State - Skeleton only for first load */}
-        {loading && !hasLoadedOnce && (
-          <div className={`${styles.grid} ${viewMode === 'list' ? styles.listView : ''} ${viewMode === 'table' ? styles.tableView : ''}`}>
-            {Array.from({ length: 12 }).map((_, index) => (
-              <ProductCardSkeleton key={index} />
-            ))}
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className={styles.errorState}>
-            <ApiErrorBanner message={error} onRetry={() => fetchProducts(page)} />
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!loading && !error && hasLoadedOnce && products.length === 0 && (
-          <div className={styles.emptyStateWrapper}>
-            <EmptyState
-              title="0 товаров по выбранным фильтрам"
-              description="Попробуйте снять один из фильтров ниже или сбросить всё — так вы быстрее найдёте подходящий вариант."
+      {/* Main Content Area */}
+      <div className="flex-1 w-full max-w-[1440px] mx-auto px-4 md:px-8 py-4" ref={catalogScrollAnchorRef}>
+        <div className="flex gap-6">
+          {/* Desktop Sidebar - 280px width */}
+          <div className="hidden lg:block w-[280px] flex-shrink-0">
+            <FilterSidebar
+              selectedCategory={selectedCategory}
+              onCategoryChange={handleCategoryChange}
+              categoryLocked={isCategoryLocked}
+              priceRange={priceRange}
+              onPriceChange={handlePriceChange}
+              selectedManufacturerIds={selectedManufacturerIds}
+              onManufacturerIdsChange={setSelectedManufacturerIds}
+              minRating={minRating}
+              onRatingChange={setMinRating}
+              selectedAvailability={selectedAvailability}
+              onAvailabilityChange={setSelectedAvailability}
+              selectedSpecifications={selectedSpecifications}
+              onSpecificationsChange={setSelectedSpecifications}
               onReset={handleResetFilters}
-              actions={[
-                ...(priceRange.min > 0 || priceRange.max > 0
-                  ? [{ label: 'Снять цену', onClick: () => setPriceRange({ min: 0, max: 0 }) }]
-                  : []),
-                ...(selectedManufacturerIds.length > 0
-                  ? [{ label: 'Снять бренды', onClick: () => setSelectedManufacturerIds([]) }]
-                  : []),
-                ...(Object.keys(selectedSpecifications).length > 0
-                  ? [{ label: 'Сбросить характеристики', onClick: () => setSelectedSpecifications({}) }]
-                  : []),
-                ...(searchQuery.trim()
-                  ? [{ label: 'Очистить поиск', onClick: () => setSearchQuery('') }]
-                  : []),
-              ]}
+              totalItems={totalItems}
             />
           </div>
-        )}
 
-        {/* Product Grid - 4 columns */}
-        {!error && products.length > 0 && (
-          <>
-            {viewMode === 'table' ? (
-              <ProductTable products={products} onAddToCart={handleAddToCart} />
-            ) : (
-              <div className={styles.gridWrapper}>
-                <motion.div 
-                  className={`${styles.grid} ${viewMode === 'list' ? styles.listView : ''}`}
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
+          {/* Product List Area */}
+          <div className="flex-1 min-w-0">
+            {/* Mobile Filter Overlay */}
+            {mobileFilterOpen && (
+              <div className="fixed inset-0 bg-canvas-dark/92 backdrop-blur-[4px] z-[1000] lg:hidden" onClick={() => setMobileFilterOpen(false)}>
+                <div 
+                  className="absolute left-0 top-0 bottom-0 w-[90vw] max-w-[380px] bg-surface-elevated overflow-y-auto"
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
-                  {products.map((product, index) => (
-                    <motion.div key={product.id} variants={itemVariants} className={styles.gridItem}>
-                      <ProductCard 
-                        product={product} 
-                        onAddToCart={handleAddToCart}
-                        onQuickView={openQuickView}
-                        viewMode={viewMode}
-                        imageFetchPriority={viewMode === 'grid' && index < 4 ? 'high' : undefined}
-                      />
-                    </motion.div>
-                  ))}
-                </motion.div>
-                {loading && hasLoadedOnce && (
-                  <div className={styles.loadingOverlay} aria-hidden="true">
-                    <div className={styles.loadingOverlayInner}>
-                      <span className={styles.spinnerIcon}>⟳</span>
-                      <span>Обновляем список…</span>
-                    </div>
+                  <div className="flex items-center justify-between p-5 pb-4 border-b border-hairline-dark">
+                    <h2 className="text-sm font-bold text-body-text flex items-center gap-2">
+                      Фильтры
+                      {activeFilterCount > 0 && (
+                        <span className="h-5 min-w-5 px-1.5 bg-gold text-gold-ink text-[10px] font-bold rounded-full flex items-center justify-center">
+                          {activeFilterCount}
+                        </span>
+                      )}
+                    </h2>
+                    <button 
+                      className="flex items-center justify-center w-9 h-9 bg-surface-elevated border border-hairline-dark rounded-lg text-muted-text hover:bg-gold/10 hover:border-gold/30 hover:text-gold transition-all"
+                      onClick={() => setMobileFilterOpen(false)}
+                      aria-label="Закрыть панель фильтров"
+                    >
+                      <X size={20} />
+                    </button>
                   </div>
-                )}
+                  <div className="p-5">
+                   <FilterSidebar
+                        mobile
+                        selectedCategory={selectedCategory}
+                        onCategoryChange={handleCategoryChange}
+                        categoryLocked={isCategoryLocked}
+                        priceRange={priceRange}
+                        onPriceChange={handlePriceChange}
+                        selectedManufacturerIds={selectedManufacturerIds}
+                        onManufacturerIdsChange={setSelectedManufacturerIds}
+                        minRating={minRating}
+                        onRatingChange={setMinRating}
+                        selectedAvailability={selectedAvailability}
+                        onAvailabilityChange={setSelectedAvailability}
+                        selectedSpecifications={selectedSpecifications}
+                        onSpecificationsChange={setSelectedSpecifications}
+                        onReset={handleResetFilters}
+                        totalItems={totalItems}
+                      />
+                  </div>
+                </div>
               </div>
             )}
 
-            {totalItems > 0 && (
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                pageSize={pageSize}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-                showPageSizeSelector={true}
-                showFirstLast={totalPages > 5}
-                disabled={loading}
-              />
+            {/* Loading State */}
+            {loading && !hasLoadedOnce && (
+              <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${viewMode === 'list' ? 'grid-cols-1' : ''}`}>
+                {Array.from({ length: pageSize }).map((_, index) => (
+                  <ProductCardSkeleton key={index} />
+                ))}
+              </div>
             )}
-          </>
-        )}
 
-      </main>
+            {/* Error State */}
+            {error && (
+              <div className="flex justify-center py-12">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 rounded-full bg-surface-card flex items-center justify-center mb-5">
+                    <X size={28} className="text-price-rise" />
+                  </div>
+                  <h3 className="text-lg font-bold text-body-text mb-2">Ошибка загрузки</h3>
+                  <p className="text-sm text-muted-text max-w-xs mb-6">{error}</p>
+                  <button 
+                    onClick={() => fetchProducts(page)}
+                    className="px-6 py-2.5 bg-gold text-gold-ink text-sm font-semibold rounded-lg hover:bg-gold-active transition-colors"
+                  >
+                    Повторить
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Products */}
+            {!error && products.length > 0 && (
+              <>
+                {viewMode === 'table' ? (
+                  <ProductTable products={products} onAddToCart={handleAddToCart} />
+                ) : viewMode === 'list' ? (
+                  <div className="relative">
+                    <ProductList products={products} onAddToCart={handleAddToCart} />
+                    {loading && hasLoadedOnce && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-canvas-dark/35 backdrop-blur-[2px] rounded-xl pointer-events-none">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-hairline-dark/8 bg-surface-elevated/80 text-body-text text-xs">
+                          <span className="animate-spin">⟳</span>
+                          <span>Обновляем список…</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <ProductGrid products={products} onAddToCart={handleAddToCart} />
+                    {loading && hasLoadedOnce && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-canvas-dark/35 backdrop-blur-[2px] rounded-xl pointer-events-none">
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-hairline-dark/8 bg-surface-elevated/80 text-body-text text-xs">
+                          <span className="animate-spin">⟳</span>
+                          <span>Обновляем список…</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {totalItems > 0 && (
+                  <div ref={catalogScrollAnchorRef} className="mt-8 pt-6 border-t border-hairline-dark/6">
+                    <Pagination
+                      page={page}
+                      totalPages={totalPages}
+                      totalItems={totalItems}
+                      pageSize={pageSize}
+                      onPageChange={handlePageChange}
+                      onPageSizeChange={handlePageSizeChange}
+                      showPageSizeSelector={true}
+                      showFirstLast={totalPages > 5}
+                      disabled={loading}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && hasLoadedOnce && products.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="w-16 h-16 rounded-full bg-surface-card flex items-center justify-center mb-5">
+                  <Search size={28} className="text-muted-text" />
+                </div>
+                <h3 className="text-lg font-bold text-body-text mb-2">Товары не найдены</h3>
+                <p className="text-sm text-muted-text max-w-xs mb-6">Попробуйте изменить фильтры или поисковый запрос</p>
+                <button 
+                  onClick={handleResetFilters}
+                  className="px-6 py-2.5 bg-gold/10 text-gold text-sm font-semibold rounded-lg hover:bg-gold/20 transition-colors"
+                >
+                  Сбросить фильтры
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

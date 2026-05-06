@@ -6,7 +6,6 @@
 
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import styles from './TicketsPage.module.css';
 
 type TicketPriority = 'high' | 'medium' | 'low';
 type TicketStatus = 'new' | 'progress' | 'waiting' | 'done' | 'cancelled';

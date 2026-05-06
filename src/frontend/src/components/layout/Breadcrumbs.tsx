@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
-import styles from './Breadcrumbs.module.css';
 
 export interface BreadcrumbItem {
   label: string;
@@ -15,21 +14,21 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
   if (items.length === 0) return null;
 
   return (
-    <nav className={styles.nav} aria-label="Хлебные крошки">
-      <ol className={styles.list}>
+    <nav className="text-sm text-muted-foreground mb-4" aria-label="Хлебные крошки">
+      <ol className="flex flex-wrap items-center gap-1 list-none m-0 p-0">
         {items.map((item, i) => {
           const isLast = i === items.length - 1;
           return (
-            <li key={`${item.label}-${i}`} className={styles.item}>
+            <li key={`${item.label}-${i}`} className="inline-flex items-center gap-1">
               {i > 0 && (
-                <ChevronRight className={styles.sep} size={14} aria-hidden />
+                <ChevronRight className="text-muted-foreground/70 select-none" size={14} aria-hidden />
               )}
               {isLast || !item.to ? (
-                <span className={styles.current} aria-current="page">
+                <span className="text-foreground font-medium max-w-[42ch] overflow-hidden text-ellipsis whitespace-nowrap" aria-current="page">
                   {item.label}
                 </span>
               ) : (
-                <Link className={styles.link} to={item.to}>
+                <Link className="text-muted-foreground no-underline rounded-sm transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-primary focus-visible:outline-offset-2" to={item.to}>
                   {item.label}
                 </Link>
               )}

@@ -20,24 +20,23 @@ import {
   mergeDescriptionIntoSpecifications,
 } from '../../utils/productDescriptionSpecs';
 import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
-import styles from './ProductPage.module.css';
 
 function renderDescriptionBlocks(description: string | undefined): ReactElement {
   const raw = trimDescriptionBeforeMain(description);
   if (!raw) {
-    return <div className={styles.descriptionText}>Описание этого товара пока не добавлено.</div>;
+    return <div className="text-[var(--fg-muted)] whitespace-pre-line">Описание этого товара пока не добавлено.</div>;
   }
 
   const blocks = splitDescriptionByHeadings(raw);
 
   if (blocks.length === 0) {
-    return <div className={styles.descriptionText}>{raw}</div>;
+    return <div className="text-[var(--fg-muted)] whitespace-pre-line">{raw}</div>;
   }
 
   const anyPairs = blocks.some((b) => extractKeyValueItemsFromBody(b.body).items.length > 0);
 
   return (
-    <div className={styles.descriptionBlocks}>
+    <div className="grid gap-4">
       {blocks.map((block, idx) => {
         const { items, rest } = extractKeyValueItemsFromBody(block.body);
         const hasTitle = !!block.title?.trim();
@@ -45,27 +44,27 @@ function renderDescriptionBlocks(description: string | undefined): ReactElement 
         const hasRest = !!rest?.trim();
 
         return (
-          <section key={`${block.title ?? 'block'}-${idx}`} className={styles.descriptionBlock}>
-            {hasTitle && <h3 className={styles.descriptionBlockTitle}>{block.title}</h3>}
+          <section key={`${block.title ?? 'block'}-${idx}`} className="p-4.5 border border-[var(--border)] rounded-xl bg-[var(--border-muted)]">
+            {hasTitle && <h3 className="m-0 mb-3 text-[1.05rem] font-semibold text-[var(--fg)] letter-spacing-[0.01em]">{block.title}</h3>}
 
             {hasItems && (
-              <ul className={styles.descriptionBullets}>
+              <ul className="m-0 p-0 list-none grid gap-2.5">
                 {items.map(({ key, value }, i) => (
-                  <li key={`${key}-${i}`} className={styles.descriptionBullet}>
-                    <span className={styles.descriptionBulletKey}>{key}</span>
-                    <span className={styles.descriptionBulletSep}>—</span>
-                    <span className={styles.descriptionBulletValue}>{value}</span>
+                  <li key={`${key}-${i}`} className="flex items-baseline gap-2 p-2.5 rounded-lg bg-[var(--border-muted)] border border-[var(--border-muted)] whitespace-normal flex-wrap">
+                    <span className="text-[var(--fg-muted)] text-[0.92rem]">{key}</span>
+                    <span className="text-[var(--fg-dim)]">—</span>
+                    <span className="text-[var(--fg)] text-[0.95rem] font-medium">{value}</span>
                   </li>
                 ))}
               </ul>
             )}
 
-            {hasRest && <div className={styles.descriptionText}>{rest}</div>}
+            {hasRest && <div className="text-[var(--fg-muted)] mt-3 whitespace-pre-line">{rest}</div>}
           </section>
         );
       })}
 
-      {!anyPairs && <div className={styles.descriptionText}>{raw}</div>}
+      {!anyPairs && <div className="text-[var(--fg-muted)] whitespace-pre-line">{raw}</div>}
     </div>
   );
 }
@@ -85,12 +84,12 @@ function renderSpecsFromCatalog(product: Product): ReactElement {
     return a.localeCompare(b);
   });
   return (
-    <ul className={styles.descriptionBullets}>
+    <ul className="m-0 p-0 list-none grid gap-2.5">
       {keys.map((k) => (
-        <li key={k} className={styles.descriptionBullet}>
-          <span className={styles.descriptionBulletKey}>{specLabel(k)}</span>
-          <span className={styles.descriptionBulletSep}>—</span>
-          <span className={styles.descriptionBulletValue}>{formatSpecValueForKey(k, specs[k])}</span>
+        <li key={k} className="flex items-baseline gap-2 p-2.5 rounded-lg bg-[var(--border-muted)] border border-[var(--border-muted)] whitespace-normal flex-wrap">
+          <span className="text-[var(--fg-muted)] text-[0.92rem]">{specLabel(k)}</span>
+          <span className="text-[var(--fg-dim)]">—</span>
+          <span className="text-[var(--fg)] text-[0.95rem] font-medium">{formatSpecValueForKey(k, specs[k])}</span>
         </li>
       ))}
     </ul>
@@ -111,14 +110,14 @@ function renderLegalInfoBlock(product: Product): ReactElement | null {
   if (items.length === 0) return null;
 
   return (
-    <section className={styles.descriptionBlock}>
-      <h3 className={styles.descriptionBlockTitle}>Юридическая информация</h3>
-      <ul className={styles.descriptionBullets}>
+    <section className="p-4.5 border border-[var(--border)] rounded-xl bg-[var(--border-muted)]">
+      <h3 className="m-0 mb-3 text-[1.05rem] font-semibold text-[var(--fg)] letter-spacing-[0.01em]">Юридическая информация</h3>
+      <ul className="m-0 p-0 list-none grid gap-2.5">
         {items.map(({ key, value }, i) => (
-          <li key={`${key}-${i}`} className={styles.descriptionBullet}>
-            <span className={styles.descriptionBulletKey}>{key}</span>
-            <span className={styles.descriptionBulletSep}>—</span>
-            <span className={styles.descriptionBulletValue}>{value}</span>
+          <li key={`${key}-${i}`} className="flex items-baseline gap-2 p-2.5 rounded-lg bg-[var(--border-muted)] border border-[var(--border-muted)] whitespace-normal flex-wrap">
+            <span className="text-[var(--fg-muted)] text-[0.92rem]">{key}</span>
+            <span className="text-[var(--fg-dim)]">—</span>
+            <span className="text-[var(--fg)] text-[0.95rem] font-medium">{value}</span>
           </li>
         ))}
       </ul>
@@ -188,29 +187,29 @@ export function ProductPage(): ReactElement {
   }, [product, isAuthenticated, showToast]);
 
   if (isLoading) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.breadcrumb}><Skeleton width={200} height={14} /></div>
-        <div className={styles.layout}>
-          <Skeleton height={500} borderRadius="lg" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <Skeleton width="40%" height={16} />
-            <Skeleton width="80%" height={40} />
-            <Skeleton width="100%" height={120} borderRadius="md" />
-            <Skeleton width="100%" height={56} borderRadius="md" />
-          </div>
+  return (
+    <div className="w-full max-w-[var(--layout-page-wide)] mx-auto px-[var(--layout-page-pad-x)] min-h-[calc(100vh-200px)] bg-[var(--bg)]" style={{ backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% 0%, var(--border-muted) 0%, transparent 50%)' }}>
+      <div className="flex items-center gap-2 text-xs text-[var(--fg-dim)] mb-8"><Skeleton width={200} height={14} /></div>
+      <div className="grid grid-cols-1 gap-10 mb-16 lg:grid-cols-[minmax(400px,650px)_1fr] lg:gap-15">
+        <Skeleton height={500} borderRadius="lg" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <Skeleton width="40%" height={16} />
+          <Skeleton width="80%" height={40} />
+          <Skeleton width="100%" height={120} borderRadius="md" />
+          <Skeleton width="100%" height={56} borderRadius="md" />
         </div>
       </div>
-    );
+    </div>
+  );
   }
 
   if (error || !product) {
     return (
-      <div className={styles.container}>
+      <div className="w-full max-w-[var(--layout-page-wide)] mx-auto px-[var(--layout-page-pad-x)] min-h-[calc(100vh-200px)] bg-[var(--bg)]">
         <div style={{ textAlign: 'center', padding: '100px 20px' }}>
           <h1 style={{ marginBottom: '16px' }}>Товар не найден</h1>
           <p style={{ color: '#71717a', marginBottom: '32px' }}>Возможно, он был удалён или ссылка неверна.</p>
-          <Link to="/catalog" className={styles.backButton}>Вернуться в каталог</Link>
+          <Link to="/catalog" className="inline-flex items-center p-3.5 text-sm font-semibold text-decoration-none text-[var(--color-black)] bg-gradient-to-br from-[#e8c4a0] to-[var(--color-gold-500)] border border-[var(--border-muted)] rounded-[var(--radius-sm,4px)] transition-all duration-200 hover:from-[#e8c4a0] hover:to-[var(--accent)] hover:scale-101">Вернуться в каталог</Link>
         </div>
       </div>
     );
@@ -218,12 +217,13 @@ export function ProductPage(): ReactElement {
 
   return (
     <motion.div 
-      className={styles.container}
+      className="w-full max-w-[var(--layout-page-wide)] mx-auto px-[var(--layout-page-pad-x)] min-h-[calc(100vh-200px)] bg-[var(--bg)]"
+      style={{ backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% 0%, var(--border-muted) 0%, transparent 50%)' }}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <header className={styles.breadcrumb}>
+      <header className="flex items-center gap-2 text-xs text-[var(--fg-dim)] mb-8">
         <Breadcrumbs
           items={[
             { label: 'Главная', to: '/' },
@@ -236,7 +236,7 @@ export function ProductPage(): ReactElement {
         />
       </header>
 
-      <div className={styles.layout}>
+      <div className="grid grid-cols-1 gap-10 mb-16 lg:grid-cols-[minmax(400px,650px)_1fr] lg:gap-15">
         <motion.div variants={itemVariants}>
           <ProductGallery product={product} />
         </motion.div>
@@ -246,7 +246,7 @@ export function ProductPage(): ReactElement {
         </motion.div>
       </div>
 
-      <motion.div variants={itemVariants} className={styles.tabsWrapper}>
+      <motion.div variants={itemVariants} className="mb-16">
         <Tabs tabs={tabs} defaultTab="specs" />
       </motion.div>
 

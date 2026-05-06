@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import type { FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import styles from './RegisterPage.module.css';
 
 /**
  * Страница регистрации
@@ -64,15 +63,15 @@ export function RegisterPage() {
   };
 
   return (
-    <div className={styles.container}>
+    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-6 relative">
       {/* Background decoration */}
-      <div className={styles.bgGlow} aria-hidden="true" />
+      <div className="fixed w-[500px] h-[500px] bg-[radial-gradient(circle,var(--accent-glow)_0%,transparent_60%)] top-[-200px] left-[-150px] blur-[80px] pointer-events-none -z-1" aria-hidden="true" />
 
-      <div className={styles.card}>
+      <div className="w-full max-w-[400px] bg-[var(--bg-card)] border border-[var(--border)] p-10 relative before:content-[''] before:absolute before:top-0 before:left-0 before:w-0.5 before:h-full before:bg-[var(--accent)]">
         {/* Logo */}
-        <Link to="/" className={styles.logo}>
-          <div className={styles.logoIcon}>
-            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <Link to="/" className="flex items-center gap-2.5 no-underline mb-8 justify-center">
+          <div className="w-10 h-10 bg-[var(--accent)] flex items-center justify-center">
+            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" className="w-[22px] h-[22px] text-[var(--bg)]">
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
@@ -93,33 +92,33 @@ export function RegisterPage() {
               />
             </svg>
           </div>
-          <span className={styles.logoText}>
-            Gold<span>PC</span>
+          <span className="text-lg font-semibold tracking-[-0.02em] text-[var(--fg)]">
+            Gold<span className="text-[var(--accent)]">PC</span>
           </span>
         </Link>
 
         {/* Header */}
-        <div className={styles.header}>
-          <h1 className={styles.title}>Создать аккаунт</h1>
-          <p className={styles.subtitle}>Заполните форму для регистрации</p>
+        <div className="text-center mb-8">
+          <h1 className="text-xl font-semibold text-center mb-2 tracking-[-0.02em] text-[var(--fg)]">Создать аккаунт</h1>
+          <p className="text-sm text-[var(--fg-muted)] text-center">Заполните форму для регистрации</p>
         </div>
 
         {/* Form */}
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <form className="flex flex-col" onSubmit={handleSubmit}>
           {error && (
-            <div className={styles.error} role="alert">
+            <div className="p-3 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-[var(--error)] text-[0.85rem] mb-4" role="alert">
               {error}
             </div>
           )}
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="firstName">
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2" htmlFor="firstName">
               Имя
             </label>
             <input
               id="firstName"
               type="text"
-              className={styles.input}
+              className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] box-border focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:border-[var(--border-accent)]"
               placeholder="Ваше имя"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
@@ -128,14 +127,14 @@ export function RegisterPage() {
             />
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="phone">
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2" htmlFor="phone">
               Телефон
             </label>
             <input
               id="phone"
               type="tel"
-              className={styles.input}
+              className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] box-border focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:border-[var(--border-accent)]"
               placeholder={"+375 (XX) XXX-XX-XX"}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
@@ -144,14 +143,14 @@ export function RegisterPage() {
             />
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="email">
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2" htmlFor="email">
               Email
             </label>
             <input
               id="email"
               type="email"
-              className={styles.input}
+              className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] box-border focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:border-[var(--border-accent)]"
               placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -160,14 +159,14 @@ export function RegisterPage() {
             />
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="password">
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2" htmlFor="password">
               Пароль
             </label>
             <input
               id="password"
               type="password"
-              className={styles.input}
+              className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] box-border focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:border-[var(--border-accent)]"
               placeholder="Минимум 8 символов"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -175,27 +174,32 @@ export function RegisterPage() {
               minLength={8}
               autoComplete="new-password"
             />
-            <p className={styles.hint}>Минимум 8 символов, буквы и цифры</p>
+            <p className="text-[0.7rem] text-[var(--fg-dim)] mt-1.5">Минимум 8 символов, буквы и цифры</p>
             {password && (
-              <div className={styles.passwordStrength}>
+              <div className="flex gap-1 mt-2">
                 {[0, 1, 2].map((index) => (
                   <div
                     key={index}
-                    className={`${styles.strengthBar} ${getStrengthClass(index)}`}
+                    className={`flex-1 h-0.5 bg-[var(--border)] transition-colors ${
+                      index >= passwordStrength ? '' : 
+                      passwordStrength === 1 ? 'bg-[var(--error)]' :
+                      passwordStrength === 2 ? 'bg-[#eab308]' :
+                      'bg-[var(--color-green-500)]'
+                    }`}
                   />
                 ))}
               </div>
             )}
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="confirm-password">
+          <div className="mb-4">
+            <label className="block text-xs font-medium text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2" htmlFor="confirm-password">
               Подтверждение пароля
             </label>
             <input
               id="confirm-password"
               type="password"
-              className={styles.input}
+              className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] box-border focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:border-[var(--border-accent)]"
               placeholder="Повторите пароль"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -204,21 +208,21 @@ export function RegisterPage() {
             />
           </div>
 
-          <div className={styles.checkboxGroup}>
+          <div className="flex items-start gap-2.5 my-5">
             <input
               type="checkbox"
               id="terms"
-              className={styles.checkbox}
+              className="w-4 h-4 accent-[var(--accent)] cursor-pointer mt-0.5 shrink-0"
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
             />
-            <label htmlFor="terms" className={styles.checkboxLabel}>
+            <label htmlFor="terms" className="text-sm text-[var(--fg-muted)] cursor-pointer leading-[1.5]">
               Я принимаю{' '}
-              <a href="/terms" target="_blank" rel="noopener noreferrer">
+              <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] no-underline hover:text-[var(--accent-bright)]">
                 условия использования
               </a>{' '}
               и{' '}
-              <a href="/privacy" target="_blank" rel="noopener noreferrer">
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] no-underline hover:text-[var(--accent-bright)]">
                 политику конфиденциальности
               </a>
             </label>
@@ -226,11 +230,11 @@ export function RegisterPage() {
 
           <button
             type="submit"
-            className={styles.submitBtn}
+            className="inline-flex items-center justify-center gap-2.5 w-full p-3.5 font-[var(--font-sans)] text-[0.85rem] font-semibold bg-[var(--accent)] text-[var(--bg)] border-none cursor-pointer transition-all hover:bg-[var(--accent-bright)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
             disabled={isLoading}
           >
             {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />
             </svg>
@@ -238,17 +242,17 @@ export function RegisterPage() {
         </form>
 
         {/* Divider */}
-        <div className={styles.divider}>
-          <div className={styles.dividerLine} />
-          <span className={styles.dividerText}>или</span>
-          <div className={styles.dividerLine} />
+        <div className="flex items-center gap-4 my-7">
+          <div className="flex-1 h-px bg-[var(--border)]" />
+          <span className="text-[0.7rem] text-[var(--fg-dim)] uppercase tracking-[0.1em]">или</span>
+          <div className="flex-1 h-px bg-[var(--border)]" />
         </div>
 
         {/* Footer */}
-        <div className={styles.footer}>
-          <p className={styles.footerText}>
+        <div className="text-center">
+          <p className="text-[0.85rem] text-[var(--fg-muted)]">
             Уже есть аккаунт?{' '}
-            <Link to="/login" className={styles.footerLink}>
+            <Link to="/login" className="text-[var(--accent)] no-underline font-medium transition-colors hover:text-[var(--accent-bright)]">
               Войти
             </Link>
           </p>
@@ -256,8 +260,8 @@ export function RegisterPage() {
       </div>
 
       {/* Back link */}
-      <Link to="/" className={styles.backLink}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <Link to="/" className="flex items-center justify-center gap-2 mt-6 text-sm text-[var(--fg-dim)] no-underline transition-colors hover:text-[var(--fg)]">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
           <line x1="19" y1="12" x2="5" y2="12" />
           <polyline points="12 19 5 12 12 5" />
         </svg>

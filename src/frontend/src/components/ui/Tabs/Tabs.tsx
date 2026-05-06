@@ -1,5 +1,4 @@
 import { useState, type ReactNode, type ReactElement } from 'react';
-import styles from './Tabs.module.css';
 
 export interface Tab {
   id: string;
@@ -31,15 +30,19 @@ export function Tabs({ tabs, defaultTab, className }: TabsProps): ReactElement {
   const activeContent = tabs.find((tab) => tab.id === activeTab)?.content;
 
   return (
-    <div className={`${styles.tabsContainer} ${className ?? ''}`}>
+    <div className={`${className ?? ''}`}>
       {/* Tab Headers */}
-      <div className={styles.tabHeaders} role="tablist">
+      <div className="flex border-b border-hairline-dark" role="tablist">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             role="tab"
             aria-selected={activeTab === tab.id}
-            className={`${styles.tabHeader} ${activeTab === tab.id ? styles.tabHeaderActive : ''}`}
+            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+              activeTab === tab.id
+                ? 'text-gold border-gold'
+                : 'text-muted-text border-transparent hover:text-body-text'
+            }`}
             onClick={() => setActiveTab(tab.id)}
           >
             {tab.label}
@@ -48,7 +51,7 @@ export function Tabs({ tabs, defaultTab, className }: TabsProps): ReactElement {
       </div>
 
       {/* Tab Content */}
-      <div className={styles.tabContent} role="tabpanel">
+      <div className="p-4" role="tabpanel">
         {activeContent}
       </div>
     </div>

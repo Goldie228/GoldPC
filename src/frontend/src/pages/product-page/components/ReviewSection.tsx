@@ -4,7 +4,6 @@ import { Skeleton } from '../../../components/ui/Skeleton';
 import { useCatalog } from '../../../hooks/useCatalog';
 import type { Product, ProductReview } from '../../../api/types';
 import { ProductReviewCard } from './ProductReviewCard';
-import styles from '../ProductPage.module.css';
 
 export interface ReviewSectionProps {
   productId: string;
@@ -152,24 +151,24 @@ export function ReviewSection({
   };
 
   return (
-    <div className={styles.reviews}>
-      <div className={styles.reviewsHeader}>
-        <div className={styles.ratingSummary}>
-          <div className={styles.ratingValue}>
+    <div>
+      <div className="flex items-center justify-between mb-8 pb-4 border-b border-[var(--border)]">
+        <div className="flex items-center gap-3">
+          <div className="text-4xl font-bold text-[var(--fg)] font-[var(--font-sans)]">
             {ratingValue > 0 ? ratingValue.toFixed(1) : 'Нет оценок'}
           </div>
-          <div className={styles.ratingStars}>
-            <div className={styles.stars} aria-hidden>
+          <div className="flex flex-col">
+            <div className="text-[var(--accent)] text-xl" aria-hidden>
               {ratingValue > 0 ? (
                 <>
                   {'★'.repeat(Math.round(ratingValue))}
                   {'☆'.repeat(5 - Math.round(ratingValue))}
                 </>
               ) : (
-                <span className={styles.starsMuted}>☆☆☆☆☆</span>
+                <span className="text-[var(--fg-dim)] letter-spacing-[0.12em]">☆☆☆☆☆</span>
               )}
             </div>
-            <span className={styles.reviewCount}>
+            <span className="text-xs text-[var(--fg-muted)]">
               {reviewCount === 0
                 ? 'пока без оценок'
                 : `${reviewCount} ${reviewCount === 1 ? 'отзыв' : 'отзывов'}`}
@@ -181,13 +180,13 @@ export function ReviewSection({
         </Button>
       </div>
 
-      <div className={styles.reviewsList}>
+      <div className="grid gap-6 mb-12">
         {loading ? (
           Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} height={150} borderRadius="md" />)
         ) : reviews.length === 0 ? (
-          <div className={styles.reviewsEmptyInvite}>
-            <p className={styles.reviewsEmptyTitle}>Станьте первым, кто оставит отзыв</p>
-            <p className={styles.reviewsEmptyText}>
+          <div className="p-7 text-center bg-[linear-gradient(180deg,color-mix(in_srgb,var(--accent)_8%,transparent_100%)_0%,var(--bg-card)_100%)] border border-dashed border-[color-mix(in_srgb,var(--accent)_35%,var(--border))] rounded-xl">
+            <p className="m-0 mb-2.5 text-lg font-semibold text-[var(--fg)]">Станьте первым, кто оставит отзыв</p>
+            <p className="m-0 text-sm leading-6 text-[var(--fg-muted)] max-w-[420px] mx-auto">
               Расскажите о впечатлениях — это поможет другим выбрать комплектующие увереннее.
             </p>
           </div>
@@ -196,35 +195,64 @@ export function ReviewSection({
         )}
       </div>
 
-      <div id="review-form" className={styles.reviewItem}>
-        <h3 className={styles.reviewFormTitle}>Ваш отзыв</h3>
-        <div className={styles.reviewFormGrid}>
-          <div className={styles.reviewFormRow}>
-            <span className={styles.reviewFormLabel}>Ваша оценка:</span>
-            <StarRatingInput
-              value={form.rating}
-              onChange={(rating) => setForm((f) => ({ ...f, rating }))}
-              disabled={submitting}
-            />
+      <div id="review-form" className="p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl">
+        <h3 className="mb-5 text-lg font-semibold text-[var(--fg)]">Ваш отзыв</h3>
+        <div className="grid gap-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-[var(--fg)] font-medium">Ваша оценка:</span>
+            <div
+              className="inline-flex items-center gap-1.5 p-1.5 rounded-lg bg-[var(--border-muted)] border border-[var(--border)]"
+              role="radiogroup"
+              aria-label="Ваша оценка"
+              aria-disabled={submitting || undefined}
+              tabIndex={submitting ? -1 : 0}
+              onKeyDown={onKeyDown}
+            >
+              {Array.from({ length: 5 }, (_, i) => {
+                const star = i + 1;
+                const isActive = star <= form.rating;
+                return (
+                  <button
+                    key={star}
+                    type="button"
+                    className={`w-8 h-8 inline-flex items-center justify-center border border-transparent bg-transparent text-[var(--fg-dim)] rounded-lg cursor-pointer transition-[all] duration-150 hover:bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-2 ${isActive ? 'text-[var(--accent)]' : ''}`}
+                    role="radio"
+                    aria-checked={form.rating === star}
+                    aria-label={`${star} из 5`}
+                    disabled={submitting}
+                    data-rating={star}
+                    onClick={() => onChange(star)}
+                  >
+                    <span aria-hidden>{isActive ? '★' : '☆'}</span>
+                  </button>
+                );
+              })}
+              <span className="font-[var(--font-mono)] text-sm text-[var(--fg-muted)] ml-2" aria-hidden>
+                {form.rating}/5
+              </span>
+              <span className="sr-only" id={`${groupId}-value`}>
+                Выбрано: {form.rating} из 5
+              </span>
+            </div>
           </div>
           <textarea
             placeholder="Комментарий"
             value={form.comment}
             onChange={(e) => setForm((f) => ({ ...f, comment: e.target.value }))}
-            className={styles.reviewTextarea}
+            className="w-full h-[120px] bg-[var(--bg-elevated)] border border-[var(--border,#27272a)] text-[var(--fg,#fff)] p-3 rounded-lg resize-y focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-glow)]"
           />
-          <div className={styles.reviewProsConsInputs}>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <input
               placeholder="Достоинства"
               value={form.pros}
               onChange={(e) => setForm((f) => ({ ...f, pros: e.target.value }))}
-              className={styles.reviewInput}
+              className="bg-[var(--bg-elevated)] border border-[var(--border,#27272a)] text-[var(--fg,#fff)] p-3 rounded-lg focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-glow)]"
             />
             <input
               placeholder="Недостатки"
               value={form.cons}
               onChange={(e) => setForm((f) => ({ ...f, cons: e.target.value }))}
-              className={styles.reviewInput}
+              className="bg-[var(--bg-elevated)] border border-[var(--border,#27272a)] text-[var(--fg,#fff)] p-3 rounded-lg focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-glow)]"
             />
           </div>
           <Button onClick={handleSubmit} disabled={submitting}>

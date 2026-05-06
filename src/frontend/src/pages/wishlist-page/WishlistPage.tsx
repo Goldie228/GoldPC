@@ -11,7 +11,6 @@ import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import type { ProductSummary, ProductCategory } from '../../api/types';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
-import styles from './WishlistPage.module.css';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -158,17 +157,18 @@ export function WishlistPage(): ReactElement {
 
   if (items.length === 0 && !loading) {
     return (
-      <div className={styles.page}>
-        <div className={styles.emptyContainer}>
-          <div className={styles.emptyContent}>
-            <div className={styles.emptyIconWrapper}>
-              <Heart size={48} className={styles.emptyIcon} />
+      <div className="min-h-[calc(100vh-200px)] bg-[var(--bg)]" style={{ backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% 0%, var(--border-muted) 0%, transparent 50%)' }}>
+        <div className="w-full max-w-[1680px] mx-auto p-6 md:p-8 flex items-center justify-center" style={{ minHeight: 'calc(100vh - 400px)' }}>
+          <div className="flex flex-col items-center text-center max-w-[400px]">
+            <div className="w-[100px] h-[100px] bg-[var(--border-muted)] rounded-full flex items-center justify-center mb-8 relative">
+              <div className="absolute inset-[-10px] border border-dashed border-[var(--border-muted)] rounded-full animate-[rotate_20s_linear_infinite]" />
+              <Heart size={48} className="text-[var(--accent)] opacity-80" />
             </div>
-            <h1 className={styles.emptyTitle}>В избранном пока пусто</h1>
-            <p className={styles.emptyText}>
+            <h1 className="text-3xl font-bold mb-4 text-[var(--fg)]">В избранном пока пусто</h1>
+            <p className="text-[var(--fg-muted)] leading-6 mb-8">
               Добавляйте понравившиеся товары из каталога, чтобы вернуться к ним позже
             </p>
-            <Link to="/catalog" className={styles.emptyBtn}>
+            <Link to="/catalog" className="inline-flex p-3.5 bg-[var(--accent)] text-[var(--bg)] rounded-lg font-semibold text-decoration-none transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_var(--border-muted)]">
               Перейти в каталог
             </Link>
           </div>
@@ -178,17 +178,17 @@ export function WishlistPage(): ReactElement {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.container}>
-        <main className={styles.main}>
-          <header className={styles.header}>
-            <div className={styles.breadcrumb}>
-              <Link to="/">Главная</Link>
+    <div className="min-h-[calc(100vh-200px)] bg-[var(--bg)]" style={{ backgroundImage: 'radial-gradient(ellipse 80% 50% at 50% 0%, var(--border-muted) 0%, transparent 50%)' }}>
+      <div className="w-full max-w-[1680px] mx-auto p-6 md:p-8">
+        <main className="min-w-0">
+          <header className="mb-6">
+            <div className="flex items-center gap-2 text-xs text-[var(--fg-dim)] mb-2">
+              <Link to="/" className="text-[var(--fg-muted)] text-decoration-none transition-colors duration-200 hover:text-[var(--accent)]">Главная</Link>
               <span>/</span>
               <span>Избранное</span>
             </div>
-            <h1 className={styles.title}>Избранное</h1>
-            <div className={styles.stats}>
+            <h1 className="text-3xl font-bold letter-spacing-[-0.02em] text-[var(--fg)] m-0 mb-2">Избранное</h1>
+            <div className="text-sm text-[var(--fg-muted)] m-0">
               {loading ? (
                 <Skeleton width={160} height={18} borderRadius="sm" />
               ) : (
@@ -198,19 +198,19 @@ export function WishlistPage(): ReactElement {
           </header>
 
           {/* Упрощенный Toolbar */}
-          <div className={styles.toolbar}>
-            <div className={styles.searchWrapper}>
-              <Search size={18} className={styles.searchIcon} />
+          <div className="flex flex-wrap items-center gap-3 mb-5 p-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-[0_4px_20px_var(--border-muted)] sm:flex-nowrap">
+            <div className="relative flex items-center flex-1 min-w-[200px]">
+              <Search size={18} className="absolute left-3.5 text-[var(--fg-dim)] pointer-events-none" />
               <input
                 type="text"
-                className={styles.searchInput}
+                className="w-full h-10 p-0 pl-11 pr-4 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg text-[var(--fg)] text-sm transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg-card)]"
                 placeholder="Поиск в избранном..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
             <select 
-              className={styles.sortSelect}
+              className="h-10 px-9 pl-4 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg text-[var(--fg)] text-sm cursor-pointer appearance-none whitespace-nowrap bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-[right_12px_center] bg-[length:16px] transition-all duration-200 focus:outline-none focus:border-[var(--accent)]"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
@@ -223,9 +223,9 @@ export function WishlistPage(): ReactElement {
 
           {/* Чипсы категорий (показываем только если категорий > 1) */}
           {showCategoryChips && (
-            <div className={styles.categoryChips}>
+            <div className="flex items-center gap-2 mb-5 overflow-x-auto overflow-y-hidden p-1 scrollbar-thin scrollbar-color-[var(--border-muted))_transparent]">
               <button
-                className={`${styles.categoryChip} ${!selectedCategory ? styles.active : ''}`}
+                className="inline-flex items-center px-4 py-2 rounded-full border border-[var(--border)] bg-[var(--bg-card)] text-[var(--fg-muted)] text-sm font-medium whitespace-nowrap cursor-pointer transition-all duration-200 hover:border-[var(--border-muted)] hover:text-[var(--fg)] hover:bg-[var(--border-muted)]"
                 onClick={() => setSelectedCategory(null)}
               >
                 Все ({products.length})
@@ -236,7 +236,11 @@ export function WishlistPage(): ReactElement {
                 return (
                   <button
                     key={cat}
-                    className={`${styles.categoryChip} ${selectedCategory === cat ? styles.active : ''}`}
+                    className={`inline-flex items-center px-4 py-2 rounded-full border text-sm font-medium whitespace-nowrap cursor-pointer transition-all duration-200 hover:border-[var(--border-muted)] hover:text-[var(--fg)] hover:bg-[var(--border-muted)] ${
+                      selectedCategory === cat 
+                        ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--bg)] font-semibold shadow-[0_2px_8px_var(--border-muted)]' 
+                        : 'bg-[var(--bg-card)] border-[var(--border)] text-[var(--fg-muted)]'
+                    }`}
                     onClick={() => setSelectedCategory(cat)}
                   >
                     {label || cat} ({count})
@@ -248,7 +252,7 @@ export function WishlistPage(): ReactElement {
 
           {/* Error State */}
           {error && (
-            <div className={styles.errorState}>
+            <div className="flex justify-center p-12 md:p-16">
               <ApiErrorBanner
                 message={error}
                 onRetry={() => window.location.reload()}
@@ -260,13 +264,13 @@ export function WishlistPage(): ReactElement {
           {!error && (
             <>
               {loading ? (
-                <div className={styles.grid}>
+                <div className="grid grid-cols-1 gap-6 w-full sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                   {Array.from({ length: 4 }).map((_, index) => (
                     <ProductCardSkeleton key={index} />
                   ))}
                 </div>
               ) : filteredProducts.length === 0 ? (
-                <div className={styles.emptyStateWrapper}>
+                <div className="flex justify-center p-12 md:p-16">
                   <EmptyState
                     title="Ничего не найдено"
                     description={
@@ -279,7 +283,7 @@ export function WishlistPage(): ReactElement {
                 </div>
               ) : (
                 <motion.div 
-                  className={styles.grid}
+                  className="grid grid-cols-1 gap-6 w-full sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
                   variants={containerVariants}
                   initial="hidden"
                   animate="visible"
@@ -293,7 +297,7 @@ export function WishlistPage(): ReactElement {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        className={styles.gridItem}
+                        className="w-full"
                       >
                         <ProductCard 
                           product={product} 

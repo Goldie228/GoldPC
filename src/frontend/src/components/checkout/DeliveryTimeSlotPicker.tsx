@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import styles from './DeliveryTimeSlotPicker.module.css';
 
 interface TimeSlot {
   id: string;
@@ -60,21 +59,35 @@ export function DeliveryTimeSlotPicker({ onSelect, selectedDate, selectedSlot }:
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.section}>
-        <label className={styles.formLabel}>Дата доставки</label>
-        <div className={styles.dateInputWrapper}>
+    <div className="my-4">
+      <div className="mb-5">
+        <label className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Дата доставки</label>
+        <div className="relative w-full">
           <input
             type="date"
             value={date}
             onChange={(e) => handleDateChange(e.target.value)}
             min={minDate}
             max={maxDateStr}
-            className={styles.nativeDateInput}
+            className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer z-1"
+            onFocus={(e) => {
+              const parent = e.currentTarget.parentElement;
+              const formatted = parent?.querySelector('.formatted-date');
+              if (formatted) {
+                formatted.className = 'formatted-date border-[var(--accent)] ring-3 ring-[var(--border-brand)]';
+              }
+            }}
+            onBlur={(e) => {
+              const parent = e.currentTarget.parentElement;
+              const formatted = parent?.querySelector('.formatted-date');
+              if (formatted) {
+                formatted.className = 'formatted-date';
+              }
+            }}
           />
-          <div className={styles.formattedDate}>
+          <div className="formatted-date w-full p-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--bg-elevated)] text-[var(--fg)] font-[var(--font-sans)] transition-all duration-200 flex justify-between items-center pointer-events-none hover:border-[var(--border-brand)]">
             {formatDisplayDate(date)}
-            <div className={styles.calendarIcon}>
+            <div className="text-[var(--accent)] flex items-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -84,22 +97,22 @@ export function DeliveryTimeSlotPicker({ onSelect, selectedDate, selectedSlot }:
             </div>
           </div>
         </div>
-        <p className={styles.hint}>Доставка доступна с завтрашнего дня</p>
+        <p className="mt-2 text-xs text-[var(--fg-muted)]">Доставка доступна с завтрашнего дня</p>
       </div>
 
       {date && (
-        <div className={styles.section}>
-          <label className={styles.formLabel}>Временной интервал</label>
-          <div className={styles.slots}>
+        <div className="mb-5">
+          <label className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Временной интервал</label>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
             {TIME_SLOTS.map((timeSlot) => (
               <button
                 key={timeSlot.id}
                 type="button"
-                className={`${styles.slot} ${slot === timeSlot.id ? styles.slotSelected : ''}`}
+                className={`flex flex-col items-center p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg cursor-pointer transition-all duration-200 hover:border-[var(--border-brand)] hover:bg-[var(--border-brand)] ${slot === timeSlot.id ? 'border-[var(--accent)] bg-[var(--border-brand)] ring-1 ring-[var(--accent)]' : ''}`}
                 onClick={() => handleSlotSelect(timeSlot.id)}
               >
-                <div className={styles.slotLabel}>{timeSlot.label}</div>
-                <div className={styles.slotTime}>{timeSlot.time}</div>
+                <div className="font-semibold text-sm text-[var(--fg)] mb-1">{timeSlot.label}</div>
+                <div className="text-xs text-[var(--fg-muted)]">{timeSlot.time}</div>
               </button>
             ))}
           </div>

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import styles from "./AccountProfile.module.css";
 
 /**
  * AccountProfile - User profile editing page

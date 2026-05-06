@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import styles from './AuditLogPage.module.css';
 
 // === Типы ===
 
@@ -227,16 +226,16 @@ export function AuditLogPage() {
 
   return (
     <div className="staff-page">
-      <header className={`${styles.header} staff-page__header`}>
+      <header className="flex justify-between items-center mb-6 staff-page__header">
         <div>
-          <h1 className={`${styles.title} staff-page__title`}>Журнал аудита</h1>
-          <p className={`${styles.subtitle} staff-page__subtitle`}>
+          <h1 className="text-2xl font-semibold text-gray-900 staff-page__title">Журнал аудита</h1>
+          <p className="text-sm text-gray-600 staff-page__subtitle">
             История всех административных действий и событий безопасности
           </p>
         </div>
-        <div className={styles.headerActions}>
+        <div className="flex gap-3">
           <button
-            className={styles.exportBtn}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
             onClick={handleExport}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -247,7 +246,7 @@ export function AuditLogPage() {
             Экспорт CSV
           </button>
           <button
-            className={styles.refreshBtn}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
             onClick={handleRefresh}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -259,28 +258,28 @@ export function AuditLogPage() {
         </div>
       </header>
 
-      {/* Stats Bar */}
-      <div className={styles.statsBar}>
-        <div className={styles.statItem}>
-          <span className={styles.statNumber}>{totalItems.toLocaleString('ru-RU')}</span>
-          <span className={styles.statLabel}>Всего записей</span>
+       {/* Stats Bar */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <span className="block text-3xl font-bold text-gray-900">{totalItems.toLocaleString('ru-RU')}</span>
+          <span className="text-sm text-gray-600">Всего записей</span>
         </div>
-        <div className={styles.statItem}>
-          <span className={styles.statNumber}>{logs.filter(l => l.severity === 'WARNING').length}</span>
-          <span className={styles.statLabel}>Предупреждений</span>
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <span className="block text-3xl font-bold text-gray-900">{logs.filter(l => l.severity === 'WARNING').length}</span>
+          <span className="text-sm text-gray-600">Предупреждений</span>
         </div>
-        <div className={styles.statItem}>
-          <span className={styles.statNumber}>{logs.filter(l => l.severity === 'CRITICAL').length}</span>
-          <span className={styles.statLabel}>Критических событий</span>
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          <span className="block text-3xl font-bold text-gray-900">{logs.filter(l => l.severity === 'CRITICAL').length}</span>
+          <span className="text-sm text-gray-600">Критических событий</span>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className={styles.filters}>
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>Действие</label>
+       {/* Filters */}
+      <div className="flex flex-wrap gap-4 mb-6 items-end">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-600">Действие</label>
           <select
-            className={styles.filterSelect}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm min-w-[160px]"
             value={actionFilter}
             onChange={(e) => {
               setActionFilter(e.target.value as AuditActionType | '');
@@ -294,10 +293,10 @@ export function AuditLogPage() {
           </select>
         </div>
 
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>Важность</label>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-600">Важность</label>
           <select
-            className={styles.filterSelect}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm min-w-[160px]"
             value={severityFilter}
             onChange={(e) => {
               setSeverityFilter(e.target.value);
@@ -311,11 +310,11 @@ export function AuditLogPage() {
           </select>
         </div>
 
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>С</label>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-600">С</label>
           <input
             type="date"
-            className={styles.filterInput}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
             value={dateFrom}
             onChange={(e) => {
               setDateFrom(e.target.value);
@@ -324,11 +323,11 @@ export function AuditLogPage() {
           />
         </div>
 
-        <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>По</label>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-gray-600">По</label>
           <input
             type="date"
-            className={styles.filterInput}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
             value={dateTo}
             onChange={(e) => {
               setDateTo(e.target.value);
@@ -338,7 +337,7 @@ export function AuditLogPage() {
         </div>
 
         <button
-          className={styles.clearFiltersBtn}
+          className="px-4 py-2 border border-gray-200 bg-white rounded-lg text-sm hover:bg-gray-50 transition-colors"
           onClick={() => {
             setActionFilter('');
             setSeverityFilter('');
@@ -352,59 +351,65 @@ export function AuditLogPage() {
       </div>
 
       {loading && (
-        <div className={styles.loading}>
-          <div className={styles.spinner}></div>
+        <div className="flex flex-col items-center justify-center py-12 text-gray-600">
+          <div className="w-10 h-10 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-4"></div>
           <p>Загрузка журнала...</p>
         </div>
       )}
 
       {error && (
-        <div className={styles.error}>
+        <div className="text-center py-12 text-red-600">
           <p>{error}</p>
-          <button onClick={fetchAuditLogs} className={styles.retryBtn}>
+          <button onClick={fetchAuditLogs} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
             Попробовать снова
           </button>
         </div>
       )}
 
       {!loading && !error && (
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <table className="w-full border-collapse">
             <thead>
-              <tr>
-                <th>Время</th>
-                <th>Действие</th>
-                <th>Пользователь</th>
-                <th>IP адрес</th>
-                <th>Описание</th>
-                <th>Важность</th>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Время</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Действие</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Ползователь</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">IP адрес</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Описание</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Важность</th>
               </tr>
             </thead>
             <tbody>
               {logs.map((entry) => (
-                <tr key={entry.id} className={styles[SEVERITY_COLORS[entry.severity]]}>
+                <tr key={entry.id} className={
+                  entry.severity === 'INFO' ? 'bg-green-50' :
+                  entry.severity === 'WARNING' ? 'bg-orange-50' : 'bg-red-50'
+                }>
                   <td>
-                    <span className={styles.date}>{formatDate(entry.createdAt)}</span>
+                    <span className="font-mono text-xs text-gray-600">{formatDate(entry.createdAt)}</span>
                   </td>
                   <td>
-                    <span className={styles.actionBadge}>
+                    <span className="inline-block px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-xs font-medium">
                       {ACTION_LABELS[entry.actionType]}
                     </span>
                   </td>
                   <td>
-                    <div className={styles.userCell}>
-                      <span className={styles.userName}>{entry.userName}</span>
-                      <span className={styles.userEmail}>{entry.userEmail}</span>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-medium text-gray-900">{entry.userName}</span>
+                      <span className="text-xs text-gray-600">{entry.userEmail}</span>
                     </div>
                   </td>
                   <td>
-                    <span className={styles.ipAddress}>{entry.ipAddress}</span>
+                    <span className="font-mono text-xs text-gray-700">{entry.ipAddress}</span>
                   </td>
                   <td>
-                    <span className={styles.description}>{entry.description}</span>
+                    <span className="text-gray-800 text-sm">{entry.description}</span>
                   </td>
                   <td>
-                    <span className={`${styles.severityBadge} ${styles[SEVERITY_COLORS[entry.severity]]}`}>
+                    <span className={`inline-block px-2 py-1 rounded-md text-xs font-semibold ${
+                      entry.severity === 'INFO' ? 'bg-green-100 text-green-800' :
+                      entry.severity === 'WARNING' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'
+                    }`}>
                       {SEVERITY_LABELS[entry.severity]}
                     </span>
                   </td>
@@ -416,13 +421,13 @@ export function AuditLogPage() {
       )}
 
       {totalPages > 1 && (
-        <div className={styles.pagination}>
-          <span className={styles.paginationInfo}>
+        <div className="flex justify-between items-center mt-6 py-4">
+          <span className="text-sm text-gray-600">
             Показано {((page - 1) * 20) + 1}-{Math.min(page * 20, totalItems)} из {totalItems} записей
           </span>
-          <div className={styles.paginationPages}>
+          <div className="flex gap-2">
             <button
-              className={styles.pageBtn}
+              className="px-3 py-2 border border-gray-200 bg-white rounded-md text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={page === 1}
               onClick={() => setPage(page - 1)}
             >
@@ -442,7 +447,11 @@ export function AuditLogPage() {
               return (
                 <button
                   key={pageNum}
-                  className={`${styles.pageBtn} ${page === pageNum ? styles.pageBtnActive : ''}`}
+                  className={`px-3 py-2 border rounded-md text-sm transition-colors ${
+                    page === pageNum
+                      ? 'bg-blue-500 text-white border-blue-500'
+                      : 'border-gray-200 bg-white hover:bg-gray-50'
+                  }`}
                   onClick={() => setPage(pageNum)}
                 >
                   {pageNum}
@@ -450,7 +459,7 @@ export function AuditLogPage() {
               );
             })}
             <button
-              className={styles.pageBtn}
+              className="px-3 py-2 border border-gray-200 bg-white rounded-md text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={page === totalPages}
               onClick={() => setPage(page + 1)}
             >

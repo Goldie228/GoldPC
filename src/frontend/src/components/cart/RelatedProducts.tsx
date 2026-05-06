@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductCard } from '../product-card/ProductCard';
 import { useProducts } from '../../hooks/useProducts';
-import styles from './RelatedProducts.module.css';
 
 interface RelatedProductsProps {
   cartItems: Array<{ productId: string; name: string }>;
@@ -116,10 +115,13 @@ export function RelatedProducts({ cartItems }: RelatedProductsProps): ReactEleme
 
   if (isLoading) {
     return (
-      <div className={styles.container}>
-        <h2 className={styles.title}>Часто покупают вместе</h2>
-        <div className={styles.loading}>
-          <div className={styles.loadingSpinner} />
+      <div className="mt-12 pt-12 border-t border-[var(--border)]">
+        <h2 className="font-sans text-2xl font-semibold mb-6 text-[var(--fg)] inline-block relative">
+          Часто покупают вместе
+          <span className="absolute bottom-[-8px] left-0 w-10 h-0.5 bg-[var(--accent)]" />
+        </h2>
+        <div className="flex items-center justify-center gap-3 py-12 px-4 text-[var(--fg-muted)] text-sm">
+          <div className="w-6 h-6 border-2 border-[var(--border)] border-t-[var(--accent)] rounded-full animate-spin" />
           <span>Загрузка рекомендаций...</span>
         </div>
       </div>
@@ -129,14 +131,17 @@ export function RelatedProducts({ cartItems }: RelatedProductsProps): ReactEleme
   if (recommendations.length === 0) return null;
 
   return (
-    <motion.section variants={itemVariants} className={styles.related}>
-      <div className={styles.relatedHeader}>
-        <h2 className={styles.relatedTitle}>С этим товаром покупают</h2>
+    <motion.section variants={itemVariants} className="mt-20">
+      <div className="flex items-end justify-between gap-4 mb-5">
+        <h2 className="font-sans text-2xl font-semibold text-[var(--fg)] mb-0 relative">
+          С этим товаром покупают
+          <span className="absolute bottom-[-8px] left-0 w-10 h-0.5 bg-[var(--accent)]" />
+        </h2>
         {canScrollX && (
-          <div className={styles.relatedNav}>
+          <div className="hidden md:inline-flex gap-2.5">
             <button
               type="button"
-              className={styles.relatedNavBtn}
+              className="w-10 h-10 rounded-full inline-flex items-center justify-center bg-[var(--border-muted)] border border-[var(--border-muted)] text-[var(--border-muted)] cursor-pointer transition-transform duration-120 hover:-translate-y-0.5 hover:bg-[var(--border-muted)] hover:border-[var(--border-brand)] disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={() => scrollByStep(-1)}
               disabled={atStart}
               aria-label="Листать влево"
@@ -145,7 +150,7 @@ export function RelatedProducts({ cartItems }: RelatedProductsProps): ReactEleme
             </button>
             <button
               type="button"
-              className={styles.relatedNavBtn}
+              className="w-10 h-10 rounded-full inline-flex items-center justify-center bg-[var(--border-muted)] border border-[var(--border-muted)] text-[var(--border-muted)] cursor-pointer transition-transform duration-120 hover:-translate-y-0.5 hover:bg-[var(--border-muted)] hover:border-[var(--border-brand)] disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={() => scrollByStep(1)}
               disabled={atEnd}
               aria-label="Листать вправо"
@@ -156,12 +161,22 @@ export function RelatedProducts({ cartItems }: RelatedProductsProps): ReactEleme
         )}
       </div>
 
-      <div
-        className={`${styles.relatedCarousel} ${atStart ? styles.relatedAtStart : ''} ${atEnd ? styles.relatedAtEnd : ''} ${!canScrollX ? styles.relatedNoScroll : ''}`}
-      >
-        <div ref={trackRef} className={styles.relatedTrack}>
+      <div className="relative">
+        {!atStart && (
+          <div
+            className="absolute top-0 bottom-0 w-[70px] pointer-events-none z-2 transition-opacity duration-160"
+            style={{ left: 0, background: 'linear-gradient(90deg, var(--bg), transparent)' }}
+          />
+        )}
+        {!atEnd && (
+          <div
+            className="absolute top-0 bottom-0 w-[70px] pointer-events-none z-2 transition-opacity duration-160"
+            style={{ right: 0, background: 'linear-gradient(270deg, var(--bg), transparent)' }}
+          />
+        )}
+        <div ref={trackRef} className="flex gap-4 overflow-x-auto overflow-y-hidden py-1 px-0.5 scroll-smooth snap-x snap-mandatory scroll-px-2">
           {recommendations.map((product) => (
-            <div key={product.id} className={styles.relatedSlide}>
+            <div key={product.id} className="snap-start flex-none w-[min(260px,78vw)] sm:w-[260px] lg:w-[280px]">
               <ProductCard product={product} />
             </div>
           ))}

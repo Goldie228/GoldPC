@@ -4,7 +4,6 @@ import { useOrders } from '../../hooks/useOrders';
 import { useToast } from '../../hooks/useToast';
 import type { Order, OrderItem } from '../../api/orders';
 import { Modal } from '../../components/ui/Modal/Modal';
-import styles from './AccountOrders.module.css';
 
 function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {

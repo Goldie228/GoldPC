@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import { Skeleton } from './Skeleton';
-import styles from './ProductCardSkeleton.module.css';
 
 /**
  * Скелетон карточки товара
@@ -8,9 +7,9 @@ import styles from './ProductCardSkeleton.module.css';
  */
 export function ProductCardSkeleton(): ReactElement {
   return (
-    <article className={styles.card} aria-hidden="true">
+    <article className="bg-surface-card rounded-xl overflow-hidden" aria-hidden="true">
       {/* Image Container */}
-      <div className={styles.imageContainer}>
+      <div className="aspect-square bg-white">
         <Skeleton 
           width="100%" 
           height="100%" 
@@ -19,23 +18,23 @@ export function ProductCardSkeleton(): ReactElement {
       </div>
 
       {/* Content */}
-      <div className={styles.content}>
+      <div className="p-4 flex flex-col gap-2">
         {/* Manufacturer */}
         <Skeleton 
           width={80} 
           height={12} 
-          className={styles.manufacturer}
+          className="rounded"
         />
 
         {/* Product Name */}
         <Skeleton 
           width="90%" 
           height={20} 
-          className={styles.name}
+          className="rounded"
         />
 
         {/* Rating */}
-        <div className={styles.rating}>
+        <div className="flex items-center gap-0.5">
           <Skeleton 
             width={60} 
             height={14} 
@@ -52,12 +51,12 @@ export function ProductCardSkeleton(): ReactElement {
         <Skeleton 
           width={100} 
           height={12} 
-          className={styles.stock}
+          className="rounded"
         />
 
         {/* Price Row */}
-        <div className={styles.priceRow}>
-          <div className={styles.prices}>
+        <div className="flex items-baseline gap-2 mt-2">
+          <div className="flex gap-2">
             <Skeleton 
               width={100} 
               height={20} 

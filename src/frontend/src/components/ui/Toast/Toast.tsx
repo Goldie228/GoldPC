@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import type { ToastType } from '../../../store/toastStore';
-import styles from './Toast.module.css';
 
 interface ToastProps {
   id: string;
@@ -16,13 +15,20 @@ const icons: Record<ToastType, string> = {
   warning: '⚠',
 };
 
+const typeClasses: Record<ToastType, string> = {
+  success: 'bg-surface-card border-l-4 border-price-drop',
+  error: 'bg-surface-card border-l-4 border-price-rise',
+  info: 'bg-surface-card border-l-4 border-info',
+  warning: 'bg-surface-card border-l-4 border-gold',
+};
+
 export function Toast({ id, message, type, onClose }: ToastProps): ReactElement {
   return (
-    <div className={`${styles.toast} ${styles[type]}`} role="alert" aria-live="polite">
-      <span className={styles.icon}>{icons[type]}</span>
-      <p className={styles.message}>{message}</p>
+    <div className={`flex items-center gap-2 p-3 pr-10 rounded-lg shadow-lg relative ${typeClasses[type]}`} role="alert" aria-live="polite">
+      <span className="text-lg">{icons[type]}</span>
+      <p className="flex-1 text-sm text-body-text">{message}</p>
       <button
-        className={styles.closeButton}
+        className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-muted-text hover:text-body-text transition-colors"
         onClick={() => onClose(id)}
         aria-label="Закрыть уведомление"
         type="button"
