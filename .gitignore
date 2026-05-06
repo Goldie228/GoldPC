@@ -215,6 +215,15 @@ skills-lock.json
 # Project temp files
 project/
 
+# Plans directory
+.plans/
+
+# Screenshots
+screenshots/
+
+# TypeScript build info
+*.tsbuildinfo
+
 # Git worktrees
 worktrees/
 
