@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, Search, RotateCcw } from 'lucide-react';
 import { catalogApi } from '../../api/catalog';
 import type { ProductCategory, Manufacturer, Category, FilterFacetAttribute } from '../../api/types';
@@ -15,42 +15,79 @@ function DualRangeSlider({
   onMaxChange: (v: number) => void;
 }) {
   const pct = (v: number) => ((v - min) / (max - min)) * 100;
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef<'min' | 'max' | null>(null);
 
-return (
-    <div className="relative h-8 w-full group">
-      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-white/30 group-hover:bg-white/50 transition-colors" />
+  const updateValue = (clientX: number, thumb: 'min' | 'max') => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    let val = min + ratio * (max - min);
+    val = Math.round(val / step) * step;
+    val = Math.max(min, Math.min(max, val));
+    if (thumb === 'min') {
+      onMinChange(Math.min(val, maxVal));
+    } else {
+      onMaxChange(Math.max(val, minVal));
+    }
+  };
+
+  const onDown = (e: React.PointerEvent, thumb: 'min' | 'max') => {
+    e.preventDefault();
+    dragging.current = thumb;
+    updateValue(e.clientX, thumb);
+    const onMove = (ev: PointerEvent) => {
+      if (dragging.current) updateValue(ev.clientX, dragging.current);
+    };
+    const onUp = () => {
+      dragging.current = null;
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+    };
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  };
+
+  return (
+    <div ref={sliderRef} className="relative h-8 w-full cursor-pointer touch-action-none select-none">
+      {/* Background track */}
+      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 rounded-full bg-white/20" />
+      {/* Active range */}
       <div
-        className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-yellow-200 shadow-sm shadow-yellow-200/50 group-hover:bg-yellow-100 transition-colors"
+        className="absolute top-1/2 -translate-y-1/2 h-1 rounded-full bg-yellow-400"
         style={{ left: `${pct(minVal)}%`, right: `${100 - pct(maxVal)}%` }}
       />
-      {/* Thumbs */}
+      {/* Min thumb */}
       <div
-        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-yellow-300 border-2 border-white shadow-sm shadow-yellow-300/50 -translate-x-1/2 group-hover:w-5 group-hover:h-5 transition-all"
+        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-yellow-400 border-2 border-white shadow-sm hover:brightness-110 cursor-grab active:cursor-grabbing"
         style={{ left: `${pct(minVal)}%` }}
+        onPointerDown={(e) => onDown(e, 'min')}
       />
+      {/* Max thumb */}
       <div
-        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-yellow-300 border-2 border-white shadow-sm shadow-yellow-300/50 -translate-x-1/2 group-hover:w-5 group-hover:h-5 transition-all"
+        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-yellow-400 border-2 border-white shadow-sm hover:brightness-110 cursor-grab active:cursor-grabbing"
         style={{ left: `${pct(maxVal)}%` }}
+        onPointerDown={(e) => onDown(e, 'max')}
       />
+      {/* Invisible inputs for accessibility */}
       <input
         type="range"
         min={min} max={max} step={step}
         value={minVal}
-        onChange={(e) => {
-          const v = Number(e.target.value);
-          if (v <= maxVal) onMinChange(v);
-        }}
-        className="dual-range-input opacity-0"
+        readOnly
+        tabIndex={-1}
+        className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
+        aria-label="Minimum price"
       />
       <input
         type="range"
         min={min} max={max} step={step}
         value={maxVal}
-        onChange={(e) => {
-          const v = Number(e.target.value);
-          if (v >= minVal) onMaxChange(v);
-        }}
-        className="dual-range-input opacity-0"
+        readOnly
+        tabIndex={-1}
+        className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
+        aria-label="Maximum price"
       />
     </div>
   );
@@ -66,7 +103,7 @@ function FilterGroup({ title, defaultOpen = true, children }: {
     <div className="border-b border-hairline-dark last:border-b-0">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-3.5 text-sm font-semibold text-on-dark hover:text-gold transition-colors group"
+        className="w-full flex items-center justify-between py-3 text-sm font-semibold text-on-dark hover:text-gold transition-colors group"
       >
         {title}
         <span className={`p-0.5 rounded transition-colors ${open ? 'text-muted-text' : 'text-muted-text group-hover:text-gold'}`}>
@@ -74,7 +111,7 @@ function FilterGroup({ title, defaultOpen = true, children }: {
         </span>
       </button>
       <div className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="pb-5">{children}</div>
+        <div className="pb-4">{children}</div>
       </div>
     </div>
   );
@@ -286,12 +323,12 @@ export function FilterSidebar({
   return (
     <div className={`bg-surface-card rounded-xl ${mobile ? '' : 'sticky top-[64px] max-h-[calc(100vh-80px)] overflow-y-auto mt-2'} ${mobile ? '' : 'lg:rounded-xl'}`}>
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-hairline-dark sticky top-0 bg-surface-card z-10">
+      <div className="flex items-center justify-between p-4 border-b border-hairline-dark sticky top-0 bg-surface-card z-10">
         <div>
-          <h2 className="text-base font-semibold text-on-dark flex items-center gap-2">
+          <h2 className="text-[24px] font-semibold text-on-dark flex items-center gap-2">
             Фильтры
             {activeCount > 0 && (
-              <span className="h-5 min-w-[20px] px-1 bg-gold text-gold-ink text-[10px] font-bold rounded-full flex items-center justify-center leading-5">
+              <span className="h-5 min-w-[20px] px-1 bg-gold text-gold-ink text-[12px] font-bold rounded-full flex items-center justify-center leading-5">
                 {activeCount}
               </span>
             )}
@@ -307,10 +344,10 @@ export function FilterSidebar({
         </button>
       </div>
 
-      <div className="p-6 pt-4">
+      <div className="p-4 pt-4">
         {/* Category */}
         <FilterGroup title="Категория">
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             <button
               onClick={() => handleCategoryChange(null)}
               className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
@@ -340,7 +377,7 @@ export function FilterSidebar({
 
         {/* Price */}
         <FilterGroup title="Цена">
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center gap-3">
               <div className="flex-1">
                 <label className="text-[10px] text-muted-text mb-1.5 block uppercase tracking-wider">От</label>
