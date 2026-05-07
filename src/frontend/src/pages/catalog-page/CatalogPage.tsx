@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { Search, X, SlidersHorizontal, LayoutGrid, List, Table2 } from 'lucide-react';
 import { FilterSidebar } from '../../components/filter-sidebar/FilterSidebar';
 import { Pagination } from '../../components/catalog/Pagination';
 import { ProductTable } from '../../components/catalog/ProductTable';
 import { buildCatalogFilterChips } from '../../components/catalog/ActiveFiltersBar';
-import { Toolbar } from '../../components/toolbar/Toolbar';
 import { ProductCard } from '../../components/product-card/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { ProductGrid } from '../../components/catalog/ProductGrid';
@@ -67,6 +66,36 @@ export function CatalogPage() {
     setSelectedCategory(resolvedCategory);
   }, [resolvedCategory]);
 
+  // Reset price bounds when category changes to force recomputation
+  useEffect(() => {
+    setPriceBounds({ min: 0, max: 0 });
+  }, [selectedCategory]);
+
+  // Filter state — must be declared before useEffect that references them (fetchPriceBounds)
+  const [sortBy, setSortBy] = useState(
+    () => searchParams.get('sortBy') || 'popular'
+  );
+  const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<string[]>(
+    () => searchParams.get('manufacturerIds')?.split(',').filter(Boolean) || []
+  );
+  const [minRating, setMinRating] = useState(
+    () => parseInt(searchParams.get('rating') || '0')
+  );
+  const [selectedAvailability, setSelectedAvailability] = useState<string[]>(
+    () => searchParams.get('availability')?.split(',').filter(Boolean) || []
+  );
+  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string[]>>(
+    () => {
+      const specParam = searchParams.get('specs');
+      if (!specParam) return {};
+      try {
+        return JSON.parse(decodeURIComponent(specParam));
+      } catch {
+        return {};
+      }
+    }
+  );
+
   const [searchQuery, setSearchQuery] = useState(
     () => searchParams.get('search') || ''
   );
@@ -91,29 +120,50 @@ export function CatalogPage() {
     }),
   }));
   const debouncedPriceRange = useDebounce(priceRange, 300);
-  const [sortBy, setSortBy] = useState(
-    () => searchParams.get('sortBy') || 'popular'
-  );
-  const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<string[]>(
-    () => searchParams.get('manufacturerIds')?.split(',').filter(Boolean) || []
-  );
-  const [minRating, setMinRating] = useState(
-    () => parseInt(searchParams.get('rating') || '0')
-  );
-  const [selectedAvailability, setSelectedAvailability] = useState<string[]>(
-    () => searchParams.get('availability')?.split(',').filter(Boolean) || []
-  );
-  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string[]>>(
-    () => {
-      const specParam = searchParams.get('specs');
-      if (!specParam) return {};
+
+  // Price bounds - computed WITHOUT price filter, using all other active filters
+  const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>({ min: 0, max: 10000 });
+  const [priceBoundsLoading, setPriceBoundsLoading] = useState(false);
+
+  // Fetch price bounds without price filter
+  useEffect(() => {
+    const fetchPriceBounds = async () => {
+      setPriceBoundsLoading(true);
       try {
-        return JSON.parse(decodeURIComponent(specParam));
-      } catch {
-        return {};
+        // Build params with all filters EXCEPT price
+        const params: any = {};
+        if (selectedCategory) params.category = selectedCategory;
+        if (debouncedSearchQuery.trim()) params.search = debouncedSearchQuery.trim();
+        if (selectedManufacturerIds.length > 0) params.manufacturerIds = selectedManufacturerIds;
+        if (minRating > 0) params.minRating = minRating;
+        if (selectedAvailability.length > 0) {
+          params.inStock = selectedAvailability.includes('in_stock');
+          params.lowStock = selectedAvailability.includes('low_stock');
+        }
+        if (Object.keys(selectedSpecifications).length > 0) {
+          params.specifications = selectedSpecifications;
+        }
+        params.page = 1;
+        params.pageSize = 10000; // Get enough products to find real bounds
+
+        const result = await getProducts(params);
+        const prices = (result?.data ?? []).map((p: any) => p.price).filter((p: number) => p > 0);
+        if (prices.length > 0) {
+          setPriceBounds({
+            min: Math.floor(Math.min(...prices)),
+            max: Math.floor(Math.max(...prices)),
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch price bounds:', err);
+      } finally {
+        setPriceBoundsLoading(false);
       }
-    }
-  );
+    };
+
+    fetchPriceBounds();
+  }, [selectedCategory, debouncedSearchQuery, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, getProducts]);
+  const computedPriceRange = priceBounds;
 
   const catalogScrollAnchorRef = useRef<HTMLDivElement>(null);
 
@@ -326,89 +376,128 @@ export function CatalogPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0e11] flex flex-col">
-      {/* Header */}
-      <div className="bg-[#1e2329] border-b border-[#2b3139]">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-2 md:py-3">
-          <Breadcrumbs
-            items={
-              selectedCategory
-                ? [
-                    { label: 'Главная', to: '/' },
-                    { label: 'Каталог', to: '/catalog' },
-                    { label: CATEGORY_LABELS_RU[selectedCategory] },
-                  ]
-                : [
-                    { label: 'Главная', to: '/' },
-                    { label: 'Каталог' },
-                  ]
-            }
-          />
+      {/* Unified Sticky Header — breadcrumbs + title + search + sort */}
+      <div className="bg-surface-card sticky top-0 z-30 shadow-sm">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
+          {/* Row 1 — Breadcrumbs (desktop only) */}
+          <div className="py-0 mb-1.5 lg:block hidden">
+            <Breadcrumbs
+              items={
+                selectedCategory
+                  ? [
+                      { label: 'Главная', to: '/' },
+                      { label: 'Каталог', to: '/catalog' },
+                      { label: CATEGORY_LABELS_RU[selectedCategory] },
+                    ]
+                  : [
+                      { label: 'Главная', to: '/' },
+                      { label: 'Каталог' },
+                    ]
+              }
+            />
+          </div>
 
-          <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mt-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-3">
-                <h1 style={{ fontSize: '24px' }} className="font-bold text-body-text tracking-tight">{categoryName}</h1>
+         {/* Row 2 — Title + Search (left) + Filters button (right) */}
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3 pt-3 pb-2">
+            {/* Left: Title + Search */}
+            <div className="flex flex-1 items-center gap-4 lg:flex-1 lg:min-w-0">
+              <div className="flex items-baseline gap-2 lg:flex-shrink-0">
+                <h1 style={{ fontSize: '36px' }} className="font-bold text-body-text tracking-tight">{categoryName}</h1>
                 <span className="text-sm text-muted-text font-tabular">
                   {totalItems > 0 ? `${formatCountRu(totalItems, RU_FORMS.tovar)}` : 'Товары не найдены'}
                 </span>
               </div>
-            </div>
 
-            <div className="flex items-center w-full md:w-auto md:min-w-[360px]">
-              <form className="relative w-full flex" onSubmit={handleSearch}>
+              {/* Search — right-aligned */}
+              <form className="flex items-center gap-0 max-w-[280px] ml-auto" onSubmit={handleSearch}>
                 <input
                   type="text"
-                  className="w-full h-10 bg-surface-elevated text-body-text text-sm rounded-l-lg py-2.5 pl-4 pr-3 placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-gold/30 border border-hairline-dark border-r-0 focus:border-gold/40 transition-all"
-                  placeholder={`Искать в «${categoryName}»...`}
+                  className="h-9 w-full bg-surface-elevated text-body-text text-sm rounded-l-lg py-1.5 pl-4 pr-3 placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-gold/30 border border-hairline-dark border-r-0 focus:border-gold/40 transition-all"
+                  placeholder={`В «${categoryName}»`}
                   aria-label="Поиск в каталоге"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
                 <button
                   type="submit"
-                  className="h-10 px-6 bg-gold text-gold-ink text-sm font-semibold rounded-r-lg hover:bg-gold-active transition-colors flex items-center gap-2 active:scale-[0.98]"
+                  className="h-9 px-4 bg-gold text-gold-ink text-sm font-semibold rounded-r-lg hover:bg-gold-active transition-colors flex items-center gap-1.5 active:scale-[0.98]"
                 >
                   <Search size={14} />
                   <span className="hidden sm:inline">Найти</span>
                 </button>
               </form>
             </div>
+
+            {/* Right: View toggle (desktop) + Mobile filter button */}
+            <div className="flex items-center gap-3 lg:flex-shrink-0">
+              {/* View toggle — desktop only */}
+              <div className="hidden md:flex items-center bg-surface-elevated rounded-lg p-0.5 border border-hairline-dark">
+                {[
+                  { value: 'grid' as const, icon: <LayoutGrid size={18} /> },
+                  { value: 'list' as const, icon: <List size={18} /> },
+                  { value: 'table' as const, icon: <Table2 size={18} /> },
+                ].map(mode => (
+                  <button
+                    key={mode.value}
+                    onClick={() => setViewMode(mode.value)}
+                    className={`w-8 h-7 rounded-md flex items-center justify-center transition-all ${
+                      viewMode === mode.value
+                        ? 'bg-gold text-gold-ink shadow-sm'
+                        : 'text-muted-text hover:text-body-text'
+                    }`}
+                    title={mode.value === 'grid' ? 'Сетка' : mode.value === 'list' ? 'Список' : 'Таблица'}
+                  >
+                    {mode.icon}
+                  </button>
+                ))}
+              </div>
+
+              {/* Mobile filter button */}
+              <button
+                onClick={() => setMobileFilterOpen(true)}
+                className="lg:hidden h-8 px-3 bg-surface-elevated text-body-text text-sm rounded-lg border border-hairline-dark flex items-center gap-1.5 hover:bg-surface-card transition-colors"
+              >
+                <SlidersHorizontal size={14} />
+                <span className="hidden sm:inline">Фильтры</span>
+                {activeFilterCount > 0 && (
+                  <span className="h-4 min-w-4 px-0.5 bg-gold text-gold-ink text-[8px] font-bold rounded-full flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Toolbar — sticky */}
-      <Toolbar
-        sortBy={sortBy as any}
-        onSortChange={(s) => setSortBy(s)}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        activeFilterCount={activeFilterCount}
-        onFilterClick={() => setMobileFilterOpen(true)}
-      />
-
       {/* Main Content Area */}
-      <div className="flex-1 w-full max-w-[1440px] mx-auto px-6 md:px-10 py-3">
+      <div className="flex-1 w-full max-w-[1440px] mx-auto px-6 md:px-10">
         <div className="flex gap-6">
           {/* Desktop Sidebar - 280px width */}
-          <div className="hidden lg:block w-[280px] flex-shrink-0">
-            <FilterSidebar
-              selectedCategory={selectedCategory}
-              onCategoryChange={handleCategoryChange}
-              categoryLocked={isCategoryLocked}
-              priceRange={priceRange}
-              onPriceChange={handlePriceChange}
-              selectedManufacturerIds={selectedManufacturerIds}
-              onManufacturerIdsChange={setSelectedManufacturerIds}
-              minRating={minRating}
-              onRatingChange={setMinRating}
-              selectedAvailability={selectedAvailability}
-              onAvailabilityChange={setSelectedAvailability}
-              selectedSpecifications={selectedSpecifications}
-              onSpecificationsChange={setSelectedSpecifications}
-              onReset={handleResetFilters}
-              totalItems={totalItems}
-            />
+             <div className="hidden lg:block w-[280px] flex-shrink-0">
+              <FilterSidebar
+                 selectedCategory={selectedCategory}
+                 onCategoryChange={handleCategoryChange}
+                 categoryLocked={isCategoryLocked}
+                 priceRange={priceRange}
+                 onPriceChange={handlePriceChange}
+                 priceMin={computedPriceRange.min}
+                 priceMax={computedPriceRange.max}
+                 selectedManufacturerIds={selectedManufacturerIds}
+                 onManufacturerIdsChange={setSelectedManufacturerIds}
+                 minRating={minRating}
+                 onRatingChange={setMinRating}
+                 selectedAvailability={selectedAvailability}
+                 onAvailabilityChange={setSelectedAvailability}
+                 selectedSpecifications={selectedSpecifications}
+                 onSpecificationsChange={setSelectedSpecifications}
+                 onReset={handleResetFilters}
+                 totalItems={totalItems}
+                 sortBy={sortBy}
+                 onSortChange={setSortBy}
+                 viewMode={viewMode}
+                 onViewModeChange={setViewMode}
+             />
           </div>
 
           {/* Product List Area */}
@@ -438,24 +527,30 @@ export function CatalogPage() {
                     </button>
                   </div>
                   <div className="p-5">
-                   <FilterSidebar
-                        mobile
-                        selectedCategory={selectedCategory}
-                        onCategoryChange={handleCategoryChange}
-                        categoryLocked={isCategoryLocked}
-                        priceRange={priceRange}
-                        onPriceChange={handlePriceChange}
-                        selectedManufacturerIds={selectedManufacturerIds}
-                        onManufacturerIdsChange={setSelectedManufacturerIds}
-                        minRating={minRating}
-                        onRatingChange={setMinRating}
-                        selectedAvailability={selectedAvailability}
-                        onAvailabilityChange={setSelectedAvailability}
-                        selectedSpecifications={selectedSpecifications}
-                        onSpecificationsChange={setSelectedSpecifications}
-                        onReset={handleResetFilters}
-                        totalItems={totalItems}
-                      />
+                    <FilterSidebar
+                          mobile
+                          selectedCategory={selectedCategory}
+                          onCategoryChange={handleCategoryChange}
+                          categoryLocked={isCategoryLocked}
+                          priceRange={priceRange}
+                          onPriceChange={handlePriceChange}
+                          priceMin={computedPriceRange.min}
+                          priceMax={computedPriceRange.max}
+                          selectedManufacturerIds={selectedManufacturerIds}
+                          onManufacturerIdsChange={setSelectedManufacturerIds}
+                          minRating={minRating}
+                          onRatingChange={setMinRating}
+                          selectedAvailability={selectedAvailability}
+                          onAvailabilityChange={setSelectedAvailability}
+                          selectedSpecifications={selectedSpecifications}
+                          onSpecificationsChange={setSelectedSpecifications}
+                          onReset={handleResetFilters}
+                          totalItems={totalItems}
+                          sortBy={sortBy}
+                          onSortChange={setSortBy}
+                          viewMode={viewMode}
+                          onViewModeChange={setViewMode}
+                        />
                   </div>
                 </div>
               </div>

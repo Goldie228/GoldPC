@@ -4,12 +4,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* ======== 字体定义（GoldNova替代=Inter, GoldPlex替代=JetBrains Mono）======= */
+  /* Font definitions */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
   
-  /* ======== 颜色系统（必须100%匹配DESIGN.md）======= */
+  /* Color system */
   --color-gold: #FCD535;
   --color-gold-active: #f0b90b;
   --color-gold-disabled: #3a3a1f;
@@ -25,6 +25,51 @@
   --color-price-drop: #0ecb81;
   --color-price-rise: #f6465d;
   --color-info-blue: #3b82f6;
+  
+  /* Variables */
+  --fg: #eaecef;
+  --fg-muted: #707a8a;
+  --fg-dim: #707a8a;
+  --fg-strong: #929aa5;
+  --bg: #0b0e11;
+  --accent: #FCD535;
+  --color-on-dark: #ffffff;
+  --color-gold: #FCD535;
+  --color-gold-active: #f0b90b;
+  --color-gold-ink: #181a20;
+  --color-canvas-dark: #0b0e11;
+  --color-surface-card: #1e2329;
+  --color-surface-elevated: #2b3139;
+  --color-hairline-dark: #2b3139;
+  --color-body-text: #eaecef;
+  --color-muted-text: #707a8a;
+  --color-muted-strong: #929aa5;
+  --color-price-drop: #0ecb81;
+  --color-price-rise: #f6465d;
+  --color-info-blue: #3b82f6;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --leading-tight: 1.1;
+  --leading-snug: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --layout-page-max: 1440px;
+  --layout-page-wide: 1440px;
+  --layout-page-checkout: 640px;
+  --layout-page-pad-x: 1rem;
   
   /* ======== Tailwind映射 ======= */
   --color-background: var(--color-canvas-dark);
@@ -46,7 +91,7 @@
   --color-input: var(--color-surface-elevated);
   --color-ring: var(--color-info-blue);
   
-  /* ======== 间距系统（DESIGN.md定义）======= */
+  /* Spacing system */
   --spacing-xs: 4px;
   --spacing-sm: 12px;
   --spacing-md: 16px;
@@ -55,7 +100,7 @@
   --spacing-xxl: 48px;
   --spacing-section: 80px;
   
-  /* ======== 圆角 ======= */
+  /* Border radius */
   --radius-xs: 2px;
   --radius-sm: 4px;
   --radius-md: 6px;
@@ -64,7 +109,7 @@
   --radius-pill: 9999px;
 }
 
-/* ======== 基础样式 ======= */
+  /* Base styles */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -77,19 +122,19 @@
   }
 }
 
-/* ======== 滚动条 ======= */
+  /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #0b0e11; }
 ::-webkit-scrollbar-thumb { background: #2b3139; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #3a3f47; }
 
-/* ======== 自定义类 ======= */
+  /* Custom classes */
 .font-tabular {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-/* ======== 复选框 ======= */
+  /* Checkbox */
 .filter-checkbox {
   appearance: none;
   width: 16px;
@@ -158,9 +203,9 @@
   height: 100%;
   top: 0;
   background: transparent;
-  margin: 0;
+  margin:0;
   outline: none;
-  padding: 0;
+  padding:0;
   cursor: pointer;
   pointer-events: auto;
 }
