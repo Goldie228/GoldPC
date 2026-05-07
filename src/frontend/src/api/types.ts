@@ -175,6 +175,7 @@ export interface FilterFacetAttribute {
   displayName: string;
   filterType: 'select' | 'range';
   sortOrder: number;
+  multiSelect?: boolean;
   options?: FilterFacetOption[];
   minValue?: number;
   maxValue?: number;

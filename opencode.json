@@ -1,0 +1,6 @@
+{
+  "plugin": [
+    "@mingeon/opencode-blueprint"
+  ],
+  "$schema": "https://opencode.ai/config.json"
+}
