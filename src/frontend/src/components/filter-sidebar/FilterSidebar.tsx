@@ -4,74 +4,10 @@ import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Search, RotateCcw, ArrowUpDown, LayoutGrid, List, Table2 } from 'lucide-react';
 import { catalogApi } from '../../api/catalog';
 import type { ProductCategory, Manufacturer, Category, FilterFacetAttribute } from '../../api/types';
+import { DualRangeSlider } from './DualRangeSlider';
 
 // === Prototype JSX Components ===
-function DualRangeSlider({
-  min, max, minVal, maxVal, onMinChange, onMaxChange,
-}: {
-  min: number; max: number;
-  minVal: number; maxVal: number;
-  onMinChange: (v: number) => void;
-  onMaxChange: (v: number) => void;
-}) {
-  const priceGap = 10; // Minimum gap between min and max
-
-  const handleMinInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Math.floor(Number(e.target.value));
-    const maxLimit = maxVal - priceGap;
-    if (value > maxLimit) {
-      onMinChange(maxLimit);
-    } else {
-      onMinChange(Math.max(min, value));
-    }
-  };
-
-  const handleMaxInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Math.floor(Number(e.target.value));
-    const minLimit = minVal + priceGap;
-    if (value < minLimit) {
-      onMaxChange(minLimit);
-    } else {
-      onMaxChange(Math.min(max, value));
-    }
-  };
-
-  // Calculate percentages for the progress bar
-  const minPct = max > min ? ((minVal - min) / (max - min)) * 100 :0;
-  const maxPct = max > min ? ((maxVal - min) / (max - min)) * 100 : 0;
-
-  return (
-    <div className="relative h-8 w-full">
-      {/* Background track */}
-      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 rounded-full bg-white/20" />
-      {/* Active range (progress) */}
-      <div
-        className="absolute top-1/2 -translate-y-1/2 h-1 rounded-full bg-yellow-400"
-        style={{ left: `${minPct}%`, right: `${100 - maxPct}%` }}
-      />
-      {/* Range inputs (invisible, for functionality) */}
-      <div className="range-input absolute inset-0">
-        <input
-          type="range"
-          min={min} max={max}
-          value={minVal}
-          onChange={handleMinInput}
-          className="absolute w-full h-full pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-yellow-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:pointer-events-auto"
-          aria-label="Minimum price"
-        />
-        <input
-          type="range"
-          min={min} max={max}
-          value={maxVal}
-          onChange={handleMaxInput}
-          className="absolute w-full h-full pointer-events-none appearance-none bg-transparent [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:shadow-sm [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:active:cursor-grabbing [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-yellow-400 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:pointer-events-auto"
-          aria-label="Maximum price"
-        />
-      </div>
-    </div>
-    );
-  }
-  
+   
 function FilterGroup({ title, defaultOpen = true, children }: {
   title: string;
   defaultOpen?: boolean;
@@ -89,7 +25,7 @@ function FilterGroup({ title, defaultOpen = true, children }: {
           {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </span>
       </button>
-      <div className={`overflow-hidden transition-all duration-200 ${open ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+      <div className={`overflow-visible transition-all duration-200 ${open ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="pb-4">{children}</div>
       </div>
     </div>
@@ -285,17 +221,83 @@ export function FilterSidebar({
     if (!categoryLocked) onCategoryChange(cat);
   };
 
-  const handlePriceMinChange = (v: number) => {
-    const maxBound = propPriceMax ?? 10000;
-    const clampedV = Math.max(0, Math.min(Math.floor(v), maxBound));
-    onPriceChange({ ...priceRange, min: clampedV });
+  // Local state for slider display during drag — syncs when slider is used
+  const [displayPriceRange, setDisplayPriceRange] = useState({
+    min: priceRange.min,
+    max: priceRange.max,
+  });
+
+  // Local state for input fields (free input — no clamp, no gap enforcement)
+  const [inputMinValue, setInputMinValue] = useState<string>(
+    priceRange.min > 0 ? String(Math.round(priceRange.min)) : ''
+  );
+  const [inputMaxValue, setInputMaxValue] = useState<string>(
+    priceRange.max > 0 ? String(Math.round(priceRange.max)) : ''
+  );
+
+  // "Banged" flag — gap enforcement on after first slider drag
+  const [banged, setBanged] = useState(false);
+
+  // Reset local state when props change
+  useEffect(() => {
+    setInputMinValue(priceRange.min > 0 ? String(Math.round(priceRange.min)) : '');
+    setInputMaxValue(priceRange.max > 0 ? String(Math.round(priceRange.max)) : '');
+    setBanged(false);
+  }, [priceRange]);
+
+  // Sync inputs when slider drags
+  const handlePriceSliderChange = (values: { min: number; max: number }) => {
+    setDisplayPriceRange(values);
+    // Trigger "banged" on first drag
+    if (!banged) setBanged(true);
+    // Update inputs to match slider
+    setInputMinValue(String(Math.round(values.min)));
+    setInputMaxValue(String(Math.round(values.max)));
   };
 
-  const handlePriceMaxChange = (v: number) => {
-    const minBound = propPriceMin ?? 0;
-    const maxBound = propPriceMax ?? 10000;
-    const clampedV = Math.max(minBound, Math.min(Math.floor(v), maxBound));
-    onPriceChange({ ...priceRange, max: clampedV });
+  // On drag end — commit to server
+  const handlePriceSliderCommit = (values: { min: number; max: number }) => {
+    setDisplayPriceRange(values);
+    setInputMinValue(String(Math.round(values.min)));
+    setInputMaxValue(String(Math.round(values.max)));
+    onPriceChange(values);
+  };
+
+  // Live input handler — free input, no clamp, no gap enforcement
+  const handleMinInputChange = (rawValue: string) => {
+    // Если пользователь стер всё — очищаем (0 = маркер "не задано")
+    if (rawValue === '') {
+      setInputMinValue('');
+      setDisplayPriceRange({ min: 0, max: displayPriceRange.max });
+      onPriceChange({ min: 0, max: priceRange.max });
+      return;
+    }
+
+    const v = Number(rawValue);
+    if (isNaN(v) || v < 0) return; // невалидный ввод
+
+    // Свободный ввод — без clamp, пользователь пишет что хочет
+    setInputMinValue(String(Math.floor(v)));
+    setDisplayPriceRange({ min: Math.floor(v), max: displayPriceRange.max });
+    onPriceChange({ min: Math.floor(v), max: priceRange.max });
+  };
+
+  const handleMaxInputChange = (rawValue: string) => {
+    // Если пользователь стер всё — очищаем (0 = маркер "не задано")
+    if (rawValue === '') {
+      setInputMaxValue('');
+      setDisplayPriceRange({ min: displayPriceRange.min, max: 0 });
+      onPriceChange({ min: priceRange.min, max: 0 });
+      return;
+    }
+
+    const v = Number(rawValue);
+    if (isNaN(v) || v < 0) return; // невалидный ввод
+
+    // Свободный ввод — без clamp
+    setInputMaxValue(String(Math.floor(v)));
+    setDisplayPriceRange({ min: displayPriceRange.min, max: Math.floor(v) });
+    onPriceChange({ min: priceRange.min, max: Math.floor(v) });
   };
 
   const handleManufacturerToggle = (id: string) => {
@@ -317,7 +319,7 @@ export function FilterSidebar({
   };
 
   return (
-    <div className={`bg-surface-card rounded-xl ${mobile ? '' : 'sticky top-[64px] max-h-[calc(100vh-80px)] overflow-y-auto mt-2'} ${mobile ? '' : 'lg:rounded-xl'}`}>
+    <div className={`bg-surface-card rounded-xl ${mobile ? '' : 'sticky top-[64px] max-h-[calc(100vh-80px)] overflow-y-scroll overflow-x-visible mt-2'} ${mobile ? '' : 'lg:rounded-xl'}`}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-hairline-dark sticky top-0 bg-surface-card z-10">
         <div>
@@ -423,38 +425,22 @@ export function FilterSidebar({
               <div className="flex-1">
                 <label className="text-[10px] text-muted-text mb-1.5 block uppercase tracking-wider">От</label>
                 <input
-                  type="number"
-                  value={priceRange.min > 0 ? Math.round(priceRange.min) : ''}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === '') {
-                      handlePriceMinChange(propPriceMin ?? 0);
-                      return;
-                    }
-                    const v = Number(raw);
-                    if (!isNaN(v)) handlePriceMinChange(v);
-                  }}
+                  type="text"
+                  value={inputMinValue}
+                  onChange={(e) => handleMinInputChange(e.target.value)}
                   className="w-full h-9 bg-surface-elevated text-on-dark text-sm font-tabular rounded-lg px-3 border border-hairline-dark focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
-                  placeholder="0"
+                  placeholder={(propPriceMin ?? 0).toLocaleString('ru-BY') + ' BYN'}
                 />
               </div>
               <span className="text-muted-text text-sm mt-5">—</span>
               <div className="flex-1">
                 <label className="text-[10px] text-muted-text mb-1.5 block uppercase tracking-wider">До</label>
                 <input
-                  type="number"
-                  value={priceRange.max > 0 ? Math.round(priceRange.max) : ''}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === '') {
-                      handlePriceMaxChange(propPriceMax ?? 10000);
-                      return;
-                    }
-                    const v = Number(raw);
-                    if (!isNaN(v)) handlePriceMaxChange(v);
-                  }}
+                  type="text"
+                  value={inputMaxValue}
+                  onChange={(e) => handleMaxInputChange(e.target.value)}
                   className="w-full h-9 bg-surface-elevated text-on-dark text-sm font-tabular rounded-lg px-3 border border-hairline-dark focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
-                  placeholder="10 000"
+                  placeholder={(propPriceMax ?? 10000).toLocaleString('ru-BY') + ' BYN'}
                 />
               </div>
             </div>
@@ -462,26 +448,22 @@ export function FilterSidebar({
               // Границы слайдера: ВСЕГДА реальный диапазон (не меняются при фильтрации)
               const sliderMin = propPriceMin ?? 0;
               const sliderMax = propPriceMax ?? 10000;
-              // Позиции ползунков: введённые значения или границы диапазона
-              // Всегда ограничиваем допустимым диапазоном [sliderMin, sliderMax]
-              const rawMinVal = priceRange.min > 0 ? priceRange.min : sliderMin;
-              const rawMaxVal = priceRange.max > 0 ? priceRange.max : sliderMax;
-              const sliderMinVal = Math.max(sliderMin, Math.min(sliderMax, rawMinVal));
-              const sliderMaxVal = Math.max(sliderMin, Math.min(sliderMax, rawMaxVal));
-
               return (
                 <>
                   <DualRangeSlider
                     min={sliderMin}
-                    max={sliderMax}
-                    minVal={sliderMinVal}
-                    maxVal={sliderMaxVal}
-                    onMinChange={handlePriceMinChange}
-                    onMaxChange={handlePriceMaxChange}
+                     max={sliderMax}
+                    minVal={displayPriceRange.min}
+                    maxVal={displayPriceRange.max}
+                    onChange={handlePriceSliderChange}
+                    onCommit={handlePriceSliderCommit}
+                    step={1}
+                    priceGap={Math.max(10, (sliderMax - sliderMin) * 0.1)}
+                    formatValue={(v) => `${Math.floor(v)} BYN`}
                   />
                     <div className="flex justify-between text-[10px] text-muted-text font-tabular">
-                      <span>{Math.floor(sliderMinVal)} BYN</span>
-                      <span>{Math.floor(sliderMaxVal)} BYN</span>
+                      <span>{Math.floor(sliderMin)} BYN</span>
+                      <span>{Math.floor(sliderMax)} BYN</span>
                     </div>
                 </>
               );
