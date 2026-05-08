@@ -4,6 +4,7 @@ using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
 using GoldPC.SharedKernel.Models;
 using GoldPC.Shared.Services.Interfaces;
+using GoldPC.Shared.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace GoldPC.WarrantyService.Services;

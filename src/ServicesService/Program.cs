@@ -4,6 +4,7 @@ using GoldPC.ServicesService.Services;
 using GoldPC.Shared.Services;
 using GoldPC.Shared.Services.Interfaces;
 using GoldPC.Shared.Services.Mocks;
+using GoldPC.Shared.Services.Implementations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -22,12 +23,6 @@ builder.Host.UseSerilog();
 
 builder.Services.AddDbContext<ServicesDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-using GoldPC.Shared.Services.Implementations;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// ... existing code ...
 
 builder.Services.AddScoped<IServicesService, ServicesService>();
 

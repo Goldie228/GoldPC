@@ -46,15 +46,17 @@
 ```
 src/frontend/src/
 ├── api/                  # API layer (use these, never fetch directly)
+├── index.css             # Tailwind @theme (CRITICAL – do not touch)
 ├── components/ui/        # SHARED PRIMITIVES – DO NOT EDIT WITHOUT APPROVAL
 ├── components/layout/    # Header, footer, main layout
 ├── components/catalog/   # Feature components
+├── components/filter-sidebar/  # Filter components (safe to edit)
 ├── components/pc-builder/
 ├── pages/                # Route pages
 ├── store/                # Zustand stores
 ├── styles/
-│   ├── index.css         # Tailwind @theme (CRITICAL – do not touch)
 │   ├── globals.css       # Legacy CSS variables (often overridden by JSX)
+│   ├── tokens.css        # Migrated to index.css @theme (empty shell)
 │   └── staff.css
 ├── hooks/                # Shared hooks
 └── utils/
