@@ -1,0 +1,102 @@
+/* DualRangeSlider - Стили компонента */
+
+.dual-range-slider {
+  position: relative;
+  height: 32px; /* h-8 = 2rem = 32px */
+  width: 100%;
+  overflow: visible;
+  isolation: isolate;
+}
+
+/* Трек (фон) */
+.dual-range-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  /* Важно: трек не должен обрезать ползунки */
+  overflow: visible;
+}
+
+/* Активный диапазон (прогресс) */
+.dual-range-progress {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 4px;
+  border-radius: 9999px;
+  background: #FCD535; /* var(--color-gold) */
+}
+
+/* Ползунки (thumbs) */
+.dual-range-thumb {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  /* Центрируем ползунок относительно его left позиции */
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  z-index: 99999; /* Всегда поверх всего */
+  transition: transform 150ms ease, z-index 0s;
+}
+
+.dual-range-thumb:focus-visible {
+  outline: 2px solid #FCD535;
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
+.dual-range-thumb.active {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.dual-range-thumb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #FCD535; /* var(--color-gold) */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 150ms ease;
+}
+
+.dual-range-thumb:hover::before,
+.dual-range-thumb.active::before {
+  box-shadow: 0 0 0 4px rgba(252, 213, 53, 0.2), 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Тултип при перетаскивании */
+.dual-range-thumb-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: rgba(30, 35, 41, 0.95); /* var(--color-surface-card) с прозрачностью */
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(252, 213, 53, 0.3); /* var(--color-gold) с прозрачностью */
+  border-radius: 4px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #FCD535; /* var(--color-gold) */
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 150ms ease, visibility 150ms ease;
+  pointer-events: none;
+  z-index: 99999; /* Тултипы тоже поверх всего */
+}
+
+.dual-range-thumb:hover .dual-range-thumb-tooltip,
+.dual-range-thumb.active .dual-range-thumb-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
