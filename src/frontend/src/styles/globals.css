@@ -95,6 +95,17 @@ body {
   color: var(--accent);
 }
 
+/* Скрываем спиннеры (кнопки вверх/вниз) у number inputs для соблюдения дизайн-системы */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
 /* Канонічні оболонки контента (Home, каталог, картка, корзина, чекаут) */
 .pageShell {
   width: 100%;

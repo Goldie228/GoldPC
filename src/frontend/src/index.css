@@ -191,68 +191,6 @@
   background: #FCD535;
 }
 
-/* ======== Двойной слайдер диапазона ======= */
-/* Визуальный трек и active range — в JSX. Inputs — прозрачные overlay. */
-.dual-range-input {
-  -webkit-appearance: none;
-  appearance: none;
-  position: absolute;
-  left: 0;
-  right: 0;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  background: transparent;
-  margin:0;
-  outline: none;
-  padding:0;
-  cursor: pointer;
-  pointer-events: auto;
-}
-.dual-range-input::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #FCD535;
-  border: 2px solid #fff;
-  margin-top: 0;
-  cursor: grab;
-}
-.dual-range-input::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #FCD535;
-  border: 2px solid #fff;
-  cursor: grab;
-}
-.dual-range-input:active::-webkit-slider-thumb {
-  cursor: grabbing;
-}
-.dual-range-input:active::-moz-range-thumb {
-  cursor: grabbing;
-}
-/* Скрываем нативный трек и thumb — их место занято JSX div-ами */
-.dual-range-input::-webkit-slider-runnable-track { height: 0; background: transparent; }
-.dual-range-input::-moz-range-track { height: 0; background: transparent; border: none; }
-.dual-range-input::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #FCD535;
-  border: 2px solid #fff;
-  margin-top: 0;
-}
-.dual-range-input::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #FCD535;
-  border: 2px solid #fff;
-}
-
 /* ======== 星级评分 ======= */
 .star-filled { color: #FCD535; }
 .star-empty { color: #9ca3af; }

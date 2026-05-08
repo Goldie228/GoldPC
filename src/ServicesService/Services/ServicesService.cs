@@ -5,15 +5,17 @@ using GoldPC.SharedKernel.Enums;
 using GoldPC.SharedKernel.Models;
 using Microsoft.EntityFrameworkCore;
 using GoldPC.Shared.Services.Interfaces;
+using GoldPC.Shared.Services;
+using PagedResult = GoldPC.SharedKernel.DTOs.PagedResult;
 
 namespace GoldPC.ServicesService.Services;
 
 public interface IServicesService
 {
     Task<ServiceRequestDto?> GetByIdAsync(Guid id);
-    Task<PagedResult<ServiceRequestDto>> GetByClientIdAsync(Guid clientId, int page, int pageSize);
-    Task<PagedResult<ServiceRequestDto>> GetByMasterIdAsync(Guid masterId, int page, int pageSize);
-    Task<PagedResult<ServiceRequestDto>> GetAllAsync(int page, int pageSize, ServiceRequestStatus? status = null);
+    Task<PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>> GetByClientIdAsync(Guid clientId, int page, int pageSize);
+    Task<PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>> GetByMasterIdAsync(Guid masterId, int page, int pageSize);
+    Task<PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>> GetAllAsync(int page, int pageSize, ServiceRequestStatus? status = null);
     Task<(ServiceRequestDto? Request, string? Error)> CreateAsync(Guid clientId, CreateServiceRequestRequest request);
     Task<(ServiceRequestDto? Request, string? Error)> AssignMasterAsync(Guid id, Guid masterId);
     Task<(ServiceRequestDto? Request, string? Error)> UpdateStatusAsync(Guid id, ServiceRequestStatus status, Guid changedBy, string? comment = null);
@@ -62,7 +64,7 @@ public class ServicesService : IServicesService
         return request != null ? MapToDto(request) : null;
     }
 
-    public async Task<PagedResult<ServiceRequestDto>> GetByClientIdAsync(Guid clientId, int page, int pageSize)
+    public async Task<PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>> GetByClientIdAsync(Guid clientId, int page, int pageSize)
     {
         var query = _context.ServiceRequests
             .Include(sr => sr.ServiceType)
@@ -72,7 +74,7 @@ public class ServicesService : IServicesService
         var totalCount = await query.CountAsync();
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-        return new PagedResult<ServiceRequestDto>
+        return new PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
@@ -81,7 +83,7 @@ public class ServicesService : IServicesService
         };
     }
 
-    public async Task<PagedResult<ServiceRequestDto>> GetByMasterIdAsync(Guid masterId, int page, int pageSize)
+    public async Task<PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>> GetByMasterIdAsync(Guid masterId, int page, int pageSize)
     {
         var query = _context.ServiceRequests
             .Include(sr => sr.ServiceType)
@@ -91,7 +93,7 @@ public class ServicesService : IServicesService
         var totalCount = await query.CountAsync();
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-        return new PagedResult<ServiceRequestDto>
+        return new PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
@@ -100,7 +102,7 @@ public class ServicesService : IServicesService
         };
     }
 
-    public async Task<PagedResult<ServiceRequestDto>> GetAllAsync(int page, int pageSize, ServiceRequestStatus? status = null)
+    public async Task<GoldPC.SharedKernel.DTOs.PagedResult<ServiceRequestDto>> GetAllAsync(int page, int pageSize, ServiceRequestStatus? status = null)
     {
         var query = _context.ServiceRequests.Include(sr => sr.ServiceType).AsQueryable();
 
@@ -112,7 +114,7 @@ public class ServicesService : IServicesService
         var totalCount = await query.CountAsync();
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-        return new PagedResult<ServiceRequestDto>
+        return new PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,

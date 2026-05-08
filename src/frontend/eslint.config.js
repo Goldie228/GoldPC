@@ -6,7 +6,20 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'coverage', 'node_modules']),
+  globalIgnores([
+    'dist',
+    'coverage',
+    'node_modules',
+    '**/*.test.ts',
+    '**/*.spec.ts',
+    '**/*.test.tsx',
+    '**/*.spec.tsx',
+    'console-monitor.ts',
+    'playwright.config.ts',
+    'vite.config.ts',
+    'vitest.config.ts',
+    'tests/**',
+  ]),
 
   // Основная конфигурация
   {
