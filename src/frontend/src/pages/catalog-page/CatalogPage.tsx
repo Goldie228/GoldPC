@@ -108,6 +108,7 @@ export function CatalogPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>(() => {
     const v = searchParams.get('view');
     return (v === 'list' || v === 'table') ? v : 'grid';
@@ -166,6 +167,7 @@ export function CatalogPage() {
   const computedPriceRange = priceBounds;
 
   const catalogScrollAnchorRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const buildApiParams = useCallback((): GetProductsParams => {
     const params: GetProductsParams = {
@@ -281,9 +283,11 @@ export function CatalogPage() {
 
   const handleSearch = useCallback((e: React.FormEvent) => {
     e.preventDefault();
+    const query = searchInputRef.current?.value || '';
+    setSearchQuery(query);
     setPage(1);
-    telemetryTrack('catalog_search', { query: searchQuery, category: selectedCategory });
-  }, [searchQuery, selectedCategory]);
+    telemetryTrack('catalog_search', { query, category: selectedCategory });
+  }, [selectedCategory]);
 
   const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
@@ -376,103 +380,96 @@ export function CatalogPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0e11] flex flex-col">
-      {/* Unified Sticky Header — breadcrumbs + title + search + sort */}
-      <div className="bg-surface-card sticky top-0 z-30 shadow-sm">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
-          {/* Row 1 — Breadcrumbs (desktop only) */}
-          <div className="py-0 mb-1.5 lg:block hidden">
-            <Breadcrumbs
-              items={
-                selectedCategory
-                  ? [
-                      { label: 'Главная', to: '/' },
-                      { label: 'Каталог', to: '/catalog' },
-                      { label: CATEGORY_LABELS_RU[selectedCategory] },
-                    ]
-                  : [
-                      { label: 'Главная', to: '/' },
-                      { label: 'Каталог' },
-                    ]
-              }
-            />
-          </div>
+       {/* Catalog toolbar — title + search + sort */}
+       <div className="bg-surface-card">
+         <div className="max-w-[1440px] mx-auto px-4 md:px-8">
+           {/* Row 1 — Title + Search (center) + View toggle + Filter button (right) */}
+            <div className="flex flex-row items-center gap-2 pt-2 pb-2">
+               {/* Left: Title + count */}
+               <div className="flex items-baseline gap-2 flex-shrink-0">
+                 <div className="font-bold text-body-text tracking-tight" style={{ fontSize: '24px' }}>{categoryName}</div>
+                 <span className="text-xs md:text-sm text-muted-text font-tabular">
+                   {totalItems > 0 ? `${formatCountRu(totalItems, RU_FORMS.tovar)}` : 'Товары не найдены'}
+                 </span>
+               </div>
 
-         {/* Row 2 — Title + Search (left) + Filters button (right) */}
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3 pt-3 pb-2">
-            {/* Left: Title + Search */}
-            <div className="flex flex-1 items-center gap-4 lg:flex-1 lg:min-w-0">
-              <div className="flex items-baseline gap-2 lg:flex-shrink-0">
-                <h1 style={{ fontSize: '36px' }} className="font-bold text-body-text tracking-tight">{categoryName}</h1>
-                <span className="text-sm text-muted-text font-tabular">
-                  {totalItems > 0 ? `${formatCountRu(totalItems, RU_FORMS.tovar)}` : 'Товары не найдены'}
-                </span>
-              </div>
+               {/* Center: Search — desktop (inline) */}
+               <div className="flex justify-center items-center flex-1">
+                 {/* Desktop search bar */}
+                 <form
+                   className="hidden sm:flex items-center gap-0 w-full max-w-[280px] flex-1"
+                   onSubmit={handleSearch}
+                 >
+                   <input
+                     type="text"
+                     ref={searchInputRef}
+                     className="h-9 w-full bg-surface-elevated text-body-text text-sm rounded-l-lg py-1.5 pl-4 pr-3 placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-gold/30 border border-hairline-dark border-r-0 focus:border-gold/40 transition-all"
+                     placeholder={`В «${categoryName}»`}
+                     aria-label="Поиск в каталоге"
+                     defaultValue={searchQuery}
+                   />
+                   <button
+                     type="submit"
+                     className="h-9 px-3 bg-gold text-gold-ink text-sm font-semibold rounded-r-lg hover:bg-gold-active transition-colors flex items-center"
+                   >
+                     <Search size={16} />
+                   </button>
+                 </form>
+               </div>
 
-              {/* Search — right-aligned */}
-              <form className="flex items-center gap-0 max-w-[280px] ml-auto" onSubmit={handleSearch}>
-                <input
-                  type="text"
-                  className="h-9 w-full bg-surface-elevated text-body-text text-sm rounded-l-lg py-1.5 pl-4 pr-3 placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-gold/30 border border-hairline-dark border-r-0 focus:border-gold/40 transition-all"
-                  placeholder={`В «${categoryName}»`}
-                  aria-label="Поиск в каталоге"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <button
-                  type="submit"
-                  className="h-9 px-4 bg-gold text-gold-ink text-sm font-semibold rounded-r-lg hover:bg-gold-active transition-colors flex items-center gap-1.5 active:scale-[0.98]"
-                >
-                  <Search size={14} />
-                  <span className="hidden sm:inline">Найти</span>
-                </button>
-              </form>
-            </div>
+               {/* Right: View toggle (desktop) + Mobile filter + search buttons */}
+               <div className="flex items-center gap-3 flex-shrink-0">
+                 {/* View toggle — desktop only */}
+                 <div className="hidden md:flex items-center bg-surface-elevated rounded-lg p-0.5 border border-hairline-dark">
+                   {[
+                     { value: 'grid' as const, icon: <LayoutGrid size={18} /> },
+                     { value: 'list' as const, icon: <List size={18} /> },
+                     { value: 'table' as const, icon: <Table2 size={18} /> },
+                   ].map(mode => (
+                     <button
+                       key={mode.value}
+                       onClick={() => setViewMode(mode.value)}
+                       className={`w-8 h-7 rounded-md flex items-center justify-center transition-all ${
+                         viewMode === mode.value
+                           ? 'bg-gold text-gold-ink shadow-sm'
+                           : 'text-muted-text hover:text-body-text'
+                       }`}
+                       title={mode.value === 'grid' ? 'Сетка' : mode.value === 'list' ? 'Список' : 'Таблица'}
+                     >
+                       {mode.icon}
+                     </button>
+                   ))}
+                 </div>
 
-            {/* Right: View toggle (desktop) + Mobile filter button */}
-            <div className="flex items-center gap-3 lg:flex-shrink-0">
-              {/* View toggle — desktop only */}
-              <div className="hidden md:flex items-center bg-surface-elevated rounded-lg p-0.5 border border-hairline-dark">
-                {[
-                  { value: 'grid' as const, icon: <LayoutGrid size={18} /> },
-                  { value: 'list' as const, icon: <List size={18} /> },
-                  { value: 'table' as const, icon: <Table2 size={18} /> },
-                ].map(mode => (
-                  <button
-                    key={mode.value}
-                    onClick={() => setViewMode(mode.value)}
-                    className={`w-8 h-7 rounded-md flex items-center justify-center transition-all ${
-                      viewMode === mode.value
-                        ? 'bg-gold text-gold-ink shadow-sm'
-                        : 'text-muted-text hover:text-body-text'
-                    }`}
-                    title={mode.value === 'grid' ? 'Сетка' : mode.value === 'list' ? 'Список' : 'Таблица'}
-                  >
-                    {mode.icon}
-                  </button>
-                ))}
-              </div>
+                 {/* Mobile search button */}
+                 <button
+                   onClick={() => setSearchModalOpen(true)}
+                   className="sm:hidden h-9 px-2 bg-surface-elevated text-body-text text-sm rounded-lg border border-hairline-dark flex items-center gap-1 hover:bg-surface-card transition-colors"
+                   aria-label="Поиск в каталоге"
+                 >
+                   <Search size={16} />
+                 </button>
 
-              {/* Mobile filter button */}
-              <button
-                onClick={() => setMobileFilterOpen(true)}
-                className="lg:hidden h-8 px-3 bg-surface-elevated text-body-text text-sm rounded-lg border border-hairline-dark flex items-center gap-1.5 hover:bg-surface-card transition-colors"
-              >
-                <SlidersHorizontal size={14} />
-                <span className="hidden sm:inline">Фильтры</span>
-                {activeFilterCount > 0 && (
-                  <span className="h-4 min-w-4 px-0.5 bg-gold text-gold-ink text-[8px] font-bold rounded-full flex items-center justify-center">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+                 {/* Mobile filter button — compact icon + badge */}
+                 <button
+                   onClick={() => setMobileFilterOpen(true)}
+                   className="lg:hidden h-9 px-2 bg-surface-elevated text-body-text text-sm rounded-lg border border-hairline-dark flex items-center gap-1 hover:bg-surface-card transition-colors relative"
+                 >
+                   <SlidersHorizontal size={16} />
+                   {activeFilterCount > 0 && (
+                     <span className="absolute -top-1 -right-1 h-4 w-4 bg-gold text-gold-ink text-[11px] font-bold rounded-full flex items-center justify-center">
+                       {activeFilterCount}
+                     </span>
+                   )}
+                 </button>
+               </div>
+             </div>
+         </div>
+       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 w-full max-w-[1440px] mx-auto px-6 md:px-10">
-        <div className="flex gap-6">
+       {/* Main Content Area */}
+       <div className="flex-1 w-full max-w-[1440px] mx-auto px-6 md:px-10 pt-6">
+         <div className="flex gap-6">
           {/* Desktop Sidebar - 280px width */}
              <div className="hidden lg:block w-[280px] flex-shrink-0">
               <FilterSidebar
@@ -552,6 +549,41 @@ export function CatalogPage() {
                           onViewModeChange={setViewMode}
                         />
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Search Modal */}
+            {searchModalOpen && (
+              <div className="fixed inset-0 bg-canvas-dark/92 backdrop-blur-[4px] z-[1000] lg:hidden" onClick={() => setSearchModalOpen(false)}>
+                <div 
+                  className="absolute left-0 right-0 top-0 p-5 pb-4 bg-surface-elevated border-b border-hairline-dark flex items-center gap-3"
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                >
+                  <form className="flex-1 flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); setSearchModalOpen(false); handleSearch(e); }}>
+                    <input
+                      type="text"
+                      className="flex-1 h-9 bg-canvas-dark text-body-text text-sm rounded-lg py-1.5 pl-4 pr-3 placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-gold/30 border border-hairline-dark transition-all"
+                      placeholder={`В «${categoryName}»`}
+                      aria-label="Поиск в каталоге"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      autoFocus
+                    />
+                    <button
+                      type="submit"
+                      className="h-9 px-3 bg-gold text-gold-ink text-sm font-semibold rounded-lg hover:bg-gold-active transition-colors flex items-center"
+                    >
+                      <Search size={16} />
+                    </button>
+                  </form>
+                  <button 
+                    className="flex items-center justify-center w-9 h-9 bg-surface-elevated border border-hairline-dark rounded-lg text-muted-text hover:bg-gold/10 hover:border-gold/30 hover:text-gold transition-all"
+                    onClick={() => setSearchModalOpen(false)}
+                    aria-label="Закрыть поиск"
+                  >
+                    <X size={20} />
+                  </button>
                 </div>
               </div>
             )}
