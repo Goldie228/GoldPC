@@ -18,7 +18,7 @@ function FilterGroup({ title, defaultOpen = true, children }: {
     <div className="border-b border-hairline-dark last:border-b-0">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-3 text-sm font-semibold text-on-dark hover:text-gold transition-colors group"
+        className="w-full flex items-center justify-between py-3 text-xs font-semibold text-on-dark hover:text-gold transition-colors group"
       >
         {title}
         <span className={`p-0.5 rounded transition-colors ${open ? 'text-muted-text' : 'text-muted-text group-hover:text-gold'}`}>
@@ -46,7 +46,7 @@ function StarRating({ rating, onChange }: { rating: number; onChange: (r: number
           />
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map(s => (
-              <span key={s} className={`text-sm ${s <= r ? 'text-gold' : 'text-muted-text'}`}>&#9733;</span>
+              <span key={s} className={`text-xs ${s <= r ? 'text-gold' : 'text-muted-text'}`}>&#9733;</span>
             ))}
           </div>
           <span className="text-[11px] text-muted-text group-hover:text-body-text transition-colors">и выше</span>
@@ -351,7 +351,7 @@ export function FilterSidebar({
               <select
                 value={sortBy}
                 onChange={(e) => onSortChange(e.target.value)}
-                className="flex-1 h-9 bg-surface-elevated text-on-dark text-sm rounded-lg px-3 pr-8 border border-hairline-dark focus:outline-none focus:ring-1 focus:ring-gold/30 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%23707a8a%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M8%2011L3%206h10z%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_10px_center] bg-no-repeat hover:border-muted-strong transition-colors"
+                className="flex-1 h-9 bg-surface-elevated text-on-dark text-xs rounded-lg px-3 pr-8 border border-hairline-dark focus:outline-none focus:ring-1 focus:ring-gold/30 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%23707a8a%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M8%2011L3%206h10z%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_10px_center] bg-no-repeat hover:border-muted-strong transition-colors"
               >
                 <option value="popular">По популярности</option>
                 <option value="price-asc">Цена: по возрастанию</option>
@@ -393,7 +393,7 @@ export function FilterSidebar({
           <div className="space-y-1">
             <button
               onClick={() => handleCategoryChange(null)}
-              className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
+               className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors ${
                 selectedCategory === null
                   ? 'text-gold bg-gold/5 font-medium'
                   : 'text-body-text hover:text-gold hover:bg-surface-elevated/50'
@@ -406,7 +406,7 @@ export function FilterSidebar({
                 key={cat.slug}
                 onClick={() => handleCategoryChange(cat.slug as ProductCategory)}
                 disabled={categoryLocked && cat.slug !== selectedCategory}
-                className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
+             className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors ${
                   selectedCategory === cat.slug
                     ? 'text-gold bg-gold/5 font-medium'
                     : 'text-body-text hover:text-gold hover:bg-surface-elevated/50'
@@ -428,18 +428,18 @@ export function FilterSidebar({
                   type="text"
                   value={inputMinValue}
                   onChange={(e) => handleMinInputChange(e.target.value)}
-                  className="w-full h-9 bg-surface-elevated text-on-dark text-sm font-tabular rounded-lg px-3 border border-hairline-dark focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
+                  className="w-full h-9 bg-surface-elevated text-on-dark text-xs font-tabular rounded-lg px-3 border border-hairline-dark focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
                   placeholder={(propPriceMin ?? 0).toLocaleString('ru-BY') + ' BYN'}
                 />
               </div>
-              <span className="text-muted-text text-sm mt-5">—</span>
+              <span className="text-muted-text text-xs mt-5">—</span>
               <div className="flex-1">
                 <label className="text-[10px] text-muted-text mb-1.5 block uppercase tracking-wider">До</label>
                 <input
                   type="text"
                   value={inputMaxValue}
                   onChange={(e) => handleMaxInputChange(e.target.value)}
-                  className="w-full h-9 bg-surface-elevated text-on-dark text-sm font-tabular rounded-lg px-3 border border-hairline-dark focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
+                  className="w-full h-9 bg-surface-elevated text-on-dark text-xs font-tabular rounded-lg px-3 border border-hairline-dark focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
                   placeholder={(propPriceMax ?? 10000).toLocaleString('ru-BY') + ' BYN'}
                 />
               </div>
@@ -480,7 +480,7 @@ export function FilterSidebar({
                 placeholder="Поиск брендов..."
                 value={mfrSearch}
                 onChange={(e) => setMfrSearch(e.target.value)}
-                className="w-full h-9 bg-surface-elevated text-on-dark text-sm rounded-lg pl-8 pr-3 border border-hairline-dark placeholder:text-muted-text focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
+                className="w-full h-9 bg-surface-elevated text-on-dark text-xs rounded-lg pl-8 pr-3 border border-hairline-dark placeholder:text-muted-text focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
               />
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-text" size={13} />
             </div>
@@ -493,7 +493,7 @@ export function FilterSidebar({
                     onChange={() => handleManufacturerToggle(mfr.id)}
                     className="filter-checkbox"
                   />
-                  <span className="text-sm text-body-text group-hover:text-on-dark transition-colors">{mfr.name}</span>
+                  <span className="text-xs text-body-text group-hover:text-on-dark transition-colors">{mfr.name}</span>
                 </label>
               ))}
             </div>
@@ -537,7 +537,7 @@ export function FilterSidebar({
                   }}
                   className="filter-radio self-center"
                 />
-                <span className="text-sm text-body-text group-hover:text-on-dark transition-colors">
+                <span className="text-xs text-body-text group-hover:text-on-dark transition-colors">
                   {opt.label}
                 </span>
               </label>
@@ -549,7 +549,7 @@ export function FilterSidebar({
         {filterFacets.length > 0 && (
           <FilterGroup title="Характеристики" defaultOpen={false}>
             {loadingFacets ? (
-              <div className="text-sm text-muted-text">Загрузка...</div>
+              <div className="text-xs text-muted-text">Загрузка...</div>
             ) : (
               <div className="space-y-4">
                 {(filterFacets || []).map(facet => {
@@ -588,7 +588,7 @@ export function FilterSidebar({
                                 }}
                                 className={facet.multiSelect ? "sr-only" : "sr-only"}
                               />
-                              <span className="text-sm text-body-text group-hover:text-on-dark transition-colors">
+                              <span className="text-xs text-body-text group-hover:text-on-dark transition-colors">
                                 {opt.value} {opt.count !== undefined && <span className="text-muted-text text-xs">({opt.count})</span>}
                               </span>
                             </label>

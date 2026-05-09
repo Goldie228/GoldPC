@@ -611,7 +611,7 @@ export function ComponentPickerModal({
                 </button>
                 <form className="flex-1 min-w-[160px] relative" onSubmit={(e) => e.preventDefault()}>
                   <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-dim)] pointer-events-none" />
-                  <input type="search" className="w-full py-1.5 pl-[30px] pr-7 rounded-md border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.25)] text-[var(--fg)] text-sm placeholder:text-[var(--fg-dim)] focus:outline-none focus:outline-2 focus:outline-[rgba(212,165,116,0.35)] focus:outline-offset-0" placeholder="Поиск по названию…"
+                  <input type="search" className="w-full py-1.5 pl-[30px] pr-7 rounded-md border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.25)] text-[var(--fg)] text-xs placeholder:text-[var(--fg-dim)] focus:outline-none focus:outline-2 focus:outline-[rgba(212,165,116,0.35)] focus:outline-offset-0" placeholder="Поиск по названию…"
                     value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); setHighlightedId(null); }} />
                   {search && <button type="button" className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-none border-none text-[var(--fg-dim)] cursor-pointer p-0.5 flex hover:text-[var(--fg-muted)]" onClick={() => setSearch('')}><X size={14} /></button>}
                 </form>
