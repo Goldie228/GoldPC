@@ -228,12 +228,12 @@ export function SaveConfigurationModal({
 
         {/* Summary */}
         <div className="bg-[var(--bg-primary)] border border-[var(--border-default)] rounded-md p-4">
-          <h3 className="m-0 mb-3 text-sm font-semibold text-[var(--fg-secondary)] uppercase tracking-wider">Сводка сборки</h3>
+          <h3 className="m-0 mb-3 text-xs font-semibold text-[var(--fg-secondary)] uppercase tracking-wider">Сводка сборки</h3>
 
           <div className="flex flex-col gap-2 divide-y divide-[var(--border-default)]">
             {/* Компонентов */}
             <div className="flex justify-between items-center py-1.5">
-              <span className="text-sm text-[var(--fg-secondary)]">Компонентов</span>
+              <span className="text-xs text-[var(--fg-secondary)]">Компонентов</span>
               <span className="text-[0.95rem] font-semibold text-[var(--fg-primary)]">
                 {selectedCount}/{totalCount}
               </span>
@@ -241,7 +241,7 @@ export function SaveConfigurationModal({
 
             {/* Совместимость */}
             <div className="flex justify-between items-center py-1.5">
-              <span className="text-sm text-[var(--fg-secondary)]">Совместимость</span>
+              <span className="text-xs text-[var(--fg-secondary)]">Совместимость</span>
               <span className={`text-[0.95rem] font-semibold ${compatibilityStatus.className}`}>
                 {compatibilityStatus.label}
               </span>
@@ -249,7 +249,7 @@ export function SaveConfigurationModal({
 
             {/* Цена */}
             <div className="flex justify-between items-center py-1.5">
-              <span className="text-sm text-[var(--fg-secondary)]">Стоимость</span>
+              <span className="text-xs text-[var(--fg-secondary)]">Стоимость</span>
               <span className="text-[1.05rem] font-semibold text-[var(--brand-primary)]">
                 {formatPrice(totalPrice)}
               </span>
@@ -260,12 +260,12 @@ export function SaveConfigurationModal({
           {(compatibilityErrors.length > 0 || compatibilityWarnings.length > 0) && (
             <div className="mt-3 pt-3 border-t border-[var(--border-default)] flex flex-col gap-1.5">
               {compatibilityErrors.map((err, i) => (
-                <p key={`err-${i}`} className="m-0 text-sm leading-normal text-[var(--error)]">
+                <p key={`err-${i}`} className="m-0 text-xs leading-normal text-[var(--error)]">
                   ✕ {err}
                 </p>
               ))}
               {compatibilityWarnings.map((warn, i) => (
-                <p key={`warn-${i}`} className="m-0 text-sm leading-normal text-[#fbbf24]">
+                <p key={`warn-${i}`} className="m-0 text-xs leading-normal text-[#fbbf24]">
                   ⚠ {warn}
                 </p>
               ))}
