@@ -567,6 +567,8 @@ Gold PC’s radius hierarchy is tighter than typical marketing systems — most 
 
 **`footer-light`** — The light‑gray footer that closes every page (including dark‑canvas pages). Background `{colors.surface-soft-light}` (#fafafa), text `{colors.body-on-light}`. 6‑column link list at desktop covering Support / About Us / Products / Business / Service / Learn columns. Vertical padding 64px. The deliberate light footer on a dark page is one of Gold PC’s most distinctive layout choices — it visually closes the page with a “marketing reset” surface.
 
+**`footer-dark`** — Premium dark footer for marketing pages. Background `#11151d` (one step elevated from `{colors.canvas-dark}` for subtle separation). Gold accent muted to warm brass (`#c9a84c`) for restrained brand presence. Section titles in `{colors.muted-strong}` (#929aa5) with wide letter‑spacing. Link text in `#5a6270` (deep muted) with hover transition to muted gold. Copyright area in `#3d4450` (near‑invisible). Dividers at `#1a1f27`. Social icons in `#5a6270`, hover to `#c9a84c`. Vertical padding 64px, desktop 4‑column grid, tablet 2‑column, mobile 1‑column. Deliberately quiet — does not compete with page content.
+
 ## Do's and Don'ts
 
 ### Do

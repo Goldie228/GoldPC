@@ -469,7 +469,7 @@ export function CatalogPage() {
 
        {/* Main Content Area */}
        <div className="flex-1 w-full max-w-[1440px] mx-auto px-6 md:px-10 pt-6">
-         <div className="flex gap-6">
+         <div className="flex gap-6 pb-8">
           {/* Desktop Sidebar - 280px width */}
              <div className="hidden lg:block w-[280px] flex-shrink-0">
               <FilterSidebar
@@ -498,7 +498,7 @@ export function CatalogPage() {
           </div>
 
           {/* Product List Area */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 mt-2">
             {/* Mobile Filter Overlay */}
             {mobileFilterOpen && (
               <div className="fixed inset-0 bg-canvas-dark/92 backdrop-blur-[4px] z-[1000] lg:hidden" onClick={() => setMobileFilterOpen(false)}>
@@ -648,7 +648,7 @@ export function CatalogPage() {
                 )}
 
                 {totalItems > 0 && (
-                  <div ref={catalogScrollAnchorRef} className="mt-8 pt-6 border-t border-hairline-dark/6">
+                  <div ref={catalogScrollAnchorRef} className="mt-8 pt-6 pb-8 border-t border-hairline-dark/6">
                     <Pagination
                       page={page}
                       totalPages={totalPages}

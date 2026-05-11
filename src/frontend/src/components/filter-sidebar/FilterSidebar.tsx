@@ -1,15 +1,134 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Search, RotateCcw, ArrowUpDown, LayoutGrid, List, Table2 } from 'lucide-react';
+import {
+  ChevronDown, ChevronUp, Search, RotateCcw,
+  Tag, Star, Package, Grid3X3, DollarSign, Check,
+  ArrowUpDown, LayoutGrid, List, Table2, SlidersHorizontal,
+} from 'lucide-react';
 import { catalogApi } from '../../api/catalog';
-import type { ProductCategory, Manufacturer, Category, FilterFacetAttribute } from '../../api/types';
 import { DualRangeSlider } from './DualRangeSlider';
+import { Skeleton } from '../ui/Skeleton';
+import type { ProductCategory, Manufacturer, Category, FilterFacetAttribute } from '../../api/types';
 
-// === Prototype JSX Components ===
-   
-function FilterGroup({ title, defaultOpen = true, children }: {
+// ============================================================
+// Constants
+// ============================================================
+
+const CATEGORY_ORDER: ProductCategory[] = [
+  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu',
+  'case', 'cooling', 'fan', 'monitor', 'keyboard', 'mouse', 'headphones',
+];
+
+const CATEGORY_LABELS: Record<ProductCategory, string> = {
+  cpu: 'Процессоры',
+  gpu: 'Видеокарты',
+  motherboard: 'Материнские платы',
+  ram: 'Оперативная память',
+  storage: 'Накопители',
+  psu: 'Блоки питания',
+  case: 'Корпуса',
+  cooling: 'Охлаждение',
+  fan: 'Вентиляторы',
+  monitor: 'Мониторы',
+  keyboard: 'Клавиатуры',
+  mouse: 'Мыши',
+  headphones: 'Наушники',
+};
+
+const BACKEND_SLUG_MAP: Record<string, ProductCategory> = {
+  processors: 'cpu',
+  motherboards: 'motherboard',
+  ram: 'ram',
+  gpu: 'gpu',
+  psu: 'psu',
+  storage: 'storage',
+  cases: 'case',
+  coolers: 'cooling',
+  monitors: 'monitor',
+  keyboards: 'keyboard',
+  mice: 'mouse',
+  headphones: 'headphones',
+  periphery: 'keyboard',
+};
+
+const FRONTEND_TO_BACKEND: Record<ProductCategory, string> = {
+  cpu: 'processors',
+  gpu: 'gpu',
+  motherboard: 'motherboards',
+  ram: 'ram',
+  storage: 'storage',
+  psu: 'psu',
+  case: 'cases',
+  cooling: 'coolers',
+  fan: 'fans',
+  monitor: 'monitors',
+  keyboard: 'keyboards',
+  mouse: 'mice',
+  headphones: 'headphones',
+};
+
+/**
+ * Порядок атрибутов по категориям (backend slug -> ключи).
+ * Каждый фильтр — атомарный, без объединения в «Прочее».
+ */
+const SPEC_ORDER: Record<string, string[]> = {
+  gpu: [
+    'release_year', 'proizvoditel_graficheskogo_protsessora', 'graficheskiy_protsessor',
+    'videopamyat', 'tip_videopamyati', 'shirina_shiny_pamyati', 'okhlazhdenie_1',
+    'razyemy_pitaniya', 'rekomenduemyy_blok_pitaniya', 'interfeys_1',
+    'dlina_videokarty', 'vysota_videokarty',
+  ],
+  processors: [
+    'socket', 'model_series', 'codename', 'architecture', 'data_vykhoda_na_rynok',
+    'integrated_graphics', 'cores', 'threads', 'base_freq', 'max_freq',
+    'max_memory_freq', 'tdp', 'delivery_type', 'cooling_included',
+    'process_nm', 'cache_l2', 'cache_l3', 'memory_support',
+    'memory_channels', 'multithreading',
+  ],
+  motherboards: [
+    'socket', 'chipset', 'form_factor', 'memory_type',
+    'memory_mixed_slots', 'memory_cudimm', 'memory_slots',
+    'max_memory', 'max_memory_freq', 'data_vykhoda_na_rynok',
+  ],
+  ram: [
+    'capacity', 'capacity_per_module', 'memory_type', 'type',
+    'frequency', 'pc_index', 'cas_latency', 'ecc', 'expo',
+    'xmp', 'voltage', 'data_vykhoda_na_rynok',
+  ],
+  storage: [
+    'capacity', 'form_factor', 'interface', 'protocol',
+    'read_speed', 'write_speed', 'flash_type', 'tbw',
+    'data_vykhoda_na_rynok',
+  ],
+  psu: ['wattage', 'efficiency', 'form_factor', 'modular', 'fan_size', 'data_vykhoda_na_rynok'],
+  cases: [
+    'form_factor', 'material', 'material_front', 'window',
+    'max_cooler_height', 'max_gpu_length', 'data_vykhoda_na_rynok',
+  ],
+  coolers: ['cooler_type', 'socket', 'tdp', 'fan_size', 'fan_count', 'noise', 'data_vykhoda_na_rynok'],
+  monitors: [
+    'diagonal', 'aspect_ratio', 'curved', 'sync_technology',
+    'resolution', 'refresh_rate', 'matrix', 'type',
+    'brightness', 'response_time', 'data_vykhoda_na_rynok',
+  ],
+  keyboards: ['type', 'interface', 'connection_type', 'wireless_protocols', 'color', 'data_vykhoda_na_rynok'],
+  mice: ['type', 'interface', 'connection_type', 'wireless_protocols', 'color', 'sensor_type', 'dpi', 'data_vykhoda_na_rynok'],
+  headphones: ['type', 'form_factor', 'interface', 'connection_type', 'driver_size', 'frequency_range', 'impedance', 'color', 'data_vykhoda_na_rynok'],
+};
+
+// ============================================================
+// FilterGroup
+// ============================================================
+
+function FilterGroup({
+  title,
+  icon,
+  defaultOpen = true,
+  children,
+}: {
   title: string;
+  icon?: React.ReactNode;
   defaultOpen?: boolean;
   children: React.ReactNode;
 }) {
@@ -19,18 +138,27 @@ function FilterGroup({ title, defaultOpen = true, children }: {
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between py-3 text-xs font-semibold text-on-dark hover:text-gold transition-colors group"
+        aria-expanded={open}
+        type="button"
       >
-        {title}
+        <span className="flex items-center gap-1.5">
+          {icon && <span className="text-muted-text shrink-0">{icon}</span>}
+          {title}
+        </span>
         <span className={`p-0.5 rounded transition-colors ${open ? 'text-muted-text' : 'text-muted-text group-hover:text-gold'}`}>
           {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </span>
       </button>
-      <div className={`overflow-visible transition-all duration-200 ${open ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="pb-4">{children}</div>
+      <div className={`transition-all duration-200 ${open ? 'max-h-[600px] opacity-100 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+        <div className="pb-4 pt-1">{children}</div>
       </div>
     </div>
   );
 }
+
+// ============================================================
+// StarRating
+// ============================================================
 
 function StarRating({ rating, onChange }: { rating: number; onChange: (r: number) => void }) {
   return (
@@ -41,7 +169,7 @@ function StarRating({ rating, onChange }: { rating: number; onChange: (r: number
             type="radio"
             name="rating"
             checked={rating === r}
-            onChange={() => onChange(r)}
+            onChange={() => onChange(rating === r ? 0 : r)}
             className="filter-radio self-center"
           />
           <div className="flex items-center gap-0.5">
@@ -61,11 +189,15 @@ function StarRating({ rating, onChange }: { rating: number; onChange: (r: number
   );
 }
 
-// === Main FilterSidebar Component ===
+// ============================================================
+// FilterSidebar
+// ============================================================
+
 export interface FilterSidebarProps {
   selectedCategory: ProductCategory | null;
   onCategoryChange: (category: ProductCategory | null) => void;
   categoryLocked?: boolean;
+  /** Render in mobile overlay mode (no sticky, no borders) */
   mobile?: boolean;
   priceRange: { min: number; max: number };
   onPriceChange: (range: { min: number; max: number }) => void;
@@ -80,8 +212,17 @@ export interface FilterSidebarProps {
   selectedSpecifications: Record<string, string | number | string[]>;
   onSpecificationsChange: (specs: Record<string, string | number | string[]>) => void;
   onReset: () => void;
+  /** Ограничивает опции spec-фильтров указанными значениями. */
   restrictedSpecValues?: Record<string, string[]>;
+  /** Спецификации для контекстных ограничений (например socket=AM4 из билда).
+   *  Передаются в API для получения фасетов с учётом текущего билда. */
   effectiveSpecifications?: Record<string, string | number | string[]>;
+  /**
+   * Используется в ComponentPickerModal для исключения несовместимых брендов.
+   * При указании 'amd' оставляем только AMD-бренды (при сокетах AM4/AM5),
+   * при 'intel' — только Intel (LGA1200/LGA1700/LGA1851).
+   * Определяется по вхождению 'AMD'/'Intel' в название производителя.
+   */
   restrictedManufacturerPlatform?: 'amd' | 'intel';
   totalItems?: number;
   sortBy?: string;
@@ -89,22 +230,6 @@ export interface FilterSidebarProps {
   viewMode?: 'grid' | 'list' | 'table';
   onViewModeChange?: (value: 'grid' | 'list' | 'table') => void;
 }
-
-const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  cpu: 'Процессоры',
-  gpu: 'Видеокарты',
-  motherboard: 'Материнские платы',
-  ram: 'Оперативная память',
-  storage: 'Накопители',
-  psu: 'Блоки питания',
-  case: 'Корпуса',
-  cooling: 'Охлаждение',
-  fan: 'Вентиляторы',
-  monitor: 'Мониторы',
-  keyboard: 'Клавиатуры',
-  mouse: 'Мыши',
-  headphones: 'Наушники',
-};
 
 export function FilterSidebar({
   selectedCategory,
@@ -125,7 +250,7 @@ export function FilterSidebar({
   onSpecificationsChange,
   onReset,
   restrictedSpecValues,
-  effectiveSpecifications: _effectiveSpecifications,
+  effectiveSpecifications: effectiveSpecs,
   restrictedManufacturerPlatform,
   totalItems = 0,
   sortBy,
@@ -133,184 +258,241 @@ export function FilterSidebar({
   viewMode,
   onViewModeChange,
 }: FilterSidebarProps) {
+  // === Local state ===
   const [mfrSearch, setMfrSearch] = useState('');
   const [showAllMfrs, setShowAllMfrs] = useState(false);
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [filterFacets, setFilterFacets] = useState<FilterFacetAttribute[]>([]);
   const [loadingFacets, setLoadingFacets] = useState(false);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [manufacturersLoading, setManufacturersLoading] = useState(false);
+  const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>({ min: 0, max: 10000 });
+  const [priceBoundsLoading, setPriceBoundsLoading] = useState(false);
+  const [localPriceRange, setLocalPriceRange] = useState({ min: 0, max: 0 });
+  const [specSearchQuery, setSpecSearchQuery] = useState<Record<string, string>>({});
 
-  // Fetch manufacturers
+  // === Sync local price with props ===
   useEffect(() => {
-    const fetchManufacturers = async () => {
-      try {
-        const data = await catalogApi.getManufacturers(selectedCategory ?? undefined);
-        let filtered = data;
-        if (restrictedManufacturerPlatform) {
-          filtered = data.filter(m => {
-            const name = m.name.toLowerCase();
-            return restrictedManufacturerPlatform === 'amd' 
-              ? name.includes('amd') || name.includes('амд')
-              : name.includes('intel') || name.includes('интел');
-          });
-        }
-        setManufacturers(filtered);
-      } catch (err) {
-        console.error('Failed to fetch manufacturers:', err);
-      }
-    };
-    fetchManufacturers();
-  }, [selectedCategory, restrictedManufacturerPlatform]);
+    setLocalPriceRange({ min: priceRange.min || 0, max: priceRange.max || 0 });
+  }, [priceRange]);
 
-  // Fetch categories
+  // === Debounce local price → parent ===
   useEffect(() => {
+    // Don't fire on initial sync (when local === prop)
+    if (localPriceRange.min === priceRange.min && localPriceRange.max === priceRange.max) return;
+    const timer = window.setTimeout(() => {
+      onPriceChange(localPriceRange);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [localPriceRange, onPriceChange, /* priceRange — intentionally omitted to avoid loop */]);
+
+  // === Fetch categories with product counts ===
+  useEffect(() => {
+    let cancelled = false;
     const fetchCategories = async () => {
       try {
+        setCategoriesLoading(true);
         const data = await catalogApi.getCategories();
-        setCategories(data);
+        if (cancelled) return;
+        const counts: Record<string, number> = {};
+        data?.forEach((cat) => {
+          if (cat?.slug != null) {
+            const key = (BACKEND_SLUG_MAP[cat.slug] ?? cat.slug) as ProductCategory;
+            counts[key] = (counts[key] ?? 0) + (cat.productCount ?? 0);
+          }
+        });
+        setCategories(data || []);
+        setCategoryCounts(counts);
       } catch (err) {
         console.error('Failed to fetch categories:', err);
+      } finally {
+        if (!cancelled) setCategoriesLoading(false);
       }
     };
     fetchCategories();
+    return () => { cancelled = true; };
   }, []);
 
-  // Fetch filter facets for specifications
+  // === Fetch filter facets for specifications ===
   useEffect(() => {
     if (!selectedCategory) {
       setFilterFacets([]);
+      setSpecSearchQuery({});
       return;
     }
+    let cancelled = false;
     const fetchFacets = async () => {
       setLoadingFacets(true);
       try {
-        const data = await catalogApi.getFilterFacets(selectedCategory, {
-          manufacturerIds: selectedManufacturerIds,
-          specifications: selectedSpecifications as Record<string, string>,
-          specificationRanges: undefined,
-          inStock: selectedAvailability.includes('in_stock'),
+        const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
+        // Use build-context specs for facet filtering only
+        const ctxSpecs = effectiveSpecs && Object.keys(effectiveSpecs).length > 0
+          ? effectiveSpecs
+          : undefined;
+        const serializedSpecs = ctxSpecs
+          ? Object.fromEntries(
+              Object.entries(ctxSpecs).map(([k, v]) => [k, Array.isArray(v) ? v.join(',') : String(v)])
+            ) as Record<string, string>
+          : undefined;
+        const isInStock = selectedAvailability.includes('in_stock');
+        const attrs = await catalogApi.getFilterFacets(backendSlug, {
+          specifications: serializedSpecs,
+          inStock: isInStock,
         });
-        setFilterFacets(data);
+        if (!cancelled) {
+          setFilterFacets(attrs);
+          // Reset spec search on category change
+          setSpecSearchQuery({});
+        }
       } catch (err) {
         console.error('Failed to fetch filter facets:', err);
+        if (!cancelled) setFilterFacets([]);
       } finally {
-        setLoadingFacets(false);
+        if (!cancelled) setLoadingFacets(false);
       }
     };
     fetchFacets();
-  }, [selectedCategory, selectedManufacturerIds, selectedSpecifications, selectedAvailability]);
+    return () => { cancelled = true; };
+  }, [selectedCategory, JSON.stringify(effectiveSpecs), selectedAvailability]);
 
-  // Filter manufacturers by search
+  // === Fetch real price bounds ===
+  useEffect(() => {
+    if (!selectedCategory) {
+      setPriceBounds({ min: 0, max: 10000 });
+      return;
+    }
+    // If parent provides price bounds, use them directly
+    if (propPriceMin != null && propPriceMin > 0 && propPriceMax != null && propPriceMax > 0) {
+      setPriceBounds({ min: propPriceMin, max: propPriceMax });
+      return;
+    }
+    let cancelled = false;
+    const fetchPriceBounds = async () => {
+      setPriceBoundsLoading(true);
+      try {
+        const [minRes, maxRes] = await Promise.all([
+          catalogApi.getProducts({ category: selectedCategory, pageSize: 1, sortBy: 'price', sortOrder: 'asc', inStock: true }),
+          catalogApi.getProducts({ category: selectedCategory, pageSize: 1, sortBy: 'price', sortOrder: 'desc', inStock: true }),
+        ]);
+        if (cancelled) return;
+        const minP = minRes?.data?.[0]?.price;
+        const maxP = maxRes?.data?.[0]?.price;
+        if (minP != null && maxP != null) {
+          setPriceBounds({ min: Math.floor(minP), max: Math.ceil(maxP) });
+        }
+      } catch (err) {
+        console.error('Failed to fetch price bounds:', err);
+      } finally {
+        if (!cancelled) setPriceBoundsLoading(false);
+      }
+    };
+    fetchPriceBounds();
+    return () => { cancelled = true; };
+  }, [selectedCategory, propPriceMin, propPriceMax]);
+
+  // === Fetch manufacturers ===
+  useEffect(() => {
+    let cancelled = false;
+    const fetchManufacturers = async () => {
+      setManufacturersLoading(true);
+      try {
+        const backendSlug = selectedCategory ? FRONTEND_TO_BACKEND[selectedCategory] : undefined;
+        const list = await catalogApi.getManufacturers(backendSlug);
+        if (cancelled) return;
+        if (list.length > 0) {
+          setManufacturers(list);
+        } else {
+          // Fallback: extract brands from product names
+          const productsResponse = await catalogApi.getProducts(
+            selectedCategory ? { category: selectedCategory, pageSize: 500 } : { pageSize: 500 }
+          );
+          const brandSet = new Set<string>();
+          const brandRe = /^[\p{Script=Cyrillic}\p{P}\s]*([A-Za-z][A-Za-z0-9-]+)/u;
+          for (const p of productsResponse?.data ?? []) {
+            const m = p.name?.match(brandRe);
+            if (m) brandSet.add(m[1]);
+          }
+          setManufacturers(Array.from(brandSet).sort().map((name, i) => ({ id: `brand-${name}`, name })));
+        }
+      } catch (err) {
+        console.error('Failed to fetch manufacturers:', err);
+        setManufacturers([]);
+      } finally {
+        if (!cancelled) setManufacturersLoading(false);
+      }
+    };
+    fetchManufacturers();
+    return () => { cancelled = true; };
+  }, [selectedCategory]);
+
+  // === Computed ===
   const filteredMfrs = manufacturers.filter(m =>
     m.name.toLowerCase().includes(mfrSearch.toLowerCase())
   );
   const visibleMfrs = showAllMfrs ? filteredMfrs : filteredMfrs.slice(0, 6);
 
-  // Calculate active filter count
   const activeCount = [
     selectedCategory !== null,
     priceRange.min > 0 || priceRange.max > 0,
     selectedManufacturerIds.length > 0,
     minRating > 0,
-    selectedAvailability.length !== 1 || selectedAvailability[0] !== 'in_stock',
+    selectedAvailability.length > 0,
     Object.keys(selectedSpecifications).length > 0,
   ].filter(Boolean).length;
 
-  // Handlers
-  const handleCategoryChange = (cat: ProductCategory | null) => {
-    if (!categoryLocked) onCategoryChange(cat);
-  };
+  const PRICE_MIN = priceBounds.min;
+  const PRICE_MAX = priceBounds.max;
+  const PRICE_STEP = Math.max(1, Math.ceil((PRICE_MAX - PRICE_MIN) / 200));
 
-  // Local state for slider display during drag — syncs when slider is used
-  const [displayPriceRange, setDisplayPriceRange] = useState({
-    min: priceRange.min,
-    max: priceRange.max,
-  });
-
-  // Local state for input fields (free input — no clamp, no gap enforcement)
-  const [inputMinValue, setInputMinValue] = useState<string>(
-    priceRange.min > 0 ? String(Math.round(priceRange.min)) : ''
-  );
-  const [inputMaxValue, setInputMaxValue] = useState<string>(
-    priceRange.max > 0 ? String(Math.round(priceRange.max)) : ''
-  );
-
-  // "Banged" flag — gap enforcement on after first slider drag
-  const [banged, setBanged] = useState(false);
-
-  // Reset local state when props change
-  useEffect(() => {
-    setInputMinValue(priceRange.min > 0 ? String(Math.round(priceRange.min)) : '');
-    setInputMaxValue(priceRange.max > 0 ? String(Math.round(priceRange.max)) : '');
-    setBanged(false);
-  }, [priceRange]);
-
-  // Sync inputs when slider drags
+  // === Handlers ===
   const handlePriceSliderChange = (values: { min: number; max: number }) => {
-    setDisplayPriceRange(values);
-    // Trigger "banged" on first drag
-    if (!banged) setBanged(true);
-    // Update inputs to match slider
-    setInputMinValue(String(Math.round(values.min)));
-    setInputMaxValue(String(Math.round(values.max)));
+    setLocalPriceRange(values);
   };
 
-  // On drag end — commit to server
   const handlePriceSliderCommit = (values: { min: number; max: number }) => {
-    setDisplayPriceRange(values);
-    setInputMinValue(String(Math.round(values.min)));
-    setInputMaxValue(String(Math.round(values.max)));
+    setLocalPriceRange(values);
     onPriceChange(values);
   };
 
-  // Live input handler — free input, no clamp, no gap enforcement
   const handleMinInputChange = (rawValue: string) => {
-    // Если пользователь стер всё — очищаем (0 = маркер "не задано")
     if (rawValue === '') {
-      setInputMinValue('');
-      setDisplayPriceRange({ min: 0, max: displayPriceRange.max });
-      onPriceChange({ min: 0, max: priceRange.max });
+      setLocalPriceRange(prev => ({ ...prev, min: 0 }));
+      onPriceChange({ min: 0, max: localPriceRange.max });
       return;
     }
-
-    const v = Number(rawValue);
-    if (isNaN(v) || v < 0) return; // невалидный ввод
-
-    // Свободный ввод — без clamp, пользователь пишет что хочет
-    setInputMinValue(String(Math.floor(v)));
-    setDisplayPriceRange({ min: Math.floor(v), max: displayPriceRange.max });
-    onPriceChange({ min: Math.floor(v), max: priceRange.max });
+    const v = parseInt(rawValue, 10);
+    if (Number.isNaN(v) || v < 0) return;
+    setLocalPriceRange(prev => ({ ...prev, min: v }));
+    onPriceChange({ min: v, max: localPriceRange.max });
   };
 
   const handleMaxInputChange = (rawValue: string) => {
-    // Если пользователь стер всё — очищаем (0 = маркер "не задано")
     if (rawValue === '') {
-      setInputMaxValue('');
-      setDisplayPriceRange({ min: displayPriceRange.min, max: 0 });
-      onPriceChange({ min: priceRange.min, max: 0 });
+      setLocalPriceRange(prev => ({ ...prev, max: 0 }));
+      onPriceChange({ min: localPriceRange.min, max: 0 });
       return;
     }
-
-    const v = Number(rawValue);
-    if (isNaN(v) || v < 0) return; // невалидный ввод
-
-    // Свободный ввод — без clamp
-    setInputMaxValue(String(Math.floor(v)));
-    setDisplayPriceRange({ min: displayPriceRange.min, max: Math.floor(v) });
-    onPriceChange({ min: priceRange.min, max: Math.floor(v) });
+    const v = parseInt(rawValue, 10);
+    if (Number.isNaN(v) || v < 0) return;
+    setLocalPriceRange(prev => ({ ...prev, max: v }));
+    onPriceChange({ min: localPriceRange.min, max: v });
   };
 
   const handleManufacturerToggle = (id: string) => {
-    const current = selectedManufacturerIds;
     onManufacturerIdsChange(
-      current.includes(id) ? current.filter(m => m !== id) : [...current, id]
+      selectedManufacturerIds.includes(id)
+        ? selectedManufacturerIds.filter(m => m !== id)
+        : [...selectedManufacturerIds, id],
     );
   };
 
   const handleAvailabilityToggle = (val: string) => {
-    const current = selectedAvailability;
     onAvailabilityChange(
-      current.includes(val) ? current.filter(v => v !== val) : [...current, val]
+      selectedAvailability.includes(val)
+        ? selectedAvailability.filter(v => v !== val)
+        : [...selectedAvailability, val],
     );
   };
 
@@ -318,24 +500,38 @@ export function FilterSidebar({
     onSpecificationsChange({ ...selectedSpecifications, [key]: value });
   };
 
+  // ============================================================
+  // Render
+  // ============================================================
   return (
-    <div className={`bg-surface-card rounded-xl ${mobile ? '' : 'sticky top-[64px] max-h-[calc(100vh-80px)] overflow-y-scroll overflow-x-visible mt-2'} ${mobile ? '' : 'lg:rounded-xl'}`}>
+    <div
+      className={`bg-surface-card rounded-xl ${
+        mobile
+          ? ''
+          : 'sticky top-[64px] max-h-[calc(100vh-80px)] overflow-y-auto mt-2 lg:rounded-xl'
+      }`}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-hairline-dark sticky top-0 bg-surface-card z-10">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-hairline-dark sticky top-0 bg-surface-card z-10">
         <div>
-          <h2 className="text-[24px] font-semibold text-on-dark flex items-center gap-2">
+          <div role="heading" aria-level={2} className="text-sm font-semibold text-on-dark flex items-center gap-2">
+            <SlidersHorizontal size={16} className="text-muted-text" />
             Фильтры
             {activeCount > 0 && (
-              <span className="h-4 min-w-[16px] px-0.5 bg-gold text-gold-ink text-[8px] font-bold rounded-full flex items-center justify-center leading-4">
+              <span className="h-4 min-w-[16px] px-1 bg-gold text-gold-ink text-[10px] font-bold rounded-full flex items-center justify-center leading-4">
                 {activeCount}
               </span>
             )}
-          </h2>
-          <span className="text-xs text-muted-text mt-0.5 block">{totalItems.toLocaleString('ru-BY')} результатов</span>
+          </div>
         </div>
         <button
           onClick={onReset}
-          className="flex items-center gap-1.5 text-gold text-xs font-medium hover:text-gold-active transition-colors px-2 py-1 rounded-md hover:bg-gold/5"
+          className={`flex items-center gap-1.5 text-xs font-medium transition-colors px-2 py-1 rounded-md ${
+            activeCount > 0
+              ? 'text-gold hover:text-gold-active hover:bg-gold/5'
+              : 'text-muted-text hover:text-body-text hover:bg-surface-elevated/50'
+          }`}
+          type="button"
         >
           <RotateCcw size={11} />
           Сбросить
@@ -343,7 +539,7 @@ export function FilterSidebar({
       </div>
 
       <div className="p-4 pt-4">
-        {/* Sorting — visible in desktop & mobile */}
+        {/* Sorting */}
         {(sortBy && onSortChange) && (
           <div className="mb-4">
             <div className="flex items-center gap-2">
@@ -364,7 +560,7 @@ export function FilterSidebar({
           </div>
         )}
 
-        {/* View toggle — only in mobile overlay */}
+        {/* View toggle — mobile only */}
         {mobile && viewMode && onViewModeChange && (
           <div className="flex items-center bg-surface-elevated rounded-lg p-0.5 border border-hairline-dark mb-4">
             {[
@@ -381,6 +577,7 @@ export function FilterSidebar({
                     : 'text-muted-text hover:text-body-text'
                 }`}
                 title={mode.value === 'grid' ? 'Сетка' : mode.value === 'list' ? 'Список' : 'Таблица'}
+                type="button"
               >
                 {mode.icon}
               </button>
@@ -388,119 +585,400 @@ export function FilterSidebar({
           </div>
         )}
 
-        {/* Category */}
-        <FilterGroup title="Категория">
-          <div className="space-y-1">
-            <button
-              onClick={() => handleCategoryChange(null)}
-               className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors ${
-                selectedCategory === null
-                  ? 'text-gold bg-gold/5 font-medium'
-                  : 'text-body-text hover:text-gold hover:bg-surface-elevated/50'
-              }`}
-            >
-              Все категории
-            </button>
-            {(categories || []).map(cat => (
+        {/* === Categories === */}
+        {!categoryLocked && (
+          <FilterGroup
+            title="Категории"
+            icon={<Grid3X3 size={14} />}
+            defaultOpen={true}
+          >
+            <div className="space-y-0.5 max-h-[320px] overflow-y-auto overflow-x-hidden pr-0.5">
               <button
-                key={cat.slug}
-                onClick={() => handleCategoryChange(cat.slug as ProductCategory)}
-                disabled={categoryLocked && cat.slug !== selectedCategory}
-             className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors ${
-                  selectedCategory === cat.slug
-                    ? 'text-gold bg-gold/5 font-medium'
-                    : 'text-body-text hover:text-gold hover:bg-surface-elevated/50'
-                } ${categoryLocked && cat.slug !== selectedCategory ? 'opacity-50 cursor-not-allowed' : ''}`}
+                type="button"
+                onClick={() => onCategoryChange(null)}
+                className={`flex items-center justify-between w-full py-2 pl-3 pr-2 text-xs rounded-lg transition-colors ${
+                  selectedCategory === null
+                    ? 'text-gold bg-gold/5 font-medium border-l-2 border-gold'
+                    : 'text-body-text hover:text-gold hover:bg-surface-elevated/50 border-l-2 border-transparent'
+                }`}
               >
-                {CATEGORY_LABELS[cat.slug as ProductCategory] ?? cat.name}
+                <span>Все товары</span>
+                <span className="text-[10px] text-muted-text bg-[var(--border-muted)] rounded px-1.5 py-0.5 font-tabular shrink-0 ml-2">
+                  {categoriesLoading ? <Skeleton width={30} height={10} borderRadius="sm" /> : CATEGORY_ORDER.reduce((sum, slug) => sum + (categoryCounts[slug] || 0), 0)}
+                </span>
               </button>
-            ))}
-          </div>
-        </FilterGroup>
+              {CATEGORY_ORDER.map(cat => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => onCategoryChange(cat)}
+                  disabled={categoryLocked && cat !== selectedCategory}
+                  className={`flex items-center justify-between w-full py-2 pl-3 pr-2 text-xs rounded-lg transition-colors ${
+                    selectedCategory === cat
+                      ? 'text-gold bg-gold/5 font-medium border-l-2 border-gold'
+                      : 'text-body-text hover:text-gold hover:bg-surface-elevated/50 border-l-2 border-transparent'
+                  } ${categoryLocked && cat !== selectedCategory ? 'opacity-40 cursor-not-allowed' : ''}`}
+                >
+                  <span>{CATEGORY_LABELS[cat]}</span>
+                  <span className="text-[10px] text-muted-text bg-[var(--border-muted)] rounded px-1.5 py-0.5 font-tabular shrink-0 ml-2">
+                    {categoriesLoading ? <Skeleton width={24} height={10} borderRadius="sm" /> : (categoryCounts[cat] ?? '—')}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </FilterGroup>
+        )}
 
-        {/* Price */}
-        <FilterGroup title="Цена">
+        {/* === Price === */}
+        <FilterGroup title="Цена" icon={<DollarSign size={14} />} defaultOpen={false}>
           <div className="space-y-3">
-            <div className="flex items-center gap-3">
+            <DualRangeSlider
+              min={PRICE_MIN}
+              max={PRICE_MAX}
+              step={PRICE_STEP}
+              minVal={localPriceRange.min}
+              maxVal={localPriceRange.max}
+              onChange={handlePriceSliderChange}
+              onCommit={handlePriceSliderCommit}
+              priceGap={Math.max(10, (PRICE_MAX - PRICE_MIN) * 0.1)}
+              formatValue={v => `${Math.floor(v).toLocaleString('ru-RU')} Br`}
+            />
+            <div className="flex items-end gap-3">
               <div className="flex-1">
-                <label className="text-[10px] text-muted-text mb-1.5 block uppercase tracking-wider">От</label>
+                <label className="text-[10px] text-muted-text mb-1 block uppercase tracking-wider" htmlFor="price-min">
+                  От
+                </label>
                 <input
+                  id="price-min"
                   type="text"
-                  value={inputMinValue}
-                  onChange={(e) => handleMinInputChange(e.target.value)}
+                  inputMode="numeric"
+                  value={localPriceRange.min || ''}
+                  onChange={e => handleMinInputChange(e.target.value)}
                   className="w-full h-9 bg-surface-elevated text-on-dark text-xs font-tabular rounded-lg px-3 border border-hairline-dark focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
-                  placeholder={(propPriceMin ?? 0).toLocaleString('ru-BY') + ' BYN'}
+                  placeholder={String(PRICE_MIN)}
                 />
               </div>
-              <span className="text-muted-text text-xs mt-5">—</span>
+              <span className="text-muted-text text-xs mt-5 select-none">—</span>
               <div className="flex-1">
-                <label className="text-[10px] text-muted-text mb-1.5 block uppercase tracking-wider">До</label>
+                <label className="text-[10px] text-muted-text mb-1 block uppercase tracking-wider" htmlFor="price-max">
+                  До
+                </label>
                 <input
+                  id="price-max"
                   type="text"
-                  value={inputMaxValue}
-                  onChange={(e) => handleMaxInputChange(e.target.value)}
+                  inputMode="numeric"
+                  value={localPriceRange.max || ''}
+                  onChange={e => handleMaxInputChange(e.target.value)}
                   className="w-full h-9 bg-surface-elevated text-on-dark text-xs font-tabular rounded-lg px-3 border border-hairline-dark focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
-                  placeholder={(propPriceMax ?? 10000).toLocaleString('ru-BY') + ' BYN'}
+                  placeholder={String(PRICE_MAX)}
                 />
               </div>
             </div>
-            {(() => {
-              // Границы слайдера: ВСЕГДА реальный диапазон (не меняются при фильтрации)
-              const sliderMin = propPriceMin ?? 0;
-              const sliderMax = propPriceMax ?? 10000;
-              return (
-                <>
-                  <DualRangeSlider
-                    min={sliderMin}
-                     max={sliderMax}
-                    minVal={displayPriceRange.min}
-                    maxVal={displayPriceRange.max}
-                    onChange={handlePriceSliderChange}
-                    onCommit={handlePriceSliderCommit}
-                    step={1}
-                    priceGap={Math.max(10, (sliderMax - sliderMin) * 0.1)}
-                    formatValue={(v) => `${Math.floor(v)} BYN`}
-                  />
-                    <div className="flex justify-between text-[10px] text-muted-text font-tabular">
-                      <span>{Math.floor(sliderMin)} BYN</span>
-                      <span>{Math.floor(sliderMax)} BYN</span>
-                    </div>
-                </>
-              );
-            })()}
           </div>
         </FilterGroup>
 
-        {/* Manufacturers */}
-        <FilterGroup title="Производители">
-          <div className="space-y-3">
-            <div className="relative">
+        {/* === Dynamic Specifications === */}
+        {selectedCategory && filterFacets.length > 0 && (() => {
+          const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
+          const order = SPEC_ORDER[backendSlug] ?? [];
+          const attrMap = new Map(filterFacets.map(a => [a.key, a]));
+          const orderedKeys = [
+            ...order.filter(k => attrMap.has(k)),
+            ...filterFacets.map(a => a.key).filter(k => !order.includes(k)),
+          ];
+          const groups = orderedKeys.map(key => ({ keys: [key] }));
+
+          const renderAttr = (attr: FilterFacetAttribute, options?: { hideLabel?: boolean }) => {
+            // --- Range filter ---
+            if (attr.filterType === 'range') {
+              if (attr.minValue == null && attr.maxValue == null) return null;
+              const isVideoMemory = attr.key === 'videopamyat';
+              const rawMin = attr.minValue ?? 0;
+              const rawMax = attr.maxValue ?? Math.max(rawMin + 1, 100);
+
+              // Контекстный минимум из сборки (GPU+CPU TDP)
+              const effectiveMin = attr.key === 'power' || attr.key === 'wattage'
+                ? (effectiveSpecs?.['wattage_min'] as number | undefined) ?? null
+                : null;
+              const rangeMin = effectiveMin != null ? Math.max(rawMin, effectiveMin) : rawMin;
+              const isWattage = attr.key === 'power' || attr.key === 'wattage';
+
+              const toUi = (v: number) => (isVideoMemory ? v / 1024 : v);
+              const fromUi = (v: number) => (isVideoMemory ? v * 1024 : v);
+
+              const minValUi = toUi(rangeMin);
+              const maxValUi = toUi(rawMax);
+
+              const raw = selectedSpecifications[attr.key];
+              const rangeStr = typeof raw === 'string' ? raw : undefined;
+              const [selMinRaw, selMaxRaw] = rangeStr?.includes(',')
+                ? rangeStr.split(',').map(s => parseFloat(s.trim()) || 0)
+                : [rawMin, rawMax];
+
+              const localRange = { min: toUi(selMinRaw || rawMin), max: toUi(selMaxRaw || rawMax) };
+              const rangeSpanUi = maxValUi - minValUi;
+              const step = isVideoMemory || attr.key.includes('capacity')
+                ? 1
+                : Math.max(1, Math.floor(rangeSpanUi / 100) || 1);
+
+              return (
+                <div key={attr.key} className="mb-3 pb-3 border-b border-hairline-dark/60 last:border-b-0">
+                  {!options?.hideLabel && (
+                    <span className="block text-[10px] font-semibold text-muted-text uppercase tracking-[0.08em] mb-2">
+                      {attr.displayName}
+                    </span>
+                  )}
+                  {effectiveMin != null && isWattage && (
+                    <div className="text-[10px] text-gold mb-1.5 py-1 px-2 bg-gold/5 rounded border border-gold/10" title={`Минимальная мощность с учётом выбранной конфигурации: ${effectiveMin}Вт`}>
+                      Мин. {effectiveMin}Вт для вашей сборки
+                    </div>
+                  )}
+                  <DualRangeSlider
+                    min={minValUi}
+                    max={maxValUi}
+                    step={step}
+                    minVal={localRange.min}
+                    maxVal={localRange.max}
+                    onChange={values => {
+                      const next = { ...selectedSpecifications };
+                      const committedMinRaw = effectiveMin != null
+                        ? Math.max(fromUi(values.min), effectiveMin)
+                        : fromUi(values.min);
+                      const committedMaxRaw = fromUi(values.max);
+                      if (committedMinRaw === rawMin && committedMaxRaw === rawMax) {
+                        delete next[attr.key];
+                      } else {
+                        next[attr.key] = `${committedMinRaw},${committedMaxRaw}`;
+                      }
+                      onSpecificationsChange(next);
+                    }}
+                    formatValue={v => (Number.isInteger(v) ? v.toString() : v.toFixed(1))}
+                  />
+                </div>
+              );
+            }
+
+            // --- Select filter ---
+            if (attr.filterType === 'select') {
+              const optionsList = attr.options ?? [];
+              const showSearch = optionsList.length > 15;
+              const query = (specSearchQuery[attr.key] ?? '').trim().toLowerCase();
+              const filteredOptions = showSearch && query
+                ? optionsList.filter(o => o.value.toLowerCase().includes(query))
+                : optionsList;
+
+              const selected = selectedSpecifications[attr.key];
+              const selectedArr = Array.isArray(selected) ? selected
+                : selected != null ? [String(selected)]
+                : [];
+              const isChecked = (val: string) => selectedArr.includes(val);
+
+              // Убираем чисто числовые значения для integrated_graphics
+              const cleanOptions = attr.key === 'integrated_graphics'
+                ? filteredOptions.filter(o => !/^\d+$/.test(o.value))
+                : filteredOptions;
+
+              const allowed = restrictedSpecValues?.[attr.key];
+              const lockedValue = selectedSpecifications[attr.key];
+              const isLockArray = Array.isArray(lockedValue);
+              const isLocked = typeof lockedValue === 'string' && !isLockArray;
+
+              // Для type — умный фильтр DDR
+              const isMatchingDDRType = (optionValue: string, expectedTypes: string[]): boolean => {
+                const upper = optionValue.toUpperCase();
+                if (/^[0-9]+[GM]x[0-9]+/i.test(optionValue)) return false;
+                if (/\bSO-DIMM\b/i.test(optionValue)) return false;
+                if (/\bREGISTERED\b/i.test(optionValue)) return false;
+                return expectedTypes.some(dt =>
+                  upper.startsWith(dt.toUpperCase())
+                  && !/\bSO-DIMM\b/.test(upper)
+                  && !/\bREGISTERED\b/.test(upper),
+                );
+              };
+
+              let finalOptions = cleanOptions;
+              if (allowed) {
+                finalOptions = attr.key === 'type'
+                  ? cleanOptions.filter(o => isMatchingDDRType(o.value, allowed))
+                  : cleanOptions.filter(o => allowed.some(a => a.toLowerCase() === o.value.toLowerCase()));
+              } else if (isLocked && lockedValue) {
+                const lockedUpper = String(lockedValue).toUpperCase();
+                finalOptions = cleanOptions.filter(o => o.value.toUpperCase() === lockedUpper);
+              }
+
+              return (
+                <div key={attr.key} className="mb-3 pb-3 border-b border-hairline-dark/60 last:border-b-0">
+                  {!options?.hideLabel && (
+                    <span className="block text-[10px] font-semibold text-muted-text uppercase tracking-[0.08em] mb-2">
+                      {attr.displayName}
+                    </span>
+                  )}
+                  {showSearch && (
+                    <div className="relative mb-2">
+                      <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-text pointer-events-none" aria-hidden />
+                      <input
+                        type="search"
+                        placeholder="Поиск..."
+                        value={specSearchQuery[attr.key] ?? ''}
+                        onChange={e =>
+                          setSpecSearchQuery(prev => ({ ...prev, [attr.key]: e.target.value }))
+                        }
+                        className="w-full h-8 bg-surface-elevated text-on-dark text-xs rounded-lg pl-8 pr-3 border border-hairline-dark placeholder:text-muted-text focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
+                      />
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto overflow-x-hidden">
+                    {finalOptions.length > 0 ? (
+                      finalOptions.map(({ value: val, count }) => {
+                        const disabled = count === 0 && !isChecked(val);
+                        return (
+                          <div
+                            key={val}
+                            role={attr.multiSelect ? 'checkbox' : 'radio'}
+                            aria-checked={isChecked(val)}
+                            aria-disabled={disabled || undefined}
+                            tabIndex={disabled ? -1 : 0}
+                            onClick={() => {
+                              if (disabled) return;
+                              const next = { ...selectedSpecifications };
+                              if (attr.multiSelect) {
+                                const newArr = isChecked(val)
+                                  ? selectedArr.filter(v => v !== val)
+                                  : [...selectedArr, val];
+                                if (newArr.length === 0) delete next[attr.key];
+                                else next[attr.key] = newArr;
+                              } else {
+                                if (isChecked(val)) delete next[attr.key];
+                                else next[attr.key] = val;
+                              }
+                              onSpecificationsChange(next);
+                            }}
+                            onKeyDown={(e) => {
+                              if (disabled) return;
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                const next = { ...selectedSpecifications };
+                                if (attr.multiSelect) {
+                                  const newArr = isChecked(val)
+                                    ? selectedArr.filter(v => v !== val)
+                                    : [...selectedArr, val];
+                                  if (newArr.length === 0) delete next[attr.key];
+                                  else next[attr.key] = newArr;
+                                } else {
+                                  if (isChecked(val)) delete next[attr.key];
+                                  else next[attr.key] = val;
+                                }
+                                onSpecificationsChange(next);
+                              }
+                            }}
+                            className={`flex items-center py-1.5 px-3 cursor-pointer transition-all duration-200 rounded-md border-l-2 border-transparent relative ${
+                              isChecked(val)
+                                ? 'text-gold border-l-2 border-gold font-medium'
+                                : 'text-body-text hover:text-on-dark hover:bg-surface-elevated/50'
+                            } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+                          >
+                            <span className="w-4 h-4 border border-muted-foreground rounded flex items-center justify-center mr-2.5 transition-all duration-200 flex-shrink-0">
+                              <Check
+                                size={10}
+                                className={`transition-opacity duration-200 ${isChecked(val) ? 'opacity-100 text-gold' : 'opacity-0'}`}
+                                aria-hidden
+                              />
+                            </span>
+                            <span className="text-xs">
+                              {val}
+                              {' '}
+                              <span className="text-muted-foreground">({count})</span>
+                            </span>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <span className="block text-xs text-muted-foreground py-2 px-3 italic">
+                        {showSearch && query ? 'Ничего не найдено' : 'Нет вариантов'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          };
+
+          return loadingFacets ? (
+            <FilterGroup title="Характеристики" icon={<Tag size={14} />} defaultOpen={false}>
+              <div className="space-y-2">
+                <Skeleton width="100%" height={20} borderRadius="sm" />
+                <Skeleton width="100%" height={20} borderRadius="sm" />
+                <Skeleton width="100%" height={20} borderRadius="sm" />
+              </div>
+            </FilterGroup>
+          ) : (
+            groups.map(group => {
+              const attrsInGroup = group.keys.map(k => attrMap.get(k)).filter(Boolean) as FilterFacetAttribute[];
+              const singleAttrGroup = attrsInGroup.length === 1;
+              const rendered = attrsInGroup.map(attr => renderAttr(attr, { hideLabel: singleAttrGroup })).filter(Boolean);
+              if (rendered.length === 0) return null;
+              const title = attrsInGroup[0]?.displayName ?? group.keys[0];
+              return (
+                <FilterGroup key={group.keys[0]} title={title} icon={<Tag size={14} />} defaultOpen={false}>
+                  {rendered}
+                </FilterGroup>
+              );
+            })
+          );
+        })()}
+
+        {/* === Manufacturers === */}
+        <FilterGroup title="Производители" icon={<Tag size={14} />} defaultOpen={false}>
+          <div className="space-y-0.5">
+            <div className="relative mb-2">
               <input
                 type="text"
                 placeholder="Поиск брендов..."
                 value={mfrSearch}
-                onChange={(e) => setMfrSearch(e.target.value)}
+                onChange={e => setMfrSearch(e.target.value)}
                 className="w-full h-9 bg-surface-elevated text-on-dark text-xs rounded-lg pl-8 pr-3 border border-hairline-dark placeholder:text-muted-text focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
               />
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-text" size={13} />
             </div>
             <div className="space-y-0.5 max-h-[200px] overflow-y-auto overflow-x-hidden pr-1">
               {(visibleMfrs || []).map(mfr => (
-                <label key={mfr.id} className="flex items-center gap-2.5 cursor-pointer group py-1.5 px-2 -mx-2 rounded-md hover:bg-surface-elevated/50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={selectedManufacturerIds.includes(mfr.id)}
-                    onChange={() => handleManufacturerToggle(mfr.id)}
-                    className="filter-checkbox"
-                  />
-                  <span className="text-xs text-body-text group-hover:text-on-dark transition-colors">{mfr.name}</span>
-                </label>
+                <div
+                  key={mfr.id}
+                  role="checkbox"
+                  aria-checked={selectedManufacturerIds.includes(mfr.id)}
+                  tabIndex={0}
+                  onClick={() => handleManufacturerToggle(mfr.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleManufacturerToggle(mfr.id); } }}
+                  className={`flex items-center py-1.5 px-3 cursor-pointer transition-all duration-200 rounded-md border-l-2 border-transparent relative ${
+                    selectedManufacturerIds.includes(mfr.id)
+                      ? 'text-gold border-l-2 border-gold font-medium'
+                      : 'text-body-text hover:text-on-dark hover:bg-surface-elevated/50'
+                  }`}
+                >
+                  <span className="w-4 h-4 border border-muted-foreground rounded flex items-center justify-center mr-2.5 transition-all duration-200 flex-shrink-0">
+                    <Check
+                      size={10}
+                      className={`transition-opacity duration-200 ${selectedManufacturerIds.includes(mfr.id) ? 'opacity-100 text-gold' : 'opacity-0'}`}
+                      aria-hidden
+                    />
+                  </span>
+                  <span className="text-xs transition-colors">{mfr.name}</span>
+                </div>
               ))}
+              {manufacturersLoading && (
+                <>
+                  <Skeleton width="100%" height={20} borderRadius="sm" />
+                  <Skeleton width="100%" height={20} borderRadius="sm" />
+                  <Skeleton width="100%" height={20} borderRadius="sm" />
+                </>
+              )}
             </div>
             {!showAllMfrs && filteredMfrs.length > 6 && (
               <button
+                type="button"
                 onClick={() => setShowAllMfrs(true)}
-                className="text-gold text-xs font-medium hover:text-gold-active transition-colors"
+                className="text-gold text-xs font-medium hover:text-gold-active transition-colors w-full text-left"
               >
                 Ещё {filteredMfrs.length - 6} брендов
               </button>
@@ -508,109 +986,85 @@ export function FilterSidebar({
           </div>
         </FilterGroup>
 
-        {/* Rating */}
-        <FilterGroup title="Рейтинг" defaultOpen={false}>
-          <StarRating
-            rating={minRating}
-            onChange={onRatingChange}
-          />
-        </FilterGroup>
-
-        {/* Availability */}
-        <FilterGroup title="Наличие" defaultOpen={false}>
+        {/* === Rating === */}
+        <FilterGroup title="Рейтинг" icon={<Star size={14} />} defaultOpen={false}>
           <div className="space-y-0.5">
-            {[
-              { value: 'all', label: 'Все товары' },
-              { value: 'in_stock', label: 'Только в наличии' },
-            ].map(opt => (
-              <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer group py-1.5 px-2 -mx-2 rounded-md hover:bg-surface-elevated/50 transition-colors">
-                <input
-                  type="radio"
-                  name="availability"
-                  checked={selectedAvailability.length === 0 && opt.value === 'all' || selectedAvailability.includes(opt.value)}
-                  onChange={() => {
-                    if (opt.value === 'all') {
-                      onAvailabilityChange([]);
-                    } else {
-                      handleAvailabilityToggle(opt.value);
-                    }
-                  }}
-                  className="filter-radio self-center"
-                />
-                <span className="text-xs text-body-text group-hover:text-on-dark transition-colors">
-                  {opt.label}
-                </span>
-              </label>
-            ))}
+            <StarRating rating={minRating} onChange={onRatingChange} />
           </div>
         </FilterGroup>
 
-        {/* Specifications (Facets) */}
-        {filterFacets.length > 0 && (
-          <FilterGroup title="Характеристики" defaultOpen={false}>
-            {loadingFacets ? (
-              <div className="text-xs text-muted-text">Загрузка...</div>
-            ) : (
-              <div className="space-y-4">
-                {(filterFacets || []).map(facet => {
-                  const restricted = restrictedSpecValues?.[facet.key];
-                  const options = restricted
-                    ? (facet.options || []).filter(v => restricted.includes(v.value))
-                    : (facet.options || []);
-                  
-                  return (
-                    <div key={facet.key} className="space-y-1">
-                      <h4 className="text-xs font-semibold text-muted-text uppercase tracking-wider">{facet.displayName}</h4>
-                      <div className="space-y-0.5">
-                        {(options || []).map((opt: any) => {
-                          const isSelected = (() => {
-                            const val = selectedSpecifications[facet.key];
-                            if (Array.isArray(val)) return val.includes(opt.value);
-                            return val === opt.value;
-                          })();
-                          
-                          return (
-                            <label key={opt.value} className="flex items-center gap-2.5 cursor-pointer group py-1 px-2 -mx-2 rounded-md hover:bg-surface-elevated/50 transition-colors">
-                              <input
-                                type={'radio'}
-                                name={facet.key}
-                                checked={isSelected}
-                                onChange={() => {
-                                  if (facet.multiSelect) {
-                                    const current = (selectedSpecifications[facet.key] as string[]) || [];
-                                    const next = isSelected 
-                                      ? current.filter(v => v !== opt.value)
-                                      : [...current, opt.value];
-                                    handleSpecChange(facet.key, next);
-                                  } else {
-                                    handleSpecChange(facet.key, opt.value);
-                                  }
-                                }}
-                                className={facet.multiSelect ? "sr-only" : "sr-only"}
-                              />
-                              <span className="text-xs text-body-text group-hover:text-on-dark transition-colors">
-                                {opt.value} {opt.count !== undefined && <span className="text-muted-text text-xs">({opt.count})</span>}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-                
-                {Object.keys(selectedSpecifications).length > 0 && (
-                  <button
-                    onClick={() => onSpecificationsChange({})}
-                    className="text-[11px] text-gold hover:text-gold-active transition-colors"
-                  >
-                    Сбросить характеристики
-                  </button>
-                )}
-              </div>
-            )}
-          </FilterGroup>
-        )}
+        {/* === Availability === */}
+        <FilterGroup title="Наличие" icon={<Package size={14} />} defaultOpen={false}>
+          <div className="space-y-0.5">
+            {/* Все товары */}
+            <div
+              role="checkbox"
+              aria-checked={selectedAvailability.length === 0}
+              tabIndex={0}
+              onClick={() => onAvailabilityChange([])}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAvailabilityChange([]); } }}
+              className={`flex items-center py-1.5 px-3 cursor-pointer transition-all duration-200 rounded-md border-l-2 border-transparent relative ${
+                selectedAvailability.length === 0
+                  ? 'text-gold border-l-2 border-gold font-medium'
+                  : 'text-body-text hover:text-on-dark hover:bg-surface-elevated/50'
+              }`}
+            >
+              <span className="w-4 h-4 border border-muted-foreground rounded flex items-center justify-center mr-2.5 transition-all duration-200 flex-shrink-0">
+                <Check
+                  size={10}
+                  className={`transition-opacity duration-200 ${selectedAvailability.length === 0 ? 'opacity-100 text-gold' : 'opacity-0'}`}
+                  aria-hidden
+                />
+              </span>
+              <span className="text-xs">Все товары</span>
+            </div>
+            {/* В наличии */}
+            <div
+              role="checkbox"
+              aria-checked={selectedAvailability.includes('in_stock')}
+              tabIndex={0}
+              onClick={() => handleAvailabilityToggle('in_stock')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAvailabilityToggle('in_stock'); } }}
+              className={`flex items-center py-1.5 px-3 cursor-pointer transition-all duration-200 rounded-md border-l-2 border-transparent relative ${
+                selectedAvailability.includes('in_stock')
+                  ? 'text-gold border-l-2 border-gold font-medium'
+                  : 'text-body-text hover:text-on-dark hover:bg-surface-elevated/50'
+              }`}
+            >
+              <span className="w-4 h-4 border border-muted-foreground rounded flex items-center justify-center mr-2.5 transition-all duration-200 flex-shrink-0">
+                <Check
+                  size={10}
+                  className={`transition-opacity duration-200 ${selectedAvailability.includes('in_stock') ? 'opacity-100 text-gold' : 'opacity-0'}`}
+                  aria-hidden
+                />
+              </span>
+              <span className="text-xs">В наличии</span>
+            </div>
+            {/* Под заказ */}
+            <div
+              role="checkbox"
+              aria-checked={selectedAvailability.includes('on_order')}
+              tabIndex={0}
+              onClick={() => handleAvailabilityToggle('on_order')}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAvailabilityToggle('on_order'); } }}
+              className={`flex items-center py-1.5 px-3 cursor-pointer transition-all duration-200 rounded-md border-l-2 border-transparent relative ${
+                selectedAvailability.includes('on_order')
+                  ? 'text-gold border-l-2 border-gold font-medium'
+                  : 'text-body-text hover:text-on-dark hover:bg-surface-elevated/50'
+              }`}
+            >
+              <span className="w-4 h-4 border border-muted-foreground rounded flex items-center justify-center mr-2.5 transition-all duration-200 flex-shrink-0">
+                <Check
+                  size={10}
+                  className={`transition-opacity duration-200 ${selectedAvailability.includes('on_order') ? 'opacity-100 text-gold' : 'opacity-0'}`}
+                  aria-hidden
+                />
+              </span>
+              <span className="text-xs">Под заказ</span>
+            </div>
+          </div>
+</FilterGroup>
+
       </div>
     </div>
   );
