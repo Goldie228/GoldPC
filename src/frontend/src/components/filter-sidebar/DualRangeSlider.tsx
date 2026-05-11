@@ -47,9 +47,10 @@ export function DualRangeSlider({
     setLocalValues({ min: minVal, max: maxVal > 0 ? maxVal : max });
   }, [minVal, maxVal]);
 
-  // Проценты для позиционирования
-  const minPercent = Math.max(0, Math.min(100, ((localValues.min - min) / (max - min)) * 100));
-  const maxPercent = Math.max(0, Math.min(100, ((localValues.max - min) / (max - min)) * 100));
+  // Проценты для позиционирования (с защитой от деления на 0 при min === max)
+  const range = max - min;
+  const minPercent = range > 0 ? Math.max(0, Math.min(100, ((localValues.min - min) / range) * 100)) : 0;
+  const maxPercent = range > 0 ? Math.max(0, Math.min(100, ((localValues.max - min) / range) * 100)) : 100;
 
   // Получение значения из позиции курсора
   const getValueFromPosition = useCallback(
@@ -68,7 +69,7 @@ export function DualRangeSlider({
   const handlePointerDown = useCallback(
     (thumb: 'min' | 'max') => (e: React.PointerEvent) => {
       e.preventDefault();
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      trackRef.current?.setPointerCapture(e.pointerId);
       setActiveThumb(thumb);
     },
     []
@@ -166,7 +167,17 @@ export function DualRangeSlider({
   // При X=50: left: 50%, затем translate(-50%) → ползунок по центру трека ✅
 
   const getLeftStyle = (percent: number): React.CSSProperties => {
-    return { left: `${percent}%` };
+    if (Number.isNaN(percent)) {
+      return { left: '8px' };
+    }
+    // Кружок 16px с translate(-50%): центр на left:X%.
+    // Чтобы ГРАНЬ кружка упиралась в край трека, отступаем на радиус (8px):
+    //   left: calc(8px + (100% - 16px) * percent / 100)
+    // При 0%  → left = 8px (центр на 8px, грань на 0px — вровень с левым краем трека) ✓
+    // При 100% → left = calc(100% - 8px) (центр на -8px, грань на 100% — вровень с правым краем трека) ✓
+    return {
+      left: `calc(8px + (100% - 16px) * ${percent} / 100)`,
+    };
   };
 
   return (

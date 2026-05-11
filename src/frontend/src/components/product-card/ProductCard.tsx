@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, GitCompareArrows, ShoppingCart, Bell, Check, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { getProductImageUrl } from '../../utils/image';
 import type { ProductSummary } from '../../api/types';
 import { BynPrice } from '../ui/BynPrice';
+import { useWishlist } from '../../hooks/useWishlist';
+import { useComparison } from '../../hooks/useComparison';
+import { useToast } from '../../hooks/useToast';
+import { catalogApi } from '../../api/catalog';
 
 /**
  * Stock status badge - flat design per design system.
@@ -34,10 +39,11 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetchPriority }: ProductCardProps) {
   const [inCart, setInCart] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
-  const [compared, setCompared] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const { isInComparison, toggleComparison } = useComparison();
+  const { showToast } = useToast();
 
   const isOutOfStock = product.stock === 0;
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
@@ -47,11 +53,26 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
   const ratingValue = typeof product.rating === 'number' ? product.rating : product.rating?.average ?? 0;
   const reviewCount = product.reviewCount ?? 0;
 
-  const images = product.images && product.images.length > 0
-    ? product.images
-    : (product.mainImage
-        ? [{ url: typeof product.mainImage === 'string' ? product.mainImage : product.mainImage.url, alt: typeof product.mainImage === 'string' ? product.name : product.mainImage.alt ?? product.name }]
-        : []);
+  // Load full product to get all images (cached by React Query)
+  const hasImagesInList = !!product.images && product.images.length > 1;
+  const { data: fullProduct } = useQuery({
+    queryKey: ['product', product.slug],
+    queryFn: () => catalogApi.getProductBySlug(product.slug!),
+    enabled: !!product.slug && !hasImagesInList,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const images = useMemo(() => {
+    if (hasImagesInList) return product.images!;
+    if (fullProduct?.images && fullProduct.images.length > 1) return fullProduct.images;
+    if (product.mainImage) {
+      return [{
+        url: typeof product.mainImage === 'string' ? product.mainImage : product.mainImage.url,
+        alt: typeof product.mainImage === 'string' ? product.name : product.mainImage.alt ?? product.name,
+      }];
+    }
+    return [];
+  }, [product.images, product.mainImage, fullProduct, hasImagesInList]);
   const hasMultipleImages = images.length > 1;
 
   const handlePrevImage = (e: React.MouseEvent) => {
@@ -293,29 +314,42 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setWishlisted(!wishlisted);
+              const newState = !isInWishlist(product.id);
+              toggleWishlist(product.id);
+              showToast(newState ? 'Добавлено в избранное' : 'Удалено из избранного', newState ? 'success' : 'info');
             }}
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm ${
-              wishlisted
+              isInWishlist(product.id)
                 ? 'bg-price-rise/20 text-price-rise'
                 : 'bg-surface-card text-muted-text hover:text-price-rise'
             }`}
-            title="Add to wishlist"
+            title="В избранное"
           >
-            <Heart size={14} fill={wishlisted ? 'currentColor' : 'none'} />
+            <Heart size={14} fill={isInWishlist(product.id) ? 'currentColor' : 'none'} />
           </button>
           <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setCompared(!compared);
+              const inComp = isInComparison(product.id);
+              if (inComp) {
+                toggleComparison(product.id, product.category);
+                showToast('Удалено из сравнения', 'info');
+              } else {
+                const result = toggleComparison(product.id, product.category);
+                if (result.success) {
+                  showToast('Добавлено в сравнение', 'success');
+                } else if (result.reason === 'limit') {
+                  showToast('В сравнении уже 4 товара этой категории', 'info');
+                }
+              }
             }}
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm ${
-              compared
+              isInComparison(product.id)
                 ? 'bg-info-blue/20 text-info-blue'
                 : 'bg-surface-card text-muted-text hover:text-info-blue'
             }`}
-            title="Compare"
+            title="Сравнить"
           >
             <GitCompareArrows size={14} />
           </button>
