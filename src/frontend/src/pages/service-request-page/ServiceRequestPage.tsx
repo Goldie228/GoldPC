@@ -64,11 +64,12 @@ interface FormErrors {
  */
 async function submitServiceRequest(
   data: ServiceRequestFormData,
-  createTicketFn: (req: CreateTicketRequest) => Promise<ServiceRequestResponse>
-): Promise<ServiceRequestResponse> {
+  createTicketFn: (req: CreateTicketRequest) => Promise<ServiceRequestResponse | null>
+): Promise<ServiceRequestResponse | null> {
   return createTicketFn({
     deviceType: data.deviceType,
     brand: data.brand,
+    model: data.brand,
     serialNumber: data.serial,
     issueDescription: data.problem,
     preferredContact: data.preferredContact,
@@ -102,8 +103,12 @@ export function ServiceRequestPage() {
   // Мутация для отправки формы
   const mutation = useMutation({
     mutationFn: (data: ServiceRequestFormData) => submitServiceRequest(data, createTicket),
-    onSuccess: (data) => {
-      showToast(`Заявка #${data.ticketNumber} успешно создана!`, 'success');
+    onSuccess: (result) => {
+      if (!result) {
+        showToast('Ошибка при отправке заявки. Сервер вернул пустой ответ.', 'error');
+        return;
+      }
+      showToast(`Заявка #${result.ticketNumber} успешно создана!`, 'success');
       // Сброс формы
       setFormData({
         deviceType: 'pc',
