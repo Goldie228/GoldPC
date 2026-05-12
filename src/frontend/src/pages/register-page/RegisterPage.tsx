@@ -1,14 +1,28 @@
-import { useState, useMemo } from 'react';
-import type { FormEvent } from 'react';
+import { useState, useMemo, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Mail, User, Phone } from 'lucide-react';
+import { PasswordField } from '@/components/ui/PasswordField';
 import { useAuth } from '../../hooks/useAuth';
 
 /**
- * Страница регистрации
- * Соответствует прототипу prototypes/register.html
+ * RegisterPage — Страница регистрации
+ *
+ * Дизайн: тёмная тема в стиле GoldPC (DESIGN.md).
+ * Полноценная страница с карточкой, валидацией полей, маской телефона, индикатором силы пароля.
  */
+
+interface PageErrors {
+  firstName?: string;
+  phone?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  terms?: string;
+}
+
 export function RegisterPage() {
   const { register, isLoading } = useAuth();
+
   const [firstName, setFirstName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -16,8 +30,37 @@ export function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<PageErrors>({});
 
-  // Password strength calculation
+  // Phone mask logic (same as RegisterModal)
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    const value = input.value;
+    const deleting = value.length < phone.length;
+
+    if (deleting) {
+      setPhone(value);
+      return;
+    }
+
+    const clean = value.replace(/\D/g, '');
+    let digits = clean;
+
+    if (digits.startsWith('375')) digits = digits.slice(3);
+
+    let formatted = '+375 ';
+    if (digits.length > 0) formatted += '(' + digits.slice(0, Math.min(2, digits.length));
+    if (digits.length >= 2) formatted += ') ';
+    if (digits.length >= 3) formatted += digits.slice(2, 5);
+    if (digits.length >= 5) formatted += '-';
+    if (digits.length >= 6) formatted += digits.slice(5, 7);
+    if (digits.length >= 7) formatted += '-';
+    if (digits.length >= 8) formatted += digits.slice(7, 9);
+
+    setPhone(formatted);
+  };
+
+  // Password strength
   const passwordStrength = useMemo(() => {
     if (!password) return 0;
     let strength = 0;
@@ -28,245 +71,328 @@ export function RegisterPage() {
     return Math.min(strength, 3);
   }, [password]);
 
-  const getStrengthClass = (index: number) => {
-    if (index >= passwordStrength) return '';
-    if (passwordStrength === 1) return styles.weak;
-    if (passwordStrength === 2) return styles.medium;
-    return styles.strong;
+  const validateField = (field: string, value: string): string => {
+    switch (field) {
+      case 'firstName':
+        if (!value) return 'Имя не может быть пустым';
+        if (value.length < 2) return 'Имя должно содержать минимум 2 символа';
+        return '';
+      case 'email': {
+        if (!value) return 'Email не может быть пустым';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Введите корректный email адрес';
+        return '';
+      }
+      case 'password': {
+        if (!value) return 'Пароль не может быть пустым';
+        if (value.length < 8) return 'Пароль должен содержать минимум 8 символов';
+        if (value.length > 64) return 'Пароль не может быть длиннее 64 символов';
+        if (!/[A-Z]/.test(value)) return 'Пароль должен содержать минимум одну заглавную букву';
+        if (!/[a-z]/.test(value)) return 'Пароль должен содержать минимум одну строчную букву';
+        if (!/[0-9]/.test(value)) return 'Пароль должен содержать минимум одну цифру';
+        return '';
+      }
+      default:
+        return '';
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // Validation
-    if (password !== confirmPassword) {
-      setError('Пароли не совпадают');
-      return;
-    }
+    const errors: PageErrors = {};
 
-    if (password.length < 8) {
-      setError('Пароль должен содержать минимум 8 символов');
-      return;
+    const firstNameErr = validateField('firstName', firstName);
+    if (firstNameErr) errors.firstName = firstNameErr;
+
+    if (!phone) errors.phone = 'Телефон не может быть пустым';
+    else if (phone.replace(/\D/g, '').length < 9) errors.phone = 'Введите корректный номер телефона';
+
+    const emailErr = validateField('email', email);
+    if (emailErr) errors.email = emailErr;
+
+    const passwordErr = validateField('password', password);
+    if (passwordErr) errors.password = passwordErr;
+
+    if (!confirmPassword) {
+      errors.confirmPassword = 'Подтвердите пароль';
+    } else if (password !== confirmPassword) {
+      errors.confirmPassword = 'Пароли не совпадают';
     }
 
     if (!termsAccepted) {
-      setError('Необходимо принять условия использования');
-      return;
+      errors.terms = 'Необходимо принять условия использования';
     }
 
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     try {
-      await register({ firstName, lastName: '', phone, email, password });
+      const cleanPhone = phone.replace(/[^\d+]/g, '');
+      await register({ firstName, lastName: '', phone: cleanPhone, email, password });
     } catch {
       setError('Ошибка регистрации. Попробуйте другой email');
     }
   };
 
-  return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-6 relative">
-      {/* Background decoration */}
-      <div className="fixed w-[500px] h-[500px] bg-[radial-gradient(circle,var(--accent-glow)_0%,transparent_60%)] top-[-200px] left-[-150px] blur-[80px] pointer-events-none -z-1" aria-hidden="true" />
+  const clearFieldError = (field: keyof PageErrors) => {
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
 
-      <div className="w-full max-w-[400px] bg-[var(--bg-card)] border border-[var(--border)] p-10 relative before:content-[''] before:absolute before:top-0 before:left-0 before:w-0.5 before:h-full before:bg-[var(--accent)]">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 no-underline mb-8 justify-center">
-          <div className="w-10 h-10 bg-[var(--accent)] flex items-center justify-center">
-            <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" className="w-[22px] h-[22px] text-[var(--bg)]">
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M29,3H3C2.4,3,2,3.4,2,4v19c0,0.6,0.4,1,1,1h26c0.6,0,1-0.4,1-1V4C30,3.4,29.6,3,29,3z M18,21h-4c-0.6,0-1-0.4-1-1s0.4-1,1-1h4c0.6,0,1,0.4,1,1S18.6,21,18,21z"
-                fill="currentColor"
-              />
-              <path
-                d="M18,21h-4c-0.6,0-1-0.4-1-1s0.4-1,1-1h4c0.6,0,1,0.4,1,1S18.6,21,18,21z"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M20.7,26.3C20.5,26.1,20.3,26,20,26h-8c-0.3,0-0.5,0.1-0.7,0.3l-2,2C9,28.6,8.9,29,9.1,29.4C9.2,29.8,9.6,30,10,30h12c0.4,0,0.8-0.2,0.9-0.6c0.2-0.4,0.1-0.8-0.2-1.1L20.7,26.3z"
-                fill="currentColor"
-              />
-            </svg>
-          </div>
-          <span className="text-lg font-semibold tracking-[-0.02em] text-[var(--fg)]">
-            Gold<span className="text-[var(--accent)]">PC</span>
-          </span>
+  return (
+    <div className="min-h-screen bg-canvas-dark flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        {/* Back link */}
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-muted-text text-sm no-underline transition-colors hover:text-body-text mb-8"
+        >
+          <ArrowLeft size={16} />
+          <span>На главную</span>
         </Link>
 
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-xl font-semibold text-center mb-2 tracking-[-0.02em] text-[var(--fg)]">Создать аккаунт</h1>
-          <p className="text-sm text-[var(--fg-muted)] text-center">Заполните форму для регистрации</p>
-        </div>
+        {/* Card */}
+        <div className="bg-surface-card border border-hairline-dark rounded-xl p-8">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <span className="text-2xl font-bold text-gold tracking-tight">
+              Gold<span className="text-body-text">PC</span>
+            </span>
+            <h1 className="text-title-sm text-body-text mt-4 mb-2">
+              Создать аккаунт
+            </h1>
+            <p className="text-sm text-muted-text leading-relaxed">
+              Заполните форму для регистрации
+            </p>
+          </div>
 
-        {/* Form */}
-        <form className="flex flex-col" onSubmit={handleSubmit}>
+          {/* Error banner */}
           {error && (
-            <div className="p-3 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)] text-[var(--error)] text-[0.85rem] mb-4" role="alert">
-              {error}
+            <div className="mb-6 p-4 bg-price-rise/10 border border-price-rise/30 text-price-rise text-sm rounded-lg flex items-start gap-3" role="alert">
+              <span>{error}</span>
             </div>
           )}
 
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2" htmlFor="firstName">
-              Имя
-            </label>
-            <input
-              id="firstName"
-              type="text"
-              className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] box-border focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:border-[var(--border-accent)]"
-              placeholder="Ваше имя"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              required
-              autoComplete="given-name"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2" htmlFor="phone">
-              Телефон
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] box-border focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:border-[var(--border-accent)]"
-              placeholder={"+375 (XX) XXX-XX-XX"}
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-              autoComplete="tel"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] box-border focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:border-[var(--border-accent)]"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2" htmlFor="password">
-              Пароль
-            </label>
-            <input
-              id="password"
-              type="password"
-              className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] box-border focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:border-[var(--border-accent)]"
-              placeholder="Минимум 8 символов"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              autoComplete="new-password"
-            />
-            <p className="text-[0.7rem] text-[var(--fg-dim)] mt-1.5">Минимум 8 символов, буквы и цифры</p>
-            {password && (
-              <div className="flex gap-1 mt-2">
-                {[0, 1, 2].map((index) => (
-                  <div
-                    key={index}
-                    className={`flex-1 h-0.5 bg-[var(--border)] transition-colors ${
-                      index >= passwordStrength ? '' : 
-                      passwordStrength === 1 ? 'bg-[var(--error)]' :
-                      passwordStrength === 2 ? 'bg-[#eab308]' :
-                      'bg-[var(--color-green-500)]'
-                    }`}
-                  />
-                ))}
+          {/* Form */}
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            {/* First name */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-muted-text uppercase tracking-wider" htmlFor="register-firstName">
+                Имя
+              </label>
+              <div className="relative">
+                <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-text" />
+                <input
+                  id="register-firstName"
+                  type="text"
+                  className={`w-full pl-10 pr-3.5 py-3 bg-surface-elevated border text-body-text text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50 ${
+                    fieldErrors.firstName ? 'border-price-rise outline outline-1 outline-price-rise/30' : 'border-hairline-dark'
+                  }`}
+                  placeholder="Ваше имя"
+                  value={firstName}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    if (fieldErrors.firstName) clearFieldError('firstName');
+                  }}
+                  required
+                  autoComplete="given-name"
+                  disabled={isLoading}
+                />
               </div>
+              {fieldErrors.firstName && (
+                <span className="text-xs text-price-rise mt-1" role="alert">{fieldErrors.firstName}</span>
+              )}
+            </div>
+
+            {/* Phone */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-muted-text uppercase tracking-wider" htmlFor="register-phone">
+                Телефон
+              </label>
+              <div className="relative">
+                <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-text" />
+                <input
+                  id="register-phone"
+                  type="tel"
+                  className={`w-full pl-10 pr-3.5 py-3 bg-surface-elevated border text-body-text text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50 ${
+                    fieldErrors.phone ? 'border-price-rise outline outline-1 outline-price-rise/30' : 'border-hairline-dark'
+                  }`}
+                  placeholder="+375 (29) 123-45-67"
+                  value={phone}
+                  onChange={(e) => {
+                    handlePhoneChange(e);
+                    if (fieldErrors.phone) clearFieldError('phone');
+                  }}
+                  required
+                  autoComplete="tel"
+                  inputMode="numeric"
+                  maxLength={19}
+                  disabled={isLoading}
+                />
+              </div>
+              {fieldErrors.phone && (
+                <span className="text-xs text-price-rise mt-1" role="alert">{fieldErrors.phone}</span>
+              )}
+            </div>
+
+            {/* Email */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-muted-text uppercase tracking-wider" htmlFor="register-email">
+                Email
+              </label>
+              <div className="relative">
+                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-text" />
+                <input
+                  id="register-email"
+                  type="email"
+                  className={`w-full pl-10 pr-3.5 py-3 bg-surface-elevated border text-body-text text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50 ${
+                    fieldErrors.email ? 'border-price-rise outline outline-1 outline-price-rise/30' : 'border-hairline-dark'
+                  }`}
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (fieldErrors.email) clearFieldError('email');
+                  }}
+                  required
+                  autoComplete="email"
+                  disabled={isLoading}
+                />
+              </div>
+              {fieldErrors.email && (
+                <span className="text-xs text-price-rise mt-1" role="alert">{fieldErrors.email}</span>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="flex flex-col gap-2">
+              <PasswordField
+                id="register-password"
+                label="Пароль"
+                value={password}
+                onChange={(value) => {
+                  setPassword(value);
+                  if (fieldErrors.password) clearFieldError('password');
+                }}
+                required
+                minLength={8}
+                maxLength={64}
+                autoComplete="new-password"
+                labelClassName="text-xs font-medium text-muted-text uppercase tracking-wider"
+                inputClassName="w-full pl-10 pr-11 py-3 bg-surface-elevated border border-hairline-dark text-body-text font-sans text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50"
+              />
+              {/* Password strength */}
+              {password && (
+                <div className="flex gap-1 mt-1">
+                  {[0, 1, 2].map((index) => (
+                    <div
+                      key={index}
+                      className={`flex-1 h-[3px] rounded-sm transition-colors duration-200 ${
+                        index >= passwordStrength
+                          ? 'bg-hairline-dark'
+                          : passwordStrength === 1
+                            ? 'bg-price-rise'
+                            : passwordStrength === 2
+                              ? 'bg-gold'
+                              : 'bg-price-drop'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+              {fieldErrors.password && (
+                <span className="text-xs text-price-rise mt-1" role="alert">{fieldErrors.password}</span>
+              )}
+            </div>
+
+            {/* Confirm password */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-medium text-muted-text uppercase tracking-wider" htmlFor="register-confirmPassword">
+                Подтверждение пароля
+              </label>
+              <input
+                id="register-confirmPassword"
+                type="password"
+                className={`w-full px-3.5 py-3 bg-surface-elevated border text-body-text text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50 ${
+                  fieldErrors.confirmPassword
+                    ? 'border-price-rise outline outline-1 outline-price-rise/30'
+                    : 'border-hairline-dark'
+                }`}
+                placeholder="Повторите пароль"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (fieldErrors.confirmPassword) clearFieldError('confirmPassword');
+                }}
+                required
+                autoComplete="new-password"
+                disabled={isLoading}
+              />
+              {fieldErrors.confirmPassword && (
+                <span className="text-xs text-price-rise mt-1" role="alert">{fieldErrors.confirmPassword}</span>
+              )}
+            </div>
+
+            {/* Terms checkbox */}
+            <div className="flex items-start gap-2.5 my-1">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  id="register-terms"
+                  className="peer absolute w-[18px] h-[18px] opacity-0 cursor-pointer z-10"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  disabled={isLoading}
+                />
+                <div className="w-[18px] h-[18px] border-2 border-hairline-dark rounded bg-surface-elevated transition-all duration-200 peer-hover:border-gold/50 peer-checked:bg-gold peer-checked:border-gold peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-gold peer-focus-visible:outline-offset-2" />
+                <div className="absolute left-[6px] top-[3px] w-[5px] h-[9px] border-r-2 border-b-2 border-gold-ink rotate-45 opacity-0 transition-opacity duration-200 peer-checked:opacity-100" />
+              </div>
+              <label htmlFor="register-terms" className="cursor-pointer text-sm text-muted-text leading-6">
+                Я принимаю{' '}
+                <a href="/terms" className="text-gold no-underline transition-colors hover:text-gold-active" target="_blank" rel="noopener noreferrer">
+                  условия использования
+                </a>{' '}
+                и{' '}
+                <a href="/privacy" className="text-gold no-underline transition-colors hover:text-gold-active" target="_blank" rel="noopener noreferrer">
+                  политику конфиденциальности
+                </a>
+              </label>
+            </div>
+            {fieldErrors.terms && (
+              <span className="text-xs text-price-rise -mt-2" role="alert">{fieldErrors.terms}</span>
             )}
+
+            {/* Submit */}
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-2.5 w-full px-6 py-3 bg-gold text-gold-ink font-sans text-sm font-semibold border-none rounded-md cursor-pointer transition-all duration-200 hover:not(:disabled):bg-gold-active disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
+              {!isLoading && <ArrowRight size={18} />}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-hairline-dark" />
+            <span className="text-[10px] text-muted-text uppercase tracking-wider">или</span>
+            <div className="flex-1 h-px bg-hairline-dark" />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2" htmlFor="confirm-password">
-              Подтверждение пароля
-            </label>
-            <input
-              id="confirm-password"
-              type="password"
-              className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] box-border focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:border-[var(--border-accent)]"
-              placeholder="Повторите пароль"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-            />
+          {/* Switch to login */}
+          <div className="text-center">
+            <p className="text-sm text-muted-text">
+              Уже есть аккаунт?{' '}
+              <Link to="/" className="text-gold no-underline font-medium transition-colors hover:text-gold-active">
+                Войти
+              </Link>
+            </p>
           </div>
-
-          <div className="flex items-start gap-2.5 my-5">
-            <input
-              type="checkbox"
-              id="terms"
-              className="w-4 h-4 accent-[var(--accent)] cursor-pointer mt-0.5 shrink-0"
-              checked={termsAccepted}
-              onChange={(e) => setTermsAccepted(e.target.checked)}
-            />
-            <label htmlFor="terms" className="text-sm text-[var(--fg-muted)] cursor-pointer leading-[1.5]">
-              Я принимаю{' '}
-              <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] no-underline hover:text-[var(--accent-bright)]">
-                условия использования
-              </a>{' '}
-              и{' '}
-              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-[var(--accent)] no-underline hover:text-[var(--accent-bright)]">
-                политику конфиденциальности
-              </a>
-            </label>
-          </div>
-
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center gap-2.5 w-full p-3.5 font-[var(--font-sans)] text-[0.85rem] font-semibold bg-[var(--accent)] text-[var(--bg)] border-none cursor-pointer transition-all hover:bg-[var(--accent-bright)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </button>
-        </form>
-
-        {/* Divider */}
-        <div className="flex items-center gap-4 my-7">
-          <div className="flex-1 h-px bg-[var(--border)]" />
-          <span className="text-[0.7rem] text-[var(--fg-dim)] uppercase tracking-[0.1em]">или</span>
-          <div className="flex-1 h-px bg-[var(--border)]" />
-        </div>
-
-        {/* Footer */}
-        <div className="text-center">
-          <p className="text-[0.85rem] text-[var(--fg-muted)]">
-            Уже есть аккаунт?{' '}
-            <Link to="/login" className="text-[var(--accent)] no-underline font-medium transition-colors hover:text-[var(--accent-bright)]">
-              Войти
-            </Link>
-          </p>
         </div>
       </div>
-
-      {/* Back link */}
-      <Link to="/" className="flex items-center justify-center gap-2 mt-6 text-sm text-[var(--fg-dim)] no-underline transition-colors hover:text-[var(--fg)]">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
-          <line x1="19" y1="12" x2="5" y2="12" />
-          <polyline points="12 19 5 12 12 5" />
-        </svg>
-        Вернуться на главную
-      </Link>
     </div>
   );
 }
+
+export default RegisterPage;
