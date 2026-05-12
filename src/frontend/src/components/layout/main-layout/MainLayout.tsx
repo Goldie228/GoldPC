@@ -24,7 +24,7 @@ export function MainLayout() {
   }, [location.pathname]);
 
   return (
-    <div className="main-layout">
+    <div className="main-layout overflow-x-hidden">
       <a href="#main-content" className="main-layout__skip">
         Перейти к основному контенту
       </a>

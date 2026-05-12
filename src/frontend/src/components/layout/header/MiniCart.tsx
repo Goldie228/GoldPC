@@ -92,7 +92,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
             Корзина ({itemCount})
           </span>
           <button
-            className="w-9 h-9 flex items-center justify-center bg-transparent border border-[var(--border)] rounded-lg text-[var(--fg-muted)] cursor-pointer transition-colors hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-500)] hover:bg-[rgba(212,165,116,0.08)]"
+            className="w-9 h-9 flex items-center justify-center bg-transparent border border-[var(--border)] rounded-lg text-[var(--fg-muted)] cursor-pointer transition-colors hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-500)] hover:bg-[rgba(252,213,53,0.08)]"
             onClick={onClose}
             aria-label="Закрыть"
             type="button"
@@ -109,7 +109,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
             <p style={{ fontSize: '0.8rem', color: 'var(--fg-dim)', margin: 0 }}>
               Добавьте товары из каталога
             </p>
-            <Link to="/catalog" className="text-sm font-medium text-[var(--color-gold-500)] no-underline px-5 py-2 border border-[var(--border-brand)] rounded-lg transition-colors hover:bg-[rgba(212,165,116,0.1)] hover:text-[var(--color-gold-400)] hover:border-[var(--color-gold-400)] inline-flex items-center gap-1.5" onClick={onClose}>
+            <Link to="/catalog" className="text-sm font-medium text-[var(--color-gold-500)] no-underline px-5 py-2 border border-[var(--border-brand)] rounded-lg transition-colors hover:bg-[rgba(252,213,53,0.1)] hover:text-[var(--color-gold-400)] hover:border-[var(--color-gold-400)] inline-flex items-center gap-1.5" onClick={onClose}>
               Перейти в каталог
               <ArrowRight size={14} style={{ marginLeft: 6 }} />
             </Link>
@@ -126,7 +126,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
                     ) : (
                       <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
-                        <text x="50" y="55" textAnchor="middle" fill="#d4a574" fontSize="10">Нет фото</text>
+                        <text x="50" y="55" textAnchor="middle" fill="#FCD535" fontSize="10">Нет фото</text>
                       </svg>
                     )}
                   </div>
@@ -134,7 +134,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
                     <span className="text-[0.825rem] font-medium text-[var(--fg)] whitespace-nowrap overflow-hidden text-ellipsis leading-[1.3] max-[768px]:text-[0.8rem]">{item.name}</span>
                     <div className="flex items-center gap-2">
                       <button
-                        className="w-8 h-8 flex items-center justify-center bg-[var(--bg-card)] border border-[var(--border)] rounded-md text-[var(--fg)] text-base font-medium cursor-pointer transition-colors hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-500)] hover:bg-[rgba(212,165,116,0.08)] p-0 leading-[1] max-[768px]:w-7 max-[768px]:h-7"
+                        className="w-8 h-8 flex items-center justify-center bg-[var(--bg-card)] border border-[var(--border)] rounded-md text-[var(--fg)] text-base font-medium cursor-pointer transition-colors hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-500)] hover:bg-[rgba(252,213,53,0.08)] p-0 leading-[1] max-[768px]:w-7 max-[768px]:h-7"
                         onClick={() => changeQuantity(item.productId, -1)}
                         aria-label="Уменьшить количество"
                         type="button"
@@ -143,7 +143,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
                       </button>
                       <span className="font-sans text-sm font-semibold text-[var(--fg)] min-w-[28px] text-center">{item.quantity}</span>
                       <button
-                        className="w-8 h-8 flex items-center justify-center bg-[var(--bg-card)] border border-[var(--border)] rounded-md text-[var(--fg)] text-base font-medium cursor-pointer transition-colors hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-500)] hover:bg-[rgba(212,165,116,0.08)] p-0 leading-[1] max-[768px]:w-7 max-[768px]:h-7"
+                        className="w-8 h-8 flex items-center justify-center bg-[var(--bg-card)] border border-[var(--border)] rounded-md text-[var(--fg)] text-base font-medium cursor-pointer transition-colors hover:border-[var(--color-gold-400)] hover:text-[var(--color-gold-500)] hover:bg-[rgba(252,213,53,0.08)] p-0 leading-[1] max-[768px]:w-7 max-[768px]:h-7"
                         onClick={() => changeQuantity(item.productId, 1)}
                         aria-label="Увеличить количество"
                         type="button"
@@ -156,7 +156,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
                     {(item.price * item.quantity).toLocaleString('ru-BY')} BYN
                   </span>
                   <button
-                    className="w-8 h-8 flex items-center justify-center bg-transparent border border-transparent rounded-md text-[var(--fg-dim)] cursor-pointer transition-colors hover:border-[var(--border-brand)] hover:text-[var(--color-gold-500)] hover:bg-[rgba(212,165,116,0.08)] max-[768px]:w-7 max-[768px]:h-7"
+                    className="w-8 h-8 flex items-center justify-center bg-transparent border border-transparent rounded-md text-[var(--fg-dim)] cursor-pointer transition-colors hover:border-[var(--border-brand)] hover:text-[var(--color-gold-500)] hover:bg-[rgba(252,213,53,0.08)] max-[768px]:w-7 max-[768px]:h-7"
                     onClick={() => removeFromCart(item.productId)}
                     aria-label={`Удалить ${item.name}`}
                     type="button"
@@ -176,7 +176,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
                 </span>
               </div>
               <div className="flex gap-2.5">
-                <Link to="/catalog" className="flex-1 inline-flex items-center justify-center px-4 py-2.5 font-sans text-[0.825rem] font-medium text-[var(--color-gold-500)] no-underline text-center bg-transparent border border-[var(--border-brand)] rounded-lg cursor-pointer transition-colors hover:bg-[rgba(212,165,116,0.1)] hover:text-[var(--color-gold-400)] hover:border-[var(--color-gold-400)]" onClick={onClose}>
+                <Link to="/catalog" className="flex-1 inline-flex items-center justify-center px-4 py-2.5 font-sans text-[0.825rem] font-medium text-[var(--color-gold-500)] no-underline text-center bg-transparent border border-[var(--border-brand)] rounded-lg cursor-pointer transition-colors hover:bg-[rgba(252,213,53,0.1)] hover:text-[var(--color-gold-400)] hover:border-[var(--color-gold-400)]" onClick={onClose}>
                   Продолжить покупки
                 </Link>
                 <Link to="/cart" className="flex-1 inline-flex items-center justify-center px-4 py-2.5 font-sans text-[0.825rem] font-semibold text-[var(--bg)] no-underline bg-[var(--color-gold-500)] border border-[var(--color-gold-500)] rounded-lg cursor-pointer transition-colors hover:bg-[var(--color-gold-400)] hover:border-[var(--color-gold-400)]" onClick={onClose}>
