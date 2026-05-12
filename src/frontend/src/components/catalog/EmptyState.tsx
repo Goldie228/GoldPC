@@ -32,7 +32,7 @@ export function EmptyState({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="flex items-center justify-center w-[120px] h-[120px] rounded-full bg-[linear-gradient(135deg,var(--border-brand)_0%,var(--border-brand)_100%)] mb-6 border border-[var(--border)]">
+      <div className="flex items-center justify-center w-[120px] h-[120px] rounded-full bg-[linear-gradient(135deg,var(--border-brand)_0%,var(--border-brand)_100%)] mb-6">
         <Package size={64} className="text-[var(--accent)] opacity-85" />
       </div>
       

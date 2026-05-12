@@ -1,16 +1,17 @@
-import { useEffect, useRef } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import './HomePage.css';
 import { Link } from 'react-router-dom';
-import { Cpu, Gpu, MemoryStick, HardDrive, Zap, Box, ThermometerSun, Fan, Monitor, Keyboard, Mouse, Headphones, ArrowRight, Star, Truck, Shield, CreditCard, Users, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Cpu, Gpu, MemoryStick, HardDrive, Zap, Box, ThermometerSun, Monitor, Shield, Truck, Star, ChevronRight, ArrowRight, Award, ChevronLeft, Pause, Play, Tag } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from '../../components/product-card/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton/ProductCardSkeleton';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { useProducts } from '../../hooks/useProducts';
-import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
 import { useCategories } from '../../hooks/useCategories';
+import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
 import type { ProductCategory } from '../../api/types';
-const DELAY_CLASSES = ['', '[transition-delay:0.1s]', '[transition-delay:0.2s]', '[transition-delay:0.3s]', '[transition-delay:0.4s]'];
 
 // Маппинг backend slug -> frontend id для ссылок
 const BACKEND_TO_FRONTEND: Record<string, ProductCategory> = {
@@ -29,7 +30,7 @@ const BACKEND_TO_FRONTEND: Record<string, ProductCategory> = {
   periphery: 'keyboard',
 };
 
-// Маппинг frontend id -> иконка
+// Иконки категорий (lucide-react компоненты, а не JSX)
 const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
   cpu: Cpu,
   gpu: Gpu,
@@ -39,177 +40,450 @@ const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
   psu: Zap,
   case: Box,
   cooling: ThermometerSun,
-  fan: Fan,
   monitor: Monitor,
-  keyboard: Keyboard,
-  mouse: Mouse,
-  headphones: Headphones,
+  keyboard: Cpu,
+  mouse: Cpu,
+  headphones: Cpu,
 };
 
+// ─── Hero Background Placeholder ───────────────────────────────────
+function HeroBackground() {
+  return (
+    <div className="home-hero__bg--placeholder" aria-hidden="true">
+      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[140px]" />
+      <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-[#2dbdb6]/5 rounded-full blur-[120px]" />
+      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/10 to-transparent" />
+    </div>
+  );
+}
+
+// ─── Stat Card (Trust Band) ────────────────────────────────────────
+interface StatCardProps {
+  icon: React.ReactNode;
+  value: string;
+  label: string;
+}
+
+function StatCard({ icon, value, label }: StatCardProps) {
+  return (
+    <div className="home-trust__card">
+      <div className="home-trust__icon-wrap">{icon}</div>
+      <div className="home-trust__value">{value}</div>
+      <div className="home-trust__label">{label}</div>
+    </div>
+  );
+}
+
+// ─── Category Card ─────────────────────────────────────────────────
+interface CategoryCardProps {
+  Icon: LucideIcon;
+  name: string;
+  count: number;
+  href: string;
+}
+
+function CategoryCard({ Icon, name, count, href }: CategoryCardProps) {
+  return (
+    <Link to={href} className="home-categories__link">
+      <div className="home-categories__icon-wrap">
+        <Icon size={24} />
+      </div>
+      <span className="home-categories__name">{name}</span>
+      <span className="home-categories__count">
+        {formatCountRu(count, RU_FORMS.tovar)}
+      </span>
+    </Link>
+  );
+}
+
+// ─── Gaming Setup Carousel ──────────────────────────────────────────
+interface GamingSlide {
+  label: string;
+  subtitle: string;
+  src: string;
+  alt: string;
+}
+
+function GamingCarousel({ slides }: { slides: GamingSlide[] }) {
+  const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startAutoPlay = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % slides.length);
+    }, 5000);
+  }, [slides.length]);
+
+  const stopAutoPlay = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!paused) startAutoPlay();
+    else stopAutoPlay();
+    return stopAutoPlay;
+  }, [paused, startAutoPlay, stopAutoPlay]);
+
+  const goTo = (i: number) => { setCurrent(i); setImgError(false); };
+  const goNext = () => { setCurrent((prev) => (prev + 1) % slides.length); setImgError(false); };
+  const goPrev = () => { setCurrent((prev) => (prev - 1 + slides.length) % slides.length); setImgError(false); };
+
+  const slide = slides[current];
+
+  return (
+    <div
+      className="home-gaming__carousel"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      role="region"
+      aria-label="Галерея игровых сетапов"
+      aria-roledescription="carousel"
+    >
+      {/* Изображение с анимацией */}
+      <div className="home-gaming__carousel-viewport">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={current}
+            className="home-gaming__carousel-slide"
+            initial={{ opacity: 0, x: 80 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -80 }}
+            transition={{ duration: 0.45, ease: 'easeInOut' }}
+            aria-roledescription="slide"
+            aria-label={`Слайд ${current + 1} из ${slides.length}`}
+          >
+            {imgError ? (
+              <div className="home-gaming__carousel-fallback">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <path d="M8 21h8M12 17v4" />
+                </svg>
+              </div>
+            ) : (
+              <img
+                src={slide.src}
+                alt={slide.alt}
+                className="home-gaming__carousel-img"
+                onError={() => setImgError(true)}
+              />
+            )}
+            {/* Тёмное затемнение */}
+            <div className="home-gaming__carousel-overlay-dark" />
+            {/* Оверлей с текстом */}
+            <div className="home-gaming__carousel-overlay">
+              <h3 className="home-gaming__carousel-label">{slide.label}</h3>
+              <p className="home-gaming__carousel-subtitle">{slide.subtitle}</p>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Стрелки */}
+      <button
+        className="home-gaming__carousel-arrow home-gaming__carousel-arrow--left"
+        onClick={goPrev}
+        aria-label="Предыдущий слайд"
+      >
+        <ChevronLeft size={24} />
+      </button>
+      <button
+        className="home-gaming__carousel-arrow home-gaming__carousel-arrow--right"
+        onClick={goNext}
+        aria-label="Следующий слайд"
+      >
+        <ChevronRight size={24} />
+      </button>
+
+      {/* Dots + пауза */}
+      <div className="home-gaming__carousel-footer">
+        <div className="home-gaming__carousel-dots" role="tablist" aria-label="Навигация по слайдам">
+          {slides.map((s, i) => (
+            <button
+              key={s.label}
+              className={`home-gaming__carousel-dot ${i === current ? 'home-gaming__carousel-dot--active' : ''}`}
+              onClick={() => goTo(i)}
+              role="tab"
+              aria-selected={i === current}
+              aria-label={`Слайд ${i + 1}: ${s.label}`}
+            />
+          ))}
+        </div>
+        <button
+          className="home-gaming__carousel-pause"
+          onClick={() => setPaused((p) => !p)}
+          aria-label={paused ? 'Возобновить автовоспроизведение' : 'Приостановить автовоспроизведение'}
+        >
+          {paused ? <Play size={14} /> : <Pause size={14} />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /**
- * HomePage - Main landing page for GoldPC
- * Matching prototypes/home.html design
+ * HomePage — Главная страница GoldPC
  */
 export function HomePage() {
-  const categoriesRef = useRef<HTMLDivElement>(null);
-  const productsRef = useRef<HTMLDivElement>(null);
-
   const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
-
   const { data: productsData, isLoading, isError, refetch } = useProducts({
     pageSize: 8,
     sortBy: 'rating',
     sortOrder: 'desc',
   });
 
-  const heroPreviewProducts = (productsData?.data ?? []).slice(0, 3);
-  void heroPreviewProducts;
+  const popularProducts = useMemo(() => (productsData?.data ?? []).slice(0, 8), [productsData]);
 
-  useEffect(() => {
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -40px 0px',
-    };
+  // Категории для рендера
+  const trustItems = useMemo(() => [
+    { icon: <Shield size={28} strokeWidth={1.5} />, value: '5 лет', label: 'Гарантия на все товары' },
+    { icon: <Award size={28} strokeWidth={1.5} />, value: '100 000+', label: 'Ремонтов проведено успешно' },
+    { icon: <Star size={28} strokeWidth={1.5} />, value: '98%', label: 'Довольных клиентов' },
+    { icon: <Truck size={28} strokeWidth={1.5} />, value: '24–48 ч', label: 'Срок доставки по РБ' },
+  ], []);
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('opacity-100', 'translate-y-0');
-        }
-      });
-    }, observerOptions);
+  // Gaming setups (авто-слайдер)
+  const gamingSlides: GamingSlide[] = useMemo(() => [
+    {
+      label: 'Игровой сетап PRO',
+      subtitle: 'Топовая конфигурация для киберспорта на базе RTX 5090',
+      src: '/placeholders/setup-1.png',
+      alt: 'Игровой сетап PRO',
+    },
+    {
+      label: 'Стримерская станция',
+      subtitle: 'Профессиональное оборудование для стримов и контента',
+      src: '/placeholders/setup-2.png',
+      alt: 'Стримерская станция',
+    },
+    {
+      label: 'Домашний офис',
+      subtitle: 'Эргономичное рабочее место для продуктивной работы',
+      src: '/placeholders/setup-3.png',
+      alt: 'Домашний офис',
+    },
+  ], []);
 
-    const fadeElements = document.querySelectorAll('[data-fade-up]');
-    fadeElements.forEach((el) => observer.observe(el));
-
-    return () => {
-      fadeElements.forEach((el) => observer.unobserve(el));
-    };
-  }, [categoriesLoading, isLoading, isError]);
+  const categories = useMemo(() => (categoriesData ?? []).filter((c) => (c.productCount ?? 0) > 0), [categoriesData]);
 
   return (
-     <div className="min-h-screen bg-canvas-dark">
-       <section className="relative overflow-hidden">
-         <div className="absolute inset-0 overflow-hidden">
-           <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-gold/5 rounded-full blur-[120px]" />
-           <div className="absolute top-1/2 right-1/4 w-1/3 h-1/3 bg-blue-500/5 rounded-full blur-[100px]" />
-         </div>
-
-         <div className="relative max-w-[1440px] mx-auto px-4 md:px-8 pt-32 pb-20">
-           <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 text-gold text-sm font-medium rounded-full mb-6">Конфигуратор ПК нового поколения</div>
-
-           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-body-text mb-8">
-             <span className="block">Собери</span>
-             <span className="block whitespace-nowrap">
-               <span className="text-gold">идеальный</span> компьютер
-             </span>
-             <span className="block">за 24 часа</span>
-           </h1>
-
-           <p className="text-lg text-muted-text max-w-2xl mb-10">
-             Умный подбор комплектующих с автоматической проверкой совместимости.
-             Гарантия качества и бесплатная доставка.
-           </p>
-
-           <div className="flex flex-col sm:flex-row gap-4">
-             <Link to="/pc-builder">
-               <Button variant="primary" size="lg" icon={<ArrowRight size={18} />}>
-                 Собрать свой ПК
-               </Button>
-             </Link>
-             <Link to="/catalog">
-               <Button variant="outline" size="lg">Каталог</Button>
-             </Link>
-           </div>
-
-         </div>
-       </section>
-
-      <section className="py-20">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
-          <div className="flex flex-col items-center mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-body-text mb-4">Категории</h2>
-              <p className="text-lg text-muted-text max-w-2xl text-center">Выберите компонент</p>
-            </div>
+    <div className="min-h-screen bg-[#0b0e11]">
+      {/* ════════════ 1. HERO BAND ════════════ */}
+      <section className="home-hero" aria-label="Главный баннер">
+        <HeroBackground />
+        <div className="home-hero__content">
+          <div className="home-hero__badge">
+            <Award size={16} strokeWidth={2} />
+            Эксклюзивные ПК нового поколения
           </div>
+          <h1 className="home-hero__title">
+            Собери <span className="text-gold">идеальный</span> компьютер<br />
+            за <span className="text-gold">24 часа</span>
+          </h1>
+          <p className="home-hero__subtitle">
+            Умный подбор комплектующих с автоматической проверкой совместимости.
+            Гарантия качества и бесплатная доставка по всей Беларуси.
+          </p>
+          <div className="home-hero__actions">
+            <Link to="/pc-builder">
+              <Button variant="primary" size="lg" icon={<ArrowRight size={18} />}>
+                Собрать свой ПК
+              </Button>
+            </Link>
+            <Link to="/catalog">
+              <Button variant="secondary" size="lg">
+                Каталог
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" ref={categoriesRef}>
+      {/* ════════════ 2. GAMING SETUP CAROUSEL ════════════ */}
+      <section className="home-gaming" aria-label="Вдохновляющие сетапы">
+        <div className="home-gaming__inner">
+          <div className="home-gaming__header">
+            <h2 className="home-gaming__title">Вдохновляющие сетапы</h2>
+            <p className="home-gaming__desc">
+              Настоящие рабочие и игровые станции наших клиентов
+            </p>
+          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.5 }}
+          >
+            <GamingCarousel slides={gamingSlides} />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ════════════ 3. CATEGORIES ════════════ */}
+      <section className="home-categories" aria-label="Категории">
+        <div className="home-categories__inner">
+          <div className="home-categories__header">
+            <h2 className="home-categories__title">Категории</h2>
+            <p className="home-categories__desc">Выберите компонент для вашего ПК</p>
+          </div>
+          <div className="home-categories__grid">
             {categoriesLoading
-              ? [...Array(8)].map((_, index) => (
-                  <div
-                    key={`cat-skeleton-${index}`}
-                    className="group relative p-6 bg-surface-card rounded-2xl border border-hairline-dark hover:border-gold/30 transition-all overflow-hidden animate-pulse min-h-[120px] opacity-0 translate-y-[20px] transition-all duration-500"
-                  />
+              ? [...Array(8)].map((_, i) => (
+                  <div key={`cat-skel-${i}`} className="home-categories__link animate-pulse">
+                    <div className="home-categories__icon-wrap">
+                      <div className="w-7 h-7 bg-surface-elevated rounded" />
+                    </div>
+                    <span className="home-categories__name">Загрузка…</span>
+                  </div>
                 ))
-              : (categoriesData ?? [])
-                  .filter((cat) => (cat.productCount ?? 0) > 0)
-                  .map((cat, index) => {
+              : categories.map((cat, i) => {
                   const frontendId = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug) as ProductCategory;
                   const IconComponent = CATEGORY_ICONS[frontendId] ?? Cpu;
-                  const delayClass = index > 0 && index < DELAY_CLASSES.length ? DELAY_CLASSES[index] : '';
-                  const count = cat.productCount ?? 0;
                   return (
-                    <Link
+                    <motion.div
                       key={cat.id}
-                      to={`/catalog/${frontendId}`}
-                      className={`group relative p-6 bg-surface-card rounded-2xl border border-hairline-dark hover:border-gold/30 transition-all overflow-hidden opacity-0 translate-y-[20px] transition-all duration-500 ${delayClass}`.trim()}
-                      data-fade-up
+                      initial={{ opacity: 0, y: 16 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '-20px' }}
+                      transition={{ duration: 0.5, delay: i * 0.05 }}
                     >
-                      <div className="w-12 h-12 flex items-center justify-center bg-gold/10 text-gold rounded-xl mb-4 group-hover:bg-gold/20 transition-colors">
-                        <IconComponent size={24} />
-                      </div>
-                      <div className="text-lg font-semibold text-body-text mb-2">{cat.name}</div>
-                      <div className="text-sm text-muted-text">{formatCountRu(count, RU_FORMS.tovar)}</div>
-                    </Link>
+                      <CategoryCard
+                        Icon={IconComponent}
+                        name={cat.name}
+                        count={cat.productCount ?? 0}
+                        href={`/catalog/${frontendId}`}
+                      />
+                    </motion.div>
                   );
                 })}
           </div>
         </div>
       </section>
 
-      <section className="py-20">
-        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
-          <div className="flex flex-col items-center mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-body-text mb-4">Популярное</h2>
-              <p className="text-lg text-muted-text max-w-2xl text-center">Выбор недели</p>
-            </div>
-            <Link to="/catalog" className="text-sm font-medium text-muted-text hover:text-gold flex items-center gap-1.5 transition-colors">
-              Смотреть все
-              <ChevronRight size={14} />
+      {/* ════════════ 4. TRUST BAND ════════════ */}
+      <section className="home-trust" aria-label="Почему выбирают GoldPC">
+        <div className="home-trust__inner">
+          <div className="home-trust__header">
+            <h2 className="home-trust__title">Почему выбирают GoldPC</h2>
+            <p className="home-trust__subtitle">
+              Более 10 лет на рынке — качество, которому доверяют
+            </p>
+          </div>
+          <div className="home-trust__grid">
+            {trustItems.map((item, i) => (
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
+                <StatCard icon={item.icon} value={item.value} label={item.label} />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════ 5. POPULAR ════════════ */}
+      <section className="home-popular" aria-label="Популярные товары">
+        <div className="home-popular__inner">
+          <div className="home-popular__header">
+            <h2 className="home-popular__title">Популярное</h2>
+            <Link to="/catalog" className="home-popular__link">
+              Выбор недели <ChevronRight size={16} />
             </Link>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" ref={productsRef}>
-            {isLoading && (
-              <>
-                {[...Array(4)].map((_, index) => (
-                  <ProductCardSkeleton key={`skeleton-${index}`} />
-                ))}
-              </>
-            )}
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {isLoading &&
+              [...Array(4)].map((_, i) => (
+                <div key={`pop-skel-${i}`}>
+                  <ProductCardSkeleton />
+                </div>
+              ))}
             {isError && (
-              <div className="text-center py-12">
+              <div className="col-span-full flex justify-center py-12">
                 <ApiErrorBanner
                   message="Не удалось загрузить товары. Попробуйте позже."
                   onRetry={() => refetch()}
                 />
               </div>
             )}
+            {popularProducts.map((product, i) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+              >
+                <ProductCard product={product} imageFetchPriority={i === 0 ? 'high' : undefined} />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {productsData?.data.map((product, index) => {
-              const delayClass = index > 0 && index < DELAY_CLASSES.length ? DELAY_CLASSES[index] : '';
-              return (
-                <div key={product.id} className={`opacity-0 translate-y-[20px] transition-all duration-500 ${delayClass}`.trim()} data-fade-up>
-                  <ProductCard
-                    product={product}
-                    imageFetchPriority={index === 0 ? 'high' : undefined}
-                  />
-                </div>
-              );
-            })}
+      {/* ════════════ 6. PROMO & BRANDS ════════════ */}
+      <section className="py-16 px-4 md:px-8 max-w-[1440px] mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <Link
+            to="/promotions"
+            className="group bg-surface-card rounded-xl border border-hairline-dark p-8 hover:border-gold/30 transition-all duration-200"
+          >
+            <div className="w-12 h-12 flex items-center justify-center bg-gold/10 text-gold rounded-lg mb-4">
+              <Tag size={24} />
+            </div>
+            <h3 className="text-xl font-semibold text-body-text group-hover:text-gold transition-colors mb-2">
+              Акции и скидки
+            </h3>
+            <p className="text-sm text-muted-text leading-relaxed">
+              Специальные предложения, рассрочка 0%, trade-in и выгодные акции на комплектующие и периферию
+            </p>
+          </Link>
+          <Link
+            to="/brands"
+            className="group bg-surface-card rounded-xl border border-hairline-dark p-8 hover:border-gold/30 transition-all duration-200"
+          >
+            <div className="w-12 h-12 flex items-center justify-center bg-gold/10 text-gold rounded-lg mb-4">
+              <Award size={24} />
+            </div>
+            <h3 className="text-xl font-semibold text-body-text group-hover:text-gold transition-colors mb-2">
+              Бренды
+            </h3>
+            <p className="text-sm text-muted-text leading-relaxed">
+              Intel, AMD, NVIDIA, ASUS, Samsung, Logitech и другие ведущие производители в ассортименте GoldPC
+            </p>
+          </Link>
+        </div>
+      </section>
+
+      {/* ════════════ 7. CTA BAND ════════════ */}
+      <section className="home-cta" aria-label="Призыв к действию">
+        <div className="home-cta__inner">
+          <h2 className="home-cta__title">
+            Готовы к <span className="text-gold">апгрейду</span>?
+          </h2>
+          <p className="home-cta__subtitle">
+            Оставьте заявку — наш специалист подберёт идеальную конфигурацию
+            под ваши задачи и бюджет.
+          </p>
+          <div className="home-cta__actions">
+            <Link to="/pc-builder">
+              <Button variant="primary" size="lg" icon={<ArrowRight size={18} />}>
+                Собрать ПК
+              </Button>
+            </Link>
+            <Link to="/catalog">
+              <Button variant="outline" size="lg">
+                В каталог
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
