@@ -46,6 +46,33 @@ public interface IAuthService
     /// Смена пароля
     /// </summary>
     Task<(bool Success, string? Error)> ChangePasswordAsync(Guid id, ChangePasswordRequest request);
+    
+    /// <summary>
+    /// Запрос на сброс пароля (отправляет email со ссылкой)
+    /// </summary>
+    Task<(bool Success, string? Error)> ForgotPasswordAsync(string email, string requestScheme, string requestHost);
+    
+    /// <summary>
+    /// Сброс пароля по токену
+    /// </summary>
+    Task<(bool Success, string? Error)> ResetPasswordAsync(string token, string newPassword, string ipAddress);
+}
+
+/// <summary>
+/// Запрос на сброс пароля (forgot password)
+/// </summary>
+public class ForgotPasswordRequest
+{
+    public string Email { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Запрос на установку нового пароля (reset password)
+/// </summary>
+public class ResetPasswordRequest
+{
+    public string Token { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 }
 
 /// <summary>

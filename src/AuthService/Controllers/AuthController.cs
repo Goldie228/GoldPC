@@ -185,4 +185,50 @@ public class AuthController : ControllerBase
 
         return Ok(ApiResponse.Ok("Пароль успешно изменён"));
     }
+
+    /// <summary>
+    /// Запрос на сброс пароля (отправляет email со ссылкой)
+    /// </summary>
+    [HttpPost("forgot-password")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        var scheme = Request.Scheme;
+        var host = Request.Host.ToString();
+
+        var (success, error) = await _authService.ForgotPasswordAsync(request.Email, scheme, host);
+        
+        if (!success)
+        {
+            return BadRequest(ApiResponse.Fail(error!));
+        }
+
+        // Всегда возвращаем 200 OK для защиты от перечисления email
+        return Ok(ApiResponse.Ok("Если аккаунт с таким email существует, на него отправлена инструкция по восстановлению пароля."));
+    }
+
+    /// <summary>
+    /// Сброс пароля по токену (из email)
+    /// </summary>
+    [HttpPost("reset-password")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        if (string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.Password))
+        {
+            return BadRequest(ApiResponse.Fail("Токен и новый пароль обязательны."));
+        }
+
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var (success, error) = await _authService.ResetPasswordAsync(request.Token, request.Password, ipAddress);
+        
+        if (!success)
+        {
+            return BadRequest(ApiResponse.Fail(error!));
+        }
+
+        return Ok(ApiResponse.Ok("Пароль успешно изменён. Теперь вы можете войти с новым паролем."));
+    }
 }

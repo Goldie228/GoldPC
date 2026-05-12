@@ -83,6 +83,11 @@ public class User : BaseEntity
     public ICollection<UserAddress> Addresses { get; set; } = new List<UserAddress>();
     
     /// <summary>
+    /// Токены сброса пароля
+    /// </summary>
+    public ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
+    
+    /// <summary>
     /// Полное имя
     /// </summary>
     public string FullName => $"{FirstName} {LastName}";
