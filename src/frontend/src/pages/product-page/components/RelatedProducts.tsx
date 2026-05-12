@@ -31,12 +31,12 @@ export function RelatedProducts({ product, productId }: RelatedProductsProps): R
   const [canScrollX, setCanScrollX] = useState(false);
 
   const { data: relatedData } = useProducts(
-    { category: product.category, pageSize: 5 },
+    { category: product.category, pageSize: 12 },
     { enabled: !!product }
   );
 
   const relatedProducts = useMemo(() => {
-    return relatedData?.data.filter(p => p.id !== productId).slice(0, 4) || [];
+    return relatedData?.data.filter(p => p.id !== productId).slice(0, 8) || [];
   }, [relatedData, productId]);
 
   useEffect(() => {
@@ -52,18 +52,14 @@ export function RelatedProducts({ product, productId }: RelatedProductsProps): R
       const atStartNow = el.scrollLeft <= 1;
       const atEndNow = el.scrollLeft >= max - 1;
 
-      // Convert vertical wheel to horizontal paging to avoid scroll-snap "no-op" feeling.
-      // Trackpads with strong horizontal delta scroll pixel-wise; mouse wheels page by step.
       const absX = Math.abs(e.deltaX);
       const absY = Math.abs(e.deltaY);
       const dominantX = absX > absY;
 
       if (dominantX && absX > 2) {
-        // If user tries to scroll beyond edges, let the page handle it.
         if ((e.deltaX < 0 && atStartNow) || (e.deltaX > 0 && atEndNow)) return;
         el.scrollLeft += e.deltaX;
       } else {
-        // If user tries to scroll beyond edges, let the page handle it.
         if ((e.deltaY < 0 && atStartNow) || (e.deltaY > 0 && atEndNow)) return;
 
         wheelAccumRef.current += e.deltaY;
@@ -117,16 +113,16 @@ export function RelatedProducts({ product, productId }: RelatedProductsProps): R
 
   return (
     <motion.section variants={itemVariants} className="mt-20">
-      <div className="flex items-end justify-between gap-4 mb-5.5">
-        <h2 className="font-[var(--font-sans)] text-2xl font-semibold text-[var(--fg)] mb-0 relative inline-block">
+      {/* Section Header */}
+      <div className="flex items-end justify-between gap-4 mb-6">
+        <h2 className="text-2xl font-semibold text-foreground m-0 pb-3 border-b-2 border-primary/50 inline-block">
           С этим товаром покупают
-          <span className="absolute bottom-[-8px] left-0 w-10 h-0.5 bg-[var(--accent)]" />
         </h2>
         {canScrollX && (
-          <div className="hidden md:inline-flex gap-2.5">
+          <div className="hidden md:inline-flex gap-2">
             <button
               type="button"
-              className="w-10 h-10 rounded-full inline-flex items-center justify-center bg-[var(--border-muted)] border border-[var(--border-muted)] text-[var(--border-muted)] cursor-pointer transition-[transform,background,border-color,opacity] duration-120 hover:-translate-y-px hover:bg-[var(--border-muted)] hover:border-[var(--border-muted)] disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-10 h-10 rounded-full inline-flex items-center justify-center bg-card border border-border text-muted-foreground cursor-pointer transition-all duration-150 hover:border-primary/40 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={() => scrollByStep(-1)}
               disabled={atStart}
               aria-label="Листать влево"
@@ -135,7 +131,7 @@ export function RelatedProducts({ product, productId }: RelatedProductsProps): R
             </button>
             <button
               type="button"
-              className="w-10 h-10 rounded-full inline-flex items-center justify-center bg-[var(--border-muted)] border border-[var(--border-muted)] text-[var(--border-muted)] cursor-pointer transition-[transform,background,border-color,opacity] duration-120 hover:-translate-y-px hover:bg-[var(--border-muted)] hover:border-[var(--border-muted)] disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-10 h-10 rounded-full inline-flex items-center justify-center bg-card border border-border text-muted-foreground cursor-pointer transition-all duration-150 hover:border-primary/40 hover:text-primary disabled:opacity-40 disabled:cursor-not-allowed"
               onClick={() => scrollByStep(1)}
               disabled={atEnd}
               aria-label="Листать вправо"
@@ -146,12 +142,18 @@ export function RelatedProducts({ product, productId }: RelatedProductsProps): R
         )}
       </div>
 
+      {/* Product Track */}
       <div
-        className={`relative ${atStart ? 'before:opacity-0' : 'before:opacity-100'} ${atEnd ? 'after:opacity-0' : 'after:opacity-100'} ${!canScrollX ? 'before:opacity-0 after:opacity-0' : ''} before:content-[''] before:absolute before:top-0 before:bottom-0 before:w-[70px] before:pointer-events-none before:z-2 before:transition-opacity before:duration-160 before:left-0 before:bg-[linear-gradient(90deg,var(--bg),transparent)] after:content-[''] after:absolute after:top-0 after:bottom-0 after:w-[70px] after:pointer-events-none after:z-2 after:transition-opacity after:duration-160 after:right-0 after:bg-[linear-gradient(270deg,var(--bg),transparent)]`}
+        className={`relative ${atStart ? 'before:opacity-0' : 'before:opacity-100'} ${atEnd ? 'after:opacity-0' : 'after:opacity-100'} ${
+          !canScrollX ? 'before:opacity-0 after:opacity-0' : ''
+        } before:content-[''] before:absolute before:top-0 before:bottom-0 before:w-[70px] before:pointer-events-none before:z-[2] before:transition-opacity before:duration-150 before:left-0 before:bg-[linear-gradient(90deg,var(--bg),transparent)] after:content-[''] after:absolute after:top-0 after:bottom-0 after:w-[70px] after:pointer-events-none after:z-[2] after:transition-opacity after:duration-150 after:right-0 after:bg-[linear-gradient(270deg,var(--bg),transparent)]`}
       >
-        <div ref={trackRef} className="flex gap-4 overflow-x-auto overflow-y-hidden p-1 pb-2.5 scroll-snap-x-mandatory scroll-padding-inline-2 scroll-behavior-smooth scrollbar-thin scrollbar-color-[var(--border)_transparent]">
+        <div
+          ref={trackRef}
+          className="flex gap-4 overflow-x-auto overflow-y-hidden p-1 pb-2.5 scroll-smooth scrollbar-thin scrollbar-color-[var(--border)_transparent]"
+        >
           {relatedProducts.map((p) => (
-            <div key={p.id} className="scroll-snap-align-start flex-0-0-auto w-[min(260px,78vw)] sm:w-[260px] lg:w-[280px]">
+            <div key={p.id} className="flex-shrink-0 w-[min(260px,78vw)] sm:w-[260px] lg:w-[280px]">
               <ProductCard product={p} />
             </div>
           ))}

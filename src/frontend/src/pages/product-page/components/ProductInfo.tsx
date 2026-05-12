@@ -22,24 +22,17 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
-function getStockStatus(stock: number): { text: string; className: string } {
-  if (stock === 0) {
-    return { 
-      text: 'Нет в наличии', 
-      className: styles.stockOut
-    };
-  }
-  if (stock <= 5) {
-    return { 
-      text: `Мало (${stock} шт)`, 
-      className: styles.stockLow
-    };
-  }
-  return { 
-    text: `В наличии`, 
-    className: styles.stockIn
-  };
+function getStockStatus(stock: number): { text: string; variant: 'in' | 'low' | 'out' } {
+  if (stock === 0) return { text: 'Нет в наличии', variant: 'out' };
+  if (stock <= 5) return { text: `Мало (${stock} шт.)`, variant: 'low' };
+  return { text: 'В наличии', variant: 'in' };
 }
+
+const stockConfig = {
+  in: { dot: 'bg-price-drop shadow-[0_0_8px_rgba(14,203,129,0.4)]', text: 'text-price-drop' },
+  low: { dot: 'bg-gold shadow-[0_0_8px_rgba(252,213,53,0.35)]', text: 'text-gold' },
+  out: { dot: 'bg-destructive', text: 'text-destructive' },
+} as const;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -51,7 +44,8 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
   const [notifyEmail, setNotifyEmail] = useState('');
   const [notifySent, setNotifySent] = useState(false);
 
-  const stockStatus = getStockStatus(product.stock);
+  const stock = getStockStatus(product.stock);
+  const stockStyle = stockConfig[stock.variant];
   const hasDiscount = product.oldPrice !== undefined && product.oldPrice > product.price;
 
   const inCart = isInCart(product.id);
@@ -89,13 +83,11 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
 
   const handleToggleComparison = (): void => {
     if (isDisabled) return;
-
     if (inComparison) {
       toggleComparison(product.id, product.category);
       showToast('Удалено из сравнения', 'info');
       return;
     }
-
     const result = toggleComparison(product.id, product.category);
     if (result.success) {
       showToast('Добавлено в сравнение', 'success');
@@ -125,7 +117,6 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
         if (err instanceof DOMException && err.name === 'AbortError') return;
       }
     }
-    
     try {
       await navigator.clipboard.writeText(url);
       showToast('Ссылка скопирована в буфер обмена', 'success');
@@ -136,44 +127,61 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
 
   return (
     <div className="flex flex-col">
+      {/* Manufacturer */}
       {product.manufacturer && (
-        <span className="text-xs font-semibold text-[var(--accent)] uppercase tracking-[0.1em] mb-2">{product.manufacturer.name}</span>
+        <span className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">
+          {product.manufacturer.name}
+        </span>
       )}
-      <h1 className="font-[var(--font-sans)] text-3xl font-bold text-[var(--fg)] m-0 mb-4 leading-1.2">{product.name}</h1>
-      
-      <div className="flex items-center flex-wrap gap-4 mb-6 text-sm">
-        <span className="text-[var(--fg-muted)] font-[var(--font-mono)]">АРТ: {product.sku}</span>
-        <div className={`flex items-center gap-2 text-sm font-medium ${stockStatus.className}`}>
-          <span className={`w-2 h-2 rounded-full ${stockStatus.text.includes('Нет') ? 'text-[var(--error)] bg-[var(--error)]' : stockStatus.text.includes('Мало') ? 'text-[var(--accent)] opacity-85 [&>span]:bg-[var(--color-amber-500)] [&>span]:shadow-[0_0_8px_rgba(245,158,11,0.4)]' : 'text-[var(--accent)] [&>span]:bg-[var(--accent)] [&>span]:shadow-[0_0_8px_var(--accent-glow)]'}`}>
-            <span className="w-2 h-2 rounded-full inline-block" />
-            {stockStatus.text}
-          </span>
-        </div>
+
+      {/* Product Name */}
+      <h1 className="text-[28px] font-bold text-foreground m-0 mb-4 leading-tight">
+        {product.name}
+      </h1>
+
+      {/* SKU + Stock Status */}
+      <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mb-6 text-sm">
+        <span className="text-muted-foreground">
+          АРТ: <span className="font-mono">{product.sku}</span>
+        </span>
+        <span className={`inline-flex items-center gap-2 text-sm font-medium ${stockStyle.text}`}>
+          <span className={`w-2 h-2 rounded-full ${stockStyle.dot}`} />
+          {stock.text}
+        </span>
       </div>
 
-      <div className="bg-[var(--border-muted)] border border-[var(--border)] rounded-xl p-6 mb-8">
-        <div className="flex items-baseline gap-4 mb-2">
-          <span className="font-[var(--font-sans)] text-4xl font-bold text-[var(--accent)]">{formatPrice(product.price)}</span>
+      {/* Price Card */}
+      <div className="bg-card border border-border rounded-xl p-6 mb-8">
+        <div className="flex items-baseline gap-4">
+          <span className="font-mono text-[36px] font-bold text-primary tracking-tight">
+            {formatPrice(product.price)}
+          </span>
           {hasDiscount && product.oldPrice && (
-            <span className="font-[var(--font-sans)] text-xl text-[var(--fg-dim)] line-through">{formatPrice(product.oldPrice)}</span>
+            <span className="font-mono text-xl text-muted-foreground line-through">
+              {formatPrice(product.oldPrice)}
+            </span>
           )}
         </div>
       </div>
 
-      <div className="flex gap-4 mb-10">
+      {/* Action Buttons */}
+      <div className="flex gap-3 mb-10">
+        {/* Add to Cart / Quantity Controls */}
         {inCart ? (
-          <div className="flex items-center gap-3 bg-[var(--bg-card)] border border-[var(--border)] rounded-lg px-4 h-14">
-            <button 
-              className="w-8 h-8 flex items-center justify-center bg-transparent border border-[var(--border)] rounded text-[var(--fg)] cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
+          <div className="flex items-center gap-3 bg-card border border-border rounded-lg px-4 h-14">
+            <button
+              className="w-8 h-8 flex items-center justify-center bg-transparent border border-border rounded text-foreground cursor-pointer transition-all duration-200 hover:border-primary hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => handleUpdateQty(-1)}
               aria-label="Уменьшить количество"
               type="button"
             >
               <Minus size={18} />
             </button>
-            <span className="font-[var(--font-mono)] text-lg font-semibold min-w-6 text-center">{quantityInCart}</span>
-            <button 
-              className="w-8 h-8 flex items-center justify-center bg-transparent border border-[var(--border)] rounded text-[var(--fg)] cursor-pointer transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-50 disabled:cursor-not-allowed"
+            <span className="font-mono text-lg font-semibold min-w-6 text-center text-foreground">
+              {quantityInCart}
+            </span>
+            <button
+              className="w-8 h-8 flex items-center justify-center bg-transparent border border-border rounded text-foreground cursor-pointer transition-all duration-200 hover:border-primary hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => handleUpdateQty(1)}
               aria-label="Увеличить количество"
               type="button"
@@ -182,29 +190,39 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
             </button>
           </div>
         ) : (
-          <Button 
-            variant="primary" 
-            onClick={handleAddToCart} 
+          <button
+            type="button"
+            onClick={handleAddToCart}
             disabled={isDisabled}
-            className="flex-1 h-14 text-base font-semibold"
+            className="flex-1 h-14 inline-flex items-center justify-center gap-2.5 bg-price-drop text-on-dark rounded-sm px-5 text-sm font-semibold border-none cursor-pointer transition-all duration-200 hover:brightness-110 active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <ShoppingCart size={20} style={{ marginRight: '10px' }} />
+            <ShoppingCart size={20} />
             Добавить в корзину
-          </Button>
+          </button>
         )}
-        
-        <button 
-          type="button" 
-          className={`w-14 h-14 flex items-center justify-center bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--fg-muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--border-muted)] ${inWishlist ? 'text-[var(--accent)]!important border-[color-mix(in_srgb,var(--accent)_35%,transparent)]!important bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]' : ''}`}
+
+        {/* Wishlist */}
+        <button
+          type="button"
+          className={`w-14 h-14 flex items-center justify-center bg-card border border-border rounded-lg text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary hover:bg-card ${
+            inWishlist
+              ? '!text-primary !border-primary/35 !bg-primary/10'
+              : ''
+          }`}
           onClick={handleToggleWishlist}
-          aria-label={inWishlist ? "Удалить из избранного" : "Добавить в избранное"}
+          aria-label={inWishlist ? 'Удалить из избранного' : 'Добавить в избранное'}
         >
           <Heart size={20} fill={inWishlist ? 'currentColor' : 'none'} />
         </button>
 
+        {/* Compare */}
         <button
           type="button"
-          className={`w-14 h-14 flex items-center justify-center bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--fg-muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--border-muted)] ${inComparison ? 'text-[var(--accent)] border-[color-mix(in_srgb,var(--accent)_35%,transparent)] bg-[color-mix(in_srgb,var(--accent)_10%,transparent)]' : ''} disabled:opacity-50 disabled:cursor-not-allowed`}
+          className={`w-14 h-14 flex items-center justify-center bg-card border border-border rounded-lg text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary hover:bg-card disabled:opacity-50 disabled:cursor-not-allowed ${
+            inComparison
+              ? '!text-primary !border-primary/35 !bg-primary/10'
+              : ''
+          }`}
           onClick={handleToggleComparison}
           disabled={isDisabled}
           aria-label={inComparison ? 'Удалить из сравнения' : 'Добавить в сравнение'}
@@ -212,9 +230,10 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
           <Icon name="compare" size="md" color={inComparison ? 'gold' : 'default'} />
         </button>
 
+        {/* Share */}
         <button
           type="button"
-          className="w-14 h-14 flex items-center justify-center bg-[var(--bg-card)] border border-[var(--border)] rounded-lg text-[var(--fg-muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--border-muted)]"
+          className="w-14 h-14 flex items-center justify-center bg-card border border-border rounded-lg text-muted-foreground transition-all duration-200 hover:border-primary hover:text-primary hover:bg-card"
           aria-label="Поделиться товаром"
           onClick={() => void handleShare()}
         >
@@ -222,17 +241,20 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
         </button>
       </div>
 
+      {/* Stock Notification */}
       {product.stock === 0 && (
-        <div className="mb-[var(--spacing-lg)] p-[var(--spacing-md)] bg-[var(--bg-card)] border border-[var(--border)] rounded-[var(--radius-md)]">
-          <p className="text-[var(--text-sm)] font-[var(--font-semibold)] mb-[var(--spacing-sm)] text-[var(--fg)]">Сообщить о поступлении</p>
-          <div className="flex flex-wrap gap-[var(--spacing-sm)] items-center">
+        <div className="mb-8 p-4 bg-card border border-border rounded-lg">
+          <p className="text-sm font-semibold text-foreground mb-3">
+            Сообщить о поступлении
+          </p>
+          <div className="flex flex-wrap gap-3 items-center">
             <label htmlFor="stock-notify-email" className="sr-only">
               Email для уведомления
             </label>
             <input
               id="stock-notify-email"
               type="email"
-              className="flex-1 min-w-[200px] p-2.5 px-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] rounded-[var(--radius-sm)] text-[var(--fg)] text-sm focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-glow)]"
+              className="flex-1 min-w-[200px] px-3.5 py-2.5 bg-surface-elevated border border-border rounded-md text-foreground text-sm focus:outline-none focus:border-primary focus:shadow-[0_0_0_3px_rgba(252,213,53,0.15)]"
               placeholder="your@email.com"
               value={notifyEmail}
               onChange={(e) => setNotifyEmail(e.target.value)}
@@ -241,55 +263,80 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
             />
             <button
               type="button"
-              className="px-4.5 py-2.5 text-sm font-semibold bg-[var(--accent)] text-[var(--bg-primary)] border-none rounded-[var(--radius-sm)] cursor-pointer transition-opacity duration-[var(--transition-fast)] hover:opacity-92 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 text-sm font-semibold bg-primary text-primary-foreground border-none rounded-md cursor-pointer transition-all duration-200 hover:brightness-110 active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleNotifyStock}
               disabled={notifySent}
             >
               {notifySent ? 'Готово' : 'Подписаться'}
             </button>
           </div>
-          <p className="text-[var(--text-xs)] text-[var(--fg-muted)] mt-[var(--spacing-sm)]">
+          <p className="text-xs text-muted-foreground mt-3">
             Оформляя подписку, вы соглашаетесь получить одно письмо о появлении товара. Без рассылок.
           </p>
         </div>
       )}
 
-      <section className="mt-4.5 border border-[var(--border)] rounded-xl bg-[var(--border-muted)] overflow-hidden" aria-label="Доставка по Минску">
-        <div className="flex items-center justify-between gap-3 p-4 border-b border-[var(--border-muted)] bg-[var(--border-muted)]">
-          <p className="m-0 text-[0.95rem] font-semibold text-[var(--fg)]">Доставка</p>
-          <span className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-[var(--border-muted)] bg-[var(--border-muted)] text-[var(--accent)] text-xs font-semibold whitespace-nowrap">по Минску</span>
+      {/* Delivery Section */}
+      <section
+        className="bg-card border border-border rounded-xl overflow-hidden"
+        aria-label="Доставка по Минску"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border">
+          <p className="m-0 text-sm font-semibold text-foreground">Доставка</p>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold whitespace-nowrap">
+            по Минску
+          </span>
         </div>
 
-        <div className="grid">
-          <div className="grid grid-cols-1fr_auto_auto items-center gap-3.5 p-3.5 border-t border-[var(--border-muted)]">
+        {/* Options */}
+        <div className="divide-y divide-border">
+          {/* Courier by time */}
+          <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3.5 px-5 py-4">
             <div className="grid gap-1 min-w-0">
-              <p className="m-0 text-[0.9rem] font-semibold text-[var(--fg)]">Курьером в ваше время</p>
-              <p className="m-0 text-[0.85rem] text-[var(--fg-muted)] leading-1.35">Доставим заказ в удобный для вас 30-минутный интервал времени</p>
+              <p className="m-0 text-sm font-semibold text-foreground">Курьером в ваше время</p>
+              <p className="m-0 text-xs text-muted-foreground leading-relaxed">
+                Доставим заказ в удобный для вас 30-минутный интервал времени
+              </p>
             </div>
-            <p className="m-0 font-[var(--font-mono)] text-sm font-bold text-[var(--fg)] whitespace-nowrap">от 7 BYN</p>
-            <Link to="/delivery" className="w-9 h-9 rounded-xl inline-flex items-center justify-center text-[var(--fg-muted)] border border-[var(--border-muted)] bg-[var(--border-muted)] text-decoration-none transition-[transform,border-color,background,color] duration-120 hover:-translate-y-px hover:text-[var(--accent)] hover:border-[var(--border-muted)] hover:bg-[var(--border-muted)]" aria-label="Условия доставки">
+            <p className="m-0 font-mono text-sm font-bold text-foreground whitespace-nowrap">от 7 BYN</p>
+            <Link
+              to="/delivery"
+              className="w-9 h-9 rounded-lg inline-flex items-center justify-center text-muted-foreground border border-border bg-transparent text-decoration-none transition-all duration-150 hover:text-primary hover:border-primary/30"
+              aria-label="Условия доставки"
+            >
               <ArrowRight size={18} aria-hidden />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1fr_auto_auto items-center gap-3.5 p-3.5 border-t border-[var(--border-muted)]">
+          {/* Standard Courier */}
+          <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3.5 px-5 py-4">
             <div className="grid gap-1 min-w-0">
-              <p className="m-0 text-[0.9rem] font-semibold text-[var(--fg)]">Курьером</p>
-              <p className="m-0 text-[0.85rem] text-[var(--fg-muted)] leading-1.35">Обычно 1–2 дня</p>
+              <p className="m-0 text-sm font-semibold text-foreground">Курьером</p>
+              <p className="m-0 text-xs text-muted-foreground leading-relaxed">Обычно 1–2 дня</p>
             </div>
-            <p className="m-0 font-[var(--font-mono)] text-sm font-bold text-[var(--accent)] whitespace-nowrap">бесплатно</p>
-            <Link to="/delivery" className="w-9 h-9 rounded-xl inline-flex items-center justify-center text-[var(--fg-muted)] border border-[var(--border-muted)] bg-[var(--border-muted)] text-decoration-none transition-[transform,border-color,background,color] duration-120 hover:-translate-y-px hover:text-[var(--accent)] hover:border-[var(--border-muted)] hover:bg-[var(--border-muted)]" aria-label="Условия доставки">
+            <p className="m-0 font-mono text-sm font-bold text-price-drop whitespace-nowrap">бесплатно</p>
+            <Link
+              to="/delivery"
+              className="w-9 h-9 rounded-lg inline-flex items-center justify-center text-muted-foreground border border-border bg-transparent text-decoration-none transition-all duration-150 hover:text-primary hover:border-primary/30"
+              aria-label="Условия доставки"
+            >
               <ArrowRight size={18} aria-hidden />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1fr_auto_auto items-center gap-3.5 p-3.5 border-t border-[var(--border-muted)]">
+          {/* Pickup */}
+          <div className="grid grid-cols-[1fr_auto_auto] items-center gap-3.5 px-5 py-4">
             <div className="grid gap-1 min-w-0">
-              <p className="m-0 text-[0.9rem] font-semibold text-[var(--fg)]">Самовывоз</p>
-              <p className="m-0 text-[0.85rem] text-[var(--fg-muted)] leading-1.35">Заберите в пункте выдачи</p>
+              <p className="m-0 text-sm font-semibold text-foreground">Самовывоз</p>
+              <p className="m-0 text-xs text-muted-foreground leading-relaxed">Заберите в пункте выдачи</p>
             </div>
-            <p className="m-0 font-[var(--font-mono)] text-sm font-bold text-[var(--accent)] whitespace-nowrap">бесплатно</p>
-            <Link to="/delivery" className="w-9 h-9 rounded-xl inline-flex items-center justify-center text-[var(--fg-muted)] border border-[var(--border-muted)] bg-[var(--border-muted)] text-decoration-none transition-[transform,border-color,background,color] duration-120 hover:-translate-y-px hover:text-[var(--accent)] hover:border-[var(--border-muted)] hover:bg-[var(--border-muted)]" aria-label="Условия самовывоза">
+            <p className="m-0 font-mono text-sm font-bold text-price-drop whitespace-nowrap">бесплатно</p>
+            <Link
+              to="/delivery"
+              className="w-9 h-9 rounded-lg inline-flex items-center justify-center text-muted-foreground border border-border bg-transparent text-decoration-none transition-all duration-150 hover:text-primary hover:border-primary/30"
+              aria-label="Условия самовывоза"
+            >
               <ArrowRight size={18} aria-hidden />
             </Link>
           </div>

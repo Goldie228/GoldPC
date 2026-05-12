@@ -7,32 +7,39 @@ export interface ProductReviewCardProps {
 
 export function ProductReviewCard({ review }: ProductReviewCardProps): ReactElement {
   return (
-    <article className="p-6 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl" aria-label={`Отзыв от ${review.userName}`}>
-      <div className="flex justify-between mb-4">
-        <span className="font-semibold text-[var(--fg)]">{review.userName}</span>
-        <time className="text-xs text-[var(--fg-dim)]" dateTime={review.createdAt}>
+    <article className="bg-card border border-border rounded-xl p-6" aria-label={`Отзыв от ${review.userName}`}>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-4">
+        <span className="font-semibold text-foreground">{review.userName}</span>
+        <time className="text-xs text-muted-foreground" dateTime={review.createdAt}>
           {new Date(review.createdAt).toLocaleDateString('ru-RU')}
         </time>
       </div>
-      <div className="text-[var(--accent)] text-sm mb-3" style={{ fontSize: '0.9rem', marginBottom: '12px' }} aria-hidden>
+
+      {/* Rating */}
+      <div className="text-primary text-sm mb-3" aria-hidden>
         {'★'.repeat(review.rating)}
         {'☆'.repeat(5 - review.rating)}
       </div>
+
+      {/* Comment */}
       {review.comment?.trim() ? (
-        <p className="mb-4 leading-6">{review.comment}</p>
+        <p className="mb-4 leading-relaxed text-foreground">{review.comment}</p>
       ) : null}
+
+      {/* Pros / Cons */}
       {(review.pros || review.cons) && (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {review.pros && (
             <div className="text-sm">
-              <strong className="text-[var(--color-emerald-500)] block text-xs font-bold uppercase tracking-[0.05em] mb-1">Достоинства</strong>
-              {review.pros}
+              <strong className="text-price-drop block text-xs font-bold uppercase tracking-wider mb-1">Достоинства</strong>
+              <span className="text-foreground">{review.pros}</span>
             </div>
           )}
           {review.cons && (
             <div className="text-sm">
-              <strong className="text-[var(--error)] block text-xs font-bold uppercase tracking-[0.05em] mb-1">Недостатки</strong>
-              {review.cons}
+              <strong className="text-destructive block text-xs font-bold uppercase tracking-wider mb-1">Недостатки</strong>
+              <span className="text-foreground">{review.cons}</span>
             </div>
           )}
         </div>
