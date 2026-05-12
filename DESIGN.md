@@ -1,6 +1,6 @@
 version: alpha
 name: Gold PC
-description: A confident computer-hardware store interface anchored on a deep near-black canvas, where Gold PC's iconic golden yellow (#FCD535) carries every primary CTA, brand accent, and value-claim moment. Type runs Gold PC's custom GoldNova / GoldPlex stack at modest weights — the system trusts size and yellow voltage over bold weight. Marketing and product surfaces default to the dark theme; transactional surfaces (product checkout, custom builder) flip to a light theme that shares the same yellow CTAs and gray-blue hairlines. Price-drop green (discount) and price-rise red (price increase) accents thread through both modes for price-direction signals.
+description: A confident computer-hardware store interface anchored on a deep near-black canvas, where Gold PC's iconic golden yellow (#FCD535) carries every primary CTA, brand accent, and value-claim moment. Type runs Gold PC's custom GoldNova / GoldPlex stack at modest weights — the system trusts size and yellow voltage over bold weight. All surfaces default to the dark theme, with a single light element: the footer. Price-drop green (discount) and price-rise red (price increase) accent price-direction signals throughout.
 
 colors:
   primary: "#fcd535"
@@ -336,15 +336,15 @@ Gold PC reads like a computer‑hardware retail platform that wants to feel both
 
 Type runs Gold PC’s custom **GoldNova** (display + body) and **GoldPlex** (numerical / product‑data) stack. GoldNova carries display headlines, section titles, and body copy. GoldPlex appears on price tickers, large stat numbers (products sold, customer ratings, in‑stock counts) — anywhere a number wants to feel “tabular and reliable.” Both run at modest weights — display sizes use weight 600‑700 (bolder than typical marketing because a hardware store needs stats to read at a glance), body stays at 400.
 
-The product is **multi‑theme**: marketing surfaces (homepage, gaming‑arena, top‑deals) default to dark, while transactional surfaces (checkout, custom‑builder, order form) flip to a light theme. The same yellow CTAs and gray‑blue hairlines (`{colors.hairline-on-light}` — #eaecef) thread through both — only canvas, surface, and text tones flip. Price‑decrease **green** (`{colors.price-drop}` — #0ecb81) and price‑increase **red** (`{colors.price-rise}` — #f6465d) signal price‑direction in tables, charts, and product listings across both modes.
+The product uses a **dark theme** across all surfaces — marketing, product showcase, and transactional (checkout, custom builder, order form) all default to `{colors.canvas-dark}` (#0b0e11). The same yellow CTAs and gray‑blue hairlines (`{colors.hairline-on-dark}` — #2b3139) thread through all pages. Price‑decrease **green** (`{colors.price-drop}` — #0ecb81) and price‑increase **red** (`{colors.price-rise}` — #f6465d) signal price‑direction in tables, charts, and product listings.
 
 **Key Characteristics:**
-- Single accent color: `{colors.primary}` (#FCD535) does all brand voltage — primary CTAs, hero headlines, brand mark, badges. Used scarcely on dark for emphasis, ubiquitously on transactional dialogs.
+- Single accent color: `{colors.primary}` (#FCD535) does all brand voltage — primary CTAs, hero headlines, brand mark, badges. Used scarcely for maximum emphasis.
 - Custom type stack: `GoldNova` (display + body) and `GoldPlex` (numbers, prices, product data). Large stat numbers always render in GoldPlex for tabular consistency.
-- Multi‑theme: marketing pages default dark (`{colors.canvas-dark}`); transactional pages flip light (`{colors.canvas-light}`). Yellow CTAs and price‑drop/price‑rise green/red are shared across both.
+- Unified dark theme: all surfaces (marketing, product, transactional, custom builder) use `{colors.canvas-dark}` as the page floor. No light theme variants.
 - Light footer on dark body: the homepage uses `{colors.surface-soft-light}` (#fafafa) for the footer even when the body above it is dark — a deliberate inversion that visually closes the page.
 - Price‑direction semantics: green down / red up (`{colors.price-drop}` / `{colors.price-rise}`) for price changes, applied as text color rather than badge background.
-- Card surfaces: `{colors.surface-card-dark}` (#1e2329) for elevated cards on dark; `{colors.canvas-light}` for cards on light. No gradient surfaces, no atmospheric backdrops — flat color blocks throughout.
+- Card surfaces: `{colors.surface-card-dark}` (#1e2329) for elevated cards; no gradient surfaces, no atmospheric backdrops — flat color blocks throughout.
 - Border radius is small to medium: `{rounded.md}` (6px) for primary buttons, `{rounded.lg}` (8px) for inputs and content cards, `{rounded.xl}` (12px) for elevated card containers, `{rounded.pill}` for prominent feature CTAs.
 - Spacing follows a 4‑multiple scale; major editorial bands sit at `{spacing.section}` (80px) — slightly tighter than typical marketing‑only sites because product pages need denser layouts.
 
@@ -358,17 +358,12 @@ The product is **multi‑theme**: marketing surfaces (homepage, gaming‑arena, 
 
 ### Surface
 
-The system has two canvas modes that map to product context:
+The system uses a unified dark canvas:
 
-**Dark mode (marketing default):**
-- **Canvas Dark** (`{colors.canvas-dark}` — #0b0e11): The primary page floor. Near‑black with a slight warm tint — never pure black.
-- **Surface Card Dark** (`{colors.surface-card-dark}` — #1e2329): Cards, navigation dropdowns, secondary buttons over dark canvas, product tables.
+- **Canvas Dark** (`{colors.canvas-dark}` — #0b0e11): The primary page floor across all surfaces — marketing, product, and transactional. Near‑black with a slight warm tint — never pure black.
+- **Surface Card Dark** (`{colors.surface-card-dark}` — #1e2329): Cards, navigation dropdowns, secondary buttons, product tables, custom builder slots.
 - **Surface Elevated Dark** (`{colors.surface-elevated-dark}` — #2b3139): One step lighter, used for nested cards, hovered nav items, and chart background panels.
-
-**Light mode (transactional):**
-- **Canvas Light** (`{colors.canvas-light}` — #ffffff): The page floor on transactional pages (checkout, custom builder, order forms).
-- **Surface Soft Light** (`{colors.surface-soft-light}` — #fafafa): Footer surface and disabled states.
-- **Surface Strong Light** (`{colors.surface-strong-light}` — #f5f5f5): Form input backgrounds in muted contexts.
+- **Surface Soft Light** (`{colors.surface-soft-light}` — #fafafa): Footer surface only — the one light element on every page.
 
 ### Hairlines & Borders
 - **Hairline on Light** (`{colors.hairline-on-light}` — #eaecef): The 1px border tone on light surfaces. Hairlines appear liberally across all transactional pages.
@@ -491,7 +486,7 @@ Gold PC’s radius hierarchy is tighter than typical marketing systems — most 
 
 **`top-nav-dark`** — The marketing top nav on dark canvas. 64px tall, `{colors.canvas-dark}` background. Carries the yellow Gold PC wordmark at left, primary horizontal menu (Shop, Desktops, Laptops, Components, Gaming, Deals, Support), right‑side cluster with language selector, light/dark toggle, “Sign In” text link, “Sign Up” `{component.button-primary}`. The wordmark uses `{colors.primary}` for “GOLD PC” type.
 
-**`top-nav-light`** — The transactional top nav on light canvas (checkout, custom builder pages). Same layout but `{colors.canvas-light}` background and `{colors.ink}` menu items.
+**`top-nav-light`** — Deprecated. Gold PC now uses the dark top nav (`top-nav-dark`) on all surfaces.
 
 ### Buttons
 
@@ -573,14 +568,14 @@ Gold PC’s radius hierarchy is tighter than typical marketing systems — most 
 
 ### Do
 - Reserve `{colors.primary}` (Gold PC Yellow) for primary actions, brand‑claim headlines, and the wordmark. Never use it for secondary or decorative purposes — yellow’s scarcity is what makes it powerful.
-- Keep `{component.button-primary}` (yellow with black text) as the universal primary CTA across both dark and light modes. The same button appears identically on `{colors.canvas-dark}` and `{colors.canvas-light}`.
+- Keep `{component.button-primary}` (yellow with black text) as the universal primary CTA. The button uses `{colors.primary}` (#FCD535) background and `{colors.on-primary}` (#181a20) text across all surfaces.
 - Use `{component.button-add-to-cart}` (green) and `{component.button-remove}` (red) only for explicit add‑to‑cart / positive purchase and remove / out‑of‑stock actions. Never use them for generic “confirm” or “cancel” because they carry semantic price‑direction meaning.
 - Use GoldPlex for every number. Prices, stock counts, discount percentages, stat counters — all GoldPlex. Mixing GoldNova into a number ticker breaks the hardware‑store character.
-- Choose canvas mode by surface intent: dark for marketing / product showcase / gaming dashboards; light for transactional dialogs (checkout, custom builder, order form).
+- Use the unified dark canvas (`{colors.canvas-dark}`) across all surfaces — marketing, product, transactional. The dark theme is Gold PC's signature look.
 - Anchor every editorial band with `{spacing.section}` (80px). Gold PC is denser than airy marketing sites — 80px is the right rhythm.
 
 ### Don't
-- Don’t introduce a second brand color. The system has exactly one accent (`{colors.primary}`) and any expansion dilutes the brand identity. The turquoise on the custom builder is a single‑product experiment, not a system token.
+- Don’t introduce a second brand color. The system has exactly one accent (`{colors.primary}`) and any expansion dilutes the brand identity.
 - Don’t use yellow for body text or large surface fills. It is for focal‑point CTAs and headlines only.
 - Don’t use `{colors.price-drop}` / `{colors.price-rise}` as background fills on cards. They are price‑direction signals, expressed as text color or small badge fill — never as a card surface.
 - Don’t soften display weight. `{typography.hero-display}` and `{typography.display-lg}` are intentionally weight 700 — going to 400 reads as design‑portfolio, not hardware platform.
@@ -618,7 +613,7 @@ Gold PC’s radius hierarchy is tighter than typical marketing systems — most 
 ## Iteration Guide
 
 1. Focus on ONE component at a time. Reference its YAML key directly (`{component.button-primary}`, `{component.product-row}`).
-2. When adding a new component, decide first whether it lives in dark mode (marketing / product) or light mode (transactional). The same component appears in both with surface tone flipped.
+2. All components use the dark theme (`{colors.canvas-dark}` background, `{colors.on-dark}` text). The same dark‑mode component patterns apply across marketing, product, and transactional surfaces.
 3. Variants of an existing component (`-active`, `-disabled`) live as separate entries in `components:` — never as nested state objects.
 4. Use `{token.refs}` everywhere prose mentions a color, a radius, a typography role, or a spacing value.
 5. Never document hover. The system documents Default and Active/Pressed states only.
@@ -631,5 +626,5 @@ Gold PC’s radius hierarchy is tighter than typical marketing systems — most 
 - GoldNova and GoldPlex weight‑axis values are not formalized as variable‑font tokens — only the static weights observed in designs are documented.
 - Animation and transition timings (chart updates, price‑change flashes) are not in scope.
 - Form validation states beyond `{component.text-input-on-light}` defaults are not extracted — error / success input variants would need a checkout or order‑confirmation flow to confirm.
-- The full PC builder surfaces (component pickers, compatibility checker) were not in the analyzed set; their configuration cards are not documented here.
+- The full PC builder surfaces (component pickers, compatibility checker) use the standard dark‑theme card pattern (`surface-card-dark`, gold accent).
 - The light/dark theme toggle behavior (whether transactional pages can be forced dark by user preference) is product behavior, not extracted from the marketing surfaces.
