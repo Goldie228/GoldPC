@@ -4,6 +4,7 @@ using FluentValidation.AspNetCore;
 using GoldPC.AuthService.Data;
 using GoldPC.AuthService.Services;
 using GoldPC.AuthService.Validators;
+using GoldPC.Shared.Services.Implementations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -43,6 +44,7 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 // Регистрация сервисов
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton<SmtpEmailService>();
 
 // Настройка JWT аутентификации
 var jwtSettings = builder.Configuration.GetSection("Jwt");
