@@ -1,0 +1,39 @@
+/* WishlistPage — GoldPC Design System */
+
+/* Toolbar: search input + sort select side-by-side */
+.wishlist-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .wishlist-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wishlist-toolbar select {
+    width: 100%;
+  }
+}
+
+/* Scrollbar for category chips */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-surface-elevated, #2b3139);
+  border-radius: 2px;
+}
+
+/* Smooth category chip transition */
+.wishlist-toolbar button {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
