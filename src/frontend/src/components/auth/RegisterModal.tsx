@@ -147,13 +147,6 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     return Math.min(strength, 3);
   }, [password]);
 
-  const getStrengthClass = (index: number) => {
-    if (index >= passwordStrength) return 'bg-[var(--border)]';
-    if (passwordStrength === 1) return 'bg-[var(--error)]';
-    if (passwordStrength === 2) return 'bg-[var(--color-amber-500)]';
-    return 'bg-[var(--color-green-500)]';
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -239,19 +232,23 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     >
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         {error && (
-          <div className="p-3 bg-red-500/10 border border-red-500/30 text-[var(--error)] text-sm rounded-[var(--radius)]" role="alert">
+          <div className="p-3 bg-price-rise/10 border border-price-rise/30 text-price-rise text-sm rounded-md" role="alert">
             {error}
           </div>
         )}
 
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider" htmlFor="register-firstName">
+          <label className="text-xs font-medium text-muted-text uppercase tracking-wider" htmlFor="register-firstName">
             Имя
           </label>
           <input
             id="register-firstName"
             type="text"
-            className={`w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)] ${fieldErrors.firstName ? 'border-[var(--error)] bg-red-500/5' : ''}`}
+            className={`w-full p-3.5 bg-surface-elevated border text-body-text font-sans text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50 ${
+              fieldErrors.firstName
+                ? 'border-price-rise outline outline-1 outline-price-rise/30'
+                : 'border-hairline-dark'
+            }`}
             placeholder="Ваше имя"
             value={firstName}
             onChange={(e) => {
@@ -261,17 +258,21 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             required
             autoComplete="given-name"
           />
-          {fieldErrors.firstName && <div className="text-xs text-[var(--error)] -mt-1 ml-0.5">{fieldErrors.firstName}</div>}
+          {fieldErrors.firstName && <div className="text-xs text-price-rise -mt-1 ml-0.5">{fieldErrors.firstName}</div>}
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider" htmlFor="register-phone">
+          <label className="text-xs font-medium text-muted-text uppercase tracking-wider" htmlFor="register-phone">
             Телефон
           </label>
           <input
             id="register-phone"
             type="tel"
-            className={`w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)] ${fieldErrors.phone ? 'border-[var(--error)] bg-red-500/5' : ''}`}
+            className={`w-full p-3.5 bg-surface-elevated border text-body-text font-sans text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50 ${
+              fieldErrors.phone
+                ? 'border-price-rise outline outline-1 outline-price-rise/30'
+                : 'border-hairline-dark'
+            }`}
             placeholder="+375 (29) 123-45-67"
             value={phone}
             onChange={(e) => {
@@ -283,17 +284,21 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             inputMode="numeric"
             maxLength={19}
           />
-          {fieldErrors.phone && <div className="text-xs text-[var(--error)] -mt-1 ml-0.5">{fieldErrors.phone}</div>}
+          {fieldErrors.phone && <div className="text-xs text-price-rise -mt-1 ml-0.5">{fieldErrors.phone}</div>}
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider" htmlFor="register-email">
+          <label className="text-xs font-medium text-muted-text uppercase tracking-wider" htmlFor="register-email">
             Email
           </label>
           <input
             id="register-email"
             type="email"
-            className={`w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)] ${fieldErrors.email ? 'border-[var(--error)] bg-red-500/5' : ''}`}
+            className={`w-full p-3.5 bg-surface-elevated border text-body-text font-sans text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50 ${
+              fieldErrors.email
+                ? 'border-price-rise outline outline-1 outline-price-rise/30'
+                : 'border-hairline-dark'
+            }`}
             placeholder="your@email.com"
             value={email}
             onChange={(e) => {
@@ -303,7 +308,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             required
             autoComplete="email"
           />
-          {fieldErrors.email && <div className="text-xs text-[var(--error)] -mt-1 ml-0.5">{fieldErrors.email}</div>}
+          {fieldErrors.email && <div className="text-xs text-price-rise -mt-1 ml-0.5">{fieldErrors.email}</div>}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -320,16 +325,24 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             minLength={8}
             maxLength={64}
             autoComplete="new-password"
-            labelClassName="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider"
-            inputClassName="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)]"
+            labelClassName="text-xs font-medium text-muted-text uppercase tracking-wider"
+            inputClassName="w-full p-3.5 bg-surface-elevated border border-hairline-dark text-body-text font-sans text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50"
           />
-          <p className="text-[10px] text-[var(--fg-dim)] mt-1">Минимум 8 символов, буквы и цифры</p>
+          <p className="text-[10px] text-muted-text mt-1">Минимум 8 символов, буквы и цифры</p>
           {password && (
             <div className="flex gap-1 mt-2">
               {[0, 1, 2].map((index) => (
                 <div
                   key={index}
-                  className={`flex-1 h-[3px] bg-[var(--border)] rounded-sm transition-colors duration-200 ${getStrengthClass(index)}`}
+                  className={`flex-1 h-[3px] rounded-sm transition-colors duration-200 ${
+                    index >= passwordStrength
+                      ? 'bg-hairline-dark'
+                      : passwordStrength === 1
+                        ? 'bg-price-rise'
+                        : passwordStrength === 2
+                          ? 'bg-gold'
+                          : 'bg-price-drop'
+                  }`}
                 />
               ))}
             </div>
@@ -337,13 +350,17 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider" htmlFor="register-confirmPassword">
+          <label className="text-xs font-medium text-muted-text uppercase tracking-wider" htmlFor="register-confirmPassword">
             Подтверждение пароля
           </label>
           <input
             id="register-confirmPassword"
             type="password"
-            className={`w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)] ${fieldErrors.confirmPassword ? 'border-[var(--error)] bg-red-500/5 focus:border-[var(--error)] focus:shadow-[0_0_0_2px_rgba(239,68,68,0.2)]' : ''}`}
+            className={`w-full p-3.5 bg-surface-elevated border text-body-text font-sans text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50 ${
+              fieldErrors.confirmPassword
+                ? 'border-price-rise outline outline-1 outline-price-rise/30'
+                : 'border-hairline-dark'
+            }`}
             placeholder="Повторите пароль"
             value={confirmPassword}
             onChange={(e) => {
@@ -353,10 +370,10 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             required
             autoComplete="new-password"
           />
-          {fieldErrors.confirmPassword && <div className="text-xs text-[var(--error)] -mt-1 ml-0.5">{fieldErrors.confirmPassword}</div>}
+          {fieldErrors.confirmPassword && <div className="text-xs text-price-rise -mt-1 ml-0.5">{fieldErrors.confirmPassword}</div>}
         </div>
 
-        <div className="flex items-start gap-2.5 my-1">
+        <div className="flex items-center gap-2.5 my-1">
           <div className="relative flex items-center">
             <input
               type="checkbox"
@@ -365,10 +382,10 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
             />
-            <div className="w-[18px] h-[18px] border-2 border-[var(--border)] rounded bg-[var(--bg-elevated)] transition-all duration-200 peer-hover:border-[var(--border-accent)] peer-checked:bg-[var(--accent)] peer-checked:border-[var(--accent)] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-[var(--accent)] peer-focus-visible:outline-offset-2"></div>
-            <div className="absolute left-[6px] top-[3px] w-[5px] h-[9px] border-r-2 border-b-2 border-[var(--bg)] rotate-45 opacity-0 transition-opacity duration-200 peer-checked:opacity-100"></div>
+            <div className="w-[18px] h-[18px] border-2 border-hairline-dark rounded bg-surface-elevated transition-all duration-200 peer-hover:border-gold/50 peer-checked:bg-gold peer-checked:border-gold peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-gold peer-focus-visible:outline-offset-2"></div>
+            <div className="absolute left-[6px] top-[3px] w-[5px] h-[9px] border-r-2 border-b-2 border-gold-ink rotate-45 opacity-0 transition-opacity duration-200 peer-checked:opacity-100"></div>
           </div>
-          <label htmlFor="register-terms" className="cursor-pointer text-sm text-[var(--fg-muted)] leading-6" onClick={(e) => {
+          <label htmlFor="register-terms" className="cursor-pointer text-sm text-muted-text leading-6" onClick={(e) => {
             if ((e.target as HTMLElement).tagName !== 'A') {
               e.preventDefault();
               setTermsAccepted(!termsAccepted);
@@ -377,7 +394,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             Я принимаю{' '}
             <a
               href="/terms"
-              className="text-[var(--accent)] no-underline transition-colors hover:text-[var(--accent-bright)]"
+              className="text-gold no-underline transition-colors hover:text-gold-active"
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
@@ -387,7 +404,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             и{' '}
             <a
               href="/privacy"
-              className="text-[var(--accent)] no-underline transition-colors hover:text-[var(--accent-bright)]"
+              className="text-gold no-underline transition-colors hover:text-gold-active"
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
@@ -399,7 +416,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
 
         <button
           type="submit"
-          className="inline-flex items-center justify-center gap-2.5 w-full p-3.5 bg-[var(--accent)] text-[var(--bg)] font-sans text-sm font-semibold border-none rounded-[var(--radius)] cursor-pointer transition-all duration-200 hover:not(:disabled):bg-[var(--accent-bright)] hover:not(:disabled):translate-y-[-2px] active:not(:disabled):translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed mt-1"
+          className="inline-flex items-center justify-center gap-2.5 w-full px-6 py-3 bg-gold text-gold-ink font-sans text-sm font-semibold border-none rounded-md cursor-pointer transition-all duration-200 hover:not(:disabled):bg-gold-active disabled:opacity-60 disabled:cursor-not-allowed mt-1"
           disabled={isLoading}
         >
           {isLoading ? 'Регистрация...' : 'Зарегистрироваться'}
@@ -409,9 +426,9 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
 
       {/* Divider */}
       <div className="flex items-center gap-4 my-2">
-        <div className="flex-1 h-px bg-[var(--border)]" />
-        <span className="text-[10px] text-[var(--fg-dim)] uppercase tracking-wider">или</span>
-        <div className="flex-1 h-px bg-[var(--border)]" />
+        <div className="flex-1 h-px bg-hairline-dark" />
+        <span className="text-[10px] text-muted-text uppercase tracking-wider">или</span>
+        <div className="flex-1 h-px bg-hairline-dark" />
       </div>
 
     </AuthModalBase>

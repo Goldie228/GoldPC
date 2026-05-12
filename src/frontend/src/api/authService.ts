@@ -2,7 +2,7 @@
  * Auth Service - API методы для аутентификации
  */
 import apiClient from './client';
-import type { LoginRequest, RegisterRequest, AuthResponse } from './types';
+import type { LoginRequest, RegisterRequest, AuthResponse, ForgotPasswordRequest, ResetPasswordRequest } from './types';
 import { AxiosError } from 'axios';
 
 const AUTH_BASE_URL = '/auth';
@@ -89,5 +89,19 @@ export const authService = {
   async getCurrentUser(): Promise<AuthResponse['user']> {
     const response = await apiClient.get(`${AUTH_BASE_URL}/me`);
     return extractData<AuthResponse['user']>(response.data);
+  },
+
+  /**
+   * Запрос на восстановление пароля (отправляет email со ссылкой)
+   */
+  async forgotPassword(data: ForgotPasswordRequest): Promise<void> {
+    await apiClient.post(`${AUTH_BASE_URL}/forgot-password`, data);
+  },
+
+  /**
+   * Сброс пароля по токену из email
+   */
+  async resetPassword(data: ResetPasswordRequest): Promise<void> {
+    await apiClient.post(`${AUTH_BASE_URL}/reset-password`, data);
   },
 };
