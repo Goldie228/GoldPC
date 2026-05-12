@@ -105,13 +105,17 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         )}
 
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider" htmlFor="login-email">
+          <label className="text-xs font-medium text-muted-text uppercase tracking-wider" htmlFor="login-email">
             Email
           </label>
           <input
             id="login-email"
             type="email"
-            className={`w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)] ${fieldErrors.email ? 'border-[var(--error)] shadow-[0_0_0_1px_var(--error)]' : ''}`}
+            className={`w-full p-3.5 bg-surface-elevated border text-body-text font-sans text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50 ${
+              fieldErrors.email
+                ? 'border-price-rise outline outline-1 outline-price-rise/30'
+                : 'border-hairline-dark'
+            }`}
             placeholder="your@email.com"
             value={email}
             onChange={handleEmailChange}
@@ -122,7 +126,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             disabled={isLoading}
           />
           {fieldErrors.email && (
-            <span id="login-email-error" className="text-xs text-[var(--error)] mt-1" role="alert">
+            <span id="login-email-error" className="text-xs text-price-rise mt-1" role="alert">
               {fieldErrors.email}
             </span>
           )}
@@ -136,32 +140,35 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           onChange={setPassword}
           required
           autoComplete="current-password"
-          labelClassName="text-xs font-medium text-[var(--fg-dim)] uppercase tracking-wider"
-          inputClassName="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-sans text-sm rounded-[var(--radius)] transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:bg-[var(--bg)] hover:not(:focus):border-[var(--border-accent)]"
+          labelClassName="text-xs font-medium text-muted-text uppercase tracking-wider"
+          inputClassName="w-full p-3.5 bg-surface-elevated border border-hairline-dark text-body-text font-sans text-sm rounded-lg transition-all duration-200 focus:outline-none focus:border-gold focus:bg-surface-card hover:not(:focus):border-gold/20 placeholder:text-muted-text/50"
         />
 
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="login-remember"
-              className="peer absolute opacity-0 w-0 h-0"
-              checked={remember}
-              onChange={(e) => setRemember(e.target.checked)}
-            />
-            <label htmlFor="login-remember" className="relative cursor-pointer pl-7 select-none text-sm text-[var(--fg-muted)] peer-hover:&+::before:border-[var(--border-accent)] peer-checked:&+::before:bg-[var(--accent)] peer-checked:&+::before:border-[var(--accent)] peer-focus-visible:&+::before:outline peer-focus-visible:&+::before:outline-2 peer-focus-visible:&+::before:outline-[var(--accent)] peer-focus-visible:&+::before:outline-offset-2">
-              <span className="peer-checked:&::after:content-[''] peer-checked:&::after:absolute peer-checked:&::after:left-[6px] peer-checked:&::after:top-[3px] peer-checked:&::after:w-[5px] peer-checked:&::after:h-[9px] peer-checked:&::after:border peer-checked:&::after:border-[var(--bg)] peer-checked:&::after:border-r-2 peer-checked:&::after:border-b-2 peer-checked:&::after:rotate-45"></span>
+            <div className="relative flex items-center">
+              <input
+                type="checkbox"
+                id="login-remember"
+                className="peer absolute w-[18px] h-[18px] opacity-0 cursor-pointer z-10"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+              />
+              <div className="w-[18px] h-[18px] border-2 border-hairline-dark rounded bg-surface-elevated transition-all duration-200 peer-hover:border-gold/50 peer-checked:bg-gold peer-checked:border-gold peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-gold peer-focus-visible:outline-offset-2"></div>
+              <div className="absolute left-[6px] top-[3px] w-[5px] h-[9px] border-r-2 border-b-2 border-gold-ink rotate-45 opacity-0 transition-opacity duration-200 peer-checked:opacity-100"></div>
+            </div>
+            <label htmlFor="login-remember" className="cursor-pointer text-sm text-muted-text select-none">
               Запомнить меня
             </label>
           </div>
-          <Link to="/forgot-password" className="text-sm text-[var(--accent)] no-underline transition-colors hover:text-[var(--accent-bright)]" onClick={handleClose}>
+          <Link to="/forgot-password" className="text-sm text-gold no-underline transition-colors hover:text-gold-active font-medium" onClick={handleClose}>
             Забыли пароль?
           </Link>
         </div>
 
         <button
           type="submit"
-          className="inline-flex items-center justify-center gap-2.5 w-full p-3.5 bg-[var(--accent)] text-[var(--bg)] font-sans text-sm font-semibold border-none rounded-[var(--radius)] cursor-pointer transition-all duration-200 hover:not(:disabled):bg-[var(--accent-bright)] hover:not(:disabled):translate-y-[-2px] active:not(:disabled):translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center gap-2.5 w-full px-6 py-3 bg-gold text-gold-ink font-sans text-sm font-semibold border-none rounded-md cursor-pointer transition-all duration-200 hover:not(:disabled):bg-gold-active disabled:opacity-60 disabled:cursor-not-allowed"
           disabled={isLoading}
           aria-busy={isLoading}
         >

@@ -54,13 +54,13 @@ export const AuthModalBase: React.FC<AuthModalBaseProps> = ({
       </div>
 
       {switchLink && (
-        <div className="px-6 py-4 border-t border-[var(--color-border)] text-center">
-          <span className="text-[14px] text-[var(--color-text-secondary)] mr-1">
+        <div className="px-6 py-4 border-t border-hairline-dark text-center">
+          <span className="text-sm text-muted-text mr-1">
             {switchLink.text}
           </span>
           <button
             type="button"
-            className="bg-none border-none text-[var(--color-primary)] text-[14px] font-medium cursor-pointer p-0 transition-opacity duration-200 hover:opacity-80 hover:underline"
+            className="bg-none border-none text-gold text-sm font-medium cursor-pointer p-0 transition-opacity duration-200 hover:opacity-80 hover:underline"
             onClick={switchLink.onClick}
           >
             {switchLink.actionText}
@@ -69,7 +69,7 @@ export const AuthModalBase: React.FC<AuthModalBaseProps> = ({
       )}
 
       {footer && (
-        <div className="px-6 pt-4 pb-6 border-t border-[var(--color-border)]">
+        <div className="px-6 pt-4 pb-6 border-t border-hairline-dark">
           {footer}
         </div>
       )}

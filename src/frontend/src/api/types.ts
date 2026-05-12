@@ -216,6 +216,17 @@ export interface AuthResponse {
   user: User;
 }
 
+/** Запрос на восстановление пароля (forgot-password) */
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+/** Запрос на сброс пароля (reset-password) */
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+
 export interface User {
   id: Uuid;
   email: string;
