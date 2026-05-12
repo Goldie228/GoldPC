@@ -1,0 +1,236 @@
+/**
+ * PCBuilderPage.css — Layout for the PC Builder page
+ *
+ * Design System: Dark canvas, gold accents, 8/4 split layout
+ * Spacing follows the 4px system (sm=12, md=16, lg=24, xl=32, xxl=48)
+ */
+
+/* ===== Page Container ===== */
+.pc-builder {
+  background: var(--bg-secondary, #0b0e11);
+  min-height: 100%;
+}
+
+.pc-builder__container {
+  padding-top: var(--spacing-xl, 32px);
+  padding-bottom: var(--spacing-xxl, 48px);
+}
+
+/* ===== Breadcrumbs ===== */
+.pc-builder__breadcrumb {
+  margin-bottom: var(--spacing-lg, 24px);
+}
+
+/* ===== Page Title ===== */
+.pc-builder__page-title {
+  font-family: var(--font-sans);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--fg, #eaecef);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 var(--spacing-xl, 32px) 0;
+}
+
+/* ===== Main Layout ===== */
+.pc-builder__main {
+  width: 100%;
+}
+
+/* ===== Two-column Grid ===== */
+.pc-builder__content {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: var(--spacing-xl, 32px);
+  align-items: start;
+}
+
+/* ===== Left Column (Slots) ===== */
+.pc-builder__left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg, 24px);
+  min-width: 0;
+}
+
+/* ===== Section Headers ===== */
+.pc-builder__section-header {
+  margin-top: var(--spacing-xs, 4px);
+}
+
+.pc-builder__section-header--periph {
+  margin-top: var(--spacing-sm, 12px);
+  padding-top: var(--spacing-lg, 24px);
+  border-top: 1px solid var(--border-muted, rgba(255, 255, 255, 0.06));
+}
+
+.pc-builder__section-title {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--fg, #eaecef);
+  letter-spacing: 0;
+  margin: 0 0 var(--spacing-md, 16px) 0;
+}
+
+.pc-builder__section-title--periph {
+  color: var(--fg-muted, #707a8a);
+}
+
+/* ===== Slots Container ===== */
+.pc-builder__slots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm, 12px);
+}
+
+/* ===== Right Column (Summary Panel) ===== */
+.pc-builder__right {
+  position: sticky;
+  top: var(--spacing-lg, 24px);
+}
+
+/* ===== Peripherals Toggle ===== */
+.pc-builder__periph-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 100%;
+  text-align: left;
+}
+
+.pc-builder__periph-chevron {
+  font-size: 0.6rem;
+  color: var(--fg-muted, #707a8a);
+  transition: transform 0.2s ease;
+  display: none;
+}
+
+.pc-builder__periph-chevron--open {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 768px) {
+  .pc-builder__periph-chevron {
+    display: inline-block;
+  }
+}
+
+/* ===== Mobile Bottom Bar ===== */
+.pc-builder__mobile-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .pc-builder__mobile-bar {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: var(--bg-primary, #1e2329);
+    border-top: 1px solid var(--border-muted, rgba(255, 255, 255, 0.06));
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .pc-builder__mobile-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    max-width: var(--layout-page-max, 1440px);
+    margin: 0 auto;
+  }
+
+  .pc-builder__mobile-total {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .pc-builder__mobile-total-label {
+    font-size: 0.72rem;
+    color: var(--fg-muted, #707a8a);
+    font-weight: 500;
+  }
+
+  .pc-builder__mobile-total-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent, #FCD535);
+  }
+
+  .pc-builder__mobile-cart-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    min-height: 40px;
+    font-family: var(--font-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: var(--radius-md, 6px);
+    cursor: pointer;
+    border: none;
+    background: var(--color-price-drop, #0ecb81);
+    color: var(--color-on-dark, #ffffff);
+    white-space: nowrap;
+    transition: background 0.15s ease, transform 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  .pc-builder__mobile-cart-btn:active {
+    transform: scale(0.97);
+  }
+
+  .pc-builder__mobile-cart-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Нужен отступ снизу, чтобы контент не перекрывался баром */
+  .pc-builder__container {
+    padding-bottom: 80px;
+  }
+
+  .pc-builder__page-title {
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-lg, 24px);
+  }
+
+  .pc-builder__content {
+    gap: var(--spacing-lg, 24px);
+  }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .pc-builder__content {
+    grid-template-columns: 1fr;
+  }
+
+  .pc-builder__right {
+    position: static;
+  }
+
+  .pc-builder__page-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .pc-builder__container {
+    padding-top: var(--spacing-lg, 24px);
+  }
+}

@@ -2,12 +2,13 @@
  * PCBuilderPage — конструктор ПК: слоты слева, итог справа, модалка выбора из каталога.
  */
 
+import './PCBuilderPage.css';
 import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Cpu, Gpu, CircuitBoard, MemoryStick, HardDrive,
   Zap, Box, Snowflake, Fan, Monitor, Keyboard,
-  Mouse, Headphones,
+  Mouse, Headphones, ShoppingBag,
 } from 'lucide-react';
 import {
   ComponentSlot,
@@ -346,6 +347,7 @@ export function PCBuilderPage() {
   const [selectedSlot, setSelectedSlot] = useState<PCComponentType | null>(null);
   const [multiIndex, setMultiIndex] = useState<number | undefined>(undefined);
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [showPeripherals, setShowPeripherals] = useState(true);
 
   const slotRows = useMemo(() => buildSlotRows(selectedComponents, maxRamQty, maxStorageModules, maxFanModules), [selectedComponents, maxRamQty, maxStorageModules, maxFanModules]);
 
@@ -606,27 +608,39 @@ export function PCBuilderPage() {
                 ))}
               </div>
 
-              {/* Периферия */}
+              {/* Периферия — схлопывается на мобилке */}
               <div className="pc-builder__section-header pc-builder__section-header--periph">
-                <h2 className="pc-builder__section-title pc-builder__section-title--periph">Периферия</h2>
+                <button
+                  type="button"
+                  className="pc-builder__periph-toggle"
+                  onClick={() => setShowPeripherals((v) => !v)}
+                  aria-expanded={showPeripherals}
+                >
+                  <h2 className="pc-builder__section-title pc-builder__section-title--periph">Периферия</h2>
+                  <span className={`pc-builder__periph-chevron ${showPeripherals ? 'pc-builder__periph-chevron--open' : ''}`}>
+                    ▼
+                  </span>
+                </button>
               </div>
-              <div className="pc-builder__slots">
-                {(['monitor', 'keyboard', 'mouse', 'headphones'] as const).map((key, idx) => (
-                  <MemoizedSlotRow
-                    key={key}
-                    row={{ kind: 'single', key, label: PC_BUILDER_SLOTS.find((s) => s.key === key)?.label ?? key, anim: slotRows.length + idx }}
-                    selectedComponents={selectedComponents}
-                    getSlotState={getSlotState}
-                    getDisplaySpecs={getDisplaySpecs}
-                    onSelect={openPicker}
-                    onRemove={handleRemove}
-                    onChangeQuantity={handleChangeQuantity}
-                    maxRamModules={maxRamModules}
-                    maxStorageModules={maxStorageModules}
-                    maxFanModules={maxFanModules}
-                  />
-                ))}
-              </div>
+              {showPeripherals && (
+                <div className="pc-builder__slots">
+                  {(['monitor', 'keyboard', 'mouse', 'headphones'] as const).map((key, idx) => (
+                    <MemoizedSlotRow
+                      key={key}
+                      row={{ kind: 'single', key, label: PC_BUILDER_SLOTS.find((s) => s.key === key)?.label ?? key, anim: slotRows.length + idx }}
+                      selectedComponents={selectedComponents}
+                      getSlotState={getSlotState}
+                      getDisplaySpecs={getDisplaySpecs}
+                      onSelect={openPicker}
+                      onRemove={handleRemove}
+                      onChangeQuantity={handleChangeQuantity}
+                      maxRamModules={maxRamModules}
+                      maxStorageModules={maxStorageModules}
+                      maxFanModules={maxFanModules}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="pc-builder__right">
@@ -654,6 +668,25 @@ export function PCBuilderPage() {
             </div>
           </div>
         </main>
+
+        {/* ===== Mobile Bottom Bar — только на мобилке ===== */}
+        <div className="pc-builder__mobile-bar">
+          <div className="pc-builder__mobile-bar-inner">
+            <div className="pc-builder__mobile-total">
+              <span className="pc-builder__mobile-total-label">Итого:</span>
+              <span className="pc-builder__mobile-total-value">{totalPrice.toLocaleString('ru-BY')} BYN</span>
+            </div>
+            <button
+              type="button"
+              className="pc-builder__mobile-cart-btn"
+              disabled={!isCompatible || selectedCount === 0}
+              onClick={handleAddToCart}
+            >
+              <ShoppingBag size={16} strokeWidth={2} aria-hidden="true" />
+              В корзину
+            </button>
+          </div>
+        </div>
       </div>
 
       {modalOpen && selectedSlot && (

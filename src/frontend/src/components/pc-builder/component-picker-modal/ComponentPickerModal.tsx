@@ -105,7 +105,7 @@ function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }:
       <div className="w-full h-full flex items-center justify-center p-2.5 box-border">
         {url
           ? <img src={url} alt={product.name} loading="lazy" className="max-w-full max-h-full w-auto h-auto object-contain" />
-          : <div className="w-[30%] aspect-square rounded-full bg-[linear-gradient(135deg,#e4e4e7,#d4d4d8)] opacity-50" />
+          : <div className="w-[30%] aspect-square rounded-full bg-[#2b3139] opacity-50" />
         }
       </div>
 
@@ -159,7 +159,7 @@ function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpen
 
   return (
     <div
-      className={`flex flex-col items-stretch gap-0 border border-[rgba(255,255,255,0.06)] rounded-lg bg-[var(--color-black-soft)] cursor-pointer text-left text-inherit font-inherit overflow-hidden transition-all hover:border-[rgba(212,165,116,0.25)] hover:-translate-y-[1px] ${isSelected ? "border-[var(--accent)] shadow-[0_0_0_1px_rgba(212,165,116,0.15)] bg-[linear-gradient(145deg,rgba(212,165,116,0.08),var(--color-black-soft))]" : ""} ${outOfStock ? "opacity-60" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
+      className={`flex flex-col items-stretch gap-0 border border-[rgba(255,255,255,0.06)] rounded-lg bg-[var(--color-black-soft)] cursor-pointer text-left text-inherit font-inherit overflow-hidden transition-all hover:border-[rgba(252,213,53,0.25)] hover:-translate-y-[1px] ${isSelected ? "border-[var(--accent)] bg-[rgba(252,213,53,0.06)]" : ""} ${outOfStock ? "opacity-60" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
       onClick={isCompatible === false ? undefined : () => onSelect(product)}
     >
       <CardImageGallery product={product} hasDiscount={hasDiscount} discountPercent={discountPercent} outOfStock={outOfStock} />
@@ -203,7 +203,7 @@ function PickerProductCardCompact({ product, isSelected, isCompatible, onSelect,
 
   return (
     <div
-      className={`flex items-center gap-3 p-2 border border-[rgba(255,255,255,0.06)] rounded-md bg-[var(--color-black-soft)] text-inherit font-inherit transition-all hover:border-[rgba(212,165,116,0.25)] ${isSelected ? "border-[var(--accent)] bg-[linear-gradient(145deg,rgba(212,165,116,0.08),var(--color-black-soft))]" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
+      className={`flex items-center gap-3 p-2 border border-[rgba(255,255,255,0.06)] rounded-md bg-[var(--color-black-soft)] text-inherit font-inherit transition-all hover:border-[rgba(252,213,53,0.25)] ${isSelected ? "border-[var(--accent)] bg-[rgba(252,213,53,0.06)]" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
       onClick={isCompatible === false ? undefined : () => onSelect(product)}
     >
       <div className="w-14 h-14 rounded-md bg-[var(--color-white)] p-1.5 flex items-center justify-center flex-shrink-0 box-border">
@@ -561,20 +561,22 @@ export function ComponentPickerModal({
       
       <div className="flex flex-col gap-0 min-h-0 h-full flex-1 overflow-hidden">
 
+        {/* Mobile filter overlay — shares the SAME FilterSidebar via mobile prop */}
         {mobileFilterOpen && (
-          <div className="fixed inset-0 bg-[var(--border-muted)] z-[1100] flex justify-end" onClick={() => setMobileFilterOpen(false)}>
-            <div className="w-[320px] max-w-[85vw] bg-[var(--bg-card)] border-l border-[rgba(255,255,255,0.06)] p-0 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between p-3 border-b border-[rgba(255,255,255,0.06)] sticky top-0 bg-[var(--bg-card)] z-1 flex-shrink-0">
-                <h3>Фильтры</h3>
-                <button className="bg-none border-none text-[var(--fg-muted)] cursor-pointer p-1 flex transition-colors hover:text-[var(--fg)]" onClick={() => setMobileFilterOpen(false)}><X size={24} /></button>
+          <div className="fixed inset-0 bg-[var(--border-muted)] z-[1100] md:hidden" onClick={() => setMobileFilterOpen(false)}>
+            <div className="absolute right-0 top-0 bottom-0 w-[90vw] max-w-[380px] bg-[var(--bg-card)] border-l border-[rgba(255,255,255,0.06)] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-5 pb-4 border-b border-[rgba(255,255,255,0.06)]">
+                <h3 className="m-0 text-sm font-bold text-[var(--fg-primary)] flex items-center gap-2">Фильтры</h3>
+                <button className="flex items-center justify-center w-9 h-9 bg-transparent border border-[rgba(255,255,255,0.08)] rounded-lg text-[var(--fg-muted)] cursor-pointer transition-all hover:bg-gold/10 hover:border-gold/30 hover:text-gold" onClick={() => setMobileFilterOpen(false)}><X size={20} /></button>
               </div>
               <FilterSidebar
+                mobile
                 selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} categoryLocked={true}
                 priceRange={priceRange} onPriceChange={setPriceRange}
                 selectedManufacturerIds={selectedManufacturerIds} onManufacturerIdsChange={setSelectedManufacturerIds}
                 minRating={minRating} onRatingChange={() => {}}
                 selectedAvailability={selectedAvailability} onAvailabilityChange={setSelectedAvailability}
-                selectedSpecifications={effectiveSpecs} onSpecificationsChange={setSelectedSpecifications}
+                selectedSpecifications={selectedSpecifications} onSpecificationsChange={setSelectedSpecifications}
                 onReset={handleResetFilters}
                 restrictedSpecValues={restrictedSpecValues}
                 effectiveSpecifications={effectiveSpecs}
@@ -584,16 +586,16 @@ export function ComponentPickerModal({
           </div>
         )}
 
-        <div className="grid grid-cols-[220px_1fr_280px] gap-4 min-h-0 flex-1 overflow-hidden items-stretch">
-          {/* Filter Sidebar */}
-          <div className="overflow-y-auto bg-[var(--color-black-soft)] p-2 self-start max-h-full scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.1)] scrollbar-track-transparent">
+        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr_280px] gap-4 min-h-0 flex-1 overflow-hidden items-stretch">
+          {/* Filter Sidebar — shown on desktop, hidden on mobile (uses overlay) */}
+          <div className="overflow-y-auto self-start max-h-full max-md:hidden">
             <FilterSidebar
               selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} categoryLocked={true}
               priceRange={priceRange} onPriceChange={setPriceRange}
               selectedManufacturerIds={selectedManufacturerIds} onManufacturerIdsChange={setSelectedManufacturerIds}
               minRating={minRating} onRatingChange={() => {}}
               selectedAvailability={selectedAvailability} onAvailabilityChange={setSelectedAvailability}
-              selectedSpecifications={effectiveSpecs}
+              selectedSpecifications={selectedSpecifications}
               effectiveSpecifications={effectiveSpecs}
               onSpecificationsChange={setSelectedSpecifications}
               onReset={handleResetFilters}
@@ -604,29 +606,24 @@ export function ComponentPickerModal({
 
           {/* Products */}
           <div className="min-w-0 flex flex-col gap-2.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.12)] scrollbar-track-transparent">
-            <div className="flex items-center justify-between gap-3 py-1.5 px-0 flex-wrap flex-shrink-0 border-b border-[rgba(255,255,255,0.06)]">
-              <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                <button className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-[rgba(255,255,255,0.08)] bg-[var(--color-black-soft)] text-[var(--fg)] text-xs cursor-pointer flex-shrink-0" onClick={() => setMobileFilterOpen(true)}>
+            <div className="flex flex-col gap-2 py-1.5 px-0 flex-shrink-0 border-b border-[rgba(255,255,255,0.06)]">
+              {/* Строка 1: поиск + кнопка Фильтры (mobile) */}
+              <div className="flex items-center gap-2">
+                <button className="flex md:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-[rgba(255,255,255,0.08)] bg-[var(--color-black-soft)] text-[var(--fg)] text-xs cursor-pointer flex-shrink-0" onClick={() => setMobileFilterOpen(true)}>
                   <SlidersHorizontal size={16} /> Фильтры
                 </button>
-                <form className="flex-1 min-w-[160px] relative" onSubmit={(e) => e.preventDefault()}>
+                <form className="flex-1 min-w-0 relative" onSubmit={(e) => e.preventDefault()}>
                   <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-dim)] pointer-events-none" />
-                  <input type="search" className="w-full py-1.5 pl-[30px] pr-7 rounded-md border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.25)] text-[var(--fg)] text-xs placeholder:text-[var(--fg-dim)] focus:outline-none focus:outline-2 focus:outline-[rgba(212,165,116,0.35)] focus:outline-offset-0" placeholder="Поиск по названию…"
+                  <input type="search" className="w-full py-1.5 pl-[30px] pr-7 rounded-md border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.25)] text-[var(--fg)] text-xs placeholder:text-[var(--fg-dim)] focus:outline-none focus:outline-2 focus:outline-[rgba(252,213,53,0.35)] focus:outline-offset-0" placeholder="Поиск по названию…"
                     value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); setHighlightedId(null); }} />
                   {search && <button type="button" className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-none border-none text-[var(--fg-dim)] cursor-pointer p-0.5 flex hover:text-[var(--fg-muted)]" onClick={() => setSearch('')}><X size={14} /></button>}
                 </form>
               </div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <select className="px-[28px] py-0 h-8 rounded-md border border-[rgba(255,255,255,0.08)] bg-[var(--color-black-soft)] text-[var(--fg)] text-xs appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-[right_8px_center] bg-[length:12px] cursor-pointer focus:outline-none focus:border-[var(--accent)]" value={sortPreset} onChange={(e) => setSortPreset(e.target.value)}>
+              {/* Строка 2: сортировка + в наличии */}
+              <div className="flex items-center gap-2.5">
+                <select className="px-[28px] py-0 h-8 rounded-md border border-[rgba(255,255,255,0.08)] bg-[var(--color-black-soft)] text-[var(--fg)] text-xs appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-[right_8px_center] bg-[length:12px] cursor-pointer focus:outline-none focus:border-[var(--accent)] flex-1 md:flex-none min-w-0 max-w-[220px]" value={sortPreset} onChange={(e) => setSortPreset(e.target.value)}>
                   {SORT_PRESETS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
-                <label className="flex items-center gap-1.5 text-xs text-[var(--fg-muted)] cursor-pointer select-none whitespace-nowrap">
-                  <span className="w-4 h-4 rounded border-[1.5px] border-[rgba(255,255,255,0.15)] bg-[rgba(0,0,0,0.3)] flex items-center justify-center flex-shrink-0 transition-all text-transparent">
-                    {inStockOnly && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                  </span>
-                  <input type="checkbox" className="fixed opacity-0 pointer-events-none w-0 h-0" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} />
-                  <span>В наличии</span>
-                </label>
               </div>
             </div>
 
@@ -709,7 +706,7 @@ export function ComponentPickerModal({
           </div>
 
           {/* Preview */}
-          <aside className="sticky top-0 flex flex-col gap-2.5 p-3.5 rounded-md border border-[rgba(255,255,255,0.06)] bg-[var(--color-black-soft)] max-h-full overflow-y-auto flex-shrink-0 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.1)] scrollbar-track-transparent">
+          <aside className="md:sticky top-0 flex flex-col gap-2.5 p-3.5 rounded-md border border-[rgba(255,255,255,0.06)] bg-[var(--color-black-soft)] max-h-full overflow-y-auto flex-shrink-0 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.1)] scrollbar-track-transparent">
             {fullPreview ? (
               <>
                 <div className="text-[0.72rem] font-semibold uppercase tracking-wider text-[var(--fg-dim)] border-b border-[rgba(255,255,255,0.06)] pb-1.5">Предпросмотр</div>
@@ -745,7 +742,7 @@ export function ComponentPickerModal({
                       <div className="flex gap-1 overflow-x-auto p-0.5">
                         {previewImageUrls.map((img, i) => (
                           <button key={i} type="button"
-                            className={`w-11 h-11 rounded-md border border-[rgba(255,255,255,0.06)] bg-[var(--fg)] p-[3px] flex-shrink-0 cursor-pointer flex items-center justify-center box-border transition-colors ${i === previewImgIdx ? "border-[var(--accent)] shadow-[0_0_0_1px_rgba(212,165,116,0.3)]" : ""}`}
+                            className={`w-11 h-11 rounded-md border border-[rgba(255,255,255,0.06)] bg-[var(--fg)] p-[3px] flex-shrink-0 cursor-pointer flex items-center justify-center box-border transition-colors ${i === previewImgIdx ? "border-[var(--accent)] shadow-[0_0_0_1px_rgba(252,213,53,0.3)]" : ""}`}
                             onClick={() => setPreviewImgIdx(i)}
                           >
                             <img src={img} alt="" />
@@ -755,21 +752,21 @@ export function ComponentPickerModal({
                     )}
                   </>
                 ) : (
-                  <div className="w-full aspect-square rounded-lg bg-[linear-gradient(135deg,#e4e4e7,#d4d4d8)] opacity-30" />
+                  <div className="w-full aspect-square rounded-lg bg-[#2b3139] opacity-30" />
                 )}
 
                 <h4 className="m-0 text-[0.85rem] font-semibold text-[var(--fg)] word-break-break-word leading-[1.3]">{fullPreview.name}</h4>
                 <div className="m-0 text-base font-semibold text-[var(--accent)]">{fullPreview.price.toLocaleString('ru-BY')} BYN</div>
 
                 {fullPreview.slug && (
-                  <button type="button" className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-[rgba(212,165,116,0.25)] bg-transparent text-[var(--accent)] text-xs font-medium cursor-pointer transition-all w-full hover:bg-[rgba(212,165,116,0.1)]" onClick={() => handleOpenProduct(fullPreview.slug!)}>
+                  <button type="button" className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-[rgba(252,213,53,0.25)] bg-transparent text-[var(--accent)] text-xs font-medium cursor-pointer transition-all w-full hover:bg-[rgba(252,213,53,0.1)]" onClick={() => handleOpenProduct(fullPreview.slug!)}>
                     <ExternalLink size={14} /> Открыть страницу товара
                   </button>
                 )}
 
                 {fullPreview.specifications && <SpecList specs={fullPreview.specifications as Record<string, unknown>} />}
 
-                <button type="button" className="mt-auto px-4 py-2.5 border-none rounded-md bg-[var(--accent)] text-[var(--color-black-soft)] text-[0.85rem] font-semibold cursor-pointer transition-all hover:bg-[#e0b68a] hover:-translate-y-[1px]" onClick={handleConfirm}>Выбрать</button>
+                <button type="button" className="mt-auto px-4 py-2.5 border-none rounded-md bg-[var(--accent)] text-[var(--color-black-soft)] text-[0.85rem] font-semibold cursor-pointer transition-all hover:bg-[#f0b90b] hover:-translate-y-[1px]" onClick={handleConfirm}>Выбрать</button>
               </>
             ) : (
               <div className="flex flex-col items-center justify-center text-center h-[200px] text-[var(--fg-dim)]">
