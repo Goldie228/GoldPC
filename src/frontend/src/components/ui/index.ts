@@ -44,3 +44,7 @@ export { ScrollToTop } from './ScrollToTop';
 // Tabs Component
 export { Tabs, default as TabsDefault } from './Tabs';
 export type { TabsProps, Tab } from './Tabs';
+
+// PhoneInput Component
+export { PhoneInput } from './PhoneInput';
+export type { PhoneInputProps } from './PhoneInput';
