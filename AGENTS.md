@@ -176,4 +176,59 @@ For multiple files, revert last commit: `git revert HEAD` (and inform the user).
 
 ---
 
+## 8. New Files (Redesign Phase)
+
+### UI Components (`components/ui/`)
+| File | Purpose |
+|------|---------|
+| `Input.tsx` | Reusable input with label, error state, and Tailwind styling |
+| `PhoneInput.tsx` | Phone input with auto-formatting (+375 (XX) XXX-XX-XX) and `parsePhone`/`formatPhone` utils |
+
+### Info Pages (`pages/info/`)
+| File | Purpose |
+|------|---------|
+| `ContactsPage.tsx` | Contact cards, working hours table, Yandex Maps link |
+| `PrivacyPage.tsx` | Privacy policy (6 sections) |
+| `TermsPage.tsx` | Terms of service (6 sections) |
+| `SitemapPage.tsx` | Site map with all routes grouped by category |
+| `PromotionsPage.tsx` | Promotions grid with real `<Link>` CTAs |
+| `BrandsPage.tsx` | 18 brands with icons and categories |
+
+### Modified Pages
+| File | Changes |
+|------|---------|
+| `pages/info/DeliveryPage.tsx` | Full redesign (breadcrumb, hero, 3 cards) |
+| `pages/info/PaymentPage.tsx` | Full redesign (4 payment methods, security block) |
+| `pages/info/WarrantyPage.tsx` | Full redesign + `/service-request` link |
+| `pages/info/ReturnsPage.tsx` | Full redesign + `/faq`, `/contacts` links |
+| `pages/info/FaqPage.tsx` | Expanded to 10 questions, anchor links |
+| `pages/about-page/AboutPage.tsx` | Real contacts, developer info, `/contacts` link |
+| `pages/services-page/ServicesPage.tsx` | Fixed duplicate CTA, broken JSX, style links |
+| `pages/service-request-page/ServiceRequestPage.tsx` | Fixed TS errors (createTicket, model) |
+| `pages/home-page/HomePage.tsx` | Added promotions/brands section |
+
+### Layout Components
+| File | Changes |
+|------|---------|
+| `components/layout/Footer.tsx` | Restructured to 6 columns (Catalog, Services, Info, Customers, Contacts) |
+| `components/layout/Header.tsx` | Added "Акции" nav item (5th in desktop/mobile menu) |
+
+### Routing
+| File | Changes |
+|------|---------|
+| `App.tsx` | Added lazy imports + routes for 6 new pages after `/faq` |
+
+### Utilities
+| File | Purpose |
+|------|---------|
+| `utils/phone.ts` | `isValidPhone`, `normalizePhone`, `parsePhone`, `formatPhone` |
+
+### Mock Assets
+| Path | Purpose |
+|------|---------|
+| `public/placeholders/services/*.svg` | 6 service category mock SVGs |
+| `public/placeholders/about/hero-team.svg` | AboutPage hero mock |
+
+---
+
 *End of AGENTS.md*
