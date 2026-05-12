@@ -11,12 +11,16 @@ import { useAuthStore } from './store/authStore';
 import { useWishlistStore } from './store/wishlistStore';
 import './App.css';
 
+// PC Builder — eager import. Lazy imports can fail intermittently due to
+// Vite HMR cache invalidation (stale ?t= cache buster on chunk URL).
+// React never retries a failed lazy() import, leaving page blank until reload.
+import { PCBuilderPage } from './pages/pc-builder-page/PCBuilderPage';
+
 // Lazy load pages
 const HomePage = lazy(() => import('./pages/home-page/HomePage').then(m => ({ default: m.HomePage })));
 const CatalogPage = lazy(() => import('./pages/catalog-page/CatalogPage').then(m => ({ default: m.CatalogPage })));
 // ... other lazy loads remain same ...
 const ProductPage = lazy(() => import('./pages/product-page/ProductPage').then(m => ({ default: m.ProductPage })));
-const PCBuilderPage = lazy(() => import('./pages/pc-builder-page/PCBuilderPage').then(m => ({ default: m.PCBuilderPage })));
 const BuildWizardPage = lazy(() => import('./pages/build-wizard-page/BuildWizardPage').then(m => ({ default: m.BuildWizardPage })));
 const CartPage = lazy(() => import('./pages/cart-page/CartPage').then(m => ({ default: m.CartPage })));
 const WishlistPage = lazy(() => import('./pages/wishlist-page/WishlistPage').then(m => ({ default: m.WishlistPage })));
@@ -25,6 +29,8 @@ const CheckoutPage = lazy(() => import('./pages/checkout-page/CheckoutPage').the
 const OrderSuccessPage = lazy(() => import('./pages/order-success-page/OrderSuccessPage').then(m => ({ default: m.OrderSuccessPage })));
 const OrderTrackingPage = lazy(() => import('./pages/order-tracking-page/OrderTrackingPage').then(m => ({ default: m.OrderTrackingPage })));
 const RegisterPage = lazy(() => import('./pages/register-page/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const ForgotPasswordPage = lazy(() => import('./pages/forgot-password-page/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import('./pages/reset-password-page/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const AboutPage = lazy(() => import('./pages/about-page/AboutPage').then(m => ({ default: m.AboutPage })));
 const ServicesPage = lazy(() => import('./pages/services-page/ServicesPage').then(m => ({ default: m.ServicesPage })));
 const ServiceDetailPage = lazy(() => import('./pages/service-detail-page/ServiceDetailPage').then(m => ({ default: m.ServiceDetailPage })));
@@ -36,6 +42,12 @@ const PaymentPage = lazy(() => import('./pages/info/PaymentPage').then(m => ({ d
 const WarrantyPage = lazy(() => import('./pages/info/WarrantyPage').then(m => ({ default: m.WarrantyPage })));
 const ReturnsPage = lazy(() => import('./pages/info/ReturnsPage').then(m => ({ default: m.ReturnsPage })));
 const FaqPage = lazy(() => import('./pages/info/FaqPage').then(m => ({ default: m.FaqPage })));
+const ContactsPage = lazy(() => import('./pages/info/ContactsPage').then(m => ({ default: m.ContactsPage })));
+const PrivacyPage = lazy(() => import('./pages/info/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => import('./pages/info/TermsPage').then(m => ({ default: m.TermsPage })));
+const SitemapPage = lazy(() => import('./pages/info/SitemapPage').then(m => ({ default: m.SitemapPage })));
+const PromotionsPage = lazy(() => import('./pages/info/PromotionsPage').then(m => ({ default: m.PromotionsPage })));
+const BrandsPage = lazy(() => import('./pages/info/BrandsPage').then(m => ({ default: m.BrandsPage })));
 const AccountLayout = lazy(() => import('./pages/account-page/AccountLayout').then(m => ({ default: m.AccountLayout })));
 const CustomerDashboard = lazy(() => import('./pages/customer-dashboard/CustomerDashboard').then(m => ({ default: m.CustomerDashboard })));
 const AccountOverview = lazy(() => import('./pages/account-page/AccountOverview').then(m => ({ default: m.AccountOverview })));
@@ -187,6 +199,12 @@ const router = createBrowserRouter([
       { path: '/warranty', element: <WarrantyPage /> },
       { path: '/returns', element: <ReturnsPage /> },
       { path: '/faq', element: <FaqPage /> },
+      { path: '/contacts', element: <ContactsPage /> },
+      { path: '/privacy', element: <PrivacyPage /> },
+      { path: '/terms', element: <TermsPage /> },
+      { path: '/sitemap', element: <SitemapPage /> },
+      { path: '/promotions', element: <PromotionsPage /> },
+      { path: '/brands', element: <BrandsPage /> },
       {
         element: <AuthGuard />,
         children: [
@@ -210,6 +228,8 @@ const router = createBrowserRouter([
       },
       { path: '/login', element: <Navigate to="/" replace /> },
       { path: '/register', element: <Navigate to="/" replace /> },
+      { path: '/forgot-password', element: <ForgotPasswordPage /> },
+      { path: '/reset-password/:token', element: <ResetPasswordPage /> },
       {
         path: '/admin',
         element: <AdminRedirect />

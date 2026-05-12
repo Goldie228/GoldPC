@@ -104,13 +104,35 @@
   --color-ring: var(--color-info-blue);
   
   /* Spacing system */
-  --spacing-xs: 4px;
-  --spacing-sm: 12px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-xxl: 48px;
-  --spacing-section: 80px;
+  /* NOTE: custom --spacing-* were removed because they shadowed max-w-* 
+     classes in Tailwind v4.2.x (--spacing-md: 16px hijacked max-w-md).
+     Use rem-based numeric spacing (p-4, p-6, p-8) or arbitrary values instead. */
+  
+  /* ======== Modal & Component System Variables ======== */
+  --bg-primary: var(--color-surface-card, #1e2329);
+  --bg-secondary: var(--color-canvas-dark, #0b0e11);
+  --bg-elevated: var(--color-surface-elevated, #2b3139);
+  --bg-tertiary: var(--color-surface-card, #1e2329);
+  --fg-primary: var(--color-body-text, #eaecef);
+  --fg-secondary: var(--color-muted-text, #707a8a);
+  --border-default: var(--color-hairline-dark, #2b3139);
+  --border-muted: rgba(255, 255, 255, 0.06);
+  --brand-primary: var(--color-gold, #FCD535);
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-black-soft: #1e2329;
+  --color-gold-500: var(--color-gold, #FCD535);
+  --color-gold-400: #f0b90b;
+  --color-gold-300: #d4a574;
+  --color-gold-600: #c9a87e;
+  --border-brand: rgba(252, 213, 53, 0.15);
+  --border-accent: rgba(252, 213, 53, 0.3);
+  --error: #ef4444;
+  --bg-card: var(--color-surface-card, #1e2329);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow-gold: 0 0 20px rgba(252, 213, 53, 0.08);
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
   
   /* Border radius */
   --radius-xs: 2px;
