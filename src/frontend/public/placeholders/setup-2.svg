@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0e11"/>
+      <stop offset="100%" stop-color="#1a1f27"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2dbdb6" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#FCD535" stop-opacity="0.03"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <rect width="1600" height="1000" fill="url(#accent)"/>
+  <circle cx="300" cy="600" r="350" fill="#2dbdb6" opacity="0.04"/>
+  <circle cx="1300" cy="400" r="300" fill="#FCD535" opacity="0.03"/>
+  <!-- Left monitor -->
+  <rect x="250" y="180" width="420" height="280" rx="10" fill="#1e2329" stroke="#2b3139" stroke-width="2"/>
+  <rect x="265" y="200" width="390" height="240" rx="5" fill="#0b0e11"/>
+  <rect x="275" y="210" width="370" height="220" rx="3" fill="#2dbdb6" opacity="0.06"/>
+  <!-- Right monitor -->
+  <rect x="930" y="180" width="420" height="280" rx="10" fill="#1e2329" stroke="#2b3139" stroke-width="2"/>
+  <rect x="945" y="200" width="390" height="240" rx="5" fill="#0b0e11"/>
+  <rect x="955" y="210" width="370" height="220" rx="3" fill="#FCD535" opacity="0.04"/>
+  <!-- Center code editor -->
+  <rect x="520" y="350" width="560" height="300" rx="10" fill="#1e2329" stroke="#2b3139" stroke-width="2"/>
+  <rect x="535" y="365" width="530" height="270" rx="5" fill="#0b0e11"/>
+  <!-- Code lines -->
+  <g fill="#2b3139" opacity="0.4">
+    <rect x="555" y="385" width="200" height="6" rx="2"/>
+    <rect x="555" y="400" width="180" height="6" rx="2"/>
+    <rect x="555" y="415" width="220" height="6" rx="2"/>
+    <rect x="555" y="430" width="160" height="6" rx="2"/>
+    <rect x="555" y="445" width="200" height="6" rx="2"/>
+    <rect x="555" y="460" width="140" height="6" rx="2"/>
+    <rect x="555" y="475" width="180" height="6" rx="2"/>
+    <rect x="555" y="490" width="210" height="6" rx="2"/>
+    <rect x="555" y="505" width="170" height="6" rx="2"/>
+    <rect x="555" y="520" width="190" height="6" rx="2"/>
+    <rect x="555" y="535" width="150" height="6" rx="2"/>
+    <rect x="555" y="550" width="200" height="6" rx="2"/>
+    <rect x="555" y="565" width="180" height="6" rx="2"/>
+    <rect x="555" y="580" width="220" height="6" rx="2"/>
+    <rect x="555" y="595" width="160" height="6" rx="2"/>
+    <rect x="555" y="610" width="200" height="6" rx="2"/>
+  </g>
+  <!-- Keyboard below -->
+  <rect x="400" y="720" width="800" height="160" rx="10" fill="#1e2329" stroke="#2b3139" stroke-width="2"/>
+  <rect x="420" y="740" width="760" height="120" rx="6" fill="#0b0e11"/>
+  <g fill="#2b3139" opacity="0.4">
+    <rect x="450" y="760" width="28" height="16" rx="2"/>
+    <rect x="486" y="760" width="28" height="16" rx="2"/>
+    <rect x="522" y="760" width="28" height="16" rx="2"/>
+    <rect x="558" y="760" width="28" height="16" rx="2"/>
+    <rect x="594" y="760" width="28" height="16" rx="2"/>
+    <rect x="630" y="760" width="28" height="16" rx="2"/>
+    <rect x="666" y="760" width="28" height="16" rx="2"/>
+    <rect x="702" y="760" width="28" height="16" rx="2"/>
+    <rect x="738" y="760" width="28" height="16" rx="2"/>
+    <rect x="774" y="760" width="28" height="16" rx="2"/>
+    <rect x="810" y="760" width="28" height="16" rx="2"/>
+    <rect x="846" y="760" width="28" height="16" rx="2"/>
+    <rect x="486" y="786" width="28" height="16" rx="2"/>
+    <rect x="522" y="786" width="28" height="16" rx="2"/>
+    <rect x="558" y="786" width="28" height="16" rx="2"/>
+    <rect x="594" y="786" width="28" height="16" rx="2"/>
+    <rect x="630" y="786" width="28" height="16" rx="2"/>
+    <rect x="666" y="786" width="28" height="16" rx="2"/>
+    <rect x="702" y="786" width="28" height="16" rx="2"/>
+    <rect x="738" y="786" width="28" height="16" rx="2"/>
+    <rect x="774" y="786" width="28" height="16" rx="2"/>
+    <rect x="630" y="812" width="28" height="16" rx="2"/>
+    <rect x="666" y="812" width="28" height="16" rx="2"/>
+    <rect x="702" y="812" width="28" height="16" rx="2"/>
+    <rect x="738" y="812" width="28" height="16" rx="2"/>
+  </g>
+  <!-- Mouse -->
+  <ellipse cx="1100" cy="790" rx="45" ry="75" fill="#1e2329" stroke="#2b3139" stroke-width="2"/>
+  <ellipse cx="1100" cy="770" rx="30" ry="45" fill="#0b0e11"/>
+  <rect x="1093" y="755" width="14" height="18" rx="3" fill="#2b3139" opacity="0.4"/>
+  <!-- Text -->
+  <text x="800" y="930" text-anchor="middle" font-family="Inter, sans-serif" font-size="28" font-weight="600" fill="#2dbdb6" opacity="0.9">Стримерская станция</text>
+</svg>
