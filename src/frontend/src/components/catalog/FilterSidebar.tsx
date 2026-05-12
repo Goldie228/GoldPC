@@ -391,31 +391,20 @@ export function FilterSidebar({ mobile = false,
     const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
 
     const fetchAttrs = async () => {
-      setSpecAttrsLoading(true);
       try {
-        // Only use build-context specs (effectiveSpecifications) for facet filtering.
-        // User's selectedSpecifications should narrow PRODUCTS only, not hide facet options.
-        const ctxSpecs = effectiveSpecifications && Object.keys(effectiveSpecifications).length > 0
-          ? effectiveSpecifications
-          : undefined;
-        // Serialize: arrays become comma-separated strings for ASP.NET model binding
-        const serializedSpecs = ctxSpecs
-          ? Object.fromEntries(
-              Object.entries(ctxSpecs).map(([k, v]) => [k, Array.isArray(v) ? v.join(',') : String(v)])
-            ) as Record<string, string>
-          : undefined;
+        // Facets always show ALL options with real counts.
+        // Spec constraints (context + user selections) are applied at the
+        // product query level — not here, so the user can browse freely.
         const isInStock = selectedAvailability.includes('in_stock');
-        const attrs = await catalogApi.getFilterFacets(backendSlug, { specifications: serializedSpecs, inStock: isInStock });
+        const attrs = await catalogApi.getFilterFacets(backendSlug, { specifications: undefined, inStock: isInStock });
         setFilterAttributes(attrs);
       } catch (err) {
         console.error('Failed to fetch filter attributes:', err);
         setFilterAttributes([]);
-      } finally {
-        setSpecAttrsLoading(false);
       }
     };
     fetchAttrs();
-  }, [selectedCategory, JSON.stringify(effectiveSpecifications), selectedAvailability]);
+  }, [selectedCategory, selectedAvailability]);
 
   // Fetch real price bounds from catalog API (cheapest + most expensive item in category)
   useEffect(() => {
@@ -694,12 +683,6 @@ export function FilterSidebar({ mobile = false,
             const restrictKey = attr.key;
             const allowed = restrictedSpecValues?.[restrictKey];
 
-            // Also check if selectedSpecifications has a locked value (single value, not array)
-            // This happens when effectiveSpecs hard-codes a spec (e.g., socket from buildContext)
-            const lockedValue = selectedSpecifications[restrictKey];
-            const isLockArray = Array.isArray(lockedValue);
-            const isLocked = typeof lockedValue === 'string' && !isLockArray;
-
             // Для `type` — умный фильтр: DDR4 должен совпадать с "DDR4 DIMM",
             // но НЕ с "DDR4 SO-DIMM" / "DDR4 DIMM Registered" / чипами ("1Gx8")
             const isMatchingDDRType = (optionValue: string, expectedTypes: string[]): boolean => {
@@ -718,10 +701,6 @@ export function FilterSidebar({ mobile = false,
               } else {
                 finalOptions = cleanOptions.filter((o) => allowed.some(a => a.toLowerCase() === o.value.toLowerCase()));
               }
-            } else if (isLocked && lockedValue) {
-              // Locked to a single value — show only that value, hide all others
-              const lockedUpper = String(lockedValue).toUpperCase();
-              finalOptions = cleanOptions.filter((o) => o.value.toUpperCase() === lockedUpper);
             }
 
             return (

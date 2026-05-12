@@ -11,14 +11,12 @@ import { Icon } from '../../components/ui/Icon/Icon';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { EmptyState } from '../../components/catalog/EmptyState';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
-import { ProductQuickViewContent } from '../../components/product/ProductQuickViewContent';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
 import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
 import { specificationsWithDescriptionFallback } from '../../utils/productDescriptionSpecs';
 import { evaluateComparison } from '../../utils/comparison/comparisonEngine';
 import { getBackendCategorySlug, normalizeCategory, normalizeSpecKey } from '../../utils/comparison/comparisonRules';
 import { sortSpecKeysForComparison } from '../../utils/comparison/specKeysSort';
-import { useModal } from '../../hooks/useModal';
 
 /** Получить главное изображение товара (mainImage или первое из images) */
 function getMainImage(product: Product): ProductImage | undefined {
@@ -42,13 +40,23 @@ function formatPrice(price: number): string {
   }).format(price);
 }
 
+function formatRating(value: unknown): number | null {
+  if (typeof value === 'number' && !Number.isNaN(value)) return value;
+  if (value && typeof value === 'object' && 'average' in value) {
+    const avg = (value as { average?: number }).average;
+    return avg != null && !Number.isNaN(avg) ? avg : null;
+  }
+  return null;
+}
 
 /**
  * Страница сравнения товаров
+ * Полностью переработана в соответствии с дизайн-системой GoldPC (DESIGN.md)
  */
 export function ComparisonPage(): ReactElement {
   const items = useComparisonStore((state) => state.items);
   const removeItem = useComparisonStore((state) => state.removeItem);
+  const clearComparison = useComparisonStore((state) => state.clearComparison);
   const { addToCart, changeQuantity, isInCart, getItemQuantity } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlistStore();
   const showToast = useToastStore((state) => state.showToast);
@@ -58,7 +66,6 @@ export function ComparisonPage(): ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
-  const { openModal, closeModal } = useModal();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [facetDisplayNames, setFacetDisplayNames] = useState<Record<string, string>>({});
 
@@ -142,19 +149,6 @@ export function ComparisonPage(): ReactElement {
     const inWishlist = isInWishlist(productId);
     toggleWishlist(productId);
     showToast(inWishlist ? 'Удалено из избранного' : 'Добавлено в избранное', inWishlist ? 'info' : 'success');
-  };
-
-  const handleOpenQuickView = (product: Product) => {
-    openModal({
-      title: product.name ?? 'Быстрый просмотр',
-      size: 'large',
-      content: (
-        <ProductQuickViewContent
-          product={product}
-          onClose={closeModal}
-        />
-      ),
-    });
   };
 
   const categoryCounts = useMemo(() => {
@@ -250,25 +244,33 @@ export function ComparisonPage(): ReactElement {
     [facetDisplayNames]
   );
 
+  // ============================================================
+  // Состояния: пусто, ошибка
+  // ============================================================
+
   if (items.length === 0 && !loading) {
     return (
-      <div className="min-h-screen bg-background pt-20">
-        <div className="max-w-[1680px] mx-auto px-6">
-          <header className="mb-8">
-            <nav className="flex items-center gap-2 text-[0.75rem] text-foreground-dim mb-3">
-              <Link to="/" className="text-muted-foreground no-underline transition-colors hover:text-accent">Главная</Link>
-              <span>/</span>
-              <span>Сравнение</span>
-            </nav>
-            <h1 className="text-[clamp(1.5rem,4vw,2rem)] font-semibold tracking-tight text-foreground mb-0">Сравнение</h1>
-          </header>
-          <div className="flex flex-col items-center justify-center p-20 bg-border-muted border border-border-muted rounded-xl backdrop-blur-sm">
+      <div className="min-h-screen bg-canvas-dark pt-20">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-xs text-muted-text mb-6" aria-label="Breadcrumb">
+            <Link to="/" className="hover:text-gold transition-colors no-underline">Главная</Link>
+            <span className="text-muted-text/40">/</span>
+            <span className="text-body-text">Сравнение</span>
+          </nav>
+
+          {/* Empty state card */}
+          <div className="bg-card border border-border rounded-xl p-12 flex flex-col items-center justify-center max-w-[600px] mx-auto">
             <EmptyState
               title="Список сравнения пуст"
               description="Добавляйте товары из каталога, чтобы сравнить их характеристики и выбрать лучшее решение."
               showResetButton={false}
             />
-            <Link to="/catalog" className="mt-6 px-8 py-3 bg-accent text-background font-semibold no-underline rounded-md transition-all hover:-translate-y-0.5 hover:shadow-lg">
+            <Link
+              to="/catalog"
+              className="mt-6 inline-flex items-center gap-2 px-8 py-3 font-semibold text-sm no-underline rounded-lg"
+style={{ backgroundColor: '#FCD535', color: '#000000' }}
+            >
               Перейти в каталог
             </Link>
           </div>
@@ -279,19 +281,23 @@ export function ComparisonPage(): ReactElement {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background pt-20">
-        <div className="max-w-[1680px] mx-auto px-6">
-          <header className="mb-8">
-            <nav className="flex items-center gap-2 text-[0.75rem] text-foreground-dim mb-3">
-              <Link to="/" className="text-muted-foreground no-underline transition-colors hover:text-accent">Главная</Link>
-              <span>/</span>
-              <span>Сравнение</span>
-            </nav>
-            <h1 className="text-[clamp(1.5rem,4vw,2rem)] font-semibold tracking-tight text-foreground mb-0">Сравнение</h1>
-          </header>
-          <div className="flex flex-col items-center gap-4 p-15 text-foreground">
+      <div className="min-h-screen bg-canvas-dark pt-20">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-8">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-xs text-muted-text mb-6" aria-label="Breadcrumb">
+            <Link to="/" className="hover:text-gold transition-colors no-underline">Главная</Link>
+            <span className="text-muted-text/40">/</span>
+            <Link to="/catalog" className="hover:text-gold transition-colors no-underline">Каталог</Link>
+            <span className="text-muted-text/40">/</span>
+            <span className="text-body-text">Сравнение</span>
+          </nav>
+
+          <div className="flex flex-col items-center gap-4 py-20">
             <ApiErrorBanner message={error} onRetry={() => window.location.reload()}>
-              <Link to="/catalog" className="inline-flex px-8 py-3.5 bg-accent text-background font-semibold no-underline rounded-md transition-all hover:-translate-y-0.5 hover:shadow-lg">
+              <Link
+                to="/catalog"
+                className="inline-flex items-center gap-2 px-8 py-3 bg-gold text-gold-ink font-semibold text-sm no-underline rounded-lg transition-all hover:bg-gold-active"
+              >
                 Перейти в каталог
               </Link>
             </ApiErrorBanner>
@@ -301,143 +307,225 @@ export function ComparisonPage(): ReactElement {
     );
   }
 
+  // ============================================================
+  // Основной контент
+  // ============================================================
+
   return (
-    <div className="min-h-screen bg-background pt-20">
-      <div className="max-w-[1680px] mx-auto px-6">
+    <div className="min-h-screen bg-canvas-dark">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-xs text-muted-text mb-6" aria-label="Breadcrumb">
+          <Link to="/" className="hover:text-gold transition-colors no-underline">Главная</Link>
+          <span className="text-muted-text/40">/</span>
+          <Link to="/catalog" className="hover:text-gold transition-colors no-underline">Каталог</Link>
+          <span className="text-muted-text/40">/</span>
+          <span className="text-gold font-medium">Сравнение</span>
+        </nav>
+
+        {/* Header section */}
         <header className="mb-8">
-          <nav className="flex items-center gap-2 text-[0.75rem] text-foreground-dim mb-3">
-            <Link to="/" className="text-muted-foreground no-underline transition-colors hover:text-accent">Главная</Link>
-            <span>/</span>
-            <Link to="/catalog" className="text-muted-foreground no-underline transition-colors hover:text-accent">Каталог</Link>
-            <span>/</span>
-            <span>Сравнение</span>
-          </nav>
-          <div className="flex items-center gap-4 mb-2 flex-wrap">
-            <h1 className="text-[clamp(1.5rem,4vw,2rem)] font-semibold tracking-tight text-foreground">Сравнение товаров</h1>
-            {activeCategory && <span className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-accent px-3 py-1 bg-border-muted border border-border-muted rounded-full">{getCategoryLabel(activeCategory)}</span>}
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-3">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-on-dark tracking-tight">
+                Сравнение товаров
+              </h1>
+            </div>
+
+            {items.length > 0 && (
+              <button
+                onClick={() => {
+                  clearComparison();
+                  showToast('Список сравнения очищен', 'info');
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-muted-text bg-surface-card border border-hairline-dark rounded-lg hover:text-price-rise hover:border-price-rise/30 transition-all"
+                type="button"
+                aria-label="Очистить список сравнения"
+              >
+                <Icon name="trash" size="xs" />
+                Очистить всё
+              </button>
+            )}
           </div>
-          <p className="text-[0.85rem] text-muted-foreground">
-            {formatCountRu(visibleProducts.length, RU_FORMS.tovar)} в выбранной категории
-          </p>
+
+          {/* Category badge + product count */}
+          <div className="flex items-center gap-3 flex-wrap mb-4">
+            {activeCategory && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-gold bg-gold/10 border border-gold/30 rounded-full">
+                <Icon name="grid" size="xs" color="gold" />
+                {getCategoryLabel(activeCategory)}
+              </span>
+            )}
+            <p className="text-sm text-muted-text">
+              {formatCountRu(visibleProducts.length, RU_FORMS.tovar)}
+            </p>
+          </div>
+
+          {/* Category tabs */}
           {categories.length > 1 && (
-            <div className="flex gap-2 flex-wrap mt-3.5" role="tablist" aria-label="Категории сравнения">
+            <div className="flex gap-2 flex-wrap" role="tablist" aria-label="Категории сравнения">
               {categories.map((category) => (
                 <button
                   key={category}
                   type="button"
                   role="tab"
                   aria-selected={activeCategory === category}
-                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-full border transition-all text-sm cursor-pointer
-                    ${activeCategory === category ? 'text-accent border-border-muted bg-border-muted' : 'text-muted-foreground border-border bg-border-muted hover:text-foreground hover:border-border-muted'}
-                  `}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
+                    activeCategory === category
+                      ? 'bg-gold text-gold-ink border-gold shadow-sm shadow-gold/20'
+                      : 'bg-surface-elevated text-muted-text border-hairline-dark hover:text-body-text hover:border-muted-strong'
+                  }`}
                   onClick={() => setActiveCategory(category)}
                 >
                   <span>{getCategoryLabel(category)}</span>
-                  <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full border border-border-muted bg-border-muted text-xs text-foreground">{categoryCounts.get(category) ?? 0}</span>
+                  <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-black/20 text-xs font-bold text-inherit">
+                    {categoryCounts.get(category) ?? 0}
+                  </span>
                 </button>
               ))}
             </div>
           )}
         </header>
 
+        {/* Loading state */}
         {loading ? (
-          <div className="flex flex-col items-center gap-4 p-25 text-muted-foreground">
+          <div className="flex flex-col items-center gap-4 py-20 text-muted-text">
             <Icon name="loader" size="xl" animated color="gold" />
-            <span>Загружаем характеристики...</span>
+            <span className="text-sm">Загружаем характеристики...</span>
           </div>
         ) : visibleProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-20 bg-border-muted/50 border border-border-muted rounded-xl backdrop-blur-sm">
+          /* Empty state for selected category */
+          <div className="bg-surface-card border border-hairline-dark rounded-xl p-12 flex flex-col items-center justify-center max-w-[600px] mx-auto">
             <EmptyState
               title="Для этой категории пока нечего сравнивать"
               description="Выберите другую категорию в переключателе сверху или добавьте товары в сравнение из каталога."
               showResetButton={false}
             />
-            <Link to="/catalog" className="mt-6 px-8 py-3 bg-accent text-background font-semibold no-underline rounded-md transition-all hover:-translate-y-0.5 hover:shadow-lg">
+            <Link
+              to="/catalog"
+              className="mt-6 inline-flex items-center gap-2 px-8 py-3 bg-gold text-gold-ink font-semibold text-sm no-underline rounded-lg transition-all hover:bg-gold-active"
+            >
               Перейти в каталог
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto bg-card border border-border rounded-xl shadow-lg relative scrollbar-thin scrollbar-thumb-border-muted scrollbar-track-transparent">
-            <table className="w-full border-separate border-spacing-0 min-w-[860px]">
-              <thead>
-                <tr>
-                  <th className="sticky left-0 z-15 w-[240px] min-w-[200px] p-5 text-left text-[0.8rem] font-semibold text-muted-foreground bg-card border-b border-border-muted border-r border-border-muted after:content-[''] after:absolute after:top-0 after:right-[-10px] after:w-2.5 after:h-full after:bg-gradient-to-r after:from-border-muted after:to-transparent after:pointer-events-none">
-                    <div className="text-accent uppercase tracking-[0.05em] text-[0.7rem]">
-                      <span>Характеристики</span>
-                    </div>
-                  </th>
+          /* ============================================================ */
+          /* Comparison Table                                              */
+          /* ============================================================ */
+          <div className="bg-surface-card border border-hairline-dark rounded-xl overflow-hidden">
+            <div className="overflow-x-auto scrollbar-thin">
+              <table className="w-full min-w-[860px] border-separate border-spacing-0">
+                {/* ----- Product header row ----- */}
+                <thead>
+                  <tr>
+                    {/* Sticky specs column header */}
+                    <th className="sticky left-0 z-15 w-[220px] min-w-[200px] px-4 py-4 text-left text-xs font-semibold text-muted-text uppercase tracking-wider bg-surface-card border-b border-r border-hairline-dark">
+                      <span className="text-gold">Характеристики</span>
+                    </th>
+
+                    {/* Product columns */}
                     {visibleProducts.map((product) => {
                       const inCart = isInCart(product.id);
                       const inWishlist = isInWishlist(product.id);
                       const quantityInCart = getItemQuantity(product.id);
-                      const canIncrement = product.stock <= 0 || quantityInCart < product.stock;
+                      const canIncrement = product.stock === 0 || quantityInCart < product.stock;
+                      const mainImage = getMainImage(product);
+                      const imageUrl = getProductImageUrl(mainImage?.url);
+                      const hasImage = imageUrl && !imageErrors.has(product.id);
 
                       return (
-                      <th
-                        key={product.id}
-                        className="p-6 min-w-[290px] border-l border-border-muted"
-                      >
-                        <div className="flex flex-col gap-4 relative">
-                          <button
-                            className="absolute top-[-8px] right-[-8px] w-7 h-7 flex items-center justify-center bg-border-muted border border-border-muted rounded-full text-muted-foreground cursor-pointer transition-all hover:text-accent hover:border-border-muted hover:bg-border-muted hover:scale-108 z-5"
-                            onClick={() => removeItem(product.id)}
-                            aria-label={`Удалить ${product.name} из сравнения`}
-                            type="button"
-                          >
-                            <Icon name="close" size="xs" />
-                          </button>
-                          <Link to={`/product/${product.slug}`} className="block w-[140px] mx-auto transition-transform hover:scale-104">
-                            {(() => {
-                              const mainImage = getMainImage(product);
-                              const url = getProductImageUrl(mainImage?.url);
-                              return (
-                                <div className="w-[140px] h-[140px] mx-auto rounded-xl border border-border-muted bg-white flex items-center justify-center overflow-hidden box-border">
-                                  {url && !imageErrors.has(product.id) ? (
-                                    <img
-                                      src={url}
-                                      alt={mainImage?.alt ?? product.name}
-                                      className="w-full h-full object-contain block"
-                                      onError={() => handleImageError(product.id)}
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-border-muted rounded-0 text-foreground-dim">
-                                      <Icon name="image" size="lg" color="secondary" />
-                                    </div>
-                                  )}
+                        <th
+                          key={product.id}
+                          className="sticky top-0 z-5 min-w-[280px] px-5 py-4 border-b border-l border-hairline-dark bg-surface-elevated"
+                        >
+                          <div className="flex flex-col items-center gap-3 relative">
+                            {/* Remove button */}
+                            <button
+                              className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center rounded-full text-muted-text hover:text-price-rise hover:bg-price-rise/10 transition-all"
+                              onClick={() => removeItem(product.id)}
+                              aria-label={`Удалить ${product.name} из сравнения`}
+                              type="button"
+                            >
+                              <Icon name="close" size="xs" />
+                            </button>
+
+                            {/* Product image */}
+                            <Link
+                              to={`/product/${product.slug}`}
+                              className="block w-[120px] h-[120px] rounded-xl border border-hairline-dark bg-white overflow-hidden transition-transform hover:scale-[1.03] mt-4"
+                            >
+                              {hasImage ? (
+                                <img
+                                  src={imageUrl}
+                                  alt={mainImage?.alt ?? product.name}
+                                  className="w-full h-full object-contain"
+                                  onError={() => handleImageError(product.id)}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-surface-elevated">
+                                  <Icon name="image" size="lg" color="secondary" />
                                 </div>
-                              );
-                            })()}
-                          </Link>
-                          <div className="flex flex-col gap-3">
-                            <Link to={`/product/${product.slug}`} className="text-[0.95rem] font-medium text-foreground no-underline leading-1.4 line-clamp-2 transition-colors hover:text-accent">
+                              )}
+                            </Link>
+
+                            {/* Product name */}
+                            <Link
+                              to={`/product/${product.slug}`}
+                              className="text-sm font-semibold text-on-dark no-underline line-clamp-2 text-center leading-5 hover:text-gold transition-colors max-w-[220px]"
+                            >
                               {product.name}
                             </Link>
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-xl font-bold text-accent">{formatPrice(product.price)}</span>
+
+                            {/* Price */}
+                            <div className="flex items-baseline gap-1">
+                              <span className="text-xl font-bold font-tabular text-on-dark">
+                                {formatPrice(product.price)}
+                              </span>
                             </div>
-                            <div className="flex gap-2 w-full items-center">
+
+                            {/* Stock badge */}
+                            <span
+                              className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                                product.stock === 0
+                                  ? 'text-muted-text border-hairline-dark bg-surface-elevated'
+                                  : 'text-price-drop border-price-drop/30 bg-price-drop/10'
+                              }`}
+                            >
+                              {product.stock === 0 ? 'Под заказ' : 'В наличии'}
+                            </span>
+
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-1.5 w-full justify-center">
+                              {/* Wishlist */}
                               <button
-                                className={`w-9.5 h-9.5 inline-flex items-center justify-center border border-border-muted bg-border-muted text-foreground transition-all rounded-md hover:border-border-muted hover:text-accent hover:bg-border-muted
-                                  ${inWishlist ? 'border-border-muted bg-border-muted' : ''}
-                                `}
+                                className={`w-8 h-8 inline-flex items-center justify-center border rounded-lg transition-all ${
+                                  inWishlist
+                                    ? 'border-gold/40 bg-gold/10 text-gold'
+                                    : 'border-hairline-dark text-muted-text hover:text-gold hover:border-gold/30'
+                                }`}
                                 onClick={() => handleToggleWishlist(product.id)}
                                 aria-label={inWishlist ? 'Удалить из избранного' : 'Добавить в избранное'}
+                                type="button"
                               >
                                 <Icon name="heart" size="xs" color={inWishlist ? 'gold' : 'default'} />
                               </button>
+
+                              {/* Cart / Quantity */}
                               {inCart ? (
-                                <div className="inline-flex items-center flex-1 min-h-[38px] border border-border-muted rounded-md overflow-hidden">
+                                <div className="inline-flex items-center flex-1 max-w-[110px] min-h-[32px] border border-hairline-dark rounded-md overflow-hidden bg-surface-card">
                                   <button
-                                    className="w-8.5 h-9 border-none bg-border-muted text-foreground cursor-pointer transition-all rounded-0 hover:text-accent hover:bg-border-muted"
+                                    className="w-7 h-8 border-none bg-surface-elevated text-muted-text cursor-pointer transition-colors hover:text-gold flex items-center justify-center"
                                     onClick={() => handleDecrement(product)}
                                     aria-label="Уменьшить количество"
                                     type="button"
                                   >
                                     <Icon name="minus" size="xs" />
                                   </button>
-                                  <span className="flex-1 text-center font-semibold text-sm text-foreground">{quantityInCart}</span>
+                                  <span className="flex-1 text-center font-tabular text-xs text-on-dark bg-surface-card">
+                                    {quantityInCart}
+                                  </span>
                                   <button
-                                    className="w-8.5 h-9 border-none bg-border-muted text-foreground cursor-pointer transition-all rounded-0 hover:text-accent hover:bg-border-muted disabled:opacity-45 disabled:cursor-not-allowed"
+                                    className="w-7 h-8 border-none bg-surface-elevated text-muted-text cursor-pointer transition-colors hover:text-gold flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
                                     onClick={() => handleIncrement(product)}
                                     disabled={!canIncrement || product.stock === 0}
                                     aria-label="Увеличить количество"
@@ -448,114 +536,144 @@ export function ComparisonPage(): ReactElement {
                                 </div>
                               ) : (
                                 <button
-                                  className="flex-1 min-h-[38px] px-2.5 inline-flex items-center justify-center gap-1.5 border border-border-muted bg-border-muted text-foreground font-semibold text-[0.82rem] cursor-pointer rounded-md transition-all hover:border-border-muted hover:bg-border-muted hover:text-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                                  className="flex-1 max-w-[110px] min-h-[32px] inline-flex items-center justify-center gap-1 px-2.5 bg-price-drop text-on-dark font-semibold text-[11px] rounded-lg border border-price-drop/30 hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                                   onClick={() => handleAddToCart(product)}
                                   disabled={product.stock === 0}
+                                  type="button"
                                 >
                                   <Icon name="cart" size="xs" />
-                                  <span>В корзину</span>
+                                  В корзину
                                 </button>
                               )}
-                              <button
-                                className="w-9.5 h-9.5 inline-flex items-center justify-center border border-border-muted bg-border-muted text-foreground transition-all rounded-md hover:border-border-muted hover:text-accent hover:bg-border-muted"
-                                onClick={() => handleOpenQuickView(product)}
-                                aria-label="Быстрый просмотр"
-                              >
-                                <Icon name="eye" size="xs" />
-                              </button>
+
                             </div>
                           </div>
-                        </div>
-                      </th>
-                    );
+                        </th>
+                      );
                     })}
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="hover:[&>td:first-child]:bg-[#1e1e22] hover:[&>td:not(:first-child)]:bg-border-muted">
-                  <td className="sticky left-0 z-10 p-4 text-[0.8rem] font-semibold text-muted-foreground bg-card border-b border-border-muted border-r border-border-muted">Производитель</td>
-                  {visibleProducts.map((product) => (
-                    <td key={product.id} className="p-4 text-sm text-foreground border-b border-border-muted border-l border-border-muted text-center transition-colors">
-                      {product.manufacturer?.name ?? '—'}
+                  </tr>
+                </thead>
+
+                {/* ----- Spec rows ----- */}
+                <tbody>
+                  {/* Производитель row */}
+                  <tr className="transition-colors hover:[&>td:not(:first-child)]:bg-surface-elevated/40">
+                    <td className="sticky left-0 z-10 px-4 py-3 text-sm font-semibold text-muted-text bg-surface-card border-b border-r border-hairline-dark">
+                      Производитель
                     </td>
-                  ))}
-                </tr>
-                <tr className="hover:[&>td:first-child]:bg-[#1e1e22] hover:[&>td:not(:first-child)]:bg-border-muted">
-                  <td className="sticky left-0 z-10 p-4 text-[0.8rem] font-semibold text-muted-foreground bg-card border-b border-border-muted border-r border-border-muted">Рейтинг</td>
-                  {visibleProducts.map((product, idx) => {
-                    const ratingNum =
-                      typeof product.rating === 'number'
-                        ? product.rating
-                        : (product.rating as { average?: number } | undefined)?.average;
-                    const ratings = visibleProducts.map((p) =>
-                      typeof p.rating === 'number' ? p.rating : (p.rating as { average?: number })?.average
-                    );
-                    const ratingEvaluation = evaluateComparison(activeCategory ?? '', 'rating', ratings);
-                    return (
+                    {visibleProducts.map((product) => (
                       <td
                         key={product.id}
-                        className={`p-4 text-sm text-foreground border-b border-border-muted border-l border-border-muted text-center transition-colors
-                          ${ratingEvaluation.bestIndices.has(idx) ? '!bg-transparent !text-foreground font-semibold border-2 border-accent rounded' : ''}
-                        `}
+                        className="px-4 py-3 text-sm text-body-text border-b border-l border-hairline-dark text-center transition-colors"
                       >
-                        {ratingNum != null && !Number.isNaN(ratingNum) ? (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-border-muted rounded">
-                            <Icon name="star" size="xs" color="gold" />
-                            <span>{Number(ratingNum).toFixed(1)}</span>
-                          </div>
-                        ) : '—'}
+                        {product.manufacturer?.name ?? '—'}
                       </td>
+                    ))}
+                  </tr>
+
+                  {/* Рейтинг row */}
+                  <tr className="transition-colors hover:[&>td:not(:first-child)]:bg-surface-elevated/40">
+                    <td className="sticky left-0 z-10 px-4 py-3 text-sm font-semibold text-muted-text bg-surface-card border-b border-r border-hairline-dark">
+                      Рейтинг
+                    </td>
+                    {visibleProducts.map((product, idx) => {
+                      const ratingNum = formatRating(product.rating);
+                      const ratings = visibleProducts.map((p) => formatRating(p.rating));
+                      const ratingEvaluation = evaluateComparison(activeCategory ?? '', 'rating', ratings);
+                      const isBest = ratingEvaluation.bestIndices.has(idx);
+
+                      return (
+                        <td
+                          key={product.id}
+                          className={`px-4 py-3 text-sm border-b border-l border-hairline-dark text-center transition-colors ${
+                            isBest
+                              ? 'text-gold font-semibold bg-gold/5'
+                              : 'text-body-text'
+                          }`}
+                        >
+                          {ratingNum != null && !Number.isNaN(ratingNum) ? (
+                            <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-surface-elevated rounded">
+                              <Icon name="star" size="xs" color="gold" />
+                              <span className="font-tabular text-xs">{Number(ratingNum).toFixed(1)}</span>
+                            </div>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+
+                  {/* Наличие row */}
+                  <tr className="transition-colors hover:[&>td:not(:first-child)]:bg-surface-elevated/40">
+                    <td className="sticky left-0 z-10 px-4 py-3 text-sm font-semibold text-muted-text bg-surface-card border-b border-r border-hairline-dark">
+                      Наличие
+                    </td>
+                    {visibleProducts.map((product) => (
+                      <td
+                        key={product.id}
+                        className="px-4 py-3 text-sm border-b border-l border-hairline-dark text-center transition-colors"
+                      >
+                        <span
+                          className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
+                            product.stock === 0
+                              ? 'text-muted-text border-hairline-dark bg-surface-elevated'
+                              : 'text-price-drop border-price-drop/30 bg-price-drop/10'
+                          }`}
+                        >
+                          {product.stock === 0 ? 'Под заказ' : 'В наличии'}
+                        </span>
+                      </td>
+                    ))}
+                  </tr>
+
+                  {/* Dynamic spec rows */}
+                  {specKeys.map((key) => {
+                    const values = visibleProducts.map((p) => {
+                      const specs = p.specifications as ProductSpecifications | undefined;
+                      return specs?.[key];
+                    });
+                    const evaluation = evaluateComparison(activeCategory ?? '', key, values, specContextValues);
+
+                    return (
+                      <tr
+                        key={key}
+                        className="transition-colors hover:[&>td:not(:first-child)]:bg-surface-elevated/40"
+                      >
+                        {/* Spec label - sticky left */}
+                        <td className="sticky left-0 z-10 px-4 py-3 text-sm font-semibold text-muted-text bg-surface-card border-b border-r border-hairline-dark">
+                          {resolveSpecLabel(key)}
+                        </td>
+
+                        {/* Spec values */}
+                        {visibleProducts.map((product, idx) => {
+                          const specs = product.specifications as ProductSpecifications | undefined;
+                          const value = specs?.[key];
+                          const display = formatSpecValueForKey(key, value);
+                          const isBest = evaluation.bestIndices.has(idx);
+
+                          return (
+                            <td
+                              key={product.id}
+                              className={`px-4 py-3 text-sm border-b border-l border-hairline-dark text-center transition-colors ${
+                                isBest
+                                  ? 'text-gold font-semibold bg-gold/5'
+                                  : 'text-body-text'
+                              }`}
+                            >
+                              {display}
+                            </td>
+                          );
+                        })}
+                      </tr>
                     );
                   })}
-                </tr>
-                <tr className="hover:[&>td:first-child]:bg-[#1e1e22] hover:[&>td:not(:first-child)]:bg-border-muted">
-                  <td className="sticky left-0 z-10 p-4 text-[0.8rem] font-semibold text-muted-foreground bg-card border-b border-border-muted border-r border-border-muted">Наличие</td>
-                  {visibleProducts.map((product) => (
-                    <td key={product.id} className="p-4 text-sm text-foreground border-b border-border-muted border-l border-border-muted text-center transition-colors">
-                      <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full border text-[0.76rem] font-semibold
-                        ${product.stock === 0 ? 'text-muted-foreground border-border-muted bg-border-muted' : 'text-accent border-border-muted bg-border-muted'}
-                      `}>
-                        {product.stock === 0 ? 'Под заказ' : 'В наличии'}
-                      </span>
-                    </td>
-                  ))}
-                </tr>
-                {specKeys.map((key) => {
-                  const values = visibleProducts.map((p) => {
-                    const specs = p.specifications as ProductSpecifications | undefined;
-                    return specs?.[key];
-                  });
-                  const evaluation = evaluateComparison(activeCategory ?? '', key, values, specContextValues);
-
-                  return (
-                    <tr key={key} className="hover:[&>td:first-child]:bg-[#1e1e22] hover:[&>td:not(:first-child)]:bg-border-muted">
-                      <td className="sticky left-0 z-10 p-4 text-[0.8rem] font-semibold text-muted-foreground bg-card border-b border-border-muted border-r border-border-muted">{resolveSpecLabel(key)}</td>
-                      {visibleProducts.map((product, idx) => {
-                        const specs = product.specifications as ProductSpecifications | undefined;
-                        const value = specs?.[key];
-                        const display = formatSpecValueForKey(key, value);
-                        const cellClassName = `p-4 text-sm text-foreground border-b border-border-muted border-l border-border-muted text-center transition-colors
-                          ${evaluation.bestIndices.has(idx) ? '!bg-transparent !text-foreground font-semibold border-2 border-accent rounded' : ''}
-                        `;
-
-                        return (
-                          <td
-                            key={product.id}
-                            className={cellClassName}
-                          >
-                            {display}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
-
     </div>
   );
 }

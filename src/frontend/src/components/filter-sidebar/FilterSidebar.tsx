@@ -324,38 +324,27 @@ export function FilterSidebar({
     }
     let cancelled = false;
     const fetchFacets = async () => {
-      setLoadingFacets(true);
       try {
         const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
-        // Use build-context specs for facet filtering only
-        const ctxSpecs = effectiveSpecs && Object.keys(effectiveSpecs).length > 0
-          ? effectiveSpecs
-          : undefined;
-        const serializedSpecs = ctxSpecs
-          ? Object.fromEntries(
-              Object.entries(ctxSpecs).map(([k, v]) => [k, Array.isArray(v) ? v.join(',') : String(v)])
-            ) as Record<string, string>
-          : undefined;
+        // Facets always show ALL options with real counts.
+        // Spec constraints are applied at the product query level.
         const isInStock = selectedAvailability.includes('in_stock');
         const attrs = await catalogApi.getFilterFacets(backendSlug, {
-          specifications: serializedSpecs,
+          specifications: undefined,
           inStock: isInStock,
         });
         if (!cancelled) {
           setFilterFacets(attrs);
-          // Reset spec search on category change
           setSpecSearchQuery({});
         }
       } catch (err) {
         console.error('Failed to fetch filter facets:', err);
         if (!cancelled) setFilterFacets([]);
-      } finally {
-        if (!cancelled) setLoadingFacets(false);
       }
     };
     fetchFacets();
     return () => { cancelled = true; };
-  }, [selectedCategory, JSON.stringify(effectiveSpecs), selectedAvailability]);
+  }, [selectedCategory, selectedAvailability]);
 
   // === Fetch real price bounds ===
   useEffect(() => {
@@ -834,23 +823,18 @@ export function FilterSidebar({
                         return (
                           <div
                             key={val}
-                            role={attr.multiSelect ? 'checkbox' : 'radio'}
+                            role="checkbox"
                             aria-checked={isChecked(val)}
                             aria-disabled={disabled || undefined}
                             tabIndex={disabled ? -1 : 0}
                             onClick={() => {
                               if (disabled) return;
                               const next = { ...selectedSpecifications };
-                              if (attr.multiSelect) {
-                                const newArr = isChecked(val)
-                                  ? selectedArr.filter(v => v !== val)
-                                  : [...selectedArr, val];
-                                if (newArr.length === 0) delete next[attr.key];
-                                else next[attr.key] = newArr;
-                              } else {
-                                if (isChecked(val)) delete next[attr.key];
-                                else next[attr.key] = val;
-                              }
+                              const newArr = isChecked(val)
+                                ? selectedArr.filter(v => v !== val)
+                                : [...selectedArr, val];
+                              if (newArr.length === 0) delete next[attr.key];
+                              else next[attr.key] = newArr;
                               onSpecificationsChange(next);
                             }}
                             onKeyDown={(e) => {
@@ -858,16 +842,11 @@ export function FilterSidebar({
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
                                 const next = { ...selectedSpecifications };
-                                if (attr.multiSelect) {
-                                  const newArr = isChecked(val)
-                                    ? selectedArr.filter(v => v !== val)
-                                    : [...selectedArr, val];
-                                  if (newArr.length === 0) delete next[attr.key];
-                                  else next[attr.key] = newArr;
-                                } else {
-                                  if (isChecked(val)) delete next[attr.key];
-                                  else next[attr.key] = val;
-                                }
+                                const newArr = isChecked(val)
+                                  ? selectedArr.filter(v => v !== val)
+                                  : [...selectedArr, val];
+                                if (newArr.length === 0) delete next[attr.key];
+                                else next[attr.key] = newArr;
                                 onSpecificationsChange(next);
                               }
                             }}
