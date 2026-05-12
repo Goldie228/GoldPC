@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b0e11"/>
+      <stop offset="100%" stop-color="#1a1f27"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FCD535" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#2dbdb6" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+  <rect width="1600" height="1000" fill="url(#accent)"/>
+  <!-- Ambient glow -->
+  <circle cx="400" cy="500" r="400" fill="#FCD535" opacity="0.03"/>
+  <circle cx="1200" cy="400" r="350" fill="#2dbdb6" opacity="0.03"/>
+  <!-- Monitor silhouette -->
+  <rect x="550" y="200" width="500" height="300" rx="12" fill="#1e2329" stroke="#2b3139" stroke-width="2"/>
+  <rect x="570" y="220" width="460" height="240" rx="6" fill="#0b0e11"/>
+  <!-- Screen glow -->
+  <rect x="580" y="230" width="440" height="220" rx="4" fill="#FCD535" opacity="0.04"/>
+  <!-- Monitor stand -->
+  <rect x="730" y="500" width="140" height="30" rx="4" fill="#1e2329"/>
+  <rect x="680" y="530" width="240" height="8" rx="4" fill="#1e2329"/>
+  <!-- Keyboard silhouette -->
+  <rect x="450" y="620" width="700" height="200" rx="12" fill="#1e2329" stroke="#2b3139" stroke-width="2"/>
+  <rect x="470" y="640" width="660" height="160" rx="6" fill="#0b0e11"/>
+  <!-- Keys rows -->
+  <g fill="#2b3139" opacity="0.6">
+    <rect x="500" y="660" width="30" height="20" rx="3"/>
+    <rect x="540" y="660" width="30" height="20" rx="3"/>
+    <rect x="580" y="660" width="30" height="20" rx="3"/>
+    <rect x="620" y="660" width="30" height="20" rx="3"/>
+    <rect x="660" y="660" width="30" height="20" rx="3"/>
+    <rect x="700" y="660" width="30" height="20" rx="3"/>
+    <rect x="740" y="660" width="30" height="20" rx="3"/>
+    <rect x="780" y="660" width="30" height="20" rx="3"/>
+    <rect x="820" y="660" width="30" height="20" rx="3"/>
+    <rect x="860" y="660" width="30" height="20" rx="3"/>
+    <rect x="900" y="660" width="30" height="20" rx="3"/>
+    <rect x="940" y="660" width="30" height="20" rx="3"/>
+    <rect x="500" y="690" width="30" height="20" rx="3"/>
+    <rect x="540" y="690" width="30" height="20" rx="3"/>
+    <rect x="580" y="690" width="30" height="20" rx="3"/>
+    <rect x="620" y="690" width="30" height="20" rx="3"/>
+    <rect x="660" y="690" width="30" height="20" rx="3"/>
+    <rect x="700" y="690" width="30" height="20" rx="3"/>
+    <rect x="740" y="690" width="30" height="20" rx="3"/>
+    <rect x="780" y="690" width="30" height="20" rx="3"/>
+    <rect x="820" y="690" width="30" height="20" rx="3"/>
+    <rect x="860" y="690" width="30" height="20" rx="3"/>
+  </g>
+  <!-- Mouse -->
+  <ellipse cx="1050" cy="720" rx="50" ry="80" fill="#1e2329" stroke="#2b3139" stroke-width="2"/>
+  <ellipse cx="1050" cy="700" rx="35" ry="50" fill="#0b0e11"/>
+  <!-- Mouse scroll -->
+  <rect x="1043" y="680" width="14" height="20" rx="3" fill="#2b3139" opacity="0.5"/>
+  <!-- Mouse buttons -->
+  <rect x="1030" y="710" width="18" height="8" rx="2" fill="#2b3139" opacity="0.4"/>
+  <rect x="1054" y="710" width="18" height="8" rx="2" fill="#2b3139" opacity="0.4"/>
+  <!-- Text label -->
+  <text x="800" y="920" text-anchor="middle" font-family="Inter, sans-serif" font-size="28" font-weight="600" fill="#FCD535" opacity="0.8">Игровой сетап PRO</text>
+</svg>
