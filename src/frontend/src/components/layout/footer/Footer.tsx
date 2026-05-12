@@ -33,7 +33,22 @@ export function Footer() {
     { label: 'Доставка по РБ', href: '/delivery' },
     { label: 'Оплата и рассрочка', href: '/payment' },
     { label: 'Гарантийное обслуживание', href: '/warranty' },
+    { label: 'Заявка в сервис', href: '/service-request' },
+  ];
+
+  const infoLinks = [
+    { label: 'О нас', href: '/about' },
+    { label: 'Контакты', href: '/contacts' },
+    { label: 'Возврат товара', href: '/returns' },
     { label: 'Частые вопросы', href: '/faq' },
+    { label: 'Карта сайта', href: '/sitemap' },
+  ];
+
+  const customerLinks = [
+    { label: 'Акции и скидки', href: '/promotions' },
+    { label: 'Бренды', href: '/brands' },
+    { label: 'Политика конфиденциальности', href: '/privacy' },
+    { label: 'Пользовательское соглашение', href: '/terms' },
   ];
 
   const contactInfo = [
@@ -72,9 +87,9 @@ export function Footer() {
     <footer className="py-16 px-6 bg-[#0b0e11] border-t border-[#2b3139]">
       <div className="max-w-[1200px] mx-auto">
         {/* Main grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-10 lg:gap-y-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-x-6 gap-y-10 lg:gap-y-12">
           {/* Brand Column */}
-          <div className="max-w-[260px]">
+          <div className="max-w-[220px]">
             <Link to="/" className="flex items-center gap-2.5 no-underline group">
               <span className="text-xl font-semibold text-[#c9a84c] tracking-tight transition-colors duration-300 group-hover:text-[#d4b86a]">
                 Gold
@@ -114,6 +129,44 @@ export function Footer() {
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
               {serviceLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    to={link.href}
+                    className="text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Info Column */}
+          <div>
+            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5">
+              Информация
+            </h4>
+            <ul className="list-none p-0 m-0 flex flex-col gap-2">
+              {infoLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    to={link.href}
+                    className="text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Customers Column */}
+          <div>
+            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5">
+              Покупателям
+            </h4>
+            <ul className="list-none p-0 m-0 flex flex-col gap-2">
+              {customerLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     to={link.href}
