@@ -17,7 +17,7 @@
 .bsp__compat-status--ok {
   background: var(--border-brand);
   border: 1px solid var(--border-brand);
-  color: var(--accent, #d4a574);
+  color: var(--accent, #FCD535);
 }
 
 .bsp__compat-status--warning {
@@ -62,7 +62,7 @@
   width: 12px;
   height: 12px;
   border: 2px solid rgba(255, 255, 255, 0.15);
-  border-top-color: var(--accent, #d4a574);
+  border-top-color: var(--accent, #FCD535);
   border-radius: 50%;
   animation: bsp-spin 0.6s linear infinite;
 }
@@ -112,27 +112,26 @@
 /* ===== Container ===== */
 .bsp {
   background: var(--bg-card, #18181b);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.06));
-  border-radius: var(--radius-lg, 12px);
-  padding: 24px 24px 24px 24px;
+  border: 1px solid var(--border-muted, rgba(255, 255, 255, 0.06));
+  border-radius: var(--radius-xl, 12px);
+  padding: var(--spacing-lg, 24px);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacing-md, 16px);
   font-family: var(--font-sans);
-  height: 100%;
 }
 
 .bsp__title {
-  font-size: var(--text-lg);
+  font-size: var(--text-lg, 1.125rem);
   font-weight: 600;
   color: var(--fg, #fafafa);
   margin: 0;
 }
 
 .bsp__progress {
-  font-size: var(--text-sm);
+  font-size: var(--text-sm, 0.875rem);
   color: var(--fg-muted, #9a9aa3);
-  margin-top: 4px;
+  margin: 0;
 }
 
 /* ===== Component List ===== */
@@ -162,7 +161,8 @@
 
 .bsp__component-price {
   color: var(--fg, #fafafa);
-  font-family: var(--font-sans);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-base);
   font-weight: 500;
   white-space: nowrap;
@@ -171,8 +171,8 @@
 /* ===== Divider ===== */
 .bsp__divider {
   height: 1px;
-  background: var(--border, rgba(255, 255, 255, 0.06));
-  margin: 4px 0;
+  background: var(--border-muted, rgba(255, 255, 255, 0.06));
+  margin: var(--spacing-xs, 4px) 0;
 }
 
 /* ===== Section ===== */
@@ -199,7 +199,7 @@
 
 .bsp__section-icon {
   flex-shrink: 0;
-  color: var(--accent, #d4a574);
+  color: var(--accent, #FCD535);
   opacity: 0.95;
 }
 
@@ -232,18 +232,20 @@
   vertical-align: middle;
 }
 
-/* ===== Power Bar (gold/gray) ===== */
+/* ===== Power Bar ===== */
 .bsp__power-bar-track {
   width: 100%;
   height: 8px;
   background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
+  border-radius: 4px;
 }
 
 .bsp__power-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent, #d4a574), #e8c89e);
+  background: var(--accent, #FCD535);
   transition: width 0.6s ease-out;
+  border-radius: 4px;
 }
 
 .bsp__power-info {
@@ -254,7 +256,7 @@
 }
 
 .bsp__power-info--ok {
-  color: var(--accent, #d4a574);
+  color: var(--accent, #FCD535);
 }
 
 .bsp__power-info--warn {
@@ -264,13 +266,14 @@
 .bsp__power-suggestion {
   font-size: 0.75rem;
   color: var(--fg-muted, #71717a);
-  padding: 8px 10px;
-  background: var(--border-brand);
-  border: 1px solid var(--border-brand);
+  padding: var(--spacing-xs, 8px) var(--spacing-sm, 12px);
+  background: rgba(252, 213, 53, 0.05);
+  border: 1px solid rgba(252, 213, 53, 0.12);
+  border-radius: var(--radius-md, 6px);
 }
 
 .bsp__power-suggestion strong {
-  color: var(--accent, #d4a574);
+  color: var(--accent, #FCD535);
 }
 
 /* ===== Performance Scores ===== */
@@ -299,25 +302,25 @@
   transition: width 0.5s ease-out;
 }
 
-/* Золотая шкала градаций (без красного «ошибка») */
+/* Золотая шкала градаций (плоские цвета) */
 .bsp__score-bar-fill.performance-none {
   width: 0;
   background: transparent;
 }
 .bsp__score-bar-fill.performance-extreme {
-  background: linear-gradient(90deg, #f0d4a8, #e8c89e);
+  background: #f0d4a8;
 }
 .bsp__score-bar-fill.performance-high {
-  background: linear-gradient(90deg, var(--accent, #d4a574), #e0b68a);
+  background: var(--accent, #FCD535);
 }
 .bsp__score-bar-fill.performance-medium {
-  background: linear-gradient(90deg, #c49a6c, var(--accent, #d4a574));
+  background: #c49a6c;
 }
 .bsp__score-bar-fill.performance-entry {
-  background: linear-gradient(90deg, #8a7358, #b8956a);
+  background: #8a7358;
 }
 .bsp__score-bar-fill.performance-basic {
-  background: linear-gradient(90deg, #5c5348, #8a7358);
+  background: #5c5348;
 }
 
 .bsp__score-value {
@@ -338,7 +341,7 @@
   color: #f0d4a8;
 }
 .bsp__score-value.performance-high {
-  color: var(--accent, #d4a574);
+  color: var(--accent, #FCD535);
 }
 .bsp__score-value.performance-medium {
   color: #c49a6c;
@@ -367,10 +370,10 @@
   line-height: 1.5;
   color: var(--fg-muted, #71717a);
   margin: 0;
-  padding: 10px 12px;
-  background: var(--border-brand);
-  border: 1px solid var(--border-brand);
-  border-radius: var(--radius-sm, 6px);
+  padding: var(--spacing-xs, 8px) var(--spacing-sm, 12px);
+  background: rgba(252, 213, 53, 0.05);
+  border: 1px solid rgba(252, 213, 53, 0.12);
+  border-radius: var(--radius-md, 6px);
 }
 
 /* ===== FPS Row ===== */
@@ -461,6 +464,7 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  padding: var(--spacing-xs, 4px) 0;
 }
 
 .bsp__total-label {
@@ -470,24 +474,25 @@
 }
 
 .bsp__total-value {
-  font-family: var(--font-sans);
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--accent, #d4a574);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--accent, #FCD535);
 }
 
-/* ===== Add to Cart Button ===== */
+/* ===== Actions ===== */
 .bsp__actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--spacing-sm, 12px);
   width: 100%;
-  padding-top: 4px;
+  padding-top: var(--spacing-xs, 4px);
 }
 
 .bsp__actions-row {
   display: flex;
-  gap: 10px;
+  gap: var(--spacing-xs, 8px);
   width: 100%;
 }
 
@@ -495,34 +500,19 @@
   flex: 1;
 }
 
-.bsp__btn--export {
-  background: var(--border-brand);
-  border-color: var(--border-brand);
-  color: var(--accent, #d4a574);
-}
-
-.bsp__btn--export:hover:not(:disabled) {
-  background: var(--border-brand);
-  border-color: var(--border-brand);
-}
-
-.bsp__btn--export svg {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
 .bsp__btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: var(--spacing-xs, 8px);
   width: 100%;
-  padding: 12px 20px;
+  padding: var(--spacing-sm, 12px) var(--spacing-lg, 24px);
+  min-height: 40px;
   font-family: var(--font-sans);
   font-size: 0.9rem;
   font-weight: 600;
-  border-radius: var(--radius-md, 8px);
+  line-height: 1;
+  border-radius: var(--radius-md, 6px);
   cursor: pointer;
   transition:
     background 0.2s ease,
@@ -530,6 +520,7 @@
     transform 0.2s ease,
     opacity 0.2s ease;
   border: 1px solid transparent;
+  box-sizing: border-box;
 }
 
 .bsp__btn svg {
@@ -539,44 +530,57 @@
 }
 
 .bsp__btn--save {
-  background: var(--border-brand);
-  border-color: var(--border-brand);
-  color: var(--accent, #d4a574);
+  background: rgba(252, 213, 53, 0.08);
+  border-color: rgba(252, 213, 53, 0.2);
+  color: var(--accent, #FCD535);
 }
 
 .bsp__btn--save:hover:not(:disabled) {
-  background: var(--border-brand);
-  border-color: var(--border-brand);
+  background: rgba(252, 213, 53, 0.15);
+  border-color: rgba(252, 213, 53, 0.35);
+  transform: translateY(-1px);
+}
+
+.bsp__btn--export {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--border-muted, rgba(255, 255, 255, 0.06));
+  color: var(--fg-muted, #a1a1aa);
+}
+
+.bsp__btn--export:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
 }
 
 .bsp__btn--cart {
-  background: transparent;
-  border-color: var(--border-brand);
-  color: var(--accent, #d4a574);
+  background: var(--color-price-drop, #0ecb81);
+  border-color: var(--color-price-drop, #0ecb81);
+  color: var(--color-on-dark, #ffffff);
 }
 
 .bsp__btn--cart:hover:not(:disabled) {
-  background: var(--border-brand);
-  border-color: var(--border-brand);
+  background: #0ab875;
+  border-color: #0ab875;
   transform: translateY(-1px);
 }
 
 .bsp__btn--checkout {
-  background: var(--accent, #d4a574);
-  color: var(--bg, #09090b);
-  border-color: var(--accent, #d4a574);
+  background: var(--accent, #FCD535);
+  color: #181a20;
+  border-color: var(--accent, #FCD535);
 }
 
 .bsp__btn--checkout:hover:not(:disabled) {
-  background: #e0b68a;
-  border-color: #e0b68a;
+  background: #f0b90b;
+  border-color: #f0b90b;
   transform: translateY(-1px);
 }
 
 .bsp__btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
-  transform: none;
+  transform: none !important;
 }
 
 /* ===== Disabled Hint ===== */
