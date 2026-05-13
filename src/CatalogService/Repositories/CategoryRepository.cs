@@ -195,6 +195,13 @@ public class ReviewRepository : IReviewRepository
         return review;
     }
 
+    public async Task<Review> UpdateAsync(Review review)
+    {
+        _context.Reviews.Update(review);
+        await _context.SaveChangesAsync();
+        return review;
+    }
+
     public async Task DeleteAsync(Guid id)
     {
         var review = await GetByIdAsync(id);

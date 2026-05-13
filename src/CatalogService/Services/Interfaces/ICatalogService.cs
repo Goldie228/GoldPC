@@ -33,6 +33,9 @@ public interface ICatalogService
     // Отзывы
     Task<ReviewDto> CreateReviewAsync(Guid productId, Guid userId, CreateReviewDto dto);
     Task<IEnumerable<ReviewDto>> GetProductReviewsAsync(Guid productId);
+    Task<ReviewDto> UpdateReviewAsync(Guid reviewId, Guid userId, UpdateReviewDto dto);
+    Task<bool> DeleteReviewAsync(Guid reviewId, Guid userId);
+    Task<bool> ToggleHelpfulAsync(Guid reviewId);
 
     // Склад
     Task<(bool Success, string? Error)> ReserveStockAsync(IEnumerable<(Guid ProductId, int Quantity)> items);
