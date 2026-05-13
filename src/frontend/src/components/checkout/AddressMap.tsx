@@ -119,7 +119,7 @@ export function AddressMap({ onAddressSelect, onPickupPointSelect, mode, city }:
         center={center}
         zoom={13}
         style={{ height: '400px', width: '100%', borderRadius: '8px' }}
-        className="border border-[var(--border)] rounded-lg overflow-hidden relative z-0"
+        className="border border-border rounded-lg overflow-hidden relative z-0"
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -145,10 +145,10 @@ export function AddressMap({ onAddressSelect, onPickupPointSelect, mode, city }:
             }}
           >
             <Popup>
-              <div className="p-2">
-                <h4 className="m-0 mb-2 text-sm font-semibold text-[var(--fg)]">{point.name}</h4>
-                <p className="m-1 text-xs text-[var(--fg-muted)]">{point.address}</p>
-                <p className="m-1 text-xs text-[var(--fg-muted)] mt-1">{point.workingHours}</p>
+<div className="p-2">
+                <h4 className="m-0 mb-2 text-sm font-semibold text-gray-900">{point.name}</h4>
+                <p className="m-1 text-xs text-gray-600">{point.address}</p>
+                <p className="m-1 text-xs text-gray-600 mt-1">{point.workingHours}</p>
               </div>
             </Popup>
           </Marker>
@@ -156,23 +156,23 @@ export function AddressMap({ onAddressSelect, onPickupPointSelect, mode, city }:
       </MapContainer>
 
       {mode === 'delivery' && (
-        <p className="mt-2 text-xs text-[var(--fg-muted)] text-center">
+        <p className="mt-2 text-xs text-muted-foreground text-center">
           Нажмите на карту, чтобы выбрать адрес доставки
         </p>
       )}
 
       {mode === 'pickup' && pickupPoints.length > 0 && (
         <div className="mt-4">
-          <div className="mb-3 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Пункты выдачи:</div>
+          <div className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Пункты выдачи:</div>
           {pickupPoints.map((point) => (
             <button
               key={point.id}
-              className="flex flex-col items-start w-full p-3 mb-2 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg cursor-pointer transition-all duration-200 text-left hover:border-[var(--border-brand)] hover:bg-[var(--border-brand)]"
+              className="flex flex-col items-start w-full p-3 mb-2 bg-elevated border border-border rounded-lg cursor-pointer transition-all duration-200 text-left hover:border-gold/30 hover:bg-gold/5"
               onClick={() => handlePickupPointClick(point)}
             >
-              <strong className="block mb-1 text-[var(--fg)] text-sm">{point.name}</strong>
-              <span className="block text-sm text-[var(--fg-muted)] mb-1">{point.address}</span>
-              <span className="block text-xs text-[var(--fg-muted)] mt-1">{point.workingHours}</span>
+              <strong className="block mb-1 text-foreground text-sm">{point.name}</strong>
+              <span className="block text-sm text-muted-foreground mb-1">{point.address}</span>
+              <span className="block text-xs text-muted-foreground mt-1">{point.workingHours}</span>
             </button>
           ))}
         </div>
