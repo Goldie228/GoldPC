@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type ReactElement } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingCart,
@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Settings,
 } from 'lucide-react';
+import { MiniCart } from './MiniCart';
 import { useCart } from '../../../hooks/useCart';
 import { useWishlist } from '../../../hooks/useWishlist';
 import { useComparison } from '../../../hooks/useComparison';
@@ -44,8 +45,10 @@ function formatCountRu(count: number, forms: readonly [string, string, string]):
 export function Header(): ReactElement {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartFlash, setCartFlash] = useState(false);
   const prevCartCountRef = useRef(0);
+  const location = useLocation();
 
   const { itemCount: cartCount } = useCart();
   const { items: wishlistItems } = useWishlist();
@@ -74,6 +77,21 @@ export function Header(): ReactElement {
   useEffect(() => {
     prevCartCountRef.current = cartCount;
   }, [cartCount]);
+
+  // Close MiniCart on Escape
+  useEffect(() => {
+    if (!isCartOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsCartOpen(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isCartOpen]);
+
+  // Close MiniCart on navigation
+  useEffect(() => {
+    setIsCartOpen(false);
+  }, [location]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -210,10 +228,16 @@ export function Header(): ReactElement {
         {/* Actions */}
         <div className="flex items-center gap-1">
           {/* Mobile-only: Profile + Menu. Desktop: all actions */}
-          <Link to="/catalog" className={`relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-body-text hover:bg-surface-elevated hidden md:flex ${cartFlash ? 'animate-pulse' : ''}`} aria-label="Корзина">
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className={`relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-body-text hover:bg-surface-elevated hidden md:flex ${cartFlash ? 'animate-pulse' : ''}`}
+            aria-label="Корзина"
+            type="button"
+          >
             <ShoppingCart />
             {cartCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 flex items-center justify-center bg-gold text-gold-ink text-[9px] font-bold rounded-md">{cartCount}</span>}
-          </Link>
+          </button>
+          <MiniCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
           <Link to="/wishlist" className="relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-body-text hover:bg-surface-elevated hidden md:flex" aria-label="Избранное">
             <Heart />
@@ -369,13 +393,13 @@ export function Header(): ReactElement {
 
                {/* Quick Actions — Card Grid */}
                <div className="grid grid-cols-3 gap-px bg-hairline-dark mx-4 mb-3 rounded-lg overflow-hidden">
-                 <Link to="/catalog" className="flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card text-center cursor-pointer transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
-                   <div className="w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text transition-colors group-hover:border-gold/30 group-hover:text-body-text">
-                     <ShoppingCart size={18} />
-                   </div>
-                   <span className="text-[11px] font-medium text-muted-text leading-tight">Корзина</span>
-                   {cartCount > 0 && <span className="text-[10px] font-semibold text-gold">{cartCount}</span>}
-                 </Link>
+                  <Link to="/cart" className="flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card text-center cursor-pointer transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
+                    <div className="w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text transition-colors group-hover:border-gold/30 group-hover:text-body-text">
+                      <ShoppingCart size={18} />
+                    </div>
+                    <span className="text-[11px] font-medium text-muted-text leading-tight">Корзина</span>
+                    {cartCount > 0 && <span className="text-[10px] font-semibold text-gold">{cartCount}</span>}
+                  </Link>
                  <Link to="/wishlist" className="flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card text-center cursor-pointer transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                    <div className="w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text transition-colors group-hover:border-gold/30 group-hover:text-body-text">
                      <Heart size={18} />
