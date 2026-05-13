@@ -5,13 +5,13 @@
  * Дизайн: тёмная тема в стиле GoldPC (DESIGN.md).
  */
 
-import { useState, useMemo, type FormEvent } from 'react';
+import { useState, useMemo, useEffect, type FormEvent } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Eye, EyeOff, CheckCircle, AlertCircle, Lock } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, CheckCircle, AlertCircle, Lock, RefreshCw, Clock } from 'lucide-react';
 import { authService } from '@/api/authService';
 import { getAuthErrorMessage } from '@/api/authService';
 
-type PageState = 'form' | 'loading' | 'success' | 'error';
+type PageState = 'checking' | 'form' | 'loading' | 'success' | 'error' | 'expired';
 
 /** Оценка сложности пароля */
 function evaluatePasswordStrength(password: string): {
@@ -60,11 +60,29 @@ export function ResetPasswordPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [pageState, setPageState] = useState<PageState>('form');
+  const [pageState, setPageState] = useState<PageState>('checking');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const strength = useMemo(() => evaluatePasswordStrength(password), [password]);
+
+  // При загрузке страницы — проверяем токен на бэкенде
+  useEffect(() => {
+    if (!token) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        await authService.validateResetToken(token);
+        if (!cancelled) setPageState('form');
+      } catch {
+        if (!cancelled) setPageState('expired');
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [token]);
 
   // Если токена нет — показываем ошибку
   if (!token) {
@@ -105,8 +123,14 @@ export function ResetPasswordPage() {
       await authService.resetPassword({ token, password });
       setPageState('success');
     } catch (error) {
-      setPageState('error');
-      setErrorMessage(getAuthErrorMessage(error));
+      const message = getAuthErrorMessage(error);
+      // Если токен истёк/недействителен — показываем отдельный экран
+      if (/истекл|недействительн|устаревш/i.test(message)) {
+        setPageState('expired');
+      } else {
+        setPageState('error');
+        setErrorMessage(message);
+      }
     }
   };
 
@@ -137,6 +161,14 @@ export function ResetPasswordPage() {
             </p>
           </div>
 
+          {/* Checking State — пока проверяем токен на бэкенде */}
+          {pageState === 'checking' && (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="w-10 h-10 border-2 border-transparent border-t-gold rounded-full animate-spin mb-4" />
+              <p className="text-sm text-muted-text">Проверка ссылки...</p>
+            </div>
+          )}
+
           {/* Success State */}
           {pageState === 'success' && (
             <div className="text-center">
@@ -159,7 +191,41 @@ export function ResetPasswordPage() {
             </div>
           )}
 
-          {/* Error banner */}
+          {/* Expired State — ссылка устарела или уже использована */}
+          {pageState === 'expired' && (
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock size={32} className="text-gold" />
+              </div>
+              <h2 className="text-title-sm text-body-text mb-3">
+                Срок действия ссылки истёк
+              </h2>
+              <p className="text-sm text-muted-text leading-relaxed mb-2">
+                Ссылка для восстановления пароля больше недействительна.
+              </p>
+              <p className="text-sm text-muted-text leading-relaxed mb-6">
+                Возможно, она уже была использована, или срок её действия истёк.
+                Запросите новую ссылку — старые автоматически аннулируются.
+              </p>
+              <div className="flex flex-col gap-3">
+                <Link
+                  to="/forgot-password"
+                  className="w-full px-4 py-2.5 bg-gold text-gold-ink rounded-md text-sm font-semibold no-underline text-center cursor-pointer transition-colors hover:bg-gold-active inline-flex items-center justify-center gap-2"
+                >
+                  <RefreshCw size={16} />
+                  Запросить новую ссылку
+                </Link>
+                <Link
+                  to="/"
+                  className="w-full px-4 py-2.5 bg-transparent border border-hairline-dark rounded-md text-body-text text-sm font-semibold text-center no-underline cursor-pointer transition-colors hover:border-gold/40 hover:bg-gold/5"
+                >
+                  Вернуться на главную
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Error banner — для прочих ошибок (не expired) */}
           {pageState === 'error' && errorMessage && (
             <div className="mb-6 p-4 bg-price-rise/10 border border-price-rise/30 text-price-rise text-sm rounded-lg flex items-start gap-3" role="alert">
               <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
