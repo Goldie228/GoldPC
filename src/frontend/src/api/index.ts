@@ -40,4 +40,6 @@ export type {
   RegisterRequest,
   AuthResponse,
   User,
+  // Review types
+  UpdateReviewRequest,
 } from './types';

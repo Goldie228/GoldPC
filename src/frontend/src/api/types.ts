@@ -124,6 +124,14 @@ export interface CreateReviewRequest {
   cons?: string;
 }
 
+export interface UpdateReviewRequest {
+  rating: number;
+  title?: string;
+  comment?: string;
+  pros?: string;
+  cons?: string;
+}
+
 export interface ProductReviewsResponse extends PagedResponse<ProductReview> {}
 
 export interface ProductListResponse extends PagedResponse<ProductSummary> {}
@@ -236,6 +244,7 @@ export interface User {
   role: 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant';
   roles?: ('Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant')[];
   isActive: boolean;
+  isEmailVerified: boolean;
   createdAt: string;
 }
 
