@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 interface TimeSlot {
   id: string;
@@ -22,6 +22,7 @@ interface DeliveryTimeSlotPickerProps {
 export function DeliveryTimeSlotPicker({ onSelect, selectedDate, selectedSlot }: DeliveryTimeSlotPickerProps) {
   const [date, setDate] = useState(selectedDate || '');
   const [slot, setSlot] = useState(selectedSlot || '');
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
   // Минимальная дата - завтра
   const tomorrow = new Date();
@@ -53,7 +54,7 @@ export function DeliveryTimeSlotPicker({ onSelect, selectedDate, selectedSlot }:
       const [year, month, day] = dateStr.split('-');
       if (!year || !month || !day) return 'Выберите дату';
       return `${day}.${month}.${year}`;
-    } catch (e) {
+    } catch {
       return 'Выберите дату';
     }
   };
@@ -61,33 +62,25 @@ export function DeliveryTimeSlotPicker({ onSelect, selectedDate, selectedSlot }:
   return (
     <div className="my-4">
       <div className="mb-5">
-        <label className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Дата доставки</label>
+        <label className="block mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Дата доставки</label>
         <div className="relative w-full">
+          {/* Hidden native date input — клик по display-диву открывает пикер */}
           <input
+            ref={dateInputRef}
             type="date"
             value={date}
             onChange={(e) => handleDateChange(e.target.value)}
             min={minDate}
             max={maxDateStr}
             className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer z-1"
-            onFocus={(e) => {
-              const parent = e.currentTarget.parentElement;
-              const formatted = parent?.querySelector('.formatted-date');
-              if (formatted) {
-                formatted.className = 'formatted-date border-[var(--accent)] ring-3 ring-[var(--border-brand)]';
-              }
-            }}
-            onBlur={(e) => {
-              const parent = e.currentTarget.parentElement;
-              const formatted = parent?.querySelector('.formatted-date');
-              if (formatted) {
-                formatted.className = 'formatted-date';
-              }
-            }}
           />
-          <div className="formatted-date w-full p-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--bg-elevated)] text-[var(--fg)] font-[var(--font-sans)] transition-all duration-200 flex justify-between items-center pointer-events-none hover:border-[var(--border-brand)]">
+          {/* Display-див — показывает отформатированную дату, клик идёт в input */}
+          <div
+            className="w-full p-3 text-sm border border-border rounded-lg bg-elevated text-foreground transition-all duration-200 flex justify-between items-center cursor-pointer hover:border-gold/30"
+            onClick={() => dateInputRef.current?.showPicker()}
+          >
             {formatDisplayDate(date)}
-            <div className="text-[var(--accent)] flex items-center">
+            <div className="text-gold flex items-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -97,22 +90,22 @@ export function DeliveryTimeSlotPicker({ onSelect, selectedDate, selectedSlot }:
             </div>
           </div>
         </div>
-        <p className="mt-2 text-xs text-[var(--fg-muted)]">Доставка доступна с завтрашнего дня</p>
+        <p className="mt-2 text-xs text-muted-foreground">Доставка доступна с завтрашнего дня</p>
       </div>
 
       {date && (
         <div className="mb-5">
-          <label className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Временной интервал</label>
+          <label className="block mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Временной интервал</label>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
             {TIME_SLOTS.map((timeSlot) => (
               <button
                 key={timeSlot.id}
                 type="button"
-                className={`flex flex-col items-center p-3.5 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-lg cursor-pointer transition-all duration-200 hover:border-[var(--border-brand)] hover:bg-[var(--border-brand)] ${slot === timeSlot.id ? 'border-[var(--accent)] bg-[var(--border-brand)] ring-1 ring-[var(--accent)]' : ''}`}
+                className={`flex flex-col items-center p-3.5 bg-elevated border border-border rounded-lg cursor-pointer transition-all duration-200 hover:border-gold/30 hover:bg-gold/5 ${slot === timeSlot.id ? 'border-gold/50 bg-gold/5 ring-1 ring-gold/30' : ''}`}
                 onClick={() => handleSlotSelect(timeSlot.id)}
               >
-                <div className="font-semibold text-sm text-[var(--fg)] mb-1">{timeSlot.label}</div>
-                <div className="text-xs text-[var(--fg-muted)]">{timeSlot.time}</div>
+                <div className="font-semibold text-sm text-foreground mb-1">{timeSlot.label}</div>
+                <div className="text-xs text-muted-foreground">{timeSlot.time}</div>
               </button>
             ))}
           </div>

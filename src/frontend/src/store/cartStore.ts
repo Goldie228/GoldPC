@@ -153,7 +153,13 @@ export const useCartStore = create<CartStore>()(
         discountAmount: state.discountAmount,
       }),
       migrate: (persistedState: unknown, _version: number) => {
-        return persistedState as CartState;
+        const state = persistedState as Partial<CartState>;
+        return {
+          items: Array.isArray(state.items) ? state.items : [],
+          promoCode: typeof state.promoCode === 'string' ? state.promoCode : null,
+          discount: typeof state.discount === 'number' ? state.discount : 0,
+          discountAmount: typeof state.discountAmount === 'number' ? state.discountAmount : 0,
+        };
       },
     }
   )

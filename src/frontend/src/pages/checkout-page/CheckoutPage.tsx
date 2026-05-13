@@ -68,6 +68,7 @@ function getPaymentMethodLabel(method: PaymentMethod, paymentData: PaymentData |
 export function CheckoutPage() {
   const navigate = useNavigate();
   const { items, getTotal, getDiscountAmount, promoCode, clearCart } = useCartStore();
+  const safeItems = items ?? [];
   const { user } = useAuthStore();
   const { showToast } = useToast();
   const { getDeliveryQuote, createOrder } = useOrders();
@@ -105,9 +106,9 @@ export function CheckoutPage() {
   // Load saved addresses
   useEffect(() => {
     if (user) {
-      getAddresses()
-        .then(setSavedAddresses)
-        .catch(() => {});
+getAddresses()
+         .then((addresses) => setSavedAddresses(addresses ?? []))
+         .catch(() => {});
     }
   }, [user]);
 
@@ -250,7 +251,7 @@ export function CheckoutPage() {
         discountAmount,
         deliveryDate: deliveryData.deliveryDate,
         deliveryTimeSlot: deliveryData.timeSlot,
-        items: items.map(item => ({
+        items: safeItems.map(item => ({
           productId: item.productId,
           productName: item.name,
           quantity: item.quantity,
@@ -285,7 +286,7 @@ export function CheckoutPage() {
     }
   };
 
-  if (items.length === 0) {
+  if (safeItems.length === 0) {
     return (
       <div className="min-h-[calc(100vh-200px)] bg-background pt-20 text-foreground">
         <div className="w-full max-w-7xl mx-auto px-6">
@@ -522,7 +523,7 @@ export function CheckoutPage() {
                 {deliveryData.method === 'Pickup' && deliveryData.pickupPointName && (
                   <div className="p-4 bg-border-muted border border-border-muted rounded-lg my-4">
                     <strong className="block mb-2 text-foreground text-sm">Выбранный пункт выдачи:</strong>
-                    <p className="text-muted-foreground m-0 text-sm leading-1.5">{deliveryData.pickupPointName}</p>
+                    <p className="text-muted-foreground m-0 text-sm leading-relaxed">{deliveryData.pickupPointName}</p>
                   </div>
                 )}
 
@@ -557,7 +558,7 @@ export function CheckoutPage() {
                       autoComplete="given-name"
                     />
                     {contactTouched.firstName && contactErrors.firstName && (
-                      <span className="text-[0.78rem] leading-1.4 text-red-300">{contactErrors.firstName}</span>
+                      <span className="text-[0.78rem] leading-relaxed text-red-300">{contactErrors.firstName}</span>
                     )}
                   </div>
                   <div className="flex flex-col gap-2">
@@ -571,7 +572,7 @@ export function CheckoutPage() {
                       autoComplete="tel"
                     />
                     {contactTouched.phone && contactErrors.phone && (
-                      <span className="text-[0.78rem] leading-1.4 text-red-300">{contactErrors.phone}</span>
+                      <span className="text-[0.78rem] leading-relaxed text-red-300">{contactErrors.phone}</span>
                     )}
                   </div>
                   <div className="flex flex-col gap-2">
@@ -588,7 +589,7 @@ export function CheckoutPage() {
                       autoComplete="email"
                     />
                     {contactTouched.email && contactErrors.email && (
-                      <span className="text-[0.78rem] leading-1.4 text-red-300">{contactErrors.email}</span>
+                      <span className="text-[0.78rem] leading-relaxed text-red-300">{contactErrors.email}</span>
                     )}
                   </div>
                 </div>
@@ -683,45 +684,51 @@ export function CheckoutPage() {
 
                 <div className="mb-6 pb-5 border-b border-border">
                   <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold text-foreground mb-3"><Icon name="package" size="sm" color="accent" /> Доставка</h3>
-                  {deliveryData.method === 'Pickup' ? (
-                    <p className="text-muted-foreground leading-1.5 m-0">{deliveryData.pickupPointName || 'Самовывоз'}</p>
-                  ) : (
-                    <>
-                      <p className="text-muted-foreground leading-1.5 m-0"><strong className="text-foreground">Адрес:</strong> {deliveryData.city}, {deliveryData.address}</p>
-                      {deliveryData.deliveryDate && (
-                        <p className="text-muted-foreground leading-1.5 m-0"><strong className="text-foreground">Дата:</strong> {new Date(deliveryData.deliveryDate).toLocaleDateString('ru-RU')}</p>
-                      )}
-                      {deliveryData.timeSlot && (
-                        <p className="text-muted-foreground leading-1.5 m-0"><strong className="text-foreground">Время:</strong> {deliveryData.timeSlot === 'morning' ? 'Утро (9:00-13:00)' :
-                          deliveryData.timeSlot === 'afternoon' ? 'День (13:00-18:00)' :
-                          deliveryData.timeSlot === 'evening' ? 'Вечер (18:00-21:00)' : 'Как можно скорее'}</p>
-                      )}
-                    </>
-                  )}
+                  <div className="flex flex-col gap-1.5">
+                    {deliveryData.method === 'Pickup' ? (
+                      <p className="text-muted-foreground leading-relaxed m-0">{deliveryData.pickupPointName || 'Самовывоз'}</p>
+                    ) : (
+                      <>
+                        <p className="text-muted-foreground leading-relaxed m-0"><strong className="text-foreground">Адрес:</strong> {deliveryData.city}, {deliveryData.address}</p>
+                        {deliveryData.deliveryDate && (
+                          <p className="text-muted-foreground leading-relaxed m-0"><strong className="text-foreground">Дата:</strong> {new Date(deliveryData.deliveryDate).toLocaleDateString('ru-RU')}</p>
+                        )}
+                        {deliveryData.timeSlot && (
+                          <p className="text-muted-foreground leading-relaxed m-0"><strong className="text-foreground">Время:</strong> {deliveryData.timeSlot === 'morning' ? 'Утро (9:00-13:00)' :
+                            deliveryData.timeSlot === 'afternoon' ? 'День (13:00-18:00)' :
+                            deliveryData.timeSlot === 'evening' ? 'Вечер (18:00-21:00)' : 'Как можно скорее'}</p>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mb-6 pb-5 border-b border-border">
                   <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold text-foreground mb-3"><Icon name="user" size="sm" color="accent" /> Контакты</h3>
-                  <p className="text-muted-foreground leading-1.5 m-0">{contactData.firstName.trim()}</p>
-                  <p className="text-muted-foreground leading-1.5 m-0">{contactData.phone.trim()}</p>
-                  <p className="text-muted-foreground leading-1.5 m-0">{contactData.email.trim()}</p>
+                  <div className="flex flex-col gap-1.5">
+                    <p className="text-muted-foreground leading-relaxed m-0">{contactData.firstName.trim()}</p>
+                    <p className="text-muted-foreground leading-relaxed m-0">{contactData.phone.trim()}</p>
+                    <p className="text-muted-foreground leading-relaxed m-0">{contactData.email.trim()}</p>
+                  </div>
                 </div>
 
                 <div className="mb-6 pb-5 border-b border-border">
                   <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold text-foreground mb-3"><Icon name="credit-card" size="sm" color="accent" /> Оплата</h3>
-                  <p className="text-muted-foreground leading-1.5 m-0">{getPaymentMethodLabel(paymentMethod, paymentData)}</p>
+                  <p className="text-muted-foreground leading-relaxed m-0">{getPaymentMethodLabel(paymentMethod, paymentData)}</p>
                 </div>
 
                 <div className="mb-6 pb-5 border-b border-border last:border-b-0 last:mb-0 last:pb-0">
-                  <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold text-foreground mb-3"><Icon name="cart" size="sm" color="accent" /> Товары ({items.length})</h3>
-                  {items.slice(0, 3).map(item => (
-                    <p key={item.id} className="text-muted-foreground leading-1.5 m-0">
-                      {item.name} × {item.quantity} — {(item.price * item.quantity).toFixed(2)} BYN
-                    </p>
-                  ))}
-                  {items.length > 3 && (
-                    <p className="italic text-foreground-dim mt-2 text-sm">... и ещё {items.length - 3} товар(ов)</p>
-                  )}
+                  <h3 className="flex items-center gap-2 text-[0.95rem] font-semibold text-foreground mb-3"><Icon name="cart" size="sm" color="accent" /> Товары ({items?.length ?? 0})</h3>
+                  <div className="flex flex-col gap-1.5">
+                    {safeItems.slice(0, 3).map(item => (
+                      <p key={item.id} className="text-muted-foreground leading-relaxed m-0">
+                        {item.name} × {item.quantity} — {(item.price * item.quantity).toFixed(2)} BYN
+                      </p>
+                    ))}
+                    {items?.length > 3 && (
+                      <p className="italic text-foreground-dim mt-2 text-sm">... и ещё {items?.length - 3} товар(ов)</p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex justify-between items-center mt-6 pt-5 border-t border-border gap-4 max-sm:flex-col max-sm:gap-3 max-sm:w-full">
@@ -741,9 +748,9 @@ export function CheckoutPage() {
             <h2 className="text-[0.85rem] font-semibold uppercase tracking-[0.05em] text-foreground mb-5 pb-4 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Ваш заказ</h2>
 
             <div className="flex flex-col gap-3 mb-4">
-              {items.slice(0, 3).map(item => (
+                    {safeItems.slice(0, 3).map(item => (
                 <div key={item.id} className="flex justify-between items-start gap-3 pb-2.5 border-b border-border-muted last:border-b-0">
-                  <span className="flex-1 text-sm text-muted-foreground leading-1.4">
+                  <span className="flex-1 text-sm text-muted-foreground leading-relaxed">
                     {item.name} × {item.quantity}
                   </span>
                   <span className="font-mono text-sm font-semibold text-foreground whitespace-nowrap">
@@ -751,32 +758,34 @@ export function CheckoutPage() {
                   </span>
                 </div>
               ))}
-              {items.length > 3 && (
+              {items?.length > 3 && (
                 <div className="text-center text-sm italic text-foreground-dim">
-                  ... и ещё {items.length - 3} товар(ов)
+                  ... и ещё {items?.length - 3} товар(ов)
                 </div>
               )}
             </div>
 
             <div className="h-px bg-border my-4"></div>
 
-            <div className="flex justify-between items-center mb-3 text-sm">
-              <span className="text-muted-foreground">Товары ({items.length})</span>
-              <span className="font-mono text-foreground">{subtotal.toFixed(2)} BYN</span>
-            </div>
-
-            {discountAmount > 0 && (
-              <div className="flex justify-between items-center mb-3 text-sm">
-                <span className="text-muted-foreground">Скидка ({promoCode})</span>
-                <span className="font-mono text-green-500 font-semibold">-{discountAmount.toFixed(2)} BYN</span>
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Товары ({items?.length ?? 0})</span>
+                <span className="font-mono text-foreground">{subtotal.toFixed(2)} BYN</span>
               </div>
-            )}
 
-            <div className="flex justify-between items-center mb-3 text-sm">
-              <span className="text-muted-foreground">Доставка</span>
-              <span className="font-mono text-foreground" style={deliveryCost === 0 ? { color: 'var(--accent, #d4a574)' } : undefined}>
-                {deliveryCost === 0 ? 'Бесплатно' : `${deliveryCost.toFixed(2)} BYN`}
-              </span>
+              {discountAmount > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Скидка ({promoCode})</span>
+                  <span className="font-mono text-price-drop font-semibold">-{discountAmount.toFixed(2)} BYN</span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Доставка</span>
+                <span className={`font-mono ${deliveryCost === 0 ? 'text-price-drop' : 'text-foreground'}`}>
+                  {deliveryCost === 0 ? 'Бесплатно' : `${deliveryCost.toFixed(2)} BYN`}
+                </span>
+              </div>
             </div>
 
             {subtotal < FREE_DELIVERY_THRESHOLD && deliveryData.method === 'Delivery' && (
@@ -786,16 +795,16 @@ export function CheckoutPage() {
                 </p>
                 <div className="h-1.5 bg-elevated rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-accent to-accent-bright rounded-full transition-all duration-400"
+                    className="h-full bg-gradient-to-r from-gold to-yellow-300 rounded-full transition-all duration-400"
                     style={{ width: `${Math.min((subtotal / FREE_DELIVERY_THRESHOLD) * 100, 100)}%` }}
                   />
                 </div>
               </div>
             )}
 
-            <div className="flex flex-col gap-1.5 mt-5 pt-5 border-t border-border">
+            <div className="flex flex-col gap-1.5 mt-4 pt-4 border-t border-border">
               <span className="text-[0.75rem] uppercase tracking-[0.05em] text-muted-foreground">Итого</span>
-              <span className="font-mono text-2xl font-bold text-accent">{total.toFixed(2)} BYN</span>
+              <span className="font-mono text-2xl font-bold text-body-text">{total.toFixed(2)} BYN</span>
             </div>
           </aside>
         </div>
