@@ -54,7 +54,7 @@ describe('PhoneInput', () => {
     fireEvent.change(input, { target: { value: '+375291234567' } });
     
     await waitFor(() => {
-      expect(onChange).toHaveBeenCalledWith('+375291234567');
+      expect(onChange).toHaveBeenCalledWith('+375 (29) 123-45-67');
     });
   });
 
