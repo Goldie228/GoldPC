@@ -423,14 +423,6 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
           <ArrowRight size={18} />
         </button>
       </form>
-
-      {/* Divider */}
-      <div className="flex items-center gap-4 my-2">
-        <div className="flex-1 h-px bg-hairline-dark" />
-        <span className="text-[10px] text-muted-text uppercase tracking-wider">или</span>
-        <div className="flex-1 h-px bg-hairline-dark" />
-      </div>
-
     </AuthModalBase>
   );
 }
