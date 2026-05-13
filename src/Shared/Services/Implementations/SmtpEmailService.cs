@@ -77,7 +77,8 @@ public class SmtpEmailService
 
     public string RenderTemplate(string templateName, object data)
     {
-        var templatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Templates", $"{templateName}.hbs");
+        // Use AppContext.BaseDirectory for better compatibility with .NET 8 and Docker
+        var templatePath = Path.Combine(AppContext.BaseDirectory, "Templates", $"{templateName}.hbs");
 
         if (!File.Exists(templatePath))
         {
@@ -85,9 +86,17 @@ public class SmtpEmailService
             return data.ToString() ?? string.Empty;
         }
 
-        var source = File.ReadAllText(templatePath);
-        var template = Handlebars.Compile(source);
-        return template(data);
+        try
+        {
+            var source = File.ReadAllText(templatePath);
+            var template = Handlebars.Compile(source);
+            return template(data);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to render template: {TemplateName}. Path: {TemplatePath}", templateName, templatePath);
+            throw new InvalidOperationException($"Failed to render template '{templateName}'. See inner exception for details.", ex);
+        }
     }
 }
 #pragma warning restore CA1031, CA1859, CS1591, SA1600
