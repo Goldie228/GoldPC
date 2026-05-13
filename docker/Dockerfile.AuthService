@@ -55,6 +55,12 @@ WORKDIR /app
 # Copy published application from publish stage
 COPY --from=publish /app/publish .
 
+# Copy templates directory for email rendering
+COPY src/AuthService/Templates ./Templates
+
+# Copy appsettings.json for configuration
+COPY src/AuthService/appsettings.json ./appsettings.json
+
 # Security: Set proper ownership
 RUN chown -R appuser:appgroup /app
 
