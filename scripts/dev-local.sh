@@ -377,7 +377,11 @@ start_backend() {
         echo -e "${CYAN}Launching $name...${RESET}"
 
         cd "$PROJECT_DIR/$path"
-        dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
+        if [ "$name" = "AuthService" ]; then
+            ASPNETCORE_ENVIRONMENT=Development dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
+        else
+            dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
+        fi
         local pid=$!
         SERVICE_PIDS+=($pid)
 
