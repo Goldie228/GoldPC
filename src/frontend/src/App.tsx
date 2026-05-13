@@ -31,6 +31,8 @@ const OrderTrackingPage = lazy(() => import('./pages/order-tracking-page/OrderTr
 const RegisterPage = lazy(() => import('./pages/register-page/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const ForgotPasswordPage = lazy(() => import('./pages/forgot-password-page/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 const ResetPasswordPage = lazy(() => import('./pages/reset-password-page/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
+const VerifyEmailPendingPage = lazy(() => import('./pages/verify-email-page/VerifyEmailPendingPage').then(m => ({ default: m.VerifyEmailPendingPage })));
+const VerifyEmailTokenPage = lazy(() => import('./pages/verify-email-page/VerifyEmailTokenPage').then(m => ({ default: m.VerifyEmailTokenPage })));
 const AboutPage = lazy(() => import('./pages/about-page/AboutPage').then(m => ({ default: m.AboutPage })));
 const ServicesPage = lazy(() => import('./pages/services-page/ServicesPage').then(m => ({ default: m.ServicesPage })));
 const ServiceDetailPage = lazy(() => import('./pages/service-detail-page/ServiceDetailPage').then(m => ({ default: m.ServiceDetailPage })));
@@ -230,6 +232,8 @@ const router = createBrowserRouter([
       { path: '/register', element: <Navigate to="/" replace /> },
       { path: '/forgot-password', element: <ForgotPasswordPage /> },
       { path: '/reset-password/:token', element: <ResetPasswordPage /> },
+      { path: '/verify-email', element: <VerifyEmailPendingPage /> },
+      { path: '/verify-email/:token', element: <VerifyEmailTokenPage /> },
       {
         path: '/admin',
         element: <AdminRedirect />

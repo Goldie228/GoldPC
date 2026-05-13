@@ -111,14 +111,9 @@
   flex: 1;
 }
 
-/* Links */
-a {
-  color: var(--accent);
-}
-
-a:hover {
-  color: var(--accent-bright, #e8c4a0);
-}
+/* Links — не перебиваем Tailwind-классы у ссылок (как text-gold-ink).
+   Глобальный a { color: var(--accent) } ломал кнопки bg-gold text-gold-ink
+   и перебивал hover-эффекты. Ссылки, которым нужен gold, явно указывают text-gold. */
 
 /* Responsive */
 @media (max-width: 600px) {
