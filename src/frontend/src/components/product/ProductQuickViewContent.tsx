@@ -9,6 +9,7 @@ import { useWishlist } from '../../hooks/useWishlist';
 import { useComparison } from '../../hooks/useComparison';
 import { useToast } from '../../hooks/useToast';
 import { hasValidProductImage } from '../../utils/image';
+import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
 import { useModal } from '../../hooks/useModal';
 import { ProductImageViewerModal } from '../../pages/product-page/components/ProductImageViewerModal';
 import { Icon } from '../ui/Icon/Icon';
@@ -202,7 +203,7 @@ export function ProductQuickViewContent({
 
       {/* Right column — Product info */}
       <div className="flex flex-col gap-2.5 min-w-0">
-        <span className="text-muted-text text-sm">{product.manufacturer?.name ?? '—'}</span>
+        <span className="text-muted-text text-sm">{getDisplayManufacturerName(product.manufacturer?.name) ?? '—'}</span>
         <div className="text-gold text-2xl font-bold font-tabular mt-0.5 mb-1">{formatPriceByn(product.price)}</div>
         <span className="text-muted-text text-xs">Артикул: {product.sku}</span>
         <div className="text-sm mt-0.5">
