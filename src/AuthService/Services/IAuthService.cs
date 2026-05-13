@@ -1,4 +1,5 @@
 using GoldPC.SharedKernel.DTOs;
+using System.Text.Json.Serialization;
 
 namespace GoldPC.AuthService.Services;
 
@@ -56,6 +57,23 @@ public interface IAuthService
     /// Сброс пароля по токену
     /// </summary>
     Task<(bool Success, string? Error)> ResetPasswordAsync(string token, string newPassword, string ipAddress);
+
+    /// <summary>
+    /// Проверка валидности токена сброса пароля (без мутаций).
+    /// Используется фронтендом при загрузке страницы, чтобы сразу показать
+    /// expired-экран, не дожидаясь заполнения формы.
+    /// </summary>
+    Task<(bool Valid, string? Error)> ValidateResetTokenAsync(string token);
+
+    /// <summary>
+    /// Отправка письма с подтверждением email (или повторная отправка).
+    /// </summary>
+    Task<(bool Success, string? Error)> SendVerificationEmailAsync(Guid userId, string requestScheme, string requestHost);
+
+    /// <summary>
+    /// Подтверждение email по токену из письма.
+    /// </summary>
+    Task<(bool Success, string? Error)> VerifyEmailAsync(string token, string ipAddress);
 }
 
 /// <summary>
@@ -63,6 +81,7 @@ public interface IAuthService
 /// </summary>
 public class ForgotPasswordRequest
 {
+    [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
 }
 
@@ -82,5 +101,21 @@ public class ChangePasswordRequest
 {
     public string CurrentPassword { get; set; } = string.Empty;
     public string NewPassword { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Запрос на валидацию токена сброса пароля
+/// </summary>
+public class ValidateResetTokenRequest
+{
+    public string Token { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Запрос на подтверждение email
+/// </summary>
+public class VerifyEmailRequest
+{
+    public string Token { get; set; } = string.Empty;
 }
 

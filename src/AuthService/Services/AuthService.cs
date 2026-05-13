@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using GoldPC.AuthService.Data;
 using GoldPC.AuthService.Entities;
+using GoldPC.AuthService.Infrastructure;
 using GoldPC.Shared.Services.Implementations;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
@@ -21,23 +22,27 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthService> _logger;
     private readonly SmtpEmailService _emailService;
+    private readonly ITokenCache _tokenCache;
     private const int MaxFailedAttempts = 5;
     private const int LockoutMinutes = 15;
     private const int RefreshTokenExpirationDays = 7;
     private const int PasswordResetTokenExpirationHours = 1;
+    private const int EmailVerificationTokenExpirationHours = 24;
 
     public AuthService(
         AuthDbContext context,
         IJwtService jwtService,
         IConfiguration configuration,
         ILogger<AuthService> logger,
-        SmtpEmailService emailService)
+        SmtpEmailService emailService,
+        ITokenCache tokenCache)
     {
         _context = context;
         _jwtService = jwtService;
         _configuration = configuration;
         _logger = logger;
         _emailService = emailService;
+        _tokenCache = tokenCache;
     }
 
     /// <inheritdoc />
@@ -285,8 +290,21 @@ public class AuthService : IAuthService
             _context.PasswordResetTokens.Add(resetToken);
             await _context.SaveChangesAsync();
 
-            // Формируем ссылку для сброса
-            var resetLink = $"{requestScheme}://{requestHost}/reset-password/{plainToken}";
+            // Сохраняем токен в Redis c TTL = PasswordResetTokenExpirationHours.
+            // При перезапуске Redis ключи сгорят → старые ссылки станут недействительны.
+            // При истечении TTL Redis автоматически удалит ключ — никаких фоновых задач.
+            await _tokenCache.StoreTokenAsync(
+                tokenHash,
+                user.Id,
+                TimeSpan.FromHours(PasswordResetTokenExpirationHours));
+
+            // Формируем ссылку для сброса.
+            // Используем Frontend:BaseUrl из конфигурации (напр. http://localhost:5173),
+            // чтобы ссылка вела на фронтенд, а не на API-сервер.
+            var frontendUrl = _configuration["Frontend:BaseUrl"];
+            var resetLink = !string.IsNullOrEmpty(frontendUrl)
+                ? $"{frontendUrl.TrimEnd('/')}/reset-password/{plainToken}"
+                : $"{requestScheme}://{requestHost}/reset-password/{plainToken}";
 
             // Рендерим HTML-письмо
             var emailBody = _emailService.RenderTemplate("PasswordReset", new
@@ -316,7 +334,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error in ForgotPasswordAsync for {Email}", email);
+            _logger.LogError(ex, "Error in ForgotPasswordAsync for {Email}: {Message}", email, ex.Message);
             return (false, "Произошла ошибка при обработке запроса. Попробуйте позже.");
         }
     }
@@ -328,19 +346,34 @@ public class AuthService : IAuthService
         {
             var tokenHash = ComputeSha256Hash(token);
 
+            // 1. Быстрая проверка в Redis: если ключа нет — токен истёк/недействителен.
+            //    Redis сам удаляет ключи по TTL, поэтому это надёжный индикатор.
+            var userId = await _tokenCache.ValidateTokenAsync(tokenHash);
+            if (userId is null)
+            {
+                _logger.LogWarning("Password reset token not found in Redis (expired or invalid)");
+                return (false, "Ссылка для восстановления пароля истекла или уже была использована.");
+            }
+
+            // 2. Находим токен в БД для полной валидации и аудита.
             var resetToken = await _context.PasswordResetTokens
                 .Include(t => t.User)
                 .FirstOrDefaultAsync(t => t.TokenHash == tokenHash);
 
-            if (resetToken == null)
+            if (resetToken is null)
             {
-                _logger.LogWarning("Invalid password reset token used");
-                return (false, "Недействительная или устаревшая ссылка для восстановления пароля.");
+                // Токен есть в Redis, но нет в БД — рассинхронизация (напр. БД пересоздана).
+                // Чистим Redis и возвращаем ошибку.
+                _logger.LogWarning("Token in Redis but not in DB — cleaning up. UserId: {UserId}", userId);
+                await _tokenCache.InvalidateTokenAsync(tokenHash);
+                return (false, "Ссылка для восстановления пароля истекла или уже была использована.");
             }
 
             if (!resetToken.IsValid)
             {
-                _logger.LogWarning("Expired or used password reset token attempted. UserId: {UserId}", resetToken.UserId);
+                // Токен есть в БД, но истёк по ExpiresAt или уже использован — чистим Redis.
+                _logger.LogWarning("Token expired/used in DB, removing from Redis. UserId: {UserId}", resetToken.UserId);
+                await _tokenCache.InvalidateTokenAsync(tokenHash);
                 return (false, "Ссылка для восстановления пароля истекла или уже была использована.");
             }
 
@@ -351,7 +384,7 @@ public class AuthService : IAuthService
                 return (false, "Учётная запись деактивирована.");
             }
 
-            // Обновляем пароль
+            // 3. Обновляем пароль
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
             user.UpdatedAt = DateTime.UtcNow;
 
@@ -377,6 +410,9 @@ public class AuthService : IAuthService
 
             await _context.SaveChangesAsync();
 
+            // 4. Удаляем токен из Redis — он больше недействителен
+            await _tokenCache.InvalidateTokenAsync(tokenHash);
+
             _logger.LogInformation("Password successfully reset for user {Email}", user.Email);
             return (true, null);
         }
@@ -384,6 +420,194 @@ public class AuthService : IAuthService
         {
             _logger.LogError(ex, "Error in ResetPasswordAsync");
             return (false, "Произошла ошибка при сбросе пароля. Попробуйте позже.");
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<(bool Valid, string? Error)> ValidateResetTokenAsync(string token)
+    {
+        try
+        {
+            var tokenHash = ComputeSha256Hash(token);
+
+            // Проверяем Redis — если ключа нет, токен истёк/недействителен.
+            // Не трогаем БД, чтобы избежать лишних блокировок и не отмечать токен как использованный.
+            var userId = await _tokenCache.ValidateTokenAsync(tokenHash);
+
+            if (userId is null)
+                return (false, "Ссылка для восстановления пароля истекла или уже была использована.");
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in ValidateResetTokenAsync");
+            return (false, "Не удалось проверить ссылку. Попробуйте позже.");
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<(bool Success, string? Error)> SendVerificationEmailAsync(Guid userId, string requestScheme, string requestHost)
+    {
+        try
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return (false, "Пользователь не найден");
+            }
+
+            if (user.IsEmailVerified)
+            {
+                _logger.LogInformation("Verification email requested for already verified user: {Email}", user.Email);
+                return (true, null); // Не ошибка — просто ничего не делаем
+            }
+
+            return await CreateAndSendVerificationEmailAsync(user, requestScheme, requestHost);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in SendVerificationEmailAsync for user {UserId}", userId);
+            return (false, "Произошла ошибка при отправке письма. Попробуйте позже.");
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<(bool Success, string? Error)> VerifyEmailAsync(string token, string ipAddress)
+    {
+        try
+        {
+            var tokenHash = ComputeSha256Hash(token);
+
+            // Находим токен в БД
+            var verificationToken = await _context.EmailVerificationTokens
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.TokenHash == tokenHash);
+
+            if (verificationToken is null)
+            {
+                _logger.LogWarning("Email verification token not found in DB");
+                return (false, "Ссылка для подтверждения email недействительна или уже была использована.");
+            }
+
+            if (!verificationToken.IsValid)
+            {
+                _logger.LogWarning("Email verification token expired/used for user {UserId}", verificationToken.UserId);
+                return (false, "Ссылка для подтверждения email истекла или уже была использована. Запросите новую ссылку.");
+            }
+
+            var user = verificationToken.User;
+
+            if (!user.IsActive)
+            {
+                return (false, "Учётная запись деактивирована.");
+            }
+
+            // Помечаем email как подтверждённый
+            user.IsEmailVerified = true;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            // Помечаем токен как использованный
+            verificationToken.UsedAt = DateTime.UtcNow;
+            verificationToken.UsedByIp = ipAddress;
+
+            // Инвалидируем все остальные неиспользованные токены верификации для этого пользователя
+            var otherTokens = await _context.EmailVerificationTokens
+                .Where(t => t.UserId == user.Id && t.Id != verificationToken.Id && t.UsedAt == null && t.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync();
+
+            foreach (var t in otherTokens)
+            {
+                t.UsedAt = DateTime.UtcNow; // Помечаем как использованные
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Email verified for user {Email}", user.Email);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in VerifyEmailAsync");
+            return (false, "Произошла ошибка при подтверждении email. Попробуйте позже.");
+        }
+    }
+
+    /// <summary>
+    /// Создаёт токен подтверждения email и отправляет письмо.
+    /// </summary>
+    private async Task<(bool Success, string? Error)> CreateAndSendVerificationEmailAsync(User user, string requestScheme, string requestHost)
+    {
+        try
+        {
+            if (user.IsEmailVerified)
+            {
+                return (true, null);
+            }
+
+            // Генерируем безопасный случайный токен
+            var tokenBytes = RandomNumberGenerator.GetBytes(64);
+            var plainToken = Convert.ToHexString(tokenBytes).ToLowerInvariant();
+            var tokenHash = ComputeSha256Hash(plainToken);
+
+            // Деактивируем все предыдущие неиспользованные токены
+            var previousTokens = await _context.EmailVerificationTokens
+                .Where(t => t.UserId == user.Id && t.UsedAt == null && t.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync();
+
+            foreach (var prev in previousTokens)
+            {
+                prev.ExpiresAt = DateTime.UtcNow; // немедленно истекают
+            }
+
+            // Создаём новый токен
+            var verificationToken = new EmailVerificationToken
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                TokenHash = tokenHash,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddHours(EmailVerificationTokenExpirationHours)
+            };
+
+            _context.EmailVerificationTokens.Add(verificationToken);
+            await _context.SaveChangesAsync();
+
+            // Формируем ссылку для подтверждения
+            var frontendUrl = _configuration["Frontend:BaseUrl"];
+            var verificationLink = !string.IsNullOrEmpty(frontendUrl)
+                ? $"{frontendUrl.TrimEnd('/')}/verify-email/{plainToken}"
+                : $"{requestScheme}://{requestHost}/verify-email/{plainToken}";
+
+            // Рендерим HTML-письмо
+            var emailBody = _emailService.RenderTemplate("EmailVerification", new
+            {
+                UserName = user.FirstName,
+                VerificationLink = verificationLink,
+                Year = DateTime.UtcNow.Year
+            });
+
+            // Отправляем письмо
+            var (sent, sendError) = await _emailService.SendEmailAsync(
+                user.Email,
+                "Подтверждение email — GoldPC",
+                emailBody,
+                isHtml: true
+            );
+
+            if (!sent)
+            {
+                _logger.LogError("Failed to send verification email to {Email}: {Error}", user.Email, sendError);
+                return (false, "Не удалось отправить письмо для подтверждения email. Попробуйте позже.");
+            }
+
+            _logger.LogInformation("Verification email sent to {Email}", user.Email);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending verification email to user {UserId}", user.Id);
+            return (false, "Произошла ошибка при отправке письма. Попробуйте позже.");
         }
     }
 
@@ -421,7 +645,8 @@ public class AuthService : IAuthService
             FirstName = user.FirstName,
             LastName = user.LastName,
             Phone = user.Phone,
-            IsActive = user.IsActive
+            IsActive = user.IsActive,
+            IsEmailVerified = user.IsEmailVerified
         };
     }
 }

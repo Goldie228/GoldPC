@@ -56,6 +56,11 @@ public class User : BaseEntity
     /// Признак активности учётной записи
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Подтверждён ли email пользователя
+    /// </summary>
+    public bool IsEmailVerified { get; set; }
     
     /// <summary>
     /// Количество неудачных попыток входа
@@ -86,6 +91,11 @@ public class User : BaseEntity
     /// Токены сброса пароля
     /// </summary>
     public ICollection<PasswordResetToken> PasswordResetTokens { get; set; } = new List<PasswordResetToken>();
+
+    /// <summary>
+    /// Токены подтверждения email
+    /// </summary>
+    public ICollection<EmailVerificationToken> EmailVerificationTokens { get; set; } = new List<EmailVerificationToken>();
     
     /// <summary>
     /// Полное имя

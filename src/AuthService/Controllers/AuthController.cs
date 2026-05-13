@@ -231,4 +231,86 @@ public class AuthController : ControllerBase
 
         return Ok(ApiResponse.Ok("Пароль успешно изменён. Теперь вы можете войти с новым паролем."));
     }
+
+    /// <summary>
+    /// Валидация токена сброса пароля (без мутаций).
+    /// Фронтенд вызывает этот метод при загрузке страницы reset-password,
+    /// чтобы сразу показать expired-экран, если ссылка недействительна.
+    /// </summary>
+    [HttpPost("validate-reset-token")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ValidateResetToken([FromBody] ValidateResetTokenRequest request)
+    {
+        if (string.IsNullOrEmpty(request.Token))
+        {
+            return BadRequest(ApiResponse.Fail("Токен обязателен."));
+        }
+
+        var (valid, error) = await _authService.ValidateResetTokenAsync(request.Token);
+
+        if (!valid)
+        {
+            return BadRequest(ApiResponse.Fail(error!));
+        }
+
+        return Ok(ApiResponse.Ok("Токен действителен."));
+    }
+
+    /// <summary>
+    /// Отправка (или повторная отправка) письма с подтверждением email.
+    /// Требует авторизации — userId извлекается из JWT.
+    /// </summary>
+    [HttpPost("send-verification")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SendVerification()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+        }
+
+        var scheme = Request.Scheme;
+        var host = Request.Host.ToString();
+
+        var (success, error) = await _authService.SendVerificationEmailAsync(userId, scheme, host);
+
+        if (!success)
+        {
+            return BadRequest(ApiResponse.Fail(error!));
+        }
+
+        return Ok(ApiResponse.Ok("Письмо для подтверждения email отправлено. Проверьте почту."));
+    }
+
+    /// <summary>
+    /// Подтверждение email по токену из письма.
+    /// Не требует авторизации — токен одноразовый.
+    /// </summary>
+    [HttpPost("verify-email")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
+    {
+        if (string.IsNullOrEmpty(request.Token))
+        {
+            return BadRequest(ApiResponse.Fail("Токен обязателен."));
+        }
+
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var (success, error) = await _authService.VerifyEmailAsync(request.Token, ipAddress);
+
+        if (!success)
+        {
+            return BadRequest(ApiResponse.Fail(error!));
+        }
+
+        return Ok(ApiResponse.Ok("Email успешно подтверждён."));
+    }
 }
