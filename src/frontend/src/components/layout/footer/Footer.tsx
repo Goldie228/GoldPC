@@ -89,7 +89,7 @@ export function Footer() {
         {/* Main grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-x-6 gap-y-10 lg:gap-y-12">
           {/* Brand Column */}
-          <div className="max-w-[220px]">
+          <div className="max-w-[220px] min-w-0">
             <Link to="/" className="flex items-center gap-2.5 no-underline group">
               <span className="text-xl font-semibold text-[#c9a84c] tracking-tight transition-colors duration-300 group-hover:text-[#d4b86a]">
                 Gold
@@ -104,8 +104,8 @@ export function Footer() {
           </div>
 
           {/* Catalog Column */}
-          <div>
-            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5">
+          <div className="min-w-0">
+            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
               Каталог
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -123,8 +123,8 @@ export function Footer() {
           </div>
 
           {/* Service Column */}
-          <div>
-            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5">
+          <div className="min-w-0">
+            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
               Сервис
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -142,8 +142,8 @@ export function Footer() {
           </div>
 
           {/* Info Column */}
-          <div>
-            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5">
+          <div className="min-w-0">
+            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
               Информация
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -161,8 +161,8 @@ export function Footer() {
           </div>
 
           {/* Customers Column */}
-          <div>
-            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5">
+          <div className="min-w-0">
+            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
               Покупателям
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -180,8 +180,8 @@ export function Footer() {
           </div>
 
           {/* Contacts Column */}
-          <div>
-            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5">
+          <div className="min-w-0">
+            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
               Контакты
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
