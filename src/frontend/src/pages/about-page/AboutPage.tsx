@@ -121,8 +121,8 @@ export function AboutPage() {
       <div className="max-w-[1440px] mx-auto px-4 md:px-8 mb-16">
         <div className="rounded-xl overflow-hidden border border-hairline-dark bg-surface-card">
           <img
-            src="/placeholders/about/hero-team.svg"
-            alt="Команда GoldPC"
+            src="/placeholders/about/hero-store.png"
+            alt="Магазин GoldPC"
             className="w-full h-auto object-cover"
             style={{ maxHeight: '400px' }}
           />
@@ -156,27 +156,44 @@ export function AboutPage() {
         </div>
       </motion.section>
 
-      {/* Mission Section */}
+      {/* Mission & Developer Section */}
       <motion.section
         className="py-16 px-4 md:px-8 max-w-[1440px] mx-auto"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-body-text mb-8">Наша миссия</h2>
-          <p className="text-lg text-muted-text mb-4 leading-relaxed">
-            Мы верим, что каждый заслуживает компьютер, который идеально соответствует его
-            потребностям. Наша миссия — сделать высокопроизводительные компьютеры доступными
-            и понятными для каждого клиента.
-          </p>
-          <p className="text-lg text-muted-text mb-4 leading-relaxed">
-            Команда GoldPC объединяет энтузиастов, которые сами увлечены технологиями.
-            Мы не просто продаём комплектующие — мы помогаем воплотить ваши идеи в реальность.
-          </p>
-          <p className="text-sm text-muted-strong mt-6 pt-6 border-t border-hairline-dark">
-            Разработчик платформы: <span className="text-body-text">Кажуро Глеб, группа Т-393</span>
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+          {/* Mission Text */}
+          <div>
+            <h2 className="text-2xl font-bold text-body-text mb-8">Наша миссия</h2>
+            <p className="text-lg text-muted-text mb-4 leading-relaxed">
+              Мы верим, что каждый заслуживает компьютер, который идеально соответствует его
+              потребностям. Наша миссия — сделать высокопроизводительные компьютеры доступными
+              и понятными для каждого клиента.
+            </p>
+            <p className="text-lg text-muted-text mb-4 leading-relaxed">
+              Команда GoldPC объединяет энтузиастов, которые сами увлечены технологиями.
+              Мы не просто продаём комплектующие — мы помогаем воплотить ваши идеи в реальность.
+            </p>
+          </div>
+
+          {/* Developer Card */}
+          <div className="bg-surface-card rounded-xl border border-hairline-dark p-6 flex flex-col items-center">
+            <div className="w-[200px] h-[200px] rounded-xl overflow-hidden mb-4">
+              <img
+                src="/placeholders/developer.jpg"
+                alt="Разработчик GoldPC"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <p className="text-sm text-muted-strong">Разработчик платформы</p>
+            <p className="text-body-text font-semibold mt-1">Кажуро Глеб, группа Т-393</p>
+            <p className="text-xs text-muted-strong mt-3 text-center leading-relaxed">
+              Проект создан в рамках курсовой работы<br />
+              Колледжа Бизнеса и Права, 2026
+            </p>
+          </div>
         </div>
       </motion.section>
 
