@@ -10,6 +10,7 @@ import { useToast } from '../../hooks/useToast';
 import { Icon } from '../ui/Icon/Icon';
 import { telemetryTrack } from '../../utils/telemetry';
 import { getProductImageUrl, hasValidProductImage } from '../../utils/image';
+import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
 
 interface ProductTableProps {
   products: ProductSummary[];
@@ -141,7 +142,7 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
                 >
                   {product.name}
                 </Link>
-                <span className="text-[11px] text-muted-text">{product.manufacturer?.name || product.brand || ''}</span>
+                <span className="text-[11px] text-muted-text">{getDisplayManufacturerName(product.manufacturer?.name) || product.brand || ''}</span>
               </div>
             </div>
 

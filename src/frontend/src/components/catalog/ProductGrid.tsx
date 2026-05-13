@@ -2,14 +2,16 @@
 
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, GitCompareArrows, ShoppingCart, Bell, Check, Star, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Heart, GitCompareArrows, ShoppingCart, Bell, Plus, Minus, Star, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getProductImageUrl } from '../../utils/image';
+import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
 import type { ProductSummary } from '../../api/types';
 import { BynPrice } from '../ui/BynPrice';
 import { EmptyState } from './EmptyState';
 import { useWishlist } from '../../hooks/useWishlist';
 import { useComparison } from '../../hooks/useComparison';
+import { useCart } from '../../hooks/useCart';
 import { useToast } from '../../hooks/useToast';
 import { catalogApi } from '../../api/catalog';
 
@@ -36,11 +38,13 @@ interface ProductCardProps {
 }
 
 function ProductCard({ product, onAddToCart }: ProductCardProps) {
-  const [inCart, setInCart] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { isInComparison, toggleComparison } = useComparison();
+  const { addToCart, isInCart, getItemQuantity, removeFromCart, updateQuantity } = useCart();
+  const inCart = isInCart(product.id);
+  const quantityInCart = getItemQuantity(product.id);
   const { showToast } = useToast();
 
   const isOutOfStock = product.stock === 0;
@@ -94,8 +98,24 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setInCart(!inCart);
+    addToCart(product);
     onAddToCart?.(product.id);
+    showToast('Товар добавлен в корзину', 'success');
+  };
+
+  const handleUpdateQty = (e: React.MouseEvent, delta: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const next = quantityInCart + delta;
+    if (next < 1) {
+      removeFromCart(product.id);
+      return;
+    }
+    if (next > product.stock) {
+      showToast(`Доступно только ${product.stock} шт.`, 'error');
+      return;
+    }
+    updateQuantity(product.id, next);
   };
 
   return (
@@ -256,7 +276,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
       {/* Information */}
       <div className="p-4 flex flex-col gap-2 flex-1 text-white">
         <span className="text-[10px] text-white/70 font-medium uppercase tracking-wider truncate">
-          {product.manufacturer?.name || product.brand || ''}
+          {getDisplayManufacturerName(product.manufacturer?.name) || product.brand || ''}
         </span>
         <h3 style={{ fontSize: '17px' }} className={`!font-semibold !leading-tight line-clamp-3 min-h-[3.5rem] ${isOutOfStock ? 'opacity-60' : ''}`}>
           <Link to={`/product/${product.slug || product.id}`} className="!text-white hover:!text-gold transition-colors">
@@ -292,18 +312,31 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
         </div>
 
         {isOutOfStock ? (
-          <button className="w-full h-7 bg-gold text-gold-ink text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 hover:bg-gold-active transition-colors">
-            <Bell size={12} />
+          <button className="w-full h-10 bg-gold text-gold-ink text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 hover:bg-gold-active transition-colors">
+            <Bell size={14} />
             Уведомить
           </button>
         ) : inCart ? (
-          <button
-            onClick={handleAddToCart}
-            className="w-full h-10 bg-price-rise text-on-dark text-sm font-semibold rounded-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all"
-          >
-            <Check size={14} />
-            В корзине
-          </button>
+          <div className="flex items-center justify-between w-full h-10 bg-surface-card border border-hairline rounded-sm">
+            <button
+              onClick={(e) => handleUpdateQty(e, -1)}
+              className="w-9 h-full flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all rounded-sm"
+              aria-label="Уменьшить количество"
+            >
+              <Minus size={14} />
+            </button>
+            <span className="font-tabular text-sm font-semibold text-on-dark min-w-[28px] text-center">
+              {quantityInCart}
+            </span>
+            <button
+              onClick={(e) => handleUpdateQty(e, 1)}
+              className="w-9 h-full flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all disabled:opacity-30 rounded-sm"
+              disabled={quantityInCart >= product.stock}
+              aria-label="Увеличить количество"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
         ) : (
           <button
             onClick={handleAddToCart}
