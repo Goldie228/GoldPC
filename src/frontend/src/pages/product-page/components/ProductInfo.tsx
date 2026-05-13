@@ -6,6 +6,7 @@ import { useWishlistStore } from '../../../store/wishlistStore';
 import { useToastStore } from '../../../store/toastStore';
 import { useComparisonStore } from '../../../store/comparisonStore';
 import { Icon } from '../../../components/ui/Icon/Icon';
+import { getDisplayManufacturerName } from '../../../utils/manufacturerNameOverrides';
 import type { Product } from '../../../api/types';
 import { Link } from 'react-router-dom';
 
@@ -130,7 +131,7 @@ export function ProductInfo({ product }: ProductInfoProps): ReactElement {
       {/* Manufacturer */}
       {product.manufacturer && (
         <span className="text-xs font-semibold text-primary uppercase tracking-widest mb-2">
-          {product.manufacturer.name}
+          {getDisplayManufacturerName(product.manufacturer.name)}
         </span>
       )}
 

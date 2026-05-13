@@ -84,15 +84,32 @@ function renderSpecsFromCatalog(product: Product): ReactElement {
     return a.localeCompare(b);
   });
   return (
-    <ul className="m-0 p-0 list-none grid gap-2.5">
-      {keys.map((k) => (
-        <li key={k} className="flex items-baseline gap-2 px-3 py-2.5 rounded-lg bg-surface-elevated border border-border whitespace-normal flex-wrap">
-          <span className="text-muted-foreground text-sm">{specLabel(k)}</span>
-          <span className="text-muted-foreground/50">—</span>
-          <span className="text-foreground text-sm font-medium">{formatSpecValueForKey(k, specs[k])}</span>
-        </li>
-      ))}
-    </ul>
+    <div className="w-full overflow-hidden rounded-xl border border-border">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-surface-elevated/70">
+            <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider w-2/5">
+              Характеристика
+            </th>
+            <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Значение
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {keys.map((k) => (
+            <tr key={k} className="transition-colors hover:bg-surface-elevated/20">
+              <td className="px-5 py-3.5 text-sm text-muted-foreground align-top">
+                {specLabel(k)}
+              </td>
+              <td className="px-5 py-3.5 text-sm text-foreground font-medium">
+                {formatSpecValueForKey(k, specs[k])}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -110,17 +127,20 @@ function renderLegalInfoBlock(product: Product): ReactElement | null {
   if (items.length === 0) return null;
 
   return (
-    <section className="p-5 border border-border rounded-xl bg-card mt-4">
+    <section className="mt-6">
       <h3 className="m-0 mb-3 text-base font-semibold text-foreground">Юридическая информация</h3>
-      <ul className="m-0 p-0 list-none grid gap-2.5">
-        {items.map(({ key, value }, i) => (
-          <li key={`${key}-${i}`} className="flex items-baseline gap-2 px-3 py-2.5 rounded-lg bg-surface-elevated border border-border whitespace-normal flex-wrap">
-            <span className="text-muted-foreground text-sm">{key}</span>
-            <span className="text-muted-foreground/50">—</span>
-            <span className="text-foreground text-sm font-medium">{value}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="w-full overflow-hidden rounded-xl border border-border">
+        <table className="w-full border-collapse">
+          <tbody className="divide-y divide-border">
+            {items.map(({ key, value }, i) => (
+              <tr key={`${key}-${i}`} className="transition-colors hover:bg-surface-elevated/20">
+                <td className="px-5 py-3.5 text-sm text-muted-foreground align-top w-2/5">{key}</td>
+                <td className="px-5 py-3.5 text-sm text-foreground font-medium">{value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }
@@ -158,7 +178,7 @@ export function ProductPage(): ReactElement {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading, error } = useProduct(slug);
   const showToast = useToastStore((state) => state.showToast);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const tabs = useMemo<Tab[]>(() => {
     if (!product) return [];
@@ -179,7 +199,7 @@ export function ProductPage(): ReactElement {
       {
         id: 'reviews',
         label: reviewCount > 0 ? `Отзывы (${reviewCount})` : 'Отзывы',
-        content: <ReviewSection productId={product.id} product={product} isAuthenticated={isAuthenticated} showToast={showToast} />
+        content: <ReviewSection productId={product.id} product={product} isAuthenticated={isAuthenticated} showToast={showToast} user={user} />
       }
     ];
   }, [product, isAuthenticated, showToast]);

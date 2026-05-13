@@ -233,7 +233,7 @@ export function ProductImageViewerModal({
           <AnimatePresence mode="wait">
             <motion.div
               key={active.url}
-              className="w-full h-full flex items-center justify-center cursor-pointer"
+              className={`w-full h-full flex items-center justify-center ${zoom > 1 ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
