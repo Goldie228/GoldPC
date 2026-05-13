@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, GitCompareArrows, ShoppingCart, Bell, Check, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, GitCompareArrows, ShoppingCart, Bell, Plus, Minus, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getProductImageUrl } from '../../utils/image';
+import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
 import type { ProductSummary } from '../../api/types';
 import { BynPrice } from '../ui/BynPrice';
 import { useWishlist } from '../../hooks/useWishlist';
 import { useComparison } from '../../hooks/useComparison';
+import { useCart } from '../../hooks/useCart';
 import { useToast } from '../../hooks/useToast';
 import { catalogApi } from '../../api/catalog';
 
@@ -38,11 +40,13 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetchPriority }: ProductCardProps) {
-  const [inCart, setInCart] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { isInComparison, toggleComparison } = useComparison();
+  const { addToCart, isInCart, getItemQuantity, removeFromCart, updateQuantity } = useCart();
+  const inCart = isInCart(product.id);
+  const quantityInCart = getItemQuantity(product.id);
   const { showToast } = useToast();
 
   const isOutOfStock = product.stock === 0;
@@ -96,8 +100,24 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setInCart(!inCart);
+    addToCart(product);
     onAddToCart?.(product.id);
+    showToast('Товар добавлен в корзину', 'success');
+  };
+
+  const handleUpdateQty = (e: React.MouseEvent, delta: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const next = quantityInCart + delta;
+    if (next < 1) {
+      removeFromCart(product.id);
+      return;
+    }
+    if (next > product.stock) {
+      showToast(`Доступно только ${product.stock} шт.`, 'error');
+      return;
+    }
+    updateQuantity(product.id, next);
   };
 
   if (viewMode === 'list') {
@@ -144,7 +164,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
         <div className="flex-1 flex flex-col justify-between">
           <div>
             <span className="text-[11px] text-muted-text font-medium uppercase tracking-wider truncate">
-              {product.manufacturer?.name || product.brand || ''}
+              {getDisplayManufacturerName(product.manufacturer?.name) || product.brand || ''}
             </span>
             <h3 className="text-sm font-semibold leading-snug text-on-dark hover:text-gold transition-colors">
               <Link to={`/product/${product.slug || product.id}`}>
@@ -185,13 +205,26 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
               Уведомить
             </button>
           ) : inCart ? (
-            <button
-              onClick={handleAddToCart}
-              className="w-full h-10 px-4 bg-price-rise text-on-dark text-sm font-semibold rounded-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all"
-            >
-              <Check size={14} />
-              В корзине
-            </button>
+            <div className="flex items-center justify-between w-full h-10 bg-surface-card border border-hairline rounded-sm px-1">
+              <button
+                onClick={(e) => handleUpdateQty(e, -1)}
+                className="w-8 h-8 flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all rounded-sm"
+                aria-label="Уменьшить количество"
+              >
+                <Minus size={14} />
+              </button>
+              <span className="font-tabular text-sm font-semibold text-on-dark min-w-[24px] text-center">
+                {quantityInCart}
+              </span>
+              <button
+                onClick={(e) => handleUpdateQty(e, 1)}
+                className="w-8 h-8 flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all disabled:opacity-30 rounded-sm"
+                disabled={quantityInCart >= product.stock}
+                aria-label="Увеличить количество"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
           ) : (
             <button
               onClick={handleAddToCart}
@@ -364,7 +397,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
       {/* Information */}
       <div className="p-4 flex flex-col gap-2 flex-1">
         <span className="text-[11px] text-muted-text font-medium uppercase tracking-wider truncate">
-          {product.manufacturer?.name || product.brand || ''}
+          {getDisplayManufacturerName(product.manufacturer?.name) || product.brand || ''}
         </span>
         <h3 className={`text-sm font-semibold leading-snug line-clamp-2 min-h-[2.5rem] ${isOutOfStock ? 'opacity-60' : 'text-on-dark'}`}>
           <Link to={`/product/${product.slug || product.id}`} className="hover:text-gold transition-colors">
@@ -400,18 +433,31 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
         </div>
 
         {isOutOfStock ? (
-          <button className="w-full h-7 bg-gold text-gold-ink text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 hover:bg-gold-active transition-colors">
-            <Bell size={12} />
+          <button className="w-full h-10 bg-gold text-gold-ink text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 hover:bg-gold-active transition-colors">
+            <Bell size={14} />
             Уведомить
           </button>
         ) : inCart ? (
-          <button
-            onClick={handleAddToCart}
-            className="w-full h-10 bg-price-rise text-on-dark text-sm font-semibold rounded-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all"
-          >
-            <Check size={14} />
-            В корзине
-          </button>
+          <div className="flex items-center justify-between w-full h-10 bg-surface-card border border-hairline rounded-sm">
+            <button
+              onClick={(e) => handleUpdateQty(e, -1)}
+              className="w-9 h-full flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all rounded-sm"
+              aria-label="Уменьшить количество"
+            >
+              <Minus size={14} />
+            </button>
+            <span className="font-tabular text-sm font-semibold text-on-dark min-w-[28px] text-center">
+              {quantityInCart}
+            </span>
+            <button
+              onClick={(e) => handleUpdateQty(e, 1)}
+              className="w-9 h-full flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all disabled:opacity-30 rounded-sm"
+              disabled={quantityInCart >= product.stock}
+              aria-label="Увеличить количество"
+            >
+              <Plus size={14} />
+            </button>
+          </div>
         ) : (
           <button
             onClick={handleAddToCart}

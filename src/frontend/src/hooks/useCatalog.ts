@@ -8,8 +8,11 @@ export interface UseCatalogReturn {
   getProducts: (params?: GetProductsParams) => Promise<ProductListResponse | null>;
   getProductsByIds: (ids: string[]) => Promise<ProductSummary[]>;
   getProductReviews: (productId: string, page?: number, pageSize?: number) => Promise<{ data: ProductReview[] } | null>;
-  addProductReview: (productId: string, data: { rating: number; comment: string; pros?: string; cons?: string }) => Promise<ProductReview | null>;
-  getFilterFacets: (categorySlug: string, filterParams?: { manufacturerIds?: string[]; specifications?: Record<string, string>; specificationRanges?: Record<string, string>; inStock?: boolean }) => Promise<FilterFacetAttribute[] | null>;
+addProductReview: (productId: string, data: { rating: number; comment: string; pros?: string; cons?: string }) => Promise<ProductReview | null>;
+   updateProductReview: (productId: string, reviewId: string, data: { rating: number; title?: string; comment?: string; pros?: string; cons?: string }) => Promise<ProductReview | null>;
+   deleteProductReview: (productId: string, reviewId: string) => Promise<boolean>;
+   toggleHelpful: (productId: string, reviewId: string) => Promise<{ helpful: number } | null>;
+   getFilterFacets: (categorySlug: string, filterParams?: { manufacturerIds?: string[]; specifications?: Record<string, string>; specificationRanges?: Record<string, string>; inStock?: boolean }) => Promise<FilterFacetAttribute[] | null>;
 }
 
 export function useCatalog(): UseCatalogReturn {
@@ -91,6 +94,49 @@ export function useCatalog(): UseCatalogReturn {
     }
   }, []);
 
+  const updateProductReview = useCallback(async (productId: string, reviewId: string, data: { rating: number; title?: string; comment?: string; pros?: string; cons?: string }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await catalogApi.updateProductReview(productId, reviewId, data);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Failed to update review');
+      setError(err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const deleteProductReview = useCallback(async (productId: string, reviewId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await catalogApi.deleteProductReview(productId, reviewId);
+      return true;
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Failed to delete review');
+      setError(err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const toggleHelpful = useCallback(async (productId: string, reviewId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      return await catalogApi.toggleHelpful(productId, reviewId);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Failed to toggle helpful');
+      setError(err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const getFilterFacets = useCallback(async (categorySlug: string, filterParams?: { manufacturerIds?: string[]; specifications?: Record<string, string>; specificationRanges?: Record<string, string>; inStock?: boolean }) => {
     setLoading(true);
     setError(null);
@@ -111,8 +157,11 @@ export function useCatalog(): UseCatalogReturn {
     getProduct,
     getProducts,
     getProductsByIds,
-    getProductReviews,
+getProductReviews,
     addProductReview,
+    updateProductReview,
+    deleteProductReview,
+    toggleHelpful,
     getFilterFacets,
   };
 }
