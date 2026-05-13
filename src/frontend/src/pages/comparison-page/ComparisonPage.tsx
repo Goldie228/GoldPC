@@ -11,6 +11,7 @@ import { Icon } from '../../components/ui/Icon/Icon';
 import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
 import { EmptyState } from '../../components/catalog/EmptyState';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
+import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
 import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
 import { specificationsWithDescriptionFallback } from '../../utils/productDescriptionSpecs';
@@ -566,7 +567,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                         key={product.id}
                         className="px-4 py-3 text-sm text-body-text border-b border-l border-hairline-dark text-center transition-colors"
                       >
-                        {product.manufacturer?.name ?? '—'}
+                        {getDisplayManufacturerName(product.manufacturer?.name) ?? '—'}
                       </td>
                     ))}
                   </tr>
