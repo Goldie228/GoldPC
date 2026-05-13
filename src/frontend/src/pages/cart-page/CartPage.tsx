@@ -75,7 +75,7 @@ function EmptyCart(): ReactElement {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Link to="/catalog" className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 font-sans text-sm font-semibold no-underline border-none cursor-pointer transition-all w-full rounded-lg bg-accent text-background">
+          <Link to="/catalog" className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 font-sans text-sm font-semibold no-underline border-none cursor-pointer transition-all w-full rounded-lg bg-gold text-gold-ink">
             <ArrowLeft size={18} />
             Перейти в каталог
           </Link>
@@ -187,7 +187,7 @@ export function CartPage(): ReactElement {
               {items.map((item) => (
                 <li key={item.productId}>
                   <motion.div
-                    className="grid grid-cols-[80px_1fr_auto] gap-5 p-5 bg-card border border-border rounded-lg transition-all hover:border-accent hover:-translate-y-0.5 hover:shadow-lg"
+                    className="grid grid-cols-[80px_1fr_auto] gap-5 p-5 bg-card border border-border rounded-lg transition-all hover:border-gold/30 hover:-translate-y-0.5 hover:shadow-lg"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -20, height: 0 }}
@@ -209,14 +209,14 @@ export function CartPage(): ReactElement {
                     {/* Details */}
                     <div className="flex flex-col justify-center gap-2 min-w-0">
                       <span className="text-[0.65rem] text-foreground-dim uppercase tracking-[0.1em] font-medium">{getCategoryLabel(item.category)}</span>
-                      <Link to={`/product/${item.productSlug ?? item.productId}`} className="text-[0.95rem] font-medium text-foreground leading-1.4 no-underline transition-colors hover:text-accent line-clamp-2">
+                      <Link to={`/product/${item.productSlug ?? item.productId}`} className="text-[0.95rem] font-medium text-foreground leading-1.4 no-underline transition-colors hover:text-gold line-clamp-2">
                         {item.name}
                       </Link>
                     </div>
 
                     {/* Actions */}
                     <div className="flex flex-col items-end justify-between gap-3">
-                      <span className="font-mono text-base font-medium text-accent">
+                      <span className="font-mono text-base font-semibold text-body-text">
                         {(item.price * item.quantity).toLocaleString('ru-BY')} BYN
                       </span>
                       <div className="flex items-center gap-2">
@@ -273,7 +273,7 @@ export function CartPage(): ReactElement {
               animate={{ opacity: 1, height: 'auto' }}
             >
               <span className="text-sm text-muted-foreground">Скидка</span>
-              <span className="font-mono text-sm text-green-500 font-semibold">
+              <span className="font-mono text-sm text-price-drop font-semibold">
                 −{discountAmount.toLocaleString('ru-BY')} BYN
               </span>
             </motion.div>
@@ -281,7 +281,7 @@ export function CartPage(): ReactElement {
 
           <div className="flex justify-between items-center mb-3">
             <span className="text-sm text-muted-foreground">Доставка</span>
-            <span className="font-mono text-sm text-foreground" style={{ color: 'var(--accent, #d4a574)' }}>
+            <span className="font-mono text-sm text-price-drop">
               Бесплатно
             </span>
           </div>
@@ -291,7 +291,7 @@ export function CartPage(): ReactElement {
           <div className="flex flex-col gap-2 mb-6">
             <span className="text-xs uppercase tracking-[0.05em] text-muted-foreground">К оплате</span>
             <span
-              className={`font-mono text-2xl font-semibold text-accent transition-transform duration-250 ease ${totalFlash ? 'animate-pulse text-shadow-glow' : ''}`}
+              className={`font-mono text-2xl font-bold text-body-text transition-transform duration-250 ease ${totalFlash ? 'animate-pulse text-shadow-glow' : ''}`}
             >
               {discountedTotal.toLocaleString('ru-BY')} BYN
             </span>
@@ -317,7 +317,7 @@ export function CartPage(): ReactElement {
           {/* Promo Code */}
           <div className="mt-5 pt-5 border-t border-border">
             {promoCode ? (
-              <div className="flex items-center gap-2 p-3 bg-border-muted border border-dashed border-accent text-accent font-mono text-sm font-medium rounded-md">
+              <div className="flex items-center gap-2 p-3 bg-border-muted border border-dashed border-gold/30 text-gold font-mono text-sm font-medium rounded-md">
                 <Tag size={14} />
                 <span>{promoCode}</span>
                 <button
@@ -340,7 +340,7 @@ export function CartPage(): ReactElement {
                     setPromoError(false);
                   }}
                   onKeyDown={handlePromoKeyDown}
-                  className={`flex-1 px-4 py-3 bg-elevated border text-foreground font-mono text-sm transition-colors rounded-md focus:outline-none focus:border-accent ${promoError ? 'border-error' : 'border-border'}`}
+                  className={`flex-1 px-4 py-3 bg-elevated border text-foreground font-mono text-sm transition-colors rounded-md focus:outline-none focus:border-gold ${promoError ? 'border-error' : 'border-border'}`}
                 />
                 <Button variant="outline" size="sm" onClick={handleApplyPromo} type="button">
                   Применить
