@@ -38,6 +38,11 @@ public class AuthDbContext : DbContext
     /// </summary>
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     
+    /// <summary>
+    /// Токены подтверждения email
+    /// </summary>
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -126,6 +131,26 @@ public class AuthDbContext : DbContext
             
             entity.HasOne(e => e.User)
                 .WithMany(u => u.PasswordResetTokens)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Конфигурация EmailVerificationToken
+        modelBuilder.Entity<EmailVerificationToken>(entity =>
+        {
+            entity.ToTable("email_verification_tokens");
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(128);
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.ExpiresAt).IsRequired();
+            entity.Property(e => e.UsedByIp).HasMaxLength(45);
+            
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasIndex(e => e.UserId);
+            
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.EmailVerificationTokens)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

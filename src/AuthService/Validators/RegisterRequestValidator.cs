@@ -87,8 +87,6 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
                 .WithMessage("Пароль должен содержать минимум одну строчную букву (a-z)")
             .Matches(@"[0-9]")
                 .WithMessage("Пароль должен содержать минимум одну цифру (0-9)")
-            .Matches(@"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>/?]")
-                .WithMessage("Пароль должен содержать минимум один специальный символ (!@#$%^&* и т.д.)")
             .Must(NotBeCommonPassword)
                 .WithMessage("Пароль слишком распространённый. Выберите более надёжный пароль.")
             .Must(NotContainUserInfo)

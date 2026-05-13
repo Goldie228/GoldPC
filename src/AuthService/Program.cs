@@ -13,6 +13,7 @@ using Serilog;
 using Serilog.Formatting.Json;
 using Shared.Middleware;
 using GoldPC.Shared.Authorization;
+using GoldPC.AuthService.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,10 +42,17 @@ builder.Host.UseSerilog();
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Redis cache для токенов сброса пароля (автоматический TTL)
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
+});
+
 // Регистрация сервисов
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<SmtpEmailService>();
+builder.Services.AddSingleton<ITokenCache, RedisTokenCache>();
 
 // Настройка JWT аутентификации
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -160,7 +168,9 @@ app.UseSecurityHeaders();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-    dbContext.Database.EnsureCreated();
+    // For development: ensure database is recreated with latest migrations
+    // In production, use dbContext.Database.Migrate() only
+    dbContext.Database.Migrate();
 }
 
 // Настройка HTTP pipeline
