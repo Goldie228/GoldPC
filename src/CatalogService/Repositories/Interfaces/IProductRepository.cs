@@ -72,6 +72,7 @@ public interface IReviewRepository
     Task<IEnumerable<Review>> GetByProductIdAsync(Guid productId);
     Task<IEnumerable<Review>> GetByUserIdAsync(Guid userId);
     Task<Review> CreateAsync(Review review);
+    Task<Review> UpdateAsync(Review review);
     Task DeleteAsync(Guid id);
     Task<double> GetAverageRatingAsync(Guid productId);
     Task<int> GetReviewCountAsync(Guid productId);

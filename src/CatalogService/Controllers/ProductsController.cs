@@ -126,6 +126,89 @@ public class CatalogController : ControllerBase
     }
 
     /// <summary>
+    /// Обновить отзыв
+    /// </summary>
+    [HttpPut("products/{productId:guid}/reviews/{reviewId:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(ReviewDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ReviewDto>> UpdateReview(Guid productId, Guid reviewId, [FromBody] UpdateReviewDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { error = "Пользователь не авторизован" });
+        }
+
+        try
+        {
+            var review = await _catalogService.UpdateReviewAsync(reviewId, userId, dto);
+            return Ok(review);
+        }
+        catch (InvalidOperationException ex)
+        {
+            if (ex.Message.Contains("не найден", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Удалить отзыв
+    /// </summary>
+    [HttpDelete("products/{productId:guid}/reviews/{reviewId:guid}")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> DeleteReview(Guid productId, Guid reviewId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { error = "Пользователь не авторизован" });
+        }
+
+        try
+        {
+            var result = await _catalogService.DeleteReviewAsync(reviewId, userId);
+            if (!result)
+            {
+                return NotFound(new { error = "Отзыв не найден" });
+            }
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Отметить отзыв как полезный
+    /// </summary>
+    [HttpPatch("products/{productId:guid}/reviews/{reviewId:guid}/helpful")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> ToggleHelpful(Guid productId, Guid reviewId)
+    {
+        var result = await _catalogService.ToggleHelpfulAsync(reviewId);
+        if (!result)
+        {
+            return NotFound(new { error = "Отзыв не найден" });
+        }
+
+        var review = await _catalogService.GetProductReviewsAsync(productId);
+        var target = review.FirstOrDefault(r => r.Id == reviewId);
+        return Ok(new { helpful = target?.Helpful ?? 0 });
+    }
+
+    /// <summary>
     /// Получить категории товаров
     /// </summary>
     [HttpGet("categories")]

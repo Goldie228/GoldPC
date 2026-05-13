@@ -550,6 +550,72 @@ public class CatalogService : ICatalogService
         return reviews.Select(MapToReviewDto);
     }
 
+    public async Task<ReviewDto> UpdateReviewAsync(Guid reviewId, Guid userId, UpdateReviewDto dto)
+    {
+        var review = await _reviewRepository.GetByIdAsync(reviewId);
+        if (review == null)
+        {
+            throw new InvalidOperationException($"Отзыв с ID {reviewId} не найден");
+        }
+
+        if (review.UserId != userId)
+        {
+            throw new InvalidOperationException("Вы можете редактировать только свои отзывы");
+        }
+
+        if (dto.Rating < 1 || dto.Rating > 5)
+        {
+            throw new InvalidOperationException("Рейтинг должен быть в диапазоне от 1 до 5");
+        }
+
+        review.Rating = dto.Rating;
+        review.Title = StringSanitizer.SanitizeText(dto.Title) ?? review.Title;
+        review.Comment = StringSanitizer.SanitizeText(dto.Comment) ?? review.Comment;
+        review.Pros = StringSanitizer.SanitizeText(dto.Pros) ?? review.Pros;
+        review.Cons = StringSanitizer.SanitizeText(dto.Cons) ?? review.Cons;
+
+        var updated = await _reviewRepository.UpdateAsync(review);
+
+        await UpdateProductRatingAsync(review.ProductId);
+
+        return MapToReviewDto(updated);
+    }
+
+    public async Task<bool> DeleteReviewAsync(Guid reviewId, Guid userId)
+    {
+        var review = await _reviewRepository.GetByIdAsync(reviewId);
+        if (review == null)
+        {
+            return false;
+        }
+
+        if (review.UserId != userId)
+        {
+            throw new InvalidOperationException("Вы можете удалять только свои отзывы");
+        }
+
+        var productId = review.ProductId;
+        await _reviewRepository.DeleteAsync(reviewId);
+
+        await UpdateProductRatingAsync(productId);
+
+        return true;
+    }
+
+    public async Task<bool> ToggleHelpfulAsync(Guid reviewId)
+    {
+        var review = await _reviewRepository.GetByIdAsync(reviewId);
+        if (review == null)
+        {
+            return false;
+        }
+
+        review.Helpful++;
+        await _reviewRepository.UpdateAsync(review);
+
+        return true;
+    }
+
     public async Task<(bool Success, string? Error)> ReserveStockAsync(IEnumerable<(Guid ProductId, int Quantity)> items)
     {
         // Упрощённая версия без транзакции (для совместимости с NpgsqlRetryingExecutionStrategy)
