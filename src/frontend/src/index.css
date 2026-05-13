@@ -129,6 +129,7 @@
   --border-accent: rgba(252, 213, 53, 0.3);
   --error: #ef4444;
   --bg-card: var(--color-surface-card, #1e2329);
+  --border: var(--color-hairline-dark, #2b3139);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
   --shadow-gold: 0 0 20px rgba(252, 213, 53, 0.08);
   --transition-fast: 0.15s ease;
@@ -171,10 +172,10 @@
   /* Checkbox */
 .filter-checkbox {
   appearance: none;
-  width: 16px;
-  height: 16px;
-  border: 1.5px solid #707a8a;
-  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #707a8a;
+  border-radius: 4px;
   background: transparent;
   cursor: pointer;
   position: relative;
@@ -188,12 +189,12 @@
 .filter-checkbox:checked::after {
   content: '';
   position: absolute;
-  left: 4.5px;
-  top: 1.5px;
-  width: 5px;
-  height: 9px;
+  left: 5.5px;
+  top: 2px;
+  width: 7px;
+  height: 12px;
   border: solid #181a20;
-  border-width: 0 2px 2px 0;
+  border-width: 0 2.5px 2.5px 0;
   transform: rotate(45deg);
 }
 .filter-checkbox:hover { border-color: #929aa5; }
@@ -202,9 +203,9 @@
 .filter-radio {
   appearance: none;
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border: 1.5px solid #707a8a;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #707a8a;
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
@@ -219,8 +220,51 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FCD535;
+}
+.filter-checkbox:checked {
+  background: #FCD535;
+  border-color: #FCD535;
+}
+.filter-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 5.5px;
+  top: 2px;
+  width: 7px;
+  height: 12px;
+  border: solid #181a20;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+.filter-checkbox:hover { border-color: #929aa5; }
+
+/* ======== 单选框 ======= */
+.filter-radio {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #707a8a;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  transition: all 150ms ease;
+}
+.filter-radio:checked { border-color: #FCD535; }
+.filter-radio:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #FCD535;
 }
