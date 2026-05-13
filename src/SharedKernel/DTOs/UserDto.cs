@@ -31,5 +31,7 @@ public class UserDto
     public string Phone { get; set; } = string.Empty;
 
     public bool IsActive { get; set; }
+
+    public bool IsEmailVerified { get; set; }
 }
 #pragma warning restore CS1591, SA1600

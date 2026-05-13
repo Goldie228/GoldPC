@@ -41,6 +41,9 @@ public static class StringSanitizer
 
     /// <summary>
     /// Комбинированная очистка для обычного текста (комментарии, отзывы).
+    /// Удаляет HTML-теги, но НЕ кодирует Unicode-символы (кириллицу и др.)
+    /// в HTML-сущности, чтобы данные хранились в читаемом виде.
+    /// Экранирование происходит на уровне представления (Handlebars, React).
     /// </summary>
     /// <returns></returns>
     public static string? SanitizeText(string? input)
@@ -50,9 +53,9 @@ public static class StringSanitizer
             return input;
         }
 
-        // Сначала удаляем теги, потом кодируем то, что осталось
-        var stripped = StripHtml(input);
-        return HtmlEncode(stripped);
+        // Удаляем теги, остальное оставляем как есть.
+        // XSS-защита: теги удалены, а экранирование — задача представления.
+        return StripHtml(input);
     }
 }
 #pragma warning restore SA1616

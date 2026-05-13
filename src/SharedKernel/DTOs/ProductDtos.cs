@@ -271,6 +271,22 @@ public record CreateReviewDto
 }
 
 /// <summary>
+/// DTO для обновления отзыва
+/// </summary>
+public record UpdateReviewDto
+{
+    public int Rating { get; init; }
+
+    public string? Title { get; init; }
+
+    public string? Comment { get; init; }
+
+    public string? Pros { get; init; }
+
+    public string? Cons { get; init; }
+}
+
+/// <summary>
 /// Параметры фильтрации товаров - соответствует ProductFilter в OpenAPI
 /// </summary>
 public record ProductFilterDto
