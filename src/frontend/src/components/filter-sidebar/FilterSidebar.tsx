@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   ChevronDown, ChevronUp, Search, RotateCcw,
   Tag, Star, Package, Grid3X3, DollarSign, Check,
   ArrowUpDown, LayoutGrid, List, Table2, SlidersHorizontal,
 } from 'lucide-react';
 import { catalogApi } from '../../api/catalog';
+import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
 import { DualRangeSlider } from './DualRangeSlider';
 import { Skeleton } from '../ui/Skeleton';
 import type { ProductCategory, Manufacturer, Category, FilterFacetAttribute } from '../../api/types';
@@ -417,8 +418,19 @@ export function FilterSidebar({
   }, [selectedCategory]);
 
   // === Computed ===
-  const filteredMfrs = manufacturers.filter(m =>
-    m.name.toLowerCase().includes(mfrSearch.toLowerCase())
+  // Дедупликация производителей с одинаковым отображаемым именем
+  // (например, BE и be quiet! — одно и то же)
+  const dedupedManufacturers = useMemo(() => {
+    const seen = new Set<string>();
+    return manufacturers.filter(m => {
+      const displayName = getDisplayManufacturerName(m.name);
+      if (seen.has(displayName)) return false;
+      seen.add(displayName);
+      return true;
+    });
+  }, [manufacturers]);
+  const filteredMfrs = dedupedManufacturers.filter(m =>
+    getDisplayManufacturerName(m.name).toLowerCase().includes(mfrSearch.toLowerCase())
   );
   const visibleMfrs = showAllMfrs ? filteredMfrs : filteredMfrs.slice(0, 6);
 
@@ -942,7 +954,7 @@ export function FilterSidebar({
                       aria-hidden
                     />
                   </span>
-                  <span className="text-xs transition-colors">{mfr.name}</span>
+                  <span className="text-xs transition-colors">{getDisplayManufacturerName(mfr.name)}</span>
                 </div>
               ))}
               {manufacturersLoading && (

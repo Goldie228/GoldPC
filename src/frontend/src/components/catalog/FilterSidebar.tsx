@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, Grid3X3, DollarSign, Package, Check, Star, Tag, Search } from 'lucide-react';
 import { catalogApi } from '../../api/catalog';
+import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
 import { RangeSlider } from '../ui/RangeSlider';
 import { Skeleton } from '../ui/Skeleton';
 import type { ProductCategory, Category, FilterFacetAttribute, Manufacturer } from '../../api/types';
@@ -483,6 +484,17 @@ export function FilterSidebar({ mobile = false,
     hasNonDefaultAvailability ||
     Object.keys(selectedSpecifications).length > 0;
 
+  // Дедупликация производителей с одинаковым отображаемым именем
+  const dedupedManufacturers = useMemo(() => {
+    const seen = new Set<string>();
+    return manufacturers.filter(m => {
+      const displayName = getDisplayManufacturerName(m.name);
+      if (seen.has(displayName)) return false;
+      seen.add(displayName);
+      return true;
+    });
+  }, [manufacturers]);
+
   return (
     <aside className={`sticky top-[100px] w-full bg-[var(--bg-elevated)] border-r border-[var(--border-muted)] border-t border-[var(--border-muted)] border-b border-[var(--border-muted)] border-l-2 border-l-transparent py-5 px-4 overflow-y-auto overflow-x-visible max-h-[calc(100vh-120px)] shadow-lg ${mobile ? 'relative top-auto left-auto w-full h-auto max-h-none overflow-visible bg-transparent backdrop-filter-none border-none shadow-none p-0' : ''}`}>
       <div className="mb-4 pb-2.5 border-b border-[var(--border-muted)] relative">
@@ -801,10 +813,10 @@ export function FilterSidebar({ mobile = false,
               <Skeleton width="100%" height={24} borderRadius="sm" />
               <Skeleton width="100%" height={24} borderRadius="sm" />
             </>
-          ) : manufacturers.length === 0 ? (
+          ) : dedupedManufacturers.length === 0 ? (
             <span className="block text-[0.75rem] text-[var(--fg-dim)] py-2 px-3 italic">Нет производителей</span>
           ) : (
-            manufacturers
+            dedupedManufacturers
               .filter((m) => {
                 if (!restrictedManufacturerPlatform) return true;
                 const name = m.name.toLowerCase();
@@ -832,7 +844,7 @@ export function FilterSidebar({ mobile = false,
                   <span className="w-4 h-4 border border-[var(--fg-dim)] rounded-sm flex items-center justify-center mr-3 transition-all duration-200 flex-shrink-0" aria-hidden="true">
                     <Check size={10} className={`opacity-0 text-[var(--accent)] transition-opacity duration-200 ${selectedManufacturerIds.includes(m.id) ? 'opacity-100' : ''}`} aria-hidden />
                   </span>
-                  <span className="text-[0.8rem] text-[var(--fg-muted)] transition-colors">{m.name}</span>
+                  <span className="text-[0.8rem] text-[var(--fg-muted)] transition-colors">{getDisplayManufacturerName(m.name)}</span>
                 </label>
               ))
           )}
