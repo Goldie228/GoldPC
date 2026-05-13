@@ -11,6 +11,7 @@ import type {
   ProductReview,
   ProductReviewsResponse,
   CreateReviewRequest,
+  UpdateReviewRequest,
 } from './types';
 
 /** Маппинг frontend category -> backend slug для API */
@@ -188,6 +189,29 @@ export const catalogApi = {
    */
   async addProductReview(productId: string, payload: CreateReviewRequest): Promise<ProductReview> {
     const response = await api.post<ProductReview>(`/catalog/products/${productId}/reviews`, payload);
+    return response.data;
+  },
+
+  /**
+   * Обновить отзыв
+   */
+  async updateProductReview(productId: string, reviewId: string, payload: UpdateReviewRequest): Promise<ProductReview> {
+    const response = await api.put<ProductReview>(`/catalog/products/${productId}/reviews/${reviewId}`, payload);
+    return response.data;
+  },
+
+  /**
+   * Удалить отзыв
+   */
+  async deleteProductReview(productId: string, reviewId: string): Promise<void> {
+    await api.delete(`/catalog/products/${productId}/reviews/${reviewId}`);
+  },
+
+  /**
+   * Отметить отзыв как полезный
+   */
+  async toggleHelpful(productId: string, reviewId: string): Promise<{ helpful: number }> {
+    const response = await api.patch<{ helpful: number }>(`/catalog/products/${productId}/reviews/${reviewId}/helpful`);
     return response.data;
   },
 

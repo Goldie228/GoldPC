@@ -42,6 +42,12 @@ const AUTH_ERROR_MESSAGES: Record<number, string> = {
 export const getAuthErrorMessage = (error: unknown): string => {
   if (error instanceof AxiosError && error.response) {
     const status = error.response.status;
+    // Пробуем достать сообщение из тела ответа (ApiResponse.message)
+    const body = error.response.data as { message?: string } | undefined;
+    if (body?.message) {
+      return body.message;
+    }
+    // Если тела нет — используем стандартное сообщение для статуса
     return AUTH_ERROR_MESSAGES[status] || 'Произошла ошибка. Попробуйте еще раз.';
   }
   return 'Проблема с подключением. Проверьте интернет соединение.';
@@ -87,7 +93,7 @@ export const authService = {
    * Получение текущего пользователя
    */
   async getCurrentUser(): Promise<AuthResponse['user']> {
-    const response = await apiClient.get(`${AUTH_BASE_URL}/me`);
+    const response = await apiClient.get(`${AUTH_BASE_URL}/profile`);
     return extractData<AuthResponse['user']>(response.data);
   },
 
@@ -103,5 +109,31 @@ export const authService = {
    */
   async resetPassword(data: ResetPasswordRequest): Promise<void> {
     await apiClient.post(`${AUTH_BASE_URL}/reset-password`, data);
+  },
+
+  /**
+   * Валидация токена сброса пароля (без мутаций).
+   * Вызывается при загрузке страницы reset-password, чтобы сразу
+   * определить, действителен ли токен, или показывать expired-экран.
+   * Бросает ошибку, если токен недействителен — используйте getAuthErrorMessage.
+   */
+  async validateResetToken(token: string): Promise<void> {
+    await apiClient.post(`${AUTH_BASE_URL}/validate-reset-token`, { token });
+  },
+
+  /**
+   * Отправка письма с подтверждением email (или повторная отправка).
+   * Требует авторизации — userId извлекается из JWT на сервере.
+   */
+  async sendVerificationEmail(): Promise<void> {
+    await apiClient.post(`${AUTH_BASE_URL}/send-verification`);
+  },
+
+  /**
+   * Подтверждение email по токену из письма.
+   * Не требует авторизации — токен одноразовый.
+   */
+  async verifyEmail(token: string): Promise<void> {
+    await apiClient.post(`${AUTH_BASE_URL}/verify-email`, { token });
   },
 };
