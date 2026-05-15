@@ -269,7 +269,6 @@ export function AboutPage() {
       {/* CTA */}
       <section className="py-16 px-4 md:px-8 max-w-[1440px] mx-auto">
         <div className="bg-surface-card rounded-xl border border-hairline-dark p-8 md:p-12 text-center relative overflow-hidden">
-          <div className="absolute top-[-100px] right-[-100px] w-[300px] h-[300px] bg-gold/5 rounded-full blur-[60px]" />
           <div className="relative z-10">
             <h2 className="text-2xl md:text-3xl font-bold text-body-text mb-3">
               Готовы собрать ПК своей мечты?

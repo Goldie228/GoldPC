@@ -25,7 +25,7 @@ function StockBadge({ stock }: { stock: number }) {
     config = { dot: 'bg-price-drop', text: 'text-price-drop', label: 'В наличии' };
   }
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-surface-card ${config.text}`}>
+    <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-surface-elevated/80 backdrop-blur-sm ${config.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
       {config.label}
     </span>
@@ -125,8 +125,8 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
         setHovered(false);
         setCurrentImageIndex(0);
       }}
-      className={`bg-surface-card rounded-xl overflow-hidden flex flex-col transition-all duration-150 text-white ${
-        hovered ? 'bg-surface-elevated ring-1 ring-hairline-dark' : ''
+      className={`bg-surface-card rounded-xl overflow-hidden flex flex-col transition-all duration-300 ease-out text-white ${
+        hovered ? 'bg-surface-elevated -translate-y-1 shadow-lg shadow-black/30 ring-1 ring-gold/20' : ''
       }`}
     >
       {/* Image Zone - WHITE BACKGROUND */}
@@ -135,7 +135,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
         {product.shortName && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
             <span
-              className="text-white font-bold uppercase tracking-tighter leading-none whitespace-nowrap"
+              className="text-surface-elevated/50 font-bold uppercase tracking-tighter leading-none whitespace-nowrap"
               style={{ fontSize: '5.5rem', textShadow: '0 0 40px rgba(0,0,0,0.06)' }}
             >
               {product.shortName}
@@ -148,7 +148,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
           <img
             src={getProductImageUrl(images[currentImageIndex].url) ?? ''}
             alt={images[currentImageIndex].alt ?? product.name}
-            className="w-full h-full object-contain p-5 transition-transform duration-300 hover:scale-105 relative z-10"
+            className="w-full h-full object-contain p-5 transition-transform duration-300 hover:scale-105 relative z-10 [backface-visibility:hidden] [will-change:transform]"
             loading="lazy"
           />
         ) : (
@@ -162,14 +162,14 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
           <>
             <button
               onClick={handlePrevImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-surface-card/90 text-body-text flex items-center justify-center z-30 hover:bg-surface-elevated transition-all shadow-sm"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-surface-elevated/90 text-body-text flex items-center justify-center z-30 hover:bg-surface-elevated transition-all shadow-md backdrop-blur-sm"
               aria-label="Предыдущее изображение"
             >
               <ChevronLeft size={14} />
             </button>
             <button
               onClick={handleNextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-surface-card/90 text-body-text flex items-center justify-center z-30 hover:bg-surface-elevated transition-all shadow-sm"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg bg-surface-elevated/90 text-body-text flex items-center justify-center z-30 hover:bg-surface-elevated transition-all shadow-md backdrop-blur-sm"
               aria-label="Следующее изображение"
             >
               <ChevronRight size={14} />
@@ -207,7 +207,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-30">
           {hasDiscount && (
-            <span className="h-6 px-2.5 bg-surface-card/90 text-price-drop text-[11px] font-bold rounded-md flex items-center backdrop-blur-sm">
+            <span className="h-6 px-2.5 bg-surface-elevated/90 text-price-drop text-[11px] font-bold rounded-md flex items-center backdrop-blur-sm shadow-sm">
               -{discountPercent}%
             </span>
           )}
@@ -230,10 +230,10 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
               toggleWishlist(product.id);
               showToast(newState ? 'Добавлено в избранное' : 'Удалено из избранного', newState ? 'success' : 'info');
             }}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm ${
+            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm backdrop-blur-sm ${
               isInWishlist(product.id)
                 ? 'bg-price-rise/20 text-price-rise'
-                : 'bg-surface-card text-muted-text hover:text-price-rise'
+                : 'bg-surface-elevated/80 text-muted-text hover:text-price-rise hover:bg-surface-elevated'
             }`}
             title="В избранное"
           >
@@ -256,10 +256,10 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
                 }
               }
             }}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm ${
+            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm backdrop-blur-sm ${
               isInComparison(product.id)
                 ? 'bg-info-blue/20 text-info-blue'
-                : 'bg-surface-card text-muted-text hover:text-info-blue'
+                : 'bg-surface-elevated/80 text-muted-text hover:text-info-blue hover:bg-surface-elevated'
             }`}
             title="Сравнить"
           >
@@ -274,7 +274,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
       </div>
 
       {/* Information */}
-      <div className="p-4 flex flex-col gap-2 flex-1 text-white">
+      <div className="p-4 pb-3 flex flex-col gap-2 flex-1 text-white border-t border-hairline-dark/50">
         <span className="text-[10px] text-white/70 font-medium uppercase tracking-wider truncate">
           {getDisplayManufacturerName(product.manufacturer?.name) || product.brand || ''}
         </span>
@@ -312,15 +312,15 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
         </div>
 
         {isOutOfStock ? (
-          <button className="w-full h-10 bg-gold text-gold-ink text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 hover:bg-gold-active transition-colors">
+          <button className="w-full h-10 bg-gold text-gold-ink text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 hover:bg-gold-active transition-colors">
             <Bell size={14} />
             Уведомить
           </button>
         ) : inCart ? (
-          <div className="flex items-center justify-between w-full h-10 bg-surface-card border border-hairline rounded-sm">
+          <div className="flex items-center justify-between w-full h-10 bg-surface-elevated border border-hairline-dark rounded-lg">
             <button
               onClick={(e) => handleUpdateQty(e, -1)}
-              className="w-9 h-full flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all rounded-sm"
+              className="w-9 h-full flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-card transition-all rounded-l-lg"
               aria-label="Уменьшить количество"
             >
               <Minus size={14} />
@@ -330,7 +330,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
             </span>
             <button
               onClick={(e) => handleUpdateQty(e, 1)}
-              className="w-9 h-full flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all disabled:opacity-30 rounded-sm"
+              className="w-9 h-full flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all disabled:opacity-30 rounded-r-lg"
               disabled={quantityInCart >= product.stock}
               aria-label="Увеличить количество"
             >
@@ -340,7 +340,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
         ) : (
           <button
             onClick={handleAddToCart}
-            className="w-full h-10 bg-price-drop text-on-dark text-sm font-semibold rounded-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-[0.98]"
+            className="w-full h-10 bg-price-drop text-on-dark text-sm font-semibold rounded-lg flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-[0.98]"
           >
             <ShoppingCart size={14} />
             В корзину

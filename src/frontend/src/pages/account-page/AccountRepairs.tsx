@@ -1,10 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useServiceTickets } from '../../hooks/useServiceTickets';
-import { useToast } from '../../hooks/useToast';
-import { TICKET_STATUSES } from '../../api/service-tickets';
-import type { ServiceTicket } from '../../api/service-tickets';
+import { TICKET_STATUSES } from '../../api/services';
+import type { ServiceTicket } from '../../api/services';
 import { Wrench, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+
+const statusColorMap: Record<string, string> = {
+  blue: 'bg-[#3b82f6]/10 text-[#3b82f6]',
+  yellow: 'bg-[#FCD535]/10 text-[#FCD535]',
+  orange: 'bg-[#f97316]/10 text-[#f97316]',
+  purple: 'bg-[#a855f7]/10 text-[#a855f7]',
+  cyan: 'bg-[#06b6d4]/10 text-[#06b6d4]',
+  green: 'bg-[#0ecb81]/10 text-[#0ecb81]',
+  gray: 'bg-[#707a8a]/10 text-[#707a8a]',
+  red: 'bg-[#f6465d]/10 text-[#f6465d]',
+};
 
 function getStatusLabel(status: string): string {
   const statusItem = TICKET_STATUSES.find(s => s.key === status);
@@ -27,8 +37,6 @@ function getStatusColor(status: string): string {
  * - Real-time status updates via polling
  */
 export function AccountRepairs() {
-  const navigate = useNavigate();
-  const { showToast } = useToast();
   const { getMyTickets } = useServiceTickets();
 
   const [activeFilter, setActiveFilter] = useState('all');
@@ -54,17 +62,17 @@ export function AccountRepairs() {
         setTickets(result.items);
       }
     } catch {
-      showToast('Ошибка загрузки списка ремонтов', 'error');
+      // Silent fail - show empty state instead
     } finally {
       setLoading(false);
     }
-  }, [page, activeFilter, showToast, getMyTickets]);
+  }, [page, activeFilter, getMyTickets]);
 
   const stats = {
     total: tickets.length,
     active: tickets.filter(t => !['Completed', 'Cancelled'].includes(t.status)).length,
     completed: tickets.filter(t => t.status === 'Completed').length,
-    urgent: tickets.filter(t => t.priority === 'urgent' || t.status === 'Ready').length,
+    urgent: tickets.filter(t => t.priority === 'urgent' || t.status === 'ReadyForPickup').length,
   };
 
   const filterOptions = [
@@ -78,122 +86,146 @@ export function AccountRepairs() {
 
   if (loading && tickets.length === 0) {
     return (
-      <div className="account-repairs">
-        <div className="loading">Загрузка...</div>
+      <div className="bg-[#0b0e11] min-h-screen flex items-center justify-center">
+        <div className="text-[#707a8a] text-lg">Загрузка...</div>
       </div>
     );
   }
 
   return (
-    <div className="account-repairs">
-      <div className="account-repairs__header">
-        <h1>Мои ремонты</h1>
-        <Link to="/service-request" className="btn btn-primary">
-          <Wrench size={18} />
-          Новый запрос на ремонт
-        </Link>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="account-repairs__stats">
-        <div className="stats-card">
-          <div className="stats-card__icon blue">
-            <Wrench />
-          </div>
-          <div className="stats-card__content">
-            <div className="stats-card__value">{stats.total}</div>
-            <div className="stats-card__label">Всего заявок</div>
-          </div>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-card__icon yellow">
-            <Clock />
-          </div>
-          <div className="stats-card__content">
-            <div className="stats-card__value">{stats.active}</div>
-            <div className="stats-card__label">В работе</div>
-          </div>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-card__icon green">
-            <CheckCircle />
-          </div>
-          <div className="stats-card__content">
-            <div className="stats-card__value">{stats.completed}</div>
-            <div className="stats-card__label">Завершено</div>
-          </div>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-card__icon red">
-            <AlertCircle />
-          </div>
-          <div className="stats-card__content">
-            <div className="stats-card__value">{stats.urgent}</div>
-            <div className="stats-card__label">Требуют внимания</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="account-repairs__filters">
-        {filterOptions.map(filter => (
-          <button
-            key={filter.key}
-            className={`filter-btn ${activeFilter === filter.key ? 'active' : ''}`}
-            onClick={() => setActiveFilter(filter.key)}
+    <div className="bg-[#0b0e11] min-h-screen">
+      <div className="max-w-[1280px] mx-auto px-4 py-6">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-[#eaecef]">Мои ремонты</h1>
+          <Link
+            to="/service-request"
+            className="inline-flex items-center gap-2 bg-[#FCD535] text-[#181a20] px-5 py-2.5 rounded-lg font-semibold text-sm hover:brightness-110 transition-all"
           >
-            {filter.label}
-          </button>
-        ))}
-      </div>
+            <Wrench size={18} />
+            Новый запрос на ремонт
+          </Link>
+        </div>
 
-      {/* Tickets List */}
-      <div className="account-repairs__list">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-4 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-[#3b82f6]/10 flex items-center justify-center text-[#3b82f6] shrink-0">
+              <Wrench size={22} />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-[#eaecef]">{stats.total}</div>
+              <div className="text-sm text-[#707a8a]">Всего заявок</div>
+            </div>
+          </div>
+
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-4 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-[#FCD535]/10 flex items-center justify-center text-[#FCD535] shrink-0">
+              <Clock size={22} />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-[#eaecef]">{stats.active}</div>
+              <div className="text-sm text-[#707a8a]">В работе</div>
+            </div>
+          </div>
+
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-4 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-[#0ecb81]/10 flex items-center justify-center text-[#0ecb81] shrink-0">
+              <CheckCircle size={22} />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-[#eaecef]">{stats.completed}</div>
+              <div className="text-sm text-[#707a8a]">Завершено</div>
+            </div>
+          </div>
+
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-4 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-lg bg-[#f6465d]/10 flex items-center justify-center text-[#f6465d] shrink-0">
+              <AlertCircle size={22} />
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-[#eaecef]">{stats.urgent}</div>
+              <div className="text-sm text-[#707a8a]">Требуют внимания</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {filterOptions.map(filter => (
+            <button
+              key={filter.key}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeFilter === filter.key
+                  ? 'bg-[#FCD535] text-[#181a20]'
+                  : 'bg-[#1e2329] text-[#707a8a] border border-[#2b3139] hover:text-[#eaecef] hover:border-[#707a8a]'
+              }`}
+              onClick={() => setActiveFilter(filter.key)}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tickets List */}
         {tickets.length === 0 ? (
-          <div className="empty-state">
-            <Wrench size={48} className="empty-state__icon" />
-            <h3>У вас пока нет заявок на ремонт</h3>
-            <p>Вы можете отправить устройство на диагностику и ремонт</p>
-            <Link to="/service-request" className="btn btn-primary">
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-12 text-center">
+            <div className="flex justify-center mb-4 text-[#707a8a]">
+              <Wrench size={48} />
+            </div>
+            <h3 className="text-lg font-semibold text-[#eaecef] mb-2">
+              У вас пока нет заявок на ремонт
+            </h3>
+            <p className="text-[#707a8a] text-sm mb-6">
+              Вы можете отправить устройство на диагностику и ремонт
+            </p>
+            <Link
+              to="/service-request"
+              className="inline-flex items-center gap-2 bg-[#FCD535] text-[#181a20] px-5 py-2.5 rounded-lg font-semibold text-sm hover:brightness-110 transition-all"
+            >
               Создать заявку
             </Link>
           </div>
         ) : (
-          <div className="tickets-table">
-            <div className="tickets-table__header">
-              <div className="tickets-table__cell">Номер</div>
-              <div className="tickets-table__cell">Устройство</div>
-              <div className="tickets-table__cell">Статус</div>
-              <div className="tickets-table__cell">Дата создания</div>
-              <div className="tickets-table__cell">Действия</div>
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] overflow-hidden">
+            {/* Table header */}
+            <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-[#2b3139] text-sm font-medium text-[#707a8a]">
+              <div className="col-span-2">Номер</div>
+              <div className="col-span-3">Устройство</div>
+              <div className="col-span-2">Статус</div>
+              <div className="col-span-3">Дата создания</div>
+              <div className="col-span-2 text-right">Действия</div>
             </div>
 
+            {/* Table rows */}
             {tickets.map(ticket => (
-              <div key={ticket.id} className="tickets-table__row">
-                <div className="tickets-table__cell">
-                  <span className="ticket-number">#{ticket.ticketNumber}</span>
+              <div
+                key={ticket.id}
+                className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-[#2b3139] last:border-b-0 items-center hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="col-span-2 text-[#FCD535] font-mono text-sm">
+                  #{ticket.ticketNumber}
                 </div>
-                <div className="tickets-table__cell">
-                  <div className="device-info">
-                    <div className="device-type">{ticket.deviceType}</div>
-                    <div className="device-model">{ticket.brand} {ticket.model}</div>
-                  </div>
+                <div className="col-span-3">
+                  <div className="text-[#eaecef] text-sm font-medium">{ticket.deviceType}</div>
+                  <div className="text-[#707a8a] text-xs">{ticket.brand} {ticket.model}</div>
                 </div>
-                <div className="tickets-table__cell">
-                  <span className={`status-badge status-badge--${getStatusColor(ticket.status)}`}>
+                <div className="col-span-2">
+                  <span
+                    className={`inline-block px-3 py-1 rounded-lg text-xs font-medium ${
+                      statusColorMap[getStatusColor(ticket.status)] || 'bg-[#707a8a]/10 text-[#707a8a]'
+                    }`}
+                  >
                     {getStatusLabel(ticket.status)}
                   </span>
                 </div>
-                <div className="tickets-table__cell">
+                <div className="col-span-3 text-[#707a8a] text-sm">
                   {new Date(ticket.createdAt).toLocaleDateString('ru-RU')}
                 </div>
-                <div className="tickets-table__cell">
+                <div className="col-span-2 text-right">
                   <Link
                     to={`/my-repairs/${ticket.id}`}
-                    className="btn btn-sm btn-outline"
+                    className="inline-flex items-center text-[#FCD535] text-sm font-medium hover:brightness-110 transition-all"
                   >
                     Подробнее
                   </Link>

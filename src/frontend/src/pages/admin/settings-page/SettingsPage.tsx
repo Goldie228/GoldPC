@@ -32,7 +32,7 @@ export function SettingsPage() {
     try {
       const data = await getSettings();
       setSettings(data);
-      setFormData(data);
+      setFormData(data ?? {});
     } catch (err) {
       setError('Не удалось загрузить настройки. Попробуйте позже.');
       console.error('Failed to fetch settings:', err);
@@ -77,7 +77,7 @@ export function SettingsPage() {
     try {
       const defaultSettings = await resetSettings();
       setSettings(defaultSettings);
-      setFormData(defaultSettings);
+      setFormData(defaultSettings ?? {});
       alert('Настройки сброшены к значениям по умолчанию');
     } catch (err) {
       console.error('Failed to reset settings:', err);

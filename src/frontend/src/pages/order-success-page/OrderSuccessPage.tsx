@@ -34,7 +34,7 @@ export function OrderSuccessPage() {
             <div className="w-[72px] h-[72px] rounded-full inline-flex items-center justify-center text-gold bg-border-muted border border-border-muted">
               <Check size={32} />
             </div>
-            <h1 className="m-0 text-title-lg font-semibold text-foreground">Заказ оформлен!</h1>
+            <h1 className="m-0 text-2xl font-semibold text-foreground">Заказ оформлен!</h1>
           </div>
           <div className="grid gap-2.5 p-5 bg-border-muted border border-border-muted rounded-lg">
             <p className="m-0 text-sm leading-normal text-muted-foreground">

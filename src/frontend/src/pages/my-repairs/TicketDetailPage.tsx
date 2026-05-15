@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useServiceTickets } from '../../hooks/useServiceTickets';
 import { useToast } from '../../hooks/useToast';
-import { TICKET_STATUSES } from '../../api/service-tickets';
-import type { ServiceTicket, TicketStatusHistory, TicketMessage } from '../../api/service-tickets';
+import { TICKET_STATUSES } from '../../api/services';
+import type { ServiceTicket, TicketStatusHistory, TicketMessage } from '../../api/services';
 import { Button, Input } from '../../components/ui';
 import { ArrowLeft, Send, Paperclip, Image } from 'lucide-react';
 
@@ -62,8 +62,8 @@ export function TicketDetailPage() {
       ]);
 
       if (ticketData) setTicket(ticketData);
-      setHistory(historyData);
-      setMessages(messagesData);
+      setHistory(historyData ?? []);
+      setMessages(messagesData ?? []);
     } catch {
       showToast('Ошибка загрузки данных заявки', 'error');
     } finally {

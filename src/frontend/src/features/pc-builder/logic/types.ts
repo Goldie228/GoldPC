@@ -3,7 +3,7 @@
  * Extracted from usePCBuilder.ts for better organization
  */
 
-import type { Product, ProductSpecifications } from '../../api/types';
+import type { Product } from '../../../api/types';
 
 export type PCComponentType =
   | 'cpu'
@@ -33,7 +33,7 @@ export interface CompatibilityResult {
   warnings: string[];
   bottleneck?: string;
   bottleneckSeverity?: 'balanced' | 'cpu-bound' | 'gpu-bound' | null;
-  performanceScores?: import('../../utils/performanceCalculator').PerformanceResult;
+  performanceScores?: import('./performance').PerformanceResult;
   apiRecommendedPsu?: number;
   apiPowerConsumption?: number;
 }

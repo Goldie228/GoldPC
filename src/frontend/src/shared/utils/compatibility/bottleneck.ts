@@ -3,12 +3,9 @@
  * Analytical logic layer for CPU/GPU bottleneck detection
  */
 
-import type { Product } from '../../../api/types';
 import type { CompatibilityWarning } from './types';
 import type { BottleneckCategory } from '../../../config/compatibilityTypes';
 import rulesConfig from '../../../config/compatibilityRules.json';
-
-import { extractPerformanceScore } from './extractors';
 
 const BOTTLENECK_CATEGORIES: Record<string, BottleneckCategory> = rulesConfig.bottleneckDetection.categories;
 

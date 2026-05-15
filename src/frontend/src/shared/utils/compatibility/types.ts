@@ -8,6 +8,7 @@ import type {
   SocketGroup,
   BottleneckCategory,
 } from '../../../config/compatibilityTypes';
+export type { CompatibilityRulesConfig, SocketGroup, BottleneckCategory } from '../../../config/compatibilityTypes';
 
 export type ComponentCategory = 'cpu' | 'gpu' | 'motherboard' | 'ram' | 'storage' | 'psu' | 'case' | 'cooling';
 export type CompatibilitySeverity = 'Error' | 'Warning' | 'Info';

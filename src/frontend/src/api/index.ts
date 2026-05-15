@@ -35,11 +35,23 @@ export type {
   PaginationMeta,
   PagedResponse,
   Uuid,
-  // Auth types
-  LoginRequest,
-  RegisterRequest,
-  AuthResponse,
-  User,
+// Auth types
+   LoginRequest,
+   RegisterRequest,
+   AuthResponse,
+   User,
+   ChangePasswordRequest,
+   TwoFactorEnableRequest,
+   TwoFactorVerifyRequest,
+   TwoFactorDisableRequest,
+   TwoFactorStatusResponse,
+   NotificationPreferenceRequest,
+   NotificationPreferenceResponse,
+   LoginHistoryItem,
   // Review types
   UpdateReviewRequest,
 } from './types';
+
+// Warranty
+export { warrantyApi } from './warranty';
+export type { WarrantyCard, WarrantyStatus, PagedResult } from './warranty';

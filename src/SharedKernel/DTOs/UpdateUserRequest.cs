@@ -23,5 +23,9 @@ public class UpdateUserRequest
     [Required(ErrorMessage = "Телефон обязателен")]
     [RegularExpression(@"^\+375\s?\(?\d{2}\)?\s?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}$", ErrorMessage = "Телефон должен быть в формате Беларуси: +375 (XX) XXX-XX-XX")]
     public string? Phone { get; set; }
+
+    public DateTime? BirthDate { get; set; }
+
+    public string? Company { get; set; }
 }
 #pragma warning restore CS1591, SA1600

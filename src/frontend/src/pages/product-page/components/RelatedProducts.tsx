@@ -144,20 +144,14 @@ export function RelatedProducts({ product, productId }: RelatedProductsProps): R
 
       {/* Product Track */}
       <div
-        className={`relative ${atStart ? 'before:opacity-0' : 'before:opacity-100'} ${atEnd ? 'after:opacity-0' : 'after:opacity-100'} ${
-          !canScrollX ? 'before:opacity-0 after:opacity-0' : ''
-        } before:content-[''] before:absolute before:top-0 before:bottom-0 before:w-[70px] before:pointer-events-none before:z-[2] before:transition-opacity before:duration-150 before:left-0 before:bg-[linear-gradient(90deg,var(--bg),transparent)] after:content-[''] after:absolute after:top-0 after:bottom-0 after:w-[70px] after:pointer-events-none after:z-[2] after:transition-opacity after:duration-150 after:right-0 after:bg-[linear-gradient(270deg,var(--bg),transparent)]`}
+        ref={trackRef}
+        className="flex gap-4 overflow-x-auto overflow-y-hidden p-1 pb-2.5 scroll-smooth scrollbar-thin scrollbar-color-[var(--border)_transparent]"
       >
-        <div
-          ref={trackRef}
-          className="flex gap-4 overflow-x-auto overflow-y-hidden p-1 pb-2.5 scroll-smooth scrollbar-thin scrollbar-color-[var(--border)_transparent]"
-        >
           {relatedProducts.map((p) => (
             <div key={p.id} className="flex-shrink-0 w-[min(260px,78vw)] sm:w-[260px] lg:w-[280px]">
               <ProductCard product={p} />
             </div>
           ))}
-        </div>
       </div>
     </motion.section>
   );

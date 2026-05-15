@@ -11,7 +11,7 @@ interface ApiErrorResponse {
   errors?: Record<string, string[]>;
 }
 
-interface DeliveryQuoteRequest {
+export interface DeliveryQuoteRequest {
   deliveryMethod: 'Pickup' | 'Delivery';
   subtotal: number;
   city?: string;

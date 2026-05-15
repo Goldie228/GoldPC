@@ -6,22 +6,23 @@ using GoldPC.SharedKernel.Models;
 using Microsoft.EntityFrameworkCore;
 using GoldPC.Shared.Services.Interfaces;
 using GoldPC.Shared.Services;
-using PagedResult = GoldPC.SharedKernel.DTOs.PagedResult;
+using PagedResultServiceRequest = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>;
 
 namespace GoldPC.ServicesService.Services;
 
 public interface IServicesService
 {
     Task<ServiceRequestDto?> GetByIdAsync(Guid id);
-    Task<PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>> GetByClientIdAsync(Guid clientId, int page, int pageSize);
-    Task<PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>> GetByMasterIdAsync(Guid masterId, int page, int pageSize);
-    Task<PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>> GetAllAsync(int page, int pageSize, ServiceRequestStatus? status = null);
+    Task<PagedResultServiceRequest> GetByClientIdAsync(Guid clientId, int page, int pageSize);
+    Task<PagedResultServiceRequest> GetByMasterIdAsync(Guid masterId, int page, int pageSize);
+    Task<PagedResultServiceRequest> GetAllAsync(int page, int pageSize, ServiceRequestStatus? status = null);
     Task<(ServiceRequestDto? Request, string? Error)> CreateAsync(Guid clientId, CreateServiceRequestRequest request);
     Task<(ServiceRequestDto? Request, string? Error)> AssignMasterAsync(Guid id, Guid masterId);
     Task<(ServiceRequestDto? Request, string? Error)> UpdateStatusAsync(Guid id, ServiceRequestStatus status, Guid changedBy, string? comment = null);
     Task<(ServiceRequestDto? Request, string? Error)> CompleteAsync(Guid id, Guid masterId, UpdateServiceRequestRequest request);
     Task<(bool Success, string? Error)> CancelAsync(Guid id, Guid userId);
     Task<List<ServiceTypeDto>> GetServiceTypesAsync();
+    Task<ServiceTypeDto?> GetServiceTypeBySlugAsync(string slug);
     Task<(ServiceRequestDto? Request, string? Error)> AddPartAsync(Guid id, Guid masterId, ServicePartDto partDto);
     Task<WorkReportDto?> GenerateReportAsync(Guid id);
 }
@@ -35,6 +36,7 @@ public class ServicesService : IServicesService
     private readonly ServicesDbContext _context;
     private readonly ILogger<ServicesService> _logger;
     private readonly INotificationService _notificationService;
+    private readonly IWarrantyClient? _warrantyClient;
     
     /// <summary>
     /// Максимальное количество активных заявок у одного мастера (ФТ-4.6)
@@ -64,7 +66,7 @@ public class ServicesService : IServicesService
         return request != null ? MapToDto(request) : null;
     }
 
-    public async Task<PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>> GetByClientIdAsync(Guid clientId, int page, int pageSize)
+    public async Task<PagedResultServiceRequest> GetByClientIdAsync(Guid clientId, int page, int pageSize)
     {
         var query = _context.ServiceRequests
             .Include(sr => sr.ServiceType)
@@ -74,7 +76,7 @@ public class ServicesService : IServicesService
         var totalCount = await query.CountAsync();
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-        return new PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>
+        return new PagedResultServiceRequest
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
@@ -83,7 +85,7 @@ public class ServicesService : IServicesService
         };
     }
 
-    public async Task<PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>> GetByMasterIdAsync(Guid masterId, int page, int pageSize)
+    public async Task<PagedResultServiceRequest> GetByMasterIdAsync(Guid masterId, int page, int pageSize)
     {
         var query = _context.ServiceRequests
             .Include(sr => sr.ServiceType)
@@ -93,7 +95,7 @@ public class ServicesService : IServicesService
         var totalCount = await query.CountAsync();
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-        return new PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>
+        return new PagedResultServiceRequest
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
@@ -102,7 +104,7 @@ public class ServicesService : IServicesService
         };
     }
 
-    public async Task<GoldPC.SharedKernel.DTOs.PagedResult<ServiceRequestDto>> GetAllAsync(int page, int pageSize, ServiceRequestStatus? status = null)
+    public async Task<PagedResultServiceRequest> GetAllAsync(int page, int pageSize, ServiceRequestStatus? status = null)
     {
         var query = _context.ServiceRequests.Include(sr => sr.ServiceType).AsQueryable();
 
@@ -114,7 +116,7 @@ public class ServicesService : IServicesService
         var totalCount = await query.CountAsync();
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-        return new PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>
+        return new PagedResultServiceRequest
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
@@ -444,6 +446,21 @@ public class ServicesService : IServicesService
                 EstimatedDurationMinutes = st.EstimatedDurationMinutes
             })
             .ToListAsync();
+    }
+
+    public async Task<ServiceTypeDto?> GetServiceTypeBySlugAsync(string slug)
+    {
+        return await _context.ServiceTypes
+            .Where(st => st.IsActive && st.Slug == slug.ToLower())
+            .Select(st => new ServiceTypeDto
+            {
+                Id = st.Id,
+                Name = st.Name,
+                Description = st.Description,
+                BasePrice = st.BasePrice,
+                EstimatedDurationMinutes = st.EstimatedDurationMinutes
+            })
+            .FirstOrDefaultAsync();
     }
 
     private static ServiceRequestDto MapToDto(ServiceRequest request)

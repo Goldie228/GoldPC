@@ -10,7 +10,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Modal } from '../../ui/Modal/Modal';
 import { Button } from '../../ui/Button';
-import type { PCBuilderSelectedState } from '../../../hooks';
+import type { PCBuilderSelectedState, SelectedComponent } from '../../../hooks';
 import { PC_BUILDER_SLOTS } from '../../../hooks';
 import {
   calculatePerformance,
@@ -88,7 +88,7 @@ function getComponentRows(s: PCBuilderSelectedState): ComponentRow[] {
       }
       continue;
     }
-    const comp = (s as Record<string, SelectedComponent | undefined>)[slot.key];
+    const comp = (s as unknown as Record<string, SelectedComponent | undefined>)[slot.key];
     if (comp?.product) {
       rows.push({
         category: slot.label,

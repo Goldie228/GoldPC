@@ -84,7 +84,7 @@ export function CatalogPage() {
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>(
     () => searchParams.get('availability')?.split(',').filter(Boolean) || []
   );
-  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string[]>>(
+  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | number | string[]>>(
     () => {
       const specParam = searchParams.get('specs');
       if (!specParam) return {};
@@ -180,10 +180,9 @@ export function CatalogPage() {
     if (debouncedPriceRange.min > 0) params.priceMin = debouncedPriceRange.min;
     if (debouncedPriceRange.max > 0 && debouncedPriceRange.max < PRICE_MAX) params.priceMax = debouncedPriceRange.max;
     if (selectedManufacturerIds.length > 0) params.manufacturerIds = selectedManufacturerIds;
-    if (minRating > 0) params.minRating = minRating;
+    if (minRating > 0) params.rating = minRating;
     if (selectedAvailability.length > 0) {
       params.inStock = selectedAvailability.includes('in_stock');
-      params.lowStock = selectedAvailability.includes('low_stock');
     }
     if (Object.keys(selectedSpecifications).length > 0) {
       params.specifications = selectedSpecifications;
@@ -211,7 +210,7 @@ export function CatalogPage() {
         params.sortOrder = 'asc';
         break;
       default:
-        params.sortBy = 'popularity';
+        params.sortBy = 'price';
         params.sortOrder = 'desc';
     }
 

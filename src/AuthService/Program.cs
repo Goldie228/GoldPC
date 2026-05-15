@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using GoldPC.AuthService.Data;
@@ -101,8 +102,12 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddPermissionBasedAuthorization();
 
-// Настройка контроллеров с FluentValidation
+// Настройка контроллеров с FluentValidation и сериализацией enum как строк
 builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    })
     .AddFluentValidation(fv =>
     {
         fv.RegisterValidatorsFromAssemblyContaining<RegisterRequestValidator>();

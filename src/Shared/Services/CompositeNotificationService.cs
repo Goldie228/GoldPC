@@ -69,5 +69,17 @@ public class CompositeNotificationService : INotificationService
         _logger.LogDebug("CompositeNotificationService BroadcastNotificationAsync called");
         return Task.CompletedTask;
     }
+
+    public Task SendPushNotificationAsync(string userId, string title, string message)
+    {
+        _logger.LogDebug("CompositeNotificationService SendPushNotificationAsync called for user {UserId}", userId);
+        return Task.CompletedTask;
+    }
+
+    public Task SendEmailAsync(string to, string subject, string body)
+    {
+        _logger.LogDebug("CompositeNotificationService SendEmailAsync called for {To}", to);
+        return Task.CompletedTask;
+    }
 }
 #pragma warning restore CS1591, SA1600

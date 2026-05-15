@@ -201,6 +201,7 @@ export function ComparisonPage(): ReactElement {
     getFilterFacets(backendSlug)
       .then((facets) => {
         if (cancelled) return;
+        if (!facets) return;
         const next: Record<string, string> = {};
         facets.forEach((facet) => {
           const normalizedKey = normalizeSpecKey(facet.key);
@@ -579,7 +580,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                     </td>
                     {visibleProducts.map((product, idx) => {
                       const ratingNum = formatRating(product.rating);
-                      const ratings = visibleProducts.map((p) => formatRating(p.rating));
+                      const ratings = visibleProducts.map((p) => formatRating(p.rating)).filter((v): v is number => v !== null);
                       const ratingEvaluation = evaluateComparison(activeCategory ?? '', 'rating', ratings);
                       const isBest = ratingEvaluation.bestIndices.has(idx);
 

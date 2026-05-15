@@ -1,0 +1,10 @@
+{
+  "id": "PF-4-001",
+  "category": "plan",
+  "severity": "info",
+  "title": "Backend field name mismatch for other pages",
+  "status": "open",
+  "fixTarget": "api/services.ts",
+  "location": "src/frontend/src/api/services.ts",
+  "planRef": "service-backend-connection"
+}

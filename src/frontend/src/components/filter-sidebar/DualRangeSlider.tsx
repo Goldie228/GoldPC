@@ -182,6 +182,12 @@ export function DualRangeSlider({
 
   return (
     <div className="dual-range-slider">
+      {/* Метки границ диапазона */}
+      <div className="dual-range-labels">
+        <span className="dual-range-label dual-range-label--min">{formatValue(min)}</span>
+        <span className="dual-range-label dual-range-label--max">{formatValue(max)}</span>
+      </div>
+
       {/* Трек (фон) */}
       <div
         ref={trackRef}

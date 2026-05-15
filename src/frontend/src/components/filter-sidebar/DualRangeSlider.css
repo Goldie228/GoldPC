@@ -99,3 +99,32 @@
   opacity: 1;
   visibility: visible;
 }
+
+/* Метки границ диапазона (min/max) */
+.dual-range-labels {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.dual-range-label {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.dual-range-label--min {
+  text-align: left;
+}
+
+.dual-range-label--max {
+  text-align: right;
+}

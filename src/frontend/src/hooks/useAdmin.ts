@@ -67,8 +67,8 @@ export function useAdmin(): UseAdminReturn {
     setError(null);
     try {
       const result = await usersAdminApi.getUsers(params);
-      setUsers(result.items);
-      setTotalUsers(result.totalCount);
+      setUsers(result.data);
+      setTotalUsers(result.meta.totalItems);
       return result;
     } catch (e) {
       const err = e instanceof Error ? e : new Error('Failed to fetch users');
@@ -170,8 +170,8 @@ export function useAdmin(): UseAdminReturn {
     setError(null);
     try {
       const result = await catalogAdminApi.getProducts(params);
-      setProducts(result.items);
-      setTotalProducts(result.totalCount);
+      setProducts(result.data);
+      setTotalProducts(result.meta.totalItems);
       return result;
     } catch (e) {
       const err = e instanceof Error ? e : new Error('Failed to fetch products');

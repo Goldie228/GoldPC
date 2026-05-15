@@ -122,7 +122,7 @@ else
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"] ?? "GoldPC_SuperSecretKey_ForDevelopment_Only_2024!";
+var secretKey = jwtSettings["SecretKey"] ?? "development_secret_key_32_chars_long!!";
 
 builder.Services.AddAuthentication(options =>
 {

@@ -31,7 +31,7 @@ export function MainLayout() {
       </a>
       <Header />
       <EmailVerificationBanner />
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence mode="popLayout" initial={false}>
         <motion.main
           key={location.pathname}
           id="main-content"

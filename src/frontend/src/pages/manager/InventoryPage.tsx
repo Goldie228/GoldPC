@@ -18,6 +18,19 @@ interface InventoryItem {
   lastUpdated: string;
 }
 
+const MOCK_INVENTORY: InventoryItem[] = [
+  { id: '1', name: 'AMD Ryzen 5 5600X', sku: 'CPU-AMD-5600X', category: 'cpu', price: 599, stock: 15, minStock: 5, reserved: 2, lastUpdated: '2026-05-14T10:00:00Z' },
+  { id: '2', name: 'Intel Core i5-12400F', sku: 'CPU-INT-12400F', category: 'cpu', price: 479, stock: 8, minStock: 5, reserved: 1, lastUpdated: '2026-05-14T10:00:00Z' },
+  { id: '3', name: 'NVIDIA RTX 4060 Ti', sku: 'GPU-NV-4060TI', category: 'gpu', price: 1299, stock: 3, minStock: 5, reserved: 0, lastUpdated: '2026-05-13T15:30:00Z' },
+  { id: '4', name: 'AMD RX 7600', sku: 'GPU-AMD-7600', category: 'gpu', price: 749, stock: 0, minStock: 3, reserved: 0, lastUpdated: '2026-05-12T09:00:00Z' },
+  { id: '5', name: 'ASUS TUF B650-PLUS', sku: 'MB-ASU-B650', category: 'motherboard', price: 449, stock: 12, minStock: 4, reserved: 3, lastUpdated: '2026-05-14T08:00:00Z' },
+  { id: '6', name: 'Kingston Fury 16GB DDR5', sku: 'RAM-KIN-16D5', category: 'ram', price: 189, stock: 25, minStock: 10, reserved: 5, lastUpdated: '2026-05-14T11:00:00Z' },
+  { id: '7', name: 'Samsung 980 PRO 1TB', sku: 'SSD-SAM-980P1', category: 'storage', price: 259, stock: 20, minStock: 8, reserved: 4, lastUpdated: '2026-05-14T07:00:00Z' },
+  { id: '8', name: 'Corsair RM750x', sku: 'PSU-COR-RM750', category: 'psu', price: 329, stock: 6, minStock: 3, reserved: 1, lastUpdated: '2026-05-13T14:00:00Z' },
+  { id: '9', name: 'NZXT H5 Flow', sku: 'CASE-NZT-H5F', category: 'case', price: 249, stock: 4, minStock: 3, reserved: 0, lastUpdated: '2026-05-14T09:00:00Z' },
+  { id: '10', name: 'AMD Ryzen 7 7800X3D', sku: 'CPU-AMD-7800X3D', category: 'cpu', price: 999, stock: 2, minStock: 3, reserved: 1, lastUpdated: '2026-05-14T12:00:00Z' },
+];
+
 const CATEGORY_LABELS: Record<string, string> = {
   cpu: 'Процессоры',
   gpu: 'Видеокарты',

@@ -6,6 +6,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User } from '../api/types';
 import { decodeHtmlEntities } from '../utils/decodeHtml';
+import { mapBackendRole, normalizeUserRoles } from '../utils/roleMapper';
 
 export type UserRole = 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant';
 
@@ -44,11 +45,13 @@ const getInitialState = (): Pick<AuthState, 'user' | 'isAuthenticated' | 'curren
           lastName: decodeHtmlEntities(data.user.lastName),
           email: decodeHtmlEntities(data.user.email),
         };
+        // Нормализуем роли: бэкенд мог сохранить числа (0=Client)
+        data.user = normalizeUserRoles(data.user);
       }
       return {
         user: data.user ?? null,
         isAuthenticated: !!data.user,
-        currentRole: data.user ? (data.user.roles?.[0] ?? data.user.role ?? null) : null,
+        currentRole: data.user ? mapBackendRole(data.user.roles?.[0] ?? data.user.role) : null,
       };
     }
   } catch {}
@@ -78,12 +81,14 @@ export const useAuthStore = create<AuthState>()(
           lastName: decodeHtmlEntities(user.lastName),
           email: decodeHtmlEntities(user.email),
         };
+        // Нормализуем роли на случай если пришли числа
+        user = normalizeUserRoles(user);
       }
       const newState = {
         user,
         isAuthenticated: !!user,
         isLoading: false,
-        currentRole: user ? (user.roles?.[0] ?? user.role ?? null) : null,
+        currentRole: user ? mapBackendRole(user.roles?.[0] ?? user.role) : null,
       };
 
       // ✅ ВРУЧНУЮ СОХРАНЯЕМ В LOCALSTORAGE

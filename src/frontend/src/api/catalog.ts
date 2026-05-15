@@ -13,6 +13,7 @@ import type {
   CreateReviewRequest,
   UpdateReviewRequest,
 } from './types';
+export type { ProductSummary, ProductReview, FilterFacetAttribute, GetProductsParams, ProductListResponse } from './types';
 
 /** Маппинг frontend category -> backend slug для API */
 const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {

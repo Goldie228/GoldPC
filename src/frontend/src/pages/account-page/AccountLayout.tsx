@@ -1,154 +1,143 @@
+import { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  User,
+  Package,
+  Wrench,
+  Menu,
+  X,
+  ShieldCheck,
+  Cpu,
+} from 'lucide-react';
+import { useAuthStore } from '../../store/authStore';
 
 /**
- * AccountLayout - Layout for account pages with sidebar navigation
- * 
+ * AccountLayout - Layout for /account/* pages with sidebar navigation
+ *
  * Features:
- * - Fixed sidebar with user profile
- * - Navigation links: Overview, Profile, Orders, Wishlist
- * - Settings section at bottom
+ * - Fixed sidebar with user profile from auth store
+ * - Navigation links: Overview, Profile, Orders, Repairs
+ * - Mobile responsive with slide-over sidebar panel
  */
 export function AccountLayout() {
-  // Mock user data - will be replaced with actual auth context
-  const user = {
-    name: 'Александр Иванов',
-    email: 'alex.ivanov@email.com',
-    initials: 'АИ',
-  };
+  const { user } = useAuthStore();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const navItems = [
-    {
-      to: '/account',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-          <polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-      ),
-      label: 'Обзор',
-      end: true,
-    },
-    {
-      to: '/account/profile',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      ),
-      label: 'Профиль',
-    },
-    {
-      to: '/account/orders',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <path d="M16 10a4 4 0 0 1-8 0" />
-        </svg>
-      ),
-      label: 'Заказы',
-    },
-    {
-      to: '/account/repairs',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M14.7 6.3l-1.4 1.4 2.6 2.6 1.4-1.4c.4-.4.4-1 0-1.4l-1.2-1.2c-.4-.4-1-.4-1.4 0z" />
-          <path d="M11 11l-2 2" />
-          <path d="M9 19v-4a2 2 0 0 0-2-2H3" />
-          <path d="M5 3l4 4" />
-          <path d="M12.5 8.5l-9 9" />
-        </svg>
-      ),
-      label: 'Ремонты',
-    },
-    {
-      to: '/wishlist',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-      ),
-      label: 'Избранное',
-    },
+  const firstName = user?.firstName ?? '';
+  const lastName = user?.lastName ?? '';
+  const initials = (firstName.charAt(0) + lastName.charAt(0)).trim() || '?';
+
+  interface NavItem {
+    to: string;
+    icon: React.ComponentType<{ size?: number }>;
+    label: string;
+    end?: boolean;
+  }
+
+const navItems: NavItem[] = [
+    { to: '/account', icon: LayoutDashboard, label: 'Обзор', end: true },
+    { to: '/account/profile', icon: User, label: 'Профиль' },
+    { to: '/account/orders', icon: Package, label: 'Заказы' },
+    { to: '/account/repairs', icon: Wrench, label: 'Ремонты' },
+    { to: '/account/warranty', icon: ShieldCheck, label: 'Гарантия' },
+    { to: '/account/saved-builds', icon: Cpu, label: 'Сборки' },
   ];
 
-  const settingsItems = [
-    {
-      to: '/account/settings',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-        </svg>
-      ),
-      label: 'Настройки',
-    },
-    {
-      to: '/login',
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-          <polyline points="16 17 21 12 16 7" />
-          <line x1="21" y1="12" x2="9" y2="12" />
-        </svg>
-      ),
-      label: 'Выйти',
-    },
-  ];
+  const sidebarLinkClass = ({ isActive }: { isActive: boolean }) =>
+    [
+      'flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors',
+      isActive
+        ? 'text-gold bg-surface-elevated border-l-2 border-gold'
+        : 'text-muted-text hover:text-body-text hover:bg-surface-elevated',
+    ].join(' ');
+
+  const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="account-layout">
+    <div className="flex min-h-screen bg-canvas-dark">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="account-sidebar">
-        <div className="account-sidebar__profile">
-          <div className="account-sidebar__avatar">{user.initials}</div>
-          <div className="account-sidebar__name">{user.name}</div>
-          <div className="account-sidebar__email">{user.email}</div>
+      <aside
+        className={[
+          'fixed inset-y-0 left-0 top-16 z-[110] w-[280px] bg-surface-card border-r border-hairline-dark lg:top-0',
+          'flex flex-col transform transition-transform duration-300 ease-in-out',
+          'lg:relative lg:translate-x-0 lg:top-0 lg:z-auto',
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+        ].join(' ')}
+      >
+        {/* Close button — mobile only */}
+        <button
+          onClick={closeSidebar}
+          className="absolute top-4 right-4 p-1 text-muted-text hover:text-body-text rounded-lg lg:hidden hover:bg-surface-elevated transition-colors"
+          aria-label="Закрыть меню"
+        >
+          <X size={20} />
+        </button>
+
+        {/* User profile section */}
+        <div className="flex flex-col items-center gap-2 pt-8 pb-6 px-6 border-b border-hairline-dark">
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt="Аватар"
+              className="w-14 h-14 rounded-full object-cover border-2 border-gold"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-full bg-gold text-gold-ink flex items-center justify-center text-lg font-bold">
+              {initials}
+            </div>
+          )}
+          <div className="font-semibold text-body-text text-center">
+            {user ? `${firstName} ${lastName}` : 'Гость'}
+          </div>
+          <div className="text-sm text-muted-text text-center truncate max-w-full">
+            {user?.email ?? 'Войдите в аккаунт'}
+          </div>
         </div>
 
-        <nav className="account-sidebar__nav">
-          <ul className="account-sidebar__list">
-            {navItems.map((item) => (
-              <li key={item.to} className="account-sidebar__item">
-                <NavLink
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) =>
-                    `account-sidebar__link ${isActive ? 'account-sidebar__link--active' : ''}`
-                  }
-                >
-                  <span className="account-sidebar__icon">{item.icon}</span>
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
+        {/* Navigation links */}
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              onClick={closeSidebar}
+              className={sidebarLinkClass}
+            >
+              <item.icon size={18} />
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
-
-        <div className="account-sidebar__section">
-          <div className="account-sidebar__section-title">Настройки</div>
-          <ul className="account-sidebar__list">
-            {settingsItems.map((item) => (
-              <li key={item.to} className="account-sidebar__item">
-                <NavLink
-                  to={item.to}
-                  className={({ isActive }) =>
-                    `account-sidebar__link ${isActive ? 'account-sidebar__link--active' : ''}`
-                  }
-                >
-                  <span className="account-sidebar__icon">{item.icon}</span>
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="account-main">
-        <Outlet />
+      {/* Main content area */}
+      <main className="flex-1 min-w-0">
+        {/* Mobile header with hamburger toggle */}
+        <div className="sticky top-0 z-30 bg-canvas-dark border-b border-hairline-dark px-4 py-3 lg:hidden flex items-center gap-3">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 text-muted-text hover:text-body-text rounded-lg hover:bg-surface-elevated transition-colors"
+            aria-label="Открыть меню"
+          >
+            <Menu size={22} />
+          </button>
+          <span className="text-sm font-semibold text-body-text">Личный кабинет</span>
+        </div>
+
+        <div className="p-6 lg:p-8">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

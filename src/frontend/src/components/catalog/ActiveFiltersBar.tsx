@@ -89,17 +89,17 @@ export function buildCatalogFilterChips(args: {
     chips.push({ id: 'search', label: `Поиск: ${args.searchQuery.trim()}`, onRemove: args.onClearSearch });
   }
 
-  if (args.priceRange.min > 0 || args.priceRange.max > 0) {
-    const min = args.priceRange.min > 0 ? args.priceRange.min : '…';
-    const max = args.priceRange.max > 0 ? args.priceRange.max : '…';
+  if ((args.priceRange?.min ?? 0) > 0 || (args.priceRange?.max ?? 0) > 0) {
+    const min = (args.priceRange?.min ?? 0) > 0 ? args.priceRange?.min : '…';
+    const max = (args.priceRange?.max ?? 0) > 0 ? args.priceRange?.max : '…';
     chips.push({ id: 'price', label: `Цена: ${min}–${max} BYN`, onRemove: args.onClearPrice });
   }
 
-  if (args.selectedManufacturerIds.length > 0) {
-    const names = args.selectedManufacturerIds
-      .map((id) => args.manufacturersById.get(id) ?? id)
+  if ((args.selectedManufacturerIds?.length ?? 0) > 0) {
+    const names = (args.selectedManufacturerIds ?? [])
+      .map((id) => args.manufacturersById?.get(id) ?? id)
       .slice(0, 3);
-    const rest = args.selectedManufacturerIds.length - names.length;
+    const rest = (args.selectedManufacturerIds?.length ?? 0) - names.length;
     chips.push({
       id: 'mfr',
       label: `Бренды: ${names.join(', ')}${rest > 0 ? ` +${rest}` : ''}`,
@@ -107,22 +107,22 @@ export function buildCatalogFilterChips(args: {
     });
   }
 
-  if (args.minRating > 0) {
-    chips.push({ id: 'rating', label: `Рейтинг: ${args.minRating}★+`, onRemove: args.onClearRating });
+  if ((args.minRating ?? 0) > 0) {
+    chips.push({ id: 'rating', label: `Рейтинг: ${args.minRating ?? 0}★+`, onRemove: args.onClearRating });
   }
 
   const hasNonDefaultAvailability =
-    args.selectedAvailability.length !== 1 || args.selectedAvailability[0] !== 'in_stock';
+    (args.selectedAvailability?.length ?? 0) !== 1 || (args.selectedAvailability?.[0] ?? '') !== 'in_stock';
   if (hasNonDefaultAvailability) {
-    const label = args.selectedAvailability.includes('in_stock') && args.selectedAvailability.includes('on_order')
+    const label = (args.selectedAvailability?.includes('in_stock') ?? false) && (args.selectedAvailability?.includes('on_order') ?? false)
       ? 'Наличие: всё'
-      : args.selectedAvailability.includes('on_order')
+      : (args.selectedAvailability?.includes('on_order') ?? false)
         ? 'Наличие: под заказ'
         : 'Наличие: в наличии';
     chips.push({ id: 'availability', label, onRemove: args.onClearAvailability });
   }
 
-  for (const [k, v] of Object.entries(args.selectedSpecifications)) {
+  for (const [k, v] of Object.entries(args.selectedSpecifications ?? {})) {
     let value: string;
 
     if (Array.isArray(v)) {
@@ -141,7 +141,7 @@ export function buildCatalogFilterChips(args: {
     chips.push({
       id: `spec-${k}`,
       label: `${specLabel(k)}: ${value}`,
-      onRemove: () => args.onClearSpecKey(k),
+      onRemove: () => args.onClearSpecKey?.(k),
     });
   }
 

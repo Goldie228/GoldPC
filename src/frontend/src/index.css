@@ -158,9 +158,9 @@
 }
 
   /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0b0e11; }
-::-webkit-scrollbar-thumb { background: #2b3139; border-radius: 3px; }
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2b3139; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #3a3f47; }
 
   /* Custom classes */

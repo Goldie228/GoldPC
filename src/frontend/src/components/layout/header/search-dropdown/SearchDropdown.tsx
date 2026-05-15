@@ -27,7 +27,7 @@ export function SearchDropdown({ isOpen, onToggle }: SearchDropdownProps) {
     setIsLoading(true);
     try {
       const res = await searchProducts(q.trim(), { page: 1, pageSize: 5 });
-      setResults(res.products ?? []);
+      setResults(res.data ?? []);
     } catch {
       setResults([]);
     } finally {
@@ -112,11 +112,11 @@ export function SearchDropdown({ isOpen, onToggle }: SearchDropdownProps) {
             <button
               key={p.id}
               className="flex items-center gap-3 w-full px-3.5 py-2.5 bg-transparent border-none border-b border-[var(--border)] cursor-pointer text-left font-sans transition-colors hover:bg-[var(--bg-elevated)]"
-              onClick={() => onSelect(p.slug)}
+              onClick={() => p.slug && onSelect(p.slug)}
               type="button"
             >
                 <img
-                src={p.mainImageUrl || '/placeholder.png'}
+                src={p.mainImage?.url || '/placeholder.png'}
                 alt={p.name}
                 className="w-10 h-10 object-contain rounded-md bg-[var(--bg-elevated)] flex-shrink-0"
               />

@@ -20,6 +20,7 @@ export function useFpsApi(components: PCBuilderSelectedState): UseFpsApiResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     const cpuId = components.cpu?.product.id;
@@ -37,6 +38,8 @@ export function useFpsApi(components: PCBuilderSelectedState): UseFpsApiResult {
 
     if (timerRef.current) clearTimeout(timerRef.current);
 
+    const requestId = ++requestIdRef.current;
+
     timerRef.current = setTimeout(async () => {
       setIsLoading(true);
       setError(null);
@@ -47,12 +50,18 @@ export function useFpsApi(components: PCBuilderSelectedState): UseFpsApiResult {
           ramCapacity,
           ramFrequency,
         });
+        // Ignore stale responses from outdated requests
+        if (requestId !== requestIdRef.current) return;
         setFpsData(result);
       } catch (e) {
+        // Ignore errors from outdated requests
+        if (requestId !== requestIdRef.current) return;
         setError(e instanceof Error ? e : new Error('FPS API error'));
         setFpsData(null);
       } finally {
-        setIsLoading(false);
+        if (requestId === requestIdRef.current) {
+          setIsLoading(false);
+        }
       }
     }, FPS_DEBOUNCE_MS);
 

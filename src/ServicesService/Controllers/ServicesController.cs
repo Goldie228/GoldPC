@@ -5,6 +5,7 @@ using GoldPC.ServicesService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using PagedResultServiceRequest = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>;
 
 namespace GoldPC.ServicesService.Controllers;
 
@@ -30,6 +31,17 @@ public class ServicesController : ControllerBase
         return Ok(ApiResponse<List<ServiceTypeDto>>.Ok(types));
     }
 
+    [HttpGet("types/{slug}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetBySlug(string slug)
+    {
+        var serviceType = await _servicesService.GetServiceTypeBySlugAsync(slug);
+        if (serviceType == null)
+            return NotFound(ApiResponse.Fail("Услуга не найдена"));
+
+        return Ok(ApiResponse<ServiceTypeDto>.Ok(serviceType));
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -51,7 +63,7 @@ public class ServicesController : ControllerBase
             return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
 
         var result = await _servicesService.GetByClientIdAsync(userId.Value, page, pageSize);
-        return Ok(ApiResponse<PagedResult<ServiceRequestDto>>.Ok(result));
+        return Ok(ApiResponse<PagedResultServiceRequest>.Ok(result));
     }
 
     [HttpGet("master")]
@@ -63,7 +75,7 @@ public class ServicesController : ControllerBase
             return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
 
         var result = await _servicesService.GetByMasterIdAsync(userId.Value, page, pageSize);
-        return Ok(ApiResponse<PagedResult<ServiceRequestDto>>.Ok(result));
+        return Ok(ApiResponse<PagedResultServiceRequest>.Ok(result));
     }
 
     [HttpGet]
@@ -71,7 +83,7 @@ public class ServicesController : ControllerBase
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] ServiceRequestStatus? status = null)
     {
         var result = await _servicesService.GetAllAsync(page, pageSize, status);
-        return Ok(ApiResponse<PagedResult<ServiceRequestDto>>.Ok(result));
+        return Ok(ApiResponse<PagedResultServiceRequest>.Ok(result));
     }
 
     [HttpPost]

@@ -35,6 +35,10 @@ export type {
   SelectComponentOptions,
 } from './usePCBuilder';
 
+// Warranty
+export { useWarranty } from './useWarranty';
+export type { UseWarrantyReturn } from './useWarranty';
+
 // Debounce
 export { useDebounce } from './useDebounce';
 

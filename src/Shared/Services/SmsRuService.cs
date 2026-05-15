@@ -83,5 +83,17 @@ public class SmsRuService : INotificationService
         _logger.LogDebug("SmsRuService BroadcastNotificationAsync called - not supported");
         return Task.CompletedTask;
     }
+
+    public Task SendPushNotificationAsync(string userId, string title, string message)
+    {
+        _logger.LogDebug("SmsRuService SendPushNotificationAsync called - not supported");
+        return Task.CompletedTask;
+    }
+
+    public Task SendEmailAsync(string to, string subject, string body)
+    {
+        _logger.LogDebug("SmsRuService SendEmailAsync called - not supported");
+        return Task.CompletedTask;
+    }
 }
 #pragma warning restore CA1031, CA2208, CA2234, CS1591, S3928, SA1600

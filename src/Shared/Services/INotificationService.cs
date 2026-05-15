@@ -12,4 +12,6 @@ public interface INotificationService
     Task SendNotificationAsync(Notification notification);
     Task SendNotificationToRoleAsync(string role, Notification notification);
     Task BroadcastNotificationAsync(Notification notification);
+    Task SendPushNotificationAsync(string userId, string title, string message);
+    Task SendEmailAsync(string to, string subject, string body);
 }

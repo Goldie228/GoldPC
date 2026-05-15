@@ -4,6 +4,7 @@
 
 import api from './index';
 import type { User, Product, PagedResponse } from './types';
+export type { User, Product, PagedResponse } from './types';
 
 // === Типы для администрирования ===
 

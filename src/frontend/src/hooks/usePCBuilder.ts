@@ -22,6 +22,18 @@ import type {
   PCBuilderSelectedState,
   SelectComponentOptions,
 } from '@/features/pc-builder/logic/types';
+export type {
+  PCComponentType,
+  CompatibilityResult,
+  ComponentCompatibility,
+  PCBuilderSelectedState,
+  SelectComponentOptions,
+} from '@/features/pc-builder/logic/types';
+// Re-exported for external use
+export type {
+  ComponentSlotState,
+  SelectedComponent,
+} from '@/features/pc-builder/logic/types';
 import {
   MAX_STORAGE_MODULES,
   MAX_FAN_MODULES,
@@ -154,7 +166,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
   const selectedCount = countSelectedCategories(selectedComponents);
 
   const maxRamModules = useMemo(
-    () => getMaxRamModules(selectedComponents.motherboard),
+    () => getMaxRamModules(selectedComponents.motherboard?.product),
     [selectedComponents.motherboard]
   );
 

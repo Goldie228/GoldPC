@@ -5,6 +5,9 @@ import '@testing-library/jest-dom/vitest';
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
+  root: Element | Document | null = null;
+  rootMargin: string = '0px';
+  thresholds: ReadonlyArray<number> = [];
   constructor() {}
   disconnect() {}
   observe() {}
