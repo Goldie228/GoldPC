@@ -332,8 +332,6 @@ export function PCBuilderPage() {
     recommendedPsu,
     estimatedFps,
     bottleneck,
-    isApiLoading,
-    apiFpsData,
     addToCart,
     maxRamModules,
     maxRamQty,
@@ -447,13 +445,16 @@ export function PCBuilderPage() {
 
     switch (type) {
       case 'cpu':
-        if (specs.cores) result.push(`${specs.cores}C / ${specs.threads}T`);
+        if (specs.cores && specs.threads) result.push(`${specs.cores}C/${specs.threads}T`);
         if (specs.baseClock) result.push(`${specs.baseClock} GHz`);
         if (specs.socket) result.push(specs.socket as string);
         break;
       case 'gpu':
-        if (specs.memory) result.push(`${specs.memory}GB ${specs.memoryType}`);
-        if (specs.tdp) result.push(`${specs.tdp}W TDP`);
+        if (specs.memory) {
+          const memType = specs.memoryType ? ` ${specs.memoryType}` : '';
+          result.push(`${specs.memory}GB${memType}`);
+        }
+        if (specs.tdp) result.push(`${specs.tdp}W`);
         break;
       case 'motherboard':
         if (specs.socket) result.push(specs.socket as string);
@@ -586,26 +587,35 @@ export function PCBuilderPage() {
         <main className="pc-builder__main">
           <div className="pc-builder__content">
             <div className="pc-builder__left">
-              <div className="pc-builder__section-header">
-                <h2 className="pc-builder__section-title">Комплектующие</h2>
-              </div>
-
               <div className="pc-builder__slots">
-                {slotRows.map((row) => (
-                  <MemoizedSlotRow
-                    key={`slot-${row.kind}-${row.kind === 'single' ? row.key : row.rowIndex}`}
-                    row={row}
-                    selectedComponents={selectedComponents}
-                    getSlotState={getSlotState}
-                    getDisplaySpecs={getDisplaySpecs}
-                    onSelect={openPicker}
-                    onRemove={handleRemove}
-                    onChangeQuantity={handleChangeQuantity}
-                    maxRamModules={maxRamModules}
-                    maxStorageModules={maxStorageModules}
-                    maxFanModules={maxFanModules}
-                  />
-                ))}
+                <div className="pc-builder__group-label">Основа</div>
+                {slotRows.map((row, idx) => {
+                  const isCoreEnd = row.kind === 'ram' && row.rowIndex === 0;
+                  const isStorageEnd = row.kind === 'storage';
+                  const isGpuEnd = row.kind === 'single' && row.key === 'gpu';
+                  const isCaseEnd = row.kind === 'single' && row.key === 'case';
+
+                  return (
+                    <React.Fragment key={`slot-${row.kind}-${row.kind === 'single' ? row.key : row.rowIndex}`}>
+                      <MemoizedSlotRow
+                        row={row}
+                        selectedComponents={selectedComponents}
+                        getSlotState={getSlotState}
+                        getDisplaySpecs={getDisplaySpecs}
+                        onSelect={openPicker}
+                        onRemove={handleRemove}
+                        onChangeQuantity={handleChangeQuantity}
+                        maxRamModules={maxRamModules}
+                        maxStorageModules={maxStorageModules}
+                        maxFanModules={maxFanModules}
+                      />
+                      {isCoreEnd && <div className="pc-builder__group-label">Накопители</div>}
+                      {isStorageEnd && <div className="pc-builder__group-label">Графика и охлаждение</div>}
+                      {isGpuEnd && <div className="pc-builder__group-label">Питание и корпус</div>}
+                      {isCaseEnd && <div className="pc-builder__group-label">Вентиляторы</div>}
+                    </React.Fragment>
+                  );
+                })}
               </div>
 
               {/* Периферия — схлопывается на мобилке */}
@@ -655,15 +665,9 @@ export function PCBuilderPage() {
                 compatibilityWarnings={compatibility.warnings}
                 selectedCount={selectedCount}
                 totalCount={totalCount}
-                apiFpsData={apiFpsData}
-                isApiLoading={isApiLoading}
                 onAddToCart={handleAddToCart}
                 onSave={() => showToast('Сборка сохранена', 'success', 3000)}
                 onCheckout={handleCheckout}
-                onExportPdf={() => {
-                  setPdfModalOpen(true);
-                  showToast('Подготовка к печати...', 'info', 3000);
-                }}
               />
             </div>
           </div>

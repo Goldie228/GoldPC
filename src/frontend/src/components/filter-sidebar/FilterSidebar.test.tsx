@@ -1,4 +1,5 @@
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
+import type { ProductCategory } from '../../api/types';
 import '@testing-library/jest-dom';
 import { FilterSidebar } from './FilterSidebar';
 

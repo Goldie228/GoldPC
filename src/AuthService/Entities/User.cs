@@ -12,12 +12,12 @@ public class User : BaseEntity
     /// Email пользователя (логин)
     /// </summary>
     public string Email { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Хэш пароля (bcrypt)
     /// </summary>
     public string PasswordHash { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Роль пользователя (устарело, используйте Roles для множественных ролей)
     /// </summary>
@@ -36,22 +36,32 @@ public class User : BaseEntity
     /// Множественные роли пользователя
     /// </summary>
     public List<UserRole> Roles { get; set; } = new List<UserRole> { UserRole.Client };
-    
+
     /// <summary>
     /// Имя
     /// </summary>
     public string FirstName { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Фамилия
     /// </summary>
     public string LastName { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Телефон в формате +375XXXXXXXXX
     /// </summary>
     public string Phone { get; set; } = string.Empty;
-    
+
+    /// <summary>
+    /// Дата рождения
+    /// </summary>
+    public DateTime? BirthDate { get; set; }
+
+    /// <summary>
+    /// Компания
+    /// </summary>
+    public string? Company { get; set; }
+
     /// <summary>
     /// Признак активности учётной записи
     /// </summary>
@@ -61,17 +71,17 @@ public class User : BaseEntity
     /// Подтверждён ли email пользователя
     /// </summary>
     public bool IsEmailVerified { get; set; }
-    
+
     /// <summary>
     /// Количество неудачных попыток входа
     /// </summary>
     public int FailedLoginAttempts { get; set; }
-    
+
     /// <summary>
     /// Время блокировки до
     /// </summary>
     public DateTime? LockedUntil { get; set; }
-    
+
     /// <summary>
     /// Refresh токены пользователя
     /// </summary>
@@ -81,12 +91,12 @@ public class User : BaseEntity
     /// Избранные товары пользователя.
     /// </summary>
     public ICollection<WishlistItem> WishlistItems { get; set; } = new List<WishlistItem>();
-    
+
     /// <summary>
     /// Адреса доставки пользователя
     /// </summary>
     public ICollection<UserAddress> Addresses { get; set; } = new List<UserAddress>();
-    
+
     /// <summary>
     /// Токены сброса пароля
     /// </summary>
@@ -96,7 +106,7 @@ public class User : BaseEntity
     /// Токены подтверждения email
     /// </summary>
     public ICollection<EmailVerificationToken> EmailVerificationTokens { get; set; } = new List<EmailVerificationToken>();
-    
+
     /// <summary>
     /// Полное имя
     /// </summary>

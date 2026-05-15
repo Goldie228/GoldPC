@@ -124,9 +124,8 @@ export function FaqPage(): ReactElement {
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-body-text mb-4 tracking-[-0.02em]">
             FAQ
           </h1>
-          <p className="text-lg text-muted-text leading-relaxed">
-            Ответы на частые вопросы. Ссылку на конкретный вопрос можно скопировать из адресной строки
-            после выбора пункта.
+          <p className="text-lg text-muted-text leading-relaxed max-w-[600px]">
+            Ответы на самые частые вопросы о нашем магазине, доставке, оплате и сервисном обслуживании.
           </p>
         </section>
 
@@ -143,7 +142,7 @@ export function FaqPage(): ReactElement {
         </div>
 
         {/* FAQ Items */}
-        <div className="space-y-3">
+        <div className="divide-y divide-hairline-dark">
           {FAQ_ITEMS.map((item) => {
             const panelId = `${baseId}-${item.id}-panel`;
             const headerId = `${baseId}-${item.id}-header`;
@@ -152,14 +151,14 @@ export function FaqPage(): ReactElement {
               <section
                 key={item.id}
                 id={item.id}
-                className="bg-surface-card rounded-xl border border-hairline-dark overflow-hidden"
+                className="py-5"
                 aria-labelledby={headerId}
               >
                 <h2 className="text-base font-semibold text-body-text">
                   <button
                     type="button"
                     id={headerId}
-                    className="w-full flex items-center justify-between p-5 text-left hover:bg-surface-elevated transition-colors"
+                    className="w-full flex items-center justify-between text-left hover:text-gold transition-colors"
                     aria-expanded={expanded}
                     aria-controls={panelId}
                     onClick={() => toggle(item.id)}
@@ -184,16 +183,8 @@ export function FaqPage(): ReactElement {
                     expanded ? 'max-h-screen' : 'max-h-0'
                   }`}
                 >
-                  <div className="px-5 pb-5 pt-0">
+                  <div className="pt-4">
                     <p className="text-muted-text text-sm leading-relaxed">{item.answer}</p>
-                    <p className="mt-3">
-                      <a
-                        href={`#${item.id}`}
-                        className="text-xs text-muted-text hover:text-gold transition-colors"
-                      >
-                        Ссылка на этот вопрос
-                      </a>
-                    </p>
                   </div>
                 </div>
               </section>

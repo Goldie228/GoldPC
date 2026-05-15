@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import './HomePage.css';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cpu, Gpu, MemoryStick, HardDrive, Zap, Box, ThermometerSun, Monitor, Shield, Truck, Star, ChevronRight, ArrowRight, Award, ChevronLeft, Pause, Play, Tag } from 'lucide-react';
+import { Cpu, Gpu, MemoryStick, HardDrive, Zap, Box, ThermometerSun, Monitor, Fan, Shield, Truck, Star, ChevronRight, ArrowRight, Award, ChevronLeft, Pause, Play } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from '../../components/product-card/ProductCard';
@@ -40,6 +40,7 @@ const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
   psu: Zap,
   case: Box,
   cooling: ThermometerSun,
+  fan: Fan,
   monitor: Monitor,
   keyboard: Cpu,
   mouse: Cpu,
@@ -429,39 +430,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ════════════ 6. PROMO & BRANDS ════════════ */}
-      <section className="py-16 px-4 md:px-8 max-w-[1440px] mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <Link
-            to="/promotions"
-            className="group bg-surface-card rounded-xl border border-hairline-dark p-8 hover:border-gold/30 transition-all duration-200"
-          >
-            <div className="w-12 h-12 flex items-center justify-center bg-gold/10 text-gold rounded-lg mb-4">
-              <Tag size={24} />
-            </div>
-            <h3 className="text-xl font-semibold text-body-text group-hover:text-gold transition-colors mb-2">
-              Акции и скидки
-            </h3>
-            <p className="text-sm text-muted-text leading-relaxed">
-              Специальные предложения, рассрочка 0%, trade-in и выгодные акции на комплектующие и периферию
-            </p>
-          </Link>
-          <Link
-            to="/brands"
-            className="group bg-surface-card rounded-xl border border-hairline-dark p-8 hover:border-gold/30 transition-all duration-200"
-          >
-            <div className="w-12 h-12 flex items-center justify-center bg-gold/10 text-gold rounded-lg mb-4">
-              <Award size={24} />
-            </div>
-            <h3 className="text-xl font-semibold text-body-text group-hover:text-gold transition-colors mb-2">
-              Бренды
-            </h3>
-            <p className="text-sm text-muted-text leading-relaxed">
-              Intel, AMD, NVIDIA, ASUS, Samsung, Logitech и другие ведущие производители в ассортименте GoldPC
-            </p>
-          </Link>
-        </div>
-      </section>
+
 
       {/* ════════════ 7. CTA BAND ════════════ */}
       <section className="home-cta" aria-label="Призыв к действию">

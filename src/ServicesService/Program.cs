@@ -47,7 +47,7 @@ else
 }
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"] ?? "GoldPC_SuperSecretKey_ForDevelopment_Only_2024!";
+var secretKey = jwtSettings["SecretKey"] ?? "development_secret_key_32_chars_long!!";
 
 builder.Services.AddAuthentication(options =>
 {
@@ -114,6 +114,7 @@ app.UseHttpsRedirection();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapGet("/health", () => Results.Ok());
 app.MapControllers();
 
 Log.Information("Services Service starting on port 5003");

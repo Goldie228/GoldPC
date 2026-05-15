@@ -4,5 +4,4 @@
 
 export * from './types';
 export * from './logic/actions';
-export * from './logic/compatibility';
 export * from './logic/persistence';

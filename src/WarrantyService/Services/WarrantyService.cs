@@ -6,6 +6,8 @@ using GoldPC.SharedKernel.Models;
 using GoldPC.Shared.Services.Interfaces;
 using GoldPC.Shared.Services;
 using Microsoft.EntityFrameworkCore;
+using PagedResultClaim = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.WarrantyClaimDto>;
+using PagedResultCard = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.WarrantyDto>;
 
 namespace GoldPC.WarrantyService.Services;
 
@@ -13,8 +15,8 @@ public interface IWarrantyService
 {
     // Claims (Existing)
     Task<WarrantyClaimDto?> GetClaimByIdAsync(Guid id);
-    Task<PagedResult<WarrantyClaimDto>> GetClaimsByUserIdAsync(Guid userId, int page, int pageSize);
-    Task<PagedResult<WarrantyClaimDto>> GetAllClaimsAsync(int page, int pageSize, WarrantyStatus? status = null);
+    Task<PagedResultClaim> GetClaimsByUserIdAsync(Guid userId, int page, int pageSize);
+    Task<PagedResultClaim> GetAllClaimsAsync(int page, int pageSize, WarrantyStatus? status = null);
     Task<(WarrantyClaimDto? Claim, string? Error)> CreateClaimAsync(Guid userId, CreateWarrantyClaimRequest request);
     Task<(WarrantyClaimDto? Claim, string? Error)> UpdateClaimStatusAsync(Guid id, WarrantyStatus status, Guid changedBy, string? comment = null);
     Task<(WarrantyClaimDto? Claim, string? Error)> ResolveClaimAsync(Guid id, string resolution, Guid changedBy);
@@ -25,7 +27,7 @@ public interface IWarrantyService
     Task<WarrantyDto?> GetCardByOrderIdAsync(Guid orderId);
     Task<WarrantyDto?> GetCardByServiceIdAsync(Guid serviceId);
     Task<WarrantyDto?> GetCardBySerialNumberAsync(string serialNumber);
-    Task<PagedResult<WarrantyDto>> GetCardsByUserIdAsync(Guid userId, int page, int pageSize);
+    Task<PagedResultCard> GetCardsByUserIdAsync(Guid userId, int page, int pageSize);
     Task<(WarrantyDto? Warranty, string? Error)> CreateCardAsync(CreateWarrantyRequest request);
     Task<(bool Success, string? Error)> AnnulCardAsync(Guid id, AnnulWarrantyRequest request, Guid userId);
     Task<int> ExpireWarrantiesAsync();
@@ -53,22 +55,22 @@ public class WarrantyService : IWarrantyService
         return claim != null ? MapClaimToDto(claim) : null;
     }
 
-    public async Task<PagedResult<WarrantyClaimDto>> GetClaimsByUserIdAsync(Guid userId, int page, int pageSize)
+    public async Task<PagedResultClaim> GetClaimsByUserIdAsync(Guid userId, int page, int pageSize)
     {
         var query = _context.WarrantyClaims.Where(w => w.UserId == userId).OrderByDescending(w => w.CreatedAt);
         var totalCount = await query.CountAsync();
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-        return new PagedResult<WarrantyClaimDto> { Items = items.Select(MapClaimToDto).ToList(), TotalCount = totalCount, PageNumber = page, PageSize = pageSize };
+        return new PagedResultClaim { Items = items.Select(MapClaimToDto).ToList(), TotalCount = totalCount, PageNumber = page, PageSize = pageSize };
     }
 
-    public async Task<PagedResult<WarrantyClaimDto>> GetAllClaimsAsync(int page, int pageSize, WarrantyStatus? status = null)
+    public async Task<PagedResultClaim> GetAllClaimsAsync(int page, int pageSize, WarrantyStatus? status = null)
     {
         var query = _context.WarrantyClaims.AsQueryable();
         if (status.HasValue) query = query.Where(w => w.Status == status.Value);
         query = query.OrderByDescending(w => w.CreatedAt);
         var totalCount = await query.CountAsync();
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-        return new PagedResult<WarrantyClaimDto> { Items = items.Select(MapClaimToDto).ToList(), TotalCount = totalCount, PageNumber = page, PageSize = pageSize };
+        return new PagedResultClaim { Items = items.Select(MapClaimToDto).ToList(), TotalCount = totalCount, PageNumber = page, PageSize = pageSize };
     }
 
     public async Task<(WarrantyClaimDto? Claim, string? Error)> CreateClaimAsync(Guid userId, CreateWarrantyClaimRequest request)
@@ -164,7 +166,7 @@ public class WarrantyService : IWarrantyService
         return MapCardToDto(card, operations);
     }
 
-    public async Task<PagedResult<WarrantyDto>> GetCardsByUserIdAsync(Guid userId, int page, int pageSize)
+    public async Task<PagedResultCard> GetCardsByUserIdAsync(Guid userId, int page, int pageSize)
     {
         var query = _context.WarrantyCards.Where(w => w.UserId == userId).OrderByDescending(w => w.CreatedAt);
         var totalCount = await query.CountAsync();
@@ -177,7 +179,7 @@ public class WarrantyService : IWarrantyService
             dtos.Add(MapCardToDto(card, operations));
         }
 
-        return new PagedResult<WarrantyDto> { Items = dtos, TotalCount = totalCount, PageNumber = page, PageSize = pageSize };
+        return new PagedResultCard { Items = dtos, TotalCount = totalCount, PageNumber = page, PageSize = pageSize };
     }
 
     public async Task<(WarrantyDto? Warranty, string? Error)> CreateCardAsync(CreateWarrantyRequest request)
@@ -306,15 +308,12 @@ public class WarrantyService : IWarrantyService
             // Для целей этой задачи используем заглушку
             string userEmail = "customer@example.com"; // Mock email
             
-            var result = await _notificationService.SendEmailAsync(
+            await _notificationService.SendEmailAsync(
                 userEmail, 
                 "Срок действия гарантии истекает скоро", 
                 $"Уважаемый клиент, гарантия на товар {card.ProductName} (номер {card.WarrantyNumber}) истекает через 30 дней ({card.EndDate:d}).");
 
-            if (result.Success)
-            {
-                notifiedCount++;
-            }
+            notifiedCount++;
         }
 
         if (notifiedCount > 0)

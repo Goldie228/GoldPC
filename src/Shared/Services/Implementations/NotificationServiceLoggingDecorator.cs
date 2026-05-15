@@ -73,6 +73,18 @@ public class NotificationServiceLoggingDecorator : INotificationService
         await _inner.BroadcastNotificationAsync(notification);
     }
 
+    public async Task SendPushNotificationAsync(string userId, string title, string message)
+    {
+        _logger.LogInformation("Sending push notification: UserId={UserId}, Title={Title}", userId, title);
+        await _inner.SendPushNotificationAsync(userId, title, message);
+    }
+
+    public async Task SendEmailAsync(string to, string subject, string body)
+    {
+        _logger.LogInformation("Sending email: To={To}, Subject={Subject}", to, subject);
+        await _inner.SendEmailAsync(to, subject, body);
+    }
+
     private static string MaskPhone(string phone)
     {
         if (string.IsNullOrEmpty(phone) || phone.Length < 7)

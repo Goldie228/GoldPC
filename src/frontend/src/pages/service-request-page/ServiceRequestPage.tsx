@@ -1,12 +1,16 @@
-import { useState, type FormEvent, type ChangeEvent } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button, Input } from '../../components/ui';
 import { useToast } from '../../hooks/useToast';
 import { useServiceTickets } from '../../hooks/useServiceTickets';
-import type { CreateTicketRequest } from '../../api/service-tickets';
+import { useAuthStore } from '../../store/authStore';
+import { ServiceSelector } from './ServiceSelector';
+import { PhotoUploader } from './PhotoUploader';
+import { SuccessScreen } from './SuccessScreen';
+import type { CreateServiceRequest } from '../../api/services';
 
 /**
- * Типы техники для ремонта
+ * Типы устройств для ремонта
  */
 const DEVICE_TYPES = [
   { value: 'pc', label: 'ПК', icon: '🖥️' },
@@ -16,426 +20,599 @@ const DEVICE_TYPES = [
 ] as const;
 
 /**
- * Уровни срочности
+ * Названия шагов для индикатора
  */
-const URGENCY_OPTIONS = [
-  { value: 'normal', label: 'Обычная (3-5 дней)' },
-  { value: 'urgent', label: 'Срочная (1-2 дня) +50%' },
-  { value: 'express', label: 'Экспресс (в тот же день) +100%' },
+const STEP_LABELS = ['Услуга', 'Устройство', 'Проблема', 'Контакты', 'Подтверждение'];
+
+/**
+ * Способы связи
+ */
+const CONTACT_METHODS = [
+  { value: 'phone', label: 'По телефону' },
+  { value: 'email', label: 'По email' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'telegram', label: 'Telegram' },
 ] as const;
 
 /**
- * Интерфейс данных формы
+ * Начальное состояние формы
  */
-interface ServiceRequestFormData {
-  deviceType: 'pc' | 'laptop' | 'printer' | 'other';
-  brand: string;
-  serial: string;
-  problem: string;
-  name: string;
-  phone: string;
-  email: string;
-  urgency: 'low' | 'normal' | 'high';
-  preferredContact: 'email' | 'phone' | 'whatsapp' | 'telegram';
-}
+const INITIAL_FORM_DATA = {
+  deviceType: 'pc' as 'pc' | 'laptop' | 'printer' | 'other',
+  brand: '',
+  serial: '',
+  problem: '',
+  name: '',
+  phone: '',
+  email: '',
+  preferredContact: 'phone' as 'phone' | 'email' | 'whatsapp' | 'telegram',
+};
 
 /**
- * Интерфейс ответа API
- */
-interface ServiceRequestResponse {
-  id: string;
-  ticketNumber: string;
-  status: string;
-  createdAt: string;
-}
-
-/**
- * Интерфейс ошибок валидации
- */
-interface FormErrors {
-  deviceType?: string;
-  problem?: string;
-  name?: string;
-  phone?: string;
-}
-
-/**
- * Отправка заявки на ремонт
- */
-async function submitServiceRequest(
-  data: ServiceRequestFormData,
-  createTicketFn: (req: CreateTicketRequest) => Promise<ServiceRequestResponse | null>
-): Promise<ServiceRequestResponse | null> {
-  return createTicketFn({
-    deviceType: data.deviceType,
-    brand: data.brand,
-    model: data.brand,
-    serialNumber: data.serial,
-    issueDescription: data.problem,
-    preferredContact: data.preferredContact,
-  });
-}
-
-/**
- * Страница заявки на ремонт
- * Соответствует прототипу prototypes/service-request.html
+ * Страница подачи заявки в сервисный центр
+ * Пошаговая форма с 5 шагами: услуга → устройство → проблема → контакты → подтверждение
+ * Данные отправляются на реальный бэкенд POST /api/v1/services (ServicesService, порт 5003)
  */
 export function ServiceRequestPage() {
   const { showToast } = useToast();
-  const { createTicket } = useServiceTickets();
+  const { createService } = useServiceTickets();
+  const { isAuthenticated } = useAuthStore();
 
-  // Состояние формы
-  const [formData, setFormData] = useState<ServiceRequestFormData>({
-    deviceType: 'pc',
-    brand: '',
-    serial: '',
-    problem: '',
-    name: '',
-    phone: '',
-    email: '',
-    urgency: 'normal',
-    preferredContact: 'phone',
-  });
+  // --- Состояние формы ---
+  const [formData, setFormData] = useState(INITIAL_FORM_DATA);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [selectedServiceName, setSelectedServiceName] = useState('');
+  const [selectedServiceSlug, setSelectedServiceSlug] = useState('');
+  const [currentStep, setCurrentStep] = useState(1);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedTicket, setSubmittedTicket] = useState<{
+    ticketNumber: string;
+    status: string;
+  } | null>(null);
 
-  // Ошибки валидации
-  const [errors, setErrors] = useState<FormErrors>({});
+  // --- Валидация шага ---
+  function validateStep(step: number): boolean {
+    const newErrors: Record<string, string> = {};
 
-  // Мутация для отправки формы
-  const mutation = useMutation({
-    mutationFn: (data: ServiceRequestFormData) => submitServiceRequest(data, createTicket),
-    onSuccess: (result) => {
-      if (!result) {
-        showToast('Ошибка при отправке заявки. Сервер вернул пустой ответ.', 'error');
-        return;
+    if (step === 1 && !selectedServiceId) {
+      newErrors.service = 'Выберите услугу';
+    }
+    if (step === 3) {
+      if (!formData.problem.trim()) {
+        newErrors.problem = 'Опишите проблему';
+      } else if (formData.problem.trim().length < 10) {
+        newErrors.problem = 'Минимум 10 символов';
       }
-      showToast(`Заявка #${result.ticketNumber} успешно создана!`, 'success');
-      // Сброс формы
-      setFormData({
-        deviceType: 'pc',
-        brand: '',
-        serial: '',
-        problem: '',
-        name: '',
-        phone: '',
-        email: '',
-        urgency: 'normal',
-        preferredContact: 'phone',
-      });
-      setErrors({});
-    },
-    onError: () => {
-      showToast('Ошибка при отправке заявки. Попробуйте позже.', 'error');
-    },
-  });
-
-  /**
-   * Валидация формы
-   */
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.deviceType) {
-      newErrors.deviceType = 'Выберите тип техники';
     }
-
-    if (!formData.problem.trim()) {
-      newErrors.problem = 'Опишите проблему';
-    } else if (formData.problem.trim().length < 10) {
-      newErrors.problem = 'Описание должно содержать минимум 10 символов';
-    }
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Укажите ваше имя';
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Укажите номер телефона';
-    } else if (!/^\+?[\d\s\-()]{7,}$/.test(formData.phone.trim())) {
-      newErrors.phone = 'Некорректный формат телефона';
+    if (step === 4) {
+      if (!formData.name.trim()) newErrors.name = 'Укажите имя';
+      if (!formData.phone.trim()) {
+        newErrors.phone = 'Укажите телефон';
+      } else if (!/^\+?[\d\s\-()]{7,}$/.test(formData.phone.trim())) {
+        newErrors.phone = 'Некорректный формат';
+      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }
 
-  /**
-   * Обработчик изменения полей
-   */
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  // --- Флаг: можно ли перейти дальше ---
+  const canProceed = (() => {
+    if (currentStep === 1) return selectedServiceId !== null;
+    if (currentStep === 2) return true;
+    if (currentStep === 3) return formData.problem.trim().length >= 10;
+    if (currentStep === 4) {
+      return (
+        formData.name.trim() !== '' &&
+        formData.phone.trim() !== '' &&
+        /^\+?[\d\s\-()]{7,}$/.test(formData.phone.trim())
+      );
+    }
+    return true;
+  })();
+
+  // --- Обработчик изменения полей ---
+  const handleFieldChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-
-    // Очистка ошибки при изменении поля
-    if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
     }
   };
 
-  /**
-   * Обработчик выбора типа устройства
-   */
-  const handleDeviceTypeChange = (value: 'pc' | 'laptop' | 'printer' | 'other') => {
-    setFormData((prev) => ({ ...prev, deviceType: value }));
-    if (errors.deviceType) {
-      setErrors((prev) => ({ ...prev, deviceType: undefined }));
+  // --- Навигация ---
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(prev + 1, 5));
     }
   };
 
-  /**
-   * Обработчик отправки формы
-   */
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handlePrev = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    setErrors({});
+  };
 
-    if (!validateForm()) {
+  // --- Отправка формы ---
+  const handleSubmit = async () => {
+    if (!validateStep(currentStep) || !selectedServiceId) return;
+
+    if (!isAuthenticated) {
+      showToast('Необходимо войти в систему', 'error');
       return;
     }
 
-    mutation.mutate(formData);
+    setIsSubmitting(true);
+
+    try {
+      const payload: CreateServiceRequest = {
+        serviceTypeId: selectedServiceId,
+        description: formData.problem,
+        deviceModel: formData.brand || undefined,
+        serialNumber: formData.serial || undefined,
+      };
+
+      const result = await createService(payload);
+
+      if (result) {
+        setSubmittedTicket({
+          ticketNumber: result.requestNumber,
+          status: result.status,
+        });
+      } else {
+        showToast('Ошибка при отправке. Попробуйте позже.', 'error');
+      }
+    } catch {
+      showToast('Ошибка при отправке. Попробуйте позже.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  return (
-    <main className="pt-[100px] px-6 pb-15 max-w-[800px] mx-auto min-h-screen">
-      {/* Заголовок страницы */}
-      <div className="mb-10">
-        <h1 className="text-2xl font-semibold tracking-[-0.02em] mb-3 text-[var(--fg)]">Заявка на ремонт</h1>
-        <p className="text-[0.95rem] text-[var(--fg-muted)] leading-[1.6]">
-          Опишите проблему с вашим компьютером, и наши специалисты свяжутся с вами для уточнения
-          деталей.
+  // --- Сброс формы для новой заявки ---
+  const handleNewRequest = () => {
+    setSubmittedTicket(null);
+    setCurrentStep(1);
+    setSelectedServiceId(null);
+    setSelectedServiceName('');
+    setSelectedServiceSlug('');
+    setFormData(INITIAL_FORM_DATA);
+    setPhotos([]);
+    setErrors({});
+  };
+
+  // ====================== ОТРИСОВКА ШАГОВ ======================
+
+  /** Шаг 1 — выбор услуги */
+  const renderStep1Service = () => (
+    <div>
+      <ServiceSelector
+        selectedServiceId={selectedServiceId}
+        onSelect={(id, slug, name) => {
+          setSelectedServiceId(id);
+          setSelectedServiceName(name);
+          setSelectedServiceSlug(slug);
+          setErrors((prev) => ({ ...prev, service: '' }));
+        }}
+      />
+      {selectedServiceName && (
+        <p className="text-[#0ecb81] text-sm mt-3">
+          ✓ Выбрано: {selectedServiceName}
         </p>
+      )}
+      {errors.service && (
+        <p className="text-[#f6465d] text-xs mt-2">{errors.service}</p>
+      )}
+    </div>
+  );
+
+  /** Шаг 2 — информация об устройстве */
+  const renderStep2Device = () => (
+    <div>
+      <h2 className="text-[#eaecef] text-lg font-semibold mb-4">
+        Информация об устройстве
+      </h2>
+
+      {/* Тип устройства */}
+      <label className="block text-xs font-medium text-[#707a8a] mb-2.5 uppercase tracking-[0.05em]">
+        Тип техники <span className="text-[#f6465d]">*</span>
+      </label>
+      <div className="flex gap-3 flex-wrap mb-6">
+        {DEVICE_TYPES.map((type) => (
+          <div key={type.value} className="relative">
+            <input
+              type="radio"
+              name="deviceType"
+              id={`device-${type.value}`}
+              value={type.value}
+              checked={formData.deviceType === type.value}
+              onChange={handleFieldChange}
+              className="sr-only"
+            />
+            <label
+              htmlFor={`device-${type.value}`}
+              className={`flex items-center gap-2 px-4 py-3 bg-[#2b3139] border rounded-lg cursor-pointer transition-all text-sm ${
+                formData.deviceType === type.value
+                  ? 'border-[#fcd535] bg-[#fcd535]/10 text-[#fcd535]'
+                  : 'border-[#2b3139] text-[#707a8a] hover:border-[#707a8a] hover:text-[#eaecef]'
+              }`}
+            >
+              <span className="text-lg">{type.icon}</span>
+              {type.label}
+            </label>
+          </div>
+        ))}
       </div>
 
-      {/* Информационный блок */}
-      <div className="flex gap-4 p-5 bg-[var(--accent-glow)] border border-[var(--border-accent)] mb-6">
-        <svg
-          className="w-5 h-5 text-[var(--accent)] shrink-0 mt-0.5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="16" x2="12" y2="12" />
-          <line x1="12" y1="8" x2="12.01" y2="8" />
-        </svg>
-        <div className="flex-1">
-          <div className="text-[0.85rem] font-semibold mb-1.5 text-[var(--fg)]">Бесплатная диагностика</div>
-          <div className="text-sm text-[var(--fg-muted)] leading-[1.6]">
-            При сдаче техники в ремонт диагностика проводится бесплатно. Срок выполнения работ — от
-            1 до 5 рабочих дней.
-          </div>
-        </div>
+      {/* Марка и серийный номер */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="Марка / Модель"
+          name="brand"
+          value={formData.brand}
+          onChange={handleFieldChange}
+          placeholder="Например: ASUS ROG Strix"
+        />
+        <Input
+          label="Серийный номер"
+          name="serial"
+          value={formData.serial}
+          onChange={handleFieldChange}
+          placeholder="Укажите при наличии"
+        />
+      </div>
+    </div>
+  );
+
+  /** Шаг 3 — описание проблемы */
+  const renderStep3Problem = () => (
+    <div>
+      <h2 className="text-[#eaecef] text-lg font-semibold mb-4">
+        Опишите проблему
+      </h2>
+
+      <label
+        className="block text-xs font-medium text-[#707a8a] mb-2.5 uppercase tracking-[0.05em]"
+        htmlFor="problem"
+      >
+        Описание проблемы <span className="text-[#f6465d]">*</span>
+      </label>
+      <textarea
+        id="problem"
+        name="problem"
+        value={formData.problem}
+        onChange={handleFieldChange}
+        placeholder="Опишите подробно, что не работает или какие проблемы вы заметили..."
+        rows={5}
+        className={`w-full p-3.5 bg-[#2b3139] border rounded-lg text-[#eaecef] font-inherit text-sm resize-y min-h-[120px] focus:outline-none transition-all ${
+          errors.problem
+            ? 'border-[#f6465d] focus:border-[#f6465d] focus:shadow-[0_0_0_3px_rgba(246,70,93,0.15)]'
+            : 'border-[#2b3139] focus:border-[#fcd535] focus:shadow-[0_0_0_3px_rgba(252,213,53,0.1)]'
+        }`}
+      />
+      <div className="flex justify-between items-center mt-2">
+        <span className="text-xs text-[#707a8a]">
+          {formData.problem.trim().length < 10
+            ? `Минимум 10 символов (ещё ${10 - formData.problem.trim().length})`
+            : `${formData.problem.trim().length} символов`}
+        </span>
+        {errors.problem && (
+          <span className="text-xs text-[#f6465d]">{errors.problem}</span>
+        )}
       </div>
 
-      {/* Форма заявки */}
-      <form className="bg-[var(--bg-card)] border border-[var(--border)] p-8 mb-6" onSubmit={handleSubmit}>
-        {/* Секция: Информация о технике */}
-        <div className="text-base font-semibold mb-6 flex items-center gap-3 pb-4 border-b border-[var(--border)] text-[var(--fg)] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:text-[var(--accent)]">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="2" y="3" width="20" height="14" rx="2" />
-            <line x1="8" y1="21" x2="16" y2="21" />
-            <line x1="12" y1="17" x2="12" y2="21" />
-          </svg>
-          Информация о технике
-        </div>
+      <div className="mt-6">
+        <label className="block text-xs font-medium text-[#707a8a] mb-2.5 uppercase tracking-[0.05em]">
+          Фотографии (необязательно)
+        </label>
+        <PhotoUploader files={photos} onFilesChange={setPhotos} />
+      </div>
+    </div>
+  );
 
-        {/* Тип техники (Radio Group) */}
-        <div className="mb-6">
-          <label className="block text-xs font-medium text-[var(--fg-muted)] mb-2.5 uppercase tracking-[0.05em]">
-            Тип техники <span className="text-[var(--error)]">*</span>
-          </label>
-          <div className="flex gap-3 flex-wrap">
-            {DEVICE_TYPES.map((type) => (
-              <div key={type.value} className="relative">
-                <input
-                  type="radio"
-                  name="deviceType"
-                  id={`type-${type.value}`}
-                  value={type.value}
-                  checked={formData.deviceType === type.value}
-                  onChange={() => handleDeviceTypeChange(type.value)}
-                  className="sr-only"
-                />
-                <label
-                  htmlFor={`type-${type.value}`}
-                  className={`flex items-center gap-2.5 px-5 py-3 bg-[var(--bg-elevated)] border border-[var(--border-accent)] cursor-pointer transition-all text-[0.85rem] text-[var(--fg-muted)] hover:border-[var(--fg-dim)] hover:text-[var(--fg)] ${
-                    formData.deviceType === type.value
-                      ? 'border-[var(--accent)] bg-[var(--accent-glow)] text-[var(--fg)]'
-                      : ''
-                  }`}
-                >
-                  <span className="text-[1.1rem]">{type.icon}</span>
-                  {type.label}
-                </label>
-              </div>
-            ))}
-          </div>
-          {errors.deviceType && <span className="block text-[0.75rem] text-[var(--error)] mt-1.5">{errors.deviceType}</span>}
-        </div>
+  /** Шаг 4 — контактные данные */
+  const renderStep4Contact = () => (
+    <div>
+      <h2 className="text-[#eaecef] text-lg font-semibold mb-4">
+        Контактные данные
+      </h2>
 
-        {/* Марка/Модель и Серийный номер */}
-        <div className="grid grid-cols-2 gap-5 mb-6">
-          <Input
-            label="Марка/Модель"
-            name="brand"
-            value={formData.brand}
-            onChange={handleChange}
-            placeholder="Например: ASUS ROG Strix"
-          />
-          <Input
-            label="Серийный номер"
-            name="serial"
-            value={formData.serial}
-            onChange={handleChange}
-            placeholder="Укажите при наличии"
-          />
-        </div>
+      <div className="flex flex-col gap-4">
+        <Input
+          label="Имя"
+          name="name"
+          value={formData.name}
+          onChange={handleFieldChange}
+          placeholder="Ваше имя"
+          required
+          error={errors.name}
+        />
+        <Input
+          label="Телефон"
+          name="phone"
+          type="tel"
+          value={formData.phone}
+          onChange={handleFieldChange}
+          placeholder="+375 (__) ___-__-__"
+          required
+          error={errors.phone}
+        />
+        <Input
+          label="Email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleFieldChange}
+          placeholder="email@example.com"
+        />
 
-        {/* Описание проблемы */}
-        <div className="mb-6">
-          <label className="block text-xs font-medium text-[var(--fg-muted)] mb-2.5 uppercase tracking-[0.05em]" htmlFor="problem">
-            Описание проблемы <span className="text-[var(--error)]">*</span>
-          </label>
-          <textarea
-            id="problem"
-            name="problem"
-            className={`w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] transition-colors resize-y min-h-[120px] focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-glow,var(--border-muted))] ${
-              errors.problem ? 'border-[var(--error)] focus:border-[var(--error)] focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]' : ''
-            }`}
-            value={formData.problem}
-            onChange={handleChange}
-            placeholder="Опишите подробно, что не работает или какие проблемы вы заметили..."
-            rows={5}
-          />
-          <div className="text-[0.75rem] text-[var(--fg-dim)] mt-2">
-            Чем подробнее вы опишете проблему, тем быстрее мы сможем её диагностировать
-          </div>
-          {errors.problem && <span className="block text-[0.75rem] text-[var(--error)] mt-1.5">{errors.problem}</span>}
-        </div>
-
-        {/* Загрузка файлов (Placeholder) */}
-        <div className="mb-6">
-          <label className="block text-xs font-medium text-[var(--fg-muted)] mb-2.5 uppercase tracking-[0.05em]">Фотографии (необязательно)</label>
-          <div className="flex flex-col items-center justify-center gap-2 p-8 border-2 border-dashed border-[var(--border)] bg-[var(--bg-elevated)] cursor-pointer transition-all text-center hover:border-[var(--fg-dim)] hover:bg-[var(--bg-card)] [&>svg]:w-8 [&>svg]:h-8 [&>svg]:text-[var(--fg-dim)] [&>svg]:transition-colors [&:hover>svg]:text-[var(--accent)]">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-            <span className="text-[0.9rem] text-[var(--fg-muted)]">Перетащите файлы сюда или кликните для выбора</span>
-            <span className="text-[0.75rem] text-[var(--fg-dim)]">PNG, JPG до 10MB</span>
-          </div>
-        </div>
-
-        {/* Секция: Контактные данные */}
-        <div className="text-base font-semibold mb-6 flex items-center gap-3 pb-4 border-b border-[var(--border)] text-[var(--fg)] [&>svg]:w-5 [&>svg]:h-5 [&>svg]:text-[var(--accent)]">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-          Контактные данные
-        </div>
-
-        {/* Имя и Телефон */}
-        <div className="grid grid-cols-2 gap-5 mb-6">
-          <Input
-            label="Имя"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Ваше имя"
-            required
-            error={errors.name}
-          />
-          <Input
-            label="Телефон"
-            name="phone"
-            type="tel"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="+375 (__) ___-__-__"
-            required
-            error={errors.phone}
-          />
-        </div>
-
-        {/* Email */}
-        <div className="grid grid-cols-2 gap-5 mb-6">
-          <Input
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="email@example.com"
-          />
-        </div>
-
-        {/* Способ связи */}
-        <div className="mb-6">
-          <label className="block text-xs font-medium text-[var(--fg-muted)] mb-2.5 uppercase tracking-[0.05em]" htmlFor="preferredContact">
+        {/* Предпочитаемый способ связи */}
+        <div>
+          <label
+            className="block text-xs font-medium text-[#707a8a] mb-2.5 uppercase tracking-[0.05em]"
+            htmlFor="preferredContact"
+          >
             Предпочитаемый способ связи
           </label>
           <select
             id="preferredContact"
             name="preferredContact"
-            className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_16px_center] focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-glow,var(--border-muted))] [&>option]:bg-[var(--bg-card)] [&>option]:text-[var(--fg)]"
             value={formData.preferredContact}
-            onChange={handleChange}
+            onChange={handleFieldChange}
+            className="w-full p-3.5 bg-[#2b3139] border border-[#2b3139] rounded-lg text-[#eaecef] font-inherit text-sm cursor-pointer appearance-none focus:outline-none focus:border-[#fcd535] bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23707a8a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_16px_center]"
           >
-            <option value="phone">По телефону</option>
-            <option value="email">По email</option>
-            <option value="whatsapp">WhatsApp</option>
-            <option value="telegram">Telegram</option>
-          </select>
-        </div>
-
-        {/* Срочность */}
-        <div className="mb-6">
-          <label className="block text-xs font-medium text-[var(--fg-muted)] mb-2.5 uppercase tracking-[0.05em]" htmlFor="urgency">
-            Срочность
-          </label>
-          <select
-            id="urgency"
-            name="urgency"
-            className="w-full p-3.5 bg-[var(--bg-elevated)] border border-[var(--border-accent)] text-[var(--fg)] font-[var(--font-sans)] text-[0.9rem] cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_16px_center] focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-glow,var(--border-muted))] [&>option]:bg-[var(--bg-card)] [&>option]:text-[var(--fg)]"
-            value={formData.urgency}
-            onChange={handleChange}
-          >
-            {URGENCY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
+            {CONTACT_METHODS.map((method) => (
+              <option key={method.value} value={method.value}>
+                {method.label}
               </option>
             ))}
           </select>
         </div>
+      </div>
+    </div>
+  );
 
-        {/* Кнопки действий */}
-        <div className="flex gap-3 mt-8 pt-6 border-t border-[var(--border)]">
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Отправка...' : 'Отправить заявку'}
-            {!mutation.isPending && (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
-            )}
-          </Button>
-          <Button type="button" variant="ghost" onClick={() => setFormData({
-            deviceType: 'pc',
-            brand: '',
-            serial: '',
-            problem: '',
-            name: '',
-            phone: '',
-            email: '',
-            urgency: 'normal',
-            preferredContact: 'phone',
-          })}>
-            Очистить форму
-          </Button>
+  /** Шаг 5 — подтверждение */
+  const renderStep5Summary = () => (
+    <div>
+      <h2 className="text-[#eaecef] text-lg font-semibold mb-4">
+        Подтверждение заявки
+      </h2>
+
+      <div className="bg-[#1e2329] border border-[#2b3139] rounded-lg p-6 space-y-4">
+        {/* Услуга */}
+        <div className="flex justify-between">
+          <span className="text-sm text-[#707a8a]">Услуга</span>
+          <span className="text-sm text-[#eaecef] font-medium">
+            {selectedServiceName}
+          </span>
         </div>
-      </form>
+
+        {/* Устройство */}
+        <div className="flex justify-between">
+          <span className="text-sm text-[#707a8a]">Тип устройства</span>
+          <span className="text-sm text-[#eaecef] font-medium">
+            {DEVICE_TYPES.find((d) => d.value === formData.deviceType)?.label}
+          </span>
+        </div>
+
+        {formData.brand && (
+          <div className="flex justify-between">
+            <span className="text-sm text-[#707a8a]">Марка / Модель</span>
+            <span className="text-sm text-[#eaecef] font-medium">
+              {formData.brand}
+            </span>
+          </div>
+        )}
+
+        {formData.serial && (
+          <div className="flex justify-between">
+            <span className="text-sm text-[#707a8a]">Серийный номер</span>
+            <span className="text-sm text-[#eaecef] font-medium">
+              {formData.serial}
+            </span>
+          </div>
+        )}
+
+        {/* Проблема (обрезанная) */}
+        <div className="pt-3 border-t border-[#2b3139]">
+          <span className="text-sm text-[#707a8a] block mb-1">Описание проблемы</span>
+          <span className="text-sm text-[#eaecef]">
+            {formData.problem.length > 120
+              ? formData.problem.slice(0, 120) + '...'
+              : formData.problem}
+          </span>
+        </div>
+
+        {/* Фото */}
+        {photos.length > 0 && (
+          <div className="pt-3 border-t border-[#2b3139]">
+            <span className="text-sm text-[#707a8a]">
+              Фотографии: {photos.length} шт.
+            </span>
+          </div>
+        )}
+
+        {/* Контакты */}
+        <div className="pt-3 border-t border-[#2b3139] space-y-3">
+          <div className="flex justify-between">
+            <span className="text-sm text-[#707a8a]">Имя</span>
+            <span className="text-sm text-[#eaecef] font-medium">
+              {formData.name}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-[#707a8a]">Телефон</span>
+            <span className="text-sm text-[#eaecef] font-medium">
+              {formData.phone}
+            </span>
+          </div>
+          {formData.email && (
+            <div className="flex justify-between">
+              <span className="text-sm text-[#707a8a]">Email</span>
+              <span className="text-sm text-[#eaecef] font-medium">
+                {formData.email}
+              </span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span className="text-sm text-[#707a8a]">Способ связи</span>
+            <span className="text-sm text-[#eaecef] font-medium">
+              {CONTACT_METHODS.find((m) => m.value === formData.preferredContact)
+                ?.label ?? formData.preferredContact}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {!isAuthenticated && (
+        <div className="mt-4 p-4 bg-[#2b3139] border border-[#fcd535]/30 rounded-lg text-center">
+          <p className="text-[#eaecef] text-sm mb-3">
+            Для отправки заявки необходимо войти в систему
+          </p>
+          <Link to="/login">
+            <Button variant="primary">Войдите, чтобы оставить заявку</Button>
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+
+  // ====================== ИНДИКАТОР ШАГОВ ======================
+
+  const renderStepIndicator = () => (
+    <div className="flex items-center mb-8">
+      {STEP_LABELS.map((label, index) => {
+        const stepNum = index + 1;
+        const isCompleted = stepNum < currentStep;
+        const isActive = stepNum === currentStep;
+        const isFuture = stepNum > currentStep;
+
+        return (
+          <div key={label} className="flex items-center flex-1 last:flex-none">
+            {/* Кружок + подпись */}
+            <div className="flex flex-col items-center">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
+                  isActive || isCompleted
+                    ? 'bg-[#fcd535] text-[#181a20]'
+                    : 'bg-[#2b3139] text-[#707a8a]'
+                }`}
+              >
+                {isCompleted ? (
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : (
+                  stepNum
+                )}
+              </div>
+              <span
+                className={`text-xs mt-1.5 whitespace-nowrap hidden md:block transition-colors ${
+                  isActive ? 'text-[#fcd535]' : 'text-[#707a8a]'
+                }`}
+              >
+                {label}
+              </span>
+            </div>
+
+            {/* Линия-соединитель (кроме последнего) */}
+            {index < STEP_LABELS.length - 1 && (
+              <div
+                className={`h-px flex-1 mx-2 md:mx-4 ${
+                  isCompleted ? 'bg-[#fcd535]' : 'bg-[#2b3139]'
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  // ====================== ОСНОВНОЙ РЕНДЕР ======================
+
+  // Успешная отправка → SuccessScreen
+  if (submittedTicket) {
+    return (
+      <main className="min-h-screen bg-[#0b0e11] pt-[100px] px-4 md:px-6 pb-15">
+        <div className="max-w-[800px] mx-auto">
+          <SuccessScreen
+            ticketNumber={submittedTicket.ticketNumber}
+            status={submittedTicket.status}
+            onNewRequest={handleNewRequest}
+          />
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-[#0b0e11] pt-[100px] px-4 md:px-6 pb-15">
+      <div className="max-w-[800px] mx-auto">
+        {/* Заголовок страницы */}
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold tracking-[-0.02em] text-[#eaecef] mb-2">
+            Заявка в сервисный центр
+          </h1>
+          <p className="text-sm text-[#707a8a]">
+            Заполните форму, и наши специалисты свяжутся с вами
+          </p>
+        </div>
+
+        {/* Индикатор шагов */}
+        {renderStepIndicator()}
+
+        {/* Содержимое шага */}
+        <div className="bg-[#1e2329] border border-[#2b3139] rounded-lg p-6 md:p-8">
+          {currentStep === 1 && renderStep1Service()}
+          {currentStep === 2 && renderStep2Device()}
+          {currentStep === 3 && renderStep3Problem()}
+          {currentStep === 4 && renderStep4Contact()}
+          {currentStep === 5 && renderStep5Summary()}
+
+          {/* Навигационные кнопки */}
+          <div className="flex justify-between mt-8 pt-6 border-t border-[#2b3139]">
+            {currentStep > 1 ? (
+              <Button variant="ghost" onClick={handlePrev}>
+                ← Назад
+              </Button>
+            ) : (
+              <div />
+            )}
+
+            {currentStep < 5 ? (
+              <Button
+                variant="primary"
+                onClick={handleNext}
+                disabled={!canProceed}
+              >
+                Далее →
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                onClick={handleSubmit}
+                disabled={isSubmitting || !isAuthenticated}
+              >
+                {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

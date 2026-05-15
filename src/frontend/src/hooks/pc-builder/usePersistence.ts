@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { saveToLocalStorage, loadFromLocalStorage, clearLocalStorage } from '@/features/pc-builder/logic/persistence';
+import { saveToLocalStorage, loadFromLocalStorage } from '@/features/pc-builder/logic/persistence';
 import type { PCBuilderSelectedState } from '@/features/pc-builder/logic/types';
 
 interface UsePersistenceOptions {
@@ -34,8 +34,8 @@ export function usePersistence(
 
   const handleClear = options.onClearStorage;
   useEffect(() => {
-    if (!isFirstRender.current && handleClear) {
-      clearLocalStorage();
+    if (!isFirstRender.current) {
+      handleClear();
     }
   }, [handleClear]);
 }

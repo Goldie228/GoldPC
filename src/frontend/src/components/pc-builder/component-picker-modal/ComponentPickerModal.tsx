@@ -11,10 +11,10 @@ import { Modal } from '../../ui';
 import { ProductCardSkeleton } from '../../ui/Skeleton';
 import { ApiErrorBanner } from '../../ui/ApiErrorBanner';
 import { Pagination } from '../../catalog/Pagination';
-import { FilterSidebar } from '../../catalog';
+import { FilterSidebar } from '../../filter-sidebar/FilterSidebar';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';
-import { extractSocket, extractMemoryType, extractFormFactor, extractTDP } from '../../../shared/utils/compatibility/extractors';
+import { extractSocket, extractFormFactor, extractTDP } from '../../../shared/utils/compatibility/extractors';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '../../../hooks/useProducts';
 import { catalogApi } from '../../../api/catalog';
@@ -71,7 +71,7 @@ function parseSort(p: string) {
 }
 
 function summaryToProduct(s: ProductSummary): Product {
-  return { ...s, specifications: s.specifications ?? {} } as Product;
+  return { ...s, specifications: {} } as Product;
 }
 
 // ─── CardImageGallery: image with prev/next + hover zones + badges ────────
@@ -85,7 +85,7 @@ function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }:
   const [currentIdx, setCurrentIdx] = useState(0);
   const allImages = useMemo<ProductImage[]>(() => {
     const imgs = product.images ?? [];
-    if (product.mainImage && !imgs.some((i: ProductImage) => i.id === product.mainImage.id)) {
+    if (product.mainImage && !imgs.some((i: ProductImage) => i.id === product.mainImage?.id)) {
       return [product.mainImage, ...imgs];
     }
     return imgs;
@@ -175,7 +175,7 @@ function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpen
             <ExternalLink size={10} /> Подробнее
           </button>
         )}
-        {specs.length > 0 && <ul className="m-0 p-0 list-none flex flex-col gap-[3px]">{specs.map((s, i) => <li key={i}>{s}</li>)}</ul>}
+        {specs.length > 0 && <ul className="m-0 p-0 list-none flex flex-col gap-[4px]">{specs.map((s, i) => <li key={i} className="text-[var(--fg-muted)] text-[0.68rem] flex items-start gap-1.5"><span className="text-[var(--accent)] mt-[1px]">•</span>{s}</li>)}</ul>}
         <div className="flex items-center justify-between gap-2 mt-auto">
           <div className="flex flex-col gap-0.5">
             <span className="text-[0.85rem] font-semibold text-[var(--accent)] whitespace-nowrap">{product.price.toLocaleString('ru-BY')} BYN</span>
@@ -183,7 +183,7 @@ function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpen
               <span className="text-[0.64rem] text-[var(--fg-dim)] line-through">{product.oldPrice.toLocaleString('ru-BY')}</span>
             )}
           </div>
-          <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border border-[var(--accent)] bg-transparent text-[var(--accent)] cursor-pointer whitespace-nowrap transition-all ${isSelected ? "bg-[var(--accent)] text-[var(--color-black-soft)]" : ""}`} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
+          <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border border-[var(--accent)] bg-transparent text-[var(--accent)] cursor-pointer whitespace-nowrap transition-all ${isSelected ? "text-black font-bold shadow-sm" : ""}`} style={isSelected ? { backgroundColor: 'var(--accent)' } : undefined} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
             {isSelected ? 'Выбрано' : outOfStock ? 'Нет в наличии' : 'Выбрать'}
           </button>
         </div>
@@ -229,7 +229,7 @@ function PickerProductCardCompact({ product, isSelected, isCompatible, onSelect,
             <span className="text-[0.62rem] text-[var(--fg-dim)] line-through">{product.oldPrice.toLocaleString('ru-BY')}</span>
           )}
         </div>
-        <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border border-[var(--accent)] bg-transparent text-[var(--accent)] cursor-pointer whitespace-nowrap transition-all ${isSelected ? "bg-[var(--accent)] text-[var(--color-black-soft)]" : ""}`} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
+          <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border border-[var(--accent)] bg-transparent text-[var(--accent)] cursor-pointer whitespace-nowrap transition-all ${isSelected ? "text-black font-bold shadow-sm" : ""}`} style={isSelected ? { backgroundColor: 'var(--accent)' } : undefined} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
           {isSelected ? 'Выбрано' : outOfStock ? 'Нет в наличии' : 'Выбрать'}
         </button>
         {outOfStock && <span className="text-[0.62rem] text-[var(--error)]">Нет в наличии</span>}
@@ -291,8 +291,8 @@ function SpecList({ specs }: { specs: Record<string, unknown> }) {
   return (
     <div className="flex flex-col gap-0">
       {entries.map((row) => (
-        <div key={row.label} className="flex flex-wrap gap-1 items-1 border-b border-[rgba(255,255,255,0.05)] pb-1.5 text-[0.74rem]">
-          <span className="text-[var(--fg-muted)] flex-1 flex-basis-[40%]">{row.label}</span>
+        <div key={row.label} className="flex flex-wrap gap-1 items-center py-2 px-1.5 text-[0.78rem] rounded-sm even:bg-[rgba(255,255,255,0.02)]">
+          <span className="text-[var(--fg-muted)] font-medium flex-1 flex-basis-[40%]">{row.label}</span>
           <span className="text-[var(--fg)] flex-1 flex-basis-[60%] text-right word-break-break-word">{row.value}</span>
         </div>
       ))}
@@ -376,12 +376,16 @@ export function ComponentPickerModal({
       if (s) out.socket = s;
     }
     if (slotType === 'ram' && buildContext?.motherboard?.product) {
-      const mt = extractMemoryType(buildContext.motherboard.product.specifications);
-      if (mt) { out.memoryType = mt; out.type = mt; }
+      // Do NOT set server-side spec filter for memory type.
+      // Let all RAM products load, and use client-side compatibility
+      // to mark incompatible items (lock icon + tooltip).
+      // Setting out.type here would hard-filter on the server and
+      // hide all products that don't match — breaking the UX when
+      // the DB has no RAM of the required type.
 
       // Form factor filtering for RAM
-      const mff = (buildContext.motherboard.product.specifications as Record<string, unknown>)["memoryFormFactor"] ??
-                  (buildContext.motherboard.product.specifications as Record<string, unknown>)["memory_form_factor"] ?? 'DIMM';
+      const mff = ((buildContext.motherboard.product.specifications as Record<string, unknown>)["memoryFormFactor"] ??
+                   (buildContext.motherboard.product.specifications as Record<string, unknown>)["memory_form_factor"] ?? 'DIMM') as string;
       if (mff) out.memoryFormFactor = mff;
     }
     // PSU picker: enforce minimum wattage based on GPU+CPU selection
@@ -434,14 +438,14 @@ export function ComponentPickerModal({
   ]);
 
   // ── Restricted spec values from build context ──
-  const restrictedSpecValues = useMemo(() => {
+  const restrictedSpecValues = useMemo((): Record<string, string[]> => {
     return {};
   }, [slotType, buildContext]);
 
   // 🔹 Debounced fetch function - 300ms delay for user input
-  const fetchProducts = useDebouncedCallback((filters) => {
+  const fetchProducts = useDebouncedCallback(() => {
     startTransition(() => {
-      refetch(filters);
+      refetch({ cancelRefetch: true });
     });
   }, 300);
 
@@ -450,7 +454,7 @@ export function ComponentPickerModal({
   // 🔹 Single effect with DEEP comparison - EXACTLY ONE request when filters change
   useDeepCompareEffect(() => {
     if (!isOpen) return;
-    fetchProducts(filters);
+    fetchProducts();
   }, [filters, isOpen, fetchProducts]);
 
   // 🔹 Keep old products during loading to prevent layout shift
@@ -581,6 +585,8 @@ export function ComponentPickerModal({
                 restrictedSpecValues={restrictedSpecValues}
                 effectiveSpecifications={effectiveSpecs}
                 restrictedManufacturerPlatform={restrictedManufacturerPlatform}
+                sortBy={sortPreset}
+                onSortChange={setSortPreset}
               />
             </div>
           </div>
@@ -601,30 +607,24 @@ export function ComponentPickerModal({
               onReset={handleResetFilters}
               restrictedSpecValues={restrictedSpecValues}
               restrictedManufacturerPlatform={restrictedManufacturerPlatform}
+              sortBy={sortPreset}
+              onSortChange={setSortPreset}
             />
           </div>
 
           {/* Products */}
           <div className="min-w-0 flex flex-col gap-2.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.12)] scrollbar-track-transparent">
-            <div className="flex flex-col gap-2 py-1.5 px-0 flex-shrink-0 border-b border-[rgba(255,255,255,0.06)]">
-              {/* Строка 1: поиск + кнопка Фильтры (mobile) */}
-              <div className="flex items-center gap-2">
-                <button className="flex md:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-[rgba(255,255,255,0.08)] bg-[var(--color-black-soft)] text-[var(--fg)] text-xs cursor-pointer flex-shrink-0" onClick={() => setMobileFilterOpen(true)}>
-                  <SlidersHorizontal size={16} /> Фильтры
-                </button>
-                <form className="flex-1 min-w-0 relative" onSubmit={(e) => e.preventDefault()}>
-                  <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-dim)] pointer-events-none" />
-                  <input type="search" className="w-full py-1.5 pl-[30px] pr-7 rounded-md border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.25)] text-[var(--fg)] text-xs placeholder:text-[var(--fg-dim)] focus:outline-none focus:outline-2 focus:outline-[rgba(252,213,53,0.35)] focus:outline-offset-0" placeholder="Поиск по названию…"
-                    value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); setHighlightedId(null); }} />
-                  {search && <button type="button" className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-none border-none text-[var(--fg-dim)] cursor-pointer p-0.5 flex hover:text-[var(--fg-muted)]" onClick={() => setSearch('')}><X size={14} /></button>}
-                </form>
-              </div>
-              {/* Строка 2: сортировка + в наличии */}
-              <div className="flex items-center gap-2.5">
-                <select className="px-[28px] py-0 h-8 rounded-md border border-[rgba(255,255,255,0.08)] bg-[var(--color-black-soft)] text-[var(--fg)] text-xs appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27%3E%3C/polyline%3E%3C/svg%3E')] bg-no-repeat bg-[right_8px_center] bg-[length:12px] cursor-pointer focus:outline-none focus:border-[var(--accent)] flex-1 md:flex-none min-w-0 max-w-[220px]" value={sortPreset} onChange={(e) => setSortPreset(e.target.value)}>
-                  {SORT_PRESETS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
+            <div className="flex items-center gap-2 py-1.5 px-0 flex-shrink-0 border-b border-[rgba(255,255,255,0.06)]">
+              {/* Поиск + кнопка Фильтры (mobile) */}
+              <button className="flex md:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-[rgba(255,255,255,0.08)] bg-[var(--color-black-soft)] text-[var(--fg)] text-xs cursor-pointer flex-shrink-0" onClick={() => setMobileFilterOpen(true)}>
+                <SlidersHorizontal size={16} /> Фильтры
+              </button>
+              <form className="flex-1 min-w-0 relative" onSubmit={(e) => e.preventDefault()}>
+                <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-dim)] pointer-events-none" />
+                <input type="search" className="w-full py-1.5 pl-[30px] pr-7 rounded-md border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.25)] text-[var(--fg)] text-xs placeholder:text-[var(--fg-dim)] focus:outline-none focus:outline-2 focus:outline-[rgba(252,213,53,0.35)] focus:outline-offset-0" placeholder="Поиск по названию…"
+                  value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); setHighlightedId(null); }} />
+                {search && <button type="button" className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-none border-none text-[var(--fg-dim)] cursor-pointer p-0.5 flex hover:text-[var(--fg-muted)]" onClick={() => setSearch('')}><X size={14} /></button>}
+              </form>
             </div>
 
             {/* ✅ Keep old products visible while loading - overlay skeletons on top */}

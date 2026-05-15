@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAdmin } from '../../../hooks/useAdmin';
 import type { UserRole, UpdateUserRequest } from '../../../api/admin';
+import { usersAdminApi } from '../../../api/admin';
 import type { User } from '../../../api/types';
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -87,6 +88,7 @@ export function UserFormPage() {
     try {
       const userData = await getUser(id!);
       setUser(userData);
+      if (!userData) return;
       setFirstName(userData.firstName);
       setLastName(userData.lastName);
       setEmail(userData.email);

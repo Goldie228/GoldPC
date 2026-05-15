@@ -4,14 +4,14 @@
  * Extracted from usePCBuilder.ts for better organization
  */
 
-import type { Product } from '../../api/types';
+import type { Product } from '../../../api/types';
 import type { PCBuilderSelectedState } from './types';
 import { MAX_RAM_MODULES } from './constants';
 import { extractMbRamSlots, extractModulesCount } from './specExtractors';
 
 export function getMaxRamModules(motherboard: Product | undefined): number {
   if (motherboard) {
-    return extractMbRamSlots(motherboard.product.specifications);
+    return extractMbRamSlots(motherboard.specifications);
   }
   return MAX_RAM_MODULES;
 }

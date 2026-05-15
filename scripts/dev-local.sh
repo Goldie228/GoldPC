@@ -192,7 +192,7 @@ check_env() {
     fi
 
     echo -e "${CYAN}Checking port availability...${RESET}"
-    local ports=(5000 5001 5002 5005 5173 5434 6379)
+    local ports=(5000 5001 5002 5003 5004 5005 5173 5434 6379)
     for port in "${ports[@]}"; do
         if ! check_port "$port"; then
             echo -e "${RED}✗ Port $port is already in use${RESET}"
@@ -369,6 +369,8 @@ start_backend() {
         "CatalogService:5000:src/CatalogService:/swagger/index.html"
         "AuthService:5001:src/AuthService:/health"
         "OrdersService:5002:src/OrdersService:/health"
+        "ServicesService:5003:src/ServicesService:/health"
+        "WarrantyService:5004:src/WarrantyService:/health"
         "PCBuilderService:5005:src/PCBuilderService:/health"
     )
 
@@ -584,6 +586,8 @@ stream_logs() {
             -t "Catalog" "$LOG_DIR/catalogservice.log" \
             -t "Auth" "$LOG_DIR/authservice.log" \
             -t "Orders" "$LOG_DIR/ordersservice.log" \
+            -t "Services" "$LOG_DIR/servicesservice.log" \
+            -t "Warranty" "$LOG_DIR/warrantyservice.log" \
             -t "PCBuilder" "$LOG_DIR/pcbuilderservice.log" \
             -t "Frontend" "$LOG_DIR/frontend.log"
     else
@@ -592,12 +596,16 @@ stream_logs() {
         tail -f "$LOG_DIR/catalogservice.log" \
                 "$LOG_DIR/authservice.log" \
                 "$LOG_DIR/ordersservice.log" \
+                "$LOG_DIR/servicesservice.log" \
+                "$LOG_DIR/warrantyservice.log" \
                 "$LOG_DIR/pcbuilderservice.log" \
                 "$LOG_DIR/frontend.log" 2>/dev/null | awk '
             /==> .*catalogservice.log <==/ { prefix="\033[32m[Catalog]\033[0m "; next }
             /==> .*authservice.log <==/ { prefix="\033[34m[Auth]\033[0m "; next }
             /==> .*ordersservice.log <==/ { prefix="\033[35m[Orders]\033[0m "; next }
-            /==> .*pcbuilderservice.log <==/ { prefix="\033[36m[PCBuilder]\033[0m "; next }
+            /==> .*servicesservice.log <==/ { prefix="\033[36m[Services]\033[0m "; next }
+            /==> .*warrantyservice.log <==/ { prefix="\033[33m[Warranty]\033[0m "; next }
+            /==> .*pcbuilderservice.log <==/ { prefix="\033[37m[PCBuilder]\033[0m "; next }
             /==> .*frontend.log <==/ { prefix="\033[33m[Frontend]\033[0m "; next }
             { print prefix $0 }
         '
@@ -627,6 +635,8 @@ echo -e "${GREEN}Frontend:${RESET}     http://localhost:5173"
 echo -e "${GREEN}Catalog API:${RESET}  http://localhost:5000/swagger"
 echo -e "${GREEN}Auth API:${RESET}     http://localhost:5001/swagger"
 echo -e "${GREEN}Orders API:${RESET}   http://localhost:5002/swagger"
+echo -e "${GREEN}Services API:${RESET} http://localhost:5003/swagger"
+echo -e "${GREEN}Warranty API:${RESET} http://localhost:5004/swagger"
 echo -e "${GREEN}PCBuilder API:${RESET} http://localhost:5005/swagger"
 echo ""
 echo -e "${YELLOW}Logs are available in $LOG_DIR/${RESET}"

@@ -30,6 +30,7 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // ✅ Проверяем ВСЕ хранилища в правильном порядке
     const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+    console.log('[API Client] Token from storage:', token ? 'present' : 'missing');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -39,6 +40,13 @@ apiClient.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+// ✅ Восстанавливаем токен при загрузке страницы
+const savedToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+console.log('[API Client] Initial token restore:', savedToken ? 'success' : 'none');
+if (savedToken) {
+  apiClient.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+}
 
 /**
  * Извлекает полезные данные из обёрнутого ответа ApiResponse<T>

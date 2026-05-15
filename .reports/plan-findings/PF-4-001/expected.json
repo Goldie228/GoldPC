@@ -1,0 +1,4 @@
+{
+  "planRef": "service-backend-connection",
+  "description": "Old ServiceTicket type kept for backward compat, new ServiceRequestDto added for backend"
+}

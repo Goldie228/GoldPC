@@ -10,9 +10,6 @@ export default defineConfig({
     tailwindcss(),
     // VitePWA temporarily disabled - install vite-plugin-pwa package to enable
   ],
-  build: {
-    cssMinify: false,
-  },
   base: './',
   resolve: {
     alias: {
@@ -49,8 +46,16 @@ export default defineConfig({
         target: 'http://localhost:5002',
         changeOrigin: true,
       },
+      '/api/v1/services': {
+        target: 'http://localhost:5003',
+        changeOrigin: true,
+      },
       '/api/v1/pcbuilder': {
         target: 'http://localhost:5005',
+        changeOrigin: true,
+      },
+      '/api/v1/warranty': {
+        target: 'http://localhost:5006',
         changeOrigin: true,
       },
       '/api': {
@@ -64,6 +69,7 @@ export default defineConfig({
     },
   },
   build: {
+    cssMinify: false,
     assetsDir: 'assets',
     rollupOptions: {
       output: {

@@ -236,17 +236,20 @@ export interface ResetPasswordRequest {
 }
 
 export interface User {
-  id: Uuid;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  role: 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant';
-  roles?: ('Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant')[];
-  isActive: boolean;
-  isEmailVerified: boolean;
-  createdAt: string;
-}
+   id: Uuid;
+   email: string;
+   firstName: string;
+   lastName: string;
+    phone?: string;
+    avatarUrl?: string;
+    birthDate?: string;
+   company?: string;
+   role: 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant';
+   roles?: ('Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant')[];
+   isActive: boolean;
+   isEmailVerified: boolean;
+   createdAt: string;
+ }
 
 // === Корзина ===
 export interface CartItem {
@@ -328,16 +331,66 @@ export interface ServiceRequest {
 
     
 export interface Order {
-  id: string;
-  customerName: string;
-  customerEmail: string;
-  status: string;
-  total: number;
-  date: string;
-  items?: Array<{
-    productId: string;
-    name: string;
-    quantity: number;
-    price: number;
-  }>;
+   id: string;
+   customerName: string;
+   customerEmail: string;
+   status: string;
+   total: number;
+   date: string;
+   items?: Array<{
+     productId: string;
+     name: string;
+     quantity: number;
+     price: number;
+   }>;
+}
+
+// === Безопасность ===
+export interface ChangePasswordRequest {
+   currentPassword: string;
+   newPassword: string;
+}
+
+export interface TwoFactorEnableRequest {
+   totpCode: string;
+}
+
+export interface TwoFactorVerifyRequest {
+   totpCode: string;
+}
+
+export interface TwoFactorDisableRequest {
+   password: string;
+}
+
+export interface TwoFactorStatusResponse {
+   isEnabled: boolean;
+   recoveryCodes: string[] | null;
+   qrCodeUrl: string | null;
+}
+
+export interface NotificationPreferenceRequest {
+   emailNotifications: boolean;
+   smsNotifications: boolean;
+   telegramNotifications: boolean;
+   orderStatusNotifications: boolean;
+   marketingNotifications: boolean;
+}
+
+export interface NotificationPreferenceResponse {
+   emailNotifications: boolean;
+   smsNotifications: boolean;
+   telegramNotifications: boolean;
+   orderStatusNotifications: boolean;
+   marketingNotifications: boolean;
+   updatedAt: string;
+}
+
+export interface LoginHistoryItem {
+   id: string;
+   ipAddress: string;
+   userAgent: string | null;
+   timestamp: string;
+   success: boolean;
+   failureReason: string | null;
 }

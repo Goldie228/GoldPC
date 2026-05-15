@@ -57,7 +57,7 @@ export function runPSUCompatibilityCheck(
   cpu: Product | undefined,
   gpu: Product | undefined,
   chassis: Product | undefined,
-  issues: CompatibilityIssue[],
+  _issues: CompatibilityIssue[],
   warnings: CompatibilityWarning[]
 ): void {
   if (psu) { const w = checkPSU(psu, cpu, gpu, chassis); if (w && w.severity !== 'Error') warnings.push(w as unknown as CompatibilityWarning); }
@@ -67,7 +67,7 @@ export function runCaseCompatibilityCheck(
   chassis: Product | undefined,
   motherboard: Product | undefined,
   issues: CompatibilityIssue[],
-  warnings: CompatibilityWarning[]
+  _warnings: CompatibilityWarning[]
 ): void {
   if (chassis && motherboard) { const i = checkCaseFF(chassis, motherboard); if (i) issues.push(i); }
 }
@@ -75,7 +75,7 @@ export function runCaseCompatibilityCheck(
 export function runGPUCompatibilityCheck(
   chassis: Product | undefined,
   gpu: Product | undefined,
-  issues: CompatibilityIssue[],
+  _issues: CompatibilityIssue[],
   warnings: CompatibilityWarning[]
 ): void {
   if (chassis && gpu) { const w = checkGPULen(chassis, gpu); if (w) warnings.push(w); }
@@ -84,7 +84,7 @@ export function runGPUCompatibilityCheck(
 export function runIntegratedGraphicsCheck(
   cpu: Product | undefined,
   gpu: Product | undefined,
-  issues: CompatibilityIssue[],
+  _issues: CompatibilityIssue[],
   warnings: CompatibilityWarning[]
 ): void {
   if (cpu) { const w = checkIG(cpu, gpu); if (w) warnings.push(w); }
@@ -108,7 +108,7 @@ export function runBottleneckAnalysis(
 
 export function runRAMCapacityWarning(
   ram: Product | undefined,
-  motherboard: Product | undefined,
+  _motherboard: Product | undefined,
   warnings: CompatibilityWarning[]
 ): void {
   if (ram && extractRAMCapacity(ram.specifications) > 0 && extractRAMCapacity(ram.specifications) < 16) {
@@ -122,16 +122,16 @@ export function checkCompatibility(components: ComponentMap): CompatibilityCheck
 
   const { cpu, gpu, motherboard, ram, psu, case: chassis, cooling } = components;
 
-  runCPUMotherboardCompatibilityCheck(cpu, motherboard, issues, warnings);
-  runRAMCompatibilityCheck(ram, motherboard, issues, warnings);
-  runCoolerCompatibilityCheck(cooling, cpu, chassis, issues, warnings);
-  runPSUCompatibilityCheck(psu, cpu, gpu, chassis, issues, warnings);
-  runCaseCompatibilityCheck(chassis, motherboard, issues, warnings);
-  runGPUCompatibilityCheck(chassis, gpu, issues, warnings);
-  runIntegratedGraphicsCheck(cpu, gpu, issues, warnings);
+  runCPUMotherboardCompatibilityCheck(cpu ?? undefined, motherboard ?? undefined, issues, warnings);
+  runRAMCompatibilityCheck(ram ?? undefined, motherboard ?? undefined, issues, warnings);
+  runCoolerCompatibilityCheck(cooling ?? undefined, cpu ?? undefined, chassis ?? undefined, issues, warnings);
+  runPSUCompatibilityCheck(psu ?? undefined, cpu ?? undefined, gpu ?? undefined, chassis ?? undefined, issues, warnings);
+  runCaseCompatibilityCheck(chassis ?? undefined, motherboard ?? undefined, issues, warnings);
+  runGPUCompatibilityCheck(chassis ?? undefined, gpu ?? undefined, issues, warnings);
+  runIntegratedGraphicsCheck(cpu ?? undefined, gpu ?? undefined, issues, warnings);
 
-  const bottleneckPct = runBottleneckAnalysis(cpu, gpu, warnings);
-  runRAMCapacityWarning(ram, motherboard, warnings);
+  const bottleneckPct = runBottleneckAnalysis(cpu ?? undefined, gpu ?? undefined, warnings);
+  runRAMCapacityWarning(ram ?? undefined, motherboard ?? undefined, warnings);
 
   const storageProducts = Object.values(components).filter(c => c?.category === 'storage');
   if (motherboard) {

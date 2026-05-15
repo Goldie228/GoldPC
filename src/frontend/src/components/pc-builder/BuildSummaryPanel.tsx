@@ -1,19 +1,16 @@
 /**
  * BuildSummaryPanel — правая панель итогов сборки
+ * Redesign: compact, grouped, DESIGN.md compliant
  */
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Zap, BarChart3, Check, AlertTriangle, Save, Gamepad2, Printer, ShoppingBag, CircleCheck, XCircle } from 'lucide-react';
+import { Zap, BarChart3, Save, ShoppingBag, AlertTriangle, XCircle } from 'lucide-react';
 import {
   calculatePerformance,
   getPerformanceLabel,
   getPerformanceColor,
-  calculateLocalGameFps,
-  estimateGpuGaming,
-  estimateCpuSingleCore,
 } from '../../features/pc-builder/logic/performance';
-import type { FpsApiResponse } from '../../api/pcBuilderService';
 import type { PCComponentType, PCBuilderSelectedState } from '../../hooks';
 import { PC_BUILDER_SLOTS } from '../../hooks';
 import './BuildSummaryPanel.css';
@@ -27,14 +24,8 @@ export interface BuildSummaryPanelProps {
   selectedCount: number;
   totalCount: number;
   psuWattage?: number;
-  /** Ошибки совместимости из usePCBuilder */
   compatibilityErrors?: string[];
-  /** Предупреждения совместимости из usePCBuilder */
   compatibilityWarnings?: string[];
-  /** Данные с backend FPS API (если CPU+GPU выбраны) */
-  apiFpsData?: FpsApiResponse;
-  /** Показывает, идёт ли сейчас запрос к API совместимости */
-  isApiLoading?: boolean;
   onAddToCart: () => void;
   onSave: () => void;
   onCheckout: () => void;
@@ -42,6 +33,15 @@ export interface BuildSummaryPanelProps {
 }
 
 const MAX_POWER = 850;
+
+// Group slots for display
+const SLOT_GROUPS = [
+  { label: 'Основа', keys: ['cpu', 'motherboard', 'ram'] },
+  { label: 'Накопители', keys: ['storage'] },
+  { label: 'Графика и охлаждение', keys: ['gpu', 'cooling'] },
+  { label: 'Питание и корпус', keys: ['psu', 'case'] },
+  { label: 'Периферия', keys: ['fan', 'monitor', 'keyboard', 'mouse', 'headphones'] },
+] as const;
 
 export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
   selectedComponents,
@@ -54,12 +54,9 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
   psuWattage,
   compatibilityErrors,
   compatibilityWarnings,
-  apiFpsData,
-  isApiLoading,
   onAddToCart,
   onSave,
   onCheckout,
-  onExportPdf,
 }: BuildSummaryPanelProps) {
   const cpu = selectedComponents.cpu?.product ?? null;
   const gpu = selectedComponents.gpu?.product ?? null;
@@ -72,7 +69,6 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
   const displayPowerW = Math.max(0, Math.round(powerConsumption));
   const recommendedPsu = recommendedPsuProp ?? Math.ceil(Math.max(0, powerConsumption) * 1.3);
   const powerPercent = Math.min((Math.max(0, powerConsumption) / MAX_POWER) * 100, 100);
-  const psuOk = psuWattage !== undefined && psuWattage >= Math.max(0, powerConsumption) * 1.2;
   const canAddToCart = isCompatible && selectedCount > 0;
   const canCheckout = canAddToCart;
   const reducedMotion = useReducedMotion();
@@ -80,21 +76,18 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
   const scoreDur = reducedMotion ? 0 : 0.5;
   const priceDur = reducedMotion ? 0 : 0.3;
 
-  // Calculate local game FPS when API data is not available
-  const localGameFps = useMemo(() => {
-    if (!gpu || !cpu) return null;
-    const gpuScore = estimateGpuGaming(gpu.specifications);
-    const cpuSingleCore = estimateCpuSingleCore(cpu.specifications);
-    return calculateLocalGameFps(gpuScore, cpuSingleCore);
-  }, [cpu, gpu, ramFirst]);
+  // Build grouped component list (only selected)
+  const groupedItems = useMemo(() => {
+    const groups: { label: string; items: { key: string; label: string; price: number }[] }[] = [];
 
-  const listItems = useMemo(() => {
-    const items: { key: string; label: string; price: number | null }[] = [];
-    for (const slot of PC_BUILDER_SLOTS) {
-      if (slot.key === 'ram') {
-        if (selectedComponents.ram.length === 0) {
-          items.push({ key: 'ram-empty', label: slot.label, price: null });
-        } else {
+    for (const group of SLOT_GROUPS) {
+      const items: { key: string; label: string; price: number }[] = [];
+
+      for (const slotKey of group.keys) {
+        const slot = PC_BUILDER_SLOTS.find(s => s.key === slotKey);
+        if (!slot) continue;
+
+        if (slotKey === 'ram') {
           selectedComponents.ram.forEach((r, i) => {
             items.push({
               key: `ram-${i}`,
@@ -102,13 +95,7 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
               price: r.product.price,
             });
           });
-        }
-        continue;
-      }
-      if (slot.key === 'storage') {
-        if (selectedComponents.storage.length === 0) {
-          items.push({ key: 'storage-empty', label: slot.label, price: null });
-        } else {
+        } else if (slotKey === 'storage') {
           selectedComponents.storage.forEach((s, i) => {
             items.push({
               key: `storage-${i}`,
@@ -116,13 +103,7 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
               price: s.product.price,
             });
           });
-        }
-        continue;
-      }
-      if (slot.key === 'fan') {
-        if (selectedComponents.fan.length === 0) {
-          items.push({ key: 'fan-empty', label: slot.label, price: null });
-        } else {
+        } else if (slotKey === 'fan') {
           selectedComponents.fan.forEach((f, i) => {
             items.push({
               key: `fan-${i}`,
@@ -130,19 +111,24 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
               price: f.product.price,
             });
           });
+        } else {
+          const comp = selectedComponents[slotKey as Exclude<PCComponentType, 'ram' | 'storage' | 'fan'>];
+          const p = comp && 'product' in comp ? comp.product : null;
+          if (p) {
+            items.push({ key: slotKey, label: slot.label, price: p.price });
+          }
         }
-        continue;
       }
-      const comp = selectedComponents[slot.key as Exclude<PCComponentType, 'ram' | 'storage'>];
-      const p = comp && 'product' in comp ? comp.product : null;
-      items.push({
-        key: slot.key,
-        label: slot.label,
-        price: p?.price ?? null,
-      });
+
+      if (items.length > 0) {
+        groups.push({ label: group.label, items });
+      }
     }
-    return items;
+
+    return groups;
   }, [selectedComponents]);
+
+  const hasSelectedComponents = groupedItems.length > 0;
 
   return (
     <div
@@ -150,115 +136,116 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
       role="complementary"
       aria-label={`Итоги сборки, выбрано ${selectedCount} из ${totalCount} категорий`}
     >
-      <h2 className="bsp__title">Ваша сборка</h2>
-      <div className="bsp__progress">{selectedCount} / {totalCount} категорий выбрано</div>
+      {/* Header */}
+      <div className="bsp__header">
+        <h2 className="bsp__title">Ваша сборка</h2>
+        <span className="bsp__progress">{selectedCount} / {totalCount}</span>
+      </div>
 
-
-      {(compatibilityErrors && compatibilityErrors.length > 0) && (
-        <ul className="bsp__compat-list" aria-label="Ошибки совместимости">
-          {compatibilityErrors.map((err, index) => (
-            <li key={index} className="bsp__compat-item bsp__compat-item--error">
-              <XCircle size={14} strokeWidth={2} aria-hidden className="bsp__compat-list-icon" />
-              {err}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {(compatibilityWarnings && compatibilityWarnings.length > 0) && (
-        <ul className="bsp__compat-list" aria-label="Предупреждения совместимости">
-          {compatibilityWarnings.map((warn, index) => (
-            <li key={index} className="bsp__compat-item bsp__compat-item--warning">
-              <AlertTriangle size={14} strokeWidth={2} aria-hidden className="bsp__compat-list-icon" />
-              {warn}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <ul className="bsp__component-list">
-        <AnimatePresence mode="popLayout">
-          {listItems.map((row) => (
-            <motion.li
-              key={row.key}
-              className="bsp__component-item"
-              initial={{ opacity: 0, x: 16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              layout
-            >
-              <span className="bsp__component-label">{row.label}</span>
-              <motion.span
-                className="bsp__component-price"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                {row.price != null ? `${row.price.toLocaleString('ru-BY')} BYN` : '—'}
-              </motion.span>
-            </motion.li>
-          ))}
-        </AnimatePresence>
-      </ul>
-
-      <div className="bsp__divider" />
-
-      <section className="bsp__section" aria-label="Энергопотребление">
-        <h3 className="bsp__section-title bsp__section-title--with-icon">
-          <Zap size={16} strokeWidth={2} aria-hidden className="bsp__section-icon" />
-          Питание
-        </h3>
-        <div
-          className="bsp__power-bar-track"
-          role="progressbar"
-          aria-valuenow={displayPowerW}
-          aria-valuemin={0}
-          aria-valuemax={MAX_POWER}
-          aria-label={`Потребление около ${displayPowerW} Вт`}
-        >
+      {/* Compatibility alerts */}
+      <AnimatePresence>
+        {compatibilityErrors && compatibilityErrors.length > 0 && (
           <motion.div
-            className="bsp__power-bar-fill"
-            initial={{ width: 0 }}
-            animate={{ width: `${powerPercent}%` }}
-            transition={{ duration: barDur, ease: 'easeOut' }}
-          />
-        </div>
-        <div className="bsp__power-info">
-          <span>Потребление (оценочно):</span>
-          <strong>~{displayPowerW} Вт</strong>
-        </div>
-        {psuWattage !== undefined ? (
-          <div className={`bsp__power-info ${psuOk ? 'bsp__power-info--ok' : 'bsp__power-info--warn'}`}>
-            <span>Блок питания:</span>
-            <strong className="bsp__power-psu-strong">
-              {psuWattage} Вт
-              {psuOk ? (
-                <Check size={14} strokeWidth={2.5} aria-hidden className="bsp__power-status-icon" />
-              ) : (
-                <AlertTriangle size={14} strokeWidth={2.5} aria-hidden className="bsp__power-status-icon" />
-              )}
-            </strong>
-          </div>
-        ) : (
-          <div className="bsp__power-suggestion">
-            Рекомендуется БП от <strong>{recommendedPsu} Вт</strong>
-          </div>
+            className="bsp__alerts bsp__alerts--error"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            {compatibilityErrors.map((err, index) => (
+              <div key={index} className="bsp__alert-item">
+                <XCircle size={14} strokeWidth={2} aria-hidden />
+                <span>{err}</span>
+              </div>
+            ))}
+          </motion.div>
         )}
-      </section>
+        {compatibilityWarnings && compatibilityWarnings.length > 0 && (
+          <motion.div
+            className="bsp__alerts bsp__alerts--warning"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+          >
+            {compatibilityWarnings.map((warn, index) => (
+              <div key={index} className="bsp__alert-item">
+                <AlertTriangle size={14} strokeWidth={2} aria-hidden />
+                <span>{warn}</span>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="bsp__divider" />
+      {/* Component list (grouped, selected only) */}
+      {hasSelectedComponents && (
+        <div className="bsp__components">
+          <AnimatePresence mode="popLayout">
+            {groupedItems.map((group) => (
+              <div key={group.label} className="bsp__component-group">
+                <div className="bsp__group-label">{group.label}</div>
+                {group.items.map((item) => (
+                  <motion.div
+                    key={item.key}
+                    className="bsp__component-row"
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    layout
+                  >
+                    <span className="bsp__component-name">{item.label}</span>
+                    <span className="bsp__component-price">{item.price.toLocaleString('ru-BY')} BYN</span>
+                  </motion.div>
+                ))}
+              </div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
 
-      <section className="bsp__section" aria-label="Производительность">
-        <h3 className="bsp__section-title bsp__section-title--with-icon">
-          <BarChart3 size={16} strokeWidth={2} aria-hidden className="bsp__section-icon" />
-          Производительность
-        </h3>
+      {!hasSelectedComponents && (
+        <p className="bsp__empty">Выберите компоненты для начала сборки</p>
+      )}
 
-        {performance.isEmptyBuild ? (
-          <p className="bsp__perf-placeholder">
-            Выберите процессор и/или видеокарту — тогда появится оценка игровой и рабочей нагрузки.
-          </p>
-        ) : (
-          <>
+      {/* Power section */}
+      {hasSelectedComponents && (
+        <section className="bsp__section" aria-label="Энергопотребление">
+          <h3 className="bsp__section-title">
+            <Zap size={14} strokeWidth={2} aria-hidden />
+            Питание
+          </h3>
+          <div className="bsp__power-bar-track" role="progressbar" aria-valuenow={displayPowerW} aria-valuemin={0} aria-valuemax={MAX_POWER}>
+            <motion.div
+              className="bsp__power-bar-fill"
+              initial={{ width: 0 }}
+              animate={{ width: `${powerPercent}%` }}
+              transition={{ duration: barDur, ease: 'easeOut' }}
+            />
+          </div>
+          <div className="bsp__power-row">
+            <span>Потребление</span>
+            <strong>~{displayPowerW} Вт</strong>
+          </div>
+          {psuWattage !== undefined ? (
+            <div className="bsp__power-row bsp__power-row--psu">
+              <span>Блок питания</span>
+              <strong>{psuWattage} Вт</strong>
+            </div>
+          ) : (
+            <div className="bsp__power-suggestion">
+              Рекомендуется БП от <strong>{recommendedPsu} Вт</strong>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Performance section */}
+      {hasSelectedComponents && !performance.isEmptyBuild && (
+        <section className="bsp__section" aria-label="Производительность">
+          <h3 className="bsp__section-title">
+            <BarChart3 size={14} strokeWidth={2} aria-hidden />
+            Производительность
+          </h3>
+          <div className="bsp__scores">
             <div className="bsp__score-row">
               <span className="bsp__score-label">Игры</span>
               <div className="bsp__score-bar-track">
@@ -273,63 +260,6 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
                 {performance.gamingScore}
               </span>
             </div>
-
-            {performance.estimatedFps.fps1080p === 0 &&
-              compatibilityWarnings?.some(
-                (w) => w.includes('no integrated graphics') || w.includes('iGPU')
-              ) ? (
-              <p className="bsp__perf-hint">
-                Нет видеокарты — игровая производительность не рассчитана.
-                Выберите видеокарту или процессор со встроенной графикой.
-              </p>
-            ) : (
-              <div className="bsp__fps-row">
-                <span className="bsp__fps-label">1080p:</span>
-                <span className="bsp__fps-value">{performance.estimatedFps.fps1080p} FPS</span>
-                <span className="bsp__fps-label">1440p:</span>
-                <span className="bsp__fps-value">{performance.estimatedFps.fps1440p}</span>
-                <span className="bsp__fps-label">4K:</span>
-                <span className="bsp__fps-value">{performance.estimatedFps.fps4k}</span>
-              </div>
-            )}
-
-            {( (apiFpsData && apiFpsData.games?.length > 0) || localGameFps) && (
-              <div className="bsp__api-fps">
-                <div className="bsp__api-fps-header">
-                  <Gamepad2 size={14} strokeWidth={2} aria-hidden />
-                  <span>FPS по {(apiFpsData?.games.length ?? localGameFps?.length ?? 0)} играм</span>
-                  {!apiFpsData && <span className="bsp__fps-local-note">(локальный расчёт)</span>}
-                </div>
-                {apiFpsData?.bottleneck && (
-                  <div className="bsp__api-fps-bottleneck">
-                    {apiFpsData.bottleneck === 'cpu-bound' && 'Упор в CPU'}
-                    {apiFpsData.bottleneck === 'gpu-bound' && 'Упор в GPU'}
-                    {apiFpsData.bottleneck === 'balanced' && 'Баланс CPU/GPU'}
-                  </div>
-                )}
-                <table className="bsp__api-fps-table">
-                  <thead>
-                    <tr>
-                      <th>Игра</th>
-                      <th>1080p</th>
-                      <th>1440p</th>
-                      <th>4K</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {( localGameFps && localGameFps.length > 0 ? localGameFps : (apiFpsData?.games ?? []) ).map((game) => (
-                      <tr key={game.gameId}>
-                        <td>{game.gameName}</td>
-                        <td>{game.resolutions.resolution1080p} FPS</td>
-                        <td>{game.resolutions.resolution1440p} FPS</td>
-                        <td>{game.resolutions.resolution4k} FPS</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
             <div className="bsp__score-row">
               <span className="bsp__score-label">Работа</span>
               <div className="bsp__score-bar-track">
@@ -344,7 +274,6 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
                 {performance.workstationScore}
               </span>
             </div>
-
             <div className="bsp__score-row bsp__score-row--overall">
               <span className="bsp__score-label">Итого</span>
               <div className="bsp__score-bar-track">
@@ -355,64 +284,40 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
                   transition={{ duration: scoreDur, ease: 'easeOut', delay: 0.2 }}
                 />
               </div>
-              <span
-                className={`bsp__score-value bsp__score-value--overall ${getPerformanceColor(performance.overallScore)}`}
-              >
+              <span className={`bsp__score-value bsp__score-value--overall ${getPerformanceColor(performance.overallScore)}`}>
                 {performance.overallScore}
               </span>
             </div>
+          </div>
+          <div className="bsp__perf-label">{getPerformanceLabel(performance.overallScore)}</div>
+        </section>
+      )}
 
-            <div className="bsp__performance-label">{getPerformanceLabel(performance.overallScore)}</div>
-          </>
-        )}
-      </section>
-
-      <div className="bsp__divider" />
-
-      <div className="bsp__total">
-        <span className="bsp__total-label">Итого:</span>
-        <motion.span
-          key={totalPrice}
-          className="bsp__total-value"
-          initial={{ scale: 1 }}
-          animate={{ scale: [1, 1.06, 1] }}
-          transition={{ duration: priceDur }}
-        >
-          {totalPrice.toLocaleString('ru-BY')} BYN
-        </motion.span>
-      </div>
-
-      <div className="bsp__actions">
-        <div className="bsp__actions-row">
-          <button
-            type="button"
-            className="bsp__btn bsp__btn--save"
-            disabled={selectedCount === 0}
-            onClick={onSave}
+      {/* Total */}
+      {hasSelectedComponents && (
+        <div className="bsp__total">
+          <span className="bsp__total-label">Итого</span>
+          <motion.span
+            key={totalPrice}
+            className="bsp__total-value"
+            initial={{ scale: 1 }}
+            animate={{ scale: [1, 1.04, 1] }}
+            transition={{ duration: priceDur }}
           >
-            <Save size={18} strokeWidth={2} aria-hidden />
-            Сохранить
-          </button>
-          {onExportPdf && (
-            <button
-              type="button"
-              className="bsp__btn bsp__btn--export"
-              disabled={selectedCount === 0}
-              onClick={onExportPdf}
-            >
-              <Printer size={18} strokeWidth={2} aria-hidden />
-              Печать
-            </button>
-          )}
+            {totalPrice.toLocaleString('ru-BY')} BYN
+          </motion.span>
         </div>
+      )}
+
+      {/* Actions */}
+      <div className="bsp__actions">
         <button
           type="button"
           className="bsp__btn bsp__btn--cart"
           disabled={!canAddToCart}
           onClick={onAddToCart}
-          aria-disabled={!canAddToCart}
         >
-          <ShoppingBag size={18} strokeWidth={2} aria-hidden="true" />
+          <ShoppingBag size={16} strokeWidth={2} aria-hidden />
           В корзину
         </button>
         <button
@@ -423,10 +328,19 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
         >
           Оформить
         </button>
+        <button
+          type="button"
+          className="bsp__btn bsp__btn--save"
+          disabled={selectedCount === 0}
+          onClick={onSave}
+        >
+          <Save size={16} strokeWidth={2} aria-hidden />
+          Сохранить
+        </button>
       </div>
 
       {!canAddToCart && selectedCount > 0 && !isCompatible && (
-        <p className="bsp__disabled-hint">Исправьте ошибки совместимости для корзины и оформления</p>
+        <p className="bsp__hint">Исправьте ошибки совместимости</p>
       )}
     </div>
   );

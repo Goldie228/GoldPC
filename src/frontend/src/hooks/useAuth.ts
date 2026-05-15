@@ -41,20 +41,18 @@ export function useAuth(): UseAuthReturn {
 
   /**
    * Сохранение токенов в хранилище
+   * ВАЖНО: Всегда сохраняем в localStorage для постоянной авторизации
    */
   const saveTokens = useCallback((accessToken: string, refreshToken: string, remember: boolean) => {
-    // ✅ Сначала СОХРАНЯЕМ, потом удаляем лишнее
-    const storage = remember ? localStorage : sessionStorage;
-    storage.setItem('accessToken', accessToken);
-    storage.setItem('refreshToken', refreshToken);
-
-    // Удаляем только из другого хранилища
-    const otherStorage = remember ? sessionStorage : localStorage;
-    otherStorage.removeItem('accessToken');
-    otherStorage.removeItem('refreshToken');
+    console.log('[saveTokens] Saving tokens, accessToken length:', accessToken?.length);
+    // ✅ Всегда сохраняем в localStorage для постоянной авторизации
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+    console.log('[saveTokens] Token saved to localStorage');
 
     // ✅ ВАЖНО: Явно устанавливаем токен в глобальный axios клиент СРАЗУ
     apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+    console.log('[saveTokens] Token set in axios defaults');
   }, []);
 
   /**

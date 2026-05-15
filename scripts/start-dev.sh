@@ -203,11 +203,14 @@ start_backend() {
         start_infra
     fi
     
-    $DOCKER_COMPOSE up -d catalogservice pcbuilderservice authservice
+    $DOCKER_COMPOSE up -d catalogservice pcbuilderservice authservice servicesservice warrantyservice
     
-    echo -e "${GREEN}✓ CatalogService: http://localhost:5001${RESET}"
-    echo -e "${GREEN}✓ PCBuilderService: http://localhost:5002${RESET}"
-    echo -e "${GREEN}✓ AuthService: http://localhost:5003${RESET}"
+    echo -e "${GREEN}✓ CatalogService: http://localhost:5000${RESET}"
+    echo -e "${GREEN}✓ AuthService: http://localhost:5001${RESET}"
+    echo -e "${GREEN}✓ OrdersService: http://localhost:5002${RESET}"
+    echo -e "${GREEN}✓ ServicesService: http://localhost:5003${RESET}"
+    echo -e "${GREEN}✓ WarrantyService: http://localhost:5004${RESET}"
+    echo -e "${GREEN}✓ PCBuilderService: http://localhost:5005${RESET}"
 }
 
 # Start frontend
@@ -234,9 +237,12 @@ print_status() {
     echo ""
     echo -e "${CYAN}Available endpoints:${RESET}"
     echo -e "  ${GREEN}Frontend:${RESET}     http://localhost:3000"
-    echo -e "  ${GREEN}Catalog API:${RESET}  http://localhost:5001/swagger"
-    echo -e "  ${GREEN}PCBuilder API:${RESET} http://localhost:5002/swagger"
-    echo -e "  ${GREEN}Auth API:${RESET}     http://localhost:5003/swagger"
+    echo -e "  ${GREEN}Catalog API:${RESET}  http://localhost:5000/swagger"
+    echo -e "  ${GREEN}Auth API:${RESET}     http://localhost:5001/swagger"
+    echo -e "  ${GREEN}Orders API:${RESET}   http://localhost:5002/swagger"
+    echo -e "  ${GREEN}Services API:${RESET} http://localhost:5003/swagger"
+    echo -e "  ${GREEN}Warranty API:${RESET} http://localhost:5004/swagger"
+    echo -e "  ${GREEN}PCBuilder API:${RESET} http://localhost:5005/swagger"
     echo -e "  ${GREEN}Adminer:${RESET}      http://localhost:8080"
     echo ""
 }

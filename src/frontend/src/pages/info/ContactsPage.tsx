@@ -1,6 +1,23 @@
 import { type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Clock, ExternalLink } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+
+// Fix для иконок Leaflet в Vite
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+// @ts-ignore
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+});
+
+const STORE_POSITION: [number, number] = [53.876, 27.499];
 
 const contactInfo = [
   {
@@ -99,14 +116,28 @@ export function ContactsPage(): ReactElement {
               <MapPin size={24} className="text-gold" />
               Как нас найти
             </h2>
-            <div className="rounded-lg bg-surface-elevated overflow-hidden">
-              {/* Static map embed */}
-              <div className="w-full h-[220px] bg-surface-elevated flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin size={48} className="text-gold mx-auto mb-2" />
-                  <p className="text-body-text font-semibold">Минск, Улица Казимировская 21</p>
-                </div>
-              </div>
+            <div className="rounded-lg overflow-hidden">
+              <MapContainer
+                center={STORE_POSITION}
+                zoom={16}
+                style={{ height: '280px', width: '100%' }}
+                className="z-0"
+                scrollWheelZoom={false}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <Marker position={STORE_POSITION}>
+                  <Popup>
+                    <div className="text-center">
+                      <strong>GoldPC</strong>
+                      <br />
+                      Минск, ул. Казимировская 21
+                    </div>
+                  </Popup>
+                </Marker>
+              </MapContainer>
               <a
                 href="https://yandex.by/maps/?text=Минск,+улица+Казимировская+21"
                 target="_blank"

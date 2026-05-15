@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, type ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -9,8 +9,6 @@ import {
   Minus,
   Plus,
   ArrowLeft,
-  Tag,
-  X,
 } from 'lucide-react';
 import { useCart } from '../../hooks/useCart';
 import { hasValidProductImage } from '../../utils/image';
@@ -43,6 +41,7 @@ function getCategoryLabel(category: string): string {
  * Пустая корзина
  */
 function EmptyCart(): ReactElement {
+  const navigate = useNavigate();
   return (
     <div className="w-full max-w-[var(--layout-page-wide)] mx-auto px-[var(--layout-page-pad-x)] py-5 min-h-[calc(100vh-200px)] bg-background">
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
@@ -75,10 +74,15 @@ function EmptyCart(): ReactElement {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Link to="/catalog" className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 font-sans text-sm font-semibold no-underline border-none cursor-pointer transition-all w-full rounded-lg bg-gold text-gold-ink">
-            <ArrowLeft size={18} />
+          <Button
+            variant="primary"
+            size="md"
+            fullWidth
+            onClick={() => navigate('/catalog')}
+            leftIcon={<ArrowLeft size={18} />}
+          >
             Перейти в каталог
-          </Link>
+          </Button>
         </motion.div>
       </div>
     </div>
@@ -98,53 +102,13 @@ export function CartPage(): ReactElement {
     itemCount,
     discountedTotal,
     discountAmount,
-    promoCode,
     discount,
     removeFromCart,
     changeQuantity,
-    validateAndApplyPromo,
-    clearPromoCode,
   } = useCart();
 
   const showToast = useToastStore((state) => state.showToast);
-  const [promoInput, setPromoInput] = useState('');
-  const [promoError, setPromoError] = useState(false);
   const [totalFlash, setTotalFlash] = useState(false);
-  const prevPromoRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (promoCode && promoCode !== prevPromoRef.current) {
-      prevPromoRef.current = promoCode;
-      setTotalFlash(true);
-      const t = window.setTimeout(() => setTotalFlash(false), 2000);
-      return () => window.clearTimeout(t);
-    }
-    if (!promoCode) prevPromoRef.current = null;
-  }, [promoCode]);
-
-  const handleApplyPromo = async (): Promise<void> => {
-    const result = await validateAndApplyPromo(promoInput);
-    if (result.success) {
-      setPromoError(false);
-      setPromoInput('');
-      showToast(result.message, 'success');
-    } else {
-      setPromoError(true);
-      showToast(result.message, 'error');
-    }
-  };
-
-  const handleRemovePromo = (): void => {
-    clearPromoCode();
-    setPromoError(false);
-    showToast('Промокод удалён', 'info');
-  };
-
-  const handlePromoKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Enter') {
-      handleApplyPromo();
-    }
-  };
 
   const handleRemoveItem = (productId: string, name: string): void => {
     removeFromCart(productId);
@@ -179,7 +143,7 @@ export function CartPage(): ReactElement {
         </p>
       </header>
 
-      <div className="grid grid-cols-[1fr_360px] gap-10 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-10 items-start">
         {/* Left: Cart Items */}
         <main className="min-w-0">
           <ul className="list-none m-0 p-0 flex flex-col gap-3" role="list">
@@ -187,7 +151,7 @@ export function CartPage(): ReactElement {
               {items.map((item) => (
                 <li key={item.productId}>
                   <motion.div
-                    className="grid grid-cols-[80px_1fr_auto] gap-5 p-5 bg-card border border-border rounded-lg transition-all hover:border-gold/30 hover:-translate-y-0.5 hover:shadow-lg"
+                    className="grid grid-cols-[64px_1fr_auto] md:grid-cols-[80px_1fr_auto] gap-3 md:gap-5 p-3 md:p-6 bg-card border border-border rounded-lg transition-all hover:border-gold/30 hover:-translate-y-0.5 hover:shadow-lg"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -20, height: 0 }}
@@ -195,7 +159,7 @@ export function CartPage(): ReactElement {
                     layout
                   >
                     {/* Image */}
-                    <div className="w-20 h-20 flex items-center justify-center bg-white rounded-xl flex-shrink-0 p-3 overflow-hidden">
+                    <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-white rounded-xl flex-shrink-0 p-2 md:p-3 overflow-hidden">
                       {hasValidProductImage(item.imageUrl) ? (
                         <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain block" />
                       ) : (
@@ -216,12 +180,12 @@ export function CartPage(): ReactElement {
 
                     {/* Actions */}
                     <div className="flex flex-col items-end justify-between gap-3">
-                      <span className="font-mono text-base font-semibold text-body-text">
+                      <span className="font-mono text-base font-medium text-body-text">
                         {(item.price * item.quantity).toLocaleString('ru-BY')} BYN
                       </span>
                       <div className="flex items-center gap-2">
                         <button
-                          className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground cursor-pointer transition-all hover:border-accent hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground cursor-pointer transition-all hover:border-accent hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed rounded-md"
                           onClick={() => changeQuantity(item.productId, -1)}
                           disabled={item.quantity <= 1}
                           aria-label={`Уменьшить количество ${item.name}`}
@@ -231,7 +195,7 @@ export function CartPage(): ReactElement {
                         </button>
                         <span className="font-mono text-sm min-w-[32px] text-center text-foreground">{item.quantity}</span>
                         <button
-                          className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground cursor-pointer transition-all hover:border-accent hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground cursor-pointer transition-all hover:border-accent hover:text-accent disabled:opacity-40 disabled:cursor-not-allowed rounded-md"
                           onClick={() => changeQuantity(item.productId, 1)}
                           aria-label={`Увеличить количество ${item.name}`}
                           type="button"
@@ -256,7 +220,7 @@ export function CartPage(): ReactElement {
         </main>
 
         {/* Right: Summary */}
-        <aside className="sticky top-[100px] bg-card border border-border rounded-xl p-6 shadow-lg max-h-[calc(100vh-120px)] overflow-y-auto">
+        <aside className="mt-6 md:mt-0 md:sticky md:top-[100px] bg-card border border-border rounded-xl p-6 shadow-lg max-h-[calc(100vh-120px)] overflow-y-auto">
           <h2 className="text-sm font-semibold uppercase tracking-[0.05em] text-foreground mb-6 pb-4 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Итого</h2>
 
           <div className="flex justify-between items-center mb-3">
@@ -312,41 +276,6 @@ export function CartPage(): ReactElement {
                 Продолжить покупки
               </Button>
             </Link>
-          </div>
-
-          {/* Promo Code */}
-          <div className="mt-5 pt-5 border-t border-border">
-            {promoCode ? (
-              <div className="flex items-center gap-2 p-3 bg-border-muted border border-dashed border-gold/30 text-gold font-mono text-sm font-medium rounded-md">
-                <Tag size={14} />
-                <span>{promoCode}</span>
-                <button
-                  className="ml-auto bg-transparent border-none text-muted-foreground cursor-pointer p-1 flex items-center justify-center transition-colors hover:text-error"
-                  onClick={handleRemovePromo}
-                  aria-label="Удалить промокод"
-                  type="button"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ) : (
-              <div className="flex gap-1.5 items-stretch">
-                <input
-                  type="text"
-                  placeholder="Промокод"
-                  value={promoInput}
-                  onChange={(e) => {
-                    setPromoInput(e.target.value);
-                    setPromoError(false);
-                  }}
-                  onKeyDown={handlePromoKeyDown}
-                  className={`flex-1 px-4 py-3 bg-elevated border text-foreground font-mono text-sm transition-colors rounded-md focus:outline-none focus:border-gold ${promoError ? 'border-error' : 'border-border'}`}
-                />
-                <Button variant="outline" size="sm" onClick={handleApplyPromo} type="button">
-                  Применить
-                </Button>
-              </div>
-            )}
           </div>
         </aside>
       </div>

@@ -13,7 +13,6 @@ export type { CardProps, CardVariant } from './Card';
 
 // Input Component
 export { Input } from './Input';
-export type { InputProps, InputSize } from './Input';
 
 // Password field with visibility toggle
 export { PasswordField } from './PasswordField';
@@ -47,4 +46,3 @@ export type { TabsProps, Tab } from './Tabs';
 
 // PhoneInput Component
 export { PhoneInput } from './PhoneInput';
-export type { PhoneInputProps } from './PhoneInput';

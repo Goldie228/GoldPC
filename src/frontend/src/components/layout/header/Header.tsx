@@ -27,7 +27,6 @@ const NAV_ITEMS = [
   { to: '/catalog', label: 'Каталог' },
   { to: '/pc-builder', label: 'Конструктор' },
   { to: '/services', label: 'Сервис' },
-  { to: '/promotions', label: 'Акции' },
   { to: '/about', label: 'О нас' },
 ];
 
@@ -293,14 +292,18 @@ export function Header(): ReactElement {
                 ) : (
                   <>
                     <div className="flex items-center gap-3 p-4 bg-surface-elevated rounded-t-xl">
-                      <div className="w-11 h-11 bg-gold rounded-full flex items-center justify-center text-gold-ink font-semibold text-lg uppercase flex-shrink-0">
-                        {((decodeHtmlEntities(user?.firstName) ?? '') || (decodeHtmlEntities(user?.email) ?? ''))?.charAt(0) || 'U'}
-                      </div>
+                      {user?.avatarUrl ? (
+                        <img src={user.avatarUrl} alt="Аватар" className="w-11 h-11 rounded-full object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-11 h-11 bg-gold rounded-full flex items-center justify-center text-gold-ink font-semibold text-lg uppercase flex-shrink-0">
+                          {((decodeHtmlEntities(user?.firstName ?? '') ?? '') || (decodeHtmlEntities(user?.email ?? '') ?? ''))?.charAt(0) || 'U'}
+                        </div>
+                      )}
                       <div className="flex flex-col gap-0.5 min-w-0">
                         <span className="text-sm font-semibold text-body-text whitespace-nowrap overflow-hidden text-overflow-ellipsis">
-                          {(decodeHtmlEntities(user?.firstName) ?? '')} {(decodeHtmlEntities(user?.lastName) ?? '')}
+                          {(decodeHtmlEntities(user?.firstName ?? ''))} {(decodeHtmlEntities(user?.lastName ?? ''))}
                         </span>
-                        <span className="text-sm text-muted-text whitespace-nowrap overflow-hidden text-overflow-ellipsis max-w-[200px]">{(decodeHtmlEntities(user?.email) ?? '')}</span>
+                        <span className="text-sm text-muted-text whitespace-nowrap overflow-hidden text-overflow-ellipsis max-w-[200px]">{(decodeHtmlEntities(user?.email ?? '') ?? '')}</span>
                       </div>
                     </div>
 
@@ -316,10 +319,6 @@ export function Header(): ReactElement {
                       <Link to="/account/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
                         <ShoppingBag />
                         <span>Заказы</span>
-                      </Link>
-                      <Link to="/wishlist" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
-                        <Heart />
-                        <span>Избранное</span>
                       </Link>
                       <Link to="/account/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
                         <Settings />
@@ -422,22 +421,26 @@ export function Header(): ReactElement {
                     <>
                       {/* User Card */}
                       <div className="flex items-center gap-3 px-4 py-3 bg-surface-elevated">
-                        <div className="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-gold-ink font-semibold text-sm uppercase flex-shrink-0">
-                          {(() => {
-                            const name = decodeHtmlEntities(user?.firstName) ?? '';
-                            const surname = decodeHtmlEntities(user?.lastName) ?? '';
-                            if (name && surname) return (name + surname).slice(0, 2).toUpperCase();
-                            if (name) return name.slice(0, 2).toUpperCase();
-                            const email = decodeHtmlEntities(user?.email) ?? '';
-                            return email.slice(0, 2).toUpperCase();
-                          })()}
-                        </div>
+                        {user?.avatarUrl ? (
+                          <img src={user.avatarUrl} alt="Аватар" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-gold-ink font-semibold text-sm uppercase flex-shrink-0">
+                            {(() => {
+                              const name = decodeHtmlEntities(user?.firstName ?? '') ?? '';
+                              const surname = decodeHtmlEntities(user?.lastName ?? '') ?? '';
+                              if (name && surname) return (name + surname).slice(0, 2).toUpperCase();
+                              if (name) return name.slice(0, 2).toUpperCase();
+                              const email = decodeHtmlEntities(user?.email ?? '') ?? '';
+                              return email.slice(0, 2).toUpperCase();
+                            })()}
+                          </div>
+                        )}
                         <div className="flex flex-col gap-0.5 min-w-0">
                           <span className="text-sm font-semibold text-body-text whitespace-nowrap overflow-hidden text-overflow-ellipsis">
-                            {(decodeHtmlEntities(user?.firstName) ?? '')} {(decodeHtmlEntities(user?.lastName) ?? '')}
+                            {(decodeHtmlEntities(user?.firstName ?? '') ?? '')} {(decodeHtmlEntities(user?.lastName ?? '') ?? '')}
                           </span>
                           <span className="text-xs text-muted-text whitespace-nowrap overflow-hidden text-overflow-ellipsis max-w-[180px]">
-                            {decodeHtmlEntities(user?.email) ?? ''}
+                            {decodeHtmlEntities(user?.email ?? '') ?? ''}
                           </span>
                         </div>
                       </div>
@@ -455,10 +458,6 @@ export function Header(): ReactElement {
                         <Link to="/account/orders" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleCloseMenu}>
                           <ShoppingBag size={18} />
                           <span>Заказы</span>
-                        </Link>
-                        <Link to="/wishlist" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleCloseMenu}>
-                          <Heart size={18} />
-                          <span>Избранное</span>
                         </Link>
                         <Link to="/account/settings" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleCloseMenu}>
                           <Settings size={18} />

@@ -59,7 +59,7 @@ export function Skeleton({
   className,
   style,
   borderRadius = 'md',
-  animate = true,
+  animate: _animate = true,
 }: SkeletonProps): ReactElement {
   const cssWidth = toCssValue(width);
   const cssHeight = toCssValue(height);

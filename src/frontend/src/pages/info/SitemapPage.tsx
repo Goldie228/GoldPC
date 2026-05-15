@@ -16,7 +16,6 @@ const categories: SitemapCategory[] = [
       { label: 'Главная', to: '/' },
       { label: 'Каталог', to: '/catalog' },
       { label: 'Конструктор ПК', to: '/pc-builder' },
-      { label: 'Акции', to: '/promotions' },
       { label: 'Бренды', to: '/brands' },
     ],
   },

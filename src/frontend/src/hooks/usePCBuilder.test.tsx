@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { usePCBuilder, PC_BUILDER_SLOTS } from './usePCBuilder';
+import { usePCBuilder } from './usePCBuilder';
+import { PC_BUILDER_SLOTS } from '../features/pc-builder/logic/slotConfig';
 import type { Product } from '../api/types';
 
 const STORAGE_KEY = 'goldpc-pc-builder';
@@ -414,7 +415,7 @@ describe('usePCBuilder', () => {
   describe('PC_BUILDER_SLOTS', () => {
     it('contains all 13 component types including peripherals', () => {
       expect(PC_BUILDER_SLOTS).toHaveLength(13);
-      const keys = PC_BUILDER_SLOTS.map(s => s.key);
+      const keys = PC_BUILDER_SLOTS.map((s: { key: string }) => s.key);
       expect(keys).toContain('cpu');
       expect(keys).toContain('gpu');
       expect(keys).toContain('motherboard');

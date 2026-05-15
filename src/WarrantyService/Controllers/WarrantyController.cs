@@ -5,6 +5,8 @@ using GoldPC.WarrantyService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using PagedResultClaim = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.WarrantyClaimDto>;
+using PagedResultCard = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.WarrantyDto>;
 
 namespace GoldPC.WarrantyService.Controllers;
 
@@ -39,7 +41,7 @@ public class WarrantyController : ControllerBase
         var userId = GetCurrentUserId();
         if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
         var result = await _warrantyService.GetClaimsByUserIdAsync(userId.Value, page, pageSize);
-        return Ok(ApiResponse<PagedResult<WarrantyClaimDto>>.Ok(result));
+        return Ok(ApiResponse<PagedResultClaim>.Ok(result));
     }
 
     [HttpGet("claim")]
@@ -47,7 +49,7 @@ public class WarrantyController : ControllerBase
     public async Task<IActionResult> GetAllClaims([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] WarrantyStatus? status = null)
     {
         var result = await _warrantyService.GetAllClaimsAsync(page, pageSize, status);
-        return Ok(ApiResponse<PagedResult<WarrantyClaimDto>>.Ok(result));
+        return Ok(ApiResponse<PagedResultClaim>.Ok(result));
     }
 
     [HttpPost("claim")]
@@ -137,7 +139,7 @@ public class WarrantyController : ControllerBase
         var userId = GetCurrentUserId();
         if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
         var result = await _warrantyService.GetCardsByUserIdAsync(userId.Value, page, pageSize);
-        return Ok(ApiResponse<PagedResult<WarrantyDto>>.Ok(result));
+        return Ok(ApiResponse<PagedResultCard>.Ok(result));
     }
 
     [HttpPost("card")]

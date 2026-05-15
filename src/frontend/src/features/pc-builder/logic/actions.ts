@@ -4,7 +4,7 @@
  * Extracted from usePCBuilder.ts for better organization
  */
 
-import type { Product } from '../../api/types';
+import type { Product } from '../../../api/types';
 import type {
   PCComponentType,
   PCBuilderSelectedState,

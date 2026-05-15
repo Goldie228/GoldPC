@@ -1,5 +1,9 @@
+#pragma warning disable CS1591, SA1600
+// Copyright (c) GoldPC. All rights reserved.
+
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using GoldPC.AuthService.Data;
 using GoldPC.AuthService.Entities;
 using GoldPC.AuthService.Infrastructure;
@@ -28,6 +32,8 @@ public class AuthService : IAuthService
     private const int RefreshTokenExpirationDays = 7;
     private const int PasswordResetTokenExpirationHours = 1;
     private const int EmailVerificationTokenExpirationHours = 24;
+    private const int TOTPStepSeconds = 30;
+    private const int TOTPDigits = 6;
 
     public AuthService(
         AuthDbContext context,
@@ -89,7 +95,6 @@ public class AuthService : IAuthService
                 .Include(u => u.RefreshTokens)
                 .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
 
-
             if (user == null)
             {
                 return (null, "Неверные учётные данные");
@@ -110,6 +115,19 @@ public class AuthService : IAuthService
             {
                 user.FailedLoginAttempts++;
 
+                // Записываем неудачную попытку входа
+                var failedLoginHistory = new LoginHistory
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = user.Id,
+                    IpAddress = ipAddress,
+                    UserAgent = null,
+                    Timestamp = DateTime.UtcNow,
+                    Success = false,
+                    FailureReason = "Неверный пароль"
+                };
+                _context.LoginHistories.Add(failedLoginHistory);
+
                 if (user.FailedLoginAttempts >= MaxFailedAttempts)
                 {
                     user.LockedUntil = DateTime.UtcNow.AddMinutes(LockoutMinutes);
@@ -127,6 +145,19 @@ public class AuthService : IAuthService
 
             var accessToken = _jwtService.GenerateAccessToken(user);
             var refreshToken = await CreateRefreshTokenAsync(user.Id, ipAddress);
+
+            // Записываем историю входа
+            var loginHistory = new LoginHistory
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                IpAddress = ipAddress,
+                UserAgent = null,
+                Timestamp = DateTime.UtcNow,
+                Success = true
+            };
+            _context.LoginHistories.Add(loginHistory);
+            await _context.SaveChangesAsync();
 
             return (new AuthResponse
             {
@@ -215,6 +246,10 @@ public class AuthService : IAuthService
             user.LastName = StringSanitizer.SanitizeText(request.LastName);
         if (request.Phone != null)
             user.Phone = StringSanitizer.SanitizeText(request.Phone);
+        if (request.BirthDate != null)
+            user.BirthDate = request.BirthDate;
+        if (request.Company != null)
+            user.Company = request.Company;
 
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
@@ -533,6 +568,285 @@ public class AuthService : IAuthService
         }
     }
 
+    /// <inheritdoc />
+    public async Task<(List<LoginHistoryItem>? Items, string? Error)> GetLoginHistoryAsync(Guid userId, int page = 1, int pageSize = 20)
+    {
+        try
+        {
+            var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+            if (!userExists)
+            {
+                return (null, "Пользователь не найден");
+            }
+
+            var items = await _context.LoginHistories
+                .Where(h => h.UserId == userId)
+                .OrderByDescending(h => h.Timestamp)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(h => new LoginHistoryItem
+                {
+                    Id = h.Id,
+                    IpAddress = h.IpAddress,
+                    UserAgent = h.UserAgent,
+                    Timestamp = h.Timestamp,
+                    Success = h.Success,
+                    FailureReason = h.FailureReason
+                })
+                .ToListAsync();
+
+            return (items, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при получении истории входа для пользователя {UserId}", userId);
+            return (null, "Произошла ошибка при получении истории входа.");
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<(NotificationPreferenceResponse? Response, string? Error)> GetNotificationPreferencesAsync(Guid userId)
+    {
+        try
+        {
+            var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+            if (!userExists)
+            {
+                return (null, "Пользователь не найден");
+            }
+
+            var pref = await _context.NotificationPreferences
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (pref == null)
+            {
+                return (new NotificationPreferenceResponse
+                {
+                    EmailNotifications = false,
+                    SmsNotifications = false,
+                    TelegramNotifications = false,
+                    OrderStatusNotifications = true,
+                    MarketingNotifications = false,
+                    UpdatedAt = DateTime.UtcNow
+                }, null);
+            }
+
+            return (new NotificationPreferenceResponse
+            {
+                EmailNotifications = pref.EmailNotifications,
+                SmsNotifications = pref.SmsNotifications,
+                TelegramNotifications = pref.TelegramNotifications,
+                OrderStatusNotifications = pref.OrderStatusNotifications,
+                MarketingNotifications = pref.MarketingNotifications,
+                UpdatedAt = pref.UpdatedAt
+            }, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при получении предпочтений уведомлений для пользователя {UserId}", userId);
+            return (null, "Произошла ошибка при получении предпочтений уведомлений.");
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<(NotificationPreferenceResponse? Response, string? Error)> UpdateNotificationPreferencesAsync(Guid userId, NotificationPreferenceRequest request)
+    {
+        try
+        {
+            var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+            if (!userExists)
+            {
+                return (null, "Пользователь не найден");
+            }
+
+            var pref = await _context.NotificationPreferences
+                .FirstOrDefaultAsync(p => p.UserId == userId);
+
+            if (pref == null)
+            {
+                pref = new NotificationPreference
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.NotificationPreferences.Add(pref);
+            }
+
+            pref.EmailNotifications = request.EmailNotifications;
+            pref.SmsNotifications = request.SmsNotifications;
+            pref.TelegramNotifications = request.TelegramNotifications;
+            pref.OrderStatusNotifications = request.OrderStatusNotifications;
+            pref.MarketingNotifications = request.MarketingNotifications;
+            pref.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return (new NotificationPreferenceResponse
+            {
+                EmailNotifications = pref.EmailNotifications,
+                SmsNotifications = pref.SmsNotifications,
+                TelegramNotifications = pref.TelegramNotifications,
+                OrderStatusNotifications = pref.OrderStatusNotifications,
+                MarketingNotifications = pref.MarketingNotifications,
+                UpdatedAt = pref.UpdatedAt
+            }, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при обновлении предпочтений уведомлений для пользователя {UserId}", userId);
+            return (null, "Произошла ошибка при обновлении предпочтений уведомлений.");
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<(TwoFactorStatusResponse? Response, string? Error)> EnableTwoFactorAsync(Guid userId)
+    {
+        try
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return (null, "Пользователь не найден");
+            }
+
+            var twoFactor = await _context.UserTwoFactors
+                .FirstOrDefaultAsync(t => t.UserId == userId);
+
+            if (twoFactor != null && twoFactor.IsEnabled)
+            {
+                return (null, "Двухфакторная аутентификация уже включена");
+            }
+
+            // Генерируем TOTP-секрет (Base32, 20 байт = 160 бит)
+            var secretBytes = RandomNumberGenerator.GetBytes(20);
+            var totpSecret = Base32Encode(secretBytes);
+
+            // Генерируем recovery-коды (10 штук по 8 символов)
+            var recoveryCodes = GenerateRecoveryCodes(10);
+            var recoveryCodesJson = JsonSerializer.Serialize(recoveryCodes);
+            var recoveryCodesHash = ComputeSha256Hash(recoveryCodesJson);
+
+            // Формируем otpauth:// URI для QR-кода
+            var issuer = "GoldPC";
+            var label = Uri.EscapeDataString($"{issuer}:{user.Email}");
+            var qrCodeUrl = $"otpauth://totp/{label}?secret={totpSecret}&issuer={issuer}&digits={TOTPDigits}&period={TOTPStepSeconds}";
+
+            if (twoFactor == null)
+            {
+                twoFactor = new UserTwoFactor
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.UserTwoFactors.Add(twoFactor);
+            }
+
+            twoFactor.TOTPSecret = totpSecret;
+            twoFactor.IsEnabled = false; // Пока не подтверждён кодом
+            twoFactor.RecoveryCodes = recoveryCodesHash;
+            twoFactor.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return (new TwoFactorStatusResponse
+            {
+                IsEnabled = false,
+                RecoveryCodes = recoveryCodes,
+                QRCodeUrl = qrCodeUrl
+            }, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при включении двухфакторной аутентификации для пользователя {UserId}", userId);
+            return (null, "Произошла ошибка при включении двухфакторной аутентификации.");
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<(TwoFactorStatusResponse? Response, string? Error)> VerifyTwoFactorAsync(Guid userId, TwoFactorVerifyRequest request)
+    {
+        try
+        {
+            var twoFactor = await _context.UserTwoFactors
+                .FirstOrDefaultAsync(t => t.UserId == userId);
+
+            if (twoFactor == null || string.IsNullOrEmpty(twoFactor.TOTPSecret))
+            {
+                return (null, "Двухфакторная аутентификация не была инициирована. Сначала вызовите EnableTwoFactorAsync.");
+            }
+
+            if (twoFactor.IsEnabled)
+            {
+                return (null, "Двухфакторная аутентификация уже включена");
+            }
+
+            var isValid = VerifyTOTP(twoFactor.TOTPSecret, request.TOTPCode);
+            if (!isValid)
+            {
+                return (null, "Неверный TOTP-код");
+            }
+
+            twoFactor.IsEnabled = true;
+            twoFactor.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return (new TwoFactorStatusResponse
+            {
+                IsEnabled = true,
+                RecoveryCodes = null, // Recovery codes были показаны при Enable
+                QRCodeUrl = null
+            }, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при подтверждении двухфакторной аутентификации для пользователя {UserId}", userId);
+            return (null, "Произошла ошибка при подтверждении двухфакторной аутентификации.");
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<(bool Success, string? Error)> DisableTwoFactorAsync(Guid userId, TwoFactorDisableRequest request)
+    {
+        try
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return (false, "Пользователь не найден");
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            {
+                return (false, "Неверный пароль");
+            }
+
+            var twoFactor = await _context.UserTwoFactors
+                .FirstOrDefaultAsync(t => t.UserId == userId);
+
+            if (twoFactor == null || !twoFactor.IsEnabled)
+            {
+                return (false, "Двухфакторная аутентификация не включена");
+            }
+
+            twoFactor.IsEnabled = false;
+            twoFactor.TOTPSecret = null;
+            twoFactor.RecoveryCodes = null;
+            twoFactor.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка при отключении двухфакторной аутентификации для пользователя {UserId}", userId);
+            return (false, "Произошла ошибка при отключении двухфакторной аутентификации.");
+        }
+    }
+
     /// <summary>
     /// Создаёт токен подтверждения email и отправляет письмо.
     /// </summary>
@@ -617,6 +931,146 @@ public class AuthService : IAuthService
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
+    /// <summary>
+    /// Генерирует N случайных recovery-кодов заданной длины.
+    /// </summary>
+    private static List<string> GenerateRecoveryCodes(int count, int length = 8)
+    {
+        const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        var codes = new List<string>(count);
+        for (var i = 0; i < count; i++)
+        {
+            var code = new char[length];
+            for (var j = 0; j < length; j++)
+            {
+                code[j] = chars[RandomNumberGenerator.GetInt32(chars.Length)];
+            }
+            codes.Add(new string(code));
+        }
+        return codes;
+    }
+
+    /// <summary>
+    /// Кодирует байты в Base32 (RFC 4648).
+    /// </summary>
+    private static string Base32Encode(byte[] data)
+    {
+        const string base32Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        var result = new StringBuilder();
+        var buffer = 0;
+        var bitsLeft = 0;
+
+        foreach (var b in data)
+        {
+            buffer = (buffer << 8) | b;
+            bitsLeft += 8;
+            while (bitsLeft >= 5)
+            {
+                bitsLeft -= 5;
+                result.Append(base32Chars[(buffer >> bitsLeft) & 0x1F]);
+            }
+        }
+
+        if (bitsLeft > 0)
+        {
+            result.Append(base32Chars[(buffer << (5 - bitsLeft)) & 0x1F]);
+        }
+
+        return result.ToString();
+    }
+
+    /// <summary>
+    /// Проверяет TOTP-код на основе HMAC-SHA1 (30-секундный шаг, 6 цифр).
+    /// Поддерживает текущее и предыдущее окно (±1 шаг) для допуска рассинхронизации.
+    /// </summary>
+    private static bool VerifyTOTP(string base32Secret, string totpCode)
+    {
+        var key = Base32Decode(base32Secret);
+        var currentStep = GetCurrentStep();
+
+        // Проверяем текущее и ±1 окно для допуска рассинхронизации часов
+        for (var drift = -1; drift <= 1; drift++)
+        {
+            var step = currentStep + drift;
+            if (step < 0) continue;
+
+            var computedCode = ComputeTOTP(key, step);
+            if (computedCode == totpCode)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Декодирует Base32-строку в байты.
+    /// </summary>
+    private static byte[] Base32Decode(string base32)
+    {
+        const string base32Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        base32 = base32.TrimEnd('=').ToUpperInvariant();
+
+        var byteCount = base32.Length * 5 / 8;
+        var result = new byte[byteCount];
+
+        var buffer = 0;
+        var bitsLeft = 0;
+        var index = 0;
+
+        foreach (var c in base32)
+        {
+            var value = base32Chars.IndexOf(c);
+            if (value < 0) continue;
+
+            buffer = (buffer << 5) | value;
+            bitsLeft += 5;
+
+            if (bitsLeft >= 8)
+            {
+                bitsLeft -= 8;
+                result[index++] = (byte)((buffer >> bitsLeft) & 0xFF);
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Вычисляет текущий TOTP-шаг (Unix-time / шаг в секундах).
+    /// </summary>
+    private static long GetCurrentStep()
+    {
+        var unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        return unixTime / TOTPStepSeconds;
+    }
+
+    /// <summary>
+    /// Вычисляет TOTP-код для заданного шага с использованием HMAC-SHA1.
+    /// </summary>
+    private static string ComputeTOTP(byte[] key, long step)
+    {
+        var stepBytes = BitConverter.GetBytes(step);
+        if (BitConverter.IsLittleEndian)
+        {
+            Array.Reverse(stepBytes);
+        }
+
+        using var hmac = new HMACSHA1(key);
+        var hash = hmac.ComputeHash(stepBytes);
+
+        // Dynamic truncation (RFC 4226)
+        var offset = hash[^1] & 0x0F;
+        var binaryCode = ((hash[offset] & 0x7F) << 24)
+                          | ((hash[offset + 1] & 0xFF) << 16)
+                          | ((hash[offset + 2] & 0xFF) << 8)
+                          | (hash[offset + 3] & 0xFF);
+
+        var otp = binaryCode % (int)Math.Pow(10, TOTPDigits);
+        return otp.ToString().PadLeft(TOTPDigits, '0');
+    }
+
     private async Task<RefreshToken> CreateRefreshTokenAsync(Guid userId, string? ipAddress)
     {
         var refreshToken = new RefreshToken
@@ -646,7 +1100,10 @@ public class AuthService : IAuthService
             LastName = user.LastName,
             Phone = user.Phone,
             IsActive = user.IsActive,
-            IsEmailVerified = user.IsEmailVerified
+            IsEmailVerified = user.IsEmailVerified,
+            BirthDate = user.BirthDate,
+            Company = user.Company
         };
     }
 }
+#pragma warning restore CS1591, SA1600

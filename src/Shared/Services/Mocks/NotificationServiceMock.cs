@@ -182,5 +182,31 @@ public class NotificationServiceMock : INotificationService
             _logger.LogInformation("[Mock NotificationService] Broadcasted notification: Id={Id}, Type={Type}", notification.Id, notification.Type);
         }
     }
+
+    public async Task SendPushNotificationAsync(string userId, string title, string message)
+    {
+        if (SimulatedDelayMs > 0)
+        {
+            await Task.Delay(SimulatedDelayMs);
+        }
+
+        if (EnableConsoleLogging)
+        {
+            _logger.LogInformation("[Mock NotificationService] Push notification: UserId={UserId}, Title={Title}, Message={Message}", userId, title, message);
+        }
+    }
+
+    public async Task SendEmailAsync(string to, string subject, string body)
+    {
+        if (SimulatedDelayMs > 0)
+        {
+            await Task.Delay(SimulatedDelayMs);
+        }
+
+        if (EnableConsoleLogging)
+        {
+            _logger.LogInformation("[Mock NotificationService] Email: To={To}, Subject={Subject}", to, subject);
+        }
+    }
 }
 #pragma warning restore CS1591, SA1201, SA1204, SA1402, SA1600, SA1616

@@ -118,7 +118,7 @@ getAddresses()
       deliveryMethod: deliveryData.method,
       subtotal,
       city: deliveryData.city,
-    }).then(quote => setDeliveryCost(quote.deliveryCost)).catch(() => {});
+    }).then(quote => setDeliveryCost(quote?.deliveryCost ?? 0)).catch(() => {});
   }, [deliveryData.method, deliveryData.city, subtotal]);
 
   const validateContactField = (field: ContactField, rawValue: string): boolean => {
@@ -261,7 +261,7 @@ getAddresses()
 
       clearCart();
       showToast('Заказ успешно оформлен!', 'success');
-      navigate(`/orders/${order.orderNumber}/success`);
+      navigate(`/orders/${order?.orderNumber ?? 'unknown'}/success`);
       return true;
     } catch (error) {
       if (isAxiosError(error)) {
@@ -367,7 +367,7 @@ getAddresses()
               <div key={step.id} className="flex items-center">
                 <div className={`flex items-center gap-2.5 ${isCurrent ? '' : ''} ${isCompleted ? '' : ''}`}>
                   <span className={`w-8 h-8 flex items-center justify-center border rounded-md font-mono text-sm transition-all
-                    ${isCurrent ? 'bg-accent border-accent text-background shadow' : ''}
+                    ${isCurrent ? 'bg-gold/10 border-gold text-gold font-medium' : ''}
                     ${isCompleted ? 'bg-border-muted border-border-muted text-accent' : ''}
                     ${!isCurrent && !isCompleted ? 'bg-elevated border-border text-muted-foreground' : ''}
                   `}>
@@ -385,7 +385,7 @@ getAddresses()
           })}
         </nav>
 
-        <div className="grid grid-cols-[1fr_400px] gap-8 items-start">
+        <div className="grid grid-cols-[1fr_400px] gap-8 items-start pb-8">
           <div className="flex flex-col gap-6">
 
             {/* Step 1: Delivery */}
@@ -400,7 +400,7 @@ getAddresses()
                       type="radio"
                       checked={deliveryData.method === 'Delivery'}
                       onChange={() => setDeliveryData(prev => ({ ...prev, method: 'Delivery', pickupPointId: undefined }))}
-                      className="w-5 h-5 cursor-pointer accent-accent"
+                      className="filter-radio"
                     />
                     <span className="flex items-center gap-2.5 text-foreground">
                       <Icon name="package" size="sm" color="accent" /> Курьерская доставка
@@ -413,7 +413,7 @@ getAddresses()
                       type="radio"
                       checked={deliveryData.method === 'Pickup'}
                       onChange={() => setDeliveryData(prev => ({...prev, method: 'Pickup' }))}
-                      className="w-5 h-5 cursor-pointer accent-accent"
+                      className="filter-radio"
                     />
                     <span className="flex items-center gap-2.5 text-foreground">
                       <Icon name="package" size="sm" color="accent" /> Самовывоз (бесплатно)
@@ -499,7 +499,7 @@ getAddresses()
                           type="checkbox"
                           checked={deliveryData.saveAddress}
                           onChange={(e) => setDeliveryData(prev => ({...prev, saveAddress: e.target.checked}))}
-                          className="w-5 h-5 cursor-pointer accent-accent"
+                          className="filter-checkbox"
                         />
                         <span className="text-foreground text-sm">Сохранить адрес в профиль</span>
                       </label>
@@ -616,7 +616,7 @@ getAddresses()
                       type="radio"
                       checked={paymentMethod === 'CardOnline'}
                       onChange={() => setPaymentMethod('CardOnline')}
-                      className="w-5 h-5 cursor-pointer accent-accent"
+                      className="filter-radio"
                     />
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-2.5 text-foreground"><Icon name="credit-card" size="sm" color="accent" /> Карта онлайн</span>
@@ -630,7 +630,7 @@ getAddresses()
                       type="radio"
                       checked={paymentMethod === 'SBP'}
                       onChange={() => setPaymentMethod('SBP')}
-                      className="w-5 h-5 cursor-pointer accent-accent"
+                      className="filter-radio"
                     />
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-2.5 text-foreground"><Icon name="phone" size="sm" color="accent" /> СБП (Система быстрых платежей)</span>
@@ -644,7 +644,7 @@ getAddresses()
                       type="radio"
                       checked={paymentMethod === 'Cash'}
                       onChange={() => setPaymentMethod('Cash')}
-                      className="w-5 h-5 cursor-pointer accent-accent"
+                      className="filter-radio"
                     />
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-2.5 text-foreground"><Icon name="credit-card" size="sm" color="accent" /> Наличными при получении</span>
@@ -658,7 +658,7 @@ getAddresses()
                       type="radio"
                       checked={paymentMethod === 'CardOnDelivery'}
                       onChange={() => setPaymentMethod('CardOnDelivery')}
-                      className="w-5 h-5 cursor-pointer accent-accent"
+                      className="filter-radio"
                     />
                     <div className="flex flex-col gap-1">
                       <span className="flex items-center gap-2.5 text-foreground"><Icon name="credit-card" size="sm" color="accent" /> Картой при получении</span>
@@ -731,7 +731,7 @@ getAddresses()
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center mt-6 pt-5 border-t border-border gap-4 max-sm:flex-col max-sm:gap-3 max-sm:w-full">
+                <div className="flex justify-between items-center gap-4 max-sm:flex-col max-sm:gap-3 max-sm:w-full">
                   <Button variant="ghost" size="md" onClick={handlePrevStep} disabled={isProcessing} leftIcon={<Icon name="arrow-left" size="sm" />}>
                     Назад
                   </Button>

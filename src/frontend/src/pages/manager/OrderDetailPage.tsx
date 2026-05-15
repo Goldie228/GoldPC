@@ -182,28 +182,36 @@ export function OrderDetailPage() {
     setIsUpdating(true);
     // Имитация API вызова
     await new Promise((resolve) => setTimeout(resolve, 500));
-    setOrder((prev) => ({
-      ...prev,
-      status: 'processing',
-      timeline: [
-        { status: 'В обработке', date: new Date().toISOString(), active: true },
-        ...prev.timeline.map((t) => ({ ...t, active: false })),
-      ],
-    }));
+    setOrder((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        id: prev.id,
+        status: 'processing',
+        timeline: [
+          { status: 'В обработке', date: new Date().toISOString(), active: true },
+          ...prev.timeline.map((t) => ({ ...t, active: false })),
+        ],
+      };
+    });
     setIsUpdating(false);
   };
 
   const handleShip = async () => {
     setIsUpdating(true);
     await new Promise((resolve) => setTimeout(resolve, 500));
-    setOrder((prev) => ({
-      ...prev,
-      status: 'shipped',
-      timeline: [
-        { status: 'Отправлен', date: new Date().toISOString(), active: true },
-        ...prev.timeline.map((t) => ({ ...t, active: false })),
-      ],
-    }));
+    setOrder((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        id: prev.id,
+        status: 'shipped',
+        timeline: [
+          { status: 'Отправлен', date: new Date().toISOString(), active: true },
+          ...prev.timeline.map((t) => ({ ...t, active: false })),
+        ],
+      };
+    });
     setIsUpdating(false);
   };
 

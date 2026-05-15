@@ -74,5 +74,17 @@ public class ProductionNotificationService : INotificationService
         _logger.LogDebug("BroadcastNotificationAsync called");
         return Task.CompletedTask;
     }
+
+    public Task SendPushNotificationAsync(string userId, string title, string message)
+    {
+        _logger.LogDebug("SendPushNotificationAsync called for user {UserId}", userId);
+        return Task.CompletedTask;
+    }
+
+    public Task SendEmailAsync(string to, string subject, string body)
+    {
+        _logger.LogDebug("SendEmailAsync called for {To}", to);
+        return Task.CompletedTask;
+    }
 }
 #pragma warning restore CA1031, CS1591, SA1600

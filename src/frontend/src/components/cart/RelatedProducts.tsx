@@ -161,26 +161,12 @@ export function RelatedProducts({ cartItems }: RelatedProductsProps): ReactEleme
         )}
       </div>
 
-      <div className="relative">
-        {!atStart && (
-          <div
-            className="absolute top-0 bottom-0 w-[70px] pointer-events-none z-2 transition-opacity duration-160"
-            style={{ left: 0, background: 'linear-gradient(90deg, var(--bg), transparent)' }}
-          />
-        )}
-        {!atEnd && (
-          <div
-            className="absolute top-0 bottom-0 w-[70px] pointer-events-none z-2 transition-opacity duration-160"
-            style={{ right: 0, background: 'linear-gradient(270deg, var(--bg), transparent)' }}
-          />
-        )}
-        <div ref={trackRef} className="flex gap-4 overflow-x-auto overflow-y-hidden py-1 px-0.5 scroll-smooth snap-x snap-mandatory scroll-px-2">
-          {recommendations.map((product) => (
-            <div key={product.id} className="snap-start flex-none w-[min(260px,78vw)] sm:w-[260px] lg:w-[280px]">
-              <ProductCard product={product} />
-            </div>
-          ))}
-        </div>
+      <div ref={trackRef} className="flex gap-4 overflow-x-auto overflow-y-hidden py-1 px-0.5 scroll-smooth snap-x snap-mandatory scroll-px-2">
+        {recommendations.map((product) => (
+          <div key={product.id} className="snap-start flex-none w-[min(260px,78vw)] sm:w-[260px] lg:w-[280px]">
+            <ProductCard product={product} />
+          </div>
+        ))}
       </div>
     </motion.section>
   );

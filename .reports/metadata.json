@@ -1,0 +1,19 @@
+{
+  "totalFindings": 1,
+  "open": 1,
+  "accepted": 0,
+  "rejected": 0,
+  "plan": {
+    "total": 1,
+    "open": 1,
+    "accepted": 0,
+    "rejected": 0
+  },
+  "impl": {
+    "total": 0,
+    "open": 0,
+    "accepted": 0,
+    "rejected": 0
+  },
+  "lastUpdated": "2026-05-14T18:57:36.178Z"
+}

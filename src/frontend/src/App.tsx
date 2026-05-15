@@ -38,6 +38,9 @@ const ServicesPage = lazy(() => import('./pages/services-page/ServicesPage').the
 const ServiceDetailPage = lazy(() => import('./pages/service-detail-page/ServiceDetailPage').then(m => ({ default: m.ServiceDetailPage })));
 const ServiceRequestPage = lazy(() => import('./pages/service-request-page/ServiceRequestPage').then(m => ({ default: m.ServiceRequestPage })));
 const AccountRepairs = lazy(() => import('./pages/account-page/AccountRepairs').then(m => ({ default: m.AccountRepairs })));
+const AccountWarranty = lazy(() => import('./pages/account-page/AccountWarranty').then(m => ({ default: m.AccountWarranty })));
+
+const AccountSavedBuilds = lazy(() => import('./pages/account-page/AccountSavedBuilds').then(m => ({ default: m.AccountSavedBuilds })));
 const ClientTicketDetailPage = lazy(() => import('./pages/my-repairs/TicketDetailPage').then(m => ({ default: m.TicketDetailPage })));
 const DeliveryPage = lazy(() => import('./pages/info/DeliveryPage').then(m => ({ default: m.DeliveryPage })));
 const PaymentPage = lazy(() => import('./pages/info/PaymentPage').then(m => ({ default: m.PaymentPage })));
@@ -47,8 +50,6 @@ const FaqPage = lazy(() => import('./pages/info/FaqPage').then(m => ({ default: 
 const ContactsPage = lazy(() => import('./pages/info/ContactsPage').then(m => ({ default: m.ContactsPage })));
 const PrivacyPage = lazy(() => import('./pages/info/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import('./pages/info/TermsPage').then(m => ({ default: m.TermsPage })));
-const SitemapPage = lazy(() => import('./pages/info/SitemapPage').then(m => ({ default: m.SitemapPage })));
-const PromotionsPage = lazy(() => import('./pages/info/PromotionsPage').then(m => ({ default: m.PromotionsPage })));
 const BrandsPage = lazy(() => import('./pages/info/BrandsPage').then(m => ({ default: m.BrandsPage })));
 const AccountLayout = lazy(() => import('./pages/account-page/AccountLayout').then(m => ({ default: m.AccountLayout })));
 const CustomerDashboard = lazy(() => import('./pages/customer-dashboard/CustomerDashboard').then(m => ({ default: m.CustomerDashboard })));
@@ -204,8 +205,6 @@ const router = createBrowserRouter([
       { path: '/contacts', element: <ContactsPage /> },
       { path: '/privacy', element: <PrivacyPage /> },
       { path: '/terms', element: <TermsPage /> },
-      { path: '/sitemap', element: <SitemapPage /> },
-      { path: '/promotions', element: <PromotionsPage /> },
       { path: '/brands', element: <BrandsPage /> },
       {
         element: <AuthGuard />,
@@ -223,7 +222,9 @@ const router = createBrowserRouter([
               { path: 'orders', element: <AccountOrders /> },
               { path: 'repairs', element: <AccountRepairs /> },
               { path: 'wishlist', element: <Navigate to="/wishlist" replace /> },
-              { path: 'settings', element: <AccountProfile /> },
+              { path: 'warranty', element: <AccountWarranty /> },
+              { path: 'saved-builds', element: <AccountSavedBuilds /> },
+
             ],
           },
         ],

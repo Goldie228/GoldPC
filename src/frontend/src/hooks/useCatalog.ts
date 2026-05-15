@@ -38,11 +38,11 @@ export function useCatalog(): UseCatalogReturn {
     setError(null);
     try {
       const result = await catalogApi.getProducts(params);
-      return result ?? { items: [], meta: { page: 1, pageSize: 12, totalPages: 1, totalItems: 0, hasNext: false, hasPrevious: false } };
+      return result ?? { data: [], meta: { page: 1, pageSize: 12, totalPages: 1, totalItems: 0, hasNext: false, hasPrevious: false } };
     } catch (e) {
       const err = e instanceof Error ? e : new Error('Failed to fetch products');
       setError(err);
-      return { items: [], meta: { page: 1, pageSize: 12, totalPages: 1, totalItems: 0, hasNext: false, hasPrevious: false } };
+      return { data: [], meta: { page: 1, pageSize: 12, totalPages: 1, totalItems: 0, hasNext: false, hasPrevious: false } };
     } finally {
       setLoading(false);
     }

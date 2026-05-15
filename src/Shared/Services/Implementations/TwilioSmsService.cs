@@ -96,6 +96,18 @@ public class TwilioSmsService : INotificationService
         return Task.CompletedTask;
     }
 
+    public Task SendPushNotificationAsync(string userId, string title, string message)
+    {
+        _logger.LogDebug("TwilioSmsService SendPushNotificationAsync called - not supported");
+        return Task.CompletedTask;
+    }
+
+    public Task SendEmailAsync(string to, string subject, string body)
+    {
+        _logger.LogDebug("TwilioSmsService SendEmailAsync called - not supported");
+        return Task.CompletedTask;
+    }
+
     private static bool IsRateLimited(string phone)
     {
         var now = DateTime.UtcNow;

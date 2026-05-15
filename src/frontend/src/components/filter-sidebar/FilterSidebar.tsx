@@ -252,8 +252,8 @@ export function FilterSidebar({
   onReset,
   restrictedSpecValues,
   effectiveSpecifications: effectiveSpecs,
-  restrictedManufacturerPlatform,
-  totalItems = 0,
+  restrictedManufacturerPlatform: _restrictedManufacturerPlatform,
+  totalItems: _totalItems = 0,
   sortBy,
   onSortChange,
   viewMode,
@@ -263,16 +263,17 @@ export function FilterSidebar({
   const [mfrSearch, setMfrSearch] = useState('');
   const [showAllMfrs, setShowAllMfrs] = useState(false);
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [_categories, setCategories] = useState<Category[]>([]);
   const [filterFacets, setFilterFacets] = useState<FilterFacetAttribute[]>([]);
-  const [loadingFacets, setLoadingFacets] = useState(false);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [manufacturersLoading, setManufacturersLoading] = useState(false);
   const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>({ min: 0, max: 10000 });
-  const [priceBoundsLoading, setPriceBoundsLoading] = useState(false);
+  const [_priceBoundsLoading, setPriceBoundsLoading] = useState(false);
   const [localPriceRange, setLocalPriceRange] = useState({ min: 0, max: 0 });
   const [specSearchQuery, setSpecSearchQuery] = useState<Record<string, string>>({});
+  /** Локальные значения range-слайдеров характеристик (обновляются только по onCommit) */
+  const [localSpecRanges, setLocalSpecRanges] = useState<Record<string, { min: number; max: number }>>({});
 
   // === Sync local price with props ===
   useEffect(() => {
@@ -288,6 +289,17 @@ export function FilterSidebar({
     }, 400);
     return () => clearTimeout(timer);
   }, [localPriceRange, onPriceChange, /* priceRange — intentionally omitted to avoid loop */]);
+
+  // === Reset local spec ranges when category changes or specs are cleared ===
+  useEffect(() => {
+    setLocalSpecRanges({});
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    if (Object.keys(selectedSpecifications).length === 0) {
+      setLocalSpecRanges({});
+    }
+  }, [selectedSpecifications]);
 
   // === Fetch categories with product counts ===
   useEffect(() => {
@@ -404,7 +416,7 @@ export function FilterSidebar({
             const m = p.name?.match(brandRe);
             if (m) brandSet.add(m[1]);
           }
-          setManufacturers(Array.from(brandSet).sort().map((name, i) => ({ id: `brand-${name}`, name })));
+          setManufacturers(Array.from(brandSet).sort().map((name, _i) => ({ id: `brand-${name}`, name })));
         }
       } catch (err) {
         console.error('Failed to fetch manufacturers:', err);
@@ -495,10 +507,6 @@ export function FilterSidebar({
         ? selectedAvailability.filter(v => v !== val)
         : [...selectedAvailability, val],
     );
-  };
-
-  const handleSpecChange = (key: string, value: string | number | string[]) => {
-    onSpecificationsChange({ ...selectedSpecifications, [key]: value });
   };
 
   // ============================================================
@@ -717,6 +725,7 @@ export function FilterSidebar({
                 : [rawMin, rawMax];
 
               const localRange = { min: toUi(selMinRaw || rawMin), max: toUi(selMaxRaw || rawMax) };
+              const displayRange = localSpecRanges[attr.key] ?? localRange;
               const rangeSpanUi = maxValUi - minValUi;
               const step = isVideoMemory || attr.key.includes('capacity')
                 ? 1
@@ -738,9 +747,12 @@ export function FilterSidebar({
                     min={minValUi}
                     max={maxValUi}
                     step={step}
-                    minVal={localRange.min}
-                    maxVal={localRange.max}
+                    minVal={displayRange.min}
+                    maxVal={displayRange.max}
                     onChange={values => {
+                      setLocalSpecRanges(prev => ({ ...prev, [attr.key]: values }));
+                    }}
+                    onCommit={values => {
                       const next = { ...selectedSpecifications };
                       const committedMinRaw = effectiveMin != null
                         ? Math.max(fromUi(values.min), effectiveMin)
@@ -895,7 +907,7 @@ export function FilterSidebar({
             return null;
           };
 
-          return loadingFacets ? (
+          return false ? (
             <FilterGroup title="Характеристики" icon={<Tag size={14} />} defaultOpen={false}>
               <div className="space-y-2">
                 <Skeleton width="100%" height={20} borderRadius="sm" />

@@ -2,8 +2,20 @@
  * Auth Service - API методы для аутентификации
  */
 import apiClient from './client';
-import type { LoginRequest, RegisterRequest, AuthResponse, ForgotPasswordRequest, ResetPasswordRequest } from './types';
+import type {
+  LoginRequest,
+  RegisterRequest,
+  AuthResponse,
+  ForgotPasswordRequest,
+  ResetPasswordRequest,
+  ChangePasswordRequest,
+  TwoFactorStatusResponse,
+  NotificationPreferenceRequest,
+  NotificationPreferenceResponse,
+  LoginHistoryItem,
+} from './types';
 import { AxiosError } from 'axios';
+import { normalizeUserRoles } from '../utils/roleMapper';
 
 const AUTH_BASE_URL = '/auth';
 
@@ -59,7 +71,12 @@ export const authService = {
    */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     const response = await apiClient.post(`${AUTH_BASE_URL}/login`, credentials);
-    return extractData<AuthResponse>(response.data);
+    const data = extractData<AuthResponse>(response.data);
+    // Нормализуем роли: бэкенд возвращает числа (0=Client), фронтенд ожидает строки
+    return {
+      ...data,
+      user: normalizeUserRoles(data.user)!,
+    };
   },
 
   /**
@@ -67,7 +84,11 @@ export const authService = {
    */
   async register(data: RegisterRequest): Promise<AuthResponse> {
     const response = await apiClient.post(`${AUTH_BASE_URL}/register`, data);
-    return extractData<AuthResponse>(response.data);
+    const authData = extractData<AuthResponse>(response.data);
+    return {
+      ...authData,
+      user: normalizeUserRoles(authData.user)!,
+    };
   },
 
   /**
@@ -86,7 +107,11 @@ export const authService = {
    */
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
     const response = await apiClient.post(`${AUTH_BASE_URL}/refresh`, { refreshToken });
-    return extractData<AuthResponse>(response.data);
+    const data = extractData<AuthResponse>(response.data);
+    return {
+      ...data,
+      user: normalizeUserRoles(data.user)!,
+    };
   },
 
   /**
@@ -94,7 +119,8 @@ export const authService = {
    */
   async getCurrentUser(): Promise<AuthResponse['user']> {
     const response = await apiClient.get(`${AUTH_BASE_URL}/profile`);
-    return extractData<AuthResponse['user']>(response.data);
+    const user = extractData<AuthResponse['user']>(response.data);
+    return normalizeUserRoles(user)!;
   },
 
   /**
@@ -121,7 +147,7 @@ export const authService = {
     await apiClient.post(`${AUTH_BASE_URL}/validate-reset-token`, { token });
   },
 
-  /**
+/**
    * Отправка письма с подтверждением email (или повторная отправка).
    * Требует авторизации — userId извлекается из JWT на сервере.
    */
@@ -135,5 +161,105 @@ export const authService = {
    */
   async verifyEmail(token: string): Promise<void> {
     await apiClient.post(`${AUTH_BASE_URL}/verify-email`, { token });
+  },
+
+  /**
+   * Смена пароля
+   */
+  async changePassword(data: ChangePasswordRequest): Promise<void> {
+    await apiClient.post(`${AUTH_BASE_URL}/change-password`, data);
+  },
+
+  /**
+   * Получение текущих предпочтений уведомлений
+   */
+  async getNotificationPreferences(): Promise<NotificationPreferenceResponse> {
+    const response = await apiClient.get(`${AUTH_BASE_URL}/notification-preferences`);
+    return extractData<NotificationPreferenceResponse>(response.data);
+  },
+
+  /**
+   * Обновление предпочтений уведомлений
+   */
+  async updateNotificationPreferences(
+    data: NotificationPreferenceRequest
+  ): Promise<NotificationPreferenceResponse> {
+    const response = await apiClient.put(`${AUTH_BASE_URL}/notification-preferences`, data);
+    return extractData<NotificationPreferenceResponse>(response.data);
+  },
+
+  /**
+   * Включение двухфакторной аутентификации
+   */
+  async enableTwoFactor(): Promise<TwoFactorStatusResponse> {
+    const response = await apiClient.post(`${AUTH_BASE_URL}/security/2fa/enable`);
+    return extractData<TwoFactorStatusResponse>(response.data);
+  },
+
+  /**
+   * Подтверждение включения двухфакторной аутентификации
+   */
+  async verifyTwoFactor(code: string): Promise<TwoFactorStatusResponse> {
+    const response = await apiClient.post(`${AUTH_BASE_URL}/security/2fa/verify`, { totpCode: code });
+    return extractData<TwoFactorStatusResponse>(response.data);
+  },
+
+  /**
+   * Отключение двухфакторной аутентификации
+   */
+  async disableTwoFactor(password: string): Promise<void> {
+    await apiClient.post(`${AUTH_BASE_URL}/security/2fa/disable`, { password });
+  },
+
+  /**
+   * История входов пользователя
+   */
+  async getLoginHistory(
+    page = 1,
+    pageSize = 20
+  ): Promise<{ items: LoginHistoryItem[]; total: number }> {
+    try {
+      const response = await apiClient.get(`${AUTH_BASE_URL}/login-history`, {
+        params: { page, pageSize },
+      });
+      const data = extractData<{ items: LoginHistoryItem[]; total: number }>(response.data);
+      return data;
+    } catch {
+      // Endpoint not implemented on backend yet — return empty gracefully
+      return { items: [], total: 0 };
+    }
+  },
+
+  /**
+   * Обновление профиля пользователя
+   */
+  async updateProfile(data: {
+    firstName: string;
+    lastName: string;
+    phone?: string;
+  }): Promise<AuthResponse['user']> {
+    const response = await apiClient.put(`${AUTH_BASE_URL}/profile`, data);
+    const user = extractData<AuthResponse['user']>(response.data);
+    return normalizeUserRoles(user)!;
+  },
+
+  /**
+   * Загрузить аватар пользователя
+   */
+  async uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await apiClient.post(`${AUTH_BASE_URL}/avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    const data = extractData<{ avatarUrl: string }>(response.data);
+    return data;
+  },
+
+  /**
+   * Удалить аватар пользователя
+   */
+  async deleteAvatar(): Promise<void> {
+    await apiClient.delete(`${AUTH_BASE_URL}/avatar`);
   },
 };

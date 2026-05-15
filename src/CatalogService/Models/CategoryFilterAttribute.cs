@@ -39,4 +39,7 @@ public class CategoryFilterAttribute
 
     /// <summary>Порядок отображения в сайдбаре</summary>
     public int SortOrder { get; set; }
+
+    /// <summary>Можно ли выбрать несколько значений (для чекбоксов)</summary>
+    public bool IsMultiValue { get; set; } = false;
 }

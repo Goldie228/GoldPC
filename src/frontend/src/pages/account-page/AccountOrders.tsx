@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Info, RefreshCw } from 'lucide-react';
 import { useOrders } from '../../hooks/useOrders';
 import { useToast } from '../../hooks/useToast';
+import { ordersApi } from '../../api/orders';
 import type { Order, OrderItem } from '../../api/orders';
 import { Modal } from '../../components/ui/Modal/Modal';
 
@@ -31,9 +33,21 @@ function getStatusProgress(status: string): number {
   return progress[status] ?? 0;
 }
 
+function getStatusBadgeClass(status: string): string {
+  const classes: Record<string, string> = {
+    'Completed': 'bg-[#0ecb81]/10 text-[#0ecb81]',
+    'Processing': 'bg-[#3b82f6]/10 text-[#3b82f6]',
+    'InProgress': 'bg-[#FCD535]/10 text-[#FCD535]',
+    'Ready': 'bg-[#2dbdb6]/10 text-[#2dbdb6]',
+    'Cancelled': 'bg-[#f6465d]/10 text-[#f6465d]',
+    'New': 'bg-[#707a8a]/10 text-[#707a8a]',
+  };
+  return classes[status] || 'bg-[#707a8a]/10 text-[#707a8a]';
+}
+
 /**
  * AccountOrders - Order history page
- * 
+ *
  * Features:
  * - Order stats cards
  * - Filter buttons
@@ -44,7 +58,7 @@ export function AccountOrders() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { getMyOrders } = useOrders();
-  
+
   const [activeFilter, setActiveFilter] = useState('all');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,9 +74,11 @@ export function AccountOrders() {
           setOrders(result.items);
         }
       })
-      .catch(() => showToast('Ошибка загрузки заказов', 'error'))
+      .catch(() => {
+        // Silent fail - show empty state instead of error
+      })
       .finally(() => setLoading(false));
-  }, [page, activeFilter, showToast, getMyOrders]);
+  }, [page, activeFilter, getMyOrders]);
 
   const stats = {
     total: orders.length,
@@ -76,16 +92,16 @@ export function AccountOrders() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  const handleViewDetails = async (currentOrderId: Order) => {
-    setSelectedOrder(currentOrderId);
+  const handleViewDetails = async (order: Order) => {
+    setSelectedOrder(order);
     setDetailsLoading(true);
     setShowDetailsModal(true);
 
     try {
-      const details = await ordersApi.getOrder(currentOrderId.id);
+      const details = await ordersApi.getOrder(order.id);
       setOrderDetails(details);
     } catch {
-      showToast('Ошибка загрузки деталей заказа', 'error');
+      // Silent fail - modal will show loading state
     } finally {
       setDetailsLoading(false);
     }
@@ -98,7 +114,7 @@ export function AccountOrders() {
         const details = await ordersApi.getOrder(selectedOrder.id);
         setOrderDetails(details);
 
-        // Update currentOrderId in list
+        // Update order in list
         setOrders(prev => prev.map(o => o.id === details.id ? details : o));
       } catch {
         // Silently fail on polling errors
@@ -114,24 +130,23 @@ export function AccountOrders() {
   }, [showDetailsModal, refreshOrderStatus]);
 
   const handleRepeatOrder = async (orderId: string) => {
-    const currentOrderId = orderId;
-    showToast(`Товары из заказа ${currentOrderId} добавлены в корзину`, 'success');
+    showToast(`Товары из заказа ${orderId} добавлены в корзину`, 'success');
     navigate('/cart');
   };
 
-  const ordersFormatted = orders.map(currentOrderId => ({
-    id: currentOrderId.orderNumber,
-    items: currentOrderId.items.slice(0, 2).map(i => ({ name: i.productName, quantity: i.quantity })),
-    date: new Date(currentOrderId.createdAt).toLocaleDateString('ru-RU'),
-    total: `${currentOrderId.total.toFixed(2)} BYN`,
-    status: currentOrderId.status,
-    statusLabel: getStatusLabel(currentOrderId.status),
-    moreItems: currentOrderId.items.length > 2 ? currentOrderId.items.length - 2 : undefined,
+  const ordersFormatted = orders.map(order => ({
+    id: order.orderNumber,
+    items: order.items.slice(0, 2).map(i => ({ name: i.productName, quantity: i.quantity })),
+    date: new Date(order.createdAt).toLocaleDateString('ru-RU'),
+    total: `${order.total.toFixed(2)} BYN`,
+    status: order.status,
+    statusLabel: getStatusLabel(order.status),
+    moreItems: order.items.length > 2 ? order.items.length - 2 : undefined,
   }));
 
-  if (loading) {
-    return <div className="account-orders">Загрузка...</div>;
-  }
+  const filteredOrders = activeFilter === 'all'
+    ? ordersFormatted
+    : ordersFormatted.filter(order => order.status === activeFilter);
 
   const filters = [
     { id: 'all', label: 'Все' },
@@ -141,315 +156,294 @@ export function AccountOrders() {
     { id: 'Cancelled', label: 'Отменённые' },
   ];
 
-  // Old mock data kept for fallback (can be removed later)
-  const oldOrdersMock = [
-    {
-      id: 'ORD-2025-0847',
-      items: [
-        { name: 'RTX 4070 Ti Super 16GB', quantity: 1 },
-        { name: 'AMD Ryzen 7 7800X3D', quantity: 1 },
-      ],
-      date: '15.03.2026',
-      total: '4 650 BYN',
-      status: 'delivered',
-      statusLabel: 'Доставлен',
-    },
-    {
-      id: 'ORD-2025-0712',
-      items: [{ name: 'G.Skill Trident Z5 32GB DDR5', quantity: 1 }],
-      date: '02.03.2026',
-      total: '650 BYN',
-      status: 'delivered',
-      statusLabel: 'Доставлен',
-    },
-    {
-      id: 'ORD-2025-0698',
-      items: [
-        { name: 'Samsung 990 Pro 2TB NVMe', quantity: 1 },
-        { name: 'Corsair RM850x PSU', quantity: 1 },
-      ],
-      date: '24.02.2026',
-      total: '680 BYN',
-      status: 'shipped',
-      statusLabel: 'В пути',
-    },
-    {
-      id: 'ORD-2025-0543',
-      items: [{ name: 'ASUS ROG Strix B650E-F', quantity: 1 }],
-      date: '10.02.2026',
-      total: '520 BYN',
-      status: 'processing',
-      statusLabel: 'В обработке',
-    },
-    {
-      id: 'ORD-2025-0421',
-      items: [
-        { name: 'NZXT H7 Flow Case', quantity: 1 },
-        { name: 'Corsair iCUE H150i Elite', quantity: 1 },
-      ],
-      date: '28.01.2026',
-      total: '1 240 BYN',
-      status: 'delivered',
-      statusLabel: 'Доставлен',
-      moreItems: 2,
-    },
-    {
-      id: 'ORD-2025-0315',
-      items: [{ name: 'Logitech G Pro X Superlight', quantity: 1 }],
-      date: '15.01.2026',
-      total: '380 BYN',
-      status: 'delivered',
-      statusLabel: 'Доставлен',
-    },
-    {
-      id: 'ORD-2025-0189',
-      items: [
-        { name: 'Intel Core i9-14900K', quantity: 1 },
-        { name: 'ASUS RTX 4080 Super', quantity: 1 },
-      ],
-      date: '02.01.2026',
-      total: '8 920 BYN',
-      status: 'delivered',
-      statusLabel: 'Доставлен',
-      moreItems: 4,
-    },
-    {
-      id: 'ORD-2024-0956',
-      items: [{ name: 'WD Black SN850X 1TB', quantity: 1 }],
-      date: '18.12.2025',
-      total: '220 BYN',
-      status: 'cancelled',
-      statusLabel: 'Отменён',
-    },
-    {
-      id: 'ORD-2024-0834',
-      items: [{ name: 'Custom Gaming PC Build', quantity: 1 }],
-      date: '05.12.2025',
-      total: '6 480 BYN',
-      status: 'delivered',
-      statusLabel: 'Доставлен',
-      moreItems: 8,
-    },
-    {
-      id: 'ORD-2024-0712',
-      items: [{ name: 'Keychron Q1 Pro Keyboard', quantity: 1 }],
-      date: '20.11.2025',
-      total: '340 BYN',
-      status: 'delivered',
-      statusLabel: 'Доставлен',
-    },
-  ];
-
-  const filteredOrders = ordersFormatted.length > 0
-    ? activeFilter === 'all'
-      ? ordersFormatted
-      : ordersFormatted.filter(currentOrderId => currentOrderId.status === activeFilter)
-    : oldOrdersMock;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0b0e11] flex items-center justify-center">
+        <div className="text-[#707a8a] text-lg">Загрузка...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="account-orders">
-      {/* Page Header */}
-      <div className="account-orders__header">
-        <div>
-          <h1 className="account-orders__title">История заказов</h1>
-          <p className="account-orders__subtitle">Все ваши заказы и их статусы</p>
+    <div className="min-h-screen bg-[#0b0e11]">
+      <div className="max-w-[1280px] mx-auto">
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-[#eaecef]">История заказов</h1>
+            <p className="text-[#707a8a] text-sm mt-1">Все ваши заказы и их статусы</p>
+          </div>
         </div>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="orders-stats">
-        <div className="stat-card">
-          <div className="stat-card__value">{stats.total}</div>
-          <div className="stat-card__label">Всего заказов</div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-5">
+            <div className="text-3xl font-bold text-[#eaecef]">{stats.total}</div>
+            <div className="text-sm text-[#707a8a] mt-1">Всего заказов</div>
+          </div>
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-5">
+            <div className="text-3xl font-bold text-[#0ecb81]">{stats.delivered}</div>
+            <div className="text-sm text-[#707a8a] mt-1">Доставлено</div>
+          </div>
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-5">
+            <div className="text-3xl font-bold text-[#FCD535]">{stats.shipped}</div>
+            <div className="text-sm text-[#707a8a] mt-1">В пути</div>
+          </div>
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-5">
+            <div className="text-3xl font-bold text-[#3b82f6]">{stats.processing}</div>
+            <div className="text-sm text-[#707a8a] mt-1">В обработке</div>
+          </div>
         </div>
-        <div className="stat-card stat-card--delivered">
-          <div className="stat-card__value">{stats.delivered}</div>
-          <div className="stat-card__label">Доставлено</div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {filters.map((filter) => (
+            <button
+              key={filter.id}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                activeFilter === filter.id
+                  ? 'bg-[#FCD535] text-[#181a20]'
+                  : 'bg-[#1e2329] text-[#707a8a] border border-[#2b3139] hover:text-[#eaecef] hover:border-[#FCD535]/40'
+              }`}
+              onClick={() => setActiveFilter(filter.id)}
+            >
+              {filter.label}
+            </button>
+          ))}
         </div>
-        <div className="stat-card stat-card--shipped">
-          <div className="stat-card__value">{stats.shipped}</div>
-          <div className="stat-card__label">В пути</div>
-        </div>
-        <div className="stat-card stat-card--processing">
-          <div className="stat-card__value">{stats.processing}</div>
-          <div className="stat-card__label">В обработке</div>
-        </div>
-      </div>
 
-      {/* Filters */}
-      <div className="orders-filters">
-        {filters.map((filter) => (
-          <button
-            key={filter.id}
-            className={`filter-btn ${activeFilter === filter.id ? 'filter-btn--active' : ''}`}
-            onClick={() => setActiveFilter(filter.id)}
-          >
-            {filter.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Orders Table */}
-      <div className="orders-table-container">
-        <table className="orders-table">
-          <thead>
-            <tr>
-              <th>Заказ</th>
-              <th>Товары</th>
-              <th>Дата</th>
-              <th>Сумма</th>
-              <th>Статус</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.map((currentOrderId) => (
-              <tr key={currentOrderId.id}>
-                <td>
-                  <a href="#" className="currentOrderId-id">#{currentOrderId.id}</a>
-                </td>
-                <td className="currentOrderId-items">
-                  <div className="currentOrderId-items-list">
-                    {currentOrderId.items.map((item, index) => (
-                      <span key={index} className="currentOrderId-item">{item.name}</span>
-                    ))}
-                    {currentOrderId.moreItems && (
-                      <span className="currentOrderId-item-more">+{currentOrderId.moreItems} товара</span>
-                    )}
-                  </div>
-                </td>
-                <td className="currentOrderId-date">{currentOrderId.date}</td>
-                <td className="currentOrderId-total">{currentOrderId.total}</td>
-                <td>
-                  <span className={`status-badge status-badge--${currentOrderId.status}`}>
-                    <span className="status-badge__dot"></span>
-                    {currentOrderId.statusLabel}
-                  </span>
-                </td>
-                <td>
-                  <div className="currentOrderId-actions">
-                    <button className="action-btn" aria-label="Отследить" onClick={() => navigate(`/orders/${currentOrderId.id}/tracking`)}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="12" y1="16" x2="12" y2="12" />
-                        <line x1="12" y1="8" x2="12.01" y2="8" />
-                      </svg>
-                    </button>
-                    <button className="action-btn" aria-label="Повторить" onClick={() => void handleRepeatOrder(currentOrderId.id)}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="pagination">
-        <button className="pagination-btn" disabled aria-label="Назад">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-        <button className="pagination-btn pagination-btn--active">1</button>
-        <button className="pagination-btn">2</button>
-        <button className="pagination-btn">3</button>
-        <button className="pagination-btn" aria-label="Вперёд">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="9 18 15 12 9 6" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Order Details Modal */}
-      <Modal
-        isOpen={showDetailsModal}
-        onClose={() => {
-          setShowDetailsModal(false);
-          setSelectedOrder(null);
-          setOrderDetails(null);
-        }}
-        title={`Заказ #${selectedOrder?.orderNumber}`}
-        size="large"
-      >
-        {detailsLoading ? (
-          <div className="modal-loading">Загрузка деталей заказа...</div>
-        ) : orderDetails && (
-          <div className="currentOrderId-details-modal">
-            <div className="currentOrderId-details-section">
-              <h4>Статус заказа</h4>
-              <div className="currentOrderId-status-timeline">
-                {[
-                  { status: 'New', label: 'Создан' },
-                  { status: 'Processing', label: 'В обработке' },
-                  { status: 'Paid', label: 'Оплачен' },
-                  { status: 'InProgress', label: 'В пути' },
-                  { status: 'Ready', label: 'Готов к выдаче' },
-                  { status: 'Completed', label: 'Получен' },
-                ].map((step, index, arr) => (
-                  <div key={step.status} className={`timeline-item ${
-                    getStatusProgress(orderDetails.status) >= getStatusProgress(step.status) ? 'timeline-item--completed' : ''
-                  } ${step.status === orderDetails.status ? 'timeline-item--active' : ''}`}>
-                    <div className="timeline-dot"></div>
-                    <div className="timeline-label">{step.label}</div>
-                    {index < arr.length - 1 && <div className="timeline-line"></div>}
-                  </div>
-                ))}
-              </div>
+        {/* Orders Table */}
+        {filteredOrders.length === 0 ? (
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-12 text-center">
+            <div className="text-[#707a8a] text-lg mb-2">Нет заказов</div>
+            <p className="text-[#707a8a] text-sm">У вас пока нет заказов с выбранным статусом</p>
+          </div>
+        ) : (
+          <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#2b3139]">
+                    <th className="text-left text-xs font-medium text-[#707a8a] uppercase tracking-wider px-5 py-4">Заказ</th>
+                    <th className="text-left text-xs font-medium text-[#707a8a] uppercase tracking-wider px-5 py-4">Товары</th>
+                    <th className="text-left text-xs font-medium text-[#707a8a] uppercase tracking-wider px-5 py-4">Дата</th>
+                    <th className="text-left text-xs font-medium text-[#707a8a] uppercase tracking-wider px-5 py-4">Сумма</th>
+                    <th className="text-left text-xs font-medium text-[#707a8a] uppercase tracking-wider px-5 py-4">Статус</th>
+                    <th className="text-right text-xs font-medium text-[#707a8a] uppercase tracking-wider px-5 py-4"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#2b3139]">
+                  {filteredOrders.map((order) => (
+                    <tr key={order.id} className="hover:bg-[#2b3139]/30 transition-colors">
+                      <td className="px-5 py-4">
+                        <button
+                          className="text-[#FCD535] text-sm font-medium hover:underline"
+                          onClick={() => {
+                            const fullOrder = orders.find(o => o.orderNumber === order.id);
+                            if (fullOrder) handleViewDetails(fullOrder);
+                          }}
+                        >
+                          #{order.id}
+                        </button>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex flex-col gap-0.5">
+                          {order.items.map((item, index) => (
+                            <span key={index} className="text-sm text-[#eaecef]">{item.name}</span>
+                          ))}
+                          {order.moreItems && (
+                            <span className="text-sm text-[#707a8a]">+{order.moreItems} товара</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-sm text-[#707a8a]">{order.date}</td>
+                      <td className="px-5 py-4 text-sm text-[#eaecef] font-medium">{order.total}</td>
+                      <td className="px-5 py-4">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${getStatusBadgeClass(order.status)}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${
+                            order.status === 'Completed' ? 'bg-[#0ecb81]' :
+                            order.status === 'Processing' ? 'bg-[#3b82f6]' :
+                            order.status === 'InProgress' ? 'bg-[#FCD535]' :
+                            order.status === 'Ready' ? 'bg-[#2dbdb6]' :
+                            order.status === 'Cancelled' ? 'bg-[#f6465d]' :
+                            'bg-[#707a8a]'
+                          }`}></span>
+                          {order.statusLabel}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center justify-end gap-2">
+<button
+                             className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#2b3139] text-[#707a8a] hover:text-[#FCD535] hover:border-[#FCD535]/40 border border-[#2b3139] transition-colors"
+                             aria-label="Отследить"
+                             onClick={() => navigate(`/orders/${order.id}/tracking`)}
+                           >
+                            <Info size={16} />
+                          </button>
+                          <button
+                            className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#2b3139] text-[#707a8a] hover:text-[#FCD535] hover:border-[#FCD535]/40 border border-[#2b3139] transition-colors"
+                            aria-label="Повторить"
+                            onClick={() => handleRepeatOrder(order.id)}
+                          >
+                            <RefreshCw size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            <div className="currentOrderId-details-grid">
-              <div className="currentOrderId-details-col">
-                <h4>Состав заказа</h4>
-                <div className="currentOrderId-items-list">
-                  {orderDetails.items.map((item: OrderItem) => (
-                    <div key={item.id} className="currentOrderId-item-row">
-                      <span className="item-name">{item.productName}</span>
-                      <span className="item-quantity">× {item.quantity}</span>
-                      <span className="item-price">{item.totalPrice.toFixed(2)} BYN</span>
-                    </div>
-                  ))}
-                  <div className="currentOrderId-item-row currentOrderId-item-row--total">
-                    <span>Итого</span>
-                    <span></span>
-                    <span>{orderDetails.total.toFixed(2)} BYN</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="currentOrderId-details-col">
-                <h4>Данные доставки</h4>
-                <div className="currentOrderId-info-list">
-                  <div className="info-row">
-                    <span className="info-label">Метод доставки:</span>
-                    <span className="info-value">{orderDetails.deliveryMethod === 'Delivery' ? 'Курьер' : 'Самовывоз'}</span>
-                  </div>
-                  {orderDetails.address && (
-                    <div className="info-row">
-                      <span className="info-label">Адрес:</span>
-                      <span className="info-value">{orderDetails.address}</span>
-                    </div>
-                  )}
-                  <div className="info-row">
-                    <span className="info-label">Оплата:</span>
-                    <span className="info-value">{orderDetails.paymentMethod === 'Online' ? 'Онлайн' : 'При получении'}</span>
-                  </div>
-                  {orderDetails.trackingNumber && (
-                    <div className="info-row">
-                      <span className="info-label">Трек номер:</span>
-                      <span className="info-value">{orderDetails.trackingNumber}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+            {/* Pagination */}
+            <div className="flex items-center justify-center gap-2 px-5 py-4 border-t border-[#2b3139]">
+              <button
+                className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#2b3139] text-[#707a8a] border border-[#2b3139] opacity-50 cursor-not-allowed"
+                disabled
+                aria-label="Назад"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <button className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#FCD535] text-[#181a20] text-sm font-medium">
+                1
+              </button>
+              <button className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#2b3139] text-[#707a8a] border border-[#2b3139] text-sm hover:text-[#eaecef] transition-colors">
+                2
+              </button>
+              <button className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#2b3139] text-[#707a8a] border border-[#2b3139] text-sm hover:text-[#eaecef] transition-colors">
+                3
+              </button>
+              <button
+                className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#2b3139] text-[#707a8a] border border-[#2b3139] hover:text-[#eaecef] transition-colors"
+                aria-label="Вперёд"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
             </div>
           </div>
         )}
-      </Modal>
+
+        {/* Order Details Modal */}
+        <Modal
+          isOpen={showDetailsModal}
+          onClose={() => {
+            setShowDetailsModal(false);
+            setSelectedOrder(null);
+            setOrderDetails(null);
+          }}
+          title={`Заказ #${selectedOrder?.orderNumber}`}
+          size="large"
+        >
+          {detailsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-[#707a8a]">Загрузка деталей заказа...</div>
+            </div>
+          ) : orderDetails && (
+            <div>
+              {/* Status Timeline */}
+              <div className="mb-8">
+                <h4 className="text-base font-semibold text-[#eaecef] mb-4">Статус заказа</h4>
+                <div className="flex items-start gap-0">
+                  {[
+                    { status: 'New', label: 'Создан' },
+                    { status: 'Processing', label: 'В обработке' },
+                    { status: 'Paid', label: 'Оплачен' },
+                    { status: 'InProgress', label: 'В пути' },
+                    { status: 'Ready', label: 'Готов к выдаче' },
+                    { status: 'Completed', label: 'Получен' },
+                  ].map((step, index, arr) => {
+                    const isCompleted = getStatusProgress(orderDetails.status) >= getStatusProgress(step.status);
+                    const isActive = step.status === orderDetails.status;
+                    return (
+                      <div key={step.status} className="flex-1 flex flex-col items-center relative">
+                        <div className={`relative z-10 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          isCompleted
+                            ? 'border-[#FCD535] bg-[#FCD535]'
+                            : isActive
+                              ? 'border-[#FCD535] bg-[#1e2329]'
+                              : 'border-[#2b3139] bg-[#1e2329]'
+                        }`}>
+                          {isCompleted && (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#181a20" strokeWidth="3" className="w-3 h-3">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className={`text-xs mt-2 text-center ${
+                          isActive ? 'text-[#FCD535] font-medium' : isCompleted ? 'text-[#eaecef]' : 'text-[#707a8a]'
+                        }`}>
+                          {step.label}
+                        </div>
+                        {index < arr.length - 1 && (
+                          <div className={`absolute top-2.5 left-[60%] w-[80%] h-0.5 -z-0 ${
+                            getStatusProgress(orderDetails.status) > getStatusProgress(step.status)
+                              ? 'bg-[#FCD535]'
+                              : 'bg-[#2b3139]'
+                          }`}></div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Order Items and Delivery Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Order Items */}
+                <div>
+                  <h4 className="text-base font-semibold text-[#eaecef] mb-3">Состав заказа</h4>
+                  <div className="space-y-2">
+                    {orderDetails.items.map((item: OrderItem) => (
+                      <div key={item.id} className="flex items-center justify-between py-2 border-b border-[#2b3139] last:border-0">
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm text-[#eaecef] block truncate">{item.productName}</span>
+                          <span className="text-xs text-[#707a8a]">× {item.quantity}</span>
+                        </div>
+                        <span className="text-sm text-[#eaecef] font-medium ml-4">{item.totalPrice.toFixed(2)} BYN</span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between pt-3 border-t border-[#2b3139]">
+                      <span className="text-sm font-semibold text-[#eaecef]">Итого</span>
+                      <span className="text-sm font-bold text-[#FCD535]">{orderDetails.total.toFixed(2)} BYN</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Delivery Info */}
+                <div>
+                  <h4 className="text-base font-semibold text-[#eaecef] mb-3">Данные доставки</h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-[#707a8a]">Метод доставки:</span>
+                      <span className="text-sm text-[#eaecef]">{orderDetails.deliveryMethod === 'Delivery' ? 'Курьер' : 'Самовывоз'}</span>
+                    </div>
+                    {orderDetails.address && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-[#707a8a]">Адрес:</span>
+                        <span className="text-sm text-[#eaecef] text-right max-w-[200px]">{orderDetails.address}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-sm text-[#707a8a]">Оплата:</span>
+                      <span className="text-sm text-[#eaecef]">{orderDetails.paymentMethod === 'Online' ? 'Онлайн' : 'При получении'}</span>
+                    </div>
+                    {orderDetails.trackingNumber && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-[#707a8a]">Трек номер:</span>
+                        <span className="text-sm text-[#FCD535]">{orderDetails.trackingNumber}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </Modal>
+      </div>
     </div>
   );
 }

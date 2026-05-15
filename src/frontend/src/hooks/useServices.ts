@@ -3,39 +3,63 @@
  * Абстрагирует прямой вызов API от компонентов
  */
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import type { ServiceListResponse, GetServicesParams, Service, Uuid } from '../api/types';
+import apiClient from '../api/client';
+import type { Service, ServiceListResponse, GetServicesParams, Uuid } from '../api/types';
+import type { ServiceType } from '../api/services';
+
+/**
+ * Маппер ServiceTypeDto → Service
+ */
+function mapServiceTypeToService(dto: ServiceType): Service {
+  return {
+    id: dto.id,
+    name: dto.name,
+    slug: dto.name.toLowerCase().replace(/\s+/g, '-'),
+    category: 'repair',
+    description: dto.description,
+    shortDescription: dto.description.slice(0, 100),
+    basePrice: dto.basePrice,
+    duration: `${dto.estimatedDurationMinutes} мин`,
+    warrantyMonths: 12,
+    isPopular: false,
+    isActive: true,
+  };
+}
 
 const servicesApi = {
   getServices: async (params?: GetServicesParams): Promise<ServiceListResponse> => {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.set('page', String(params.page));
-    if (params?.pageSize) searchParams.set('pageSize', String(params.pageSize));
-    if (params?.category) searchParams.set('category', params.category);
-    if (params?.search) searchParams.set('search', params.search);
-    if (params?.isPopular !== undefined) searchParams.set('isPopular', String(params.isPopular));
+    const response = await apiClient.get('/services/types');
+    const raw = response.data;
+    // Бэкенд возвращает { data: T, success, message } — извлекаем данные
+    const data: ServiceType[] = raw && typeof raw === 'object' && 'data' in raw ? (raw as { data: ServiceType[] }).data : (raw as ServiceType[]);
+    const items = Array.isArray(data) ? data.map(mapServiceTypeToService) : [];
 
-    const response = await fetch(`/api/services?${searchParams.toString()}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch services');
-    }
-    return response.json();
+    return {
+      data: items,
+      meta: {
+        page: params?.page ?? 1,
+        pageSize: params?.pageSize ?? 20,
+        totalPages: 1,
+        totalItems: items.length,
+        hasNext: false,
+        hasPrevious: false,
+      },
+    };
   },
 
   getService: async (id: Uuid): Promise<Service> => {
-    const response = await fetch(`/api/services/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch service');
-    }
-    return response.json();
+    const response = await apiClient.get(`/services/${id}`);
+    const raw = response.data;
+    const dto: ServiceType = raw && typeof raw === 'object' && 'data' in raw ? (raw as { data: ServiceType }).data : (raw as ServiceType);
+    return mapServiceTypeToService(dto);
   },
 
-  getServiceBySlug: async (slug: string): Promise<Service> => {
-    const response = await fetch(`/api/services/slug/${slug}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch service');
-    }
-    return response.json();
-  },
+getServiceBySlug: async (slug: string): Promise<Service> => {
+    const response = await apiClient.get(`/services/types/${slug}`);
+    const raw = response.data;
+    const dto: ServiceType = raw && typeof raw === 'object' && 'data' in raw ? (raw as { data: ServiceType }).data : (raw as ServiceType);
+    return mapServiceTypeToService(dto);
+},
 };
 
 /**

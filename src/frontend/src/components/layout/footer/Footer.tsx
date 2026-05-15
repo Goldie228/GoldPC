@@ -41,11 +41,9 @@ export function Footer() {
     { label: 'Контакты', href: '/contacts' },
     { label: 'Возврат товара', href: '/returns' },
     { label: 'Частые вопросы', href: '/faq' },
-    { label: 'Карта сайта', href: '/sitemap' },
   ];
 
   const customerLinks = [
-    { label: 'Акции и скидки', href: '/promotions' },
     { label: 'Бренды', href: '/brands' },
     { label: 'Политика конфиденциальности', href: '/privacy' },
     { label: 'Пользовательское соглашение', href: '/terms' },

@@ -186,9 +186,9 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
   };
 
   return (
-    <form className="bg-[var(--bg-card)] p-6 rounded-xl border border-[var(--border)]" onSubmit={handleSubmit}>
+    <form className="bg-card p-6 rounded-xl border border-border" onSubmit={handleSubmit}>
       <div className="mb-5">
-        <label htmlFor="cardNumber" className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">
+        <label htmlFor="cardNumber" className="block mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Номер карты
           {cardType !== 'unknown' && <span className="ml-2 text-sm">{getCardIcon()}</span>}
         </label>
@@ -199,17 +199,17 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
           value={formatCardNumber(cardNumber)}
           onChange={handleCardNumberChange}
           onBlur={() => handleBlur('cardNumber')}
-          className={`w-full p-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--bg-elevated)] text-[var(--fg)] font-[var(--font-sans)] transition-all duration-200 hover:border-[var(--border-brand)] focus:outline-none focus:border-[var(--accent)] focus:ring-3 focus:ring-[var(--border-brand)] placeholder:text-[var(--fg-dim)] ${touched.cardNumber && errors.cardNumber ? 'border-[var(--error)] focus:ring-[rgba(239,68,68,0.1)]' : ''}`}
+          className={`w-full p-3 text-sm border border-border rounded-lg bg-elevated text-foreground font-sans transition-all duration-200 hover:border-gold/15 focus:outline-none focus:border-gold focus:ring-3 focus:ring-gold/15 placeholder:text-foreground-dim ${touched.cardNumber && errors.cardNumber ? 'border-destructive/65 focus:ring-destructive/10' : ''}`}
           disabled={isProcessing}
           maxLength={19}
         />
         {touched.cardNumber && errors.cardNumber && (
-          <span className="block mt-1.5 text-xs text-[var(--error)]">{errors.cardNumber}</span>
+          <span className="block mt-1.5 text-xs text-destructive">{errors.cardNumber}</span>
         )}
       </div>
 
       <div className="mb-5">
-        <label htmlFor="cardHolder" className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Имя держателя (как на карте)</label>
+        <label htmlFor="cardHolder" className="block mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Имя держателя (как на карте)</label>
         <input
           id="cardHolder"
           type="text"
@@ -217,17 +217,17 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
           value={cardHolder}
           onChange={handleCardHolderChange}
           onBlur={() => handleBlur('cardHolder')}
-          className={`w-full p-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--bg-elevated)] text-[var(--fg)] font-[var(--font-sans)] transition-all duration-200 hover:border-[var(--border-brand)] focus:outline-none focus:border-[var(--accent)] focus:ring-3 focus:ring-[var(--border-brand)] placeholder:text-[var(--fg-dim)] ${touched.cardHolder && errors.cardHolder ? 'border-[var(--error)] focus:ring-[rgba(239,68,68,0.1)]' : ''}`}
+          className={`w-full p-3 text-sm border border-border rounded-lg bg-elevated text-foreground font-sans transition-all duration-200 hover:border-gold/15 focus:outline-none focus:border-gold focus:ring-3 focus:ring-gold/15 placeholder:text-foreground-dim ${touched.cardHolder && errors.cardHolder ? 'border-destructive/65 focus:ring-destructive/10' : ''}`}
           disabled={isProcessing}
         />
         {touched.cardHolder && errors.cardHolder && (
-          <span className="block mt-1.5 text-xs text-[var(--error)]">{errors.cardHolder}</span>
+          <span className="block mt-1.5 text-xs text-destructive">{errors.cardHolder}</span>
         )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="mb-5">
-          <label htmlFor="expiry" className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">Срок действия</label>
+          <label htmlFor="expiry" className="block mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Срок действия</label>
           <input
             id="expiry"
             type="text"
@@ -235,17 +235,17 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
             value={formatCardExpiry(expiry)}
             onChange={handleExpiryChange}
             onBlur={() => handleBlur('expiry')}
-            className={`w-full p-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--bg-elevated)] text-[var(--fg)] font-[var(--font-sans)] transition-all duration-200 hover:border-[var(--border-brand)] focus:outline-none focus:border-[var(--accent)] focus:ring-3 focus:ring-[var(--border-brand)] placeholder:text-[var(--fg-dim)] ${touched.expiry && errors.expiry ? 'border-[var(--error)] focus:ring-[rgba(239,68,68,0.1)]' : ''}`}
+            className={`w-full p-3 text-sm border border-border rounded-lg bg-elevated text-foreground font-sans transition-all duration-200 hover:border-gold/15 focus:outline-none focus:border-gold focus:ring-3 focus:ring-gold/15 placeholder:text-foreground-dim ${touched.expiry && errors.expiry ? 'border-destructive/65 focus:ring-destructive/10' : ''}`}
             disabled={isProcessing}
             maxLength={5}
           />
           {touched.expiry && errors.expiry && (
-            <span className="block mt-1.5 text-xs text-[var(--error)]">{errors.expiry}</span>
+            <span className="block mt-1.5 text-xs text-destructive">{errors.expiry}</span>
           )}
         </div>
 
         <div className="mb-5">
-          <label htmlFor="cvv" className="block mb-2 text-xs font-medium text-[var(--fg-muted)] uppercase tracking-wider">CVV</label>
+          <label htmlFor="cvv" className="block mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">CVV</label>
           <input
             id="cvv"
             type="password"
@@ -253,17 +253,17 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
             value={cvv}
             onChange={handleCvvChange}
             onBlur={() => handleBlur('cvv')}
-            className={`w-full p-3 text-sm border border-[var(--border)] rounded-lg bg-[var(--bg-elevated)] text-[var(--fg)] font-[var(--font-sans)] transition-all duration-200 hover:border-[var(--border-brand)] focus:outline-none focus:border-[var(--accent)] focus:ring-3 focus:ring-[var(--border-brand)] placeholder:text-[var(--fg-dim)] ${touched.cvv && errors.cvv ? 'border-[var(--error)] focus:ring-[rgba(239,68,68,0.1)]' : ''}`}
+            className={`w-full p-3 text-sm border border-border rounded-lg bg-elevated text-foreground font-sans transition-all duration-200 hover:border-gold/15 focus:outline-none focus:border-gold focus:ring-3 focus:ring-gold/15 placeholder:text-foreground-dim ${touched.cvv && errors.cvv ? 'border-destructive/65 focus:ring-destructive/10' : ''}`}
             disabled={isProcessing}
             maxLength={4}
           />
           {touched.cvv && errors.cvv && (
-            <span className="block mt-1.5 text-xs text-[var(--error)]">{errors.cvv}</span>
+            <span className="block mt-1.5 text-xs text-destructive">{errors.cvv}</span>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 p-3 bg-[var(--border-brand)] border border-[var(--border-brand)] rounded-lg text-sm text-[var(--fg-muted)] text-center my-5">
+      <div className="flex items-center gap-2 p-3 bg-gold/5 border border-gold/15 rounded-lg text-sm text-muted-foreground text-center my-5">
         <Icon name="lock" size="sm" color="accent" /> Ваши платёжные данные защищены и не сохраняются на наших серверах
       </div>
 

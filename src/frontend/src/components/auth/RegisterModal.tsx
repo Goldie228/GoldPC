@@ -253,7 +253,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             value={firstName}
             onChange={(e) => {
               setFirstName(e.target.value);
-              setFieldErrors(prev => ({ ...prev, firstName: undefined }));
+              setFieldErrors(prev => ({ ...prev, firstName: '' }));
             }}
             required
             autoComplete="given-name"
@@ -277,7 +277,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             value={phone}
             onChange={(e) => {
               handlePhoneChange(e);
-              setFieldErrors(prev => ({ ...prev, phone: undefined }));
+              setFieldErrors(prev => ({ ...prev, phone: '' }));
             }}
             required
             autoComplete="tel"
@@ -303,7 +303,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              setFieldErrors(prev => ({ ...prev, email: undefined }));
+              setFieldErrors(prev => ({ ...prev, email: '' }));
             }}
             required
             autoComplete="email"
@@ -365,7 +365,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             value={confirmPassword}
             onChange={(e) => {
               setConfirmPassword(e.target.value);
-              setFieldErrors(prev => ({ ...prev, confirmPassword: undefined }));
+              setFieldErrors(prev => ({ ...prev, confirmPassword: '' }));
             }}
             required
             autoComplete="new-password"

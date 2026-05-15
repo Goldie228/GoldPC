@@ -3,7 +3,7 @@
  * Re-exports from shared compatibility extractors + feature-specific helpers
  */
 
-import type { ProductSpecifications } from '../../api/types';
+import type { ProductSpecifications } from '../../../api/types';
 import type { MemoryType } from '@/shared/utils/compatibility/types';
 import {
   extractSocket,
