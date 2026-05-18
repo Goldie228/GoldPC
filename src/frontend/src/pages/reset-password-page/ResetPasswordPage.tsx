@@ -72,7 +72,7 @@ export function ResetPasswordPage() {
 
     let cancelled = false;
 
-    (async () => {
+    void (async () => {
       try {
         await authService.validateResetToken(token);
         if (!cancelled) setPageState('form');
