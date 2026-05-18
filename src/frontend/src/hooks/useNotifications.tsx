@@ -112,12 +112,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     };
 
-    startConnection();
+    void startConnection();
 
     return () => {
       isMounted = false;
       hubConnection?.off('ReceiveNotification');
-      hubConnection?.stop();
+      void hubConnection?.stop();
       setConnection(null);
     };
   }, []);

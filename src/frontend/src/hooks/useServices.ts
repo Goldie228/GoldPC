@@ -7,6 +7,12 @@ import apiClient from '../api/client';
 import type { Service, ServiceListResponse, GetServicesParams, Uuid } from '../api/types';
 import type { ServiceType } from '../api/services';
 
+interface ApiResponse<T> {
+  data?: T;
+  success?: boolean;
+  message?: string;
+}
+
 /**
  * Маппер ServiceTypeDto → Service
  */
@@ -28,7 +34,7 @@ function mapServiceTypeToService(dto: ServiceType): Service {
 
 const servicesApi = {
   getServices: async (params?: GetServicesParams): Promise<ServiceListResponse> => {
-    const response = await apiClient.get('/services/types');
+    const response = await apiClient.get<ApiResponse<ServiceType[]>>('/services/types');
     const raw = response.data;
     // Бэкенд возвращает { data: T, success, message } — извлекаем данные
     const data: ServiceType[] = raw && typeof raw === 'object' && 'data' in raw ? (raw as { data: ServiceType[] }).data : (raw as ServiceType[]);
@@ -48,14 +54,14 @@ const servicesApi = {
   },
 
   getService: async (id: Uuid): Promise<Service> => {
-    const response = await apiClient.get(`/services/${id}`);
+    const response = await apiClient.get<ApiResponse<ServiceType>>(`/services/${id}`);
     const raw = response.data;
     const dto: ServiceType = raw && typeof raw === 'object' && 'data' in raw ? (raw as { data: ServiceType }).data : (raw as ServiceType);
     return mapServiceTypeToService(dto);
   },
 
 getServiceBySlug: async (slug: string): Promise<Service> => {
-    const response = await apiClient.get(`/services/types/${slug}`);
+    const response = await apiClient.get<ApiResponse<ServiceType>>(`/services/types/${slug}`);
     const raw = response.data;
     const dto: ServiceType = raw && typeof raw === 'object' && 'data' in raw ? (raw as { data: ServiceType }).data : (raw as ServiceType);
     return mapServiceTypeToService(dto);
