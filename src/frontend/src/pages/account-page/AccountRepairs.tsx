@@ -47,10 +47,10 @@ export function AccountRepairs() {
   const pageSize = 10;
 
   useEffect(() => {
-    loadTickets();
+    void loadTickets();
 
     // Poll for updates every 30 seconds
-    const interval = setInterval(loadTickets, 30000);
+    const interval = setInterval(() => { void loadTickets(); }, 30000);
     return () => clearInterval(interval);
   }, [page, activeFilter]);
 
@@ -58,7 +58,7 @@ export function AccountRepairs() {
     setLoading(true);
     try {
       const result = await getMyTickets(page, pageSize, activeFilter === 'all' ? undefined : activeFilter);
-      if (result) {
+      if (result != null) {
         setTickets(result.items);
       }
     } catch {
