@@ -77,7 +77,7 @@ function mapCard(raw: {
  * Безопасное извлечение data из ApiResponse<T>
  */
 function unwrap<T>(response: T | ApiResponse<T>): T {
-  if (response && typeof response === 'object' && 'data' in (response as object)) {
+  if (response != null && typeof response === 'object' && 'data' in (response as object)) {
     const wrapped = response as ApiResponse<T>;
     if (wrapped.data !== undefined) return wrapped.data;
   }

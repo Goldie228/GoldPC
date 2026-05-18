@@ -5,7 +5,7 @@ interface ApiResponse<T> {
 }
 
 function extractData<T>(payload: T | ApiResponse<T>): T {
-  if (payload && typeof payload === 'object' && 'data' in (payload as object)) {
+  if (payload != null && typeof payload === 'object' && 'data' in (payload as object)) {
     const wrapped = payload as ApiResponse<T>;
     if (wrapped.data !== undefined) return wrapped.data;
   }

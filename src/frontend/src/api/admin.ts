@@ -286,7 +286,7 @@ export interface SiteSettings {
   maintenanceMode: boolean;
 }
 
-export interface UpdateSettingsRequest extends Partial<SiteSettings> {}
+export type UpdateSettingsRequest = Partial<SiteSettings>;
 
 /**
  * API для управления настройками системы

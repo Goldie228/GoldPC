@@ -132,7 +132,7 @@ export interface CreateTicketResponse {
  * Бэкенд возвращает { data: T, success: true, message: "..." }
  */
 function unwrapData<T>(responseData: unknown): T {
-  if (responseData && typeof responseData === 'object' && 'data' in (responseData as Record<string, unknown>)) {
+  if (responseData != null && typeof responseData === 'object' && 'data' in (responseData as Record<string, unknown>)) {
     const wrapped = responseData as { data: T; success?: boolean; message?: string };
     if (wrapped.data !== undefined) return wrapped.data;
   }
@@ -160,8 +160,8 @@ async function createService(data: CreateServiceRequest): Promise<ServiceRequest
   const response = await apiClient.post('/services', {
     serviceTypeId: data.serviceTypeId,
     description: data.description,
-    deviceModel: data.deviceModel || null,
-    serialNumber: data.serialNumber || null,
+    deviceModel: data.deviceModel ?? null,
+    serialNumber: data.serialNumber ?? null,
   });
   return unwrapData<ServiceRequestDto>(response.data);
 }
@@ -173,8 +173,8 @@ async function getMyServices(page = 1, pageSize = 10): Promise<{ items: ServiceR
   const response = await apiClient.get(`/services/my?page=${page}&pageSize=${pageSize}`);
   const data = unwrapData<{ items: ServiceRequestDto[]; totalCount: number }>(response.data);
   return {
-    items: data.items || [],
-    total: data.totalCount || 0,
+    items: data.items ?? [],
+    total: data.totalCount ?? 0,
   };
 }
 
@@ -197,13 +197,13 @@ function mapServiceRequestToTicket(dto: ServiceRequestDto): ServiceTicket {
   return {
     id: dto.id,
     ticketNumber: dto.requestNumber,
-    deviceType: dto.deviceModel || dto.serviceTypeName || 'Устройство',
+    deviceType: (dto.deviceModel != null && dto.deviceModel !== '') ? dto.deviceModel : (dto.serviceTypeName != null && dto.serviceTypeName !== '') ? dto.serviceTypeName : 'Устройство',
     brand: '',
-    model: dto.deviceModel || '',
+    model: dto.deviceModel ?? '',
     issueDescription: dto.description,
-    status: dto.status as TicketStatus,
+    status: dto.status,
     createdAt: dto.createdAt,
-    updatedAt: dto.completedAt || dto.createdAt,
+    updatedAt: dto.completedAt ?? dto.createdAt,
     notes: '',
     priority: 'normal',
   };
@@ -212,13 +212,13 @@ function mapServiceRequestToTicket(dto: ServiceRequestDto): ServiceTicket {
 /** @deprecated Используйте getMyServices */
 async function getMyTickets(page = 1, pageSize = 10, status?: string): Promise<{ items: ServiceTicket[]; total: number }> {
   const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-  if (status && status !== 'all') params.append('status', status);
+  if (status != null && status !== '' && status !== 'all') params.append('status', status);
 
   const response = await apiClient.get(`/services/my?${params}`);
   const data = unwrapData<{ items: ServiceRequestDto[]; totalCount: number }>(response.data);
   return {
-    items: (data.items || []).map(mapServiceRequestToTicket),
-    total: data.totalCount || 0,
+    items: (data.items ?? []).map(mapServiceRequestToTicket),
+    total: data.totalCount ?? 0,
   };
 }
 
