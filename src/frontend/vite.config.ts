@@ -97,6 +97,21 @@ export default defineConfig({
               id.includes('node_modules/web-vitals/')) {
             return 'utils';
           }
+          // Leaflet + react-leaflet — map rendering (only needed on contacts/checkout pages)
+          if (id.includes('node_modules/leaflet/') ||
+              id.includes('node_modules/react-leaflet/') ||
+              id.includes('node_modules/@react-leaflet/')) {
+            return 'leaflet';
+          }
+          // jsPDF + autoTable — PDF export (only needed when user exports PC build)
+          if (id.includes('node_modules/jspdf/') ||
+              id.includes('node_modules/jspdf-autotable/')) {
+            return 'pdf-export';
+          }
+          // Fontsource fonts — loaded on startup but separable
+          if (id.includes('node_modules/@fontsource/')) {
+            return 'fonts';
+          }
         },
       },
     },
