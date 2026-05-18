@@ -79,13 +79,14 @@ export const catalogApi = {
    */
   async getProducts(params?: GetProductsParams): Promise<ProductListResponse> {
     const apiParams: Record<string, string | number | boolean | undefined> = {};
-    if (!params) {
+    if (params == null) {
       const response = await api.get<ProductListResponse>('/catalog/products');
       const data = response.data;
       if (data?.data && Array.isArray(data.data)) {
         for (const p of data.data) {
-          if (typeof (p as any).category === 'string') {
-            (p as any).category = CATEGORY_NAME_TO_SLUG[(p as any).category] ?? (p as any).category;
+          const prod = p as unknown as { category: string };
+          if (typeof prod.category === 'string' && prod.category in CATEGORY_NAME_TO_SLUG) {
+            (p as unknown as { category: ProductCategory }).category = CATEGORY_NAME_TO_SLUG[prod.category];
           }
         }
       }
@@ -146,8 +147,9 @@ export const catalogApi = {
     const data = response.data;
     if (data?.data && Array.isArray(data.data)) {
       for (const p of data.data) {
-        if (typeof (p as any).category === 'string') {
-          (p as any).category = CATEGORY_NAME_TO_SLUG[(p as any).category] ?? (p as any).category;
+        const prod = p as unknown as { category: string };
+        if (typeof prod.category === 'string' && prod.category in CATEGORY_NAME_TO_SLUG) {
+          (p as unknown as { category: ProductCategory }).category = CATEGORY_NAME_TO_SLUG[prod.category];
         }
       }
     }
@@ -160,8 +162,11 @@ export const catalogApi = {
  async getProduct(productId: string): Promise<Product> {
     const response = await api.get<Product>(`/catalog/products/${productId}`);
     const p = response.data;
-    if (p && typeof (p as any).category === 'string') {
-      (p as any).category = CATEGORY_NAME_TO_SLUG[(p as any).category] ?? (p as any).category;
+    if (p != null) {
+      const prod = p as unknown as { category: string };
+      if (typeof prod.category === 'string' && prod.category in CATEGORY_NAME_TO_SLUG) {
+        (p as unknown as { category: ProductCategory }).category = CATEGORY_NAME_TO_SLUG[prod.category];
+      }
     }
     return p;
   },
@@ -169,8 +174,11 @@ export const catalogApi = {
   async getProductBySlug(slug: string): Promise<Product> {
     const response = await api.get<Product>(`/catalog/products/by-slug/${slug}`);
     const p = response.data;
-    if (p && typeof (p as any).category === 'string') {
-      (p as any).category = CATEGORY_NAME_TO_SLUG[(p as any).category] ?? (p as any).category;
+    if (p != null) {
+      const prod = p as unknown as { category: string };
+      if (typeof prod.category === 'string' && prod.category in CATEGORY_NAME_TO_SLUG) {
+        (p as unknown as { category: ProductCategory }).category = CATEGORY_NAME_TO_SLUG[prod.category];
+      }
     }
     return p;
   },

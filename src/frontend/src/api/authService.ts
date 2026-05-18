@@ -23,8 +23,8 @@ const AUTH_BASE_URL = '/auth';
  * Извлекает полезные данные из обёрнутого ответа ApiResponse<T>
  * Безопасно: если данных нет, возвращает undefined
  */
-function extractData<T>(payload: T | { data?: T; success?: boolean; message?: string }): T {
-  if (payload && typeof payload === 'object' && 'data' in payload) {
+function extractData<T>(payload: unknown): T {
+  if (payload != null && typeof payload === 'object' && 'data' in payload) {
     const wrapped = payload as { data?: T; success?: boolean; message?: string };
     if (wrapped.data !== undefined) return wrapped.data;
   }
@@ -56,7 +56,7 @@ export const getAuthErrorMessage = (error: unknown): string => {
     const status = error.response.status;
     // Пробуем достать сообщение из тела ответа (ApiResponse.message)
     const body = error.response.data as { message?: string } | undefined;
-    if (body?.message) {
+    if (body?.message != null && body.message !== '') {
       return body.message;
     }
     // Если тела нет — используем стандартное сообщение для статуса

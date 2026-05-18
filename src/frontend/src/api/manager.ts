@@ -4,7 +4,29 @@
  */
 
 import apiClient from './client';
-import type { Order, Product } from './types';
+
+interface ApiResponse<T> {
+  data?: T;
+  success?: boolean;
+  message?: string;
+}
+
+interface ApiPagedResponse<T> {
+  items?: T[];
+  totalCount?: number;
+}
+
+export interface RawOrderItem {
+  id?: string;
+  status?: string;
+}
+
+export interface RawProductItem {
+  id?: string;
+  name?: string;
+  sku?: string;
+  stock?: number;
+}
 
 export interface DashboardWidget {
   id: string;
@@ -42,18 +64,20 @@ export interface DashboardData {
 export const managerApi = {
   async getDashboardData(): Promise<DashboardData> {
     const [ordersRes, catalogRes] = await Promise.all([
-      apiClient.get<any>('/orders', { params: { page: 1, pageSize: 100 } }),
-      apiClient.get<any>('/catalog/products', { params: { page: 1, pageSize: 100, inStock: true } })
+      apiClient.get<ApiResponse<ApiPagedResponse<RawOrderItem>>>('/orders', { params: { page: 1, pageSize: 100 } }),
+      apiClient.get<ApiResponse<ApiPagedResponse<RawProductItem>>>('/catalog/products', { params: { page: 1, pageSize: 100, inStock: true } })
     ]);
 
-    const orders = ordersRes.data?.data || ordersRes.data || { items: [] };
-    const products = catalogRes.data?.data || catalogRes.data || { items: [] };
+    const ordersData = ordersRes.data?.data ?? ordersRes.data as ApiPagedResponse<RawOrderItem> ?? { items: [] };
+    const productsData = catalogRes.data?.data ?? catalogRes.data as ApiPagedResponse<RawProductItem> ?? { items: [] };
+    const ordersItems: RawOrderItem[] = ordersData.items ?? [];
+    const productsItems: RawProductItem[] = productsData.items ?? [];
 
     const widgets: DashboardWidget[] = [
       {
         id: 'today-orders',
         title: 'Заказы сегодня',
-        value: orders.items?.length || 0,
+        value: ordersItems.length,
         icon: '📦',
         trend: 'up',
         color: 'blue',
@@ -62,7 +86,7 @@ export const managerApi = {
       {
         id: 'pending-orders',
         title: 'Ожидают обработки',
-        value: orders.items?.filter((o: any) => o.status === 'pending').length || 0,
+        value: ordersItems.filter((o) => o.status === 'pending').length,
         icon: '⏳',
         trend: 'neutral',
         color: 'yellow',
@@ -71,7 +95,7 @@ export const managerApi = {
       {
         id: 'low-stock',
         title: 'Товары с низким остатком',
-        value: products.items?.filter((p: any) => p.stock > 0 && p.stock < 5).length || 0,
+        value: productsItems.filter((p) => (p.stock ?? 0) > 0 && (p.stock ?? 0) < 5).length,
         icon: '⚠️',
         trend: 'neutral',
         color: 'red',
@@ -79,36 +103,36 @@ export const managerApi = {
       }
     ];
 
-    const lowStock: LowStockItem[] = (products.items || [])
-      .filter((p: any) => p.stock > 0 && p.stock < 5)
+    const lowStock: LowStockItem[] = productsItems
+      .filter((p) => (p.stock ?? 0) > 0 && (p.stock ?? 0) < 5)
       .slice(0, 10)
-      .map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        sku: p.sku,
-        stock: p.stock,
+      .map((p) => ({
+        id: p.id ?? '',
+        name: p.name ?? '',
+        sku: p.sku ?? '',
+        stock: p.stock ?? 0,
         threshold: 5
       }));
 
     return { widgets, lowStock, pendingTickets: [] };
   },
 
-  async getOrders(page = 1, pageSize = 20, status?: string) {
-    const params: any = { page, pageSize };
-    if (status) params.status = status;
-    const response = await apiClient.get<any>('/orders', { params });
-    return response.data?.data || response.data || { items: [], totalCount: 0 };
+  async getOrders(page = 1, pageSize = 20, status?: string): Promise<ApiPagedResponse<RawOrderItem>> {
+    const params: Record<string, string | number> = { page, pageSize };
+    if (status != null && status !== '') params.status = status;
+    const response = await apiClient.get<ApiResponse<ApiPagedResponse<RawOrderItem>>>('/orders', { params });
+    return response.data?.data ?? (response.data as ApiPagedResponse<RawOrderItem>) ?? { items: [], totalCount: 0 };
   },
 
-  async getOrderById(id: string) {
-    const response = await apiClient.get<any>(`/orders/${id}`);
-    return response.data?.data || response.data;
+  async getOrderById(id: string): Promise<RawOrderItem | undefined> {
+    const response = await apiClient.get<ApiResponse<RawOrderItem>>(`/orders/${id}`);
+    return response.data?.data ?? (response.data as RawOrderItem);
   },
 
-  async getInventory(page = 1, pageSize = 50) {
-    const response = await apiClient.get<any>('/catalog/products', {
+  async getInventory(page = 1, pageSize = 50): Promise<ApiPagedResponse<RawProductItem>> {
+    const response = await apiClient.get<ApiResponse<ApiPagedResponse<RawProductItem>>>('/catalog/products', {
       params: { page, pageSize, inStock: true }
     });
-    return response.data?.data || response.data || { items: [], totalCount: 0 };
+    return response.data?.data ?? (response.data as ApiPagedResponse<RawProductItem>) ?? { items: [], totalCount: 0 };
   }
 };
