@@ -77,7 +77,7 @@ export function UserManagementPage() {
       }
       
       const response = await getUsers(params);
-      if (response) {
+      if (response != null) {
         setUsers(response.data);
         setTotalPages(response.meta.totalPages);
         setTotalItems(response.meta.totalItems);

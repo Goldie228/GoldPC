@@ -413,8 +413,8 @@ export function CoordinatorDashboard() {
       if (!response.ok) {
         throw new Error('Ошибка загрузки: ' + response.status);
       }
-      const result: CoordinatorDashboardData = await response.json();
-      setData(result);
+      const result = await response.json() as unknown;
+      setData(result as CoordinatorDashboardData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
       setError(errorMessage);
@@ -425,12 +425,12 @@ export function CoordinatorDashboard() {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
 
   useEffect(() => {
     if (!autoRefresh) return;
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(() => { void fetchData(); }, 30000);
     return () => clearInterval(interval);
   }, [autoRefresh, fetchData]);
 
@@ -449,7 +449,7 @@ export function CoordinatorDashboard() {
         <span className="coordinator-dashboard__error-icon">⚠️</span>
         <h2>Ошибка загрузки</h2>
         <p>{error}</p>
-        <button className="btn btn--primary" onClick={fetchData}>
+        <button className="btn btn--primary" onClick={() => void fetchData()}>
           Попробовать снова
         </button>
       </div>
@@ -472,7 +472,7 @@ export function CoordinatorDashboard() {
             <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} />
             <span>Автообновление</span>
           </label>
-          <button className="btn btn--secondary" onClick={fetchData} title="Обновить данные">
+          <button className="btn btn--secondary" onClick={() => void fetchData()} title="Обновить данные">
             🔄 Обновить
           </button>
         </div>
