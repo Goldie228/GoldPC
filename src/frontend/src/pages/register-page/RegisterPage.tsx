@@ -174,7 +174,7 @@ export function RegisterPage() {
           )}
 
           {/* Form */}
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
             {/* First name */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-medium text-muted-text uppercase tracking-wider" htmlFor="register-firstName">

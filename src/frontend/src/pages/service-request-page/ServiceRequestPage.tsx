@@ -158,7 +158,7 @@ export function ServiceRequestPage() {
 
       const result = await createService(payload);
 
-      if (result) {
+      if (result != null) {
         setSubmittedTicket({
           ticketNumber: result.requestNumber,
           status: result.status,

@@ -81,7 +81,7 @@ export function OrderTrackingPage() {
   }, [orderNumber, getOrderByNumber]);
 
   useEffect(() => {
-    fetchOrder();
+    void fetchOrder();
   }, [fetchOrder]);
 
   // ── Render states ─────────────────────────────────────
@@ -112,7 +112,7 @@ export function OrderTrackingPage() {
   }
 
   // Not found / error
-  if (!order) {
+  if (order == null) {
     return (
       <main className="min-h-screen bg-[#0b0e11] pt-[100px] px-6 pb-15">
         <div className="max-w-[620px] mx-auto">
@@ -124,7 +124,7 @@ export function OrderTrackingPage() {
               или произошла ошибка соединения.
             </p>
             <div className="flex gap-3 justify-center">
-              <Button variant="primary" onClick={fetchOrder}>
+              <Button variant="primary" onClick={() => void fetchOrder()}>
                 Повторить
               </Button>
               <Link to="/">

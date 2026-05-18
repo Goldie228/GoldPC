@@ -54,7 +54,7 @@ export function ReviewSection({
   useEffect(() => {
     getProductReviews(productId, 1, 20)
       .then((res) => {
-        if (res) {
+        if (res != null) {
           const paged = res as ProductReviewsResponse;
           setReviews(paged.data || []);
           setHasMore(paged.meta?.hasNext ?? false);
@@ -124,7 +124,7 @@ export function ReviewSection({
     try {
       const nextPage = page + 1;
       const res = await getProductReviews(productId, nextPage, 20);
-      if (res) {
+      if (res != null) {
         const paged = res as ProductReviewsResponse;
         setReviews((prev) => [...prev, ...(paged.data || [])]);
         setPage(nextPage);
@@ -141,7 +141,7 @@ export function ReviewSection({
 const handleUpdate = useCallback(
     async (reviewId: string, data: UpdateReviewRequest): Promise<boolean> => {
       const updated = await updateProductReview(productId, reviewId, data);
-      if (updated) {
+      if (updated != null) {
         setReviews((prev) => prev.map((r) => (r.id === reviewId ? updated : r)));
         showToast('Отзыв обновлён', 'success');
         return true;
@@ -171,7 +171,7 @@ const handleUpdate = useCallback(
   const handleHelpful = useCallback(
     async (reviewId: string): Promise<{ helpful: number } | null> => {
       const result = await toggleHelpful(productId, reviewId);
-      if (result) {
+      if (result != null) {
         setReviews((prev) =>
           prev.map((r) => (r.id === reviewId ? { ...r, helpful: result.helpful } : r)),
         );
@@ -351,7 +351,7 @@ const handleUpdate = useCallback(
         {/* Load More */}
         {hasMore && filteredReviews.length > 0 && (
           <div className="flex justify-center">
-            <Button variant="outline" className="px-8" onClick={handleLoadMore} disabled={loadingMore}>
+            <Button variant="outline" className="px-8" onClick={() => void handleLoadMore()} disabled={loadingMore}>
               {loadingMore ? 'Загрузка...' : 'Загрузить ещё'}
             </Button>
           </div>
@@ -428,7 +428,7 @@ const handleUpdate = useCallback(
           </div>
 
           {/* Submit */}
-          <Button onClick={handleSubmit} disabled={submitting}>
+          <Button onClick={() => void handleSubmit()} disabled={submitting}>
             {submitting ? 'Отправка...' : 'Отправить отзыв'}
           </Button>
         </div>
