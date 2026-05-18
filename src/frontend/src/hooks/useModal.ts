@@ -45,7 +45,7 @@ export function useModal(): UseModalReturn {
     (content?: ModalContent) => {
       if (isOpen) {
         closeModal();
-      } else if (content) {
+      } else if (content != null) {
         openModal(content);
       }
     },

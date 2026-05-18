@@ -26,7 +26,7 @@ export function useCompatibilityApi(
 
   useEffect(() => {
     const hasComponents =
-      !!components.cpu || !!components.gpu || !!components.motherboard;
+      components.cpu != null || components.gpu != null || components.motherboard != null;
     if (!hasComponents) {
       setApiResult(null);
       setError(null);
@@ -37,26 +37,28 @@ export function useCompatibilityApi(
 
     const requestId = ++requestIdRef.current;
 
-    timerRef.current = setTimeout(async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const result = await checkCompatibilityAPI(
-          components as Parameters<typeof checkCompatibilityAPI>[0]
-        );
-        // Ignore stale responses from outdated requests
-        if (requestId !== requestIdRef.current) return;
-        setApiResult(result);
-      } catch (e) {
-        // Ignore errors from outdated requests
-        if (requestId !== requestIdRef.current) return;
-        setError(e instanceof Error ? e : new Error('API error'));
-        setApiResult(null);
-      } finally {
-        if (requestId === requestIdRef.current) {
-          setIsLoading(false);
+    timerRef.current = setTimeout(() => {
+      void (async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const result = await checkCompatibilityAPI(
+            components as Parameters<typeof checkCompatibilityAPI>[0]
+          );
+          // Ignore stale responses from outdated requests
+          if (requestId !== requestIdRef.current) return;
+          setApiResult(result);
+        } catch (e) {
+          // Ignore errors from outdated requests
+          if (requestId !== requestIdRef.current) return;
+          setError(e instanceof Error ? e : new Error('API error'));
+          setApiResult(null);
+        } finally {
+          if (requestId === requestIdRef.current) {
+            setIsLoading(false);
+          }
         }
-      }
+      })();
     }, COMPATIBILITY_DEBOUNCE_MS);
 
     return () => {

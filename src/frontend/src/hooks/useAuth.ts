@@ -79,7 +79,7 @@ export function useAuth(): UseAuthReturn {
 
       // Редирект делаем ПОСЛЕ ВСЕГО
       setTimeout(() => {
-        navigate('/');
+        void navigate('/');
       }, 0);
 
     } catch (error) {
@@ -103,7 +103,7 @@ export function useAuth(): UseAuthReturn {
       setUser(response.user);
 
       // Редиректим на страницу подтверждения email
-      navigate('/verify-email');
+      void navigate('/verify-email');
 
       // А потом уже в фоне синхронизируем избранное
       // Не используем await чтобы не блокировать поток регистрации
@@ -132,7 +132,7 @@ export function useAuth(): UseAuthReturn {
       sessionStorage.removeItem('refreshToken');
 
       storeLogout();
-      navigate('/login');
+      void navigate('/login');
     }
   }, [storeLogout, navigate]);
 
