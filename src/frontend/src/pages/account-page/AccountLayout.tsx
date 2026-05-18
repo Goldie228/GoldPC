@@ -105,7 +105,7 @@ const navItems: NavItem[] = [
         </div>
 
         {/* Navigation links */}
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1" aria-label="Навигация аккаунта">
           {navItems.map((item) => (
             <NavLink
               key={item.to}

@@ -12,7 +12,7 @@ const XCORE_PLACEHOLDER_PATTERNS = [
  */
 function isLocalCatalogImagePath(url: unknown): boolean {
   if (typeof url !== 'string') return false;
-  const str = url as string;
+  const str = url;
   if (!str) return false;
   const normalized = str.replace(/^\s+|\s+$/g, ''); // trim без .trim()
   
@@ -29,7 +29,7 @@ function isLocalCatalogImagePath(url: unknown): boolean {
 
 export function isXCorePlaceholderUrl(url: unknown): boolean {
   if (typeof url !== 'string') return true;
-  const str = url as string;
+  const str = url;
   const u = str.replace(/^\s+|\s+$/g, '');
   if (!u) return true;
   return XCORE_PLACEHOLDER_PATTERNS.some((p) => u.includes(p));
@@ -40,7 +40,7 @@ export function isXCorePlaceholderUrl(url: unknown): boolean {
  */
 export function hasValidProductImage(url: unknown): boolean {
   if (typeof url !== 'string') return false;
-  const str = url as string;
+  const str = url;
   const u = str.replace(/^\s+|\s+$/g, '');
   if (!u) return false;
   return isLocalCatalogImagePath(u) && !isXCorePlaceholderUrl(u);
@@ -51,17 +51,17 @@ export function hasValidProductImage(url: unknown): boolean {
  */
 export function getProductImageUrl(url: unknown): string | null {
   // Handle if url is an object (e.g., ProductImage) instead of string
-  if (url && typeof url === 'object' && 'url' in url) {
+  if (url != null && typeof url === 'object' && 'url' in url) {
     return getProductImageUrl((url as Record<string, unknown>).url);
   }
   
   if (typeof url !== 'string') return null;
-  const str = url as string;
+  const str = url;
   const u = str.replace(/^\s+|\s+$/g, '');
   if (!u) return null;
   if (!isLocalCatalogImagePath(u)) return null;
   if (u.startsWith('/')) return `${window.location.origin}${u}`;
-  const apiBase = import.meta.env?.VITE_API_URL;
+  const apiBase = typeof import.meta.env?.VITE_API_URL === 'string' ? import.meta.env.VITE_API_URL : undefined;
   const base = apiBase ? String(apiBase).replace(/\/api\/v\d+(\/)?$/, '') : window.location.origin;
   return `${base.replace(/\/$/, '')}/${u.replace(/^\//, '')}`;
 }

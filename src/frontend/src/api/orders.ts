@@ -48,7 +48,7 @@ export interface CreateOrderRequest {
 }
 
 export function extractApiErrorMessage(payload: unknown): string | null {
-  if (!payload || typeof payload !== 'object') {
+  if (payload == null || typeof payload !== 'object') {
     return null;
   }
 
@@ -57,14 +57,19 @@ export function extractApiErrorMessage(payload: unknown): string | null {
     return response.message;
   }
 
-  if (response.errors && typeof response.errors === 'object') {
-    for (const value of Object.values(response.errors)) {
-      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
-        return value[0];
-      }
-    }
+  if (response.errors != null && typeof response.errors === 'object') {
+    return findFirstErrorString(response.errors);
   }
 
+  return null;
+}
+
+function findFirstErrorString(errors: Record<string, unknown>): string | null {
+  for (const value of Object.values(errors)) {
+    if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+      return value[0];
+    }
+  }
   return null;
 }
 
@@ -110,7 +115,7 @@ export interface PagedResult<T> {
 }
 
 function unwrap<T>(response: T | ApiResponse<T>): T {
-  if (response && typeof response === 'object' && 'data' in (response as object)) {
+  if (response != null && typeof response === 'object' && 'data' in (response as object)) {
     const wrapped = response as ApiResponse<T>;
     if (wrapped.data !== undefined) return wrapped.data;
   }
@@ -142,7 +147,7 @@ export const ordersApi = {
    */
   async getMyOrders(page = 1, pageSize = 10, status?: string): Promise<PagedResult<Order>> {
     const params: Record<string, string | number> = { page, pageSize };
-    if (status) {
+    if (status != null && status !== '') {
       params.status = status;
     }
     const response = await apiClient.get<ApiResponse<PagedResult<Order>>>('/orders/my', { params });

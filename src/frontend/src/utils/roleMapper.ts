@@ -60,7 +60,7 @@ export function mapBackendRole(role: number | string | undefined | null): Fronte
  * Конвертирует массив числовых ролей в массив строковых ролей.
  */
 export function mapBackendRoles(roles: (number | string)[] | undefined | null): FrontendRole[] {
-  if (!roles || roles.length === 0) return ['Client'];
+  if (roles == null || roles.length === 0) return ['Client'];
   return roles.map((r) => mapBackendRole(typeof r === 'number' ? r : r));
 }
 
@@ -71,7 +71,7 @@ export function mapBackendRoles(roles: (number | string)[] | undefined | null): 
 export function normalizeUserRoles<T extends { role?: number | string; roles?: (number | string)[] }>(
   user: T | null | undefined
 ): T | null {
-  if (!user) return null;
+  if (user == null) return null;
 
   return {
     ...user,

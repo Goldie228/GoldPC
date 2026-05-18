@@ -19,12 +19,12 @@ export type { MemoryType as RAMType };
 
 // Unique feature-specific helpers
 export function extractMbRamSlots(specs: ProductSpecifications | undefined): number {
-  if (!specs) return 4;
+  if (specs == null) return 4;
   return (specs.ramSlots as number) || 4;
 }
 
 export function extractModulesCount(specs: ProductSpecifications | undefined): number {
-  if (!specs) return 1;
+  if (specs == null) return 1;
   const raw = specs.modules as string | undefined;
   if (!raw) return 1;
   const match = raw.match(/(\d+)/);

@@ -112,7 +112,7 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
             });
           });
         } else {
-          const comp = selectedComponents[slotKey as Exclude<PCComponentType, 'ram' | 'storage' | 'fan'>];
+          const comp = selectedComponents[slotKey];
           const p = comp && 'product' in comp ? comp.product : null;
           if (p) {
             items.push({ key: slotKey, label: slot.label, price: p.price });

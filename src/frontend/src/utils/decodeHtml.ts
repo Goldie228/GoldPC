@@ -30,14 +30,14 @@ export function decodeHtmlEntities(text: string): string {
   decoded = decoded.replace(NAMED_REGEX, (match) => NAMED_ENTITIES[match] ?? match);
 
   // Decode numeric entities (decimal and hexadecimal)
-  decoded = decoded.replace(NUMERIC_REGEX, (_, _hexPrefix, hex, dec) => {
-    if (hex) {
+  decoded = decoded.replace(NUMERIC_REGEX, (_match, _hexPrefix: string | undefined, hex: string | undefined, dec: string | undefined) => {
+    if (hex != null) {
       return String.fromCodePoint(parseInt(hex, 16));
     }
-    if (dec) {
+    if (dec != null) {
       return String.fromCodePoint(parseInt(dec, 10));
     }
-    return _;
+    return _match;
   });
 
   return decoded || '';

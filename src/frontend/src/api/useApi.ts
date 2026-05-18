@@ -4,6 +4,8 @@ import {
   useQueryClient,
   type UseQueryOptions,
   type UseMutationOptions,
+  type UseQueryResult,
+  type UseMutationResult,
   type QueryKey,
 } from '@tanstack/react-query'
 import type { AxiosError, AxiosResponse } from 'axios'
@@ -24,8 +26,8 @@ interface UseApiQueryOptions<TData, TError = ApiError>
 /**
  * Параметры для useApi mutation hook
  */
-interface UseApiMutationOptions<TData, TError = ApiError, TVariables = unknown>
-  extends Omit<UseMutationOptions<TData, TError, TVariables>, 'mutationFn'> {}
+type UseApiMutationOptions<TData, TError = ApiError, TVariables = unknown> =
+  Omit<UseMutationOptions<TData, TError, TVariables>, 'mutationFn'>;
 
 /**
  * Хук для выполнения GET запросов с использованием React Query
@@ -40,7 +42,7 @@ interface UseApiMutationOptions<TData, TError = ApiError, TVariables = unknown>
 export function useApiQuery<TData = unknown>(
   url: string,
   options?: UseApiQueryOptions<TData>
-) {
+): UseQueryResult<TData, ApiError> {
   return useQuery<TData, ApiError>({
     queryKey: [url],
     queryFn: async () => {
@@ -65,7 +67,7 @@ export function useApiQuery<TData = unknown>(
 export function useApiQueryWithParams<TData = unknown, TParams = Record<string, unknown>>(
   queryKey: [string, TParams?],
   options?: UseApiQueryOptions<TData>
-) {
+): UseQueryResult<TData, ApiError> {
   const [url, params] = queryKey
   
   return useQuery<TData, ApiError>({
@@ -94,7 +96,7 @@ export function useApiQueryWithParams<TData = unknown, TParams = Record<string, 
 export function useApiMutation<TData = unknown, TVariables = unknown>(
   mutationFn: (variables: TVariables) => Promise<ApiResponse<TData>>,
   options?: UseApiMutationOptions<TData, ApiError, TVariables>
-) {
+): UseMutationResult<TData, ApiError, TVariables> {
   return useMutation<TData, ApiError, TVariables>({
     mutationFn: async (variables) => {
       const response = await mutationFn(variables)
@@ -118,7 +120,14 @@ export function useApiMutation<TData = unknown, TVariables = unknown>(
  * invalidate()
  * ```
  */
-export function useApiUtils() {
+interface ApiUtils {
+  invalidate: (queryKey?: QueryKey) => Promise<void>;
+  prefetch: <_TData = unknown>(url: string) => Promise<void>;
+  setQueryData: <TData = unknown>(url: string, data: TData) => void;
+  getQueryData: <TData = unknown>(url: string) => TData | undefined;
+}
+
+export function useApiUtils(): ApiUtils {
   const queryClient = useQueryClient()
 
   return {

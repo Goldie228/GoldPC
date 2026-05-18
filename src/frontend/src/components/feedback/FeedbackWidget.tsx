@@ -203,7 +203,7 @@ export function FeedbackWidget() {
                 <div className="flex justify-end gap-3 mt-6">
                   <button
                     className="px-6 py-3 bg-[linear-gradient(135deg,#667eea_0%,#764ba2_100%)] text-white border-none rounded-lg text-base font-medium cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(102,126,234,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"
-                    onClick={handleSubmit}
+                    onClick={() => void handleSubmit()}
                     disabled={isSubmitting || rating === 0}
                     type="button"
                   >

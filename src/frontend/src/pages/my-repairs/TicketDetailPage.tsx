@@ -39,10 +39,10 @@ export function TicketDetailPage() {
 
   useEffect(() => {
     if (ticketId) {
-      loadTicketData();
+      void loadTicketData();
 
       // Poll for updates every 15 seconds
-      const interval = setInterval(loadTicketData, 15000);
+      const interval = setInterval(() => { void loadTicketData(); }, 15000);
       return () => clearInterval(interval);
     }
   }, [ticketId]);
@@ -61,7 +61,7 @@ export function TicketDetailPage() {
         getTicketMessages(ticketId)
       ]);
 
-      if (ticketData) setTicket(ticketData);
+      if (ticketData != null) setTicket(ticketData);
       setHistory(historyData ?? []);
       setMessages(messagesData ?? []);
     } catch {
@@ -83,7 +83,7 @@ export function TicketDetailPage() {
     setSendingMessage(true);
     try {
       const message = await sendMessage(ticketId, newMessage.trim());
-      if (message) {
+      if (message != null) {
         setMessages(prev => [...prev, message]);
       }
       setNewMessage('');
@@ -100,7 +100,7 @@ export function TicketDetailPage() {
     return <div className="ticket-detail">Загрузка...</div>;
   }
 
-  if (!ticket) {
+  if (ticket == null) {
     return (
       <div className="ticket-detail">
         <div className="not-found">

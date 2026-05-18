@@ -8,9 +8,8 @@ import '@fontsource/space-grotesk/700.css'
 import '@fontsource/jetbrains-mono/400.css'
 import '@fontsource/jetbrains-mono/500.css'
 import '@fontsource-variable/fraunces/index.css'
-import 'leaflet/dist/leaflet.css'
-import './index.css'          // 新的原型tokens + Tailwind (第1个!)
-import './styles/tokens.css' // 旧设计tokens（保留空壳）
+import './index.css'          // Новые прототипные tokens + Tailwind (первый!)
+import './styles/tokens.css' // Старые дизайн-tokens (сохранена оболочка)
 import './styles/globals.css'
 import './styles/staff.css'
 import App from './App.tsx'

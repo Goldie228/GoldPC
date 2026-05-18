@@ -59,7 +59,7 @@ export function AccountWarranty() {
   const { cards, totalCount, loading, error, getMyCards } = useWarranty();
 
   useEffect(() => {
-    getMyCards(1, 50);
+    void getMyCards(1, 50);
   }, [getMyCards]);
 
   const stats = useMemo(() => {
@@ -97,7 +97,7 @@ export function AccountWarranty() {
               Не удалось получить список гарантийных талонов. Попробуйте обновить страницу.
             </p>
             <button
-              onClick={() => getMyCards(1, 50)}
+              onClick={() => void getMyCards(1, 50)}
               className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold text-gold-ink text-sm font-medium hover:bg-gold-active transition-colors"
             >
               Повторить

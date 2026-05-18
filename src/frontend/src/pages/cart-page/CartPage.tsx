@@ -78,7 +78,7 @@ function EmptyCart(): ReactElement {
             variant="primary"
             size="md"
             fullWidth
-            onClick={() => navigate('/catalog')}
+            onClick={() => void navigate('/catalog')}
             leftIcon={<ArrowLeft size={18} />}
           >
             Перейти в каталог
@@ -116,7 +116,7 @@ export function CartPage(): ReactElement {
   };
 
   const handleCheckout = (): void => {
-    navigate('/checkout');
+    void navigate('/checkout');
   };
 
   if (isEmpty) {

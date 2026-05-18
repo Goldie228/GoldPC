@@ -50,15 +50,15 @@ export function splitDescriptionByHeadings(description: string): DescriptionBloc
 
   for (const line of lines) {
     if (known.has(line)) {
-      if (current && (current.title || current.body.trim())) blocks.push(current);
+      if (current != null && (current.title || current.body.trim())) blocks.push(current);
       current = { title: line, body: '' };
       continue;
     }
-    if (!current) current = { body: '' };
+    if (current == null) current = { body: '' };
     current.body = current.body ? `${current.body}\n${line}` : line;
   }
 
-  if (current && (current.title || current.body.trim())) blocks.push(current);
+  if (current != null && (current.title || current.body.trim())) blocks.push(current);
   return blocks;
 }
 
@@ -202,7 +202,7 @@ export function mergeDescriptionIntoSpecifications(
   specs: ProductSpecifications | undefined | null,
   description: string | undefined
 ): ProductSpecifications {
-  const base = (specs && typeof specs === 'object' ? { ...specs } : {}) as Record<string, string | number | boolean | undefined | null>;
+  const base = (specs != null && typeof specs === 'object' ? { ...specs } : {}) as Record<string, string | number | boolean | undefined | null>;
   const pairs = collectKeyValuePairsFromDescription(description);
   for (const { key, value } of pairs) {
     const nk = normalizeMergedSpecKey(key);

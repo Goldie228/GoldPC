@@ -35,26 +35,28 @@ interface AuthState {
 const getInitialState = (): Pick<AuthState, 'user' | 'isAuthenticated' | 'currentRole'> => {
   try {
     const saved = localStorage.getItem('auth-storage');
-    if (saved) {
-      const data = JSON.parse(saved);
+    if (saved != null && saved !== '') {
+      const data = JSON.parse(saved) as { user?: User | null };
       // Decode HTML entities in user data
-      if (data.user) {
-        data.user = {
+      if (data.user != null) {
+        const decodedUser = {
           ...data.user,
           firstName: decodeHtmlEntities(data.user.firstName),
           lastName: decodeHtmlEntities(data.user.lastName),
           email: decodeHtmlEntities(data.user.email),
         };
         // Нормализуем роли: бэкенд мог сохранить числа (0=Client)
-        data.user = normalizeUserRoles(data.user);
+        const normalizedUser = normalizeUserRoles(decodedUser);
+         return {
+           user: normalizedUser,
+           isAuthenticated: normalizedUser != null,
+           currentRole: normalizedUser != null ? mapBackendRole(normalizedUser.roles?.[0] ?? normalizedUser.role) : null,
+         };
       }
-      return {
-        user: data.user ?? null,
-        isAuthenticated: !!data.user,
-        currentRole: data.user ? mapBackendRole(data.user.roles?.[0] ?? data.user.role) : null,
-      };
     }
-  } catch {}
+  } catch {
+    // Ignore parse errors
+  }
 
   return {
     user: null,
@@ -74,7 +76,7 @@ export const useAuthStore = create<AuthState>()(
 
     setUser: (user) => {
       // Decode HTML entities in user data
-      if (user) {
+      if (user != null) {
         user = {
           ...user,
           firstName: decodeHtmlEntities(user.firstName),
@@ -88,7 +90,7 @@ export const useAuthStore = create<AuthState>()(
         user,
         isAuthenticated: !!user,
         isLoading: false,
-        currentRole: user ? mapBackendRole(user.roles?.[0] ?? user.role) : null,
+        currentRole: user != null ? mapBackendRole(user.roles?.[0] ?? user.role) : null,
       };
 
       // ✅ ВРУЧНУЮ СОХРАНЯЕМ В LOCALSTORAGE
@@ -107,7 +109,7 @@ export const useAuthStore = create<AuthState>()(
       const currentState = get();
 
       // Only Admin users are allowed to perform impersonation
-      if (!currentState.user || currentState.user.role !== 'Admin') {
+      if (currentState.user?.role !== 'Admin') {
         console.error('Security violation: Insufficient permissions for user impersonation');
         return;
       }
@@ -140,7 +142,7 @@ export const useAuthStore = create<AuthState>()(
     switchRole: (role: string) => {
       const currentState = get();
 
-      if (!currentState.user) return;
+      if (currentState.user == null) return;
 
       // Validate that user actually has this role
       const userRoles: string[] = (currentState.user.roles ?? [currentState.user.role]).filter(Boolean) as string[];

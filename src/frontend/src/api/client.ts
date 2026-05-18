@@ -10,7 +10,7 @@ import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axio
  * Базовый URL для API запросов
  * В режиме разработки использует относительный путь для MSW
  */
-const BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const BASE_URL = (typeof import.meta.env?.VITE_API_URL === 'string' && import.meta.env.VITE_API_URL !== '') ? import.meta.env.VITE_API_URL : '/api/v1';
 
 /**
  * Экземпляр axios с базовой конфигурацией
@@ -29,9 +29,8 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // ✅ Проверяем ВСЕ хранилища в правильном порядке
-    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-    console.log('[API Client] Token from storage:', token ? 'present' : 'missing');
-    if (token && config.headers) {
+    const token = localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken');
+    if (token != null && config.headers != null) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -42,9 +41,8 @@ apiClient.interceptors.request.use(
 );
 
 // ✅ Восстанавливаем токен при загрузке страницы
-const savedToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-console.log('[API Client] Initial token restore:', savedToken ? 'success' : 'none');
-if (savedToken) {
+const savedToken = localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken');
+if (savedToken != null && savedToken !== '') {
   apiClient.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
 }
 
@@ -52,8 +50,8 @@ if (savedToken) {
  * Извлекает полезные данные из обёрнутого ответа ApiResponse<T>
  * Безопасно: если данных нет, возвращает undefined (вызывающий должен обработать)
  */
-function extractData<T>(payload: T | { data?: T; success?: boolean; message?: string }): T {
-  if (payload && typeof payload === 'object' && 'data' in payload) {
+function extractData<T>(payload: unknown): T {
+  if (payload != null && typeof payload === 'object' && 'data' in payload) {
     const wrapped = payload as { data?: T; success?: boolean; message?: string };
     if (wrapped.data !== undefined) return wrapped.data;
   }
@@ -75,16 +73,16 @@ apiClient.interceptors.response.use(
       // ✅ Ищем refresh token в ОБОИХ хранилищах
       let refreshTokenSource: 'local' | 'session' | null = null;
       let refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
+      if (refreshToken != null && refreshToken !== '') {
         refreshTokenSource = 'local';
       } else {
         refreshToken = sessionStorage.getItem('refreshToken');
-        if (refreshToken) {
+        if (refreshToken != null && refreshToken !== '') {
           refreshTokenSource = 'session';
         }
       }
 
-      if (refreshToken) {
+      if (refreshToken != null && refreshToken !== '') {
         try {
           const response = await axios.post(`${BASE_URL}/auth/refresh`, {
             refreshToken,
@@ -104,7 +102,7 @@ apiClient.interceptors.response.use(
             localStorage.setItem('refreshToken', newRefreshToken);
           }
 
-          if (originalRequest.headers) {
+          if (originalRequest.headers != null) {
             originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           }
 

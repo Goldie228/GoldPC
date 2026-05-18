@@ -38,7 +38,7 @@ export function AccountSavedBuilds() {
   const [sharingId, setSharingId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadBuilds();
+    void loadBuilds();
   }, []);
 
   const loadBuilds = async () => {
@@ -192,7 +192,7 @@ export function AccountSavedBuilds() {
                     <ExternalLink size={16} />
                   </Link>
                   <button
-                    onClick={() => handleShare(build.id)}
+                    onClick={() => void handleShare(build.id)}
                     disabled={sharingId === build.id}
                     className="p-2 rounded-lg text-muted-text hover:text-body-text hover:bg-surface-elevated transition-colors disabled:opacity-50"
                     title="Поделиться"
@@ -204,7 +204,7 @@ export function AccountSavedBuilds() {
                     )}
                   </button>
                   <button
-                    onClick={() => handleDelete(build.id, build.name)}
+                    onClick={() => void handleDelete(build.id, build.name)}
                     disabled={deletingId === build.id}
                     className="p-2 rounded-lg text-muted-text hover:text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
                     title="Удалить"

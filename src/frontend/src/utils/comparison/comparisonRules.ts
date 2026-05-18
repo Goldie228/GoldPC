@@ -495,7 +495,7 @@ const SPEC_ALIASES_BY_CATEGORY: Partial<Record<ProductCategory, Record<string, s
 
 function resolveCanonicalSpecKey(category: ProductCategory, normalizedKey: string): string {
   const map = SPEC_ALIASES_BY_CATEGORY[category];
-  if (map && map[normalizedKey]) {
+  if (map?.[normalizedKey]) {
     return map[normalizedKey];
   }
   return normalizedKey;
@@ -512,7 +512,7 @@ export function getCanonicalSpecKeyForComparison(category: string, specKey: stri
 export function hasExplicitCategoryRuleForCanonicalKey(category: string, canonicalKey: string): boolean {
   const normalizedCategory = normalizeCategory(category) as ProductCategory;
   const map = CATEGORY_RULES[normalizedCategory];
-  return map != null && map[canonicalKey] !== undefined;
+  return map?.[canonicalKey] !== undefined;
 }
 
 export function getComparisonRule(category: string, specKey: string): ComparisonRule {

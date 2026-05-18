@@ -30,8 +30,11 @@ const CATEGORY_NAME_TO_SLUG: Record<string, ProductCategory> = {
 };
 
 function normalizeCategory<T extends { category?: unknown }>(item: T): T {
-  if (item && typeof item.category === 'string') {
-    (item as any).category = CATEGORY_NAME_TO_SLUG[(item as any).category] ?? (item as any).category;
+  if (item != null && typeof item.category === 'string') {
+    const slug = CATEGORY_NAME_TO_SLUG[item.category];
+    if (slug != null) {
+      (item as { category?: string }).category = slug;
+    }
   }
   return item;
 }
@@ -48,7 +51,7 @@ export async function getProducts(
     params,
   });
   const data = response.data;
-  if (data?.data && Array.isArray(data.data)) {
+  if (data?.data != null && Array.isArray(data.data)) {
     for (const p of data.data) {
       normalizeCategory(p);
     }
@@ -84,7 +87,7 @@ export async function getFeaturedProducts(limit?: number): Promise<ProductSummar
   const response = await apiClient.get<ProductListResponse>('/catalog/products', {
     params: {
       isFeatured: true,
-      pageSize: limit || 10,
+      pageSize: limit ?? 10,
     },
   });
   const items = response.data.data ?? [];
@@ -111,7 +114,7 @@ export async function searchProducts(
     },
   });
   const data = response.data;
-  if (data?.data && Array.isArray(data.data)) {
+  if (data?.data != null && Array.isArray(data.data)) {
     for (const p of data.data) {
       normalizeCategory(p);
     }

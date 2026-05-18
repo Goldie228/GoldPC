@@ -30,7 +30,7 @@ export function DictionariesPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [activeTab]);
 
   const fetchData = async () => {
@@ -77,7 +77,7 @@ export function DictionariesPage() {
 
     try {
       await dictionariesApi.deleteItem(activeTab, id);
-      fetchData();
+      void fetchData();
     } catch (err) {
       console.error('Failed to delete:', err);
       alert('Не удалось удалить запись');
@@ -92,7 +92,7 @@ export function DictionariesPage() {
 
     setSaving(true);
     try {
-      if (editingItem) {
+      if (editingItem != null) {
         await dictionariesApi.updateItem(activeTab, editingItem.id, {
           name: formData.name,
           slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
@@ -104,7 +104,7 @@ export function DictionariesPage() {
         });
       }
       setShowModal(false);
-      fetchData();
+      void fetchData();
     } catch (err) {
       console.error('Failed to save:', err);
       alert('Не удалось сохранить запись');
@@ -136,7 +136,7 @@ export function DictionariesPage() {
       return (
         <div className="text-center py-12 text-red-600">
           <p>{error}</p>
-          <button onClick={fetchData} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
+          <button onClick={() => void fetchData()} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
             Попробовать снова
           </button>
         </div>
@@ -144,7 +144,7 @@ export function DictionariesPage() {
     }
 
     let filteredItems: DictionaryItem[] = [];
-    let itemCounts: Record<string, number> = {};
+    const itemCounts: Record<string, number> = {};
 
     switch (activeTab) {
       case 'categories':
@@ -217,7 +217,7 @@ export function DictionariesPage() {
                     <button
                       className="w-8 h-8 flex items-center justify-center bg-transparent border border-gray-600 text-gray-400 cursor-pointer hover:border-red-300 hover:text-red-500 hover:bg-red-500/10 transition-colors text-sm"
                       title="Удалить"
-                      onClick={() => handleDelete(item.id)}
+                      onClick={() => void handleDelete(item.id)}
                     >
                       🗑️
                     </button>
@@ -338,7 +338,7 @@ export function DictionariesPage() {
                </button>
                <button
                  className="px-5 py-2.5 bg-blue-500 text-white border-none text-sm font-semibold cursor-pointer hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                 onClick={handleSave}
+                  onClick={() => void handleSave()}
                  disabled={saving}
                >
                  {saving ? 'Сохранение...' : 'Сохранить'}

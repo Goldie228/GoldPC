@@ -35,10 +35,9 @@ export function usePWAInstallPrompt() {
   const promptInstall = async () => {
     if (!installPrompt) return false;
 
-    // @ts-expect-error prompt method exists on the event
-    await installPrompt.prompt();
-    // @ts-expect-error userChoice exists on the event
-    const choiceResult = await installPrompt.userChoice;
+    const promptEvent = installPrompt as Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> };
+    await promptEvent.prompt();
+    const choiceResult = await promptEvent.userChoice;
 
     if (choiceResult.outcome === 'accepted') {
       setIsInstallable(false);

@@ -10,7 +10,7 @@ import { MAX_RAM_MODULES } from './constants';
 import { extractMbRamSlots, extractModulesCount } from './specExtractors';
 
 export function getMaxRamModules(motherboard: Product | undefined): number {
-  if (motherboard) {
+  if (motherboard != null) {
     return extractMbRamSlots(motherboard.specifications);
   }
   return MAX_RAM_MODULES;

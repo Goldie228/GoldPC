@@ -52,7 +52,7 @@ export const useComparisonStore = create<ComparisonState>()(
       toggleComparison: (productId: string, category: string): { success: boolean; reason?: 'limit' } => {
         const { items } = get();
         const existing = items.find((i) => i.id === productId);
-        if (existing) {
+        if (existing != null) {
           set({ items: items.filter((i) => i.id !== productId) });
           return { success: true };
         }

@@ -363,7 +363,7 @@ export function FilterSidebar({ mobile = false,
         const counts: Record<string, number> = {};
         categories?.forEach((cat: Category) => {
           if (cat?.slug != null) {
-            const key = (BACKEND_SLUG_MAP[cat.slug] ?? cat.slug) as ProductCategory;
+            const key = (BACKEND_SLUG_MAP[cat.slug] ?? cat.slug);
             // Несколько backend-категорий могут маппиться на один frontend (keyboards + periphery -> keyboard)
             counts[key] = (counts[key] ?? 0) + (cat.productCount ?? 0);
           }
@@ -377,7 +377,7 @@ export function FilterSidebar({ mobile = false,
       }
     };
 
-    fetchCategories();
+    void fetchCategories();
   }, []);
 
   // Загрузка атрибутов фильтрации только при смене категории.
@@ -404,7 +404,7 @@ export function FilterSidebar({ mobile = false,
         setFilterAttributes([]);
       }
     };
-    fetchAttrs();
+    void fetchAttrs();
   }, [selectedCategory, selectedAvailability]);
 
   // Fetch real price bounds from catalog API (cheapest + most expensive item in category)
@@ -430,7 +430,7 @@ export function FilterSidebar({ mobile = false,
         console.error('Failed to fetch price bounds:', err);
       }
     };
-    fetchPriceBounds();
+    void fetchPriceBounds();
     return () => { cancelled = true; };
   }, [selectedCategory]);
 
@@ -467,7 +467,7 @@ export function FilterSidebar({ mobile = false,
         setManufacturersLoading(false);
       }
     };
-    fetchManufacturers();
+    void fetchManufacturers();
   }, [selectedCategory]);
 
   // Подсчёт общего количества товаров
