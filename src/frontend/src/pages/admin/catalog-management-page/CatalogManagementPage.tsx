@@ -53,7 +53,7 @@ export function CatalogManagementPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchProducts();
+    void fetchProducts();
   }, [page, categoryFilter, activeFilter]);
 
   const fetchProducts = async () => {
@@ -198,7 +198,7 @@ export function CatalogManagementPage() {
           <option value="false">Неактивные</option>
         </select>
 
-        <button className="px-5 py-3 bg-gray-100 border border-gray-200 rounded-lg text-sm cursor-pointer hover:bg-gray-200 transition-colors" onClick={fetchProducts}>
+        <button className="px-5 py-3 bg-gray-100 border border-gray-200 rounded-lg text-sm cursor-pointer hover:bg-gray-200 transition-colors" onClick={() => void fetchProducts()}>
           🔄 Обновить
         </button>
       </div>
@@ -267,7 +267,7 @@ export function CatalogManagementPage() {
               </button>
               <button
                 className="px-5 py-3 bg-blue-500 text-white border-none rounded-lg text-sm cursor-pointer hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleEditSave}
+                onClick={() => void handleEditSave()}
                 disabled={saving}
               >
                 {saving ? 'Сохранение...' : 'Сохранить'}
@@ -287,7 +287,7 @@ export function CatalogManagementPage() {
       {error && (
         <div className="text-center py-12 text-red-600">
           <p>{error}</p>
-          <button onClick={fetchProducts} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
+          <button onClick={() => void fetchProducts()} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
             Попробовать снова
           </button>
         </div>
@@ -367,7 +367,7 @@ export function CatalogManagementPage() {
                         </button>
                         <button
                           className="w-8 h-8 flex items-center justify-center bg-transparent border border-gray-200 rounded-md cursor-pointer text-base hover:bg-red-50 hover:border-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          onClick={() => handleDelete(product)}
+                          onClick={() => void handleDelete(product)}
                           disabled={deleting === product.id}
                           title="Удалить"
                         >

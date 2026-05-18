@@ -202,7 +202,7 @@ export function AuditLogPage() {
   }, [page, actionFilter, severityFilter, dateFrom, dateTo]);
 
   useEffect(() => {
-    fetchAuditLogs();
+    void fetchAuditLogs();
   }, [fetchAuditLogs]);
 
   const formatDate = (dateString: string) => {
@@ -217,7 +217,7 @@ export function AuditLogPage() {
   };
 
   const handleRefresh = () => {
-    fetchAuditLogs();
+    void fetchAuditLogs();
   };
 
   const handleExport = () => {
@@ -360,7 +360,7 @@ export function AuditLogPage() {
       {error && (
         <div className="text-center py-12 text-red-600">
           <p>{error}</p>
-          <button onClick={fetchAuditLogs} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
+          <button onClick={() => void fetchAuditLogs()} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
             Попробовать снова
           </button>
         </div>

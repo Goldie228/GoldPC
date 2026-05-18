@@ -226,7 +226,7 @@ export function ExportPage() {
         <div className="flex gap-3 mt-6 pt-6 border-t border-[var(--border)]">
           <button
             className="inline-flex items-center gap-2.5 px-6 py-3.5 font-[var(--font-sans)] text-[0.85rem] font-semibold border-none cursor-pointer transition-all duration-[var(--transition-base)] bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-bright)] disabled:opacity-70 disabled:cursor-not-allowed"
-            onClick={handleExport}
+            onClick={() => void handleExport()}
             disabled={isExporting}
           >
             {isExporting ? (
