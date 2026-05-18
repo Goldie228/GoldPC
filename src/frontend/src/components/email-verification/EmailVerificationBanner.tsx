@@ -61,7 +61,7 @@ export function EmailVerificationBanner() {
           <div className="flex items-center gap-3 shrink-0">
             {!sent ? (
               <button
-                onClick={handleResend}
+                onClick={() => void handleResend()}
                 disabled={resending}
                 className="flex items-center gap-1.5 text-xs font-medium text-gold hover:text-gold-active transition-colors disabled:opacity-50 bg-transparent border-none cursor-pointer whitespace-nowrap"
               >

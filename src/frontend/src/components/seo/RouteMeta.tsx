@@ -42,7 +42,7 @@ const CATEGORY_META: Record<string, MetaConfig> = {
 };
 
 function setMetaTag(name: string, content: string): void {
-  let tag = document.head.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
+  let tag = document.head.querySelector(`meta[name="${name}"]`);
   if (!tag) {
     tag = document.createElement('meta');
     tag.setAttribute('name', name);
@@ -52,7 +52,7 @@ function setMetaTag(name: string, content: string): void {
 }
 
 function setPropertyMetaTag(property: string, content: string): void {
-  let tag = document.head.querySelector(`meta[property="${property}"]`) as HTMLMetaElement | null;
+  let tag = document.head.querySelector(`meta[property="${property}"]`);
   if (!tag) {
     tag = document.createElement('meta');
     tag.setAttribute('property', property);
@@ -62,7 +62,7 @@ function setPropertyMetaTag(property: string, content: string): void {
 }
 
 function setCanonical(url: string): void {
-  let link = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+  let link = document.head.querySelector('link[rel="canonical"]');
   if (!link) {
     link = document.createElement('link');
     link.setAttribute('rel', 'canonical');

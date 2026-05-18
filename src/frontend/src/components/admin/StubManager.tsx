@@ -78,8 +78,8 @@ export const StubManager: React.FC = () => {
         throw new Error(`Ошибка загрузки: ${response.status} ${response.statusText}`);
       }
       
-      const data: Stub[] = await response.json();
-      setStubs(Array.isArray(data) ? data : []);
+      const data = await response.json() as unknown;
+      setStubs(Array.isArray(data) ? (data as Stub[]) : []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
       setError(errorMessage);
@@ -136,7 +136,7 @@ export const StubManager: React.FC = () => {
    * Загрузка данных при монтировании компонента
    */
   useEffect(() => {
-    fetchStubs();
+    void fetchStubs();
   }, [fetchStubs]);
 
   /**
@@ -245,7 +245,7 @@ export const StubManager: React.FC = () => {
                       <select
                         className="stub-manager__select"
                         value={stub.mode}
-                        onChange={(e) => updateStub(stub.name, e.target.value as StubMode)}
+                        onChange={(e) => void updateStub(stub.name, e.target.value as StubMode)}
                         disabled={updating === stub.name}
                         title={MODE_DESCRIPTIONS[stub.mode]}
                       >
@@ -284,7 +284,7 @@ export const StubManager: React.FC = () => {
       <div className="stub-manager__actions">
         <button 
           className="stub-manager__button stub-manager__button--refresh"
-          onClick={fetchStubs}
+          onClick={() => void fetchStubs()}
           disabled={loading}
         >
           🔄 Обновить данные
@@ -294,7 +294,7 @@ export const StubManager: React.FC = () => {
           onClick={() => {
             stubs.forEach(stub => {
               if (stub.mode !== 'Normal') {
-                updateStub(stub.name, 'Normal');
+                void updateStub(stub.name, 'Normal');
               }
             });
           }}

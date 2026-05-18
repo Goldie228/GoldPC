@@ -13,7 +13,7 @@ export function SearchDropdown({ isOpen, onToggle }: SearchDropdownProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<ProductSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isFocused, setIsFocused] = useState(false);
+  const [_isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -38,11 +38,11 @@ export function SearchDropdown({ isOpen, onToggle }: SearchDropdownProps) {
   const onChange = (q: string) => {
     setQuery(q);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => doSearch(q), 300);
+    debounceRef.current = setTimeout(() => void doSearch(q), 300);
   };
 
   const onSelect = (slug: string) => {
-    navigate(`/product/${slug}`);
+    void navigate(`/product/${slug}`);
     setQuery('');
     setResults([]);
     onToggle();
@@ -50,7 +50,7 @@ export function SearchDropdown({ isOpen, onToggle }: SearchDropdownProps) {
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && query.trim().length >= 2) {
-      navigate(`/catalog?search=${encodeURIComponent(query.trim())}`);
+      void navigate(`/catalog?search=${encodeURIComponent(query.trim())}`);
       setQuery('');
       setResults([]);
       onToggle();
@@ -130,7 +130,7 @@ export function SearchDropdown({ isOpen, onToggle }: SearchDropdownProps) {
             <button
               className="block w-full px-3.5 py-2.5 bg-transparent border-none border-t border-[var(--border)] text-[var(--color-gold-500)] font-sans text-sm font-medium cursor-pointer text-center transition-colors hover:bg-[var(--bg-elevated)]"
               onClick={() => {
-                navigate(`/catalog?search=${encodeURIComponent(query.trim())}`);
+      void navigate(`/catalog?search=${encodeURIComponent(query.trim())}`);
                 setQuery('');
                 setResults([]);
                 onToggle();

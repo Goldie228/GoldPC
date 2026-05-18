@@ -97,7 +97,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         onClick: handleSwitchToRegister
       }}
     >
-      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-5" onSubmit={(e) => void handleSubmit(e)}>
         {error && (
           <div className="p-3 bg-price-rise/10 border border-price-rise/30 text-price-rise text-sm rounded-md" role="alert">
             {error}

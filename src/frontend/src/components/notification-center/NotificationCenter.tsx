@@ -50,7 +50,7 @@ export const NotificationCenter = () => {
               </span>
               {unreadCount > 0 && (
                 <button
-                  onClick={markAllAsRead}
+                  onClick={() => void markAllAsRead()}
                   className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
                 >
                   <CheckIcon className="h-4 w-4" />
@@ -70,7 +70,7 @@ export const NotificationCenter = () => {
                 <div
                   key={notification.id}
                   className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.isRead ? getPriorityColor(notification.priority) : ''}`}
-                  onClick={() => !notification.isRead && markAsRead(notification.id)}
+                  onClick={() => !notification.isRead && void markAsRead(notification.id)}
                 >
                   <div className="flex items-start gap-3">
                     <span className="text-xl">{getTypeIcon(notification.type)}</span>
@@ -84,14 +84,14 @@ export const NotificationCenter = () => {
                     <div className="flex items-center gap-1">
                       {!notification.isRead && (
                         <button
-                          onClick={(e) => { e.stopPropagation(); markAsRead(notification.id); }}
+                          onClick={(e) => { e.stopPropagation(); void markAsRead(notification.id); }}
                           className="p-1 text-gray-400 hover:text-gray-600 rounded"
                         >
                           <CheckIcon className="h-4 w-4" />
                         </button>
                       )}
                       <button
-                        onClick={(e) => { e.stopPropagation(); deleteNotification(notification.id); }}
+                        onClick={(e) => { e.stopPropagation(); void deleteNotification(notification.id); }}
                         className="p-1 text-gray-400 hover:text-red-600 rounded"
                       >
                         <TrashIcon className="h-4 w-4" />

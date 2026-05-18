@@ -186,7 +186,7 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
   };
 
   return (
-    <form className="bg-card p-6 rounded-xl border border-border" onSubmit={handleSubmit}>
+    <form className="bg-card p-6 rounded-xl border border-border" onSubmit={(e) => void handleSubmit(e)}>
       <div className="mb-5">
         <label htmlFor="cardNumber" className="block mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
           Номер карты

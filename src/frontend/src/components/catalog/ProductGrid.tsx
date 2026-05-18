@@ -6,9 +6,8 @@ import { Heart, GitCompareArrows, ShoppingCart, Bell, Plus, Minus, Star, Chevron
 import { useQuery } from '@tanstack/react-query';
 import { getProductImageUrl } from '../../utils/image';
 import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
-import type { ProductSummary } from '../../api/types';
+import type { ProductSummary, Product } from '../../api/types';
 import { BynPrice } from '../ui/BynPrice';
-import { EmptyState } from './EmptyState';
 import { useWishlist } from '../../hooks/useWishlist';
 import { useComparison } from '../../hooks/useComparison';
 import { useCart } from '../../hooks/useCart';
@@ -50,7 +49,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const isOutOfStock = product.stock === 0;
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const discountPercent = hasDiscount ? Math.round((1 - product.price / product.oldPrice!) * 100) : 0;
-  const isHit = (product as any).isFeatured;
+  const isHit = (product as Product).isFeatured;
 
   const ratingValue = typeof product.rating === 'number' ? product.rating : product.rating?.average ?? 0;
   const reviewCount = product.reviewCount ?? 0;
