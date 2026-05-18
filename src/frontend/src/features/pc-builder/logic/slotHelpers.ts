@@ -38,21 +38,22 @@ export function getComponentState(
 
   const componentErrors = compatibility.errors.filter((error) => {
     const errorLower = error.toLowerCase();
+    // Ошибки совместимости генерируются на английском, ищем по ключевым словам
     const typeName =
       type === 'cpu'
-        ? 'процессор'
+        ? 'cpu'
         : type === 'motherboard'
-          ? 'материнск'
+          ? 'motherboard'
           : type === 'ram'
-            ? 'памят'
+            ? 'ram'
           : type === 'cooling'
-            ? 'охлажден'
+            ? 'cooler'
           : type === 'gpu'
-            ? 'видеокарт'
+            ? 'gpu'
           : type === 'psu'
-            ? 'блок питания'
+            ? 'psu'
           : type === 'storage'
-            ? 'накопител'
+            ? 'storage'
           : null;
 
     return typeName ? errorLower.includes(typeName) : false;
@@ -67,21 +68,22 @@ export function getComponentState(
 
   const componentWarnings = compatibility.warnings.filter((warning) => {
     const warningLower = warning.toLowerCase();
+    // Предупреждения тоже на английском, ищем по ключевым словам
     const typeName =
       type === 'cpu'
-        ? 'процессор'
+        ? 'cpu'
         : type === 'motherboard'
-          ? 'материнск'
+          ? 'motherboard'
           : type === 'ram'
-            ? 'памят'
+            ? 'ram'
           : type === 'cooling'
-            ? 'охлажден'
+            ? 'cooler'
           : type === 'gpu'
-            ? 'видеокарт'
+            ? 'gpu'
           : type === 'psu'
-            ? 'блок питания'
+            ? 'psu'
           : type === 'storage'
-            ? 'накопител'
+            ? 'storage'
           : null;
 
     return typeName ? warningLower.includes(typeName) : false;
@@ -106,19 +108,19 @@ export function getComponentState(
 
 export function countSelectedCategories(c: PCBuilderSelectedState): number {
   let n =0;
-  if (c.cpu) n++;
-  if (c.gpu) n++;
-  if (c.motherboard) n++;
+  if (c.cpu != null) n++;
+  if (c.gpu != null) n++;
+  if (c.motherboard != null) n++;
   if (c.ram.length > 0) n++;
   if (c.storage.length > 0) n++;
-  if (c.psu) n++;
-  if (c.case) n++;
-  if (c.cooling) n++;
+  if (c.psu != null) n++;
+  if (c.case != null) n++;
+  if (c.cooling != null) n++;
   if (c.fan.length > 0) n++;
-  if (c.monitor) n++;
-  if (c.keyboard) n++;
-  if (c.mouse) n++;
-  if (c.headphones) n++;
+  if (c.monitor != null) n++;
+  if (c.keyboard != null) n++;
+  if (c.mouse != null) n++;
+  if (c.headphones != null) n++;
   return n;
 }
 

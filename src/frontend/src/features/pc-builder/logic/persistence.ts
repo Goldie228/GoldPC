@@ -9,7 +9,6 @@ import type {
   SerializedBuildV1,
   SerializedBuildV2,
   SerializedSingle,
-  PCComponentType,
   SelectedComponent,
 } from './types';
 import {
@@ -19,19 +18,19 @@ import {
 
 export function isBuilderEmpty(c: PCBuilderSelectedState): boolean {
   return (
-    !c.cpu &&
-    !c.gpu &&
-    !c.motherboard &&
-    !c.psu &&
-    !c.case &&
-    !c.cooling &&
+    c.cpu == null &&
+    c.gpu == null &&
+    c.motherboard == null &&
+    c.psu == null &&
+    c.case == null &&
+    c.cooling == null &&
     c.ram.length === 0 &&
     c.storage.length === 0 &&
     c.fan.length === 0 &&
-    !c.monitor &&
-    !c.keyboard &&
-    !c.mouse &&
-    !c.headphones
+    c.monitor == null &&
+    c.keyboard == null &&
+    c.mouse == null &&
+    c.headphones == null
   );
 }
 
@@ -56,8 +55,8 @@ export function saveToLocalStorage(components: PCBuilderSelectedState): void {
     ];
     for (const key of singleKeys) {
       const comp = components[key];
-      if (comp && typeof comp === 'object' && 'product' in comp) {
-        const sc = comp as SelectedComponent;
+      if (comp != null && typeof comp === 'object' && 'product' in comp) {
+        const sc = comp;
         (componentsPayload as Record<string, SerializedSingle>)[key] = {
           productId: sc.product.id,
           product: sc.product,
@@ -102,9 +101,9 @@ export function migrateV1ToState(parsed: SerializedBuildV1): PCBuilderSelectedSt
   const out = emptyPcBuilderState();
   const c = parsed.components || {};
   for (const [, raw] of Object.entries(c)) {
-    if (!raw || typeof raw !== 'object') continue;
-    const entry = raw as SerializedSingle;
-    const type = entry.type as PCComponentType;
+    if (raw == null || typeof raw !== 'object') continue;
+    const entry = raw;
+    const type = entry.type;
     const sc: SelectedComponent = { product: entry.product, type };
     if (type === 'ram') out.ram.push(sc);
     else if (type === 'storage') out.storage.push(sc);
@@ -125,27 +124,27 @@ export function loadFromLocalStorage(): PCBuilderSelectedState {
     if (!raw) return emptyPcBuilderState();
     const parsed = JSON.parse(raw) as SerializedBuildV2 | SerializedBuildV1;
 
-    if ('v' in parsed && parsed.v === 2 && parsed.components) {
+    if ('v' in parsed && parsed.v === 2 && parsed.components != null) {
       const c = parsed.components;
       return {
-        cpu: c.cpu ? { product: c.cpu.product, type: 'cpu' } : undefined,
-        gpu: c.gpu ? { product: c.gpu.product, type: 'gpu' } : undefined,
-        motherboard: c.motherboard
+        cpu: c.cpu != null ? { product: c.cpu.product, type: 'cpu' } : undefined,
+        gpu: c.gpu != null ? { product: c.gpu.product, type: 'gpu' } : undefined,
+        motherboard: c.motherboard != null
           ? { product: c.motherboard.product, type: 'motherboard' }
           : undefined,
-        psu: c.psu ? { product: c.psu.product, type: 'psu' } : undefined,
-        case: c.case ? { product: c.case.product, type: 'case' } : undefined,
-        cooling: c.cooling ? { product: c.cooling.product, type: 'cooling' } : undefined,
+        psu: c.psu != null ? { product: c.psu.product, type: 'psu' } : undefined,
+        case: c.case != null ? { product: c.case.product, type: 'case' } : undefined,
+        cooling: c.cooling != null ? { product: c.cooling.product, type: 'cooling' } : undefined,
         ram: (c.ram ?? []).map((x) => ({ product: x.product, type: 'ram' as const })),
         storage: (c.storage ?? []).map((x) => ({
           product: x.product,
           type: 'storage' as const,
         })),
         fan: (c.fan ?? []).map((x) => ({ product: x.product, type: 'fan' as const })),
-        monitor: c.monitor ? { product: c.monitor.product, type: 'monitor' } : undefined,
-        keyboard: c.keyboard ? { product: c.keyboard.product, type: 'keyboard' } : undefined,
-        mouse: c.mouse ? { product: c.mouse.product, type: 'mouse' } : undefined,
-        headphones: c.headphones ? { product: c.headphones.product, type: 'headphones' } : undefined,
+        monitor: c.monitor != null ? { product: c.monitor.product, type: 'monitor' } : undefined,
+        keyboard: c.keyboard != null ? { product: c.keyboard.product, type: 'keyboard' } : undefined,
+        mouse: c.mouse != null ? { product: c.mouse.product, type: 'mouse' } : undefined,
+        headphones: c.headphones != null ? { product: c.headphones.product, type: 'headphones' } : undefined,
       };
     }
 
