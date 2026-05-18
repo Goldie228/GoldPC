@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react';
+import React, { lazy, Suspense, useEffect } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { MainLayout } from './components/layout/main-layout/MainLayout';
 import { AuthGuard, RoleGuard, AdminRedirect } from './components/guards';
@@ -28,7 +28,7 @@ const ComparisonPage = lazy(() => import('./pages/comparison-page/ComparisonPage
 const CheckoutPage = lazy(() => import('./pages/checkout-page/CheckoutPage').then(m => ({ default: m.CheckoutPage })));
 const OrderSuccessPage = lazy(() => import('./pages/order-success-page/OrderSuccessPage').then(m => ({ default: m.OrderSuccessPage })));
 const OrderTrackingPage = lazy(() => import('./pages/order-tracking-page/OrderTrackingPage').then(m => ({ default: m.OrderTrackingPage })));
-const RegisterPage = lazy(() => import('./pages/register-page/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const _RegisterPage = lazy(() => import('./pages/register-page/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const ForgotPasswordPage = lazy(() => import('./pages/forgot-password-page/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 const ResetPasswordPage = lazy(() => import('./pages/reset-password-page/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const VerifyEmailPendingPage = lazy(() => import('./pages/verify-email-page/VerifyEmailPendingPage').then(m => ({ default: m.VerifyEmailPendingPage })));
@@ -41,7 +41,7 @@ const AccountRepairs = lazy(() => import('./pages/account-page/AccountRepairs').
 const AccountWarranty = lazy(() => import('./pages/account-page/AccountWarranty').then(m => ({ default: m.AccountWarranty })));
 
 const AccountSavedBuilds = lazy(() => import('./pages/account-page/AccountSavedBuilds').then(m => ({ default: m.AccountSavedBuilds })));
-const ClientTicketDetailPage = lazy(() => import('./pages/my-repairs/TicketDetailPage').then(m => ({ default: m.TicketDetailPage })));
+const _ClientTicketDetailPage = lazy(() => import('./pages/my-repairs/TicketDetailPage').then(m => ({ default: m.TicketDetailPage })));
 const DeliveryPage = lazy(() => import('./pages/info/DeliveryPage').then(m => ({ default: m.DeliveryPage })));
 const PaymentPage = lazy(() => import('./pages/info/PaymentPage').then(m => ({ default: m.PaymentPage })));
 const WarrantyPage = lazy(() => import('./pages/info/WarrantyPage').then(m => ({ default: m.WarrantyPage })));
@@ -79,7 +79,7 @@ function lastPathSegment(pathname: string): string {
 }
 
 /** Скелетон по типу маршрута (без Router: pathname из window при подгрузке чанка) */
-function RouteAwarePageLoader() {
+function RouteAwarePageLoader(): React.ReactElement {
   const path = typeof window !== 'undefined' ? window.location.pathname : '/';
   const isStaffOrAccount =
     path.startsWith('/admin') ||
@@ -89,84 +89,96 @@ function RouteAwarePageLoader() {
     path.startsWith('/account');
 
   if (isStaffOrAccount) {
-    return (
-      <div className="page-loader page-loader--content" aria-busy="true" aria-label="Загрузка страницы">
-        <div className="page-loader__bar page-loader__bar--long" />
-        <div className="page-loader__bar page-loader__bar--medium" />
-        <div className="page-loader__panel" />
-      </div>
-    );
+    return <StaffPageLoader />;
   }
 
   const leaf = lastPathSegment(path);
 
   if (leaf === 'wishlist') {
-    return (
-      <div className="page-loader page-loader--wishlist" aria-busy="true" aria-label="Загрузка страницы">
-        <aside className="page-loader__wishlistSidebar" aria-hidden>
-          <div className="page-loader__bar page-loader__bar--sidebarTitle" />
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="page-loader__bar page-loader__bar--sidebarRow" />
-          ))}
-          <div className="page-loader__wishlistSidebarBlock" />
-        </aside>
-        <div className="page-loader__wishlistMain">
-          <div className="page-loader__bar page-loader__bar--long" />
-          <div className="page-loader__bar page-loader__bar--short" />
-          <div className="page-loader__wishlistToolbar">
-            <div className="page-loader__bar page-loader__bar--toolbar" />
-            <div className="page-loader__bar page-loader__bar--toolbarNarrow" />
-          </div>
-          <div className="page-loader__wishlistGrid">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <ProductCardSkeleton key={i} />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <WishlistPageLoader />;
   }
 
   if (leaf === 'comparison') {
-    return (
-      <div className="page-loader page-loader--comparison" aria-busy="true" aria-label="Загрузка страницы">
-        <div className="page-loader__bar page-loader__bar--long" />
-        <div className="page-loader__bar page-loader__bar--medium" />
-        <div className="page-loader__comparisonTable" role="presentation">
-          <div className="page-loader__comparisonHead">
-            <div className="page-loader__comparisonCorner">
-              <div className="page-loader__bar page-loader__bar--cornerLabel" />
-            </div>
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="page-loader__comparisonProductCol">
-                <div className="page-loader__comparisonImg" />
-                <div className="page-loader__bar page-loader__bar--productTitle" />
-                <div className="page-loader__bar page-loader__bar--productPrice" />
-                <div className="page-loader__comparisonActions">
-                  <div className="page-loader__bar page-loader__bar--action" />
-                  <div className="page-loader__bar page-loader__bar--action" />
-                </div>
-              </div>
-            ))}
-          </div>
-          {Array.from({ length: 5 }).map((_, row) => (
-            <div key={row} className="page-loader__comparisonRow">
-              <div className="page-loader__comparisonLabel">
-                <div className="page-loader__bar page-loader__bar--specLabel" />
-              </div>
-              {Array.from({ length: 3 }).map((_, col) => (
-                <div key={col} className="page-loader__comparisonCell">
-                  <div className="page-loader__bar page-loader__bar--specValue" />
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <ComparisonPageLoader />;
   }
 
   return <SimplePageLoader />;
+}
+
+function StaffPageLoader(): React.ReactElement {
+  return (
+    <div className="page-loader page-loader--content" aria-busy="true" aria-label="Загрузка страницы">
+      <div className="page-loader__bar page-loader__bar--long" />
+      <div className="page-loader__bar page-loader__bar--medium" />
+      <div className="page-loader__panel" />
+    </div>
+  );
+}
+
+function WishlistPageLoader(): React.ReactElement {
+  return (
+    <div className="page-loader page-loader--wishlist" aria-busy="true" aria-label="Загрузка страницы">
+      <aside className="page-loader__wishlistSidebar" aria-hidden>
+        <div className="page-loader__bar page-loader__bar--sidebarTitle" />
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="page-loader__bar page-loader__bar--sidebarRow" />
+        ))}
+        <div className="page-loader__wishlistSidebarBlock" />
+      </aside>
+      <div className="page-loader__wishlistMain">
+        <div className="page-loader__bar page-loader__bar--long" />
+        <div className="page-loader__bar page-loader__bar--short" />
+        <div className="page-loader__wishlistToolbar">
+          <div className="page-loader__bar page-loader__bar--toolbar" />
+          <div className="page-loader__bar page-loader__bar--toolbarNarrow" />
+        </div>
+        <div className="page-loader__wishlistGrid">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ComparisonPageLoader(): React.ReactElement {
+  return (
+    <div className="page-loader page-loader--comparison" aria-busy="true" aria-label="Загрузка страницы">
+      <div className="page-loader__bar page-loader__bar--long" />
+      <div className="page-loader__bar page-loader__bar--medium" />
+      <div className="page-loader__comparisonTable" role="presentation">
+        <div className="page-loader__comparisonHead">
+          <div className="page-loader__comparisonCorner">
+            <div className="page-loader__bar page-loader__bar--cornerLabel" />
+          </div>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="page-loader__comparisonProductCol">
+              <div className="page-loader__comparisonImg" />
+              <div className="page-loader__bar page-loader__bar--productTitle" />
+              <div className="page-loader__bar page-loader__bar--productPrice" />
+              <div className="page-loader__comparisonActions">
+                <div className="page-loader__bar page-loader__bar--action" />
+                <div className="page-loader__bar page-loader__bar--action" />
+              </div>
+            </div>
+          ))}
+        </div>
+        {Array.from({ length: 5 }).map((_, row) => (
+          <div key={row} className="page-loader__comparisonRow">
+            <div className="page-loader__comparisonLabel">
+              <div className="page-loader__bar page-loader__bar--specLabel" />
+            </div>
+            {Array.from({ length: 3 }).map((_, col) => (
+              <div key={col} className="page-loader__comparisonCell">
+                <div className="page-loader__bar page-loader__bar--specValue" />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 const router = createBrowserRouter([
@@ -287,7 +299,7 @@ const router = createBrowserRouter([
   basename: import.meta.env.BASE_URL,
 });
 
-function App() {
+function App(): React.ReactElement {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const syncWishlistWithServer = useWishlistStore((state) => state.syncWithServer);
 

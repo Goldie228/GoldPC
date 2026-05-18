@@ -5,7 +5,6 @@ import { FilterSidebar } from '../../components/filter-sidebar/FilterSidebar';
 import { Pagination } from '../../components/catalog/Pagination';
 import { ProductTable } from '../../components/catalog/ProductTable';
 import { buildCatalogFilterChips } from '../../components/catalog/ActiveFiltersBar';
-import { ProductCard } from '../../components/product-card/ProductCard';
 import { ProductCardSkeleton } from '../../components/ui/Skeleton';
 import { ProductGrid } from '../../components/catalog/ProductGrid';
 import { ProductList } from '../../components/catalog/ProductList';
@@ -13,9 +12,8 @@ import { useCatalog } from '../../hooks/useCatalog';
 import { useDebounce } from '../../hooks/useDebounce';
 import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
 import type { ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
-import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
 import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
-import { telemetryInitAutoFlush, telemetryTrack } from '../../utils/telemetry';
+import { telemetryTrack } from '../../utils/telemetry';
 
 const VALID_CATEGORIES: ProductCategory[] = [
   'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'keyboard', 'mouse', 'headphones'
@@ -89,7 +87,7 @@ export function CatalogPage() {
       const specParam = searchParams.get('specs');
       if (!specParam) return {};
       try {
-        return JSON.parse(decodeURIComponent(specParam));
+        return JSON.parse(decodeURIComponent(specParam)) as Record<string, string | number | string[]>;
       } catch {
         return {};
       }
@@ -124,7 +122,7 @@ export function CatalogPage() {
 
   // Price bounds - computed WITHOUT price filter, using all other active filters
   const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>({ min: 0, max: 10000 });
-  const [priceBoundsLoading, setPriceBoundsLoading] = useState(false);
+  const [_priceBoundsLoading, setPriceBoundsLoading] = useState(false);
 
   // Fetch price bounds without price filter
   useEffect(() => {
@@ -132,14 +130,13 @@ export function CatalogPage() {
       setPriceBoundsLoading(true);
       try {
         // Build params with all filters EXCEPT price
-        const params: any = {};
+        const params: GetProductsParams = {};
         if (selectedCategory) params.category = selectedCategory;
         if (debouncedSearchQuery.trim()) params.search = debouncedSearchQuery.trim();
         if (selectedManufacturerIds.length > 0) params.manufacturerIds = selectedManufacturerIds;
-        if (minRating > 0) params.minRating = minRating;
+        if (minRating > 0) params.rating = minRating;
         if (selectedAvailability.length > 0) {
           params.inStock = selectedAvailability.includes('in_stock');
-          params.lowStock = selectedAvailability.includes('low_stock');
         }
         if (Object.keys(selectedSpecifications).length > 0) {
           params.specifications = selectedSpecifications;
@@ -148,7 +145,7 @@ export function CatalogPage() {
         params.pageSize = 10000; // Get enough products to find real bounds
 
         const result = await getProducts(params);
-        const prices = (result?.data ?? []).map((p: any) => p.price).filter((p: number) => p > 0);
+        const prices = (result?.data ?? []).map((p: ProductSummary) => p.price).filter((p: number) => p > 0);
         if (prices.length > 0) {
           setPriceBounds({
             min: Math.floor(Math.min(...prices)),
@@ -162,12 +159,19 @@ export function CatalogPage() {
       }
     };
 
-    fetchPriceBounds();
+    void fetchPriceBounds();
   }, [selectedCategory, debouncedSearchQuery, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, getProducts]);
   const computedPriceRange = priceBounds;
 
   const catalogScrollAnchorRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Listen for mobile filter apply event
+  useEffect(() => {
+    const handler = () => setMobileFilterOpen(false);
+    window.addEventListener('mobile-filter-apply', handler);
+    return () => window.removeEventListener('mobile-filter-apply', handler);
+  }, []);
 
   const buildApiParams = useCallback((): GetProductsParams => {
     const params: GetProductsParams = {
@@ -246,7 +250,7 @@ export function CatalogPage() {
   }, [buildApiParams, getProducts, page]);
 
   useEffect(() => {
-    fetchProducts();
+    void fetchProducts();
   }, [fetchProducts]);
 
   const updateUrl = useCallback(() => {
@@ -273,7 +277,7 @@ export function CatalogPage() {
       ? `/catalog/${selectedCategory}` 
       : '/catalog';
     
-    navigate(queryString ? `${path}?${queryString}` : path, { replace: true });
+    void navigate(queryString ? `${path}?${queryString}` : path, { replace: true });
   }, [selectedCategory, isCategoryLocked, searchQuery, page, viewMode, sortBy, priceRange, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications, navigate]);
 
   useEffect(() => {
@@ -332,7 +336,7 @@ export function CatalogPage() {
     return map;
   }, [selectedManufacturerIds]);
 
-  const chips = buildCatalogFilterChips({
+  const _chips = buildCatalogFilterChips({
     isCategoryLocked,
     selectedCategory,
     searchQuery,
@@ -378,7 +382,7 @@ export function CatalogPage() {
     : 'Все товары';
 
   return (
-    <div className="min-h-screen bg-[#0b0e11] flex flex-col">
+    <main id="main" className="min-h-screen bg-[#0b0e11] flex flex-col">
        {/* Catalog toolbar — title + search + sort */}
        <div className="bg-surface-card">
          <div className="max-w-[1440px] mx-auto px-4 md:px-8">
@@ -500,12 +504,20 @@ export function CatalogPage() {
           <div className="flex-1 min-w-0 mt-2">
             {/* Mobile Filter Overlay */}
             {mobileFilterOpen && (
-              <div className="fixed inset-0 bg-canvas-dark/92 backdrop-blur-[4px] z-[1000] lg:hidden" onClick={() => setMobileFilterOpen(false)}>
+              <div
+                className="fixed inset-0 bg-canvas-dark/92 backdrop-blur-[4px] z-[1000] lg:hidden"
+                role="button"
+                tabIndex={0}
+                onClick={() => setMobileFilterOpen(false)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMobileFilterOpen(false); } }}
+                aria-label="Закрыть фильтры"
+              >
                 <div 
-                  className="absolute left-0 top-0 bottom-0 w-[90vw] max-w-[380px] bg-surface-elevated overflow-y-auto"
+                  className="absolute left-0 top-0 bottom-0 w-[90vw] max-w-[380px] bg-surface-elevated flex flex-col"
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
-                  <div className="flex items-center justify-between p-5 pb-4 border-b border-hairline-dark">
+                  {/* Header — always visible */}
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-hairline-dark bg-surface-elevated flex-shrink-0">
                     <h2 className="text-sm font-bold text-body-text flex items-center gap-2">
                       Фильтры
                       {activeFilterCount > 0 && (
@@ -522,7 +534,8 @@ export function CatalogPage() {
                       <X size={20} />
                     </button>
                   </div>
-                  <div className="p-5">
+                  {/* Content — scrollable */}
+                  <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-text/20 [&::-webkit-scrollbar-thumb]:rounded-full">
                     <FilterSidebar
                           mobile
                           selectedCategory={selectedCategory}
@@ -548,13 +561,30 @@ export function CatalogPage() {
                           onViewModeChange={setViewMode}
                         />
                   </div>
+                  {/* Footer — sticky at bottom */}
+                  <div className="flex-shrink-0 border-t border-hairline-dark px-4 py-3 bg-surface-elevated">
+                    <button
+                      onClick={() => setMobileFilterOpen(false)}
+                      className="w-full h-11 bg-gold text-gold-ink text-sm font-semibold rounded-lg hover:bg-gold-active transition-colors flex items-center justify-center gap-2"
+                      type="button"
+                    >
+                      Показать {totalItems > 0 ? totalItems.toLocaleString('ru-RU') : '—'} товаров
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Search Modal */}
             {searchModalOpen && (
-              <div className="fixed inset-0 bg-canvas-dark/92 backdrop-blur-[4px] z-[1000] lg:hidden" onClick={() => setSearchModalOpen(false)}>
+              <div
+                className="fixed inset-0 bg-canvas-dark/92 backdrop-blur-[4px] z-[1000] lg:hidden"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSearchModalOpen(false)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSearchModalOpen(false); } }}
+                aria-label="Закрыть поиск"
+              >
                 <div 
                   className="absolute left-0 right-0 top-0 p-5 pb-4 bg-surface-elevated border-b border-hairline-dark flex items-center gap-3"
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
@@ -606,7 +636,7 @@ export function CatalogPage() {
                   <h3 className="text-lg font-bold text-body-text mb-2">Ошибка загрузки</h3>
                   <p className="text-sm text-muted-text max-w-xs mb-6">{error}</p>
                   <button 
-                    onClick={() => fetchProducts(page)}
+                    onClick={() => void fetchProducts(page)}
                     className="px-6 py-2.5 bg-gold text-gold-ink text-sm font-semibold rounded-lg hover:bg-gold-active transition-colors"
                   >
                     Повторить
@@ -683,6 +713,6 @@ export function CatalogPage() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

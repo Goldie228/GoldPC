@@ -22,7 +22,7 @@ import type { Product, ProductCategory, ProductImage, ProductSummary, Pagination
 import type { PCComponentType } from '../../../hooks';
 import type { PCBuilderSelectedState } from '../../../hooks/usePCBuilder';
 
-const noopSelect = () => {};
+const noopSelect = (_product: ProductSummary) => {};
 
 const LOCK_ICON_STYLE = { display: 'inline', marginRight: 4, verticalAlign: 'text-bottom' as const } satisfies React.CSSProperties;
 
@@ -77,7 +77,7 @@ function summaryToProduct(s: ProductSummary): Product {
 // ─── CardImageGallery: image with prev/next + hover zones + badges ────────
 
 function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }: {
-  product: Product;
+  product: ProductSummary;
   hasDiscount: boolean;
   discountPercent: number;
   outOfStock: boolean;
@@ -142,10 +142,10 @@ function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }:
 // ─── PickerProductCard ──────────────────────────────────
 
 interface PickerProductCardProps {
-  product: any;
+  product: ProductSummary;
   isSelected: boolean;
   isCompatible?: boolean;
-  onSelect: (product: Product) => void;
+  onSelect: (product: ProductSummary) => void;
   onOpenProduct: (slug: string) => void;
   slotType: PCComponentType;
   getDisplaySpecs: (type: PCComponentType, product: Product) => string[];
@@ -153,8 +153,8 @@ interface PickerProductCardProps {
 
 function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpenProduct, slotType, getDisplaySpecs }: PickerProductCardProps) {
   const specs = getDisplaySpecs(slotType, summaryToProduct(product)).slice(0, 3);
-  const hasDiscount = product.oldPrice !== undefined && product.oldPrice > product.price;
-  const discountPercent = hasDiscount ? Math.round((1 - product.price / product.oldPrice) * 100) : 0;
+   const hasDiscount = product.oldPrice !== undefined && product.oldPrice !== null && product.oldPrice > product.price;
+   const discountPercent = hasDiscount ? Math.round((1 - product.price / product.oldPrice!) * 100) : 0;
   const outOfStock = product.stock === 0 || !product.isActive;
 
   return (
@@ -170,12 +170,12 @@ function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpen
             {product.name}
           </button>
         </h4>
-        {product.slug && (
-          <button type="button" className="inline-flex items-center gap-[3px] p-0 m-0 bg-none border-none text-[0.64rem] text-[var(--fg-muted)] cursor-pointer transition-colors hover:text-[var(--accent)]" onClick={() => onOpenProduct(product.slug)} title="Открыть страницу товара">
-            <ExternalLink size={10} /> Подробнее
-          </button>
-        )}
-        {specs.length > 0 && <ul className="m-0 p-0 list-none flex flex-col gap-[4px]">{specs.map((s, i) => <li key={i} className="text-[var(--fg-muted)] text-[0.68rem] flex items-start gap-1.5"><span className="text-[var(--accent)] mt-[1px]">•</span>{s}</li>)}</ul>}
+         {product.slug && (
+           <button type="button" className="inline-flex items-center gap-[3px] p-0 m-0 bg-none border-none text-[0.64rem] text-[var(--fg-muted)] cursor-pointer transition-colors hover:text-[var(--accent)]" onClick={() => onOpenProduct(product.slug!)} title="Открыть страницу товара">
+             <ExternalLink size={10} /> Подробнее
+           </button>
+         )}
+         {specs.length > 0 && <ul className="m-0 p-0 list-none flex flex-col gap-[4px]">{specs.map((s, i) => <li key={i} className="text-[var(--fg-muted)] text-[0.68rem] flex items-start gap-1.5"><span className="text-[var(--accent)] mt-[1px]">•</span>{s}</li>)}</ul>}
         <div className="flex items-center justify-between gap-2 mt-auto">
           <div className="flex flex-col gap-0.5">
             <span className="text-[0.85rem] font-semibold text-[var(--accent)] whitespace-nowrap">{product.price.toLocaleString('ru-BY')} BYN</span>
@@ -215,11 +215,11 @@ function PickerProductCardCompact({ product, isSelected, isCompatible, onSelect,
             {product.name}
           </button>
         </h4>
-        {product.slug && (
-          <button type="button" className="inline-flex items-center gap-[3px] p-0 m-0 bg-none border-none text-[0.64rem] text-[var(--fg-muted)] cursor-pointer transition-colors hover:text-[var(--accent)]" onClick={() => onOpenProduct(product.slug)} title="Открыть страницу товара">
-            <ExternalLink size={10} /> Подробнее
-          </button>
-        )}
+         {product.slug && (
+           <button type="button" className="inline-flex items-center gap-[3px] p-0 m-0 bg-none border-none text-[0.64rem] text-[var(--fg-muted)] cursor-pointer transition-colors hover:text-[var(--accent)]" onClick={() => onOpenProduct(product.slug!)} title="Открыть страницу товара">
+             <ExternalLink size={10} /> Подробнее
+           </button>
+         )}
         {specs.length > 0 && <span className="text-[0.65rem] text-[var(--fg-dim)] whitespace-nowrap overflow-hidden text-ellipsis">{specs.join(' · ')}</span>}
       </div>
       <div className="flex flex-col items-flex-end gap-1.5 flex-shrink-0">
@@ -249,7 +249,7 @@ function ImageMagnifier({ images, initIdx, onClose }: { images: string[]; initId
   return (
     <Modal isOpen onClose={onClose} title="Изображение товара" size="large" showCloseButton>
       <div className="flex flex-col items-center gap-4 py-4 pb-6">
-        <img src={cur} alt="" className="max-w-[90%] max-h-[75vh] w-auto h-auto object-contain bg-white rounded-2xl p-6 box-border shadow-[0_4px_24px_var(--border-muted)]" />
+        <img src={cur} alt="Изображение товара" className="max-w-[90%] max-h-[75vh] w-auto h-auto object-contain bg-white rounded-2xl p-6 box-border shadow-[0_4px_24px_var(--border-muted)]" />
         {images.length > 1 && (
           <div className="flex items-center gap-4">
             <button type="button" className="w-10 h-10 rounded-full border border-[rgba(255,255,255,0.1)] bg-[rgba(0,0,0,0.6)] text-[var(--fg)] flex items-center justify-center cursor-pointer transition-all hover:bg-[rgba(0,0,0,0.85)] hover:border-[var(--accent)]"
@@ -445,7 +445,7 @@ export function ComponentPickerModal({
   // 🔹 Debounced fetch function - 300ms delay for user input
   const fetchProducts = useDebouncedCallback(() => {
     startTransition(() => {
-      refetch({ cancelRefetch: true });
+      void refetch({ cancelRefetch: true });
     });
   }, 300);
 
@@ -510,7 +510,7 @@ export function ComponentPickerModal({
     if (!highlightedId) return null;
     const fromList = productsWithCompatibility.find((p) => p.id === highlightedId);
     if (fromList) return summaryToProduct(fromList);
-    if (currentProduct?.id === highlightedId) return currentProduct as Product;
+    if (currentProduct?.id === highlightedId) return currentProduct;
     return null;
   }, [productsWithCompatibility, highlightedId, currentProduct]);
 
@@ -542,7 +542,7 @@ export function ComponentPickerModal({
   const handleConfirm = () => {
     if (!highlightedId) return;
     const p = fullPreview || previewProduct;
-    if (p) onConfirm(p as Product);
+    if (p) onConfirm(p);
   };
 
   const handleCategoryChange = useCallback((cat: ProductCategory | null) => {
@@ -567,7 +567,14 @@ export function ComponentPickerModal({
 
         {/* Mobile filter overlay — shares the SAME FilterSidebar via mobile prop */}
         {mobileFilterOpen && (
-          <div className="fixed inset-0 bg-[var(--border-muted)] z-[1100] md:hidden" onClick={() => setMobileFilterOpen(false)}>
+          <div
+            className="fixed inset-0 bg-[var(--border-muted)] z-[1100] md:hidden"
+            role="button"
+            tabIndex={0}
+            onClick={() => setMobileFilterOpen(false)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMobileFilterOpen(false); } }}
+            aria-label="Закрыть фильтры"
+          >
             <div className="absolute right-0 top-0 bottom-0 w-[90vw] max-w-[380px] bg-[var(--bg-card)] border-l border-[rgba(255,255,255,0.06)] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between p-5 pb-4 border-b border-[rgba(255,255,255,0.06)]">
                 <h3 className="m-0 text-sm font-bold text-[var(--fg-primary)] flex items-center gap-2">Фильтры</h3>
@@ -635,7 +642,7 @@ export function ComponentPickerModal({
                   <div key={p.id} className={p.isIncompatible ? "relative" : ''}>
                     <PickerProductCard product={p} isSelected={p.id === highlightedId}
                       isCompatible={!p.isIncompatible}
-                      onSelect={p.isIncompatible ? noopSelect : (prod: any) => setHighlightedId(prod.id)}
+                      onSelect={p.isIncompatible ? noopSelect : (prod) => setHighlightedId(prod.id)}
                       onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
                     {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
                       <div className="text-[0.7rem] text-[var(--error)] p-1.5 bg-[rgba(248,113,113,0.05)] rounded mt-1">
@@ -650,7 +657,7 @@ export function ComponentPickerModal({
                   <div key={p.id} className={p.isIncompatible ? "relative" : ''}>
                     <PickerProductCardCompact product={p} isSelected={p.id === highlightedId}
                       isCompatible={!p.isIncompatible}
-                      onSelect={p.isIncompatible ? noopSelect : (prod: any) => setHighlightedId(prod.id)}
+                      onSelect={p.isIncompatible ? noopSelect : (prod) => setHighlightedId(prod.id)}
                       onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
                     {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
                       <div className="text-[0.7rem] text-[var(--error)] p-1.5 bg-[rgba(248,113,113,0.05)] rounded mt-1">
@@ -670,7 +677,7 @@ export function ComponentPickerModal({
               )}
             </div>
 
-            {error && <ApiErrorBanner message="Не удалось загрузить список." onRetry={() => refetch()} />}
+            {error && <ApiErrorBanner message="Не удалось загрузить список." onRetry={() => void refetch()} />}
 
             {!error && (
               <>
