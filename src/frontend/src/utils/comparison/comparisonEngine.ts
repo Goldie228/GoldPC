@@ -36,7 +36,7 @@ function extractNumeric(value: unknown): number | null {
   const source = preprocessForNumericExtraction(String(value));
   if (source === '') return null;
   const strict = source.match(/^[+-]?\d+(?:[.,]\d+)?/);
-  if (strict) {
+  if (strict != null) {
     const parsed = Number(strict[0].replace(',', '.'));
     return Number.isNaN(parsed) ? null : parsed;
   }
@@ -161,22 +161,22 @@ export function parseStorageCapacityToGb(value: unknown): number | null {
   const s = raw.toLowerCase().replace(/[\s\u00a0\u202f]+/g, ' ');
 
   const tb = s.match(/^([0-9]+(?:[.,][0-9]+)?)\s*(?:тб|tb)(?:\s|$)/i);
-  if (tb) {
+  if (tb != null) {
     const n = Number(tb[1].replace(',', '.'));
     return Number.isNaN(n) ? null : n * 1000;
   }
-  const gb = s.match(/^([0-9]+(?:[.,][0-9]+)?)\s*(?:гб|gb|гиг)(?:\s|$)/i);
-  if (gb) {
+  const gb = s.match(/^([0-9]+(?:[.,][0-9]+)?)\s*(?:гб|gb)(?:\s|$)/i);
+  if (gb != null) {
     const n = Number(gb[1].replace(',', '.'));
     return Number.isNaN(n) ? null : n;
   }
   const mb = s.match(/^([0-9]+(?:[.,][0-9]+)?)\s*(?:мб|mb)(?:\s|$)/i);
-  if (mb) {
+  if (mb != null) {
     const n = Number(mb[1].replace(',', '.'));
     return Number.isNaN(n) ? null : n / 1000;
   }
-  const bare = s.match(/^([0-9]+(?:[.,][0-9]+)?)$/);
-  if (bare) {
+  const bare = s.match(/^([0-9]+(?:[.,][0-9]+)?)\s*$/);
+  if (bare != null) {
     const n = Number(bare[1].replace(',', '.'));
     return Number.isNaN(n) ? null : n;
   }
