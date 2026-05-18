@@ -30,7 +30,7 @@ export function AccountProfile() {
   });
 
   useEffect(() => {
-    if (user) {
+    if (user != null) {
       setFormData({
         firstName: user.firstName || '',
         lastName: user.lastName || '',
@@ -84,7 +84,7 @@ export function AccountProfile() {
         lastName: formData.lastName,
         phone: formData.phone,
       });
-      if (updatedUser) {
+      if (updatedUser != null) {
         setUser(updatedUser);
         showToast('Данные профиля сохранены', 'success');
       }
@@ -135,7 +135,7 @@ export function AccountProfile() {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={handleAvatarUpload}
+              onChange={(e) => void handleAvatarUpload(e)}
             />
             <div>
               <div className="font-semibold text-[#eaecef]">Аватар профиля</div>
@@ -152,7 +152,7 @@ export function AccountProfile() {
             <h2 className="text-lg font-semibold text-[#eaecef]">Личные данные</h2>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={(e) => void handleSubmit(e)}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-[#707a8a] mb-1.5" htmlFor="firstName">

@@ -13,9 +13,12 @@ import {
 import {
   ComponentSlot,
   BuildSummaryPanel,
-  PdfExportModal,
   ComponentPickerModal,
 } from '../../components/pc-builder';
+import { lazy, Suspense } from 'react';
+const PdfExportModal = lazy(() =>
+  import('../../components/pc-builder/pdf-export-modal/PdfExportModal').then(m => ({ default: m.PdfExportModal }))
+);
 import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
 import {
   usePCBuilder,
@@ -289,10 +292,10 @@ function buildSlotRows(
   }
 
   // cooling (single)
-  rows.push({ kind: 'single', key: 'cooling' as PCComponentType as PCComponentType, label: 'Охлаждение' as const, anim: anim++ });
+  rows.push({ kind: 'single', key: 'cooling' as PCComponentType, label: 'Охлаждение' as const, anim: anim++ });
 
   // gpu (single)
-  rows.push({ kind: 'single', key: 'gpu' as PCComponentType as PCComponentType, label: 'Видеокарта' as const, anim: anim++ });
+  rows.push({ kind: 'single', key: 'gpu' as PCComponentType, label: 'Видеокарта' as const, anim: anim++ });
 
   // psu, case (single slots)
   for (const s of [
@@ -410,7 +413,7 @@ export function PCBuilderPage() {
         duplicateModule('ram');
       } else if (slotType === 'storage' && selectedComponents.storage.length > 0) {
         const product = selectedComponents.storage[rowIndex]?.product;
-        if (product) selectComponent(slotType, product);
+        if (product != null) selectComponent(slotType, product);
       } else if (slotType === 'fan' && selectedComponents.fan.length > 0) {
         duplicateModule('fan');
       }
@@ -504,7 +507,7 @@ export function PCBuilderPage() {
     }
 
     return result;
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- getDisplaySpecs is pure, no external deps needed
+   
   }, []);
 
   const psuWattageRaw = selectedComponents.psu?.product.specifications?.wattage;
@@ -520,7 +523,7 @@ export function PCBuilderPage() {
 
   const handleCheckout = () => {
     addToCart();
-    navigate('/cart');
+    void navigate('/cart');
   };
 
   const handleAddToCart = () => {
@@ -711,17 +714,21 @@ export function PCBuilderPage() {
         />
       )}
 
-      <PdfExportModal
-        isOpen={pdfModalOpen}
-        onClose={() => setPdfModalOpen(false)}
-        selectedComponents={selectedComponents}
-        totalPrice={totalPrice}
-        powerConsumption={powerConsumption}
-        recommendedPsu={recommendedPsu}
-        isCompatible={isCompatible}
-        compatibilityErrors={compatibility.errors}
-        compatibilityWarnings={compatibility.warnings}
-      />
+      {pdfModalOpen && (
+        <Suspense fallback={null}>
+          <PdfExportModal
+            isOpen={pdfModalOpen}
+            onClose={() => setPdfModalOpen(false)}
+            selectedComponents={selectedComponents}
+            totalPrice={totalPrice}
+            powerConsumption={powerConsumption}
+            recommendedPsu={recommendedPsu}
+            isCompatible={isCompatible}
+            compatibilityErrors={compatibility.errors}
+            compatibilityWarnings={compatibility.warnings}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

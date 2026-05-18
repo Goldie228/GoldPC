@@ -4,7 +4,7 @@ import { Heart, GitCompareArrows, ShoppingCart, Bell, Plus, Minus, Star, Chevron
 import { useQuery } from '@tanstack/react-query';
 import { getProductImageUrl } from '../../utils/image';
 import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
-import type { ProductSummary } from '../../api/types';
+import type { ProductSummary, Product } from '../../api/types';
 import { BynPrice } from '../ui/BynPrice';
 import { useWishlist } from '../../hooks/useWishlist';
 import { useComparison } from '../../hooks/useComparison';
@@ -52,7 +52,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
   const isOutOfStock = product.stock === 0;
   const hasDiscount = product.oldPrice && product.oldPrice > product.price;
   const discountPercent = hasDiscount ? Math.round((1 - product.price / product.oldPrice!) * 100) : 0;
-  const isHit = (product as any).isFeatured;
+  const isHit = (product as Product).isFeatured;
 
   const ratingValue = typeof product.rating === 'number' ? product.rating : product.rating?.average ?? 0;
   const reviewCount = product.reviewCount ?? 0;
@@ -128,8 +128,8 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           setHovered(false);
           setCurrentImageIndex(0);
         }}
-        className={`flex gap-4 p-4 bg-surface-card rounded-xl overflow-hidden ${
-          hovered ? 'bg-surface-elevated ring-1 ring-hairline-dark' : ''
+        className={`flex gap-6 p-6 bg-surface-card rounded-xl overflow-hidden ${
+          hovered ? 'bg-surface-elevated ring-1 ring-gold/20' : ''
         }`}
       >
         {/* Image - smaller for list view */}
@@ -163,10 +163,10 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
         {/* Info */}
         <div className="flex-1 flex flex-col justify-between">
           <div>
-            <span className="text-[11px] text-muted-text font-medium uppercase tracking-wider truncate">
+            <span className="text-xs text-muted-strong font-medium uppercase tracking-wider truncate">
               {getDisplayManufacturerName(product.manufacturer?.name) || product.brand || ''}
             </span>
-            <h3 className="text-sm font-semibold leading-snug text-on-dark hover:text-gold transition-colors">
+            <h3 className="text-base font-semibold leading-snug text-on-dark hover:text-gold transition-colors">
               <Link to={`/product/${product.slug || product.id}`}>
                 {product.name}
               </Link>
@@ -178,37 +178,37 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
                 ))}
               </div>
               <span className="font-tabular text-xs text-body-text font-medium">{ratingValue.toFixed(1)}</span>
-              <span className="text-[11px] text-muted-text">({reviewCount.toLocaleString('ru-BY')})</span>
+              <span className="text-xs text-muted-text">({reviewCount.toLocaleString('ru-BY')})</span>
             </div>
           </div>
           <div className="flex items-baseline gap-2">
             <BynPrice
               amount={product.price}
               size="lg"
-              className={hasDiscount ? 'text-price-drop' : isOutOfStock ? 'text-muted-text' : 'text-on-dark'}
+              className={`font-tabular ${hasDiscount ? 'text-price-drop' : isOutOfStock ? 'text-muted-text' : 'text-on-dark'}`}
             />
             {hasDiscount && (
               <BynPrice
                 amount={product.oldPrice!}
                 size="sm"
-                className="text-muted-text line-through"
+                className="font-tabular text-muted-text line-through"
               />
             )}
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-2 w-full">
+        <div className="flex flex-col gap-2 self-center">
           {isOutOfStock ? (
-            <button className="w-full h-10 px-4 bg-surface-elevated text-muted-text text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 cursor-not-allowed">
+            <button className="h-9 px-5 bg-surface-elevated text-muted-text text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 cursor-not-allowed">
               <Bell size={14} />
               Уведомить
             </button>
           ) : inCart ? (
-            <div className="flex items-center justify-between w-full h-10 bg-surface-card border border-hairline rounded-sm px-1">
+            <div className="flex items-center justify-between h-9 bg-surface-card border border-hairline rounded-sm px-1">
               <button
                 onClick={(e) => handleUpdateQty(e, -1)}
-                className="w-8 h-8 flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all rounded-sm"
+                className="w-7 h-7 flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all rounded-sm"
                 aria-label="Уменьшить количество"
               >
                 <Minus size={14} />
@@ -218,7 +218,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
               </span>
               <button
                 onClick={(e) => handleUpdateQty(e, 1)}
-                className="w-8 h-8 flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all disabled:opacity-30 rounded-sm"
+                className="w-7 h-7 flex items-center justify-center text-muted-text hover:text-on-dark hover:bg-surface-elevated transition-all disabled:opacity-30 rounded-sm"
                 disabled={quantityInCart >= product.stock}
                 aria-label="Увеличить количество"
               >
@@ -228,7 +228,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           ) : (
             <button
               onClick={handleAddToCart}
-              className="w-full h-10 px-4 bg-price-drop text-on-dark text-sm font-semibold rounded-sm flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-[0.98]"
+              className="h-9 px-5 bg-price-drop text-on-dark text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 hover:brightness-110 transition-all active:scale-[0.98]"
             >
               <ShoppingCart size={14} />
               В корзину

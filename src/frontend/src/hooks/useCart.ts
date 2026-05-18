@@ -30,7 +30,7 @@ export function useCart() {
 
   const changeQuantity = (productId: string, delta: number) => {
     const item = store.items.find((i) => i.productId === productId);
-    if (item) {
+    if (item != null) {
       store.updateQuantity(productId, item.quantity + delta);
     }
   };

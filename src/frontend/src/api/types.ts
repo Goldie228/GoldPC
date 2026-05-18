@@ -132,9 +132,9 @@ export interface UpdateReviewRequest {
   cons?: string;
 }
 
-export interface ProductReviewsResponse extends PagedResponse<ProductReview> {}
+export type ProductReviewsResponse = PagedResponse<ProductReview>;
 
-export interface ProductListResponse extends PagedResponse<ProductSummary> {}
+export type ProductListResponse = PagedResponse<ProductSummary>;
 
 // === Параметры запроса продуктов ===
 export interface GetProductsParams {
@@ -308,7 +308,7 @@ export interface Service {
   updatedAt?: string;
 }
 
-export interface ServiceListResponse extends PagedResponse<Service> {}
+export type ServiceListResponse = PagedResponse<Service>;
 
 export interface GetServicesParams {
   page?: number;

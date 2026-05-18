@@ -273,7 +273,7 @@ export function HomePage() {
   const categories = useMemo(() => (categoriesData ?? []).filter((c) => (c.productCount ?? 0) > 0), [categoriesData]);
 
   return (
-    <div className="min-h-screen bg-[#0b0e11]">
+    <main id="main" className="min-h-screen bg-[#0b0e11]">
       {/* ════════════ 1. HERO BAND ════════════ */}
       <section className="home-hero" aria-label="Главный баннер">
         <HeroBackground />
@@ -334,7 +334,7 @@ export function HomePage() {
           </div>
           <div className="home-categories__grid">
             {categoriesLoading
-              ? [...Array(8)].map((_, i) => (
+              ? Array.from({ length: 8 }).map((_, i) => (
                   <div key={`cat-skel-${i}`} className="home-categories__link animate-pulse">
                     <div className="home-categories__icon-wrap">
                       <div className="w-7 h-7 bg-surface-elevated rounded" />
@@ -343,7 +343,7 @@ export function HomePage() {
                   </div>
                 ))
               : categories.map((cat, i) => {
-                  const frontendId = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug) as ProductCategory;
+                  const frontendId = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug);
                   const IconComponent = CATEGORY_ICONS[frontendId] ?? Cpu;
                   return (
                     <motion.div
@@ -402,7 +402,7 @@ export function HomePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {isLoading &&
-              [...Array(4)].map((_, i) => (
+              Array.from({ length: 4 }).map((_, i) => (
                 <div key={`pop-skel-${i}`}>
                   <ProductCardSkeleton />
                 </div>
@@ -456,6 +456,6 @@ export function HomePage() {
           </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

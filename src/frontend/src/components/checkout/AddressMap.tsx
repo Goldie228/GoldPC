@@ -91,16 +91,16 @@ export function AddressMap({ onAddressSelect, onPickupPointSelect, mode, city }:
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=ru`
       );
-      const data = await response.json();
+      const data = await response.json() as Record<string, unknown>;
 
-      if (data.display_name) {
-        const address = data.address;
+      if (typeof data.display_name === 'string') {
+        const address = (data.address ?? {}) as Record<string, unknown>;
         const formattedAddress = [
           address.road || address.suburb,
           address.house_number,
-        ].filter(Boolean).join(', ');
+        ].filter((v): v is string => typeof v === 'string').join(', ');
 
-        onAddressSelect?.(formattedAddress || data.display_name, [lat, lng]);
+        onAddressSelect?.(formattedAddress || (data.display_name), [lat, lng]);
       }
     } catch (error) {
       console.error('Ошибка геокодирования:', error);
@@ -126,7 +126,7 @@ export function AddressMap({ onAddressSelect, onPickupPointSelect, mode, city }:
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {mode === 'delivery' && <MapClickHandler onMapClick={handleMapClick} />}
+        {mode === 'delivery' && <MapClickHandler onMapClick={(lat, lng) => void handleMapClick(lat, lng)} />}
 
         {mode === 'delivery' && selectedPosition && (
           <Marker position={selectedPosition}>

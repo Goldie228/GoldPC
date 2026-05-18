@@ -138,7 +138,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
 
   // === Combined Compatibility (API + local) ===
   const compatibility: CompatibilityResult = useMemo(() => {
-    if (apiResult) {
+    if (apiResult != null) {
       const apiIssues = apiResult.result;
       const errors: string[] = apiIssues.issues
         .filter((i) => i.severity === 'Error')

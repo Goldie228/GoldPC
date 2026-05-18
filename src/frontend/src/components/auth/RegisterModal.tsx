@@ -109,14 +109,14 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     return '';
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const _handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setEmail(value);
     const err = validateEmail(value);
     setFieldErrors(prev => ({ ...prev, email: err }));
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const _handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setPassword(value);
     const err = validatePassword(value);
@@ -129,7 +129,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     }
   };
 
-  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const _handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setConfirmPassword(value);
     const err = validateConfirmPassword(value);
@@ -230,7 +230,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         onClick: handleSwitchToLogin
       }}
     >
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
         {error && (
           <div className="p-3 bg-price-rise/10 border border-price-rise/30 text-price-rise text-sm rounded-md" role="alert">
             {error}

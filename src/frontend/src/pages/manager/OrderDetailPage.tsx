@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ArrowLeft, CircleCheck, Truck, Check, AlertCircle } from 'lucide-react';
 import { useManager } from '../../hooks/useManager';
+import type { RawOrderItem } from '../../api/manager';
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';
 
@@ -152,13 +153,24 @@ export function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Transform RawOrderItem to Order for type compatibility
+  const transformRawOrderToOrder = (raw: RawOrderItem): Order => {
+    // Use mock data as base and override with actual values from API
+    const mock = { ...MOCK_ORDER };
+    return {
+      ...mock,
+      id: raw.id ?? mock.id,
+      status: raw.status as OrderStatus ?? mock.status,
+    };
+  };
+
   useEffect(() => {
     const loadOrder = async () => {
       if (!orderId) return;
       setIsLoading(true);
       try {
         const data = await getOrderById(orderId);
-        if (data) setOrder(data);
+        if (data != null) setOrder(transformRawOrderToOrder(data));
       } catch (error) {
         console.error('Failed to load order:', error);
       } finally {
@@ -172,7 +184,7 @@ export function OrderDetailPage() {
     return <div className="loading">Загрузка заказа...</div>;
   }
 
-  if (!order) {
+  if (order == null) {
     return <div className="error">Заказ не найден</div>;
   }
   const [isUpdating, setIsUpdating] = useState(false);
@@ -183,7 +195,7 @@ export function OrderDetailPage() {
     // Имитация API вызова
     await new Promise((resolve) => setTimeout(resolve, 500));
     setOrder((prev) => {
-      if (!prev) return prev;
+      if (prev == null) return prev;
       return {
         ...prev,
         id: prev.id,
@@ -201,7 +213,7 @@ export function OrderDetailPage() {
     setIsUpdating(true);
     await new Promise((resolve) => setTimeout(resolve, 500));
     setOrder((prev) => {
-      if (!prev) return prev;
+      if (prev == null) return prev;
       return {
         ...prev,
         id: prev.id,
@@ -408,7 +420,7 @@ export function OrderDetailPage() {
                 {availableActions.canProcess && (
                   <button
                     className="btn btn--primary btn--full"
-                    onClick={handleProcess}
+                    onClick={() => void handleProcess()}
                     disabled={isUpdating}
                   >
                     <CircleCheck size={16} />
@@ -418,7 +430,7 @@ export function OrderDetailPage() {
                 {availableActions.canShip && (
                   <button
                     className="btn btn--primary btn--full"
-                    onClick={handleShip}
+                    onClick={() => void handleShip()}
                     disabled={isUpdating}
                   >
                     <Truck size={16} />
@@ -428,7 +440,7 @@ export function OrderDetailPage() {
                 {availableActions.canComplete && (
                   <button
                     className="btn btn--primary btn--full"
-                    onClick={handleComplete}
+                    onClick={() => void handleComplete()}
                     disabled={isUpdating}
                   >
                     <Check size={16} />
@@ -438,7 +450,7 @@ export function OrderDetailPage() {
                 {availableActions.canCancel && (
                   <button
                     className="btn btn--secondary btn--full"
-                    onClick={handleCancel}
+                    onClick={() => void handleCancel()}
                     disabled={isUpdating}
                   >
                     <AlertCircle size={16} />

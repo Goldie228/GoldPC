@@ -16,11 +16,11 @@ export function runRAMCompatibilityCheck(
   issues: CompatibilityIssue[],
   warnings: CompatibilityWarning[]
 ): void {
-  if (ram && motherboard) {
+  if (ram != null && motherboard != null) {
     const i = checkRAM(ram, motherboard);
-    if (i) {
+    if (i != null) {
       if (i.severity === 'Error') issues.push(i);
-      else warnings.push({ severity: i.severity as 'Warning'|'Info', component: i.component1, message: i.message, suggestion: i.suggestion });
+      else warnings.push({ severity: i.severity, component: i.component1, message: i.message, suggestion: i.suggestion });
     }
   }
 }
@@ -31,13 +31,13 @@ export function runCPUMotherboardCompatibilityCheck(
   issues: CompatibilityIssue[],
   warnings: CompatibilityWarning[]
 ): void {
-  if (cpu && motherboard) {
+  if (cpu != null && motherboard != null) {
     const i = checkCPUSocket(cpu, motherboard);
-    if (i) issues.push(i);
+    if (i != null) issues.push(i);
     const cpuSocket = extractSocket(cpu.specifications);
     const chipset = extractChipset(motherboard.specifications);
     const biosW = checkBiosWarning(cpuSocket, chipset);
-    if (biosW) warnings.push(biosW);
+    if (biosW != null) warnings.push(biosW);
   }
 }
 
@@ -48,8 +48,8 @@ export function runCoolerCompatibilityCheck(
   issues: CompatibilityIssue[],
   warnings: CompatibilityWarning[]
 ): void {
-  if (cooling && cpu) { const w = checkCooler(cooling, cpu); if (w) warnings.push(w); }
-  if (cooling && chassis) { const i = checkCoolerHeightCheck(cooling, chassis); if (i) issues.push(i); }
+  if (cooling != null && cpu != null) { const w = checkCooler(cooling, cpu); if (w != null) warnings.push(w); }
+  if (cooling != null && chassis != null) { const i = checkCoolerHeightCheck(cooling, chassis); if (i != null) issues.push(i); }
 }
 
 export function runPSUCompatibilityCheck(
@@ -60,7 +60,7 @@ export function runPSUCompatibilityCheck(
   _issues: CompatibilityIssue[],
   warnings: CompatibilityWarning[]
 ): void {
-  if (psu) { const w = checkPSU(psu, cpu, gpu, chassis); if (w && w.severity !== 'Error') warnings.push(w as unknown as CompatibilityWarning); }
+  if (psu != null) { const w = checkPSU(psu, cpu, gpu, chassis); if (w != null && w.severity !== 'Error') warnings.push(w as unknown as CompatibilityWarning); }
 }
 
 export function runCaseCompatibilityCheck(
@@ -69,7 +69,7 @@ export function runCaseCompatibilityCheck(
   issues: CompatibilityIssue[],
   _warnings: CompatibilityWarning[]
 ): void {
-  if (chassis && motherboard) { const i = checkCaseFF(chassis, motherboard); if (i) issues.push(i); }
+  if (chassis != null && motherboard != null) { const i = checkCaseFF(chassis, motherboard); if (i != null) issues.push(i); }
 }
 
 export function runGPUCompatibilityCheck(
@@ -78,7 +78,7 @@ export function runGPUCompatibilityCheck(
   _issues: CompatibilityIssue[],
   warnings: CompatibilityWarning[]
 ): void {
-  if (chassis && gpu) { const w = checkGPULen(chassis, gpu); if (w) warnings.push(w); }
+  if (chassis != null && gpu != null) { const w = checkGPULen(chassis, gpu); if (w != null) warnings.push(w); }
 }
 
 export function runIntegratedGraphicsCheck(
@@ -87,7 +87,7 @@ export function runIntegratedGraphicsCheck(
   _issues: CompatibilityIssue[],
   warnings: CompatibilityWarning[]
 ): void {
-  if (cpu) { const w = checkIG(cpu, gpu); if (w) warnings.push(w); }
+  if (cpu != null) { const w = checkIG(cpu, gpu); if (w != null) warnings.push(w); }
 }
 
 export function runBottleneckAnalysis(
@@ -96,7 +96,7 @@ export function runBottleneckAnalysis(
   warnings: CompatibilityWarning[]
 ): number {
   let bottleneckPct = 0;
-  if (cpu && gpu) {
+  if (cpu != null && gpu != null) {
     const cpuScore = extractPerformanceScore(cpu.specifications);
     const gpuScore = extractPerformanceScore(gpu.specifications);
     bottleneckPct = calculateBottleneck(cpuScore, gpuScore);
@@ -111,7 +111,7 @@ export function runRAMCapacityWarning(
   _motherboard: Product | undefined,
   warnings: CompatibilityWarning[]
 ): void {
-  if (ram && extractRAMCapacity(ram.specifications) > 0 && extractRAMCapacity(ram.specifications) < 16) {
+  if (ram != null && extractRAMCapacity(ram.specifications) > 0 && extractRAMCapacity(ram.specifications) < 16) {
     warnings.push({ severity: 'Info', component: ram.name, message: `${extractRAMCapacity(ram.specifications)}GB RAM may be insufficient for modern tasks`, suggestion: 'Consider 16GB+' });
   }
 }
@@ -134,7 +134,7 @@ export function checkCompatibility(components: ComponentMap): CompatibilityCheck
   runRAMCapacityWarning(ram ?? undefined, motherboard ?? undefined, warnings);
 
   const storageProducts = Object.values(components).filter(c => c?.category === 'storage');
-  if (motherboard) {
+  if (motherboard != null) {
     const mbM2Slots = extractM2Slots(motherboard.specifications);
     const mbSataPorts = extractSataPorts(motherboard.specifications);
 

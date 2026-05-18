@@ -62,7 +62,7 @@ export function selectComponent(
     return next;
   }
 
-  (next as PCBuilderSelectedState)[type as keyof PCBuilderSelectedState] = sc as unknown as never;
+  (next)[type as keyof PCBuilderSelectedState] = sc as unknown as never;
   return next;
 }
 
@@ -73,7 +73,7 @@ export function duplicateModule(
   const arr = prevState[type];
   if (arr.length === 0 || arr.length >= MAX_RAM_MODULES) return prevState;
   const first = arr[0];
-  if (!first) return prevState;
+  if (first == null) return prevState;
   return { ...prevState, [type]: [...arr, { ...first }] };
 }
 
@@ -151,8 +151,8 @@ export function addToCart(
   ];
   for (const key of keys) {
     const c = s[key];
-    if (c && typeof c === 'object' && 'product' in c) {
-      addItemToCart((c as SelectedComponent).product, 1);
+    if (c != null && typeof c === 'object' && 'product' in c) {
+      addItemToCart((c).product, 1);
     }
   }
   for (const r of s.ram) addItemToCart(r.product, 1);

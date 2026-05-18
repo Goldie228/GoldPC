@@ -70,7 +70,7 @@ export function AccountOrders() {
     setLoading(true);
     getMyOrders(page, pageSize, activeFilter === 'all' ? undefined : activeFilter)
       .then((result) => {
-        if (result) {
+        if (result != null) {
           setOrders(result.items);
         }
       })
@@ -125,13 +125,13 @@ export function AccountOrders() {
   useEffect(() => {
     if (!showDetailsModal) return;
 
-    const interval = setInterval(refreshOrderStatus, 30000);
+    const interval = setInterval(() => { void refreshOrderStatus(); }, 30000);
     return () => clearInterval(interval);
   }, [showDetailsModal, refreshOrderStatus]);
 
   const handleRepeatOrder = async (orderId: string) => {
     showToast(`Товары из заказа ${orderId} добавлены в корзину`, 'success');
-    navigate('/cart');
+    void navigate('/cart');
   };
 
   const ordersFormatted = orders.map(order => ({
@@ -240,7 +240,7 @@ export function AccountOrders() {
                           className="text-[#FCD535] text-sm font-medium hover:underline"
                           onClick={() => {
                             const fullOrder = orders.find(o => o.orderNumber === order.id);
-                            if (fullOrder) handleViewDetails(fullOrder);
+                            if (fullOrder) void handleViewDetails(fullOrder);
                           }}
                         >
                           #{order.id}
@@ -276,14 +276,14 @@ export function AccountOrders() {
 <button
                              className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#2b3139] text-[#707a8a] hover:text-[#FCD535] hover:border-[#FCD535]/40 border border-[#2b3139] transition-colors"
                              aria-label="Отследить"
-                             onClick={() => navigate(`/orders/${order.id}/tracking`)}
+                              onClick={() => void navigate(`/orders/${order.id}/tracking`)}
                            >
                             <Info size={16} />
                           </button>
                           <button
                             className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#2b3139] text-[#707a8a] hover:text-[#FCD535] hover:border-[#FCD535]/40 border border-[#2b3139] transition-colors"
                             aria-label="Повторить"
-                            onClick={() => handleRepeatOrder(order.id)}
+                            onClick={() => void handleRepeatOrder(order.id)}
                           >
                             <RefreshCw size={16} />
                           </button>

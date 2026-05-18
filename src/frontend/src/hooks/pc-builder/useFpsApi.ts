@@ -40,29 +40,31 @@ export function useFpsApi(components: PCBuilderSelectedState): UseFpsApiResult {
 
     const requestId = ++requestIdRef.current;
 
-    timerRef.current = setTimeout(async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const result = await calculateFpsApi({
-          cpuId,
-          gpuId,
-          ramCapacity,
-          ramFrequency,
-        });
-        // Ignore stale responses from outdated requests
-        if (requestId !== requestIdRef.current) return;
-        setFpsData(result);
-      } catch (e) {
-        // Ignore errors from outdated requests
-        if (requestId !== requestIdRef.current) return;
-        setError(e instanceof Error ? e : new Error('FPS API error'));
-        setFpsData(null);
-      } finally {
-        if (requestId === requestIdRef.current) {
-          setIsLoading(false);
+    timerRef.current = setTimeout(() => {
+      void (async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+          const result = await calculateFpsApi({
+            cpuId,
+            gpuId,
+            ramCapacity,
+            ramFrequency,
+          });
+          // Ignore stale responses from outdated requests
+          if (requestId !== requestIdRef.current) return;
+          setFpsData(result);
+        } catch (e) {
+          // Ignore errors from outdated requests
+          if (requestId !== requestIdRef.current) return;
+          setError(e instanceof Error ? e : new Error('FPS API error'));
+          setFpsData(null);
+        } finally {
+          if (requestId === requestIdRef.current) {
+            setIsLoading(false);
+          }
         }
-      }
+      })();
     }, FPS_DEBOUNCE_MS);
 
     return () => {

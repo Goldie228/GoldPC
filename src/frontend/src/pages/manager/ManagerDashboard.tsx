@@ -62,7 +62,7 @@ export function ManagerDashboard() {
       setIsLoading(true);
       try {
         const data = await getDashboardData();
-        if (data) {
+        if (data != null) {
           setWidgets(data.widgets);
           setLowStock(data.lowStock);
           setPendingTickets(data.pendingTickets);

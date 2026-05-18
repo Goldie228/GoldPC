@@ -5,6 +5,8 @@ import { useOrders } from '../../hooks/useOrders';
 import { useServiceTickets } from '../../hooks/useServiceTickets';
 import { useAuthStore } from '../../store/authStore';
 import { TICKET_STATUSES } from '../../api/services';
+import type { Order } from '../../api/orders';
+import type { ServiceTicket } from '../../api/services';
 
 /**
  * AccountOverview - Main dashboard page for account
@@ -19,17 +21,17 @@ export function AccountOverview() {
   const { getMyOrders, loading: ordersLoading } = useOrders();
   const { getMyTickets, loading: ticketsLoading } = useServiceTickets();
 
-  const [orders, setOrders] = useState<any[]>([]);
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [tickets, setTickets] = useState<ServiceTicket[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.allSettled([
+    void Promise.allSettled([
       getMyOrders(1, 5).then((result) => {
-        if (result) setOrders(result.items);
+        if (result != null) setOrders(result.items);
       }),
       getMyTickets(1, 5).then((result) => {
-        if (result) setTickets(result.items);
+        if (result != null) setTickets(result.items);
       }),
     ]).finally(() => setLoading(false));
   }, [getMyOrders, getMyTickets]);

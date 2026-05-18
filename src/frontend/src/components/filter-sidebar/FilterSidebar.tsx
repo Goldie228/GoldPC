@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   ChevronDown, ChevronUp, Search, RotateCcw,
   Tag, Star, Package, Grid3X3, DollarSign, Check,
-  ArrowUpDown, LayoutGrid, List, Table2, SlidersHorizontal,
+  ArrowUpDown, SlidersHorizontal,
 } from 'lucide-react';
 import { catalogApi } from '../../api/catalog';
 import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
@@ -127,18 +127,22 @@ function FilterGroup({
   icon,
   defaultOpen = true,
   children,
+  mobile = false,
 }: {
   title: string;
   icon?: React.ReactNode;
   defaultOpen?: boolean;
   children: React.ReactNode;
+  mobile?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-hairline-dark last:border-b-0">
+    <div className={`last:border-b-0 ${mobile ? 'border-b border-hairline-dark/50' : 'border-b border-hairline-dark'}`}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-3 text-xs font-semibold text-on-dark hover:text-gold transition-colors group"
+        className={`w-full flex items-center justify-between transition-colors group ${
+          mobile ? 'py-2.5 text-xs' : 'py-3 text-xs'
+        } font-semibold text-on-dark hover:text-gold`}
         aria-expanded={open}
         type="button"
       >
@@ -151,7 +155,7 @@ function FilterGroup({
         </span>
       </button>
       <div className={`transition-all duration-200 ${open ? 'max-h-[600px] opacity-100 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-        <div className="pb-4 pt-1">{children}</div>
+        <div className={`${mobile ? 'pb-3 pt-0.5' : 'pb-4 pt-1'}`}>{children}</div>
       </div>
     </div>
   );
@@ -256,12 +260,13 @@ export function FilterSidebar({
   totalItems: _totalItems = 0,
   sortBy,
   onSortChange,
-  viewMode,
-  onViewModeChange,
+  viewMode: _viewMode,
+  onViewModeChange: _onViewModeChange,
 }: FilterSidebarProps) {
   // === Local state ===
   const [mfrSearch, setMfrSearch] = useState('');
   const [showAllMfrs, setShowAllMfrs] = useState(false);
+  const [showAllCats, setShowAllCats] = useState(false);
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
   const [_categories, setCategories] = useState<Category[]>([]);
   const [filterFacets, setFilterFacets] = useState<FilterFacetAttribute[]>([]);
@@ -293,6 +298,7 @@ export function FilterSidebar({
   // === Reset local spec ranges when category changes or specs are cleared ===
   useEffect(() => {
     setLocalSpecRanges({});
+    setShowAllCats(false);
   }, [selectedCategory]);
 
   useEffect(() => {
@@ -312,7 +318,7 @@ export function FilterSidebar({
         const counts: Record<string, number> = {};
         data?.forEach((cat) => {
           if (cat?.slug != null) {
-            const key = (BACKEND_SLUG_MAP[cat.slug] ?? cat.slug) as ProductCategory;
+            const key = (BACKEND_SLUG_MAP[cat.slug] ?? cat.slug);
             counts[key] = (counts[key] ?? 0) + (cat.productCount ?? 0);
           }
         });
@@ -324,7 +330,7 @@ export function FilterSidebar({
         if (!cancelled) setCategoriesLoading(false);
       }
     };
-    fetchCategories();
+    void fetchCategories();
     return () => { cancelled = true; };
   }, []);
 
@@ -355,7 +361,7 @@ export function FilterSidebar({
         if (!cancelled) setFilterFacets([]);
       }
     };
-    fetchFacets();
+    void fetchFacets();
     return () => { cancelled = true; };
   }, [selectedCategory, selectedAvailability]);
 
@@ -390,7 +396,7 @@ export function FilterSidebar({
         if (!cancelled) setPriceBoundsLoading(false);
       }
     };
-    fetchPriceBounds();
+    void fetchPriceBounds();
     return () => { cancelled = true; };
   }, [selectedCategory, propPriceMin, propPriceMax]);
 
@@ -425,7 +431,7 @@ export function FilterSidebar({
         if (!cancelled) setManufacturersLoading(false);
       }
     };
-    fetchManufacturers();
+    void fetchManufacturers();
     return () => { cancelled = true; };
   }, [selectedCategory]);
 
@@ -444,7 +450,7 @@ export function FilterSidebar({
   const filteredMfrs = dedupedManufacturers.filter(m =>
     getDisplayManufacturerName(m.name).toLowerCase().includes(mfrSearch.toLowerCase())
   );
-  const visibleMfrs = showAllMfrs ? filteredMfrs : filteredMfrs.slice(0, 6);
+  const visibleMfrs = (showAllMfrs || !mobile) ? filteredMfrs : filteredMfrs.slice(0, 5);
 
   const activeCount = [
     selectedCategory !== null,
@@ -514,42 +520,58 @@ export function FilterSidebar({
   // ============================================================
   return (
     <div
-      className={`bg-surface-card rounded-xl ${
+      className={`bg-surface-card ${
         mobile
           ? ''
-          : 'sticky top-[64px] max-h-[calc(100vh-80px)] overflow-y-auto mt-2 lg:rounded-xl'
+          : 'rounded-xl sticky top-[64px] max-h-[calc(100vh-80px)] overflow-y-auto mt-2 lg:rounded-xl'
       }`}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-hairline-dark sticky top-0 bg-surface-card z-10">
-        <div>
-          <div role="heading" aria-level={2} className="text-sm font-semibold text-on-dark flex items-center gap-2">
-            <SlidersHorizontal size={16} className="text-muted-text" />
-            Фильтры
-            {activeCount > 0 && (
-              <span className="h-4 min-w-[16px] px-1 bg-gold text-gold-ink text-[10px] font-bold rounded-full flex items-center justify-center leading-4">
-                {activeCount}
-              </span>
-            )}
+      {/* Header — hidden in mobile mode (CatalogPage renders its own) */}
+      {!mobile && (
+        <div className="flex items-center justify-between px-4 py-3 border-b border-hairline-dark sticky top-0 bg-surface-card z-10">
+          <div>
+            <div role="heading" aria-level={2} className="text-sm font-semibold text-on-dark flex items-center gap-2">
+              <SlidersHorizontal size={16} className="text-muted-text" />
+              Фильтры
+              {activeCount > 0 && (
+                <span className="h-4 min-w-[16px] px-1 bg-gold text-gold-ink text-[10px] font-bold rounded-full flex items-center justify-center leading-4">
+                  {activeCount}
+                </span>
+              )}
+            </div>
           </div>
+          <button
+            onClick={onReset}
+            className={`flex items-center gap-1.5 text-xs font-medium transition-colors px-2 py-1 rounded-md ${
+              activeCount > 0
+                ? 'text-gold hover:text-gold-active hover:bg-gold/5'
+                : 'text-muted-text hover:text-body-text hover:bg-surface-elevated/50'
+            }`}
+            type="button"
+          >
+            <RotateCcw size={11} />
+            Сбросить
+          </button>
         </div>
-        <button
-          onClick={onReset}
-          className={`flex items-center gap-1.5 text-xs font-medium transition-colors px-2 py-1 rounded-md ${
-            activeCount > 0
-              ? 'text-gold hover:text-gold-active hover:bg-gold/5'
-              : 'text-muted-text hover:text-body-text hover:bg-surface-elevated/50'
-          }`}
-          type="button"
-        >
-          <RotateCcw size={11} />
-          Сбросить
-        </button>
-      </div>
+      )}
 
-      <div className="p-4 pt-4">
-        {/* Sorting */}
-        {(sortBy && onSortChange) && (
+      {/* Mobile: compact reset bar */}
+      {mobile && activeCount > 0 && (
+        <div className="bg-surface-card border-b border-hairline-dark px-3 py-2">
+          <button
+            onClick={onReset}
+            className="flex items-center gap-1.5 text-xs font-medium text-gold hover:text-gold-active transition-colors w-full justify-center py-1.5 rounded-lg bg-gold/5"
+            type="button"
+          >
+            <RotateCcw size={12} />
+            Сбросить все фильтры ({activeCount})
+          </button>
+        </div>
+      )}
+
+      <div className={`${mobile ? 'p-3 pt-3' : 'p-4 pt-4'}`}>
+        {/* Sorting — desktop only (mobile has it in toolbar) */}
+        {!mobile && (sortBy && onSortChange) && (
           <div className="mb-4">
             <div className="flex items-center gap-2">
               <ArrowUpDown size={14} className="text-muted-text flex-shrink-0" />
@@ -569,30 +591,7 @@ export function FilterSidebar({
           </div>
         )}
 
-        {/* View toggle — mobile only */}
-        {mobile && viewMode && onViewModeChange && (
-          <div className="flex items-center bg-surface-elevated rounded-lg p-0.5 border border-hairline-dark mb-4">
-            {[
-              { value: 'grid' as const, icon: <LayoutGrid size={18} /> },
-              { value: 'list' as const, icon: <List size={18} /> },
-              { value: 'table' as const, icon: <Table2 size={18} /> },
-            ].map(mode => (
-              <button
-                key={mode.value}
-                onClick={() => onViewModeChange(mode.value)}
-                className={`flex-1 h-8 rounded-md flex items-center justify-center transition-all ${
-                  viewMode === mode.value
-                    ? 'bg-gold text-gold-ink shadow-sm'
-                    : 'text-muted-text hover:text-body-text'
-                }`}
-                title={mode.value === 'grid' ? 'Сетка' : mode.value === 'list' ? 'Список' : 'Таблица'}
-                type="button"
-              >
-                {mode.icon}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* View toggle — removed from sidebar, handled by CatalogPage toolbar */}
 
         {/* === Categories === */}
         {!categoryLocked && (
@@ -600,15 +599,16 @@ export function FilterSidebar({
             title="Категории"
             icon={<Grid3X3 size={14} />}
             defaultOpen={true}
+            mobile={mobile}
           >
-            <div className="space-y-0.5 max-h-[320px] overflow-y-auto overflow-x-hidden pr-0.5">
+            <div className="space-y-0">
               <button
                 type="button"
                 onClick={() => onCategoryChange(null)}
-                className={`flex items-center justify-between w-full py-2 pl-3 pr-2 text-xs rounded-lg transition-colors ${
+                className={`flex items-center justify-between w-full py-1.5 pl-3 pr-2 text-xs rounded-md transition-colors ${
                   selectedCategory === null
-                    ? 'text-gold bg-gold/5 font-medium border-l-2 border-gold'
-                    : 'text-body-text hover:text-gold hover:bg-surface-elevated/50 border-l-2 border-transparent'
+                    ? 'text-gold bg-gold/5 font-medium'
+                    : 'text-body-text hover:text-gold hover:bg-surface-elevated/50'
                 }`}
               >
                 <span>Все товары</span>
@@ -616,16 +616,16 @@ export function FilterSidebar({
                   {categoriesLoading ? <Skeleton width={30} height={10} borderRadius="sm" /> : CATEGORY_ORDER.reduce((sum, slug) => sum + (categoryCounts[slug] || 0), 0)}
                 </span>
               </button>
-              {CATEGORY_ORDER.map(cat => (
+              {(showAllCats || !mobile ? CATEGORY_ORDER : CATEGORY_ORDER.slice(0, 6)).map(cat => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => onCategoryChange(cat)}
                   disabled={categoryLocked && cat !== selectedCategory}
-                  className={`flex items-center justify-between w-full py-2 pl-3 pr-2 text-xs rounded-lg transition-colors ${
+                  className={`flex items-center justify-between w-full py-1.5 pl-3 pr-2 text-xs rounded-md transition-colors ${
                     selectedCategory === cat
-                      ? 'text-gold bg-gold/5 font-medium border-l-2 border-gold'
-                      : 'text-body-text hover:text-gold hover:bg-surface-elevated/50 border-l-2 border-transparent'
+                      ? 'text-gold bg-gold/5 font-medium'
+                      : 'text-body-text hover:text-gold hover:bg-surface-elevated/50'
                   } ${categoryLocked && cat !== selectedCategory ? 'opacity-40 cursor-not-allowed' : ''}`}
                 >
                   <span>{CATEGORY_LABELS[cat]}</span>
@@ -634,13 +634,22 @@ export function FilterSidebar({
                   </span>
                 </button>
               ))}
+              {mobile && CATEGORY_ORDER.length > 6 && !showAllCats && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllCats(true)}
+                  className="text-gold text-xs font-medium hover:text-gold-active transition-colors w-full text-left py-1.5 pl-3"
+                >
+                  Ещё {CATEGORY_ORDER.length - 6} категорий
+                </button>
+              )}
             </div>
           </FilterGroup>
         )}
 
         {/* === Price === */}
-        <FilterGroup title="Цена" icon={<DollarSign size={14} />} defaultOpen={false}>
-          <div className="space-y-3">
+        <FilterGroup title="Цена" icon={<DollarSign size={14} />} defaultOpen={false} mobile={mobile}>
+          <div className={`${mobile ? 'space-y-4' : 'space-y-3'}`}>
             <DualRangeSlider
               min={PRICE_MIN}
               max={PRICE_MAX}
@@ -654,7 +663,7 @@ export function FilterSidebar({
             />
             <div className="flex items-end gap-3">
               <div className="flex-1">
-                <label className="text-[10px] text-muted-text mb-1 block uppercase tracking-wider" htmlFor="price-min">
+                <label className={`text-[10px] text-muted-text block uppercase tracking-wider ${mobile ? 'mb-1.5' : 'mb-1'}`} htmlFor="price-min">
                   От
                 </label>
                 <input
@@ -669,7 +678,7 @@ export function FilterSidebar({
               </div>
               <span className="text-muted-text text-xs mt-5 select-none">—</span>
               <div className="flex-1">
-                <label className="text-[10px] text-muted-text mb-1 block uppercase tracking-wider" htmlFor="price-max">
+                <label className={`text-[10px] text-muted-text block uppercase tracking-wider ${mobile ? 'mb-1.5' : 'mb-1'}`} htmlFor="price-max">
                   До
                 </label>
                 <input
@@ -840,7 +849,7 @@ export function FilterSidebar({
                       />
                     </div>
                   )}
-                  <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto overflow-x-hidden">
+                  <div className="flex flex-col gap-0.5">
                     {finalOptions.length > 0 ? (
                       finalOptions.map(({ value: val, count }) => {
                         const disabled = count === 0 && !isChecked(val);
@@ -923,7 +932,7 @@ export function FilterSidebar({
               if (rendered.length === 0) return null;
               const title = attrsInGroup[0]?.displayName ?? group.keys[0];
               return (
-                <FilterGroup key={group.keys[0]} title={title} icon={<Tag size={14} />} defaultOpen={false}>
+                <FilterGroup key={group.keys[0]} title={title} icon={<Tag size={14} />} defaultOpen={false} mobile={mobile}>
                   {rendered}
                 </FilterGroup>
               );
@@ -932,7 +941,7 @@ export function FilterSidebar({
         })()}
 
         {/* === Manufacturers === */}
-        <FilterGroup title="Производители" icon={<Tag size={14} />} defaultOpen={false}>
+        <FilterGroup title="Производители" icon={<Tag size={14} />} defaultOpen={false} mobile={mobile}>
           <div className="space-y-0.5">
             <div className="relative mb-2">
               <input
@@ -944,7 +953,7 @@ export function FilterSidebar({
               />
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-text" size={13} />
             </div>
-            <div className="space-y-0.5 max-h-[200px] overflow-y-auto overflow-x-hidden pr-1">
+            <div className="space-y-0.5">
               {(visibleMfrs || []).map(mfr => (
                 <div
                   key={mfr.id}
@@ -954,6 +963,8 @@ export function FilterSidebar({
                   onClick={() => handleManufacturerToggle(mfr.id)}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleManufacturerToggle(mfr.id); } }}
                   className={`flex items-center py-1.5 px-3 cursor-pointer transition-all duration-200 rounded-md border-l-2 border-transparent relative ${
+                    mobile ? 'min-h-[44px]' : ''
+                  } ${
                     selectedManufacturerIds.includes(mfr.id)
                       ? 'text-gold border-l-2 border-gold font-medium'
                       : 'text-body-text hover:text-on-dark hover:bg-surface-elevated/50'
@@ -977,27 +988,27 @@ export function FilterSidebar({
                 </>
               )}
             </div>
-            {!showAllMfrs && filteredMfrs.length > 6 && (
+            {!showAllMfrs && filteredMfrs.length > 5 && (
               <button
                 type="button"
                 onClick={() => setShowAllMfrs(true)}
-                className="text-gold text-xs font-medium hover:text-gold-active transition-colors w-full text-left"
+                className="text-gold text-xs font-medium hover:text-gold-active transition-colors w-full text-left py-2"
               >
-                Ещё {filteredMfrs.length - 6} брендов
+                Ещё {filteredMfrs.length - 5} брендов
               </button>
             )}
           </div>
         </FilterGroup>
 
         {/* === Rating === */}
-        <FilterGroup title="Рейтинг" icon={<Star size={14} />} defaultOpen={false}>
+        <FilterGroup title="Рейтинг" icon={<Star size={14} />} defaultOpen={false} mobile={mobile}>
           <div className="space-y-0.5">
             <StarRating rating={minRating} onChange={onRatingChange} />
           </div>
         </FilterGroup>
 
         {/* === Availability === */}
-        <FilterGroup title="Наличие" icon={<Package size={14} />} defaultOpen={false}>
+        <FilterGroup title="Наличие" icon={<Package size={14} />} defaultOpen={false} mobile={mobile}>
           <div className="space-y-0.5">
             {/* Все товары */}
             <div
@@ -1066,7 +1077,9 @@ export function FilterSidebar({
               <span className="text-xs">Под заказ</span>
             </div>
           </div>
-</FilterGroup>
+        </FilterGroup>
+
+        {/* Mobile: sticky footer with apply button — handled by CatalogPage overlay */}
 
       </div>
     </div>

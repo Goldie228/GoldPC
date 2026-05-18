@@ -14,7 +14,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
   if (items.length === 0) return null;
 
   return (
-    <nav className="text-sm text-muted-foreground mb-4" aria-label="Хлебные крошки">
+    <nav className="text-sm text-muted-foreground mb-4" aria-label="Навигационная цепочка">
       <ol className="flex flex-wrap items-center gap-1 list-none m-0 p-0">
         {items.map((item, i) => {
           const isLast = i === items.length - 1;

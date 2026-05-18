@@ -1,4 +1,4 @@
-import { X, RotateCcw } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
 
@@ -57,22 +57,22 @@ export function buildCatalogFilterChips(args: {
 }): Chip[] {
   // Set defaults
   const {
-    isCategoryLocked = false,
-    selectedCategory = null,
-    searchQuery = '',
-    priceRange = { min: 0, max: 0 },
-    selectedManufacturerIds = [],
-    manufacturersById = new Map<string, string>(),
-    minRating = 0,
-    selectedAvailability = [],
-    selectedSpecifications = {},
-    onClearSearch = () => {},
-    onClearPrice = () => {},
-    onClearManufacturers = () => {},
-    onClearRating = () => {},
-    onClearAvailability = () => {},
-    onClearSpecKey = (_key: string) => {},
-    onClearCategory = () => {},
+    isCategoryLocked: _isCategoryLocked = false,
+    selectedCategory: _selectedCategory = null,
+    searchQuery: _searchQuery = '',
+    priceRange: _priceRange = { min: 0, max: 0 },
+    selectedManufacturerIds: _selectedManufacturerIds = [],
+    manufacturersById: _manufacturersById = new Map<string, string>(),
+    minRating: _minRating = 0,
+    selectedAvailability: _selectedAvailability = [],
+    selectedSpecifications: _selectedSpecifications = {},
+    onClearSearch: _onClearSearch = () => {},
+    onClearPrice: _onClearPrice = () => {},
+    onClearManufacturers: _onClearManufacturers = () => {},
+    onClearRating: _onClearRating = () => {},
+    onClearAvailability: _onClearAvailability = () => {},
+    onClearSpecKey: _onClearSpecKey = (_key: string) => {},
+    onClearCategory: _onClearCategory = () => {},
   } = args;
   
   const chips: Chip[] = [];
@@ -85,7 +85,7 @@ export function buildCatalogFilterChips(args: {
     });
   }
 
-  if (args.searchQuery && args.searchQuery.trim()) {
+  if (args.searchQuery?.trim()) {
     chips.push({ id: 'search', label: `Поиск: ${args.searchQuery.trim()}`, onRemove: args.onClearSearch });
   }
 

@@ -42,7 +42,7 @@ export function ProductReviewCard({
     setHelpfulLoading(true);
     try {
       const result = await onHelpful(review.id);
-      if (result) {
+      if (result != null) {
         setHelpfulCount(result.helpful);
       }
     } catch {
@@ -229,7 +229,7 @@ export function ProductReviewCard({
         <button
           type="button"
           className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer bg-transparent border-none p-0"
-          onClick={handleHelpful}
+          onClick={() => void handleHelpful()}
           disabled={helpfulLoading || !onHelpful}
         >
           {helpfulLoading ? '...' : `Был полезен? (${helpfulCount})`}
@@ -255,7 +255,7 @@ export function ProductReviewCard({
         {isOwn && deleteConfirm && !isEditing && (
           <div className="flex items-center gap-3">
             <span className="text-sm text-foreground">Удалить отзыв?</span>
-            <Button variant="danger" size="sm" onClick={handleDeleteConfirm} disabled={deleting}>
+            <Button variant="danger" size="sm" onClick={() => void handleDeleteConfirm()} disabled={deleting}>
               {deleting ? 'Удаление...' : 'Да, удалить'}
             </Button>
             <Button variant="outline" size="sm" onClick={handleDeleteCancel} disabled={deleting}>
@@ -267,7 +267,7 @@ export function ProductReviewCard({
         {/* Edit mode save/cancel */}
         {isOwn && isEditing && (
           <div className="flex items-center gap-2">
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={() => void handleSave()} disabled={saving}>
               {saving ? 'Сохранение...' : 'Сохранить'}
             </Button>
             <Button variant="outline" size="sm" onClick={cancelEditing} disabled={saving}>
