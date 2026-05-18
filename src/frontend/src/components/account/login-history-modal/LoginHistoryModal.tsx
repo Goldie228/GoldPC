@@ -76,7 +76,7 @@ export function LoginHistoryModal({ isOpen, onClose }: LoginHistoryModalProps) {
   useEffect(() => {
     if (isOpen) {
       setPage(1);
-      loadHistory(1);
+      void loadHistory(1);
     }
   }, [isOpen]);
 
@@ -98,7 +98,7 @@ export function LoginHistoryModal({ isOpen, onClose }: LoginHistoryModalProps) {
     if (page > 1) {
       const newPage = page - 1;
       setPage(newPage);
-      loadHistory(newPage);
+      void loadHistory(newPage);
     }
   };
 
@@ -106,7 +106,7 @@ export function LoginHistoryModal({ isOpen, onClose }: LoginHistoryModalProps) {
     if (hasMore) {
       const newPage = page + 1;
       setPage(newPage);
-      loadHistory(newPage);
+      void loadHistory(newPage);
     }
   };
 

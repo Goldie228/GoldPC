@@ -8,7 +8,7 @@ export default function PWAInstallButton() {
 
   return (
     <button
-      onClick={promptInstall}
+      onClick={() => void promptInstall()}
       className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
     >
       <Download size={16} />

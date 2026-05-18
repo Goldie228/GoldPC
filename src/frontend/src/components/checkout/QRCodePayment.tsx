@@ -17,7 +17,7 @@ export function QRCodePayment({ amount, orderNumber, onConfirm, onCancel, isProc
   const [timeLeft, setTimeLeft] = useState(600); // 10 минут
 
   useEffect(() => {
-    generateQRCode();
+    void generateQRCode();
   }, [amount, orderNumber]);
 
   useEffect(() => {
@@ -125,7 +125,7 @@ export function QRCodePayment({ amount, orderNumber, onConfirm, onCancel, isProc
         <Button
           type="button"
           variant="primary"
-          onClick={onConfirm}
+          onClick={() => void onConfirm()}
           disabled={isProcessing}
           className="flex-1"
         >

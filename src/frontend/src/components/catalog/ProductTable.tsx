@@ -1,7 +1,7 @@
 import { type ReactElement, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Heart, GitCompare, ShoppingCart, Check, Bell, Star, Search } from 'lucide-react';
+import { ShoppingCart, Bell, Star, Search } from 'lucide-react';
 import type { ProductSummary } from '../../api/types';
 import { useCart } from '../../hooks/useCart';
 import { useWishlist } from '../../hooks/useWishlist';
@@ -48,7 +48,7 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
     setTimeout(() => setAddingId(null), 500);
   };
 
-  const handleToggleWishlist = (productId: string) => {
+  const _handleToggleWishlist = (productId: string) => {
     const inWishlist = isInWishlist(productId);
     toggleWishlist(productId);
     showToast(
@@ -57,7 +57,7 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
     );
   };
 
-  const handleToggleComparison = (product: ProductSummary) => {
+  const _handleToggleComparison = (product: ProductSummary) => {
     const inComp = isInComparison(product.id);
     const result = toggleComparison(product.id, product.category);
 
@@ -97,14 +97,14 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
       {/* Rows */}
       {products.map(product => {
         const inCart = isInCart(product.id);
-        const quantity = getItemQuantity(product.id);
+        const _quantity = getItemQuantity(product.id);
         const isAdding = addingId === product.id;
         const isOutOfStock = product.stock === 0;
         const isDisabled = product.stock === 0 || !product.isActive;
-        const inWishlist = isInWishlist(product.id);
-        const inComparison = isInComparison(product.id);
+        const _inWishlist = isInWishlist(product.id);
+        const _inComparison = isInComparison(product.id);
         const discountPercent = product.oldPrice && product.oldPrice > product.price
-          ? Math.round((1 - product.price / product.oldPrice!) * 100)
+          ? Math.round((1 - product.price / product.oldPrice) * 100)
           : 0;
 
         const ratingValue = typeof product.rating === 'number' ? product.rating : product.rating?.average ?? 0;

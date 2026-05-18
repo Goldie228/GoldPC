@@ -6,5 +6,4 @@ export { SaveConfigurationModal } from './save-configuration-modal/SaveConfigura
 export type { SaveConfigurationModalProps } from './save-configuration-modal/SaveConfigurationModal';
 export { ComponentPickerModal } from './component-picker-modal/ComponentPickerModal';
 export type { ComponentPickerModalProps } from './component-picker-modal/ComponentPickerModal';
-export { PdfExportModal } from './pdf-export-modal/PdfExportModal';
-export type { PdfExportModalProps } from './pdf-export-modal/PdfExportModal';
+// PdfExportModal removed from barrel — lazy-loaded directly in PCBuilderPage to avoid bundling jspdf in main chunk

@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
 import { HardDrive } from 'lucide-react';
 import type { PCComponentType } from '../../hooks';
-import { type WizardState, type Purpose, type Budget, PURPOSE_OPTIONS, BUDGET_OPTIONS, COMPONENT_LABELS, getTemplate } from './types';
+import { type WizardState, type Purpose, type Budget, type BuildTemplate, PURPOSE_OPTIONS, BUDGET_OPTIONS, COMPONENT_LABELS, getTemplate } from './types';
+
+type BuildTemplateKey = keyof BuildTemplate;
 
 export function BuildResult({ wizardState, onAddToBuilder }: { wizardState: WizardState; onAddToBuilder: () => void }) {
   const template = getTemplate(wizardState.purpose as Purpose, wizardState.budget as Budget);
@@ -37,7 +39,7 @@ export function BuildResult({ wizardState, onAddToBuilder }: { wizardState: Wiza
       <div className="mb-6">
         <h3 className="text-lg text-[var(--fg-primary,#f5f5f5)] mb-4">Рекомендуемый диапазон цен</h3>
         <div className="grid grid-cols-2 gap-2.5">
-          {Object.entries(template).map(([key, value]) => (
+          {(Object.entries(template) as [BuildTemplateKey, BuildTemplate[BuildTemplateKey]][]).map(([key, value]) => (
             <div key={key} className="flex justify-between p-2.5 px-3.5 bg-[var(--surface-elevated,#1a1a2e)] rounded-lg text-xs">
               <span className="text-[var(--fg-muted)]">{COMPONENT_LABELS[key as PCComponentType] || key}</span>
               <span className="text-[var(--brand-primary,#c9a84c)] font-medium">

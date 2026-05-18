@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Modal } from '../../ui/Modal/Modal';
 import { Button } from '../../ui/Button';
-import { Input } from '../../ui/Input';
 import { useToast } from '../../../hooks/useToast';
 import { authService, getAuthErrorMessage } from '../../../api/authService';
 import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
@@ -151,7 +150,7 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Смена пароля" size="small">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-5">
         {/* Текущий пароль */}
         <PasswordField
           label="Текущий пароль"
