@@ -105,7 +105,7 @@ export function CheckoutPage() {
 
   // Load saved addresses
   useEffect(() => {
-    if (user) {
+    if (user != null) {
 getAddresses()
          .then((addresses) => setSavedAddresses(addresses ?? []))
          .catch(() => {});
@@ -261,7 +261,7 @@ getAddresses()
 
       clearCart();
       showToast('Заказ успешно оформлен!', 'success');
-      navigate(`/orders/${order?.orderNumber ?? 'unknown'}/success`);
+      void navigate(`/orders/${order?.orderNumber ?? 'unknown'}/success`);
       return true;
     } catch (error) {
       if (isAxiosError(error)) {
@@ -735,7 +735,7 @@ getAddresses()
                   <Button variant="ghost" size="md" onClick={handlePrevStep} disabled={isProcessing} leftIcon={<Icon name="arrow-left" size="sm" />}>
                     Назад
                   </Button>
-                  <Button variant="primary" size="lg" onClick={handlePlaceOrder} disabled={isProcessing}>
+                  <Button variant="primary" size="lg" onClick={() => void handlePlaceOrder()} disabled={isProcessing}>
                     {isProcessing ? 'Обработка...' : `Подтвердить заказ (${total.toFixed(2)} BYN)`}
                   </Button>
                 </div>

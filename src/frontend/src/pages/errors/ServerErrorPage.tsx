@@ -21,11 +21,11 @@ export function ServerErrorPage() {
 
   const handleRetry = () => {
     // Navigate to the same page to retry
-    navigate(0);
+    void navigate(0);
   };
 
   const handleGoHome = () => {
-    navigate('/');
+    void navigate('/');
   };
 
   // Generate a simple error ID for support reference

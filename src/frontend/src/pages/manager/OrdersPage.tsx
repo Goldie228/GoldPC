@@ -60,22 +60,31 @@ export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadOrders = async () => {
-      setIsLoading(true);
-      try {
-        const data = await getOrders(currentPage, itemsPerPage, statusFilter || undefined);
-        if (data) {
-          setOrders(data.items || []);
-        }
-      } catch (error) {
-        console.error('Failed to load orders:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    void loadOrders();
-  }, [currentPage, statusFilter, getOrders]);
+   useEffect(() => {
+     const loadOrders = async () => {
+       setIsLoading(true);
+       try {
+         const data = await getOrders(currentPage, itemsPerPage, statusFilter || undefined);
+         if (data != null) {
+           // Transform RawOrderItem[] to Order[]
+           const transformedOrders = (data.items || []).map((item) => ({
+             id: item.id ?? '',
+             customerName: 'Unknown Customer',
+             customerEmail: 'unknown@example.com',
+             total: 0,
+             status: (item.status ?? 'pending') as OrderStatus,
+             date: new Date().toISOString(),
+           }));
+           setOrders(transformedOrders);
+         }
+       } catch (error) {
+         console.error('Failed to load orders:', error);
+       } finally {
+         setIsLoading(false);
+       }
+     };
+     void loadOrders();
+   }, [currentPage, statusFilter, getOrders]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -195,8 +204,8 @@ export function OrdersPage() {
                     <span className="order-total">{formatPrice(order.total)}</span>
                   </td>
                   <td>
-                    <span className={'status-badge ' + STATUS_CLASSES[order.status as OrderStatus]}>
-                      {STATUS_LABELS[order.status as OrderStatus]}
+                    <span className={'status-badge ' + STATUS_CLASSES[order.status]}>
+                      {STATUS_LABELS[order.status]}
                     </span>
                   </td>
                   <td>{formatDate(order.date)}</td>
