@@ -33,22 +33,7 @@
   --fg-strong: #929aa5;
   --bg: #0b0e11;
   --accent: #FCD535;
-  --color-on-dark: #ffffff;
-  --color-gold: #FCD535;
-  --color-gold-active: #f0b90b;
-  --color-gold-ink: #181a20;
-  --color-canvas-dark: #0b0e11;
-  --color-surface-card: #1e2329;
-  --color-surface-elevated: #2b3139;
-  --color-hairline-dark: #2b3139;
-  --color-body-text: #eaecef;
-  --color-muted-text: #707a8a;
-  --color-muted-strong: #929aa5;
-  --color-price-drop: #0ecb81;
-  --color-price-rise: #f6465d;
-  --color-info-blue: #3b82f6;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -58,6 +43,20 @@
   --text-3xl: 1.875rem;
   --text-4xl: 2.25rem;
   --text-5xl: 3rem;
+  
+  /* Typography tokens per DESIGN.md */
+  --text-hero: 4rem;          /* 64px */
+  --text-display-lg: 3rem;    /* 48px */
+  --text-display-md: 2.5rem;  /* 40px */
+  --text-display-sm: 2rem;    /* 32px */
+  --text-title-lg: 1.5rem;    /* 24px */
+  --text-title-md: 1.25rem;   /* 20px */
+  --text-title-sm: 1rem;      /* 16px */
+  --text-number: 2.5rem;      /* 40px for stat numbers */
+  --text-body-md: 0.875rem;   /* 14px */
+  --text-body-sm: 0.8125rem;  /* 13px */
+  --text-caption-size: 0.75rem; /* 12px */
+  
   --font-normal: 400;
   --font-medium: 500;
   --font-semibold: 600;
@@ -75,15 +74,15 @@
   --footer-bg: #11151d;
   --footer-divider: #1a1f27;
   --footer-title: #929aa5;
-  --footer-link: #5a6270;
+  --footer-link: #8a919e;
   --footer-link-hover: #c9a84c;
-  --footer-copyright: #3d4450;
+  --footer-copyright: #707a8a;
   --footer-social: #5a6270;
   --footer-social-hover: #c9a84c;
   --footer-gold-muted: #c9a84c;
   --footer-gold-hover: #d4b86a;
 
-  /* ======== Tailwind映射 ======= */
+  /* ======== Tailwind маппинг ======= */
   --color-background: var(--color-canvas-dark);
   --color-foreground: var(--color-body-text);
   --color-card: var(--color-surface-card);
@@ -199,50 +198,7 @@
 }
 .filter-checkbox:hover { border-color: #929aa5; }
 
-/* ======== 单选框 ======= */
-.filter-radio {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #707a8a;
-  border-radius: 50%;
-  background: transparent;
-  cursor: pointer;
-  position: relative;
-  flex-shrink: 0;
-  transition: all 150ms ease;
-}
-.filter-radio:checked { border-color: #FCD535; }
-.filter-radio:checked::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #FCD535;
-}
-.filter-checkbox:checked {
-  background: #FCD535;
-  border-color: #FCD535;
-}
-.filter-checkbox:checked::after {
-  content: '';
-  position: absolute;
-  left: 5.5px;
-  top: 2px;
-  width: 7px;
-  height: 12px;
-  border: solid #181a20;
-  border-width: 0 2.5px 2.5px 0;
-  transform: rotate(45deg);
-}
-.filter-checkbox:hover { border-color: #929aa5; }
-
-/* ======== 单选框 ======= */
+/* ======== Радиокнопки ======= */
 .filter-radio {
   appearance: none;
   -webkit-appearance: none;
@@ -269,16 +225,16 @@
   background: #FCD535;
 }
 
-/* ======== 星级评分 ======= */
+/* ======== Звёздочный рейтинг ======= */
 .star-filled { color: #FCD535; }
 .star-empty { color: #9ca3af; }
 
-/* ======== 产品卡片过渡 ======= */
+/* ======== Переходы карточек товаров ======= */
 .product-card-transition {
   transition: background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
 }
 
-/* ======== Focus visible for accessibility ======= */
+/* ======== Focus visible для доступности ======= */
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
