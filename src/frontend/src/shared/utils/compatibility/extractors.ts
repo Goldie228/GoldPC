@@ -153,9 +153,9 @@ export function extractStorageType(specs: ProductSpecifications | undefined): 'm
   const type = getString(specs, 'type', 'storageType', 'storage_type');
   const iface = getString(specs, 'interface', 'form_factor');
   if (type && (type.toUpperCase() === 'NVME' || type.toUpperCase() === 'PCIe')) return 'm2';
-  if (type && type.toUpperCase() === 'SATA') return 'sata';
+  if (type?.toUpperCase() === 'SATA') return 'sata';
   if (iface && (iface.toUpperCase() === 'M.2' || iface.toUpperCase() === 'NVME')) return 'm2';
-  if (iface && iface.toUpperCase() === 'SATA') return 'sata';
+  if (iface?.toUpperCase() === 'SATA') return 'sata';
   return 'other';
 }
 

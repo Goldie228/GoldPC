@@ -17,7 +17,7 @@ function findSocketGroup(socket: string): SocketGroup | null {
 export function checkBiosWarning(cpuSocket: string | null, chipset: string | null): CompatibilityWarning | null {
   if (!cpuSocket) return null;
   const group = findSocketGroup(cpuSocket);
-  if (!group || !group.biosWarning.enabled) return null;
+  if (!group?.biosWarning.enabled) return null;
   if (chipset && group.biosWarning.affectedChipsets?.length) {
     const isAffected = group.biosWarning.affectedChipsets.some(
       c => c.toUpperCase() === chipset.toUpperCase()
