@@ -42,7 +42,7 @@ async function flush(): Promise<void> {
 }
 
 export function telemetryTrack(name: string, props?: TelemetryProps): void {
-  if (!name || !name.trim()) return;
+  if (!name?.trim()) return;
   queue.push({ name, ts: new Date().toISOString(), props });
   scheduleFlush();
 }
