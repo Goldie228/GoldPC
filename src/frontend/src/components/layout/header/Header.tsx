@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type ReactElement } from 'react';
+import { useState, useRef, useEffect, type ReactElement } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -21,7 +21,6 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useModal } from '../../../hooks/useModal';
 import { useAuthModal } from '../../../hooks/useAuthModal';
 import { decodeHtmlEntities } from '../../../utils/decodeHtml';
-import { CATEGORY_LABELS_RU } from '../../../utils/categoryLabels';
 
 const NAV_ITEMS = [
   { to: '/catalog', label: 'Каталог' },
@@ -29,17 +28,6 @@ const NAV_ITEMS = [
   { to: '/services', label: 'Сервис' },
   { to: '/about', label: 'О нас' },
 ];
-
-const RU_FORMS = ['роль', 'роли', 'ролей'] as const;
-
-function formatCountRu(count: number, forms: readonly [string, string, string]): string {
-  const abs = Math.abs(count) % 100;
-  const last = abs % 10;
-  if (abs > 10 && abs < 20) return `${count} ${forms[2]}`;
-  if (last === 1) return `${count} ${forms[0]}`;
-  if (last >= 2 && last <= 4) return `${count} ${forms[1]}`;
-  return `${count} ${forms[2]}`;
-}
 
 export function Header(): ReactElement {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -53,7 +41,7 @@ export function Header(): ReactElement {
   const { items: wishlistItems } = useWishlist();
   const { items: comparisonItems } = useComparison();
   const { isAuthenticated, user, logout } = useAuth();
-  const { openModal, closeModal } = useModal();
+  const { openModal: _openModal, closeModal: _closeModal } = useModal();
 
   const wishlistCount = wishlistItems.length;
   const comparisonCount = comparisonItems.length;
@@ -180,7 +168,7 @@ export function Header(): ReactElement {
   };
 
   const handleLogout = () => {
-    logout();
+    void logout();
     handleProfileDropdownClose();
     setIsMobileMenuOpen(false);
   };
@@ -354,7 +342,14 @@ export function Header(): ReactElement {
        <AnimatePresence>
          {isMobileMenuOpen && (
            <>
-              <div className="fixed top-0 left-0 w-screen h-screen bg-black/50 z-[190]" onClick={handleCloseMenu} />
+              <div
+                className="fixed top-0 left-0 w-screen h-screen bg-black/50 z-[190]"
+                role="button"
+                tabIndex={0}
+                onClick={handleCloseMenu}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCloseMenu(); } }}
+                aria-label="Закрыть меню"
+              />
              <motion.div
                ref={mobileDrawerRef}
                className="fixed bottom-0 left-0 right-0 bg-surface-card border-t border-hairline-dark shadow-xl z-[200] overflow-y-auto rounded-t-2xl max-h-[calc(100vh-4rem)]"
