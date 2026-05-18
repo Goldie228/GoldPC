@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { PhoneInput } from './PhoneInput';
 
 function getInput(): HTMLInputElement {
-  return screen.getByPlaceholderText('+375 (29) 123-45-67') as HTMLInputElement;
+  const inputs = screen.getAllByPlaceholderText('+375 (29) 123-45-67');
+  return inputs[inputs.length - 1] as HTMLInputElement;
 }
 
 describe('PhoneInput', () => {
@@ -12,6 +13,7 @@ describe('PhoneInput', () => {
   });
 
   afterEach(() => {
+    cleanup();
     vi.restoreAllMocks();
   });
 
