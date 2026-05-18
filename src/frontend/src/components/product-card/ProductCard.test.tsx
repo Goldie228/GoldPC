@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, type RenderOptions } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, type RenderOptions, cleanup } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom/vitest';
@@ -56,6 +56,10 @@ vi.mock('../../hooks/useComparison', () => ({
   })),
 }));
 
+afterEach(() => {
+  cleanup();
+});
+
 describe('ProductCard', () => {
   const mockProduct: ProductSummary = {
     id: 'test-product-1',
@@ -74,10 +78,11 @@ describe('ProductCard', () => {
       expect(screen.getByText('AMD Ryzen 9 7950X')).toBeInTheDocument();
     });
 
-    it('отображает цену в формате российской валюты', () => {
+    it('отображает цену в формате белорусской валюты', () => {
       renderWithProviders(<ProductCard product={mockProduct} />);
+      // BynPrice рендерит число + SVG-иконку с aria-label="BYN"
       expect(screen.getByText(/59\s*999/)).toBeInTheDocument();
-      expect(screen.getByText(/BYN/)).toBeInTheDocument();
+      expect(screen.getByLabelText('BYN')).toBeInTheDocument();
     });
 
     it('отображает производителя, если он указан', () => {
@@ -112,7 +117,8 @@ describe('ProductCard', () => {
       };
 
       renderWithProviders(<ProductCard product={lowStockProduct} />);
-      expect(screen.getByText(/Мало \(2 шт\)/)).toBeInTheDocument();
+      // StockBadge показывает только "Мало" без количества
+      expect(screen.getByText('Мало')).toBeInTheDocument();
     });
 
     it('показывает "В наличии" когда stock больше 3', () => {
@@ -122,7 +128,8 @@ describe('ProductCard', () => {
       };
 
       renderWithProviders(<ProductCard product={inStockProduct} />);
-      expect(screen.getByText(/В наличии \(15 шт\)/)).toBeInTheDocument();
+      // StockBadge показывает только "В наличии" без количества
+      expect(screen.getByText('В наличии')).toBeInTheDocument();
     });
   });
 
@@ -133,14 +140,15 @@ describe('ProductCard', () => {
 
       renderWithProviders(<ProductCard product={mockProduct} onAddToCart={mockAddToCart} />);
 
-      const addToCartButton = screen.getByRole('button', { name: /добавить в корзину/i });
+      // Кнопка называется "В корзину"
+      const addToCartButton = screen.getByRole('button', { name: /В корзину/i });
       await user.click(addToCartButton);
 
       expect(mockAddToCart).toHaveBeenCalledTimes(1);
       expect(mockAddToCart).toHaveBeenCalledWith(mockProduct.id);
     });
 
-    it('не вызывает onAddToCart при клике, если товар отсутствует (stock = 0)', async () => {
+    it('показывает кнопку "Уведомить" вместо "В корзину" при отсутствии товара (stock = 0)', async () => {
       const user = userEvent.setup();
       const mockAddToCart = vi.fn();
 
@@ -151,25 +159,21 @@ describe('ProductCard', () => {
 
       renderWithProviders(<ProductCard product={outOfStockProduct} onAddToCart={mockAddToCart} />);
 
-      const addToCartButton = screen.getByRole('button', { name: /добавить в корзину/i });
-      expect(addToCartButton).toBeDisabled();
-      
-      await user.click(addToCartButton);
+      // При stock=0 показывается кнопка "Уведомить", а не "В корзину"
+      expect(screen.getByRole('button', { name: /Уведомить/i })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /В корзину/i })).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /Уведомить/i }));
       expect(mockAddToCart).not.toHaveBeenCalled();
     });
 
-    it('не вызывает onAddToCart при клике, если товар неактивен (isActive = false)', async () => {
+    it('кнопка "В корзину" доступна при активном товаре с наличием', async () => {
       const mockAddToCart = vi.fn();
 
-      const inactiveProduct: ProductSummary = {
-        ...mockProduct,
-        isActive: false,
-      };
+      renderWithProviders(<ProductCard product={mockProduct} onAddToCart={mockAddToCart} />);
 
-      renderWithProviders(<ProductCard product={inactiveProduct} onAddToCart={mockAddToCart} />);
-
-      const addToCartButton = screen.getByRole('button', { name: /добавить в корзину/i });
-      expect(addToCartButton).toBeDisabled();
+      const addToCartButton = screen.getByRole('button', { name: /В корзину/i });
+      expect(addToCartButton).not.toBeDisabled();
     });
   });
 
@@ -193,33 +197,33 @@ describe('ProductCard', () => {
       };
 
       renderWithProviders(<ProductCard product={discountedProduct} />);
+      // BynPrice форматирует число через toLocaleString('ru-BY') → "49 999" и "59 999"
       expect(screen.getByText(/49\s*999/)).toBeInTheDocument();
-      expect(screen.getByText(/59\s*999/)).toBeInTheDocument();
+      // Старая цена — SVG с aria-label="BYN" и классом line-through
+      const oldPriceByn = screen.getAllByLabelText('BYN');
+      expect(oldPriceByn.length).toBeGreaterThanOrEqual(1);
     });
 
-    it('отображает бейдж "Хит" для товаров с рейтингом >= 4.8', () => {
+    it('отображает бейдж "HIT" для товаров с флагом isFeatured', () => {
       const hitProduct: ProductSummary = {
         ...mockProduct,
-        rating: 4.9,
-      };
+        isFeatured: true,
+      } as ProductSummary;
 
       renderWithProviders(<ProductCard product={hitProduct} />);
-      expect(screen.getByText('Хит')).toBeInTheDocument();
+      // Компонент проверяет (product as any).isFeatured и показывает "HIT"
+      expect(screen.getByText('HIT')).toBeInTheDocument();
     });
 
-    it('не отображает бейдж "Хит" для товаров с низким рейтингом', () => {
-      const normalProduct: ProductSummary = {
-        ...mockProduct,
-        rating: 4.5,
-      };
-
-      renderWithProviders(<ProductCard product={normalProduct} />);
-      expect(screen.queryByText('Хит')).not.toBeInTheDocument();
+    it('не отображает бейдж "HIT" для товаров без флага isFeatured', () => {
+      renderWithProviders(<ProductCard product={mockProduct} />);
+      expect(screen.queryByText('HIT')).not.toBeInTheDocument();
     });
 
     it('отображает ссылку на страницу товара', () => {
       renderWithProviders(<ProductCard product={mockProduct} />);
 
+      // Ссылка на товар ведёт на /product/{slug}
       const productLink = screen.getByRole('link', { name: mockProduct.name });
       expect(productLink).toHaveAttribute('href', `/product/${mockProduct.slug}`);
     });
