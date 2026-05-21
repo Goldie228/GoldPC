@@ -3,11 +3,43 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ======== Nunito Sans (GoldNova replacement — display + body) ======== */
+@font-face {
+  font-family: 'Nunito Sans';
+  src: url('/fonts/NunitoSans.woff2') format('woff2');
+  font-weight: 200 1000;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Nunito Sans';
+  src: url('/fonts/NunitoSans-Italic.woff2') format('woff2');
+  font-weight: 200 1000;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ======== Nunito (GoldPlex replacement — numbers / tabular data) ======== */
+@font-face {
+  font-family: 'Nunito';
+  src: url('/fonts/Nunito.woff2') format('woff2');
+  font-weight: 200 1000;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Nunito';
+  src: url('/fonts/Nunito-Italic.woff2') format('woff2');
+  font-weight: 200 1000;
+  font-style: italic;
+  font-display: swap;
+}
+
 @theme inline {
-  /* Font definitions */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  /* Font definitions — Nunito Sans for display/body, Nunito for numbers */
+  --font-sans: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Nunito', 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
   
   /* Color system */
   --color-gold: #FCD535;
@@ -44,18 +76,18 @@
   --text-4xl: 2.25rem;
   --text-5xl: 3rem;
   
-  /* Typography tokens per DESIGN.md */
-  --text-hero: 4rem;          /* 64px */
-  --text-display-lg: 3rem;    /* 48px */
-  --text-display-md: 2.5rem;  /* 40px */
-  --text-display-sm: 2rem;    /* 32px */
-  --text-title-lg: 1.5rem;    /* 24px */
-  --text-title-md: 1.25rem;   /* 20px */
-  --text-title-sm: 1rem;      /* 16px */
-  --text-number: 2.5rem;      /* 40px for stat numbers */
-  --text-body-md: 0.875rem;   /* 14px */
-  --text-body-sm: 0.8125rem;  /* 13px */
-  --text-caption-size: 0.75rem; /* 12px */
+  /* Typography tokens per DESIGN.md (scaled for Nunito Sans cap height) */
+  --text-hero: 3.375rem;       /* 54px (was 64px — Nunito Sans reads larger) */
+  --text-display-lg: 2.5rem;   /* 40px (was 48px) */
+  --text-display-md: 2.125rem; /* 34px (was 40px) */
+  --text-display-sm: 1.75rem;  /* 28px (was 32px) */
+  --text-title-lg: 1.25rem;    /* 20px (was 24px) */
+  --text-title-md: 1.125rem;   /* 18px (was 20px) */
+  --text-title-sm: 0.9375rem;  /* 15px (was 16px) */
+  --text-number: 2.125rem;     /* 34px (was 40px for stat numbers) */
+  --text-body-md: 0.875rem;    /* 14px — body stays same */
+  --text-body-sm: 0.8125rem;   /* 13px — body stays same */
+  --text-caption-size: 0.6875rem; /* 11px (was 12px) */
   
   --font-normal: 400;
   --font-medium: 500;

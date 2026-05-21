@@ -182,18 +182,18 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
             </div>
           </div>
           <div className="flex items-baseline gap-2">
+          <BynPrice
+            amount={product.price}
+            size="lg"
+            className={`product-card__price font-tabular ${hasDiscount ? 'text-price-drop' : isOutOfStock ? 'text-muted-text' : 'text-on-dark'}`}
+          />
+          {hasDiscount && (
             <BynPrice
-              amount={product.price}
-              size="lg"
-              className={`font-tabular ${hasDiscount ? 'text-price-drop' : isOutOfStock ? 'text-muted-text' : 'text-on-dark'}`}
+              amount={product.oldPrice!}
+              size="sm"
+              className="product-card__old-price font-tabular text-muted-text line-through"
             />
-            {hasDiscount && (
-              <BynPrice
-                amount={product.oldPrice!}
-                size="sm"
-                className="font-tabular text-muted-text line-through"
-              />
-            )}
+          )}
           </div>
         </div>
 
@@ -396,10 +396,10 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
 
       {/* Information */}
       <div className="pt-3 px-4 pb-3 flex flex-col gap-2 flex-1">
-        <span className="text-[11px] text-muted-text font-medium uppercase tracking-wider truncate">
+        <span className="product-card__brand text-[11px] text-muted-text font-medium uppercase tracking-wider truncate">
           {getDisplayManufacturerName(product.manufacturer?.name) || product.brand || ''}
         </span>
-        <h3 className={`text-sm font-semibold leading-snug line-clamp-2 min-h-[2.5rem] ${isOutOfStock ? 'opacity-60' : 'text-on-dark'}`}>
+        <h3 className={`product-card__name text-sm font-semibold leading-snug line-clamp-2 min-h-[2.5rem] ${isOutOfStock ? 'opacity-60' : 'text-on-dark'}`}>
           <Link to={`/product/${product.slug || product.id}`} className="hover:text-gold transition-colors">
             {product.name}
           </Link>
@@ -410,8 +410,8 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
               <Star key={s} size={12} className={s <= Math.round(ratingValue) ? 'star-filled fill-gold' : 'star-empty'} />
             ))}
           </div>
-          <span className="font-tabular text-xs text-body-text font-medium">{ratingValue.toFixed(1)}</span>
-          <span className="text-[11px] text-muted-text">({reviewCount.toLocaleString('ru-BY')})</span>
+          <span className="product-card__rating font-tabular text-xs text-body-text font-medium">{ratingValue.toFixed(1)}</span>
+          <span className="product-card__rating text-[11px] text-muted-text">({reviewCount.toLocaleString('ru-BY')})</span>
         </div>
       </div>
 
@@ -461,7 +461,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
         ) : (
           <button
             onClick={handleAddToCart}
-            className="w-full h-10 bg-price-drop text-on-dark text-sm font-semibold rounded-lg flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-[0.98]"
+            className="product-card__btn w-full h-10 bg-price-drop text-on-dark text-sm font-semibold rounded-lg flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-[0.98]"
           >
             <ShoppingCart size={14} />
             В корзину
