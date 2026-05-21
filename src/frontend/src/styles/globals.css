@@ -126,7 +126,7 @@ input[type="number"] {
 /* ===== TYPOGRAPHY HIERARCHY (токени + утиліти) ===== */
 h1,
 .h1 {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: var(--text-hero);
   font-weight: 700;
   line-height: 1.1;
@@ -135,7 +135,7 @@ h1,
 
 h2,
 .h2 {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: var(--text-display-lg);
   font-weight: 700;
   line-height: 1.1;
@@ -144,7 +144,7 @@ h2,
 
 h3,
 .h3 {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: var(--text-display-md);
   font-weight: 600;
   line-height: 1.15;
@@ -153,7 +153,7 @@ h3,
 
 h4,
 .h4 {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: var(--text-display-sm);
   font-weight: 600;
   line-height: 1.2;
@@ -161,7 +161,7 @@ h4,
 
 h5,
 .h5 {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: var(--text-title-lg);
   font-weight: 600;
   line-height: 1.3;
@@ -169,7 +169,7 @@ h5,
 
 h6,
 .h6 {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: var(--text-title-md);
   font-weight: 600;
   line-height: 1.35;
@@ -276,41 +276,375 @@ h6,
   line-height: 1.4;
 }
 
-/* ===== Responsive Typography ===== */
+/* Product Card Name — desktop base */
+.product-card__name {
+  font-size: 0.9375rem !important; /* 15px — читаемо для коротких, не давит для длинных (2 строки) */
+  line-height: 1.3 !important;
+}
+
+/* EmailVerificationBanner — action buttons 13px вместо 12px (text-xs был слишком мелким визуально) */
+[role="alert"] .text-xs.text-gold {
+  font-size: 0.8125rem !important;
+}
+
+/* Footer titles — desktop base (предотвращает h4 unlayered override: Tailwind utilities в @layer, 
+   а h4 без слоя → unlayered побеждает layered). Соответствует мобильному breakpoint. */
+.footer__title {
+  font-size: 0.875rem !important; /* 14px — как на .md breakpoint */
+  letter-spacing: 0.1em !important;
+  margin-bottom: 1rem !important;
+}
+
+/* ===== Responsive Typography (scaled for Nunito Sans) ===== */
 @media (max-width: 768px) {
   h1,
   .h1 {
-    font-size: 2.25rem; /* 36px */
+    font-size: 1.875rem; /* 30px */
   }
 
   h2,
   .h2 {
-    font-size: 2rem; /* 32px */
+    font-size: 1.625rem; /* 26px */
   }
 
   h3,
   .h3 {
-    font-size: 1.75rem; /* 28px */
+    font-size: 1.375rem; /* 22px */
   }
 
   h4,
   .h4 {
-    font-size: 1.5rem; /* 24px */
+    font-size: 1.25rem; /* 20px */
   }
 
   .text-hero {
-    font-size: 2.25rem; /* 36px */
+    font-size: 1.875rem; /* 30px */
   }
 
   .text-display-lg {
-    font-size: 2rem; /* 32px */
+    font-size: 1.625rem; /* 26px */
   }
 
   .text-display-md {
-    font-size: 1.75rem; /* 28px */
+    font-size: 1.375rem; /* 22px */
   }
 
   .text-display-sm {
+    font-size: 1.25rem; /* 20px */
+  }
+
+  .text-number {
     font-size: 1.5rem; /* 24px */
+  }
+
+  /* HomePage sections */
+  .home-hero__title {
+    font-size: 2.25rem !important; /* 36px */
+  }
+
+  .home-hero__subtitle {
+    font-size: 1rem !important; /* 16px */
+  }
+
+  .home-hero__badge {
+    font-size: 0.75rem !important; /* 12px */
+  }
+
+  .home-categories__title,
+  .home-trust__title,
+  .home-gaming__title {
+    font-size: 1.5rem !important; /* 24px */
+  }
+
+  .home-categories__desc,
+  .home-trust__subtitle,
+  .home-gaming__desc {
+    font-size: 0.875rem !important; /* 14px */
+  }
+
+  .home-trust__value {
+    font-size: 1.75rem !important; /* 28px */
+  }
+
+  .home-trust__label {
+    font-size: 0.8125rem !important; /* 13px */
+  }
+
+  .home-popular__title {
+    font-size: 1.5rem !important; /* 24px */
+  }
+
+  .home-popular__link {
+    font-size: 0.8125rem !important; /* 13px */
+  }
+
+  .home-gaming__carousel-label {
+    font-size: 1.375rem !important; /* 22px */
+  }
+
+  .home-gaming__carousel-subtitle {
+    font-size: 0.8125rem !important; /* 13px */
+  }
+
+  .home-gaming__card-label {
+    font-size: 1rem !important; /* 16px */
+  }
+
+  .home-cta__title {
+    font-size: 1.75rem !important; /* 28px */
+  }
+
+  .home-cta__subtitle {
+    font-size: 0.875rem !important; /* 14px */
+  }
+
+  .home-categories__name {
+    font-size: 0.875rem !important; /* 14px */
+  }
+
+  .home-categories__count {
+    font-size: 0.6875rem !important; /* 11px */
+  }
+
+  /* ProductCard */
+  .product-card__name {
+    font-size: 0.8125rem !important; /* 13px */
+  }
+
+  .product-card__brand {
+    font-size: 0.6875rem !important; /* 11px */
+  }
+
+  .product-card__price {
+    font-size: 0.9375rem !important; /* 15px */
+  }
+
+  .product-card__old-price {
+    font-size: 0.75rem !important; /* 12px */
+  }
+
+  .product-card__rating {
+    font-size: 0.6875rem !important; /* 11px */
+  }
+
+  .product-card__btn {
+    font-size: 0.75rem !important; /* 12px */
+  }
+
+  /* Footer */
+  .footer__title {
+    font-size: 0.875rem !important; /* 14px */
+    letter-spacing: 0.1em !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .footer__link {
+    font-size: 0.8125rem !important; /* 13px */
+    line-height: 1.6 !important;
+  }
+
+  .footer__brand-text {
+    font-size: 0.8125rem !important; /* 13px */
+    line-height: 1.5 !important;
+  }
+
+  .footer__brand-logo {
+    font-size: 1.25rem !important; /* 20px */
+  }
+
+  .footer__copyright {
+    font-size: 0.75rem !important; /* 12px */
+  }
+
+  .footer__social-icon {
+    width: 2rem !important; /* 32px */
+    height: 2rem !important;
+  }
+}
+
+/* Small phones (500px and below — actual mobile viewport) */
+@media (max-width: 500px) {
+  h1,
+  .h1 {
+    font-size: 1.5rem; /* 24px */
+  }
+
+  h2,
+  .h2 {
+    font-size: 1.25rem; /* 20px */
+  }
+
+  h3,
+  .h3 {
+    font-size: 1.125rem; /* 18px */
+  }
+
+  h4,
+  .h4 {
+    font-size: 1rem; /* 16px */
+  }
+
+  .text-hero {
+    font-size: 1.5rem; /* 24px */
+  }
+
+  .text-display-lg {
+    font-size: 1.25rem; /* 20px */
+  }
+
+  .text-display-md {
+    font-size: 1.125rem; /* 18px */
+  }
+
+  .text-display-sm {
+    font-size: 1rem; /* 16px */
+  }
+
+  .text-number {
+    font-size: 1.25rem; /* 20px */
+  }
+
+  /* HomePage sections */
+  .home-hero {
+    padding: 80px 0 60px !important;
+  }
+
+  .home-hero__title {
+    font-size: 1.625rem !important; /* 26px */
+    letter-spacing: -0.02em !important;
+  }
+
+  .home-hero__subtitle {
+    font-size: 0.875rem !important; /* 14px */
+    margin-bottom: 1.75rem !important;
+  }
+
+  .home-hero__badge {
+    font-size: 0.6875rem !important; /* 11px */
+    padding: 0.375rem 0.75rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .home-categories__title,
+  .home-trust__title,
+  .home-gaming__title {
+    font-size: 1.25rem !important; /* 20px */
+  }
+
+  .home-categories__desc,
+  .home-trust__subtitle,
+  .home-gaming__desc {
+    font-size: 0.8125rem !important; /* 13px */
+  }
+
+  .home-trust__value {
+    font-size: 1.375rem !important; /* 22px */
+  }
+
+  .home-trust__label {
+    font-size: 0.75rem !important; /* 12px */
+  }
+
+  .home-trust__card {
+    padding: 1.25rem 0.75rem !important;
+    min-height: 8.75rem !important; /* 140px */
+  }
+
+  .home-popular__title {
+    font-size: 1.25rem !important; /* 20px */
+  }
+
+  .home-popular__link {
+    font-size: 0.75rem !important; /* 12px */
+  }
+
+  .home-gaming__carousel-label {
+    font-size: 1.125rem !important; /* 18px */
+  }
+
+  .home-gaming__carousel-subtitle {
+    font-size: 0.75rem !important; /* 12px */
+  }
+
+  .home-gaming__card-label {
+    font-size: 0.875rem !important; /* 14px */
+  }
+
+  .home-cta__title {
+    font-size: 1.375rem !important; /* 22px */
+  }
+
+  .home-cta__subtitle {
+    font-size: 0.8125rem !important; /* 13px */
+  }
+
+  .home-categories__name {
+    font-size: 0.8125rem !important; /* 13px */
+  }
+
+  .home-categories__count {
+    font-size: 0.625rem !important; /* 10px */
+  }
+
+  .home-categories__icon-wrap {
+    width: 2.5rem !important; /* 40px */
+    height: 2.5rem !important;
+  }
+
+  /* ProductCard */
+  .product-card__name {
+    font-size: 0.75rem !important; /* 12px */
+    line-height: 1.3 !important;
+  }
+
+  .product-card__brand {
+    font-size: 0.625rem !important; /* 10px */
+  }
+
+  .product-card__price {
+    font-size: 0.8125rem !important; /* 13px */
+  }
+
+  .product-card__old-price {
+    font-size: 0.6875rem !important; /* 11px */
+  }
+
+  .product-card__rating {
+    font-size: 0.625rem !important; /* 10px */
+  }
+
+  .product-card__btn {
+    font-size: 0.6875rem !important; /* 11px */
+    height: 2.25rem !important; /* 36px */
+  }
+
+  /* Footer */
+  .footer__title {
+    font-size: 0.75rem !important; /* 12px */
+    letter-spacing: 0.08em !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .footer__link {
+    font-size: 0.75rem !important; /* 12px */
+    line-height: 1.5 !important;
+  }
+
+  .footer__brand-text {
+    font-size: 0.75rem !important; /* 12px */
+    line-height: 1.4 !important;
+  }
+
+  .footer__brand-logo {
+    font-size: 1.125rem !important; /* 18px */
+  }
+
+  .footer__copyright {
+    font-size: 0.6875rem !important; /* 11px */
+  }
+
+  .footer__social-icon {
+    width: 1.75rem !important; /* 28px */
+    height: 1.75rem !important;
   }
 }

@@ -89,21 +89,21 @@ export function Footer() {
           {/* Brand Column */}
           <div className="max-w-[220px] min-w-0">
             <Link to="/" className="flex items-center gap-2.5 no-underline group">
-              <span className="text-xl font-semibold text-[#c9a84c] tracking-tight transition-colors duration-300 group-hover:text-[#d4b86a]">
+              <span className="footer__brand-logo text-xl font-semibold text-[#c9a84c] tracking-tight transition-colors duration-300 group-hover:text-[#d4b86a]">
                 Gold
                 <span className="text-[#5a6270] transition-colors duration-300 group-hover:text-[#707a8a]">
                   PC
                 </span>
               </span>
             </Link>
-            <p className="text-sm text-[#5a6270] leading-relaxed mt-5">
+            <p className="footer__brand-text text-sm text-[#5a6270] leading-relaxed mt-5">
               Премиальный магазин компьютерных компонентов с профессиональной сборкой и гарантией качества.
             </p>
           </div>
 
           {/* Catalog Column */}
           <div className="min-w-0">
-            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
+            <h4 className="footer__title text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
               Каталог
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -111,7 +111,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     to={link.href}
-                    className="text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                    className="footer__link text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
                   >
                     {link.label}
                   </Link>
@@ -122,7 +122,7 @@ export function Footer() {
 
           {/* Service Column */}
           <div className="min-w-0">
-            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
+            <h4 className="footer__title text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
               Сервис
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -130,7 +130,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     to={link.href}
-                    className="text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                    className="footer__link text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
                   >
                     {link.label}
                   </Link>
@@ -141,7 +141,7 @@ export function Footer() {
 
           {/* Info Column */}
           <div className="min-w-0">
-            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
+            <h4 className="footer__title text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
               Информация
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -149,7 +149,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     to={link.href}
-                    className="text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                    className="footer__link text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
                   >
                     {link.label}
                   </Link>
@@ -160,7 +160,7 @@ export function Footer() {
 
           {/* Customers Column */}
           <div className="min-w-0">
-            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
+            <h4 className="footer__title text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
               Покупателям
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -168,7 +168,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     to={link.href}
-                    className="text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                    className="footer__link text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
                   >
                     {link.label}
                   </Link>
@@ -179,18 +179,18 @@ export function Footer() {
 
           {/* Contacts Column */}
           <div className="min-w-0">
-            <h4 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
+            <h4 className="footer__title text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
               Контакты
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
               {contactInfo.map((item, index) => (
                 <li key={index}>
                   {item.type === 'address' ? (
-                    <span className="text-sm text-[#5a6270]">{item.label}</span>
+                    <span className="footer__link text-sm text-[#5a6270]">{item.label}</span>
                   ) : (
                     <a
                       href={item.href}
-                      className="text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                      className="footer__link text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
                     >
                       {item.label}
                     </a>
@@ -205,7 +205,7 @@ export function Footer() {
         <div className="mt-12 pt-6 border-t border-[#2b3139]">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Copyright */}
-            <span className="text-xs text-[#3d4450] tracking-wide">
+            <span className="footer__copyright text-xs text-[#3d4450] tracking-wide">
               © {currentYear} GoldPC. Все права защищены.
             </span>
 
@@ -218,7 +218,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="w-8 h-8 flex items-center justify-center bg-transparent border border-[#2a3040] text-[#5a6270] no-underline rounded transition-colors duration-200 hover:border-[#c9a84c] hover:text-[#c9a84c]"
+                  className="footer__social-icon w-8 h-8 flex items-center justify-center bg-transparent border border-[#2a3040] text-[#5a6270] no-underline rounded transition-colors duration-200 hover:border-[#c9a84c] hover:text-[#c9a84c]"
                 >
                   {renderSocialIcon(social.icon)}
                 </a>

@@ -1,6 +1,6 @@
 version: alpha
 name: Gold PC
-description: A confident computer-hardware store interface anchored on a deep near-black canvas, where Gold PC's iconic golden yellow (#FCD535) carries every primary CTA, brand accent, and value-claim moment. Type runs Gold PC's custom GoldNova / GoldPlex stack at modest weights — the system trusts size and yellow voltage over bold weight. All surfaces default to the dark theme, with a single light element: the footer. Price-drop green (discount) and price-rise red (price increase) accent price-direction signals throughout.
+description: A confident computer-hardware store interface anchored on a deep near-black canvas, where Gold PC's iconic golden yellow (#FCD535) carries every primary CTA, brand accent, and value-claim moment. Type runs Nunito Sans (display + body) and Nunito (numerical / product-data) stack at modest weights — the system trusts size and yellow voltage over bold weight. All surfaces default to the dark theme, with a single light element: the footer. Price-drop green (discount) and price-rise red (price increase) accent price-direction signals throughout.
 
 colors:
   primary: "#fcd535"
@@ -30,91 +30,91 @@ colors:
 
 typography:
   hero-display:
-    fontFamily: "GoldNova, -apple-system, BlinkMacSystemFont, sans-serif"
-    fontSize: 64px
+    fontFamily: "Nunito Sans, -apple-system, BlinkMacSystemFont, sans-serif"
+    fontSize: 54px
     fontWeight: 700
     lineHeight: 1.1
     letterSpacing: -1px
   display-lg:
-    fontFamily: "GoldNova, sans-serif"
-    fontSize: 48px
+    fontFamily: "Nunito Sans, sans-serif"
+    fontSize: 40px
     fontWeight: 700
     lineHeight: 1.1
     letterSpacing: -0.5px
   display-md:
-    fontFamily: "GoldNova, sans-serif"
-    fontSize: 40px
+    fontFamily: "Nunito Sans, sans-serif"
+    fontSize: 34px
     fontWeight: 600
     lineHeight: 1.15
     letterSpacing: -0.3px
   display-sm:
-    fontFamily: "GoldNova, sans-serif"
-    fontSize: 32px
+    fontFamily: "Nunito Sans, sans-serif"
+    fontSize: 28px
     fontWeight: 600
     lineHeight: 1.2
     letterSpacing: 0
   title-lg:
-    fontFamily: "GoldNova, sans-serif"
-    fontSize: 24px
+    fontFamily: "Nunito Sans, sans-serif"
+    fontSize: 20px
     fontWeight: 600
     lineHeight: 1.3
     letterSpacing: 0
   title-md:
-    fontFamily: "GoldNova, sans-serif"
-    fontSize: 20px
+    fontFamily: "Nunito Sans, sans-serif"
+    fontSize: 18px
     fontWeight: 600
     lineHeight: 1.35
     letterSpacing: 0
   title-sm:
-    fontFamily: "GoldNova, sans-serif"
-    fontSize: 16px
+    fontFamily: "Nunito Sans, sans-serif"
+    fontSize: 15px
     fontWeight: 600
     lineHeight: 1.4
     letterSpacing: 0
   number-display:
-    fontFamily: "GoldPlex, GoldNova, sans-serif"
-    fontSize: 40px
+    fontFamily: "Nunito, Nunito Sans, sans-serif"
+    fontSize: 34px
     fontWeight: 700
     lineHeight: 1.1
     letterSpacing: -0.3px
   number-md:
-    fontFamily: "GoldPlex, GoldNova, sans-serif"
+    fontFamily: "Nunito, Nunito Sans, sans-serif"
     fontSize: 16px
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: 0
   number-sm:
-    fontFamily: "GoldPlex, GoldNova, sans-serif"
+    fontFamily: "Nunito, Nunito Sans, sans-serif"
     fontSize: 14px
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: 0
   body-md:
-    fontFamily: "GoldNova, sans-serif"
+    fontFamily: "Nunito Sans, sans-serif"
     fontSize: 14px
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: 0
   body-sm:
-    fontFamily: "GoldNova, sans-serif"
+    fontFamily: "Nunito Sans, sans-serif"
     fontSize: 13px
     fontWeight: 400
     lineHeight: 1.5
     letterSpacing: 0
   caption:
-    fontFamily: "GoldNova, sans-serif"
-    fontSize: 12px
+    fontFamily: "Nunito Sans, sans-serif"
+    fontSize: 11px
     fontWeight: 500
     lineHeight: 1.4
     letterSpacing: 0
   button:
-    fontFamily: "GoldNova, sans-serif"
+    fontFamily: "Nunito Sans, sans-serif"
     fontSize: 14px
     fontWeight: 600
     lineHeight: 1
     letterSpacing: 0
   nav-link:
-    fontFamily: "GoldNova, sans-serif"
+    fontFamily: "Nunito Sans, sans-serif"
     fontSize: 14px
     fontWeight: 500
     lineHeight: 1.4
@@ -334,13 +334,13 @@ components:
 
 Gold PC reads like a computer‑hardware retail platform that wants to feel both authoritative and energetic. The base atmosphere is **deep near‑black canvas** (`{colors.canvas-dark}` — #0b0e11) holding white type and a single, ubiquitous accent: **Gold PC Yellow** (`{colors.primary}` — #FCD535). That yellow does almost all of the brand’s heavy lifting — it carries every primary CTA, every value‑claim headline (“YOUR GEAR, PROTECTED”), every “Shop Now” pill, every featured tier indicator, and the wordmark itself. There is no secondary brand color. The system trusts the yellow voltage to do the brand work, and it carries it.
 
-Type runs Gold PC’s custom **GoldNova** (display + body) and **GoldPlex** (numerical / product‑data) stack. GoldNova carries display headlines, section titles, and body copy. GoldPlex appears on price tickers, large stat numbers (products sold, customer ratings, in‑stock counts) — anywhere a number wants to feel “tabular and reliable.” Both run at modest weights — display sizes use weight 600‑700 (bolder than typical marketing because a hardware store needs stats to read at a glance), body stays at 400.
+Type runs Gold PC’s custom **Nunito Sans** (display + body) and **Nunito** (numerical / product‑data) stack. Nunito Sans carries display headlines, section titles, and body copy. Nunito appears on price tickers, large stat numbers (products sold, customer ratings, in‑stock counts) — anywhere a number wants to feel “tabular and reliable.” Both run at modest weights — display sizes use weight 600‑700 (bolder than typical marketing because a hardware store needs stats to read at a glance), body stays at 400.
 
 The product uses a **dark theme** across all surfaces — marketing, product showcase, and transactional (checkout, custom builder, order form) all default to `{colors.canvas-dark}` (#0b0e11). The same yellow CTAs and gray‑blue hairlines (`{colors.hairline-on-dark}` — #2b3139) thread through all pages. Price‑decrease **green** (`{colors.price-drop}` — #0ecb81) and price‑increase **red** (`{colors.price-rise}` — #f6465d) signal price‑direction in tables, charts, and product listings.
 
 **Key Characteristics:**
 - Single accent color: `{colors.primary}` (#FCD535) does all brand voltage — primary CTAs, hero headlines, brand mark, badges. Used scarcely for maximum emphasis.
-- Custom type stack: `GoldNova` (display + body) and `GoldPlex` (numbers, prices, product data). Large stat numbers always render in GoldPlex for tabular consistency.
+- Custom type stack: `Nunito Sans` (display + body) and `Nunito` (numbers, prices, product data). Large stat numbers always render in Nunito for tabular consistency.
 - Unified dark theme: all surfaces (marketing, product, transactional, custom builder) use `{colors.canvas-dark}` as the page floor. No light theme variants.
 - Light footer on dark body: the homepage uses `{colors.surface-soft-light}` (#fafafa) for the footer even when the body above it is dark — a deliberate inversion that visually closes the page.
 - Price‑direction semantics: green down / red up (`{colors.price-drop}` / `{colors.price-rise}`) for price changes, applied as text color rather than badge background.
@@ -389,41 +389,41 @@ The system uses a unified dark canvas:
 ## Typography
 
 ### Font Family
-The system runs **GoldNova** for display and body, and **GoldPlex** for numerical / product data. Both are licensed Gold PC custom typefaces. The fallback stack walks `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`.
+The system runs **Nunito Sans** for display and body, and **Nunito** for numerical / product data. Both are licensed Gold PC custom typefaces. The fallback stack walks `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`.
 
 The split is functional, not decorative:
-- GoldNova → editorial type (headlines, paragraphs, button labels, nav)
-- GoldPlex → tabular numerical type (prices, stock counts, discount percentages, stat counters, product ratings)
+- Nunito Sans → editorial type (headlines, paragraphs, button labels, nav)
+- Nunito → tabular numerical type (prices, stock counts, discount percentages, stat counters, product ratings)
 
-Mixing them is not optional — GoldNova on a price ticker would lose the hardware‑store character; GoldPlex on a paragraph would feel monospace‑cold.
+Mixing them is not optional — Nunito Sans on a price ticker would lose the hardware‑store character; Nunito on a paragraph would feel monospace‑cold.
 
 ### Hierarchy
 
 | Token | Size | Weight | Line Height | Letter Spacing | Use |
 |---|---|---|---|---|---|
-| `{typography.hero-display}` | 64px | 700 | 1.1 | -1px | Homepage h1 (“2,500,000+ CUSTOMERS TRUST US”) |
-| `{typography.display-lg}` | 48px | 700 | 1.1 | -0.5px | Brand‑claim headlines (“YOUR GEAR, PROTECTED”), product‑launch hero (“Introducing the Titan X”) |
-| `{typography.display-md}` | 40px | 600 | 1.15 | -0.3px | Section heads on long‑scroll pages |
-| `{typography.display-sm}` | 32px | 600 | 1.2 | 0 | CTA band headlines (“Build Your Dream PC with Gold PC”) |
-| `{typography.title-lg}` | 24px | 600 | 1.3 | 0 | Sub‑section titles |
-| `{typography.title-md}` | 20px | 600 | 1.35 | 0 | QR‑promo cards, feature card titles |
-| `{typography.title-sm}` | 16px | 600 | 1.4 | 0 | Trust badges, FAQ rows, step labels |
-| `{typography.number-display}` | 40px | 700 | 1.1 | -0.3px | Large stat numbers (1,000,000+ Products, 98% Satisfaction) — GoldPlex |
-| `{typography.number-md}` | 16px | 500 | 1.4 | 0 | Product table prices, spec table cells — GoldPlex |
-| `{typography.number-sm}` | 14px | 500 | 1.4 | 0 | Inline prices, discount % changes — GoldPlex |
-| `{typography.body-md}` | 14px | 400 | 1.5 | 0 | Default running‑text — GoldNova |
+| `{typography.hero-display}` | 54px | 700 | 1.1 | -1px | Homepage h1 ("2,500,000+ CUSTOMERS TRUST US") |
+| `{typography.display-lg}` | 40px | 700 | 1.1 | -0.5px | Brand‑claim headlines ("YOUR GEAR, PROTECTED"), product‑launch hero ("Introducing the Titan X") |
+| `{typography.display-md}` | 34px | 600 | 1.15 | -0.3px | Section heads on long‑scroll pages |
+| `{typography.display-sm}` | 28px | 600 | 1.2 | 0 | CTA band headlines ("Build Your Dream PC with Gold PC") |
+| `{typography.title-lg}` | 20px | 600 | 1.3 | 0 | Sub‑section titles |
+| `{typography.title-md}` | 18px | 600 | 1.35 | 0 | QR‑promo cards, feature card titles |
+| `{typography.title-sm}` | 15px | 600 | 1.4 | 0 | Trust badges, FAQ rows, step labels |
+| `{typography.number-display}` | 34px | 700 | 1.1 | -0.3px | Large stat numbers (1,000,000+ Products, 98% Satisfaction) — Nunito |
+| `{typography.number-md}` | 16px | 500 | 1.4 | 0 | Product table prices, spec table cells — Nunito |
+| `{typography.number-sm}` | 14px | 500 | 1.4 | 0 | Inline prices, discount % changes — Nunito |
+| `{typography.body-md}` | 14px | 400 | 1.5 | 0 | Default running‑text — Nunito Sans |
 | `{typography.body-sm}` | 13px | 400 | 1.5 | 0 | Cookie consent text, footer body |
-| `{typography.caption}` | 12px | 500 | 1.4 | 0 | Small meta labels |
+| `{typography.caption}` | 11px | 500 | 1.4 | 0 | Small meta labels |
 | `{typography.button}` | 14px | 600 | 1 | 0 | Standard CTA button labels |
 | `{typography.nav-link}` | 14px | 500 | 1.4 | 0 | Top nav menu items |
 
 ### Principles
 Display sizes use weight 700 — heavier than most marketing systems. This makes sense for a hardware store: stats and specs need to read at a glance, headlines need to compete with dense product grids and comparison tables. The system will not soften display weight to 400 the way Airtable or Stripe does.
 
-`{typography.number-display}` and the smaller number variants always use **GoldPlex**, even when surrounding body type uses GoldNova. Prices, stock counts, and stat counters render in GoldPlex regardless of context — it is the system’s “trustworthy number” voice.
+`{typography.number-display}` and the smaller number variants always use **Nunito**, even when surrounding body type uses Nunito Sans. Prices, stock counts, and stat counters render in Nunito regardless of context — it is the system’s “trustworthy number” voice.
 
 ### Note on Font Substitutes
-If GoldNova and GoldPlex are unavailable, **Inter** is the closest open‑source substitute for GoldNova and **JetBrains Mono** or **IBM Plex Sans** is the closest substitute for GoldPlex (depending on whether tabular monospace fidelity matters more than humanist proportions). Adjust display headlines down by ~3% in line‑height to match GoldNova’s tighter cap height.
+Nunito Sans (Google Fonts, OFL license) replaces the original GoldNova. Nunito (Google Fonts, OFL license) replaces GoldPlex for numerical data. Both are free, open-source fonts with full Cyrillic support. Nunito Sans has a larger x-height — display sizes are scaled down ~15% from the original spec to maintain visual proportions.
 
 ## Layout
 
@@ -512,15 +512,15 @@ Gold PC’s radius hierarchy is tighter than typical marketing systems — most 
 
 **`hero-band-dark`** — Full‑width dark band carrying the homepage h1 + sub‑headline + dual CTA pair. Background `{colors.canvas-dark}`, padding `{spacing.section}` (80px). The h1 (“2,500,000+ CUSTOMERS TRUST US”) uses `{typography.hero-display}` at 64px / 700 — the system’s largest type role.
 
-**`stat-callout-card`** — Inline yellow stat numbers (1,000,000+ Products, 24/7 Support, 98% Satisfaction). Transparent background, text `{colors.primary}`, type `{typography.number-display}` in GoldPlex. Used as a flat layout block, not a card with surface — the yellow text alone carries the visual weight.
+**`stat-callout-card`** — Inline yellow stat numbers (1,000,000+ Products, 24/7 Support, 98% Satisfaction). Transparent background, text `{colors.primary}`, type `{typography.number-display}` in Nunito. Used as a flat layout block, not a card with surface — the yellow text alone carries the visual weight.
 
 **`trust-badge`** — Small dark cards holding “No.1 PC Retailer” / “Award‑Winning Support” claims. Background `{colors.surface-card-dark}`, rounded `{rounded.lg}` (8px), padding 16px × 20px. Yellow numeric or word badge (“No.1”) sits next to a short label.
 
 **`product-table-card`** — The right‑side top‑deals table on the homepage. Background `{colors.surface-card-dark}`, rounded `{rounded.xl}` (12px), padding `{spacing.lg}` (24px). Carries a tab row (Best Sellers / New Arrivals / Biggest Discounts), then a 5‑column row of products with price, 24‑hour price change %, stock status, action button. Each row uses `{component.product-row}`.
 
-**`product-row`** — A single row inside the product table. Transparent background, 12px vertical padding, hairline divider between rows. Product image (32×32) + name on left; price in `{typography.number-md}` (GoldPlex); 24‑hour change cell colored by direction (`{component.price-drop-cell}` or `{component.price-rise-cell}`); right‑aligned chevron icon for “view detail.”
+**`product-row`** — A single row inside the product table. Transparent background, 12px vertical padding, hairline divider between rows. Product image (32×32) + name on left; price in `{typography.number-md}` (Nunito); 24‑hour change cell colored by direction (`{component.price-drop-cell}` or `{component.price-rise-cell}`); right‑aligned chevron icon for “view detail.”
 
-**`price-drop-cell`** / **`price-rise-cell`** — Colored text cells for price changes. Transparent background, text `{colors.price-drop}` or `{colors.price-rise}`, type `{typography.number-md}` in GoldPlex. Always paired with a small triangle arrow indicating direction.
+**`price-drop-cell`** / **`price-rise-cell`** — Colored text cells for price changes. Transparent background, text `{colors.price-drop}` or `{colors.price-rise}`, type `{typography.number-md}` in Nunito. Always paired with a small triangle arrow indicating direction.
 
 **`gaming-setup-card`** — The “Inspiration” section’s photo strip — 3 lifestyle photos showing people using Gold PC gaming rigs. Background `{colors.surface-card-dark}`, rounded `{rounded.xl}`. Photos crop edge‑to‑edge, no internal padding around the image.
 
@@ -534,7 +534,7 @@ Gold PC’s radius hierarchy is tighter than typical marketing systems — most 
 
 ### Light‑Mode Transactional Components
 
-**`product-quantity-card`** — The right‑rail card on the product detail / checkout page. Background `{colors.canvas-light}`, rounded `{rounded.lg}` (8px), padding `{spacing.lg}` (24px). Carries an editable quantity input in `{typography.number-display}` (GoldPlex), a variant selector (e.g., color/storage), and a yellow `{component.button-primary}` for “Add to Cart” / “Buy Now.”
+**`product-quantity-card`** — The right‑rail card on the product detail / checkout page. Background `{colors.canvas-light}`, rounded `{rounded.lg}` (8px), padding `{spacing.lg}` (24px). Carries an editable quantity input in `{typography.number-display}` (Nunito), a variant selector (e.g., color/storage), and a yellow `{component.button-primary}` for “Add to Cart” / “Buy Now.”
 
 **`steps-card`** — The “How to Get Your PC” 3‑up cards (Choose Your Parts → Confirm Order → Receive & Play). Background `{colors.canvas-light}`, rounded `{rounded.lg}`, padding `{spacing.lg}`. Each card has a small numbered icon, a `{typography.title-sm}` step name, and a body description.
 
@@ -570,7 +570,7 @@ Gold PC’s radius hierarchy is tighter than typical marketing systems — most 
 - Reserve `{colors.primary}` (Gold PC Yellow) for primary actions, brand‑claim headlines, and the wordmark. Never use it for secondary or decorative purposes — yellow’s scarcity is what makes it powerful.
 - Keep `{component.button-primary}` (yellow with black text) as the universal primary CTA. The button uses `{colors.primary}` (#FCD535) background and `{colors.on-primary}` (#181a20) text across all surfaces.
 - Use `{component.button-add-to-cart}` (green) and `{component.button-remove}` (red) only for explicit add‑to‑cart / positive purchase and remove / out‑of‑stock actions. Never use them for generic “confirm” or “cancel” because they carry semantic price‑direction meaning.
-- Use GoldPlex for every number. Prices, stock counts, discount percentages, stat counters — all GoldPlex. Mixing GoldNova into a number ticker breaks the hardware‑store character.
+- Use Nunito for every number. Prices, stock counts, discount percentages, stat counters — all Nunito. Mixing Nunito Sans into a number ticker breaks the hardware‑store character.
 - Use the unified dark canvas (`{colors.canvas-dark}`) across all surfaces — marketing, product, transactional. The dark theme is Gold PC's signature look.
 - Anchor every editorial band with `{spacing.section}` (80px). Gold PC is denser than airy marketing sites — 80px is the right rhythm.
 
@@ -617,13 +617,13 @@ Gold PC’s radius hierarchy is tighter than typical marketing systems — most 
 3. Variants of an existing component (`-active`, `-disabled`) live as separate entries in `components:` — never as nested state objects.
 4. Use `{token.refs}` everywhere prose mentions a color, a radius, a typography role, or a spacing value.
 5. Never document hover. The system documents Default and Active/Pressed states only.
-6. Numbers always use GoldPlex; copy always uses GoldNova. Mixing them is a system violation.
+6. Numbers always use Nunito; copy always uses Nunito Sans. Mixing them is a system violation.
 7. Price‑drop green / price‑rise red are semantic price signals — never repurpose them for “success” or “error” generic states.
 
 ## Known Gaps
 
 - The frequency analysis of hairlines and the yellow accent was derived from design intent; hairlines are used extensively throughout.
-- GoldNova and GoldPlex weight‑axis values are not formalized as variable‑font tokens — only the static weights observed in designs are documented.
+- Nunito Sans and Nunito are variable fonts (weight 200–1000). The CSS @font-face declarations use the full variable range for optimal file size.
 - Animation and transition timings (chart updates, price‑change flashes) are not in scope.
 - Form validation states beyond `{component.text-input-on-light}` defaults are not extracted — error / success input variants would need a checkout or order‑confirmation flow to confirm.
 - The full PC builder surfaces (component pickers, compatibility checker) use the standard dark‑theme card pattern (`surface-card-dark`, gold accent).

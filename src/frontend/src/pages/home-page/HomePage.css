@@ -41,7 +41,7 @@
   background: rgba(252, 213, 53, 0.1);
   border: 1px solid rgba(252, 213, 53, 0.2);
   border-radius: 9999px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 13px;
   font-weight: 500;
   color: #FCD535;
@@ -50,7 +50,7 @@
 }
 
 .home-hero__title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 60px;
   font-weight: 700;
   line-height: 1.05;
@@ -61,7 +61,7 @@
 }
 
 .home-hero__subtitle {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 18px;
   line-height: 1.5;
   color: #707a8a;
@@ -111,7 +111,7 @@
 }
 
 .home-categories__title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 28px;
   font-weight: 600;
   line-height: 1.15;
@@ -120,7 +120,7 @@
 }
 
 .home-categories__desc {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 15px;
   color: #707a8a;
 }
@@ -179,7 +179,7 @@
 }
 
 .home-categories__name {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 15px;
   font-weight: 600;
   color: #ffffff;
@@ -187,7 +187,7 @@
 }
 
 .home-categories__count {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Nunito', monospace;
   font-size: 12px;
   font-weight: 500;
   color: #707a8a;
@@ -230,7 +230,7 @@
 }
 
 .home-trust__title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 28px;
   font-weight: 600;
   line-height: 1.15;
@@ -239,7 +239,7 @@
 }
 
 .home-trust__subtitle {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 15px;
   color: #707a8a;
 }
@@ -298,7 +298,7 @@
 }
 
 .home-trust__value {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 36px;
   font-weight: 700;
   color: #FCD535;
@@ -307,7 +307,7 @@
 }
 
 .home-trust__label {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: #707a8a;
@@ -340,7 +340,7 @@
 }
 
 .home-popular__title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 32px;
   font-weight: 600;
   line-height: 1.15;
@@ -349,7 +349,7 @@
 }
 
 .home-popular__link {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: #707a8a;
@@ -390,7 +390,7 @@
 }
 
 .home-gaming__title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 28px;
   font-weight: 600;
   line-height: 1.15;
@@ -399,7 +399,7 @@
 }
 
 .home-gaming__desc {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 15px;
   color: #707a8a;
 }
@@ -477,7 +477,7 @@
 }
 
 .home-gaming__carousel-label {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 28px;
   font-weight: 700;
   color: #ffffff;
@@ -493,7 +493,7 @@
 }
 
 .home-gaming__carousel-subtitle {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 15px;
   color: rgba(255, 255, 255, 0.8);
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
@@ -629,7 +629,7 @@
 }
 
 .home-gaming__title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 32px;
   font-weight: 600;
   line-height: 1.15;
@@ -638,7 +638,7 @@
 }
 
 .home-gaming__desc {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 16px;
   color: #707a8a;
 }
@@ -703,7 +703,7 @@
 }
 
 .home-gaming__card-label {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 18px;
   font-weight: 600;
   color: #ffffff;
@@ -731,7 +731,7 @@
 }
 
 .home-cta__title {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 36px;
   font-weight: 700;
   line-height: 1.1;
@@ -741,7 +741,7 @@
 }
 
 .home-cta__subtitle {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Nunito Sans', sans-serif;
   font-size: 16px;
   color: #707a8a;
   margin-bottom: 32px;
@@ -758,3 +758,163 @@
 }
 
 /* ---------- Scroll Fade Animation (framer-motion whileInView) ---------- */
+
+/* ===== Responsive Typography ===== */
+@media (max-width: 768px) {
+  .home-hero__title {
+    font-size: 36px;
+  }
+
+  .home-hero__subtitle {
+    font-size: 16px;
+  }
+
+  .home-hero__badge {
+    font-size: 12px;
+  }
+
+  .home-categories__title,
+  .home-trust__title,
+  .home-gaming__title {
+    font-size: 24px;
+  }
+
+  .home-categories__desc,
+  .home-trust__subtitle,
+  .home-gaming__desc {
+    font-size: 14px;
+  }
+
+  .home-trust__value {
+    font-size: 28px;
+  }
+
+  .home-trust__label {
+    font-size: 13px;
+  }
+
+  .home-popular__title {
+    font-size: 24px;
+  }
+
+  .home-popular__link {
+    font-size: 13px;
+  }
+
+  .home-gaming__carousel-label {
+    font-size: 22px;
+  }
+
+  .home-gaming__carousel-subtitle {
+    font-size: 13px;
+  }
+
+  .home-gaming__card-label {
+    font-size: 16px;
+  }
+
+  .home-cta__title {
+    font-size: 28px;
+  }
+
+  .home-cta__subtitle {
+    font-size: 14px;
+  }
+
+  .home-categories__name {
+    font-size: 14px;
+  }
+
+  .home-categories__count {
+    font-size: 11px;
+  }
+}
+
+/* Small phones (500px and below — actual mobile viewport) */
+@media (max-width: 500px) {
+  .home-hero {
+    padding: 80px 0 60px;
+  }
+
+  .home-hero__title {
+    font-size: 26px;
+    letter-spacing: -0.02em;
+  }
+
+  .home-hero__subtitle {
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+
+  .home-hero__badge {
+    font-size: 11px;
+    padding: 6px 12px;
+    margin-bottom: 16px;
+  }
+
+  .home-categories__title,
+  .home-trust__title,
+  .home-gaming__title {
+    font-size: 20px;
+  }
+
+  .home-categories__desc,
+  .home-trust__subtitle,
+  .home-gaming__desc {
+    font-size: 13px;
+  }
+
+  .home-trust__value {
+    font-size: 22px;
+  }
+
+  .home-trust__label {
+    font-size: 12px;
+  }
+
+  .home-trust__card {
+    padding: 20px 12px;
+    min-height: 140px;
+  }
+
+  .home-popular__title {
+    font-size: 20px;
+  }
+
+  .home-popular__link {
+    font-size: 12px;
+  }
+
+  .home-gaming__carousel-label {
+    font-size: 18px;
+  }
+
+  .home-gaming__carousel-subtitle {
+    font-size: 12px;
+  }
+
+  .home-gaming__card-label {
+    font-size: 14px;
+  }
+
+  .home-cta__title {
+    font-size: 22px;
+  }
+
+  .home-cta__subtitle {
+    font-size: 13px;
+  }
+
+  .home-categories__name {
+    font-size: 13px;
+  }
+
+  .home-categories__count {
+    font-size: 10px;
+  }
+
+  .home-categories__icon-wrap {
+    width: 40px;
+    height: 40px;
+  }
+}
