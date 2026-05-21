@@ -4,58 +4,25 @@
  * API-driven via useServices hook
  */
 import { Link } from 'react-router-dom';
-import {
-  ArrowRight,
-  ChevronRight,
-  ShieldCheck,
-  Clock,
-  Users,
-  CreditCard,
-  Wrench,
-  TrendingUp,
-  Info,
-  Box,
-  Database,
-  Sun,
-  Loader2,
-  RefreshCw,
-} from 'lucide-react';
+import { ArrowRight, ChevronRight, Clock, Loader2, RefreshCw } from 'lucide-react';
 import { useServices } from '../../hooks/useServices';
-import type { ServiceCategory } from '../../api/types';
-
-// ═══════════════════════════════════════════════
-//  Маппинг категорий на иконки
-// ═══════════════════════════════════════════════
-
-const categoryIcons: Record<ServiceCategory, React.ComponentType<{ size?: number }>> = {
-  repair: Wrench,
-  upgrade: TrendingUp,
-  diagnostics: Info,
-  assembly: Box,
-  'data-recovery': Database,
-  maintenance: Sun,
-};
 
 const benefits = [
   {
     title: 'Гарантия до 12 месяцев',
     description: 'На все виды работ и установленные запчасти',
-    icon: ShieldCheck,
   },
   {
     title: 'Быстрое выполнение',
     description: 'Большинство работ выполняется за 1–2 дня',
-    icon: Clock,
   },
   {
     title: 'Опытные специалисты',
     description: 'Сертифицированные инженеры с опытом 10+ лет',
-    icon: Users,
   },
   {
     title: 'Честные цены',
     description: 'Фиксированные цены без скрытых платежей',
-    icon: CreditCard,
   },
 ];
 
@@ -92,7 +59,7 @@ export function ServicesPage() {
             </p>
             <button
               onClick={() => refetch()}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-surface-card border border-hairline-dark text-body-text rounded-lg hover:border-gold/30 hover:text-gold transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-surface-card border border-hairline-dark text-body-text rounded-md hover:border-gold/30 hover:text-gold transition-colors"
             >
               <RefreshCw size={18} />
               <span>Попробовать снова</span>
@@ -115,7 +82,7 @@ export function ServicesPage() {
 
         {/* Hero */}
         <section className="mb-16">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-body-text mb-4 tracking-[-0.02em]">
+          <h1 className="text-display-sm md:text-display-md lg:text-display-lg font-bold text-body-text mb-4">
             Наши <span className="text-gold">услуги</span>
           </h1>
           <p className="text-lg text-muted-text max-w-[600px] leading-relaxed">
@@ -134,48 +101,40 @@ export function ServicesPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {services.map((service) => {
-                const IconComponent = categoryIcons[service.category] ?? Wrench;
-                return (
-                  <article
-                    key={service.id}
-                    className="bg-surface-card rounded-xl border border-hairline-dark p-6 md:p-8 flex flex-col group transition-all duration-300 hover:border-gold/30"
-                  >
-                    {/* Icon */}
-                    <div className="w-14 h-14 flex items-center justify-center bg-gold/10 text-gold rounded-lg mb-5">
-                      <IconComponent size={24} />
-                    </div>
+              {services.map((service) => (
+                <article
+                  key={service.id}
+                  className="bg-surface-card rounded-xl border border-hairline-dark p-6 md:p-8 flex flex-col group transition-all duration-300 hover:border-gold/30"
+                >
+                  {/* Title */}
+                  <h2 className="text-title-md font-semibold text-body-text mb-3">{service.name}</h2>
 
-                    {/* Title */}
-                    <h2 className="text-lg font-semibold text-body-text mb-3">{service.name}</h2>
+                  {/* Description */}
+                  <p className="text-sm text-muted-text leading-relaxed mb-6 flex-grow">
+                    {service.shortDescription || service.description}
+                  </p>
 
-                    {/* Description */}
-                    <p className="text-sm text-muted-text leading-relaxed mb-6 flex-grow">
-                      {service.shortDescription || service.description}
-                    </p>
+                  {/* Duration */}
+                  <p className="text-xs text-muted-text mb-4 flex items-center gap-1.5">
+                    <Clock size={12} />
+                    {service.duration}
+                  </p>
 
-                    {/* Duration */}
-                    <p className="text-xs text-muted-text mb-4 flex items-center gap-1.5">
-                      <Clock size={12} />
-                      {service.duration}
-                    </p>
-
-                    {/* Footer: price + link */}
-                    <div className="flex justify-between items-center pt-5 border-t border-hairline-dark">
-                      <span className="text-sm text-muted-text">
-                        от <span className="text-gold font-semibold">{service.basePrice} BYN</span>
-                      </span>
-                      <Link
-                        to={`/services/${service.slug}`}
-                        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-text hover:text-gold transition-colors"
-                      >
-                        Подробнее
-                        <ChevronRight size={16} className="transition-transform duration-200 group-hover:translate-x-0.5" />
-                      </Link>
-                    </div>
-                  </article>
-                );
-              })}
+                  {/* Footer: price + link */}
+                  <div className="flex justify-between items-center pt-5 border-t border-hairline-dark">
+                    <span className="text-sm text-muted-text">
+                      от <span className="text-gold font-semibold">{service.basePrice} BYN</span>
+                    </span>
+                    <Link
+                      to={`/services/${service.slug}`}
+                      className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-text hover:text-gold transition-colors"
+                    >
+                      Подробнее
+                      <ChevronRight size={16} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+                    </Link>
+                  </div>
+                </article>
+              ))}
             </div>
           )}
         </section>
@@ -183,25 +142,16 @@ export function ServicesPage() {
         {/* Benefits */}
         <section className="mb-20">
           <div className="bg-surface-card rounded-xl border border-hairline-dark p-6 md:p-8">
-            <h2 className="text-xl font-semibold text-body-text mb-8 flex items-center gap-3">
-              <ShieldCheck size={24} className="text-gold" />
+            <h2 className="text-title-lg font-semibold text-body-text mb-8">
               Почему выбирают нас
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {benefits.map((benefit) => {
-                const Icon = benefit.icon;
-                return (
-                  <div key={benefit.title} className="flex items-start gap-4">
-                    <div className="w-10 h-10 flex items-center justify-center bg-gold/10 text-gold rounded-lg shrink-0">
-                      <Icon size={20} />
-                    </div>
-                    <div>
-                      <h4 className="text-body-text font-semibold text-sm mb-1">{benefit.title}</h4>
-                      <p className="text-sm text-muted-text leading-relaxed">{benefit.description}</p>
-                    </div>
-                  </div>
-                );
-              })}
+              {benefits.map((benefit) => (
+                <div key={benefit.title}>
+                  <h4 className="text-body-text font-semibold text-sm mb-1">{benefit.title}</h4>
+                  <p className="text-sm text-muted-text leading-relaxed">{benefit.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -209,7 +159,7 @@ export function ServicesPage() {
         {/* CTA — flat, no gradients per DESIGN.md */}
         <section>
           <div className="bg-surface-card rounded-xl border border-hairline-dark p-8 md:p-12 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-body-text mb-3">
+            <h2 className="text-display-sm font-bold text-body-text mb-3">
               Нужна <span className="text-gold">консультация</span>?
             </h2>
             <p className="text-muted-text mb-6 max-w-md mx-auto">
@@ -217,7 +167,7 @@ export function ServicesPage() {
             </p>
             <Link
               to="/service-request"
-              className="inline-flex items-center gap-2.5 px-6 py-3 bg-gold text-gold-ink font-semibold rounded-lg hover:bg-gold-active transition-colors"
+              className="inline-flex items-center gap-2.5 px-6 py-3 bg-gold text-gold-ink font-semibold rounded-md hover:bg-gold-active transition-colors h-10"
             >
               Оставить заявку
               <ArrowRight size={18} />

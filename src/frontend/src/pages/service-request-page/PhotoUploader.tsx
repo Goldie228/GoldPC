@@ -191,14 +191,14 @@ export function PhotoUploader({ files, onFilesChange }: PhotoUploaderProps) {
           transition-all cursor-pointer min-h-[160px]
           ${
             isDragging
-              ? 'border-[#fcd535] bg-[#fcd535]/5'
-              : 'border-[#2b3139] bg-[#1e2329] hover:border-[#707a8a]'
+              ? 'border-gold bg-gold/5'
+              : 'border-border bg-surface-card hover:border-muted-text'
           }
         `}
       >
         {/* Иконка загрузки */}
         <svg
-          className={`w-10 h-10 transition-colors ${isDragging ? 'text-[#fcd535]' : 'text-[#707a8a]'}`}
+          className={`w-10 h-10 transition-colors ${isDragging ? 'text-gold' : 'text-muted-text'}`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -210,19 +210,19 @@ export function PhotoUploader({ files, onFilesChange }: PhotoUploaderProps) {
         </svg>
 
         {/* Основной текст */}
-        <span className="text-[#eaecef] text-sm text-center">
+        <span className="text-foreground text-sm text-center">
           Перетащите файлы сюда или кликните для выбора
         </span>
 
         {/* Подсказка */}
-        <span className="text-[#707a8a] text-xs text-center">
+        <span className="text-muted-text text-xs text-center">
           PNG, JPG до 10MB. Можно несколько файлов
         </span>
       </div>
 
       {/* Счётчик загруженных файлов */}
       {files.length > 0 && (
-        <p className="text-[#707a8a] text-xs mt-3">
+        <p className="text-muted-text text-xs mt-3">
           Выбрано: {files.length} файл{files.length === 1 ? '' : 'ов'}
         </p>
       )}
@@ -231,7 +231,7 @@ export function PhotoUploader({ files, onFilesChange }: PhotoUploaderProps) {
       {previewUrls.length > 0 && (
         <div className="flex flex-wrap gap-3 mt-4">
           {previewUrls.map((url, index) => (
-            <div key={url} className="relative w-20 h-20 rounded-lg overflow-hidden border border-[#2b3139] group">
+            <div key={url} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border group">
               {/* Изображение */}
               <img
                 src={url}
@@ -246,7 +246,7 @@ export function PhotoUploader({ files, onFilesChange }: PhotoUploaderProps) {
                   e.stopPropagation();
                   handleRemove(index);
                 }}
-                className="absolute -top-2 -right-2 w-5 h-5 bg-[#f6465d] rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-[#e53e50]"
+                className="absolute -top-2 -right-2 w-5 h-5 bg-price-rise rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-[#e53e50]"
                 aria-label={`Удалить файл ${index + 1}`}
               >
                 <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 h-3">

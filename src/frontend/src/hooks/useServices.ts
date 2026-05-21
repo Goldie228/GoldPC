@@ -4,13 +4,29 @@
  */
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import apiClient from '../api/client';
-import type { Service, ServiceListResponse, GetServicesParams, Uuid } from '../api/types';
+import type { Service, ServiceCategory, ServiceListResponse, GetServicesParams, Uuid } from '../api/types';
 import type { ServiceType } from '../api/services';
 
 interface ApiResponse<T> {
   data?: T;
   success?: boolean;
   message?: string;
+}
+
+/**
+ * Определяет категорию услуги по названию
+ */
+function inferCategory(name: string): ServiceCategory {
+  const n = name.toLowerCase();
+  if (n.includes('ноутбук')) return 'laptop-repair';
+  if (n.includes('проч')) return 'other'; // прочая техника
+  if (n.includes('ремонт')) return 'repair';
+  if (n.includes('модерниза') || n.includes('апгрейд')) return 'upgrade';
+  if (n.includes('диагностик')) return 'diagnostics';
+  if (n.includes('сборк')) return 'assembly';
+  if (n.includes('восстановлен') || n.includes('данных')) return 'data-recovery';
+  if (n.includes('чистк') || n.includes('обслуживан')) return 'maintenance';
+  return 'other';
 }
 
 /**
@@ -21,7 +37,7 @@ function mapServiceTypeToService(dto: ServiceType): Service {
     id: dto.id,
     name: dto.name,
     slug: dto.name.toLowerCase().replace(/\s+/g, '-'),
-    category: 'repair',
+    category: inferCategory(dto.name),
     description: dto.description,
     shortDescription: dto.description.slice(0, 100),
     basePrice: dto.basePrice,

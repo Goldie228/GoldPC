@@ -271,11 +271,13 @@ export interface Cart {
 // === Услуги сервисного центра ===
 export type ServiceCategory = 
   | 'repair'
+  | 'laptop-repair'
   | 'upgrade'
   | 'diagnostics'
   | 'assembly'
   | 'data-recovery'
-  | 'maintenance';
+  | 'maintenance'
+  | 'other';
 
 export interface ServicePriceItem {
   id: Uuid;
