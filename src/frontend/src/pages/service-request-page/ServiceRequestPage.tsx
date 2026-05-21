@@ -13,10 +13,10 @@ import type { CreateServiceRequest } from '../../api/services';
  * Типы устройств для ремонта
  */
 const DEVICE_TYPES = [
-  { value: 'pc', label: 'ПК', icon: '🖥️' },
-  { value: 'laptop', label: 'Ноутбук', icon: '💻' },
-  { value: 'printer', label: 'Принтер', icon: '🖨️' },
-  { value: 'other', label: 'Другое', icon: '📦' },
+  { value: 'pc', label: 'ПК' },
+  { value: 'laptop', label: 'Ноутбук' },
+  { value: 'printer', label: 'Принтер' },
+  { value: 'other', label: 'Другое' },
 ] as const;
 
 /**
@@ -200,12 +200,12 @@ export function ServiceRequestPage() {
         }}
       />
       {selectedServiceName && (
-        <p className="text-[#0ecb81] text-sm mt-3">
+        <p className="text-price-drop text-sm mt-3">
           ✓ Выбрано: {selectedServiceName}
         </p>
       )}
       {errors.service && (
-        <p className="text-[#f6465d] text-xs mt-2">{errors.service}</p>
+        <p className="text-price-rise text-xs mt-2">{errors.service}</p>
       )}
     </div>
   );
@@ -213,13 +213,13 @@ export function ServiceRequestPage() {
   /** Шаг 2 — информация об устройстве */
   const renderStep2Device = () => (
     <div>
-      <h2 className="text-[#eaecef] text-lg font-semibold mb-4">
+      <h2 className="text-foreground text-lg font-semibold mb-4">
         Информация об устройстве
       </h2>
 
       {/* Тип устройства */}
-      <label className="block text-xs font-medium text-[#707a8a] mb-2.5 uppercase tracking-[0.05em]">
-        Тип техники <span className="text-[#f6465d]">*</span>
+      <label className="block text-xs font-medium text-muted-text mb-2.5 uppercase tracking-[0.05em]">
+        Тип техники <span className="text-price-rise">*</span>
       </label>
       <div className="flex gap-3 flex-wrap mb-6">
         {DEVICE_TYPES.map((type) => (
@@ -235,13 +235,12 @@ export function ServiceRequestPage() {
             />
             <label
               htmlFor={`device-${type.value}`}
-              className={`flex items-center gap-2 px-4 py-3 bg-[#2b3139] border rounded-lg cursor-pointer transition-all text-sm ${
+              className={`flex items-center gap-2 px-4 py-3 bg-surface-elevated border rounded-lg cursor-pointer transition-all text-sm ${
                 formData.deviceType === type.value
-                  ? 'border-[#fcd535] bg-[#fcd535]/10 text-[#fcd535]'
-                  : 'border-[#2b3139] text-[#707a8a] hover:border-[#707a8a] hover:text-[#eaecef]'
+                  ? 'border-gold bg-gold/10 text-gold'
+                  : 'border-border text-muted-text hover:border-[#707a8a] hover:text-foreground'
               }`}
             >
-              <span className="text-lg">{type.icon}</span>
               {type.label}
             </label>
           </div>
@@ -271,15 +270,15 @@ export function ServiceRequestPage() {
   /** Шаг 3 — описание проблемы */
   const renderStep3Problem = () => (
     <div>
-      <h2 className="text-[#eaecef] text-lg font-semibold mb-4">
+      <h2 className="text-foreground text-lg font-semibold mb-4">
         Опишите проблему
       </h2>
 
       <label
-        className="block text-xs font-medium text-[#707a8a] mb-2.5 uppercase tracking-[0.05em]"
+        className="block text-xs font-medium text-muted-text mb-2.5 uppercase tracking-[0.05em]"
         htmlFor="problem"
       >
-        Описание проблемы <span className="text-[#f6465d]">*</span>
+        Описание проблемы <span className="text-price-rise">*</span>
       </label>
       <textarea
         id="problem"
@@ -288,25 +287,25 @@ export function ServiceRequestPage() {
         onChange={handleFieldChange}
         placeholder="Опишите подробно, что не работает или какие проблемы вы заметили..."
         rows={5}
-        className={`w-full p-3.5 bg-[#2b3139] border rounded-lg text-[#eaecef] font-inherit text-sm resize-y min-h-[120px] focus:outline-none transition-all ${
+        className={`w-full p-3.5 bg-surface-elevated border rounded-lg text-foreground font-inherit text-sm resize-y min-h-[120px] focus:outline-none transition-all ${
           errors.problem
             ? 'border-[#f6465d] focus:border-[#f6465d] focus:shadow-[0_0_0_3px_rgba(246,70,93,0.15)]'
-            : 'border-[#2b3139] focus:border-[#fcd535] focus:shadow-[0_0_0_3px_rgba(252,213,53,0.1)]'
+            : 'border-border focus:border-gold focus:shadow-[0_0_0_3px_rgba(252,213,53,0.1)]'
         }`}
       />
       <div className="flex justify-between items-center mt-2">
-        <span className="text-xs text-[#707a8a]">
+        <span className="text-xs text-muted-text">
           {formData.problem.trim().length < 10
             ? `Минимум 10 символов (ещё ${10 - formData.problem.trim().length})`
             : `${formData.problem.trim().length} символов`}
         </span>
         {errors.problem && (
-          <span className="text-xs text-[#f6465d]">{errors.problem}</span>
+          <span className="text-xs text-price-rise">{errors.problem}</span>
         )}
       </div>
 
       <div className="mt-6">
-        <label className="block text-xs font-medium text-[#707a8a] mb-2.5 uppercase tracking-[0.05em]">
+        <label className="block text-xs font-medium text-muted-text mb-2.5 uppercase tracking-[0.05em]">
           Фотографии (необязательно)
         </label>
         <PhotoUploader files={photos} onFilesChange={setPhotos} />
@@ -317,7 +316,7 @@ export function ServiceRequestPage() {
   /** Шаг 4 — контактные данные */
   const renderStep4Contact = () => (
     <div>
-      <h2 className="text-[#eaecef] text-lg font-semibold mb-4">
+      <h2 className="text-foreground text-lg font-semibold mb-4">
         Контактные данные
       </h2>
 
@@ -353,7 +352,7 @@ export function ServiceRequestPage() {
         {/* Предпочитаемый способ связи */}
         <div>
           <label
-            className="block text-xs font-medium text-[#707a8a] mb-2.5 uppercase tracking-[0.05em]"
+            className="block text-xs font-medium text-muted-text mb-2.5 uppercase tracking-[0.05em]"
             htmlFor="preferredContact"
           >
             Предпочитаемый способ связи
@@ -363,7 +362,7 @@ export function ServiceRequestPage() {
             name="preferredContact"
             value={formData.preferredContact}
             onChange={handleFieldChange}
-            className="w-full p-3.5 bg-[#2b3139] border border-[#2b3139] rounded-lg text-[#eaecef] font-inherit text-sm cursor-pointer appearance-none focus:outline-none focus:border-[#fcd535] bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23707a8a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_16px_center]"
+            className="w-full p-3.5 bg-surface-elevated border border-border rounded-lg text-foreground font-inherit text-sm cursor-pointer appearance-none focus:outline-none focus:border-gold bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23707a8a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_16px_center]"
           >
             {CONTACT_METHODS.map((method) => (
               <option key={method.value} value={method.value}>
@@ -379,31 +378,31 @@ export function ServiceRequestPage() {
   /** Шаг 5 — подтверждение */
   const renderStep5Summary = () => (
     <div>
-      <h2 className="text-[#eaecef] text-lg font-semibold mb-4">
+      <h2 className="text-foreground text-lg font-semibold mb-4">
         Подтверждение заявки
       </h2>
 
-      <div className="bg-[#1e2329] border border-[#2b3139] rounded-lg p-6 space-y-4">
+      <div className="bg-surface-card border border-border rounded-lg p-6 space-y-4">
         {/* Услуга */}
         <div className="flex justify-between">
-          <span className="text-sm text-[#707a8a]">Услуга</span>
-          <span className="text-sm text-[#eaecef] font-medium">
+          <span className="text-sm text-muted-text">Услуга</span>
+          <span className="text-sm text-foreground font-medium">
             {selectedServiceName}
           </span>
         </div>
 
         {/* Устройство */}
         <div className="flex justify-between">
-          <span className="text-sm text-[#707a8a]">Тип устройства</span>
-          <span className="text-sm text-[#eaecef] font-medium">
+          <span className="text-sm text-muted-text">Тип устройства</span>
+          <span className="text-sm text-foreground font-medium">
             {DEVICE_TYPES.find((d) => d.value === formData.deviceType)?.label}
           </span>
         </div>
 
         {formData.brand && (
           <div className="flex justify-between">
-            <span className="text-sm text-[#707a8a]">Марка / Модель</span>
-            <span className="text-sm text-[#eaecef] font-medium">
+            <span className="text-sm text-muted-text">Марка / Модель</span>
+            <span className="text-sm text-foreground font-medium">
               {formData.brand}
             </span>
           </div>
@@ -411,17 +410,17 @@ export function ServiceRequestPage() {
 
         {formData.serial && (
           <div className="flex justify-between">
-            <span className="text-sm text-[#707a8a]">Серийный номер</span>
-            <span className="text-sm text-[#eaecef] font-medium">
+            <span className="text-sm text-muted-text">Серийный номер</span>
+            <span className="text-sm text-foreground font-medium">
               {formData.serial}
             </span>
           </div>
         )}
 
         {/* Проблема (обрезанная) */}
-        <div className="pt-3 border-t border-[#2b3139]">
-          <span className="text-sm text-[#707a8a] block mb-1">Описание проблемы</span>
-          <span className="text-sm text-[#eaecef]">
+        <div className="pt-3 border-t border-border">
+          <span className="text-sm text-muted-text block mb-1">Описание проблемы</span>
+          <span className="text-sm text-foreground">
             {formData.problem.length > 120
               ? formData.problem.slice(0, 120) + '...'
               : formData.problem}
@@ -430,38 +429,38 @@ export function ServiceRequestPage() {
 
         {/* Фото */}
         {photos.length > 0 && (
-          <div className="pt-3 border-t border-[#2b3139]">
-            <span className="text-sm text-[#707a8a]">
+          <div className="pt-3 border-t border-border">
+            <span className="text-sm text-muted-text">
               Фотографии: {photos.length} шт.
             </span>
           </div>
         )}
 
         {/* Контакты */}
-        <div className="pt-3 border-t border-[#2b3139] space-y-3">
+        <div className="pt-3 border-t border-border space-y-3">
           <div className="flex justify-between">
-            <span className="text-sm text-[#707a8a]">Имя</span>
-            <span className="text-sm text-[#eaecef] font-medium">
+            <span className="text-sm text-muted-text">Имя</span>
+            <span className="text-sm text-foreground font-medium">
               {formData.name}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-sm text-[#707a8a]">Телефон</span>
-            <span className="text-sm text-[#eaecef] font-medium">
+            <span className="text-sm text-muted-text">Телефон</span>
+            <span className="text-sm text-foreground font-medium">
               {formData.phone}
             </span>
           </div>
           {formData.email && (
             <div className="flex justify-between">
-              <span className="text-sm text-[#707a8a]">Email</span>
-              <span className="text-sm text-[#eaecef] font-medium">
+              <span className="text-sm text-muted-text">Email</span>
+              <span className="text-sm text-foreground font-medium">
                 {formData.email}
               </span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className="text-sm text-[#707a8a]">Способ связи</span>
-            <span className="text-sm text-[#eaecef] font-medium">
+            <span className="text-sm text-muted-text">Способ связи</span>
+            <span className="text-sm text-foreground font-medium">
               {CONTACT_METHODS.find((m) => m.value === formData.preferredContact)
                 ?.label ?? formData.preferredContact}
             </span>
@@ -470,8 +469,8 @@ export function ServiceRequestPage() {
       </div>
 
       {!isAuthenticated && (
-        <div className="mt-4 p-4 bg-[#2b3139] border border-[#fcd535]/30 rounded-lg text-center">
-          <p className="text-[#eaecef] text-sm mb-3">
+        <div className="mt-4 p-4 bg-surface-elevated border border-gold/30 rounded-lg text-center">
+          <p className="text-foreground text-sm mb-3">
             Для отправки заявки необходимо войти в систему
           </p>
           <Link to="/login">
@@ -499,8 +498,8 @@ export function ServiceRequestPage() {
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
                   isActive || isCompleted
-                    ? 'bg-[#fcd535] text-[#181a20]'
-                    : 'bg-[#2b3139] text-[#707a8a]'
+                    ? 'bg-gold text-gold-ink'
+                    : 'bg-surface-elevated text-muted-text'
                 }`}
               >
                 {isCompleted ? (
@@ -521,7 +520,7 @@ export function ServiceRequestPage() {
               </div>
               <span
                 className={`text-xs mt-1.5 whitespace-nowrap hidden md:block transition-colors ${
-                  isActive ? 'text-[#fcd535]' : 'text-[#707a8a]'
+                  isActive ? 'text-gold' : 'text-muted-text'
                 }`}
               >
                 {label}
@@ -532,7 +531,7 @@ export function ServiceRequestPage() {
             {index < STEP_LABELS.length - 1 && (
               <div
                 className={`h-px flex-1 mx-2 md:mx-4 ${
-                  isCompleted ? 'bg-[#fcd535]' : 'bg-[#2b3139]'
+                  isCompleted ? 'bg-gold' : 'bg-surface-elevated'
                 }`}
               />
             )}
@@ -564,10 +563,10 @@ export function ServiceRequestPage() {
       <div className="max-w-[800px] mx-auto">
         {/* Заголовок страницы */}
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-[-0.02em] text-[#eaecef] mb-2">
+          <h1 className="text-2xl font-semibold tracking-[-0.02em] text-foreground mb-2">
             Заявка в сервисный центр
           </h1>
-          <p className="text-sm text-[#707a8a]">
+          <p className="text-sm text-muted-text">
             Заполните форму, и наши специалисты свяжутся с вами
           </p>
         </div>
@@ -576,7 +575,7 @@ export function ServiceRequestPage() {
         {renderStepIndicator()}
 
         {/* Содержимое шага */}
-        <div className="bg-[#1e2329] border border-[#2b3139] rounded-lg p-6 md:p-8">
+        <div className="bg-surface-card border border-border rounded-lg p-6 md:p-8">
           {currentStep === 1 && renderStep1Service()}
           {currentStep === 2 && renderStep2Device()}
           {currentStep === 3 && renderStep3Problem()}
@@ -584,7 +583,7 @@ export function ServiceRequestPage() {
           {currentStep === 5 && renderStep5Summary()}
 
           {/* Навигационные кнопки */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-[#2b3139]">
+          <div className="flex justify-between mt-8 pt-6 border-t border-border">
             {currentStep > 1 ? (
               <Button variant="ghost" onClick={handlePrev}>
                 ← Назад

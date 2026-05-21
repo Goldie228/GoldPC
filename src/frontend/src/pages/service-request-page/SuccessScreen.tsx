@@ -12,14 +12,14 @@ export interface SuccessScreenProps {
  * Color classes map for each status color from TICKET_STATUSES.
  */
 const statusColorMap: Record<string, { bg: string; text: string }> = {
-  blue: { bg: 'bg-[#3b82f6]/20', text: 'text-[#3b82f6]' },
-  yellow: { bg: 'bg-[#fcd535]/20', text: 'text-[#fcd535]' },
-  green: { bg: 'bg-[#0ecb81]/20', text: 'text-[#0ecb81]' },
-  red: { bg: 'bg-[#f6465d]/20', text: 'text-[#f6465d]' },
+  blue: { bg: 'bg-info-blue/20', text: 'text-info-blue' },
+  yellow: { bg: 'bg-gold/20', text: 'text-gold' },
+  green: { bg: 'bg-price-drop/20', text: 'text-price-drop' },
+  red: { bg: 'bg-price-rise/20', text: 'text-price-rise' },
   orange: { bg: 'bg-[#f59e0b]/20', text: 'text-[#f59e0b]' },
   purple: { bg: 'bg-[#8b5cf6]/20', text: 'text-[#8b5cf6]' },
   cyan: { bg: 'bg-[#06b6d4]/20', text: 'text-[#06b6d4]' },
-  gray: { bg: 'bg-[#707a8a]/20', text: 'text-[#707a8a]' },
+  gray: { bg: 'bg-muted-text/20', text: 'text-muted-text' },
 };
 
 /**
@@ -36,10 +36,10 @@ export function SuccessScreen({ ticketNumber, status, onNewRequest }: SuccessScr
 
   return (
     <div className="min-h-[400px] flex flex-col items-center justify-center text-center">
-      <div className="bg-[#1e2329] border border-[#2b3139] rounded-xl p-8 max-w-[480px] w-full">
+      <div className="bg-surface-card border border-border rounded-xl p-8 max-w-[480px] w-full">
         {/* Success icon — green circle with checkmark */}
         <svg
-          className="w-16 h-16 text-[#0ecb81] mb-6 mx-auto"
+          className="w-16 h-16 text-price-drop mb-6 mx-auto"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -52,12 +52,12 @@ export function SuccessScreen({ ticketNumber, status, onNewRequest }: SuccessScr
         </svg>
 
         {/* Headline */}
-        <h2 className="text-[#fcd535] text-2xl font-semibold mb-2">
+        <h2 className="text-gold text-2xl font-semibold mb-2">
           Заявка создана!
         </h2>
 
         {/* Ticket number */}
-        <p className="text-[#ffffff] text-4xl font-bold mb-1">
+        <p className="text-on-dark text-4xl font-bold mb-1">
           #{ticketNumber}
         </p>
 
@@ -71,28 +71,28 @@ export function SuccessScreen({ ticketNumber, status, onNewRequest }: SuccessScr
         </div>
 
         {/* Divider */}
-        <div className="w-full h-px bg-[#2b3139] my-8" />
+        <div className="w-full h-px bg-surface-elevated my-8" />
 
         {/* What's next section */}
         <div className="text-left">
-          <h3 className="text-[#eaecef] font-semibold text-base mb-4">
+          <h3 className="text-foreground font-semibold text-base mb-4">
             Что дальше?
           </h3>
 
           <div className="flex items-start gap-3 mb-3">
-            <span className="w-6 h-6 rounded-full bg-[#2b3139] flex items-center justify-center text-xs text-[#707a8a] shrink-0 mt-0.5">
+            <span className="w-6 h-6 rounded-full bg-surface-elevated flex items-center justify-center text-xs text-muted-text shrink-0 mt-0.5">
               1
             </span>
-            <span className="text-[#eaecef] text-sm">
+            <span className="text-foreground text-sm">
               Наш мастер свяжется с вами в ближайшее время
             </span>
           </div>
 
           <div className="flex items-start gap-3">
-            <span className="w-6 h-6 rounded-full bg-[#2b3139] flex items-center justify-center text-xs text-[#707a8a] shrink-0 mt-0.5">
+            <span className="w-6 h-6 rounded-full bg-surface-elevated flex items-center justify-center text-xs text-muted-text shrink-0 mt-0.5">
               2
             </span>
-            <span className="text-[#eaecef] text-sm">
+            <span className="text-foreground text-sm">
               Вы можете отслеживать статус заявки в личном кабинете
             </span>
           </div>

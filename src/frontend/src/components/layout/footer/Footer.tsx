@@ -82,7 +82,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="py-16 px-6 bg-[#0b0e11] border-t border-[#2b3139]">
+    <footer className="py-16 px-6 bg-background border-t border-border">
       <div className="max-w-[1200px] mx-auto">
         {/* Main grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-x-6 gap-y-10 lg:gap-y-12">
@@ -103,7 +103,7 @@ export function Footer() {
 
           {/* Catalog Column */}
           <div className="min-w-0">
-            <h4 className="footer__title text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
+            <h4 className="footer__title uppercase tracking-[0.14em] font-semibold text-muted-strong mb-5 w-fit">
               Каталог
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -122,7 +122,7 @@ export function Footer() {
 
           {/* Service Column */}
           <div className="min-w-0">
-            <h4 className="footer__title text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
+            <h4 className="footer__title uppercase tracking-[0.14em] font-semibold text-muted-strong mb-5 w-fit">
               Сервис
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -141,7 +141,7 @@ export function Footer() {
 
           {/* Info Column */}
           <div className="min-w-0">
-            <h4 className="footer__title text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
+            <h4 className="footer__title uppercase tracking-[0.14em] font-semibold text-muted-strong mb-5 w-fit">
               Информация
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -160,7 +160,7 @@ export function Footer() {
 
           {/* Customers Column */}
           <div className="min-w-0">
-            <h4 className="footer__title text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
+            <h4 className="footer__title uppercase tracking-[0.14em] font-semibold text-muted-strong mb-5 w-fit">
               Покупателям
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -179,7 +179,7 @@ export function Footer() {
 
           {/* Contacts Column */}
           <div className="min-w-0">
-            <h4 className="footer__title text-[10px] uppercase tracking-[0.14em] font-semibold text-[#929aa5] mb-5 w-fit">
+            <h4 className="footer__title uppercase tracking-[0.14em] font-semibold text-muted-strong mb-5 w-fit">
               Контакты
             </h4>
             <ul className="list-none p-0 m-0 flex flex-col gap-2">
@@ -202,7 +202,7 @@ export function Footer() {
         </div>
 
         {/* Footer Bottom */}
-        <div className="mt-12 pt-6 border-t border-[#2b3139]">
+        <div className="mt-12 pt-6 border-t border-border">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Copyright */}
             <span className="footer__copyright text-xs text-[#3d4450] tracking-wide">

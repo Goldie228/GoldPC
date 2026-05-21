@@ -48,22 +48,20 @@ function ServiceCard({
           onSelect();
         }
       }}
-      className={`bg-[#1e2329] border rounded-lg p-5 cursor-pointer transition-all ${
+      className={`bg-surface-card border rounded-lg p-5 cursor-pointer transition-all ${
         isSelected
-          ? 'border-[#fcd535] shadow-[0_0_0_1px_#fcd535]'
-          : 'border-[#2b3139] hover:border-[#707a8a]'
+          ? 'border-gold shadow-[0_0_0_1px_#fcd535]'
+          : 'border-border hover:border-muted-text'
       }`}
     >
-      <div className="text-2xl mb-3" aria-hidden>
-        🔧
-      </div>
-      <div className="text-[#eaecef] font-semibold text-base mb-1">{service.name}</div>
-      <div className="text-[#707a8a] text-sm mb-3 line-clamp-2">{service.description}</div>
+
+      <div className="text-foreground font-semibold text-base mb-1">{service.name}</div>
+      <div className="text-muted-text text-sm mb-3 line-clamp-2">{service.description}</div>
       <div className="flex items-center justify-between">
-        <span className="text-[#fcd535] font-medium">
+        <span className="text-gold font-medium">
           от {service.basePrice} BYN
         </span>
-        <span className="text-[#929aa5] text-xs">
+        <span className="text-muted-strong text-xs">
           {formatDuration(service.estimatedDurationMinutes)}
         </span>
       </div>
@@ -76,14 +74,14 @@ function ServiceCard({
  */
 function SkeletonCard() {
   return (
-    <div className="bg-[#1e2329] border border-[#2b3139] rounded-lg p-5 animate-pulse" aria-hidden>
-      <div className="w-10 h-10 bg-[#2b3139] rounded mb-3" />
-      <div className="h-4 bg-[#2b3139] rounded mb-2 w-3/4" />
-      <div className="h-3 bg-[#2b3139] rounded mb-1 w-full" />
-      <div className="h-3 bg-[#2b3139] rounded mb-3 w-2/3" />
+    <div className="bg-surface-card border border-border rounded-lg p-5 animate-pulse" aria-hidden>
+      <div className="w-10 h-10 bg-surface-elevated rounded mb-3" />
+      <div className="h-4 bg-surface-elevated rounded mb-2 w-3/4" />
+      <div className="h-3 bg-surface-elevated rounded mb-1 w-full" />
+      <div className="h-3 bg-surface-elevated rounded mb-3 w-2/3" />
       <div className="flex justify-between">
-        <div className="h-4 bg-[#2b3139] rounded w-20" />
-        <div className="h-3 bg-[#2b3139] rounded w-16" />
+        <div className="h-4 bg-surface-elevated rounded w-20" />
+        <div className="h-3 bg-surface-elevated rounded w-16" />
       </div>
     </div>
   );
@@ -135,7 +133,7 @@ export function ServiceSelector({ selectedServiceId, onSelect }: ServiceSelector
   if (isLoading) {
     return (
       <section>
-        <h2 className="text-[#eaecef] text-lg font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-foreground text-lg font-semibold mb-4 flex items-center gap-2">
           Выберите услугу
         </h2>
         <div
@@ -155,11 +153,11 @@ export function ServiceSelector({ selectedServiceId, onSelect }: ServiceSelector
   if (isError) {
     return (
       <section>
-        <h2 className="text-[#eaecef] text-lg font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-foreground text-lg font-semibold mb-4 flex items-center gap-2">
           Выберите услугу
         </h2>
-        <div className="text-center py-10 px-4 bg-[#1e2329] border border-[#2b3139] rounded-lg">
-          <p className="text-[#707a8a] mb-4">Не удалось загрузить список услуг</p>
+        <div className="text-center py-10 px-4 bg-surface-card border border-border rounded-lg">
+          <p className="text-muted-text mb-4">Не удалось загрузить список услуг</p>
           <Button variant="outline" onClick={loadServiceTypes}>
             Попробовать снова
           </Button>
@@ -172,11 +170,11 @@ export function ServiceSelector({ selectedServiceId, onSelect }: ServiceSelector
   if (services.length === 0) {
     return (
       <section>
-        <h2 className="text-[#eaecef] text-lg font-semibold mb-4 flex items-center gap-2">
+        <h2 className="text-foreground text-lg font-semibold mb-4 flex items-center gap-2">
           Выберите услугу
         </h2>
-        <div className="text-center py-10 px-4 bg-[#1e2329] border border-[#2b3139] rounded-lg">
-          <p className="text-[#707a8a]">Услуги временно недоступны</p>
+        <div className="text-center py-10 px-4 bg-surface-card border border-border rounded-lg">
+          <p className="text-muted-text">Услуги временно недоступны</p>
         </div>
       </section>
     );
@@ -185,7 +183,7 @@ export function ServiceSelector({ selectedServiceId, onSelect }: ServiceSelector
   // --- Normal State ---
   return (
     <section>
-      <h2 className="text-[#eaecef] text-lg font-semibold mb-4 flex items-center gap-2">
+      <h2 className="text-foreground text-lg font-semibold mb-4 flex items-center gap-2">
         Выберите услугу
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
