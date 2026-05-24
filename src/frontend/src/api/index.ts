@@ -14,8 +14,8 @@ export {
   getCategories,
   getFeaturedProducts,
   searchProducts,
-  catalogService,
-} from './catalogService';
+  catalogApi,
+} from './catalog';
 
 // Сервис аутентификации
 export { authService } from './authService';

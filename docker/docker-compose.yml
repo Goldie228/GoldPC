@@ -139,13 +139,13 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc_auth;User Id=postgres;Password=admin
-      - JwtSettings__Secret=your-super-secret-key-for-development-min-32-chars!
+      - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=goldpc
       - JwtSettings__Audience=goldpc-users
       - Smtp__Host=smtp.gmail.com
       - Smtp__Port=587
       - Smtp__Username=pascalixsprivate@gmail.com
-      - Smtp__Password=mdgqxnypetpdysnv
+      - Smtp__Password=${SMTP_PASSWORD}
       - Smtp__FromEmail=pascalixsprivate@gmail.com
       - Smtp__FromName=GoldPC
     ports:

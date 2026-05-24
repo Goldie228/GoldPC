@@ -59,6 +59,85 @@ namespace GoldPC.AuthService.Migrations
                     b.ToTable("email_verification_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("GoldPC.AuthService.Entities.LoginHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
+                    b.Property<bool>("Success")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("login_history", (string)null);
+                });
+
+            modelBuilder.Entity("GoldPC.AuthService.Entities.NotificationPreference", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("EmailNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("MarketingNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("OrderStatusNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SmsNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("TelegramNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("notification_preferences", (string)null);
+                });
+
             modelBuilder.Entity("GoldPC.AuthService.Entities.PasswordResetToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -130,6 +209,8 @@ namespace GoldPC.AuthService.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ExpiresAt");
+
                     b.HasIndex("Token")
                         .IsUnique();
 
@@ -143,6 +224,13 @@ namespace GoldPC.AuthService.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("BirthDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Company")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -248,6 +336,40 @@ namespace GoldPC.AuthService.Migrations
                     b.ToTable("user_addresses", (string)null);
                 });
 
+            modelBuilder.Entity("GoldPC.AuthService.Entities.UserTwoFactor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("RecoveryCodes")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("TOTPSecret")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("user_two_factors", (string)null);
+                });
+
             modelBuilder.Entity("GoldPC.AuthService.Entities.WishlistItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -285,6 +407,28 @@ namespace GoldPC.AuthService.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("GoldPC.AuthService.Entities.LoginHistory", b =>
+                {
+                    b.HasOne("GoldPC.AuthService.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GoldPC.AuthService.Entities.NotificationPreference", b =>
+                {
+                    b.HasOne("GoldPC.AuthService.Entities.User", "User")
+                        .WithOne()
+                        .HasForeignKey("GoldPC.AuthService.Entities.NotificationPreference", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("GoldPC.AuthService.Entities.PasswordResetToken", b =>
                 {
                     b.HasOne("GoldPC.AuthService.Entities.User", "User")
@@ -312,6 +456,17 @@ namespace GoldPC.AuthService.Migrations
                     b.HasOne("GoldPC.AuthService.Entities.User", "User")
                         .WithMany("Addresses")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("GoldPC.AuthService.Entities.UserTwoFactor", b =>
+                {
+                    b.HasOne("GoldPC.AuthService.Entities.User", "User")
+                        .WithOne()
+                        .HasForeignKey("GoldPC.AuthService.Entities.UserTwoFactor", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

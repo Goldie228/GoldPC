@@ -87,7 +87,7 @@ public class AuthService : IAuthService
     }
 
     /// <inheritdoc />
-    public async Task<(AuthResponse? Response, string? Error)> LoginAsync(LoginRequest request, string ipAddress)
+    public async Task<(AuthResponse? Response, string? Error)> LoginAsync(LoginRequest request, string ipAddress, string userAgent)
     {
         try
         {
@@ -121,7 +121,7 @@ public class AuthService : IAuthService
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
                     IpAddress = ipAddress,
-                    UserAgent = null,
+                    UserAgent = userAgent,
                     Timestamp = DateTime.UtcNow,
                     Success = false,
                     FailureReason = "Неверный пароль"
@@ -152,7 +152,7 @@ public class AuthService : IAuthService
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
                 IpAddress = ipAddress,
-                UserAgent = null,
+                UserAgent = userAgent,
                 Timestamp = DateTime.UtcNow,
                 Success = true
             };
@@ -569,19 +569,23 @@ public class AuthService : IAuthService
     }
 
     /// <inheritdoc />
-    public async Task<(List<LoginHistoryItem>? Items, string? Error)> GetLoginHistoryAsync(Guid userId, int page = 1, int pageSize = 20)
+    public async Task<(List<LoginHistoryItem>? Items, int TotalCount, string? Error)> GetLoginHistoryAsync(Guid userId, int page = 1, int pageSize = 20)
     {
         try
         {
             var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
             if (!userExists)
             {
-                return (null, "Пользователь не найден");
+                return (null, 0, "Пользователь не найден");
             }
 
-            var items = await _context.LoginHistories
+            var query = _context.LoginHistories
                 .Where(h => h.UserId == userId)
-                .OrderByDescending(h => h.Timestamp)
+                .OrderByDescending(h => h.Timestamp);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(h => new LoginHistoryItem
@@ -595,12 +599,12 @@ public class AuthService : IAuthService
                 })
                 .ToListAsync();
 
-            return (items, null);
+            return (items, totalCount, null);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка при получении истории входа для пользователя {UserId}", userId);
-            return (null, "Произошла ошибка при получении истории входа.");
+            return (null, 0, "Произошла ошибка при получении истории входа.");
         }
     }
 

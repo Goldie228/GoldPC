@@ -7,6 +7,7 @@ using GoldPC.AuthService.Services;
 using GoldPC.AuthService.Validators;
 using GoldPC.Shared.Services.Implementations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -55,6 +56,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<SmtpEmailService>();
 builder.Services.AddSingleton<ITokenCache, RedisTokenCache>();
 
+// Фоновый сервис очистки просроченных refresh-токенов
+builder.Services.AddHostedService<RefreshTokenCleanupWorker>();
+
 // Настройка JWT аутентификации
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 
@@ -101,6 +105,40 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddPermissionBasedAuthorization();
+
+// Rate Limiting - защита от brute-force атак на уровне приложения
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("LoginPolicy", opt =>
+    {
+        opt.PermitLimit = 5;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+    
+    options.AddFixedWindowLimiter("RegisterPolicy", opt =>
+    {
+        opt.PermitLimit = 3;
+        opt.Window = TimeSpan.FromMinutes(10);
+        opt.QueueLimit = 0;
+    });
+    
+    options.AddFixedWindowLimiter("PasswordResetPolicy", opt =>
+    {
+        opt.PermitLimit = 3;
+        opt.Window = TimeSpan.FromMinutes(15);
+        opt.QueueLimit = 0;
+    });
+    
+    options.AddFixedWindowLimiter("GeneralApiPolicy", opt =>
+    {
+        opt.PermitLimit = 100;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 
 // Настройка контроллеров с FluentValidation и сериализацией enum как строк
 builder.Services.AddControllers()
@@ -187,6 +225,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

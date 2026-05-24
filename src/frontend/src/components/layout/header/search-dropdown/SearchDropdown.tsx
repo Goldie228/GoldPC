@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { searchProducts } from '../../../../api/catalogService';
+import { searchProducts } from '../../../../api/catalog';
 import type { ProductSummary } from '../../../../api/types';
 
 interface SearchDropdownProps {
