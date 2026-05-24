@@ -86,6 +86,7 @@ public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerific
             entity.ToTable("refresh_tokens");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Token).IsUnique();
+            entity.HasIndex(e => e.ExpiresAt);
             entity.Property(e => e.Token).IsRequired().HasMaxLength(500);
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.ExpiresAt).IsRequired();

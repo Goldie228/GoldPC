@@ -23,18 +23,15 @@ public interface ICompatibilityService
 /// </summary>
 public class CompatibilityService : ICompatibilityService
 {
-    private readonly HttpClient _catalogClient;
     private readonly ILogger<CompatibilityService> _logger;
     private readonly CompatibilityRuleEngine _ruleEngine;
     private readonly PCBuilderDbContext _dbContext;
 
     public CompatibilityService(
-        HttpClient catalogClient,
         ILogger<CompatibilityService> logger,
         CompatibilityRuleEngine ruleEngine,
         PCBuilderDbContext dbContext)
     {
-        _catalogClient = catalogClient;
         _logger = logger;
         _ruleEngine = ruleEngine;
         _dbContext = dbContext;

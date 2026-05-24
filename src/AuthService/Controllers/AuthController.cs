@@ -51,7 +51,8 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        var (response, error) = await _authService.LoginAsync(request, ipAddress);
+        var userAgent = HttpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "unknown";
+        var (response, error) = await _authService.LoginAsync(request, ipAddress, userAgent);
         
         if (error != null)
         {

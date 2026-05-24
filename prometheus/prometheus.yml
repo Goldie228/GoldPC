@@ -1,0 +1,53 @@
+# GoldPC Prometheus Configuration
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'catalog-service'
+    static_configs:
+      - targets: ['catalog-blue:5001', 'catalog-green:5011']
+    metrics_path: /metrics
+
+  - job_name: 'auth-service'
+    static_configs:
+      - targets: ['auth-blue:5003', 'auth-green:5013']
+    metrics_path: /metrics
+
+  - job_name: 'orders-service'
+    static_configs:
+      - targets: ['orders-blue:5004', 'orders-green:5014']
+    metrics_path: /metrics
+
+  - job_name: 'services-service'
+    static_configs:
+      - targets: ['services-blue:5005', 'services-green:5015']
+    metrics_path: /metrics
+
+  - job_name: 'warranty-service'
+    static_configs:
+      - targets: ['warranty-blue:5006', 'warranty-green:5016']
+    metrics_path: /metrics
+
+  - job_name: 'pcbuilder-service'
+    static_configs:
+      - targets: ['pcbuilder-blue:5002', 'pcbuilder-green:5012']
+    metrics_path: /metrics
+
+  - job_name: 'reporting-service'
+    static_configs:
+      - targets: ['reporting-blue:5008', 'reporting-green:5018']
+    metrics_path: /metrics
+
+  - job_name: 'postgresql'
+    static_configs:
+      - targets: ['postgres:5432']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq:15672']
+    metrics_path: /metrics

@@ -44,7 +44,7 @@ public class SecurityController : ControllerBase
             return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
         }
 
-        var (items, error) = await _authService.GetLoginHistoryAsync(userId, page, pageSize);
+        var (items, totalCount, error) = await _authService.GetLoginHistoryAsync(userId, page, pageSize);
 
         if (error != null)
         {
@@ -55,7 +55,7 @@ public class SecurityController : ControllerBase
         var result = new PagedResultLoginHistory
         {
             Items = items ?? new List<LoginHistoryItem>(),
-            TotalCount = items?.Count ?? 0,
+            TotalCount = totalCount,
             PageNumber = page,
             PageSize = pageSize
         };

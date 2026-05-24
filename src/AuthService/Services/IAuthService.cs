@@ -16,7 +16,7 @@ public interface IAuthService
     /// <summary>
     /// Вход в систему
     /// </summary>
-    Task<(AuthResponse? Response, string? Error)> LoginAsync(LoginRequest request, string ipAddress);
+    Task<(AuthResponse? Response, string? Error)> LoginAsync(LoginRequest request, string ipAddress, string userAgent);
 
     /// <summary>
     /// Обновление токена
@@ -78,7 +78,7 @@ public interface IAuthService
     /// <summary>
     /// Получение истории входов пользователя
     /// </summary>
-    Task<(List<LoginHistoryItem>? Items, string? Error)> GetLoginHistoryAsync(Guid userId, int page = 1, int pageSize = 20);
+    Task<(List<LoginHistoryItem>? Items, int TotalCount, string? Error)> GetLoginHistoryAsync(Guid userId, int page = 1, int pageSize = 20);
 
     /// <summary>
     /// Получение предпочтений уведомлений пользователя

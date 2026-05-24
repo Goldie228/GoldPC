@@ -30,7 +30,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Host=localhost;Port=5432;Database=goldpc_pcbuilder;Username=postgres;Password=postgres";
+    ?? "Host=localhost;Port=5434;Database=goldpc_pcbuilder;Username=postgres;Password=postgres";
 builder.Services.AddDbContext<PCBuilderDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -59,12 +59,7 @@ builder.Services.AddGrpcClient<Shared.Protos.CatalogGrpc.CatalogGrpcClient>(o =>
     o.Address = new Uri(catalogServiceGrpcUrl);
 });
 
-var catalogServiceUrl = builder.Configuration["CatalogService:Url"] ?? "http://localhost:5000";
-builder.Services.AddHttpClient("CatalogService", client =>
-{
-    client.BaseAddress = new Uri(catalogServiceUrl);
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
+
 
 builder.Services.AddCors(options =>
 {

@@ -15,6 +15,27 @@ import type {
 } from './types';
 export type { ProductSummary, ProductReview, FilterFacetAttribute, GetProductsParams, ProductListResponse } from './types';
 
+// Standalone exports for backwards compatibility (SearchDropdown etc.)
+export async function searchProducts(query: string, params?: Omit<GetProductsParams, 'search'>): Promise<ProductListResponse> {
+  return catalogApi.searchProducts(query, params);
+}
+
+export async function getFeaturedProducts(limit?: number): Promise<ProductSummary[]> {
+  return catalogApi.getFeaturedProducts(limit);
+}
+
+export async function getProductById(id: string): Promise<Product> {
+  return catalogApi.getProduct(id);
+}
+
+export async function getProducts(params?: GetProductsParams): Promise<ProductListResponse> {
+  return catalogApi.getProducts(params);
+}
+
+export async function getCategories(): Promise<Category[]> {
+  return catalogApi.getCategories();
+}
+
 /** Маппинг frontend category -> backend slug для API */
 const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
   cpu: 'processors',
@@ -322,5 +343,20 @@ export const catalogApi = {
       return data;
     }
     return data?.data ?? [];
+  },
+
+  /**
+   * Поиск товаров по названию (обёртка над getProducts)
+   */
+  async searchProducts(query: string, params?: Omit<GetProductsParams, 'search'>): Promise<ProductListResponse> {
+    return this.getProducts({ ...params, search: query } as GetProductsParams);
+  },
+
+  /**
+   * Получить популярные товары
+   */
+  async getFeaturedProducts(limit?: number): Promise<ProductSummary[]> {
+    const response = await this.getProducts({ isFeatured: true, pageSize: limit ?? 10 } as GetProductsParams);
+    return response.data ?? [];
   },
 };
