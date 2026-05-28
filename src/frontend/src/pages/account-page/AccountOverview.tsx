@@ -39,10 +39,10 @@ export function AccountOverview() {
   const userName = user?.firstName || 'Пользователь';
 
   const statusBadgeClasses: Record<string, string> = {
-    Completed: 'bg-[#0ecb81]/10 text-[#0ecb81]',
-    InProgress: 'bg-[#FCD535]/10 text-[#FCD535]',
-    Processing: 'bg-[#3b82f6]/10 text-[#3b82f6]',
-    Cancelled: 'bg-[#f6465d]/10 text-[#f6465d]',
+    Completed: 'bg-muted/10 text-muted-foreground',
+    InProgress: 'bg-warning/15 text-warning',
+    Processing: 'bg-info-blue/10 text-info-blue',
+    Cancelled: 'bg-destructive/10 text-destructive',
   };
 
   const getStatusLabel = (status: string): string => {
@@ -64,38 +64,38 @@ export function AccountOverview() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0e11]">
+    <div className="min-h-screen bg-background">
       <div className="max-w-[1280px] mx-auto">
         {/* Welcome Card */}
-        <div className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-6 mb-6">
-          <h1 className="text-2xl font-bold text-[#eaecef]">Личный кабинет</h1>
-          <p className="text-[#707a8a] mb-6">Управляйте своим аккаунтом и заказами</p>
+        <div className="bg-card rounded-xl border border-border p-6 mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Личный кабинет</h1>
+          <p className="text-muted-foreground mb-6">Управляйте своим аккаунтом и заказами</p>
 
           {/* Stats Row */}
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <div className="text-3xl font-bold text-[#FCD535]">
+              <div className="text-3xl font-bold text-foreground font-tabular">
                 {loading ? '...' : orders.length}
               </div>
-              <div className="text-sm text-[#707a8a]">Заказов</div>
+              <div className="text-sm text-muted-foreground">Заказов</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-[#FCD535]">
+              <div className="text-3xl font-bold text-foreground font-tabular">
                 {loading ? '...' : tickets.length}
               </div>
-              <div className="text-sm text-[#707a8a]">Ремонтов</div>
+              <div className="text-sm text-muted-foreground">Ремонтов</div>
             </div>
           </div>
         </div>
 
         {/* Recent Orders */}
-        <section className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-6">
+        <section className="bg-card rounded-xl border border-border p-6">
           {/* Section Header */}
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-semibold text-[#eaecef]">Последние заказы</h2>
+            <h2 className="text-lg font-semibold text-foreground">Последние заказы</h2>
             <Link
               to="/account/orders"
-              className="flex items-center gap-1 text-[#FCD535] hover:opacity-80 transition-opacity text-sm font-medium"
+              className="flex items-center gap-1 text-info-blue hover:opacity-80 transition-opacity text-sm font-medium"
             >
               Все заказы
               <ChevronRight size={16} />
@@ -106,7 +106,7 @@ export function AccountOverview() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="text-[#707a8a] text-sm uppercase tracking-wider">
+                <tr className="text-muted-foreground text-sm uppercase tracking-wider">
                   <th className="text-left pb-3 pr-4 font-medium">Заказ</th>
                   <th className="text-left pb-3 pr-4 font-medium">Товары</th>
                   <th className="text-left pb-3 pr-4 font-medium">Дата</th>
@@ -118,49 +118,49 @@ export function AccountOverview() {
                 {loading ? (
                   <tr>
                     <td colSpan={5} className="py-12 text-center">
-                      <p className="text-[#707a8a] text-sm">Загрузка...</p>
+                      <p className="text-muted-foreground text-sm">Загрузка...</p>
                     </td>
                   </tr>
                 ) : orders.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-12 text-center">
-                      <Package size={48} className="text-[#707a8a] mx-auto mb-3" />
-                      <p className="text-[#707a8a] text-sm">У вас пока нет заказов</p>
+                      <Package size={48} className="text-muted-foreground mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">У вас пока нет заказов</p>
                     </td>
                   </tr>
                 ) : (
                   orders.map((order) => (
-                    <tr key={order.id} className="border-t border-[#2b3139]">
+                    <tr key={order.id} className="border-t border-border">
                       <td className="py-3 pr-4">
-                        <span className="text-[#FCD535] font-medium text-sm">#{order.orderNumber}</span>
+                        <span className="text-foreground font-medium text-sm">#{order.orderNumber}</span>
                       </td>
-                      <td className="py-3 pr-4 text-[#eaecef] text-sm">
+                      <td className="py-3 pr-4 text-foreground text-sm">
                         {order.items[0]?.productName}
-                        {order.items.length > 1 && <span className="text-[#707a8a]"> +{order.items.length - 1}</span>}
+                        {order.items.length > 1 && <span className="text-muted-foreground"> +{order.items.length - 1}</span>}
                       </td>
-                      <td className="py-3 pr-4 text-[#707a8a] text-sm">
+                      <td className="py-3 pr-4 text-muted-foreground text-sm">
                         {new Date(order.createdAt).toLocaleDateString('ru-RU')}
                       </td>
-                      <td className="py-3 pr-4 text-[#eaecef] text-sm font-medium">
+                      <td className="py-3 pr-4 text-foreground text-sm font-medium">
                         {order.total.toFixed(2)} BYN
                       </td>
                       <td className="py-3">
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
-                            statusBadgeClasses[order.status] || 'bg-[#2b3139] text-[#707a8a]'
+                            statusBadgeClasses[order.status] || 'bg-elevated text-muted-foreground'
                           }`}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
                               order.status === 'Completed'
-                                ? 'bg-[#0ecb81]'
+                                ? 'bg-muted-foreground'
                                 : order.status === 'InProgress'
-                                  ? 'bg-[#FCD535]'
+                                  ? 'bg-warning'
                                   : order.status === 'Processing'
-                                    ? 'bg-[#3b82f6]'
+                                    ? 'bg-info-blue'
                                     : order.status === 'Cancelled'
-                                      ? 'bg-[#f6465d]'
-                                      : 'bg-[#707a8a]'
+                                      ? 'bg-destructive'
+                                      : 'bg-muted-foreground'
                             }`}
                           />
                           {getStatusLabel(order.status)}
@@ -178,32 +178,32 @@ export function AccountOverview() {
         <section className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
           <Link
             to="/account/saved-builds"
-            className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-5 hover:border-[#FCD535]/30 transition-colors group"
+            className="bg-card rounded-xl border border-border p-5 hover:border-border transition-colors group"
           >
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-[#FCD535]/10 flex items-center justify-center">
-                <Cpu size={20} className="text-[#FCD535]" />
+              <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center">
+                <Cpu size={20} className="text-muted-foreground" />
               </div>
-              <h3 className="text-base font-semibold text-[#eaecef]">Сохранённые сборки</h3>
+              <h3 className="text-base font-semibold text-foreground">Сохранённые сборки</h3>
             </div>
-            <p className="text-sm text-[#707a8a]">Ваши конфигурации ПК из конструктора</p>
-            <div className="flex items-center gap-1 text-[#FCD535] text-sm font-medium mt-3 group-hover:gap-2 transition-all">
+            <p className="text-sm text-muted-foreground">Ваши конфигурации ПК из конструктора</p>
+            <div className="flex items-center gap-1 text-info-blue text-sm font-medium mt-3 group-hover:gap-2 transition-all">
               Открыть <ChevronRight size={16} />
             </div>
           </Link>
 
           <Link
             to="/account/warranty"
-            className="bg-[#1e2329] rounded-xl border border-[#2b3139] p-5 hover:border-[#FCD535]/30 transition-colors group"
+            className="bg-card rounded-xl border border-border p-5 hover:border-border transition-colors group"
           >
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-lg bg-[#0ecb81]/10 flex items-center justify-center">
-                <ShieldCheck size={20} className="text-[#0ecb81]" />
+              <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center">
+                <ShieldCheck size={20} className="text-info-blue" />
               </div>
-              <h3 className="text-base font-semibold text-[#eaecef]">Гарантийные талоны</h3>
+              <h3 className="text-base font-semibold text-foreground">Гарантийные талоны</h3>
             </div>
-            <p className="text-sm text-[#707a8a]">Гарантия на товары и услуги</p>
-            <div className="flex items-center gap-1 text-[#FCD535] text-sm font-medium mt-3 group-hover:gap-2 transition-all">
+            <p className="text-sm text-muted-foreground">Гарантия на товары и услуги</p>
+            <div className="flex items-center gap-1 text-info-blue text-sm font-medium mt-3 group-hover:gap-2 transition-all">
               Открыть <ChevronRight size={16} />
             </div>
           </Link>

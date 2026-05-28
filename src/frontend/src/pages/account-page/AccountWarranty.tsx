@@ -207,7 +207,7 @@ export function AccountWarranty() {
                     <div className="flex items-end justify-end">
                       <a
                         href="#"
-                        className="inline-flex items-center gap-1.5 text-sm text-gold hover:text-gold-active transition-colors"
+                        className="inline-flex items-center gap-1.5 text-sm text-info-blue hover:text-info-blue transition-colors"
                         onClick={(e) => {
                           e.preventDefault();
                           // TODO: Navigate to warranty detail page

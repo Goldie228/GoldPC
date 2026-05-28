@@ -64,13 +64,13 @@ export function ReportsPage() {
   };
 
   return (
-    <div className="pt-[100px] px-[var(--space-md)] pb-12 mx-auto min-h-screen bg-[var(--bg)] text-[var(--fg)] max-w-[1400px]">
+    <div className="pt-[100px] px-[var(--space-md)] pb-12 mx-auto min-h-screen bg-background text-foreground max-w-[1400px]">
       <header className="flex items-center justify-between gap-[var(--space-md)] mb-[var(--space-lg)] flex-wrap">
         <div>
-          <h1 className="font-[var(--font-display)] text-[var(--text-3xl)] font-[var(--font-semibold)] tracking-[-0.02em] mb-1 text-[var(--fg)]">
+          <h1 className="font-[var(--font-display)] text-[var(--text-3xl)] font-[var(--font-semibold)] tracking-[-0.02em] mb-1 text-foreground">
             Финансовые отчёты
           </h1>
-          <p className="text-[var(--text-sm)] text-[var(--fg-muted)] m-0">
+          <p className="text-[var(--text-sm)] text-muted-foreground m-0">
             Формирование отчётов за выбранный период
           </p>
         </div>
@@ -78,24 +78,24 @@ export function ReportsPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5">
-          <div className="text-[0.7rem] text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2">Выручка за месяц</div>
-          <div className="font-[var(--font-mono)] text-2xl font-medium text-[var(--accent)]">
+        <div className="bg-card border border-border p-5">
+          <div className="text-[0.7rem] text-muted-foreground uppercase tracking-[0.08em] mb-2">Выручка за месяц</div>
+          <div className="font-[var(--font-mono)] text-2xl font-medium text-accent">
             {stats ? formatPrice(stats.monthlyRevenue) : formatPrice(MOCK_STATS.monthlyRevenue)}
           </div>
         </div>
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5">
-          <div className="text-[0.7rem] text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2">Заказов</div>
+        <div className="bg-card border border-border p-5">
+          <div className="text-[0.7rem] text-muted-foreground uppercase tracking-[0.08em] mb-2">Заказов</div>
           <div className="font-[var(--font-mono)] text-2xl font-medium">
             {stats ? stats.ordersCount : MOCK_STATS.ordersCount}
           </div>
         </div>
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5">
-          <div className="text-[0.7rem] text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2">Средний чек</div>
+        <div className="bg-card border border-border p-5">
+          <div className="text-[0.7rem] text-muted-foreground uppercase tracking-[0.08em] mb-2">Средний чек</div>
           <div className="font-[var(--font-mono)] text-2xl font-medium">{MOCK_STATS.averageCheck} BYN</div>
         </div>
-        <div className="bg-[var(--bg-card)] border border-[var(--border)] p-5">
-          <div className="text-[0.7rem] text-[var(--fg-dim)] uppercase tracking-[0.08em] mb-2">Услуг оказано</div>
+        <div className="bg-card border border-border p-5">
+          <div className="text-[0.7rem] text-muted-foreground uppercase tracking-[0.08em] mb-2">Услуг оказано</div>
           <div className="font-[var(--font-mono)] text-2xl font-medium">
             {stats ? stats.servicesCount : MOCK_STATS.servicesCount}
           </div>
@@ -103,10 +103,10 @@ export function ReportsPage() {
       </div>
 
       {/* Report Period Card */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 mb-6">
-        <div className="text-[0.9rem] font-semibold mb-5 flex items-center gap-2.5 pb-4 border-b border-[var(--border)]">
+      <div className="bg-card border border-border p-6 mb-6">
+        <div className="text-[0.9rem] font-semibold mb-5 flex items-center gap-2.5 pb-4 border-b border-border">
           <svg
-            className="w-[18px] h-[18px] text-[var(--accent)]"
+            className="w-[18px] h-[18px] text-accent"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -122,19 +122,19 @@ export function ReportsPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="mb-5">
-            <label className="block text-[0.75rem] font-medium text-[var(--fg-muted)] mb-2 uppercase tracking-[0.05em]">Дата начала</label>
+            <label className="block text-[0.75rem] font-medium text-muted-foreground mb-2 uppercase tracking-[0.05em]">Дата начала</label>
             <input
               type="date"
-              className="w-full p-3 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-[var(--font-mono)] text-[0.85rem] transition-colors duration-[var(--transition-base)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full p-3 bg-elevated border border-border text-foreground font-[var(--font-mono)] text-[0.85rem] transition-colors duration-[var(--transition-base)] focus:outline-none focus:border-accent"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
             />
           </div>
           <div className="mb-5">
-            <label className="block text-[0.75rem] font-medium text-[var(--fg-muted)] mb-2 uppercase tracking-[0.05em]">Дата окончания</label>
+            <label className="block text-[0.75rem] font-medium text-muted-foreground mb-2 uppercase tracking-[0.05em]">Дата окончания</label>
             <input
               type="date"
-              className="w-full p-3 bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--fg)] font-[var(--font-mono)] text-[0.85rem] transition-colors duration-[var(--transition-base)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full p-3 bg-elevated border border-border text-foreground font-[var(--font-mono)] text-[0.85rem] transition-colors duration-[var(--transition-base)] focus:outline-none focus:border-accent"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
             />
@@ -143,13 +143,13 @@ export function ReportsPage() {
 
         <div className="flex gap-3 mt-6">
           <button
-            className="inline-flex items-center gap-2.5 px-6 py-3.5 font-[var(--font-sans)] text-[0.85rem] font-semibold border-none cursor-pointer transition-all duration-[var(--transition-base)] bg-[var(--accent)] text-[var(--bg)] hover:bg-[var(--accent-bright)] hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:translate-y-0"
+            className="inline-flex items-center gap-2.5 px-6 py-3.5 font-[var(--font-sans)] text-[0.85rem] font-semibold border-none cursor-pointer transition-all duration-[var(--transition-base)] bg-accent text-background hover:bg-accent-bright hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:translate-y-0"
             onClick={() => void handleGenerateReport()}
             disabled={isGenerating}
           >
             {isGenerating ? (
               <>
-                <span className="w-4 h-4 border-2 border-[var(--bg)] border-t-transparent rounded-full animate-spin"></span>
+                <span className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin"></span>
                 Генерация...
               </>
             ) : (
@@ -163,7 +163,7 @@ export function ReportsPage() {
               </>
             )}
           </button>
-          <button className="inline-flex items-center gap-2.5 px-6 py-3.5 font-[var(--font-sans)] text-[0.85rem] font-semibold border-none cursor-pointer transition-all duration-[var(--transition-base)] bg-transparent text-[var(--fg)] border border-[var(--border)] hover:border-[var(--fg-dim)] hover:bg-[var(--bg-card)]">
+          <button             className="inline-flex items-center gap-2.5 px-6 py-3.5 font-[var(--font-sans)] text-[0.85rem] font-semibold border-none cursor-pointer transition-all duration-[var(--transition-base)] bg-transparent text-foreground border border-border hover:border-muted-foreground hover:bg-card">
             Предпросмотр
           </button>
         </div>
@@ -171,10 +171,10 @@ export function ReportsPage() {
 
       {/* Generated Report Results */}
       {stats && (
-        <div className="bg-[var(--bg-card)] border border-[var(--border-accent)] p-6 mb-6">
-          <div className="text-[0.9rem] font-semibold mb-5 flex items-center gap-2.5 pb-4 border-b border-[var(--border)]">
+        <div className="bg-card border border-accent p-6 mb-6">
+          <div className="text-[0.9rem] font-semibold mb-5 flex items-center gap-2.5 pb-4 border-b border-border">
             <svg
-              className="w-[18px] h-[18px] text-[var(--accent)]"
+              className="w-[18px] h-[18px] text-accent"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -189,37 +189,37 @@ export function ReportsPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
-              <span className="text-[0.85rem] text-[var(--fg-muted)]">Период:</span>
+            <div className="flex justify-between items-center py-3 border-b border-border">
+              <span className="text-[0.85rem] text-muted-foreground">Период:</span>
               <span className="font-[var(--font-mono)] text-[0.95rem] font-medium">
                 {new Date(dateFrom).toLocaleDateString('ru-RU')} —{' '}
                 {new Date(dateTo).toLocaleDateString('ru-RU')}
               </span>
             </div>
-            <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
-              <span className="text-[0.85rem] text-[var(--fg-muted)]">Выручка:</span>
-              <span className="font-[var(--font-mono)] text-[0.95rem] font-medium text-[var(--accent)]">
+            <div className="flex justify-between items-center py-3 border-b border-border">
+              <span className="text-[0.85rem] text-muted-foreground">Выручка:</span>
+              <span className="font-[var(--font-mono)] text-[0.95rem] font-medium text-accent">
                 {formatPrice(stats.monthlyRevenue)}
               </span>
             </div>
-            <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
-              <span className="text-[0.85rem] text-[var(--fg-muted)]">Прибыль:</span>
-              <span className="font-[var(--font-mono)] text-[0.95rem] font-medium text-green-500">
+            <div className="flex justify-between items-center py-3 border-b border-border">
+              <span className="text-[0.85rem] text-muted-foreground">Прибыль:</span>
+              <span className="font-[var(--font-mono)] text-[0.95rem] font-medium text-price-drop">
                 {formatPrice(stats.profit)}
               </span>
             </div>
-            <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
-              <span className="text-[0.85rem] text-[var(--fg-muted)]">Рентабельность:</span>
+            <div className="flex justify-between items-center py-3 border-b border-border">
+              <span className="text-[0.85rem] text-muted-foreground">Рентабельность:</span>
               <span className="font-[var(--font-mono)] text-[0.95rem] font-medium">
                 {((stats.profit / stats.monthlyRevenue) * 100).toFixed(1)}%
               </span>
             </div>
-            <div className="flex justify-between items-center py-3 border-b border-[var(--border)]">
-              <span className="text-[0.85rem] text-[var(--fg-muted)]">Количество заказов:</span>
+            <div className="flex justify-between items-center py-3 border-b border-border">
+              <span className="text-[0.85rem] text-muted-foreground">Количество заказов:</span>
               <span className="font-[var(--font-mono)] text-[0.95rem] font-medium">{stats.ordersCount}</span>
             </div>
-            <div className="flex justify-between items-center py-3 border-b border-[var(--border)] last:border-b-0">
-              <span className="text-[0.85rem] text-[var(--fg-muted)]">Оказано услуг:</span>
+            <div className="flex justify-between items-center py-3 border-b border-border last:border-b-0">
+              <span className="text-[0.85rem] text-muted-foreground">Оказано услуг:</span>
               <span className="font-[var(--font-mono)] text-[0.95rem] font-medium">{stats.servicesCount}</span>
             </div>
           </div>
