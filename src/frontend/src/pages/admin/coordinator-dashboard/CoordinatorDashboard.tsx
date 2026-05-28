@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { StatCard } from '../../../components/admin';
 import { statsApi } from '../../../api/admin';
+import { LayoutDashboard, TrendingDown, Users, AlertTriangle, CheckCircle, RefreshCw, Loader2, Circle, Pin, Clock } from 'lucide-react';
 
 // ===== Types =====
 type AgentTier = 'TIER-1' | 'TIER-2' | 'TIER-3';
@@ -70,11 +71,11 @@ interface LocalDashboardStats {
   ticketsChange: number;
 }
 
-const STATUS_COLORS: Record<AgentStatusType, string> = {
-  Active: '🟢',
-  Idle: '⚪',
-  Blocked: '🔴',
-  Review: '🟡',
+const STATUS_INDICATORS: Record<AgentStatusType, { color: string; label: string }> = {
+  Active: { color: 'text-price-drop', label: 'Активен' },
+  Idle: { color: 'text-muted-foreground', label: 'Ожидает' },
+  Blocked: { color: 'text-destructive', label: 'Заблокирован' },
+  Review: { color: 'text-amber-500', label: 'На ревью' },
 };
 
 const STATUS_LABELS: Record<AgentStatusType, string> = {
@@ -128,7 +129,7 @@ function StatsGrid() {
     return (
       <div className="stats-grid stats-grid--error">
         <div className="stats-grid__error-message">
-          <span>⚠️ Не удалось загрузить статистику</span>
+          <AlertTriangle className="w-4 h-4 text-error inline mr-2" /><span>Не удалось загрузить статистику</span>
         </div>
       </div>
     );
@@ -189,7 +190,7 @@ function SprintProgressBar({ metrics }: { metrics: SprintMetrics }): React.React
   return (
     <div className="sprint-progress">
       <div className="sprint-progress__header">
-        <h2 className="sprint-progress__title">📉 Sprint Progress</h2>
+        <h2 className="sprint-progress__title flex items-center gap-2"><TrendingDown className="w-4 h-4" /> Sprint Progress</h2>
         <span className="sprint-progress__eta">
           ETA: {new Date(metrics.endDate).toLocaleDateString('ru-RU')}
           {daysLeft > 0 && <span className="sprint-progress__days-left"> ({daysLeft} дн.)</span>}
@@ -231,8 +232,8 @@ function AgentRow({ agent }: { agent: AgentStatus }) {
   return (
     <tr className={'agent-row agent-row--' + agent.status.toLowerCase()}>
       <td className="agent-row__cell agent-row__cell--name">
-        <div className="agent-info">
-          <span className="agent-info__indicator">{STATUS_COLORS[agent.status]}</span>
+        <div className="agent-info flex items-center gap-2">
+          <Circle className={'w-3 h-3 flex-shrink-0 ' + STATUS_INDICATORS[agent.status].color} />
           <div className="agent-info__details">
             <span className="agent-info__name">{agent.name}</span>
             <span className="agent-info__tier">{agent.tier}</span>
@@ -280,7 +281,7 @@ function AgentStatusTable({ agents }: { agents: AgentStatus[] }) {
   return (
     <div className="agent-status">
       <div className="agent-status__header">
-        <h2 className="agent-status__title">👥 Agent Status</h2>
+        <h2 className="agent-status__title flex items-center gap-2"><Users className="w-4 h-4" /> Agent Status</h2>
         <span className="agent-status__count">
           {agents.filter(a => a.status === 'Active').length}/{agents.length} активных
         </span>
@@ -328,8 +329,8 @@ function BlockerCard({ blocker }: { blocker: BlockerInfo }) {
       </div>
       <p className="blocker-card__description">{blocker.description}</p>
       <div className="blocker-card__meta">
-        <span className="blocker-card__reporter">📌 {blocker.reporter}</span>
-        <span className="blocker-card__time">🕐 {createdDate}</span>
+        <span className="blocker-card__reporter flex items-center gap-1"><Pin className="w-3 h-3" /> {blocker.reporter}</span>
+        <span className="blocker-card__time flex items-center gap-1"><Clock className="w-3 h-3" /> {createdDate}</span>
       </div>
       {blocker.assignedTo && (
         <div className="blocker-card__assigned">
@@ -364,8 +365,8 @@ function BlockersSection({ blockers }: { blockers: BlockerInfo[] }) {
   return (
     <div className="blockers-section">
       <div className="blockers-section__header">
-        <h2 className="blockers-section__title">
-          🚨 Blockers
+        <h2 className="blockers-section__title flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4" /> Blockers
           {activeBlockers.length > 0 && (
             <span className="blockers-section__count">{activeBlockers.length}</span>
           )}
@@ -373,7 +374,7 @@ function BlockersSection({ blockers }: { blockers: BlockerInfo[] }) {
       </div>
       {activeBlockers.length === 0 ? (
         <div className="blockers-section__empty">
-          <span className="blockers-section__empty-icon">✅</span>
+          <CheckCircle className="w-5 h-5 text-price-drop" />
           <span className="blockers-section__empty-text">Нет активных блокеров</span>
         </div>
       ) : (
@@ -436,8 +437,8 @@ export function CoordinatorDashboard() {
 
   if (loading) {
     return (
-      <div className="coordinator-dashboard coordinator-dashboard--loading">
-        <div className="coordinator-dashboard__spinner" />
+      <div className="flex flex-col items-center justify-center p-12 text-muted-foreground bg-card border border-border">
+        <Loader2 className="w-8 h-8 animate-spin text-accent mb-4" />
         <p>Загрузка данных координатора...</p>
       </div>
     );
@@ -445,11 +446,14 @@ export function CoordinatorDashboard() {
 
   if (error && !data) {
     return (
-      <div className="coordinator-dashboard coordinator-dashboard--error">
-        <span className="coordinator-dashboard__error-icon">⚠️</span>
-        <h2>Ошибка загрузки</h2>
-        <p>{error}</p>
-        <button className="btn btn--primary" onClick={() => void fetchData()}>
+      <div className="flex flex-col items-center justify-center p-12 text-center bg-card border border-border">
+        <AlertTriangle className="w-12 h-12 text-error mb-4" />
+        <h2 className="text-xl font-semibold text-foreground mb-2">Ошибка загрузки</h2>
+        <p className="text-error mb-4">{error}</p>
+        <button
+          className="px-4 py-2 bg-accent text-gold-ink text-sm hover:bg-accent-bright transition-colors"
+          onClick={() => void fetchData()}
+        >
           Попробовать снова
         </button>
       </div>
@@ -462,7 +466,7 @@ export function CoordinatorDashboard() {
     <div className="coordinator-dashboard">
       <header className="coordinator-dashboard__header">
         <div className="coordinator-dashboard__title-section">
-          <h1 className="coordinator-dashboard__title">📊 Coordinator Dashboard</h1>
+          <h1 className="coordinator-dashboard__title flex items-center gap-2"><LayoutDashboard className="w-6 h-6 text-accent" /> Coordinator Dashboard</h1>
           <p className="coordinator-dashboard__subtitle">
             Панель управления параллельной разработкой GoldPC
           </p>
@@ -473,7 +477,7 @@ export function CoordinatorDashboard() {
             <span>Автообновление</span>
           </label>
           <button className="btn btn--secondary" onClick={() => void fetchData()} title="Обновить данные">
-            🔄 Обновить
+            <RefreshCw className="w-4 h-4" /> Обновить
           </button>
         </div>
       </header>

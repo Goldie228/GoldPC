@@ -57,6 +57,9 @@
   --color-price-drop: #0ecb81;
   --color-price-rise: #f6465d;
   --color-info-blue: #3b82f6;
+  --color-warning: #f0b90b;              /* new token — for warning status badges */
+  --color-border-subtle: #1e2329;        /* new token — subtle border variant (same as surface-card) */
+  --font-family-tabular: 'Nunito Sans', ui-monospace, monospace;  /* new token — font-tabular utility for tabular-nums */
   
   /* Variables */
   --fg: #eaecef;

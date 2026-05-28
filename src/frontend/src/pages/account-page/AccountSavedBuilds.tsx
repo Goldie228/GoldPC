@@ -102,8 +102,8 @@ export function AccountSavedBuilds() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 size={32} className="text-gold animate-spin" />
-        <span className="ml-3 text-sm text-muted-text">Загрузка сборок...</span>
+        <Loader2 size={32} className="text-muted-foreground animate-spin" />
+        <span className="ml-3 text-sm text-muted-foreground">Загрузка сборок...</span>
       </div>
     );
   }
@@ -113,8 +113,8 @@ export function AccountSavedBuilds() {
       {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-body-text">Сохранённые сборки</h1>
-          <p className="text-sm text-muted-text mt-1">Ваши конфигурации ПК</p>
+          <h1 className="text-2xl font-bold text-foreground">Сохранённые сборки</h1>
+          <p className="text-sm text-muted-foreground mt-1">Ваши конфигурации ПК</p>
         </div>
         <Link
           to="/pc-builder"
@@ -127,10 +127,10 @@ export function AccountSavedBuilds() {
 
       {/* Builds List */}
       {builds.length === 0 ? (
-        <div className="bg-surface-card border border-hairline-dark rounded-xl p-12 text-center">
-          <Package size={48} className="text-muted-text mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-body-text mb-2">Нет сохранённых сборок</h3>
-          <p className="text-sm text-muted-text mb-6">
+        <div className="bg-card border border-border rounded-xl p-12 text-center">
+          <Package size={48} className="text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-foreground mb-2">Нет сохранённых сборок</h3>
+          <p className="text-sm text-muted-foreground mb-6">
             Создайте свою первую конфигурацию ПК в конструкторе
           </p>
           <Link
@@ -146,19 +146,19 @@ export function AccountSavedBuilds() {
           {builds.map((build) => (
             <div
               key={build.id}
-              className="bg-surface-card border border-hairline-dark rounded-xl p-5 hover:border-gold/30 transition-colors"
+              className="bg-card border border-border rounded-xl p-5 hover:border-border transition-colors"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
-                      <Cpu size={20} className="text-gold" />
+                    <div className="w-10 h-10 rounded-lg bg-elevated flex items-center justify-center shrink-0">
+                      <Cpu size={20} className="text-muted-foreground" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-base font-semibold text-body-text truncate">{build.name}</h3>
-                      <div className="flex items-center gap-3 text-xs text-muted-text">
+                      <h3 className="text-base font-semibold text-foreground truncate">{build.name}</h3>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
                         {build.purpose && (
-                          <span className="bg-surface-elevated px-2 py-0.5 rounded">
+                          <span className="bg-elevated px-2 py-0.5 rounded">
                             {PURPOSE_LABELS[build.purpose] || build.purpose}
                           </span>
                         )}
@@ -169,11 +169,11 @@ export function AccountSavedBuilds() {
                   </div>
 
                   <div className="flex items-center gap-4 mt-3">
-                    <span className="text-lg font-bold text-gold">{formatPrice(build.totalPrice)}</span>
+                    <span className="text-lg font-bold text-foreground font-tabular">{formatPrice(build.totalPrice)}</span>
                     <span
                       className={`text-xs font-medium px-2 py-0.5 rounded ${
                         build.isCompatible
-                          ? 'bg-[#0ecb81]/10 text-[#0ecb81]'
+                          ? 'bg-muted/10 text-muted-foreground'
                           : 'bg-red-500/10 text-red-500'
                       }`}
                     >
@@ -186,7 +186,7 @@ export function AccountSavedBuilds() {
                 <div className="flex items-center gap-2 shrink-0">
                   <Link
                     to={`/pc-builder?config=${build.id}`}
-                    className="p-2 rounded-lg text-muted-text hover:text-body-text hover:bg-surface-elevated transition-colors"
+                    className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-elevated transition-colors"
                     title="Открыть в конструкторе"
                   >
                     <ExternalLink size={16} />
@@ -194,7 +194,7 @@ export function AccountSavedBuilds() {
                   <button
                     onClick={() => void handleShare(build.id)}
                     disabled={sharingId === build.id}
-                    className="p-2 rounded-lg text-muted-text hover:text-body-text hover:bg-surface-elevated transition-colors disabled:opacity-50"
+                    className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-elevated transition-colors disabled:opacity-50"
                     title="Поделиться"
                   >
                     {sharingId === build.id ? (
@@ -206,7 +206,7 @@ export function AccountSavedBuilds() {
                   <button
                     onClick={() => void handleDelete(build.id, build.name)}
                     disabled={deletingId === build.id}
-                    className="p-2 rounded-lg text-muted-text hover:text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                    className="p-2 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50"
                     title="Удалить"
                   >
                     {deletingId === build.id ? (

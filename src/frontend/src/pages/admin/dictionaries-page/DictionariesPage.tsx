@@ -10,6 +10,7 @@ import {
   type DictionaryManufacturer,
   type DictionaryItem,
 } from '../../../api/admin';
+import { Search, Edit2, Trash2, Plus, X, Loader2 } from 'lucide-react';
 
 type TabType = 'categories' | 'manufacturers' | 'attributes';
 
@@ -125,8 +126,8 @@ export function DictionariesPage() {
   const renderTable = () => {
     if (loading) {
       return (
-        <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-          <div className="w-8 h-8 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin mb-4"></div>
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <Loader2 className="w-8 h-8 animate-spin text-accent mb-4" />
           <p>Загрузка...</p>
         </div>
       );
@@ -134,9 +135,9 @@ export function DictionariesPage() {
 
     if (error) {
       return (
-        <div className="text-center py-12 text-red-600">
+        <div className="text-center py-12 text-error">
           <p>{error}</p>
-          <button onClick={() => void fetchData()} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors">
+          <button onClick={() => void fetchData()} className="mt-4 px-4 py-2 bg-accent text-gold-ink rounded-lg text-sm hover:bg-accent-bright transition-colors">
             Попробовать снова
           </button>
         </div>
@@ -166,33 +167,33 @@ export function DictionariesPage() {
 
     if (filteredItems.length === 0) {
       return (
-        <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <p>Нет записей</p>
         </div>
       );
     }
 
     return (
-      <div className="bg-gray-800 border border-gray-700">
+      <div className="bg-card border border-border">
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700">ID</th>
-              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700">Название</th>
-              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700">Slug</th>
-              {activeTab !== 'attributes' && <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700">Товаров</th>}
-              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700">Статус</th>
-              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-gray-400 uppercase tracking-[0.08em] bg-gray-700 border-b border-gray-700"></th>
+              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border">ID</th>
+              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border">Название</th>
+              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border">Slug</th>
+              {activeTab !== 'attributes' && <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border">Товаров</th>}
+              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border">Статус</th>
+              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border"></th>
             </tr>
           </thead>
           <tbody>
             {filteredItems.map((item, index) => (
-              <tr key={item.id} className="hover:bg-gray-700">
-                <td className="px-5 py-3.5 text-sm font-mono text-xs text-gray-400">#{String(index + 1).padStart(3, '0')}</td>
-                <td className="px-5 py-3.5 text-sm font-medium text-gray-900">{item.name}</td>
-                <td className="px-5 py-3.5 text-sm font-mono text-xs text-gray-400">{item.slug}</td>
+              <tr key={item.id} className="hover:bg-elevated">
+                <td className="px-5 py-3.5 text-sm font-mono text-xs text-muted-foreground">#{String(index + 1).padStart(3, '0')}</td>
+                <td className="px-5 py-3.5 text-sm font-medium text-foreground">{item.name}</td>
+                <td className="px-5 py-3.5 text-sm font-mono text-xs text-muted-foreground">{item.slug}</td>
                 {activeTab !== 'attributes' && (
-                  <td className="px-5 py-3.5 text-sm font-mono text-xs text-gray-400">
+                  <td className="px-5 py-3.5 text-sm font-mono text-xs text-muted-foreground">
                     {itemCounts[item.id] || 0}
                   </td>
                 )}
@@ -207,19 +208,26 @@ export function DictionariesPage() {
                 </td>
                 <td className="px-5 py-3.5 text-sm">
                   <div className="flex gap-1">
+                      <button
+                        className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground cursor-pointer hover:border-accent hover:bg-accent/10 transition-colors"
+                        title="Редактировать"
+                        onClick={() => handleEdit(item)}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground cursor-pointer hover:border-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        title="Удалить"
+                        onClick={() => void handleDelete(item.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     <button
-                      className="w-8 h-8 flex items-center justify-center bg-transparent border border-gray-600 text-gray-400 cursor-pointer hover:border-blue-500 hover:bg-blue-500/10 transition-colors text-sm"
-                      title="Редактировать"
-                      onClick={() => handleEdit(item)}
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      className="w-8 h-8 flex items-center justify-center bg-transparent border border-gray-600 text-gray-400 cursor-pointer hover:border-red-300 hover:text-red-500 hover:bg-red-500/10 transition-colors text-sm"
+                      className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground cursor-pointer hover:border-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
                       title="Удалить"
                       onClick={() => void handleDelete(item.id)}
                     >
-                      🗑️
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </td>
@@ -235,60 +243,60 @@ export function DictionariesPage() {
     <div className="p-8 max-w-[1400px] mx-auto">
       <header className="flex justify-between items-start mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2 tracking-tight">Справочники</h1>
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <a href="#" className="text-gray-400 hover:text-blue-500 transition-colors no-underline">Admin</a>
+          <h1 className="text-2xl font-semibold text-foreground mb-2 tracking-tight">Справочники</h1>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <a href="#" className="text-muted-foreground hover:text-accent transition-colors no-underline">Admin</a>
             <span>→</span>
-            <span className="text-gray-400">Справочники</span>
+            <span className="text-muted-foreground">Справочники</span>
           </div>
         </div>
       </header>
 
       {/* Tabs */}
-      <div className="flex gap-0 border-b border-gray-200 mb-8">
+      <div className="flex gap-0 border-b border-border mb-8">
         <button
           className={`px-6 py-3 text-sm font-medium bg-transparent border-none cursor-pointer relative transition-colors ${
-            activeTab === 'categories' ? 'text-blue-500' : 'text-gray-400 hover:text-gray-900'
+            activeTab === 'categories' ? 'text-accent' : 'text-muted-foreground hover:text-foreground'
           }`}
           onClick={() => setActiveTab('categories')}
         >
           Категории
-          {activeTab === 'categories' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-blue-500"></div>}
+          {activeTab === 'categories' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-accent"></div>}
         </button>
         <button
           className={`px-6 py-3 text-sm font-medium bg-transparent border-none cursor-pointer relative transition-colors ${
-            activeTab === 'manufacturers' ? 'text-blue-500' : 'text-gray-400 hover:text-gray-900'
+            activeTab === 'manufacturers' ? 'text-accent' : 'text-muted-foreground hover:text-foreground'
           }`}
           onClick={() => setActiveTab('manufacturers')}
         >
           Производители
-          {activeTab === 'manufacturers' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-blue-500"></div>}
+          {activeTab === 'manufacturers' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-accent"></div>}
         </button>
         <button
           className={`px-6 py-3 text-sm font-medium bg-transparent border-none cursor-pointer relative transition-colors ${
-            activeTab === 'attributes' ? 'text-blue-500' : 'text-gray-400 hover:text-gray-900'
+            activeTab === 'attributes' ? 'text-accent' : 'text-muted-foreground hover:text-foreground'
           }`}
           onClick={() => setActiveTab('attributes')}
         >
           Характеристики
-          {activeTab === 'attributes' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-blue-500"></div>}
+          {activeTab === 'attributes' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-accent"></div>}
         </button>
       </div>
 
       {/* Toolbar */}
       <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
-        <div className="flex items-center gap-3 px-4 py-2.5 bg-gray-800 border border-gray-700 min-w-[320px]">
-          <span className="text-gray-400">🔍</span>
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border min-w-[320px]">
+          <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <input
             type="text"
-            className="flex-1 bg-transparent border-none text-gray-900 text-sm outline-none placeholder-gray-400"
+            className="flex-1 bg-transparent border-none text-foreground text-sm outline-none placeholder-muted-foreground"
             placeholder="Поиск по названию..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white border-none text-sm font-semibold cursor-pointer hover:bg-blue-600 transition-colors" onClick={handleAdd}>
-          <span>+</span> Добавить
+        <button className="flex items-center gap-2 px-5 py-2.5 bg-accent text-gold-ink border-none text-sm font-semibold cursor-pointer hover:bg-accent-bright transition-colors" onClick={handleAdd}>
+          <Plus className="w-4 h-4" /> Добавить
         </button>
       </div>
 
@@ -298,46 +306,46 @@ export function DictionariesPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200]" onClick={() => setShowModal(false)}>
-          <div className="bg-gray-800 border border-gray-700 w-full max-w-[480px]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center px-6 py-5 border-b border-gray-700">
+          <div className="bg-card border border-border w-full max-w-[480px]" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center px-6 py-5 border-b border-border">
               <h3 className="text-base font-semibold m-0">
                 {editingItem ? 'Редактировать' : 'Новая запись'}
               </h3>
-              <button className="w-8 h-8 flex items-center justify-center bg-transparent border-none text-gray-400 cursor-pointer hover:text-gray-900 transition-colors" onClick={() => setShowModal(false)}>
-                ✕
+              <button className="w-8 h-8 flex items-center justify-center bg-transparent border-none text-muted-foreground cursor-pointer hover:text-foreground transition-colors" onClick={() => setShowModal(false)}>
+                <X className="w-4 h-4" />
               </button>
             </div>
              <div className="p-6">
                <div className="mb-5">
-                 <label className="block text-sm font-medium text-gray-400 mb-2">Название</label>
+                 <label className="block text-sm font-medium text-muted-foreground mb-2">Название</label>
                  <input
                    type="text"
-                   className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-gray-900 text-sm transition-colors focus:outline-none focus:border-blue-500"
+                   className="w-full px-4 py-3 bg-elevated border border-border text-foreground text-sm transition-colors focus:outline-none focus:border-info-blue"
                    placeholder="Введите название"
                    value={formData.name}
                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                  />
                </div>
                <div className="mb-5">
-                 <label className="block text-sm font-medium text-gray-400 mb-2">Slug (URL)</label>
+                 <label className="block text-sm font-medium text-muted-foreground mb-2">Slug (URL)</label>
                  <input
                    type="text"
-                   className="w-full px-4 py-3 bg-gray-700 border border-gray-600 text-gray-900 text-sm transition-colors focus:outline-none focus:border-blue-500"
+                   className="w-full px-4 py-3 bg-elevated border border-border text-foreground text-sm transition-colors focus:outline-none focus:border-info-blue"
                    placeholder="auto-generated-slug"
                    value={formData.slug}
                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                  />
                </div>
              </div>
-             <div className="flex justify-end gap-3 px-6 py-5 border-t border-gray-700">
+             <div className="flex justify-end gap-3 px-6 py-5 border-t border-border">
                <button
-                 className="px-5 py-2.5 bg-transparent border border-gray-600 text-gray-400 text-sm font-semibold cursor-pointer hover:border-gray-400 hover:text-gray-900 transition-colors"
+                 className="px-5 py-2.5 bg-transparent border border-border text-muted-foreground text-sm font-semibold cursor-pointer hover:border-muted-foreground hover:text-foreground transition-colors"
                  onClick={() => setShowModal(false)}
                >
                  Отмена
                </button>
                <button
-                 className="px-5 py-2.5 bg-blue-500 text-white border-none text-sm font-semibold cursor-pointer hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                 className="px-5 py-2.5 bg-accent text-gold-ink border-none text-sm font-semibold cursor-pointer hover:bg-accent-bright transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={() => void handleSave()}
                  disabled={saving}
                >

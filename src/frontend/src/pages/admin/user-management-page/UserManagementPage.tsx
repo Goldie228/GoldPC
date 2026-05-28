@@ -278,7 +278,7 @@ export function UserManagementPage() {
                   <tr key={user.id} className={!user.isActive ? 'opacity-60' : ''}>
                     <td className="p-4 text-sm border-b border-border align-middle">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 flex items-center justify-center bg-accent-glow text-accent font-semibold text-[0.9rem] flex-shrink-0">
+                        <div className="w-10 h-10 flex items-center justify-center bg-elevated text-accent font-semibold text-[0.9rem] flex-shrink-0">
                           {getInitials(user)}
                         </div>
                         <div className="flex flex-col gap-0.5">
