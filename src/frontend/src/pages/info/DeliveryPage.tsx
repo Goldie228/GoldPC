@@ -45,14 +45,13 @@ const checkSteps = [
 
 export function DeliveryPage(): ReactElement {
   return (
-    <main className="min-h-screen bg-canvas-dark pt-24 md:pt-28 pb-20">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
-          <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
-          <span className="text-muted-text">/</span>
-          <span className="text-body-text">Доставка</span>
-        </nav>
+    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
+        <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
+        <span className="text-muted-text">/</span>
+        <span className="text-body-text">Доставка</span>
+      </nav>
 
         {/* Hero */}
         <section className="mb-16">
@@ -131,6 +130,5 @@ export function DeliveryPage(): ReactElement {
           </div>
         </section>
       </div>
-    </main>
-  );
-}
+    );
+  }

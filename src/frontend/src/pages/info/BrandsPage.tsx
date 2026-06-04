@@ -143,76 +143,74 @@ export function BrandsPage(): ReactElement {
   const brandResults = useQueries({ queries: brandProductQueries });
 
   return (
-    <main className="min-h-screen bg-canvas-dark pt-24 md:pt-28 pb-20">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
-          <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
-          <span className="text-muted-text">/</span>
-          <span className="text-body-text">Бренды</span>
-        </nav>
+    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
+        <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
+        <span className="text-muted-text">/</span>
+        <span className="text-body-text">Бренды</span>
+      </nav>
 
-        {/* Hero */}
-        <section className="mb-16">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-body-text mb-4 tracking-[-0.02em]">
-            Производители
-          </h1>
-          <p className="text-lg text-muted-text max-w-[600px] leading-relaxed">
-            Ведущие мировые бренды компьютерной техники и комплектующих в ассортименте GoldPC.
-          </p>
-        </section>
+      {/* Hero */}
+      <section className="mb-16">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-body-text mb-4 tracking-[-0.02em]">
+          Производители
+        </h1>
+        <p className="text-lg text-muted-text max-w-[600px] leading-relaxed">
+          Ведущие мировые бренды компьютерной техники и комплектующих в ассортименте GoldPC.
+        </p>
+      </section>
 
-        {/* Brands Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {brands.map((brand, index) => {
-            const Icon = brand.icon;
-            const categorySlug = brandToCategory[brand.name] ?? '';
-            const manufacturerId = manufacturerIdOverrides[brand.name] ?? manufacturerIdMap[brand.name.toLowerCase()];
-            const params = new URLSearchParams();
-            // Если UUID из override — не добавляем категорию (данные автопарсинга ненадёжные,
-            // реальные товары могут быть в другой категории)
-            if (categorySlug && !manufacturerIdOverrides[brand.name]) params.set('category', categorySlug);
-            if (manufacturerId) params.set('manufacturerIds', manufacturerId);
-            const queryStr = params.toString();
-            const href = queryStr ? `/catalog?${queryStr}` : '/catalog';
+      {/* Brands Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {brands.map((brand, index) => {
+          const Icon = brand.icon;
+          const categorySlug = brandToCategory[brand.name] ?? '';
+          const manufacturerId = manufacturerIdOverrides[brand.name] ?? manufacturerIdMap[brand.name.toLowerCase()];
+          const params = new URLSearchParams();
+          // Если UUID из override — не добавляем категорию (данные автопарсинга ненадёжные,
+          // реальные товары могут быть в другой категории)
+          if (categorySlug && !manufacturerIdOverrides[brand.name]) params.set('category', categorySlug);
+          if (manufacturerId) params.set('manufacturerIds', manufacturerId);
+          const queryStr = params.toString();
+          const href = queryStr ? `/catalog?${queryStr}` : '/catalog';
 
-            const topProduct = brandResults[index]?.data ?? null;
-            const productImage = topProduct?.mainImage?.url && hasValidProductImage(topProduct.mainImage.url)
-              ? getProductImageUrl(topProduct.mainImage.url)
-              : (brandImageOverrides[brand.name] ?? null);
+          const topProduct = brandResults[index]?.data ?? null;
+          const productImage = topProduct?.mainImage?.url && hasValidProductImage(topProduct.mainImage.url)
+            ? getProductImageUrl(topProduct.mainImage.url)
+            : (brandImageOverrides[brand.name] ?? null);
 
-            return (
-              <Link key={brand.name} to={href} className="block group h-full">
-                <article
-                  className="bg-surface-card rounded-xl border border-hairline-dark p-6 flex items-start gap-4 hover:border-gold/30 transition-colors h-full"
-                >
-                  <div className="w-12 h-12 flex items-center justify-center bg-gold/10 text-gold rounded-lg shrink-0">
-                    <Icon size={24} />
+          return (
+            <Link key={brand.name} to={href} className="block group h-full">
+              <article
+                className="bg-surface-card rounded-xl border border-hairline-dark p-6 flex items-start gap-4 hover:border-gold/30 transition-colors h-full"
+              >
+                <div className="w-12 h-12 flex items-center justify-center bg-gold/10 text-gold rounded-lg shrink-0">
+                  <Icon size={24} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h3 className="text-lg font-semibold text-body-text">{brand.name}</h3>
+                    <span className="text-[10px] uppercase tracking-wider text-muted-text bg-surface-elevated px-2 py-0.5 rounded shrink-0">
+                      {brand.category}
+                    </span>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h3 className="text-lg font-semibold text-body-text">{brand.name}</h3>
-                      <span className="text-[10px] uppercase tracking-wider text-muted-text bg-surface-elevated px-2 py-0.5 rounded shrink-0">
-                        {brand.category}
-                      </span>
-                    </div>
-                    <p className="text-muted-text text-sm leading-relaxed">{brand.description}</p>
+                  <p className="text-muted-text text-sm leading-relaxed">{brand.description}</p>
+                </div>
+                {productImage && (
+                  <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-white border border-hairline-dark">
+                    <img
+                      src={productImage}
+                      alt=""
+                      className="w-full h-full object-contain p-2"
+                    />
                   </div>
-                  {productImage && (
-                    <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-white border border-hairline-dark">
-                      <img
-                        src={productImage}
-                        alt=""
-                        className="w-full h-full object-contain p-2"
-                      />
-                    </div>
-                  )}
-                </article>
-              </Link>
-            );
-          })}
-        </div>
+                )}
+              </article>
+            </Link>
+          );
+        })}
       </div>
-    </main>
+    </div>
   );
 }

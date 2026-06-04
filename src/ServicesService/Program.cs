@@ -1,5 +1,6 @@
 using System.Text;
 using GoldPC.ServicesService.Data;
+using GoldPC.ServicesService.Hubs;
 using GoldPC.ServicesService.Services;
 using GoldPC.Shared.Services;
 using GoldPC.Shared.Services.Interfaces;
@@ -49,6 +50,7 @@ else
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["SecretKey"] ?? "development_secret_key_32_chars_long!!";
 
+builder.Services.AddSignalR();
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -67,10 +69,29 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
         ClockSkew = TimeSpan.Zero
     };
+
+    // SignalR WebSockets передают токен через query string (?access_token=)
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/chat", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -98,10 +119,30 @@ var app = builder.Build();
 // Security Headers Middleware - должен быть в начале pipeline
 app.UseSecurityHeaders();
 
-using (var scope = app.Services.CreateScope())
+try
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ServicesDbContext>();
-    dbContext.Database.Migrate();
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ServicesDbContext>();
+        Log.Information("Applying database migrations...");
+        dbContext.Database.Migrate();
+        Log.Information("Database migrations applied successfully");
+
+        // Update assembly service slug to match frontend URL (/services/assembly)
+        var assemblyService = dbContext.ServiceTypes
+            .FirstOrDefault(st => st.Name == "Сборка ПК на заказ");
+        if (assemblyService != null && assemblyService.Slug != "assembly")
+        {
+            assemblyService.Slug = "assembly";
+            dbContext.SaveChanges();
+            Log.Information("Updated assembly service slug to 'assembly'");
+        }
+    }
+}
+catch (Exception ex)
+{
+    Log.Warning(ex, "Database migration failed — continuing startup. Will retry on first request.");
+    // Не блокируем запуск сервиса из-за миграции
 }
 
 if (app.Environment.IsDevelopment())
@@ -110,12 +151,21 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// UseHttpsRedirection отключён в Docker/Development — HTTPS terminated на nginx
+// if (!app.Environment.IsDevelopment())
+// {
+//     app.UseHttpsRedirection();
+// }
+
+// Serve uploaded files (chat attachments, etc.)
+app.UseStaticFiles();
+
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapGet("/health", () => Results.Ok());
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 Log.Information("Services Service starting on port 5003");
 app.Run();

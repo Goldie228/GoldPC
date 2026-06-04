@@ -746,7 +746,40 @@ public class CatalogService : ICatalogService
                     .FirstOrDefault(),
             Rating = product.Rating > 0 ? new RatingDto { Average = product.Rating, Count = product.ReviewCount } : null,
             IsActive = product.IsActive,
-            DescriptionShort = descShort
+            DescriptionShort = descShort,
+
+            // Совместимость: поля из SpecificationValues (с null-safe доступом — не загружаются в витрине)
+            Socket = product.SpecificationValues
+                ?.Where(sv => sv.Attribute != null && sv.Attribute.Key == "socket")
+                .Select(sv => sv.CanonicalValue?.ValueText)
+                .FirstOrDefault(),
+
+            MemoryType = product.SpecificationValues
+                ?.Where(sv => sv.Attribute != null && sv.Attribute.Key == "memory_type")
+                .Select(sv => sv.CanonicalValue?.ValueText)
+                .FirstOrDefault(),
+
+            MemoryFormFactor = product.SpecificationValues
+                ?.Where(sv => sv.Attribute != null && sv.Attribute.Key == "memory_form_factor")
+                .Select(sv => sv.CanonicalValue?.ValueText)
+                .FirstOrDefault(),
+
+            Tdp = product.SpecificationValues
+                ?.Where(sv => sv.Attribute != null && sv.Attribute.Key == "tdp")
+                .Select(sv => sv.ValueNumber != null ? (int?)sv.ValueNumber : null)
+                .FirstOrDefault(),
+
+            Wattage = product.SpecificationValues
+                ?.Where(sv => sv.Attribute != null && sv.Attribute.Key == "wattage")
+                .Select(sv =>
+                {
+                    if (sv.ValueNumber.HasValue) return (int?)sv.ValueNumber;
+                    if (sv.CanonicalValue != null && int.TryParse(
+                        sv.CanonicalValue.ValueText.TrimEnd('W', 'w'), out var w))
+                        return w;
+                    return null;
+                })
+                .FirstOrDefault()
         };
     }
 

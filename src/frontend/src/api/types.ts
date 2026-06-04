@@ -80,6 +80,16 @@ export interface ProductSummary {
   isActive: boolean;
   /** Краткое описание для QuickView (первые 300 символов) */
   descriptionShort?: string;
+  /** Сокет процессора (для проверки совместимости CPU/Motherboard) */
+  socket?: string;
+  /** Тип оперативной памяти (для проверки совместимости Motherboard/RAM) */
+  memoryType?: string;
+  /** Форм-фактор оперативной памяти (DIMM/SO-DIMM) */
+  memoryFormFactor?: string;
+  /** Тепловыделение процессора в ваттах (для проверки совместимости с кулером) */
+  tdp?: number;
+  /** Мощность блока питания в ваттах (для проверки совместимости PSU/system) */
+  wattage?: number;
   images?: ProductImage[];
   /** Краткое имя для водяного знака за изображением */
   shortName?: string;

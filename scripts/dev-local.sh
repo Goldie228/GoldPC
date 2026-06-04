@@ -379,7 +379,7 @@ start_backend() {
         echo -e "${CYAN}Launching $name...${RESET}"
 
         cd "$PROJECT_DIR/$path"
-        if [ "$name" = "AuthService" ]; then
+        if [ "$name" = "AuthService" ] || [ "$name" = "ServicesService" ]; then
             ASPNETCORE_ENVIRONMENT=Development dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
         else
             dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
@@ -509,6 +509,21 @@ frontend_smoke_test() {
 # Function to start frontend
 start_frontend() {
     echo -e "${CYAN}Preparing frontend...${RESET}"
+
+    # Load nvm for Node 24 (Vite 8 несовместим с Node 18)
+    if [ -s "$HOME/.nvm/nvm.sh" ]; then
+        # shellcheck source=/dev/null
+        . "$HOME/.nvm/nvm.sh"
+        if nvm use 24.13.0 2>/dev/null; then
+            echo -e "${GREEN}✓ Using Node $(node -v) via nvm${RESET}"
+        else
+            echo -e "${YELLOW}⚠ nvm use 24.13.0 failed, falling back to system Node $(node -v)${RESET}"
+            echo -e "${YELLOW}  Установи: nvm install 24.13.0 && nvm use 24.13.0${RESET}"
+        fi
+    else
+        echo -e "${YELLOW}⚠ nvm не найден, используется системный Node $(node -v)${RESET}"
+        echo -e "${YELLOW}  Установи nvm: https://github.com/nvm-sh/nvm${RESET}"
+    fi
 
     if ! ensure_frontend_deps; then
         exit 1

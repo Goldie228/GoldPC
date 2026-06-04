@@ -39,7 +39,7 @@ export interface CompatibilityCheckResult {
 
 export type ComponentMap = Partial<Record<ComponentCategory, Product | null>>;
 
-export type MemoryType = 'DDR4' | 'DDR5';
+export type MemoryType = 'DDR3' | 'DDR4' | 'DDR5' | 'LPDDR5';
 export type FormFactor = 'ATX' | 'MicroATX' | 'MiniITX' | 'EATX';
 export type MemoryFormFactor = 'DIMM' | 'SO-DIMM';
 

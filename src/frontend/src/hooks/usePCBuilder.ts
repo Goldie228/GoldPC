@@ -108,7 +108,8 @@ export function usePCBuilder(): UsePCBuilderReturn {
   // === Derived Data (pure logic) ===
   const localCompatibility = useMemo(() => {
     const componentMap = buildComponentMap(selectedComponents);
-    const result = checkCompatibility(componentMap);
+    const allRamSticks = selectedComponents.ram.map(r => r.product);
+    const result = checkCompatibility(componentMap, allRamSticks);
     return {
       isCompatible: result.isCompatible,
       errors: result.issues.map(i => i.message),
@@ -217,7 +218,8 @@ export function usePCBuilder(): UsePCBuilderReturn {
 
   const checkCompatibilityAction = useCallback(() => {
     const componentMap = buildComponentMap(selectedComponents);
-    const result = checkCompatibility(componentMap);
+    const allRamSticks = selectedComponents.ram.map(r => r.product);
+    const result = checkCompatibility(componentMap, allRamSticks);
     return {
       isCompatible: result.isCompatible,
       errors: result.issues.map(i => i.message),

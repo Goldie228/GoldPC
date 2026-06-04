@@ -288,7 +288,7 @@ getAddresses()
 
   if (safeItems.length === 0) {
     return (
-      <div className="min-h-[calc(100vh-200px)] bg-background pt-20 text-foreground">
+      <div className="min-h-[calc(100vh-200px)] bg-background text-foreground pt-8">
         <div className="w-full max-w-7xl mx-auto px-6">
           <div className="flex flex-col gap-7 text-center p-12 bg-card border border-border rounded-xl max-w-[620px] mx-auto shadow-lg relative overflow-hidden">
             <h1>Корзина пуста</h1>
@@ -305,7 +305,7 @@ getAddresses()
 
   if (showPaymentForm) {
     return (
-      <div className="min-h-[calc(100vh-200px)] bg-background pt-20 text-foreground">
+      <div className="min-h-[calc(100vh-200px)] bg-background text-foreground pt-8">
         <div className="w-full max-w-7xl mx-auto px-6">
           <h1 className="font-sans text-[clamp(1.5rem,4vw,2rem)] font-semibold tracking-tight text-foreground mb-2">Оплата картой</h1>
           <div className="max-w-[600px] mx-auto py-8">
@@ -321,7 +321,7 @@ getAddresses()
 
   if (showQRPayment) {
     return (
-      <div className="min-h-[calc(100vh-200px)] bg-background pt-20 text-foreground">
+      <div className="min-h-[calc(100vh-200px)] bg-background text-foreground pt-8">
         <div className="w-full max-w-7xl mx-auto px-6">
           <h1 className="font-sans text-[clamp(1.5rem,4vw,2rem)] font-semibold tracking-tight text-foreground mb-2">Оплата через СБП</h1>
           <div className="max-w-[600px] mx-auto py-8">
@@ -339,7 +339,7 @@ getAddresses()
   }
 
   return (
-    <div className="min-h-[calc(100vh-200px)] bg-background pt-20 text-foreground">
+    <div className="min-h-[calc(100vh-200px)] bg-background text-foreground pt-8">
       <div className="w-full max-w-7xl mx-auto px-[var(--layout-page-pad-x)]">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-[0.7rem] text-foreground-dim mb-2">

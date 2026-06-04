@@ -10,6 +10,7 @@ import {
   type DictionaryManufacturer,
   type DictionaryItem,
 } from '../../../api/admin';
+import { useToast } from '../../../hooks/useToast';
 import { Search, Edit2, Trash2, Plus, X, Loader2 } from 'lucide-react';
 
 type TabType = 'categories' | 'manufacturers' | 'attributes';
@@ -18,6 +19,7 @@ type TabType = 'categories' | 'manufacturers' | 'attributes';
  * Страница управления справочниками
  */
 export function DictionariesPage() {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<TabType>('categories');
   const [categories, setCategories] = useState<DictionaryCategory[]>([]);
   const [manufacturers, setManufacturers] = useState<DictionaryManufacturer[]>([]);
@@ -81,13 +83,13 @@ export function DictionariesPage() {
       void fetchData();
     } catch (err) {
       console.error('Failed to delete:', err);
-      alert('Не удалось удалить запись');
+      showToast('Не удалось удалить запись', 'error');
     }
   };
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      alert('Введите название');
+      showToast('Введите название', 'error');
       return;
     }
 
@@ -108,7 +110,7 @@ export function DictionariesPage() {
       void fetchData();
     } catch (err) {
       console.error('Failed to save:', err);
-      alert('Не удалось сохранить запись');
+      showToast('Не удалось сохранить запись', 'error');
     } finally {
       setSaving(false);
     }

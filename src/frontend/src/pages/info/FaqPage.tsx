@@ -110,14 +110,13 @@ export function FaqPage(): ReactElement {
   }, [location.hash]);
 
   return (
-    <main className="min-h-screen bg-canvas-dark pt-24 md:pt-28 pb-20">
-      <div className="max-w-[900px] mx-auto px-4 md:px-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
-          <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
-          <span className="text-muted-text">/</span>
-          <span className="text-body-text">FAQ</span>
-        </nav>
+    <div className="max-w-[900px] mx-auto px-4 md:px-8 pt-8">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
+        <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
+        <span className="text-muted-text">/</span>
+        <span className="text-body-text">FAQ</span>
+      </nav>
 
         {/* Hero */}
         <section className="mb-10">
@@ -192,6 +191,5 @@ export function FaqPage(): ReactElement {
           })}
         </div>
       </div>
-    </main>
-  );
-}
+    );
+  }

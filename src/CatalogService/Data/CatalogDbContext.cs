@@ -212,6 +212,7 @@ public class CatalogDbContext : DbContext
             entity.Property(e => e.DisplayName).HasColumnName("display_name").IsRequired().HasMaxLength(100);
             entity.Property(e => e.FilterType).HasColumnName("filter_type");
             entity.Property(e => e.SortOrder).HasColumnName("sort_order");
+            entity.Property(e => e.IsMultiValue).HasColumnName("is_multi_value");
             entity.HasIndex(e => e.CategoryId);
             entity.HasIndex(e => e.AttributeId);
             entity.HasOne(e => e.Attribute)
@@ -335,6 +336,7 @@ public class CatalogDbContext : DbContext
             // Removed legacy spec attributes: data_vykhoda_na_rynok_2, proizvoditel_graficheskogo_protsessora, shirina_shiny_pamyati, okhlazhdenie_1, razyemy_pitaniya, rekomenduemyy_blok_pitaniya
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000021"), Key = "dlina_videokarty", DisplayName = "Длина видеокарты", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000022"), Key = "vysota_videokarty", DisplayName = "Высота видеокарты", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
+            new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000026"), Key = "memory_form_factor", DisplayName = "Форм-фактор памяти", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
             // === NEW SPEC ATTRIBUTES FOR COOLERS ===
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000023"), Key = "cooler_type", DisplayName = "Тип кулера", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000024"), Key = "supported_sockets", DisplayName = "Поддерживаемые сокеты", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = true },
@@ -391,6 +393,11 @@ public class CatalogDbContext : DbContext
         foreach (var (text, order) in new[] { ("DDR5", 1), ("DDR4", 2) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = memoryTypeId, ValueText = text, SortOrder = order });
 
+        // --- memory_form_factor canonical values ---
+        var memoryFormFactorAttrId = Guid.Parse("40000000-0000-0000-0000-000000000026");
+        foreach (var (text, order) in new[] { ("DIMM", 1), ("SO-DIMM", 2) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = memoryFormFactorAttrId, ValueText = text, SortOrder = order });
+
         // === NEW COOLER SPEC ATTRIBUTE CANONICAL VALUES ===
         var coolerTypeId = Guid.Parse("40000000-0000-0000-0000-000000000023");
         var supportedSocketsId = Guid.Parse("40000000-0000-0000-0000-000000000024");
@@ -402,6 +409,47 @@ public class CatalogDbContext : DbContext
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = supportedSocketsId, ValueText = text, SortOrder = order });
         foreach (var (text, order) in new[] { ("150W", 1), ("200W", 2), ("250W", 3), ("300W", 4) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = maxTdpId, ValueText = text, SortOrder = order });
+
+        // === NEW CANONICAL VALUES FOR STORAGE, CASES, PERIPHERALS, MONITORS ===
+        var colorCvId = Guid.Parse("40000000-0000-0000-0000-00000000000b");
+        var ifaceCvId = Guid.Parse("40000000-0000-0000-0000-000000000019");
+        var typeCvId = Guid.Parse("40000000-0000-0000-0000-000000000006");
+        var diagonalCvId = Guid.Parse("40000000-0000-0000-0000-00000000000d");
+        var resolutionCvId = Guid.Parse("40000000-0000-0000-0000-00000000000e");
+        var refreshRateCvId = Guid.Parse("40000000-0000-0000-0000-00000000000f");
+        var sensorTypeCvId = Guid.Parse("40000000-0000-0000-0000-000000000012");
+
+        // Storage capacity (additional)
+        foreach (var (text, order) in new[] { ("1TB", 5), ("2TB", 6) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = capacityId, ValueText = text, SortOrder = order });
+
+        // Interface
+        foreach (var (text, order) in new[] { ("NVMe PCIe 4.0", 1), ("NVMe PCIe 3.0", 2), ("SATA III", 3), ("USB Type-C", 4), ("USB Type-A", 5), ("Bluetooth", 6), ("3.5 мм", 7) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = ifaceCvId, ValueText = text, SortOrder = order });
+
+        // Color
+        foreach (var (text, order) in new[] { ("Черный", 1), ("Белый", 2) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = colorCvId, ValueText = text, SortOrder = order });
+
+        // Type (peripherals — keyboards, mice, headphones)
+        foreach (var (text, order) in new[] { ("Механическая", 3), ("Мембранная", 4), ("Игровая", 5), ("Офисная", 6), ("Полноразмерные", 7), ("Вкладыши", 8) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = typeCvId, ValueText = text, SortOrder = order });
+
+        // Diagonal
+        foreach (var (text, order) in new[] { ("27\"", 1), ("32\"", 2), ("24\"", 3) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = diagonalCvId, ValueText = text, SortOrder = order });
+
+        // Resolution
+        foreach (var (text, order) in new[] { ("1920x1080 (Full HD)", 1), ("2560x1440 (QHD)", 2), ("3840x2160 (4K UHD)", 3) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = resolutionCvId, ValueText = text, SortOrder = order });
+
+        // Refresh rate
+        foreach (var (text, order) in new[] { ("144 Гц", 1), ("165 Гц", 2), ("60 Гц", 3) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = refreshRateCvId, ValueText = text, SortOrder = order });
+
+        // Sensor type
+        foreach (var (text, order) in new[] { ("Оптический", 1), ("Лазерный", 2) })
+            cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = sensorTypeCvId, ValueText = text, SortOrder = order });
 
         modelBuilder.Entity<SpecificationCanonicalValue>().HasData(cv);
     }
@@ -505,7 +553,14 @@ public class CatalogDbContext : DbContext
             new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-000000000014"), Name = "Samsung", Country = "South Korea" },
             new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-000000000015"), Name = "Western Digital", Country = "USA" },
             new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-000000000016"), Name = "NZXT", Country = "USA" },
-            new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-000000000017"), Name = "Fractal Design", Country = "Sweden" }
+            new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-000000000017"), Name = "Fractal Design", Country = "Sweden" },
+            new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-000000000018"), Name = "Logitech", Country = "Switzerland" },
+            new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-000000000019"), Name = "SteelSeries", Country = "Denmark" },
+            new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-00000000001a"), Name = "HyperX", Country = "USA" },
+            new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-00000000001b"), Name = "Cooler Master", Country = "Taiwan" },
+            new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-00000000001c"), Name = "Noctua", Country = "Austria" },
+            new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-00000000001d"), Name = "LG", Country = "South Korea" },
+            new Manufacturer { Id = Guid.Parse("10000000-0000-0000-0000-00000000001e"), Name = "Dell", Country = "USA" }
         };
 
         modelBuilder.Entity<Manufacturer>().HasData(manufacturers);
@@ -519,6 +574,13 @@ public class CatalogDbContext : DbContext
         var ramCategoryId = Guid.Parse("00000000-0000-0000-0000-000000000003");
         var gpuCategoryId = Guid.Parse("00000000-0000-0000-0000-000000000004");
         var psuCategoryId = Guid.Parse("00000000-0000-0000-0000-000000000005");
+        var storageCategoryId = Guid.Parse("00000000-0000-0000-0000-000000000006");
+        var casesCategoryId = Guid.Parse("00000000-0000-0000-0000-000000000007");
+        var coolersCategoryId = Guid.Parse("00000000-0000-0000-0000-000000000008");
+        var monitorsCategoryId = Guid.Parse("00000000-0000-0000-0000-00000000000a");
+        var keyboardsCategoryId = Guid.Parse("00000000-0000-0000-0000-00000000000b");
+        var miceCategoryId = Guid.Parse("00000000-0000-0000-0000-00000000000c");
+        var headphonesCategoryId = Guid.Parse("00000000-0000-0000-0000-00000000000d");
 
         // ID производителей
         var amdId = Guid.Parse("10000000-0000-0000-0000-000000000002");
@@ -532,6 +594,15 @@ public class CatalogDbContext : DbContext
         var gskillId = Guid.Parse("10000000-0000-0000-0000-000000000011");
         var beQuietId = Guid.Parse("10000000-0000-0000-0000-000000000012");
         var seasonicId = Guid.Parse("10000000-0000-0000-0000-000000000013");
+        var samsungId = Guid.Parse("10000000-0000-0000-0000-000000000014");
+        var wdId = Guid.Parse("10000000-0000-0000-0000-000000000015");
+        var nzxtId = Guid.Parse("10000000-0000-0000-0000-000000000016");
+        var fractalId = Guid.Parse("10000000-0000-0000-0000-000000000017");
+        var logitechId = Guid.Parse("10000000-0000-0000-0000-000000000018");
+        var steelseriesId = Guid.Parse("10000000-0000-0000-0000-000000000019");
+        var hyperxId = Guid.Parse("10000000-0000-0000-0000-00000000001a");
+        var lgId = Guid.Parse("10000000-0000-0000-0000-00000000001d");
+        var dellId = Guid.Parse("10000000-0000-0000-0000-00000000001e");
 
         var products = new[]
         {
@@ -761,6 +832,272 @@ public class CatalogDbContext : DbContext
                 IsActive = true,
                 IsFeatured = true,
                 CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+
+            // === НАКОПИТЕЛИ (STORAGE) ===
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-000000000013"),
+                Name = "Samsung 990 Pro 1TB NVMe SSD",
+                Sku = "ST-SAMSUNG-990PRO-1TB",
+                Slug = "samsung_990_pro_1tb_nvme_ssd",
+                Description = "NVMe SSD Samsung 990 Pro 1TB, PCIe 4.0, скорости чтения до 7450 МБ/с. Идеально для игр и профессиональных задач.",
+                CategoryId = storageCategoryId,
+                ManufacturerId = samsungId,
+                Price = 299.00m,
+                Stock = 30,
+                WarrantyMonths = 60,
+                Rating = 4.9,
+                ReviewCount = 245,
+                IsActive = true,
+                IsFeatured = true,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-000000000014"),
+                Name = "Western Digital WD Black SN850X 2TB NVMe SSD",
+                Sku = "ST-WD-SN850X-2TB",
+                Slug = "wd_black_sn850x_2tb_nvme_ssd",
+                Description = "NVMe SSD Western Digital WD Black SN850X 2TB, PCIe 4.0, скорости чтения до 7300 МБ/с. Оптимизирован для игр和工作ы.",
+                CategoryId = storageCategoryId,
+                ManufacturerId = wdId,
+                Price = 499.00m,
+                Stock = 20,
+                WarrantyMonths = 60,
+                Rating = 4.8,
+                ReviewCount = 178,
+                IsActive = true,
+                IsFeatured = true,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+
+            // === КОРПУСА (CASES) ===
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-000000000015"),
+                Name = "NZXT H5 Flow",
+                Sku = "CASE-NZXT-H5F",
+                Slug = "nzxt_h5_flow",
+                Description = "Корпус NZXT H5 Flow, ATX, с сетчатой передней панелью для максимального воздушного потока. 2 предустановленных вентилятора.",
+                CategoryId = casesCategoryId,
+                ManufacturerId = nzxtId,
+                Price = 249.00m,
+                Stock = 15,
+                WarrantyMonths = 24,
+                Rating = 4.7,
+                ReviewCount = 89,
+                IsActive = true,
+                IsFeatured = true,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-000000000016"),
+                Name = "Fractal Design Pop Air",
+                Sku = "CASE-FRACT-POPA",
+                Slug = "fractal_design_pop_air",
+                Description = "Корпус Fractal Design Pop Air, mATX, минималистичный скандинавский дизайн. Отличная вентиляция, поддержка GPU до 405 мм.",
+                CategoryId = casesCategoryId,
+                ManufacturerId = fractalId,
+                Price = 189.00m,
+                Stock = 25,
+                WarrantyMonths = 24,
+                Rating = 4.6,
+                ReviewCount = 67,
+                IsActive = true,
+                IsFeatured = false,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+
+            // === СИСТЕМЫ ОХЛАЖДЕНИЯ (COOLERS) ===
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-000000000017"),
+                Name = "be quiet! Dark Rock Pro 5",
+                Sku = "COOL-BQT-DRP5",
+                Slug = "be_quiet_dark_rock_pro_5",
+                Description = "Башенный кулер be quiet! Dark Rock Pro 5, воздушный, TDP до 250W. Два вентилятора, сверхтихая работа. Поддержка LGA1700 и AM5.",
+                CategoryId = coolersCategoryId,
+                ManufacturerId = beQuietId,
+                Price = 279.00m,
+                Stock = 12,
+                WarrantyMonths = 36,
+                Rating = 4.8,
+                ReviewCount = 134,
+                IsActive = true,
+                IsFeatured = true,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-000000000018"),
+                Name = "NZXT Kraken X73 RGB",
+                Sku = "COOL-NZXT-KRAKENX73",
+                Slug = "nzxt_kraken_x73_rgb",
+                Description = "Жидкостное охлаждение NZXT Kraken X73 RGB 360мм. TDP до 300W, RGB-подсветка, поддержка LGA1700 и AM5.",
+                CategoryId = coolersCategoryId,
+                ManufacturerId = nzxtId,
+                Price = 449.00m,
+                Stock = 8,
+                WarrantyMonths = 36,
+                Rating = 4.7,
+                ReviewCount = 98,
+                IsActive = true,
+                IsFeatured = true,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+
+            // === МОНИТОРЫ (MONITORS) ===
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-000000000019"),
+                Name = "LG 27GP850-B",
+                Sku = "MON-LG-27GP850",
+                Slug = "lg_27gp850_b",
+                Description = "Монитор LG 27GP850-B 27\" QHD (2560x1440), IPS, 165 Гц, 1 мс. NVIDIA G-Sync совместимый, HDR10. Идеален для киберспорта.",
+                CategoryId = monitorsCategoryId,
+                ManufacturerId = lgId,
+                Price = 899.00m,
+                Stock = 18,
+                WarrantyMonths = 36,
+                Rating = 4.7,
+                ReviewCount = 156,
+                IsActive = true,
+                IsFeatured = true,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-00000000001a"),
+                Name = "Dell S2722QC",
+                Sku = "MON-DELL-S2722QC",
+                Slug = "dell_s2722qc",
+                Description = "Монитор Dell S2722QC 27\" 4K UHD (3840x2160), IPS, 60 Гц, USB-C с 65W Power Delivery. Отличный выбор для работы и контента.",
+                CategoryId = monitorsCategoryId,
+                ManufacturerId = dellId,
+                Price = 1099.00m,
+                Stock = 10,
+                WarrantyMonths = 36,
+                Rating = 4.6,
+                ReviewCount = 89,
+                IsActive = true,
+                IsFeatured = false,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+
+            // === КЛАВИАТУРЫ (KEYBOARDS) ===
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-00000000001b"),
+                Name = "Logitech G Pro X",
+                Sku = "KB-LOGI-GPROX",
+                Slug = "logitech_g_pro_x",
+                Description = "Клавиатура Logitech G Pro X, механическая, GX Blue, USB Type-C. Компактный дизайн Tenkeyless для киберспорта.",
+                CategoryId = keyboardsCategoryId,
+                ManufacturerId = logitechId,
+                Price = 329.00m,
+                Stock = 22,
+                WarrantyMonths = 24,
+                Rating = 4.6,
+                ReviewCount = 112,
+                IsActive = true,
+                IsFeatured = true,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-00000000001c"),
+                Name = "SteelSeries Apex 3",
+                Sku = "KB-STEEL-APEX3",
+                Slug = "steelseries_apex_3",
+                Description = "Клавиатура SteelSeries Apex 3, мембранная, USB Type-A, влагозащита IP32. Тихие клавиши с мягким ходом, RGB-подсветка 10 зон.",
+                CategoryId = keyboardsCategoryId,
+                ManufacturerId = steelseriesId,
+                Price = 159.00m,
+                Stock = 35,
+                WarrantyMonths = 24,
+                Rating = 4.4,
+                ReviewCount = 203,
+                IsActive = true,
+                IsFeatured = false,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+
+            // === МЫШИ (MICE) ===
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-00000000001d"),
+                Name = "Logitech G Pro X Superlight",
+                Sku = "MICE-LOGI-GPROX-SL",
+                Slug = "logitech_g_pro_x_superlight",
+                Description = "Мышь Logitech G Pro X Superlight, беспроводная, 63g. Сенсор HERO 25K (32000 DPI), 70 часов работы. Выбор профессионалов.",
+                CategoryId = miceCategoryId,
+                ManufacturerId = logitechId,
+                Price = 449.00m,
+                Stock = 18,
+                WarrantyMonths = 24,
+                Rating = 4.9,
+                ReviewCount = 312,
+                IsActive = true,
+                IsFeatured = true,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-00000000001e"),
+                Name = "SteelSeries Rival 3",
+                Sku = "MICE-STEEL-RIVAL3",
+                Slug = "steelseries_rival_3",
+                Description = "Мышь SteelSeries Rival 3, проводная USB Type-A, сенсор TrueMove Core (8500 DPI). Лёгкая (77g), 6 кнопок, RGB-подсветка.",
+                CategoryId = miceCategoryId,
+                ManufacturerId = steelseriesId,
+                Price = 99.00m,
+                Stock = 45,
+                WarrantyMonths = 24,
+                Rating = 4.5,
+                ReviewCount = 189,
+                IsActive = true,
+                IsFeatured = false,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+
+            // === НАУШНИКИ (HEADPHONES) ===
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-00000000001f"),
+                Name = "HyperX Cloud II",
+                Sku = "HP-HYPERX-CLOUD2",
+                Slug = "hyperx_cloud_ii",
+                Description = "Наушники HyperX Cloud II, полноразмерные, 7.1 виртуальный звук, 3.5 мм. Закрытые амбушюры с эффектом памяти, съёмный микрофон.",
+                CategoryId = headphonesCategoryId,
+                ManufacturerId = hyperxId,
+                Price = 249.00m,
+                Stock = 30,
+                WarrantyMonths = 24,
+                Rating = 4.7,
+                ReviewCount = 456,
+                IsActive = true,
+                IsFeatured = true,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new Product
+            {
+                Id = Guid.Parse("20000000-0000-0000-0000-000000000020"),
+                Name = "SteelSeries Arctis Nova 1",
+                Sku = "HP-STEEL-ANOVA1",
+                Slug = "steelseries_arctis_nova_1",
+                Description = "Наушники SteelSeries Arctis Nova 1, полноразмерные, 3.5 мм, Hi-Res Audio. Лёгкая конструкция, дискретный микрофон с шумоподавлением.",
+                CategoryId = headphonesCategoryId,
+                ManufacturerId = steelseriesId,
+                Price = 179.00m,
+                Stock = 28,
+                WarrantyMonths = 24,
+                Rating = 4.5,
+                ReviewCount = 234,
+                IsActive = true,
+                IsFeatured = false,
+                CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         };
 
@@ -781,7 +1118,6 @@ public class CatalogDbContext : DbContext
         // Max Memory: 128GB=...0027, 64GB=...0028
         // Integrated Graphics: Есть=...0029, Нет=...002a
         // Memory Type: DDR5=...002b, DDR4=...002c
-
         var socketAttrId = Guid.Parse("40000000-0000-0000-0000-000000000001");
         var coresAttrId = Guid.Parse("40000000-0000-0000-0000-000000000004");
         var tdpAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000c");
@@ -798,6 +1134,17 @@ public class CatalogDbContext : DbContext
         var wattageAttrId = Guid.Parse("40000000-0000-0000-0000-000000000008");
         var efficiencyAttrId = Guid.Parse("40000000-0000-0000-0000-000000000009");
         var modularAttrId = Guid.Parse("40000000-0000-0000-0000-000000000016");
+        var interfaceAttrId = Guid.Parse("40000000-0000-0000-0000-000000000019");
+        var colorAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000b");
+        var typeAttrId = Guid.Parse("40000000-0000-0000-0000-000000000006");
+        var diagonalAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000d");
+        var resolutionAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000e");
+        var refreshRateAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000f");
+        var dpiAttrId = Guid.Parse("40000000-0000-0000-0000-000000000011");
+        var sensorTypeAttrId = Guid.Parse("40000000-0000-0000-0000-000000000012");
+        var coolerTypeSvId = Guid.Parse("40000000-0000-0000-0000-000000000023");
+        var supportedSocketsSvId = Guid.Parse("40000000-0000-0000-0000-000000000024");
+        var maxTdpSvId = Guid.Parse("40000000-0000-0000-0000-000000000025");
 
         var specValues = new[]
         {
@@ -813,7 +1160,7 @@ public class CatalogDbContext : DbContext
             new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000007"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000002"), AttributeId = coresAttrId, ValueNumber = 8 },
             new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000008"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000002"), AttributeId = threadsAttrId, ValueNumber = 16 },
             new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000009"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000002"), AttributeId = tdpAttrId, ValueNumber = 120 },
-            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000000a"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000002"), AttributeId = integratedGraphicsAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000027") }, // Нет
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000000a"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000002"), AttributeId = integratedGraphicsAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000026") }, // Есть (RDNA 2 iGPU)
 
             // === CPU: Intel Core i5-13600KF ===
             new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000000b"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000003"), AttributeId = socketAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000003") }, // LGA1700
@@ -870,6 +1217,76 @@ public class CatalogDbContext : DbContext
             new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000002c"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000012"), AttributeId = wattageAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000016") }, // 850W
             new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000002d"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000012"), AttributeId = efficiencyAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000019") }, // 80+ Gold
             new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000002e"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000012"), AttributeId = modularAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000021") }, // Полностью модульный
+
+            // === STORAGE: Samsung 990 Pro 1TB ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000002f"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000013"), AttributeId = capacityAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000051") }, // 1TB
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000030"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000013"), AttributeId = interfaceAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000053") }, // NVMe PCIe 4.0
+
+            // === STORAGE: WD Black SN850X 2TB ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000031"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000014"), AttributeId = capacityAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000052") }, // 2TB
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000032"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000014"), AttributeId = interfaceAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000053") }, // NVMe PCIe 4.0
+
+            // === CASES: NZXT H5 Flow ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000033"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000015"), AttributeId = formFactorAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-00000000001d") }, // ATX
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000034"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000015"), AttributeId = colorAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000060") }, // Черный
+
+            // === CASES: Fractal Design Pop Air ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000035"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000016"), AttributeId = formFactorAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-00000000001e") }, // mATX
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000036"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000016"), AttributeId = colorAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000061") }, // Белый
+
+            // === COOLERS: be quiet! Dark Rock Pro 5 ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000037"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000017"), AttributeId = coolerTypeSvId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000042") }, // Воздушный
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000038"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000017"), AttributeId = supportedSocketsSvId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000046") }, // LGA1700
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000039"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000017"), AttributeId = supportedSocketsSvId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000045") }, // AM5
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000003a"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000017"), AttributeId = maxTdpSvId, ValueNumber = 250 },
+
+            // === COOLERS: NZXT Kraken X73 RGB ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000003b"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000018"), AttributeId = coolerTypeSvId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000043") }, // Жидкостный
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000003c"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000018"), AttributeId = supportedSocketsSvId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000046") }, // LGA1700
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000003d"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000018"), AttributeId = supportedSocketsSvId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000045") }, // AM5
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000003e"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000018"), AttributeId = maxTdpSvId, ValueNumber = 300 },
+
+            // === MONITORS: LG 27GP850-B ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000003f"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000019"), AttributeId = diagonalAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000068") }, // 27"
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000040"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000019"), AttributeId = resolutionAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000072") }, // QHD
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000041"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000019"), AttributeId = refreshRateAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000075") }, // 165 Гц
+
+            // === MONITORS: Dell S2722QC ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000042"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001a"), AttributeId = diagonalAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000068") }, // 27"
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000043"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001a"), AttributeId = resolutionAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000073") }, // 4K UHD
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000044"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001a"), AttributeId = refreshRateAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000076") }, // 60 Гц
+
+            // === KEYBOARDS: Logitech G Pro X ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000045"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001b"), AttributeId = typeAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000062") }, // Механическая
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000046"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001b"), AttributeId = interfaceAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000056") }, // USB Type-C
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000047"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001b"), AttributeId = colorAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000060") }, // Черный
+
+            // === KEYBOARDS: SteelSeries Apex 3 ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000048"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001c"), AttributeId = typeAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000063") }, // Мембранная
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000049"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001c"), AttributeId = interfaceAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000057") }, // USB Type-A
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000004a"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001c"), AttributeId = colorAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000060") }, // Черный
+
+            // === MICE: Logitech G Pro X Superlight ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000004b"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001d"), AttributeId = typeAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000064") }, // Игровая
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000004c"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001d"), AttributeId = interfaceAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000057") }, // USB Type-A
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000004d"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001d"), AttributeId = dpiAttrId, ValueNumber = 32000 },
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000004e"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001d"), AttributeId = sensorTypeAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000077") }, // Оптический
+
+            // === MICE: SteelSeries Rival 3 ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-00000000004f"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001e"), AttributeId = typeAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000064") }, // Игровая
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000050"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001e"), AttributeId = interfaceAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000057") }, // USB Type-A
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000051"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001e"), AttributeId = dpiAttrId, ValueNumber = 8500 },
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000052"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001e"), AttributeId = sensorTypeAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000077") }, // Оптический
+
+            // === HEADPHONES: HyperX Cloud II ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000053"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001f"), AttributeId = typeAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000066") }, // Полноразмерные
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000054"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001f"), AttributeId = interfaceAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000059") }, // 3.5 мм
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000055"), ProductId = Guid.Parse("20000000-0000-0000-0000-00000000001f"), AttributeId = colorAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000060") }, // Черный
+
+            // === HEADPHONES: SteelSeries Arctis Nova 1 ===
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000056"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000020"), AttributeId = typeAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000066") }, // Полноразмерные
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000057"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000020"), AttributeId = interfaceAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000059") }, // 3.5 мм
+            new ProductSpecificationValue { Id = Guid.Parse("60000000-0000-0000-0000-000000000058"), ProductId = Guid.Parse("20000000-0000-0000-0000-000000000020"), AttributeId = colorAttrId, CanonicalValueId = Guid.Parse("50000000-0000-0000-0000-000000000060") }, // Черный
         };
 
         modelBuilder.Entity<ProductSpecificationValue>().HasData(specValues);

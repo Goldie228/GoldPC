@@ -19,6 +19,13 @@ export function EmailVerificationBanner() {
   const [error, setError] = useState<string | null>(null);
 
   const handleResend = useCallback(async () => {
+    // Не отправляем если нет токена — пользователь не fully аутентифицирован
+    const token = localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken');
+    if (!token) {
+      setError('Требуется повторный вход в аккаунт');
+      return;
+    }
+
     setResending(true);
     setError(null);
     try {

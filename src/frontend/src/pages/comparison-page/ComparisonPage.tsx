@@ -252,7 +252,7 @@ export function ComparisonPage(): ReactElement {
 
   if (items.length === 0 && !loading) {
     return (
-      <div className="min-h-screen bg-canvas-dark pt-20">
+      <div className="min-h-screen bg-canvas-dark">
         <div className="max-w-[1440px] mx-auto px-4 md:px-8">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-xs text-muted-text mb-6" aria-label="Breadcrumb">
@@ -283,7 +283,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
 
   if (error) {
     return (
-      <div className="min-h-screen bg-canvas-dark pt-20">
+      <div className="min-h-screen bg-canvas-dark">
         <div className="max-w-[1440px] mx-auto px-4 md:px-8">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-xs text-muted-text mb-6" aria-label="Breadcrumb">

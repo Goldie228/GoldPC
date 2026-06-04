@@ -5,6 +5,7 @@ using GoldPC.ServicesService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using FileUploadResult = GoldPC.SharedKernel.DTOs.FileUploadResult;
 using PagedResultServiceRequest = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.ServiceRequestDto>;
 
 namespace GoldPC.ServicesService.Controllers;
@@ -177,6 +178,102 @@ public class ServicesController : ControllerBase
             return NotFound(ApiResponse.Fail("Отчет не найден"));
 
         return Ok(ApiResponse<WorkReportDto>.Ok(report));
+    }
+
+    /// <summary>
+    /// Получить историю сообщений заявки
+    /// </summary>
+    [HttpGet("{id}/messages")]
+    public async Task<IActionResult> GetMessages(Guid id, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var messages = await _servicesService.GetMessagesAsync(id, userId.Value, page, pageSize);
+        return Ok(ApiResponse<List<TicketMessageDto>>.Ok(messages));
+    }
+
+    /// <summary>
+    /// Отправить сообщение (REST fallback)
+    /// </summary>
+    [HttpPost("{id}/messages")]
+    public async Task<IActionResult> SendMessage(Guid id, [FromBody] SendMessageRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Content) && string.IsNullOrEmpty(request.FileUrl))
+            return BadRequest(ApiResponse.Fail("Пустое сообщение"));
+
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var role = User.FindAll(ClaimTypes.Role).Select(c => c.Value).Contains("Master") ? "Master" : "Client";
+
+        var message = await _servicesService.SendMessageAsync(
+            id, userId.Value, role,
+            request.Content?.Trim() ?? string.Empty,
+            request.FileUrl,
+            request.FileName,
+            request.FileSize,
+            request.ContentType);
+        if (message == null) return BadRequest(ApiResponse.Fail("Не удалось отправить сообщение"));
+
+        return Ok(ApiResponse<TicketMessageDto>.Ok(message, "Сообщение отправлено"));
+    }
+
+    /// <summary>
+    /// Получить количество непрочитанных сообщений
+    /// </summary>
+    [HttpGet("{id}/messages/unread-count")]
+    public async Task<IActionResult> GetUnreadCount(Guid id)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var count = await _servicesService.GetUnreadCountAsync(id, userId.Value);
+        return Ok(ApiResponse<int>.Ok(count));
+    }
+
+    /// <summary>
+    /// Загрузить файл для чата заявки
+    /// </summary>
+    [HttpPost("{id}/upload")]
+    [Authorize]
+    [RequestSizeLimit(30 * 1024 * 1024)] // 30 MB
+    public async Task<IActionResult> UploadFile(Guid id, IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(ApiResponse.Fail("Файл не выбран"));
+
+        var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        // Check that the ticket exists
+        var ticket = await _servicesService.GetByIdAsync(id);
+        if (ticket == null)
+            return NotFound(ApiResponse.Fail("Заявка не найдена"));
+
+        // Save to uploads/tickets/{id}/
+        var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "uploads", "tickets", id.ToString());
+        Directory.CreateDirectory(uploadDir);
+
+        // Sanitize filename — keep extension, add GUID prefix to avoid collisions
+        var ext = Path.GetExtension(file.FileName);
+        var safeName = $"{Guid.NewGuid():N}{ext}";
+        var filePath = Path.Combine(uploadDir, safeName);
+
+        await using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
+
+        var fileUrl = $"/uploads/tickets/{id}/{safeName}";
+
+        _logger.LogInformation("File uploaded: {FileUrl} ({Size} bytes) for ticket {TicketId}", fileUrl, file.Length, id);
+
+        return Ok(ApiResponse<FileUploadResult>.Ok(new FileUploadResult
+        {
+            FileUrl = fileUrl,
+            FileName = file.FileName,
+            FileSize = file.Length,
+            ContentType = file.ContentType,
+        }));
     }
 
     [HttpPost("{id}/cancel")]

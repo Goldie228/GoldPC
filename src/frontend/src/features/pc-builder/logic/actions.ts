@@ -42,7 +42,15 @@ export function selectComponent(
   const sc: SelectedComponent = { product, type };
 
   if (type === 'ram') {
-    next.ram = [sc];
+    if (idx !== undefined) {
+      if (idx < next.ram.length) {
+        next.ram[idx] = sc;
+      } else if (idx === next.ram.length && next.ram.length < MAX_RAM_MODULES) {
+        next.ram.push(sc);
+      }
+    } else if (next.ram.length < MAX_RAM_MODULES) {
+      next.ram.push(sc);
+    }
     return next;
   }
   if (type === 'storage') {
@@ -62,7 +70,9 @@ export function selectComponent(
     return next;
   }
 
-  (next)[type as keyof PCBuilderSelectedState] = sc as unknown as never;
+  // For single-component types, assign directly with proper typing
+  const nextRecord = next as Record<string, unknown>;
+  nextRecord[type] = sc;
   return next;
 }
 
@@ -84,15 +94,11 @@ export function removeComponent(
 ): PCBuilderSelectedState {
   if (type === 'cpu') {
     return {
+      ...prevState,
       cpu: undefined,
       motherboard: undefined,
       ram: [],
       cooling: undefined,
-      fan: [...prevState.fan],
-      gpu: prevState.gpu,
-      storage: [...prevState.storage],
-      psu: prevState.psu,
-      case: prevState.case,
     };
   }
   if (type === 'motherboard') {

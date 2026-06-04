@@ -1,11 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useServiceTickets } from '../../hooks/useServiceTickets';
+import { useTicketChat } from '../../hooks/useTicketChat';
 import { useToast } from '../../hooks/useToast';
+import { useAuthStore } from '../../store/authStore';
 import { TICKET_STATUSES } from '../../api/services';
-import type { ServiceTicket, TicketStatusHistory, TicketMessage } from '../../api/services';
-import { Button, Input } from '../../components/ui';
-import { ArrowLeft, Send, Paperclip, Image } from 'lucide-react';
+import type { ServiceTicket } from '../../api/services';
+import { ArrowLeft, Lock } from 'lucide-react';
+import { ChatMessage } from '../../components/chat/ChatMessage';
+import { ChatInput } from '../../components/chat/ChatInput';
+import { TypingIndicator } from '../../components/chat/TypingIndicator';
+import './TicketDetailPage.css';
 
 function getStatusLabel(status: string): string {
   const statusItem = TICKET_STATUSES.find(s => s.key === status);
@@ -20,81 +25,75 @@ function getStatusLabel(status: string): string {
  * - Ticket details
  * - Technician notes
  * - Photo gallery
- * - Messaging with technician
- * - Real-time updates via polling
+ * - Real-time chat with technician (SignalR + REST)
  */
 export function TicketDetailPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
   const { showToast } = useToast();
-  const { getTicket, getTicketHistory, getTicketMessages, sendMessage } = useServiceTickets();
+  const { getTicket } = useServiceTickets();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const currentUserId = useAuthStore((state) => state.user?.id);
 
   const [ticket, setTicket] = useState<ServiceTicket | null>(null);
-  const [history, setHistory] = useState<TicketStatusHistory[]>([]);
-  const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newMessage, setNewMessage] = useState('');
-  const [sendingMessage, setSendingMessage] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Real-time chat via SignalR + REST fallback
+  const {
+    messages,
+    loading: messagesLoading,
+    error: chatError,
+    uploading,
+    typingUserId,
+    connectionStatus,
+    sendMessage,
+    uploadFile,
+  } = useTicketChat({ ticketId });
+
+  // Load ticket data (once, no polling — messages come via SignalR)
   useEffect(() => {
-    if (ticketId) {
-      void loadTicketData();
-
-      // Poll for updates every 15 seconds
-      const interval = setInterval(() => { void loadTicketData(); }, 15000);
-      return () => clearInterval(interval);
-    }
-  }, [ticketId]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const loadTicketData = useCallback(async () => {
     if (!ticketId) return;
 
-    try {
-      const [ticketData, historyData, messagesData] = await Promise.all([
-        getTicket(ticketId),
-        getTicketHistory(ticketId),
-        getTicketMessages(ticketId)
-      ]);
-
-      if (ticketData != null) setTicket(ticketData);
-      setHistory(historyData ?? []);
-      setMessages(messagesData ?? []);
-    } catch {
-      showToast('Ошибка загрузки данных заявки', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [ticketId, showToast]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!newMessage.trim() || !ticketId) return;
-
-    setSendingMessage(true);
-    try {
-      const message = await sendMessage(ticketId, newMessage.trim());
-      if (message != null) {
-        setMessages(prev => [...prev, message]);
+    const load = async () => {
+      try {
+        const ticketData = await getTicket(ticketId);
+        if (ticketData != null) setTicket(ticketData);
+      } catch {
+        showToast('Ошибка загрузки данных заявки', 'error');
+      } finally {
+        setLoading(false);
       }
-      setNewMessage('');
-    } catch {
-      showToast('Ошибка отправки сообщения', 'error');
-    } finally {
-      setSendingMessage(false);
-    }
-  };
+    };
 
-  const currentStepIndex = TICKET_STATUSES.findIndex(s => s.key === ticket?.status);
+    void load();
+  }, [ticketId, getTicket, showToast]);
+
+  // Auto-scroll to bottom ONLY if user is already near the bottom
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    const messagesList = messagesEndRef.current?.closest('.messages-list');
+    if (!messagesList) return;
+
+    const threshold = 120;
+    const distFromBottom = messagesList.scrollHeight - messagesList.scrollTop - messagesList.clientHeight;
+    if (distFromBottom < threshold) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages.length]);
+
+  // Show chat errors
+  useEffect(() => {
+    if (chatError) {
+      showToast(chatError, 'error');
+    }
+  }, [chatError, showToast]);
+
+  const whoIsTyping = typingUserId && ticket?.technician?.id === typingUserId ? 'Техник' : null;
+
+  const TIMELINE_STEPS = TICKET_STATUSES.filter(s => s.key !== 'Cancelled');
+  const currentStepIndex = TIMELINE_STEPS.findIndex(s => s.key === ticket?.status);
 
   if (loading) {
     return <div className="ticket-detail">Загрузка...</div>;
@@ -104,9 +103,25 @@ export function TicketDetailPage() {
     return (
       <div className="ticket-detail">
         <div className="not-found">
-          <h1>Заявка не найдена</h1>
-          <Link to="/my-repairs" className="btn btn-primary">
-            Вернуться к моим ремонтам
+          {isAuthenticated ? (
+            <>
+              <h1>Заявка не найдена</h1>
+              <p className="not-found__desc">
+                Заявка с таким номером не существует или была удалена.
+                Возможно, у вас нет доступа к этой заявке.
+              </p>
+            </>
+          ) : (
+            <>
+              <Lock size={48} className="not-found__icon" />
+              <h1>Требуется авторизация</h1>
+              <p className="not-found__desc">
+                Для просмотра заявки необходимо войти в аккаунт.
+              </p>
+            </>
+          )}
+          <Link to={isAuthenticated ? '/account/repairs' : '/'} className="btn btn-primary">
+            {isAuthenticated ? 'Вернуться к моим ремонтам' : 'На главную'}
           </Link>
         </div>
       </div>
@@ -116,152 +131,140 @@ export function TicketDetailPage() {
   return (
     <div className="ticket-detail">
       <div className="ticket-detail__header">
-        <Link to="/my-repairs" className="back-link">
-          <ArrowLeft size={20} />
-          <span>Назад к списку</span>
-        </Link>
-        <h1 className="ticket-detail__title">Заявка #{ticket.ticketNumber}</h1>
-        <div className={`status-badge status-badge--${ticket.status}`}>
-          {getStatusLabel(ticket.status)}
+        <div className="ticket-detail__breadcrumb">
+          <Link to="/my-repairs" className="back-link">
+            <ArrowLeft size={16} />
+            <span>Мои ремонты</span>
+          </Link>
         </div>
-      </div>
-
-      {/* Status Timeline */}
-      <div className="ticket-detail__timeline">
-        <h2 className="section-title">Статус ремонта</h2>
-        <div className="timeline-track">
-          {TICKET_STATUSES.slice(0, 7).map((step, index) => {
-            const isCompleted = index <= currentStepIndex;
-            const isCurrent = index === currentStepIndex;
-
-            return (
-              <div key={step.key} className="timeline-item">
-                <div className={`timeline-dot ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}>
-                  {isCompleted && <span>✓</span>}
-                </div>
-                <div className="timeline-label">{step.label}</div>
-                {index < 6 && (
-                  <div className={`timeline-line ${isCompleted ? 'completed' : ''}`} />
-                )}
-              </div>
-            );
-          })}
+        <div className="ticket-detail__title-row">
+          <h1 className="ticket-detail__title">Заявка #{ticket.ticketNumber}</h1>
+          <div className={`status-badge status-badge--${ticket.status}`}>
+            {getStatusLabel(ticket.status)}
+          </div>
         </div>
       </div>
 
       <div className="ticket-detail__grid">
-        {/* Ticket Details */}
-        <div className="card details-card">
-          <h2 className="section-title">Детали заявки</h2>
+        {/* Dashboard Card — timeline, details, photos, notes */}
+        <div className="card dashboard-card">
+          {/* Timeline */}
+          <div className="dashboard-section">
+            <h2 className="section-title">Статус ремонта</h2>
+            <div className="timeline-track">
+              {TIMELINE_STEPS.map((step, index) => {
+                const isCompleted = index <= currentStepIndex;
+                const isCurrent = index === currentStepIndex;
 
-          <div className="details-grid">
-            <div className="detail-item">
-              <span className="detail-label">Тип устройства:</span>
-              <span className="detail-value">{ticket.deviceType}</span>
+                return (
+                  <div key={step.key} className="timeline-item">
+                    <div className={`timeline-dot ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}>
+                      {isCompleted && <span>✓</span>}
+                    </div>
+                    <div className="timeline-label">{step.label}</div>
+                    {index < TIMELINE_STEPS.length - 1 && (
+                      <div className={`timeline-line ${isCompleted ? 'completed' : ''}`} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            <div className="detail-item">
-              <span className="detail-label">Бренд:</span>
-              <span className="detail-value">{ticket.brand}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Модель:</span>
-              <span className="detail-value">{ticket.model}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Дата создания:</span>
-              <span className="detail-value">
-                {new Date(ticket.createdAt).toLocaleDateString('ru-RU')}
-              </span>
-            </div>
-            {ticket.technician && (
+          </div>
+
+          {/* Ticket Details + Problem Description */}
+          <div className="dashboard-section">
+            <h2 className="section-title">Детали заявки</h2>
+            <div className="details-grid">
               <div className="detail-item">
-                <span className="detail-label">Техник:</span>
-                <span className="detail-value">{ticket.technician.name}</span>
+                <span className="detail-label">Тип устройства:</span>
+                <span className="detail-value">{ticket.deviceType}</span>
               </div>
-            )}
-            {ticket.estimatedCompletion && (
+              {ticket.brand && (
+                <div className="detail-item">
+                  <span className="detail-label">Бренд:</span>
+                  <span className="detail-value">{ticket.brand}</span>
+                </div>
+              )}
               <div className="detail-item">
-                <span className="detail-label">Ориентировочная готовность:</span>
+                <span className="detail-label">Модель:</span>
+                <span className="detail-value">{ticket.model}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Дата создания:</span>
                 <span className="detail-value">
-                  {new Date(ticket.estimatedCompletion).toLocaleDateString('ru-RU')}
+                  {new Date(ticket.createdAt).toLocaleDateString('ru-RU')}
                 </span>
               </div>
-            )}
+              {ticket.technician && (
+                <div className="detail-item">
+                  <span className="detail-label">Техник:</span>
+                  <span className="detail-value">{ticket.technician.name}</span>
+                </div>
+              )}
+              {ticket.estimatedCompletion && (
+                <div className="detail-item">
+                  <span className="detail-label">Ориентировочная готовность:</span>
+                  <span className="detail-value">
+                    {new Date(ticket.estimatedCompletion).toLocaleDateString('ru-RU')}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="problem-description">
+              <h3 className="subtitle">Описание проблемы</h3>
+              <p>{ticket.issueDescription}</p>
+            </div>
           </div>
 
-          <div className="problem-description">
-            <h3 className="subtitle">Описание проблемы</h3>
-            <p>{ticket.issueDescription}</p>
-          </div>
-
+          {/* Technician Notes */}
           {ticket.notes && (
-            <div className="technician-notes">
-              <h3 className="subtitle">Примечания техника</h3>
-              <p>{ticket.notes}</p>
+            <div className="dashboard-section">
+              <h2 className="section-title">Примечания техника</h2>
+              <div className="technician-notes">
+                <p>{ticket.notes}</p>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Photo Gallery */}
-        <div className="card gallery-card">
-          <h2 className="section-title">Фото от техника</h2>
-          <div className="photo-grid">
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} className="photo-placeholder">
-                <Image size={32} />
-                <span>Фото {i}</span>
-              </div>
-            ))}
+        {/* Chat Card */}
+        <div className="card chat-card">
+          <div className="chat-card__header">
+            <h2 className="section-title">Чат с техником</h2>
+            {connectionStatus === 'connected' && <span className="chat-status chat-status--online" title="Подключено" />}
+            {connectionStatus === 'connecting' && <span className="chat-status chat-status--connecting" title="Подключение..." />}
+            {connectionStatus === 'disconnected' && <span className="chat-status chat-status--offline" title="Нет подключения" />}
+            {connectionStatus === 'error' && <span className="chat-status chat-status--error" title="Ошибка подключения" />}
           </div>
-        </div>
-      </div>
 
-      {/* Messaging Section */}
-      <div className="card messages-card">
-        <h2 className="section-title">Чат с техником</h2>
-
-        <div className="messages-list">
-          {messages.map(message => (
-            <div
-              key={message.id}
-              className={`message ${message.author === 'customer' ? 'my-message' : ''}`}
-            >
-              <div className="message-header">
-                <span className="message-author">
-                  {message.authorName || (message.author === 'technician' ? 'Техник' : 'Вы')}
-                </span>
-                <span className="message-time">
-                  {new Date(message.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                </span>
+          <div className="messages-list">
+            {messagesLoading && messages.length === 0 && (
+              <div className="messages-list__empty">Загрузка сообщений...</div>
+            )}
+            {!messagesLoading && messages.length === 0 && (
+              <div className="messages-list__empty">
+                Нет сообщений. Напишите первое сообщение технику.
               </div>
-              <div className="message-content">{message.content}</div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
+            )}
+            {messages.map((msg) => (
+              <ChatMessage
+                key={msg.id}
+                message={msg}
+                isOwn={msg.authorId === currentUserId}
+              />
+            ))}
+            <TypingIndicator who={whoIsTyping} />
+            <div ref={messagesEndRef} />
+          </div>
 
-        <form onSubmit={handleSendMessage} className="message-form">
-          <Input
-            placeholder="Написать сообщение..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            className="message-input"
+          <ChatInput
+            onSend={sendMessage}
+            onUpload={uploadFile}
+            uploading={uploading}
+            disabled={connectionStatus === 'disconnected' || connectionStatus === 'error' || !ticketId}
           />
-          <Button
-            type="button"
-            variant="secondary"
-            className="attach-btn"
-          >
-            <Paperclip size={18} />
-          </Button>
-          <Button
-            type="submit"
-            disabled={sendingMessage || !newMessage.trim()}
-            className="send-btn"
-          >
-            <Send size={18} />
-          </Button>
-        </form>
+        </div>
       </div>
     </div>
   );

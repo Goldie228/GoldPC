@@ -246,7 +246,7 @@ export function PhotoUploader({ files, onFilesChange }: PhotoUploaderProps) {
                   e.stopPropagation();
                   handleRemove(index);
                 }}
-                className="absolute -top-2 -right-2 w-5 h-5 bg-price-rise rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-[#e53e50]"
+                className="absolute -top-2 -right-2 w-5 h-5 bg-price-rise rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-destructive"
                 aria-label={`Удалить файл ${index + 1}`}
               >
                 <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" className="w-3 h-3">

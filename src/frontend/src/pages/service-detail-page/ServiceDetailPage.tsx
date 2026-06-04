@@ -64,60 +64,48 @@ export function ServiceDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-canvas-dark pt-24 md:pt-28 pb-20">
-        <div className="max-w-[1200px] mx-auto px-4 md:px-8">
-          <div className="flex justify-center items-center min-h-[300px]">
-            <Loader2 size={48} className="animate-spin text-gold" />
-          </div>
+      <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
+        <div className="flex justify-center items-center min-h-[300px]">
+          <Loader2 size={48} className="animate-spin text-gold" />
         </div>
-      </main>
+      </div>
     );
   }
 
   if (error || !service) {
     return (
-      <main className="min-h-screen bg-canvas-dark pt-24 md:pt-28 pb-20">
-        <div className="max-w-[1200px] mx-auto px-4 md:px-8">
-          <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
-            <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
-            <span className="text-muted-text">/</span>
-            <Link to="/services" className="hover:text-gold transition-colors">Сервис</Link>
-          </nav>
-          <div className="text-center py-20">
-            <p className="text-lg text-muted-text mb-6">
-              Не удалось загрузить информацию об услуге.
-            </p>
-            <button
-              onClick={() => refetch()}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-surface-card border border-hairline-dark text-body-text rounded-md hover:border-gold/30 hover:text-gold transition-colors"
-            >
-              <RefreshCw size={18} />
-              <span>Попробовать снова</span>
-            </button>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  // Преимущества услуги
-  const features = service.features || [
-    'Гарантия качества — все работы выполняются сертифицированными специалистами с гарантией до 12 месяцев',
-    'Быстрое выполнение — большинство работ выполняется за 1-2 дня. Срочный ремонт в день обращения',
-    'Честные цены — фиксированные цены без скрытых платежей. Бесплатная диагностика при ремонте',
-  ];
-
-  return (
-    <main className="min-h-screen bg-canvas-dark pt-24 md:pt-28 pb-20">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8">
-        {/* Breadcrumb */}
+      <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
         <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
           <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
           <span className="text-muted-text">/</span>
           <Link to="/services" className="hover:text-gold transition-colors">Сервис</Link>
-          <span className="text-muted-text">/</span>
-          <span className="text-body-text">{service.name}</span>
         </nav>
+        <div className="text-center py-20">
+          <p className="text-lg text-muted-text mb-6">
+            Не удалось загрузить информацию об услуге.
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-surface-card border border-hairline-dark text-body-text rounded-md hover:border-gold/30 hover:text-gold transition-colors"
+          >
+            <RefreshCw size={18} />
+            <span>Попробовать снова</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8 pb-12">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
+        <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
+        <span className="text-muted-text">/</span>
+        <Link to="/services" className="hover:text-gold transition-colors">Сервис</Link>
+        <span className="text-muted-text">/</span>
+        <span className="text-body-text">{service.name}</span>
+      </nav>
 
         {/* ---- Hero Image ---- */}
         <div className="rounded-xl overflow-hidden mb-8 border border-hairline-dark bg-surface-card">
@@ -231,30 +219,6 @@ export function ServiceDetailPage() {
             </div>
           </section>
         )}
-
-        {/* ---- Features ---- */}
-        <section className="mb-16">
-          <h2 className="text-title-lg font-semibold text-body-text mb-6">Преимущества</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {features.slice(0, 3).map((feature, index) => {
-              const parts = feature.split(' — ');
-              return (
-                <div
-                  key={index}
-                  className="bg-surface-card border border-hairline-dark rounded-xl p-6"
-                >
-                  <h3 className="text-body-text font-semibold text-sm mb-2">
-                    {parts[0]}
-                  </h3>
-                  <p className="text-sm text-muted-text leading-relaxed">
-                    {parts[1] || feature}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
       </div>
-    </main>
-  );
-}
+    );
+  }

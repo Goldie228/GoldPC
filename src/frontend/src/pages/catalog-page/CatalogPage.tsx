@@ -16,7 +16,7 @@ import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
 import { telemetryTrack } from '../../utils/telemetry';
 
 const VALID_CATEGORIES: ProductCategory[] = [
-  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'monitor', 'keyboard', 'mouse', 'headphones'
+  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'fan', 'monitor', 'keyboard', 'mouse', 'headphones'
 ];
 
 function resolveCategoryFromUrl(
@@ -382,7 +382,7 @@ export function CatalogPage() {
     : 'Все товары';
 
   return (
-    <main id="main" className="min-h-screen bg-[#0b0e11] flex flex-col">
+    <div id="main" className="min-h-screen bg-background flex flex-col">
        {/* Catalog toolbar — title + search + sort */}
        <div className="bg-surface-card">
          <div className="max-w-[1440px] mx-auto px-4 md:px-8">
@@ -713,6 +713,6 @@ export function CatalogPage() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

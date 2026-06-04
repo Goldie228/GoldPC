@@ -35,7 +35,7 @@ export function MainLayout() {
         <motion.main
           key={location.pathname}
           id="main-content"
-          className="main-layout__content"
+          className="main-layout__content pt-0 pb-0"
           initial={reduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={reduceMotion ? undefined : { opacity: 0 }}

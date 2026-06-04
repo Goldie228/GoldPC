@@ -50,6 +50,7 @@
   --color-surface-card: #1e2329;
   --color-surface-elevated: #2b3139;
   --color-hairline-dark: #2b3139;
+  --color-elevated: var(--color-surface-elevated);    /* bg-elevated class support */
   --color-body-text: #eaecef;
   --color-muted-text: #707a8a;
   --color-muted-strong: #929aa5;

@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '../../../hooks/useAdmin';
+import { useToast } from '../../../hooks/useToast';
 import type { UserRole, GetUsersParams } from '../../../api/admin';
 import type { User } from '../../../api/types';
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -43,6 +44,7 @@ const STATUS_FILTERS = [
 export function UserManagementPage() {
   const navigate = useNavigate();
   const { getUsers, deleteUser } = useAdmin();
+  const { showToast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -116,7 +118,7 @@ export function UserManagementPage() {
       setTotalItems(prev => prev - 1);
     } catch (err) {
       console.error('Failed to delete user:', err);
-      alert('Не удалось удалить пользователя. Попробуйте позже.');
+      showToast('Не удалось удалить пользователя', 'error');
     } finally {
       setDeleting(null);
     }

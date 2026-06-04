@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { useToast } from '../../../hooks/useToast';
 import { Toast } from './Toast';
 
@@ -11,8 +12,9 @@ export function ToastContainer(): ReactElement | null {
 
   return (
     <div className="fixed top-20 right-4 z-[1000] flex flex-col gap-2" aria-label="Уведомления">
-      {toasts.map((toast) => (
-        <Toast
+      <AnimatePresence>
+        {toasts.map((toast) => (
+          <Toast
           key={toast.id}
           id={toast.id}
           message={toast.message}
@@ -20,6 +22,7 @@ export function ToastContainer(): ReactElement | null {
           onClose={removeToast}
         />
       ))}
+      </AnimatePresence>
     </div>
   );
 }

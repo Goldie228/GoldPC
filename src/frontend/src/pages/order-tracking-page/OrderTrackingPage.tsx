@@ -94,7 +94,7 @@ export function OrderTrackingPage() {
   // No order number provided
   if (!orderNumber) {
     return (
-      <main className="min-h-screen bg-[#0b0e11] pt-[100px] px-6 pb-15">
+      <div className="min-h-screen bg-[#0b0e11] px-6 pb-15 pt-8">
         <div className="max-w-[620px] mx-auto">
           <div className="bg-[#1e2329] border border-[#2b3139] rounded-xl p-12 text-center">
             <Package size={48} className="text-[#707a8a] mx-auto mb-4" />
@@ -107,14 +107,14 @@ export function OrderTrackingPage() {
             </Link>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   // Not found / error
   if (order == null) {
     return (
-      <main className="min-h-screen bg-[#0b0e11] pt-[100px] px-6 pb-15">
+      <div className="min-h-screen bg-[#0b0e11] px-6 pb-15 pt-8">
         <div className="max-w-[620px] mx-auto">
           <div className="bg-[#1e2329] border border-[#2b3139] rounded-xl p-12 text-center">
             <AlertCircle size={48} className="text-[#707a8a] mx-auto mb-4" />
@@ -133,7 +133,7 @@ export function OrderTrackingPage() {
             </div>
           </div>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -154,7 +154,7 @@ export function OrderTrackingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0e11] pt-[100px] px-6 pb-15">
+    <div className="min-h-screen bg-[#0b0e11] px-6 pb-15 pt-8">
       <div className="max-w-[1000px] mx-auto">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-[#707a8a] mb-6">
@@ -339,7 +339,7 @@ export function OrderTrackingPage() {
           </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -398,7 +398,7 @@ function TotalRow({
 
 function SkeletonView() {
   return (
-    <main className="min-h-screen bg-[#0b0e11] pt-[100px] px-6 pb-15">
+    <div className="min-h-screen bg-[#0b0e11] px-6 pb-15 pt-8">
       <div className="max-w-[1000px] mx-auto">
         {/* Breadcrumb */}
         <div className="flex gap-2 items-center mb-6">
@@ -438,6 +438,6 @@ function SkeletonView() {
           ))}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

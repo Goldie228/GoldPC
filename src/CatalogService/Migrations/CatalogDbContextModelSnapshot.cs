@@ -207,6 +207,9 @@ namespace CatalogService.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("filter_type");
 
+                    b.Property<bool>("IsMultiValue")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer")
                         .HasColumnName("sort_order");
@@ -228,6 +231,7 @@ namespace CatalogService.Migrations
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000004"),
                             DisplayName = "Объём видеопамяти",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 1
                         },
                         new
@@ -238,6 +242,7 @@ namespace CatalogService.Migrations
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000004"),
                             DisplayName = "Серия GPU",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 2
                         },
                         new
@@ -248,6 +253,7 @@ namespace CatalogService.Migrations
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000001"),
                             DisplayName = "Сокет",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 1
                         },
                         new
@@ -258,6 +264,7 @@ namespace CatalogService.Migrations
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000001"),
                             DisplayName = "Количество ядер",
                             FilterType = 1,
+                            IsMultiValue = false,
                             SortOrder = 2
                         },
                         new
@@ -268,6 +275,7 @@ namespace CatalogService.Migrations
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000002"),
                             DisplayName = "Сокет",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 1
                         },
                         new
@@ -278,16 +286,18 @@ namespace CatalogService.Migrations
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000002"),
                             DisplayName = "Чипсет",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 2
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000007"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
-                            AttributeKey = "type",
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000013"),
+                            AttributeKey = "memory_type",
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000003"),
                             DisplayName = "Тип памяти",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 1
                         },
                         new
@@ -298,6 +308,7 @@ namespace CatalogService.Migrations
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000003"),
                             DisplayName = "Объём",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 2
                         },
                         new
@@ -308,206 +319,161 @@ namespace CatalogService.Migrations
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000006"),
                             DisplayName = "Объём",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 1
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-00000000000a"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            AttributeKey = "interface",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000006"),
+                            DisplayName = "Интерфейс",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000011"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000008"),
                             AttributeKey = "wattage",
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000005"),
                             DisplayName = "Мощность",
                             FilterType = 0,
-                            SortOrder = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-00000000000b"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000009"),
-                            AttributeKey = "efficiency",
-                            CategoryId = new Guid("00000000-0000-0000-0000-000000000005"),
-                            DisplayName = "Сертификат",
-                            FilterType = 0,
-                            SortOrder = 2
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-00000000000c"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000a"),
-                            AttributeKey = "form_factor",
-                            CategoryId = new Guid("00000000-0000-0000-0000-000000000007"),
-                            DisplayName = "Форм-фактор",
-                            FilterType = 0,
-                            SortOrder = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-00000000000d"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
-                            AttributeKey = "color",
-                            CategoryId = new Guid("00000000-0000-0000-0000-000000000007"),
-                            DisplayName = "Цвет",
-                            FilterType = 0,
-                            SortOrder = 2
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-00000000000e"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
-                            AttributeKey = "type",
-                            CategoryId = new Guid("00000000-0000-0000-0000-000000000008"),
-                            DisplayName = "Тип",
-                            FilterType = 0,
-                            SortOrder = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-00000000000f"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000001"),
-                            AttributeKey = "socket",
-                            CategoryId = new Guid("00000000-0000-0000-0000-000000000008"),
-                            DisplayName = "Сокет",
-                            FilterType = 0,
-                            SortOrder = 2
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000010"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000c"),
-                            AttributeKey = "tdp",
-                            CategoryId = new Guid("00000000-0000-0000-0000-000000000008"),
-                            DisplayName = "TDP, Вт",
-                            FilterType = 1,
-                            SortOrder = 3
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000011"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000d"),
-                            AttributeKey = "diagonal",
-                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000a"),
-                            DisplayName = "Диагональ",
-                            FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 1
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000012"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000e"),
-                            AttributeKey = "resolution",
-                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000a"),
-                            DisplayName = "Разрешение",
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000009"),
+                            AttributeKey = "efficiency",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000005"),
+                            DisplayName = "Сертификат",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 2
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-000000000013"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000a"),
+                            AttributeKey = "form_factor",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000007"),
+                            DisplayName = "Форм-фактор",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000014"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
+                            AttributeKey = "color",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000007"),
+                            DisplayName = "Цвет",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000015"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000023"),
+                            AttributeKey = "cooler_type",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000008"),
+                            DisplayName = "Тип кулера",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000016"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000024"),
+                            AttributeKey = "supported_sockets",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000008"),
+                            DisplayName = "Поддерживаемые сокеты",
+                            FilterType = 0,
+                            IsMultiValue = true,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000017"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000025"),
+                            AttributeKey = "max_tdp",
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000008"),
+                            DisplayName = "Макс. TDP кулера",
+                            FilterType = 1,
+                            IsMultiValue = false,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000018"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000d"),
+                            AttributeKey = "diagonal",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000a"),
+                            DisplayName = "Диагональ",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000019"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000e"),
+                            AttributeKey = "resolution",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000a"),
+                            DisplayName = "Разрешение",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-00000000001a"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000f"),
                             AttributeKey = "refresh_rate",
                             CategoryId = new Guid("00000000-0000-0000-0000-00000000000a"),
                             DisplayName = "Частота обновления",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 3
                         },
                         new
                         {
-                            Id = new Guid("30000000-0000-0000-0000-000000000014"),
+                            Id = new Guid("30000000-0000-0000-0000-00000000001b"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
                             AttributeKey = "type",
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000009"),
                             DisplayName = "Тип устройства",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 1
                         },
                         new
                         {
-                            Id = new Guid("30000000-0000-0000-0000-000000000015"),
+                            Id = new Guid("30000000-0000-0000-0000-00000000001c"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000010"),
                             AttributeKey = "connection",
                             CategoryId = new Guid("00000000-0000-0000-0000-000000000009"),
                             DisplayName = "Подключение",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 2
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000016"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
-                            AttributeKey = "type",
-                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000b"),
-                            DisplayName = "Тип/типоразмер",
-                            FilterType = 0,
-                            SortOrder = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000017"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
-                            AttributeKey = "interface",
-                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000b"),
-                            DisplayName = "Интерфейс",
-                            FilterType = 0,
-                            SortOrder = 2
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000018"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
-                            AttributeKey = "color",
-                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000b"),
-                            DisplayName = "Цвет",
-                            FilterType = 0,
-                            SortOrder = 3
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-000000000019"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
-                            AttributeKey = "type",
-                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000c"),
-                            DisplayName = "Тип",
-                            FilterType = 0,
-                            SortOrder = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-00000000001a"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
-                            AttributeKey = "interface",
-                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000c"),
-                            DisplayName = "Интерфейс",
-                            FilterType = 0,
-                            SortOrder = 2
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-00000000001b"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000011"),
-                            AttributeKey = "dpi",
-                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000c"),
-                            DisplayName = "DPI",
-                            FilterType = 1,
-                            SortOrder = 3
-                        },
-                        new
-                        {
-                            Id = new Guid("30000000-0000-0000-0000-00000000001c"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000012"),
-                            AttributeKey = "sensor_type",
-                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000c"),
-                            DisplayName = "Тип сенсора",
-                            FilterType = 0,
-                            SortOrder = 4
                         },
                         new
                         {
                             Id = new Guid("30000000-0000-0000-0000-00000000001d"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
                             AttributeKey = "type",
-                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000d"),
-                            DisplayName = "Тип",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000b"),
+                            DisplayName = "Тип/типоразмер",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 1
                         },
                         new
@@ -515,9 +481,10 @@ namespace CatalogService.Migrations
                             Id = new Guid("30000000-0000-0000-0000-00000000001e"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
                             AttributeKey = "interface",
-                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000d"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000b"),
                             DisplayName = "Интерфейс",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 2
                         },
                         new
@@ -525,9 +492,87 @@ namespace CatalogService.Migrations
                             Id = new Guid("30000000-0000-0000-0000-00000000001f"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
                             AttributeKey = "color",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000b"),
+                            DisplayName = "Цвет",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000020"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            AttributeKey = "type",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000c"),
+                            DisplayName = "Тип",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000021"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            AttributeKey = "interface",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000c"),
+                            DisplayName = "Интерфейс",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000022"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000011"),
+                            AttributeKey = "dpi",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000c"),
+                            DisplayName = "DPI",
+                            FilterType = 1,
+                            IsMultiValue = false,
+                            SortOrder = 3
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000023"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000012"),
+                            AttributeKey = "sensor_type",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000c"),
+                            DisplayName = "Тип сенсора",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 4
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000024"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            AttributeKey = "type",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000d"),
+                            DisplayName = "Тип",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000025"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            AttributeKey = "interface",
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000d"),
+                            DisplayName = "Интерфейс",
+                            FilterType = 0,
+                            IsMultiValue = false,
+                            SortOrder = 2
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000026"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
+                            AttributeKey = "color",
                             CategoryId = new Guid("00000000-0000-0000-0000-00000000000d"),
                             DisplayName = "Цвет",
                             FilterType = 0,
+                            IsMultiValue = false,
                             SortOrder = 3
                         });
                 });
@@ -674,6 +719,48 @@ namespace CatalogService.Migrations
                             Id = new Guid("10000000-0000-0000-0000-000000000017"),
                             Country = "Sweden",
                             Name = "Fractal Design"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000018"),
+                            Country = "Switzerland",
+                            Name = "Logitech"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000019"),
+                            Country = "Denmark",
+                            Name = "SteelSeries"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-00000000001a"),
+                            Country = "USA",
+                            Name = "HyperX"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-00000000001b"),
+                            Country = "Taiwan",
+                            Name = "Cooler Master"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-00000000001c"),
+                            Country = "Austria",
+                            Name = "Noctua"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-00000000001d"),
+                            Country = "South Korea",
+                            Name = "LG"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-00000000001e"),
+                            Country = "USA",
+                            Name = "Dell"
                         });
                 });
 
@@ -1020,6 +1107,258 @@ namespace CatalogService.Migrations
                             Slug = "seasonic_focus_gx_850_850w",
                             Stock = 18,
                             WarrantyMonths = 120
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000013"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "NVMe SSD Samsung 990 Pro 1TB, PCIe 4.0, скорости чтения до 7450 МБ/с. Идеально для игр и профессиональных задач.",
+                            IsActive = true,
+                            IsFeatured = true,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-000000000014"),
+                            Name = "Samsung 990 Pro 1TB NVMe SSD",
+                            Price = 299.00m,
+                            Rating = 4.9000000000000004,
+                            ReviewCount = 245,
+                            Sku = "ST-SAMSUNG-990PRO-1TB",
+                            Slug = "samsung_990_pro_1tb_nvme_ssd",
+                            Stock = 30,
+                            WarrantyMonths = 60
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000014"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "NVMe SSD Western Digital WD Black SN850X 2TB, PCIe 4.0, скорости чтения до 7300 МБ/с. Оптимизирован для игр和工作ы.",
+                            IsActive = true,
+                            IsFeatured = true,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-000000000015"),
+                            Name = "Western Digital WD Black SN850X 2TB NVMe SSD",
+                            Price = 499.00m,
+                            Rating = 4.7999999999999998,
+                            ReviewCount = 178,
+                            Sku = "ST-WD-SN850X-2TB",
+                            Slug = "wd_black_sn850x_2tb_nvme_ssd",
+                            Stock = 20,
+                            WarrantyMonths = 60
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000015"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Корпус NZXT H5 Flow, ATX, с сетчатой передней панелью для максимального воздушного потока. 2 предустановленных вентилятора.",
+                            IsActive = true,
+                            IsFeatured = true,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-000000000016"),
+                            Name = "NZXT H5 Flow",
+                            Price = 249.00m,
+                            Rating = 4.7000000000000002,
+                            ReviewCount = 89,
+                            Sku = "CASE-NZXT-H5F",
+                            Slug = "nzxt_h5_flow",
+                            Stock = 15,
+                            WarrantyMonths = 24
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000016"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Корпус Fractal Design Pop Air, mATX, минималистичный скандинавский дизайн. Отличная вентиляция, поддержка GPU до 405 мм.",
+                            IsActive = true,
+                            IsFeatured = false,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-000000000017"),
+                            Name = "Fractal Design Pop Air",
+                            Price = 189.00m,
+                            Rating = 4.5999999999999996,
+                            ReviewCount = 67,
+                            Sku = "CASE-FRACT-POPA",
+                            Slug = "fractal_design_pop_air",
+                            Stock = 25,
+                            WarrantyMonths = 24
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000017"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Башенный кулер be quiet! Dark Rock Pro 5, воздушный, TDP до 250W. Два вентилятора, сверхтихая работа. Поддержка LGA1700 и AM5.",
+                            IsActive = true,
+                            IsFeatured = true,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-000000000012"),
+                            Name = "be quiet! Dark Rock Pro 5",
+                            Price = 279.00m,
+                            Rating = 4.7999999999999998,
+                            ReviewCount = 134,
+                            Sku = "COOL-BQT-DRP5",
+                            Slug = "be_quiet_dark_rock_pro_5",
+                            Stock = 12,
+                            WarrantyMonths = 36
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000018"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Жидкостное охлаждение NZXT Kraken X73 RGB 360мм. TDP до 300W, RGB-подсветка, поддержка LGA1700 и AM5.",
+                            IsActive = true,
+                            IsFeatured = true,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-000000000016"),
+                            Name = "NZXT Kraken X73 RGB",
+                            Price = 449.00m,
+                            Rating = 4.7000000000000002,
+                            ReviewCount = 98,
+                            Sku = "COOL-NZXT-KRAKENX73",
+                            Slug = "nzxt_kraken_x73_rgb",
+                            Stock = 8,
+                            WarrantyMonths = 36
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000019"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000a"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Монитор LG 27GP850-B 27\" QHD (2560x1440), IPS, 165 Гц, 1 мс. NVIDIA G-Sync совместимый, HDR10. Идеален для киберспорта.",
+                            IsActive = true,
+                            IsFeatured = true,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-00000000001d"),
+                            Name = "LG 27GP850-B",
+                            Price = 899.00m,
+                            Rating = 4.7000000000000002,
+                            ReviewCount = 156,
+                            Sku = "MON-LG-27GP850",
+                            Slug = "lg_27gp850_b",
+                            Stock = 18,
+                            WarrantyMonths = 36
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000001a"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000a"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Монитор Dell S2722QC 27\" 4K UHD (3840x2160), IPS, 60 Гц, USB-C с 65W Power Delivery. Отличный выбор для работы и контента.",
+                            IsActive = true,
+                            IsFeatured = false,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-00000000001e"),
+                            Name = "Dell S2722QC",
+                            Price = 1099.00m,
+                            Rating = 4.5999999999999996,
+                            ReviewCount = 89,
+                            Sku = "MON-DELL-S2722QC",
+                            Slug = "dell_s2722qc",
+                            Stock = 10,
+                            WarrantyMonths = 36
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000001b"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000b"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Клавиатура Logitech G Pro X, механическая, GX Blue, USB Type-C. Компактный дизайн Tenkeyless для киберспорта.",
+                            IsActive = true,
+                            IsFeatured = true,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-000000000018"),
+                            Name = "Logitech G Pro X",
+                            Price = 329.00m,
+                            Rating = 4.5999999999999996,
+                            ReviewCount = 112,
+                            Sku = "KB-LOGI-GPROX",
+                            Slug = "logitech_g_pro_x",
+                            Stock = 22,
+                            WarrantyMonths = 24
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000001c"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000b"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Клавиатура SteelSeries Apex 3, мембранная, USB Type-A, влагозащита IP32. Тихие клавиши с мягким ходом, RGB-подсветка 10 зон.",
+                            IsActive = true,
+                            IsFeatured = false,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-000000000019"),
+                            Name = "SteelSeries Apex 3",
+                            Price = 159.00m,
+                            Rating = 4.4000000000000004,
+                            ReviewCount = 203,
+                            Sku = "KB-STEEL-APEX3",
+                            Slug = "steelseries_apex_3",
+                            Stock = 35,
+                            WarrantyMonths = 24
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000001d"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000c"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Мышь Logitech G Pro X Superlight, беспроводная, 63g. Сенсор HERO 25K (32000 DPI), 70 часов работы. Выбор профессионалов.",
+                            IsActive = true,
+                            IsFeatured = true,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-000000000018"),
+                            Name = "Logitech G Pro X Superlight",
+                            Price = 449.00m,
+                            Rating = 4.9000000000000004,
+                            ReviewCount = 312,
+                            Sku = "MICE-LOGI-GPROX-SL",
+                            Slug = "logitech_g_pro_x_superlight",
+                            Stock = 18,
+                            WarrantyMonths = 24
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000001e"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000c"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Мышь SteelSeries Rival 3, проводная USB Type-A, сенсор TrueMove Core (8500 DPI). Лёгкая (77g), 6 кнопок, RGB-подсветка.",
+                            IsActive = true,
+                            IsFeatured = false,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-000000000019"),
+                            Name = "SteelSeries Rival 3",
+                            Price = 99.00m,
+                            Rating = 4.5,
+                            ReviewCount = 189,
+                            Sku = "MICE-STEEL-RIVAL3",
+                            Slug = "steelseries_rival_3",
+                            Stock = 45,
+                            WarrantyMonths = 24
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-00000000001f"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000d"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Наушники HyperX Cloud II, полноразмерные, 7.1 виртуальный звук, 3.5 мм. Закрытые амбушюры с эффектом памяти, съёмный микрофон.",
+                            IsActive = true,
+                            IsFeatured = true,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-00000000001a"),
+                            Name = "HyperX Cloud II",
+                            Price = 249.00m,
+                            Rating = 4.7000000000000002,
+                            ReviewCount = 456,
+                            Sku = "HP-HYPERX-CLOUD2",
+                            Slug = "hyperx_cloud_ii",
+                            Stock = 30,
+                            WarrantyMonths = 24
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000020"),
+                            CategoryId = new Guid("00000000-0000-0000-0000-00000000000d"),
+                            CreatedAt = new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Наушники SteelSeries Arctis Nova 1, полноразмерные, 3.5 мм, Hi-Res Audio. Лёгкая конструкция, дискретный микрофон с шумоподавлением.",
+                            IsActive = true,
+                            IsFeatured = false,
+                            ManufacturerId = new Guid("10000000-0000-0000-0000-000000000019"),
+                            Name = "SteelSeries Arctis Nova 1",
+                            Price = 179.00m,
+                            Rating = 4.5,
+                            ReviewCount = 234,
+                            Sku = "HP-STEEL-ANOVA1",
+                            Slug = "steelseries_arctis_nova_1",
+                            Stock = 28,
+                            WarrantyMonths = 24
                         });
                 });
 
@@ -1100,6 +1439,624 @@ namespace CatalogService.Migrations
                     b.HasIndex("ProductId", "AttributeId");
 
                     b.ToTable("product_specification_values", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000001"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000001"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000001"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000002"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000004"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000001"),
+                            ValueNumber = 6m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000003"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000014"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000001"),
+                            ValueNumber = 12m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000004"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000c"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000001"),
+                            ValueNumber = 65m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000005"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000015"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000027"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000006"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000001"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000002"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000007"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000004"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000002"),
+                            ValueNumber = 8m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000008"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000014"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000002"),
+                            ValueNumber = 16m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000009"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000c"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000002"),
+                            ValueNumber = 120m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000000a"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000015"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000027"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000000b"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000001"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000003"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000000c"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000004"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000003"),
+                            ValueNumber = 14m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000000d"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000014"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000003"),
+                            ValueNumber = 20m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000000e"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000c"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000003"),
+                            ValueNumber = 125m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000000f"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000015"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000027"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000010"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000001"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000002"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000011"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000005"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-00000000000d"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000012"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000a"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-00000000001d"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000013"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000013"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000028"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000014"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000017"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000004"),
+                            ValueNumber = 4m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000015"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000018"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000024"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000016"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000001"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000002"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000017"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000005"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-00000000000d"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000018"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000a"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-00000000001d"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000019"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000013"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000028"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000001a"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000017"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000005"),
+                            ValueNumber = 4m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000001b"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000018"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000024"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000001c"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000013"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000028"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000006")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000001d"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000011"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000006")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000001e"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000013"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000028"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000007")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000001f"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000011"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000007")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000020"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000002"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000005"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000008")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000021"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000003"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000009"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000008")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000022"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000c"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000008"),
+                            ValueNumber = 220m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000023"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000002"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000006"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000009")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000024"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000003"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-00000000000a"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000009")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000025"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000c"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000009"),
+                            ValueNumber = 263m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000026"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000008"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000015"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000010")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000027"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000009"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000019"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000010")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000028"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000016"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000021"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000010")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000029"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000008"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000016"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000011")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000002a"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000009"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000019"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000011")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000002b"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000016"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000022"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000011")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000002c"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000008"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000016"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000012")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000002d"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000009"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000019"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000012")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000002e"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000016"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000021"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000012")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000002f"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000051"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000013")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000030"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000053"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000013")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000031"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000052"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000014")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000032"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000053"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000014")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000033"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000a"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-00000000001d"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000015")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000034"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000060"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000015")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000035"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000a"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-00000000001e"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000016")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000036"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000061"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000016")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000037"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000023"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000042"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000017")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000038"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000024"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000046"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000017")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000039"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000024"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000045"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000017")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000003a"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000025"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000017"),
+                            ValueNumber = 250m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000003b"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000023"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000043"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000003c"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000024"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000046"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000003d"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000024"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000045"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000003e"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000025"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000018"),
+                            ValueNumber = 300m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000003f"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000d"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000068"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000019")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000040"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000e"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000072"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000019")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000041"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000f"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000075"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000019")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000042"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000d"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000068"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001a")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000043"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000e"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000073"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001a")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000044"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000f"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000076"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001a")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000045"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000062"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001b")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000046"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000056"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001b")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000047"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000060"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001b")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000048"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000063"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001c")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000049"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000057"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001c")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000004a"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000060"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001c")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000004b"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000064"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001d")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000004c"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000057"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001d")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000004d"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000011"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001d"),
+                            ValueNumber = 32000m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000004e"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000012"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000077"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001d")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-00000000004f"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000064"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001e")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000050"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000057"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001e")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000051"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000011"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001e"),
+                            ValueNumber = 8500m
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000052"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000012"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000077"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001e")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000053"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000066"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001f")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000054"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000059"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001f")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000055"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000060"),
+                            ProductId = new Guid("20000000-0000-0000-0000-00000000001f")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000056"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000066"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000020")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000057"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000059"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000020")
+                        },
+                        new
+                        {
+                            Id = new Guid("60000000-0000-0000-0000-000000000058"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000060"),
+                            ProductId = new Guid("20000000-0000-0000-0000-000000000020")
+                        });
                 });
 
             modelBuilder.Entity("CatalogService.Models.Review", b =>
@@ -1402,62 +2359,6 @@ namespace CatalogService.Migrations
                         },
                         new
                         {
-                            Id = new Guid("40000000-0000-0000-0000-00000000001a"),
-                            DisplayName = "Год выхода",
-                            IsMultiValue = false,
-                            Key = "release_year",
-                            ValueType = 0
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-00000000001b"),
-                            DisplayName = "Дата выхода (legacy)",
-                            IsMultiValue = false,
-                            Key = "data_vykhoda_na_rynok_2",
-                            ValueType = 0
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-00000000001c"),
-                            DisplayName = "Производитель ГП",
-                            IsMultiValue = false,
-                            Key = "proizvoditel_graficheskogo_protsessora",
-                            ValueType = 0
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-00000000001d"),
-                            DisplayName = "Ширина шины памяти",
-                            IsMultiValue = false,
-                            Key = "shirina_shiny_pamyati",
-                            ValueType = 1
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-00000000001e"),
-                            DisplayName = "Охлаждение",
-                            IsMultiValue = false,
-                            Key = "okhlazhdenie_1",
-                            ValueType = 0
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-00000000001f"),
-                            DisplayName = "Разъёмы питания",
-                            IsMultiValue = false,
-                            Key = "razyemy_pitaniya",
-                            ValueType = 0
-                        },
-                        new
-                        {
-                            Id = new Guid("40000000-0000-0000-0000-000000000020"),
-                            DisplayName = "Рек. БП, Вт",
-                            IsMultiValue = false,
-                            Key = "rekomenduemyy_blok_pitaniya",
-                            ValueType = 1
-                        },
-                        new
-                        {
                             Id = new Guid("40000000-0000-0000-0000-000000000021"),
                             DisplayName = "Длина видеокарты",
                             IsMultiValue = false,
@@ -1470,6 +2371,30 @@ namespace CatalogService.Migrations
                             DisplayName = "Высота видеокарты",
                             IsMultiValue = false,
                             Key = "vysota_videokarty",
+                            ValueType = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000023"),
+                            DisplayName = "Тип кулера",
+                            IsMultiValue = false,
+                            Key = "cooler_type",
+                            ValueType = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000024"),
+                            DisplayName = "Поддерживаемые сокеты",
+                            IsMultiValue = true,
+                            Key = "supported_sockets",
+                            ValueType = 0
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000025"),
+                            DisplayName = "Макс. TDP кулера",
+                            IsMultiValue = false,
+                            Key = "max_tdp",
                             ValueType = 1
                         });
                 });
@@ -1529,287 +2454,525 @@ namespace CatalogService.Migrations
                             Id = new Guid("50000000-0000-0000-0000-000000000004"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000002"),
                             SortOrder = 1,
-                            ValueText = "8GB GDDR6"
+                            ValueText = "8GB"
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000005"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000002"),
                             SortOrder = 2,
-                            ValueText = "12GB GDDR6X"
+                            ValueText = "12GB"
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000006"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000002"),
                             SortOrder = 3,
-                            ValueText = "16GB GDDR6"
+                            ValueText = "16GB"
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000007"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000002"),
                             SortOrder = 4,
-                            ValueText = "8GB"
+                            ValueText = "24GB"
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000008"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000002"),
                             SortOrder = 5,
-                            ValueText = "12GB"
+                            ValueText = "32GB"
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000009"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000002"),
-                            SortOrder = 6,
-                            ValueText = "16GB"
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000003"),
+                            SortOrder = 1,
+                            ValueText = "GeForce RTX 4070 SUPER"
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000010"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000003"),
-                            SortOrder = 1,
-                            ValueText = "NVIDIA GeForce RTX 4070 SUPER"
+                            SortOrder = 2,
+                            ValueText = "Radeon RX 7800 XT"
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000011"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000003"),
-                            SortOrder = 2,
-                            ValueText = "AMD Radeon RX 7800 XT"
+                            SortOrder = 3,
+                            ValueText = "GeForce RTX 4060"
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000012"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000003"),
-                            SortOrder = 3,
-                            ValueText = "GeForce RTX 4070 SUPER"
+                            SortOrder = 4,
+                            ValueText = "Radeon RX 7600"
                         },
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000013"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000003"),
-                            SortOrder = 4,
-                            ValueText = "Radeon RX 7800 XT"
-                        },
-                        new
-                        {
-                            Id = new Guid("50000000-0000-0000-0000-000000000014"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000005"),
                             SortOrder = 1,
                             ValueText = "B650"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000015"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000014"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000005"),
                             SortOrder = 2,
                             ValueText = "Z790"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000016"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000015"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
                             SortOrder = 1,
                             ValueText = "DDR5"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000017"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000016"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
                             SortOrder = 2,
                             ValueText = "DDR4"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000018"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000017"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
                             SortOrder = 1,
                             ValueText = "32GB"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000019"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000018"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
                             SortOrder = 2,
                             ValueText = "16GB"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000020"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000019"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
                             SortOrder = 3,
                             ValueText = "64GB"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000021"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000020"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
                             SortOrder = 4,
                             ValueText = "128GB"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000022"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000021"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000008"),
                             SortOrder = 1,
                             ValueText = "750W"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000023"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000022"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000008"),
                             SortOrder = 2,
                             ValueText = "850W"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000024"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000023"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000008"),
                             SortOrder = 3,
                             ValueText = "650W"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000025"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000024"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000008"),
                             SortOrder = 4,
                             ValueText = "700W"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000026"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000025"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000009"),
                             SortOrder = 1,
                             ValueText = "80+ Gold"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000027"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000026"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000009"),
                             SortOrder = 2,
                             ValueText = "80+ Bronze"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000028"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000027"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000009"),
                             SortOrder = 3,
                             ValueText = "80+ Platinum"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000029"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000028"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000009"),
                             SortOrder = 4,
                             ValueText = "80+"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000030"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000029"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000a"),
                             SortOrder = 1,
                             ValueText = "ATX"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000031"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000030"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000a"),
                             SortOrder = 2,
                             ValueText = "mATX"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000032"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000031"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000a"),
                             SortOrder = 3,
                             ValueText = "Mini-ITX"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000033"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000032"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000a"),
                             SortOrder = 4,
-                            ValueText = "eATX (до 280 мм)"
+                            ValueText = "eATX"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000034"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000033"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000016"),
                             SortOrder = 1,
                             ValueText = "Полностью модульный"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000035"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000034"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000016"),
                             SortOrder = 2,
                             ValueText = "Полумодульный"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000036"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000035"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000016"),
                             SortOrder = 3,
-                            ValueText = "Нет"
+                            ValueText = "Не модульный"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000037"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000016"),
-                            SortOrder = 4,
-                            ValueText = "Full"
-                        },
-                        new
-                        {
-                            Id = new Guid("50000000-0000-0000-0000-000000000038"),
-                            AttributeId = new Guid("40000000-0000-0000-0000-000000000016"),
-                            SortOrder = 5,
-                            ValueText = "Semi"
-                        },
-                        new
-                        {
-                            Id = new Guid("50000000-0000-0000-0000-000000000039"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000036"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000018"),
                             SortOrder = 1,
                             ValueText = "128GB"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000040"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000037"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000018"),
                             SortOrder = 2,
                             ValueText = "64GB"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000041"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000038"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000015"),
                             SortOrder = 1,
                             ValueText = "Есть"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000042"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000039"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000015"),
                             SortOrder = 2,
                             ValueText = "Нет"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000043"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000040"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000013"),
                             SortOrder = 1,
                             ValueText = "DDR5"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000044"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000041"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000013"),
                             SortOrder = 2,
                             ValueText = "DDR4"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000042"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000023"),
+                            SortOrder = 1,
+                            ValueText = "Воздушный"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000043"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000023"),
+                            SortOrder = 2,
+                            ValueText = "Жидкостный"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000044"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000024"),
+                            SortOrder = 1,
+                            ValueText = "AM4"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000045"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000024"),
+                            SortOrder = 2,
+                            ValueText = "AM5"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000046"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000024"),
+                            SortOrder = 3,
+                            ValueText = "LGA1700"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000047"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000025"),
+                            SortOrder = 1,
+                            ValueText = "150W"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000048"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000025"),
+                            SortOrder = 2,
+                            ValueText = "200W"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000049"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000025"),
+                            SortOrder = 3,
+                            ValueText = "250W"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000050"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000025"),
+                            SortOrder = 4,
+                            ValueText = "300W"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000051"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
+                            SortOrder = 5,
+                            ValueText = "1TB"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000052"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
+                            SortOrder = 6,
+                            ValueText = "2TB"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000053"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            SortOrder = 1,
+                            ValueText = "NVMe PCIe 4.0"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000054"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            SortOrder = 2,
+                            ValueText = "NVMe PCIe 3.0"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000055"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            SortOrder = 3,
+                            ValueText = "SATA III"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000056"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            SortOrder = 4,
+                            ValueText = "USB Type-C"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000057"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            SortOrder = 5,
+                            ValueText = "USB Type-A"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000058"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            SortOrder = 6,
+                            ValueText = "Bluetooth"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000059"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
+                            SortOrder = 7,
+                            ValueText = "3.5 мм"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000060"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
+                            SortOrder = 1,
+                            ValueText = "Черный"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000061"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
+                            SortOrder = 2,
+                            ValueText = "Белый"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000062"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            SortOrder = 3,
+                            ValueText = "Механическая"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000063"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            SortOrder = 4,
+                            ValueText = "Мембранная"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000064"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            SortOrder = 5,
+                            ValueText = "Игровая"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000065"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            SortOrder = 6,
+                            ValueText = "Офисная"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000066"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            SortOrder = 7,
+                            ValueText = "Полноразмерные"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000067"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
+                            SortOrder = 8,
+                            ValueText = "Вкладыши"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000068"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000d"),
+                            SortOrder = 1,
+                            ValueText = "27\""
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000069"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000d"),
+                            SortOrder = 2,
+                            ValueText = "32\""
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000070"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000d"),
+                            SortOrder = 3,
+                            ValueText = "24\""
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000071"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000e"),
+                            SortOrder = 1,
+                            ValueText = "1920x1080 (Full HD)"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000072"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000e"),
+                            SortOrder = 2,
+                            ValueText = "2560x1440 (QHD)"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000073"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000e"),
+                            SortOrder = 3,
+                            ValueText = "3840x2160 (4K UHD)"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000074"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000f"),
+                            SortOrder = 1,
+                            ValueText = "144 Гц"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000075"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000f"),
+                            SortOrder = 2,
+                            ValueText = "165 Гц"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000076"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-00000000000f"),
+                            SortOrder = 3,
+                            ValueText = "60 Гц"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000077"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000012"),
+                            SortOrder = 1,
+                            ValueText = "Оптический"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000078"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000012"),
+                            SortOrder = 2,
+                            ValueText = "Лазерный"
                         });
                 });
 

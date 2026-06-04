@@ -1,6 +1,6 @@
 /**
  * useCompatibilityApi — Debounced API call for compatibility checking
- * Isolated side effect: API calls + debounce timer
+ * Isolated side effect: API calls + debounce timer + AbortController
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -22,6 +22,7 @@ export function useCompatibilityApi(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
 
   useEffect(() => {
@@ -33,36 +34,56 @@ export function useCompatibilityApi(
       return;
     }
 
+    // Cancel previous timer
     if (timerRef.current) clearTimeout(timerRef.current);
+
+    // Cancel previous in-flight request
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
 
     const requestId = ++requestIdRef.current;
 
     timerRef.current = setTimeout(() => {
-      void (async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-          const result = await checkCompatibilityAPI(
-            components as Parameters<typeof checkCompatibilityAPI>[0]
-          );
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      setIsLoading(true);
+      setError(null);
+
+      checkCompatibilityAPI(
+        components as Parameters<typeof checkCompatibilityAPI>[0],
+        { signal: controller.signal }
+      )
+        .then((result) => {
           // Ignore stale responses from outdated requests
           if (requestId !== requestIdRef.current) return;
           setApiResult(result);
-        } catch (e) {
-          // Ignore errors from outdated requests
+        })
+        .catch((e) => {
+          // Ignore aborted requests and stale responses
+          if (e instanceof DOMException && e.name === 'AbortError') return;
           if (requestId !== requestIdRef.current) return;
           setError(e instanceof Error ? e : new Error('API error'));
           setApiResult(null);
-        } finally {
+        })
+        .finally(() => {
           if (requestId === requestIdRef.current) {
             setIsLoading(false);
           }
-        }
-      })();
+          if (abortRef.current === controller) {
+            abortRef.current = null;
+          }
+        });
     }, COMPATIBILITY_DEBOUNCE_MS);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
     };
   }, [components]);
 

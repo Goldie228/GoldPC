@@ -492,6 +492,190 @@ public class CompatibilityRuleEngine
     }
 
     #endregion
+
+    #region New Compatibility Checks
+
+    public CompatibilityIssueDto? CheckEpsSupply(int required, int supplied, string mbName, string psuName)
+    {
+        if (required <= 1 || supplied >= required) return null;
+        var rule = _config.EpsCompatibility.InsufficientCables;
+        return new CompatibilityIssueDto
+        {
+            Severity = rule.Severity,
+            Component1 = psuName,
+            Component2 = mbName,
+            Message = rule.MessageTemplate?.Replace("{required}", required.ToString()).Replace("{supplied}", supplied.ToString()) ?? "",
+            Suggestion = rule.SuggestionTemplate?.Replace("{required}", required.ToString()) ?? ""
+        };
+    }
+
+    public CompatibilityIssueDto? CheckPciePowerSupply(int gpuRequiredPcie, int psuSuppliedPcie, bool gpuHas12Vhpwr, bool psuAtx3, string gpuName, string psuName, out List<CompatibilityWarningDto> warnings)
+    {
+        warnings = new List<CompatibilityWarningDto>();
+        
+        if (gpuHas12Vhpwr && !psuAtx3)
+        {
+            var ruleAtx3 = _config.PciePowerCompatibility.Atx3Required;
+            warnings.Add(new CompatibilityWarningDto
+            {
+                Severity = ruleAtx3.Severity,
+                Component = psuName,
+                Message = ruleAtx3.MessageTemplate ?? "",
+                Suggestion = ruleAtx3.Suggestion
+            });
+        }
+        
+        if (!gpuHas12Vhpwr && gpuRequiredPcie > 0 && psuSuppliedPcie < gpuRequiredPcie)
+        {
+            var rule = _config.PciePowerCompatibility.InsufficientCables;
+            return new CompatibilityIssueDto
+            {
+                Severity = rule.Severity,
+                Component1 = psuName,
+                Component2 = gpuName,
+                Message = rule.MessageTemplate?.Replace("{required}", gpuRequiredPcie.ToString()).Replace("{supplied}", psuSuppliedPcie.ToString()) ?? "",
+                Suggestion = rule.SuggestionTemplate?.Replace("{required}", gpuRequiredPcie.ToString()) ?? ""
+            };
+        }
+        
+        return null;
+    }
+
+    public CompatibilityWarningDto? CheckVrmCapacity(int cpuTdp, int vrmPhases, int? vrmMaxTdp, string mbName, string cpuName)
+    {
+        if (cpuTdp < 125) return null;
+        
+        if (vrmMaxTdp.HasValue && cpuTdp > vrmMaxTdp.Value)
+        {
+            var rule = _config.VrmCompatibility.VrmTdpExceeded;
+            return new CompatibilityWarningDto
+            {
+                Severity = rule.Severity,
+                Component = mbName,
+                Message = rule.MessageTemplate?.Replace("{cpuTdp}", cpuTdp.ToString()).Replace("{vrmMaxTdp}", vrmMaxTdp.Value.ToString()) ?? "",
+                Suggestion = rule.Suggestion
+            };
+        }
+        
+        if (vrmPhases > 0 && vrmPhases < 8 && cpuTdp >= 125)
+        {
+            var rule = _config.VrmCompatibility.Insufficient;
+            return new CompatibilityWarningDto
+            {
+                Severity = rule.Severity,
+                Component = mbName,
+                Message = rule.MessageTemplate?.Replace("{vrmPhases}", vrmPhases.ToString()).Replace("{cpuTdp}", cpuTdp.ToString()) ?? "",
+                Suggestion = rule.SuggestionTemplate ?? ""
+            };
+        }
+        
+        return null;
+    }
+
+    public CompatibilityWarningDto? CheckM2Interface(string storageInterface, bool mbSupportsM2Sata, string storageName, string mbName)
+    {
+        if (!string.Equals(storageInterface, "sata", StringComparison.OrdinalIgnoreCase)) return null;
+        if (mbSupportsM2Sata) return null;
+        var rule = _config.StorageInterfaceCompatibility.M2SataInNvmeSlot;
+        return new CompatibilityWarningDto
+        {
+            Severity = rule.Severity, // Keep as Warning since this gets escalated to Error by caller
+            Component = storageName,
+            Message = rule.MessageTemplate ?? "",
+            Suggestion = rule.Suggestion
+        };
+    }
+
+    public CompatibilityWarningDto? CheckM2PcieGen(int ssdGen, int mbGen, string storageName)
+    {
+        if (ssdGen <= 0 || mbGen <= 0 || ssdGen <= mbGen || ssdGen < 5) return null;
+        var rule = _config.StorageInterfaceCompatibility.M2Gen5Overheating;
+        return new CompatibilityWarningDto
+        {
+            Severity = rule.Severity,
+            Component = storageName,
+            Message = rule.MessageTemplate ?? "",
+            Suggestion = rule.SuggestionTemplate ?? ""
+        };
+    }
+
+    public CompatibilityWarningDto? CheckGpuSlotWidth(double slotWidth, int expansionSlots, string gpuName, string caseName)
+    {
+        if (slotWidth <= 0 || expansionSlots <= 0 || slotWidth <= expansionSlots) return null;
+        var rule = _config.GpuSlotCompatibility.ExceedsExpansionSlots;
+        return new CompatibilityWarningDto
+        {
+            Severity = rule.Severity,
+            Component = gpuName,
+            Message = rule.MessageTemplate?.Replace("{slotWidth}", slotWidth.ToString("F1")).Replace("{maxSlots}", expansionSlots.ToString()) ?? "",
+            Suggestion = rule.SuggestionTemplate?.Replace("{slotWidth}", slotWidth.ToString("F1")) ?? ""
+        };
+    }
+
+    public CompatibilityWarningDto? CheckUsbCHeader(bool caseHasUsbC, bool mbHasUsbCHeader, string mbName, string caseName)
+    {
+        if (!caseHasUsbC || mbHasUsbCHeader) return null;
+        var rule = _config.UsbCCompatibility.MissingHeader;
+        return new CompatibilityWarningDto
+        {
+            Severity = rule.Severity,
+            Component = mbName,
+            Message = rule.MessageTemplate ?? "",
+            Suggestion = rule.Suggestion
+        };
+    }
+
+    public CompatibilityWarningDto? CheckPsuBrand(string psuName, string brand)
+    {
+        if (string.IsNullOrEmpty(brand)) return null;
+        var trustedBrands = _config.PsuBrandSafety.TrustedBrands;
+        foreach (var trusted in trustedBrands)
+        {
+            if (brand.IndexOf(trusted, StringComparison.OrdinalIgnoreCase) >= 0) return null;
+        }
+        var rule = _config.PsuBrandSafety.UnknownBrand;
+        return new CompatibilityWarningDto
+        {
+            Severity = rule.Severity,
+            Component = psuName,
+            Message = rule.Message ?? "",
+            Suggestion = rule.Suggestion
+        };
+    }
+
+    public CompatibilityWarningDto? CheckCpuOverclock(string chipset, string cpuName, string mbName)
+    {
+        if (string.IsNullOrEmpty(chipset)) return null;
+        var upper = chipset.ToUpperInvariant();
+        if (upper.StartsWith("B") || upper.StartsWith("H") || upper.StartsWith("Q"))
+        {
+            var rule = _config.CpuOverclockCompatibility.KSeriesOnNonZ;
+            return new CompatibilityWarningDto
+            {
+                Severity = rule.Severity,
+                Component = cpuName,
+                Message = rule.MessageTemplate?.Replace("{chipset}", chipset) ?? "",
+                Suggestion = rule.Suggestion
+            };
+        }
+        return null;
+    }
+
+    public CompatibilityWarningDto? CheckEpsCableLength(int epsLength, int caseDepth, string psuName, string caseName)
+    {
+        if (epsLength <= 0 || caseDepth <= 0) return null;
+        if (epsLength >= caseDepth * 0.8) return null;
+        var rule = _config.EpsLengthCompatibility.TooShort;
+        return new CompatibilityWarningDto
+        {
+            Severity = rule.Severity,
+            Component = psuName,
+            Message = rule.MessageTemplate?.Replace("{epsLength}", epsLength.ToString()).Replace("{caseDepth}", caseDepth.ToString()) ?? "",
+            Suggestion = rule.Suggestion
+        };
+    }
+
+    #endregion
 }
 
 #region Configuration Models
@@ -508,6 +692,19 @@ public class RulesConfig
     public BottleneckDetectionConfig BottleneckDetection { get; set; } = new();
     public PerformanceWarningsConfig PerformanceWarnings { get; set; } = new();
     public StorageDefaultsConfig StorageDefaults { get; set; } = new();
+    public EpsCompatibilityConfig EpsCompatibility { get; set; } = new();
+    public PciePowerCompatibilityConfig PciePowerCompatibility { get; set; } = new();
+    public VrmCompatibilityConfig VrmCompatibility { get; set; } = new();
+    public UsbCCompatibilityConfig UsbCCompatibility { get; set; } = new();
+    public StorageInterfaceCompatibilityConfig StorageInterfaceCompatibility { get; set; } = new();
+    public GpuSlotCompatibilityConfig GpuSlotCompatibility { get; set; } = new();
+    public FanHeaderCompatibilityConfig FanHeaderCompatibility { get; set; } = new();
+    public PsuBrandSafetyConfig PsuBrandSafety { get; set; } = new();
+    public RgbCompatibilityConfig RgbCompatibility { get; set; } = new();
+    public RamClearanceCompatibilityConfig RamClearanceCompatibility { get; set; } = new();
+    public EccCompatibilityConfig EccCompatibility { get; set; } = new();
+    public CpuOverclockCompatibilityConfig CpuOverclockCompatibility { get; set; } = new();
+    public EpsLengthCompatibilityConfig EpsLengthCompatibility { get; set; } = new();
 
     public int M2Slots => StorageDefaults.MbDefaultM2Slots;
     public int SataPorts => StorageDefaults.MbDefaultSataPorts;
@@ -663,5 +860,19 @@ public class RuleTemplate
     public string? SuggestionTemplate { get; set; }
     public string? Suggestion { get; set; }
 }
+
+public class EpsCompatibilityConfig { public RuleTemplate InsufficientCables { get; set; } = new(); }
+public class PciePowerCompatibilityConfig { public RuleTemplate InsufficientCables { get; set; } = new(); public RuleTemplate Atx3Required { get; set; } = new(); }
+public class VrmCompatibilityConfig { public RuleTemplate Insufficient { get; set; } = new(); public RuleTemplate VrmTdpExceeded { get; set; } = new(); }
+public class UsbCCompatibilityConfig { public RuleTemplate MissingHeader { get; set; } = new(); }
+public class StorageInterfaceCompatibilityConfig { public RuleTemplate M2SataInNvmeSlot { get; set; } = new(); public RuleTemplate M2Gen5Overheating { get; set; } = new(); }
+public class GpuSlotCompatibilityConfig { public RuleTemplate ExceedsExpansionSlots { get; set; } = new(); }
+public class FanHeaderCompatibilityConfig { public RuleTemplate InsufficientHeaders { get; set; } = new(); }
+public class PsuBrandSafetyConfig { public RuleTemplate UnknownBrand { get; set; } = new(); public List<string> TrustedBrands { get; set; } = new(); }
+public class RgbCompatibilityConfig { public RuleTemplate VoltageMismatch { get; set; } = new(); }
+public class RamClearanceCompatibilityConfig { public RuleTemplate Insufficient { get; set; } = new(); }
+public class EccCompatibilityConfig { public RuleTemplate EccInConsumerBoard { get; set; } = new(); }
+public class CpuOverclockCompatibilityConfig { public RuleTemplate KSeriesOnNonZ { get; set; } = new(); }
+public class EpsLengthCompatibilityConfig { public RuleTemplate TooShort { get; set; } = new(); }
 
 #endregion

@@ -117,12 +117,12 @@ export function ServiceSelector({ selectedServiceId, onSelect }: ServiceSelector
     loadServiceTypes();
   }, []);
 
-  // Pre-select service from URL query param ?service=id
+  // Pre-select service from URL query param ?service=slug
   useEffect(() => {
     if (preSelectedId && services.length > 0) {
-      const found = services.find((s) => s.id === preSelectedId);
+      const found = services.find((s) => s.slug === preSelectedId);
       if (found) {
-        onSelect(found.id, found.id, found.name);
+        onSelect(found.id, found.slug, found.name);
       }
     }
     // Только при первой загрузке списка
@@ -192,7 +192,7 @@ export function ServiceSelector({ selectedServiceId, onSelect }: ServiceSelector
             key={service.id}
             service={service}
             isSelected={selectedServiceId === service.id}
-            onSelect={() => onSelect(service.id, service.id, service.name)}
+            onSelect={() => onSelect(service.id, service.slug, service.name)}
           />
         ))}
       </div>

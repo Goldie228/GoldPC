@@ -273,7 +273,7 @@ export function HomePage() {
   const categories = useMemo(() => (categoriesData ?? []).filter((c) => (c.productCount ?? 0) > 0), [categoriesData]);
 
   return (
-    <main id="main" className="min-h-screen bg-[#0b0e11]">
+    <div id="main" className="min-h-screen bg-[#0b0e11]">
       {/* ════════════ 1. HERO BAND ════════════ */}
       <section className="home-hero" aria-label="Главный баннер">
         <HeroBackground />
@@ -456,6 +456,6 @@ export function HomePage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

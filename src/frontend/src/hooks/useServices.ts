@@ -36,7 +36,7 @@ function mapServiceTypeToService(dto: ServiceType): Service {
   return {
     id: dto.id,
     name: dto.name,
-    slug: dto.name.toLowerCase().replace(/\s+/g, '-'),
+    slug: dto.slug,
     category: inferCategory(dto.name),
     description: dto.description,
     shortDescription: dto.description.slice(0, 100),

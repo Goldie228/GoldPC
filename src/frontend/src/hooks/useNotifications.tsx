@@ -1,5 +1,7 @@
-import React, { useEffect, useCallback, useState, createContext, useContext } from 'react';
+import React, { useEffect, useCallback, useState, useRef, createContext, useContext } from 'react';
 import * as signalR from '@microsoft/signalr';
+import { useAuthStore } from '../store/authStore';
+import { useToastStore } from '../store/toastStore';
 
 export interface Notification {
   id: string;
@@ -51,18 +53,27 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const isMountedRef = useRef(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
+    // Пропускаем первый mount при StrictMode (development двойной рендер)
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
+
+    const getToken = () => localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken');
+    if (!getToken()) return;
 
     let hubConnection: signalR.HubConnection | null = null;
     let isMounted = true;
 
     const startConnection = async () => {
       hubConnection = new signalR.HubConnectionBuilder()
+        .configureLogging(signalR.LogLevel.Warning)
         .withUrl('/hubs/notifications', {
-          accessTokenFactory: () => token
+          accessTokenFactory: () => getToken() ?? ''
         })
         .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
         .build();
@@ -97,6 +108,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (isMounted) setConnectionStatus('disconnected');
       });
 
+      // Первая попытка может失败了 (e.g. negotiate 401), 
+      // но withAutomaticReconnect переподключится автоматически.
+      // Ошибку не логируем — reconnect сам всё исправит.
       try {
         if (isMounted) setConnectionStatus('connecting');
         await hubConnection.start();
@@ -104,10 +118,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           setConnectionStatus('connected');
           setConnection(hubConnection);
         }
-      } catch (error) {
+      } catch {
+        // automatic reconnect will retry — keep status as 'connecting'
         if (isMounted) {
-          console.error('Failed to connect to notification hub:', error);
-          setConnectionStatus('error');
+          setConnectionStatus('connecting');
         }
       }
     };
@@ -120,10 +134,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       void hubConnection?.stop();
       setConnection(null);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const showToast = (notification: Notification) => {
-    // Integrate with toast system here
+    const toastType = (() => {
+      switch (notification.priority) {
+        case 'Critical': case 'High': return 'error';
+        case 'Medium': return 'warning';
+        default: return 'info';
+      }
+    })();
+    useToastStore.getState().showToast(
+      `${notification.title}: ${notification.message}`,
+      toastType as 'info' | 'warning' | 'error' | 'success',
+      5000,
+    );
   };
 
   const markAsRead = useCallback(async (id: string) => {
