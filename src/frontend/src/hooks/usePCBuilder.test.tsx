@@ -144,7 +144,10 @@ describe('usePCBuilder', () => {
     it('не возвращает ошибку при совпадении сокетов', () => {
       const { result } = renderHook(() => usePCBuilder());
 
-      const cpu = createCPU();
+      // CPU с iGPU, чтобы не было ошибок "нет видеокарты"
+      const cpu = createCPU({
+        specifications: { socket: 'LGA1700', tdp: 125, integratedGraphics: true },
+      });
       const mb = createMotherboard();
 
       act(() => {
@@ -172,8 +175,8 @@ describe('usePCBuilder', () => {
       });
 
       expect(result.current.compatibility.isCompatible).toBe(false);
-      // Ошибки совместимости генерируются на английском
-      expect(result.current.compatibility.errors.some(e => e.toLowerCase().includes('ram'))).toBe(true);
+      // Ошибки совместимости содержат тип DDR5
+      expect(result.current.compatibility.errors.some(e => e.includes('DDR5'))).toBe(true);
     });
   });
 

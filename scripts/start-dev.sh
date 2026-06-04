@@ -203,14 +203,11 @@ start_backend() {
         start_infra
     fi
     
-    $DOCKER_COMPOSE up -d catalogservice pcbuilderservice authservice servicesservice warrantyservice
+    $DOCKER_COMPOSE up -d catalog.api auth.api services.api
     
-    echo -e "${GREEN}✓ CatalogService: http://localhost:5000${RESET}"
-    echo -e "${GREEN}✓ AuthService: http://localhost:5001${RESET}"
-    echo -e "${GREEN}✓ OrdersService: http://localhost:5002${RESET}"
-    echo -e "${GREEN}✓ ServicesService: http://localhost:5003${RESET}"
-    echo -e "${GREEN}✓ WarrantyService: http://localhost:5004${RESET}"
-    echo -e "${GREEN}✓ PCBuilderService: http://localhost:5005${RESET}"
+    echo -e "${GREEN}✓ catalog.api (Catalog): http://localhost:9081${RESET}"
+    echo -e "${GREEN}✓ auth.api (Auth): http://localhost:9082${RESET}"
+    echo -e "${GREEN}✓ services.api (Services): http://localhost:5003${RESET}"
 }
 
 # Start frontend

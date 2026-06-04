@@ -145,7 +145,7 @@ export function CartPage(): ReactElement {
 
       <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-10 items-start">
         {/* Left: Cart Items */}
-        <main className="min-w-0">
+        <div className="min-w-0">
           <ul className="list-none m-0 p-0 flex flex-col gap-3" role="list">
             <AnimatePresence mode="popLayout">
               {items.map((item) => (
@@ -217,7 +217,7 @@ export function CartPage(): ReactElement {
               ))}
             </AnimatePresence>
           </ul>
-        </main>
+        </div>
 
         {/* Right: Summary */}
         <aside className="mt-6 md:mt-0 md:sticky md:top-[100px] bg-card border border-border rounded-xl p-6 shadow-lg max-h-[calc(100vh-120px)] overflow-y-auto">

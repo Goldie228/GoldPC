@@ -12,8 +12,10 @@ import {
   GitCompare,
   LayoutDashboard,
   Settings,
+  Bell,
 } from 'lucide-react';
 import { MiniCart } from './MiniCart';
+import { NotificationCenter } from '../../notification-center/NotificationCenter';
 import { useCart } from '../../../hooks/useCart';
 import { useWishlist } from '../../../hooks/useWishlist';
 import { useComparison } from '../../../hooks/useComparison';
@@ -236,6 +238,11 @@ export function Header(): ReactElement {
             {comparisonCount > 0 && <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 flex items-center justify-center bg-gold text-gold-ink text-[9px] font-bold rounded-md">{comparisonCount}</span>}
           </Link>
 
+          {/* Notifications - hidden on mobile */}
+          <div className="hidden md:block">
+            <NotificationCenter />
+          </div>
+
           {/* Profile / Auth - hidden on mobile (in drawer instead) */}
           <div className="relative hidden md:block" ref={profileDropdownRef}>
             <button
@@ -296,7 +303,7 @@ export function Header(): ReactElement {
                     </div>
 
                     <nav className="flex flex-col py-2">
-                      <Link to="/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
+                      <Link to="/account" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
                         <LayoutDashboard />
                         <span>Панель управления</span>
                       </Link>
@@ -386,7 +393,7 @@ export function Header(): ReactElement {
                <div className="h-px bg-hairline-dark my-2" />
 
                {/* Quick Actions — Card Grid */}
-               <div className="grid grid-cols-3 gap-px bg-hairline-dark mx-4 mb-3 rounded-lg overflow-hidden">
+                <div className="grid grid-cols-4 gap-px bg-hairline-dark mx-4 mb-3 rounded-lg overflow-hidden">
                   <Link to="/cart" className="flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card text-center cursor-pointer transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                     <div className="w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text transition-colors group-hover:border-gold/30 group-hover:text-body-text">
                       <ShoppingCart size={18} />
@@ -401,14 +408,20 @@ export function Header(): ReactElement {
                    <span className="text-[11px] font-medium text-muted-text leading-tight">Избранное</span>
                    {wishlistCount > 0 && <span className="text-[10px] font-semibold text-gold">{wishlistCount}</span>}
                  </Link>
-                 <Link to="/comparison" className="flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card text-center cursor-pointer transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
-                   <div className="w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text transition-colors group-hover:border-gold/30 group-hover:text-body-text">
-                     <GitCompare size={18} />
-                   </div>
-                   <span className="text-[11px] font-medium text-muted-text leading-tight">Сравнение</span>
-                   {comparisonCount > 0 && <span className="text-[10px] font-semibold text-gold">{comparisonCount}</span>}
-                 </Link>
-               </div>
+                  <Link to="/comparison" className="flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card text-center cursor-pointer transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
+                    <div className="w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text transition-colors group-hover:border-gold/30 group-hover:text-body-text">
+                      <GitCompare size={18} />
+                    </div>
+                    <span className="text-[11px] font-medium text-muted-text leading-tight">Сравнение</span>
+                    {comparisonCount > 0 && <span className="text-[10px] font-semibold text-gold">{comparisonCount}</span>}
+                  </Link>
+                  <button type="button" className="relative flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card cursor-pointer transition-colors hover:bg-surface-elevated">
+                    <div className="w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text">
+                      <Bell size={18} />
+                    </div>
+                    <span className="text-[11px] font-medium text-muted-text leading-tight">Уведомления</span>
+                  </button>
+                </div>
 
 {/* CTA Section */}
                 <div className="flex flex-col gap-px bg-hairline-dark mx-4 mb-3 rounded-lg overflow-hidden">
@@ -442,7 +455,7 @@ export function Header(): ReactElement {
 
                       {/* Navigation */}
                       <nav className="flex flex-col">
-                        <Link to="/dashboard" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleCloseMenu}>
+                        <Link to="/account" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleCloseMenu}>
                           <LayoutDashboard size={18} />
                           <span>Панель управления</span>
                         </Link>

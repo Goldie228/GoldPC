@@ -165,6 +165,38 @@ services:
       - goldpc-network
     restart: on-failure
 
+  # Services Service
+  services.api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ServicesService
+    container_name: goldpc-services
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5003
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=goldpc_services;Username=postgres;Password=admin
+      - RabbitMq__Host=rabbitmq
+      - Redis__ConnectionString=redis:6379
+      - Services__WarrantyService=http://warranty-service:5004
+    ports:
+      - "5003:5003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5003/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - goldpc-network
+    restart: on-failure
+
   # Frontend (Nginx + React)
   frontend:
     build:

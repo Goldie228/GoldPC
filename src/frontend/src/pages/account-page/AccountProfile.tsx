@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Lock, Clock, Loader2 } from 'lucide-react';
+import { Lock, Clock, Loader2, Camera } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { authService } from '../../api/authService';
 import { useToast } from '../../hooks/useToast';
@@ -39,6 +39,20 @@ export function AccountProfile() {
       });
     }
   }, [user]);
+
+  // Mobile keyboard handling — adjust padding when keyboard opens
+  useEffect(() => {
+    const handleResize = () => {
+      const vp = window.visualViewport;
+      if (vp && vp.height < window.screen.height * 0.8) {
+        document.documentElement.style.setProperty('--keyboard-offset', `${window.innerHeight - vp.height}px`);
+      } else {
+        document.documentElement.style.setProperty('--keyboard-offset', '0px');
+      }
+    };
+    window.visualViewport?.addEventListener('resize', handleResize);
+    return () => window.visualViewport?.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -109,7 +123,8 @@ export function AccountProfile() {
         {/* Avatar Section Card */}
         <div className="bg-card rounded-xl border border-border p-6 mb-6">
           <div className="flex items-center gap-4">
-            <div className="relative shrink-0">
+            {/* Avatar with hover upload overlay */}
+            <div className="relative shrink-0 group cursor-pointer" onClick={() => document.getElementById('avatar-upload')?.click()}>
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -121,14 +136,13 @@ export function AccountProfile() {
                   {initials}
                 </div>
               )}
+              <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Camera size={20} className="text-white" />
+              </div>
               <label
                 htmlFor="avatar-upload"
-                className="absolute -bottom-1 -right-1 w-6 h-6 bg-elevated border border-border rounded-full flex items-center justify-center cursor-pointer hover:bg-elevated transition-colors"
-              >
-                <svg className="w-3 h-3 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-              </label>
+                className="absolute inset-0 rounded-full cursor-pointer"
+              />
             </div>
             <input
               id="avatar-upload"

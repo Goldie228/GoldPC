@@ -7,6 +7,7 @@ import { ModalContainer } from './components/ui/Modal/ModalContainer';
 import { RouteMeta } from './components/seo/RouteMeta';
 import { ProductCardSkeleton, SimplePageLoader } from './components/ui/Skeleton';
 import OfflineBanner from './components/offline-banner/OfflineBanner';
+import { NotificationProvider } from './hooks/useNotifications';
 import { useAuthStore } from './store/authStore';
 import { useWishlistStore } from './store/wishlistStore';
 import './App.css';
@@ -41,7 +42,8 @@ const AccountRepairs = lazy(() => import('./pages/account-page/AccountRepairs').
 const AccountWarranty = lazy(() => import('./pages/account-page/AccountWarranty').then(m => ({ default: m.AccountWarranty })));
 
 const AccountSavedBuilds = lazy(() => import('./pages/account-page/AccountSavedBuilds').then(m => ({ default: m.AccountSavedBuilds })));
-const _ClientTicketDetailPage = lazy(() => import('./pages/my-repairs/TicketDetailPage').then(m => ({ default: m.TicketDetailPage })));
+const AccountSettings = lazy(() => import('./pages/account-page/AccountSettings').then(m => ({ default: m.AccountSettings })));
+const ClientTicketDetailPage = lazy(() => import('./pages/my-repairs/TicketDetailPage').then(m => ({ default: m.TicketDetailPage })));
 const DeliveryPage = lazy(() => import('./pages/info/DeliveryPage').then(m => ({ default: m.DeliveryPage })));
 const PaymentPage = lazy(() => import('./pages/info/PaymentPage').then(m => ({ default: m.PaymentPage })));
 const WarrantyPage = lazy(() => import('./pages/info/WarrantyPage').then(m => ({ default: m.WarrantyPage })));
@@ -52,7 +54,6 @@ const PrivacyPage = lazy(() => import('./pages/info/PrivacyPage').then(m => ({ d
 const TermsPage = lazy(() => import('./pages/info/TermsPage').then(m => ({ default: m.TermsPage })));
 const BrandsPage = lazy(() => import('./pages/info/BrandsPage').then(m => ({ default: m.BrandsPage })));
 const AccountLayout = lazy(() => import('./pages/account-page/AccountLayout').then(m => ({ default: m.AccountLayout })));
-const CustomerDashboard = lazy(() => import('./pages/customer-dashboard/CustomerDashboard').then(m => ({ default: m.CustomerDashboard })));
 const AccountOverview = lazy(() => import('./pages/account-page/AccountOverview').then(m => ({ default: m.AccountOverview })));
 const AccountProfile = lazy(() => import('./pages/account-page/AccountProfile').then(m => ({ default: m.AccountProfile })));
 const AccountOrders = lazy(() => import('./pages/account-page/AccountOrders').then(m => ({ default: m.AccountOrders })));
@@ -221,7 +222,7 @@ const router = createBrowserRouter([
       {
         element: <AuthGuard />,
         children: [
-          { path: '/dashboard', element: <CustomerDashboard /> },
+          { path: '/dashboard', element: <Navigate to="/account" replace /> },
           { path: '/orders', element: <Navigate to="/account/orders" replace /> },
           { path: '/repairs', element: <Navigate to="/account/repairs" replace /> },
           { path: '/profile', element: <Navigate to="/account/profile" replace /> },
@@ -236,6 +237,7 @@ const router = createBrowserRouter([
               { path: 'wishlist', element: <Navigate to="/wishlist" replace /> },
               { path: 'warranty', element: <AccountWarranty /> },
               { path: 'saved-builds', element: <AccountSavedBuilds /> },
+              { path: 'settings', element: <AccountSettings /> },
 
             ],
           },
@@ -291,7 +293,7 @@ const router = createBrowserRouter([
       },
       { path: '/orders/:orderNumber/success', element: <OrderSuccessPage /> },
       { path: '/orders/:orderNumber/tracking', element: <OrderTrackingPage /> },
-      { path: '/my-repairs/:ticketId', element: <TicketDetailPage /> },
+      { path: '/my-repairs/:ticketId', element: <ClientTicketDetailPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
@@ -309,10 +311,12 @@ function App(): React.ReactElement {
   }, [isAuthenticated, syncWishlistWithServer]);
 
   return (
-    <Suspense fallback={<RouteAwarePageLoader />}>
-      <OfflineBanner />
-      <RouterProvider router={router} />
-    </Suspense>
+    <NotificationProvider>
+      <Suspense fallback={<RouteAwarePageLoader />}>
+        <OfflineBanner />
+        <RouterProvider router={router} />
+      </Suspense>
+    </NotificationProvider>
   );
 }
 

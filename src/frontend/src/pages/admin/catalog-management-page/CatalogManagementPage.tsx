@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { catalogAdminApi, type UpdateProductRequest } from '../../../api/admin';
+import { useToast } from '../../../hooks/useToast';
 import { hasValidProductImage } from '../../../utils/image';
 import type { Product, ProductCategory } from '../../../api/types';
 import { Edit2, Trash2, RefreshCw, Loader2, ChevronLeft, ChevronRight, PackageX } from 'lucide-react';
@@ -40,6 +41,7 @@ interface EditFormData {
  * Страница управления каталогом
  */
 export function CatalogManagementPage() {
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +121,7 @@ export function CatalogManagementPage() {
       setEditingProduct(null);
     } catch (err) {
       console.error('Failed to update product:', err);
-      alert('Не удалось сохранить изменения');
+      showToast('Не удалось сохранить изменения', 'error');
     } finally {
       setSaving(false);
     }
@@ -138,7 +140,7 @@ export function CatalogManagementPage() {
       ));
     } catch (err) {
       console.error('Failed to delete product:', err);
-      alert('Не удалось удалить товар');
+      showToast('Не удалось удалить товар', 'error');
     } finally {
       setDeleting(null);
     }
@@ -324,8 +326,8 @@ export function CatalogManagementPage() {
                           />
                         ) : (
                           <svg viewBox="0 0 60 60" fill="none" className="w-10 h-10 rounded-md flex-shrink-0">
-                            <rect x="5" y="5" width="50" height="50" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
-                            <text x="30" y="35" textAnchor="middle" fill="#d4a574" fontSize="10">Нет фото</text>
+                            <rect x="5" y="5" width="50" height="50" rx="4" fill="var(--color-surface-card)" stroke="var(--color-hairline-dark)"/>
+                            <text x="30" y="35" textAnchor="middle" fill="var(--color-gold-300)" fontSize="10">Нет фото</text>
                           </svg>
                         )}
                         <span className="text-foreground">{product.name}</span>

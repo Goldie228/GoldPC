@@ -17,6 +17,7 @@ import { AuthModalBase } from './AuthModalBase';
 import { PasswordField } from '@/components/ui/PasswordField';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthModal } from '@/hooks/useAuthModal';
+import { getAuthErrorMessage } from '@/api/authService';
 
 export interface LoginModalProps {
   /** Whether modal is open */
@@ -71,8 +72,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       setEmail('');
       setPassword('');
       setRemember(false);
-    } catch {
-      setError('Неверный email или пароль');
+    } catch (err) {
+      setError(getAuthErrorMessage(err));
     }
   };
 

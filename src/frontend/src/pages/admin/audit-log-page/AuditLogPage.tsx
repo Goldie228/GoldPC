@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useToast } from '../../../hooks/useToast';
 import { RefreshCw, Loader2, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 
 // === Типы ===
@@ -83,6 +84,7 @@ const SEVERITY_LABELS = {
  * Страница журнала аудита
  */
 export function AuditLogPage() {
+  const { showToast } = useToast();
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -222,7 +224,7 @@ export function AuditLogPage() {
   };
 
   const handleExport = () => {
-    alert('Экспорт журнала аудита будет реализован в следующей версии');
+    showToast('Экспорт аудита будет реализован в следующей версии', 'info');
   };
 
   return (

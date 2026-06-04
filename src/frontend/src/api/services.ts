@@ -33,6 +33,7 @@ export type TicketStatus = (typeof TICKET_STATUSES)[number]['key'];
 export interface ServiceType {
   id: string;
   name: string;
+  slug: string;
   description: string;
   basePrice: number;
   estimatedDurationMinutes: number;
@@ -41,6 +42,7 @@ export interface ServiceType {
 /** Запрос на создание заявки (CreateServiceRequestRequest) */
 export interface CreateServiceRequest {
   serviceTypeId: string;
+  /** Описание проблемы (опционально для неавторизованных, обязательно для авторизованных) */
   description: string; // 10-2000 символов
   deviceModel?: string; // макс 100
   serialNumber?: string; // макс 50
@@ -60,8 +62,30 @@ export interface ServiceRequestDto {
   serialNumber?: string;
   estimatedCost: number;
   actualCost: number;
+  masterComment?: string;
   createdAt: string;
   completedAt?: string;
+  serviceParts?: ServicePartDto[];
+  workReports?: WorkReportDto[];
+}
+
+/** Деталь/запчасть (ServicePartDto) */
+export interface ServicePartDto {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+/** Запись истории (WorkReportDto) */
+export interface WorkReportDto {
+  id: string;
+  serviceRequestId: string;
+  previousStatus: TicketStatus;
+  newStatus: TicketStatus;
+  comment?: string;
+  changedBy: string;
+  changedAt: string;
 }
 
 // ═══════════════════════════════════════════════
@@ -190,6 +214,88 @@ async function getServiceById(id: string): Promise<ServiceRequestDto> {
 //  СТАРЫЕ API-ФУНКЦИИ (обратная совместимость, deprecated)
 // ═══════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════
+//  MASTER API-ФУНКЦИИ
+// ═══════════════════════════════════════════════
+
+/**
+ * GET /services/master — список заявок, назначенных мастеру
+ * [Authorize(Roles = "Master")]
+ */
+async function getMasterServices(
+  page = 1,
+  pageSize = 10,
+  status?: string,
+): Promise<{ items: ServiceRequestDto[]; total: number }> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  if (status != null && status !== '' && status !== 'all') params.append('status', status);
+
+  const response = await apiClient.get(`/services/master?${params}`);
+  const data = unwrapData<{ items: ServiceRequestDto[]; totalCount: number }>(response.data);
+  return {
+    items: data.items ?? [],
+    total: data.totalCount ?? 0,
+  };
+}
+
+/**
+ * PATCH /services/{id}/status — обновить статус заявки
+ * [Authorize(Roles = "Manager,Admin,Master")]
+ */
+async function updateTicketStatus(
+  id: string,
+  status: TicketStatus,
+  masterComment?: string,
+): Promise<ServiceRequestDto> {
+  const response = await apiClient.patch(`/services/${id}/status`, {
+    status,
+    masterComment: masterComment ?? null,
+  });
+  return unwrapData<ServiceRequestDto>(response.data);
+}
+
+/**
+ * PUT /services/{id}/complete — завершить работу мастера (→ ReadyForPickup)
+ * [Authorize(Roles = "Master")]
+ */
+async function completeTicket(id: string, masterComment?: string): Promise<ServiceRequestDto> {
+  const response = await apiClient.put(`/services/${id}/complete`, {
+    masterComment: masterComment ?? '',
+  });
+  return unwrapData<ServiceRequestDto>(response.data);
+}
+
+/**
+ * POST /services/{id}/parts — добавить запчасть
+ * [Authorize(Roles = "Master")]
+ */
+async function addServicePart(id: string, dto: ServicePartDto): Promise<ServicePartDto> {
+  const response = await apiClient.post(`/services/${id}/parts`, dto);
+  return unwrapData<ServicePartDto>(response.data);
+}
+
+/**
+ * POST /services/{id}/cancel — отменить заявку
+ * [Authorize]
+ */
+async function cancelTicket(id: string): Promise<ServiceRequestDto> {
+  const response = await apiClient.post(`/services/${id}/cancel`);
+  return unwrapData<ServiceRequestDto>(response.data);
+}
+
+/**
+ * POST /services/{id}/close — закрыть заявку (выдача клиенту)
+ * [Authorize(Roles = "Manager,Admin")]
+ */
+async function closeTicket(id: string, comment?: string): Promise<ServiceRequestDto> {
+  const response = await apiClient.post(`/services/${id}/close`, { comment: comment ?? null });
+  return unwrapData<ServiceRequestDto>(response.data);
+}
+
+// ═══════════════════════════════════════════════
+//  СТАРЫЕ API-ФУНКЦИИ (обратная совместимость, deprecated)
+// ═══════════════════════════════════════════════
+
 /**
  * Маппер ServiceRequestDto → ServiceTicket (для обратной совместимости)
  */
@@ -197,7 +303,7 @@ function mapServiceRequestToTicket(dto: ServiceRequestDto): ServiceTicket {
   return {
     id: dto.id,
     ticketNumber: dto.requestNumber,
-    deviceType: (dto.deviceModel != null && dto.deviceModel !== '') ? dto.deviceModel : (dto.serviceTypeName != null && dto.serviceTypeName !== '') ? dto.serviceTypeName : 'Устройство',
+    deviceType: (dto.serviceTypeName != null && dto.serviceTypeName !== '') ? dto.serviceTypeName : (dto.deviceModel != null && dto.deviceModel !== '') ? dto.deviceModel : 'Устройство',
     brand: '',
     model: dto.deviceModel ?? '',
     issueDescription: dto.description,
@@ -225,7 +331,8 @@ async function getMyTickets(page = 1, pageSize = 10, status?: string): Promise<{
 /** @deprecated Используйте getServiceById */
 async function getTicket(id: string): Promise<ServiceTicket> {
   const response = await apiClient.get(`/services/${id}`);
-  return unwrapData<ServiceTicket>(response.data);
+  const dto = unwrapData<ServiceRequestDto>(response.data);
+  return mapServiceRequestToTicket(dto);
 }
 
 /** @deprecated */
@@ -257,11 +364,18 @@ async function createTicket(data: CreateTicketRequest): Promise<CreateTicketResp
 // ═══════════════════════════════════════════════
 
 export const servicesApi = {
-  // Новые
+  // Общие
   getServiceTypes,
   createService,
   getMyServices,
   getServiceById,
+  // Master
+  getMasterServices,
+  updateTicketStatus,
+  completeTicket,
+  addServicePart,
+  cancelTicket,
+  closeTicket,
   // Старые (deprecated)
   getMyTickets,
   getTicket,

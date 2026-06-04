@@ -14,11 +14,12 @@ import { Pagination } from '../../catalog/Pagination';
 import { FilterSidebar } from '../../filter-sidebar/FilterSidebar';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';
-import { extractSocket, extractFormFactor, extractTDP } from '../../../shared/utils/compatibility/extractors';
+import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryType } from '../../../shared/utils/compatibility/extractors';
+import { checkRAM, detectMemoryFormFactorFromName } from '../../../shared/utils/compatibility/checks';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '../../../hooks/useProducts';
 import { catalogApi } from '../../../api/catalog';
-import type { Product, ProductCategory, ProductImage, ProductSummary, PaginationMeta } from '../../../api/types';
+import type { Product, ProductCategory, ProductImage, ProductSummary, ProductSpecifications, PaginationMeta } from '../../../api/types';
 import type { PCComponentType } from '../../../hooks';
 import type { PCBuilderSelectedState } from '../../../hooks/usePCBuilder';
 
@@ -70,8 +71,43 @@ function parseSort(p: string) {
   }
 }
 
-function summaryToProduct(s: ProductSummary): Product {
-  return { ...s, specifications: {} } as Product;
+/**
+ * Safely maps ProductSummary to Product, populating specifications
+ * from the new compatibility fields now available in ProductSummary.
+ * This avoids the `specifications: {}` hack that caused fail-open bugs.
+ */
+function enrichSummaryToProduct(s: ProductSummary): Product {
+  const specs: ProductSpecifications = {};
+  if (s.socket) specs.socket = s.socket;
+  if (s.memoryType) specs.memoryType = s.memoryType;
+  if (s.memoryFormFactor) specs.memoryFormFactor = s.memoryFormFactor;
+  if (s.tdp != null) specs.tdp = s.tdp;
+  if (s.wattage != null) specs.wattage = s.wattage;
+  // Если входной объект — полноценный Product со спецификациями, копируем их
+  const fullProduct = s as Product;
+  if (fullProduct.specifications) {
+    const fullMemType = extractMemoryType(fullProduct.specifications);
+    if (fullMemType) specs.memoryType = fullMemType;
+  }
+  // Try to detect type from name as fallback for checkRAM
+  const nameUpper = s.name.toUpperCase();
+  if (nameUpper.includes('DDR5')) specs.type = 'DDR5';
+  else if (nameUpper.includes('DDR4') || nameUpper.includes('LPDDR4')) specs.type = 'DDR4';
+  else if (nameUpper.includes('DDR3') || nameUpper.includes('DDR3L')) specs.type = 'DDR3';
+  // Fallback для материнских плат: определяем DDR по сокету/чипсету
+  else if (s.category?.toLowerCase().includes('материнск')) {
+    const specs2 = fullProduct.specifications ?? {} as ProductSpecifications;
+    const socket = s.socket || (typeof specs2.socket === 'string' ? specs2.socket : '') || '';
+    const chipset = typeof specs2.chipset === 'string' ? specs2.chipset : '';
+    const both = (socket + ' ' + chipset + ' ' + s.name).toUpperCase();
+    // AM5 → DDR5, LGA 1851 → DDR5
+    if (both.includes('AM5') || both.includes('LGA1851') || both.includes('1851')) specs.type = 'DDR5';
+    // HM55/HM65/HM75/HM85 → DDR3
+    else if (/\bHM[5678]\d/.test(both)) specs.type = 'DDR3';
+    // Всё остальное (AM4, LGA1151, LGA1200, LGA1700 и т.д.) → DDR4
+    else specs.type = 'DDR4';
+  }
+  return { ...s, specifications: specs } as Product;
 }
 
 // ─── CardImageGallery: image with prev/next + hover zones + badges ────────
@@ -152,7 +188,7 @@ interface PickerProductCardProps {
 }
 
 function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpenProduct, slotType, getDisplaySpecs }: PickerProductCardProps) {
-  const specs = getDisplaySpecs(slotType, summaryToProduct(product)).slice(0, 3);
+  const specs = getDisplaySpecs(slotType, enrichSummaryToProduct(product)).slice(0, 3);
    const hasDiscount = product.oldPrice !== undefined && product.oldPrice !== null && product.oldPrice > product.price;
    const discountPercent = hasDiscount ? Math.round((1 - product.price / product.oldPrice!) * 100) : 0;
   const outOfStock = product.stock === 0 || !product.isActive;
@@ -197,7 +233,7 @@ function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpen
 function PickerProductCardCompact({ product, isSelected, isCompatible, onSelect, onOpenProduct, slotType, getDisplaySpecs }: PickerProductCardProps) {
   const url = product.mainImage?.url && hasValidProductImage(product.mainImage.url)
     ? getProductImageUrl(product.mainImage.url) : null;
-  const specs = getDisplaySpecs(slotType, summaryToProduct(product)).slice(0, 2);
+  const specs = getDisplaySpecs(slotType, enrichSummaryToProduct(product)).slice(0, 2);
   const hasDiscount = product.oldPrice !== undefined && product.oldPrice > product.price;
   const outOfStock = product.stock === 0 || !product.isActive;
 
@@ -317,44 +353,12 @@ export function ComponentPickerModal({
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [magnifierIdx, setMagnifierIdx] = useState<number | null>(null);
   const [previewImgIdx, setPreviewImgIdx] = useState(0);
-  const [showIncompatible, setShowIncompatible] = useState(true);
-
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 0 });
-  const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<string[]>([]);
-  const [minRating] = useState(0);
-  const [selectedAvailability, setSelectedAvailability] = useState<string[]>(['in_stock']);
-  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | number | string[]>>({});
-
-  const prevIsOpen = useRef(false);
-
-  useEffect(() => {
-    // Only reset state WHEN MODAL FIRST OPENS, not on every dependency change
-    if (isOpen && !prevIsOpen.current) {
-      // ✅ Batch ALL state updates in a single re-render using functional updates
-      setSelectedCategory(category);
-      setSearch(''); setDebouncedSearch(''); setSortPreset('popular'); setPreviewImgIdx(0);
-      setInStockOnly(false); setHighlightedId(currentProduct?.id ?? null);
-      setPage(1); setViewMode('grid');
-      setPriceRange({ min: 0, max: 0 });
-      setSelectedManufacturerIds([]);
-    }
-
-    // ALWAYS update compatibility filters when buildContext changes, even after mount
-
-    prevIsOpen.current = isOpen;
-  }, [isOpen, category, currentProduct?.id, slotType, buildContext]);
-
-  useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedSearch(search.trim()), 250);
-    return () => window.clearTimeout(t);
-  }, [search]);
-
-  // Sync FilterSidebar availability changes → inStockOnly (the flag useProducts reads)
-  useEffect(() => {
-    setInStockOnly(selectedAvailability.length > 0 && selectedAvailability.includes('in_stock'));
-  }, [selectedAvailability]);
-
   const [isPending, startTransition] = useTransition();
+  const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
+  const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<number[]>([]);
+  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | string[]>>({});
+  const [selectedAvailability, setSelectedAvailability] = useState<string[]>([]);
+  const [minRating, setMinRating] = useState(0);
 
   const { sortBy, sortOrder } = useMemo(() => parseSort(sortPreset), [sortPreset]);
 
@@ -376,17 +380,9 @@ export function ComponentPickerModal({
       if (s) out.socket = s;
     }
     if (slotType === 'ram' && buildContext?.motherboard?.product) {
-      // Do NOT set server-side spec filter for memory type.
-      // Let all RAM products load, and use client-side compatibility
-      // to mark incompatible items (lock icon + tooltip).
-      // Setting out.type here would hard-filter on the server and
-      // hide all products that don't match — breaking the UX when
-      // the DB has no RAM of the required type.
-
-      // Form factor filtering for RAM
-      const mff = ((buildContext.motherboard.product.specifications as Record<string, unknown>)["memoryFormFactor"] ??
-                   (buildContext.motherboard.product.specifications as Record<string, unknown>)["memory_form_factor"] ?? 'DIMM') as string;
-      if (mff) out.memoryFormFactor = mff;
+      // Filter by memory type on the server so that pagination is accurate
+      const mt = extractMemoryType(buildContext.motherboard.product.specifications);
+      if (mt) out.type = mt;
     }
     // PSU picker: enforce minimum wattage based on GPU+CPU selection
     if (slotType === 'psu' && (buildContext?.gpu?.product || buildContext?.cpu?.product)) {
@@ -486,30 +482,89 @@ export function ComponentPickerModal({
     };
   }, [buildContext]);
 
+  // ── Background enrichment: batch-load full specs for RAM products ──
+  // ProductSummary has no `specifications` field, so extractMemoryFormFactor returns null.
+  // When a motherboard is selected, fetch full Product data (with specifications)
+  // for all visible RAM products to enable accurate SO-DIMM detection.
+  const ramProductIdsKey = useMemo(() => {
+    if (slotType !== 'ram' || products.length === 0) return '';
+    return products.map(p => p.id).sort().join(',');
+  }, [slotType, products]);
+
+  const fullRamSpecsQuery = useQuery({
+    queryKey: ['full-ram-specs', ramProductIdsKey],
+    queryFn: async () => {
+      const ids = ramProductIdsKey.split(',').filter(Boolean);
+      const map = new Map<string, Product>();
+      // Low concurrency to avoid overwhelming the server
+      const CONCURRENCY = 2;
+      for (let i = 0; i < ids.length; i += CONCURRENCY) {
+        const batch = ids.slice(i, i + CONCURRENCY);
+        const results = await Promise.allSettled(
+          batch.map(id => catalogApi.getProduct(id))
+        );
+        for (const r of results) {
+          if (r.status === 'fulfilled' && r.value) {
+            map.set(r.value.id, r.value);
+          }
+        }
+      }
+      return map;
+    },
+    enabled: isOpen && slotType === 'ram' && !!componentMap.motherboard && ramProductIdsKey.length > 0,
+    staleTime: 5_000,
+    gcTime: 30_000,
+  });
+
+  // Compatibility checking — check memory type (DDR3/4/5) when specs available
   const productsWithCompatibility = useMemo(() => {
+    const mb = componentMap.motherboard;
+    const isRam = slotType === 'ram';
+
     return products.map((p) => {
+      if (isRam && mb) {
+        const ramProduct = enrichSummaryToProduct(p);
+        const rt = extractMemoryType(ramProduct.specifications);
+        const mt = extractMemoryType(mb.specifications);
+        if (rt && mt && rt !== mt) {
+          return {
+            ...p, isIncompatible: true,
+            incompatibilityIssues: [`Тип памяти ${rt} не поддерживается материнской платой (${mt})`],
+          };
+        }
+
+        // Check form factor (SO-DIMM vs DIMM)
+        const rff = extractMemoryFormFactor(ramProduct.specifications)
+          ?? detectMemoryFormFactorFromName(ramProduct.name, ramProduct.sku);
+        const mff = extractMemoryFormFactor(mb.specifications) ?? 'DIMM';
+
+        if (rff && mff && rff !== mff) {
+          const ffMsg = rff === 'SO-DIMM'
+            ? `Форм-фактор ${rff} — для ноутбуков, не подходит для десктопной материнской платы (${mff})`
+            : `Форм-фактор ${rff} несовместим с материнской платой (${mff})`;
+          return {
+            ...p, isIncompatible: true,
+            incompatibilityIssues: [ffMsg],
+          };
+        }
+      }
       return { ...p, isIncompatible: false, incompatibilityIssues: [] as string[] };
     });
-  }, [products]);
+  }, [products, slotType, componentMap]);
 
-  const incompatibleCount = useMemo(
-    () => productsWithCompatibility.filter((p) => p.isIncompatible).length,
-    [productsWithCompatibility],
-  );
-
-  // Keep incompatible items in the visible list, but filter by nameFilter
+  // Hide incompatible products — user won't see what doesn't fit their build
   const filteredProducts = useMemo(() => {
     return productsWithCompatibility.filter((p) => {
-      if (!showIncompatible && p.isIncompatible) return false;
+      if (p.isIncompatible) return false;
       if (nameFilter && !p.name.toLowerCase().includes(nameFilter.toLowerCase())) return false;
       return true;
     });
-  }, [productsWithCompatibility, showIncompatible, nameFilter]);
+  }, [productsWithCompatibility, nameFilter]);
 
   const previewProduct = useMemo(() => {
     if (!highlightedId) return null;
     const fromList = productsWithCompatibility.find((p) => p.id === highlightedId);
-    if (fromList) return summaryToProduct(fromList);
+    if (fromList) return enrichSummaryToProduct(fromList);
     if (currentProduct?.id === highlightedId) return currentProduct;
     return null;
   }, [productsWithCompatibility, highlightedId, currentProduct]);
@@ -522,6 +577,15 @@ export function ComponentPickerModal({
   });
 
   const fullPreview = detailProduct ?? previewProduct;
+
+  const previewIncompatibility = useMemo(() => {
+    if (!highlightedId) return { isIncompatible: false, issues: [] as string[] };
+    const found = productsWithCompatibility.find(p => p.id === highlightedId);
+    if (found?.isIncompatible) {
+      return { isIncompatible: true, issues: found.incompatibilityIssues ?? [] };
+    }
+    return { isIncompatible: false, issues: [] };
+  }, [productsWithCompatibility, highlightedId]);
 
   const previewImages = useMemo(() => {
     if (!fullPreview) return [];
@@ -541,6 +605,11 @@ export function ComponentPickerModal({
 
   const handleConfirm = () => {
     if (!highlightedId) return;
+    // Safety net: prevent confirming incompatible products
+    const isIncompatible = productsWithCompatibility.some(
+      (pw) => pw.id === highlightedId && pw.isIncompatible,
+    );
+    if (isIncompatible) return;
     const p = fullPreview || previewProduct;
     if (p) onConfirm(p);
   };
@@ -683,18 +752,6 @@ export function ComponentPickerModal({
               <>
                 {meta && meta.totalItems > 0 && <div className="text-[0.72rem] text-[var(--fg-dim)] pb-1 flex-shrink-0">Найдено: {meta.totalItems}</div>}
 
-                {/* Toggle incompatible visibility */}
-                {incompatibleCount > 0 && (
-                  <button
-                    className="mt-3 px-3.5 py-2 border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.04)] text-[var(--fg-muted)] rounded-md text-xs cursor-pointer transition-all hover:bg-[rgba(255,255,255,0.08)] hover:text-[var(--fg)]"
-                    onClick={() => setShowIncompatible(!showIncompatible)}
-                  >
-                    {showIncompatible
-                      ? `Скрыть несовместимые (${incompatibleCount})`
-                      : `Показать несовместимые (${incompatibleCount})`}
-                  </button>
-                )}
-
                 {filteredProducts.length === 0 && !isPending && (
                   <div className="text-center p-8 text-[var(--fg-muted)]">
                     <h3>Нет товаров</h3>
@@ -773,7 +830,14 @@ export function ComponentPickerModal({
 
                 {fullPreview.specifications && <SpecList specs={fullPreview.specifications as Record<string, unknown>} />}
 
-                <button type="button" className="mt-auto px-4 py-2.5 border-none rounded-md bg-[var(--accent)] text-[var(--color-black-soft)] text-[0.85rem] font-semibold cursor-pointer transition-all hover:bg-[#f0b90b] hover:-translate-y-[1px]" onClick={handleConfirm}>Выбрать</button>
+                {previewIncompatibility.isIncompatible && (
+                  <div className="text-[0.7rem] text-[var(--error)] p-2 bg-[rgba(248,113,113,0.05)] rounded-md">
+                    <Lock size={12} style={LOCK_ICON_STYLE} />
+                    {previewIncompatibility.issues.join('; ') || 'Компонент несовместим с текущей сборкой'}
+                  </div>
+                )}
+
+                <button type="button" className={`mt-auto px-4 py-2.5 border-none rounded-md text-[0.85rem] font-semibold transition-all ${previewIncompatibility.isIncompatible ? 'bg-[rgba(255,255,255,0.08)] text-[var(--fg-dim)] cursor-not-allowed' : 'bg-[var(--accent)] text-[var(--color-black-soft)] cursor-pointer hover:bg-[#f0b90b] hover:-translate-y-[1px]'}`} onClick={previewIncompatibility.isIncompatible ? undefined : handleConfirm} disabled={previewIncompatibility.isIncompatible} title={previewIncompatibility.isIncompatible ? 'Компонент несовместим с вашей сборкой' : undefined}>{previewIncompatibility.isIncompatible ? 'Несовместим' : 'Выбрать'}</button>
               </>
             ) : (
               <div className="flex flex-col items-center justify-center text-center h-[200px] text-[var(--fg-dim)]">

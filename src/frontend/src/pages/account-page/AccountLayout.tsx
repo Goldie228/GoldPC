@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
   User,
@@ -9,6 +10,12 @@ import {
   X,
   ShieldCheck,
   Cpu,
+  Settings,
+  Users,
+  Warehouse,
+  Ticket,
+  BarChart3,
+  Download,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
@@ -21,7 +28,7 @@ import { useAuthStore } from '../../store/authStore';
  * - Mobile responsive with slide-over sidebar panel
  */
 export function AccountLayout() {
-  const { user } = useAuthStore();
+  const { user, currentRole } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const firstName = user?.firstName ?? '';
@@ -42,6 +49,7 @@ const navItems: NavItem[] = [
     { to: '/account/repairs', icon: Wrench, label: 'Ремонты' },
     { to: '/account/warranty', icon: ShieldCheck, label: 'Гарантия' },
     { to: '/account/saved-builds', icon: Cpu, label: 'Сборки' },
+    { to: '/account/settings', icon: Settings, label: 'Настройки' },
   ];
 
   const sidebarLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -57,13 +65,19 @@ const navItems: NavItem[] = [
   return (
     <div className="flex min-h-screen bg-canvas-dark">
       {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={closeSidebar}
-          aria-hidden="true"
-        />
-      )}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={closeSidebar}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
 
       {/* Sidebar */}
       <aside
@@ -118,11 +132,106 @@ const navItems: NavItem[] = [
               {item.label}
             </NavLink>
           ))}
+
+          {/* Role-aware section — only for non-Client roles */}
+          {currentRole && currentRole !== 'Client' && (
+            <>
+              <div className="border-t border-hairline-dark my-2" />
+              <div className="px-4 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                {currentRole === 'Admin'
+                  ? 'Администрирование'
+                  : currentRole === 'Manager'
+                    ? 'Управление'
+                    : currentRole === 'Master'
+                      ? 'Мастерская'
+                      : currentRole === 'Accountant'
+                        ? 'Отчёты'
+                        : ''}
+              </div>
+
+              {currentRole === 'Admin' && (
+                <>
+                  {[
+                    { to: '/admin/users', icon: Users, label: 'Пользователи' },
+                    { to: '/admin/catalog', icon: Package, label: 'Каталог' },
+                    { to: '/admin/coordinator', icon: LayoutDashboard, label: 'Координатор' },
+                  ].map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      onClick={closeSidebar}
+                      className={sidebarLinkClass}
+                    >
+                      <item.icon size={18} />
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </>
+              )}
+
+              {currentRole === 'Manager' && (
+                <>
+                  {[
+                    { to: '/manager/dashboard', icon: LayoutDashboard, label: 'Панель менеджера' },
+                    { to: '/manager/orders', icon: Package, label: 'Заказы (все)' },
+                    { to: '/manager/inventory', icon: Warehouse, label: 'Склад' },
+                  ].map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      onClick={closeSidebar}
+                      className={sidebarLinkClass}
+                    >
+                      <item.icon size={18} />
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </>
+              )}
+
+              {currentRole === 'Master' && (
+                <>
+                  {[
+                    { to: '/master/tickets', icon: Ticket, label: 'Тикеты' },
+                  ].map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      onClick={closeSidebar}
+                      className={sidebarLinkClass}
+                    >
+                      <item.icon size={18} />
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </>
+              )}
+
+              {currentRole === 'Accountant' && (
+                <>
+                  {[
+                    { to: '/accountant/reports', icon: BarChart3, label: 'Отчёты' },
+                    { to: '/accountant/export', icon: Download, label: 'Экспорт' },
+                  ].map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      onClick={closeSidebar}
+                      className={sidebarLinkClass}
+                    >
+                      <item.icon size={18} />
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </>
+              )}
+            </>
+          )}
         </nav>
       </aside>
 
       {/* Main content area */}
-      <main className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0">
         {/* Mobile header with hamburger toggle */}
         <div className="sticky top-0 z-30 bg-canvas-dark border-b border-hairline-dark px-4 py-3 lg:hidden flex items-center gap-3">
           <button
@@ -138,7 +247,7 @@ const navItems: NavItem[] = [
         <div className="p-6 lg:p-8">
           <Outlet />
         </div>
-      </main>
+      </div>
     </div>
   );
 }

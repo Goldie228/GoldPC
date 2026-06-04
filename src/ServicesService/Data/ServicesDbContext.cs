@@ -11,6 +11,7 @@ public class ServicesDbContext : DbContext
     public DbSet<ServiceType> ServiceTypes => Set<ServiceType>();
     public DbSet<ServicePart> ServiceParts => Set<ServicePart>();
     public DbSet<WorkReport> WorkReports => Set<WorkReport>();
+    public DbSet<TicketMessage> TicketMessages => Set<TicketMessage>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -90,6 +91,29 @@ public class ServicesDbContext : DbContext
                 .WithMany(sr => sr.WorkReports)
                 .HasForeignKey(e => e.ServiceRequestId)
                 .HasConstraintName("fk_work_reports_service_request")
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        modelBuilder.Entity<TicketMessage>(entity =>
+        {
+            entity.ToTable("ticket_messages");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ServiceRequestId).HasColumnName("service_request_id");
+            entity.Property(e => e.AuthorId).HasColumnName("author_id");
+            entity.Property(e => e.AuthorRole).HasColumnName("author_role").IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Content).HasColumnName("content").IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.FileUrl).HasColumnName("file_url").HasMaxLength(1000);
+            entity.Property(e => e.FileName).HasColumnName("file_name").HasMaxLength(255);
+            entity.Property(e => e.FileSize).HasColumnName("file_size");
+            entity.Property(e => e.ContentType).HasColumnName("content_type").HasMaxLength(100);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.ReadAt).HasColumnName("read_at");
+
+            entity.HasOne(e => e.ServiceRequest)
+                .WithMany(sr => sr.TicketMessages)
+                .HasForeignKey(e => e.ServiceRequestId)
+                .HasConstraintName("fk_ticket_messages_service_request")
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

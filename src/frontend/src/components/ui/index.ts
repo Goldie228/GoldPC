@@ -46,3 +46,16 @@ export type { TabsProps, Tab } from './Tabs';
 
 // PhoneInput Component
 export { PhoneInput } from './PhoneInput';
+
+// PageHero Component
+export { PageHero } from './PageHero';
+
+// IconBox Component
+export { IconBox } from './IconBox';
+
+// StatusBadge Component
+export { StatusBadge } from './StatusBadge';
+export type { StatusVariant } from './StatusBadge';
+
+// StatCard Component
+export { StatCard } from './StatCard';

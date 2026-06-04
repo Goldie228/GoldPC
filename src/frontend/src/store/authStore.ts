@@ -35,7 +35,13 @@ interface AuthState {
 const getInitialState = (): Pick<AuthState, 'user' | 'isAuthenticated' | 'currentRole'> => {
   try {
     const saved = localStorage.getItem('auth-storage');
-    if (saved != null && saved !== '') {
+
+    // Проверяем, что токен реально существует
+    const hasToken = !!(
+      localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken')
+    );
+
+    if (saved != null && saved !== '' && hasToken) {
       const data = JSON.parse(saved) as { user?: User | null };
       // Decode HTML entities in user data
       if (data.user != null) {
@@ -53,6 +59,12 @@ const getInitialState = (): Pick<AuthState, 'user' | 'isAuthenticated' | 'curren
            currentRole: normalizedUser != null ? mapBackendRole(normalizedUser.roles?.[0] ?? normalizedUser.role) : null,
          };
       }
+    }
+
+    // Если дошли сюда — нет user'а или нет токена ⇒ неавторизован
+    if (saved != null && saved !== '') {
+      console.warn('[authStore] auth-storage найден, но accessToken отсутствует — очищаем');
+      localStorage.removeItem('auth-storage');
     }
   } catch {
     // Ignore parse errors

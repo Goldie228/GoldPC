@@ -45,14 +45,13 @@ const steps = [
 
 export function WarrantyPage(): ReactElement {
   return (
-    <main className="min-h-screen bg-canvas-dark pt-24 md:pt-28 pb-20">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
-          <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
-          <span className="text-muted-text">/</span>
-          <span className="text-body-text">Гарантия</span>
-        </nav>
+    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
+        <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
+        <span className="text-muted-text">/</span>
+        <span className="text-body-text">Гарантия</span>
+      </nav>
 
         {/* Hero */}
         <section className="mb-16">
@@ -119,16 +118,15 @@ export function WarrantyPage(): ReactElement {
         </section>
 
 {/* Service request link */}
-         <section className="mt-16 text-center">
-           <Link
-             to="/catalog"
-             className="inline-flex items-center gap-2 px-6 py-3 bg-gold text-gold-ink font-semibold rounded-lg hover:bg-gold-active transition-colors"
-           >
-             Перейти в каталог
-             <ArrowRight size={18} />
-           </Link>
-         </section>
+        <section className="mt-16 text-center">
+          <Link
+            to="/service-request"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gold text-gold-ink font-semibold rounded-lg hover:bg-gold-active transition-colors"
+          >
+            Подать заявку на ремонт
+            <ArrowRight size={18} />
+          </Link>
+        </section>
       </div>
-    </main>
-  );
-}
+    );
+  }

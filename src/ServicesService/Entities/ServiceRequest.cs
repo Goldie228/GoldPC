@@ -24,6 +24,7 @@ public class ServiceRequest : BaseEntity
     public ServiceType ServiceType { get; set; } = null!;
     public ICollection<ServicePart> ServiceParts { get; set; } = new List<ServicePart>();
     public ICollection<WorkReport> WorkReports { get; set; } = new List<WorkReport>();
+    public ICollection<TicketMessage> TicketMessages { get; set; } = new List<TicketMessage>();
 }
 
 /// <summary>

@@ -196,5 +196,112 @@
       ]
     },
     "noIntegratedGraphics": { "severity": "Warning", "message": "Процессор не имеет встроенной графики", "suggestion": "Убедитесь, что выбрана видеокарта" }
+  },
+  "epsCompatibility": {
+    "insufficientCables": {
+      "severity": "Error",
+      "messageTemplate": "Материнской плате требуется {required} EPS12V (8-pin CPU), у БП — {supplied}. Система может не запуститься.",
+      "suggestionTemplate": "Выберите БП с {required}× EPS12V кабелями"
+    }
+  },
+  "pciePowerCompatibility": {
+    "insufficientCables": {
+      "severity": "Error",
+      "messageTemplate": "GPU требует {required}× PCIe 8-pin, у БП — {supplied}.",
+      "suggestionTemplate": "Выберите БП с {required}× PCIe кабелями"
+    },
+    "atx3Required": {
+      "severity": "Warning",
+      "messageTemplate": "GPU требует 12VHPWR. БП без ATX 3.0 может не иметь родного кабеля 12VHPWR.",
+      "suggestion": "Выберите БП с ATX 3.0 или используйте переходник из комплекта GPU"
+    }
+  },
+  "vrmCompatibility": {
+    "insufficient": {
+      "severity": "Warning",
+      "messageTemplate": "VRM материнской платы (фазы: {vrmPhases}) может перегреваться с CPU {cpuTdp}Вт под нагрузкой.",
+      "suggestionTemplate": "Рекомендуется материнская плата с 8+ фазами VRM"
+    },
+    "vrmTdpExceeded": {
+      "severity": "Warning",
+      "messageTemplate": "VRM материнской платы не выдержит CPU {cpuTdp}Вт (максимум VRM: {vrmMaxTdp}Вт).",
+      "suggestion": "Выберите материнскую плату с более мощным VRM"
+    }
+  },
+  "usbCCompatibility": {
+    "missingHeader": {
+      "severity": "Warning",
+      "messageTemplate": "Корпус имеет USB-C, но материнская плата не имеет разъёма USB 3.2 Type-E. USB-C не будет работать.",
+      "suggestion": "Выберите материнскую плату с USB-C header"
+    }
+  },
+  "storageInterfaceCompatibility": {
+    "m2SataInNvmeSlot": {
+      "severity": "Error",
+      "messageTemplate": "M.2 SATA SSD несовместим со слотами материнской платы (только NVMe).",
+      "suggestion": "Выберите NVMe SSD или SATA 2.5\""
+    },
+    "m2Gen5Overheating": {
+      "severity": "Warning",
+      "messageTemplate": "PCIe 5.0 SSD в слоте 4.0 — возможен перегрев без радиатора.",
+      "suggestionTemplate": "Убедитесь, что материнская плата имеет радиатор для M.2"
+    }
+  },
+  "gpuSlotCompatibility": {
+    "exceedsExpansionSlots": {
+      "severity": "Warning",
+      "messageTemplate": "GPU ({slotWidth} слота) может не поместиться в корпус ({maxSlots} слотов).",
+      "suggestionTemplate": "Выберите корпус с {slotWidth}+ слотами"
+    }
+  },
+  "fanHeaderCompatibility": {
+    "insufficientHeaders": {
+      "severity": "Warning",
+      "messageTemplate": "Всего {totalFans} вентиляторов, но материнская плата имеет {maxHeaders} разъёмов.",
+      "suggestion": "Используйте разветвитель (хаб) для вентиляторов"
+    }
+  },
+  "psuBrandSafety": {
+    "unknownBrand": {
+      "severity": "Warning",
+      "message": "Блок питания малоизвестного бренда. Реальная мощность может быть ниже заявленной.",
+      "suggestion": "Выберите БП от проверенного производителя"
+    },
+    "trustedBrands": ["Seasonic", "Corsair", "EVGA", "be quiet!", "Super Flower", "Cooler Master", "FSP", "Chieftec", "Thermaltake", "ASUS", "MSI", "Gigabyte", "Phanteks", "NZXT", "Fractal Design", "Silverstone", "Deepcool", "Lian Li"]
+  },
+  "rgbCompatibility": {
+    "voltageMismatch": {
+      "severity": "Warning",
+      "messageTemplate": "Несовместимость RGB: материнская плата ({mbRgbType}), корпус/вентиляторы ({componentRgbType}). 12V и 5V нельзя подключать друг к другу.",
+      "suggestion": "Убедитесь, что все RGB компоненты используют одинаковое напряжение"
+    }
+  },
+  "ramClearanceCompatibility": {
+    "insufficient": {
+      "severity": "Warning",
+      "messageTemplate": "Высота RAM ({ramHeight}мм) может мешать башенному кулеру (зазор {coolerClearance}мм).",
+      "suggestion": "Выберите RAM с меньшими радиаторами"
+    }
+  },
+  "eccCompatibility": {
+    "eccInConsumerBoard": {
+      "severity": "Warning",
+      "message": "ECC RAM может не работать с этой потребительской материнской платой (не поддерживает ECC).",
+      "suggestion": "Выберите Non-ECC память"
+    }
+  },
+  "cpuOverclockCompatibility": {
+    "kSeriesOnNonZ": {
+      "severity": "Warning",
+      "messageTemplate": "CPU с разблокированным множителем (K-series) на чипсете {chipset}. Разгон CPU недоступен.",
+      "suggestion": "Выберите материнскую плату на Z-чипсете для разгона"
+    }
+  },
+  "epsLengthCompatibility": {
+    "tooShort": {
+      "severity": "Warning",
+      "messageTemplate": "Кабель CPU EPS ({epsLength}мм) может не дотянуться в корпусе глубиной {caseDepth}мм.",
+      "suggestion": "Убедитесь, что кабель достаточно длинный, или используйте удлинитель"
+    }
   }
 }

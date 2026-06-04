@@ -74,57 +74,55 @@ const categories: SitemapCategory[] = [
 
 export function SitemapPage(): ReactElement {
   return (
-    <main className="min-h-screen bg-canvas-dark pt-24 md:pt-28 pb-20">
-      <div className="max-w-[900px] mx-auto px-4 md:px-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
-          <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
-          <span className="text-muted-text">/</span>
-          <span className="text-body-text">Карта сайта</span>
-        </nav>
+    <div className="max-w-[900px] mx-auto px-4 md:px-8 pt-8">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
+        <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
+        <span className="text-muted-text">/</span>
+        <span className="text-body-text">Карта сайта</span>
+      </nav>
 
-        {/* Hero */}
-        <section className="mb-12">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-body-text mb-4 tracking-[-0.02em]">
-            Карта сайта
-          </h1>
-          <p className="text-lg text-muted-text leading-relaxed">
-            Все страницы сайта GoldPC. Используйте карту для быстрой навигации.
-          </p>
-        </section>
+      {/* Hero */}
+      <section className="mb-12">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-body-text mb-4 tracking-[-0.02em]">
+          Карта сайта
+        </h1>
+        <p className="text-lg text-muted-text leading-relaxed">
+          Все страницы сайта GoldPC. Используйте карту для быстрой навигации.
+        </p>
+      </section>
 
-        {/* Categories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {categories.map((category) => {
-            const Icon = category.icon;
-            return (
-              <section
-                key={category.title}
-                className="bg-surface-card rounded-xl border border-hairline-dark p-6"
-              >
-                <h2 className="text-lg font-semibold text-body-text mb-5 flex items-center gap-3">
-                  <div className="w-8 h-8 flex items-center justify-center bg-gold/10 text-gold rounded-lg shrink-0">
-                    <Icon size={18} />
-                  </div>
-                  {category.title}
-                </h2>
-                <ul className="space-y-2">
-                  {category.links.map((link) => (
-                    <li key={link.to}>
-                      <Link
-                        to={link.to}
-                        className="text-sm text-muted-text hover:text-gold transition-colors block py-1.5"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            );
-          })}
-        </div>
+      {/* Categories Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {categories.map((category) => {
+          const Icon = category.icon;
+          return (
+            <section
+              key={category.title}
+              className="bg-surface-card rounded-xl border border-hairline-dark p-6"
+            >
+              <h2 className="text-lg font-semibold text-body-text mb-5 flex items-center gap-3">
+                <div className="w-8 h-8 flex items-center justify-center bg-gold/10 text-gold rounded-lg shrink-0">
+                  <Icon size={18} />
+                </div>
+                {category.title}
+              </h2>
+              <ul className="space-y-2">
+                {category.links.map((link) => (
+                  <li key={link.to}>
+                    <Link
+                      to={link.to}
+                      className="text-sm text-muted-text hover:text-gold transition-colors block py-1.5"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })}
       </div>
-    </main>
+    </div>
   );
 }

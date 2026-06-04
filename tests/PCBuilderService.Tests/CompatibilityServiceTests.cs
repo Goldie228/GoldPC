@@ -36,7 +36,6 @@ public class CompatibilityServiceTests
     {
         _loggerMock = new Mock<ILogger<CompatibilityService>>();
         _ruleEngineLoggerMock = new Mock<ILogger<CompatibilityRuleEngine>>();
-        var httpClient = new HttpClient { BaseAddress = new Uri("http://localhost:5000") };
         var jsonPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "PCBuilderService", "Data", "compatibility-rules.json");
         _ruleEngine = new CompatibilityRuleEngine(jsonPath, _ruleEngineLoggerMock.Object);
 
@@ -45,7 +44,7 @@ public class CompatibilityServiceTests
             .Options;
         var dbContext = new PCBuilderDbContext(dbContextOptions);
 
-        _service = new CompatibilityService(httpClient, _loggerMock.Object, _ruleEngine, dbContext);
+        _service = new CompatibilityService(_loggerMock.Object, _ruleEngine, dbContext);
     }
 
     #region Rule 1: CPU ↔ Motherboard Socket
@@ -88,6 +87,24 @@ public class CompatibilityServiceTests
         );
         var response = await _service.CheckCompatibilityAsync(request);
         response.Result.Issues.Should().NotContain(i => i.Message == "Incompatible Socket");
+    }
+
+    [Fact]
+    public async Task MissingCpuSocket_ReturnsError()
+    {
+        // Fail-closed: CPU has no "socket" spec → GetSpecValueOrNull returns null
+        // → service should report error "Не удалось определить сокет"
+        var request = CreateRequest(
+            cpu: CreateCpuComponent("AMD Ryzen 5 5600X", new Dictionary<string, object>
+            { ["tdp"] = 65, ["performanceScore"] = 50 }),
+            motherboard: CreateMotherboardComponent("ASUS ROG Strix B650", new Dictionary<string, object>
+            { ["socket"] = "AM5", ["ramType"] = "DDR5", ["formFactor"] = "ATX" })
+        );
+
+        var result = await _service.CheckCompatibilityAsync(request);
+
+        result.Result.IsCompatible.Should().BeFalse();
+        result.Result.Issues.Should().Contain(i => i.Message.Contains("сокет"));
     }
 
     #endregion
@@ -133,6 +150,26 @@ public class CompatibilityServiceTests
         var response = await _service.CheckCompatibilityAsync(request);
         response.Result.IsCompatible.Should().BeTrue();
         response.Result.Warnings.Should().Contain(w => w.Message.Contains("Скорость памяти"));
+    }
+
+    [Fact]
+    public async Task MissingRamType_ReturnsError()
+    {
+        // Fail-closed: RAM has no "type" spec → GetSpecValueOrNull returns null
+        // → service should report error "Не удалось определить тип памяти"
+        var request = CreateRequest(
+            cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
+            { ["socket"] = "AM5", ["tdp"] = 120, ["performanceScore"] = 85 }),
+            motherboard: CreateMotherboardComponent("ASUS ROG Strix B650", new Dictionary<string, object>
+            { ["socket"] = "AM5", ["ramType"] = "DDR5", ["formFactor"] = "ATX" }),
+            ram: CreateRamComponent("Kingston Fury 32GB", new Dictionary<string, object>
+            { /* intentionally empty: missing type */ })
+        );
+
+        var result = await _service.CheckCompatibilityAsync(request);
+
+        result.Result.IsCompatible.Should().BeFalse();
+        result.Result.Issues.Should().Contain(i => i.Message.Contains("тип памяти"));
     }
 
     #endregion
@@ -345,6 +382,28 @@ public class CompatibilityServiceTests
         response.Result.Issues.Should().Contain(i => i.Message.Contains("Несовместимый сокет"));
         response.Result.Issues.Should().Contain(i => i.Message.Contains("Несовместимый тип памяти"));
         response.Result.Issues.Should().Contain(i => i.Message.Contains("Мощности БП") && i.Message.Contains("недостаточно"));
+    }
+
+    [Fact]
+    public async Task MatchingSocketAndRamType_Passes()
+    {
+        // Happy path: all critical specs present and matching
+        // → no errors about "сокет" or "тип памяти"
+        var request = CreateRequest(
+            cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
+            { ["socket"] = "AM5", ["tdp"] = 120, ["performanceScore"] = 85 }),
+            motherboard: CreateMotherboardComponent("ASUS ROG Strix B650", new Dictionary<string, object>
+            { ["socket"] = "AM5", ["ramType"] = "DDR5", ["formFactor"] = "ATX" }),
+            ram: CreateRamComponent("Kingston Fury 32GB", new Dictionary<string, object>
+            { ["type"] = "DDR5", ["capacity"] = 32 })
+        );
+
+        var result = await _service.CheckCompatibilityAsync(request);
+
+        // Socket check should pass, RAM type check should pass
+        // Errors should NOT contain socket or ram type related messages
+        result.Result.Issues.Should().NotContain(i => i.Message.Contains("сокет"));
+        result.Result.Issues.Should().NotContain(i => i.Message.Contains("тип памяти"));
     }
 
     #endregion

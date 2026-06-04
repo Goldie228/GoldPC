@@ -9,7 +9,7 @@ export function ProductCardSkeleton(): ReactElement {
   return (
     <article className="bg-surface-card rounded-xl overflow-hidden" aria-hidden="true">
       {/* Image Container */}
-      <div className="aspect-square bg-white">
+      <div className="aspect-square bg-surface-elevated">
         <Skeleton 
           width="100%" 
           height="100%" 

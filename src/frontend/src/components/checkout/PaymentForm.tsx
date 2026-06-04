@@ -10,6 +10,7 @@ import {
 } from '../../utils/cardValidation';
 import { Icon } from '../ui/Icon';
 import { Button } from '../ui/Button';
+import { useToast } from '../../hooks/useToast';
 
 interface PaymentFormProps {
   onSubmit: (data: PaymentData) => Promise<void>;
@@ -24,6 +25,7 @@ export interface PaymentData {
 }
 
 export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
+  const { showToast } = useToast();
   const [cardNumber, setCardNumber] = useState('');
   const [cardHolder, setCardHolder] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -169,7 +171,7 @@ export function PaymentForm({ onSubmit, onCancel }: PaymentFormProps) {
         cvv,
       });
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Ошибка обработки платежа');
+      showToast(error instanceof Error ? error.message : 'Ошибка обработки платежа', 'error');
     } finally {
       setIsProcessing(false);
     }

@@ -1,92 +1,103 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Button, Input } from '../../components/ui';
+import { useState, useEffect, useRef } from 'react';
+import { Button, Input, PhoneInput } from '../../components/ui';
 import { useToast } from '../../hooks/useToast';
 import { useServiceTickets } from '../../hooks/useServiceTickets';
 import { useAuthStore } from '../../store/authStore';
+import { useAuthModal } from '../../hooks/useAuthModal';
 import { ServiceSelector } from './ServiceSelector';
 import { PhotoUploader } from './PhotoUploader';
 import { SuccessScreen } from './SuccessScreen';
 import type { CreateServiceRequest } from '../../api/services';
 
 /**
- * Типы устройств для ремонта
- */
-const DEVICE_TYPES = [
-  { value: 'pc', label: 'ПК' },
-  { value: 'laptop', label: 'Ноутбук' },
-  { value: 'printer', label: 'Принтер' },
-  { value: 'other', label: 'Другое' },
-] as const;
-
-/**
- * Названия шагов для индикатора
- */
-const STEP_LABELS = ['Услуга', 'Устройство', 'Проблема', 'Контакты', 'Подтверждение'];
-
-/**
  * Способы связи
  */
 const CONTACT_METHODS = [
+  { value: 'viber', label: 'По телефону и Viber' },
   { value: 'phone', label: 'По телефону' },
   { value: 'email', label: 'По email' },
-  { value: 'whatsapp', label: 'WhatsApp' },
-  { value: 'telegram', label: 'Telegram' },
 ] as const;
 
 /**
  * Начальное состояние формы
  */
 const INITIAL_FORM_DATA = {
-  deviceType: 'pc' as 'pc' | 'laptop' | 'printer' | 'other',
   brand: '',
   serial: '',
   problem: '',
   name: '',
   phone: '',
   email: '',
-  preferredContact: 'phone' as 'phone' | 'email' | 'whatsapp' | 'telegram',
+  preferredContact: 'viber' as 'viber' | 'phone' | 'email',
 };
 
 /**
  * Страница подачи заявки в сервисный центр
- * Пошаговая форма с 5 шагами: услуга → устройство → проблема → контакты → подтверждение
- * Данные отправляются на реальный бэкенд POST /api/v1/services (ServicesService, порт 5003)
+ *
+ * 2 шага:
+ *   1. Услуга + описание проблемы
+ *   2. Контакты + отправка
  */
 export function ServiceRequestPage() {
   const { showToast } = useToast();
   const { createService } = useServiceTickets();
   const { isAuthenticated } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const { openLoginModal } = useAuthModal();
 
   // --- Состояние формы ---
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [photos, setPhotos] = useState<File[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [selectedServiceName, setSelectedServiceName] = useState('');
-  const [selectedServiceSlug, setSelectedServiceSlug] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingAuthSubmit, setPendingAuthSubmit] = useState(false);
   const [submittedTicket, setSubmittedTicket] = useState<{
     ticketNumber: string;
     status: string;
   } | null>(null);
 
+  // Для отслеживания изменения isAuthenticated
+  const prevAuth = useRef(isAuthenticated);
+
+  // --- Авто-отправка после логина ---
+  useEffect(() => {
+    if (pendingAuthSubmit && isAuthenticated && !prevAuth.current) {
+      setPendingAuthSubmit(false);
+      performSubmit();
+    }
+    prevAuth.current = isAuthenticated;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, pendingAuthSubmit]);
+
+  // --- Авто-заполнение контактов из профиля при входе на шаг 2 ---
+  useEffect(() => {
+    if (currentStep === 2 && user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || `${user.firstName} ${user.lastName ?? ''}`.trim(),
+        phone: prev.phone || user.phone || '',
+        email: user.email || prev.email,
+        preferredContact: prev.preferredContact || 'viber',
+      }));
+    }
+  }, [currentStep, user]);
+
   // --- Валидация шага ---
   function validateStep(step: number): boolean {
     const newErrors: Record<string, string> = {};
 
-    if (step === 1 && !selectedServiceId) {
-      newErrors.service = 'Выберите услугу';
-    }
-    if (step === 3) {
+    if (step === 1) {
+      if (!selectedServiceId) newErrors.service = 'Выберите услугу';
       if (!formData.problem.trim()) {
         newErrors.problem = 'Опишите проблему';
       } else if (formData.problem.trim().length < 10) {
         newErrors.problem = 'Минимум 10 символов';
       }
     }
-    if (step === 4) {
+    if (step === 2) {
       if (!formData.name.trim()) newErrors.name = 'Укажите имя';
       if (!formData.phone.trim()) {
         newErrors.phone = 'Укажите телефон';
@@ -101,10 +112,10 @@ export function ServiceRequestPage() {
 
   // --- Флаг: можно ли перейти дальше ---
   const canProceed = (() => {
-    if (currentStep === 1) return selectedServiceId !== null;
-    if (currentStep === 2) return true;
-    if (currentStep === 3) return formData.problem.trim().length >= 10;
-    if (currentStep === 4) {
+    if (currentStep === 1) {
+      return selectedServiceId !== null && formData.problem.trim().length >= 10;
+    }
+    if (currentStep === 2) {
       return (
         formData.name.trim() !== '' &&
         formData.phone.trim() !== '' &&
@@ -127,24 +138,19 @@ export function ServiceRequestPage() {
 
   // --- Навигация ---
   const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, 5));
+    if (validateStep(1)) {
+      setCurrentStep(2);
     }
   };
 
   const handlePrev = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
+    setCurrentStep(1);
     setErrors({});
   };
 
   // --- Отправка формы ---
-  const handleSubmit = async () => {
-    if (!validateStep(currentStep) || !selectedServiceId) return;
-
-    if (!isAuthenticated) {
-      showToast('Необходимо войти в систему', 'error');
-      return;
-    }
+  const performSubmit = async () => {
+    if (!selectedServiceId) return;
 
     setIsSubmitting(true);
 
@@ -156,6 +162,11 @@ export function ServiceRequestPage() {
         serialNumber: formData.serial || undefined,
       };
 
+      // Логируем payload для отладки 500-х ошибок
+      if (import.meta.env.DEV) {
+        console.debug('[ServiceRequest] Payload:', JSON.stringify(payload, null, 2));
+      }
+
       const result = await createService(payload);
 
       if (result != null) {
@@ -166,11 +177,41 @@ export function ServiceRequestPage() {
       } else {
         showToast('Ошибка при отправке. Попробуйте позже.', 'error');
       }
-    } catch {
-      showToast('Ошибка при отправке. Попробуйте позже.', 'error');
+    } catch (err) {
+      console.error('[ServiceRequest] Submit failed:', err);
+
+      // Пытаемся извлечь статус и сообщение из Axios-ошибки
+      let msg = 'Ошибка при отправке. Попробуйте позже.';
+      if (err && typeof err === 'object' && 'response' in err) {
+        const resp = (err as { response: { status: number; data?: { message?: string } } }).response;
+        if (resp.status === 401) {
+          msg = resp.data?.message || 'Ошибка авторизации. Попробуйте перелогиниться.';
+        } else if (resp.status >= 500) {
+          msg = resp.data?.message
+            ? `Ошибка сервера: ${resp.data.message}`
+            : 'Внутренняя ошибка сервера. Попробуйте позже.';
+        } else {
+          msg = resp.data?.message || 'Ошибка при отправке. Проверьте данные.';
+        }
+      } else if (err && typeof err === 'object' && 'request' in err) {
+        msg = 'Нет соединения с сервером. Проверьте интернет.';
+      }
+      showToast(msg, 'error');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSubmit = () => {
+    if (!validateStep(2) || !selectedServiceId) return;
+
+    if (!isAuthenticated) {
+      setPendingAuthSubmit(true);
+      openLoginModal();
+      return;
+    }
+
+    performSubmit();
   };
 
   // --- Сброс формы для новой заявки ---
@@ -179,132 +220,88 @@ export function ServiceRequestPage() {
     setCurrentStep(1);
     setSelectedServiceId(null);
     setSelectedServiceName('');
-    setSelectedServiceSlug('');
     setFormData(INITIAL_FORM_DATA);
     setPhotos([]);
     setErrors({});
   };
 
-  // ====================== ОТРИСОВКА ШАГОВ ======================
+  // ====================== ШАГ 1: Услуга + Проблема ======================
 
-  /** Шаг 1 — выбор услуги */
   const renderStep1Service = () => (
     <div>
-      <ServiceSelector
-        selectedServiceId={selectedServiceId}
-        onSelect={(id, slug, name) => {
-          setSelectedServiceId(id);
-          setSelectedServiceName(name);
-          setSelectedServiceSlug(slug);
-          setErrors((prev) => ({ ...prev, service: '' }));
-        }}
-      />
-      {selectedServiceName && (
-        <p className="text-price-drop text-sm mt-3">
-          ✓ Выбрано: {selectedServiceName}
-        </p>
-      )}
-      {errors.service && (
-        <p className="text-price-rise text-xs mt-2">{errors.service}</p>
-      )}
-    </div>
-  );
-
-  /** Шаг 2 — информация об устройстве */
-  const renderStep2Device = () => (
-    <div>
-      <h2 className="text-foreground text-lg font-semibold mb-4">
-        Информация об устройстве
-      </h2>
-
-      {/* Тип устройства */}
-      <label className="block text-xs font-medium text-muted-text mb-2.5 uppercase tracking-[0.05em]">
-        Тип техники <span className="text-price-rise">*</span>
-      </label>
-      <div className="flex gap-3 flex-wrap mb-6">
-        {DEVICE_TYPES.map((type) => (
-          <div key={type.value} className="relative">
-            <input
-              type="radio"
-              name="deviceType"
-              id={`device-${type.value}`}
-              value={type.value}
-              checked={formData.deviceType === type.value}
-              onChange={handleFieldChange}
-              className="sr-only"
-            />
-            <label
-              htmlFor={`device-${type.value}`}
-              className={`flex items-center gap-2 px-4 py-3 bg-surface-elevated border rounded-lg cursor-pointer transition-all text-sm ${
-                formData.deviceType === type.value
-                  ? 'border-gold bg-gold/10 text-gold'
-                  : 'border-border text-muted-text hover:border-[#707a8a] hover:text-foreground'
-              }`}
-            >
-              {type.label}
-            </label>
-          </div>
-        ))}
-      </div>
-
-      {/* Марка и серийный номер */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="Марка / Модель"
-          name="brand"
-          value={formData.brand}
-          onChange={handleFieldChange}
-          placeholder="Например: ASUS ROG Strix"
+      {/* Выбор услуги */}
+      <div className="mb-8">
+        <ServiceSelector
+          selectedServiceId={selectedServiceId}
+          onSelect={(id, _slug, name) => {
+            setSelectedServiceId(id);
+            setSelectedServiceName(name);
+            setErrors((prev) => ({ ...prev, service: '' }));
+          }}
         />
-        <Input
-          label="Серийный номер"
-          name="serial"
-          value={formData.serial}
-          onChange={handleFieldChange}
-          placeholder="Укажите при наличии"
-        />
-      </div>
-    </div>
-  );
-
-  /** Шаг 3 — описание проблемы */
-  const renderStep3Problem = () => (
-    <div>
-      <h2 className="text-foreground text-lg font-semibold mb-4">
-        Опишите проблему
-      </h2>
-
-      <label
-        className="block text-xs font-medium text-muted-text mb-2.5 uppercase tracking-[0.05em]"
-        htmlFor="problem"
-      >
-        Описание проблемы <span className="text-price-rise">*</span>
-      </label>
-      <textarea
-        id="problem"
-        name="problem"
-        value={formData.problem}
-        onChange={handleFieldChange}
-        placeholder="Опишите подробно, что не работает или какие проблемы вы заметили..."
-        rows={5}
-        className={`w-full p-3.5 bg-surface-elevated border rounded-lg text-foreground font-inherit text-sm resize-y min-h-[120px] focus:outline-none transition-all ${
-          errors.problem
-            ? 'border-[#f6465d] focus:border-[#f6465d] focus:shadow-[0_0_0_3px_rgba(246,70,93,0.15)]'
-            : 'border-border focus:border-gold focus:shadow-[0_0_0_3px_rgba(252,213,53,0.1)]'
-        }`}
-      />
-      <div className="flex justify-between items-center mt-2">
-        <span className="text-xs text-muted-text">
-          {formData.problem.trim().length < 10
-            ? `Минимум 10 символов (ещё ${10 - formData.problem.trim().length})`
-            : `${formData.problem.trim().length} символов`}
-        </span>
-        {errors.problem && (
-          <span className="text-xs text-price-rise">{errors.problem}</span>
+        {errors.service && (
+          <p className="text-price-rise text-xs mt-2">{errors.service}</p>
         )}
       </div>
 
-      <div className="mt-6">
+      {/* Марка / Модель + Серийный номер */}
+      <div className="mb-6">
+        <h3 className="text-foreground text-base font-semibold mb-4">
+          Информация об устройстве
+        </h3>
+          <div className="flex flex-col gap-4">
+            <Input
+              label="Марка / Модель"
+              name="brand"
+              value={formData.brand}
+              onChange={handleFieldChange}
+              placeholder="Например: ASUS ROG Strix"
+            />
+            <Input
+              label="Серийный номер"
+              name="serial"
+              value={formData.serial}
+              onChange={handleFieldChange}
+              placeholder="Укажите при наличии"
+            />
+          </div>
+      </div>
+
+      {/* Описание проблемы */}
+      <div className="mb-6">
+        <label
+          className="block text-xs font-medium text-muted-text mb-2.5 uppercase tracking-[0.05em]"
+          htmlFor="problem"
+        >
+          Описание проблемы <span className="text-price-rise">*</span>
+        </label>
+        <textarea
+          id="problem"
+          name="problem"
+          value={formData.problem}
+          onChange={handleFieldChange}
+          placeholder="Опишите подробно, что не работает или какие проблемы вы заметили..."
+          rows={5}
+          className={`w-full p-3.5 bg-surface-elevated border rounded-lg text-foreground font-inherit text-sm resize-y min-h-[120px] focus:outline-none transition-all ${
+            errors.problem
+              ? 'border-price-rise focus:border-price-rise focus:ring-2 focus:ring-price-rise/20'
+              : 'border-border focus:border-gold focus:ring-2 focus:ring-gold/10'
+          }`}
+        />
+        <div className="flex justify-between items-center mt-2">
+          <span className="text-xs text-muted-text">
+            {formData.problem.trim().length < 10
+              ? `Минимум 10 символов (ещё ${10 - formData.problem.trim().length})`
+              : `${formData.problem.trim().length} символов`}
+          </span>
+          {errors.problem && (
+            <span className="text-xs text-price-rise">{errors.problem}</span>
+          )}
+        </div>
+      </div>
+
+      {/* Фотографии */}
+      <div>
         <label className="block text-xs font-medium text-muted-text mb-2.5 uppercase tracking-[0.05em]">
           Фотографии (необязательно)
         </label>
@@ -313,14 +310,15 @@ export function ServiceRequestPage() {
     </div>
   );
 
-  /** Шаг 4 — контактные данные */
-  const renderStep4Contact = () => (
+  // ====================== ШАГ 2: Контакты + Отправка ======================
+
+  const renderStep2Contact = () => (
     <div>
       <h2 className="text-foreground text-lg font-semibold mb-4">
         Контактные данные
       </h2>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 mb-8">
         <Input
           label="Имя"
           name="name"
@@ -330,16 +328,19 @@ export function ServiceRequestPage() {
           required
           error={errors.name}
         />
-        <Input
-          label="Телефон"
-          name="phone"
-          type="tel"
-          value={formData.phone}
-          onChange={handleFieldChange}
-          placeholder="+375 (__) ___-__-__"
-          required
-          error={errors.phone}
-        />
+        <div>
+          <label className="text-xs font-medium text-muted-text uppercase tracking-[0.05em]">
+            Телефон <span className="text-price-rise">*</span>
+          </label>
+          <PhoneInput
+            value={formData.phone}
+            onChange={(value) => {
+              setFormData((prev) => ({ ...prev, phone: value }));
+              if (errors.phone) setErrors((prev) => ({ ...prev, phone: '' }));
+            }}
+          />
+          {errors.phone && <span className="text-[0.75rem] leading-1.4 text-price-rise">{errors.phone}</span>}
+        </div>
         <Input
           label="Email"
           name="email"
@@ -347,7 +348,14 @@ export function ServiceRequestPage() {
           value={formData.email}
           onChange={handleFieldChange}
           placeholder="email@example.com"
+          readOnly={!!user?.email}
+          className={user?.email ? 'opacity-60 cursor-not-allowed' : ''}
         />
+        {user?.email && (
+          <p className="text-xs text-muted-text -mt-2">
+            Email из вашего профиля, его нельзя изменить
+          </p>
+        )}
 
         {/* Предпочитаемый способ связи */}
         <div>
@@ -372,172 +380,39 @@ export function ServiceRequestPage() {
           </select>
         </div>
       </div>
-    </div>
-  );
 
-  /** Шаг 5 — подтверждение */
-  const renderStep5Summary = () => (
-    <div>
-      <h2 className="text-foreground text-lg font-semibold mb-4">
-        Подтверждение заявки
-      </h2>
-
-      <div className="bg-surface-card border border-border rounded-lg p-6 space-y-4">
-        {/* Услуга */}
-        <div className="flex justify-between">
-          <span className="text-sm text-muted-text">Услуга</span>
-          <span className="text-sm text-foreground font-medium">
-            {selectedServiceName}
-          </span>
-        </div>
-
-        {/* Устройство */}
-        <div className="flex justify-between">
-          <span className="text-sm text-muted-text">Тип устройства</span>
-          <span className="text-sm text-foreground font-medium">
-            {DEVICE_TYPES.find((d) => d.value === formData.deviceType)?.label}
-          </span>
-        </div>
-
-        {formData.brand && (
+      {/* Сводка заявки */}
+      <div className="bg-surface-card border border-border rounded-lg p-5 mb-6">
+        <h3 className="text-foreground font-semibold text-sm mb-3">
+          Сводка заявки
+        </h3>
+        <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-sm text-muted-text">Марка / Модель</span>
-            <span className="text-sm text-foreground font-medium">
-              {formData.brand}
+            <span className="text-muted-text">Услуга</span>
+            <span className="text-foreground font-medium">
+              {selectedServiceName}
             </span>
           </div>
-        )}
-
-        {formData.serial && (
-          <div className="flex justify-between">
-            <span className="text-sm text-muted-text">Серийный номер</span>
-            <span className="text-sm text-foreground font-medium">
-              {formData.serial}
-            </span>
-          </div>
-        )}
-
-        {/* Проблема (обрезанная) */}
-        <div className="pt-3 border-t border-border">
-          <span className="text-sm text-muted-text block mb-1">Описание проблемы</span>
-          <span className="text-sm text-foreground">
-            {formData.problem.length > 120
-              ? formData.problem.slice(0, 120) + '...'
-              : formData.problem}
-          </span>
-        </div>
-
-        {/* Фото */}
-        {photos.length > 0 && (
-          <div className="pt-3 border-t border-border">
-            <span className="text-sm text-muted-text">
-              Фотографии: {photos.length} шт.
-            </span>
-          </div>
-        )}
-
-        {/* Контакты */}
-        <div className="pt-3 border-t border-border space-y-3">
-          <div className="flex justify-between">
-            <span className="text-sm text-muted-text">Имя</span>
-            <span className="text-sm text-foreground font-medium">
-              {formData.name}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-muted-text">Телефон</span>
-            <span className="text-sm text-foreground font-medium">
-              {formData.phone}
-            </span>
-          </div>
-          {formData.email && (
+          {formData.brand && (
             <div className="flex justify-between">
-              <span className="text-sm text-muted-text">Email</span>
-              <span className="text-sm text-foreground font-medium">
-                {formData.email}
-              </span>
+              <span className="text-muted-text">Модель</span>
+              <span className="text-foreground">{formData.brand}</span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className="text-sm text-muted-text">Способ связи</span>
-            <span className="text-sm text-foreground font-medium">
-              {CONTACT_METHODS.find((m) => m.value === formData.preferredContact)
-                ?.label ?? formData.preferredContact}
+            <span className="text-muted-text">Проблема</span>
+            <span className="text-foreground text-right max-w-[60%] truncate">
+              {formData.problem}
             </span>
           </div>
+          {photos.length > 0 && (
+            <div className="flex justify-between">
+              <span className="text-muted-text">Фото</span>
+              <span className="text-foreground">{photos.length} шт.</span>
+            </div>
+          )}
         </div>
       </div>
-
-      {!isAuthenticated && (
-        <div className="mt-4 p-4 bg-surface-elevated border border-gold/30 rounded-lg text-center">
-          <p className="text-foreground text-sm mb-3">
-            Для отправки заявки необходимо войти в систему
-          </p>
-          <Link to="/login">
-            <Button variant="primary">Войдите, чтобы оставить заявку</Button>
-          </Link>
-        </div>
-      )}
-    </div>
-  );
-
-  // ====================== ИНДИКАТОР ШАГОВ ======================
-
-  const renderStepIndicator = () => (
-    <div className="flex items-center mb-8">
-      {STEP_LABELS.map((label, index) => {
-        const stepNum = index + 1;
-        const isCompleted = stepNum < currentStep;
-        const isActive = stepNum === currentStep;
-        const isFuture = stepNum > currentStep;
-
-        return (
-          <div key={label} className="flex items-center flex-1 last:flex-none">
-            {/* Кружок + подпись */}
-            <div className="flex flex-col items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                  isActive || isCompleted
-                    ? 'bg-gold text-gold-ink'
-                    : 'bg-surface-elevated text-muted-text'
-                }`}
-              >
-                {isCompleted ? (
-                  <svg
-                    className="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                ) : (
-                  stepNum
-                )}
-              </div>
-              <span
-                className={`text-xs mt-1.5 whitespace-nowrap hidden md:block transition-colors ${
-                  isActive ? 'text-gold' : 'text-muted-text'
-                }`}
-              >
-                {label}
-              </span>
-            </div>
-
-            {/* Линия-соединитель (кроме последнего) */}
-            {index < STEP_LABELS.length - 1 && (
-              <div
-                className={`h-px flex-1 mx-2 md:mx-4 ${
-                  isCompleted ? 'bg-gold' : 'bg-surface-elevated'
-                }`}
-              />
-            )}
-          </div>
-        );
-      })}
     </div>
   );
 
@@ -546,53 +421,113 @@ export function ServiceRequestPage() {
   // Успешная отправка → SuccessScreen
   if (submittedTicket) {
     return (
-      <main className="min-h-screen bg-[#0b0e11] pt-[100px] px-4 md:px-6 pb-15">
-        <div className="max-w-[800px] mx-auto">
-          <SuccessScreen
-            ticketNumber={submittedTicket.ticketNumber}
-            status={submittedTicket.status}
-            onNewRequest={handleNewRequest}
-          />
-        </div>
-      </main>
+      <div className="max-w-[800px] w-full mx-auto px-4 md:px-6 pt-8 pb-12">
+        <SuccessScreen
+          ticketNumber={submittedTicket.ticketNumber}
+          status={submittedTicket.status}
+          onNewRequest={handleNewRequest}
+        />
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#0b0e11] pt-[100px] px-4 md:px-6 pb-15">
-      <div className="max-w-[800px] mx-auto">
-        {/* Заголовок страницы */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-[-0.02em] text-foreground mb-2">
-            Заявка в сервисный центр
-          </h1>
-          <p className="text-sm text-muted-text">
-            Заполните форму, и наши специалисты свяжутся с вами
-          </p>
+    <div className="max-w-[800px] w-full mx-auto px-4 md:px-6 pt-8 pb-12">
+      {/* Заголовок страницы */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-foreground mb-2">
+          Заявка в сервисный центр
+        </h1>
+        <p className="text-sm text-muted-text">
+          {currentStep === 1
+            ? 'Выберите услугу и опишите проблему'
+            : 'Укажите контактные данные и отправьте заявку'}
+        </p>
+      </div>
+
+      {/* Метка шага */}
+      <div className="flex items-center gap-3 mb-6">
+        <span
+          className={`text-xs font-semibold uppercase tracking-[0.08em] px-3 py-1 rounded-full ${
+            currentStep === 1
+              ? 'bg-gold/15 text-gold'
+              : 'bg-surface-elevated text-muted-text'
+          }`}
+        >
+          Шаг {currentStep} из 2
+        </span>
+        <span className="text-sm text-muted-text">
+          {currentStep === 1 ? 'Услуга и описание' : 'Контакты и отправка'}
+        </span>
+      </div>
+
+      {/* Блок авторизации — виден сразу, над карточкой */}
+      {!isAuthenticated && (
+        <div className="mb-6 p-4 bg-surface-elevated border border-gold/30 rounded-lg flex items-center gap-3">
+          <div className="shrink-0 w-8 h-8 rounded-full bg-gold/15 flex items-center justify-center">
+            <svg className="w-4 h-4 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-foreground text-sm font-medium">
+              Требуется авторизация
+            </p>
+            <p className="text-muted-text text-xs mt-0.5">
+              Войдите в аккаунт, чтобы заполнить и отправить заявку
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Содержимое */}
+      <div className="bg-surface-card border border-border rounded-lg p-6 md:p-8 relative">
+        {/* Контент шага — одинаковая обёртка для обоих шагов */}
+        <div className={currentStep === 1 && !isAuthenticated ? 'pointer-events-none select-none opacity-30' : ''}>
+          {currentStep === 1 && renderStep1Service()}
+          {currentStep === 2 && renderStep2Contact()}
         </div>
 
-        {/* Индикатор шагов */}
-        {renderStepIndicator()}
+        {/* Оверлей для неавторизованных — блокирует шаг 1 */}
+        {currentStep === 1 && !isAuthenticated && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center">
+            <div className="bg-surface-card/95 border border-gold/30 rounded-xl p-8 text-center shadow-xl max-w-sm mx-auto">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gold/10 flex items-center justify-center">
+                <svg className="w-7 h-7 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
+              <p className="text-foreground font-semibold text-lg mb-1">
+                Требуется вход
+              </p>
+              <p className="text-muted-text text-sm mb-6">
+                Войдите в аккаунт, чтобы оставить заявку
+              </p>
+              <Button variant="primary" onClick={openLoginModal} fullWidth>
+                Войти или зарегистрироваться
+              </Button>
+            </div>
+          </div>
+        )}
 
-        {/* Содержимое шага */}
-        <div className="bg-surface-card border border-border rounded-lg p-6 md:p-8">
-          {currentStep === 1 && renderStep1Service()}
-          {currentStep === 2 && renderStep2Device()}
-          {currentStep === 3 && renderStep3Problem()}
-          {currentStep === 4 && renderStep4Contact()}
-          {currentStep === 5 && renderStep5Summary()}
+        {/* Навигационные кнопки */}
+        <div className="flex justify-between mt-8 pt-6 border-t border-border">
+          {currentStep === 2 ? (
+            <Button variant="ghost" onClick={handlePrev}>
+              ← Назад
+            </Button>
+          ) : (
+            <div />
+          )}
 
-          {/* Навигационные кнопки */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-border">
-            {currentStep > 1 ? (
-              <Button variant="ghost" onClick={handlePrev}>
-                ← Назад
+          {currentStep === 1 ? (
+            !isAuthenticated ? (
+              <Button variant="primary" onClick={openLoginModal}>
+                Войти →
               </Button>
             ) : (
-              <div />
-            )}
-
-            {currentStep < 5 ? (
               <Button
                 variant="primary"
                 onClick={handleNext}
@@ -600,19 +535,23 @@ export function ServiceRequestPage() {
               >
                 Далее →
               </Button>
-            ) : (
-              <Button
-                variant="primary"
-                onClick={handleSubmit}
-                disabled={isSubmitting || !isAuthenticated}
-              >
-                {isSubmitting ? 'Отправка...' : 'Отправить заявку'}
-              </Button>
-            )}
-          </div>
+            )
+          ) : (
+            <Button
+              variant="primary"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? 'Отправка...'
+                : isAuthenticated
+                  ? 'Отправить заявку'
+                  : 'Войти и отправить'}
+            </Button>
+          )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BellIcon, CheckIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { Package, Wrench, AlertTriangle, MessageSquare, Bell, Circle, Check, Trash2 } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
 import type { Notification, NotificationPriorityValue, NotificationTypeValue } from '../../hooks/useNotifications';
 
@@ -18,11 +18,11 @@ export const NotificationCenter = () => {
 
   const getTypeIcon = (type: NotificationTypeValue) => {
     switch (type) {
-      case 'OrderStatusChanged': return '📦';
-      case 'RepairTicketUpdated': return '🔧';
-      case 'LowStockAlert': return '⚠️';
-      case 'NewSupportMessage': return '💬';
-      default: return '🔔';
+      case 'OrderStatusChanged': return <Package size={20} />;
+      case 'RepairTicketUpdated': return <Wrench size={20} />;
+      case 'LowStockAlert': return <AlertTriangle size={20} />;
+      case 'NewSupportMessage': return <MessageSquare size={20} />;
+      default: return <Bell size={20} />;
     }
   };
 
@@ -30,9 +30,9 @@ export const NotificationCenter = () => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100 focus:outline-none"
+        className="relative p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-elevated focus:outline-none"
       >
-        <BellIcon className="h-6 w-6" />
+        <Bell className="h-6 w-6" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -41,20 +41,21 @@ export const NotificationCenter = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Notifications</h3>
+        <div className="absolute right-0 mt-2 w-96 bg-card rounded-lg shadow-xl border border-border z-50">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <h3 className="font-semibold text-foreground">Уведомления</h3>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">
-                {connectionStatus === 'connected' ? '🟢 Online' : '🔴 Offline'}
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Circle size={8} className={connectionStatus === 'connected' ? 'text-price-drop' : 'text-price-rise'} fill="currentColor" />
+                {connectionStatus === 'connected' ? 'В сети' : 'Не в сети'}
               </span>
               {unreadCount > 0 && (
                 <button
                   onClick={() => void markAllAsRead()}
                   className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
                 >
-                  <CheckIcon className="h-4 w-4" />
-                  Mark all read
+                  <Check className="h-4 w-4" />
+                  Прочитать все
                 </button>
               )}
             </div>
@@ -62,21 +63,21 @@ export const NotificationCenter = () => {
 
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <p>No notifications</p>
+              <div className="p-8 text-center text-muted-foreground">
+                <p>Нет уведомлений</p>
               </div>
             ) : (
               notifications.map(notification => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${!notification.isRead ? getPriorityColor(notification.priority) : ''}`}
+                  className={`p-4 border-b border-border hover:bg-elevated cursor-pointer ${!notification.isRead ? getPriorityColor(notification.priority) : ''}`}
                   onClick={() => !notification.isRead && void markAsRead(notification.id)}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-xl">{getTypeIcon(notification.type)}</span>
+                    <span className="text-xl mt-0.5">{getTypeIcon(notification.type)}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{notification.title}</p>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{notification.message}</p>
+                      <p className="font-medium text-foreground truncate">{notification.title}</p>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{notification.message}</p>
                       <p className="text-xs text-gray-400 mt-1">
                         {new Date(notification.createdAt).toLocaleString()}
                       </p>
@@ -87,14 +88,14 @@ export const NotificationCenter = () => {
                           onClick={(e) => { e.stopPropagation(); void markAsRead(notification.id); }}
                           className="p-1 text-gray-400 hover:text-gray-600 rounded"
                         >
-                          <CheckIcon className="h-4 w-4" />
+                          <Check className="h-4 w-4" />
                         </button>
                       )}
                       <button
                         onClick={(e) => { e.stopPropagation(); void deleteNotification(notification.id); }}
                         className="p-1 text-gray-400 hover:text-red-600 rounded"
                       >
-                        <TrashIcon className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </div>

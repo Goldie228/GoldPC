@@ -12,6 +12,7 @@ import type {
   ProductReviewsResponse,
   CreateReviewRequest,
   UpdateReviewRequest,
+  ProductSummary,
 } from './types';
 export type { ProductSummary, ProductReview, FilterFacetAttribute, GetProductsParams, ProductListResponse } from './types';
 
@@ -50,7 +51,7 @@ const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
   keyboard: 'keyboards',
   mouse: 'mice',
   headphones: 'headphones',
-  fan: 'fans',
+  fan: 'coolers',
 };
 
 /** Маппинг русских названий категорий из API -> frontend slug */

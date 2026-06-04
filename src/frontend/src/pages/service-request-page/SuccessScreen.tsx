@@ -16,9 +16,9 @@ const statusColorMap: Record<string, { bg: string; text: string }> = {
   yellow: { bg: 'bg-gold/20', text: 'text-gold' },
   green: { bg: 'bg-price-drop/20', text: 'text-price-drop' },
   red: { bg: 'bg-price-rise/20', text: 'text-price-rise' },
-  orange: { bg: 'bg-[#f59e0b]/20', text: 'text-[#f59e0b]' },
-  purple: { bg: 'bg-[#8b5cf6]/20', text: 'text-[#8b5cf6]' },
-  cyan: { bg: 'bg-[#06b6d4]/20', text: 'text-[#06b6d4]' },
+  orange: { bg: 'bg-warning/20', text: 'text-warning' },
+  purple: { bg: 'bg-info-blue/20', text: 'text-info-blue' },
+  cyan: { bg: 'bg-info-blue/20', text: 'text-info-blue' },
   gray: { bg: 'bg-muted-text/20', text: 'text-muted-text' },
 };
 

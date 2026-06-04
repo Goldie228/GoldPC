@@ -25,6 +25,11 @@ public interface IServicesService
     Task<ServiceTypeDto?> GetServiceTypeBySlugAsync(string slug);
     Task<(ServiceRequestDto? Request, string? Error)> AddPartAsync(Guid id, Guid masterId, ServicePartDto partDto);
     Task<WorkReportDto?> GenerateReportAsync(Guid id);
+    
+    // Chat
+    Task<List<TicketMessageDto>> GetMessagesAsync(Guid serviceRequestId, Guid userId, int page = 1, int pageSize = 50);
+    Task<TicketMessageDto?> SendMessageAsync(Guid serviceRequestId, Guid userId, string authorRole, string content, string? fileUrl = null, string? fileName = null, long? fileSize = null, string? contentType = null);
+    Task<int> GetUnreadCountAsync(Guid serviceRequestId, Guid userId);
 }
 
 /// <summary>
@@ -441,6 +446,7 @@ public class ServicesService : IServicesService
             {
                 Id = st.Id,
                 Name = st.Name,
+                Slug = st.Slug,
                 Description = st.Description,
                 BasePrice = st.BasePrice,
                 EstimatedDurationMinutes = st.EstimatedDurationMinutes
@@ -456,11 +462,90 @@ public class ServicesService : IServicesService
             {
                 Id = st.Id,
                 Name = st.Name,
+                Slug = st.Slug,
                 Description = st.Description,
                 BasePrice = st.BasePrice,
                 EstimatedDurationMinutes = st.EstimatedDurationMinutes
             })
             .FirstOrDefaultAsync();
+    }
+
+    // ──────────────────────────────────────────────
+    // Chat methods
+    // ──────────────────────────────────────────────
+
+    public async Task<List<TicketMessageDto>> GetMessagesAsync(Guid serviceRequestId, Guid userId, int page = 1, int pageSize = 50)
+    {
+        if (!await HasAccessToTicket(serviceRequestId, userId))
+            return new List<TicketMessageDto>();
+
+        var messages = await _context.TicketMessages
+            .Where(m => m.ServiceRequestId == serviceRequestId)
+            .OrderByDescending(m => m.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return messages.Select(MapToMessageDto).ToList();
+    }
+
+    public async Task<TicketMessageDto?> SendMessageAsync(Guid serviceRequestId, Guid userId, string authorRole, string content, string? fileUrl = null, string? fileName = null, long? fileSize = null, string? contentType = null)
+    {
+        if (!await HasAccessToTicket(serviceRequestId, userId))
+            return null;
+
+        var message = new TicketMessage
+        {
+            Id = Guid.NewGuid(),
+            ServiceRequestId = serviceRequestId,
+            AuthorId = userId,
+            AuthorRole = authorRole,
+            Content = content,
+            FileUrl = fileUrl,
+            FileName = fileName,
+            FileSize = fileSize,
+            ContentType = contentType,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.TicketMessages.Add(message);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Message sent to ticket {TicketId} by user {UserId}", serviceRequestId, userId);
+        return MapToMessageDto(message);
+    }
+
+    public async Task<int> GetUnreadCountAsync(Guid serviceRequestId, Guid userId)
+    {
+        return await _context.TicketMessages
+            .CountAsync(m => m.ServiceRequestId == serviceRequestId
+                          && m.AuthorId != userId
+                          && m.ReadAt == null);
+    }
+
+    private async Task<bool> HasAccessToTicket(Guid serviceRequestId, Guid userId)
+    {
+        var request = await _context.ServiceRequests.FindAsync(serviceRequestId);
+        if (request == null) return false;
+        return request.ClientId == userId || request.MasterId == userId;
+    }
+
+    private static TicketMessageDto MapToMessageDto(TicketMessage message)
+    {
+        return new TicketMessageDto
+        {
+            Id = message.Id,
+            ServiceRequestId = message.ServiceRequestId,
+            AuthorId = message.AuthorId,
+            AuthorRole = message.AuthorRole,
+            Content = message.Content,
+            FileUrl = message.FileUrl,
+            FileName = message.FileName,
+            FileSize = message.FileSize,
+            ContentType = message.ContentType,
+            CreatedAt = message.CreatedAt,
+            ReadAt = message.ReadAt
+        };
     }
 
     private static ServiceRequestDto MapToDto(ServiceRequest request)

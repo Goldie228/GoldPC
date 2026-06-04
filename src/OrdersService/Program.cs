@@ -15,6 +15,7 @@ using Shared.Data;
 using Shared.Middleware;
 using Shared.Messaging;
 using GoldPC.OrdersService.Background;
+using GoldPC.OrdersService.Hubs;
 
 // Включаем HTTP/2 без TLS для gRPC в development
 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
@@ -142,10 +143,25 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
         ClockSkew = TimeSpan.Zero
     };
+
+    // Support JWT in SignalR query string (WebSocket can't set Authorization header)
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddSignalR();
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -181,6 +197,14 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddCors(options =>
 {
+    // SignalR requires AllowCredentials which conflicts with AllowAnyOrigin
+    options.AddPolicy("SignalR", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
     options.AddDefaultPolicy(policy =>
     {
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
@@ -203,10 +227,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseDeveloperExceptionPage();
 // app.UseHttpsRedirection();
-app.UseCors();
+app.UseCors("SignalR");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<NotificationsHub>("/hubs/notifications");
 app.MapGet("/health", () => Results.Ok());
 
 Log.Information("Orders Service starting on port 5002");

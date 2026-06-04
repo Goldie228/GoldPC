@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoldPC — Схема базы данных</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e14;
+  --bg2:#10161e;
+  --bg3:#18202a;
+  --bg4:#1f2a38;
+  --border:#253240;
+  --text:#cdd6e0;
+  --text2:#8892a0;
+  --accent:#5fb3f7;
+  --accent2:#9f7aea;
+  --green:#5fc78a;
+  --orange:#f0a050;
+  --red:#e05858;
+  --pink:#d4729e;
+  --cyan:#4fc4cf;
+  --yellow:#e5c07b;
+  --radius:10px;
+  --font:'Plus Jakarta Sans',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  min-height:100vh;
+}
+/* Hero */
+.hero{
+  position:relative;
+  padding:60px 40px 50px;
+  background:linear-gradient(135deg,#0a0e14 0%,#10161e 50%,#0d1520 100%);
+  border-bottom:1px solid var(--border);
+  overflow:hidden;
+}
+.hero::before{
+  content:'';
+  position:absolute;
+  top:-50%;right:-20%;
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(95,179,247,0.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero::after{
+  content:'';
+  position:absolute;
+  bottom:-30%;left:-10%;
+  width:400px;height:400px;
+  background:radial-gradient(circle,rgba(159,122,234,0.05) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-top{display:flex;align-items:center;gap:16px;margin-bottom:8px;position:relative;z-index:1}
+.hero-icon{
+  width:48px;height:48px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+  box-shadow:0 4px 20px rgba(95,179,247,0.2);
+}
+.hero h1{
+  font-size:28px;font-weight:800;
+  background:linear-gradient(135deg,var(--text),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero p{
+  color:var(--text2);font-size:15px;position:relative;z-index:1;
+  max-width:640px;
+}
+.hero-stats{
+  display:flex;gap:32px;margin-top:20px;position:relative;z-index:1;
+}
+.stat{text-align:center}
+.stat-num{font-size:24px;font-weight:800;color:var(--accent);font-family:var(--mono)}
+.stat-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+/* Layout */
+.layout{display:flex;min-height:calc(100vh - 200px)}
+
+/* Sidebar */
+.sidebar{
+  width:240px;flex-shrink:0;
+  background:var(--bg2);
+  border-right:1px solid var(--border);
+  padding:20px 0;
+  position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;
+}
+.sidebar-label{
+  font-size:11px;text-transform:uppercase;letter-spacing:1px;
+  color:var(--text2);padding:8px 20px 4px;font-weight:600;
+}
+.sidebar-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 20px;cursor:pointer;
+  color:var(--text2);font-size:13px;font-weight:500;
+  transition:all .15s;border-left:3px solid transparent;
+  text-decoration:none;
+}
+.sidebar-item:hover,.sidebar-item.active{
+  color:var(--text);background:var(--bg3);
+}
+.sidebar-item.active{
+  border-left-color:var(--accent);color:var(--accent);
+}
+.sidebar-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.sidebar-count{
+  margin-left:auto;font-size:11px;color:var(--text2);
+  font-family:var(--mono);
+}
+
+/* Main */
+.main{
+  flex:1;padding:32px 40px;
+  max-width:calc(100% - 240px);
+}
+
+/* Service header */
+.service-header{
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:4px;
+}
+.service-header h2{
+  font-size:20px;font-weight:700;
+}
+.service-db{
+  font-family:var(--mono);font-size:12px;
+  color:var(--accent2);padding:3px 10px;
+  background:rgba(159,122,234,0.1);
+  border-radius:6px;border:1px solid rgba(159,122,234,0.15);
+}
+.service-desc{
+  color:var(--text2);font-size:14px;margin-bottom:24px;
+}
+
+/* Table card */
+.table-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:20px;
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.table-card:hover{border-color:rgba(95,179,247,0.2)}
+.table-header{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 20px;
+  background:var(--bg3);
+  border-bottom:1px solid var(--border);
+}
+.table-header h3{
+  font-size:15px;font-weight:600;font-family:var(--mono);
+}
+.table-badge{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+  padding:2px 8px;border-radius:4px;
+}
+.badge-pk{background:rgba(95,179,247,0.15);color:var(--accent);border:1px solid rgba(95,179,247,0.2)}
+.badge-unique{background:rgba(229,192,123,0.12);color:var(--yellow);border:1px solid rgba(229,192,123,0.18)}
+.badge-idx{background:rgba(79,196,207,0.12);color:var(--cyan);border:1px solid rgba(79,196,207,0.18)}
+.badge-fdw{background:rgba(159,122,234,0.12);color:var(--accent2);border:1px solid rgba(159,122,234,0.18)}
+.badge-mv{background:rgba(240,160,80,0.12);color:var(--orange);border:1px solid rgba(240,160,80,0.18)}
+.badge-view{background:rgba(95,199,138,0.12);color:var(--green);border:1px solid rgba(95,199,138,0.18)}
+.badge-parted{background:rgba(212,114,158,0.12);color:var(--pink);border:1px solid rgba(212,114,158,0.18)}
+
+/* Table */
+.cols-table{width:100%;border-collapse:collapse;font-size:13px}
+.cols-table th{
+  text-align:left;padding:8px 20px;
+  font-size:10px;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--text2);font-weight:600;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+}
+.cols-table td{
+  padding:8px 20px;
+  border-bottom:1px solid rgba(37,50,64,0.4);
+  font-family:var(--mono);font-size:12.5px;
+}
+.cols-table tr:last-child td{border-bottom:none}
+.cols-table tr:hover td{background:var(--bg3)}
+.col-name{font-weight:600;color:var(--text)}
+.col-type{color:var(--accent2)}
+.col-null{color:var(--text2);font-size:11px}
+.col-key{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:18px;border-radius:4px;
+  font-size:9px;font-weight:700;
+}
+.key-pk{background:rgba(95,179,247,0.15);color:var(--accent)}
+.key-fk{background:rgba(229,192,123,0.12);color:var(--yellow)}
+.key-idx{background:rgba(79,196,207,0.1);color:var(--cyan)}
+.key-uq{background:rgba(90,180,130,0.12);color:var(--green)}
+
+/* DB section */
+.db-section{margin-bottom:40px}
+.db-section:target{
+  animation:highlight 2s ease;
+}
+@keyframes highlight{
+  0%,100%{opacity:1}
+  50%{opacity:.7}
+}
+
+/* Footer */
+.footer{
+  text-align:center;padding:24px 40px;
+  color:var(--text2);font-size:12px;
+  border-top:1px solid var(--border);
+  background:var(--bg2);
+}
+
+/* Scrollbar */
+.sidebar::-webkit-scrollbar{width:6px}
+.sidebar::-webkit-scrollbar-track{background:transparent}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Responsive */
+@media(max-width:900px){
+  .sidebar{display:none}
+  .main{max-width:100%;padding:24px 16px}
+  .hero{padding:40px 20px}
+  .hero h1{font-size:22px}
+}
+
+/* Tooltip */
+.tooltip-wrap{position:relative;cursor:help;border-bottom:1px dashed var(--text2)}
+.tooltip-wrap:hover::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);
+  background:var(--bg4);color:var(--text);font-size:11px;
+  padding:4px 10px;border-radius:6px;white-space:nowrap;
+  border:1px solid var(--border);z-index:10;
+  font-family:var(--font);
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-top">
+    <div class="hero-icon">🗄️</div>
+    <h1>GoldPC • Схема базы данных</h1>
+  </div>
+  <p>Полная структура всех микросервисных баз данных — 30 таблиц, 3 представления (FDW), материализованное представление в 7 доменах.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">7</div><div class="stat-label">БД</div></div>
+    <div class="stat"><div class="stat-num">30</div><div class="stat-label">таблиц</div></div>
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">FDW view</div></div>
+    <div class="stat"><div class="stat-num">1</div><div class="stat-label">MV</div></div>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar">
+  <div class="sidebar-label">Базы данных</div>
+  <a class="sidebar-item active" href="#auth"><span class="sidebar-dot" style="background:#5fb3f7"></span>AuthService<span class="sidebar-count">6</span></a>
+  <a class="sidebar-item" href="#catalog"><span class="sidebar-dot" style="background:#5fc78a"></span>CatalogService<span class="sidebar-count">9</span></a>
+  <a class="sidebar-item" href="#orders"><span class="sidebar-dot" style="background:#f0a050"></span>OrdersService<span class="sidebar-count">5</span></a>
+  <a class="sidebar-item" href="#pcbuilder"><span class="sidebar-dot" style="background:#9f7aea"></span>PCBuilderService<span class="sidebar-count">2+1MV</span></a>
+  <a class="sidebar-item" href="#warranty"><span class="sidebar-dot" style="background:#d4729e"></span>WarrantyService<span class="sidebar-count">4</span></a>
+  <a class="sidebar-item" href="#services"><span class="sidebar-dot" style="background:#4fc4cf"></span>ServicesService<span class="sidebar-count">4</span></a>
+  <a class="sidebar-item" href="#reporting"><span class="sidebar-dot" style="background:#e5c07b"></span>ReportingService<span class="sidebar-count">3 view</span></a>
+</nav>
+
+<main class="main">
+
+<!-- ==================== AUTH SERVICE ==================== -->
+<section class="db-section" id="auth">
+  <div class="service-header">
+    <span class="sidebar-dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#5fb3f7"></span>
+    <h2>AuthService</h2>
+    <span class="service-db">goldpc_auth</span>
+  </div>
+  <p class="service-desc">Аутентификация, регистрация, управление пользователями, избранное, адреса доставки.</p>
+
+  <div class="table-card">
+    <div class="table-header">
+      <h3>users</h3>
+      <span class="table-badge badge-pk">PK: Id</span>
+      <span class="table-badge badge-unique">UQ: Email</span>
+    </div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td><span class="col-null">Первичный ключ</span></td></tr>
+      <tr><td><span class="col-name">Email</span></td><td><span class="col-type">varchar(256)</span></td><td><span class="col-key key-uq">UQ</span></td><td><span class="col-null">Email пользователя (логин)</span></td></tr>
+      <tr><td><span class="col-name">PasswordHash</span></td><td><span class="col-type">varchar(500)</span></td><td></td><td><span class="col-null">Bcrypt hash пароля</span></td></tr>
+      <tr><td><span class="col-name">Role</span></td><td><span class="col-type">varchar(20)</span></td><td></td><td><span class="col-null">Client / Manager / Master / Admin / Accountant</span></td></tr>
+      <tr><td><span class="col-name">FirstName</span></td><td><span class="col-type">varchar(50)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">LastName</span></td><td><span class="col-type">varchar(50)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">Phone</span></td><td><span class="col-type">varchar(20)</span></td><td></td><td><span class="col-null">+375XXXXXXXXX</span></td></tr>
+      <tr><td><span class="col-name">IsActive</span></td><td><span class="col-type">boolean</span></td><td></td><td><span class="col-null">default: true</span></td></tr>
+      <tr><td><span class="col-name">IsEmailVerified</span></td><td><span class="col-type">boolean</span></td><td></td><td><span class="col-null">default: false</span></td></tr>
+      <tr><td><span class="col-name">FailedLoginAttempts</span></td><td><span class="col-type">integer</span></td><td></td><td><span class="col-null">Блокировка после 5 попыток</span></td></tr>
+      <tr><td><span class="col-name">LockedUntil</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">NULL = не заблокирован</span></td></tr>
+      <tr><td><span class="col-name">CreatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">UpdatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">NULL до первого обновления</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <h3>refresh_tokens</h3>
+      <span class="table-badge badge-pk">PK: Id</span>
+      <span class="table-badge badge-unique">UQ: Token</span>
+    </div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">UserId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ users.Id (CASCADE)</span></td></tr>
+      <tr><td><span class="col-name">Token</span></td><td><span class="col-type">varchar(500)</span></td><td><span class="col-key key-uq">UQ</span></td><td></td></tr>
+      <tr><td><span class="col-name">CreatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">ExpiresAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">7 дней</span></td></tr>
+      <tr><td><span class="col-name">RevokedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">NULL = активен</span></td></tr>
+      <tr><td><span class="col-name">CreatedByIp</span></td><td><span class="col-type">text</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">RevokedByIp</span></td><td><span class="col-type">text</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">RevokedReason</span></td><td><span class="col-type">text</span></td><td></td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <h3>user_addresses</h3>
+      <span class="table-badge badge-pk">PK: Id</span>
+    </div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">UserId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ users.Id (CASCADE)</span></td></tr>
+      <tr><td><span class="col-name">Name</span></td><td><span class="col-type">varchar(100)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">City</span></td><td><span class="col-type">varchar(100)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">Address</span></td><td><span class="col-type">varchar(500)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">Apartment</span></td><td><span class="col-type">varchar(50)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">PostalCode</span></td><td><span class="col-type">varchar(20)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">IsDefault</span></td><td><span class="col-type">boolean</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">CreatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">UpdatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <h3>wishlist_items</h3>
+      <span class="table-badge badge-pk">PK: Id</span>
+      <span class="table-badge badge-unique">UQ: UserId + ProductId</span>
+    </div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">UserId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ users.Id (CASCADE)</span></td></tr>
+      <tr><td><span class="col-name">ProductId</span></td><td><span class="col-type">uuid</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">CreatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">UpdatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <h3>password_reset_tokens</h3>
+      <span class="table-badge badge-pk">PK: Id</span>
+      <span class="table-badge badge-unique">UQ: TokenHash</span>
+    </div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">UserId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ users.Id (CASCADE)</span></td></tr>
+      <tr><td><span class="col-name">TokenHash</span></td><td><span class="col-type">varchar(128)</span></td><td><span class="col-key key-uq">UQ</span></td><td><span class="col-null">SHA256</span></td></tr>
+      <tr><td><span class="col-name">CreatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">ExpiresAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">1 час</span></td></tr>
+      <tr><td><span class="col-name">UsedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">UsedByIp</span></td><td><span class="col-type">varchar(45)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <h3>email_verification_tokens</h3>
+      <span class="table-badge badge-pk">PK: Id</span>
+      <span class="table-badge badge-unique">UQ: TokenHash</span>
+    </div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">UserId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ users.Id (CASCADE)</span></td></tr>
+      <tr><td><span class="col-name">TokenHash</span></td><td><span class="col-type">varchar(128)</span></td><td><span class="col-key key-uq">UQ</span></td><td></td></tr>
+      <tr><td><span class="col-name">CreatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">ExpiresAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">24 часа</span></td></tr>
+      <tr><td><span class="col-name">UsedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">UsedByIp</span></td><td><span class="col-type">varchar(45)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ==================== CATALOG SERVICE ==================== -->
+<section class="db-section" id="catalog">
+  <div class="service-header">
+    <span class="sidebar-dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#5fc78a"></span>
+    <h2>CatalogService</h2>
+    <span class="service-db">goldpc_catalog</span>
+  </div>
+  <p class="service-desc">Каталог товаров: категории, производители, товары, спецификации, фильтры, отзывы. 13 категорий, 17 производителей.</p>
+
+  <div class="table-card">
+    <div class="table-header"><h3>categories</h3><span class="table-badge badge-pk">PK: Id</span><span class="table-badge badge-unique">UQ: slug</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">name</span></td><td><span class="col-type">varchar</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">slug</span></td><td><span class="col-type">varchar(220)</span></td><td><span class="col-key key-uq">UQ</span></td><td></td></tr>
+      <tr><td><span class="col-name">component_type</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">parent_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ categories.id (самоссылка)</span></td></tr>
+      <tr><td><span class="col-name">description</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">Icon</span></td><td><span class="col-type">text</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">Order</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>manufacturers</h3><span class="table-badge badge-pk">PK: Id</span><span class="table-badge badge-unique">UQ: name, slug</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">name</span></td><td><span class="col-type">varchar(100)</span></td><td><span class="col-key key-uq">UQ</span></td><td></td></tr>
+      <tr><td><span class="col-name">slug</span></td><td><span class="col-type">varchar(100)</span></td><td><span class="col-key key-uq">UQ</span></td><td></td></tr>
+      <tr><td><span class="col-name">logo_url</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">logo_path</span></td><td><span class="col-type">varchar(500)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">country</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">website</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>products</h3><span class="table-badge badge-pk">PK: Id</span><span class="table-badge badge-unique">UQ: sku, slug</span><span class="table-badge badge-idx">IDX: is_active+price</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">category_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ categories.id</span></td></tr>
+      <tr><td><span class="col-name">manufacturer_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ manufacturers.id</span></td></tr>
+      <tr><td><span class="col-name">name</span></td><td><span class="col-type">varchar(255)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">slug</span></td><td><span class="col-type">varchar(220)</span></td><td><span class="col-key key-uq">UQ</span></td><td></td></tr>
+      <tr><td><span class="col-name">sku</span></td><td><span class="col-type">varchar(50)</span></td><td><span class="col-key key-uq">UQ</span></td><td></td></tr>
+      <tr><td><span class="col-name">price</span></td><td><span class="col-type">numeric</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">old_price</span></td><td><span class="col-type">numeric</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">stock</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">is_active</span></td><td><span class="col-type">boolean</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">is_featured</span></td><td><span class="col-type">boolean</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">description</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">importer</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">manufacturer_address</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">production_address</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">service_support</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">warranty</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">warranty_info</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">created_at</span></td><td><span class="col-type">timestamptz</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">updated_at</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>product_images</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">product_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ products.id</span></td></tr>
+      <tr><td><span class="col-name">url</span></td><td><span class="col-type">text</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">path</span></td><td><span class="col-type">varchar(500)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">alt_text</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">sort_order</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>reviews</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">product_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ products.id</span></td></tr>
+      <tr><td><span class="col-name">user_id</span></td><td><span class="col-type">uuid</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">rating</span></td><td><span class="col-type">integer</span></td><td></td><td><span class="col-null">1-5</span></td></tr>
+      <tr><td><span class="col-name">comment</span></td><td><span class="col-type">text</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">moderated</span></td><td><span class="col-type">boolean</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">created_at</span></td><td><span class="col-type">timestamptz</span></td><td></td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>specification_attributes</h3><span class="table-badge badge-pk">PK: Id</span><span class="table-badge badge-unique">UQ: key</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">key</span></td><td><span class="col-type">varchar(50)</span></td><td><span class="col-key key-uq">UQ</span></td><td><span class="col-null">socket, vram, cores, tdp, type…</span></td></tr>
+      <tr><td><span class="col-name">display_name</span></td><td><span class="col-type">varchar(100)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">value_type</span></td><td><span class="col-type">integer</span></td><td></td><td><span class="col-null">0 = select / 1 = range</span></td></tr>
+      <tr><td><span class="col-name">is_multi_value</span></td><td><span class="col-type">boolean</span></td><td></td><td><span class="col-null">Сокет, форм-фактор — multi</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>specification_canonical_values</h3><span class="table-badge badge-pk">PK: Id</span><span class="table-badge badge-unique">UQ: attribute_id+value_text</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">attribute_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ specification_attributes.id (CASCADE)</span></td></tr>
+      <tr><td><span class="col-name">value_text</span></td><td><span class="col-type">varchar(200)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">sort_order</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>product_specification_values</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">product_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ products.id (CASCADE)</span></td></tr>
+      <tr><td><span class="col-name">attribute_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ specification_attributes.id (RESTRICT)</span></td></tr>
+      <tr><td><span class="col-name">canonical_value_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ canonical_values.id (RESTRICT) nullable</span></td></tr>
+      <tr><td><span class="col-name">value_number</span></td><td><span class="col-type">numeric(18,4)</span></td><td></td><td><span class="col-null">nullable (для range-атрибутов)</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>category_filter_attributes</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">attribute_key</span></td><td><span class="col-type">text</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">attribute_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ specification_attributes.id</span></td></tr>
+      <tr><td><span class="col-name">category_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ categories.id</span></td></tr>
+      <tr><td><span class="col-name">display_name</span></td><td><span class="col-type">text</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">filter_type</span></td><td><span class="col-type">integer</span></td><td></td><td><span class="col-null">0 = список / 1 = диапазон</span></td></tr>
+      <tr><td><span class="col-name">sort_order</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ==================== ORDERS SERVICE ==================== -->
+<section class="db-section" id="orders">
+  <div class="service-header">
+    <span class="sidebar-dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#f0a050"></span>
+    <h2>OrdersService</h2>
+    <span class="service-db">goldpc_orders</span>
+  </div>
+  <p class="service-desc">Заказы, позиции заказов, история статусов (партиционированная), промокоды, Outbox для интеграционных событий.</p>
+
+  <div class="table-card">
+    <div class="table-header"><h3>orders</h3><span class="table-badge badge-pk">PK: Id</span><span class="table-badge badge-unique">UQ: OrderNumber</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">OrderNumber</span></td><td><span class="col-type">varchar(20)</span></td><td><span class="col-key key-uq">UQ</span></td><td></td></tr>
+      <tr><td><span class="col-name">UserId</span></td><td><span class="col-type">uuid</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">Status</span></td><td><span class="col-type">varchar(20)</span></td><td></td><td><span class="col-null">Pending / Paid / Processing / Shipped / Completed / Cancelled</span></td></tr>
+      <tr><td><span class="col-name">Total</span></td><td><span class="col-type">numeric(12,2)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">Subtotal</span></td><td><span class="col-type">numeric(12,2)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">DeliveryCost</span></td><td><span class="col-type">numeric(12,2)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">DeliveryMethod</span></td><td><span class="col-type">varchar(20)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">PaymentMethod</span></td><td><span class="col-type">varchar(20)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">CustomerFirstName</span></td><td><span class="col-type">varchar(100)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">CustomerLastName</span></td><td><span class="col-type">varchar(100)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">CustomerPhone</span></td><td><span class="col-type">varchar(20)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">CustomerEmail</span></td><td><span class="col-type">varchar(255)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">Address</span></td><td><span class="col-type">varchar(500)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">DeliveryDate</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">DeliveryTimeSlot</span></td><td><span class="col-type">varchar(50)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">DiscountAmount</span></td><td><span class="col-type">numeric(12,2)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">PromoCode</span></td><td><span class="col-type">varchar(50)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">IsPaid</span></td><td><span class="col-type">boolean</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">PaidAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">PaymentId</span></td><td><span class="col-type">text</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">Comment</span></td><td><span class="col-type">varchar(1000)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>order_items</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">OrderId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ orders.Id (CASCADE)</span></td></tr>
+      <tr><td><span class="col-name">ProductId</span></td><td><span class="col-type">uuid</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">ProductName</span></td><td><span class="col-type">varchar(255)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">Quantity</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">UnitPrice</span></td><td><span class="col-type">numeric(12,2)</span></td><td></td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>order_history</h3><span class="table-badge badge-parted">PARTITIONED</span><span class="table-badge badge-pk">PK: Id+ChangedAt</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">ChangedAt</span></td><td><span class="col-type">timestamptz</span></td><td><span class="col-key key-pk">PK</span></td><td><span class="col-null">Ключ партиционирования (по месяцам)</span></td></tr>
+      <tr><td><span class="col-name">OrderId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td><td><span class="col-null">→ orders.Id (CASCADE)</span></td></tr>
+      <tr><td><span class="col-name">PreviousStatus</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">NewStatus</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">Comment</span></td><td><span class="col-type">varchar(500)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">ChangedBy</span></td><td><span class="col-type">uuid</span></td><td></td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>outbox_messages</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">Type</span></td><td><span class="col-type">varchar(255)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">Content</span></td><td><span class="col-type">text</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">CreatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">ProcessedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">Error</span></td><td><span class="col-type">text</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>promo_codes</h3><span class="table-badge badge-pk">PK: Id</span><span class="table-badge badge-unique">UQ: Code</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">Code</span></td><td><span class="col-type">varchar(50)</span></td><td><span class="col-key key-uq">UQ</span></td><td></td></tr>
+      <tr><td><span class="col-name">DiscountPercent</span></td><td><span class="col-type">numeric</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">MaxUses</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">CurrentUses</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">ValidFrom</span></td><td><span class="col-type">timestamptz</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">ValidTo</span></td><td><span class="col-type">timestamptz</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">IsActive</span></td><td><span class="col-type">boolean</span></td><td></td><td></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ==================== PC BUILDER SERVICE ==================== -->
+<section class="db-section" id="pcbuilder">
+  <div class="service-header">
+    <span class="sidebar-dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#9f7aea"></span>
+    <h2>PCBuilderService</h2>
+    <span class="service-db">goldpc_pcbuilder</span>
+  </div>
+  <p class="service-desc">Конфигуратор ПК: сохранённые сборки пользователей и правила совместимости компонентов.</p>
+
+  <div class="table-card">
+    <div class="table-header"><h3>pc_configurations</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">user_id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-idx">IDX</span></td><td></td></tr>
+      <tr><td><span class="col-name">name</span></td><td><span class="col-type">varchar(200)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">purpose</span></td><td><span class="col-type">varchar(50)</span></td><td></td><td><span class="col-null">gaming / work / home / office</span></td></tr>
+      <tr><td><span class="col-name">processor_id</span></td><td><span class="col-type">uuid</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">motherboard_id</span></td><td><span class="col-type">uuid</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">ram_id</span></td><td><span class="col-type">uuid</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">gpu_id</span></td><td><span class="col-type">uuid</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">psu_id</span></td><td><span class="col-type">uuid</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">storage_id</span></td><td><span class="col-type">uuid</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">case_id</span></td><td><span class="col-type">uuid</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">cooler_id</span></td><td><span class="col-type">uuid</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">total_price</span></td><td><span class="col-type">numeric(12,2)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">total_power</span></td><td><span class="col-type">integer</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">is_compatible</span></td><td><span class="col-type">boolean</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">share_token</span></td><td><span class="col-type">varchar(64)</span></td><td><span class="col-key key-idx">IDX</span></td><td><span class="col-null">nullable, INDEX WHERE NOT NULL</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>compatibility_rules</h3><span class="table-badge badge-pk">PK: Id</span><span class="table-badge badge-unique">UQ: rule_type+component1_id+component2_id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th><th>Описание</th></tr>
+      <tr><td><span class="col-name">id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td><td></td></tr>
+      <tr><td><span class="col-name">rule_type</span></td><td><span class="col-type">varchar(50)</span></td><td></td><td><span class="col-null">socket / memory / form_factor / psu / clearance</span></td></tr>
+      <tr><td><span class="col-name">component1_id</span></td><td><span class="col-type">uuid</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">component1_type</span></td><td><span class="col-type">varchar(30)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">component1_name</span></td><td><span class="col-type">varchar(300)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">component2_id</span></td><td><span class="col-type">uuid</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">component2_type</span></td><td><span class="col-type">varchar(30)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">component2_name</span></td><td><span class="col-type">varchar(300)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">socket</span></td><td><span class="col-type">varchar(30)</span></td><td><span class="col-key key-idx">IDX</span></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">memory_type</span></td><td><span class="col-type">varchar(10)</span></td><td><span class="col-key key-idx">IDX</span></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">form_factor</span></td><td><span class="col-type">varchar(20)</span></td><td><span class="col-key key-idx">IDX</span></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">is_compatible</span></td><td><span class="col-type">boolean</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">incompatibility_type</span></td><td><span class="col-type">varchar(50)</span></td><td></td><td></td></tr>
+      <tr><td><span class="col-name">message</span></td><td><span class="col-type">varchar(500)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">suggestion</span></td><td><span class="col-type">varchar(500)</span></td><td></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>mv_compatibility_quick_check</h3><span class="table-badge badge-mv">MATERIALIZED VIEW</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th>Описание</th></tr>
+      <tr><td colspan="3"><span style="color:var(--text2);font-size:12px">Только несовместимые пары (is_compatible = false). Индексы по socket, memory_type, form_factor, rule_type.</span></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ==================== WARRANTY SERVICE ==================== -->
+<section class="db-section" id="warranty">
+  <div class="service-header">
+    <span class="sidebar-dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#d4729e"></span>
+    <h2>WarrantyService</h2>
+    <span class="service-db">goldpc_warranty</span>
+  </div>
+  <p class="service-desc">Гарантийные карты, заявки на гарантийное обслуживание, история операций.</p>
+
+  <div class="table-card">
+    <div class="table-header"><h3>warranty_cards</h3><span class="table-badge badge-pk">PK: Id</span><span class="table-badge badge-unique">UQ: WarrantyNumber</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td></tr>
+      <tr><td><span class="col-name">WarrantyNumber</span></td><td><span class="col-type">varchar(20)</span></td><td><span class="col-key key-uq">UQ</span></td></tr>
+      <tr><td><span class="col-name">UserId</span></td><td><span class="col-type">uuid</span></td><td></td></tr>
+      <tr><td><span class="col-name">ProductName</span></td><td><span class="col-type">varchar(255)</span></td><td></td></tr>
+      <tr><td><span class="col-name">SerialNumber</span></td><td><span class="col-type">varchar(100)</span></td><td><span class="col-key key-idx">IDX</span></td></tr>
+      <tr><td><span class="col-name">PurchaseDate</span></td><td><span class="col-type">timestamptz</span></td><td></td></tr>
+      <tr><td><span class="col-name">WarrantyEndDate</span></td><td><span class="col-type">timestamptz</span></td><td></td></tr>
+      <tr><td><span class="col-name">Status</span></td><td><span class="col-type">varchar(20)</span></td><td></td></tr>
+      <tr><td><span class="col-name">CancellationReason</span></td><td><span class="col-type">varchar(500)</span></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>warranty_card_operations</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td></tr>
+      <tr><td><span class="col-name">WarrantyCardId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td></tr>
+      <tr><td><span class="col-name">OperationType</span></td><td><span class="col-type">varchar(50)</span></td><td></td></tr>
+      <tr><td><span class="col-name">Description</span></td><td><span class="col-type">varchar(500)</span></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">OperatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td></tr>
+      <tr><td><span class="col-name">OperatedBy</span></td><td><span class="col-type">uuid</span></td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>warranty_claims</h3><span class="table-badge badge-pk">PK: Id</span><span class="table-badge badge-unique">UQ: ClaimNumber</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td></tr>
+      <tr><td><span class="col-name">ClaimNumber</span></td><td><span class="col-type">varchar(20)</span></td><td><span class="col-key key-uq">UQ</span></td></tr>
+      <tr><td><span class="col-name">UserId</span></td><td><span class="col-type">uuid</span></td><td></td></tr>
+      <tr><td><span class="col-name">WarrantyCardId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td></tr>
+      <tr><td><span class="col-name">Status</span></td><td><span class="col-type">varchar(20)</span></td><td></td></tr>
+      <tr><td><span class="col-name">ProductName</span></td><td><span class="col-type">varchar(255)</span></td><td></td></tr>
+      <tr><td><span class="col-name">Description</span></td><td><span class="col-type">varchar(2000)</span></td><td></td></tr>
+      <tr><td><span class="col-name">MasterComment</span></td><td><span class="col-type">varchar(1000)</span></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">Resolution</span></td><td><span class="col-type">varchar(500)</span></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>warranty_history</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td></tr>
+      <tr><td><span class="col-name">WarrantyClaimId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td></tr>
+      <tr><td><span class="col-name">ChangedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td></tr>
+      <tr><td><span class="col-name">Status</span></td><td><span class="col-type">varchar(20)</span></td><td></td></tr>
+      <tr><td><span class="col-name">Comment</span></td><td><span class="col-type">varchar(500)</span></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">ChangedBy</span></td><td><span class="col-type">uuid</span></td><td></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ==================== SERVICES SERVICE ==================== -->
+<section class="db-section" id="services">
+  <div class="service-header">
+    <span class="sidebar-dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#4fc4cf"></span>
+    <h2>ServicesService</h2>
+    <span class="service-db">goldpc_services</span>
+  </div>
+  <p class="service-desc">Сервисное обслуживание: заявки на ремонт, типы услуг, запчасти, отчёты мастеров.</p>
+
+  <div class="table-card">
+    <div class="table-header"><h3>service_requests</h3><span class="table-badge badge-pk">PK: Id</span><span class="table-badge badge-unique">UQ: RequestNumber</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td></tr>
+      <tr><td><span class="col-name">RequestNumber</span></td><td><span class="col-type">varchar(20)</span></td><td><span class="col-key key-uq">UQ</span></td></tr>
+      <tr><td><span class="col-name">UserId</span></td><td><span class="col-type">uuid</span></td><td></td></tr>
+      <tr><td><span class="col-name">ServiceTypeId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td></tr>
+      <tr><td><span class="col-name">Status</span></td><td><span class="col-type">varchar(30)</span></td><td></td></tr>
+      <tr><td><span class="col-name">DeviceModel</span></td><td><span class="col-type">varchar(100)</span></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">SerialNumber</span></td><td><span class="col-type">varchar(50)</span></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">Description</span></td><td><span class="col-type">varchar(2000)</span></td><td></td></tr>
+      <tr><td><span class="col-name">EstimatedCost</span></td><td><span class="col-type">numeric(12,2)</span></td><td></td></tr>
+      <tr><td><span class="col-name">ActualCost</span></td><td><span class="col-type">numeric(12,2)</span></td><td></td></tr>
+      <tr><td><span class="col-name">MasterId</span></td><td><span class="col-type">uuid</span></td><td></td></tr>
+      <tr><td><span class="col-name">MasterComment</span></td><td><span class="col-type">varchar(2000)</span></td><td><span class="col-null">nullable</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>service_types</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td></tr>
+      <tr><td><span class="col-name">Name</span></td><td><span class="col-type">varchar(100)</span></td><td></td></tr>
+      <tr><td><span class="col-name">Description</span></td><td><span class="col-type">varchar(500)</span></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">BasePrice</span></td><td><span class="col-type">numeric(12,2)</span></td><td></td></tr>
+      <tr><td><span class="col-name">EstimatedDuration</span></td><td><span class="col-type">interval</span></td><td></td></tr>
+      <tr><td><span class="col-name">IsActive</span></td><td><span class="col-type">boolean</span></td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>service_parts</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td></tr>
+      <tr><td><span class="col-name">ServiceRequestId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td></tr>
+      <tr><td><span class="col-name">ProductName</span></td><td><span class="col-type">varchar(255)</span></td><td></td></tr>
+      <tr><td><span class="col-name">Quantity</span></td><td><span class="col-type">integer</span></td><td></td></tr>
+      <tr><td><span class="col-name">UnitPrice</span></td><td><span class="col-type">numeric(12,2)</span></td><td></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>work_reports</h3><span class="table-badge badge-pk">PK: Id</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Тип</th><th></th></tr>
+      <tr><td><span class="col-name">Id</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-pk">PK</span></td></tr>
+      <tr><td><span class="col-name">ServiceRequestId</span></td><td><span class="col-type">uuid</span></td><td><span class="col-key key-fk">FK</span></td></tr>
+      <tr><td><span class="col-name">PreviousStatus</span></td><td><span class="col-type">varchar(30)</span></td><td></td></tr>
+      <tr><td><span class="col-name">NewStatus</span></td><td><span class="col-type">varchar(30)</span></td><td></td></tr>
+      <tr><td><span class="col-name">Comment</span></td><td><span class="col-type">varchar(1000)</span></td><td><span class="col-null">nullable</span></td></tr>
+      <tr><td><span class="col-name">CreatedAt</span></td><td><span class="col-type">timestamptz</span></td><td></td></tr>
+      <tr><td><span class="col-name">MasterId</span></td><td><span class="col-type">uuid</span></td><td></td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ==================== REPORTING SERVICE ==================== -->
+<section class="db-section" id="reporting">
+  <div class="service-header">
+    <span class="sidebar-dot" style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#e5c07b"></span>
+    <h2>ReportingService</h2>
+    <span class="service-db">goldpc_reporting</span>
+  </div>
+  <p class="service-desc">Аналитика и отчёты. Использует Foreign Data Wrappers для чтения данных из других БД.</p>
+
+  <div class="table-card">
+    <div class="table-header"><h3>FDW: goldpc_catalog</h3><span class="table-badge badge-fdw">FOREIGN DATA WRAPPER</span></div>
+    <table class="cols-table">
+      <tr><td style="padding:10px 20px;color:var(--text2);font-size:13px">Импортированы таблицы: <strong>products</strong>, <strong>categories</strong> (схема: fdw_catalog)</td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>FDW: goldpc_orders</h3><span class="table-badge badge-fdw">FOREIGN DATA WRAPPER</span></div>
+    <table class="cols-table">
+      <tr><td style="padding:10px 20px;color:var(--text2);font-size:13px">Импортированы таблицы: <strong>orders</strong>, <strong>order_items</strong>, <strong>order_history</strong> (схема: fdw_orders)</td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>FDW: goldpc_services</h3><span class="table-badge badge-fdw">FOREIGN DATA WRAPPER</span></div>
+    <table class="cols-table">
+      <tr><td style="padding:10px 20px;color:var(--text2);font-size:13px">Импортированы таблицы: <strong>service_requests</strong> (схема: fdw_services)</td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>vw_SalesPerformance</h3><span class="table-badge badge-view">VIEW</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Источник</th></tr>
+      <tr><td><span class="col-name">Date</span></td><td><span class="col-null">date_trunc('day', created_at)</span></td></tr>
+      <tr><td><span class="col-name">Revenue</span></td><td><span class="col-null">SUM(total) из fdw_orders.orders (Completed/Paid)</span></td></tr>
+      <tr><td><span class="col-name">Profit</span></td><td><span class="col-null">20% от Revenue (условно)</span></td></tr>
+      <tr><td><span class="col-name">OrdersCount</span></td><td><span class="col-null">COUNT(*)</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>vw_ServiceEfficiency</h3><span class="table-badge badge-view">VIEW</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Описание</th></tr>
+      <tr><td><span class="col-name">MasterId</span></td><td><span class="col-null">assigned_master_id</span></td></tr>
+      <tr><td><span class="col-name">MasterName</span></td><td><span class="col-null">плейсхолдер</span></td></tr>
+      <tr><td><span class="col-name">ActiveTasks</span></td><td><span class="col-null">незавершённые заявки</span></td></tr>
+      <tr><td><span class="col-name">CompletedTasks</span></td><td><span class="col-null">выполненные заявки</span></td></tr>
+      <tr><td><span class="col-name">EfficiencyRate</span></td><td><span class="col-null">% выполнения</span></td></tr>
+    </table>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header"><h3>vw_InventoryAnalytics</h3><span class="table-badge badge-view">VIEW</span></div>
+    <table class="cols-table">
+      <tr><th>Колонка</th><th>Описание</th></tr>
+      <tr><td><span class="col-name">ProductId</span></td><td></td></tr>
+      <tr><td><span class="col-name">ProductName</span></td><td></td></tr>
+      <tr><td><span class="col-name">CurrentStock</span></td><td><span class="col-null">products.stock</span></td></tr>
+      <tr><td><span class="col-name">LowStockThreshold</span></td><td><span class="col-null">10 (хардкод)</span></td></tr>
+      <tr><td><span class="col-name">SalesVelocity</span></td><td><span class="col-null">продаж/день (30 дней)</span></td></tr>
+      <tr><td><span class="col-name">SuggestedOrderQuantity</span></td><td><span class="col-null">рекомендуемый заказ</span></td></tr>
+    </table>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer class="footer">
+  GoldPC — Схема базы данных &bull; Сгенерировано из EF Core Migrations &bull; 30 таблиц · 3 FDW view · 1 MV
+</footer>
+
+<script>
+document.querySelectorAll('.sidebar-item').forEach(item => {
+  item.addEventListener('click', function(e) {
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>

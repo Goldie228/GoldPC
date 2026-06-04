@@ -438,4 +438,176 @@ test.describe('PC Builder — Konstruktor PK', () => {
       await expect(priceEl2).toContainText('999');
     }
   });
+
+  // ---------------------------------------------------------------
+  // 9) EPS power connector mismatch — Error
+  // ---------------------------------------------------------------
+  test('9 - EPS power connector mismatch: oshibka', async ({ page }) => {
+    const cpuWithEps = {
+      id: 'cpu-eps', name: 'Intel Core i9-14900K', sku: 'I9-14900K',
+      category: 'cpu', price: 1899, stock: 5, isActive: true,
+      specifications: { socket: 'LGA1700', cores: 24, threads: 32, tdp: 125, memoryType: 'DDR5' },
+    };
+    const mbWithEps = {
+      id: 'mb-eps', name: 'MSI Z790 ACE', sku: 'Z790-ACE',
+      category: 'motherboard', price: 1199, stock: 5, isActive: true,
+      specifications: { socket: 'LGA1700', memoryType: 'DDR5', formFactor: 'ATX', cpuPowerConnectors: '8+4' },
+    };
+    const psuOneEps = {
+      id: 'psu-eps', name: 'Corsair RM750x', sku: 'RM750x',
+      category: 'psu', price: 499, stock: 7, isActive: true,
+      specifications: { wattage: 750, epsCables: 1, pcieCables: 2 },
+    };
+
+    await mockAllProductRoutes(page, {
+      processors: [cpuWithEps],
+      motherboards: [mbWithEps],
+      psu: [psuOneEps],
+      gpu: [], ram: [], storage: [], cases: [], coolers: [],
+    });
+
+    await pcBuilderPage.goto();
+    await selectSlotProduct(page, 0); // CPU (LGA1700)
+    await selectSlotProduct(page, 1); // MB (8+4 CPU power)
+    await selectSlotProduct(page, 6); // PSU (1 EPS cable)
+
+    const errors = page.locator('.pc-builder__errors, .pc-builder__error');
+    await expect(errors.first()).toBeVisible({ timeout: 5000 });
+    await expect(errors).toContainText(/EPS|CPU.*пита|8-pin|power/i);
+  });
+
+  // ---------------------------------------------------------------
+  // 10) M.2 SATA SSD in NVMe slot — Error
+  // ---------------------------------------------------------------
+  test('10 - M.2 SATA SSD v NVMe slote: oshibka', async ({ page }) => {
+    const cpuAm5NoSata = {
+      id: 'cpu-m2', name: 'AMD Ryzen 9 7950X', sku: 'RYZEN-7950X',
+      category: 'cpu', price: 1899, stock: 10, isActive: true,
+      specifications: { socket: 'AM5', cores: 16, threads: 32, tdp: 170, memoryType: 'DDR5' },
+    };
+    const mbNoSataM2 = {
+      id: 'mb-nosata', name: 'ASUS ROG Crosshair X670E Hero', sku: 'ROG-X670E',
+      category: 'motherboard', price: 1199, stock: 5, isActive: true,
+      specifications: { socket: 'AM5', memoryType: 'DDR5', formFactor: 'ATX', m2SataSupport: false },
+    };
+    const storageSataM2 = {
+      id: 'storage-sata', name: 'Samsung 870 Evo M.2 SATA', sku: '870EVO-M2',
+      category: 'storage', price: 249, stock: 10, isActive: true,
+      specifications: { type: 'SATA', interface: 'M.2', capacity: 500 },
+    };
+
+    await mockAllProductRoutes(page, {
+      processors: [cpuAm5NoSata],
+      motherboards: [mbNoSataM2],
+      storage: [storageSataM2],
+      gpu: [], ram: [], psu: [], cases: [], coolers: [],
+    });
+
+    await pcBuilderPage.goto();
+    await selectSlotProduct(page, 0); // CPU (AM5)
+    await selectSlotProduct(page, 1); // MB (no M.2 SATA support)
+    await selectSlotProduct(page, 3); // Storage (M.2 SATA)
+
+    const errors = page.locator('.pc-builder__errors, .pc-builder__error');
+    await expect(errors.first()).toBeVisible({ timeout: 5000 });
+    await expect(errors).toContainText(/M\.2|SATA.*NVMe|NVMe.*SATA|neosvemestim/i);
+  });
+
+  // ---------------------------------------------------------------
+  // 11) CPU without iGPU + no GPU — Error
+  // ---------------------------------------------------------------
+  test('11 - CPU bez vstroennogo video + net videokarty: oshibka', async ({ page }) => {
+    const cpuNoIgpu = {
+      id: 'cpu-noigpu', name: 'AMD Ryzen 7 7700X', sku: 'RYZEN-7700X',
+      category: 'cpu', price: 1299, stock: 8, isActive: true,
+      specifications: { socket: 'AM5', cores: 8, threads: 16, tdp: 105, memoryType: 'DDR5', integratedGraphics: false },
+    };
+
+    await mockAllProductRoutes(page, {
+      processors: [cpuNoIgpu],
+      gpu: [], motherboards: [], ram: [], storage: [], psu: [], cases: [], coolers: [],
+    });
+
+    await pcBuilderPage.goto();
+    await selectSlotProduct(page, 0); // CPU (no iGPU)
+    // No GPU selected — expect error
+
+    const errors = page.locator('.pc-builder__errors, .pc-builder__error');
+    await expect(errors.first()).toBeVisible({ timeout: 5000 });
+    await expect(errors).toContainText(/videokarta|GPU|bez.*video|net.*videokart/i);
+  });
+
+  // ---------------------------------------------------------------
+  // 12) USB-C front panel without MB header — Warning
+  // ---------------------------------------------------------------
+  test('12 - USB-C perednej paneli bez razema na MB: preduprezhdenie', async ({ page }) => {
+    const cpuUsbC = {
+      id: 'cpu-usbc', name: 'AMD Ryzen 9 7950X', sku: 'RYZEN-7950X',
+      category: 'cpu', price: 1899, stock: 10, isActive: true,
+      specifications: { socket: 'AM5', cores: 16, threads: 32, tdp: 170, memoryType: 'DDR5' },
+    };
+    const mbNoUsbC = {
+      id: 'mb-nousbc', name: 'ASUS Prime B650M-A', sku: 'PRIME-B650M',
+      category: 'motherboard', price: 599, stock: 8, isActive: true,
+      specifications: { socket: 'AM5', memoryType: 'DDR5', formFactor: 'mATX', usbCHeader: false },
+    };
+    const caseWithUsbC = {
+      id: 'case-usbc', name: 'NZXT H7 Flow USB-C', sku: 'H7-FLOW-USBC',
+      category: 'case', price: 349, stock: 6, isActive: true,
+      specifications: { hasUsbc: true, formFactor: 'ATX' },
+    };
+
+    await mockAllProductRoutes(page, {
+      processors: [cpuUsbC],
+      motherboards: [mbNoUsbC],
+      cases: [caseWithUsbC],
+      gpu: [], ram: [], storage: [], psu: [], coolers: [],
+    });
+
+    await pcBuilderPage.goto();
+    await selectSlotProduct(page, 0); // CPU
+    await selectSlotProduct(page, 1); // MB (no USB-C header)
+    await selectSlotProduct(page, 7); // Case (has USB-C front panel)
+
+    const warnings = page.locator('.pc-builder__warnings, .pc-builder__warning, .pc-builder__alerts--warning, .pc-builder__error');
+    await expect(warnings.first()).toBeVisible({ timeout: 5000 });
+    await expect(warnings).toContainText(/USB-C|USB.*panel|peredn.*usb/i);
+  });
+
+  // ---------------------------------------------------------------
+  // 13) No-name PSU brand — Warning
+  // ---------------------------------------------------------------
+  test('13 - Noname PSU brend: preduprezhdenie', async ({ page }) => {
+    const cpuPsuWarning = {
+      id: 'cpu-psuwarn', name: 'AMD Ryzen 5 7600', sku: 'RYZEN-7600',
+      category: 'cpu', price: 799, stock: 10, isActive: true,
+      specifications: { socket: 'AM5', cores: 6, threads: 12, tdp: 65, memoryType: 'DDR5' },
+    };
+    const mbPsuWarning = {
+      id: 'mb-psuwarn', name: 'Gigabyte B650 GAMING X AX', sku: 'B650-GAMING',
+      category: 'motherboard', price: 699, stock: 5, isActive: true,
+      specifications: { socket: 'AM5', memoryType: 'DDR5', formFactor: 'ATX' },
+    };
+    const psuNoname = {
+      id: 'psu-noname', name: 'Noname Power 750W', sku: 'NONAME-750',
+      category: 'psu', price: 149, stock: 10, isActive: true,
+      specifications: { wattage: 750, brand: 'Noname Power', efficiency: '80+ White' },
+    };
+
+    await mockAllProductRoutes(page, {
+      processors: [cpuPsuWarning],
+      motherboards: [mbPsuWarning],
+      psu: [psuNoname],
+      gpu: [], ram: [], storage: [], cases: [], coolers: [],
+    });
+
+    await pcBuilderPage.goto();
+    await selectSlotProduct(page, 0); // CPU
+    await selectSlotProduct(page, 1); // MB
+    await selectSlotProduct(page, 6); // PSU (Noname brand)
+
+    const warnings = page.locator('.pc-builder__warnings, .pc-builder__warning, .pc-builder__alerts--warning, .pc-builder__error');
+    await expect(warnings.first()).toBeVisible({ timeout: 5000 });
+    await expect(warnings).toContainText(/brend|Noname|neizvestn.*proizvod|brand/i);
+  });
 });

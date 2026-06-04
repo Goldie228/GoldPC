@@ -36,6 +36,21 @@ public record ProductListDto
 
     /// <summary>Gets краткое описание для QuickView (первые 300 символов)</summary>
     public string? DescriptionShort { get; init; }
+
+    /// <summary>Gets сокет процессора (для проверки совместимости CPU/Motherboard)</summary>
+    public string? Socket { get; init; }
+
+    /// <summary>Gets тип оперативной памяти (для проверки совместимости Motherboard/RAM)</summary>
+    public string? MemoryType { get; init; }
+
+    /// <summary>Gets форм-фактор оперативной памяти (DIMM/SO-DIMM)</summary>
+    public string? MemoryFormFactor { get; init; }
+
+    /// <summary>Gets тепловыделение процессора в ваттах (для проверки совместимости с кулером)</summary>
+    public int? Tdp { get; init; }
+
+    /// <summary>Gets мощность блока питания в ваттах (для проверки совместимости PSU/system)</summary>
+    public int? Wattage { get; init; }
 }
 
 /// <summary>

@@ -58,6 +58,16 @@ export default defineConfig({
         target: 'http://localhost:5006',
         changeOrigin: true,
       },
+      '/hubs/chat': {
+        target: 'http://localhost:5003',
+        changeOrigin: true,
+        ws: true,
+      },
+      '/hubs/notifications': {
+        target: 'http://localhost:5002',
+        changeOrigin: true,
+        ws: true,
+      },
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,

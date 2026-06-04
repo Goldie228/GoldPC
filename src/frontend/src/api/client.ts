@@ -108,9 +108,10 @@ apiClient.interceptors.response.use(
 
           return apiClient(originalRequest);
         } catch {
-          // ✅ При провале refresh очищаем токены и перезагружаем на /login
+          // ✅ При провале refresh очищаем токены + auth-storage и перезагружаем на /login
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
+          localStorage.removeItem('auth-storage');
           sessionStorage.removeItem('accessToken');
           sessionStorage.removeItem('refreshToken');
           window.location.href = '/login';

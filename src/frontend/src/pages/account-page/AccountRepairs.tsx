@@ -1,19 +1,44 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useServiceTickets } from '../../hooks/useServiceTickets';
 import { TICKET_STATUSES } from '../../api/services';
 import type { ServiceTicket } from '../../api/services';
-import { Wrench, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Wrench, Clock, CheckCircle, AlertCircle, Plus, RefreshCw } from 'lucide-react';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import type { StatusVariant } from '../../components/ui/StatusBadge';
+import { StatCard } from '../../components/ui/StatCard';
 
-const statusColorMap: Record<string, string> = {
-  blue: 'bg-info-blue/10 text-info-blue',
-  yellow: 'bg-warning/15 text-warning',
-  orange: 'bg-orange-500/15 text-orange-500',
-  purple: 'bg-purple-500/15 text-purple-500',
-  cyan: 'bg-cyan-500/15 text-cyan-500',
-  green: 'bg-muted/10 text-muted-foreground',
-  gray: 'bg-muted/10 text-muted-foreground',
-  red: 'bg-destructive/10 text-destructive',
+// ═══════════════════════════════════════════════════════════════════
+//  Stagger entrance animation
+// ═══════════════════════════════════════════════════════════════════
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.1, 0.25, 1] as const } },
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  Status helpers
+// ═══════════════════════════════════════════════════════════════════
+
+const statusVariantMap: Record<string, StatusVariant> = {
+  blue: 'info',
+  yellow: 'warning',
+  orange: 'warning',
+  purple: 'info',
+  cyan: 'info',
+  green: 'neutral',
+  gray: 'neutral',
+  red: 'warning',
 };
 
 function getStatusLabel(status: string): string {
@@ -21,21 +46,115 @@ function getStatusLabel(status: string): string {
   return statusItem?.label || status;
 }
 
-function getStatusColor(status: string): string {
+function getStatusVariant(status: string): StatusVariant {
   const statusItem = TICKET_STATUSES.find(s => s.key === status);
-  return statusItem?.color || 'gray';
+  return statusVariantMap[statusItem?.color || 'gray'];
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Timeline steps for active repairs
+// ═══════════════════════════════════════════════════════════════════
+
+const TIMELINE_STEPS = [
+  { key: 'Submitted', label: 'Создана' },
+  { key: 'InProgress', label: 'Диагностика' },
+  { key: 'PartsPending', label: 'Ремонт' },
+  { key: 'ReadyForPickup', label: 'Готов' },
+  { key: 'Completed', label: 'Завершён' },
+] as const;
+
+const STATUS_ORDER: string[] = TIMELINE_STEPS.map(s => s.key);
+const TERMINAL_STATUSES = new Set(['Completed', 'Cancelled']);
+
+function getCurrentStepIndex(status: string): number {
+  const idx = STATUS_ORDER.indexOf(status);
+  return idx >= 0 ? idx : -1;
 }
 
 /**
- * AccountRepairs - My Repairs page for customers
- *
- * Features:
- * - Repair ticket stats cards
- * - Filter buttons by status
- * - Tickets list with status badges
- * - Link to ticket detail page
- * - Real-time status updates via polling
+ * ActiveRepairTimeline — горизонтальный таймлайн для активных заявок.
+ * Показывает 5 шагов: Создана → Диагностика → Ремонт → Готов → Завершён.
+ * Текущий шаг выделен, пройденные — приглушены, будущие — полупрозрачны.
  */
+function ActiveRepairTimeline({ status }: { status: string }) {
+  const currentIdx = getCurrentStepIndex(status);
+  if (currentIdx < 0) return null;
+
+  return (
+    <div className="flex items-center gap-0 px-4 md:px-6 pb-4">
+      {TIMELINE_STEPS.map((step, idx) => {
+        const isCompleted = idx < currentIdx;
+        const isCurrent = idx === currentIdx;
+        const isActive = isCompleted || isCurrent;
+
+        return (
+          <div key={step.key} className="flex items-center flex-1 min-w-0">
+            <div className="flex flex-col items-center">
+              <div
+                className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                  isActive
+                    ? 'bg-gold ring-2 ring-gold/30'
+                    : 'bg-muted-foreground/20'
+                }`}
+              />
+              <span
+                className={`text-[10px] mt-1 leading-tight text-center ${
+                  isCurrent
+                    ? 'text-foreground font-medium'
+                    : isCompleted
+                      ? 'text-muted-foreground/60'
+                      : 'text-muted-foreground/30'
+                }`}
+              >
+                {step.label}
+              </span>
+            </div>
+            {idx < TIMELINE_STEPS.length - 1 && (
+              <div
+                className={`flex-1 h-px mx-1 self-start mt-[5px] ${
+                  idx < currentIdx ? 'bg-gold/40' : 'bg-border'
+                }`}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  Mobile card styles — data-label based
+// ═══════════════════════════════════════════════════════════════════
+
+const mobileCardStyles = `
+@media (max-width: 767px) {
+  .repair-cell {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .repair-cell::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    color: var(--color-muted-foreground);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .repair-device-cell {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .repair-device-cell::before {
+    align-self: flex-start;
+  }
+}
+`;
+
+// ═══════════════════════════════════════════════════════════════════
+//  AccountRepairs — My Repairs page
+// ═══════════════════════════════════════════════════════════════════
+
 export function AccountRepairs() {
   const { getMyTickets } = useServiceTickets();
 
@@ -62,7 +181,7 @@ export function AccountRepairs() {
         setTickets(result.items);
       }
     } catch {
-      // Silent fail - show empty state instead
+      // Silent fail — show empty state instead
     } finally {
       setLoading(false);
     }
@@ -70,96 +189,66 @@ export function AccountRepairs() {
 
   const stats = {
     total: tickets.length,
-    active: tickets.filter(t => !['Completed', 'Cancelled'].includes(t.status)).length,
+    active: tickets.filter(t => !TERMINAL_STATUSES.has(t.status)).length,
     completed: tickets.filter(t => t.status === 'Completed').length,
     urgent: tickets.filter(t => t.priority === 'urgent' || t.status === 'ReadyForPickup').length,
   };
 
   const filterOptions = [
     { key: 'all', label: 'Все' },
-    { key: 'New', label: 'Новые' },
-    { key: 'Diagnosing', label: 'Диагностика' },
-    { key: 'Repairing', label: 'В ремонте' },
-    { key: 'Ready', label: 'Готовы' },
+    { key: 'Submitted', label: 'Новые' },
+    { key: 'InProgress', label: 'Диагностика' },
+    { key: 'PartsPending', label: 'В ремонте' },
+    { key: 'ReadyForPickup', label: 'Готовы' },
     { key: 'Completed', label: 'Завершённые' },
   ];
 
   if (loading && tickets.length === 0) {
     return (
       <div className="bg-background min-h-screen flex items-center justify-center">
-        <div className="text-muted-foreground text-lg">Загрузка...</div>
+        <div className="flex flex-col items-center gap-4">
+          <RefreshCw size={24} className="text-muted-foreground animate-spin" />
+          <div className="text-muted-foreground text-sm">Загрузка ремонтов...</div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="bg-background min-h-screen">
+      <style>{mobileCardStyles}</style>
+
       <div className="max-w-[1280px] mx-auto px-4 py-6">
-        {/* Header */}
+        {/* ── Header ────────────────────────────────────────────── */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-foreground">Мои ремонты</h1>
           <Link
             to="/service-request"
-            className="inline-flex items-center gap-2 bg-gold text-gold-ink px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-gold-active transition-all"
+            className="hidden md:inline-flex items-center gap-2 bg-gold text-gold-ink px-5 py-2.5 rounded-lg font-semibold text-sm hover:bg-gold-active transition-all"
           >
             <Wrench size={18} />
             Новый запрос на ремонт
           </Link>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-card rounded-xl border border-border p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-info-blue/10 flex items-center justify-center text-info-blue shrink-0">
-              <Wrench size={22} />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-foreground">{stats.total}</div>
-              <div className="text-sm text-muted-foreground">Всего заявок</div>
-            </div>
-          </div>
-
-          <div className="bg-card rounded-xl border border-border p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-elevated flex items-center justify-center text-muted-foreground shrink-0">
-              <Clock size={22} />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-foreground">{stats.active}</div>
-              <div className="text-sm text-muted-foreground">В работе</div>
-            </div>
-          </div>
-
-          <div className="bg-card rounded-xl border border-border p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-elevated flex items-center justify-center text-muted-foreground shrink-0">
-              <CheckCircle size={22} />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-foreground">{stats.completed}</div>
-              <div className="text-sm text-muted-foreground">Завершено</div>
-            </div>
-          </div>
-
-          <div className="bg-card rounded-xl border border-border p-4 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive shrink-0">
-              <AlertCircle size={22} />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-foreground">{stats.urgent}</div>
-              <div className="text-sm text-muted-foreground">Требуют внимания</div>
-            </div>
-          </div>
+        {/* ── Stats Cards ───────────────────────────────────────── */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <StatCard label="Всего заявок" value={stats.total} icon={Wrench} />
+          <StatCard label="В работе" value={stats.active} icon={Clock} />
+          <StatCard label="Завершено" value={stats.completed} icon={CheckCircle} />
+          <StatCard label="Требуют внимания" value={stats.urgent} icon={AlertCircle} />
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        {/* ── Filters · Mobile: horizontal scroll snap ──────────── */}
+        <div className="flex gap-2 mb-6 overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden pb-1">
           {filterOptions.map(filter => (
             <button
               key={filter.key}
-               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeFilter === filter.key
-                    ? 'bg-elevated text-foreground'
-                    : 'bg-card text-muted-foreground border border-border hover:text-foreground hover:border-foreground/20'
-               }`}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeFilter === filter.key
+                  ? 'bg-elevated text-foreground'
+                  : 'bg-card text-muted-foreground border border-border hover:text-foreground hover:border-foreground/20'
+              }`}
               onClick={() => setActiveFilter(filter.key)}
             >
               {filter.label}
@@ -167,7 +256,7 @@ export function AccountRepairs() {
           ))}
         </div>
 
-        {/* Tickets List */}
+        {/* ── Tickets List ──────────────────────────────────────── */}
         {tickets.length === 0 ? (
           <div className="bg-card rounded-xl border border-border p-12 text-center">
             <div className="flex justify-center mb-4 text-muted-foreground">
@@ -188,8 +277,8 @@ export function AccountRepairs() {
           </div>
         ) : (
           <div className="bg-card rounded-xl border border-border overflow-hidden">
-            {/* Table header */}
-            <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-border text-sm font-medium text-muted-foreground">
+            {/* Table header — hidden on mobile */}
+            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 border-b border-border text-sm font-medium text-muted-foreground">
               <div className="col-span-2">Номер</div>
               <div className="col-span-3">Устройство</div>
               <div className="col-span-2">Статус</div>
@@ -197,44 +286,95 @@ export function AccountRepairs() {
               <div className="col-span-2 text-right">Действия</div>
             </div>
 
-            {/* Table rows */}
+            {/* Ticket rows */}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
             {tickets.map(ticket => (
-              <div
-                key={ticket.id}
-                className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-border last:border-b-0 items-center hover:bg-white/[0.02] transition-colors"
-              >
-                <div className="col-span-2 text-foreground font-mono text-sm">
-                  #{ticket.ticketNumber}
-                </div>
-                <div className="col-span-3">
-                  <div className="text-foreground text-sm font-medium">{ticket.deviceType}</div>
-                  <div className="text-muted-foreground text-xs">{ticket.brand} {ticket.model}</div>
-                </div>
-                <div className="col-span-2">
-                  <span
-                    className={`inline-block px-3 py-1 rounded-lg text-xs font-medium ${
-                      statusColorMap[getStatusColor(ticket.status)] || 'bg-muted/10 text-muted-foreground'
-                    }`}
+              <motion.div key={ticket.id} variants={itemVariants} className="border-b border-border last:border-b-0">
+                {/* Main row — grid on desktop, block on mobile */}
+                <div className="block md:grid md:grid-cols-12 md:gap-4 px-4 md:px-6 py-4">
+                  {/* Ticket number */}
+                  <div
+                    className="repair-cell mb-3 md:mb-0 md:col-span-2"
+                    data-label="Номер"
                   >
-                    {getStatusLabel(ticket.status)}
-                  </span>
-                </div>
-                <div className="col-span-3 text-muted-foreground text-sm">
-                  {new Date(ticket.createdAt).toLocaleDateString('ru-RU')}
-                </div>
-                <div className="col-span-2 text-right">
-                  <Link
-                    to={`/my-repairs/${ticket.id}`}
-                    className="inline-flex items-center text-info-blue text-sm font-medium hover:brightness-110 transition-all"
+                    <span className="text-foreground font-mono text-sm">
+                      #{ticket.ticketNumber}
+                    </span>
+                  </div>
+
+                  {/* Device info */}
+                  <div
+                    className="repair-cell repair-device-cell mb-3 md:mb-0 md:col-span-3"
+                    data-label="Устройство"
                   >
-                    Подробнее
-                  </Link>
+                    <div className="text-right md:text-left">
+                      <div className="text-foreground text-sm font-medium">{ticket.deviceType}</div>
+                      <div className="text-muted-foreground text-xs">{ticket.brand} {ticket.model}</div>
+                    </div>
+                  </div>
+
+                  {/* Status badge */}
+                  <div
+                    className="repair-cell mb-3 md:mb-0 md:col-span-2"
+                    data-label="Статус"
+                  >
+                    <StatusBadge
+                      variant={getStatusVariant(ticket.status)}
+                      label={getStatusLabel(ticket.status)}
+                      pulse={ticket.status === 'ReadyForPickup'}
+                    />
+                  </div>
+
+                  {/* Date */}
+                  <div
+                    className="repair-cell mb-3 md:mb-0 md:col-span-3"
+                    data-label="Дата создания"
+                  >
+                    <span className="text-muted-foreground text-sm">
+                      {new Date(ticket.createdAt).toLocaleDateString('ru-RU')}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div
+                    className="repair-cell md:col-span-2 md:text-right"
+                    data-label=""
+                  >
+                    <Link
+                      to={`/my-repairs/${ticket.id}`}
+                      className="inline-flex items-center gap-1.5 bg-elevated border border-border text-foreground text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-gold hover:text-gold-ink hover:border-gold transition-all"
+                    >
+                      Подробнее
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+                        <path d="M9 18l6-6-6-6" />
+                      </svg>
+                    </Link>
+                  </div>
                 </div>
-              </div>
+
+                {/* Timeline for active repairs */}
+                {!TERMINAL_STATUSES.has(ticket.status) && (
+                  <ActiveRepairTimeline status={ticket.status} />
+                )}
+              </motion.div>
             ))}
+            </motion.div>
           </div>
         )}
       </div>
+
+      {/* ── Mobile FAB ──────────────────────────────────────────── */}
+      <Link
+        to="/service-request"
+        className="fixed bottom-6 right-6 z-50 md:hidden w-14 h-14 rounded-full bg-gold text-gold-ink flex items-center justify-center shadow-lg hover:bg-gold-active transition-all"
+        aria-label="Новый запрос на ремонт"
+      >
+        <Plus size={24} />
+      </Link>
     </div>
   );
 }

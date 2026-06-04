@@ -2,26 +2,45 @@ import { useEffect, useMemo } from 'react';
 import { ShieldCheck, ShieldAlert, Calendar, Loader2, AlertCircle } from 'lucide-react';
 import { useWarranty } from '../../hooks/useWarranty';
 import type { WarrantyCard, WarrantyStatus } from '../../api/warranty';
+import { StatusBadge } from '../../components/ui/StatusBadge';
+import { StatCard } from '../../components/ui/StatCard';
 
 /* ------------------------------------------------------------------ */
-/*  Status helpers                                                     */
+/*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-function statusConfig(status: WarrantyStatus): { label: string; className: string } {
+/**
+ * Маппинг статуса гарантии на variant для StatusBadge.
+ * active → info, expired/annulled → neutral.
+ */
+function badgeVariant(status: WarrantyStatus): 'info' | 'neutral' {
+  return status === 'active' ? 'info' : 'neutral';
+}
+
+/**
+ * Локализованная метка статуса.
+ */
+function badgeLabel(status: WarrantyStatus): string {
   switch (status) {
-    case 'active':
-      return { label: 'Активна', className: 'bg-price-drop/10 text-price-drop' };
-    case 'expired':
-      return { label: 'Истекла', className: 'bg-price-rise/10 text-price-rise' };
-    case 'annulled':
-      return { label: 'Аннулирована', className: 'bg-muted/10 text-muted-foreground' };
+    case 'active':   return 'Активна';
+    case 'expired':  return 'Истекла';
+    case 'annulled': return 'Аннулирована';
   }
 }
 
-function statusIcon(status: WarrantyStatus) {
-  if (status === 'active') return <ShieldCheck size={14} />;
-  if (status === 'expired') return <ShieldAlert size={14} />;
-  return null;
+/**
+ * Вычисляет процент оставшегося срока гарантии для прогресс-бара.
+ * Используется только для активных гарантий.
+ */
+function calcProgress(card: WarrantyCard): number {
+  if (card.status !== 'active') return 0;
+  const start = new Date(card.startDate).getTime();
+  const end = new Date(card.endDate).getTime();
+  const now = Date.now();
+  if (start >= end || now >= end) return 0;
+  const total = end - start;
+  const remaining = end - now;
+  return Math.min(100, Math.max(0, (remaining / total) * 100));
 }
 
 /**
@@ -91,7 +110,7 @@ export function AccountWarranty() {
       <div className="min-h-screen bg-background">
         <div className="max-w-[1280px] mx-auto flex items-center justify-center py-32">
           <div className="flex flex-col items-center gap-3 text-center">
-            <AlertCircle size={40} className="text-price-rise" />
+            <AlertCircle size={40} className="text-destructive" />
             <h3 className="text-lg font-semibold text-foreground">Ошибка загрузки</h3>
             <p className="text-sm text-muted-foreground max-w-md">
               Не удалось получить список гарантийных талонов. Попробуйте обновить страницу.
@@ -120,20 +139,11 @@ export function AccountWarranty() {
           <p className="text-muted-foreground mt-1">Сроки гарантийного обслуживания</p>
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-card rounded-xl border border-border p-4">
-            <div className="text-2xl font-bold text-foreground">{stats.total}</div>
-            <div className="text-sm text-muted-foreground">Всего</div>
-          </div>
-          <div className="bg-card rounded-xl border border-border p-4">
-            <div className="text-2xl font-bold text-price-drop">{stats.active}</div>
-            <div className="text-sm text-muted-foreground">Активных</div>
-          </div>
-          <div className="bg-card rounded-xl border border-border p-4">
-            <div className="text-2xl font-bold text-price-rise">{stats.expired}</div>
-            <div className="text-sm text-muted-foreground">Истекло</div>
-          </div>
+        {/* Stats row — StatCard вместо ручной вёрстки */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <StatCard label="Всего" value={stats.total} icon={ShieldCheck} />
+          <StatCard label="Активных" value={stats.active} icon={ShieldAlert} variant="callout" />
+          <StatCard label="Истекло" value={stats.expired} icon={Calendar} />
         </div>
 
         {/* Loading overlay (cards already loaded, background refresh) */}
@@ -159,7 +169,7 @@ export function AccountWarranty() {
           /* Warranty cards */
           <div className="space-y-4">
             {items.map((card) => {
-              const cfg = statusConfig(card.status);
+              const pct = calcProgress(card);
               return (
                 <div
                   key={card.id}
@@ -181,13 +191,23 @@ export function AccountWarranty() {
                         </span>
                       </div>
                     </div>
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium shrink-0 ml-3 ${cfg.className}`}
-                    >
-                      {statusIcon(card.status)}
-                      {cfg.label}
-                    </span>
+                    <StatusBadge
+                      variant={badgeVariant(card.status)}
+                      label={badgeLabel(card.status)}
+                    />
                   </div>
+
+                  {/* Progress bar — только для активных гарантий */}
+                  {card.status === 'active' && (
+                    <div className="mt-4">
+                      <div className="h-1.5 bg-elevated rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-info-blue rounded-full transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                     <div>
@@ -205,17 +225,11 @@ export function AccountWarranty() {
                       <span className="text-foreground">{formatDate(card.endDate)}</span>
                     </div>
                     <div className="flex items-end justify-end">
-                      <a
-                        href="#"
-                        className="inline-flex items-center gap-1.5 text-sm text-info-blue hover:text-info-blue transition-colors"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          // TODO: Navigate to warranty detail page
-                        }}
-                      >
+                      {/* Страница деталей гарантии пока не реализована — показываем только иконку */}
+                      <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
                         <Calendar size={14} />
                         Подробнее
-                      </a>
+                      </span>
                     </div>
                   </div>
                 </div>

@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAdmin } from '../../../hooks/useAdmin';
+import { useToast } from '../../../hooks/useToast';
 import type { SiteSettings, UpdateSettingsRequest } from '../../../api/admin';
 import { Home, Package, Lock, Bell, Settings, Loader2 } from 'lucide-react';
 
@@ -17,6 +18,7 @@ export function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { showToast } = useToast();
   const [resetting, setResetting] = useState(false);
 
   // Form state
@@ -62,27 +64,27 @@ export function SettingsPage() {
     try {
       const updated = await updateSettings(formData);
       setSettings(updated);
-      alert('Настройки успешно сохранены');
+      showToast('Настройки успешно сохранены', 'success');
     } catch (err) {
       console.error('Failed to save settings:', err);
-      alert('Не удалось сохранить настройки');
+      showToast('Не удалось сохранить настройки', 'error');
     } finally {
       setSaving(false);
     }
   };
 
   const handleReset = async () => {
-    if (!confirm('Сбросить все настройки к значениям по умолчанию?')) return;
+    if (!window.confirm('Сбросить все настройки к значениям по умолчанию?')) return;
     
     setResetting(true);
     try {
       const defaultSettings = await resetSettings();
       setSettings(defaultSettings);
       setFormData(defaultSettings ?? {});
-      alert('Настройки сброшены к значениям по умолчанию');
+      showToast('Настройки сброшены к значениям по умолчанию', 'success');
     } catch (err) {
       console.error('Failed to reset settings:', err);
-      alert('Не удалось сбросить настройки');
+      showToast('Не удалось сбросить настройки', 'error');
     } finally {
       setResetting(false);
     }

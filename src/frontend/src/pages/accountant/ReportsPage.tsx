@@ -64,7 +64,7 @@ export function ReportsPage() {
   };
 
   return (
-    <div className="pt-[100px] px-[var(--space-md)] pb-12 mx-auto min-h-screen bg-background text-foreground max-w-[1400px]">
+    <div className="px-[var(--space-md)] pb-12 mx-auto min-h-screen bg-background text-foreground max-w-[1400px]">
       <header className="flex items-center justify-between gap-[var(--space-md)] mb-[var(--space-lg)] flex-wrap">
         <div>
           <h1 className="font-[var(--font-display)] text-[var(--text-3xl)] font-[var(--font-semibold)] tracking-[-0.02em] mb-1 text-foreground">

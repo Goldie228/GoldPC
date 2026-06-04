@@ -587,7 +587,7 @@ export function PCBuilderPage() {
 
         <h1 className="pc-builder__page-title">Конструктор ПК</h1>
 
-        <main className="pc-builder__main">
+        <div className="pc-builder__main">
           <div className="pc-builder__content">
             <div className="pc-builder__left">
               <div className="pc-builder__slots">
@@ -674,7 +674,7 @@ export function PCBuilderPage() {
               />
             </div>
           </div>
-        </main>
+        </div>
 
         {/* ===== Mobile Bottom Bar — только на мобилке ===== */}
         <div className="pc-builder__mobile-bar">

@@ -1,500 +1,599 @@
 /**
  * Master Ticket Detail Page
- * Страница детального просмотра заявки на сервис
- * Основано на prototypes/master-ticket-detail.html
+ * Детальная страница заявки для мастера
+ * Использует реальное API: servicesApi, useTicketChat (SignalR)
  */
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { servicesApi, TICKET_STATUSES } from '../../api/services';
+import type { ServiceRequestDto, TicketStatus, ServicePartDto } from '../../api/services';
+import { useAuthStore } from '../../store/authStore';
+import { useToast } from '../../hooks/useToast';
+import { useTicketChat } from '../../hooks/useTicketChat';
+import { ChatMessage } from '../../components/chat/ChatMessage';
+import { ChatInput } from '../../components/chat/ChatInput';
+import { TypingIndicator } from '../../components/chat/TypingIndicator';
 
-type TicketPriority = 'high' | 'medium' | 'low';
-type TicketStatus = 'new' | 'progress' | 'waiting' | 'done' | 'cancelled';
+// ─── Статус-бейджи Tailwind ─────────────────────────────────────────────────
 
-interface TimelineItem {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  type: 'created' | 'status' | 'comment' | 'priority';
+const STATUS_TAILWIND: Record<string, string> = {
+  Submitted: 'bg-blue-100 text-blue-800',
+  InProgress: 'bg-yellow-100 text-yellow-800',
+  PartsPending: 'bg-purple-100 text-purple-800',
+  ReadyForPickup: 'bg-green-100 text-green-800',
+  Completed: 'bg-gray-100 text-gray-800',
+  Cancelled: 'bg-red-100 text-red-800',
+};
+
+// ─── Вспомогательные функции ────────────────────────────────────────────────
+
+function getStatusLabel(key: string): string {
+  const found = TICKET_STATUSES.find((s) => s.key === key);
+  return found?.label ?? key;
 }
 
-interface TicketDetail {
-  id: string;
-  customerName: string;
-  customerPhone: string;
-  customerEmail: string;
-  deviceName: string;
-  deviceSerial: string;
-  deviceCategory: string;
-  deviceManufacturer: string;
-  warrantyEnd: string;
-  purchaseDate: string;
-  problem: string;
-  preliminaryDiagnosis: string;
-  priority: TicketPriority;
-  status: TicketStatus;
-  createdAt: string;
-  deadline: string;
-  assignedTo: string | null;
-  timeline: TimelineItem[];
+/** Разрешённые переходы статуса для мастера */
+function getAllowedStatuses(current: TicketStatus): { value: TicketStatus; label: string }[] {
+  const map: Record<string, { value: TicketStatus; label: string }[]> = {
+    Submitted: [{ value: 'InProgress', label: 'В работе' }],
+    InProgress: [{ value: 'PartsPending', label: 'Ожидание запчастей' }],
+    PartsPending: [{ value: 'InProgress', label: 'В работе' }],
+    ReadyForPickup: [],
+    Completed: [],
+    Cancelled: [],
+  };
+  return map[current] ?? [];
 }
 
-// Моковые данные для демонстрации
-const MOCK_TICKET: TicketDetail = {
-  id: 'TKT-1247',
-  customerName: 'Алексей Петров',
-  customerPhone: '+375 29 123-45-67',
-  customerEmail: 'petrov@example.com',
-  deviceName: 'Gigabyte RTX 4080 Gaming OC',
-  deviceSerial: 'GV-N4080G-1792',
-  deviceCategory: 'Видеокарта',
-  deviceManufacturer: 'Gigabyte',
-  warrantyEnd: '15.08.2027',
-  purchaseDate: '15.08.2024',
-  problem: 'Клиент сообщает о появлении артефактов на экране при высокой нагрузке на видеокарту. Проблема проявляется в 3D-играх и при рендеринге видео. Артефакты представляют собой цветные полосы и мерцание отдельных участков экрана. В обычном режиме работы (офисные задачи, просмотр видео) проблема не наблюдается. Температура GPU при нагрузке достигает 78-82°C, что в пределах нормы.',
-  preliminaryDiagnosis: 'Возможен перегрев видеопамяти или повреждение чипа. Требуется диагностика.',
-  priority: 'high',
-  status: 'new',
-  createdAt: '2026-03-17 14:32',
-  deadline: '2026-03-20',
-  assignedTo: null,
-  timeline: [
-    {
-      id: '1',
-      title: 'Заявка создана',
-      description: 'Заявка создана через сайт клиентом',
-      date: '17.03.2026 14:32',
-      type: 'created',
-    },
-    {
-      id: '2',
-      title: 'Приоритет повышен',
-      description: 'Приоритет изменен с «Средний» на «Высокий»',
-      date: '17.03.2026 14:45',
-      type: 'priority',
-    },
-    {
-      id: '3',
-      title: 'Клиент подтвердил актуальность',
-      description: 'Клиент подтвердил актуальность проблемы по телефону',
-      date: '17.03.2026 15:10',
-      type: 'comment',
-    },
-  ],
-};
-
-const PRIORITY_LABELS: Record<TicketPriority, string> = {
-  high: 'Высокий',
-  medium: 'Средний',
-  low: 'Низкий',
-};
-
-const PRIORITY_CLASSES: Record<TicketPriority, string> = {
-  high: 'priority-badge--high',
-  medium: 'priority-badge--medium',
-  low: 'priority-badge--low',
-};
-
-const STATUS_LABELS: Record<TicketStatus, string> = {
-  new: 'Новая',
-  progress: 'В работе',
-  waiting: 'Ожидание',
-  done: 'Выполнено',
-  cancelled: 'Отменено',
-};
-
-const STATUS_CLASSES: Record<TicketStatus, string> = {
-  new: 'status-badge--new',
-  progress: 'status-badge--progress',
-  waiting: 'status-badge--waiting',
-  done: 'status-badge--done',
-  cancelled: 'status-badge--cancelled',
-};
-
-// Моковые данные инженеров
-const ENGINEERS = [
-  { id: '1', name: 'Иванов Иван', role: 'инженер' },
-  { id: '2', name: 'Петров Сергей', role: 'ст. инженер' },
-  { id: '3', name: 'Сидоров Алексей', role: 'инженер' },
-];
-
-// Получение инициалов
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase();
+function formatDate(iso: string): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'BYN',
+    minimumFractionDigits: 2,
+  }).format(value);
+}
+
+function getInitials(id: string): string {
+  return (id?.charAt(0) ?? '?').toUpperCase();
+}
+
+/** Проверяет, можно ли переходить к статусу (не Cancelled/Completed) */
+function isTerminal(status: TicketStatus): boolean {
+  return status === 'Completed' || status === 'Cancelled';
+}
+
+// ─── Компонент ──────────────────────────────────────────────────────────────
 
 export function TicketDetailPage() {
-  const [ticket] = useState<TicketDetail>(MOCK_TICKET);
-  const [status, setStatus] = useState<TicketStatus>(ticket.status);
-  const [priority, setPriority] = useState<TicketPriority>(ticket.priority);
-  const [assignedTo, setAssignedTo] = useState<string>(ticket.assignedTo || '');
-  const [comment, setComment] = useState('');
-  const [newComment, setNewComment] = useState('');
+  const { ticketId } = useParams<{ ticketId: string }>();
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const currentUserId = useAuthStore((state) => state.user?.id);
 
-  const handleStatusUpdate = (e: React.FormEvent) => {
+  // ── Данные заявки ────────────────────────────────────────────────────────
+  const [ticket, setTicket] = useState<ServiceRequestDto | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // ── Форма статуса ────────────────────────────────────────────────────────
+  const [selectedStatus, setSelectedStatus] = useState<TicketStatus | ''>('');
+  const [statusComment, setStatusComment] = useState('');
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
+  // ── Форма завершения работы ──────────────────────────────────────────────
+  const [completeComment, setCompleteComment] = useState('');
+  const [completing, setCompleting] = useState(false);
+
+  // ── Форма добавления запчасти ────────────────────────────────────────────
+  const [partName, setPartName] = useState('');
+  const [partQty, setPartQty] = useState('1');
+  const [partPrice, setPartPrice] = useState('0');
+  const [addingPart, setAddingPart] = useState(false);
+
+  // ── Отмена ───────────────────────────────────────────────────────────────
+  const [cancelling, setCancelling] = useState(false);
+
+  // ── Чат ──────────────────────────────────────────────────────────────────
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+  const {
+    messages,
+    loading: messagesLoading,
+    error: chatError,
+    typingUserId,
+    connectionStatus,
+    sendMessage,
+  } = useTicketChat({ ticketId });
+
+  // ── Загрузка заявки ──────────────────────────────────────────────────────
+
+  const loadTicket = useCallback(async () => {
+    if (!ticketId) return;
+    try {
+      setLoading(true);
+      const data = await servicesApi.getServiceById(ticketId);
+      setTicket(data);
+      setSelectedStatus('');
+      setStatusComment('');
+    } catch (err) {
+      showToast('Ошибка загрузки заявки', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [ticketId, showToast]);
+
+  useEffect(() => {
+    loadTicket();
+  }, [loadTicket]);
+
+  // Автоскролл чата вниз при новых сообщениях
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // ── Обработчики ──────────────────────────────────────────────────────────
+
+  const handleUpdateStatus = async (e: React.FormEvent) => {
     e.preventDefault();
-    setComment('');
+    if (!ticketId || !selectedStatus) return;
+
+    setStatusUpdating(true);
+    try {
+      await servicesApi.updateTicketStatus(ticketId, selectedStatus as TicketStatus, statusComment || undefined);
+      showToast('Статус обновлён', 'success');
+      await loadTicket();
+    } catch {
+      showToast('Ошибка при обновлении статуса', 'error');
+    } finally {
+      setStatusUpdating(false);
+    }
   };
 
-  const handleAddComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-    setNewComment('');
+  const handleComplete = async () => {
+    if (!ticketId) return;
+
+    setCompleting(true);
+    try {
+      await servicesApi.completeTicket(ticketId, completeComment || undefined);
+      showToast('Работа завершена', 'success');
+      await loadTicket();
+      setCompleteComment('');
+    } catch {
+      showToast('Ошибка при завершении работы', 'error');
+    } finally {
+      setCompleting(false);
+    }
   };
+
+  const handleAddPart = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ticketId || !partName.trim()) return;
+
+    setAddingPart(true);
+    try {
+      const dto: ServicePartDto = {
+        productId: crypto.randomUUID(),
+        productName: partName.trim(),
+        quantity: Number(partQty) || 1,
+        unitPrice: Number(partPrice) || 0,
+      };
+      await servicesApi.addServicePart(ticketId, dto);
+      showToast('Запчасть добавлена', 'success');
+      await loadTicket();
+      setPartName('');
+      setPartQty('1');
+      setPartPrice('0');
+    } catch {
+      showToast('Ошибка при добавлении запчасти', 'error');
+    } finally {
+      setAddingPart(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!ticketId) return;
+    if (!window.confirm('Вы уверены, что хотите отменить заявку?')) return;
+
+    setCancelling(true);
+    try {
+      await servicesApi.cancelTicket(ticketId);
+      showToast('Заявка отменена', 'success');
+      navigate('/master/tickets');
+    } catch {
+      showToast('Ошибка при отмене заявки', 'error');
+      setCancelling(false);
+    }
+  };
+
+  // ── Состояние загрузки ───────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div className="staff-page">
+        <p className="text-center py-12 text-gray-500">Загрузка заявки...</p>
+      </div>
+    );
+  }
+
+  if (!ticket) {
+    return (
+      <div className="staff-page">
+        <p className="text-center py-12 text-gray-500">Заявка не найдена</p>
+      </div>
+    );
+  }
+
+  const allowedStatuses = getAllowedStatuses(ticket.status);
+  const terminal = isTerminal(ticket.status);
+  const assignedToOther = ticket.masterId && ticket.masterId !== currentUserId;
+
+  // ── Рендер ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="ticket-detail">
+    <div className="staff-page">
       {/* Header */}
-      <header className="ticket-detail__header">
-        <div className="ticket-detail__title-section">
-          <Link to="/master/tickets" className="back-link">
+      <div className="staff-page__header">
+        <div>
+          <Link
+            to="/master/tickets"
+            className="inline-flex items-center gap-1 text-sm text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors mb-1"
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
               <polyline points="15 18 9 12 15 6" />
             </svg>
             Назад к списку
           </Link>
-          <h1 className="ticket-detail__title">
-            <span className="ticket-id">#{ticket.id}</span>
-            <span className={'status-badge ' + STATUS_CLASSES[status]}>
-              {STATUS_LABELS[status]}
+          <h1 className="staff-page__title">
+            #{ticket.requestNumber}
+            <span className={`ml-3 inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_TAILWIND[ticket.status] ?? 'bg-gray-100 text-gray-800'}`}>
+              {getStatusLabel(ticket.status)}
             </span>
           </h1>
         </div>
-        <div className="ticket-detail__actions">
-          <button className="btn btn--danger">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            </svg>
-            Удалить
-          </button>
-          <button className="btn btn--primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-            Сохранить
-          </button>
-        </div>
-      </header>
+      </div>
 
       {/* Content Grid */}
-      <div className="ticket-detail__grid">
-        {/* Left Column */}
-        <div className="ticket-detail__main">
-          {/* Main Info Card */}
-          <div className="card">
-            <div className="card__header">
-              <span className="card__title">Основная информация</span>
-            </div>
-            <div className="card__body">
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="info-label">ID заявки</span>
-                  <span className="info-value info-value--accent">#{ticket.id}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Дата создания</span>
-                  <span className="info-value info-value--mono">{ticket.createdAt}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Приоритет</span>
-                  <span className="info-value">
-                    <span className={'priority-badge ' + PRIORITY_CLASSES[priority]}>
-                      {PRIORITY_LABELS[priority]}
-                    </span>
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Статус</span>
-                  <span className="info-value">
-                    <span className={'status-badge ' + STATUS_CLASSES[status]}>
-                      {STATUS_LABELS[status]}
-                    </span>
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Назначена</span>
-                  <span className="info-value">
-                    {assignedTo
-                      ? ENGINEERS.find((e) => e.id === assignedTo)?.name
-                      : 'Не назначена'}
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Срок выполнения</span>
-                  <span className="info-value info-value--warning">{ticket.deadline}</span>
-                </div>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        {/* ════════════════ LEFT COLUMN (lg:col-span-2) ════════════════ */}
+        <div className="lg:col-span-2 space-y-6">
 
-              {/* Device Section */}
-              <div className="device-section">
-                <div className="device-header">
-                  <div className="device-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24">
-                      <rect x="2" y="6" width="20" height="12" rx="2" />
-                      <path d="M6 10h4v4H6z" />
-                    </svg>
-                  </div>
-                  <div className="device-info">
-                    <div className="device-name">{ticket.deviceName}</div>
-                    <div className="device-serial">SN: {ticket.deviceSerial}</div>
-                  </div>
-                </div>
-                <div className="info-grid">
-                  <div className="info-item">
-                    <span className="info-label">Категория</span>
-                    <span className="info-value">{ticket.deviceCategory}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Производитель</span>
-                    <span className="info-value">{ticket.deviceManufacturer}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Гарантия</span>
-                    <span className="info-value info-value--success">До {ticket.warrantyEnd}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Дата покупки</span>
-                    <span className="info-value info-value--mono">{ticket.purchaseDate}</span>
-                  </div>
-                </div>
+          {/* ── Карточка "Информация о заявке" ─────────────────────────── */}
+          <div className="bg-white rounded-lg border p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-[var(--fg)]">Информация о заявке</h2>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-[var(--fg-muted)] block">ID заявки</span>
+                <span className="font-medium text-[var(--fg)]">{ticket.id}</span>
+              </div>
+              <div>
+                <span className="text-[var(--fg-muted)] block">Тип услуги</span>
+                <span className="font-medium text-[var(--fg)]">{ticket.serviceTypeName}</span>
+              </div>
+              <div>
+                <span className="text-[var(--fg-muted)] block">Устройство</span>
+                <span className="font-medium text-[var(--fg)]">{ticket.deviceModel || '—'}</span>
+              </div>
+              <div>
+                <span className="text-[var(--fg-muted)] block">Серийный номер</span>
+                <span className="font-medium text-[var(--fg)]">{ticket.serialNumber || '—'}</span>
+              </div>
+              <div>
+                <span className="text-[var(--fg-muted)] block">Стоимость</span>
+                <span className="font-medium text-[var(--fg)]">
+                  {ticket.actualCost > 0 ? formatCurrency(ticket.actualCost) : formatCurrency(ticket.estimatedCost)}
+                </span>
+              </div>
+              <div>
+                <span className="text-[var(--fg-muted)] block">Дата создания</span>
+                <span className="font-medium text-[var(--fg)]">{formatDate(ticket.createdAt)}</span>
               </div>
             </div>
+
+            {/* Описание проблемы */}
+            <div>
+              <h3 className="text-sm font-semibold text-[var(--fg)] mb-1">Описание проблемы</h3>
+              <p className="text-sm text-[var(--fg-secondary)] whitespace-pre-wrap">{ticket.description}</p>
+            </div>
+
+            {/* Комментарий мастера */}
+            {ticket.masterComment && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                <h3 className="text-sm font-semibold text-yellow-800 mb-1">Комментарий мастера</h3>
+                <p className="text-sm text-yellow-700 whitespace-pre-wrap">{ticket.masterComment}</p>
+              </div>
+            )}
           </div>
 
-          {/* Problem Description Card */}
-          <div className="card">
-            <div className="card__header">
-              <span className="card__title">Описание проблемы</span>
-            </div>
-            <div className="card__body">
-              <p className="problem-text">{ticket.problem}</p>
-              <p className="problem-text problem-text--diagnosis">
-                <strong>Предварительный диагноз:</strong> {ticket.preliminaryDiagnosis}
-              </p>
-            </div>
-          </div>
-
-          {/* Timeline Card */}
-          <div className="card">
-            <div className="card__header">
-              <span className="card__title">История заявки</span>
-            </div>
-            <div className="card__body">
-              <div className="timeline">
-                {ticket.timeline.map((item, index) => (
-                  <div key={item.id} className="timeline-item">
-                    <div className={'timeline-marker ' + (index === 0 ? 'timeline-marker--first' : '')}>
-                      {item.type === 'created' && (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                          <polyline points="14 2 14 8 20 8" />
-                        </svg>
-                      )}
-                      {item.type === 'priority' && (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-                          <circle cx="12" cy="12" r="10" />
-                          <polyline points="12 6 12 12 16 14" />
-                        </svg>
-                      )}
-                      {item.type === 'comment' && (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-                          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72" />
-                        </svg>
-                      )}
-                      {item.type === 'status' && (
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
+          {/* ── Карточка "История изменений" ──────────────────────────── */}
+          <div className="bg-white rounded-lg border p-6">
+            <h2 className="text-lg font-semibold text-[var(--fg)] mb-4">История изменений</h2>
+            {(ticket.workReports ?? []).length === 0 ? (
+              <p className="text-sm text-gray-500">История изменений отсутствует</p>
+            ) : (
+              <div className="space-y-0">
+                {(ticket.workReports ?? []).map((report, idx) => (
+                  <div key={report.id} className="flex gap-3 pb-4 relative">
+                    {/* Маркер-кружок */}
+                    <div className="flex flex-col items-center">
+                      <div className={`w-3 h-3 rounded-full border-2 mt-1 ${
+                        idx === 0
+                          ? 'bg-blue-500 border-blue-500'
+                          : 'bg-white border-gray-300'
+                      }`} />
+                      {idx < (ticket.workReports ?? []).length - 1 && (
+                        <div className="w-0.5 flex-1 bg-gray-200 mt-1" />
                       )}
                     </div>
-                    <div className="timeline-content">
-                      <div className="timeline-title">{item.title}</div>
-                      <div className="timeline-desc">{item.description}</div>
-                      <div className="timeline-date">{item.date}</div>
+                    {/* Контент */}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-gray-500">{formatDate(report.changedAt)}</div>
+                      <div className="text-sm font-medium text-[var(--fg)] mt-0.5">
+                        Статус изменён: {getStatusLabel(report.previousStatus)} → {getStatusLabel(report.newStatus)}
+                      </div>
+                      {report.comment && (
+                        <p className="text-sm text-[var(--fg-secondary)] mt-1">{report.comment}</p>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Add Comment Card */}
-          <div className="card">
-            <div className="card__header">
-              <span className="card__title">Добавить комментарий</span>
+          {/* ── Карточка "Чат с клиентом" ─────────────────────────────── */}
+          <div className="bg-white rounded-lg border p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <h2 className="text-lg font-semibold text-[var(--fg)]">Чат с клиентом</h2>
+              <span className={`inline-block w-2.5 h-2.5 rounded-full ${
+                connectionStatus === 'connected' ? 'bg-green-500' : 'bg-gray-400'
+              }`} />
             </div>
-            <div className="card__body">
-              <form onSubmit={handleAddComment}>
-                <div className="form-group">
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Введите комментарий..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-                <button type="submit" className="btn btn--primary">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                  </svg>
-                  Добавить комментарий
-                </button>
-              </form>
+
+            {chatError && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-3 text-sm text-red-700">
+                {chatError}
+              </div>
+            )}
+
+            <div className="max-h-[400px] overflow-y-auto space-y-1 mb-4">
+              {messagesLoading && messages.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-8">Загрузка сообщений...</p>
+              ) : messages.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-8">
+                  Нет сообщений. Напишите первое сообщение клиенту.
+                </p>
+              ) : (
+                messages.map((msg) => (
+                  <ChatMessage key={msg.id} message={msg} isOwn={msg.authorRole === 'Master'} />
+                ))
+              )}
+              {typingUserId && <TypingIndicator userName="Клиент" />}
+              <div ref={chatBottomRef} />
             </div>
+
+            <ChatInput
+              onSend={sendMessage}
+              disabled={terminal || !!assignedToOther}
+              placeholder="Введите сообщение..."
+            />
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className="ticket-detail__sidebar">
-          {/* Customer Card */}
-          <div className="card">
-            <div className="card__header">
-              <span className="card__title">Клиент</span>
-            </div>
-            <div className="card__body">
-              <div className="customer-card">
-                <div className="customer-avatar">{getInitials(ticket.customerName)}</div>
-                <div className="customer-info">
-                  <div className="customer-name">{ticket.customerName}</div>
-                  <div className="customer-contacts">
-                    <a href={`tel:${ticket.customerPhone}`} className="customer-link">
-                      {ticket.customerPhone}
-                    </a>
-                    <a href={`mailto:${ticket.customerEmail}`} className="customer-link">
-                      {ticket.customerEmail}
-                    </a>
-                  </div>
-                </div>
+        {/* ════════════════ RIGHT COLUMN (lg:col-span-1) ════════════════ */}
+        <div className="lg:col-span-1 space-y-4">
+
+          {/* ── Карточка "Клиент" ──────────────────────────────────────── */}
+          <div className="bg-white rounded-lg border p-4">
+            <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Клиент</h3>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">
+                {getInitials(ticket.clientId)}
               </div>
-              <div className="quick-actions">
-                <a href="#" className="quick-action">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                  История обращений (3)
-                </a>
-                <a href="#" className="quick-action">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                  История покупок
-                </a>
+              <div>
+                <p className="text-sm font-medium text-[var(--fg)]">
+                  ID: {ticket.clientId.length > 8 ? ticket.clientId.slice(0, 8) + '…' : ticket.clientId}
+                </p>
+                <p className="text-xs text-[var(--fg-muted)]">
+                  {ticket.clientId}
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Update Status Card */}
-          <div className="card">
-            <div className="card__header">
-              <span className="card__title">Обновить статус</span>
+          {/* ── Баннер "Назначена другому мастеру" ─────────────────────── */}
+          {assignedToOther && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-sm text-orange-800">
+              Заявка назначена другому мастеру. Управление статусом недоступно.
             </div>
-            <div className="card__body">
-              <form onSubmit={handleStatusUpdate}>
-                <div className="form-group">
-                  <label className="form-label">Статус</label>
-                  <select
-                    className="form-select"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as TicketStatus)}
+          )}
+
+          {/* ── Карточка "Управление статусом" ─────────────────────────── */}
+          {!terminal && !assignedToOther && (
+            <div className="bg-white rounded-lg border p-4">
+              <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Управление статусом</h3>
+
+              {allowedStatuses.length === 0 ? (
+                <p className="text-xs text-gray-500">Нет доступных переходов для текущего статуса</p>
+              ) : (
+                <form onSubmit={handleUpdateStatus} className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--fg-muted)] mb-1">Новый статус</label>
+                    <select
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value as TicketStatus)}
+                      required
+                    >
+                      <option value="" disabled>Выберите статус...</option>
+                      {allowedStatuses.map((s) => (
+                        <option key={s.value} value={s.value}>{s.label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--fg-muted)] mb-1">Комментарий</label>
+                    <textarea
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      rows={2}
+                      placeholder="Комментарий к изменению..."
+                      value={statusComment}
+                      onChange={(e) => setStatusComment(e.target.value)}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={statusUpdating || !selectedStatus}
+                    className="w-full rounded-md bg-blue-600 text-white py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    <option value="new">Новая</option>
-                    <option value="progress">В работе</option>
-                    <option value="waiting">Ожидание</option>
-                    <option value="done">Выполнено</option>
-                    <option value="cancelled">Отменено</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Приоритет</label>
-                  <select
-                    className="form-select"
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value as TicketPriority)}
-                  >
-                    <option value="low">Низкий</option>
-                    <option value="medium">Средний</option>
-                    <option value="high">Высокий</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Назначить</label>
-                  <select
-                    className="form-select"
-                    value={assignedTo}
-                    onChange={(e) => setAssignedTo(e.target.value)}
-                  >
-                    <option value="">Не назначена</option>
-                    {ENGINEERS.map((engineer) => (
-                      <option key={engineer.id} value={engineer.id}>
-                        {engineer.name} ({engineer.role})
-                      </option>
+                    {statusUpdating ? 'Обновление...' : 'Обновить статус'}
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+
+          {/* ── Кнопка "Завершить работу" ───────────────────────────────── */}
+          {ticket.status === 'InProgress' && !assignedToOther && (
+            <div className="bg-white rounded-lg border p-4">
+              <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Завершить работу</h3>
+              <div className="space-y-3">
+                <textarea
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                  rows={2}
+                  placeholder="Финальный комментарий..."
+                  value={completeComment}
+                  onChange={(e) => setCompleteComment(e.target.value)}
+                />
+                <button
+                  type="button"
+                  disabled={completing}
+                  onClick={handleComplete}
+                  className="w-full rounded-md bg-green-600 text-white py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {completing ? 'Завершение...' : 'Завершить работу'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Карточка "Запчасти" ─────────────────────────────────────── */}
+          <div className="bg-white rounded-lg border p-4">
+            <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Запчасти</h3>
+
+            {/* Список запчастей */}
+            {(ticket.serviceParts ?? []).length === 0 ? (
+              <p className="text-xs text-gray-500 mb-3">Запчасти не добавлены</p>
+            ) : (
+              <div className="overflow-x-auto mb-4">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-1 pr-2 font-medium text-[var(--fg-muted)]">Название</th>
+                      <th className="text-right py-1 px-2 font-medium text-[var(--fg-muted)]">Кол-во</th>
+                      <th className="text-right py-1 px-2 font-medium text-[var(--fg-muted)]">Цена</th>
+                      <th className="text-right py-1 pl-2 font-medium text-[var(--fg-muted)]">Сумма</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(ticket.serviceParts ?? []).map((part, idx) => (
+                      <tr key={`${part.productId}-${idx}`} className="border-b border-gray-100">
+                        <td className="py-1.5 pr-2 text-[var(--fg)]">{part.productName}</td>
+                        <td className="text-right py-1.5 px-2 text-[var(--fg)]">{part.quantity}</td>
+                        <td className="text-right py-1.5 px-2 text-[var(--fg)]">{formatCurrency(part.unitPrice)}</td>
+                        <td className="text-right py-1.5 pl-2 text-[var(--fg)] font-medium">
+                          {formatCurrency(part.quantity * part.unitPrice)}
+                        </td>
+                      </tr>
                     ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Комментарий</label>
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Добавьте комментарий к изменению..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    rows={3}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Форма добавления запчасти */}
+            {!terminal && !assignedToOther && (
+              <form onSubmit={handleAddPart} className="space-y-2">
+                <div>
+                  <label className="block text-xs font-medium text-[var(--fg-muted)] mb-0.5">Название</label>
+                  <input
+                    className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Наименование запчасти"
+                    value={partName}
+                    onChange={(e) => setPartName(e.target.value)}
+                    required
                   />
                 </div>
-                <button type="submit" className="btn btn--primary btn--full">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Обновить
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--fg-muted)] mb-0.5">Кол-во</label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={partQty}
+                      onChange={(e) => setPartQty(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[var(--fg-muted)] mb-0.5">Цена за ед.</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={partPrice}
+                      onChange={(e) => setPartPrice(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={addingPart || !partName.trim()}
+                  className="w-full rounded-md bg-blue-600 text-white py-1.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {addingPart ? 'Добавление...' : 'Добавить'}
                 </button>
               </form>
-            </div>
+            )}
           </div>
 
-          {/* Quick Actions Card */}
-          <div className="card">
-            <div className="card__header">
-              <span className="card__title">Быстрые действия</span>
+          {/* ── Быстрые действия ────────────────────────────────────────── */}
+          {!terminal && !assignedToOther && (
+            <div className="bg-white rounded-lg border p-4">
+              <h3 className="text-sm font-semibold text-[var(--fg)] mb-3">Быстрые действия</h3>
+              <button
+                type="button"
+                disabled={cancelling}
+                onClick={handleCancel}
+                className="w-full rounded-md border border-red-300 text-red-700 py-2 text-sm font-medium hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {cancelling ? 'Отмена...' : 'Отменить заявку'}
+              </button>
             </div>
-            <div className="card__body">
-              <div className="quick-actions">
-                <a href="#" className="quick-action">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14 2 14 8 20 8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                  </svg>
-                  Печать акта приёмки
-                </a>
-                <a href="#" className="quick-action">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  Экспорт в PDF
-                </a>
-                <a href="#" className="quick-action">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                  </svg>
-                  Создать копию заявки
-                </a>
-              </div>
+          )}
+
+          {ticket.completedAt && (
+            <div className="bg-white rounded-lg border p-4">
+              <h3 className="text-sm font-semibold text-[var(--fg)] mb-1">Дата завершения</h3>
+              <p className="text-sm text-[var(--fg-secondary)]">{formatDate(ticket.completedAt)}</p>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -62,7 +62,7 @@ const FRONTEND_TO_BACKEND: Record<ProductCategory, string> = {
   psu: 'psu',
   case: 'cases',
   cooling: 'coolers',
-  fan: 'fans',
+  fan: 'coolers',
   monitor: 'monitors',
   keyboard: 'keyboards',
   mouse: 'mice',
@@ -71,51 +71,70 @@ const FRONTEND_TO_BACKEND: Record<ProductCategory, string> = {
 
 /**
  * Порядок атрибутов по категориям (backend slug -> ключи).
+ * Ключи должны совпадать с CategoryFilterAttribute.AttributeKey из backend.
  * Каждый фильтр — атомарный, без объединения в «Прочее».
  */
 const SPEC_ORDER: Record<string, string[]> = {
   gpu: [
     'release_year', 'proizvoditel_graficheskogo_protsessora', 'graficheskiy_protsessor',
     'videopamyat', 'tip_videopamyati', 'shirina_shiny_pamyati', 'okhlazhdenie_1',
-    'razyemy_pitaniya', 'rekomenduemyy_blok_pitaniya', 'interfeys_1',
+    'razyemy_pitaniya', 'interfeys_1', 'rekomenduemyy_blok_pitaniya',
     'dlina_videokarty', 'vysota_videokarty',
   ],
   processors: [
-    'socket', 'model_series', 'codename', 'architecture', 'data_vykhoda_na_rynok',
-    'integrated_graphics', 'cores', 'threads', 'base_freq', 'max_freq',
-    'max_memory_freq', 'tdp', 'delivery_type', 'cooling_included',
-    'process_nm', 'cache_l2', 'cache_l3', 'memory_support',
-    'memory_channels', 'multithreading',
+    'socket', 'model_series', 'codename', 'architecture',
+    'data_vykhoda_na_rynok', 'integrated_graphics', 'cores', 'threads',
+    'base_freq', 'max_freq', 'max_memory_freq', 'tdp', 'delivery_type',
+    'cooling_included', 'process_nm', 'cache_l2', 'cache_l3',
+    'memory_support', 'memory_channels', 'multithreading',
   ],
   motherboards: [
-    'socket', 'chipset', 'form_factor', 'memory_type',
-    'memory_mixed_slots', 'memory_cudimm', 'memory_slots',
-    'max_memory', 'max_memory_freq', 'data_vykhoda_na_rynok',
-  ],
-  ram: [
-    'capacity', 'capacity_per_module', 'memory_type', 'type',
-    'frequency', 'pc_index', 'cas_latency', 'ecc', 'expo',
-    'xmp', 'voltage', 'data_vykhoda_na_rynok',
-  ],
-  storage: [
-    'capacity', 'form_factor', 'interface', 'protocol',
-    'read_speed', 'write_speed', 'flash_type', 'tbw',
+    'socket', 'chipset', 'form_factor', 'memory_type', 'memory_mixed_slots',
+    'memory_cudimm', 'memory_slots', 'max_memory', 'max_memory_freq',
     'data_vykhoda_na_rynok',
   ],
-  psu: ['wattage', 'efficiency', 'form_factor', 'modular', 'fan_size', 'data_vykhoda_na_rynok'],
+  ram: [
+    'capacity', 'capacity_per_module', 'kit_modules', 'type', 'frequency',
+    'pc_index', 'cas_latency', 'ecc', 'voltage', 'expo', 'xmp',
+    'data_vykhoda_na_rynok',
+  ],
+  storage: [
+    'capacity', 'form_factor', 'interface', 'protocol', 'flash_type',
+    'read_speed', 'write_speed', 'tbw', 'data_vykhoda_na_rynok',
+  ],
+  psu: [
+    'wattage', 'efficiency', 'form_factor', 'modular', 'fan_size',
+    'data_vykhoda_na_rynok',
+  ],
   cases: [
     'form_factor', 'material', 'material_front', 'window',
     'max_cooler_height', 'max_gpu_length', 'data_vykhoda_na_rynok',
   ],
-  coolers: ['cooler_type', 'socket', 'tdp', 'fan_size', 'fan_count', 'noise', 'data_vykhoda_na_rynok'],
+  coolers: [
+    'type', 'socket', 'tdp', 'fan_size', 'fan_count', 'noise',
+    'data_vykhoda_na_rynok',
+  ],
   monitors: [
     'diagonal', 'aspect_ratio', 'curved', 'sync_technology',
-    'resolution', 'refresh_rate', 'matrix', 'type',
-    'brightness', 'response_time', 'data_vykhoda_na_rynok',
+    'resolution', 'refresh_rate', 'matrix', 'type', 'brightness',
+    'response_time', 'data_vykhoda_na_rynok',
   ],
-  keyboards: ['type', 'interface', 'connection_type', 'wireless_protocols', 'color', 'data_vykhoda_na_rynok'],
-  mice: ['type', 'interface', 'connection_type', 'wireless_protocols', 'color', 'sensor_type', 'dpi', 'data_vykhoda_na_rynok'],
-  headphones: ['type', 'form_factor', 'interface', 'connection_type', 'driver_size', 'frequency_range', 'impedance', 'color', 'data_vykhoda_na_rynok'],
+  keyboards: [
+    'type', 'interface', 'connection_type', 'wireless_protocols', 'color',
+    'data_vykhoda_na_rynok',
+  ],
+  mice: [
+    'type', 'interface', 'connection_type', 'wireless_protocols', 'color',
+    'sensor_type', 'dpi', 'data_vykhoda_na_rynok',
+  ],
+  headphones: [
+    'type', 'form_factor', 'interface', 'connection_type', 'driver_size',
+    'frequency_range', 'impedance', 'color', 'data_vykhoda_na_rynok',
+  ],
+  periphery: [
+    'type', 'interface', 'color', 'sensor_type', 'dpi',
+    'data_vykhoda_na_rynok',
+  ],
 };
 
 // ============================================================

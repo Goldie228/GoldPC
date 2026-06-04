@@ -60,14 +60,13 @@ function Clock({ size, className }: { size?: number; className?: string }) {
 
 export function ReturnsPage(): ReactElement {
   return (
-    <main className="min-h-screen bg-canvas-dark pt-24 md:pt-28 pb-20">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
-          <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
-          <span className="text-muted-text">/</span>
-          <span className="text-body-text">Возврат и обмен</span>
-        </nav>
+    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
+        <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
+        <span className="text-muted-text">/</span>
+        <span className="text-body-text">Возврат и обмен</span>
+      </nav>
 
         {/* Hero */}
         <section className="mb-16">
@@ -135,7 +134,7 @@ export function ReturnsPage(): ReactElement {
           </div>
         </section>
 
-        {/* Help links */}
+{/* Help links */}
         <section className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             to="/faq"
@@ -153,6 +152,5 @@ export function ReturnsPage(): ReactElement {
           </Link>
         </section>
       </div>
-    </main>
-  );
-}
+    );
+  }

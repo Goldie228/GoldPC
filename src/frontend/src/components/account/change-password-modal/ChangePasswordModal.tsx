@@ -203,10 +203,10 @@ export function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProp
             <span className="text-xs font-medium text-muted-text">Требования к паролю:</span>
           </div>
           <ul className="text-xs text-muted-text space-y-1 ml-6 list-disc">
-            <li className={newPassword.length >= 8 ? 'text-[#0ecb81]' : ''}>Минимум 8 символов</li>
-            <li className={/[A-Z]/.test(newPassword) ? 'text-[#0ecb81]' : ''}>Заглавная буква (A-Z)</li>
-            <li className={/[a-z]/.test(newPassword) ? 'text-[#0ecb81]' : ''}>Строчная буква (a-z)</li>
-            <li className={/[0-9]/.test(newPassword) ? 'text-[#0ecb81]' : ''}>Цифра (0-9)</li>
+            <li className={newPassword.length >= 8 ? 'text-info-blue' : ''}>Минимум 8 символов</li>
+            <li className={/[A-Z]/.test(newPassword) ? 'text-info-blue' : ''}>Заглавная буква (A-Z)</li>
+            <li className={/[a-z]/.test(newPassword) ? 'text-info-blue' : ''}>Строчная буква (a-z)</li>
+            <li className={/[0-9]/.test(newPassword) ? 'text-info-blue' : ''}>Цифра (0-9)</li>
           </ul>
         </div>
 

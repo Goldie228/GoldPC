@@ -155,7 +155,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <span className="text-gray-400 text-xs">No image</span>
+              <span className="text-muted-foreground text-xs">Нет изображения</span>
             </div>
           )}
         </div>
@@ -200,7 +200,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
         {/* Actions */}
         <div className="flex flex-col gap-2 self-center">
           {isOutOfStock ? (
-            <button className="h-9 px-5 bg-surface-elevated text-muted-text text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 cursor-not-allowed">
+            <button className="h-9 px-5 border border-border text-foreground bg-transparent text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 cursor-not-allowed hover:bg-surface-elevated transition-colors">
               <Bell size={14} />
               Уведомить
             </button>
@@ -228,7 +228,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           ) : (
             <button
               onClick={handleAddToCart}
-              className="h-9 px-5 bg-price-drop text-on-dark text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 hover:brightness-110 transition-all active:scale-[0.98]"
+              className="h-9 px-5 bg-gold text-gold-ink text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 hover:bg-gold-active transition-all active:scale-[0.98]"
             >
               <ShoppingCart size={14} />
               В корзину
@@ -274,7 +274,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="text-gray-400 text-sm">No image</span>
+            <span className="text-muted-foreground text-sm">Нет изображения</span>
           </div>
         )}
 
@@ -433,7 +433,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
         </div>
 
         {isOutOfStock ? (
-          <button className="w-full h-10 bg-gold text-gold-ink text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 hover:bg-gold-active transition-colors">
+          <button className="w-full h-10 border border-border text-foreground bg-transparent text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 hover:bg-surface-elevated transition-colors">
             <Bell size={14} />
             Уведомить
           </button>
@@ -461,7 +461,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
         ) : (
           <button
             onClick={handleAddToCart}
-            className="product-card__btn w-full h-10 bg-price-drop text-on-dark text-sm font-semibold rounded-lg flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-[0.98]"
+            className="product-card__btn w-full h-10 bg-gold text-gold-ink text-sm font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-gold-active transition-all active:scale-[0.98]"
           >
             <ShoppingCart size={14} />
             В корзину

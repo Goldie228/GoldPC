@@ -187,7 +187,7 @@ export function WishlistPage(): ReactElement {
   return (
     <div className="bg-canvas-dark min-h-screen">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
-        <main className="min-w-0">
+        <div className="min-w-0">
           {/* Хлебные крошки */}
           <Breadcrumbs
             items={[
@@ -319,10 +319,10 @@ export function WishlistPage(): ReactElement {
                   </AnimatePresence>
                 </motion.div>
               )}
-            </>
-          )}
-        </main>
+</>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
 }

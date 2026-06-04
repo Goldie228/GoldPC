@@ -16,6 +16,34 @@ import {
   emptyPcBuilderState,
 } from './constants';
 
+/**
+ * Runtime validation for deserialized build data.
+ * Prevents corrupted localStorage data from crashing the app.
+ */
+function isValidSerializedBuild(data: unknown): data is SerializedBuildV2 | SerializedBuildV1 {
+  if (!data || typeof data !== 'object') return false;
+  const obj = data as Record<string, unknown>;
+
+  // Must have 'v' field (version)
+  if (typeof obj.v !== 'number') return false;
+
+  // V2 requires 'components' object
+  if (obj.v === 2) {
+    if (!obj.components || typeof obj.components !== 'object') return false;
+    const comps = obj.components as Record<string, unknown>;
+    // At least validate that component entries have product and type
+    for (const [, value] of Object.entries(comps)) {
+      if (value == null) continue;
+      if (typeof value !== 'object') return false;
+      const entry = value as Record<string, unknown>;
+      if (!entry.product || !entry.type) return false;
+    }
+    return true;
+  }
+
+  return false;
+}
+
 export function isBuilderEmpty(c: PCBuilderSelectedState): boolean {
   return (
     c.cpu == null &&
@@ -122,7 +150,13 @@ export function loadFromLocalStorage(): PCBuilderSelectedState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return emptyPcBuilderState();
-    const parsed = JSON.parse(raw) as SerializedBuildV2 | SerializedBuildV1;
+    const parsed = JSON.parse(raw);
+
+    // Runtime validation before type assertion
+    if (!isValidSerializedBuild(parsed)) {
+      clearLocalStorage();
+      return emptyPcBuilderState();
+    }
 
     if ('v' in parsed && parsed.v === 2 && parsed.components != null) {
       const c = parsed.components;

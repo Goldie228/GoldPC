@@ -61,52 +61,50 @@ const sections = [
 
 export function TermsPage(): ReactElement {
   return (
-    <main className="min-h-screen bg-canvas-dark pt-24 md:pt-28 pb-20">
-      <div className="max-w-[900px] mx-auto px-4 md:px-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
-          <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
-          <span className="text-muted-text">/</span>
-          <span className="text-body-text">Пользовательское соглашение</span>
-        </nav>
+    <div className="max-w-[900px] mx-auto px-4 md:px-8 pt-8">
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
+        <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
+        <span className="text-muted-text">/</span>
+        <span className="text-body-text">Пользовательское соглашение</span>
+      </nav>
 
-        {/* Hero */}
-        <section className="mb-12">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-body-text mb-4 tracking-[-0.02em]">
-            Пользовательское соглашение
-          </h1>
-          <p className="text-lg text-muted-text leading-relaxed">
-            Условия использования сайта и сервисов GoldPC. Оформляя заказ, вы соглашаетесь с ними.
-          </p>
-        </section>
+      {/* Hero */}
+      <section className="mb-12">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-body-text mb-4 tracking-[-0.02em]">
+          Пользовательское соглашение
+        </h1>
+        <p className="text-lg text-muted-text leading-relaxed">
+          Условия использования сайта и сервисов GoldPC. Оформляя заказ, вы соглашаетесь с ними.
+        </p>
+      </section>
 
-        {/* Sections */}
-        <div className="space-y-6">
-          {sections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <section
-                key={section.title}
-                className="bg-surface-card rounded-xl border border-hairline-dark p-6 md:p-8"
-              >
-                <h2 className="text-lg font-semibold text-body-text mb-4 flex items-center gap-3">
-                  <div className="w-8 h-8 flex items-center justify-center bg-gold/10 text-gold rounded-lg shrink-0">
-                    <Icon size={18} />
-                  </div>
-                  {section.title}
-                </h2>
-                <div className="space-y-3">
-                  {section.paragraphs.map((p, i) => (
-                    <p key={i} className="text-muted-text text-sm leading-relaxed">
-                      {p}
-                    </p>
-                  ))}
+      {/* Sections */}
+      <div className="space-y-6">
+        {sections.map((section) => {
+          const Icon = section.icon;
+          return (
+            <section
+              key={section.title}
+              className="bg-surface-card rounded-xl border border-hairline-dark p-6 md:p-8"
+            >
+              <h2 className="text-lg font-semibold text-body-text mb-4 flex items-center gap-3">
+                <div className="w-8 h-8 flex items-center justify-center bg-gold/10 text-gold rounded-lg shrink-0">
+                  <Icon size={18} />
                 </div>
-              </section>
-            );
-          })}
-        </div>
+                {section.title}
+              </h2>
+              <div className="space-y-3">
+                {section.paragraphs.map((p, i) => (
+                  <p key={i} className="text-muted-text text-sm leading-relaxed">
+                    {p}
+                  </p>
+                ))}
+              </div>
+            </section>
+          );
+        })}
       </div>
-    </main>
+    </div>
   );
 }
