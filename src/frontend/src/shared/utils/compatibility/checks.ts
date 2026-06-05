@@ -610,7 +610,7 @@ function checkM2SataLaneConflict(storage: Product[], motherboard: Product): Comp
 
   const sataUsed = storage.filter(s => extractStorageType(s.specifications) === 'sata').length;
   const totalSata = extractSataPorts(motherboard.specifications);
-  if (totalSata === 0) return null;
+  if (totalSata === null || totalSata === 0) return null;
 
   const effectiveSata = Math.max(0, totalSata - m2Count);
   if (sataUsed > effectiveSata) {
@@ -841,17 +841,10 @@ export function calculatePowerConsumption(components: ComponentMap): number {
     t += ramCapacity * ramCount * 0.005;
   }
 
-  if (components.storage) {
-    if (Array.isArray(components.storage)) {
-      // Для массива накопителей (новая версия)
-      for (const s of components.storage) {
-        if (!s) continue;
-        const storageType = extractStorageType(s.specifications);
-        t += storageType === 'm2' || storageType === 'sata' ? 10 : 3;
-      }
-    } else {
-      // Для одиночного накопителя (старая версия)
-      const storageType = extractStorageType(components.storage.specifications);
+  if (components.storage && components.storage.length > 0) {
+    for (const s of components.storage) {
+      if (!s) continue;
+      const storageType = extractStorageType(s.specifications);
       t += storageType === 'm2' || storageType === 'sata' ? 10 : 3;
     }
   }

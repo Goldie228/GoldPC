@@ -27,6 +27,7 @@ import {
   type PCBuilderSelectedState,
 } from '../../hooks';
 import { extractSocket } from '../../features/pc-builder/logic/specExtractors';
+import { extractStorageType, extractM2Slots, extractSataPorts } from '../../shared/utils/compatibility/extractors';
 import type { Product, ProductCategory } from '../../api/types';
 import { useToastStore } from '../../store/toastStore';
 
@@ -102,6 +103,7 @@ export interface MemoizedSlotRowProps {
   onSelect: (type: import('../../hooks').PCComponentType, index?: number) => void;
   onRemove: (type: import('../../hooks').PCComponentType, index?: number) => void;
   onChangeQuantity: (slotType: import('../../hooks').PCComponentType, rowIndex: number, delta: number) => void;
+  maxRamQty: number;
   maxRamModules: number;
   maxStorageModules: number;
   maxFanModules: number;
@@ -115,6 +117,7 @@ export const MemoizedSlotRow = React.memo(function MemoizedSlotRow({
   onSelect,
   onRemove,
   onChangeQuantity,
+  maxRamQty,
   maxRamModules,
   maxStorageModules,
   maxFanModules,
@@ -174,7 +177,7 @@ export const MemoizedSlotRow = React.memo(function MemoizedSlotRow({
         quantity={
           row.rowIndex === 0 ? selectedComponents.ram.length : undefined
         }
-        maxQuantity={maxRamModules}
+        maxQuantity={maxRamQty}
         onChangeQuantity={
           row.rowIndex === 0
             ? (delta) => onChangeQuantity('ram', row.rowIndex, delta)
@@ -413,7 +416,38 @@ export function PCBuilderPage() {
         duplicateModule('ram');
       } else if (slotType === 'storage' && selectedComponents.storage.length > 0) {
         const product = selectedComponents.storage[rowIndex]?.product;
-        if (product != null) selectComponent(slotType, product);
+        if (product == null) return;
+
+        // Проверка: не превысит ли новый диск лимит M.2/SATA слотов материнской платы
+        const mb = selectedComponents.motherboard?.product;
+        if (mb) {
+          const diskType = extractStorageType(product.specifications);
+          const mbSpecs = mb.specifications;
+          const m2Slots = extractM2Slots(mbSpecs);
+          const sataPorts = extractSataPorts(mbSpecs);
+
+          if (diskType === 'm2' && m2Slots !== null) {
+            const currentM2 = selectedComponents.storage.filter(
+              s => extractStorageType(s.product.specifications) === 'm2'
+            ).length;
+            if (currentM2 >= m2Slots) {
+              showToast(`Материнская плата поддерживает только ${m2Slots} M.2 накопитель(ей)`, 'error');
+              return;
+            }
+          }
+
+          if (diskType === 'sata' && sataPorts !== null) {
+            const currentSata = selectedComponents.storage.filter(
+              s => extractStorageType(s.product.specifications) === 'sata'
+            ).length;
+            if (currentSata >= sataPorts) {
+              showToast(`Материнская плата поддерживает только ${sataPorts} SATA накопитель(ей)`, 'error');
+              return;
+            }
+          }
+        }
+
+        selectComponent(slotType, product);
       } else if (slotType === 'fan' && selectedComponents.fan.length > 0) {
         duplicateModule('fan');
       }
@@ -608,6 +642,7 @@ export function PCBuilderPage() {
                         onSelect={openPicker}
                         onRemove={handleRemove}
                         onChangeQuantity={handleChangeQuantity}
+                        maxRamQty={maxRamQty}
                         maxRamModules={maxRamModules}
                         maxStorageModules={maxStorageModules}
                         maxFanModules={maxFanModules}
@@ -638,19 +673,20 @@ export function PCBuilderPage() {
               {showPeripherals && (
                 <div className="pc-builder__slots">
                   {(['monitor', 'keyboard', 'mouse', 'headphones'] as const).map((key, idx) => (
-                    <MemoizedSlotRow
-                      key={key}
-                      row={{ kind: 'single', key, label: PC_BUILDER_SLOTS.find((s) => s.key === key)?.label ?? key, anim: slotRows.length + idx }}
-                      selectedComponents={selectedComponents}
-                      getSlotState={getSlotState}
-                      getDisplaySpecs={getDisplaySpecs}
-                      onSelect={openPicker}
-                      onRemove={handleRemove}
-                      onChangeQuantity={handleChangeQuantity}
-                      maxRamModules={maxRamModules}
-                      maxStorageModules={maxStorageModules}
-                      maxFanModules={maxFanModules}
-                    />
+                      <MemoizedSlotRow
+                        key={key}
+                        row={{ kind: 'single', key, label: PC_BUILDER_SLOTS.find((s) => s.key === key)?.label ?? key, anim: slotRows.length + idx }}
+                        selectedComponents={selectedComponents}
+                        getSlotState={getSlotState}
+                        getDisplaySpecs={getDisplaySpecs}
+                        onSelect={openPicker}
+                        onRemove={handleRemove}
+                        onChangeQuantity={handleChangeQuantity}
+                        maxRamQty={maxRamQty}
+                        maxRamModules={maxRamModules}
+                        maxStorageModules={maxStorageModules}
+                        maxFanModules={maxFanModules}
+                      />
                   ))}
                 </div>
               )}

@@ -441,7 +441,7 @@ export function checkCompatibility(components: ComponentMap, ramSticks?: Product
   const bottleneckPct = runBottleneckAnalysis(cpu ?? undefined, gpu ?? undefined, warnings);
   runRAMCapacityWarning(ram ?? undefined, motherboard ?? undefined, warnings);
 
-  const storageProducts = Object.values(components).filter(c => c?.category === 'storage');
+  const storageProducts = components.storage ?? [];
   if (motherboard != null) {
     const mbM2Slots = extractM2Slots(motherboard.specifications);
     const mbSataPorts = extractSataPorts(motherboard.specifications);
@@ -456,7 +456,7 @@ export function checkCompatibility(components: ComponentMap, ramSticks?: Product
       if (type === 'sata') usedSata++;
     }
 
-    if (usedM2 > mbM2Slots) {
+    if (usedM2 > 0 && mbM2Slots !== null && usedM2 > mbM2Slots) {
       issues.push({
         severity: 'Error',
         component1: 'Накопители',
@@ -466,13 +466,33 @@ export function checkCompatibility(components: ComponentMap, ramSticks?: Product
       });
     }
 
-    if (usedSata > mbSataPorts) {
+    if (usedM2 > 0 && mbM2Slots === null) {
+      issues.push({
+        severity: 'Error',
+        component1: 'Накопители',
+        component2: motherboard.name,
+        message: `Выбрано ${usedM2} M.2 накопитель(ей), но не удалось определить количество M.2 слотов на материнской плате.`,
+        suggestion: 'Проверьте наличие M.2 слотов в характеристиках материнской платы.',
+      });
+    }
+
+    if (usedSata > 0 && mbSataPorts !== null && usedSata > mbSataPorts) {
       issues.push({
         severity: 'Error',
         component1: 'Накопители',
         component2: motherboard.name,
         message: `Выбрано ${usedSata} SATA накопителей, но материнская плата поддерживает только ${mbSataPorts}`,
         suggestion: `Удалите ${usedSata - mbSataPorts} SATA накопителя или выберите другую материнскую плату`,
+      });
+    }
+
+    if (usedSata > 0 && mbSataPorts === null) {
+      issues.push({
+        severity: 'Error',
+        component1: 'Накопители',
+        component2: motherboard.name,
+        message: `Выбрано ${usedSata} SATA накопитель(ей), но не удалось определить количество SATA портов на материнской плате.`,
+        suggestion: 'Проверьте наличие SATA портов в характеристиках материнской платы.',
       });
     }
   }

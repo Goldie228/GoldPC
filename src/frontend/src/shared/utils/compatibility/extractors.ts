@@ -14,6 +14,39 @@ const KNOWN_SOCKETS = new Set(
   SOCKET_GROUPS.flatMap(g => g.sockets.map(s => s.toUpperCase().trim()))
 );
 
+/**
+ * Хардкодная таблица: чипсет → кол-во M.2 слотов.
+ * Используется как fallback, когда API не отдаёт m2Slots/sataPorts.
+ * Основана на спецификациях чипсетов (данные Intel, AMD).
+ */
+const CHIPSET_M2_MAP: Record<string, number> = {
+  // AMD
+  A320: 1, A520: 1, A620: 1,
+  B350: 1, B450: 1, B550: 2,
+  X370: 2, X470: 2, X570: 4,
+  B650: 2, B650E: 2, B850: 3,
+  X670: 3, X670E: 3, X870E: 4,
+  // Intel
+  H310: 1, H410: 1, H510: 1,
+  B360: 1, B460: 1, B560: 1,
+  H610: 1, B660: 2, B760: 2,
+  Z370: 2, Z390: 2, Z490: 3, Z590: 3, Z690: 4, Z790: 4,
+  H810: 1, B860: 2, Z890: 4,
+};
+
+/** Чипсет → кол-во SATA портов (приблизительно, может варьироваться между моделями) */
+const CHIPSET_SATA_MAP: Record<string, number> = {
+  A320: 4, A520: 4, A620: 2,
+  B350: 4, B450: 4, B550: 4,
+  X370: 6, X470: 6, X570: 6,
+  B650: 4, B650E: 4, B850: 4, X670: 6, X670E: 6, X870E: 6,
+  H310: 4, H410: 4, H510: 4,
+  B360: 6, B460: 6, B560: 4,
+  H610: 4, B660: 4, B760: 4,
+  Z370: 6, Z390: 6, Z490: 6, Z590: 6, Z690: 6, Z790: 6,
+  H810: 4, B860: 4, Z890: 6,
+};
+
 function getNumber(specs: ProductSpecifications | undefined, ...keys: string[]): number | null {
   if (!specs) return null;
   for (const key of keys) {
@@ -142,8 +175,18 @@ export function extractMemoryFormFactor(specs: ProductSpecifications | undefined
   return null;
 }
 
-export function extractSataPorts(specs: ProductSpecifications | undefined): number {
-  return getNumber(specs, 'sataPorts', 'sata_ports', 'sata', 'sata3', 'sata 3.0', 'sata ports') ?? 0;
+export function extractSataPorts(specs: ProductSpecifications | undefined): number | null {
+  const val = getNumber(specs, 'sataPorts', 'sata_ports', 'sata', 'sata3', 'sata 3.0', 'sata ports');
+  if (val !== null) return val;
+  // Fallback: определяем по чипсету
+  const chipset = getString(specs, 'chipset');
+  if (chipset) {
+    const upper = chipset.toUpperCase().trim();
+    for (const [prefix, count] of Object.entries(CHIPSET_SATA_MAP)) {
+      if (upper.startsWith(prefix)) return count;
+    }
+  }
+  return null;
 }
 
 export function extractRAMSpeed(specs: ProductSpecifications | undefined): number | null {
@@ -248,18 +291,39 @@ export function extractM2Key(specs: ProductSpecifications | undefined): string |
   return getString(specs, 'm2Key', 'm2_key', 'key', 'mKey');
 }
 
-export function extractM2Slots(specs: ProductSpecifications | undefined): number {
-  return getNumber(specs, 'm2Slots', 'm2_slots', 'm.2', 'm2', 'nvme slots', 'nvme') ?? 0;
+export function extractM2Slots(specs: ProductSpecifications | undefined): number | null {
+  const val = getNumber(specs, 'm2Slots', 'm2_slots', 'm.2', 'm2', 'nvme slots', 'nvme');
+  if (val !== null) return val;
+  // Fallback: определяем по чипсету
+  const chipset = getString(specs, 'chipset');
+  if (chipset) {
+    const upper = chipset.toUpperCase().trim();
+    for (const [prefix, count] of Object.entries(CHIPSET_M2_MAP)) {
+      if (upper.startsWith(prefix)) return count;
+    }
+  }
+  return null;
 }
 
 export function extractStorageType(specs: ProductSpecifications | undefined): 'm2' | 'sata' | 'other' {
   if (!specs) return 'other';
   const type = getString(specs, 'type', 'storageType', 'storage_type');
   const iface = getString(specs, 'interface', 'form_factor');
+  const ff = getString(specs, 'form_factor', 'formFactor');
+
+  // mSATA — физический форм-фактор (mini-PCIe), интерфейс SATA
+  if (ff?.toUpperCase().includes('MSATA') || ff?.toUpperCase().includes('M-SATA')) return 'sata';
+
   if (type && (type.toUpperCase() === 'NVME' || type.toUpperCase() === 'PCIe')) return 'm2';
   if (type?.toUpperCase() === 'SATA') return 'sata';
+
+  // M.2 = форм-фактор (B/M/B&M key), интерфейс может быть SATA или NVMe
   if (iface && (iface.toUpperCase() === 'M.2' || iface.toUpperCase() === 'NVME')) return 'm2';
-  if (iface?.toUpperCase() === 'SATA') return 'sata';
+  if (ff?.toUpperCase().includes('M.2')) return 'm2';
+
+  // SATA 3.0, SATA III, SATA 6Gb/s и т.д.
+  if (iface?.toUpperCase().startsWith('SATA')) return 'sata';
+
   return 'other';
 }
 

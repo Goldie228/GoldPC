@@ -37,7 +37,16 @@ export interface CompatibilityCheckResult {
   bottleneckPercentage: number;
 }
 
-export type ComponentMap = Partial<Record<ComponentCategory, Product | null>>;
+export interface ComponentMap {
+  cpu?: Product | null;
+  gpu?: Product | null;
+  motherboard?: Product | null;
+  ram?: Product | null;
+  storage?: Product[];
+  psu?: Product | null;
+  case?: Product | null;
+  cooling?: Product | null;
+}
 
 export type MemoryType = 'DDR3' | 'DDR4' | 'DDR5' | 'LPDDR5';
 export type FormFactor = 'ATX' | 'MicroATX' | 'MiniITX' | 'EATX';

@@ -134,7 +134,7 @@ export function buildComponentMap(components: PCBuilderSelectedState): Component
     gpu: components.gpu?.product ?? null,
     motherboard: components.motherboard?.product ?? null,
     ram: components.ram[0]?.product ?? null,
-    storage: components.storage[0]?.product ?? null,
+    storage: components.storage.map(s => s.product),
     psu: components.psu?.product ?? null,
     case: components.case?.product ?? null,
     cooling: components.cooling?.product ?? null,
