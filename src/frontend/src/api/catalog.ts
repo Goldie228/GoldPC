@@ -115,7 +115,13 @@ export const catalogApi = {
       return data;
     }
     if (params.page != null) apiParams.page = params.page;
-    if (params.pageSize != null) apiParams.pageSize = params.pageSize;
+    if (params.pageSize != null) {
+      apiParams.pageSize = params.pageSize;
+    } else if (params.category === 'storage') {
+      // В категории Накопители 585 товаров, SSD/NVMe на страницах 11+.
+      // Увеличиваем pageSize, чтобы все диски попали в первый запрос.
+      apiParams.pageSize = 200;
+    }
     if (params.category && FRONTEND_TO_BACKEND_SLUG[params.category]) {
       apiParams.category = FRONTEND_TO_BACKEND_SLUG[params.category];
     }

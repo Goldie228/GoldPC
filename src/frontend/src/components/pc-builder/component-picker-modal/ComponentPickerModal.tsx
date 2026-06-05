@@ -14,7 +14,7 @@ import { Pagination } from '../../catalog/Pagination';
 import { FilterSidebar } from '../../filter-sidebar/FilterSidebar';
 import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
 import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';
-import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryType } from '../../../shared/utils/compatibility/extractors';
+import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryType, extractStorageType, extractM2Slots, extractSataPorts } from '../../../shared/utils/compatibility/extractors';
 import { checkRAM, detectMemoryFormFactorFromName } from '../../../shared/utils/compatibility/checks';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '../../../hooks/useProducts';
@@ -520,6 +520,17 @@ export function ComponentPickerModal({
   const productsWithCompatibility = useMemo(() => {
     const mb = componentMap.motherboard;
     const isRam = slotType === 'ram';
+    const isStorage = slotType === 'storage';
+
+    // Pre-count current storage of each type (only relevant when motherboard selected)
+    const currentM2 = isStorage && mb && buildContext
+      ? buildContext.storage.filter(s => extractStorageType(s.product.specifications) === 'm2').length
+      : 0;
+    const currentSata = isStorage && mb && buildContext
+      ? buildContext.storage.filter(s => extractStorageType(s.product.specifications) === 'sata').length
+      : 0;
+    const mbM2Slots = isStorage && mb ? extractM2Slots(mb.specifications) : null;
+    const mbSataPorts = isStorage && mb ? extractSataPorts(mb.specifications) : null;
 
     return products.map((p) => {
       if (isRam && mb) {
@@ -548,9 +559,32 @@ export function ComponentPickerModal({
           };
         }
       }
+
+      // Storage compatibility: hide drives that would exceed motherboard M.2/SATA limits
+      if (isStorage && mb) {
+        // Cast to access full specs (may be undefined in ProductSummary)
+        const fullSpecs = (p as Product).specifications ?? {};
+        const diskType = extractStorageType(fullSpecs);
+        // Without interface/form_factor in summary, we can't determine type — skip
+        if (diskType !== 'other') {
+          if (diskType === 'm2' && mbM2Slots !== null && currentM2 >= mbM2Slots) {
+            return {
+              ...p, isIncompatible: true,
+              incompatibilityIssues: [`Материнская плата поддерживает только ${mbM2Slots} M.2 накопитель(ей); все слоты заняты`],
+            };
+          }
+          if (diskType === 'sata' && mbSataPorts !== null && currentSata >= mbSataPorts) {
+            return {
+              ...p, isIncompatible: true,
+              incompatibilityIssues: [`Материнская плата поддерживает только ${mbSataPorts} SATA накопитель(ей); все порты заняты`],
+            };
+          }
+        }
+      }
+
       return { ...p, isIncompatible: false, incompatibilityIssues: [] as string[] };
     });
-  }, [products, slotType, componentMap]);
+  }, [products, slotType, componentMap, buildContext]);
 
   // Hide incompatible products — user won't see what doesn't fit their build
   const filteredProducts = useMemo(() => {

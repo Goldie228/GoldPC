@@ -81,7 +81,8 @@ export function duplicateModule(
   type: 'ram' | 'storage' | 'fan'
 ): PCBuilderSelectedState {
   const arr = prevState[type];
-  if (arr.length === 0 || arr.length >= MAX_RAM_MODULES) return prevState;
+  const maxModules = type === 'storage' ? MAX_STORAGE_MODULES : type === 'ram' ? MAX_RAM_MODULES : Infinity;
+  if (arr.length === 0 || arr.length >= maxModules) return prevState;
   const first = arr[0];
   if (first == null) return prevState;
   return { ...prevState, [type]: [...arr, { ...first }] };

@@ -20,13 +20,23 @@ export type { MemoryType as RAMType };
 // Unique feature-specific helpers
 export function extractMbRamSlots(specs: ProductSpecifications | undefined): number {
   if (specs == null) return 4;
-  return (specs.ramSlots as number) || 4;
+  // API возвращает memory_slots, но типы допускают ramSlots как альтернативу
+  const slots = (specs['memory_slots'] as number) || (specs.ramSlots as number);
+  return slots || 4;
 }
 
-export function extractModulesCount(specs: ProductSpecifications | undefined): number {
+export function extractModulesCount(specs: ProductSpecifications | undefined, name?: string): number {
   if (specs == null) return 1;
+  // Прямое поле из API
   const raw = specs.modules as string | undefined;
-  if (!raw) return 1;
-  const match = raw.match(/(\d+)/);
-  return match ? parseInt(match[1], 10) : 1;
+  if (raw) {
+    const match = raw.match(/(\d+)/);
+    if (match) return parseInt(match[1], 10);
+  }
+  // Fallback: парсим из названия товара (например "2x16GB" → 2)
+  if (name) {
+    const match = name.match(/(\d+)\s*[xх×]\s*\d+/i);
+    if (match) return parseInt(match[1], 10);
+  }
+  return 1;
 }

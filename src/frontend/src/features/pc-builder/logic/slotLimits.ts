@@ -21,7 +21,8 @@ export function getMaxRamQty(
   maxRamModules: number
 ): number {
   if (selectedComponents.ram.length > 0) {
-    const modulesPerUnit = extractModulesCount(selectedComponents.ram[0]?.product.specifications);
+    const product = selectedComponents.ram[0]?.product;
+    const modulesPerUnit = extractModulesCount(product?.specifications, product?.name);
     return Math.min(MAX_RAM_MODULES, Math.floor(maxRamModules / Math.max(1, modulesPerUnit)));
   }
   return MAX_RAM_MODULES;
