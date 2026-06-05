@@ -75,12 +75,27 @@ export function extractSocket(specs: ProductSpecifications | undefined): string 
 
 export function extractMemoryType(specs: ProductSpecifications | undefined): MemoryType | null {
   const raw = getString(specs, 'memoryType', 'memory_type', 'tip_pamyati', 'type');
-  if (!raw) return null;
-  const upper = raw.toUpperCase().trim();
-  if (upper.startsWith('DDR5')) return 'DDR5';
-  if (upper.startsWith('DDR4') || upper.startsWith('LPDDR4') || upper.startsWith('LPDDR4X')) return 'DDR4';
-  if (upper.startsWith('DDR3') || upper.startsWith('LPDDR3') || upper.startsWith('DDR3L')) return 'DDR3';
-  if (upper.startsWith('LPDDR5')) return 'LPDDR5';
+  if (raw) {
+    const upper = raw.toUpperCase().trim();
+    if (upper.startsWith('DDR5')) return 'DDR5';
+    if (upper.startsWith('DDR4') || upper.startsWith('LPDDR4') || upper.startsWith('LPDDR4X')) return 'DDR4';
+    if (upper.startsWith('DDR3') || upper.startsWith('LPDDR3') || upper.startsWith('DDR3L')) return 'DDR3';
+    if (upper.startsWith('LPDDR5')) return 'LPDDR5';
+  }
+  // Fallback: определяем поколение DDR по сокету/чипсету (когда спецификации неполные)
+  if (specs) {
+    const chipset = getString(specs, 'chipset');
+    const socket = getString(specs, 'socket');
+    const chipsetUpper = (chipset ?? '').toUpperCase();
+    const socketUpper = (socket ?? '').toUpperCase();
+    if (socketUpper.includes('AM5') || socketUpper.includes('LGA1851') || socketUpper.includes('1851')) return 'DDR5';
+    if (chipsetUpper.includes('AM5') || chipsetUpper.includes('B850') || chipsetUpper.includes('X870E')) return 'DDR5';
+    if (chipsetUpper.includes('B650') || chipsetUpper.includes('X670') || chipsetUpper.includes('A620')) return 'DDR5';
+    if (chipsetUpper.includes('B860') || chipsetUpper.includes('Z890') || chipsetUpper.includes('H810')) return 'DDR5';
+    if (/\bHM[5678]\d/.test(chipsetUpper)) return 'DDR3';
+    // Всё остальное (AM4, LGA1151, LGA1200, LGA1700, B760, Z790, H610, A520, H310 и т.д.) → DDR4
+    if (chipset || socket) return 'DDR4';
+  }
   return null;
 }
 
