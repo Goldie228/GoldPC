@@ -59,3 +59,7 @@ export type { StatusVariant } from './StatusBadge';
 
 // StatCard Component
 export { StatCard } from './StatCard';
+
+// BottomSheet Component
+export { BottomSheet } from './BottomSheet';
+export type { BottomSheetProps } from './BottomSheet';
