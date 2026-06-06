@@ -1,0 +1,68 @@
+/**
+ * BottomSheet Styles
+ * GoldPC Design System — консистентно с Modal.css
+ */
+
+/* Overlay */
+.bottom-sheet-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--color-canvas-dark, #0b0e11) 55%, transparent);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1050;
+  animation: bsFadeIn 0.2s ease;
+}
+
+@keyframes bsFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Sheet container */
+.bottom-sheet {
+  width: 100%;
+  max-width: 100%;
+  max-height: 80vh;
+  background: var(--color-surface-card, #1e2329);
+  border-radius: 16px 16px 0 0;
+  border: 1px solid var(--color-hairline-dark, rgba(255, 255, 255, 0.08));
+  border-bottom: none;
+  display: flex;
+  flex-direction: column;
+  animation: bsSlideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  overflow: hidden;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes bsSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Drag handle */
+.bottom-sheet__handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-hairline-dark, rgba(255, 255, 255, 0.15));
+  margin: 10px auto 6px;
+  flex-shrink: 0;
+}
+
+/* Scrollable content */
+.bottom-sheet__content {
+  padding: 0 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Стили для контента внутри bottom sheet (переопределения для мобилки) */
+.bottom-sheet__content .preview-image {
+  max-height: 220px;
+}

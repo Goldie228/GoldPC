@@ -227,6 +227,10 @@ screenshots/
 # Git worktrees
 worktrees/
 
+# Python cache
+__pycache__/
+*.pyc
+
 # Prototypes
 prototypes/
 

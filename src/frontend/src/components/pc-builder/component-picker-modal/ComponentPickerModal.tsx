@@ -7,7 +7,8 @@ import { useState, useEffect, useMemo, useCallback, useTransition, useRef } from
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { useDebouncedCallback } from 'use-debounce';
 import { Search, SlidersHorizontal, X, ExternalLink, ZoomIn, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
-import { Modal } from '../../ui';
+import { Modal, BottomSheet } from '../../ui';
+import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { ProductCardSkeleton } from '../../ui/Skeleton';
 import { ApiErrorBanner } from '../../ui/ApiErrorBanner';
 import { Pagination } from '../../catalog/Pagination';
@@ -350,6 +351,7 @@ export function ComponentPickerModal({
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [magnifierIdx, setMagnifierIdx] = useState<number | null>(null);
   const [previewImgIdx, setPreviewImgIdx] = useState(0);
@@ -663,6 +665,95 @@ export function ComponentPickerModal({
     window.open(`/product/${slug}`, '_blank', 'noopener,noreferrer');
   }, []);
 
+  // ── Общий рендер содержимого превью (используется и в desktop aside, и в mobile BottomSheet) ──
+  const renderPreviewContent = () => {
+    if (!fullPreview) return null;
+    return (
+      <div className="flex flex-col gap-3">
+        <div className="text-[0.72rem] font-semibold uppercase tracking-wider text-[var(--fg-dim)] border-b border-[rgba(255,255,255,0.06)] pb-1.5">Предпросмотр</div>
+
+        {/* Image gallery for preview */}
+        {previewImageUrls.length > 0 ? (
+          <>
+            <div className="relative w-full aspect-square min-h-[140px] rounded-lg bg-[var(--color-white)] p-3 box-border flex items-center justify-center overflow-hidden">
+              {previewImageUrls.length > 1 && previewImgIdx > 0 && (
+                <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-[rgba(0,0,0,0.12)] bg-[rgba(255,255,255,0.85)] text-[var(--color-black)] flex items-center justify-center cursor-pointer z-2 left-1"
+                  onClick={() => setPreviewImgIdx((i) => i - 1)}>
+                  <ChevronLeft size={18} />
+                </button>
+              )}
+              {previewImageUrls.length > 1 && previewImgIdx < previewImageUrls.length - 1 && (
+                <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-[rgba(0,0,0,0.12)] bg-[rgba(255,255,255,0.85)] text-[var(--color-black)] flex items-center justify-center cursor-pointer z-2 right-1"
+                  onClick={() => setPreviewImgIdx((i) => i + 1)}>
+                  <ChevronRight size={18} />
+                </button>
+              )}
+              <img
+                src={previewImageUrls[previewImgIdx]}
+                alt=""
+                className="max-w-[90%] max-h-[90%] w-auto h-auto object-contain"
+              />
+              <button type="button" className="absolute bottom-2 right-2 w-9 h-9 rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(0,0,0,0.6)] text-[rgba(255,255,255,0.8)] flex items-center justify-center cursor-pointer transition-all z-2 hover:bg-[rgba(0,0,0,0.8)] hover:text-white hover:border-[var(--accent)]"
+                onClick={() => setMagnifierIdx(previewImgIdx)}
+                title="Увеличить фото" aria-label="Увеличить фото">
+                <ZoomIn size={20} />
+              </button>
+            </div>
+            {previewImageUrls.length > 1 && (
+              <div className="flex gap-1 overflow-x-auto p-0.5">
+                {previewImageUrls.map((img, i) => (
+                  <button key={i} type="button"
+                    className={`w-11 h-11 rounded-md border border-[rgba(255,255,255,0.06)] bg-[var(--fg)] p-[3px] flex-shrink-0 cursor-pointer flex items-center justify-center box-border transition-colors ${i === previewImgIdx ? "border-[var(--accent)] shadow-[0_0_0_1px_rgba(252,213,53,0.3)]" : ""}`}
+                    onClick={() => setPreviewImgIdx(i)}
+                  >
+                    <img src={img} alt="" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="w-full aspect-square rounded-lg bg-[#2b3139] opacity-30" />
+        )}
+
+        <h4 className="m-0 text-[0.85rem] font-semibold text-[var(--fg)] word-break-break-word leading-[1.3]">{fullPreview.name}</h4>
+
+        {/* Price + confirm button on one row */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="m-0 text-base font-semibold text-[var(--accent)] whitespace-nowrap">{fullPreview.price.toLocaleString('ru-BY')} BYN</div>
+          <button
+            type="button"
+            className={`px-5 py-2.5 border-none rounded-md text-[0.85rem] font-semibold transition-all whitespace-nowrap ${
+              previewIncompatibility.isIncompatible
+                ? 'bg-[rgba(255,255,255,0.08)] text-[var(--fg-dim)] cursor-not-allowed'
+                : 'bg-[var(--accent)] text-[var(--color-black-soft)] cursor-pointer hover:bg-[#f0b90b] active:scale-[0.97]'
+            }`}
+            onClick={previewIncompatibility.isIncompatible ? undefined : handleConfirm}
+            disabled={previewIncompatibility.isIncompatible}
+            title={previewIncompatibility.isIncompatible ? 'Компонент несовместим с вашей сборкой' : undefined}
+          >
+            {previewIncompatibility.isIncompatible ? 'Несовместим' : 'Выбрать'}
+          </button>
+        </div>
+
+        {fullPreview.slug && (
+          <button type="button" className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-[rgba(252,213,53,0.25)] bg-transparent text-[var(--accent)] text-xs font-medium cursor-pointer transition-all w-full hover:bg-[rgba(252,213,53,0.1)]" onClick={() => handleOpenProduct(fullPreview.slug!)}>
+            <ExternalLink size={14} /> Открыть страницу товара
+          </button>
+        )}
+
+        {previewIncompatibility.isIncompatible && (
+          <div className="text-[0.7rem] text-[var(--error)] p-2 bg-[rgba(248,113,113,0.05)] rounded-md">
+            <Lock size={12} style={LOCK_ICON_STYLE} />
+            {previewIncompatibility.issues.join('; ') || 'Компонент несовместим с текущей сборкой'}
+          </div>
+        )}
+
+        {fullPreview.specifications && <SpecList specs={fullPreview.specifications as Record<string, unknown>} />}
+      </div>
+    );
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Выбор: ${slotLabel}`} size="xlarge" showCloseButton>
       
@@ -803,77 +894,9 @@ export function ComponentPickerModal({
             )}
           </div>
 
-          {/* Preview */}
-          <aside className="md:sticky top-0 flex flex-col gap-2.5 p-3.5 rounded-md border border-[rgba(255,255,255,0.06)] bg-[var(--color-black-soft)] max-h-full overflow-y-auto flex-shrink-0 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.1)] scrollbar-track-transparent">
-            {fullPreview ? (
-              <>
-                <div className="text-[0.72rem] font-semibold uppercase tracking-wider text-[var(--fg-dim)] border-b border-[rgba(255,255,255,0.06)] pb-1.5">Предпросмотр</div>
-
-                {/* Image gallery for preview */}
-                {previewImageUrls.length > 0 ? (
-                  <>
-                    <div className="relative w-full aspect-square min-h-[180px] rounded-lg bg-[var(--color-white)] p-3 box-border flex items-center justify-center overflow-hidden">
-                      {previewImageUrls.length > 1 && previewImgIdx > 0 && (
-                        <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-[rgba(0,0,0,0.12)] bg-[rgba(255,255,255,0.85)] text-[var(--color-black)] flex items-center justify-center cursor-pointer z-2 left-1"
-                          onClick={() => setPreviewImgIdx((i) => i - 1)}>
-                          <ChevronLeft size={18} />
-                        </button>
-                      )}
-                      {previewImageUrls.length > 1 && previewImgIdx < previewImageUrls.length - 1 && (
-                        <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-[rgba(0,0,0,0.12)] bg-[rgba(255,255,255,0.85)] text-[var(--color-black)] flex items-center justify-center cursor-pointer z-2 right-1"
-                          onClick={() => setPreviewImgIdx((i) => i + 1)}>
-                          <ChevronRight size={18} />
-                        </button>
-                      )}
-                      <img
-                        src={previewImageUrls[previewImgIdx]}
-                        alt=""
-                        className="max-w-[90%] max-h-[90%] w-auto h-auto object-contain"
-                      />
-                      <button type="button" className="absolute bottom-2 right-2 w-9 h-9 rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(0,0,0,0.6)] text-[rgba(255,255,255,0.8)] flex items-center justify-center cursor-pointer transition-all z-2 hover:bg-[rgba(0,0,0,0.8)] hover:text-white hover:border-[var(--accent)]"
-                        onClick={() => setMagnifierIdx(previewImgIdx)}
-                        title="Увеличить фото" aria-label="Увеличить фото">
-                        <ZoomIn size={20} />
-                      </button>
-                    </div>
-                    {previewImageUrls.length > 1 && (
-                      <div className="flex gap-1 overflow-x-auto p-0.5">
-                        {previewImageUrls.map((img, i) => (
-                          <button key={i} type="button"
-                            className={`w-11 h-11 rounded-md border border-[rgba(255,255,255,0.06)] bg-[var(--fg)] p-[3px] flex-shrink-0 cursor-pointer flex items-center justify-center box-border transition-colors ${i === previewImgIdx ? "border-[var(--accent)] shadow-[0_0_0_1px_rgba(252,213,53,0.3)]" : ""}`}
-                            onClick={() => setPreviewImgIdx(i)}
-                          >
-                            <img src={img} alt="" />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="w-full aspect-square rounded-lg bg-[#2b3139] opacity-30" />
-                )}
-
-                <h4 className="m-0 text-[0.85rem] font-semibold text-[var(--fg)] word-break-break-word leading-[1.3]">{fullPreview.name}</h4>
-                <div className="m-0 text-base font-semibold text-[var(--accent)]">{fullPreview.price.toLocaleString('ru-BY')} BYN</div>
-
-                {fullPreview.slug && (
-                  <button type="button" className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-[rgba(252,213,53,0.25)] bg-transparent text-[var(--accent)] text-xs font-medium cursor-pointer transition-all w-full hover:bg-[rgba(252,213,53,0.1)]" onClick={() => handleOpenProduct(fullPreview.slug!)}>
-                    <ExternalLink size={14} /> Открыть страницу товара
-                  </button>
-                )}
-
-                {fullPreview.specifications && <SpecList specs={fullPreview.specifications as Record<string, unknown>} />}
-
-                {previewIncompatibility.isIncompatible && (
-                  <div className="text-[0.7rem] text-[var(--error)] p-2 bg-[rgba(248,113,113,0.05)] rounded-md">
-                    <Lock size={12} style={LOCK_ICON_STYLE} />
-                    {previewIncompatibility.issues.join('; ') || 'Компонент несовместим с текущей сборкой'}
-                  </div>
-                )}
-
-                <button type="button" className={`mt-auto px-4 py-2.5 border-none rounded-md text-[0.85rem] font-semibold transition-all ${previewIncompatibility.isIncompatible ? 'bg-[rgba(255,255,255,0.08)] text-[var(--fg-dim)] cursor-not-allowed' : 'bg-[var(--accent)] text-[var(--color-black-soft)] cursor-pointer hover:bg-[#f0b90b] hover:-translate-y-[1px]'}`} onClick={previewIncompatibility.isIncompatible ? undefined : handleConfirm} disabled={previewIncompatibility.isIncompatible} title={previewIncompatibility.isIncompatible ? 'Компонент несовместим с вашей сборкой' : undefined}>{previewIncompatibility.isIncompatible ? 'Несовместим' : 'Выбрать'}</button>
-              </>
-            ) : (
+          {/* Preview (desktop only — mobile uses BottomSheet) */}
+          <aside className="max-md:hidden md:sticky top-0 flex flex-col gap-2.5 p-3.5 rounded-md border border-[rgba(255,255,255,0.06)] bg-[var(--color-black-soft)] max-h-full overflow-y-auto flex-shrink-0 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.1)] scrollbar-track-transparent">
+            {fullPreview ? renderPreviewContent() : (
               <div className="flex flex-col items-center justify-center text-center h-[200px] text-[var(--fg-dim)]">
                 <h4>Предпросмотр</h4>
                 <p>Выберите товар из списка, здесь появятся его характеристики.</p>
@@ -882,6 +905,13 @@ export function ComponentPickerModal({
           </aside>
         </div>
       </div>
+
+      {/* Mobile BottomSheet: предпросмотр при выборе товара */}
+      {isMobile && (
+        <BottomSheet isOpen={!!fullPreview} onClose={() => setHighlightedId(null)}>
+          {renderPreviewContent()}
+        </BottomSheet>
+      )}
 
       {/* Magnifier */}
       {magnifierIdx !== null && previewImageUrls.length > 0 && (
