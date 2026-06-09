@@ -84,7 +84,7 @@ async function mockProducts(page: Page, catalog: Record<string, Record<string, u
           contentType: 'application/json',
           body: JSON.stringify({
             data: products,
-            meta: { page: 1, pageSize: 50, totalPages: 1, totalItems: products.length, hasNext: false, hasPrevious: false },
+            meta: { page: 1, pageSize: 50, totalPages: 1, totalItems: products.length, hasNextPage: false, hasPrevPage: false },
           }),
         }),
     );
@@ -477,7 +477,7 @@ test.describe('InStock faceting - facet counts must match product search', () =>
         status: 200,
         body: JSON.stringify({
           data: [cpu_instock, cpu_instock_am5], // only in-stock products
-          meta: { page: 1, pageSize: 50, totalPages: 1, totalItems: 2, hasNext: false, hasPrevious: false },
+          meta: { page: 1, pageSize: 50, totalPages: 1, totalItems: 2, hasNextPage: false, hasPrevPage: false },
         }),
       }),
     );
@@ -488,7 +488,7 @@ test.describe('InStock faceting - facet counts must match product search', () =>
         status: 200,
         body: JSON.stringify({
           data: [cpu_instock, cpu_outofstock, cpu_instock_am5, cpu_outofstock_am5],
-          meta: { page: 1, pageSize: 50, totalPages: 1, totalItems: 4, hasNext: false, hasPrevious: false },
+          meta: { page: 1, pageSize: 50, totalPages: 1, totalItems: 4, hasNextPage: false, hasPrevPage: false },
         }),
       }),
     );

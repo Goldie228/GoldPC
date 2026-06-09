@@ -399,7 +399,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
         <span className="product-card__brand text-[11px] text-muted-text font-medium uppercase tracking-wider truncate">
           {getDisplayManufacturerName(product.manufacturer?.name) || product.brand || ''}
         </span>
-        <h3 className={`product-card__name text-sm font-semibold leading-snug line-clamp-2 min-h-[2.5rem] ${isOutOfStock ? 'opacity-60' : 'text-on-dark'}`}>
+        <h3 className={`product-card__name text-sm font-semibold leading-snug line-clamp-3 min-h-[3.75rem] ${isOutOfStock ? 'opacity-60' : 'text-on-dark'}`}>
           <Link to={`/product/${product.slug || product.id}`} className="hover:text-gold transition-colors">
             {product.name}
           </Link>

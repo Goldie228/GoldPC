@@ -191,7 +191,6 @@ export function WishlistPage(): ReactElement {
           {/* Хлебные крошки */}
           <Breadcrumbs
             items={[
-              { label: 'Главная', to: '/' },
               { label: 'Избранное' },
             ]}
           />

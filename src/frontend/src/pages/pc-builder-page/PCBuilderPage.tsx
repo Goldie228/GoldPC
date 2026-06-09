@@ -613,7 +613,6 @@ export function PCBuilderPage() {
         <div className="pc-builder__breadcrumb">
           <Breadcrumbs
             items={[
-              { label: 'Главная', to: '/' },
               { label: 'Конструктор ПК' },
             ]}
           />
@@ -712,24 +711,6 @@ export function PCBuilderPage() {
           </div>
         </div>
 
-        {/* ===== Mobile Bottom Bar — только на мобилке ===== */}
-        <div className="pc-builder__mobile-bar">
-          <div className="pc-builder__mobile-bar-inner">
-            <div className="pc-builder__mobile-total">
-              <span className="pc-builder__mobile-total-label">Итого:</span>
-              <span className="pc-builder__mobile-total-value">{totalPrice.toLocaleString('ru-BY')} BYN</span>
-            </div>
-            <button
-              type="button"
-              className="pc-builder__mobile-cart-btn"
-              disabled={!isCompatible || selectedCount === 0}
-              onClick={handleAddToCart}
-            >
-              <ShoppingBag size={16} strokeWidth={2} aria-hidden="true" />
-              В корзину
-            </button>
-          </div>
-        </div>
       </div>
 
       {modalOpen && selectedSlot && (

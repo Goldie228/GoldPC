@@ -1,11 +1,11 @@
 {
-  "totalFindings": 1,
-  "open": 1,
+  "totalFindings": 3,
+  "open": 3,
   "accepted": 0,
   "rejected": 0,
   "plan": {
-    "total": 1,
-    "open": 1,
+    "total": 3,
+    "open": 3,
     "accepted": 0,
     "rejected": 0
   },
@@ -15,5 +15,5 @@
     "accepted": 0,
     "rejected": 0
   },
-  "lastUpdated": "2026-05-14T18:57:36.178Z"
+  "lastUpdated": "2026-06-08T08:01:25.044Z"
 }

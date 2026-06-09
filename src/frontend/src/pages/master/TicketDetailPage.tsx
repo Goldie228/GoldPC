@@ -378,7 +378,7 @@ export function TicketDetailPage() {
                   <ChatMessage key={msg.id} message={msg} isOwn={msg.authorRole === 'Master'} />
                 ))
               )}
-              {typingUserId && <TypingIndicator userName="Клиент" />}
+              {typingUserId && <TypingIndicator who="Клиент" />}
               <div ref={chatBottomRef} />
             </div>
 

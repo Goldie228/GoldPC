@@ -129,7 +129,6 @@ export function CartPage(): ReactElement {
       <header className="mb-4">
         <Breadcrumbs
           items={[
-            { label: 'Главная', to: '/' },
             { label: 'Каталог', to: '/catalog' },
             { label: 'Корзина' },
           ]}

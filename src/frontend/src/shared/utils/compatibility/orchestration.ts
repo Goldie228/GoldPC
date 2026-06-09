@@ -17,7 +17,7 @@ import {
 import { checkBiosWarning } from './bios';
 import { 
   extractSocket, extractChipset, extractPerformanceScore, extractRAMCapacity, 
-  extractM2Slots, extractSataPorts, extractStorageType, extractFanCount 
+  extractM2Slots, extractSataPorts, extractStorageType 
 } from './extractors';
 import { calculateBottleneck, detectBottleneckWarnings } from './bottleneck';
 import { 
@@ -256,7 +256,12 @@ export function runM2SataLaneConflictCheck(
 ): void {
   if (motherboard == null) return;
   const w = checkM2SataLaneConflict(storage, motherboard);
-  if (w != null) warnings.push(w);
+  if (w != null) warnings.push({
+    severity: 'Warning' as const,
+    component: w.component2,
+    message: w.message,
+    suggestion: w.suggestion,
+  });
 }
 
 export function runFanHeaderCheck(
@@ -376,7 +381,7 @@ export function runTips(
   ram: Product | undefined,
   ramCount: number,
   cooler: Product | undefined,
-  issues: CompatibilityIssue[],
+  _issues: CompatibilityIssue[],
   warnings: CompatibilityWarning[]
 ): void {
   if (cpu != null && gpu != null) {

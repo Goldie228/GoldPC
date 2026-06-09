@@ -37,8 +37,8 @@ async function mockAllProductRoutes(
               pageSize: 50,
               totalPages: 1,
               totalItems: products.length,
-              hasNext: false,
-              hasPrevious: false,
+              hasNextPage: false,
+              hasPrevPage: false,
             },
           }),
         })
