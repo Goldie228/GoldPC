@@ -63,8 +63,8 @@ const servicesApi = {
         pageSize: params?.pageSize ?? 20,
         totalPages: 1,
         totalItems: items.length,
-        hasNext: false,
-        hasPrevious: false,
+        hasNextPage: false,
+        hasPrevPage: false,
       },
     };
   },

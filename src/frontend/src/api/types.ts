@@ -11,8 +11,8 @@ export interface PaginationMeta {
   pageSize: number;
   totalPages: number;
   totalItems: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
 export interface PagedResponse<T> {
@@ -106,6 +106,7 @@ export interface Product extends ProductSummary {
   specifications?: ProductSpecifications;
   images?: ProductImage[];
   isFeatured?: boolean;
+  isCategoryAutoDetected?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -405,4 +406,47 @@ export interface LoginHistoryItem {
    timestamp: string;
    success: boolean;
    failureReason: string | null;
+}
+
+// === История цен ===
+export interface PriceHistoryDto {
+  id: string;
+  price: number;
+  oldPrice?: number;
+  changedAt: string;
+  changedBy?: string;
+}
+
+// === Генерация названия товара ===
+export interface GenerateNameRequest {
+  manufacturerName?: string;
+  categorySlug?: string;
+  specifications?: Record<string, string | number | boolean>;
+}
+
+export interface GenerateNameResponse {
+  name: string;
+}
+
+// === Мета-данные спецификаций для админки ===
+export interface SpecificationAttributeDto {
+  id: string;
+  key: string;
+  displayName: string;
+  valueType: 'select' | 'range';
+  isMultiValue: boolean;
+  unit?: string;
+  groupName?: string;
+  sortOrder: number;
+  validationMin?: number;
+  validationMax?: number;
+  validationStep?: number;
+  isRequired: boolean;
+  options: string[];
+}
+
+export interface CategorySpecificationsDto {
+  categoryId: string;
+  categoryName: string;
+  attributes: SpecificationAttributeDto[];
 }

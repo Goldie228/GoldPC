@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { usersAdminApi, catalogAdminApi, statsApi, dictionariesApi, settingsApi, type User, type UserRole, type GetUsersParams, type UserListResponse, type UpdateUserRoleRequest, type UpdateUserRequest, type UpdateProductRequest, type Product, type PagedResponse, type StatsResponse, type DictionaryItem, type DictionaryCategory, type DictionaryManufacturer, type CreateDictionaryItemRequest, type UpdateDictionaryItemRequest, type SiteSettings } from '../api/admin';
+import { usersAdminApi, catalogAdminApi, statsApi, dictionariesApi, settingsApi, type User, type UserRole, type GetUsersParams, type UserListResponse, type UpdateUserRoleRequest, type UpdateUserRequest, type UpdateProductRequest, type CreateProductRequest, type Product, type PagedResponse, type StatsResponse, type DictionaryItem, type DictionaryCategory, type DictionaryManufacturer, type CreateDictionaryItemRequest, type UpdateDictionaryItemRequest, type SiteSettings } from '../api/admin';
 
 export interface UseAdminReturn {
   // Users
@@ -21,7 +21,7 @@ export interface UseAdminReturn {
   getProducts: (params?: { page?: number; pageSize?: number; category?: string; isActive?: boolean }) => Promise<PagedResponse<Product> | null>;
   updateProduct: (productId: string, data: UpdateProductRequest) => Promise<Product | null>;
   deleteProduct: (productId: string) => Promise<boolean>;
-  createProduct: (data: Partial<Product>) => Promise<Product | null>;
+  createProduct: (data: CreateProductRequest) => Promise<Product | null>;
 
   // Stats
   stats: StatsResponse | null;
@@ -211,7 +211,7 @@ export function useAdmin(): UseAdminReturn {
     }
   }, []);
 
-  const createProduct = useCallback(async (data: Partial<Product>) => {
+  const createProduct = useCallback(async (data: CreateProductRequest) => {
     setLoadingProducts(true);
     setError(null);
     try {
