@@ -30,7 +30,7 @@ public class NotificationHub : Hub
     /// Send system announcement to all connected users
     /// Only administrators can call this method
     /// </summary>
-    [Authorize(Roles = Roles.Admin)]
+    [Authorize(Roles = "Admin")]
     public async Task SendSystemAnnouncement(Notification notification)
     {
         notification.Type = NotificationType.SystemAnnouncement;
