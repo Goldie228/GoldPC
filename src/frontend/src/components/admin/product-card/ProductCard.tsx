@@ -1,0 +1,145 @@
+/**
+ * ProductCard — карточка товара для админ-панели
+ * Отображает изображение, название, цену, индикатор остатка и кнопки действий
+ */
+
+import { Package, Edit2, ExternalLink, Trash2 } from 'lucide-react';
+import { hasValidProductImage } from '../../../utils/image';
+import type { Product } from '../../../api/types';
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('ru-BY', {
+    style: 'currency',
+    currency: 'BYN',
+    minimumFractionDigits: 0,
+  }).format(price);
+};
+
+interface ProductCardProps {
+  product: Product;
+  onEdit: (product: Product) => void;
+  onDelete: (product: Product) => void;
+}
+
+export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
+  // Определяем URL изображения: mainImage или первое из массива images
+  const imageUrl =
+    (hasValidProductImage(product.mainImage?.url) && product.mainImage?.url) ||
+    (product.images &&
+      product.images.length > 0 &&
+      hasValidProductImage(product.images[0].url) &&
+      product.images[0].url) ||
+    null;
+
+  // Прогресс stock: максимум 50 = 100%
+  const stockPercent = Math.min((product.stock / 50) * 100, 100);
+
+  const getStockBarColor = () => {
+    if (product.stock === 0) return 'bg-[var(--border-muted)]';
+    if (product.stock <= 4) return 'bg-red-500';
+    if (product.stock <= 19) return 'bg-yellow-500';
+    return 'bg-green-500';
+  };
+
+  return (
+    <div
+      className={`relative bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-muted)] overflow-hidden flex flex-col min-w-[280px] flex-1 ${
+        !product.isActive ? 'opacity-60' : ''
+      }`}
+    >
+      {/* Оверлей для неактивного товара */}
+      {!product.isActive && (
+        <div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center rounded-[var(--radius-lg)]">
+          <span className="px-2 py-0.5 rounded-[var(--radius-sm)] text-xs bg-[var(--color-price-rise)]/15 text-[var(--color-price-rise)] font-medium">
+            Неактивен
+          </span>
+        </div>
+      )}
+
+      {/* Изображение */}
+      <div className="aspect-[4/3] bg-white relative overflow-hidden">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={product.name}
+            className="w-full h-full object-contain p-3"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Package className="w-12 h-12 text-muted-foreground/40" />
+          </div>
+        )}
+      </div>
+
+      {/* Контент */}
+      <div className="p-4 flex flex-col gap-3 flex-1">
+        {/* Название — 2 строки */}
+        <h3 className="text-sm font-medium text-body-text line-clamp-2 leading-snug">
+          {product.name}
+        </h3>
+
+        {/* Артикул (SKU) */}
+        {product.sku && (
+          <span className="text-xs text-muted-foreground font-mono">
+            Арт: {product.sku}
+          </span>
+        )}
+
+        {/* Разделитель */}
+        <div className="border-t border-[var(--border-muted)]" />
+
+        {/* Цена */}
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <span className="text-lg font-bold text-[var(--color-gold)]">
+            {formatPrice(product.price)}
+          </span>
+          {product.oldPrice && (
+            <span className="text-sm text-[var(--color-muted-text)] line-through">
+              {formatPrice(product.oldPrice)}
+            </span>
+          )}
+        </div>
+
+        {/* Stock indicator */}
+        <div className="space-y-1.5">
+          <div className="h-1.5 rounded-full bg-[var(--border-muted)] w-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${getStockBarColor()}`}
+              style={{ width: `${stockPercent}%` }}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {product.stock === 0 ? 'Нет в наличии' : `${product.stock} шт.`}
+          </span>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 mt-auto pt-1">
+          <button
+            onClick={() => onEdit(product)}
+            className="w-8 h-8 flex items-center justify-center bg-transparent border border-hairline-dark rounded-md text-muted-foreground hover:text-body-text hover:bg-surface-elevated transition-colors cursor-pointer"
+            title="Редактировать"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <a
+            href={`/product/${product.slug ?? product.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-8 h-8 flex items-center justify-center bg-transparent border border-hairline-dark rounded-md text-muted-foreground hover:text-body-text hover:bg-surface-elevated transition-colors"
+            title="Открыть на сайте"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
+          <button
+            onClick={() => onDelete(product)}
+            className="w-8 h-8 flex items-center justify-center bg-transparent border border-hairline-dark rounded-md text-muted-foreground hover:text-price-rise hover:border-price-rise/30 transition-colors cursor-pointer"
+            title="Удалить"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

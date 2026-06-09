@@ -1,362 +1,619 @@
 /**
- * Страница управления справочниками
- * Категории, производители, характеристики
+ * Страница управления справочниками (Справочники)
+ * 3 вкладки: Категории, Производители, Характеристики
+ * Inline-редактирование, добавление, удаление с подтверждением
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   dictionariesApi,
   type DictionaryCategory,
   type DictionaryManufacturer,
   type DictionaryItem,
+  type CreateDictionaryItemRequest,
+  type UpdateDictionaryItemRequest,
 } from '../../../api/admin';
 import { useToast } from '../../../hooks/useToast';
-import { Search, Edit2, Trash2, Plus, X, Loader2 } from 'lucide-react';
+import {
+  BookOpen,
+  Search,
+  Plus,
+  Edit2,
+  Trash2,
+  Check,
+  X,
+  Loader2,
+} from 'lucide-react';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 type TabType = 'categories' | 'manufacturers' | 'attributes';
 
-/**
- * Страница управления справочниками
- */
+interface TabConfig {
+  key: TabType;
+  label: string;
+}
+
+interface ItemFormData {
+  name: string;
+  slug: string;
+}
+
+type DictionaryUnion = DictionaryCategory | DictionaryManufacturer | DictionaryItem;
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const TABS: TabConfig[] = [
+  { key: 'categories', label: 'Категории' },
+  { key: 'manufacturers', label: 'Производители' },
+  { key: 'attributes', label: 'Характеристики' },
+];
+
+function isCategory(item: DictionaryUnion): item is DictionaryCategory {
+  return 'productCount' in item && !('country' in item);
+}
+
+function isManufacturer(item: DictionaryUnion): item is DictionaryManufacturer {
+  return 'country' in item;
+}
+
+function deriveSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^\wа-яё\s-]/gi, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 export function DictionariesPage() {
   const { showToast } = useToast();
+  const queryClient = useQueryClient();
+
+  // ----- Tab & filter state -----------------------------------------------
   const [activeTab, setActiveTab] = useState<TabType>('categories');
-  const [categories, setCategories] = useState<DictionaryCategory[]>([]);
-  const [manufacturers, setManufacturers] = useState<DictionaryManufacturer[]>([]);
-  const [attributes, setAttributes] = useState<DictionaryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [editingItem, setEditingItem] = useState<DictionaryItem | null>(null);
-  const [formData, setFormData] = useState({ name: '', slug: '' });
-  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    void fetchData();
-  }, [activeTab]);
+  // ----- Inline edit state ------------------------------------------------
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<ItemFormData>({ name: '', slug: '' });
 
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      switch (activeTab) {
-        case 'categories':
-          const cats = await dictionariesApi.getCategories();
-          setCategories(cats);
-          break;
-        case 'manufacturers':
-          const mans = await dictionariesApi.getManufacturers();
-          setManufacturers(mans);
-          break;
-        case 'attributes':
-          const attrs = await dictionariesApi.getAttributes();
-          setAttributes(attrs);
-          break;
-      }
-    } catch (err) {
-      setError('Не удалось загрузить данные. Попробуйте позже.');
-      console.error('Failed to fetch dictionary data:', err);
-    } finally {
-      setLoading(false);
-    }
+  // ----- Add-new-row state -------------------------------------------------
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addForm, setAddForm] = useState<ItemFormData>({ name: '', slug: '' });
+
+  // ===== React Query: fetch per tab =======================================
+
+  const categoriesQuery = useQuery({
+    queryKey: ['admin', 'dictionaries', 'categories'],
+    queryFn: () => dictionariesApi.getCategories(),
+    enabled: activeTab === 'categories',
+  });
+
+  const manufacturersQuery = useQuery({
+    queryKey: ['admin', 'dictionaries', 'manufacturers'],
+    queryFn: () => dictionariesApi.getManufacturers(),
+    enabled: activeTab === 'manufacturers',
+  });
+
+  const attributesQuery = useQuery({
+    queryKey: ['admin', 'dictionaries', 'attributes'],
+    queryFn: () => dictionariesApi.getAttributes(),
+    enabled: activeTab === 'attributes',
+  });
+
+  // ----- Resolve active query ---------------------------------------------
+  const activeQuery =
+    activeTab === 'categories'
+      ? categoriesQuery
+      : activeTab === 'manufacturers'
+        ? manufacturersQuery
+        : attributesQuery;
+
+  const allData = (activeQuery.data ?? []) as DictionaryUnion[];
+  const isLoading = activeQuery.isLoading;
+  const isError = activeQuery.isError;
+
+  // ----- Search filter ----------------------------------------------------
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim()) return allData;
+    const q = searchQuery.toLowerCase();
+    return allData.filter(
+      (item) =>
+        item.name.toLowerCase().includes(q) ||
+        item.slug.toLowerCase().includes(q),
+    );
+  }, [allData, searchQuery]);
+
+  // ===== Mutations =========================================================
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin', 'dictionaries'] });
   };
 
-  const handleAdd = () => {
-    setEditingItem(null);
-    setFormData({ name: '', slug: '' });
-    setShowModal(true);
-  };
+  const createMutation = useMutation({
+    mutationFn: (payload: CreateDictionaryItemRequest) =>
+      dictionariesApi.createItem(activeTab, payload),
+    onSuccess: () => {
+      invalidateAll();
+      setShowAddForm(false);
+      setAddForm({ name: '', slug: '' });
+      showToast('Запись добавлена', 'success');
+    },
+    onError: (err) => {
+      console.error('Failed to create item:', err);
+      showToast('Не удалось добавить запись', 'error');
+    },
+  });
 
-  const handleEdit = (item: DictionaryItem) => {
-    setEditingItem(item);
-    setFormData({ name: item.name, slug: item.slug });
-    setShowModal(true);
-  };
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateDictionaryItemRequest }) =>
+      dictionariesApi.updateItem(activeTab, id, data),
+    onSuccess: () => {
+      invalidateAll();
+      setEditingId(null);
+      showToast('Запись обновлена', 'success');
+    },
+    onError: (err) => {
+      console.error('Failed to update item:', err);
+      showToast('Не удалось обновить запись', 'error');
+    },
+  });
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Удалить эту запись?')) return;
-
-    try {
-      await dictionariesApi.deleteItem(activeTab, id);
-      void fetchData();
-    } catch (err) {
-      console.error('Failed to delete:', err);
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => dictionariesApi.deleteItem(activeTab, id),
+    onSuccess: () => {
+      invalidateAll();
+      showToast('Запись удалена', 'success');
+    },
+    onError: (err) => {
+      console.error('Failed to delete item:', err);
       showToast('Не удалось удалить запись', 'error');
-    }
+    },
+  });
+
+  // ===== Handlers ===========================================================
+
+  const handleStartEdit = (item: DictionaryItem) => {
+    setEditingId(item.id);
+    setEditForm({ name: item.name, slug: item.slug });
   };
 
-  const handleSave = async () => {
-    if (!formData.name.trim()) {
+  const handleCancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const handleSaveEdit = (id: string) => {
+    if (!editForm.name.trim()) {
       showToast('Введите название', 'error');
       return;
     }
-
-    setSaving(true);
-    try {
-      if (editingItem != null) {
-        await dictionariesApi.updateItem(activeTab, editingItem.id, {
-          name: formData.name,
-          slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
-        });
-      } else {
-        await dictionariesApi.createItem(activeTab, {
-          name: formData.name,
-          slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
-        });
-      }
-      setShowModal(false);
-      void fetchData();
-    } catch (err) {
-      console.error('Failed to save:', err);
-      showToast('Не удалось сохранить запись', 'error');
-    } finally {
-      setSaving(false);
-    }
+    updateMutation.mutate({
+      id,
+      data: {
+        name: editForm.name.trim(),
+        slug: editForm.slug.trim() || deriveSlug(editForm.name),
+      },
+    });
   };
 
-  const filterItems = <T extends DictionaryItem>(items: T[]): T[] => {
-    if (!searchQuery) return items;
-    return items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.slug.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+  const handleDelete = (item: DictionaryItem) => {
+    if (!window.confirm(`Удалить "${item.name}"?\nЭто действие нельзя отменить.`)) return;
+    deleteMutation.mutate(item.id);
   };
 
-  const renderTable = () => {
-    if (loading) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-          <Loader2 className="w-8 h-8 animate-spin text-accent mb-4" />
-          <p>Загрузка...</p>
-        </div>
-      );
+  const handleStartAdd = () => {
+    setShowAddForm(true);
+    setAddForm({ name: '', slug: '' });
+  };
+
+  const handleSaveAdd = () => {
+    if (!addForm.name.trim()) {
+      showToast('Введите название', 'error');
+      return;
     }
+    createMutation.mutate({
+      name: addForm.name.trim(),
+      slug: addForm.slug.trim() || deriveSlug(addForm.name),
+    });
+  };
 
-    if (error) {
-      return (
-        <div className="text-center py-12 text-error">
-          <p>{error}</p>
-          <button onClick={() => void fetchData()} className="mt-4 px-4 py-2 bg-accent text-gold-ink rounded-lg text-sm hover:bg-accent-bright transition-colors">
-            Попробовать снова
-          </button>
-        </div>
-      );
-    }
+  const handleCancelAdd = () => {
+    setShowAddForm(false);
+    setAddForm({ name: '', slug: '' });
+  };
 
-    let filteredItems: DictionaryItem[] = [];
-    const itemCounts: Record<string, number> = {};
+  // ===== Render helpers =====================================================
 
-    switch (activeTab) {
-      case 'categories':
-        filteredItems = filterItems(categories);
-        categories.forEach((c) => {
-          itemCounts[c.id] = c.productCount;
-        });
-        break;
-      case 'manufacturers':
-        filteredItems = filterItems(manufacturers);
-        manufacturers.forEach((m) => {
-          itemCounts[m.id] = m.productCount;
-        });
-        break;
-      case 'attributes':
-        filteredItems = filterItems(attributes);
-        break;
-    }
+  /** Renders a status badge (active / inactive) */
+  const StatusBadge = ({ isActive }: { isActive: boolean }) => (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md ${
+        isActive
+          ? 'bg-price-drop/15 text-price-drop'
+          : 'bg-warning/15 text-warning'
+      }`}
+    >
+      {isActive ? 'Активна' : 'Неактивна'}
+    </span>
+  );
 
-    if (filteredItems.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-          <p>Нет записей</p>
-        </div>
-      );
+  /** Renders loading skeleton */
+  const LoadingState = () => (
+    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+      <Loader2 className="w-8 h-8 animate-spin text-gold mb-4" />
+      <p className="text-sm">Загрузка...</p>
+    </div>
+  );
+
+  /** Renders error with retry */
+  const ErrorState = () => (
+    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+      <p className="text-sm text-price-rise mb-4">Не удалось загрузить данные. Попробуйте позже.</p>
+      <button
+        onClick={() => activeQuery.refetch()}
+        className="inline-flex items-center gap-2 px-4 py-2 bg-surface-card text-body-text text-sm font-medium rounded-md border border-hairline-dark hover:bg-surface-elevated transition-colors"
+      >
+        <Loader2 className="w-4 h-4" />
+        Попробовать снова
+      </button>
+    </div>
+  );
+
+  /** Renders empty-state placeholder */
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+      <BookOpen className="w-12 h-12 mb-4 opacity-40" />
+      <p className="text-sm">Нет записей</p>
+    </div>
+  );
+
+  /** Renders an inline input cell used in both edit and add modes */
+  const InlineInput = ({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    placeholder?: string;
+  }) => (
+    <input
+      type="text"
+      className="w-full min-w-0 bg-surface-card border border-hairline-dark rounded-md px-3 py-1.5 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+    />
+  );
+
+  // ----- Table body ---------------------------------------------------------
+  const renderTableBody = () => {
+    if (isLoading) return <tr><td colSpan={100}><LoadingState /></td></tr>;
+    if (isError) return <tr><td colSpan={100}><ErrorState /></td></tr>;
+
+    if (filteredData.length === 0 && !showAddForm) {
+      return <tr><td colSpan={100}><EmptyState /></td></tr>;
     }
 
     return (
-      <div className="bg-card border border-border">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr>
-              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border">ID</th>
-              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border">Название</th>
-              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border">Slug</th>
-              {activeTab !== 'attributes' && <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border">Товаров</th>}
-              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border">Статус</th>
-              <th className="px-5 py-3.5 text-left text-[0.7rem] font-semibold text-muted-foreground uppercase tracking-[0.08em] bg-elevated border-b border-border"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredItems.map((item, index) => (
-              <tr key={item.id} className="hover:bg-elevated">
-                <td className="px-5 py-3.5 text-sm font-mono text-xs text-muted-foreground">#{String(index + 1).padStart(3, '0')}</td>
-                <td className="px-5 py-3.5 text-sm font-medium text-foreground">{item.name}</td>
-                <td className="px-5 py-3.5 text-sm font-mono text-xs text-muted-foreground">{item.slug}</td>
-                {activeTab !== 'attributes' && (
-                  <td className="px-5 py-3.5 text-sm font-mono text-xs text-muted-foreground">
-                    {itemCounts[item.id] || 0}
-                  </td>
-                )}
-                <td className="px-5 py-3.5 text-sm">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[0.7rem] font-medium uppercase tracking-[0.05em] rounded ${
-                    item.isActive
-                      ? 'bg-green-500/15 text-green-500'
-                      : 'bg-amber-500/15 text-amber-500'
-                  }`}>
-                    {item.isActive ? 'Активна' : 'Скрыта'}
-                  </span>
-                </td>
-                <td className="px-5 py-3.5 text-sm">
-                  <div className="flex gap-1">
+      <>
+        {/* ---- Add-new row ---- */}
+        {showAddForm && (
+          <tr className="bg-surface-elevated/30">
+            {renderAddRowCells()}
+            <td className="py-3 px-4 border-b border-hairline-dark">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleSaveAdd()}
+                  disabled={createMutation.isPending}
+                  className="w-8 h-8 flex items-center justify-center bg-gold text-black rounded-md hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Сохранить"
+                >
+                  {createMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                </button>
+                <button
+                  onClick={handleCancelAdd}
+                  disabled={createMutation.isPending}
+                  className="w-8 h-8 flex items-center justify-center bg-surface-card text-muted-foreground rounded-md border border-hairline-dark hover:text-body-text hover:bg-surface-elevated transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Отмена"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        )}
+
+        {/* ---- Existing rows ---- */}
+        {filteredData.map((item) => {
+          const isEditing = editingId === item.id;
+          const isPending =
+            updateMutation.isPending && updateMutation.variables?.id === item.id;
+
+          return (
+            <tr
+              key={item.id}
+              className={`border-b border-hairline-dark transition-colors ${
+                isEditing ? 'bg-surface-elevated/20' : 'hover:bg-surface-elevated/10'
+              }`}
+            >
+              {isEditing ? renderEditRowCells(item) : renderNormalRowCells(item)}
+              <td className="py-3 px-4 border-b border-hairline-dark">
+                <div className="flex items-center gap-2">
+                  {isEditing ? (
+                    <>
                       <button
-                        className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground cursor-pointer hover:border-accent hover:bg-accent/10 transition-colors"
+                        onClick={() => handleSaveEdit(item.id)}
+                        disabled={isPending}
+                        className="w-8 h-8 flex items-center justify-center bg-gold text-black rounded-md hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Сохранить"
+                      >
+                        {isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Check className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        disabled={isPending}
+                        className="w-8 h-8 flex items-center justify-center bg-surface-card text-muted-foreground rounded-md border border-hairline-dark hover:text-body-text hover:bg-surface-elevated transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Отмена"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleStartEdit(item)}
+                        className="w-8 h-8 flex items-center justify-center bg-surface-card text-muted-foreground rounded-md border border-hairline-dark hover:text-gold hover:border-gold transition-all"
                         title="Редактировать"
-                        onClick={() => handleEdit(item)}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
-                        className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground cursor-pointer hover:border-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        onClick={() => handleDelete(item)}
+                        disabled={deleteMutation.isPending && deleteMutation.variables === item.id}
+                        className="w-8 h-8 flex items-center justify-center bg-surface-card text-muted-foreground rounded-md border border-hairline-dark hover:text-price-rise hover:border-price-rise transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Удалить"
-                        onClick={() => void handleDelete(item.id)}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {deleteMutation.isPending && deleteMutation.variables === item.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </button>
-                    <button
-                      className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground cursor-pointer hover:border-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
-                      title="Удалить"
-                      onClick={() => void handleDelete(item.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                    </>
+                  )}
+                </div>
+              </td>
+            </tr>
+          );
+        })}
+      </>
     );
   };
 
-  return (
-    <div className="p-8 max-w-[1400px] mx-auto">
-      <header className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground mb-2 tracking-tight">Справочники</h1>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <a href="#" className="text-muted-foreground hover:text-accent transition-colors no-underline">Admin</a>
-            <span>→</span>
-            <span className="text-muted-foreground">Справочники</span>
-          </div>
-        </div>
-      </header>
+  // --- Normal row cells (read-only) ---
+  const renderNormalRowCells = (item: DictionaryUnion) => {
+    const showProductCount = isCategory(item) || isManufacturer(item);
 
-      {/* Tabs */}
-      <div className="flex gap-0 border-b border-border mb-8">
-        <button
-          className={`px-6 py-3 text-sm font-medium bg-transparent border-none cursor-pointer relative transition-colors ${
-            activeTab === 'categories' ? 'text-accent' : 'text-muted-foreground hover:text-foreground'
-          }`}
-          onClick={() => setActiveTab('categories')}
-        >
-          Категории
-          {activeTab === 'categories' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-accent"></div>}
-        </button>
-        <button
-          className={`px-6 py-3 text-sm font-medium bg-transparent border-none cursor-pointer relative transition-colors ${
-            activeTab === 'manufacturers' ? 'text-accent' : 'text-muted-foreground hover:text-foreground'
-          }`}
-          onClick={() => setActiveTab('manufacturers')}
-        >
-          Производители
-          {activeTab === 'manufacturers' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-accent"></div>}
-        </button>
-        <button
-          className={`px-6 py-3 text-sm font-medium bg-transparent border-none cursor-pointer relative transition-colors ${
-            activeTab === 'attributes' ? 'text-accent' : 'text-muted-foreground hover:text-foreground'
-          }`}
-          onClick={() => setActiveTab('attributes')}
-        >
-          Характеристики
-          {activeTab === 'attributes' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-accent"></div>}
-        </button>
-      </div>
+    return (
+      <>
+        <td className="py-3 px-4 text-sm text-body-text font-medium border-b border-hairline-dark">
+          {item.name}
+        </td>
+        <td className="py-3 px-4 text-sm text-muted-foreground font-mono border-b border-hairline-dark">
+          {item.slug}
+        </td>
+        {isManufacturer(item) && (
+          <td className="py-3 px-4 text-sm text-muted-foreground border-b border-hairline-dark">
+            {item.country ?? '—'}
+          </td>
+        )}
+        {showProductCount && (
+          <td className="py-3 px-4 text-sm text-muted-foreground border-b border-hairline-dark">
+            <span className="font-mono">{item.productCount}</span>
+          </td>
+        )}
+        <td className="py-3 px-4 border-b border-hairline-dark">
+          <StatusBadge isActive={item.isActive} />
+        </td>
+      </>
+    );
+  };
 
-      {/* Toolbar */}
-      <div className="flex justify-between items-center mb-6 gap-4 flex-wrap">
-        <div className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border min-w-[320px]">
-          <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          <input
-            type="text"
-            className="flex-1 bg-transparent border-none text-foreground text-sm outline-none placeholder-muted-foreground"
-            placeholder="Поиск по названию..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+  // --- Edit row cells (inline inputs) ---
+  const renderEditRowCells = (item: DictionaryUnion) => {
+    const showProductCount = isCategory(item) || isManufacturer(item);
+
+    return (
+      <>
+        <td className="py-3 px-4 border-b border-hairline-dark">
+          <InlineInput
+            value={editForm.name}
+            onChange={(v) => setEditForm((p) => ({ ...p, name: v }))}
+            placeholder="Название"
           />
-        </div>
-        <button className="flex items-center gap-2 px-5 py-2.5 bg-accent text-gold-ink border-none text-sm font-semibold cursor-pointer hover:bg-accent-bright transition-colors" onClick={handleAdd}>
-          <Plus className="w-4 h-4" /> Добавить
-        </button>
-      </div>
+        </td>
+        <td className="py-3 px-4 border-b border-hairline-dark">
+          <InlineInput
+            value={editForm.slug}
+            onChange={(v) => setEditForm((p) => ({ ...p, slug: v }))}
+            placeholder={deriveSlug(editForm.name)}
+          />
+        </td>
+        {isManufacturer(item) && (
+          <td className="py-3 px-4 text-sm text-muted-foreground border-b border-hairline-dark">
+            {item.country ?? '—'}
+          </td>
+        )}
+        {showProductCount && (
+          <td className="py-3 px-4 text-sm text-muted-foreground border-b border-hairline-dark">
+            <span className="font-mono">{item.productCount}</span>
+          </td>
+        )}
+        <td className="py-3 px-4 border-b border-hairline-dark">
+          <StatusBadge isActive={item.isActive} />
+        </td>
+      </>
+    );
+  };
 
-      {/* Table */}
-      {renderTable()}
+  // --- Add row cells ---
+  const renderAddRowCells = () => {
+    const showProductCount = activeTab !== 'attributes';
 
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[200]" onClick={() => setShowModal(false)}>
-          <div className="bg-card border border-border w-full max-w-[480px]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center px-6 py-5 border-b border-border">
-              <h3 className="text-base font-semibold m-0">
-                {editingItem ? 'Редактировать' : 'Новая запись'}
-              </h3>
-              <button className="w-8 h-8 flex items-center justify-center bg-transparent border-none text-muted-foreground cursor-pointer hover:text-foreground transition-colors" onClick={() => setShowModal(false)}>
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-             <div className="p-6">
-               <div className="mb-5">
-                 <label className="block text-sm font-medium text-muted-foreground mb-2">Название</label>
-                 <input
-                   type="text"
-                   className="w-full px-4 py-3 bg-elevated border border-border text-foreground text-sm transition-colors focus:outline-none focus:border-info-blue"
-                   placeholder="Введите название"
-                   value={formData.name}
-                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                 />
-               </div>
-               <div className="mb-5">
-                 <label className="block text-sm font-medium text-muted-foreground mb-2">Slug (URL)</label>
-                 <input
-                   type="text"
-                   className="w-full px-4 py-3 bg-elevated border border-border text-foreground text-sm transition-colors focus:outline-none focus:border-info-blue"
-                   placeholder="auto-generated-slug"
-                   value={formData.slug}
-                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                 />
-               </div>
-             </div>
-             <div className="flex justify-end gap-3 px-6 py-5 border-t border-border">
-               <button
-                 className="px-5 py-2.5 bg-transparent border border-border text-muted-foreground text-sm font-semibold cursor-pointer hover:border-muted-foreground hover:text-foreground transition-colors"
-                 onClick={() => setShowModal(false)}
-               >
-                 Отмена
-               </button>
-               <button
-                 className="px-5 py-2.5 bg-accent text-gold-ink border-none text-sm font-semibold cursor-pointer hover:bg-accent-bright transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  onClick={() => void handleSave()}
-                 disabled={saving}
-               >
-                 {saving ? 'Сохранение...' : 'Сохранить'}
-               </button>
-             </div>
+    return (
+      <>
+        <td className="py-3 px-4 border-b border-hairline-dark">
+          <InlineInput
+            value={addForm.name}
+            onChange={(v) => setAddForm((p) => ({ ...p, name: v }))}
+            placeholder="Введите название"
+          />
+        </td>
+        <td className="py-3 px-4 border-b border-hairline-dark">
+          <InlineInput
+            value={addForm.slug}
+            onChange={(v) => setAddForm((p) => ({ ...p, slug: v }))}
+            placeholder={deriveSlug(addForm.name)}
+          />
+        </td>
+        {activeTab === 'manufacturers' && (
+          <td className="py-3 px-4 text-sm text-muted-foreground border-b border-hairline-dark">
+            —
+          </td>
+        )}
+        {showProductCount && (
+          <td className="py-3 px-4 text-sm text-muted-foreground border-b border-hairline-dark">
+            <span className="font-mono">0</span>
+          </td>
+        )}
+        <td className="py-3 px-4 border-b border-hairline-dark">
+          <StatusBadge isActive={true} />
+        </td>
+      </>
+    );
+  };
+
+  // ===== Main render ========================================================
+
+  return (
+    <div className="bg-canvas-dark min-h-screen">
+      <div className="p-8 max-w-[1400px] mx-auto">
+        {/* ---- Page header ---- */}
+        <header className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-lg font-semibold text-body-text">Справочники</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Управление категориями, производителями и характеристиками
+            </p>
           </div>
+        </header>
+
+        {/* ---- Tabs ---- */}
+        <div className="bg-surface-card rounded-xl p-1 inline-flex gap-1 mb-6">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setActiveTab(tab.key);
+                setEditingId(null);
+                setShowAddForm(false);
+                setSearchQuery('');
+              }}
+              className={`inline-flex px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeTab === tab.key
+                  ? 'bg-gold text-black'
+                  : 'text-muted-foreground hover:text-body-text hover:bg-surface-elevated'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
-      )}
+
+        {/* ---- Toolbar: search + add button ---- */}
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Поиск по названию..."
+              className="w-full pl-10 pr-4 py-2 bg-surface-card border border-hairline-dark rounded-md text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+            />
+          </div>
+
+          <button
+            onClick={handleStartAdd}
+            disabled={showAddForm}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gold text-black text-sm font-semibold rounded-md hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus className="w-4 h-4" />
+            Добавить
+          </button>
+        </div>
+
+        {/* ---- Table ---- */}
+        <div className="bg-surface-card rounded-xl overflow-hidden">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-surface-elevated/50">
+                <th className="py-3 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-hairline-dark">
+                  Название
+                </th>
+                <th className="py-3 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-hairline-dark">
+                  Slug
+                </th>
+                {activeTab === 'manufacturers' && (
+                  <th className="py-3 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-hairline-dark">
+                    Страна
+                  </th>
+                )}
+                {activeTab !== 'attributes' && (
+                  <th className="py-3 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-hairline-dark">
+                    Товаров
+                  </th>
+                )}
+                <th className="py-3 px-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-hairline-dark">
+                  Статус
+                </th>
+                <th className="py-3 px-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider border-b border-hairline-dark">
+                  Действия
+                </th>
+              </tr>
+            </thead>
+            <tbody>{renderTableBody()}</tbody>
+          </table>
+        </div>
+
+        {/* ---- Summary footer ---- */}
+        {!isLoading && !isError && filteredData.length > 0 && (
+          <p className="text-xs text-muted-foreground mt-3 text-right">
+            {showAddForm
+              ? 'Добавление новой записи'
+              : `Всего: ${filteredData.length} ${filteredData.length % 10 === 1 && filteredData.length % 100 !== 11 ? 'запись' : filteredData.length % 10 >= 2 && filteredData.length % 10 <= 4 && (filteredData.length % 100 < 10 || filteredData.length % 100 >= 20) ? 'записи' : 'записей'}`}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
