@@ -38,7 +38,7 @@ const ROLE_OPTIONS: UserRole[] = [
   'Accountant',
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 
 /* ======== Компонент ======== */
 
@@ -51,6 +51,7 @@ export function UserManagementPage() {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | ''>('');
+  const [pageSize, setPageSize] = useState<number>(10);
   const [page, setPage] = useState(1);
   const [mutationError, setMutationError] = useState<string | null>(null);
   const [updatingRoles, setUpdatingRoles] = useState<Record<string, boolean>>(
@@ -69,12 +70,12 @@ export function UserManagementPage() {
     queryKey: [
       'admin',
       'users',
-      { search: searchQuery, role: roleFilter, page, pageSize: PAGE_SIZE },
+      { search: searchQuery, role: roleFilter, page, pageSize },
     ],
     queryFn: () =>
       usersAdminApi.getUsers({
         page,
-        pageSize: PAGE_SIZE,
+        pageSize,
         ...(searchQuery ? { search: searchQuery } : {}),
         ...(roleFilter ? { role: roleFilter as UserRole } : {}),
       }),
@@ -439,10 +440,31 @@ export function UserManagementPage() {
               {/* ===== Пагинация ===== */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4 border-t border-hairline-dark">
-                  <span className="text-sm text-muted-foreground">
-                    Показано {(page - 1) * PAGE_SIZE + 1}–
-                    {Math.min(page * PAGE_SIZE, totalItems)} из {totalItems}
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground whitespace-nowrap">
+                        Показывать по:
+                      </label>
+                      <select
+                        className="px-2 py-1 bg-surface-card border border-hairline-dark rounded-md text-sm text-body-text cursor-pointer outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(Number(e.target.value));
+                          setPage(1);
+                        }}
+                      >
+                        {PAGE_SIZE_OPTIONS.map((size) => (
+                          <option key={size} value={size}>
+                            {size}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      Показано {(page - 1) * pageSize + 1}–
+                      {Math.min(page * pageSize, totalItems)} из {totalItems}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setPage(page - 1)}

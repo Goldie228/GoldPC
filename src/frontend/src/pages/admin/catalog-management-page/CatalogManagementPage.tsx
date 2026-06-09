@@ -46,7 +46,7 @@ const CATEGORY_OPTIONS: ProductCategory[] = [
   'case', 'cooling', 'fan', 'monitor', 'keyboard', 'mouse', 'headphones',
 ];
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 
 interface ProductFormData {
   name: string;
@@ -76,6 +76,8 @@ export function CatalogManagementPage() {
   // Filter & pagination state
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory | ''>('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [pageSize, setPageSize] = useState<number>(10);
   const [page, setPage] = useState(1);
 
   // View mode state (table/grid) with localStorage persistence
@@ -94,9 +96,10 @@ export function CatalogManagementPage() {
   // Build query params
   const queryParams = {
     page,
-    pageSize: PAGE_SIZE,
+    pageSize,
     ...(categoryFilter ? { category: categoryFilter } : {}),
     ...(searchQuery ? { search: searchQuery } : {}),
+    ...(activeFilter !== 'all' ? { isActive: activeFilter === 'active' } : {}),
   };
 
   // Products query
@@ -199,8 +202,8 @@ export function CatalogManagementPage() {
     }).format(price);
   };
 
-  const startItem = totalItems === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const endItem = Math.min(page * PAGE_SIZE, totalItems);
+  const startItem = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
+  const endItem = Math.min(page * pageSize, totalItems);
 
   return (
     <div className="bg-canvas-dark min-h-screen">
@@ -279,6 +282,23 @@ export function CatalogManagementPage() {
                   {CATEGORY_LABELS[cat]}
                 </option>
               ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Статус
+            </label>
+            <select
+              className="px-3 py-2 pr-8 bg-surface-card border border-hairline-dark rounded-md text-sm text-body-text cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23707a8a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_8px_center] focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+              value={activeFilter}
+              onChange={(e) => {
+                setActiveFilter(e.target.value as 'all' | 'active' | 'inactive');
+                setPage(1);
+              }}
+            >
+              <option value="all">Все</option>
+              <option value="active">Активные</option>
+              <option value="inactive">Неактивные</option>
             </select>
           </div>
           <ViewToggle viewMode={viewMode} onChange={setViewMode} />
@@ -463,9 +483,30 @@ export function CatalogManagementPage() {
             {/* Pagination — shared for both views */}
             {totalPages > 1 && (
               <div className="bg-surface-card rounded-xl px-4 py-4 flex items-center justify-between border border-hairline-dark">
-                <span className="text-sm text-muted-foreground">
-                  Показано {startItem}–{endItem} из {totalItems}
-                </span>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <label className="text-xs text-muted-foreground whitespace-nowrap">
+                      Показывать по:
+                    </label>
+                    <select
+                      className="px-2 py-1 bg-surface-card border border-hairline-dark rounded-md text-sm text-body-text cursor-pointer outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors"
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(Number(e.target.value));
+                        setPage(1);
+                      }}
+                    >
+                      {PAGE_SIZE_OPTIONS.map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    Показано {startItem}–{endItem} из {totalItems}
+                  </span>
+                </div>
                 <div className="flex items-center gap-1">
                   <button
                     disabled={page === 1}
