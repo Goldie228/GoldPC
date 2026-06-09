@@ -3,8 +3,54 @@
  */
 
 import api from './index';
-import type { User, Product, PagedResponse } from './types';
-export type { User, Product, PagedResponse } from './types';
+import type { ProductImage, User, Product, PagedResponse, ProductCategory, PriceHistoryDto, CategorySpecificationsDto } from './types';
+export type { ProductImage, User, Product, PagedResponse, ProductCategory, PriceHistoryDto } from './types';
+
+// === Маппинг категорий ===
+
+/** Маппинг русских названий категорий из CatalogService → frontend ProductCategory slug */
+const CATEGORY_NAME_TO_SLUG: Record<string, ProductCategory> = {
+  'Процессоры': 'cpu',
+  'Видеокарты': 'gpu',
+  'Материнские платы': 'motherboard',
+  'Оперативная память': 'ram',
+  'Накопители': 'storage',
+  'Блоки питания': 'psu',
+  'Корпуса': 'case',
+  'Охлаждение': 'cooling',
+  'Вентиляторы': 'fan',
+  'Мониторы': 'monitor',
+  'Клавиатуры': 'keyboard',
+  'Мыши': 'mouse',
+  'Наушники': 'headphones',
+};
+
+/**
+ * Преобразует category из ответа CatalogService (название на русском) в ProductCategory slug.
+ * Если значение уже является валидным ProductCategory — возвращает как есть.
+ */
+function normalizeCategory(raw: string): ProductCategory {
+  if (raw in CATEGORY_NAME_TO_SLUG) return CATEGORY_NAME_TO_SLUG[raw];
+  // Уже slug или неизвестное значение — возвращаем как есть
+  return raw as ProductCategory;
+}
+
+/** Маппинг frontend ProductCategory slug → backend Category slug (для фильтрации) */
+const FRONTEND_TO_BACKEND_SLUG: Record<string, string> = {
+  cpu: 'processors',
+  gpu: 'gpu',
+  motherboard: 'motherboards',
+  ram: 'ram',
+  storage: 'storage',
+  psu: 'psu',
+  case: 'cases',
+  cooling: 'coolers',
+  monitor: 'monitors',
+  keyboard: 'keyboards',
+  mouse: 'mice',
+  headphones: 'headphones',
+  fan: 'coolers',
+};
 
 // === Типы для администрирования ===
 
@@ -39,12 +85,41 @@ export interface UpdateUserRequest {
   isActive?: boolean;
 }
 
+/**
+ * Тело запроса обновления товара — соответствует UpdateProductDto из SharedKernel
+ */
 export interface UpdateProductRequest {
   name?: string;
+  slug?: string;
+  manufacturerId?: string;
   price?: number;
+  oldPrice?: number;
   stock?: number;
-  isActive?: boolean;
+  warrantyMonths?: number;
   description?: string;
+  specifications?: Record<string, string | number | boolean>;
+  isActive?: boolean;
+  isFeatured?: boolean;
+}
+
+/**
+ * Тело запроса создания товара — соответствует CreateProductDto из SharedKernel
+ */
+export interface CreateProductRequest {
+  name: string;
+  sku: string;
+  slug?: string;
+  category: string;
+  categoryId?: string;
+  manufacturerId?: string;
+  price: number;
+  oldPrice?: number;
+  stock: number;
+  warrantyMonths?: number;
+  description?: string;
+  specifications?: Record<string, string | number | boolean>;
+  isActive?: boolean;
+  isFeatured?: boolean;
 }
 
 export interface GetUsersParams {
@@ -124,18 +199,40 @@ export const usersAdminApi = {
  */
 export const catalogAdminApi = {
   /**
-   * Получить все продукты (включая неактивные)
+   * Получить все продукты (включая неактивные).
+   * Проксируется через GoldPC.Api → CatalogService.
+   *
+   * Ответ: PagedResult<ProductListDto> — category приходит как русское название
+   * (напр. "Процессоры"), поэтому нормализуем в ProductCategory slug.
    */
   async getProducts(params?: {
     page?: number;
     pageSize?: number;
     category?: string;
+    search?: string;
     isActive?: boolean;
   }): Promise<PagedResponse<Product>> {
+    // Маппим frontend slug → backend slug для фильтрации (CatalogService ожидает slug категории)
+    const apiParams = params?.category
+      ? { ...params, category: FRONTEND_TO_BACKEND_SLUG[params.category] ?? params.category }
+      : params;
+
     const response = await api.get<PagedResponse<Product>>('/admin/products', {
-      params,
+      params: apiParams,
     });
-    return response.data;
+    const result = response.data;
+
+    // Нормализуем category: CatalogService возвращает "Процессоры", а фронтенд ждёт "cpu"
+    if (result?.data && Array.isArray(result.data)) {
+      for (const p of result.data) {
+        const raw = (p as unknown as { category: string }).category;
+        if (typeof raw === 'string') {
+          (p as unknown as { category: ProductCategory }).category = normalizeCategory(raw);
+        }
+      }
+    }
+
+    return result;
   },
 
   /**
@@ -156,8 +253,44 @@ export const catalogAdminApi = {
   /**
    * Создать продукт
    */
-  async createProduct(data: Partial<Product>): Promise<Product> {
+  async createProduct(data: CreateProductRequest): Promise<Product> {
     const response = await api.post<Product>('/admin/products', data);
+    return response.data;
+  },
+
+  /**
+   * Получить продукт по ID (для редактора)
+   */
+  async getProductById(id: string): Promise<Product> {
+    const response = await api.get<Product>(`/admin/products/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Получить историю цен продукта
+   */
+  async getPriceHistory(productId: string): Promise<PriceHistoryDto[]> {
+    const response = await api.get<PriceHistoryDto[]>(`/admin/products/${productId}/price-history`);
+    return response.data;
+  },
+
+  /**
+   * Сгенерировать название товара по шаблону
+   */
+  async generateProductName(data: {
+    manufacturerName?: string;
+    categorySlug?: string;
+    specifications?: Record<string, string | number | boolean>;
+  }): Promise<{ name: string }> {
+    const response = await api.post<{ name: string }>('/admin/products/generate-name', data);
+    return response.data;
+  },
+
+  /**
+   * Получить мета-данные характеристик для категории
+   */
+  async getCategorySpecifications(categoryId: string): Promise<CategorySpecificationsDto> {
+    const response = await api.get<CategorySpecificationsDto>(`/admin/specifications/by-category/${categoryId}`);
     return response.data;
   },
 };
@@ -172,6 +305,59 @@ export const statsApi = {
   async getStats(): Promise<StatsResponse> {
     const response = await api.get<StatsResponse>('/admin/stats');
     return response.data;
+  },
+};
+
+/**
+ * API для управления изображениями товаров
+ */
+export const imagesAdminApi = {
+  /**
+   * Загрузить изображение для товара (multipart/form-data)
+   */
+  async upload(
+    productId: string,
+    file: File,
+    onProgress?: (progress: number) => void
+  ): Promise<ProductImage> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post<ProductImage>(
+      `/admin/products/${productId}/images`,
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: onProgress
+          ? (progressEvent) => {
+              if (progressEvent.total) {
+                onProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
+              }
+            }
+          : undefined,
+      }
+    );
+    return response.data;
+  },
+
+  /**
+   * Удалить изображение товара
+   */
+  async delete(productId: string, imageId: string): Promise<void> {
+    await api.delete(`/admin/products/${productId}/images/${imageId}`);
+  },
+
+  /**
+   * Установить изображение как главное
+   */
+  async setPrimary(productId: string, imageId: string): Promise<void> {
+    await api.put(`/admin/products/${productId}/images/${imageId}/primary`);
+  },
+
+  /**
+   * Изменить порядок изображений
+   */
+  async reorder(productId: string, imageIds: string[]): Promise<void> {
+    await api.put(`/admin/products/${productId}/images/reorder`, { imageIds });
   },
 };
 

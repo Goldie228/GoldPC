@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Settings,
   Bell,
+  Shield,
 } from 'lucide-react';
 import { MiniCart } from './MiniCart';
 import { NotificationCenter } from '../../notification-center/NotificationCenter';
@@ -243,6 +244,17 @@ export function Header(): ReactElement {
             <NotificationCenter />
           </div>
 
+          {/* Admin panel button - only for admins */}
+          {isAuthenticated && user?.role === 'Admin' && (
+            <Link
+              to="/admin/users"
+              className="relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-gold hover:bg-surface-elevated hidden md:flex"
+              aria-label="Админ-панель"
+            >
+              <Shield size={20} />
+            </Link>
+          )}
+
           {/* Profile / Auth - hidden on mobile (in drawer instead) */}
           <div className="relative hidden md:block" ref={profileDropdownRef}>
             <button
@@ -320,6 +332,16 @@ export function Header(): ReactElement {
                         <span>Настройки</span>
                       </Link>
                     </nav>
+
+                    {user?.role === 'Admin' && (
+                      <>
+                        <div className="h-px bg-hairline-dark mx-4" />
+                        <Link to="/admin/users" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleProfileDropdownClose}>
+                          <Shield size={18} />
+                          <span>Админ-панель</span>
+                        </Link>
+                      </>
+                    )}
 
                     <button className="flex items-center gap-3 w-full px-4 py-3 bg-transparent border-t border-hairline-dark text-muted-text text-sm cursor-pointer transition-colors hover:text-red-500 hover:bg-red-50" onClick={handleLogout} type="button">
                       <LogOut />
@@ -472,6 +494,17 @@ export function Header(): ReactElement {
                           <span>Настройки</span>
                         </Link>
                       </nav>
+
+                      {/* Admin panel - only for admins */}
+                      {user?.role === 'Admin' && (
+                        <>
+                          <div className="h-px bg-hairline-dark mx-4" />
+                          <Link to="/admin/users" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
+                            <Shield size={18} />
+                            <span>Админ-панель</span>
+                          </Link>
+                        </>
+                      )}
 
                       {/* Logout */}
                       <button className="flex items-center gap-2 w-full px-4 py-3 bg-transparent border-t border-hairline-dark text-sm font-semibold text-red-500 cursor-pointer transition-colors hover:bg-red-50" onClick={handleLogout} type="button">

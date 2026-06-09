@@ -58,7 +58,7 @@ export function useTicketChat({ ticketId, pageSize = 50 }: UseTicketChatOptions)
 
   const pageRef = useRef(1);
   const connectionRef = useRef<signalR.HubConnection | null>(null);
-  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Get auth token from storage
   const getToken = useCallback((): string | null => {

@@ -63,3 +63,6 @@ export { StatCard } from './StatCard';
 // BottomSheet Component
 export { BottomSheet } from './BottomSheet';
 export type { BottomSheetProps } from './BottomSheet';
+
+// ImageUpload Component
+export { ImageUpload } from './ImageUpload/ImageUpload';

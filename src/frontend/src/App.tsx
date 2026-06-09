@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useEffect } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import { MainLayout } from './components/layout/main-layout/MainLayout';
 import { AuthGuard, RoleGuard, AdminRedirect } from './components/guards';
+import { AdminLayout } from './components/layout/admin-layout/AdminLayout';
 import { AuthModalContainer } from './components/auth';
 import { ModalContainer } from './components/ui/Modal/ModalContainer';
 import { RouteMeta } from './components/seo/RouteMeta';
@@ -10,6 +11,7 @@ import OfflineBanner from './components/offline-banner/OfflineBanner';
 import { NotificationProvider } from './hooks/useNotifications';
 import { useAuthStore } from './store/authStore';
 import { useWishlistStore } from './store/wishlistStore';
+import { useTokenRefresh } from './hooks/useTokenRefresh';
 import './App.css';
 
 // PC Builder — eager import. Lazy imports can fail intermittently due to
@@ -61,9 +63,9 @@ const UserManagementPage = lazy(() => import('./pages/admin/user-management-page
 const UserFormPage = lazy(() => import('./pages/admin/user-form-page/UserFormPage').then(m => ({ default: m.UserFormPage })));
 const CatalogManagementPage = lazy(() => import('./pages/admin/catalog-management-page/CatalogManagementPage').then(m => ({ default: m.CatalogManagementPage })));
 const CoordinatorDashboard = lazy(() => import('./pages/admin/coordinator-dashboard/CoordinatorDashboard').then(m => ({ default: m.CoordinatorDashboard })));
-// AuditLogPage temporarily commented out - missing page file
-// const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
-const StubManager = lazy(() => import('./components/admin').then(m => ({ default: m.StubManager })));
+const DictionariesPage = lazy(() => import('./pages/admin/dictionaries-page/DictionariesPage').then(m => ({ default: m.DictionariesPage })));
+const SettingsPage = lazy(() => import('./pages/admin/settings-page/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const ProductEditorPage = lazy(() => import('./components/admin/product-editor/ProductEditorPage').then(m => ({ default: m.ProductEditorPage })));
 const OrdersPage = lazy(() => import('./pages/manager/OrdersPage').then(m => ({ default: m.OrdersPage })));
 const OrderDetailPage = lazy(() => import('./pages/manager/OrderDetailPage').then(m => ({ default: m.OrderDetailPage })));
 const ManagerDashboard = lazy(() => import('./pages/manager/ManagerDashboard').then(m => ({ default: m.ManagerDashboard })));
@@ -250,24 +252,6 @@ const router = createBrowserRouter([
       { path: '/verify-email', element: <VerifyEmailPendingPage /> },
       { path: '/verify-email/:token', element: <VerifyEmailTokenPage /> },
       {
-        path: '/admin',
-        element: <AdminRedirect />
-      },
-      {
-        element: <RoleGuard allowedRoles={['Admin']} />,
-        children: [
-          { path: '/admin', element: <Navigate to="/admin/users" replace /> },
-          { path: '/admin/users', element: <UserManagementPage /> },
-          { path: '/admin/users', element: <UserManagementPage /> },
-          { path: '/admin/users/new', element: <UserFormPage /> },
-          { path: '/admin/users/:id/edit', element: <UserFormPage /> },
-          { path: '/admin/catalog', element: <CatalogManagementPage /> },
-          { path: '/admin/coordinator', element: <CoordinatorDashboard /> },
-          // { path: '/admin/audit-log', element: <AuditLogPage /> },
-          { path: '/admin/stubs', element: <StubManager /> },
-        ],
-      },
-      {
         element: <RoleGuard allowedRoles={['Manager', 'Admin', 'Master']} />,
         children: [
           { path: '/manager', element: <Navigate to="/manager/dashboard" replace /> },
@@ -297,6 +281,28 @@ const router = createBrowserRouter([
       { path: '*', element: <NotFoundPage /> },
     ],
   },
+  // Админ-панель — с path="/admin" чтобы не матчить корневые URL
+  {
+    path: '/admin',
+    element: <RoleGuard allowedRoles={['Admin']} />,
+    children: [
+      { index: true, element: <Navigate to="users" replace /> },
+      {
+        element: <AdminLayout />,
+        children: [
+          { path: 'users', element: <UserManagementPage /> },
+          { path: 'users/new', element: <UserFormPage /> },
+          { path: 'users/:id/edit', element: <UserFormPage /> },
+          { path: 'catalog', element: <CatalogManagementPage /> },
+          { path: 'dictionaries', element: <DictionariesPage /> },
+          { path: 'coordinator', element: <CoordinatorDashboard /> },
+          { path: 'settings', element: <SettingsPage /> },
+        ],
+      },
+      // ProductEditor — отдельный route без AdminLayout (полноэкранный режим)
+      { path: 'products/:id/edit', element: <ProductEditorPage /> },
+    ],
+  },
 ], {
   basename: import.meta.env.BASE_URL,
 });
@@ -304,6 +310,9 @@ const router = createBrowserRouter([
 function App(): React.ReactElement {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const syncWishlistWithServer = useWishlistStore((state) => state.syncWithServer);
+
+  // Тихий рефреш токена при загрузке страницы
+  useTokenRefresh();
 
   useEffect(() => {
     if (!isAuthenticated) return;
