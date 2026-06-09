@@ -21,6 +21,7 @@ public class CatalogDbContext : DbContext
     public DbSet<Manufacturer> Manufacturers => Set<Manufacturer>();
     public DbSet<ProductImage> ProductImages => Set<ProductImage>();
     public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<PriceHistory> PriceHistory => Set<PriceHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,6 +36,7 @@ public class CatalogDbContext : DbContext
         ConfigureManufacturer(modelBuilder);
         ConfigureProductImage(modelBuilder);
         ConfigureReview(modelBuilder);
+        ConfigurePriceHistory(modelBuilder);
         
         SeedCategories(modelBuilder);
         SeedManufacturers(modelBuilder);
@@ -119,6 +121,13 @@ public class CatalogDbContext : DbContext
             entity.Property(e => e.DisplayName).HasColumnName("display_name").IsRequired().HasMaxLength(100);
             entity.Property(e => e.ValueType).HasColumnName("value_type");
             entity.Property(e => e.IsMultiValue).HasColumnName("is_multi_value");
+            entity.Property(e => e.Unit).HasColumnName("unit").HasMaxLength(30);
+            entity.Property(e => e.GroupName).HasColumnName("group_name").HasMaxLength(100);
+            entity.Property(e => e.SortOrder).HasColumnName("sort_order");
+            entity.Property(e => e.ValidationMin).HasColumnName("validation_min").HasColumnType("numeric(18,4)");
+            entity.Property(e => e.ValidationMax).HasColumnName("validation_max").HasColumnType("numeric(18,4)");
+            entity.Property(e => e.ValidationStep).HasColumnName("validation_step").HasColumnType("numeric(18,4)");
+            entity.Property(e => e.IsRequired).HasColumnName("is_required");
             entity.HasIndex(e => e.Key).IsUnique();
         });
     }
@@ -213,6 +222,7 @@ public class CatalogDbContext : DbContext
             entity.Property(e => e.FilterType).HasColumnName("filter_type");
             entity.Property(e => e.SortOrder).HasColumnName("sort_order");
             entity.Property(e => e.IsMultiValue).HasColumnName("is_multi_value");
+            entity.Property(e => e.IsRequired).HasColumnName("is_required");
             entity.HasIndex(e => e.CategoryId);
             entity.HasIndex(e => e.AttributeId);
             entity.HasOne(e => e.Attribute)
@@ -279,6 +289,30 @@ public class CatalogDbContext : DbContext
             
             entity.HasIndex(e => e.ProductId);
             entity.HasIndex(e => e.UserId);
+        });
+    }
+
+    private static void ConfigurePriceHistory(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PriceHistory>(entity =>
+        {
+            entity.ToTable("price_history");
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ProductId).HasColumnName("product_id");
+            entity.Property(e => e.Price).HasColumnName("price").HasPrecision(12, 2);
+            entity.Property(e => e.OldPrice).HasColumnName("old_price").HasPrecision(12, 2);
+            entity.Property(e => e.ChangedAt).HasColumnName("changed_at");
+            entity.Property(e => e.ChangedBy).HasColumnName("changed_by").HasMaxLength(100);
+
+            entity.HasIndex(e => e.ProductId);
+            entity.HasIndex(e => e.ChangedAt);
+
+            entity.HasOne(e => e.Product)
+                .WithMany()
+                .HasForeignKey(e => e.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

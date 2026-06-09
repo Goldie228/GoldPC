@@ -115,6 +115,9 @@ public record ProductDetailDto
     public DateTime CreatedAt { get; init; }
 
     public DateTime? UpdatedAt { get; init; }
+
+    /// <summary>Gets указывает, была ли категория определена автоматически</summary>
+    public bool IsCategoryAutoDetected { get; init; }
 }
 
 /// <summary>
@@ -217,6 +220,20 @@ public record ManufacturerDto
     public string? Logo { get; init; }
 
     public string? Country { get; init; }
+
+    public string? Description { get; init; }
+}
+
+/// <summary>
+/// DTO для обновления производителя
+/// </summary>
+public record UpdateManufacturerDto
+{
+    public string? Name { get; init; }
+
+    public string? Country { get; init; }
+
+    public string? LogoUrl { get; init; }
 
     public string? Description { get; init; }
 }
@@ -332,6 +349,9 @@ public record ProductFilterDto
     /// <summary>Gets только рекомендуемые</summary>
     public bool? IsFeatured { get; init; }
 
+    /// <summary>Gets фильтр по активности товара (true — активные, false — неактивные, null — все)</summary>
+    public bool? IsActive { get; init; }
+
     /// <summary>Gets поиск по названию и описанию</summary>
     public string? Search { get; init; }
 
@@ -391,6 +411,48 @@ public record FilterAttributeDto
 }
 
 /// <summary>
+/// DTO для создания производителя
+/// </summary>
+public record CreateManufacturerDto
+{
+    public string Name { get; init; } = string.Empty;
+
+    public string? Country { get; init; }
+
+    public string? LogoUrl { get; init; }
+
+    public string? Description { get; init; }
+}
+
+/// <summary>
+/// DTO для создания категории
+/// </summary>
+public record CreateCategoryDto
+{
+    public string Name { get; init; } = string.Empty;
+
+    public string Slug { get; init; } = string.Empty;
+
+    public string? Description { get; init; }
+
+    public Guid? ParentId { get; init; }
+}
+
+/// <summary>
+/// DTO для обновления категории
+/// </summary>
+public record UpdateCategoryDto
+{
+    public string? Name { get; init; }
+
+    public string? Slug { get; init; }
+
+    public string? Description { get; init; }
+
+    public Guid? ParentId { get; init; }
+}
+
+/// <summary>
 /// Пагинированный результат - соответствует PagedResponse в OpenAPI
 /// </summary>
 public record PagedResult<T>
@@ -416,5 +478,105 @@ public record PaginationMeta
     public bool HasNextPage { get; init; }
 
     public bool HasPrevPage { get; init; }
+}
+
+/// <summary>
+/// DTO записи об изменении цены товара
+/// </summary>
+public record PriceHistoryDto
+{
+    public Guid Id { get; init; }
+
+    public decimal Price { get; init; }
+
+    public decimal? OldPrice { get; init; }
+
+    public DateTime ChangedAt { get; init; }
+
+    public string? ChangedBy { get; init; }
+}
+
+/// <summary>
+/// Запрос на генерацию названия товара по шаблону
+/// </summary>
+public record GenerateNameRequest
+{
+    /// <summary>Gets название производителя</summary>
+    public string? ManufacturerName { get; init; }
+
+    /// <summary>Gets slug категории</summary>
+    public string? CategorySlug { get; init; }
+
+    /// <summary>Gets характеристики товара</summary>
+    public Dictionary<string, object>? Specifications { get; init; }
+}
+
+/// <summary>
+/// Ответ сгенерированного названия товара
+/// </summary>
+public record GenerateNameResponse
+{
+    /// <summary>Gets сгенерированное название</summary>
+    public string Name { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// DTO с мета-информацией о характеристике для редактора админки
+/// </summary>
+public record SpecificationAttributeDto
+{
+    /// <summary>ID атрибута</summary>
+    public Guid Id { get; init; }
+
+    /// <summary>Ключ (socket, cores, frequency...)</summary>
+    public string Key { get; init; } = string.Empty;
+
+    /// <summary>Отображаемое название ("Сокет", "Количество ядер")</summary>
+    public string DisplayName { get; init; } = string.Empty;
+
+    /// <summary>Тип значения: "select" или "range"</summary>
+    public string ValueType { get; init; } = "select";
+
+    /// <summary>Может ли быть несколько значений</summary>
+    public bool IsMultiValue { get; init; }
+
+    /// <summary>Единица измерения (МГц, ГБ, мм, Ом...)</summary>
+    public string? Unit { get; init; }
+
+    /// <summary>Группа для группировки</summary>
+    public string? GroupName { get; init; }
+
+    /// <summary>Порядок сортировки</summary>
+    public int SortOrder { get; init; }
+
+    /// <summary>Минимальное значение (для range)</summary>
+    public decimal? ValidationMin { get; init; }
+
+    /// <summary>Максимальное значение (для range)</summary>
+    public decimal? ValidationMax { get; init; }
+
+    /// <summary>Шаг значения (для range)</summary>
+    public decimal? ValidationStep { get; init; }
+
+    /// <summary>Обязательное поле</summary>
+    public bool IsRequired { get; init; }
+
+    /// <summary>Доступные значения (для select)</summary>
+    public List<string> Options { get; init; } = new();
+}
+
+/// <summary>
+/// DTO с характеристиками категории для редактора админки
+/// </summary>
+public record CategorySpecificationsDto
+{
+    /// <summary>ID категории</summary>
+    public Guid CategoryId { get; init; }
+
+    /// <summary>Название категории</summary>
+    public string CategoryName { get; init; } = string.Empty;
+
+    /// <summary>Характеристики категории</summary>
+    public List<SpecificationAttributeDto> Attributes { get; init; } = new();
 }
 #pragma warning restore CA1002, CA1056, CA1805, CS1591, SA1402, SA1600, SA1649

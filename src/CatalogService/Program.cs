@@ -116,6 +116,9 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 builder.Services.AddScoped<CatalogService.Services.SpecImportNormalizer>();
 builder.Services.AddScoped<CatalogService.Services.ManufacturerDetector>();
 builder.Services.AddScoped<CatalogService.Services.SpecificationDataMigration>();
+builder.Services.AddScoped<CatalogService.Services.DescriptionToSpecsMigration>();
+builder.Services.AddScoped<ICategoryParser, CategoryParser>();
+builder.Services.AddScoped<IProductNameGenerator, ProductNameGenerator>();
 builder.Services.AddScoped<ICatalogService, CatalogService.Services.CatalogService>();
 builder.Services.AddScoped<CatalogService.Services.CatalogJsonImporter>();
 builder.Services.AddScoped<CatalogService.Services.FilterAttributesSeeder>();
@@ -689,6 +692,29 @@ if (args is ["cleanup-invalid-products"])
         throw;
     }
 
+    return 0;
+}
+
+// CLI: dotnet run -- migrate-descriptions-to-specs
+// Переносит характеристики из текстового description в product_specification_values
+if (args is ["migrate-descriptions-to-specs"])
+{
+    using var scope = app.Services.CreateScope();
+    var migration = scope.ServiceProvider.GetRequiredService<DescriptionToSpecsMigration>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var result = await migration.MigrateAsync();
+        logger.LogInformation(
+            "Миграция описаний завершена: обработано {Processed}, найдено пар {ParsedPairs}, сопоставлено {Mapped}, сохранено {Saved}, пропущено {Skipped}, ошибок {Errors}",
+            result.Processed, result.ParsedPairs, result.Mapped, result.Saved, result.Skipped, result.Errors);
+        Console.WriteLine($"Processed: {result.Processed}, Parsed: {result.ParsedPairs}, Mapped: {result.Mapped}, Saved: {result.Saved}, Skipped: {result.Skipped}, Errors: {result.Errors}");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка migrate-descriptions-to-specs");
+        throw;
+    }
     return 0;
 }
 

@@ -1,0 +1,10 @@
+{
+  "id": "PF-bugfix-002",
+  "category": "plan",
+  "severity": "critical",
+  "title": "ProductPage imports non-existent image file",
+  "status": "open",
+  "fixTarget": "code",
+  "location": "src/frontend/src/pages/product-page/ProductPage.tsx:32",
+  "planRef": "bugfix-A-02"
+}
