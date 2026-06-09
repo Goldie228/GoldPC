@@ -40,19 +40,32 @@
 
 **Stack**: React 19 + Vite 8 + Tailwind v4 + Zustand + TanStack Query.  
 **Backend**: ASP.NET Core 8 microservices behind `GoldPC.Api` gateway.  
+**Dirs**: `src/frontend/` | `src/backend/` | `src/CatalogService/` | `src/AuthService/` | `src/SharedKernel/` | `src/Shared/`  
 **Never call backend services directly. All requests go through `/api/...`.**
 
-### Critical directories
+### Frontend Structure
 ```
 src/frontend/src/
 ├── api/                  # API layer (use these, never fetch directly)
+│   ├── client.ts         # Axios instance with JWT refresh, base /api/v1
+│   ├── admin.ts          # Admin API (users, products, dictionaries, settings, stats)
+│   ├── catalog.ts        # Public catalog API
+│   └── ...
 ├── index.css             # Tailwind @theme (CRITICAL – do not touch)
 ├── components/ui/        # SHARED PRIMITIVES – DO NOT EDIT WITHOUT APPROVAL
-├── components/layout/    # Header, footer, main layout
+├── components/admin/     # Admin panel components
+│   ├── product-card/     # Product card grid + view toggle
+│   ├── product-editor/   # Tabbed product editor (basic, specs, images, prices)
+│   └── ...
+├── components/layout/    # Header, footer, admin-layout, main layout
 ├── components/catalog/   # Feature components
-├── components/filter-sidebar/  # Filter components (safe to edit)
+├── components/filter-sidebar/
 ├── components/pc-builder/
-├── pages/                # Route pages
+├── pages/
+│   ├── admin/            # Admin panel pages (see Section 8)
+│   ├── info/             # Info pages
+│   ├── home-page/
+│   └── ...
 ├── store/                # Zustand stores
 ├── styles/
 │   ├── globals.css       # Legacy CSS variables (often overridden by JSX)
@@ -61,6 +74,39 @@ src/frontend/src/
 ├── hooks/                # Shared hooks
 └── utils/
 ```
+
+### Backend Microservices Architecture
+```
+src/
+├── backend/GoldPC.Api/       # API Gateway — single entry point (port 5000)
+│   ├── Controllers/          # AdminController, AdminImageController
+│   ├── Services/             # CatalogServiceClient, FileService, AuthForwardingHandler
+│   ├── Hubs/                 # SignalR hubs (NotificationHub)
+│   ├── Models/               # FileUploadResult, ProductImageDto
+│   └── Program.cs
+├── CatalogService/           # Product catalog (port 5001)
+│   ├── Controllers/          # ProductsController
+│   ├── Services/             # CatalogService, CategoryParser, ProductNameGenerator
+│   ├── Repositories/         # ProductRepository, CategoryRepository
+│   ├── Data/                 # CatalogDbContext (EF Core + PostgreSQL)
+│   ├── Models/               # SpecificationAttribute, PriceHistory, FilterAttribute
+│   └── Migrations/
+├── AuthService/              # Auth + JWT + 2FA (port 5002)
+├── WarrantyService/          # Warranty cards
+├── ServicesService/          # Service requests + chat
+├── PCBuilderService/         # Compatibility checking
+├── OrdersService/            # Orders (in progress)
+├── ReportingService/         # Reports (in progress)
+├── SharedKernel/             # Shared DTOs (GoldPC.SharedKernel.DTOs)
+└── Shared/                   # Shared services (notifications, auth, mocks)
+```
+
+**Gateway Pattern**: Frontend → `/api/v1/admin/...` → `GoldPC.Api/AdminController` → `CatalogServiceClient` → `CatalogService`
+
+### C# Context Files (load before editing .cs files)
+- `.opencode/context/core/standards/csharp.md` — universal C# / .NET patterns
+- `.opencode/context/core/standards/csharp-project-structure.md` — ASP.NET Core project layout
+- `.opencode/context/development/csharp-conventions.md` — GoldPC-specific C# conventions
 
 ## 2. Styling & Typography — THE RULES
 
@@ -183,6 +229,44 @@ For multiple files, revert last commit: `git revert HEAD` (and inform the user).
 |------|---------|
 | `Input.tsx` | Reusable input with label, error state, and Tailwind styling |
 | `PhoneInput.tsx` | Phone input with auto-formatting (+375 (XX) XXX-XX-XX) and `parsePhone`/`formatPhone` utils |
+| `ImageUpload/ImageUpload.tsx` | Image upload with preview and drag-drop |
+
+### Admin Panel Pages (`pages/admin/`)
+| Route (`/admin/...`) | File | Purpose |
+|----------------------|------|---------|
+| `users` | `user-management-page/UserManagementPage.tsx` | User list with role filter, inline role change, activate/deactivate, pagination + pageSize selector |
+| `users/new` | `user-form-page/UserFormPage.tsx` | Create/edit user form |
+| `users/:id/edit` | `user-form-page/UserFormPage.tsx` | Edit user (same component) |
+| `catalog` | `catalog-management-page/CatalogManagementPage.tsx` | Product table/grid, search, category/status filter, pageSize (10/25/50/100), inline spec filter |
+| `dictionaries` | `dictionaries-page/DictionariesPage.tsx` | Tabs: Categories, Manufacturers, Attributes — inline CRUD, search |
+| `coordinator` | `coordinator-dashboard/CoordinatorDashboard.tsx` | 4 stats cards (users, orders, revenue, updated) |
+| `settings` | `settings-page/SettingsPage.tsx` | 4 sections: General, Delivery, Notifications, Maintenance mode |
+
+### Admin Backend (`src/backend/GoldPC.Api/`)
+| File | Purpose |
+|------|---------|
+| `Controllers/AdminController.cs` | Main admin controller (~1350 lines): users, products, stats, dictionaries, settings — contains inline `AdminService` (in-memory → JSON persistence) |
+| `Controllers/AdminImageController.cs` | Product image upload/management |
+| `Services/CatalogServiceClient.cs` | Typed HttpClient → CatalogService |
+| `Services/AuthForwardingHandler.cs` | DelegatingHandler that forwards JWT to downstream services |
+| `Services/FileService.cs` | Local file storage for uploaded images |
+| `Hubs/NotificationHub.cs` | SignalR hub for real-time notifications |
+
+### Admin Components (`components/admin/`)
+| File | Purpose |
+|------|---------|
+| `product-card/ProductCard.tsx` | Admin product card with quick-edit |
+| `product-card/ProductCardGrid.tsx` | Grid layout for admin catalog |
+| `product-card/ViewToggle.tsx` | Table/grid view toggle |
+| `product-editor/ProductEditorPage.tsx` | Full-screen tabbed product editor |
+| `product-editor/ProductEditorDrawer.tsx` | Drawer variant for quick edits |
+| `product-editor/ProductEditorTabs.tsx` | Tab navigation: Basic, Description, Specs, Images, Price |
+| `product-editor/tabs/BasicInfoTab.tsx` | Name, category, manufacturer, price, stock |
+| `product-editor/tabs/DescriptionTab.tsx` | WYSIWYG-like description editor |
+| `product-editor/tabs/ImagesTab.tsx` | Image gallery management |
+| `product-editor/tabs/PriceHistoryTab.tsx` | Price history chart |
+| `product-editor/tabs/SpecificationsTab.tsx` | Dynamic spec editor per category |
+| `layout/admin-layout/AdminLayout.tsx` | Admin sidebar + topbar layout |
 
 ### Info Pages (`pages/info/`)
 | File | Purpose |
@@ -216,7 +300,15 @@ For multiple files, revert last commit: `git revert HEAD` (and inform the user).
 ### Routing
 | File | Changes |
 |------|---------|
-| `App.tsx` | Added lazy imports + routes for 6 new pages after `/faq` |
+| `App.tsx` | Added lazy imports + routes for 6 new pages after `/faq`; admin routes (lazy-loaded `AdminLayout` + `RoleGuard`) |
+
+### Admin Hooks & API
+| File | Purpose |
+|------|---------|
+| `api/admin.ts` | All admin API calls (users, products, dictionaries, settings, stats, images) — 504 lines |
+| `api/client.ts` | Axios instance, JWT refresh interceptor, base `/api/v1` |
+| `hooks/useAdmin.ts` | TanStack Query hooks for admin CRUD |
+| `hooks/useTokenRefresh.ts` | Silent JWT refresh on page load |
 
 ### Utilities
 | File | Purpose |
