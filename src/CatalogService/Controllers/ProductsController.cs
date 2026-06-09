@@ -299,7 +299,6 @@ public record FilterFacetsResponse
 /// </summary>
 [ApiController]
 [Route("api/v1/admin")]
-[Authorize(Roles = "Manager,Admin,Master")]
 public class AdminCatalogController : ControllerBase
 {
     private readonly ICatalogService _catalogService;
@@ -309,6 +308,31 @@ public class AdminCatalogController : ControllerBase
     {
         _catalogService = catalogService;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Получить список товаров для админки с пагинацией и фильтрами
+    /// </summary>
+    [HttpGet("products")]
+    [ProducesResponseType(typeof(PagedResult<ProductListDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<ProductListDto>>> GetAdminProducts(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? category = null,
+        [FromQuery] bool? isActive = null,
+        [FromQuery] string? search = null)
+    {
+        var filter = new ProductFilterDto
+        {
+            Page = page,
+            PageSize = pageSize,
+            Category = category,
+            IsActive = isActive,
+            Search = search
+        };
+
+        var result = await _catalogService.GetAdminProductsAsync(filter);
+        return Ok(result);
     }
 
     /// <summary>
@@ -361,6 +385,182 @@ public class AdminCatalogController : ControllerBase
             return NotFound(new { error = "Товар не найден", productId });
         }
         return NoContent();
+    }
+
+    /// <summary>
+    /// Создать нового производителя
+    /// </summary>
+    [HttpPost("manufacturers")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ManufacturerDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ManufacturerDto>> CreateManufacturer([FromBody] CreateManufacturerDto dto)
+    {
+        try
+        {
+            var manufacturer = await _catalogService.CreateManufacturerAsync(dto);
+            return CreatedAtAction(nameof(CatalogController.GetManufacturers), "Catalog", new { }, manufacturer);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Обновить производителя
+    /// </summary>
+    [HttpPut("manufacturers/{manufacturerId:guid}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ManufacturerDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ManufacturerDto>> UpdateManufacturer(Guid manufacturerId, [FromBody] UpdateManufacturerDto dto)
+    {
+        var manufacturer = await _catalogService.UpdateManufacturerAsync(manufacturerId, dto);
+        if (manufacturer == null)
+        {
+            return NotFound(new { error = "Производитель не найден", manufacturerId });
+        }
+        return Ok(manufacturer);
+    }
+
+    /// <summary>
+    /// Удалить производителя
+    /// </summary>
+    [HttpDelete("manufacturers/{manufacturerId:guid}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteManufacturer(Guid manufacturerId)
+    {
+        var deleted = await _catalogService.DeleteManufacturerAsync(manufacturerId);
+        if (!deleted)
+        {
+            return NotFound(new { error = "Производитель не найден", manufacturerId });
+        }
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Создать новую категорию
+    /// </summary>
+    [HttpPost("categories")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<CategoryDto>> CreateCategory([FromBody] CreateCategoryDto dto)
+    {
+        try
+        {
+            var category = await _catalogService.CreateCategoryAsync(dto);
+            return CreatedAtAction(nameof(CatalogController.GetCategories), "Catalog", new { }, category);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Обновить категорию
+    /// </summary>
+    [HttpPut("categories/{categoryId:guid}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(CategoryDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CategoryDto>> UpdateCategory(Guid categoryId, [FromBody] UpdateCategoryDto dto)
+    {
+        var category = await _catalogService.UpdateCategoryAsync(categoryId, dto);
+        if (category == null)
+        {
+            return NotFound(new { error = "Категория не найдена", categoryId });
+        }
+        return Ok(category);
+    }
+
+    /// <summary>
+    /// Удалить категорию
+    /// </summary>
+    [HttpDelete("categories/{categoryId:guid}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> DeleteCategory(Guid categoryId)
+    {
+        try
+        {
+            var deleted = await _catalogService.DeleteCategoryAsync(categoryId);
+            if (!deleted)
+            {
+                return NotFound(new { error = "Категория не найдена", categoryId });
+            }
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Получить историю цен товара
+    /// </summary>
+    [HttpGet("products/{productId:guid}/price-history")]
+    [ProducesResponseType(typeof(List<PriceHistoryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<PriceHistoryDto>>> GetPriceHistory(Guid productId)
+    {
+        if (!await _catalogService.GetProductByIdAsync(productId).ContinueWith(t => t.Result != null))
+        {
+            return NotFound(new { error = "Товар не найден", productId });
+        }
+
+        var history = await _catalogService.GetPriceHistoryAsync(productId);
+        return Ok(history);
+    }
+
+    /// <summary>
+    /// Получить мета-данные характеристик для категории (для редактора админки)
+    /// </summary>
+    [HttpGet("specifications/by-category/{categoryId:guid}")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(CategorySpecificationsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CategorySpecificationsDto>> GetCategorySpecifications(Guid categoryId)
+    {
+        var result = await _catalogService.GetCategorySpecificationsAsync(categoryId);
+        if (result.Attributes.Count == 0)
+        {
+            return NotFound(new { error = "Категория не найдена", categoryId });
+        }
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Сгенерировать название товара по шаблону
+    /// </summary>
+    [HttpPost("products/generate-name")]
+    [Authorize(Roles = "Manager,Admin,Master")]
+    [ProducesResponseType(typeof(GenerateNameResponse), StatusCodes.Status200OK)]
+    public ActionResult<GenerateNameResponse> GenerateProductName(
+        [FromBody] GenerateNameRequest request,
+        [FromServices] IProductNameGenerator nameGenerator)
+    {
+        try
+        {
+            var name = nameGenerator.GenerateName(
+                request.ManufacturerName,
+                request.CategorySlug,
+                request.Specifications);
+
+            return Ok(new GenerateNameResponse { Name = name });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка генерации названия товара");
+            return Ok(new GenerateNameResponse { Name = "Без названия" });
+        }
     }
 }
 

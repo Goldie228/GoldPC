@@ -1,0 +1,10 @@
+{
+  "id": "PF-bugfix-001",
+  "category": "plan",
+  "severity": "major",
+  "title": "ProductCard uses hardcoded local fallback images instead of API response images",
+  "status": "open",
+  "fixTarget": "code",
+  "location": "src/frontend/src/components/catalog/ProductCard.tsx:28-46,72-79",
+  "planRef": "bugfix-A-01"
+}

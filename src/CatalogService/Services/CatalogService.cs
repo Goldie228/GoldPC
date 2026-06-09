@@ -1,11 +1,14 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using CatalogService.Data;
 using CatalogService.Models;
 using CatalogService.Repositories.Interfaces;
 using CatalogService.Services.Interfaces;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Utilities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
+using CatalogServiceModels = CatalogService.Models;
 
 namespace CatalogService.Services;
 
@@ -19,23 +22,29 @@ public class CatalogService : ICatalogService
     private readonly ICategoryRepository _categoryRepository;
     private readonly IManufacturerRepository _manufacturerRepository;
     private readonly IReviewRepository _reviewRepository;
+    private readonly ICategoryParser _categoryParser;
     private readonly ILogger<CatalogService> _logger;
     private readonly IDistributedCache _cache;
+    private readonly CatalogDbContext _dbContext;
 
     public CatalogService(
         IProductRepository productRepository,
         ICategoryRepository categoryRepository,
         IManufacturerRepository manufacturerRepository,
         IReviewRepository reviewRepository,
+        ICategoryParser categoryParser,
         ILogger<CatalogService> logger,
-        IDistributedCache cache)
+        IDistributedCache cache,
+        CatalogDbContext dbContext)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
         _manufacturerRepository = manufacturerRepository;
         _reviewRepository = reviewRepository;
+        _categoryParser = categoryParser;
         _logger = logger;
         _cache = cache;
+        _dbContext = dbContext;
     }
 
     public async Task<PagedResult<ProductListDto>> GetProductsAsync(ProductFilterDto filter)
@@ -83,6 +92,27 @@ public class CatalogService : ICatalogService
         return pagedResult;
     }
 
+    public async Task<PagedResult<ProductListDto>> GetAdminProductsAsync(ProductFilterDto filter)
+    {
+        var result = await _productRepository.GetFilteredAdminAsync(filter);
+
+        var totalPages = (int)Math.Ceiling(result.TotalCount / (double)result.PageSize);
+
+        return new PagedResult<ProductListDto>
+        {
+            Data = result.Items.Select(MapToListDto).ToList(),
+            Meta = new PaginationMeta
+            {
+                Page = result.Page,
+                PageSize = result.PageSize,
+                TotalPages = totalPages,
+                TotalItems = result.TotalCount,
+                HasNextPage = result.Page < totalPages,
+                HasPrevPage = result.Page > 1
+            }
+        };
+    }
+
     public async Task<ProductDetailDto?> GetProductByIdAsync(Guid id)
     {
         var product = await _productRepository.GetDetailByIdAsync(id);
@@ -127,8 +157,9 @@ public class CatalogService : ICatalogService
             throw new InvalidOperationException($"Товар с артикулом {dto.Sku} уже существует");
         }
 
-        // Определяем CategoryId: либо передан напрямую, либо ищем по slug/названию
+        // Определяем CategoryId: либо передан напрямую, либо ищем по slug/названию, либо авто-определение
         Guid categoryId;
+        bool isCategoryAutoDetected = false;
         if (dto.CategoryId.HasValue)
         {
             categoryId = dto.CategoryId.Value;
@@ -151,7 +182,36 @@ public class CatalogService : ICatalogService
         }
         else
         {
-            throw new InvalidOperationException("Необходимо указать CategoryId или Category");
+            // Авто-определение категории по названию и характеристикам
+#pragma warning disable CA1031
+            try
+            {
+                var detectedSlug = _categoryParser.DetectCategory(dto.Name, dto.Specifications);
+                if (!string.IsNullOrEmpty(detectedSlug))
+                {
+                    var detectedCategory = await _categoryRepository.GetBySlugAsync(detectedSlug);
+                    if (detectedCategory != null)
+                    {
+                        categoryId = detectedCategory.Id;
+                        isCategoryAutoDetected = true;
+                        _logger.LogInformation("Категория авто-определена как '{Slug}' для товара '{Name}'", detectedSlug, dto.Name);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Авто-определённая категория '{detectedSlug}' не найдена в базе");
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException("Необходимо указать CategoryId, Category или предоставить достаточно данных для авто-определения");
+                }
+            }
+            catch (Exception ex) when (ex is not InvalidOperationException)
+            {
+                _logger.LogWarning(ex, "Ошибка авто-определения категории для '{Name}'", dto.Name);
+                throw new InvalidOperationException("Необходимо указать CategoryId или Category");
+            }
+#pragma warning restore CA1031
         }
 
         var productSlug = await EnsureUniqueProductSlugAsync(dto.Slug, dto.Name);
@@ -174,13 +234,17 @@ public class CatalogService : ICatalogService
         var created = await _productRepository.CreateAsync(product);
         if (dto.Specifications != null && dto.Specifications.Count > 0)
             await _productRepository.SetSpecificationsAsync(created.Id, dto.Specifications);
-        return (await GetProductByIdAsync(created.Id))!;
+        var result = (await GetProductByIdAsync(created.Id))!;
+        return isCategoryAutoDetected ? result with { IsCategoryAutoDetected = true } : result;
     }
 
     public async Task<ProductDetailDto?> UpdateProductAsync(Guid id, UpdateProductDto dto)
     {
         var product = await _productRepository.GetByIdAsync(id);
         if (product == null) return null;
+
+        // Запоминаем старую цену до изменений
+        var oldPrice = product.Price;
 
         if (dto.Name != null)
             product.Name = dto.Name;
@@ -210,6 +274,20 @@ public class CatalogService : ICatalogService
         product.UpdatedAt = DateTime.UtcNow;
 
         await _productRepository.UpdateAsync(product);
+
+        // Автоматическая запись изменения цены
+        if (dto.Price.HasValue && dto.Price.Value != oldPrice)
+        {
+            var priceEntry = new CatalogServiceModels.PriceHistory
+            {
+                ProductId = id,
+                Price = dto.Price.Value,
+                OldPrice = oldPrice,
+                ChangedAt = DateTime.UtcNow
+            };
+            await _productRepository.AddPriceHistoryAsync(priceEntry);
+        }
+
         return await GetProductByIdAsync(id);
     }
 
@@ -458,12 +536,52 @@ public class CatalogService : ICatalogService
             Name = dto.Name,
             Slug = dto.Slug,
             Description = dto.Description,
-            ParentId = dto.ParentId,
-            ComponentType = dto.ComponentType
+            ParentId = dto.ParentId
         };
 
         var created = await _categoryRepository.CreateAsync(category);
         return MapToCategoryDto(created);
+    }
+
+    public async Task<CategoryDto?> UpdateCategoryAsync(Guid id, UpdateCategoryDto dto)
+    {
+        var category = await _categoryRepository.GetByIdAsync(id);
+        if (category == null) return null;
+
+        if (dto.Name != null)
+            category.Name = dto.Name;
+        if (dto.Slug != null)
+            category.Slug = dto.Slug;
+        if (dto.Description != null)
+            category.Description = dto.Description;
+        if (dto.ParentId.HasValue)
+            category.ParentId = dto.ParentId;
+
+        var updated = await _categoryRepository.UpdateAsync(category);
+
+        // Инвалидация кэша категорий
+        await _cache.RemoveAsync("all_categories");
+
+        return MapToCategoryDto(updated);
+    }
+
+    public async Task<bool> DeleteCategoryAsync(Guid id)
+    {
+        var category = await _categoryRepository.GetByIdAsync(id);
+        if (category == null) return false;
+
+        // Проверяем, есть ли товары в категории
+        if (await _categoryRepository.HasProductsAsync(id))
+        {
+            throw new InvalidOperationException("Невозможно удалить категорию, содержащую товары");
+        }
+
+        await _categoryRepository.DeleteAsync(id);
+
+        // Инвалидация кэша категорий
+        await _cache.RemoveAsync("all_categories");
+
+        return true;
     }
 
     public async Task<IEnumerable<ManufacturerDto>> GetManufacturersAsync()
@@ -501,6 +619,32 @@ public class CatalogService : ICatalogService
 
         var created = await _manufacturerRepository.CreateAsync(manufacturer);
         return MapToManufacturerDto(created);
+    }
+
+    public async Task<ManufacturerDto?> UpdateManufacturerAsync(Guid id, UpdateManufacturerDto dto)
+    {
+        var manufacturer = await _manufacturerRepository.GetByIdAsync(id);
+        if (manufacturer == null) return null;
+
+        if (dto.Name != null)
+            manufacturer.Name = dto.Name;
+        if (dto.Country != null)
+            manufacturer.Country = dto.Country;
+        if (dto.LogoUrl != null)
+            manufacturer.LogoUrl = dto.LogoUrl;
+        if (dto.Description != null)
+            manufacturer.Description = dto.Description;
+
+        var updated = await _manufacturerRepository.UpdateAsync(manufacturer);
+        return MapToManufacturerDto(updated);
+    }
+
+    public async Task<bool> DeleteManufacturerAsync(Guid id)
+    {
+        var manufacturer = await _manufacturerRepository.GetByIdAsync(id);
+        if (manufacturer == null) return false;
+        await _manufacturerRepository.DeleteAsync(id);
+        return true;
     }
 
     public async Task<ReviewDto> CreateReviewAsync(Guid productId, Guid userId, CreateReviewDto dto)
@@ -731,7 +875,7 @@ public class CatalogService : ICatalogService
             Name = product.Name,
             Sku = product.Sku,
             Slug = product.Slug,
-            Category = product.Category?.Name ?? string.Empty,
+            Category = product.Category?.Slug ?? string.Empty,
             Price = product.Price,
             OldPrice = product.OldPrice,
             Stock = product.Stock,
@@ -791,7 +935,7 @@ public class CatalogService : ICatalogService
             Name = product.Name,
             Sku = product.Sku,
             Slug = product.Slug,
-            Category = product.Category?.Name ?? string.Empty,
+            Category = product.Category?.Slug ?? string.Empty,
             ManufacturerId = product.ManufacturerId,
             Manufacturer = product.Manufacturer != null ? MapToManufacturerDto(product.Manufacturer) : null,
             Price = product.Price,
@@ -919,6 +1063,109 @@ public class CatalogService : ICatalogService
         }
 
         return 2;
+    }
+
+    public async Task<List<PriceHistoryDto>> GetPriceHistoryAsync(Guid productId)
+    {
+        var history = await _productRepository.GetPriceHistoryAsync(productId);
+        return history.Select(h => new PriceHistoryDto
+        {
+            Id = h.Id,
+            Price = h.Price,
+            OldPrice = h.OldPrice,
+            ChangedAt = h.ChangedAt,
+            ChangedBy = h.ChangedBy
+        }).ToList();
+    }
+
+    public async Task<CategorySpecificationsDto> GetCategorySpecificationsAsync(Guid categoryId)
+    {
+        var category = await _dbContext.Categories.FindAsync(categoryId);
+        if (category == null)
+            return new CategorySpecificationsDto { CategoryId = categoryId, CategoryName = "Unknown" };
+
+        // Получаем ID атрибутов, привязанных к категории через CategoryFilterAttribute
+        var filterAttrIds = await _dbContext.CategoryFilterAttributes
+            .Where(cfa => cfa.CategoryId == categoryId)
+            .Select(cfa => cfa.AttributeId)
+            .ToListAsync();
+
+        // Если для категории есть привязки — фильтруем, иначе отдаём все (fallback)
+        IQueryable<SpecificationAttribute> attributesQuery = _dbContext.SpecificationAttributes
+            .OrderBy(a => a.SortOrder)
+                .ThenBy(a => a.DisplayName);
+
+        if (filterAttrIds.Count > 0)
+        {
+            attributesQuery = attributesQuery
+                .Where(a => filterAttrIds.Contains(a.Id));
+        }
+
+        // Получаем canonical values, которые реально используются в товарах этой категории
+        var relevantCanonicalValueIds = new List<Guid>();
+        if (filterAttrIds.Count > 0)
+        {
+            relevantCanonicalValueIds = await _dbContext.ProductSpecificationValues
+                .Where(psv => psv.CanonicalValueId != null)
+                .Where(psv => filterAttrIds.Contains(psv.AttributeId))
+                .Where(psv => psv.Product.CategoryId == categoryId)
+                .Select(psv => psv.CanonicalValueId!.Value)
+                .Distinct()
+                .ToListAsync();
+        }
+
+        // Если есть релевантные canonical values — фильтруем options, иначе показываем все
+        var attributes = relevantCanonicalValueIds.Count > 0
+            ? await attributesQuery
+                .Select(a => new SpecificationAttributeDto
+                {
+                    Id = a.Id,
+                    Key = a.Key,
+                    DisplayName = a.DisplayName,
+                    ValueType = a.ValueType == SpecificationAttributeValueType.Range ? "range" : "select",
+                    IsMultiValue = a.IsMultiValue,
+                    Unit = a.Unit,
+                    GroupName = a.GroupName,
+                    SortOrder = a.SortOrder,
+                    ValidationMin = a.ValidationMin,
+                    ValidationMax = a.ValidationMax,
+                    ValidationStep = a.ValidationStep,
+                    IsRequired = a.IsRequired,
+                    Options = a.CanonicalValues
+                        .Where(cv => relevantCanonicalValueIds.Contains(cv.Id))
+                        .OrderBy(cv => cv.SortOrder)
+                        .Select(cv => cv.ValueText)
+                        .ToList()
+                })
+                .ToListAsync()
+            : await attributesQuery
+                .Select(a => new SpecificationAttributeDto
+                {
+                    Id = a.Id,
+                    Key = a.Key,
+                    DisplayName = a.DisplayName,
+                    ValueType = a.ValueType == SpecificationAttributeValueType.Range ? "range" : "select",
+                    IsMultiValue = a.IsMultiValue,
+                    Unit = a.Unit,
+                    GroupName = a.GroupName,
+                    SortOrder = a.SortOrder,
+                    ValidationMin = a.ValidationMin,
+                    ValidationMax = a.ValidationMax,
+                    ValidationStep = a.ValidationStep,
+                    IsRequired = a.IsRequired,
+                    Options = a.CanonicalValues
+                        .OrderBy(cv => cv.SortOrder)
+                        .Select(cv => cv.ValueText)
+                        .ToList()
+                })
+                .ToListAsync();
+
+        return new CategorySpecificationsDto
+        {
+            CategoryId = categoryId,
+            CategoryName = category.Name,
+            Attributes = attributes
+        };
     }
 #pragma warning restore CA1724
 }

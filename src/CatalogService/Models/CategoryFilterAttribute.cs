@@ -42,4 +42,7 @@ public class CategoryFilterAttribute
 
     /// <summary>Можно ли выбрать несколько значений (для чекбоксов)</summary>
     public bool IsMultiValue { get; set; } = false;
+
+    /// <summary>Обязательное поле для этой категории</summary>
+    public bool IsRequired { get; set; }
 }

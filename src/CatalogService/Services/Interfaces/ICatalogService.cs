@@ -10,6 +10,7 @@ public interface ICatalogService
 {
     // Товары
     Task<PagedResult<ProductListDto>> GetProductsAsync(ProductFilterDto filter);
+    Task<PagedResult<ProductListDto>> GetAdminProductsAsync(ProductFilterDto filter);
     Task<ProductDetailDto?> GetProductByIdAsync(Guid id);
     Task<ProductDetailDto?> GetProductBySlugAsync(string slug);
     Task<ProductDetailDto?> GetProductBySkuAsync(string sku);
@@ -24,11 +25,15 @@ public interface ICatalogService
     Task<IEnumerable<FilterAttributeDto>> GetFilterAttributesByCategoryAsync(string categorySlug, FilterAttributesQueryDto? filterParams = null);
     Task<IEnumerable<FilterFacetAttributeDto>> GetFilterFacetsByCategoryAsync(string categorySlug, FilterAttributesQueryDto? filterParams = null);
     Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto dto);
+    Task<CategoryDto?> UpdateCategoryAsync(Guid id, UpdateCategoryDto dto);
+    Task<bool> DeleteCategoryAsync(Guid id);
     
     // Производители
     Task<IEnumerable<ManufacturerDto>> GetManufacturersAsync();
     Task<IEnumerable<ManufacturerDto>> GetManufacturersByCategoryAsync(string categorySlug);
     Task<ManufacturerDto> CreateManufacturerAsync(CreateManufacturerDto dto);
+    Task<ManufacturerDto?> UpdateManufacturerAsync(Guid id, UpdateManufacturerDto dto);
+    Task<bool> DeleteManufacturerAsync(Guid id);
     
     // Отзывы
     Task<ReviewDto> CreateReviewAsync(Guid productId, Guid userId, CreateReviewDto dto);
@@ -40,27 +45,10 @@ public interface ICatalogService
     // Склад
     Task<(bool Success, string? Error)> ReserveStockAsync(IEnumerable<(Guid ProductId, int Quantity)> items);
     Task<(bool Success, string? Error)> ReleaseStockAsync(IEnumerable<(Guid ProductId, int Quantity)> items);
-}
 
-/// <summary>
-/// DTO для создания категории
-/// </summary>
-public record CreateCategoryDto
-{
-    public string Name { get; init; } = string.Empty;
-    public string Slug { get; init; } = string.Empty;
-    public string? Description { get; init; }
-    public Guid? ParentId { get; init; }
-    public ComponentType? ComponentType { get; init; }
-}
+    // История цен
+    Task<List<PriceHistoryDto>> GetPriceHistoryAsync(Guid productId);
 
-/// <summary>
-/// DTO для создания производителя
-/// </summary>
-public record CreateManufacturerDto
-{
-    public string Name { get; init; } = string.Empty;
-    public string? Country { get; init; }
-    public string? LogoUrl { get; init; }
-    public string? Description { get; init; }
+    // Мета-данные спецификаций
+    Task<CategorySpecificationsDto> GetCategorySpecificationsAsync(Guid categoryId);
 }

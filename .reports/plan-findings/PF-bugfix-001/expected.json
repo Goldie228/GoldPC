@@ -1,0 +1,4 @@
+{
+  "planRef": "bugfix-A-01",
+  "description": "ProductCard uses product.images[0].url from API response"
+}

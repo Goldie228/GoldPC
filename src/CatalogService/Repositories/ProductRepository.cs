@@ -227,6 +227,101 @@ public class ProductRepository : IProductRepository
         };
     }
 
+    /// <summary>
+    /// Админская выборка товаров — не хардкодит IsActive, позволяет фильтровать по статусу.
+    /// </summary>
+    public async Task<RepositoryPagedResult<Product>> GetFilteredAdminAsync(ProductFilterDto filter)
+    {
+        var query = _readContext.Products
+            .Include(p => p.Category)
+            .Include(p => p.Manufacturer)
+            .Include(p => p.Images)
+            .AsQueryable();
+
+        // Фильтрация по активности (admin: по умолчанию все, включая неактивные)
+        if (filter.IsActive.HasValue)
+        {
+            query = query.Where(p => p.IsActive == filter.IsActive.Value);
+        }
+
+        // Фильтрация по ID категории
+        if (filter.CategoryId.HasValue)
+        {
+            query = query.Where(p => p.CategoryId == filter.CategoryId.Value);
+        }
+        else if (!string.IsNullOrWhiteSpace(filter.Category))
+        {
+            var categorySlug = filter.Category.Trim().ToLowerInvariant();
+            query = query.Where(p => p.Category != null && p.Category.Slug.ToLower() == categorySlug);
+        }
+
+        // Фильтрация по производителю(ам)
+        var manIds = filter.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
+        if (manIds != null && manIds.Count > 0)
+        {
+            query = query.Where(p => p.ManufacturerId.HasValue && manIds.Contains(p.ManufacturerId.Value));
+        }
+        else if (filter.ManufacturerId.HasValue)
+        {
+            query = query.Where(p => p.ManufacturerId == filter.ManufacturerId.Value);
+        }
+
+        // Фильтрация по цене
+        if (filter.MinPrice.HasValue)
+        {
+            query = query.Where(p => p.Price >= filter.MinPrice.Value);
+        }
+        if (filter.MaxPrice.HasValue)
+        {
+            query = query.Where(p => p.Price <= filter.MaxPrice.Value);
+        }
+
+        // Фильтрация по наличию
+        if (filter.InStock == true)
+        {
+            query = query.Where(p => p.Stock > 0);
+        }
+        else if (filter.InStock == false)
+        {
+            query = query.Where(p => p.Stock <= 0);
+        }
+
+        // Фильтрация по рекомендуемым
+        if (filter.IsFeatured == true)
+        {
+            query = query.Where(p => p.IsFeatured);
+        }
+
+        // Поиск по названию и описанию
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var term = filter.Search.Trim();
+            query = query.Where(p =>
+                EF.Functions.ILike(p.Name, $"%{term}%") ||
+                (p.Description != null && EF.Functions.ILike(p.Description, $"%{term}%")) ||
+                EF.Functions.ILike(p.Sku, $"%{term}%"));
+        }
+
+        // Подсчёт и пагинация
+        var totalCount = await query.CountAsync();
+
+        var sortDesc = string.Equals(filter.SortOrder, "desc", StringComparison.OrdinalIgnoreCase);
+        query = ApplySorting(query, filter.SortBy, sortDesc);
+
+        var items = await query
+            .Skip((filter.Page - 1) * filter.PageSize)
+            .Take(filter.PageSize)
+            .ToListAsync();
+
+        return new RepositoryPagedResult<Product>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = filter.Page,
+            PageSize = filter.PageSize
+        };
+    }
+
     private static IQueryable<Product> ApplySorting(IQueryable<Product> query, string sortBy, bool sortDesc)
     {
         return (sortBy ?? string.Empty).ToLower(CultureInfo.InvariantCulture) switch
@@ -689,5 +784,20 @@ public class ProductRepository : IProductRepository
     public async Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync()
     {
         return await _context.Database.BeginTransactionAsync();
+    }
+
+    public async Task<List<PriceHistory>> GetPriceHistoryAsync(Guid productId)
+    {
+        return await _context.PriceHistory
+            .Where(ph => ph.ProductId == productId)
+            .OrderByDescending(ph => ph.ChangedAt)
+            .ToListAsync();
+    }
+
+    public async Task AddPriceHistoryAsync(PriceHistory entry)
+    {
+        entry.Id = Guid.NewGuid();
+        _context.PriceHistory.Add(entry);
+        await _context.SaveChangesAsync();
     }
 }
