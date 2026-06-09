@@ -15,7 +15,7 @@ ADMIN_PHONE="${ADMIN_PHONE:-+375291000001}"
 echo "🔑 Seeding admin user: $ADMIN_EMAIL"
 
 # Check if auth service is running
-if ! curl -sf "http://localhost:5001/swagger" > /dev/null 2>&1; then
+if ! curl -sf "http://localhost:5001/health" > /dev/null 2>&1 && ! curl -sf "http://localhost:5001/swagger" > /dev/null 2>&1; then
   echo "⚠️  Auth service not responding at $AUTH_URL"
   echo "   Make sure the service is running on port 5001"
   exit 1
@@ -49,14 +49,23 @@ REG_SUCCESS=$(echo "$REG_RESPONSE" | python3 -c "import sys,json; print(json.loa
 
 if [ "$REG_SUCCESS" = "True" ]; then
   echo "✅ Admin user registered successfully"
+
+  # Promote to Admin role via psql
+  echo "🔧 Promoting to Admin role..."
+  if PGPASSWORD=admin psql -h localhost -p 5434 -U postgres -d goldpc_auth \
+    -c "UPDATE users SET \"Role\" = 'Admin' WHERE \"Email\" = '$ADMIN_EMAIL';" 2>/dev/null; then
+    echo "✅ User promoted to Admin"
+  else
+    echo "⚠️  Could not promote via psql. Run manually:"
+    echo "   UPDATE users SET \"Role\" = 'Admin' WHERE \"Email\" = '$ADMIN_EMAIL';"
+  fi
+
   echo ""
   echo "📋 Credentials:"
   echo "   Email:    $ADMIN_EMAIL"
   echo "   Password: $ADMIN_PASSWORD"
   echo ""
-  echo "⚠️  Note: User role is 'Client' by default."
-  echo "   To promote to Admin, run this SQL:"
-  echo "   UPDATE users SET role = 3, roles = '[3]' WHERE email = '$ADMIN_EMAIL';"
+  echo "📌 После входа в админ-панель — не забудь обновить страницу."
 else
   echo "❌ Failed to register admin user"
   echo "   Response: $REG_RESPONSE"

@@ -248,7 +248,6 @@ export function ProductPage(): ReactElement {
       <header className="flex items-center gap-2 text-xs text-muted-foreground pt-8 mb-8">
         <Breadcrumbs
           items={[
-            { label: 'Главная', to: '/' },
             { label: 'Каталог', to: '/catalog' },
             ...(CATEGORY_LABELS_RU[product.category]
               ? [{ label: CATEGORY_LABELS_RU[product.category], to: `/catalog/${product.category}` }]

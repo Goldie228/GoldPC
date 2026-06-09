@@ -361,6 +361,19 @@ seed_catalog() {
     fi
 }
 
+# Function to seed admin user (вызывается после seed_catalog)
+seed_admin() {
+    if [ "$SKIP_SEED" = true ]; then
+        log_warn "Skipping admin seed (--skip-seed)"
+        return
+    fi
+    log_info "Seeding admin user..."
+    bash "$PROJECT_DIR/scripts/seed-data/seed-admin-user.sh" 2>&1 | while IFS= read -r line; do
+        log_info "  [admin-seed] $line"
+    done
+    log_ok "Admin seed completed"
+}
+
 # Function to start backend services
 start_backend() {
     echo -e "${CYAN}Starting backend services...${RESET}"
@@ -372,6 +385,7 @@ start_backend() {
         "ServicesService:5003:src/ServicesService:/health"
         "WarrantyService:5004:src/WarrantyService:/health"
         "PCBuilderService:5005:src/PCBuilderService:/health"
+        "AdminPanel:5007:src/backend/GoldPC.Api:/health"
     )
 
     for service_info in "${services[@]}"; do
@@ -379,7 +393,7 @@ start_backend() {
         echo -e "${CYAN}Launching $name...${RESET}"
 
         cd "$PROJECT_DIR/$path"
-        if [ "$name" = "AuthService" ] || [ "$name" = "ServicesService" ]; then
+        if [ "$name" = "AuthService" ] || [ "$name" = "ServicesService" ] || [ "$name" = "AdminPanel" ]; then
             ASPNETCORE_ENVIRONMENT=Development dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
         else
             dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
@@ -639,6 +653,7 @@ else
     start_infra
     seed_catalog
     start_backend
+    seed_admin
     start_frontend
 fi
 
@@ -653,6 +668,7 @@ echo -e "${GREEN}Orders API:${RESET}   http://localhost:5002/swagger"
 echo -e "${GREEN}Services API:${RESET} http://localhost:5003/swagger"
 echo -e "${GREEN}Warranty API:${RESET} http://localhost:5004/swagger"
 echo -e "${GREEN}PCBuilder API:${RESET} http://localhost:5005/swagger"
+echo -e "${GREEN}Admin Panel API:${RESET} http://localhost:5007/health"
 echo ""
 echo -e "${YELLOW}Logs are available in $LOG_DIR/${RESET}"
 if [ "$TAIL_LOGS" = false ]; then

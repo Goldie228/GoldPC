@@ -71,7 +71,7 @@ export function selectComponent(
   }
 
   // For single-component types, assign directly with proper typing
-  const nextRecord = next as Record<string, unknown>;
+  const nextRecord = next as unknown as Record<string, unknown>;
   nextRecord[type] = sc;
   return next;
 }

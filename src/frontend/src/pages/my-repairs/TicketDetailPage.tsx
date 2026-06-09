@@ -254,7 +254,7 @@ export function TicketDetailPage() {
                 isOwn={msg.authorId === currentUserId}
               />
             ))}
-            <TypingIndicator who={whoIsTyping} />
+            <TypingIndicator who={whoIsTyping ?? undefined} />
             <div ref={messagesEndRef} />
           </div>
 

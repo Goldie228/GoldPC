@@ -357,8 +357,8 @@ export function ComponentPickerModal({
   const [previewImgIdx, setPreviewImgIdx] = useState(0);
   const [isPending, startTransition] = useTransition();
   const [priceRange, setPriceRange] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
-  const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<number[]>([]);
-  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | string[]>>({});
+  const [selectedManufacturerIds, setSelectedManufacturerIds] = useState<string[]>([]);
+  const [selectedSpecifications, setSelectedSpecifications] = useState<Record<string, string | number | string[]>>({});
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>([]);
   const [minRating, setMinRating] = useState(0);
 

@@ -47,7 +47,6 @@ import {
   extractCaseHasUSBC,
   extractMBECCSupport,
   extractRAMECCSupport,
-  extractMemoryRank,
   extractM2Interface,
   extractM2SataSupport,
   extractM2Key,
@@ -629,7 +628,7 @@ function checkM2SataLaneConflict(storage: Product[], motherboard: Product): Comp
 /**
  * Fan headers count check
  */
-function checkFanHeaderCount(mb: Product, cooling: Product | undefined, chassis: Product | undefined, selectedFans: number): CompatibilityWarning | null {
+function checkFanHeaderCount(mb: Product, cooling: Product | undefined, _chassis: Product | undefined, selectedFans: number): CompatibilityWarning | null {
   const mbHeaders = extractFanHeaderCount(mb.specifications);
   if (mbHeaders === null) return null;
 
@@ -653,7 +652,7 @@ function checkFanHeaderCount(mb: Product, cooling: Product | undefined, chassis:
 /**
  * RGB voltage compatibility (12V vs 5V)
  */
-function checkRGBType(mb: Product, chassis: Product | undefined, fans: Product[]): CompatibilityWarning | null {
+function checkRGBType(mb: Product, chassis: Product | undefined, _fans: Product[]): CompatibilityWarning | null {
   const mbRGB = extractRGBHeaderType(mb.specifications);
   if (!mbRGB || mbRGB === 'both') return null;
 

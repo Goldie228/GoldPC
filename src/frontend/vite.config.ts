@@ -68,6 +68,10 @@ export default defineConfig({
         changeOrigin: true,
         ws: true,
       },
+      '/api/v1/admin': {
+        target: 'http://localhost:5007',
+        changeOrigin: true,
+      },
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,

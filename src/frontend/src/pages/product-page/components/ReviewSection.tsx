@@ -57,7 +57,7 @@ export function ReviewSection({
         if (res != null) {
           const paged = res as ProductReviewsResponse;
           setReviews(paged.data || []);
-          setHasMore(paged.meta?.hasNext ?? false);
+          setHasMore(paged.meta?.hasNextPage ?? false);
           setPage(1);
         }
       })
@@ -128,7 +128,7 @@ export function ReviewSection({
         const paged = res as ProductReviewsResponse;
         setReviews((prev) => [...prev, ...(paged.data || [])]);
         setPage(nextPage);
-        setHasMore(paged.meta?.hasNext ?? false);
+        setHasMore(paged.meta?.hasNextPage ?? false);
       }
     } catch {
       showToast('Не удалось загрузить ещё отзывы', 'error');

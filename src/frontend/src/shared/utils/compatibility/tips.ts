@@ -5,8 +5,8 @@
 
 import type { CompatibilityWarning } from './types';
 import type { Product } from '../../../api/types';
-import { extractMemoryType, extractRAMSpeed, extractBaseRAMSpeed, extractCPUOverclockable, extractTPMSupport, extractThermalPasteIncluded, extractRAMECCSupport, extractSocket, extractMBECCSupport, extractMemoryRank, extractM2Interface, extractPCIeGeneration, extractM2Key } from './extractors';
-import { extractMemorySlots, extractRAMCapacity } from './extractors';
+import { extractMemoryType, extractRAMSpeed, extractBaseRAMSpeed, extractThermalPasteIncluded } from './extractors';
+import { extractMemorySlots } from './extractors';
 
 /**
  * Совет: подключение монитора к GPU, не к материнской плате
@@ -41,7 +41,7 @@ export function tipDDR5Training(ram: Product | undefined): CompatibilityWarning 
 /**
  * Совет: XMP/EXTO профиль не включён — RAM работает медленнее
  */
-export function tipXMPNeeded(ram: Product | undefined, mb: Product | undefined): CompatibilityWarning | null {
+export function tipXMPNeeded(ram: Product | undefined, _mb: Product | undefined): CompatibilityWarning | null {
   if (!ram) return null;
   const speed = extractRAMSpeed(ram.specifications);
   const baseSpeed = extractBaseRAMSpeed(ram.specifications);
