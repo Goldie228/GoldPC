@@ -1,7 +1,9 @@
 using GoldPC.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
 using GoldPC.Shared.Authorization;
+using System.Text.Json;
 using SK = GoldPC.SharedKernel.DTOs;
 
 namespace GoldPC.Api.Controllers;
@@ -144,6 +146,7 @@ public interface IAdminService
     Task<UserDto?> DeactivateUserAsync(Guid id);
     Task<UserDto?> ActivateUserAsync(Guid id);
     Task<bool> DeleteUserAsync(Guid id);
+    Task<int> GetTotalUsersCountAsync();
 
     // Dictionaries (only attributes — categories/manufacturers moved to CatalogService)
     Task<List<DictionaryItemDto>> GetDictionaryAsync(string type);
@@ -165,13 +168,159 @@ public interface IAdminService
 public class AdminService : IAdminService
 {
     private readonly ILogger<AdminService> _logger;
-    private static readonly List<UserDto> _users = GenerateUsers();
-    private static readonly List<DictionaryItemDto> _attributes = GenerateAttributes();
+    private readonly string _dataDir;
+    private readonly string _usersFilePath;
+    private readonly string _attributesFilePath;
+    private readonly string _settingsFilePath;
+    private static readonly object _lock = new();
+    private static readonly List<UserDto> _users = new();
+    private static readonly List<DictionaryItemDto> _attributes = new();
     private static SiteSettingsDto _settings = new();
 
-    public AdminService(ILogger<AdminService> logger)
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    public AdminService(ILogger<AdminService> logger, IWebHostEnvironment env)
     {
         _logger = logger;
+        _dataDir = Path.Combine(env.ContentRootPath, "App_Data", "admin");
+        _usersFilePath = Path.Combine(_dataDir, "users.json");
+        _attributesFilePath = Path.Combine(_dataDir, "attributes.json");
+        _settingsFilePath = Path.Combine(_dataDir, "settings.json");
+        EnsureDataLoaded();
+    }
+
+    // ====================================================================
+    // Persistence
+    // ====================================================================
+
+    private void EnsureDataLoaded()
+    {
+        Directory.CreateDirectory(_dataDir);
+        LoadUsers();
+        LoadAttributes();
+        LoadSettings();
+    }
+
+    private void LoadUsers()
+    {
+        if (File.Exists(_usersFilePath))
+        {
+            try
+            {
+                var json = File.ReadAllText(_usersFilePath);
+                var users = JsonSerializer.Deserialize<List<UserDto>>(json, _jsonOptions);
+                if (users != null && users.Count > 0)
+                {
+                    lock (_lock)
+                    {
+                        _users.Clear();
+                        _users.AddRange(users);
+                    }
+                    _logger.LogInformation("Loaded {Count} users from {Path}", _users.Count, _usersFilePath);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load users from {Path}, using seed data", _usersFilePath);
+            }
+        }
+
+        // File doesn't exist or is invalid — use seed data
+        lock (_lock)
+        {
+            _users.AddRange(GenerateUsers());
+        }
+        SaveUsers();
+    }
+
+    private void LoadAttributes()
+    {
+        if (File.Exists(_attributesFilePath))
+        {
+            try
+            {
+                var json = File.ReadAllText(_attributesFilePath);
+                var attrs = JsonSerializer.Deserialize<List<DictionaryItemDto>>(json, _jsonOptions);
+                if (attrs != null && attrs.Count > 0)
+                {
+                    lock (_lock)
+                    {
+                        _attributes.Clear();
+                        _attributes.AddRange(attrs);
+                    }
+                    _logger.LogInformation("Loaded {Count} attributes from {Path}", _attributes.Count, _attributesFilePath);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load attributes from {Path}, using seed data", _attributesFilePath);
+            }
+        }
+
+        // File doesn't exist or is invalid — use seed data
+        lock (_lock)
+        {
+            _attributes.AddRange(GenerateAttributes());
+        }
+        SaveAttributes();
+    }
+
+    private void LoadSettings()
+    {
+        if (File.Exists(_settingsFilePath))
+        {
+            try
+            {
+                var json = File.ReadAllText(_settingsFilePath);
+                var settings = JsonSerializer.Deserialize<SiteSettingsDto>(json, _jsonOptions);
+                if (settings != null)
+                {
+                    lock (_lock) { _settings = settings; }
+                    _logger.LogInformation("Loaded settings from {Path}", _settingsFilePath);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load settings from {Path}, using defaults", _settingsFilePath);
+            }
+        }
+
+        // File doesn't exist or is invalid — use defaults
+        SaveSettings();
+    }
+
+    private void SaveUsers()
+    {
+        lock (_lock)
+        {
+            var json = JsonSerializer.Serialize(_users, _jsonOptions);
+            File.WriteAllText(_usersFilePath, json);
+        }
+    }
+
+    private void SaveAttributes()
+    {
+        lock (_lock)
+        {
+            var json = JsonSerializer.Serialize(_attributes, _jsonOptions);
+            File.WriteAllText(_attributesFilePath, json);
+        }
+    }
+
+    private void SaveSettings()
+    {
+        lock (_lock)
+        {
+            var json = JsonSerializer.Serialize(_settings, _jsonOptions);
+            File.WriteAllText(_settingsFilePath, json);
+        }
     }
 
     // ====================================================================
@@ -212,38 +361,53 @@ public class AdminService : IAdminService
         return Task.FromResult(user);
     }
 
+    public Task<int> GetTotalUsersCountAsync()
+    {
+        return Task.FromResult(_users.Count);
+    }
+
     public Task<UserDto?> UpdateUserAsync(Guid id, UpdateUserDto update)
     {
-        var index = _users.FindIndex(u => u.Id == id);
-        if (index == -1) return Task.FromResult<UserDto?>(null);
-
-        var existing = _users[index];
-        var updated = existing with
+        UserDto? updated;
+        lock (_lock)
         {
-            FirstName = update.FirstName ?? existing.FirstName,
-            LastName = update.LastName ?? existing.LastName,
-            Phone = update.Phone ?? existing.Phone,
-            UpdatedAt = DateTime.UtcNow
-        };
-        _users[index] = updated;
+            var index = _users.FindIndex(u => u.Id == id);
+            if (index == -1) return Task.FromResult<UserDto?>(null);
 
+            var existing = _users[index];
+            updated = existing with
+            {
+                FirstName = update.FirstName ?? existing.FirstName,
+                LastName = update.LastName ?? existing.LastName,
+                Phone = update.Phone ?? existing.Phone,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _users[index] = updated;
+        }
+
+        SaveUsers();
         _logger.LogInformation("User {UserId} updated by admin", id);
         return Task.FromResult<UserDto?>(updated);
     }
 
     public Task<UserDto?> UpdateUserRoleAsync(Guid id, string role)
     {
-        var index = _users.FindIndex(u => u.Id == id);
-        if (index == -1) return Task.FromResult<UserDto?>(null);
-
-        var existing = _users[index];
-        var updated = existing with
+        UserDto? updated;
+        lock (_lock)
         {
-            Role = role,
-            UpdatedAt = DateTime.UtcNow
-        };
-        _users[index] = updated;
+            var index = _users.FindIndex(u => u.Id == id);
+            if (index == -1) return Task.FromResult<UserDto?>(null);
 
+            var existing = _users[index];
+            updated = existing with
+            {
+                Role = role,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _users[index] = updated;
+        }
+
+        SaveUsers();
         _logger.LogInformation("User {UserId} role changed to {Role} by admin", id, role);
         return Task.FromResult<UserDto?>(updated);
     }
@@ -260,33 +424,42 @@ public class AdminService : IAdminService
 
     public Task<bool> DeleteUserAsync(Guid id)
     {
-        var index = _users.FindIndex(u => u.Id == id);
-        if (index == -1) return Task.FromResult(false);
-
-        var existing = _users[index];
-        _users[index] = existing with
+        lock (_lock)
         {
-            IsActive = false,
-            UpdatedAt = DateTime.UtcNow
-        };
+            var index = _users.FindIndex(u => u.Id == id);
+            if (index == -1) return Task.FromResult(false);
 
+            var existing = _users[index];
+            _users[index] = existing with
+            {
+                IsActive = false,
+                UpdatedAt = DateTime.UtcNow
+            };
+        }
+
+        SaveUsers();
         _logger.LogInformation("User {UserId} deactivated (delete) by admin", id);
         return Task.FromResult(true);
     }
 
     private Task<UserDto?> SetUserActiveAsync(Guid id, bool active)
     {
-        var index = _users.FindIndex(u => u.Id == id);
-        if (index == -1) return Task.FromResult<UserDto?>(null);
-
-        var existing = _users[index];
-        var updated = existing with
+        UserDto? updated;
+        lock (_lock)
         {
-            IsActive = active,
-            UpdatedAt = DateTime.UtcNow
-        };
-        _users[index] = updated;
+            var index = _users.FindIndex(u => u.Id == id);
+            if (index == -1) return Task.FromResult<UserDto?>(null);
 
+            var existing = _users[index];
+            updated = existing with
+            {
+                IsActive = active,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _users[index] = updated;
+        }
+
+        SaveUsers();
         _logger.LogInformation("User {UserId} active={Active} by admin", id, active);
         return Task.FromResult<UserDto?>(updated);
     }
@@ -308,57 +481,72 @@ public class AdminService : IAdminService
 
     public Task<DictionaryItemDto> CreateDictionaryItemAsync(string type, CreateDictionaryItemRequest request)
     {
-        var list = GetDictionaryList(type);
-        var prefix = type.ToLower() switch
+        DictionaryItemDto item;
+        lock (_lock)
         {
-            "categories" => "cat",
-            "manufacturers" => "mfr",
-            "attributes" => "attr",
-            _ => "dic"
-        };
-        var id = $"{prefix}-{list.Count + 1:D2}";
+            var list = GetDictionaryList(type);
+            var prefix = type.ToLower() switch
+            {
+                "categories" => "cat",
+                "manufacturers" => "mfr",
+                "attributes" => "attr",
+                _ => "dic"
+            };
+            var id = $"{prefix}-{list.Count + 1:D2}";
 
-        var item = new DictionaryItemDto
-        {
-            Id = id,
-            Name = request.Name,
-            Slug = request.Slug,
-            IsActive = true
-        };
+            item = new DictionaryItemDto
+            {
+                Id = id,
+                Name = request.Name,
+                Slug = request.Slug,
+                IsActive = true
+            };
 
-        list.Add(item);
+            list.Add(item);
+        }
+
+        SaveAttributes();
         _logger.LogInformation("Dictionary {Type} item created: {Name}", type, request.Name);
         return Task.FromResult(item);
     }
 
     public Task<DictionaryItemDto?> UpdateDictionaryItemAsync(string type, string id, UpdateDictionaryItemRequest request)
     {
-        var list = GetDictionaryList(type);
-        var index = list.FindIndex(d => d.Id == id);
-        if (index == -1) return Task.FromResult<DictionaryItemDto?>(null);
-
-        var existing = list[index];
-        var updated = existing with
+        DictionaryItemDto? updated;
+        lock (_lock)
         {
-            Name = request.Name ?? existing.Name,
-            Slug = request.Slug ?? existing.Slug,
-            IsActive = request.IsActive ?? existing.IsActive
-        };
-        list[index] = updated;
+            var list = GetDictionaryList(type);
+            var index = list.FindIndex(d => d.Id == id);
+            if (index == -1) return Task.FromResult<DictionaryItemDto?>(null);
 
+            var existing = list[index];
+            updated = existing with
+            {
+                Name = request.Name ?? existing.Name,
+                Slug = request.Slug ?? existing.Slug,
+                IsActive = request.IsActive ?? existing.IsActive
+            };
+            list[index] = updated;
+        }
+
+        SaveAttributes();
         _logger.LogInformation("Dictionary {Type} item {Id} updated", type, id);
         return Task.FromResult<DictionaryItemDto?>(updated);
     }
 
     public Task<bool> DeleteDictionaryItemAsync(string type, string id)
     {
-        var list = GetDictionaryList(type);
-        var index = list.FindIndex(d => d.Id == id);
-        if (index == -1) return Task.FromResult(false);
+        lock (_lock)
+        {
+            var list = GetDictionaryList(type);
+            var index = list.FindIndex(d => d.Id == id);
+            if (index == -1) return Task.FromResult(false);
 
-        var existing = list[index];
-        list[index] = existing with { IsActive = false };
+            var existing = list[index];
+            list[index] = existing with { IsActive = false };
+        }
 
+        SaveAttributes();
         _logger.LogInformation("Dictionary {Type} item {Id} deactivated", type, id);
         return Task.FromResult(true);
     }
@@ -380,32 +568,41 @@ public class AdminService : IAdminService
 
     public Task<SiteSettingsDto> UpdateSettingsAsync(UpdateSiteSettingsDto update)
     {
-        _settings = _settings with
+        lock (_lock)
         {
-            SiteName = update.SiteName ?? _settings.SiteName,
-            AdminEmail = update.AdminEmail ?? _settings.AdminEmail,
-            StoreAddress = update.StoreAddress ?? _settings.StoreAddress,
-            Phone = update.Phone ?? _settings.Phone,
-            WorkingHours = update.WorkingHours ?? _settings.WorkingHours,
-            FreeDeliveryThreshold = update.FreeDeliveryThreshold ?? _settings.FreeDeliveryThreshold,
-            DeliveryCost = update.DeliveryCost ?? _settings.DeliveryCost,
-            DeliveryTime = update.DeliveryTime ?? _settings.DeliveryTime,
-            TwoFactorRequired = update.TwoFactorRequired ?? _settings.TwoFactorRequired,
-            AuditLogging = update.AuditLogging ?? _settings.AuditLogging,
-            LoginNotifications = update.LoginNotifications ?? _settings.LoginNotifications,
-            OrderEmailNotifications = update.OrderEmailNotifications ?? _settings.OrderEmailNotifications,
-            SmsNotifications = update.SmsNotifications ?? _settings.SmsNotifications,
-            LowStockNotifications = update.LowStockNotifications ?? _settings.LowStockNotifications,
-            MaintenanceMode = update.MaintenanceMode ?? _settings.MaintenanceMode
-        };
+            _settings = _settings with
+            {
+                SiteName = update.SiteName ?? _settings.SiteName,
+                AdminEmail = update.AdminEmail ?? _settings.AdminEmail,
+                StoreAddress = update.StoreAddress ?? _settings.StoreAddress,
+                Phone = update.Phone ?? _settings.Phone,
+                WorkingHours = update.WorkingHours ?? _settings.WorkingHours,
+                FreeDeliveryThreshold = update.FreeDeliveryThreshold ?? _settings.FreeDeliveryThreshold,
+                DeliveryCost = update.DeliveryCost ?? _settings.DeliveryCost,
+                DeliveryTime = update.DeliveryTime ?? _settings.DeliveryTime,
+                TwoFactorRequired = update.TwoFactorRequired ?? _settings.TwoFactorRequired,
+                AuditLogging = update.AuditLogging ?? _settings.AuditLogging,
+                LoginNotifications = update.LoginNotifications ?? _settings.LoginNotifications,
+                OrderEmailNotifications = update.OrderEmailNotifications ?? _settings.OrderEmailNotifications,
+                SmsNotifications = update.SmsNotifications ?? _settings.SmsNotifications,
+                LowStockNotifications = update.LowStockNotifications ?? _settings.LowStockNotifications,
+                MaintenanceMode = update.MaintenanceMode ?? _settings.MaintenanceMode
+            };
+        }
 
+        SaveSettings();
         _logger.LogInformation("Site settings updated by admin");
         return Task.FromResult(_settings);
     }
 
     public Task<SiteSettingsDto> ResetSettingsAsync()
     {
-        _settings = new SiteSettingsDto();
+        lock (_lock)
+        {
+            _settings = new SiteSettingsDto();
+        }
+
+        SaveSettings();
         _logger.LogInformation("Site settings reset to defaults by admin");
         return Task.FromResult(_settings);
     }
@@ -744,20 +941,22 @@ public class AdminController : ControllerBase
     [ProducesResponseType(typeof(StatsResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<StatsResponse>> GetStats()
     {
-        // Deyshvord: poluchayem dannye iz CatalogService
+        // Получаем данные из CatalogService
         var totalProducts = await _catalogClient.GetTotalProductsAsync();
         var totalCategories = await _catalogClient.GetTotalCategoriesAsync();
         var totalManufacturers = await _catalogClient.GetTotalManufacturersAsync();
 
+        var totalUsers = await _adminService.GetTotalUsersCountAsync();
+
         var stats = new DashboardStats
         {
-            TotalUsers = 10, // TODO: replace with real user count from AuthService
-            TotalOrders = totalProducts, // Using product count as placeholder
-            Revenue = 0, // TODO: replace with real revenue from OrderService
+            TotalUsers = totalUsers,
+            TotalOrders = 0, // Нет OrderService
+            Revenue = 0, // Нет OrderService
             UsersChange = 0,
             OrdersChange = 0,
             RevenueChange = 0
-        };
+            };
 
         return Ok(new StatsResponse
         {
