@@ -1,14 +1,27 @@
 /**
- * Страница управления пользователями
- * Таблица пользователей с возможностью редактирования и удаления
+ * Страница управления пользователями (Admin)
+ * - Таблица пользователей с поиском, фильтром по роли, пагинацией
+ * - Инлайн-изменение роли, деактивация/активация, редактирование
+ * - Использует @tanstack/react-query и usersAdminApi
+ * - Все стили через DESIGN.md токены Tailwind
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdmin } from '../../../hooks/useAdmin';
-import { useToast } from '../../../hooks/useToast';
-import type { UserRole, GetUsersParams } from '../../../api/admin';
-import type { User } from '../../../api/types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { usersAdminApi, type UserRole } from '../../../api/admin';
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Edit2,
+  UserX,
+  Check,
+  Users,
+} from 'lucide-react';
+
+/* ======== Константы ======== */
+
 const ROLE_LABELS: Record<UserRole, string> = {
   Client: 'Клиент',
   Manager: 'Менеджер',
@@ -17,395 +30,458 @@ const ROLE_LABELS: Record<UserRole, string> = {
   Accountant: 'Бухгалтер',
 };
 
-const ROLE_OPTIONS: UserRole[] = ['Client', 'Manager', 'Master', 'Admin', 'Accountant'];
-
-const ROLE_BADGE_CLASSES: Record<string, string> = {
-  Admin: 'bg-border-muted text-accent',
-  Manager: 'bg-indigo-500/15 text-indigo-400',
-  Master: 'bg-green-500/15 text-green-500',
-  Client: 'bg-zinc-500/15 text-muted-foreground',
-  Accountant: 'bg-pink-500/15 text-pink-400',
-};
-
-const STATUS_BADGE_CLASSES: Record<string, string> = {
-  active: 'bg-green-500/15 text-green-500',
-  inactive: 'bg-red-500/15 text-red-500',
-};
-
-const STATUS_FILTERS = [
-  { value: '', label: 'Все статусы' },
-  { value: 'true', label: 'Активные' },
-  { value: 'false', label: 'Неактивные' },
+const ROLE_OPTIONS: UserRole[] = [
+  'Client',
+  'Manager',
+  'Master',
+  'Admin',
+  'Accountant',
 ];
 
-/**
- * Страница управления пользователями
- */
+const PAGE_SIZE = 10;
+
+/* ======== Компонент ======== */
+
 export function UserManagementPage() {
   const navigate = useNavigate();
-  const { getUsers, deleteUser } = useAdmin();
-  const { showToast } = useToast();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  /* ————— Состояние ————— */
+
+  const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | ''>('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
+  const [updatingRoles, setUpdatingRoles] = useState<Record<string, boolean>>(
+    {},
+  );
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const params: GetUsersParams = {
+  /* ————— React Query: получение пользователей ————— */
+
+  const {
+    data: response,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: [
+      'admin',
+      'users',
+      { search: searchQuery, role: roleFilter, page, pageSize: PAGE_SIZE },
+    ],
+    queryFn: () =>
+      usersAdminApi.getUsers({
         page,
-        pageSize: 10,
-      };
-      
-      if (searchQuery) {
-        params.search = searchQuery;
-      }
-      
-      if (roleFilter) {
-        params.role = roleFilter;
-      }
+        pageSize: PAGE_SIZE,
+        ...(searchQuery ? { search: searchQuery } : {}),
+        ...(roleFilter ? { role: roleFilter as UserRole } : {}),
+      }),
+  });
 
-      if (statusFilter) {
-        params.isActive = statusFilter === 'true';
-      }
-      
-      const response = await getUsers(params);
-      if (response != null) {
-        setUsers(response.data);
-        setTotalPages(response.meta.totalPages);
-        setTotalItems(response.meta.totalItems);
-      }
-    } catch (err) {
-      setError('Не удалось загрузить пользователей. Попробуйте позже.');
-      console.error('Failed to fetch users:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [page, roleFilter, statusFilter, searchQuery]);
+  /* ————— React Query: мутации ————— */
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  const deactivateMutation = useMutation({
+    mutationFn: (userId: string) => usersAdminApi.deactivateUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      setMutationError(null);
+    },
+    onError: (err: Error) => {
+      setMutationError(err.message || 'Ошибка деактивации пользователя');
+    },
+  });
+
+  const activateMutation = useMutation({
+    mutationFn: (userId: string) => usersAdminApi.activateUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      setMutationError(null);
+    },
+    onError: (err: Error) => {
+      setMutationError(err.message || 'Ошибка активации пользователя');
+    },
+  });
+
+  const roleMutation = useMutation({
+    mutationFn: ({
+      userId,
+      role,
+    }: {
+      userId: string;
+      role: UserRole;
+    }) => usersAdminApi.updateUserRole(userId, { role }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      setMutationError(null);
+    },
+    onError: (err: Error) => {
+      setMutationError(err.message || 'Ошибка изменения роли');
+    },
+  });
+
+  /* ————— Производные данные ————— */
+
+  const users = response?.data ?? [];
+  const meta = response?.meta;
+  const totalItems = meta?.totalItems ?? 0;
+  const totalPages = meta?.totalPages ?? 0;
+
+  /* ————— Обработчики ————— */
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setSearchQuery(searchInput);
     setPage(1);
-    fetchUsers();
   };
 
   const handleEdit = (userId: string) => {
     navigate(`/admin/users/${userId}/edit`);
   };
 
-  const handleDelete = async (user: User) => {
-    if (!window.confirm(`Вы уверены, что хотите удалить пользователя ${user.firstName} ${user.lastName}?\nЭто действие нельзя отменить.`)) {
-      return;
-    }
-
-    setDeleting(user.id);
-    try {
-      await deleteUser(user.id);
-      setUsers(users.filter(u => u.id !== user.id));
-      setTotalItems(prev => prev - 1);
-    } catch (err) {
-      console.error('Failed to delete user:', err);
-      showToast('Не удалось удалить пользователя', 'error');
-    } finally {
-      setDeleting(null);
+  const handleDeactivate = (userId: string) => {
+    if (
+      window.confirm(
+        'Вы уверены, что хотите деактивировать этого пользователя?',
+      )
+    ) {
+      deactivateMutation.mutate(userId);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
+  const handleActivate = (userId: string) => {
+    activateMutation.mutate(userId);
+  };
+
+  const handleRoleChange = (userId: string, newRole: string) => {
+    setUpdatingRoles((prev) => ({ ...prev, [userId]: true }));
+    roleMutation.mutate(
+      { userId, role: newRole as UserRole },
+      {
+        onSettled: () => {
+          setUpdatingRoles((prev) => ({ ...prev, [userId]: false }));
+        },
+      },
+    );
+  };
+
+  const resetFilters = () => {
+    setSearchInput('');
+    setSearchQuery('');
+    setRoleFilter('');
+    setPage(1);
+  };
+
+  /* ————— Утилиты ————— */
+
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('ru-RU', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
     });
+
+  const getPageNumbers = (): number[] => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (page <= 3) {
+      return [1, 2, 3, 4, 5];
+    }
+    if (page >= totalPages - 2) {
+      return [
+        totalPages - 4,
+        totalPages - 3,
+        totalPages - 2,
+        totalPages - 1,
+        totalPages,
+      ];
+    }
+    return [page - 2, page - 1, page, page + 1, page + 2];
   };
 
-  const getInitials = (user: User) => {
-    return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`;
-  };
+  /* ————— Рендер ————— */
 
   return (
-    <div className="staff-page">
-      <header className="flex justify-between items-start mb-8 staff-page__header">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground mb-1 staff-page__title">Пользователи</h1>
-          <p className="text-sm text-muted-foreground staff-page__subtitle">
-            Управление пользователями системы
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-transparent border border-border text-foreground text-sm font-medium cursor-pointer transition-all hover:border-accent hover:text-accent"
-            onClick={() => {}}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Экспорт
-          </button>
-          <button
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent border-none text-background text-sm font-semibold cursor-pointer transition-all hover:bg-accent-bright"
-            onClick={() => navigate('/admin/users/new')}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Добавить пользователя
-          </button>
-        </div>
-      </header>
-
-      {/* Stats Bar */}
-      <div className="flex gap-6 mb-6 p-4 px-5 bg-card border border-border">
+    <div className="min-h-screen bg-canvas-dark p-6">
+      <div className="mx-auto max-w-7xl space-y-6">
+        {/* ===== Заголовок страницы ===== */}
         <div className="flex items-center gap-3">
-          <span className="font-mono text-xl font-medium text-accent">{totalItems.toLocaleString('ru-RU')}</span>
-          <span className="text-xs text-muted-foreground">Всего пользователей</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xl font-medium text-accent">{users.filter(u => u.isActive).length}</span>
-          <span className="text-xs text-muted-foreground">Активных на странице</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xl font-medium text-accent">{users.filter(u => u.role === 'Admin').length}</span>
-          <span className="text-xs text-muted-foreground">Администраторов</span>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-3 mb-6 flex-wrap">
-        <form className="flex gap-2 flex-1 min-w-[300px]" onSubmit={handleSearch}>
-          <div className="relative flex-1">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground-dim pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="M21 21l-4.35-4.35"/>
-            </svg>
-            <input
-              type="text"
-              className="w-full py-2 pl-9 pr-3 bg-card border border-border text-foreground text-sm transition-colors focus:outline-none focus:border-accent"
-              placeholder="Поиск по имени или email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <button type="submit" className="px-4 py-2 bg-card border border-border text-foreground text-sm cursor-pointer transition-all hover:border-accent hover:text-accent">
-            Найти
-          </button>
-        </form>
-
-        <div className="flex items-center gap-2">
-          <label className="text-[0.75rem] text-foreground-dim uppercase tracking-wider">Роль</label>
-          <select
-            className="px-3 py-2 pr-8 bg-card border border-border text-foreground text-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_8px_center] focus:outline-none focus:border-accent"
-            value={roleFilter}
-            onChange={(e) => {
-              setRoleFilter(e.target.value as UserRole | '');
-              setPage(1);
-            }}
-          >
-            <option value="">Все роли</option>
-            {ROLE_OPTIONS.map((role) => (
-              <option key={role} value={role}>
-                {ROLE_LABELS[role]}
-              </option>
-            ))}
-          </select>
+          <Users className="h-6 w-6 text-gold" />
+          <h1 className="text-lg font-semibold text-body-text">
+            Управление пользователями
+          </h1>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-[0.75rem] text-foreground-dim uppercase tracking-wider">Статус</label>
-          <select
-            className="px-3 py-2 pr-8 bg-card border border-border text-foreground text-sm cursor-pointer appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_8px_center] focus:outline-none focus:border-accent"
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(1);
-            }}
-          >
-            {STATUS_FILTERS.map((filter) => (
-              <option key={filter.value} value={filter.value}>
-                {filter.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+        {/* ===== Основная карточка ===== */}
+        <div className="bg-surface-card rounded-xl p-6 space-y-6">
+          {/* Ошибка мутации */}
+          {mutationError && (
+            <div className="bg-price-rise/10 border border-price-rise/30 rounded-md px-4 py-3 text-sm text-price-rise">
+              {mutationError}
+            </div>
+          )}
 
-      {loading && (
-        <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground bg-card border border-border">
-          <div className="w-8 h-8 border-2 border-border border-t-accent rounded-full animate-spin"></div>
-          <p className="mt-4">Загрузка пользователей...</p>
-        </div>
-      )}
+          {/* ===== Фильтры ===== */}
+          <div className="flex flex-wrap items-center gap-4">
+            <form
+              onSubmit={handleSearch}
+              className="flex flex-1 min-w-[280px] gap-2"
+            >
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Поиск по имени или email..."
+                  className="w-full bg-surface-card border border-hairline-dark rounded-md pl-9 pr-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-gold text-black hover:bg-gold-active rounded-md px-4 py-2 text-sm font-semibold"
+              >
+                Найти
+              </button>
+            </form>
 
-      {error && (
-        <div className="flex flex-col items-center justify-center p-12 text-center text-error bg-card border border-border">
-          <p>{error}</p>
-          <button onClick={fetchUsers} className="mt-4 px-4 py-2 bg-elevated border border-border text-foreground text-sm cursor-pointer transition-all hover:border-accent hover:text-accent">
-            Попробовать снова
-          </button>
-        </div>
-      )}
-
-      {!loading && !error && (
-        <>
-          <div className="bg-card border border-border overflow-hidden">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr>
-                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border">Пользователь</th>
-                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border">ID</th>
-                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border">Роль</th>
-                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border">Статус</th>
-                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border">Регистрация</th>
-                  <th className="text-left p-3.5 text-[0.7rem] font-semibold uppercase tracking-[0.08em] text-foreground-dim bg-elevated border-b border-border"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} className={!user.isActive ? 'opacity-60' : ''}>
-                    <td className="p-4 text-sm border-b border-border align-middle">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 flex items-center justify-center bg-elevated text-accent font-semibold text-[0.9rem] flex-shrink-0">
-                          {getInitials(user)}
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-medium text-foreground">
-                            {user.firstName} {user.lastName}
-                          </span>
-                          <span className="text-[0.75rem] text-foreground-dim">{user.email}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-sm border-b border-border align-middle">
-                      <span className="font-mono text-[0.75rem] text-foreground-dim">
-                        {user.id.substring(0, 8).toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="p-4 text-sm border-b border-border align-middle">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium uppercase tracking-wider ${ROLE_BADGE_CLASSES[user.role] || ''}`}>
-                        {ROLE_LABELS[user.role]}
-                      </span>
-                    </td>
-                    <td className="p-4 text-sm border-b border-border align-middle">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium uppercase tracking-wider ${user.isActive ? STATUS_BADGE_CLASSES.active : STATUS_BADGE_CLASSES.inactive}`}>
-                        {user.isActive ? 'Активен' : 'Неактивен'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-sm border-b border-border align-middle">
-                      <span className="font-mono text-sm text-muted-foreground">{formatDate(user.createdAt)}</span>
-                    </td>
-                    <td className="p-4 text-sm border-b border-border align-middle">
-                      <div className="flex gap-2 justify-end">
-                        <button
-                          className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-foreground-dim cursor-pointer transition-all hover:border-accent hover:text-accent"
-                          onClick={() => handleEdit(user.id)}
-                          title="Редактировать"
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                          </svg>
-                        </button>
-                        <button
-                          className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-foreground-dim cursor-pointer transition-all hover:border-error hover:text-error disabled:opacity-50 disabled:cursor-not-allowed"
-                          onClick={() => handleDelete(user)}
-                          disabled={deleting === user.id}
-                          title="Удалить"
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Роль
+              </label>
+              <select
+                value={roleFilter}
+                onChange={(e) => {
+                  setRoleFilter(e.target.value as UserRole | '');
+                  setPage(1);
+                }}
+                className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text focus:border-gold focus:ring-1 focus:ring-gold outline-none cursor-pointer"
+              >
+                <option value="">Все роли</option>
+                {ROLE_OPTIONS.map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+            </div>
           </div>
 
-          {users.length === 0 && (
-            <div className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground bg-card border border-border">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-12 h-12 text-foreground-dim">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-              <p>Пользователи не найдены</p>
-              <button className="mt-4 px-4 py-2 bg-elevated border border-border text-foreground text-sm cursor-pointer transition-all hover:border-accent hover:text-accent" onClick={() => {
-                setSearchQuery('');
-                setRoleFilter('');
-                setStatusFilter('');
-                setPage(1);
-              }}>
-                Сбросить фильтры
+          {/* ===== Состояние: загрузка ===== */}
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="h-8 w-8 border-2 border-hairline-dark border-t-gold rounded-full animate-spin" />
+              <p className="mt-4 text-sm text-muted-foreground">
+                Загрузка пользователей...
+              </p>
+            </div>
+          )}
+
+          {/* ===== Состояние: ошибка ===== */}
+          {!isLoading && isError && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <p className="text-sm text-price-rise">
+                {error instanceof Error
+                  ? error.message
+                  : 'Не удалось загрузить пользователей. Попробуйте позже.'}
+              </p>
+              <button
+                onClick={() => refetch()}
+                className="mt-4 bg-surface-card text-body-text hover:bg-surface-elevated rounded-md px-4 py-2 text-sm font-semibold"
+              >
+                Попробовать снова
               </button>
             </div>
           )}
 
-          {totalPages > 1 && (
-            <div className="flex justify-between items-center p-4 border-t border-border">
-              <span className="text-sm text-muted-foreground">
-                Показано {((page - 1) * 10) + 1}-{Math.min(page * 10, totalItems)} из {totalItems} пользователей
-              </span>
-              <div className="flex gap-1">
+          {/* ===== Состояние: пустой список ===== */}
+          {!isLoading && !isError && users.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Users className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-body-text">Пользователи не найдены</p>
+              {(searchQuery || roleFilter) && (
                 <button
-                  className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground font-mono text-sm cursor-pointer transition-all hover:border-foreground-dim hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
+                  onClick={resetFilters}
+                  className="mt-4 bg-surface-card text-body-text hover:bg-surface-elevated rounded-md px-4 py-2 text-sm font-semibold"
                 >
-                  ←
+                  Сбросить фильтры
                 </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum: number;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (page <= 3) {
-                    pageNum = i + 1;
-                  } else if (page >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = page - 2 + i;
-                  }
-                  return (
-                    <button
-                      key={pageNum}
-                      className={`w-8 h-8 flex items-center justify-center border font-mono text-sm cursor-pointer transition-all hover:border-foreground-dim hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed ${page === pageNum ? 'bg-accent border-accent text-background' : 'bg-transparent border-border text-muted-foreground'}`}
-                      onClick={() => setPage(pageNum)}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-                <button
-                  className="w-8 h-8 flex items-center justify-center bg-transparent border border-border text-muted-foreground font-mono text-sm cursor-pointer transition-all hover:border-foreground-dim hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={page === totalPages}
-                  onClick={() => setPage(page + 1)}
-                >
-                  →
-                </button>
-              </div>
+              )}
             </div>
           )}
-        </>
-      )}
+
+          {/* ===== Таблица пользователей ===== */}
+          {!isLoading && !isError && users.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th className="bg-surface-card text-xs font-medium text-muted-foreground uppercase tracking-wider py-3 px-4 text-left border-b border-hairline-dark">
+                      Пользователь
+                    </th>
+                    <th className="bg-surface-card text-xs font-medium text-muted-foreground uppercase tracking-wider py-3 px-4 text-left border-b border-hairline-dark">
+                      Роль
+                    </th>
+                    <th className="bg-surface-card text-xs font-medium text-muted-foreground uppercase tracking-wider py-3 px-4 text-left border-b border-hairline-dark">
+                      Статус
+                    </th>
+                    <th className="bg-surface-card text-xs font-medium text-muted-foreground uppercase tracking-wider py-3 px-4 text-left border-b border-hairline-dark">
+                      Регистрация
+                    </th>
+                    <th className="bg-surface-card text-xs font-medium text-muted-foreground uppercase tracking-wider py-3 px-4 text-right border-b border-hairline-dark">
+                      Действия
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((user, idx) => (
+                    <tr
+                      key={user.id}
+                      className={`${
+                        idx % 2 === 0 ? '' : 'bg-surface-card/50'
+                      } ${!user.isActive ? 'opacity-60' : ''}`}
+                    >
+                      {/* Пользователь: аватар + имя + email */}
+                      <td className="py-3 px-4 text-sm text-body-text border-b border-hairline-dark">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 flex items-center justify-center bg-surface-elevated text-body-text rounded-full text-sm font-semibold flex-shrink-0">
+                            {user.firstName.charAt(0)}
+                            {user.lastName.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-medium truncate">
+                              {user.firstName} {user.lastName}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {user.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Роль: инлайн <select> */}
+                      <td className="py-3 px-4 text-sm text-body-text border-b border-hairline-dark">
+                        <select
+                          value={user.role}
+                          onChange={(e) =>
+                            handleRoleChange(user.id, e.target.value)
+                          }
+                          disabled={updatingRoles[user.id]}
+                          className="bg-surface-card border border-hairline-dark rounded-md px-2 py-1 text-xs font-medium cursor-pointer focus:border-gold focus:ring-1 focus:ring-gold outline-none disabled:opacity-50"
+                        >
+                          {ROLE_OPTIONS.map((role) => (
+                            <option key={role} value={role}>
+                              {ROLE_LABELS[role]}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+
+                      {/* Статус: активен / неактивен */}
+                      <td className="py-3 px-4 text-sm text-body-text border-b border-hairline-dark">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded ${
+                            user.isActive
+                              ? 'bg-price-drop/15 text-price-drop'
+                              : 'bg-price-rise/15 text-price-rise'
+                          }`}
+                        >
+                          {user.isActive ? 'Активен' : 'Неактивен'}
+                        </span>
+                      </td>
+
+                      {/* Дата регистрации */}
+                      <td className="py-3 px-4 text-sm text-body-text border-b border-hairline-dark">
+                        {formatDate(user.createdAt)}
+                      </td>
+
+                      {/* Кнопки действий */}
+                      <td className="py-3 px-4 text-sm border-b border-hairline-dark">
+                        <div className="flex items-center justify-end gap-2">
+                          {user.isActive ? (
+                            <button
+                              onClick={() => handleDeactivate(user.id)}
+                              disabled={deactivateMutation.isPending}
+                              title="Деактивировать пользователя"
+                              className="bg-price-rise text-white hover:bg-red-700 rounded-md px-3 py-1.5 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <UserX className="h-3.5 w-3.5 inline-block mr-1" />
+                              Деактивировать
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleActivate(user.id)}
+                              disabled={activateMutation.isPending}
+                              title="Активировать пользователя"
+                              className="bg-price-drop text-white hover:bg-green-700 rounded-md px-3 py-1.5 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Check className="h-3.5 w-3.5 inline-block mr-1" />
+                              Активировать
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleEdit(user.id)}
+                            title="Редактировать пользователя"
+                            className="bg-surface-card text-body-text hover:bg-surface-elevated rounded-md px-3 py-1.5 text-xs font-semibold"
+                          >
+                            <Edit2 className="h-3.5 w-3.5 inline-block mr-1" />
+                            Редактировать
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* ===== Пагинация ===== */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t border-hairline-dark">
+                  <span className="text-sm text-muted-foreground">
+                    Показано {(page - 1) * PAGE_SIZE + 1}–
+                    {Math.min(page * PAGE_SIZE, totalItems)} из {totalItems}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setPage(page - 1)}
+                      disabled={page <= 1}
+                      className="flex items-center justify-center h-8 w-8 bg-surface-card text-body-text hover:bg-surface-elevated rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Предыдущая страница"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    {getPageNumbers().map((pageNum) => (
+                      <button
+                        key={pageNum}
+                        onClick={() => setPage(pageNum)}
+                        className={`flex items-center justify-center h-8 w-8 text-sm font-medium rounded-md ${
+                          pageNum === page
+                            ? 'bg-gold text-black'
+                            : 'bg-surface-card text-body-text hover:bg-surface-elevated'
+                        }`}
+                        aria-current={pageNum === page ? 'page' : undefined}
+                        aria-label={`Страница ${pageNum}`}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setPage(page + 1)}
+                      disabled={page >= totalPages}
+                      className="flex items-center justify-center h-8 w-8 bg-surface-card text-body-text hover:bg-surface-elevated rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Следующая страница"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
