@@ -1,82 +1,72 @@
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using GoldPC.Api.Hubs;
 using GoldPC.Shared.Entities;
 using GoldPC.Shared.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace GoldPC.Api.Services;
 
+/// <summary>
+/// In-memory реализация INotificationService без БД.
+/// Уведомления хранятся в ConcurrentDictionary и отправляются через SignalR.
+/// </summary>
 public class NotificationService : INotificationService
 {
     private readonly IHubContext<NotificationHub> _hubContext;
-    private readonly DbContext _dbContext;
+    private readonly ILogger<NotificationService> _logger;
+    private static readonly ConcurrentDictionary<Guid, Notification> _notifications = new();
 
-    public NotificationService(IHubContext<NotificationHub> hubContext, DbContext dbContext)
+    public NotificationService(IHubContext<NotificationHub> hubContext, ILogger<NotificationService> logger)
     {
         _hubContext = hubContext;
-        _dbContext = dbContext;
+        _logger = logger;
     }
 
-    public async Task<Notification> CreateNotificationAsync(Notification notification)
+    public Task<Notification> CreateNotificationAsync(Notification notification)
     {
         notification.Id = Guid.NewGuid();
         notification.CreatedAt = DateTime.UtcNow;
         notification.IsRead = false;
-
-        await _dbContext.Set<Notification>().AddAsync(notification);
-        await _dbContext.SaveChangesAsync();
-
-        return notification;
+        _notifications[notification.Id] = notification;
+        return Task.FromResult(notification);
     }
 
-    public async Task<IEnumerable<Notification>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false, int limit = 50)
+    public Task<IEnumerable<Notification>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false, int limit = 50)
     {
-        var query = _dbContext.Set<Notification>()
+        IEnumerable<Notification> query = _notifications.Values
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt);
 
         if (unreadOnly)
-        {
-            query = (IOrderedQueryable<Notification>)query.Where(n => !n.IsRead);
-        }
+            query = query.Where(n => !n.IsRead);
 
-        return await query.Take(limit).ToListAsync();
+        return Task.FromResult(query.Take(limit));
     }
 
-    public async Task MarkAsReadAsync(Guid notificationId)
+    public Task MarkAsReadAsync(Guid notificationId)
     {
-        var notification = await _dbContext.Set<Notification>().FindAsync(notificationId);
-        if (notification != null)
-        {
-            notification.IsRead = true;
-            notification.ReadAt = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync();
-        }
-    }
-
-    public async Task MarkAllAsReadAsync(Guid userId)
-    {
-        var notifications = await _dbContext.Set<Notification>()
-            .Where(n => n.UserId == userId && !n.IsRead)
-            .ToListAsync();
-
-        foreach (var notification in notifications)
+        if (_notifications.TryGetValue(notificationId, out var notification))
         {
             notification.IsRead = true;
             notification.ReadAt = DateTime.UtcNow;
         }
-
-        await _dbContext.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
-    public async Task DeleteNotificationAsync(Guid notificationId)
+    public Task MarkAllAsReadAsync(Guid userId)
     {
-        var notification = await _dbContext.Set<Notification>().FindAsync(notificationId);
-        if (notification != null)
+        foreach (var n in _notifications.Values.Where(n => n.UserId == userId && !n.IsRead))
         {
-            _dbContext.Set<Notification>().Remove(notification);
-            await _dbContext.SaveChangesAsync();
+            n.IsRead = true;
+            n.ReadAt = DateTime.UtcNow;
         }
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteNotificationAsync(Guid notificationId)
+    {
+        _notifications.TryRemove(notificationId, out _);
+        return Task.CompletedTask;
     }
 
     public async Task SendNotificationAsync(Notification notification)
@@ -96,5 +86,17 @@ public class NotificationService : INotificationService
     {
         await _hubContext.Clients.All
             .SendAsync("ReceiveNotification", notification);
+    }
+
+    public Task SendPushNotificationAsync(string userId, string title, string message)
+    {
+        _logger.LogInformation("Push notification skipped (not implemented): {UserId} - {Title}", userId, title);
+        return Task.CompletedTask;
+    }
+
+    public Task SendEmailAsync(string to, string subject, string body)
+    {
+        _logger.LogInformation("Email skipped (not implemented): {To} - {Subject}", to, subject);
+        return Task.CompletedTask;
     }
 }
