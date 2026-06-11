@@ -27,6 +27,7 @@ public class AdminImageController : ControllerBase
     }
 
     /// <summary>Загрузить одно или несколько изображений товара (multipart/form-data)</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [HttpPost]
     [ProducesResponseType(typeof(List<ProductImageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -41,7 +42,9 @@ public class AdminImageController : ControllerBase
         if (product == null)
             return NotFound(new { error = "Товар не найден" });
 
+#pragma warning disable S6932 // Use IFormFile or IFormFileCollection binding instead — получение файлов из формы напрямую необходимо для динамического числа файлов
         var files = Request.Form.Files;
+#pragma warning restore S6932
         if (files == null || files.Count == 0)
             return BadRequest(new { error = "Не выбраны файлы для загрузки" });
 
@@ -74,6 +77,7 @@ public class AdminImageController : ControllerBase
     }
 
     /// <summary>Удалить изображение товара (soft delete)</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [HttpDelete("{imageId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -87,6 +91,7 @@ public class AdminImageController : ControllerBase
     }
 
     /// <summary>Установить изображение как главное</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [HttpPut("{imageId}/primary")]
     [ProducesResponseType(typeof(ProductImageDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -100,6 +105,7 @@ public class AdminImageController : ControllerBase
     }
 
     /// <summary>Пересортировать изображения товара</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     [HttpPut("reorder")]
     [ProducesResponseType(typeof(List<ProductImageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

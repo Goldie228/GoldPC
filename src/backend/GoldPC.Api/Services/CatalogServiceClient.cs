@@ -22,7 +22,6 @@ public class CatalogServiceClient : ICatalogServiceClient
     // ====================================================================
     // Товары
     // ====================================================================
-
     public async Task<PagedResult<ProductListDto>> GetProductsAsync(int page, int pageSize, string? category, bool? isActive, string? search = null)
     {
         try
@@ -54,7 +53,7 @@ public class CatalogServiceClient : ICatalogServiceClient
         {
             _logger.LogDebug("GetProductByIdAsync: {ProductId}", id);
 
-            var response = await _http.GetAsync($"api/v1/catalog/products/{id}");
+            var response = await _http.GetAsync(new Uri($"api/v1/catalog/products/{id}", UriKind.Relative));
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return null;
 
@@ -74,7 +73,7 @@ public class CatalogServiceClient : ICatalogServiceClient
         {
             _logger.LogInformation("CreateProductAsync: {Name}", dto.Name);
 
-            var response = await _http.PostAsJsonAsync("api/v1/admin/products", dto);
+            var response = await _http.PostAsJsonAsync(new Uri("api/v1/admin/products", UriKind.Relative), dto);
             response.EnsureSuccessStatusCode();
             return (await response.Content.ReadFromJsonAsync<ProductDetailDto>())
                 ?? throw new InvalidOperationException("Пустой ответ при создании товара");
@@ -92,7 +91,7 @@ public class CatalogServiceClient : ICatalogServiceClient
         {
             _logger.LogInformation("UpdateProductAsync: {ProductId}", id);
 
-            var response = await _http.PutAsJsonAsync($"api/v1/admin/products/{id}", dto);
+            var response = await _http.PutAsJsonAsync(new Uri($"api/v1/admin/products/{id}", UriKind.Relative), dto);
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return null;
 
@@ -112,7 +111,7 @@ public class CatalogServiceClient : ICatalogServiceClient
         {
             _logger.LogInformation("DeleteProductAsync: {ProductId}", id);
 
-            var response = await _http.DeleteAsync($"api/v1/admin/products/{id}");
+            var response = await _http.DeleteAsync(new Uri($"api/v1/admin/products/{id}", UriKind.Relative));
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
@@ -125,14 +124,13 @@ public class CatalogServiceClient : ICatalogServiceClient
     // ====================================================================
     // Категории
     // ====================================================================
-
     public async Task<List<CategoryDto>> GetCategoriesAsync()
     {
         try
         {
             _logger.LogDebug("GetCategoriesAsync");
 
-            var response = await _http.GetAsync("api/v1/catalog/categories");
+            var response = await _http.GetAsync(new Uri("api/v1/catalog/categories", UriKind.Relative));
             response.EnsureSuccessStatusCode();
 
             var wrapper = await response.Content.ReadFromJsonAsync<CategoriesWrapper>();
@@ -151,7 +149,7 @@ public class CatalogServiceClient : ICatalogServiceClient
         {
             _logger.LogInformation("CreateCategoryAsync: {Name}", dto.Name);
 
-            var response = await _http.PostAsJsonAsync("api/v1/admin/categories", dto);
+            var response = await _http.PostAsJsonAsync(new Uri("api/v1/admin/categories", UriKind.Relative), dto);
             response.EnsureSuccessStatusCode();
             return (await response.Content.ReadFromJsonAsync<CategoryDto>())
                 ?? throw new InvalidOperationException("Пустой ответ при создании категории");
@@ -169,7 +167,7 @@ public class CatalogServiceClient : ICatalogServiceClient
         {
             _logger.LogInformation("UpdateCategoryAsync: {CategoryId}", id);
 
-            var response = await _http.PutAsJsonAsync($"api/v1/admin/categories/{id}", dto);
+            var response = await _http.PutAsJsonAsync(new Uri($"api/v1/admin/categories/{id}", UriKind.Relative), dto);
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return null;
 
@@ -189,7 +187,7 @@ public class CatalogServiceClient : ICatalogServiceClient
         {
             _logger.LogInformation("DeleteCategoryAsync: {CategoryId}", id);
 
-            var response = await _http.DeleteAsync($"api/v1/admin/categories/{id}");
+            var response = await _http.DeleteAsync(new Uri($"api/v1/admin/categories/{id}", UriKind.Relative));
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
@@ -202,14 +200,13 @@ public class CatalogServiceClient : ICatalogServiceClient
     // ====================================================================
     // Производители
     // ====================================================================
-
     public async Task<List<ManufacturerDto>> GetManufacturersAsync()
     {
         try
         {
             _logger.LogDebug("GetManufacturersAsync");
 
-            var response = await _http.GetAsync("api/v1/catalog/manufacturers");
+            var response = await _http.GetAsync(new Uri("api/v1/catalog/manufacturers", UriKind.Relative));
             response.EnsureSuccessStatusCode();
 
             var wrapper = await response.Content.ReadFromJsonAsync<ManufacturersWrapper>();
@@ -228,7 +225,7 @@ public class CatalogServiceClient : ICatalogServiceClient
         {
             _logger.LogInformation("CreateManufacturerAsync: {Name}", dto.Name);
 
-            var response = await _http.PostAsJsonAsync("api/v1/admin/manufacturers", dto);
+            var response = await _http.PostAsJsonAsync(new Uri("api/v1/admin/manufacturers", UriKind.Relative), dto);
             response.EnsureSuccessStatusCode();
             return (await response.Content.ReadFromJsonAsync<ManufacturerDto>())
                 ?? throw new InvalidOperationException("Пустой ответ при создании производителя");
@@ -246,7 +243,7 @@ public class CatalogServiceClient : ICatalogServiceClient
         {
             _logger.LogInformation("UpdateManufacturerAsync: {ManufacturerId}", id);
 
-            var response = await _http.PutAsJsonAsync($"api/v1/admin/manufacturers/{id}", dto);
+            var response = await _http.PutAsJsonAsync(new Uri($"api/v1/admin/manufacturers/{id}", UriKind.Relative), dto);
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return null;
 
@@ -266,7 +263,7 @@ public class CatalogServiceClient : ICatalogServiceClient
         {
             _logger.LogInformation("DeleteManufacturerAsync: {ManufacturerId}", id);
 
-            var response = await _http.DeleteAsync($"api/v1/admin/manufacturers/{id}");
+            var response = await _http.DeleteAsync(new Uri($"api/v1/admin/manufacturers/{id}", UriKind.Relative));
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
@@ -279,12 +276,11 @@ public class CatalogServiceClient : ICatalogServiceClient
     // ====================================================================
     // Статистика
     // ====================================================================
-
     public async Task<int> GetTotalProductsAsync()
     {
         try
         {
-            var response = await _http.GetAsync("api/v1/catalog/products?page=1&pageSize=1");
+            var response = await _http.GetAsync(new Uri("api/v1/catalog/products?page=1&pageSize=1", UriKind.Relative));
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<PagedResult<ProductListDto>>();
             return result?.Meta.TotalItems ?? 0;
@@ -296,45 +292,16 @@ public class CatalogServiceClient : ICatalogServiceClient
         }
     }
 
-    public async Task<int> GetTotalCategoriesAsync()
-    {
-        try
-        {
-            var categories = await GetCategoriesAsync();
-            return categories.Count;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error calling CatalogService GetTotalCategories");
-            return 0;
-        }
-    }
-
-    public async Task<int> GetTotalManufacturersAsync()
-    {
-        try
-        {
-            var manufacturers = await GetManufacturersAsync();
-            return manufacturers.Count;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error calling CatalogService GetTotalManufacturers");
-            return 0;
-        }
-    }
-
     // ====================================================================
     // История цен
     // ====================================================================
-
     public async Task<List<PriceHistoryDto>> GetPriceHistoryAsync(Guid productId)
     {
         try
         {
             _logger.LogDebug("GetPriceHistoryAsync: {ProductId}", productId);
 
-            var response = await _http.GetAsync($"api/v1/admin/products/{productId}/price-history");
+            var response = await _http.GetAsync(new Uri($"api/v1/admin/products/{productId}/price-history", UriKind.Relative));
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return new List<PriceHistoryDto>();
 
@@ -351,7 +318,6 @@ public class CatalogServiceClient : ICatalogServiceClient
     // ====================================================================
     // Генерация названия товара
     // ====================================================================
-
     public async Task<string> GenerateProductNameAsync(string? manufacturerName, string? categorySlug, Dictionary<string, object>? specifications)
     {
         try
@@ -365,7 +331,7 @@ public class CatalogServiceClient : ICatalogServiceClient
                 Specifications = specifications
             };
 
-            var response = await _http.PostAsJsonAsync("api/v1/admin/products/generate-name", request);
+            var response = await _http.PostAsJsonAsync(new Uri("api/v1/admin/products/generate-name", UriKind.Relative), request);
             response.EnsureSuccessStatusCode();
 
             var result = await response.Content.ReadFromJsonAsync<GenerateNameResponseWrapper>();
@@ -381,14 +347,13 @@ public class CatalogServiceClient : ICatalogServiceClient
     // ====================================================================
     // Мета-данные спецификаций для админки
     // ====================================================================
-
     public async Task<CategorySpecificationsDto?> GetCategorySpecificationsAsync(Guid categoryId)
     {
         try
         {
             _logger.LogDebug("GetCategorySpecificationsAsync: {CategoryId}", categoryId);
 
-            var response = await _http.GetAsync($"api/v1/admin/specifications/by-category/{categoryId}");
+            var response = await _http.GetAsync(new Uri($"api/v1/admin/specifications/by-category/{categoryId}", UriKind.Relative));
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return null;
 
@@ -405,7 +370,6 @@ public class CatalogServiceClient : ICatalogServiceClient
     // ====================================================================
     // Внутренние DTO-обёртки (ответ CatalogService обёрнут в { "data": [...] })
     // ====================================================================
-
     private sealed record CategoriesWrapper
     {
         public List<CategoryDto> Data { get; init; } = new();

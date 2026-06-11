@@ -1,35 +1,44 @@
+using GoldPC.Shared.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using GoldPC.Shared.Entities;
 
 namespace GoldPC.Api.Hubs;
 
 /// <summary>
-/// SignalR hub for real-time notifications
+/// SignalR hub для доставки уведомлений в реальном времени.
+/// Поддерживает отправку уведомлений конкретному пользователю, по роли и глобальную рассылку.
 /// </summary>
 [Authorize]
 public class NotificationHub : Hub
 {
     /// <summary>
-    /// Send notification to a specific user
+    /// Отправляет уведомление конкретному пользователю по его идентификатору.
     /// </summary>
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <param name="notification">Уведомление для отправки.</param>
+    /// <returns>Задачу, представляющую асинхронную операцию.</returns>
     public async Task SendNotificationToUser(Guid userId, Notification notification)
     {
         await Clients.User(userId.ToString()).SendAsync("ReceiveNotification", notification);
     }
 
     /// <summary>
-    /// Send notification to all users in a specific role
+    /// Отправляет уведомление всем пользователям в указанной роли.
     /// </summary>
+    /// <param name="role">Роль пользователей.</param>
+    /// <param name="notification">Уведомление для отправки.</param>
+    /// <returns>Задачу, представляющую асинхронную операцию.</returns>
     public async Task SendNotificationToRole(string role, Notification notification)
     {
         await Clients.Group(role).SendAsync("ReceiveNotification", notification);
     }
 
     /// <summary>
-    /// Send system announcement to all connected users
-    /// Only administrators can call this method
+    /// Отправляет системное объявление всем подключённым пользователям.
+    /// Доступно только администраторам.
     /// </summary>
+    /// <param name="notification">Системное уведомление. Тип автоматически устанавливается как <see cref="NotificationType.SystemAnnouncement"/>.</param>
+    /// <returns>Задачу, представляющую асинхронную операцию.</returns>
     [Authorize(Roles = "Admin")]
     public async Task SendSystemAnnouncement(Notification notification)
     {
@@ -37,6 +46,11 @@ public class NotificationHub : Hub
         await Clients.All.SendAsync("ReceiveNotification", notification);
     }
 
+    /// <summary>
+    /// Обрабатывает подключение клиента к hub.
+    /// Добавляет клиента во все группы по его ролям.
+    /// </summary>
+    /// <returns>Задачу, представляющую асинхронную операцию.</returns>
     public override async Task OnConnectedAsync()
     {
         var userId = Context.UserIdentifier;
@@ -56,6 +70,12 @@ public class NotificationHub : Hub
         await base.OnConnectedAsync();
     }
 
+    /// <summary>
+    /// Обрабатывает отключение клиента от hub.
+    /// Удаляет клиента из всех групп по его ролям.
+    /// </summary>
+    /// <param name="exception">Исключение, вызвавшее отключение (если есть).</param>
+    /// <returns>Задачу, представляющую асинхронную операцию.</returns>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var roles = Context.User?.Claims

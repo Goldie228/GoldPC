@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GoldPC.Api.Controllers;
 
@@ -38,9 +38,9 @@ public class FeedbackController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
                           ?? User.FindFirst("sub")?.Value;
-        
+
         if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
         {
             return Unauthorized(new { error = "Пользователь не авторизован" });
@@ -134,22 +134,22 @@ public enum FeedbackType
 public record FeedbackRequest
 {
     /// <summary>
-    /// Тип обратной связи
+    /// Gets тип обратной связи
     /// </summary>
     public FeedbackType Type { get; init; }
 
     /// <summary>
-    /// Оценка от 1 до 5
+    /// Gets оценка от 1 до 5
     /// </summary>
     public int Rating { get; init; }
 
     /// <summary>
-    /// Комментарий пользователя
+    /// Gets комментарий пользователя
     /// </summary>
     public string? Comment { get; init; }
 
     /// <summary>
-    /// Страница, с которой отправлен отзыв
+    /// Gets страница, с которой отправлен отзыв
     /// </summary>
     public string? Page { get; init; }
 }
@@ -160,42 +160,42 @@ public record FeedbackRequest
 public class Feedback
 {
     /// <summary>
-    /// Уникальный идентификатор
+    /// Gets or sets уникальный идентификатор
     /// </summary>
     public Guid Id { get; set; }
 
     /// <summary>
-    /// ID пользователя
+    /// Gets or sets iD пользователя
     /// </summary>
     public Guid UserId { get; set; }
 
     /// <summary>
-    /// Тип обратной связи
+    /// Gets or sets тип обратной связи
     /// </summary>
     public FeedbackType Type { get; set; }
 
     /// <summary>
-    /// Оценка от 1 до 5
+    /// Gets or sets оценка от 1 до 5
     /// </summary>
     public int Rating { get; set; }
 
     /// <summary>
-    /// Комментарий
+    /// Gets or sets комментарий
     /// </summary>
     public string? Comment { get; set; }
 
     /// <summary>
-    /// Страница, с которой отправлен отзыв
+    /// Gets or sets страница, с которой отправлен отзыв
     /// </summary>
     public string? Page { get; set; }
 
     /// <summary>
-    /// User-Agent браузера
+    /// Gets or sets user-Agent браузера
     /// </summary>
     public string? UserAgent { get; set; }
 
     /// <summary>
-    /// Время создания
+    /// Gets or sets время создания
     /// </summary>
     public DateTime Timestamp { get; set; }
 }
@@ -206,12 +206,12 @@ public class Feedback
 public class PagedResult<T>
 {
     /// <summary>
-    /// Данные
+    /// Gets or sets данные
     /// </summary>
     public IEnumerable<T> Data { get; set; } = Enumerable.Empty<T>();
 
     /// <summary>
-    /// Метаданные пагинации
+    /// Gets or sets метаданные пагинации
     /// </summary>
     public PaginationMeta Meta { get; set; } = new();
 }
@@ -222,32 +222,32 @@ public class PagedResult<T>
 public class PaginationMeta
 {
     /// <summary>
-    /// Текущая страница
+    /// Gets or sets текущая страница
     /// </summary>
     public int Page { get; set; }
 
     /// <summary>
-    /// Размер страницы
+    /// Gets or sets размер страницы
     /// </summary>
     public int PageSize { get; set; }
 
     /// <summary>
-    /// Всего элементов
+    /// Gets or sets всего элементов
     /// </summary>
     public int TotalItems { get; set; }
 
     /// <summary>
-    /// Всего страниц
+    /// Gets or sets всего страниц
     /// </summary>
     public int TotalPages { get; set; }
 
     /// <summary>
-    /// Есть следующая страница
+    /// Gets or sets a value indicating whether есть следующая страница
     /// </summary>
     public bool HasNextPage { get; set; }
 
     /// <summary>
-    /// Есть предыдущая страница
+    /// Gets or sets a value indicating whether есть предыдущая страница
     /// </summary>
     public bool HasPrevPage { get; set; }
 }
@@ -260,11 +260,13 @@ public interface IFeedbackService
     /// <summary>
     /// Сохранить обратную связь
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task SubmitAsync(Feedback feedback);
 
     /// <summary>
     /// Получить список обратной связи
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task<PagedResult<Feedback>> GetFeedbacksAsync(int page, int pageSize, FeedbackType? typeFilter);
 }
 
@@ -281,6 +283,7 @@ public class FeedbackService : IFeedbackService
         _logger = logger;
     }
 
+    /// <inheritdoc/>
     public Task SubmitAsync(Feedback feedback)
     {
         _feedbackStorage.Add(feedback);
@@ -290,6 +293,7 @@ public class FeedbackService : IFeedbackService
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc/>
     public Task<PagedResult<Feedback>> GetFeedbacksAsync(int page, int pageSize, FeedbackType? typeFilter)
     {
         var query = _feedbackStorage.AsEnumerable();
