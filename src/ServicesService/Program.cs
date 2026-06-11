@@ -15,6 +15,18 @@ using Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// === SECURITY: JWT SecretKey must come from environment variables in Production ===
+if (builder.Environment.IsProduction())
+{
+    var jwtKey = builder.Configuration["Jwt:SecretKey"];
+    if (string.IsNullOrEmpty(jwtKey) || jwtKey.Contains("Dev", StringComparison.OrdinalIgnoreCase) || jwtKey.Contains("development_secret_key", StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException(
+            "CRITICAL SECURITY: Jwt:SecretKey is not configured via environment variable in Production. " +
+            "Set the Jwt__SecretKey environment variable (or use Docker secrets).");
+    }
+}
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .WriteTo.File("logs/services-service-.log", rollingInterval: RollingInterval.Day)
@@ -111,7 +123,15 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    options.AddDefaultPolicy(policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:5173", "http://localhost:3000" };
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
 });
 
 var app = builder.Build();

@@ -1,6 +1,9 @@
+using System;
 using System.Text;
 using GoldPC.ReportingService.Data;
+using GoldPC.Shared.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -9,6 +12,18 @@ using Serilog.Formatting.Json;
 using Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// === SECURITY: JWT SecretKey must come from environment variables in Production ===
+if (builder.Environment.IsProduction())
+{
+    var jwtKey = builder.Configuration["Jwt:SecretKey"];
+    if (string.IsNullOrEmpty(jwtKey) || jwtKey.Contains("Dev", StringComparison.OrdinalIgnoreCase) || jwtKey.Contains("development_secret_key", StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException(
+            "CRITICAL SECURITY: Jwt:SecretKey is not configured via environment variable in Production. " +
+            "Set the Jwt__SecretKey environment variable (or use Docker secrets).");
+    }
+}
 
 // Настройка Serilog
 var loggerConfiguration = new LoggerConfiguration()
@@ -63,7 +78,7 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] { }
+            Array.Empty<string>()
         }
     });
 });
@@ -104,13 +119,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-using Microsoft.AspNetCore.Authorization;
-using GoldPC.Shared.Authorization;
-
-var builder = WebApplication.CreateBuilder(args);
-
-// ... (rest of the code)
-
 builder.Services.AddAuthorization(options =>
 {
     foreach (var permission in Permissions.AllPermissions)
@@ -126,7 +134,9 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        var allowedOrigins = builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:5173", "http://localhost:3000" };
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
