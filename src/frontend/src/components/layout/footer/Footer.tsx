@@ -65,7 +65,7 @@ export function Footer() {
   const renderSocialIcon = (icon: string) => {
     switch (icon) {
       case 'telegram':
-        return <Send size={18} className="text-muted-foreground" />;
+        return <Send size={16} className="text-muted-foreground" />;
       case 'instagram':
         return <Instagram className="w-4 h-4" />;
       case 'facebook':

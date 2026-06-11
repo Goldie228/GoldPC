@@ -868,7 +868,7 @@ export function FilterSidebar({
                       />
                     </div>
                   )}
-                  <div className="flex flex-col gap-0.5">
+                  <div className="flex flex-col gap-0.5 max-h-[180px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
                     {finalOptions.length > 0 ? (
                       finalOptions.map(({ value: val, count }) => {
                         const disabled = count === 0 && !isChecked(val);
@@ -902,7 +902,7 @@ export function FilterSidebar({
                                 onSpecificationsChange(next);
                               }
                             }}
-                            className={`flex items-center py-1.5 px-3 cursor-pointer transition-all duration-200 rounded-md border-l-2 border-transparent relative ${
+                            className={`flex items-center py-1.5 px-3 cursor-pointer transition-all duration-200 rounded-md border-l-2 border-transparent relative min-w-0 ${
                               isChecked(val)
                                 ? 'text-gold border-l-2 border-gold font-medium'
                                 : 'text-body-text hover:text-on-dark hover:bg-surface-elevated/50'
@@ -915,7 +915,7 @@ export function FilterSidebar({
                                 aria-hidden
                               />
                             </span>
-                            <span className="text-xs">
+                            <span className="text-xs truncate">
                               {val}
                               {' '}
                               <span className="text-muted-foreground">({count})</span>

@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 
 const sizeMap = {
-  xs: { text: '0.75rem', icon: 10 },
-  sm: { text: '0.875rem', icon: 11 },
-  md: { text: '1rem', icon: 13 },
-  lg: { text: '1.125rem', icon: 14 },
-  xl: { text: '1.25rem', icon: 16 },
+  xs: '0.75rem',
+  sm: '0.875rem',
+  md: '1rem',
+  lg: '1.125rem',
+  xl: '1.25rem',
 } as const;
 
 export type BynPriceSize = keyof typeof sizeMap;
@@ -16,16 +16,15 @@ interface BynPriceProps {
   size?: BynPriceSize;
 }
 
-function BynIcon({ size, className = '' }: { size: number; className?: string }) {
+function BynIcon({ className = '' }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 360.67 446.4"
-      width={size}
-      height={size * (446.4 / 360.67)}
       className={className}
       aria-label="BYN"
       fill="currentColor"
+      style={{ height: '0.85em', width: 'auto', verticalAlign: 'baseline' }}
     >
       <path d="M475.61,528.84c0-72.5-62.75-131.27-140.16-131.27H227.58V263.37H426v-49.6H178v290h-63.1v49.7H178V660.17h49.54l107.92-.07c77.36,0,140.11-58.77,140.11-131.26Zm-248-25.1V447.1c35.89,0,72.35.07,107.87.07,50,0,90.56,36.57,90.56,81.67s-40.54,81.67-90.56,81.7l-107.87,0V553.44h112.7v-49.7Z" transform="translate(-114.94 -213.77)" />
     </svg>
@@ -33,16 +32,16 @@ function BynIcon({ size, className = '' }: { size: number; className?: string })
 }
 
 export function BynPrice({ amount, className = '', size = 'sm' }: BynPriceProps): ReactNode {
-  const s = sizeMap[size];
+  const fontSize = sizeMap[size];
 
   return (
     <span
       className={`inline-flex items-baseline gap-1 ${className}`}
-      style={{ fontSize: s.text, fontVariantNumeric: 'tabular-nums' }}
+      style={{ fontSize, fontVariantNumeric: 'tabular-nums' }}
     >
       {amount.toLocaleString('ru-BY')}
-      <span className="inline-flex items-center" style={{ marginBottom: '-0.1em' }}>
-        <BynIcon size={s.icon} />
+      <span className="inline-flex items-center">
+        <BynIcon />
       </span>
     </span>
   );
