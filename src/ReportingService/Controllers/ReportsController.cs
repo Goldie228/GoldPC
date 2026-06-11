@@ -80,7 +80,6 @@ public class ReportsController : ControllerBase
     {
         // For demo, we aggregate from order_history through FDW
         // In a full implementation, we'd have a separate AuditService or aggregate all history tables
-        
         var auditLog = await _context.Database.SqlQuery<AuditEntry>($@"
             SELECT 
                 id as Id,

@@ -18,7 +18,6 @@ namespace GoldPC.ReportingService.Migrations
             // We use 'goldpc_catalog', 'goldpc_orders', 'goldpc_services' databases.
             // Note: fdw connects to the same database by default unless specified.
             // Since they are different databases on the same server, we need separate servers OR use the same server with different options.
-            
             migrationBuilder.Sql(@"
                 DO $$
                 BEGIN
