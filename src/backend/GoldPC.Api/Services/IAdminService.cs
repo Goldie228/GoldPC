@@ -23,6 +23,16 @@ public interface IAdminService
     Task<DictionaryItemDto?> UpdateDictionaryItemAsync(string type, string id, UpdateDictionaryItemRequest request);
     Task<bool> DeleteDictionaryItemAsync(string type, string id);
 
+    // Статистика дашборда (графики, спарклайны, активность)
+    /// <summary>Получить данные графиков для дашборда по периоду</summary>
+    Task<ChartResponseDto> GetChartAsync(string period);
+
+    /// <summary>Получить спарклайны для карточек статистики</summary>
+    Task<SparklinesResponseDto> GetSparklinesAsync(string period);
+
+    /// <summary>Получить ленту активности дашборда</summary>
+    Task<ActivityResponseDto> GetActivityAsync();
+
     // Настройки
     Task<SiteSettingsDto> GetSettingsAsync();
     Task<SiteSettingsDto> UpdateSettingsAsync(UpdateSiteSettingsDto update);

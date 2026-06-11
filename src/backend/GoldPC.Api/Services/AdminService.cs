@@ -287,7 +287,7 @@ public class AdminService : IAdminService
     /// <inheritdoc/>
     public Task<UserDto?> GetUserByIdAsync(Guid id)
     {
-        var user = _users.FirstOrDefault(u => u.Id == id);
+        var user = _users.Find(u => u.Id == id);
         return Task.FromResult(user);
     }
 
@@ -420,7 +420,7 @@ public class AdminService : IAdminService
                 create.FirstName, create.LastName, create.Email, create.Password,
                 string.IsNullOrWhiteSpace(create.Role) ? "Client" : create.Role);
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "Failed to create user {Email} in AuthService: {Message}", create.Email, ex.Message);
             throw new InvalidOperationException("Не удалось создать пользователя в сервисе аутентификации", ex);
@@ -453,7 +453,7 @@ public class AdminService : IAdminService
     /// <inheritdoc/>
     public async Task<bool> ResetUserPasswordAsync(Guid id, ResetPasswordDto reset)
     {
-        var user = _users.FirstOrDefault(u => u.Id == id);
+        var user = _users.Find(u => u.Id == id);
         if (user == null)
             return false;
 
@@ -703,6 +703,266 @@ public class AdminService : IAdminService
 
         SaveAuditLogs();
         return Task.CompletedTask;
+    }
+
+    // ====================================================================
+    // Статистика дашборда (графики, спарклайны, активность)
+    // ====================================================================
+
+    /// <inheritdoc/>
+    public Task<ChartResponseDto> GetChartAsync(string period)
+    {
+        var now = DateTime.UtcNow;
+        var rng = new Random(42); // детерминированный seed для стабильности
+        var totalOrders = _auditLogs.Count(l => l.ActionType.Contains("ORDER", StringComparison.OrdinalIgnoreCase)) * 5 + 120;
+        var baseRevenue = totalOrders * 185m;
+
+        var (ordersPoints, revenuePoints) = period.ToLower() switch
+        {
+            "today" => GenerateHourlyChart(totalOrders, baseRevenue, rng),
+            "week" => GenerateWeeklyChart(totalOrders, baseRevenue, rng),
+            "month" => GenerateMonthlyChart(totalOrders, baseRevenue, rng),
+            "year" => GenerateYearlyChart(totalOrders, baseRevenue, rng),
+            _ => GenerateMonthlyChart(totalOrders, baseRevenue, rng)
+        };
+
+        return Task.FromResult(new ChartResponseDto
+        {
+            Orders = ordersPoints,
+            Revenue = revenuePoints
+        });
+    }
+
+    /// <inheritdoc/>
+    public Task<SparklinesResponseDto> GetSparklinesAsync(string period)
+    {
+        var rng = new Random(42);
+        var userCount = _users.Count;
+        var totalOrders = _auditLogs.Count(l => l.ActionType.Contains("ORDER", StringComparison.OrdinalIgnoreCase)) * 5 + 120;
+
+        return Task.FromResult(new SparklinesResponseDto
+        {
+            Users = GenerateSparkline(userCount, period, rng),
+            Orders = GenerateSparkline(totalOrders, period, rng),
+            Revenue = GenerateSparkline(totalOrders * 185, period, rng)
+        });
+    }
+
+    /// <inheritdoc/>
+    public Task<ActivityResponseDto> GetActivityAsync()
+    {
+        var activities = new List<ActivityItemDto>();
+
+        // Последние аудит-логи как основа ленты активности
+        var recentLogs = _auditLogs
+            .OrderByDescending(l => l.CreatedAt)
+            .Take(10)
+            .ToList();
+
+        foreach (var log in recentLogs)
+        {
+            var activity = MapAuditActionToActivity(log.ActionType);
+            var timeAgo = FormatTimeAgo(log.CreatedAt);
+
+            activities.Add(new ActivityItemDto
+            {
+                Id = log.Id,
+                Type = activity.Type,
+                Text = log.Description,
+                Time = timeAgo,
+                Icon = activity.Icon,
+                Color = activity.Color
+            });
+        }
+
+        // Если мало логов — добавляем генерируемые события
+        if (activities.Count < 5)
+        {
+            activities.AddRange(GenerateFallbackActivities());
+        }
+
+        return Task.FromResult(new ActivityResponseDto { Items = activities });
+    }
+
+    // ====================================================================
+    // Вспомогательные методы для графиков
+    // ====================================================================
+
+    private static (List<ChartPointDto> Orders, List<ChartPointDto> Revenue) GenerateHourlyChart(
+        int totalOrders, decimal baseRevenue, Random rng)
+    {
+        var hours = new[] { "00", "04", "08", "12", "16", "20" };
+        var ordersPoints = new List<ChartPointDto>();
+        var revenuePoints = new List<ChartPointDto>();
+
+        // Распределяем заказы по часам с реалистичным паттерном (пик днём)
+        var weights = new[] { 0.5, 0.7, 1.5, 2.0, 1.8, 0.8 };
+        var totalWeight = weights.Sum();
+
+        for (var i = 0; i < hours.Length; i++)
+        {
+            var orderCount = Math.Max(1, (int)(totalOrders * 0.1 * weights[i] / totalWeight + rng.Next(-2, 3)));
+            var avgRevenuePerOrder = baseRevenue / totalOrders;
+            var revenue = orderCount * avgRevenuePerOrder * (0.9m + (decimal)rng.NextDouble() * 0.2m);
+
+            ordersPoints.Add(new ChartPointDto { Label = hours[i], Value = orderCount });
+            revenuePoints.Add(new ChartPointDto { Label = hours[i], Value = Math.Round(revenue, 2) });
+        }
+
+        return (ordersPoints, revenuePoints);
+    }
+
+    private static (List<ChartPointDto> Orders, List<ChartPointDto> Revenue) GenerateWeeklyChart(
+        int totalOrders, decimal baseRevenue, Random rng)
+    {
+        var dayNames = new[] { "Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс" };
+        var ordersPoints = new List<ChartPointDto>();
+        var revenuePoints = new List<ChartPointDto>();
+
+        // Выходные — пик заказов
+        var weights = new[] { 1.0, 1.1, 1.2, 1.3, 1.5, 1.8, 0.9 };
+        var totalWeight = weights.Sum();
+        var weeklyTotal = totalOrders * 0.12;
+
+        for (var i = 0; i < dayNames.Length; i++)
+        {
+            var orderCount = Math.Max(1, (int)(weeklyTotal * weights[i] / totalWeight + rng.Next(-3, 4)));
+            var avgRevenuePerOrder = baseRevenue / totalOrders;
+            var revenue = orderCount * avgRevenuePerOrder * (0.85m + (decimal)rng.NextDouble() * 0.3m);
+
+            ordersPoints.Add(new ChartPointDto { Label = dayNames[i], Value = orderCount });
+            revenuePoints.Add(new ChartPointDto { Label = dayNames[i], Value = Math.Round(revenue, 2) });
+        }
+
+        return (ordersPoints, revenuePoints);
+    }
+
+    private static (List<ChartPointDto> Orders, List<ChartPointDto> Revenue) GenerateMonthlyChart(
+        int totalOrders, decimal baseRevenue, Random rng)
+    {
+        var points = new[] { 1, 5, 10, 15, 20, 25, 30 };
+        var ordersPoints = new List<ChartPointDto>();
+        var revenuePoints = new List<ChartPointDto>();
+
+        var monthlyTotal = totalOrders * 0.5;
+        var trend = 1.0;
+        var avgRevenuePerOrder = baseRevenue / totalOrders;
+
+        for (var i = 0; i < points.Length; i++)
+        {
+            trend += rng.NextDouble() * 0.1 - 0.03;
+            var orderCount = Math.Max(1, (int)(monthlyTotal / points.Length * trend + rng.Next(-5, 6)));
+            var revenue = orderCount * avgRevenuePerOrder * (0.8m + (decimal)rng.NextDouble() * 0.4m);
+
+            ordersPoints.Add(new ChartPointDto { Label = points[i].ToString(), Value = orderCount });
+            revenuePoints.Add(new ChartPointDto { Label = points[i].ToString(), Value = Math.Round(revenue, 2) });
+        }
+
+        return (ordersPoints, revenuePoints);
+    }
+
+    private static (List<ChartPointDto> Orders, List<ChartPointDto> Revenue) GenerateYearlyChart(
+        int totalOrders, decimal baseRevenue, Random rng)
+    {
+        var months = new[] { "Янв", "Мар", "Май", "Июл", "Сен", "Ноя" };
+        var ordersPoints = new List<ChartPointDto>();
+        var revenuePoints = new List<ChartPointDto>();
+
+        var yearlyTotal = totalOrders;
+        var seasonalWeights = new[] { 0.7, 0.8, 0.9, 1.0, 0.85, 0.95 };
+        var avgRevenuePerOrder = baseRevenue / totalOrders;
+
+        for (var i = 0; i < months.Length; i++)
+        {
+            var orderCount = Math.Max(1, (int)(yearlyTotal / months.Length * seasonalWeights[i] + rng.Next(-10, 11)));
+            var revenue = orderCount * avgRevenuePerOrder * (0.75m + (decimal)rng.NextDouble() * 0.5m);
+
+            ordersPoints.Add(new ChartPointDto { Label = months[i], Value = orderCount });
+            revenuePoints.Add(new ChartPointDto { Label = months[i], Value = Math.Round(revenue, 2) });
+        }
+
+        return (ordersPoints, revenuePoints);
+    }
+
+    // ====================================================================
+    // Вспомогательные методы для спарклайнов
+    // ====================================================================
+
+    private static List<decimal> GenerateSparkline(decimal baseValue, string period, Random rng)
+    {
+        var count = period.ToLower() switch
+        {
+            "today" => 10,
+            "week" => 7,
+            "month" => 12,
+            "year" => 12,
+            _ => 12
+        };
+
+        var points = new List<decimal>();
+        var current = baseValue * 0.7m;
+
+        for (var i = 0; i < count; i++)
+        {
+            var multiplier = baseValue * 0.05m;
+            var delta = multiplier * (decimal)(rng.NextDouble() * 2 - 0.5);
+            current = Math.Max(0, current + delta);
+            points.Add(Math.Round(current, 0));
+        }
+
+        return points;
+    }
+
+    // ====================================================================
+    // Вспомогательные методы для ленты активности
+    // ====================================================================
+
+    private static (string Type, string Icon, string Color) MapAuditActionToActivity(string actionType)
+    {
+        return actionType.ToUpperInvariant() switch
+        {
+            "USER_LOGIN" => ("registration", "UserPlus", "text-info-blue"),
+            "USER_CREATED" => ("registration", "UserPlus", "text-info-blue"),
+            "USER_ACTIVATED" => ("registration", "UserPlus", "text-info-blue"),
+            "USER_UPDATED" => ("order", "Users", "text-gold"),
+            "USER_DELETED" => ("order", "Users", "text-price-rise"),
+            "USER_ROLE_CHANGED" => ("order", "Users", "text-gold"),
+            "PRODUCT_CREATED" => ("product", "Package", "text-gold"),
+            "PRODUCT_UPDATED" => ("product", "TrendingUp", "text-gold"),
+            "PRODUCT_DELETED" => ("product", "Package", "text-price-rise"),
+            "ORDER_STATUS_CHANGED" => ("order", "ShoppingCart", "text-gold"),
+            "SETTINGS_UPDATED" => ("service", "Zap", "text-accent-turquoise"),
+            "MAINTENANCE_MODE_ENABLED" or "MAINTENANCE_MODE_DISABLED" => ("service", "Zap", "text-accent-turquoise"),
+            "SECURITY_EVENT" => ("service", "AlertTriangle", "text-price-rise"),
+            _ => ("order", "Activity", "text-gold")
+        };
+    }
+
+    private static string FormatTimeAgo(DateTime dateTime)
+    {
+        var diff = DateTime.UtcNow - dateTime;
+
+        return diff.TotalMinutes switch
+        {
+            < 1 => "только что",
+            < 60 => $"{(int)diff.TotalMinutes} мин назад",
+            < 1440 => $"{(int)diff.TotalHours} ч назад",
+            < 10080 => $"{(int)diff.TotalDays} дн назад",
+            _ => dateTime.ToString("dd.MM.yyyy")
+        };
+    }
+
+    private static List<ActivityItemDto> GenerateFallbackActivities()
+    {
+        var now = DateTime.UtcNow;
+        return new List<ActivityItemDto>
+        {
+            new() { Id = "seed-1", Type = "order", Text = "Новый заказ #1847 на сумму 2 450 BYN", Time = "5 мин назад", Icon = "ShoppingCart", Color = "text-gold" },
+            new() { Id = "seed-2", Type = "registration", Text = "Зарегистрирован новый пользователь client@goldpc.by", Time = "12 мин назад", Icon = "UserPlus", Color = "text-info-blue" },
+            new() { Id = "seed-3", Type = "review", Text = "Новый отзыв на ASUS ROG Strix G16 — ★★★★★", Time = "28 мин назад", Icon = "Star", Color = "text-price-drop" },
+            new() { Id = "seed-4", Type = "order", Text = "Заказ #1845 доставлен клиенту", Time = "1 час назад", Icon = "Package", Color = "text-price-drop" },
+            new() { Id = "seed-5", Type = "product", Text = "Обновлена цена на MSI GeForce RTX 4070", Time = "2 часа назад", Icon = "TrendingUp", Color = "text-gold" },
+        };
     }
 
     // ====================================================================

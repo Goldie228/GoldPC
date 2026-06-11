@@ -68,4 +68,51 @@ public class AdminStatsController : ControllerBase
             LastUpdated = DateTime.UtcNow.ToString("o")
         });
     }
+
+    /// <summary>Получить данные графиков для дашборда по периоду</summary>
+    /// <param name="period">Период: today, week, month, year</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    [HttpGet("charts")]
+    [Authorize(Policy = Permissions.ReportsView)]
+    [ProducesResponseType(typeof(ChartResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ChartResponseDto>> GetCharts(
+        [FromQuery] string period = "month")
+    {
+        var validPeriods = new[] { "today", "week", "month", "year" };
+        if (!validPeriods.Contains(period.ToLowerInvariant()))
+            return BadRequest(new { error = $"Недопустимый период. Допустимые: {string.Join(", ", validPeriods)}" });
+
+        var chart = await _adminService.GetChartAsync(period);
+        return Ok(chart);
+    }
+
+    /// <summary>Получить спарклайны для карточек статистики</summary>
+    /// <param name="period">Период: today, week, month, year</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    [HttpGet("sparklines")]
+    [Authorize(Policy = Permissions.ReportsView)]
+    [ProducesResponseType(typeof(SparklinesResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<SparklinesResponseDto>> GetSparklines(
+        [FromQuery] string period = "month")
+    {
+        var validPeriods = new[] { "today", "week", "month", "year" };
+        if (!validPeriods.Contains(period.ToLowerInvariant()))
+            return BadRequest(new { error = $"Недопустимый период. Допустимые: {string.Join(", ", validPeriods)}" });
+
+        var sparklines = await _adminService.GetSparklinesAsync(period);
+        return Ok(sparklines);
+    }
+
+    /// <summary>Получить ленту активности дашборда</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    [HttpGet("activity")]
+    [Authorize(Policy = Permissions.ReportsView)]
+    [ProducesResponseType(typeof(ActivityResponseDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ActivityResponseDto>> GetActivity()
+    {
+        var activity = await _adminService.GetActivityAsync();
+        return Ok(activity);
+    }
 }

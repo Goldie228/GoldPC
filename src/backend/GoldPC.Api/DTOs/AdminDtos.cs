@@ -187,6 +187,72 @@ public record UpdateSiteSettingsDto
     public bool? MaintenanceMode { get; init; }
 }
 
+// ========================================================================
+// DTOs графиков, спарклайнов и ленты активности дашборда
+// ========================================================================
+
+/// <summary>Точка данных для графика (метка + числовое значение)</summary>
+public record ChartPointDto
+{
+    /// <summary>Метка оси X (например, "Пн", "15", "08:00")</summary>
+    public string Label { get; init; } = string.Empty;
+
+    /// <summary>Числовое значение (заказы или выручка)</summary>
+    public decimal Value { get; init; }
+}
+
+/// <summary>Ответ с данными графиков для дашборда</summary>
+public record ChartResponseDto
+{
+    /// <summary>Данные графика заказов по периоду</summary>
+    public List<ChartPointDto> Orders { get; init; } = new();
+
+    /// <summary>Данные графика выручки по периоду</summary>
+    public List<ChartPointDto> Revenue { get; init; } = new();
+}
+
+/// <summary>Ответ со спарклайнами для карточек статистики</summary>
+public record SparklinesResponseDto
+{
+    /// <summary>Спарклайн пользователей (последние N точек)</summary>
+    public List<decimal> Users { get; init; } = new();
+
+    /// <summary>Спарклайн заказов (последние N точек)</summary>
+    public List<decimal> Orders { get; init; } = new();
+
+    /// <summary>Спарклайн выручки (последние N точек)</summary>
+    public List<decimal> Revenue { get; init; } = new();
+}
+
+/// <summary>Элемент ленты активности дашборда</summary>
+public record ActivityItemDto
+{
+    /// <summary>Уникальный идентификатор события</summary>
+    public string Id { get; init; } = string.Empty;
+
+    /// <summary>Тип события: order, registration, review, product, service</summary>
+    public string Type { get; init; } = string.Empty;
+
+    /// <summary>Текстовое описание события</summary>
+    public string Text { get; init; } = string.Empty;
+
+    /// <summary>Относительное время (например, "5 мин назад")</summary>
+    public string Time { get; init; } = string.Empty;
+
+    /// <summary>Тип иконки для фронтенда (lucide-react icon name)</summary>
+    public string Icon { get; init; } = string.Empty;
+
+    /// <summary>CSS-класс цвета (например, "text-gold", "text-info-blue")</summary>
+    public string Color { get; init; } = string.Empty;
+}
+
+/// <summary>Ответ с лентой активности дашборда</summary>
+public record ActivityResponseDto
+{
+    /// <summary>Список последних событий</summary>
+    public List<ActivityItemDto> Items { get; init; } = new();
+}
+
 /// <summary>Публичные настройки сайта (безопасны для внешнего потребления)</summary>
 public record PublicSiteSettingsDto
 {
