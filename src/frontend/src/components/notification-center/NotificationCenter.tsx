@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Package, Wrench, AlertTriangle, MessageSquare, Bell, Circle, Check, Trash2 } from 'lucide-react';
+import { Package, Wrench, AlertTriangle, MessageSquare, Bell, Check, Trash2 } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import type { Notification, NotificationPriorityValue, NotificationTypeValue } from '@/hooks/useNotifications';
 
 export const NotificationCenter = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, connectionStatus } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
   const getPriorityStyle = (priority: NotificationPriorityValue) => {
@@ -61,10 +61,6 @@ export const NotificationCenter = () => {
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <h3 className="font-semibold text-sm text-foreground">Уведомления</h3>
             <div className="flex items-center gap-3">
-              <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                <Circle size={6} className={connectionStatus === 'connected' ? 'text-price-drop' : 'text-price-rise'} fill="currentColor" />
-                {connectionStatus === 'connected' ? 'В сети' : 'Не в сети'}
-              </span>
               {unreadCount > 0 && (
                 <button
                   onClick={() => void markAllAsRead()}

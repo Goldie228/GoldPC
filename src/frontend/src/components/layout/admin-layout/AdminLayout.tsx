@@ -11,6 +11,8 @@ import {
   Menu,
   X,
   ExternalLink,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -32,8 +34,8 @@ const navItems: NavItem[] = [
   { to: '/admin/catalog', icon: Package, label: 'Каталог' },
   { to: '/admin/dictionaries', icon: BookOpen, label: 'Справочники' },
   { to: '/admin/audit-log', icon: ScrollText, label: 'Журнал аудита' },
-  { to: '/admin/settings', icon: Settings, label: 'Настройки' },
   { to: '/admin/coordinator', icon: LayoutDashboard, label: 'Координатор' },
+  { to: '/admin/settings', icon: Settings, label: 'Настройки' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -56,13 +58,17 @@ const navItems: NavItem[] = [
  */
 export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  const sidebarWidth = collapsed ? 'w-[68px]' : 'w-60';
 
   const sidebarLinkClass = ({ isActive }: { isActive: boolean }) =>
     [
-      'flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-md transition-colors',
+      'flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-md transition-colors shrink-0',
       isActive
         ? 'text-gold bg-surface-card border-l-2 border-gold'
         : 'text-muted-foreground hover:text-body-text hover:bg-surface-elevated',
+      collapsed ? 'justify-center px-2' : '',
     ].join(' ');
 
   const closeSidebar = () => setSidebarOpen(false);
@@ -91,11 +97,12 @@ export function AdminLayout() {
       {/* -------------------------------------------------- */}
       <aside
         className={[
-          'fixed inset-y-0 left-0 z-[110] flex w-60 flex-col',
+          'fixed inset-y-0 left-0 z-[110] flex flex-col h-screen',
           'bg-canvas-dark border-r border-hairline-dark',
-          'transform transition-transform duration-300 ease-in-out',
-          'lg:relative lg:translate-x-0 lg:z-auto',
+          'transform transition-all duration-300 ease-in-out',
+          'lg:translate-x-0 lg:z-auto',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+          sidebarWidth,
         ].join(' ')}
       >
         {/* Close button — mobile only */}
@@ -113,13 +120,15 @@ export function AdminLayout() {
         </button>
 
         {/* Logo section */}
-        <div className="flex items-center gap-2 px-6 h-14 border-b border-hairline-dark shrink-0">
+        <div className={`flex items-center h-14 border-b border-hairline-dark shrink-0 ${collapsed ? 'justify-center px-2' : 'gap-2 px-6'}`}>
           <span className="text-lg font-bold text-gold tracking-tight">
-            Gold PC
+            {collapsed ? 'GP' : 'Gold PC'}
           </span>
-          <span className="hidden sm:inline text-xs text-muted-foreground">
-            Администрирование
-          </span>
+          {!collapsed && (
+            <span className="hidden sm:inline text-xs text-muted-foreground">
+              Администрирование
+            </span>
+          )}
         </div>
 
         {/* Navigation */}
@@ -133,18 +142,34 @@ export function AdminLayout() {
               to={item.to}
               onClick={closeSidebar}
               className={sidebarLinkClass}
+              title={collapsed ? item.label : undefined}
             >
-              <item.icon size={18} />
-              {item.label}
+              <item.icon size={20} className="shrink-0" />
+              {!collapsed && item.label}
             </NavLink>
           ))}
         </nav>
+
+        {/* Collapse toggle — desktop only, всегда видна */}
+        <div className="hidden lg:block shrink-0 border-t border-hairline-dark">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className={[
+              'flex items-center justify-center w-full h-11',
+              'text-muted-foreground hover:text-body-text',
+              'hover:bg-surface-elevated transition-colors cursor-pointer',
+            ].join(' ')}
+            aria-label={collapsed ? 'Развернуть меню' : 'Свернуть меню'}
+          >
+            {collapsed ? <ChevronsRight size={18} /> : <ChevronsLeft size={18} />}
+          </button>
+        </div>
       </aside>
 
       {/* -------------------------------------------------- */}
       {/* Main content area                                    */}
       {/* -------------------------------------------------- */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className={`flex min-w-0 flex-1 flex-col transition-all duration-300 ${collapsed ? 'lg:ml-[68px]' : 'lg:ml-60'}`}>
         {/* Header */}
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-hairline-dark bg-canvas-dark px-4 lg:px-6">
           <div className="flex items-center gap-3">
@@ -161,14 +186,6 @@ export function AdminLayout() {
             >
               <Menu size={20} />
             </button>
-
-            {/* Brand */}
-            <div className="flex items-baseline gap-2">
-              <span className="text-sm font-bold text-gold">Gold PC</span>
-              <span className="hidden sm:inline text-xs text-muted-foreground">
-                Администрирование
-              </span>
-            </div>
           </div>
 
           {/* "На сайт" button — Link to / (SPA без перезагрузки) */}
@@ -188,7 +205,7 @@ export function AdminLayout() {
         </header>
 
         {/* Page content via nested routes */}
-        <main className="flex-1 p-6 lg:p-8">
+        <main className="flex-1 p-4 lg:p-6">
           <Outlet />
         </main>
       </div>

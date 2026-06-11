@@ -205,7 +205,7 @@ export function CatalogManagementPage() {
 
   return (
     <div className="bg-canvas-dark min-h-screen">
-      <div className="max-w-[1400px] mx-auto p-6 space-y-6">
+      <div className="max-w-[1400px] mx-auto pb-6 space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>

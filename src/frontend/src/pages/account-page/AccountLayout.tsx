@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -12,11 +12,12 @@ import {
   Cpu,
   Bell,
   Settings,
-  Users,
-  Warehouse,
+  Shield,
   Ticket,
   BarChart3,
   Download,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
@@ -31,6 +32,9 @@ import { useAuthStore } from '@/store/authStore';
 export function AccountLayout() {
   const { user, currentRole } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  const sidebarWidth = collapsed ? 'w-[68px]' : 'w-[280px]';
 
   const firstName = user?.firstName ?? '';
   const lastName = user?.lastName ?? '';
@@ -56,10 +60,11 @@ const navItems: NavItem[] = [
 
   const sidebarLinkClass = ({ isActive }: { isActive: boolean }) =>
     [
-      'flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors',
+      'flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors shrink-0',
       isActive
         ? 'text-gold bg-surface-elevated border-l-2 border-gold'
         : 'text-muted-text hover:text-body-text hover:bg-surface-elevated',
+      collapsed ? 'justify-center px-2' : '',
     ].join(' ');
 
   const closeSidebar = () => setSidebarOpen(false);
@@ -84,10 +89,11 @@ const navItems: NavItem[] = [
       {/* Sidebar */}
       <aside
         className={[
-          'fixed inset-y-0 left-0 top-16 z-[110] w-[280px] bg-surface-card border-r border-hairline-dark lg:top-0',
-          'flex flex-col transform transition-transform duration-300 ease-in-out',
-          'lg:relative lg:translate-x-0 lg:top-0 lg:z-auto',
+          'fixed inset-y-0 left-0 z-[110] bg-surface-card border-r border-hairline-dark',
+          'flex flex-col transform transition-all duration-300 ease-in-out',
+          'lg:relative lg:translate-x-0 lg:z-auto',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+          sidebarWidth,
         ].join(' ')}
       >
         {/* Close button — mobile only */}
@@ -99,25 +105,38 @@ const navItems: NavItem[] = [
           <X size={20} />
         </button>
 
+        {/* Collapse toggle — desktop only */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="hidden lg:flex absolute top-2 right-2 w-7 h-7 items-center justify-center rounded-md text-muted-text hover:text-gold hover:bg-gold/10 transition-all cursor-pointer z-10"
+          aria-label={collapsed ? 'Развернуть меню' : 'Свернуть меню'}
+        >
+          {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
+        </button>
+
         {/* User profile section */}
-        <div className="flex flex-col items-center gap-2 pt-8 pb-6 px-6 border-b border-hairline-dark">
+        <div className={`flex flex-col items-center gap-2 pt-12 pb-6 border-b border-hairline-dark transition-all duration-300 ${collapsed ? 'px-2' : 'px-6'}`}>
           {user?.avatarUrl ? (
             <img
               src={user.avatarUrl}
               alt="Аватар"
-              className="w-14 h-14 rounded-full object-cover border-2 border-gold"
+              className={`rounded-full object-cover border-2 border-gold shrink-0 transition-all duration-300 ${collapsed ? 'w-10 h-10' : 'w-14 h-14'}`}
             />
           ) : (
-            <div className="w-14 h-14 rounded-full bg-gold text-gold-ink flex items-center justify-center text-lg font-bold">
+            <div className={`rounded-full bg-gold text-gold-ink flex items-center justify-center font-bold shrink-0 transition-all duration-300 ${collapsed ? 'w-10 h-10 text-sm' : 'w-14 h-14 text-lg'}`}>
               {initials}
             </div>
           )}
-          <div className="font-semibold text-body-text text-center">
-            {user ? `${firstName} ${lastName}` : 'Гость'}
-          </div>
-          <div className="text-sm text-muted-text text-center truncate max-w-full">
-            {user?.email ?? 'Войдите в аккаунт'}
-          </div>
+          {!collapsed && (
+            <>
+              <div className="font-semibold text-body-text text-center">
+                {user ? `${firstName} ${lastName}` : 'Гость'}
+              </div>
+              <div className="text-sm text-muted-text text-center truncate max-w-full">
+                {user?.email ?? 'Войдите в аккаунт'}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Navigation links */}
@@ -129,9 +148,10 @@ const navItems: NavItem[] = [
               end={item.end}
               onClick={closeSidebar}
               className={sidebarLinkClass}
+              title={collapsed ? item.label : undefined}
             >
-              <item.icon size={18} />
-              {item.label}
+              <item.icon size={20} className="shrink-0" />
+              {!collapsed && item.label}
             </NavLink>
           ))}
 
@@ -139,92 +159,63 @@ const navItems: NavItem[] = [
           {currentRole && currentRole !== 'Client' && (
             <>
               <div className="border-t border-hairline-dark my-2" />
-              <div className="px-4 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                {currentRole === 'Admin'
-                  ? 'Администрирование'
-                  : currentRole === 'Manager'
-                    ? 'Управление'
-                    : currentRole === 'Master'
-                      ? 'Мастерская'
-                      : currentRole === 'Accountant'
-                        ? 'Отчёты'
-                        : ''}
-              </div>
 
               {currentRole === 'Admin' && (
-                <>
-                  {[
-                    { to: '/admin/users', icon: Users, label: 'Пользователи' },
-                    { to: '/admin/catalog', icon: Package, label: 'Каталог' },
-                    { to: '/admin/coordinator', icon: LayoutDashboard, label: 'Координатор' },
-                  ].map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={closeSidebar}
-                      className={sidebarLinkClass}
-                    >
-                      <item.icon size={18} />
-                      {item.label}
-                    </NavLink>
-                  ))}
-                </>
+                <Link
+                  to="/admin/users"
+                  onClick={closeSidebar}
+                  className={`flex items-center gap-3 text-sm font-medium rounded-lg transition-colors text-gold bg-gold/10 hover:bg-gold/15 border border-gold/20 shrink-0 ${collapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'}`}
+                  title={collapsed ? 'Админ-панель' : undefined}
+                >
+                  <Shield size={20} className="shrink-0" />
+                  {!collapsed && 'Админ-панель'}
+                </Link>
               )}
 
               {currentRole === 'Manager' && (
-                <>
-                  {[
-                    { to: '/manager/dashboard', icon: LayoutDashboard, label: 'Панель менеджера' },
-                    { to: '/manager/orders', icon: Package, label: 'Заказы (все)' },
-                    { to: '/manager/inventory', icon: Warehouse, label: 'Склад' },
-                  ].map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={closeSidebar}
-                      className={sidebarLinkClass}
-                    >
-                      <item.icon size={18} />
-                      {item.label}
-                    </NavLink>
-                  ))}
-                </>
+                <NavLink
+                  to="/manager/dashboard"
+                  onClick={closeSidebar}
+                  className={sidebarLinkClass}
+                  title={collapsed ? 'Панель менеджера' : undefined}
+                >
+                  <LayoutDashboard size={20} className="shrink-0" />
+                  {!collapsed && 'Панель менеджера'}
+                </NavLink>
               )}
 
               {currentRole === 'Master' && (
-                <>
-                  {[
-                    { to: '/master/tickets', icon: Ticket, label: 'Тикеты' },
-                  ].map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={closeSidebar}
-                      className={sidebarLinkClass}
-                    >
-                      <item.icon size={18} />
-                      {item.label}
-                    </NavLink>
-                  ))}
-                </>
+                <NavLink
+                  to="/master/tickets"
+                  onClick={closeSidebar}
+                  className={sidebarLinkClass}
+                  title={collapsed ? 'Тикеты' : undefined}
+                >
+                  <Ticket size={20} className="shrink-0" />
+                  {!collapsed && 'Тикеты'}
+                </NavLink>
               )}
 
               {currentRole === 'Accountant' && (
                 <>
-                  {[
-                    { to: '/accountant/reports', icon: BarChart3, label: 'Отчёты' },
-                    { to: '/accountant/export', icon: Download, label: 'Экспорт' },
-                  ].map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={closeSidebar}
-                      className={sidebarLinkClass}
-                    >
-                      <item.icon size={18} />
-                      {item.label}
-                    </NavLink>
-                  ))}
+                  <NavLink
+                    to="/accountant/reports"
+                    onClick={closeSidebar}
+                    className={sidebarLinkClass}
+                    title={collapsed ? 'Отчёты' : undefined}
+                  >
+                    <BarChart3 size={20} className="shrink-0" />
+                    {!collapsed && 'Отчёты'}
+                  </NavLink>
+                  <NavLink
+                    to="/accountant/export"
+                    onClick={closeSidebar}
+                    className={sidebarLinkClass}
+                    title={collapsed ? 'Экспорт' : undefined}
+                  >
+                    <Download size={20} className="shrink-0" />
+                    {!collapsed && 'Экспорт'}
+                  </NavLink>
                 </>
               )}
             </>

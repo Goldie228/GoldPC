@@ -240,7 +240,7 @@ export function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-canvas-dark p-6">
+      <div className="min-h-screen bg-canvas-dark pb-6">
         <div className="mx-auto max-w-[900px]">
           <div className="mb-8">
             <div className="mb-2 h-7 w-56 animate-pulse rounded bg-surface-elevated" />
@@ -256,7 +256,7 @@ export function SettingsPage() {
 
   if (isError || !settings) {
     return (
-      <div className="min-h-screen bg-canvas-dark p-6">
+      <div className="min-h-screen bg-canvas-dark pb-6">
         <div className="mx-auto max-w-[900px]">
           <div className="flex flex-col items-center justify-center rounded-xl bg-surface-card p-12 text-center">
             <AlertTriangle className="mb-4 h-12 w-12 text-price-rise" />
@@ -286,7 +286,7 @@ export function SettingsPage() {
   // ====== Основной рендер ======
 
   return (
-    <div className="min-h-screen bg-canvas-dark p-6">
+    <div className="min-h-screen bg-canvas-dark pb-6">
       <div className="mx-auto max-w-[900px]">
         {/* Шапка страницы */}
         <header className="mb-8">
