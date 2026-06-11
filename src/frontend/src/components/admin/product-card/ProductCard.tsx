@@ -3,7 +3,7 @@
  * Отображает изображение, название, цену, индикатор остатка и кнопки действий
  */
 
-import { Package, Edit2, ExternalLink, Trash2 } from 'lucide-react';
+import { Package, Edit2, ExternalLink, Trash2, ChevronRight } from 'lucide-react';
 import { hasValidProductImage } from '@/utils/image';
 import type { Product } from '@/api/types';
 
@@ -43,7 +43,7 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
 
   return (
     <div
-      className={`relative bg-surface-card rounded-lg border border-hairline-dark overflow-hidden flex flex-col min-w-[280px] flex-1 ${
+      className={`relative bg-surface-card rounded-lg border border-hairline-dark overflow-hidden flex flex-col flex-1 ${
         !product.isActive ? 'opacity-60' : ''
       }`}
     >
@@ -55,6 +55,11 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
           </span>
         </div>
       )}
+
+      {/* Индикатор кликабельности */}
+      <div className="absolute top-3 right-3 z-10 text-muted-foreground/50">
+        <ChevronRight className="w-4 h-4" />
+      </div>
 
       {/* Изображение */}
       <div className="aspect-[4/3] bg-white relative overflow-hidden">
