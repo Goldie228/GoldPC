@@ -4,14 +4,14 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cpu, Gpu, MemoryStick, HardDrive, Zap, Box, ThermometerSun, Monitor, Fan, Shield, Truck, Star, ChevronRight, ArrowRight, Award, ChevronLeft, Pause, Play } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Button } from '../../components/ui/Button';
-import { ProductCard } from '../../components/product-card/ProductCard';
-import { ProductCardSkeleton } from '../../components/ui/Skeleton/ProductCardSkeleton';
-import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
-import { useProducts } from '../../hooks/useProducts';
-import { useCategories } from '../../hooks/useCategories';
-import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
-import type { ProductCategory } from '../../api/types';
+import { Button } from '@/components/ui/Button';
+import { ProductCard } from '@/components/product-card/ProductCard';
+import { ProductCardSkeleton } from '@/components/ui/Skeleton/ProductCardSkeleton';
+import { ApiErrorBanner } from '@/components/ui/ApiErrorBanner';
+import { useProducts } from '@/hooks/useProducts';
+import { useCategories } from '@/hooks/useCategories';
+import { formatCountRu, RU_FORMS } from '@/utils/pluralizeRu';
+import type { ProductCategory } from '@/api/types';
 
 // Маппинг backend slug -> frontend id для ссылок
 const BACKEND_TO_FRONTEND: Record<string, ProductCategory> = {
@@ -52,7 +52,7 @@ function HeroBackground() {
   return (
     <div className="home-hero__bg--placeholder" aria-hidden="true">
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[140px]" />
-      <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-[#2dbdb6]/5 rounded-full blur-[120px]" />
+      <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-accent-turquoise/5 rounded-full blur-[120px]" />
       <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/10 to-transparent" />
     </div>
   );
@@ -273,7 +273,7 @@ export function HomePage() {
   const categories = useMemo(() => (categoriesData ?? []).filter((c) => (c.productCount ?? 0) > 0), [categoriesData]);
 
   return (
-    <div id="main" className="min-h-screen bg-[#0b0e11]">
+    <div id="main" className="min-h-screen bg-canvas-dark">
       {/* ════════════ 1. HERO BAND ════════════ */}
       <section className="home-hero" aria-label="Главный баннер">
         <HeroBackground />

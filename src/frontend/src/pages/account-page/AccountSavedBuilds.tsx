@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cpu, Trash2, Share2, ExternalLink, Loader2, Package, Plus } from 'lucide-react';
-import { useToast } from '../../hooks/useToast';
-import apiClient from '../../api/client';
-import { StatusBadge } from '../../components/ui/StatusBadge';
+import { useToast } from '@/hooks/useToast';
+import apiClient from '@/api/client';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 interface SavedBuild {
   id: string;

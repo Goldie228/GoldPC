@@ -8,15 +8,15 @@ import {
   ShieldCheck,
   ChevronRight,
 } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
-import { useOrders } from '../../hooks/useOrders';
-import { useServiceTickets } from '../../hooks/useServiceTickets';
-import { TICKET_STATUSES } from '../../api/services';
-import { StatusBadge } from '../../components/ui/StatusBadge';
-import { StatCard } from '../../components/ui/StatCard';
-import type { StatusVariant } from '../../components/ui/StatusBadge';
-import type { Order } from '../../api/orders';
-import type { ServiceTicket } from '../../api/services';
+import { useAuthStore } from '@/store/authStore';
+import { useOrders } from '@/hooks/useOrders';
+import { useServiceTickets } from '@/hooks/useServiceTickets';
+import { TICKET_STATUSES } from '@/api/services';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { StatCard } from '@/components/ui/StatCard';
+import type { StatusVariant } from '@/components/ui/StatusBadge';
+import type { Order } from '@/api/orders';
+import type { ServiceRequestDto } from '@/api/services';
 
 /* ─── Order status helpers ─── */
 
@@ -193,11 +193,11 @@ export function AccountOverview() {
     getMyOrders,
   } = useOrders();
   const {
-    tickets,
-    total: ticketsTotal,
     loading: ticketsLoading,
-    getMyTickets,
+    getMyServices,
   } = useServiceTickets();
+  const [tickets, setTickets] = useState<ServiceRequestDto[]>([]);
+  const [ticketsTotal, setTicketsTotal] = useState(0);
 
   const [initialLoading, setInitialLoading] = useState(true);
 
@@ -206,10 +206,16 @@ export function AccountOverview() {
       setInitialLoading(false);
       return;
     }
-    Promise.allSettled([getMyOrders(1, 5), getMyTickets(1, 5)]).finally(() =>
-      setInitialLoading(false)
-    );
-  }, [getMyOrders, getMyTickets, isAuthenticated]);
+    Promise.allSettled([
+      getMyOrders(1, 5),
+      getMyServices(1, 5).then(result => {
+        if (result) {
+          setTickets(result.items);
+          setTicketsTotal(result.total);
+        }
+      }),
+    ]).finally(() => setInitialLoading(false));
+  }, [getMyOrders, getMyServices, isAuthenticated]);
 
   const isLoading = initialLoading;
   const userName = user?.firstName || 'Пользователь';
@@ -423,18 +429,20 @@ export function AccountOverview() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {tickets.slice(0, 5).map((ticket: ServiceTicket) => {
+                  {tickets.slice(0, 5).map((ticket: ServiceRequestDto) => {
                     const { label, variant } = getTicketStatusInfo(ticket.status);
                     return (
                       <tr key={ticket.id}>
                         <td className="py-3 pr-2 text-sm text-foreground whitespace-nowrap">
-                          #{ticket.ticketNumber}
+                          #{ticket.requestNumber}
                         </td>
                         <td className="py-3 pr-2 text-sm text-foreground truncate max-w-[140px]">
-                          <span className="block leading-tight">{ticket.deviceType}</span>
-                          <span className="block text-muted-foreground text-xs">
-                            {ticket.brand} {ticket.model}
-                          </span>
+                          <span className="block leading-tight">{ticket.serviceTypeName}</span>
+                          {ticket.deviceModel && (
+                            <span className="block text-muted-foreground text-xs">
+                              {ticket.deviceModel}
+                            </span>
+                          )}
                         </td>
                         <td className="py-3 pr-2 whitespace-nowrap">
                           <StatusBadge variant={variant} label={label} />

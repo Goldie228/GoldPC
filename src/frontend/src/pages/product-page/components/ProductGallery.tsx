@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { hasValidProductImage } from '../../../utils/image';
-import type { Product } from '../../../api/types';
+import { hasValidProductImage } from '@/utils/image';
+import type { Product } from '@/api/types';
 import { ProductImageViewerModal } from './ProductImageViewerModal';
 
 export interface ProductGalleryProps {

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Lock, Clock, Loader2, Camera } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
-import { authService } from '../../api/authService';
-import { useToast } from '../../hooks/useToast';
-import { ChangePasswordModal } from '../../components/account/change-password-modal/ChangePasswordModal';
-import { LoginHistoryModal } from '../../components/account/login-history-modal/LoginHistoryModal';
-import { PhoneInput } from '../../components/ui/PhoneInput';
+import { useAuthStore } from '@/store/authStore';
+import { authService } from '@/api/authService';
+import { useToast } from '@/hooks/useToast';
+import { ChangePasswordModal } from '@/components/account/change-password-modal/ChangePasswordModal';
+import { LoginHistoryModal } from '@/components/account/login-history-modal/LoginHistoryModal';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 
 type SecurityModal = 'password' | 'history' | null;
 

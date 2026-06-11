@@ -85,6 +85,15 @@ export interface UpdateUserRequest {
   isActive?: boolean;
 }
 
+export interface CreateUserRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  role: UserRole;
+  password: string;
+}
+
 /**
  * Тело запроса обновления товара — соответствует UpdateProductDto из SharedKernel
  */
@@ -183,6 +192,14 @@ export const usersAdminApi = {
    */
   async updateUser(userId: string, data: UpdateUserRequest): Promise<User> {
     const response = await api.put<User>(`/admin/users/${userId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Создать нового пользователя (только Admin)
+   */
+  async createUser(data: CreateUserRequest): Promise<User> {
+    const response = await api.post<User>('/admin/users', data);
     return response.data;
   },
 
@@ -500,5 +517,110 @@ export const settingsApi = {
   async resetSettings(): Promise<SiteSettings> {
     const response = await api.post<SiteSettings>('/admin/settings/reset');
     return response.data;
+  },
+};
+
+// === Типы для журнала аудита ===
+
+export type AuditActionType =
+  | 'USER_CREATED'
+  | 'USER_UPDATED'
+  | 'USER_DELETED'
+  | 'USER_ROLE_CHANGED'
+  | 'USER_LOGIN'
+  | 'USER_LOGOUT'
+  | 'USER_ACTIVATED'
+  | 'SETTINGS_UPDATED'
+  | 'PRODUCT_CREATED'
+  | 'PRODUCT_UPDATED'
+  | 'PRODUCT_DELETED'
+  | 'ORDER_STATUS_CHANGED'
+  | 'MAINTENANCE_MODE_ENABLED'
+  | 'MAINTENANCE_MODE_DISABLED'
+  | 'SECURITY_EVENT';
+
+export interface AuditLogEntry {
+  id: string;
+  actionType: AuditActionType;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  ipAddress: string;
+  description: string;
+  additionalData?: Record<string, unknown>;
+  createdAt: string;
+  severity: 'INFO' | 'WARNING' | 'CRITICAL';
+}
+
+export interface AuditLogParams {
+  page?: number;
+  pageSize?: number;
+  actionType?: AuditActionType;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+  severity?: string;
+}
+
+export interface AuditLogResponse {
+  data: AuditLogEntry[];
+  meta: {
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  };
+}
+
+/**
+ * API для журнала аудита
+ */
+export const auditLogApi = {
+  /**
+   * Получить записи аудита с пагинацией и фильтрацией
+   */
+  async getLogs(params?: AuditLogParams): Promise<AuditLogResponse> {
+    const response = await api.get<AuditLogResponse>('/admin/audit-logs', { params });
+    return response.data;
+  },
+};
+
+// === Stub Manager API ===
+
+export type StubMode = 'Normal' | 'Slow' | 'Failing' | 'Unstable';
+
+export interface ChaosConfig {
+  failureRate: number;
+  latencyRate: number;
+  maxLatencyMs?: number;
+}
+
+export interface Stub {
+  name: string;
+  serviceName: string;
+  mode: StubMode;
+  chaos?: ChaosConfig;
+}
+
+export interface StubUpdateRequest {
+  mode: StubMode;
+  chaos?: ChaosConfig;
+}
+
+/**
+ * API для управления заглушками (Chaos Engineering)
+ */
+export const stubApi = {
+  /** Получить список всех заглушек */
+  async getStubs(): Promise<Stub[]> {
+    const response = await api.get<Stub[]>('/internal/stubs');
+    return response.data;
+  },
+
+  /** Обновить режим заглушки */
+  async updateStub(name: string, data: StubUpdateRequest): Promise<void> {
+    await api.patch(`/internal/stubs/${encodeURIComponent(name)}`, data);
   },
 };

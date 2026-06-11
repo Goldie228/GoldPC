@@ -7,6 +7,7 @@ import {
   BookOpen,
   Settings,
   LayoutDashboard,
+  ScrollText,
   Menu,
   X,
   ExternalLink,
@@ -30,6 +31,7 @@ const navItems: NavItem[] = [
   { to: '/admin/users', icon: Users, label: 'Пользователи' },
   { to: '/admin/catalog', icon: Package, label: 'Каталог' },
   { to: '/admin/dictionaries', icon: BookOpen, label: 'Справочники' },
+  { to: '/admin/audit-log', icon: ScrollText, label: 'Журнал аудита' },
   { to: '/admin/settings', icon: Settings, label: 'Настройки' },
   { to: '/admin/coordinator', icon: LayoutDashboard, label: 'Координатор' },
 ];

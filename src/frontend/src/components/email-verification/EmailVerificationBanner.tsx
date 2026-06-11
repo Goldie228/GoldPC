@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { X, RefreshCw, Mail, AlertCircle } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import { authService, getAuthErrorMessage } from '../../api/authService';
+import { useAuth } from '@/hooks/useAuth';
+import { authService, getAuthErrorMessage } from '@/api/authService';
 
 /**
  * EmailVerificationBanner — глобальный баннер для неверифицированных пользователей.

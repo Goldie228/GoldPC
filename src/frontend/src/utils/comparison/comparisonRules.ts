@@ -1,4 +1,4 @@
-import type { ProductCategory } from '../../api/types';
+import type { ProductCategory } from '@/api/types';
 
 export type ComparisonMode = 'min' | 'max' | 'compatibility' | 'none';
 export type ComparisonValueType = 'number' | 'text' | 'boolean';

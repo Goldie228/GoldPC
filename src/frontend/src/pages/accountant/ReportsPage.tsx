@@ -1,5 +1,4 @@
 /**
- * Accountant Reports Page
  * Страница финансовых отчётов для бухгалтера
  * Основано на prototypes/accountant-reports.html
  */
@@ -67,16 +66,16 @@ export function ReportsPage() {
     <div className="px-[var(--space-md)] pb-12 mx-auto min-h-screen bg-background text-foreground max-w-[1400px]">
       <header className="flex items-center justify-between gap-[var(--space-md)] mb-[var(--space-lg)] flex-wrap">
         <div>
-          <h1 className="font-[var(--font-display)] text-[var(--text-3xl)] font-[var(--font-semibold)] tracking-[-0.02em] mb-1 text-foreground">
+          <h1 className="font-display text-3xl font-semibold tracking-[-0.02em] mb-1 text-foreground">
             Финансовые отчёты
           </h1>
-          <p className="text-[var(--text-sm)] text-muted-foreground m-0">
+          <p className="text-sm text-muted-foreground m-0">
             Формирование отчётов за выбранный период
           </p>
         </div>
       </header>
 
-      {/* Stats Grid */}
+      {/* Сетка статистики */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-card border border-border p-5">
           <div className="text-[0.7rem] text-muted-foreground uppercase tracking-[0.08em] mb-2">Выручка за месяц</div>
@@ -102,7 +101,7 @@ export function ReportsPage() {
         </div>
       </div>
 
-      {/* Report Period Card */}
+      {/* Карточка периода отчёта */}
       <div className="bg-card border border-border p-6 mb-6">
         <div className="text-[0.9rem] font-semibold mb-5 flex items-center gap-2.5 pb-4 border-b border-border">
           <svg
@@ -125,7 +124,7 @@ export function ReportsPage() {
             <label className="block text-[0.75rem] font-medium text-muted-foreground mb-2 uppercase tracking-[0.05em]">Дата начала</label>
             <input
               type="date"
-              className="w-full p-3 bg-elevated border border-border text-foreground font-[var(--font-mono)] text-[0.85rem] transition-colors duration-[var(--transition-base)] focus:outline-none focus:border-accent"
+              className="w-full p-3 bg-elevated border border-border text-foreground font-[var(--font-mono)] text-[0.85rem] transition-colors duration-[var(--transition-base)] focus:outline-none focus:border-accent [color-scheme:dark]"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
             />
@@ -134,7 +133,7 @@ export function ReportsPage() {
             <label className="block text-[0.75rem] font-medium text-muted-foreground mb-2 uppercase tracking-[0.05em]">Дата окончания</label>
             <input
               type="date"
-              className="w-full p-3 bg-elevated border border-border text-foreground font-[var(--font-mono)] text-[0.85rem] transition-colors duration-[var(--transition-base)] focus:outline-none focus:border-accent"
+              className="w-full p-3 bg-elevated border border-border text-foreground font-[var(--font-mono)] text-[0.85rem] transition-colors duration-[var(--transition-base)] focus:outline-none focus:border-accent [color-scheme:dark]"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
             />
@@ -169,7 +168,7 @@ export function ReportsPage() {
         </div>
       </div>
 
-      {/* Generated Report Results */}
+      {/* Результаты сформированного отчёта */}
       {stats && (
         <div className="bg-card border border-accent p-6 mb-6">
           <div className="text-[0.9rem] font-semibold mb-5 flex items-center gap-2.5 pb-4 border-b border-border">

@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Modal } from '../../ui/Modal/Modal';
-import { Button } from '../../ui/Button';
-import { Input } from '../../ui/Input';
-import { useToast } from '../../../hooks/useToast';
-import apiClient from '../../../api/client';
-import type { PCBuilderSelectedState } from '../../../hooks';
+import { Modal } from '@/components/ui/Modal/Modal';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { useToast } from '@/hooks/useToast';
+import apiClient from '@/api/client';
+import type { PCBuilderSelectedState } from '@/hooks';
 
 /** Назначение ПК (соответствует PCPurpose из API) */
 type PCPurpose = 'Gaming' | 'Office' | 'Workstation';
@@ -166,15 +166,15 @@ export function SaveConfigurationModal({
   /** Статус совместимости */
   const getCompatibilityStatus = (): { label: string; className: string } => {
     if (selectedCount === 0) {
-      return { label: 'Нет компонентов', className: 'text-[var(--fg-secondary)]' };
+      return { label: 'Нет компонентов', className: 'text-muted-foreground' };
     }
     if (compatibilityErrors.length > 0) {
-      return { label: `Ошибки: ${compatibilityErrors.length}`, className: 'text-[var(--error)]' };
+      return { label: `Ошибки: ${compatibilityErrors.length}`, className: 'text-red-500' };
     }
     if (compatibilityWarnings.length > 0) {
-      return { label: `Предупреждения: ${compatibilityWarnings.length}`, className: 'text-[#fbbf24]' };
+      return { label: `Предупреждения: ${compatibilityWarnings.length}`, className: 'text-warning' };
     }
-    return { label: 'Все совместимо', className: 'text-[#4ade80]' };
+    return { label: 'Все совместимо', className: 'text-green-400' };
   };
 
   const compatibilityStatus = getCompatibilityStatus();
@@ -208,12 +208,12 @@ export function SaveConfigurationModal({
 
         {/* Назначение */}
         <div className="flex flex-col gap-1.5">
-          <label className="flex items-center gap-1 text-xs font-medium text-[var(--fg-secondary)] uppercase tracking-wider" htmlFor="purpose-select">
+          <label className="flex items-center gap-1 text-xs font-medium text-muted-foreground uppercase tracking-wider" htmlFor="purpose-select">
             Назначение
           </label>
           <select
             id="purpose-select"
-            className="w-full px-3.5 py-2.5 font-inherit text-[0.95rem] text-[var(--fg-primary)] bg-[var(--bg-tertiary)] border border-[var(--border-default)] rounded-md outline-none cursor-pointer transition-colors appearance-none"
+            className="w-full px-3.5 py-2.5 font-inherit text-[0.95rem] text-body-text bg-surface-card border border-border rounded-md outline-none cursor-pointer transition-colors appearance-none"
             value={purpose}
             onChange={(e) => setPurpose(e.target.value as PCPurpose)}
             disabled={saveMutation.isPending}
@@ -227,21 +227,21 @@ export function SaveConfigurationModal({
         </div>
 
         {/* Summary */}
-        <div className="bg-[var(--bg-primary)] border border-[var(--border-default)] rounded-md p-4">
-          <h3 className="m-0 mb-3 text-xs font-semibold text-[var(--fg-secondary)] uppercase tracking-wider">Сводка сборки</h3>
+        <div className="bg-surface-card border border-border rounded-md p-4">
+          <h3 className="m-0 mb-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Сводка сборки</h3>
 
-          <div className="flex flex-col gap-2 divide-y divide-[var(--border-default)]">
+          <div className="flex flex-col gap-2 divide-y divide-border">
             {/* Компонентов */}
             <div className="flex justify-between items-center py-1.5">
-              <span className="text-xs text-[var(--fg-secondary)]">Компонентов</span>
-              <span className="text-[0.95rem] font-semibold text-[var(--fg-primary)]">
+              <span className="text-xs text-muted-foreground">Компонентов</span>
+              <span className="text-[0.95rem] font-semibold text-body-text">
                 {selectedCount}/{totalCount}
               </span>
             </div>
 
             {/* Совместимость */}
             <div className="flex justify-between items-center py-1.5">
-              <span className="text-xs text-[var(--fg-secondary)]">Совместимость</span>
+              <span className="text-xs text-muted-foreground">Совместимость</span>
               <span className={`text-[0.95rem] font-semibold ${compatibilityStatus.className}`}>
                 {compatibilityStatus.label}
               </span>
@@ -249,8 +249,8 @@ export function SaveConfigurationModal({
 
             {/* Цена */}
             <div className="flex justify-between items-center py-1.5">
-              <span className="text-xs text-[var(--fg-secondary)]">Стоимость</span>
-              <span className="text-[1.05rem] font-semibold text-[var(--brand-primary)]">
+              <span className="text-xs text-muted-foreground">Стоимость</span>
+              <span className="text-[1.05rem] font-semibold text-gold">
                 {formatPrice(totalPrice)}
               </span>
             </div>
@@ -258,14 +258,14 @@ export function SaveConfigurationModal({
 
           {/* Детали ошибок/предупреждений */}
           {(compatibilityErrors.length > 0 || compatibilityWarnings.length > 0) && (
-            <div className="mt-3 pt-3 border-t border-[var(--border-default)] flex flex-col gap-1.5">
+            <div className="mt-3 pt-3 border-t border-border flex flex-col gap-1.5">
               {compatibilityErrors.map((err, i) => (
-                <p key={`err-${i}`} className="m-0 text-xs leading-normal text-[var(--error)]">
+                <p key={`err-${i}`} className="m-0 text-xs leading-normal text-red-500">
                   ✕ {err}
                 </p>
               ))}
               {compatibilityWarnings.map((warn, i) => (
-                <p key={`warn-${i}`} className="m-0 text-xs leading-normal text-[#fbbf24]">
+                <p key={`warn-${i}`} className="m-0 text-xs leading-normal text-warning">
                   ⚠ {warn}
                 </p>
               ))}

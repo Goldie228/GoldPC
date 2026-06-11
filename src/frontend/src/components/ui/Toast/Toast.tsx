@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle, XCircle, Info, AlertTriangle, X } from 'lucide-react';
-import type { ToastType } from '../../../store/toastStore';
+import type { ToastType } from '@/store/toastStore';
 
 interface ToastProps {
   id: string;

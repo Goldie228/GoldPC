@@ -22,7 +22,7 @@ interface AuthState {
   originalUser: User | null;
   currentRole: string | null;
 
-  // Actions
+  // Действия
   setUser: (user: User | null) => void;
   setLoading: (loading: boolean) => void;
   logout: () => void;
@@ -43,7 +43,7 @@ const getInitialState = (): Pick<AuthState, 'user' | 'isAuthenticated' | 'curren
 
     if (saved != null && saved !== '' && hasToken) {
       const data = JSON.parse(saved) as { user?: User | null };
-      // Decode HTML entities in user data
+      // Декодируем HTML-сущности в данных пользователя
       if (data.user != null) {
         const decodedUser = {
           ...data.user,
@@ -67,7 +67,7 @@ const getInitialState = (): Pick<AuthState, 'user' | 'isAuthenticated' | 'curren
       localStorage.removeItem('auth-storage');
     }
   } catch {
-    // Ignore parse errors
+    // Игнорируем ошибки парсинга
   }
 
   return {
@@ -87,7 +87,7 @@ export const useAuthStore = create<AuthState>()(
     originalUser: null,
 
     setUser: (user) => {
-      // Decode HTML entities in user data
+      // Декодируем HTML-сущности в данных пользователя
       if (user != null) {
         user = {
           ...user,
@@ -120,7 +120,7 @@ export const useAuthStore = create<AuthState>()(
     startImpersonation: (targetUser: User) => {
       const currentState = get();
 
-      // Only Admin users are allowed to perform impersonation
+      // Только пользователи с ролью Admin могут выполнять подмену
       if (currentState.user?.role !== 'Admin') {
         console.error('Security violation: Insufficient permissions for user impersonation');
         return;
@@ -136,7 +136,7 @@ export const useAuthStore = create<AuthState>()(
     stopImpersonation: () => {
       const currentState = get();
 
-      // Only allow stopping impersonation if actually impersonating
+      // Разрешаем остановку подмены только если она активна
       if (!currentState.isImpersonating) {
         console.error('Cannot stop impersonation: not currently impersonating');
         return;
@@ -146,7 +146,7 @@ export const useAuthStore = create<AuthState>()(
         user: currentState.originalUser,
         originalUser: null,
         isImpersonating: false,
-        // Reset current role when stopping impersonation
+        // Сбрасываем текущую роль при остановке подмены
         currentRole: currentState.originalUser?.roles?.[0] ?? currentState.originalUser?.role ?? null,
       });
     },
@@ -156,7 +156,7 @@ export const useAuthStore = create<AuthState>()(
 
       if (currentState.user == null) return;
 
-      // Validate that user actually has this role
+      // Проверяем, что пользователь действительно имеет эту роль
       const userRoles: string[] = (currentState.user.roles ?? [currentState.user.role]).filter(Boolean) as string[];
       if (!userRoles.includes(role)) {
         console.error(`User does not have role: ${role}`);
@@ -176,7 +176,7 @@ export const useAuthStore = create<AuthState>()(
           await keycloakModule.doLogout();
         }
       } finally {
-        // Always clear local storage and state regardless of server outcome
+        // Всегда очищаем локальное хранилище и состояние независимо от результата сервера
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         sessionStorage.removeItem('accessToken');

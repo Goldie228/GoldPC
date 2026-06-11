@@ -1,19 +1,19 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { Search, X, SlidersHorizontal, LayoutGrid, List, Table2 } from 'lucide-react';
-import { FilterSidebar } from '../../components/filter-sidebar/FilterSidebar';
-import { Pagination } from '../../components/catalog/Pagination';
-import { ProductTable } from '../../components/catalog/ProductTable';
-import { buildCatalogFilterChips } from '../../components/catalog/ActiveFiltersBar';
-import { ProductCardSkeleton } from '../../components/ui/Skeleton';
-import { ProductGrid } from '../../components/catalog/ProductGrid';
-import { ProductList } from '../../components/catalog/ProductList';
-import { useCatalog } from '../../hooks/useCatalog';
-import { useDebounce } from '../../hooks/useDebounce';
-import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
-import type { ProductSummary, ProductCategory, GetProductsParams } from '../../api/types';
-import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
-import { telemetryTrack } from '../../utils/telemetry';
+import { FilterSidebar } from '@/components/filter-sidebar/FilterSidebar';
+import { Pagination } from '@/components/catalog/Pagination';
+import { ProductTable } from '@/components/catalog/ProductTable';
+import { buildCatalogFilterChips } from '@/components/catalog/ActiveFiltersBar';
+import { ProductCardSkeleton } from '@/components/ui/Skeleton';
+import { ProductGrid } from '@/components/catalog/ProductGrid';
+import { ProductList } from '@/components/catalog/ProductList';
+import { useCatalog } from '@/hooks/useCatalog';
+import { useDebounce } from '@/hooks/useDebounce';
+import { formatCountRu, RU_FORMS } from '@/utils/pluralizeRu';
+import type { ProductSummary, ProductCategory, GetProductsParams } from '@/api/types';
+import { CATEGORY_LABELS_RU } from '@/utils/categoryLabels';
+import { telemetryTrack } from '@/utils/telemetry';
 
 const VALID_CATEGORIES: ProductCategory[] = [
   'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'fan', 'monitor', 'keyboard', 'mouse', 'headphones'

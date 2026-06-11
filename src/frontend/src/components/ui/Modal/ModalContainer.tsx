@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { useModal } from '../../../hooks/useModal';
+import { useModal } from '@/hooks/useModal';
 import { Modal, type ModalSize } from './Modal';
 
 function mapStoreSize(size: 'small' | 'default' | 'large' | 'fullWidth' | undefined): ModalSize {

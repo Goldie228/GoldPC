@@ -93,7 +93,7 @@ export function buildComponentsDTO(components: SelectedComponentsState): PCCompo
   if (components.case) dto.case = productToDTO(components.case.product);
   if (components.cooling) dto.cooling = productToDTO(components.cooling.product);
 
-  // Send first RAM stick (backend currently accepts only singular Ram)
+  // Отправляем первый модуль ОЗУ (бэкенд currently принимает только один Ram)
   // TODO: when backend supports multiple RAM sticks, change to send all
   if (components.ram.length > 0) {
     dto.ram = productToDTO(components.ram[0].product);

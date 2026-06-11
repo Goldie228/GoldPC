@@ -2,7 +2,7 @@ import { useState, useMemo, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Mail, User, Phone } from 'lucide-react';
 import { PasswordField } from '@/components/ui/PasswordField';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 /**
  * RegisterPage — Страница регистрации

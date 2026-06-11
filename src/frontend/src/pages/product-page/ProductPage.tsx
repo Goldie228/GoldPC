@@ -1,14 +1,16 @@
 import { useMemo, type ReactElement } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Tabs, type Tab } from '../../components/ui/Tabs';
-import { Skeleton } from '../../components/ui/Skeleton';
-import { useProduct } from '../../hooks/useProduct';
-import { useToastStore } from '../../store/toastStore';
-import { useAuth } from '../../hooks/useAuth';
-import type { Product } from '../../api/types';
-import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
-import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
+import { useQuery } from '@tanstack/react-query';
+import { Tabs, type Tab } from '@/components/ui/Tabs';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useProduct } from '@/hooks/useProduct';
+import { useToastStore } from '@/store/toastStore';
+import { useAuth } from '@/hooks/useAuth';
+import type { Product, SpecificationAttributeDto } from '@/api/types';
+import { catalogApi } from '@/api/catalog';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
+import { CATEGORY_LABELS_RU } from '@/utils/categoryLabels';
 import { ProductGallery } from './components/ProductGallery';
 import { ProductInfo } from './components/ProductInfo';
 import { ReviewSection } from './components/ReviewSection';
@@ -18,8 +20,8 @@ import {
   splitDescriptionByHeadings,
   extractKeyValueItemsFromBody,
   mergeDescriptionIntoSpecifications,
-} from '../../utils/productDescriptionSpecs';
-import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
+} from '@/utils/productDescriptionSpecs';
+import { specLabel, formatSpecValueForKey } from '@/utils/specifications';
 
 function renderDescriptionBlocks(description: string | undefined): ReactElement {
   const raw = trimDescriptionBeforeMain(description);
@@ -69,11 +71,23 @@ function renderDescriptionBlocks(description: string | undefined): ReactElement 
   );
 }
 
-function renderSpecsFromCatalog(product: Product): ReactElement {
+function renderSpecsFromCatalog(
+  product: Product,
+  specMeta?: SpecificationAttributeDto[]
+): ReactElement {
   const specs = mergeDescriptionIntoSpecifications(product.specifications, product.description);
   if (!specs || Object.keys(specs).length === 0) {
     return renderDescriptionBlocks(trimDescriptionBeforeMain(product.description));
   }
+
+  // Build lookup from metadata: key → displayName
+  const metaMap = new Map<string, string>();
+  if (specMeta) {
+    for (const attr of specMeta) {
+      metaMap.set(attr.key, attr.displayName);
+    }
+  }
+
   const priority = ['socket', 'chipset', 'cores', 'threads', 'vram', 'capacity', 'frequency'];
   const keys = Object.keys(specs).sort((a, b) => {
     const ia = priority.indexOf(a);
@@ -100,7 +114,7 @@ function renderSpecsFromCatalog(product: Product): ReactElement {
           {keys.map((k) => (
             <tr key={k} className="transition-colors hover:bg-surface-elevated/20">
               <td className="px-5 py-3.5 text-sm text-muted-foreground align-top">
-                {specLabel(k)}
+                {metaMap.get(k) ?? specLabel(k)}
               </td>
               <td className="px-5 py-3.5 text-sm text-foreground font-medium">
                 {formatSpecValueForKey(k, specs[k])}
@@ -180,6 +194,28 @@ export function ProductPage(): ReactElement {
   const showToast = useToastStore((state) => state.showToast);
   const { isAuthenticated, user } = useAuth();
 
+  // Fetch categories to map product.category slug → categoryId
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => catalogApi.getCategories(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Find categoryId by slug
+  const categoryId = useMemo(() => {
+    if (!product?.category || !categories) return null;
+    const found = categories.find((c) => c.slug === product.category);
+    return found?.id ?? null;
+  }, [product?.category, categories]);
+
+  // Fetch specification metadata for this category
+  const { data: specMeta } = useQuery({
+    queryKey: ['category-specs', categoryId],
+    queryFn: () => catalogApi.getCategorySpecifications(categoryId!),
+    enabled: !!categoryId,
+    staleTime: 10 * 60 * 1000,
+  });
+
   const tabs = useMemo<Tab[]>(() => {
     if (!product) return [];
 
@@ -191,7 +227,7 @@ export function ProductPage(): ReactElement {
         label: 'Характеристики',
         content: (
           <>
-            {renderSpecsFromCatalog(product)}
+            {renderSpecsFromCatalog(product, specMeta?.attributes)}
             {renderLegalInfoBlock(product)}
           </>
         )
@@ -202,7 +238,7 @@ export function ProductPage(): ReactElement {
         content: <ReviewSection productId={product.id} product={product} isAuthenticated={isAuthenticated} showToast={showToast} user={user} />
       }
     ];
-  }, [product, isAuthenticated, showToast]);
+  }, [product, isAuthenticated, showToast, specMeta]);
 
   if (isLoading) {
     return (

@@ -14,22 +14,22 @@ import {
   ComponentSlot,
   BuildSummaryPanel,
   ComponentPickerModal,
-} from '../../components/pc-builder';
+} from '@/components/pc-builder';
 import { lazy, Suspense } from 'react';
 const PdfExportModal = lazy(() =>
-  import('../../components/pc-builder/pdf-export-modal/PdfExportModal').then(m => ({ default: m.PdfExportModal }))
+  import('@/components/pc-builder/pdf-export-modal/PdfExportModal').then(m => ({ default: m.PdfExportModal }))
 );
-import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import {
   usePCBuilder,
   PC_BUILDER_SLOTS,
   type PCComponentType,
   type PCBuilderSelectedState,
-} from '../../hooks';
-import { extractSocket } from '../../features/pc-builder/logic/specExtractors';
-import { extractStorageType, extractM2Slots, extractSataPorts } from '../../shared/utils/compatibility/extractors';
-import type { Product, ProductCategory } from '../../api/types';
-import { useToastStore } from '../../store/toastStore';
+} from '@/hooks';
+import { extractSocket } from '@/features/pc-builder/logic/specExtractors';
+import { extractStorageType, extractM2Slots, extractSataPorts } from '@/shared/utils/compatibility/extractors';
+import type { Product, ProductCategory } from '@/api/types';
+import { useToastStore } from '@/store/toastStore';
 
 const icons = {
   cpu: <Cpu />,
@@ -97,12 +97,12 @@ type SlotRow =
 
 export interface MemoizedSlotRowProps {
   row: SlotRow;
-  selectedComponents: import('../../hooks').PCBuilderSelectedState;
-  getSlotState: (type: import('../../hooks').PCComponentType, index?: number) => import('../../hooks').ComponentCompatibility;
-  getDisplaySpecs: (type: import('../../hooks').PCComponentType, product: Product | undefined) => string[];
-  onSelect: (type: import('../../hooks').PCComponentType, index?: number) => void;
-  onRemove: (type: import('../../hooks').PCComponentType, index?: number) => void;
-  onChangeQuantity: (slotType: import('../../hooks').PCComponentType, rowIndex: number, delta: number) => void;
+  selectedComponents: import('@/hooks').PCBuilderSelectedState;
+  getSlotState: (type: import('@/hooks').PCComponentType, index?: number) => import('@/hooks').ComponentCompatibility;
+  getDisplaySpecs: (type: import('@/hooks').PCComponentType, product: Product | undefined) => string[];
+  onSelect: (type: import('@/hooks').PCComponentType, index?: number) => void;
+  onRemove: (type: import('@/hooks').PCComponentType, index?: number) => void;
+  onChangeQuantity: (slotType: import('@/hooks').PCComponentType, rowIndex: number, delta: number) => void;
   maxRamQty: number;
   maxRamModules: number;
   maxStorageModules: number;

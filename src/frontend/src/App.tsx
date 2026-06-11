@@ -45,6 +45,7 @@ const AccountWarranty = lazy(() => import('./pages/account-page/AccountWarranty'
 
 const AccountSavedBuilds = lazy(() => import('./pages/account-page/AccountSavedBuilds').then(m => ({ default: m.AccountSavedBuilds })));
 const AccountSettings = lazy(() => import('./pages/account-page/AccountSettings').then(m => ({ default: m.AccountSettings })));
+const NotificationsPage = lazy(() => import('./pages/account/notifications-page/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 const ClientTicketDetailPage = lazy(() => import('./pages/my-repairs/TicketDetailPage').then(m => ({ default: m.TicketDetailPage })));
 const DeliveryPage = lazy(() => import('./pages/info/DeliveryPage').then(m => ({ default: m.DeliveryPage })));
 const PaymentPage = lazy(() => import('./pages/info/PaymentPage').then(m => ({ default: m.PaymentPage })));
@@ -65,6 +66,7 @@ const CatalogManagementPage = lazy(() => import('./pages/admin/catalog-managemen
 const CoordinatorDashboard = lazy(() => import('./pages/admin/coordinator-dashboard/CoordinatorDashboard').then(m => ({ default: m.CoordinatorDashboard })));
 const DictionariesPage = lazy(() => import('./pages/admin/dictionaries-page/DictionariesPage').then(m => ({ default: m.DictionariesPage })));
 const SettingsPage = lazy(() => import('./pages/admin/settings-page/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const AuditLogPage = lazy(() => import('./pages/admin/audit-log-page/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
 const ProductEditorPage = lazy(() => import('./components/admin/product-editor/ProductEditorPage').then(m => ({ default: m.ProductEditorPage })));
 const OrdersPage = lazy(() => import('./pages/manager/OrdersPage').then(m => ({ default: m.OrdersPage })));
 const OrderDetailPage = lazy(() => import('./pages/manager/OrderDetailPage').then(m => ({ default: m.OrderDetailPage })));
@@ -240,6 +242,7 @@ const router = createBrowserRouter([
               { path: 'warranty', element: <AccountWarranty /> },
               { path: 'saved-builds', element: <AccountSavedBuilds /> },
               { path: 'settings', element: <AccountSettings /> },
+              { path: 'notifications', element: <NotificationsPage /> },
 
             ],
           },
@@ -296,6 +299,7 @@ const router = createBrowserRouter([
           { path: 'catalog', element: <CatalogManagementPage /> },
           { path: 'dictionaries', element: <DictionariesPage /> },
           { path: 'coordinator', element: <CoordinatorDashboard /> },
+          { path: 'audit-log', element: <AuditLogPage /> },
           { path: 'settings', element: <SettingsPage /> },
         ],
       },

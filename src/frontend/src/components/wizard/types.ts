@@ -1,4 +1,4 @@
-import type { PCComponentType } from '../../hooks';
+import type { PCComponentType } from '@/hooks';
 
 export type Purpose = 'gaming' | 'office' | 'video' | 'universal';
 export type Budget = 'low' | 'mid' | 'high' | 'ultra';

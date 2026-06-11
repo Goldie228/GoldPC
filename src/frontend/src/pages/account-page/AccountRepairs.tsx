@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useServiceTickets } from '../../hooks/useServiceTickets';
-import { TICKET_STATUSES } from '../../api/services';
-import type { ServiceTicket } from '../../api/services';
+import { useServiceTickets } from '@/hooks/useServiceTickets';
+import { TICKET_STATUSES } from '@/api/services';
+import type { ServiceRequestDto } from '@/api/services';
 import { Wrench, Clock, CheckCircle, AlertCircle, Plus, RefreshCw } from 'lucide-react';
-import { StatusBadge } from '../../components/ui/StatusBadge';
-import type { StatusVariant } from '../../components/ui/StatusBadge';
-import { StatCard } from '../../components/ui/StatCard';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import type { StatusVariant } from '@/components/ui/StatusBadge';
+import { StatCard } from '@/components/ui/StatCard';
 
 // ═══════════════════════════════════════════════════════════════════
 //  Stagger entrance animation
@@ -156,10 +156,10 @@ const mobileCardStyles = `
 // ═══════════════════════════════════════════════════════════════════
 
 export function AccountRepairs() {
-  const { getMyTickets } = useServiceTickets();
+  const { getMyServices } = useServiceTickets();
 
   const [activeFilter, setActiveFilter] = useState('all');
-  const [tickets, setTickets] = useState<ServiceTicket[]>([]);
+  const [tickets, setTickets] = useState<ServiceRequestDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [page] = useState(1);
 
@@ -176,7 +176,7 @@ export function AccountRepairs() {
   const loadTickets = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await getMyTickets(page, pageSize, activeFilter === 'all' ? undefined : activeFilter);
+      const result = await getMyServices(page, pageSize, activeFilter === 'all' ? undefined : activeFilter);
       if (result != null) {
         setTickets(result.items);
       }
@@ -185,13 +185,13 @@ export function AccountRepairs() {
     } finally {
       setLoading(false);
     }
-  }, [page, activeFilter, getMyTickets]);
+  }, [page, activeFilter, getMyServices]);
 
   const stats = {
     total: tickets.length,
     active: tickets.filter(t => !TERMINAL_STATUSES.has(t.status)).length,
     completed: tickets.filter(t => t.status === 'Completed').length,
-    urgent: tickets.filter(t => t.priority === 'urgent' || t.status === 'ReadyForPickup').length,
+    urgent: tickets.filter(t => t.status === 'ReadyForPickup').length,
   };
 
   const filterOptions = [
@@ -302,7 +302,7 @@ export function AccountRepairs() {
                     data-label="Номер"
                   >
                     <span className="text-foreground font-mono text-sm">
-                      #{ticket.ticketNumber}
+                      #{ticket.requestNumber}
                     </span>
                   </div>
 
@@ -312,8 +312,10 @@ export function AccountRepairs() {
                     data-label="Устройство"
                   >
                     <div className="text-right md:text-left">
-                      <div className="text-foreground text-sm font-medium">{ticket.deviceType}</div>
-                      <div className="text-muted-foreground text-xs">{ticket.brand} {ticket.model}</div>
+                      <div className="text-foreground text-sm font-medium">{ticket.serviceTypeName}</div>
+                      {ticket.deviceModel && (
+                        <div className="text-muted-foreground text-xs">{ticket.deviceModel}</div>
+                      )}
                     </div>
                   </div>
 

@@ -41,23 +41,23 @@ function parseMarkdown(text: string): string {
     // Заголовок ##
     const headingMatch = line.match(/^##\s+(.*)$/);
     if (headingMatch) {
-      return `<h3 style="font-size:1.125rem;font-weight:600;color:var(--color-body-text,#eaecef);margin:1rem 0 0.5rem">${escapeHtml(headingMatch[1])}</h3>`;
+      return `<h3 class="text-lg font-semibold text-body-text mt-4 mb-2">${escapeHtml(headingMatch[1])}</h3>`;
     }
 
     // Маркированный список
     const bulletMatch = line.match(/^-\s+(.*)$/);
     if (bulletMatch) {
-      return `<li style="font-size:0.875rem;color:var(--color-body-text,#eaecef);margin-left:1rem;list-style-type:disc">${escapeHtml(bulletMatch[1])}</li>`;
+      return `<li class="text-sm text-body-text ml-4 list-disc">${escapeHtml(bulletMatch[1])}</li>`;
     }
 
     // Нумерованный список
     const numberedMatch = line.match(/^\d+\.\s+(.*)$/);
     if (numberedMatch) {
-      return `<li style="font-size:0.875rem;color:var(--color-body-text,#eaecef);margin-left:1rem;list-style-type:decimal">${escapeHtml(numberedMatch[1])}</li>`;
+      return `<li class="text-sm text-body-text ml-4 list-decimal">${escapeHtml(numberedMatch[1])}</li>`;
     }
 
     // Жирный **text**
-    let processed = line.replace(/\*\*(.+?)\*\*/g, '<strong style="font-weight:600">$1</strong>');
+    let processed = line.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>');
 
     // Курсив *text*
     processed = processed.replace(/\*(.+?)\*/g, '<em>$1</em>');
@@ -218,7 +218,7 @@ export function DescriptionTab({ form, onChange }: DescriptionTabProps) {
             ))}
           </div>
 
-          {/* Textarea */}
+          {/* Текстовое поле */}
           <textarea
             ref={textareaRef}
             id="pe-description"

@@ -2,15 +2,15 @@ import { type ReactElement, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Bell, Star, Search } from 'lucide-react';
-import type { ProductSummary } from '../../api/types';
-import { useCart } from '../../hooks/useCart';
-import { useWishlist } from '../../hooks/useWishlist';
-import { useComparison } from '../../hooks/useComparison';
-import { useToast } from '../../hooks/useToast';
+import type { ProductSummary } from '@/api/types';
+import { useCart } from '@/hooks/useCart';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useComparison } from '@/hooks/useComparison';
+import { useToast } from '@/hooks/useToast';
 import { Icon } from '../ui/Icon/Icon';
-import { telemetryTrack } from '../../utils/telemetry';
-import { getProductImageUrl, hasValidProductImage } from '../../utils/image';
-import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
+import { telemetryTrack } from '@/utils/telemetry';
+import { getProductImageUrl, hasValidProductImage } from '@/utils/image';
+import { getDisplayManufacturerName } from '@/utils/manufacturerNameOverrides';
 
 interface ProductTableProps {
   products: ProductSummary[];

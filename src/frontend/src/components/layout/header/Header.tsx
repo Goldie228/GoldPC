@@ -16,14 +16,14 @@ import {
   Shield,
 } from 'lucide-react';
 import { MiniCart } from './MiniCart';
-import { NotificationCenter } from '../../notification-center/NotificationCenter';
-import { useCart } from '../../../hooks/useCart';
-import { useWishlist } from '../../../hooks/useWishlist';
-import { useComparison } from '../../../hooks/useComparison';
-import { useAuth } from '../../../hooks/useAuth';
-import { useModal } from '../../../hooks/useModal';
-import { useAuthModal } from '../../../hooks/useAuthModal';
-import { decodeHtmlEntities } from '../../../utils/decodeHtml';
+import { NotificationCenter } from '@/notification-center/NotificationCenter';
+import { useCart } from '@/hooks/useCart';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useComparison } from '@/hooks/useComparison';
+import { useAuth } from '@/hooks/useAuth';
+import { useModal } from '@/hooks/useModal';
+import { useAuthModal } from '@/hooks/useAuthModal';
+import { decodeHtmlEntities } from '@/utils/decodeHtml';
 
 const NAV_ITEMS = [
   { to: '/catalog', label: 'Каталог' },
@@ -190,7 +190,7 @@ export function Header(): ReactElement {
 
   return (
     <>
-      <header className="sticky top-0 z-[100] bg-[#0b0e11] border-b border-[#2b3139] flex items-center justify-between px-6 h-16 gap-4">
+      <header className="sticky top-0 z-[100] bg-canvas-dark border-b border-hairline-dark flex items-center justify-between px-6 h-16 gap-4">
          {/* Logo */}
          <Link to="/" className="flex items-center gap-2.5 text-decoration-none flex-shrink-0">
              <span className="text-lg md:text-xl font-bold text-gold tracking-tight">Gold<span className="text-body-text">PC</span></span>
@@ -326,6 +326,10 @@ export function Header(): ReactElement {
                       <Link to="/account/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
                         <ShoppingBag />
                         <span>Заказы</span>
+                      </Link>
+                      <Link to="/account/notifications" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
+                        <Bell />
+                        <span>Уведомления</span>
                       </Link>
                       <Link to="/account/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
                         <Settings />
@@ -488,6 +492,10 @@ export function Header(): ReactElement {
                         <Link to="/account/orders" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleCloseMenu}>
                           <ShoppingBag size={18} />
                           <span>Заказы</span>
+                        </Link>
+                        <Link to="/account/notifications" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleCloseMenu}>
+                          <Bell size={18} />
+                          <span>Уведомления</span>
                         </Link>
                         <Link to="/account/settings" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleCloseMenu}>
                           <Settings size={18} />

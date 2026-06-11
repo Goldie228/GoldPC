@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Modal } from '../../ui/Modal/Modal';
-import { Button } from '../../ui/Button';
-import { useToast } from '../../../hooks/useToast';
-import { authService } from '../../../api/authService';
+import { Modal } from '@/ui/Modal/Modal';
+import { Button } from '@/ui/Button';
+import { useToast } from '@/hooks/useToast';
+import { authService } from '@/api/authService';
 import { Clock, Loader2, Globe, Monitor, CheckCircle2, XCircle } from 'lucide-react';
-import type { LoginHistoryItem } from '../../../api/types';
+import type { LoginHistoryItem } from '@/api/types';
 
 interface LoginHistoryModalProps {
   isOpen: boolean;
@@ -167,7 +167,7 @@ export function LoginHistoryModal({ isOpen, onClose }: LoginHistoryModalProps) {
                       </td>
                       <td className="py-3">
                         {item.success ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-[#0ecb81]">
+                          <span className="inline-flex items-center gap-1 text-xs text-price-drop">
                             <CheckCircle2 size={12} />
                             Успешно
                           </span>

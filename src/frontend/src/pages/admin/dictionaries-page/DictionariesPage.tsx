@@ -13,8 +13,8 @@ import {
   type DictionaryItem,
   type CreateDictionaryItemRequest,
   type UpdateDictionaryItemRequest,
-} from '../../../api/admin';
-import { useToast } from '../../../hooks/useToast';
+} from '@/api/admin';
+import { useToast } from '@/hooks/useToast';
 import {
   BookOpen,
   Search,
@@ -149,8 +149,7 @@ export function DictionariesPage() {
       setAddForm({ name: '', slug: '' });
       showToast('Запись добавлена', 'success');
     },
-    onError: (err) => {
-      console.error('Failed to create item:', err);
+    onError: () => {
       showToast('Не удалось добавить запись', 'error');
     },
   });
@@ -163,8 +162,7 @@ export function DictionariesPage() {
       setEditingId(null);
       showToast('Запись обновлена', 'success');
     },
-    onError: (err) => {
-      console.error('Failed to update item:', err);
+    onError: () => {
       showToast('Не удалось обновить запись', 'error');
     },
   });
@@ -175,8 +173,7 @@ export function DictionariesPage() {
       invalidateAll();
       showToast('Запись удалена', 'success');
     },
-    onError: (err) => {
-      console.error('Failed to delete item:', err);
+    onError: () => {
       showToast('Не удалось удалить запись', 'error');
     },
   });

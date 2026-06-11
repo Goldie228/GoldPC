@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { statsApi } from '../../../api/admin';
+import { statsApi } from '@/api/admin';
 import {
   LayoutDashboard,
   Users,

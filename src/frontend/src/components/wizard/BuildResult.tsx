@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { HardDrive } from 'lucide-react';
-import type { PCComponentType } from '../../hooks';
+import type { PCComponentType } from '@/hooks';
 import { type WizardState, type Purpose, type Budget, type BuildTemplate, PURPOSE_OPTIONS, BUDGET_OPTIONS, COMPONENT_LABELS, getTemplate } from './types';
 
 type BuildTemplateKey = keyof BuildTemplate;

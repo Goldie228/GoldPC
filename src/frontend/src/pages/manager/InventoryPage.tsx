@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { managerApi } from '../../api/manager';
+import { managerApi } from '@/api/manager';
 
 interface InventoryItem {
   id: string;

@@ -13,7 +13,7 @@ import type { ProductEditForm } from '../types';
 import type { SpecificationAttributeDto } from '@/api/types';
 
 // ---------------------------------------------------------------------------
-// Props
+// Пропсы
 // ---------------------------------------------------------------------------
 interface SpecificationsTabProps {
   form: ProductEditForm;
@@ -21,7 +21,7 @@ interface SpecificationsTabProps {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Вспомогательные функции
 // ---------------------------------------------------------------------------
 function removeKey(
   record: Record<string, string | number | boolean>,
@@ -66,7 +66,7 @@ function NumberSpecInput({
     <div className="flex items-center gap-2">
       <input
         type="number"
-        className="bg-[var(--bg-card)] border border-[var(--border-muted)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--color-body-text)] placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors w-full"
+        className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors w-full"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={`${min ?? 0} – ${max ?? '...'}`}
@@ -83,7 +83,7 @@ function NumberSpecInput({
   );
 }
 
-/** Select из канонических значений */
+/** Выпадающий список из канонических значений */
 function SelectSpecInput({
   attr,
   value,
@@ -95,7 +95,7 @@ function SelectSpecInput({
 }) {
   return (
     <select
-      className="bg-[var(--bg-card)] border border-[var(--border-muted)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--color-body-text)] focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors w-full cursor-pointer appearance-none"
+      className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors w-full cursor-pointer appearance-none"
       value={value}
       onChange={(e) => onChange(e.target.value)}
     >
@@ -109,7 +109,7 @@ function SelectSpecInput({
   );
 }
 
-/** Текстовый input (для select-атрибутов без предопределённых значений) */
+/** Текстовое поле (для атрибутов-выбора без предопределённых значений) */
 function TextSpecInput({
   attr,
   value,
@@ -122,7 +122,7 @@ function TextSpecInput({
   return (
     <input
       type="text"
-      className="bg-[var(--bg-card)] border border-[var(--border-muted)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--color-body-text)] placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors w-full"
+      className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors w-full"
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={`Введите ${attr.displayName.toLowerCase()}`}
@@ -130,7 +130,7 @@ function TextSpecInput({
   );
 }
 
-/** Авто-определение нужного input */
+/** Авто-определение нужного поля ввода */
 function SpecInput({
   attr,
   value,
@@ -171,13 +171,13 @@ function GroupSection({
   return (
     <div className="bg-surface-elevated rounded-lg overflow-hidden">
       {groupName && (
-        <div className="px-4 py-2 bg-[var(--bg-card)] border-b border-[var(--border-muted)]">
+        <div className="px-4 py-2 bg-surface-card border-b border-hairline-dark">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {groupName}
           </h3>
         </div>
       )}
-      <div className="divide-y divide-[var(--border-muted)]">
+      <div className="divide-y divide-hairline-dark">
         {attributes.map((attr) => {
           const value = getSpecValue(specs, attr.key);
           const isPresent = attr.key in specs;
@@ -245,7 +245,7 @@ function GroupSection({
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Компонент
 // ---------------------------------------------------------------------------
 export function SpecificationsTab({ form, onChange }: SpecificationsTabProps) {
   const [specMeta, setSpecMeta] = useState<SpecificationAttributeDto[]>([]);
@@ -317,7 +317,7 @@ export function SpecificationsTab({ form, onChange }: SpecificationsTabProps) {
     return { groups, noGroup };
   }, [specMeta]);
 
-  // --- Handlers ---
+  // --- Обработчики ---
 
   const updateSpecs = (newSpecs: Record<string, string | number | boolean>) => {
     (onChange as (field: string, value: unknown) => void)('specifications', newSpecs);
@@ -332,7 +332,7 @@ export function SpecificationsTab({ form, onChange }: SpecificationsTabProps) {
     updateSpecs({ ...form.specifications, [tempKey]: '' });
   };
 
-  // --- Derived ---
+  // --- Вычисляемые значения ---
 
   // Пользовательские ключи (которых нет в мета-данных)
   const metaKeys = useMemo(
@@ -343,7 +343,7 @@ export function SpecificationsTab({ form, onChange }: SpecificationsTabProps) {
     ([k]) => !metaKeys.has(k) && !k.startsWith('_new_'),
   );
 
-  // --- Render ---
+  // --- Рендер ---
 
   if (!form.category) {
     return (
@@ -411,12 +411,12 @@ export function SpecificationsTab({ form, onChange }: SpecificationsTabProps) {
       {/* Пользовательские характеристики (не из мета-данных) */}
       {customEntries.length > 0 && (
         <div className="bg-surface-elevated rounded-lg overflow-hidden">
-          <div className="px-4 py-2 bg-[var(--bg-card)] border-b border-[var(--border-muted)]">
+          <div className="px-4 py-2 bg-surface-card border-b border-hairline-dark">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Дополнительно
             </h3>
           </div>
-          <div className="divide-y divide-[var(--border-muted)]">
+          <div className="divide-y divide-hairline-dark">
             {customEntries.map(([key, value], index) => (
               <div
                 key={index}
@@ -424,14 +424,14 @@ export function SpecificationsTab({ form, onChange }: SpecificationsTabProps) {
               >
                 <input
                   type="text"
-                  className="bg-[var(--bg-card)] border border-[var(--border-muted)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--color-body-text)] placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors w-full"
+                  className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors w-full"
                   value={key}
                   placeholder="Название"
                   onChange={() => {}}
                 />
                 <input
                   type="text"
-                  className="bg-[var(--bg-card)] border border-[var(--border-muted)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--color-body-text)] placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors w-full"
+                  className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors w-full"
                   value={String(value)}
                   onChange={(e) => handleValueChange(key, e.target.value)}
                   placeholder="Значение"
@@ -463,7 +463,7 @@ export function SpecificationsTab({ form, onChange }: SpecificationsTabProps) {
       <button
         type="button"
         onClick={handleAddCustom}
-        className="flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-hairline-dark rounded-[var(--radius-md)] text-sm text-muted-foreground hover:text-body-text hover:border-body-text transition-colors cursor-pointer"
+        className="flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-hairline-dark rounded-md text-sm text-muted-foreground hover:text-body-text hover:border-body-text transition-colors cursor-pointer"
       >
         <Plus className="w-4 h-4" />
         + Добавить свою характеристику

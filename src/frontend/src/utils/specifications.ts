@@ -3,97 +3,36 @@ import { normalizeSpecKey } from './comparison/comparisonRules';
 
 export type SpecValue = string | number | boolean | undefined | null;
 
-/** Расширенный словарь русских названий характеристик (локализация) */
+/**
+ * Локализация ключей, которых нет в specLabels.generated.ts.
+ * Приоритет: SPEC_LABELS_GENERATED → SPEC_LABELS → fallback.
+ */
 const SPEC_LABELS: Record<string, string> = {
-  vram: 'Объём видеопамяти',
-  videopamyat: 'Объём видеопамяти (ГБ)',
-  gpu: 'Серия GPU',
-  razyemy_pitaniya: 'Разъёмы питания',
-  release_year: 'Год выхода на рынок',
-  okhlazhdenie_1: 'Охлаждение',
-  graficheskiy_protsessor: 'Графический процессор',
-  shirina_shiny_pamyati: 'Ширина шины памяти',
-  proizvoditel_graficheskogo_protsessora: 'Производитель графического процессора',
-  vysota_videokarty: 'Высота видеокарты',
-  dlina_videokarty: 'Длина видеокарты',
   directx: 'DirectX',
   chip: 'Чип',
   memory: 'Память',
   memoryType: 'Тип памяти',
-  interface: 'Интерфейс',
-  socket: 'Сокет',
-  cores: 'Количество ядер',
-  threads: 'Потоки',
-  integrated_graphics: 'Встроенная графика',
-  cooling_included: 'Охлаждение в комплекте',
-  multithreading: 'Многопоточность',
   baseFrequency: 'Базовая частота',
   boostFrequency: 'Турбо частота',
-  chipset: 'Чипсет',
-  form_factor: 'Форм-фактор',
   formFactor: 'Форм-фактор',
-  type: 'Тип',
-  capacity: 'Объём',
-  frequency: 'Частота',
-  wattage: 'Мощность',
   power: 'Мощность',
-  efficiency: 'Сертификат 80+',
-  modular: 'Модульный',
-  color: 'Цвет',
-  tdp: 'TDP',
-  diagonal: 'Диагональ',
-  resolution: 'Разрешение',
-  refresh_rate: 'Частота обновления',
   refreshRate: 'Частота обновления',
-  connection: 'Подключение',
   cache: 'Кэш',
   ports: 'Разъёмы',
   memorySlots: 'Слотов памяти',
   maxMemory: 'Макс. память',
   pcieSlots: 'Слоты PCIe',
   latency: 'Задержка',
-  voltage: 'Напряжение',
   modules: 'Модули',
   readSpeed: 'Скорость чтения',
   writeSpeed: 'Скорость записи',
   fanSize: 'Вентилятор',
-  fan_size: 'Вентилятор',
-  material: 'Материал',
-  window: 'Прозрачное окно',
-  max_cooler_height: 'Макс. высота кулера',
-  max_gpu_length: 'Макс. длина видеокарты',
   gpuLength: 'Длина видеокарты',
   cpuCoolerHeight: 'Высота кулера',
   fans: 'Вентиляторы',
-  noise: 'Уровень шума',
   height: 'Высота',
   panelType: 'Тип матрицы',
-  matrix: 'Матрица',
   responseTime: 'Время отклика',
-  dpi: 'DPI',
-  sensor_type: 'Тип сенсора',
-  connection_type: 'Тип подключения',
-  ecc: 'ECC',
-  xmp: 'Профили XMP',
-  expo: 'AMD EXPO',
-  data_vykhoda_na_rynok: 'Год выхода на рынок',
-  driver_size: 'Размер драйвера, мм',
-  impedance: 'Импеданс',
-};
-
-/** snake_case → человекочитаемое русское (частые исключения) */
-const SNAKE_TO_RU: Record<string, string> = {
-  release_year: 'Год выхода на рынок',
-  data_vykhoda_na_rynok: 'Год выхода на рынок',
-  driver_size: 'Размер драйвера',
-  max_cooler_height: 'Макс. высота кулера',
-  max_gpu_length: 'Макс. длина видеокарты',
-  connection_type: 'Тип подключения',
-  sensor_type: 'Тип сенсора',
-  refresh_rate: 'Частота обновления',
-  response_time: 'Время отклика',
-  form_factor: 'Форм-фактор',
-  fan_size: 'Размер вентилятора',
 };
 
 export function specLabel(key: string): string {
@@ -107,8 +46,6 @@ export function specLabel(key: string): string {
     SPEC_LABELS[key] ??
     SPEC_LABELS[normalized] ??
     SPEC_LABELS[lower] ??
-    SNAKE_TO_RU[lower] ??
-    SNAKE_TO_RU[normalized] ??
     key
       .split('_')
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())

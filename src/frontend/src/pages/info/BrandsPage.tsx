@@ -5,9 +5,9 @@ import {
   Cpu, Monitor, Smartphone, HardDrive,
   CircuitBoard, Headphones, Mouse, Keyboard,
 } from 'lucide-react';
-import { catalogApi } from '../../api/catalog';
-import type { ProductSummary, GetProductsParams } from '../../api/types';
-import { getProductImageUrl, hasValidProductImage } from '../../utils/image';
+import { catalogApi } from '@/api/catalog';
+import type { ProductSummary, GetProductsParams } from '@/api/types';
+import { getProductImageUrl, hasValidProductImage } from '@/utils/image';
 
 type Brand = {
   name: string;

@@ -4,8 +4,8 @@
  */
 
 import type { CompatibilityWarning } from './types';
-import type { BottleneckCategory } from '../../../config/compatibilityTypes';
-import rulesConfig from '../../../config/compatibilityRules.json';
+import type { BottleneckCategory } from '@/config/compatibilityTypes';
+import rulesConfig from '@/config/compatibilityRules.json';
 
 const BOTTLENECK_CATEGORIES: Record<string, BottleneckCategory> = rulesConfig.bottleneckDetection.categories;
 

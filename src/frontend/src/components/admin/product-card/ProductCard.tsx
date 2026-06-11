@@ -4,8 +4,8 @@
  */
 
 import { Package, Edit2, ExternalLink, Trash2 } from 'lucide-react';
-import { hasValidProductImage } from '../../../utils/image';
-import type { Product } from '../../../api/types';
+import { hasValidProductImage } from '@/utils/image';
+import type { Product } from '@/api/types';
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('ru-BY', {
@@ -35,22 +35,22 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
   const stockPercent = Math.min((product.stock / 50) * 100, 100);
 
   const getStockBarColor = () => {
-    if (product.stock === 0) return 'bg-[var(--border-muted)]';
-    if (product.stock <= 4) return 'bg-red-500';
-    if (product.stock <= 19) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (product.stock === 0) return 'bg-hairline-dark';
+    if (product.stock <= 4) return 'bg-price-rise';
+    if (product.stock <= 19) return 'bg-warning';
+    return 'bg-price-drop';
   };
 
   return (
     <div
-      className={`relative bg-[var(--bg-card)] rounded-[var(--radius-lg)] border border-[var(--border-muted)] overflow-hidden flex flex-col min-w-[280px] flex-1 ${
+      className={`relative bg-surface-card rounded-lg border border-hairline-dark overflow-hidden flex flex-col min-w-[280px] flex-1 ${
         !product.isActive ? 'opacity-60' : ''
       }`}
     >
       {/* Оверлей для неактивного товара */}
       {!product.isActive && (
-        <div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center rounded-[var(--radius-lg)]">
-          <span className="px-2 py-0.5 rounded-[var(--radius-sm)] text-xs bg-[var(--color-price-rise)]/15 text-[var(--color-price-rise)] font-medium">
+        <div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center rounded-lg">
+          <span className="px-2 py-0.5 rounded-sm text-xs bg-price-rise/15 text-price-rise font-medium">
             Неактивен
           </span>
         </div>
@@ -86,23 +86,23 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
         )}
 
         {/* Разделитель */}
-        <div className="border-t border-[var(--border-muted)]" />
+        <div className="border-t border-hairline-dark" />
 
         {/* Цена */}
         <div className="flex items-baseline gap-2 flex-wrap">
-          <span className="text-lg font-bold text-[var(--color-gold)]">
+          <span className="text-lg font-bold text-gold">
             {formatPrice(product.price)}
           </span>
           {product.oldPrice && (
-            <span className="text-sm text-[var(--color-muted-text)] line-through">
+            <span className="text-sm text-muted-foreground line-through">
               {formatPrice(product.oldPrice)}
             </span>
           )}
         </div>
 
-        {/* Stock indicator */}
+        {/* Индикатор наличия */}
         <div className="space-y-1.5">
-          <div className="h-1.5 rounded-full bg-[var(--border-muted)] w-full overflow-hidden">
+          <div className="h-1.5 rounded-full bg-hairline-dark w-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${getStockBarColor()}`}
               style={{ width: `${stockPercent}%` }}
@@ -113,7 +113,7 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
           </span>
         </div>
 
-        {/* Action buttons */}
+        {/* Кнопки действий */}
         <div className="flex items-center gap-2 mt-auto pt-1">
           <button
             onClick={() => onEdit(product)}

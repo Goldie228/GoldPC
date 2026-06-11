@@ -3,7 +3,7 @@
  * Extracted from FilterSidebar for better organization
  */
 
-import type { ProductCategory, Category, FilterFacetAttribute, Manufacturer } from '../../api/types';
+import type { ProductCategory, Category, FilterFacetAttribute, Manufacturer } from '@/api/types';
 
 export interface FilterState {
   selectedCategory: ProductCategory | null;

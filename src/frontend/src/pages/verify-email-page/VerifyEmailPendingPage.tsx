@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Mail, RefreshCw, CircleCheckBig } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import { useAuthStore } from '../../store/authStore';
-import { authService } from '../../api/authService';
+import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
+import { authService } from '@/api/authService';
 
 /**
  * VerifyEmailPendingPage — Страница после регистрации

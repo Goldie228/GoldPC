@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ProductCard } from '../product-card/ProductCard';
-import { useProducts } from '../../hooks/useProducts';
+import { useProducts } from '@/hooks/useProducts';
 
 interface RelatedProductsProps {
   cartItems: Array<{ productId: string; name: string }>;

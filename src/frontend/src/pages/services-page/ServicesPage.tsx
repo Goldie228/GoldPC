@@ -5,8 +5,8 @@
  */
 import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronRight, Clock, Gem, Loader2, RefreshCw, ShieldCheck, Users, Zap } from 'lucide-react';
-import { useServices } from '../../hooks/useServices';
-import type { ServiceCategory } from '../../api/types';
+import { useServices } from '@/hooks/useServices';
+import type { ServiceCategory } from '@/api/types';
 
 const categoryImages: Record<ServiceCategory, string> = {
   repair: '/placeholders/services/repair.jpg',

@@ -55,7 +55,7 @@ export function ProductEditorDrawer({
 
   const isOpen = productId !== null;
 
-  // --- Responsive: гибридный режим ---
+  // --- Адаптивный: гибридный режим ---
   const [isWide, setIsWide] = useState(() => window.innerWidth > 1400);
   const [manuallyExpanded, setManuallyExpanded] = useState(false);
 
@@ -65,13 +65,13 @@ export function ProductEditorDrawer({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- Tab state ---
+  // --- Состояние вкладки ---
   const [activeTab, setActiveTab] = useState<TabKey>('basic');
 
-  // --- Form state ---
+  // --- Состояние формы ---
   const [form, setForm] = useState<ProductEditForm>(EMPTY_FORM);
 
-  // --- Fetch product ---
+  // --- Загрузка товара ---
   const {
     data: product,
     isLoading,
@@ -82,7 +82,7 @@ export function ProductEditorDrawer({
     enabled: isOpen,
   });
 
-  // Populate form when product loads
+  // Заполнение формы при загрузке товара
   useEffect(() => {
     if (product) {
       setForm({
@@ -104,7 +104,7 @@ export function ProductEditorDrawer({
     }
   }, [product]);
 
-  // Reset form when drawer closes
+  // Сброс формы при закрытии дровера
   useEffect(() => {
     if (!isOpen) {
       setForm(EMPTY_FORM);
@@ -113,7 +113,7 @@ export function ProductEditorDrawer({
     }
   }, [isOpen]);
 
-  // --- hasChanges detection ---
+  // --- Определение наличия изменений ---
   const hasChanges = useMemo(() => {
     if (!product) return false;
     return (
@@ -128,7 +128,7 @@ export function ProductEditorDrawer({
     );
   }, [form, product]);
 
-  // --- Save mutation ---
+  // --- Мутация сохранения ---
   const saveMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateProductRequest }) =>
       catalogAdminApi.updateProduct(id, data),
@@ -158,7 +158,7 @@ export function ProductEditorDrawer({
     });
   }, [productId, product, form, saveMutation]);
 
-  // --- Form change handler ---
+  // --- Обработчик изменения формы ---
   const handleFormChange = useCallback(
     (field: string, value: string | number | boolean | null) => {
       setForm((prev) => ({ ...prev, [field]: value }));
@@ -166,15 +166,15 @@ export function ProductEditorDrawer({
     [],
   );
 
-  // --- Images change handler ---
+  // --- Обработчик изменения изображений ---
   const handleImagesChange = useCallback((images: ProductImage[]) => {
     setForm((prev) => ({ ...prev, images }));
   }, []);
 
-  // --- Navigation ---
+  // --- Навигация ---
   const handleNavigateTo = useCallback(
     (newProductId: string) => {
-      // Auto-save before navigating
+      // Автосохранение перед навигацией
       if (hasChanges && product) {
         saveMutation.mutate({
           id: product.id,
@@ -198,7 +198,7 @@ export function ProductEditorDrawer({
   const hasPrev = currentIdx > 0;
   const hasNext = products ? currentIdx < products.length - 1 : false;
 
-  // --- Close handler with confirm ---
+  // --- Обработчик закрытия с подтверждением ---
   const handleClose = useCallback(() => {
     if (hasChanges) {
       const confirmed = window.confirm(
@@ -209,25 +209,25 @@ export function ProductEditorDrawer({
     onClose();
   }, [hasChanges, onClose]);
 
-  // --- Keyboard shortcuts ---
+  // --- Горячие клавиши ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen || !productId) return;
 
-      // Escape → close
+      // Escape → закрыть
       if (e.key === 'Escape') {
         handleClose();
         return;
       }
 
-      // Ctrl+S / ⌘S → save
+      // Ctrl+S / ⌘S → сохранить
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
         handleSave();
         return;
       }
 
-      // ← / → → navigate between products
+      // ← / → → навигация между товарами
       if (products && products.length > 0) {
         if (e.key === 'ArrowLeft' && hasPrev) {
           handleNavigateTo(products[currentIdx - 1].id);
@@ -242,7 +242,7 @@ export function ProductEditorDrawer({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, productId, products, currentIdx, hasPrev, hasNext, handleClose, handleSave, handleNavigateTo]);
 
-  // --- Compute effective drawer width ---
+  // --- Вычисление эффективной ширины дровера ---
   const isFullWidth = !isWide || manuallyExpanded;
 
   const drawerTitle = isLoading
@@ -260,18 +260,18 @@ export function ProductEditorDrawer({
         />
       )}
 
-      {/* Drawer panel */}
+      {/* Панель дровера */}
       <div
-        className={`fixed top-0 right-0 z-[1001] h-full bg-[var(--bg-card)] shadow-xl overflow-y-auto transition-transform duration-300 ${
+        className={`fixed top-0 right-0 z-[1001] h-full bg-surface-card shadow-xl overflow-y-auto transition-transform duration-300 ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         } ${
           isFullWidth ? 'w-full' : 'w-[55vw] max-w-[55vw]'
         }`}
       >
-        {/* Sticky header */}
-        <div className="sticky top-0 z-10 bg-[var(--bg-card)] border-b border-[var(--border-muted)]">
+        {/* Закреплённый заголовок */}
+        <div className="sticky top-0 z-10 bg-surface-card border-b border-hairline-dark">
           <div className="flex items-center justify-between px-6 py-4">
-            {/* Left: nav arrows + title */}
+            {/* Слева: стрелки навигации + заголовок */}
             <div className="flex items-center gap-3 min-w-0">
               {products && products.length > 0 && (
                 <div className="flex items-center gap-1 mr-1">
@@ -300,9 +300,9 @@ export function ProductEditorDrawer({
               </h2>
             </div>
 
-            {/* Right: actions */}
+            {/* Справа: действия */}
             <div className="flex items-center gap-2">
-              {/* Expand toggle */}
+              {/* Переключатель развёртывания */}
               {isWide && (
                 <button
                   type="button"
@@ -318,7 +318,7 @@ export function ProductEditorDrawer({
                 </button>
               )}
 
-              {/* Save button */}
+              {/* Кнопка сохранения */}
               <button
                 type="button"
                 onClick={handleSave}
@@ -334,7 +334,7 @@ export function ProductEditorDrawer({
                 <span className="hidden sm:inline">Сохранить</span>
               </button>
 
-              {/* Close */}
+              {/* Закрыть */}
               <button
                 type="button"
                 onClick={handleClose}
@@ -347,7 +347,7 @@ export function ProductEditorDrawer({
           </div>
         </div>
 
-        {/* Loading state */}
+        {/* Состояние загрузки */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="w-8 h-8 animate-spin text-gold mb-4" />
@@ -355,7 +355,7 @@ export function ProductEditorDrawer({
           </div>
         )}
 
-        {/* Error state */}
+        {/* Состояние ошибки */}
         {isError && !isLoading && (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <p className="text-sm text-price-rise mb-2">
@@ -367,7 +367,7 @@ export function ProductEditorDrawer({
           </div>
         )}
 
-        {/* Tab content */}
+        {/* Содержимое вкладки */}
         {!isLoading && !isError && product && (
           <ProductEditorTabs
             activeTab={activeTab}

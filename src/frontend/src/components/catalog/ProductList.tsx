@@ -1,4 +1,4 @@
-import type { ProductSummary } from '../../api/types';
+import type { ProductSummary } from '@/api/types';
 import { ProductCard } from '../product-card/ProductCard';
 
 interface ProductListProps {

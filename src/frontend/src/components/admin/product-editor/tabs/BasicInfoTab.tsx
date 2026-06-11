@@ -49,8 +49,8 @@ export function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
       if (result.name) {
         onChange('name', result.name);
       }
-    } catch (error) {
-      console.error('Ошибка генерации названия:', error);
+    } catch {
+      // Ошибка генерации названия — не критична, пользователь может ввести вручную
     } finally {
       setIsGenerating(false);
     }
@@ -69,7 +69,7 @@ export function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
           <input
             id="pe-name"
             type="text"
-            className="flex-1 bg-[var(--bg-card)] border border-[var(--border-muted)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--color-body-text)] placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+            className="flex-1 bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
             placeholder="Введите название товара"
             value={form.name}
             onChange={(e) => onChange('name', e.target.value)}
@@ -78,7 +78,7 @@ export function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
             type="button"
             onClick={handleGenerateName}
             disabled={!canGenerate}
-            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gold border border-gold/30 rounded-[var(--radius-md)] hover:bg-gold/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gold border border-gold/30 rounded-md hover:bg-gold/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Сгенерировать название по шаблону"
           >
             {isGenerating ? (
@@ -103,7 +103,7 @@ export function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
         </label>
         <select
           id="pe-category"
-          className="bg-[var(--bg-card)] border border-[var(--border-muted)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--color-body-text)] focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors cursor-pointer"
+          className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors cursor-pointer"
           value={form.category}
           onChange={(e) => onChange('category', e.target.value)}
         >
@@ -127,7 +127,7 @@ export function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
             type="number"
             min={0}
             step="0.01"
-            className="bg-[var(--bg-card)] border border-[var(--border-muted)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--color-body-text)] placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+            className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
             placeholder="0"
             value={form.price}
             onChange={(e) => onChange('price', parseFloat(e.target.value) || 0)}
@@ -142,7 +142,7 @@ export function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
             type="number"
             min={0}
             step="0.01"
-            className="bg-[var(--bg-card)] border border-[var(--border-muted)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--color-body-text)] placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+            className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
             placeholder="0"
             value={form.oldPrice ?? ''}
             onChange={(e) =>
@@ -162,7 +162,7 @@ export function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
           type="number"
           min={0}
           step="1"
-          className="bg-[var(--bg-card)] border border-[var(--border-muted)] rounded-[var(--radius-md)] px-3 py-2 text-sm text-[var(--color-body-text)] placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+          className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
           placeholder="0"
           value={form.stock}
           onChange={(e) => onChange('stock', parseInt(e.target.value, 10) || 0)}

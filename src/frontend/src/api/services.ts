@@ -89,65 +89,6 @@ export interface WorkReportDto {
 }
 
 // ═══════════════════════════════════════════════
-//  СТАРЫЕ ТИПЫ (обратная совместимость, deprecated)
-// ═══════════════════════════════════════════════
-
-/** @deprecated Используйте ServiceRequestDto */
-export interface ServiceTicket {
-  id: string;
-  ticketNumber: string;
-  deviceType: string;
-  brand: string;
-  model: string;
-  issueDescription: string;
-  status: TicketStatus;
-  createdAt: string;
-  updatedAt: string;
-  technician?: { id: string; name: string };
-  notes: string;
-  estimatedCompletion?: string;
-  priority: 'low' | 'normal' | 'high' | 'urgent';
-}
-
-/** @deprecated */
-export interface TicketStatusHistory {
-  id: string;
-  status: TicketStatus;
-  createdAt: string;
-  note?: string;
-  author?: string;
-}
-
-/** @deprecated */
-export interface TicketMessage {
-  id: string;
-  author: 'customer' | 'technician' | 'system';
-  authorName?: string;
-  content: string;
-  createdAt: string;
-  attachments?: string[];
-}
-
-/** @deprecated Используйте CreateServiceRequest */
-export interface CreateTicketRequest {
-  deviceType: string;
-  brand: string;
-  model: string;
-  issueDescription: string;
-  preferredContact: 'phone' | 'email' | 'whatsapp' | 'telegram';
-  serialNumber?: string;
-  purchaseDate?: string;
-}
-
-/** @deprecated */
-export interface CreateTicketResponse {
-  id: string;
-  ticketNumber: string;
-  status: TicketStatus;
-  createdAt: string;
-}
-
-// ═══════════════════════════════════════════════
 //  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // ═══════════════════════════════════════════════
 
@@ -209,10 +150,6 @@ async function getServiceById(id: string): Promise<ServiceRequestDto> {
   const response = await apiClient.get(`/services/${id}`);
   return unwrapData<ServiceRequestDto>(response.data);
 }
-
-// ═══════════════════════════════════════════════
-//  СТАРЫЕ API-ФУНКЦИИ (обратная совместимость, deprecated)
-// ═══════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════
 //  MASTER API-ФУНКЦИИ
@@ -293,73 +230,6 @@ async function closeTicket(id: string, comment?: string): Promise<ServiceRequest
 }
 
 // ═══════════════════════════════════════════════
-//  СТАРЫЕ API-ФУНКЦИИ (обратная совместимость, deprecated)
-// ═══════════════════════════════════════════════
-
-/**
- * Маппер ServiceRequestDto → ServiceTicket (для обратной совместимости)
- */
-function mapServiceRequestToTicket(dto: ServiceRequestDto): ServiceTicket {
-  return {
-    id: dto.id,
-    ticketNumber: dto.requestNumber,
-    deviceType: (dto.serviceTypeName != null && dto.serviceTypeName !== '') ? dto.serviceTypeName : (dto.deviceModel != null && dto.deviceModel !== '') ? dto.deviceModel : 'Устройство',
-    brand: '',
-    model: dto.deviceModel ?? '',
-    issueDescription: dto.description,
-    status: dto.status,
-    createdAt: dto.createdAt,
-    updatedAt: dto.completedAt ?? dto.createdAt,
-    notes: '',
-    priority: 'normal',
-  };
-}
-
-/** @deprecated Используйте getMyServices */
-async function getMyTickets(page = 1, pageSize = 10, status?: string): Promise<{ items: ServiceTicket[]; total: number }> {
-  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-  if (status != null && status !== '' && status !== 'all') params.append('status', status);
-
-  const response = await apiClient.get(`/services/my?${params}`);
-  const data = unwrapData<{ items: ServiceRequestDto[]; totalCount: number }>(response.data);
-  return {
-    items: (data.items ?? []).map(mapServiceRequestToTicket),
-    total: data.totalCount ?? 0,
-  };
-}
-
-/** @deprecated Используйте getServiceById */
-async function getTicket(id: string): Promise<ServiceTicket> {
-  const response = await apiClient.get(`/services/${id}`);
-  const dto = unwrapData<ServiceRequestDto>(response.data);
-  return mapServiceRequestToTicket(dto);
-}
-
-/** @deprecated */
-async function getTicketHistory(id: string): Promise<TicketStatusHistory[]> {
-  const response = await apiClient.get(`/services/${id}/history`);
-  return unwrapData<TicketStatusHistory[]>(response.data);
-}
-
-/** @deprecated */
-async function getTicketMessages(id: string): Promise<TicketMessage[]> {
-  const response = await apiClient.get(`/services/${id}/messages`);
-  return unwrapData<TicketMessage[]>(response.data);
-}
-
-/** @deprecated */
-async function sendMessage(ticketId: string, content: string): Promise<TicketMessage> {
-  const response = await apiClient.post(`/services/${ticketId}/messages`, { content });
-  return unwrapData<TicketMessage>(response.data);
-}
-
-/** @deprecated Используйте createService */
-async function createTicket(data: CreateTicketRequest): Promise<CreateTicketResponse> {
-  const response = await apiClient.post('/services', data);
-  return unwrapData<CreateTicketResponse>(response.data);
-}
-
-// ═══════════════════════════════════════════════
 //  ЭКСПОРТ
 // ═══════════════════════════════════════════════
 
@@ -376,11 +246,4 @@ export const servicesApi = {
   addServicePart,
   cancelTicket,
   closeTicket,
-  // Старые (deprecated)
-  getMyTickets,
-  getTicket,
-  getTicketHistory,
-  getTicketMessages,
-  sendMessage,
-  createTicket,
 };

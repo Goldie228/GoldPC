@@ -7,22 +7,22 @@ import { useState, useEffect, useMemo, useCallback, useTransition, useRef } from
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import { useDebouncedCallback } from 'use-debounce';
 import { Search, SlidersHorizontal, X, ExternalLink, ZoomIn, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
-import { Modal, BottomSheet } from '../../ui';
-import { useMediaQuery } from '../../../hooks/useMediaQuery';
-import { ProductCardSkeleton } from '../../ui/Skeleton';
-import { ApiErrorBanner } from '../../ui/ApiErrorBanner';
-import { Pagination } from '../../catalog/Pagination';
-import { FilterSidebar } from '../../filter-sidebar/FilterSidebar';
-import { getProductImageUrl, hasValidProductImage } from '../../../utils/image';
-import { specLabel, formatSpecValueForKey } from '../../../utils/specifications';
-import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryType, extractStorageType, extractM2Slots, extractSataPorts } from '../../../shared/utils/compatibility/extractors';
-import { checkRAM, detectMemoryFormFactorFromName } from '../../../shared/utils/compatibility/checks';
+import { Modal, BottomSheet } from '@/components/ui';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { ProductCardSkeleton } from '@/components/ui/Skeleton';
+import { ApiErrorBanner } from '@/components/ui/ApiErrorBanner';
+import { Pagination } from '@/components/catalog/Pagination';
+import { FilterSidebar } from '@/components/filter-sidebar/FilterSidebar';
+import { getProductImageUrl, hasValidProductImage } from '@/utils/image';
+import { specLabel, formatSpecValueForKey } from '@/utils/specifications';
+import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryType, extractStorageType, extractM2Slots, extractSataPorts } from '@/shared/utils/compatibility/extractors';
+import { checkRAM, detectMemoryFormFactorFromName } from '@/shared/utils/compatibility/checks';
 import { useQuery } from '@tanstack/react-query';
-import { useProducts } from '../../../hooks/useProducts';
-import { catalogApi } from '../../../api/catalog';
-import type { Product, ProductCategory, ProductImage, ProductSummary, ProductSpecifications, PaginationMeta } from '../../../api/types';
-import type { PCComponentType } from '../../../hooks';
-import type { PCBuilderSelectedState } from '../../../hooks/usePCBuilder';
+import { useProducts } from '@/hooks/useProducts';
+import { catalogApi } from '@/api/catalog';
+import type { Product, ProductCategory, ProductImage, ProductSummary, ProductSpecifications, PaginationMeta } from '@/api/types';
+import type { PCComponentType } from '@/hooks';
+import type { PCBuilderSelectedState } from '@/hooks/usePCBuilder';
 
 const noopSelect = (_product: ProductSummary) => {};
 
@@ -40,9 +40,9 @@ export interface ComponentPickerModalProps {
   buildContext?: PCBuilderSelectedState;
   onConfirm: (product: Product) => void;
   getDisplaySpecs: (type: PCComponentType, product: Product) => string[];
-  /** Фильтр по подстроке в названии (e.g. "вентилятор для корпуса") */
+  /** Фильтр по подстроке в названии (например, "вентилятор для корпуса") */
   nameFilter?: string;
-  /** Значение спецификации 'type' для фильтрации (e.g. 'CPU Кулер', 'Жидкостное охлаждение'). Если массив — OR. */
+  /** Значение спецификации 'type' для фильтрации (например, 'CPU Кулер', 'Жидкостное охлаждение'). Если массив — ИЛИ. */
   typeFilter?: string | string[];
   /** Платформа для фильтра производителей: 'amd' или 'intel' */
   restrictedManufacturerPlatform?: 'amd' | 'intel';
@@ -73,9 +73,9 @@ function parseSort(p: string) {
 }
 
 /**
- * Safely maps ProductSummary to Product, populating specifications
- * from the new compatibility fields now available in ProductSummary.
- * This avoids the `specifications: {}` hack that caused fail-open bugs.
+ * Безопасное преобразование ProductSummary в Product с заполнением
+ * спецификаций из новых полей совместимости, доступных в ProductSummary.
+ * Убирает хак с `specifications: {}`, который вызывал баги.
  */
 function enrichSummaryToProduct(s: ProductSummary): Product {
   const specs: ProductSpecifications = {};
@@ -90,12 +90,12 @@ function enrichSummaryToProduct(s: ProductSummary): Product {
     const fullMemType = extractMemoryType(fullProduct.specifications);
     if (fullMemType) specs.memoryType = fullMemType;
   }
-  // Try to detect type from name as fallback for checkRAM
+  // Пытаемся определить тип по названию как запасной вариант для checkRAM
   const nameUpper = s.name.toUpperCase();
   if (nameUpper.includes('DDR5')) specs.type = 'DDR5';
   else if (nameUpper.includes('DDR4') || nameUpper.includes('LPDDR4')) specs.type = 'DDR4';
   else if (nameUpper.includes('DDR3') || nameUpper.includes('DDR3L')) specs.type = 'DDR3';
-  // Fallback для материнских плат: определяем DDR по сокету/чипсету
+  // Запасной вариант для материнских плат: определяем DDR по сокету/чипсету
   else if (s.category?.toLowerCase().includes('материнск')) {
     const specs2 = fullProduct.specifications ?? {} as ProductSpecifications;
     const socket = s.socket || (typeof specs2.socket === 'string' ? specs2.socket : '') || '';
@@ -111,7 +111,7 @@ function enrichSummaryToProduct(s: ProductSummary): Product {
   return { ...s, specifications: specs } as Product;
 }
 
-// ─── CardImageGallery: image with prev/next + hover zones + badges ────────
+// ─── CardImageGallery: изображение с навигацией + зоны наведения + бейджи ────────
 
 function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }: {
   product: ProductSummary;
@@ -138,30 +138,30 @@ function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }:
   const hasMultiple = validImages.length > 1;
 
   return (
-    <div className="relative w-full h-[200px] bg-[var(--color-white)] flex items-center justify-center overflow-hidden" onMouseLeave={() => setCurrentIdx(0)}>
+    <div className="relative w-full h-[200px] bg-white flex items-center justify-center overflow-hidden" onMouseLeave={() => setCurrentIdx(0)}>
       <div className="w-full h-full flex items-center justify-center p-2.5 box-border">
         {url
           ? <img src={url} alt={product.name} loading="lazy" className="max-w-full max-h-full w-auto h-auto object-contain" />
-          : <div className="w-[30%] aspect-square rounded-full bg-[#2b3139] opacity-50" />
+          : <div className="w-[30%] aspect-square rounded-full bg-surface-elevated opacity-50" />
         }
       </div>
 
-      {/* Navigation arrows */}
+      {/* Навигационные стрелки */}
       {hasMultiple && (
         <>
-          <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-[rgba(0,0,0,0.12)] bg-[rgba(255,255,255,0.85)] text-[var(--color-black)] flex items-center justify-center cursor-pointer opacity-0 transition-opacity z-2 left-1" onClick={goPrev} aria-label="Предыдущее">
+          <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-black/10 bg-white/85 text-black flex items-center justify-center cursor-pointer opacity-0 transition-opacity z-2 left-1" onClick={goPrev} aria-label="Предыдущее">
             <ChevronLeft size={18} />
           </button>
-          <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-[rgba(0,0,0,0.12)] bg-[rgba(255,255,255,0.85)] text-[var(--color-black)] flex items-center justify-center cursor-pointer opacity-0 transition-opacity z-2 right-1" onClick={goNext} aria-label="Следующее">
+          <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-black/10 bg-white/85 text-black flex items-center justify-center cursor-pointer opacity-0 transition-opacity z-2 right-1" onClick={goNext} aria-label="Следующее">
             <ChevronRight size={18} />
           </button>
-          {/* Image indicators */}
+          {/* Индикаторы изображений */}
           <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1 z-2">
             {validImages.map((_, i) => (
               <span key={i} className={`w-1.5 h-1.5 rounded-full bg-[rgba(0,0,0,0.2)] transition-all ${i === currentIdx ? "bg-[rgba(0,0,0,0.5)] w-3.5 rounded-[3px]" : ""}`} />
             ))}
           </div>
-          {/* Hover zones */}
+          {/* Зоны наведения */}
           <div className="absolute inset-0 flex z-1 pointer-events-auto">
             {validImages.map((_, i) => (
               <div key={i} className="flex-1 cursor-pointer" onMouseEnter={() => setCurrentIdx(i)} />
@@ -170,13 +170,13 @@ function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }:
         </>
       )}
 
-      {hasDiscount && <span className="absolute top-2 left-2 px-2 py-0.5 text-[0.64rem] font-semibold bg-[var(--error)] text-white rounded-md z-3">-{discountPercent}%</span>}
-      {outOfStock && <span className="absolute top-2 right-2 px-2 py-0.5 text-[0.64rem] font-medium bg-[rgba(0,0,0,0.6)] text-white rounded-md z-3">Нет в наличии</span>}
+      {hasDiscount && <span className="absolute top-2 left-2 px-2 py-0.5 text-[0.64rem] font-semibold bg-price-rise text-white rounded-md z-3">-{discountPercent}%</span>}
+      {outOfStock && <span className="absolute top-2 right-2 px-2 py-0.5 text-[0.64rem] font-medium bg-black/60 text-white rounded-md z-3">Нет в наличии</span>}
     </div>
   );
 }
 
-// ─── PickerProductCard ──────────────────────────────────
+// ─── PickerProductCard (карточка товара в модалке) ──────────────────────────────────
 
 interface PickerProductCardProps {
   product: ProductSummary;
@@ -196,31 +196,31 @@ function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpen
 
   return (
     <div
-      className={`flex flex-col items-stretch gap-0 border border-[rgba(255,255,255,0.06)] rounded-lg bg-[var(--color-black-soft)] cursor-pointer text-left text-inherit font-inherit overflow-hidden transition-all hover:border-[rgba(252,213,53,0.25)] hover:-translate-y-[1px] ${isSelected ? "border-[var(--accent)] bg-[rgba(252,213,53,0.06)]" : ""} ${outOfStock ? "opacity-60" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
+      className={`flex flex-col items-stretch gap-0 border border-white/5 rounded-lg bg-neutral-900 cursor-pointer text-left text-inherit font-inherit overflow-hidden transition-all hover:border-gold/25 hover:-translate-y-[1px] ${isSelected ? "border-gold bg-gold/5" : ""} ${outOfStock ? "opacity-60" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
       onClick={isCompatible === false ? undefined : () => onSelect(product)}
     >
       <CardImageGallery product={product} hasDiscount={hasDiscount} discountPercent={discountPercent} outOfStock={outOfStock} />
 
       <div className="p-2.5 flex flex-col gap-1 flex-1">
         <h4 className="m-0">
-          <button type="button" className="inline text-[0.74rem] font-medium text-[var(--fg)] leading-[1.3] m-0 p-0 bg-none border-none text-left cursor-pointer display-[-webkit-box] -webkit-line-clamp-2 -webkit-box-orient-vertical overflow-hidden hover:text-[var(--accent)]" onClick={isCompatible === false ? undefined : () => onSelect(product)} title={product.name}>
+          <button type="button" className="inline text-[0.74rem] font-medium text-body-text leading-[1.3] m-0 p-0 bg-none border-none text-left cursor-pointer display-[-webkit-box] -webkit-line-clamp-2 -webkit-box-orient-vertical overflow-hidden hover:text-gold" onClick={isCompatible === false ? undefined : () => onSelect(product)} title={product.name}>
             {product.name}
           </button>
         </h4>
          {product.slug && (
-           <button type="button" className="inline-flex items-center gap-[3px] p-0 m-0 bg-none border-none text-[0.64rem] text-[var(--fg-muted)] cursor-pointer transition-colors hover:text-[var(--accent)]" onClick={() => onOpenProduct(product.slug!)} title="Открыть страницу товара">
+           <button type="button" className="inline-flex items-center gap-[3px] p-0 m-0 bg-none border-none text-[0.64rem] text-muted-foreground cursor-pointer transition-colors hover:text-gold" onClick={() => onOpenProduct(product.slug!)} title="Открыть страницу товара">
              <ExternalLink size={10} /> Подробнее
            </button>
          )}
-         {specs.length > 0 && <ul className="m-0 p-0 list-none flex flex-col gap-[4px]">{specs.map((s, i) => <li key={i} className="text-[var(--fg-muted)] text-[0.68rem] flex items-start gap-1.5"><span className="text-[var(--accent)] mt-[1px]">•</span>{s}</li>)}</ul>}
+         {specs.length > 0 && <ul className="m-0 p-0 list-none flex flex-col gap-[4px]">{specs.map((s, i) => <li key={i} className="text-muted-foreground text-[0.68rem] flex items-start gap-1.5"><span className="text-gold mt-[1px]">•</span>{s}</li>)}</ul>}
         <div className="flex items-center justify-between gap-2 mt-auto">
           <div className="flex flex-col gap-0.5">
-            <span className="text-[0.85rem] font-semibold text-[var(--accent)] whitespace-nowrap">{product.price.toLocaleString('ru-BY')} BYN</span>
+            <span className="text-[0.85rem] font-semibold text-gold whitespace-nowrap">{product.price.toLocaleString('ru-BY')} BYN</span>
             {hasDiscount && product.oldPrice !== undefined && (
-              <span className="text-[0.64rem] text-[var(--fg-dim)] line-through">{product.oldPrice.toLocaleString('ru-BY')}</span>
+              <span className="text-[0.64rem] text-muted-foreground line-through">{product.oldPrice.toLocaleString('ru-BY')}</span>
             )}
           </div>
-          <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border border-[var(--accent)] bg-transparent text-[var(--accent)] cursor-pointer whitespace-nowrap transition-all ${isSelected ? "text-black font-bold shadow-sm" : ""}`} style={isSelected ? { backgroundColor: 'var(--accent)' } : undefined} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
+          <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border border-gold bg-transparent text-gold cursor-pointer whitespace-nowrap transition-all ${isSelected ? "text-black font-bold shadow-sm" : ""}`} style={isSelected ? { backgroundColor: 'var(--accent)' } : undefined} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
             {isSelected ? 'Выбрано' : outOfStock ? 'Нет в наличии' : 'Выбрать'}
           </button>
         </div>
@@ -229,7 +229,7 @@ function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpen
   );
 }
 
-// ─── PickerProductCardCompact ───────────────────────────
+// ─── PickerProductCardCompact (компактная карточка) ───────────────────────────
 
 function PickerProductCardCompact({ product, isSelected, isCompatible, onSelect, onOpenProduct, slotType, getDisplaySpecs }: PickerProductCardProps) {
   const url = product.mainImage?.url && hasValidProductImage(product.mainImage.url)
@@ -240,42 +240,42 @@ function PickerProductCardCompact({ product, isSelected, isCompatible, onSelect,
 
   return (
     <div
-      className={`flex items-center gap-3 p-2 border border-[rgba(255,255,255,0.06)] rounded-md bg-[var(--color-black-soft)] text-inherit font-inherit transition-all hover:border-[rgba(252,213,53,0.25)] ${isSelected ? "border-[var(--accent)] bg-[rgba(252,213,53,0.06)]" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
+      className={`flex items-center gap-3 p-2 border border-white/5 rounded-md bg-neutral-900 text-inherit font-inherit transition-all hover:border-gold/25 ${isSelected ? "border-gold bg-gold/5" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
       onClick={isCompatible === false ? undefined : () => onSelect(product)}
     >
-      <div className="w-14 h-14 rounded-md bg-[var(--color-white)] p-1.5 flex items-center justify-center flex-shrink-0 box-border">
-        {url ? <img src={url} alt="" className="w-full h-full object-contain" /> : <div className="w-1/2 aspect-square rounded-full bg-[#e4e4e7] opacity-50" />}
+      <div className="w-14 h-14 rounded-md bg-white p-1.5 flex items-center justify-center flex-shrink-0 box-border">
+        {url ? <img src={url} alt="" className="w-full h-full object-contain" /> : <div className="w-1/2 aspect-square rounded-full bg-zinc-200 opacity-50" />}
       </div>
       <div className="flex-1 min-w-0">
         <h4 className="m-0 whitespace-nowrap overflow-hidden text-ellipsis">
-          <button type="button" className="inline text-[0.74rem] font-medium text-[var(--fg)] leading-[1.3] m-0 p-0 bg-none border-none text-left cursor-pointer display-[-webkit-box] -webkit-line-clamp-2 -webkit-box-orient-vertical overflow-hidden hover:text-[var(--accent)]" onClick={isCompatible === false ? undefined : () => onSelect(product)} title={product.name}>
+          <button type="button" className="inline text-[0.74rem] font-medium text-body-text leading-[1.3] m-0 p-0 bg-none border-none text-left cursor-pointer display-[-webkit-box] -webkit-line-clamp-2 -webkit-box-orient-vertical overflow-hidden hover:text-gold" onClick={isCompatible === false ? undefined : () => onSelect(product)} title={product.name}>
             {product.name}
           </button>
         </h4>
          {product.slug && (
-           <button type="button" className="inline-flex items-center gap-[3px] p-0 m-0 bg-none border-none text-[0.64rem] text-[var(--fg-muted)] cursor-pointer transition-colors hover:text-[var(--accent)]" onClick={() => onOpenProduct(product.slug!)} title="Открыть страницу товара">
+           <button type="button" className="inline-flex items-center gap-[3px] p-0 m-0 bg-none border-none text-[0.64rem] text-muted-foreground cursor-pointer transition-colors hover:text-gold" onClick={() => onOpenProduct(product.slug!)} title="Открыть страницу товара">
              <ExternalLink size={10} /> Подробнее
            </button>
          )}
-        {specs.length > 0 && <span className="text-[0.65rem] text-[var(--fg-dim)] whitespace-nowrap overflow-hidden text-ellipsis">{specs.join(' · ')}</span>}
+        {specs.length > 0 && <span className="text-[0.65rem] text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis">{specs.join(' · ')}</span>}
       </div>
       <div className="flex flex-col items-flex-end gap-1.5 flex-shrink-0">
         <div className="flex flex-col items-flex-end">
-          <span className="text-[0.82rem] font-semibold text-[var(--accent)] whitespace-nowrap">{product.price.toLocaleString('ru-BY')} BYN</span>
+          <span className="text-[0.82rem] font-semibold text-gold whitespace-nowrap">{product.price.toLocaleString('ru-BY')} BYN</span>
           {hasDiscount && product.oldPrice !== undefined && (
-            <span className="text-[0.62rem] text-[var(--fg-dim)] line-through">{product.oldPrice.toLocaleString('ru-BY')}</span>
+            <span className="text-[0.62rem] text-muted-foreground line-through">{product.oldPrice.toLocaleString('ru-BY')}</span>
           )}
         </div>
-          <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border border-[var(--accent)] bg-transparent text-[var(--accent)] cursor-pointer whitespace-nowrap transition-all ${isSelected ? "text-black font-bold shadow-sm" : ""}`} style={isSelected ? { backgroundColor: 'var(--accent)' } : undefined} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
+          <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border border-gold bg-transparent text-gold cursor-pointer whitespace-nowrap transition-all ${isSelected ? "text-black font-bold shadow-sm" : ""}`} style={isSelected ? { backgroundColor: 'var(--accent)' } : undefined} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
           {isSelected ? 'Выбрано' : outOfStock ? 'Нет в наличии' : 'Выбрать'}
         </button>
-        {outOfStock && <span className="text-[0.62rem] text-[var(--error)]">Нет в наличии</span>}
+        {outOfStock && <span className="text-[0.62rem] text-price-rise">Нет в наличии</span>}
       </div>
     </div>
   );
 }
 
-// ─── Image magnifier modal (uses our Modal) ────────────
+// ─── Модальное окно увеличения изображения (использует наш Modal) ────────────
 
 function ImageMagnifier({ images, initIdx, onClose }: { images: string[]; initIdx: number; onClose: () => void }) {
   const [idx, setIdx] = useState(initIdx);
@@ -289,18 +289,18 @@ function ImageMagnifier({ images, initIdx, onClose }: { images: string[]; initId
         <img src={cur} alt="Изображение товара" className="max-w-[90%] max-h-[75vh] w-auto h-auto object-contain bg-white rounded-2xl p-6 box-border shadow-[0_4px_24px_var(--border-muted)]" />
         {images.length > 1 && (
           <div className="flex items-center gap-4">
-            <button type="button" className="w-10 h-10 rounded-full border border-[rgba(255,255,255,0.1)] bg-[rgba(0,0,0,0.6)] text-[var(--fg)] flex items-center justify-center cursor-pointer transition-all hover:bg-[rgba(0,0,0,0.85)] hover:border-[var(--accent)]"
+            <button type="button" className="w-10 h-10 rounded-full border border-white/10 bg-black/60 text-body-text flex items-center justify-center cursor-pointer transition-all hover:bg-black/85 hover:border-gold"
               onClick={() => setIdx((i) => (i <= 0 ? images.length - 1 : i - 1))}
               aria-label="Предыдущее фото">
               <ChevronLeft size={28} />
             </button>
             <div className="flex gap-1.5">
               {images.map((_, i) => (
-                <span key={i} className={`w-2 h-2 rounded-full bg-[rgba(255,255,255,0.15)] cursor-pointer transition-all ${i === idx ? "bg-[var(--accent)] w-5 rounded-[4px]" : ""}`}
+                <span key={i} className={`w-2 h-2 rounded-full bg-[rgba(255,255,255,0.15)] cursor-pointer transition-all ${i === idx ? "bg-gold w-5 rounded-[4px]" : ""}`}
                   onClick={() => setIdx(i)} />
               ))}
             </div>
-            <button type="button" className="w-10 h-10 rounded-full border border-[rgba(255,255,255,0.1)] bg-[rgba(0,0,0,0.6)] text-[var(--fg)] flex items-center justify-center cursor-pointer transition-all hover:bg-[rgba(0,0,0,0.85)] hover:border-[var(--accent)]"
+            <button type="button" className="w-10 h-10 rounded-full border border-white/10 bg-black/60 text-body-text flex items-center justify-center cursor-pointer transition-all hover:bg-black/85 hover:border-gold"
               onClick={() => setIdx((i) => (i >= images.length - 1 ? 0 : i + 1))}
               aria-label="Следующее фото">
               <ChevronRight size={28} />
@@ -312,7 +312,7 @@ function ImageMagnifier({ images, initIdx, onClose }: { images: string[]; initId
   );
 }
 
-// ─── SpecList ───────────────────────────────────────────
+// ─── SpecList (список характеристик) ───────────────────────────────────────────
 
 function SpecList({ specs }: { specs: Record<string, unknown> }) {
   const entries = useMemo(() => {
@@ -329,15 +329,15 @@ function SpecList({ specs }: { specs: Record<string, unknown> }) {
     <div className="flex flex-col gap-0">
       {entries.map((row) => (
         <div key={row.label} className="flex flex-wrap gap-1 items-center py-2 px-1.5 text-[0.78rem] rounded-sm even:bg-[rgba(255,255,255,0.02)]">
-          <span className="text-[var(--fg-muted)] font-medium flex-1 flex-basis-[40%]">{row.label}</span>
-          <span className="text-[var(--fg)] flex-1 flex-basis-[60%] text-right word-break-break-word">{row.value}</span>
+          <span className="text-muted-foreground font-medium flex-1 flex-basis-[40%]">{row.label}</span>
+          <span className="text-body-text flex-1 flex-basis-[60%] text-right word-break-break-word">{row.value}</span>
         </div>
       ))}
     </div>
   );
 }
 
-// ─── ComponentPickerModal ───────────────────────────────
+// ─── ComponentPickerModal (основной компонент) ───────────────────────────────
 
 export function ComponentPickerModal({
   isOpen, onClose, category, slotType, slotLabel,
@@ -369,7 +369,7 @@ export function ComponentPickerModal({
 
   const effectiveSpecs = useMemo(() => {
     const out = { ...selectedSpecifications };
-    // typeFilter — фильтрация по спецификации 'type' (e.g. cooling vs fan)
+    // typeFilter — фильтрация по спецификации 'type' (например, cooling vs fan)
     if (typeFilter) {
       out.type = Array.isArray(typeFilter) ? typeFilter : [typeFilter];
     }
@@ -382,35 +382,35 @@ export function ComponentPickerModal({
       if (s) out.socket = s;
     }
     if (slotType === 'ram' && buildContext?.motherboard?.product) {
-      // Filter by memory type on the server so that pagination is accurate
+      // Фильтруем по типу памяти на сервере, чтобы пагинация была корректной
       const mt = extractMemoryType(buildContext.motherboard.product.specifications);
       if (mt) out.type = mt;
     }
-    // PSU picker: enforce minimum wattage based on GPU+CPU selection
+    // Выбор БП: устанавливаем минимальную мощность на основе GPU+CPU
     if (slotType === 'psu' && (buildContext?.gpu?.product || buildContext?.cpu?.product)) {
       const gpuW = buildContext.gpu?.product ? extractTDP(buildContext.gpu.product.specifications) : 0;
       const cpuW = buildContext.cpu?.product ? extractTDP(buildContext.cpu.product.specifications) : 0;
       const minWatt = gpuW + cpuW + 50;
       if (minWatt > 0) {
-        // Use a special marker that FilterSidebar picks up to set the range min
+        // Используем специальный маркер, который FilterSidebar подхватит для установки минимума диапазона
         out['wattage_min'] = minWatt;
       }
     }
-    // Case picker: restrict to case form factors that fit the selected motherboard
+    // Выбор корпуса: ограничиваем форм-факторы, подходящие для выбранной материнской платы
     if (slotType === 'case' && buildContext?.motherboard?.product) {
       const mbFF = extractFormFactor(buildContext.motherboard.product.specifications);
       if (mbFF) {
-        // Simple case form factor matching
+        // Простое сопоставление форм-факторов корпуса
         const caseFFs = [mbFF];
         out.formFactor = caseFFs;
       }
     }
     return out;
-  // ✅ Fix slider reset bug: deep compare dependencies to prevent new object instance on every render
+  // ✅ Исправлен баг сброса слайдера: глубокое сравнение зависимостей чтобы не создавать новый объект при каждом рендере
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(selectedSpecifications), slotType, buildContext]);
 
-  // 🔹 Single consolidated filters object - ALL dependencies go HERE
+  // 🔹 Единый объединённый объект фильтров — ВСЕ зависимости ЗДЕСЬ
   const filters = useMemo(() => ({
     category: selectedCategory,
     search: debouncedSearch,
@@ -435,12 +435,12 @@ export function ComponentPickerModal({
     priceMax
   ]);
 
-  // ── Restricted spec values from build context ──
+  // ── Ограниченные значения спецификаций из контекста сборки ──
   const restrictedSpecValues = useMemo((): Record<string, string[]> => {
     return {};
   }, [slotType, buildContext]);
 
-  // 🔹 Debounced fetch function - 300ms delay for user input
+  // 🔹 Дебаунс-функция загрузки — задержка 300мс для пользовательского ввода
   const fetchProducts = useDebouncedCallback(() => {
     startTransition(() => {
       void refetch({ cancelRefetch: true });
@@ -449,13 +449,13 @@ export function ComponentPickerModal({
 
   const { data: productsResponse, isLoading, error, refetch } = useProducts(filters, { enabled: false });
 
-  // 🔹 Single effect with DEEP comparison - EXACTLY ONE request when filters change
+  // 🔹 Единый эффект с ГЛУБОКИМ сравнением — РОВНО ОДИН запрос при изменении фильтров
   useDeepCompareEffect(() => {
     if (!isOpen) return;
     fetchProducts();
   }, [filters, isOpen, fetchProducts]);
 
-  // 🔹 Keep old products during loading to prevent layout shift
+  // 🔹 Сохраняем старые товары во время загрузки, чтобы избежать смещения верстки
   const [cachedProducts, setCachedProducts] = useState<ProductSummary[]>([]);
   const [cachedMeta, setCachedMeta] = useState<PaginationMeta | null>(null);
 
@@ -469,7 +469,7 @@ export function ComponentPickerModal({
   const products = isPending ? cachedProducts : (productsResponse?.data ?? cachedProducts);
   const meta = isPending ? cachedMeta : (productsResponse?.meta ?? cachedMeta);
 
-  // ── Compatibility filtering ──
+  // ── Фильтрация по совместимости ──
 
   const componentMap = useMemo(() => {
     const b = buildContext ?? { ram: [], storage: [], fan: [] };
@@ -484,10 +484,10 @@ export function ComponentPickerModal({
     };
   }, [buildContext]);
 
-  // ── Background enrichment: batch-load full specs for RAM products ──
-  // ProductSummary has no `specifications` field, so extractMemoryFormFactor returns null.
-  // When a motherboard is selected, fetch full Product data (with specifications)
-  // for all visible RAM products to enable accurate SO-DIMM detection.
+  // ── Фоновое обогащение: пакетная загрузка полных спецификаций для ОЗУ ──
+  // ProductSummary не имеет поля `specifications`, поэтому extractMemoryFormFactor возвращает null.
+  // Когда материнская плата выбрана, загружаем полные данные Product (со спецификациями)
+  // для всех видимых товаров ОЗУ, чтобы точно определить SO-DIMM.
   const ramProductIdsKey = useMemo(() => {
     if (slotType !== 'ram' || products.length === 0) return '';
     return products.map(p => p.id).sort().join(',');
@@ -498,7 +498,7 @@ export function ComponentPickerModal({
     queryFn: async () => {
       const ids = ramProductIdsKey.split(',').filter(Boolean);
       const map = new Map<string, Product>();
-      // Low concurrency to avoid overwhelming the server
+      // Низкая параллельность, чтобы не перегружать сервер
       const CONCURRENCY = 2;
       for (let i = 0; i < ids.length; i += CONCURRENCY) {
         const batch = ids.slice(i, i + CONCURRENCY);
@@ -518,13 +518,13 @@ export function ComponentPickerModal({
     gcTime: 30_000,
   });
 
-  // Compatibility checking — check memory type (DDR3/4/5) when specs available
+  // Проверка совместимости — проверяем тип памяти (DDR3/4/5) когда спецификации доступны
   const productsWithCompatibility = useMemo(() => {
     const mb = componentMap.motherboard;
     const isRam = slotType === 'ram';
     const isStorage = slotType === 'storage';
 
-    // Pre-count current storage of each type (only relevant when motherboard selected)
+    // Предварительный подсчёт текущих накопителей по типу (актуально только при выбранной материнской плате)
     const currentM2 = isStorage && mb && buildContext
       ? buildContext.storage.filter(s => extractStorageType(s.product.specifications) === 'm2').length
       : 0;
@@ -546,7 +546,7 @@ export function ComponentPickerModal({
           };
         }
 
-        // Check form factor (SO-DIMM vs DIMM)
+        // Проверяем форм-фактор (SO-DIMM vs DIMM)
         const rff = extractMemoryFormFactor(ramProduct.specifications)
           ?? detectMemoryFormFactorFromName(ramProduct.name, ramProduct.sku);
         const mff = extractMemoryFormFactor(mb.specifications) ?? 'DIMM';
@@ -562,12 +562,12 @@ export function ComponentPickerModal({
         }
       }
 
-      // Storage compatibility: hide drives that would exceed motherboard M.2/SATA limits
+      // Совместимость накопителей: скрываем диски, которые превышают лимиты M.2/SATA материнской платы
       if (isStorage && mb) {
-        // Cast to access full specs (may be undefined in ProductSummary)
+        // Приводим тип для доступа к полным спецификациям (может быть undefined в ProductSummary)
         const fullSpecs = (p as Product).specifications ?? {};
         const diskType = extractStorageType(fullSpecs);
-        // Without interface/form_factor in summary, we can't determine type — skip
+        // Без interface/form_factor в summary невозможно определить тип — пропускаем
         if (diskType !== 'other') {
           if (diskType === 'm2' && mbM2Slots !== null && currentM2 >= mbM2Slots) {
             return {
@@ -588,7 +588,7 @@ export function ComponentPickerModal({
     });
   }, [products, slotType, componentMap, buildContext]);
 
-  // Hide incompatible products — user won't see what doesn't fit their build
+  // Скрываем несовместимые товары — пользователь не увидит то, что не подходит для его сборки
   const filteredProducts = useMemo(() => {
     return productsWithCompatibility.filter((p) => {
       if (p.isIncompatible) return false;
@@ -641,7 +641,7 @@ export function ComponentPickerModal({
 
   const handleConfirm = () => {
     if (!highlightedId) return;
-    // Safety net: prevent confirming incompatible products
+    // Защита: не даём подтвердить выбор несовместимого товара
     const isIncompatible = productsWithCompatibility.some(
       (pw) => pw.id === highlightedId && pw.isIncompatible,
     );
@@ -655,7 +655,7 @@ export function ComponentPickerModal({
   }, [category]);
 
   const handleResetFilters = useCallback(() => {
-    // Keep the computed price bounds, just reset min/max to full range
+    // Сохраняем вычисленные границы цен, просто сбрасываем min/max на полный диапазон
     setPriceRange((prev) => prev); // don't zero out — keep derived bounds
     setSelectedManufacturerIds([]);
     setSelectedSpecifications({}); setSelectedAvailability([]); setInStockOnly(false); setPage(1);
@@ -670,20 +670,20 @@ export function ComponentPickerModal({
     if (!fullPreview) return null;
     return (
       <div className="flex flex-col gap-3">
-        <div className="text-[0.72rem] font-semibold uppercase tracking-wider text-[var(--fg-dim)] border-b border-[rgba(255,255,255,0.06)] pb-1.5">Предпросмотр</div>
+        <div className="text-[0.72rem] font-semibold uppercase tracking-wider text-muted-foreground border-b border-white/5 pb-1.5">Предпросмотр</div>
 
-        {/* Image gallery for preview */}
+        {/* Галерея изображений для предпросмотра */}
         {previewImageUrls.length > 0 ? (
           <>
-            <div className="relative w-full aspect-square min-h-[140px] rounded-lg bg-[var(--color-white)] p-3 box-border flex items-center justify-center overflow-hidden">
+            <div className="relative w-full aspect-square min-h-[140px] rounded-lg bg-white p-3 box-border flex items-center justify-center overflow-hidden">
               {previewImageUrls.length > 1 && previewImgIdx > 0 && (
-                <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-[rgba(0,0,0,0.12)] bg-[rgba(255,255,255,0.85)] text-[var(--color-black)] flex items-center justify-center cursor-pointer z-2 left-1"
+                <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-black/10 bg-white/85 text-black flex items-center justify-center cursor-pointer z-2 left-1"
                   onClick={() => setPreviewImgIdx((i) => i - 1)}>
                   <ChevronLeft size={18} />
                 </button>
               )}
               {previewImageUrls.length > 1 && previewImgIdx < previewImageUrls.length - 1 && (
-                <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-[rgba(0,0,0,0.12)] bg-[rgba(255,255,255,0.85)] text-[var(--color-black)] flex items-center justify-center cursor-pointer z-2 right-1"
+                <button type="button" className="absolute top-1/2 -translate-y-1/2 w-7 h-7 p-0 rounded-md border border-black/10 bg-white/85 text-black flex items-center justify-center cursor-pointer z-2 right-1"
                   onClick={() => setPreviewImgIdx((i) => i + 1)}>
                   <ChevronRight size={18} />
                 </button>
@@ -693,7 +693,7 @@ export function ComponentPickerModal({
                 alt=""
                 className="max-w-[90%] max-h-[90%] w-auto h-auto object-contain"
               />
-              <button type="button" className="absolute bottom-2 right-2 w-9 h-9 rounded-full border border-[rgba(255,255,255,0.2)] bg-[rgba(0,0,0,0.6)] text-[rgba(255,255,255,0.8)] flex items-center justify-center cursor-pointer transition-all z-2 hover:bg-[rgba(0,0,0,0.8)] hover:text-white hover:border-[var(--accent)]"
+              <button type="button" className="absolute bottom-2 right-2 w-9 h-9 rounded-full border border-[rgba(255,255,255,0.2)] bg-black/60 text-white/80 flex items-center justify-center cursor-pointer transition-all z-2 hover:bg-[rgba(0,0,0,0.8)] hover:text-white hover:border-gold"
                 onClick={() => setMagnifierIdx(previewImgIdx)}
                 title="Увеличить фото" aria-label="Увеличить фото">
                 <ZoomIn size={20} />
@@ -703,7 +703,7 @@ export function ComponentPickerModal({
               <div className="flex gap-1 overflow-x-auto p-0.5">
                 {previewImageUrls.map((img, i) => (
                   <button key={i} type="button"
-                    className={`w-11 h-11 rounded-md border border-[rgba(255,255,255,0.06)] bg-[var(--fg)] p-[3px] flex-shrink-0 cursor-pointer flex items-center justify-center box-border transition-colors ${i === previewImgIdx ? "border-[var(--accent)] shadow-[0_0_0_1px_rgba(252,213,53,0.3)]" : ""}`}
+                    className={`w-11 h-11 rounded-md border border-white/5 bg-body-text p-[3px] flex-shrink-0 cursor-pointer flex items-center justify-center box-border transition-colors ${i === previewImgIdx ? "border-gold shadow-[0_0_0_1px_rgba(252,213,53,0.3)]" : ""}`}
                     onClick={() => setPreviewImgIdx(i)}
                   >
                     <img src={img} alt="" />
@@ -713,20 +713,20 @@ export function ComponentPickerModal({
             )}
           </>
         ) : (
-          <div className="w-full aspect-square rounded-lg bg-[#2b3139] opacity-30" />
+          <div className="w-full aspect-square rounded-lg bg-surface-elevated opacity-30" />
         )}
 
-        <h4 className="m-0 text-[0.85rem] font-semibold text-[var(--fg)] word-break-break-word leading-[1.3]">{fullPreview.name}</h4>
+        <h4 className="m-0 text-[0.85rem] font-semibold text-body-text word-break-break-word leading-[1.3]">{fullPreview.name}</h4>
 
-        {/* Price + confirm button on one row */}
+        {/* Цена + кнопка подтверждения в одну строку */}
         <div className="flex items-center justify-between gap-3">
-          <div className="m-0 text-base font-semibold text-[var(--accent)] whitespace-nowrap">{fullPreview.price.toLocaleString('ru-BY')} BYN</div>
+          <div className="m-0 text-base font-semibold text-gold whitespace-nowrap">{fullPreview.price.toLocaleString('ru-BY')} BYN</div>
           <button
             type="button"
             className={`px-5 py-2.5 border-none rounded-md text-[0.85rem] font-semibold transition-all whitespace-nowrap ${
               previewIncompatibility.isIncompatible
-                ? 'bg-[rgba(255,255,255,0.08)] text-[var(--fg-dim)] cursor-not-allowed'
-                : 'bg-[var(--accent)] text-[var(--color-black-soft)] cursor-pointer hover:bg-[#f0b90b] active:scale-[0.97]'
+                ? 'bg-[rgba(255,255,255,0.08)] text-muted-foreground cursor-not-allowed'
+                : 'bg-gold text-neutral-900 cursor-pointer hover:bg-gold-active active:scale-[0.97]'
             }`}
             onClick={previewIncompatibility.isIncompatible ? undefined : handleConfirm}
             disabled={previewIncompatibility.isIncompatible}
@@ -737,13 +737,13 @@ export function ComponentPickerModal({
         </div>
 
         {fullPreview.slug && (
-          <button type="button" className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-[rgba(252,213,53,0.25)] bg-transparent text-[var(--accent)] text-xs font-medium cursor-pointer transition-all w-full hover:bg-[rgba(252,213,53,0.1)]" onClick={() => handleOpenProduct(fullPreview.slug!)}>
+          <button type="button" className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border border-gold/25 bg-transparent text-gold text-xs font-medium cursor-pointer transition-all w-full hover:bg-[rgba(252,213,53,0.1)]" onClick={() => handleOpenProduct(fullPreview.slug!)}>
             <ExternalLink size={14} /> Открыть страницу товара
           </button>
         )}
 
         {previewIncompatibility.isIncompatible && (
-          <div className="text-[0.7rem] text-[var(--error)] p-2 bg-[rgba(248,113,113,0.05)] rounded-md">
+          <div className="text-[0.7rem] text-price-rise p-2 bg-[rgba(248,113,113,0.05)] rounded-md">
             <Lock size={12} style={LOCK_ICON_STYLE} />
             {previewIncompatibility.issues.join('; ') || 'Компонент несовместим с текущей сборкой'}
           </div>
@@ -759,20 +759,20 @@ export function ComponentPickerModal({
       
       <div className="flex flex-col gap-0 min-h-0 h-full flex-1 overflow-hidden">
 
-        {/* Mobile filter overlay — shares the SAME FilterSidebar via mobile prop */}
+        {/* Мобильный оверлей фильтров — использует ТОТ ЖЕ FilterSidebar через проп mobile */}
         {mobileFilterOpen && (
           <div
-            className="fixed inset-0 bg-[var(--border-muted)] z-[1100] md:hidden"
+            className="fixed inset-0 bg-white/6 z-[1100] md:hidden"
             role="button"
             tabIndex={0}
             onClick={() => setMobileFilterOpen(false)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMobileFilterOpen(false); } }}
             aria-label="Закрыть фильтры"
           >
-            <div className="absolute right-0 top-0 bottom-0 w-[90vw] max-w-[380px] bg-[var(--bg-card)] border-l border-[rgba(255,255,255,0.06)] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between p-5 pb-4 border-b border-[rgba(255,255,255,0.06)]">
-                <h3 className="m-0 text-sm font-bold text-[var(--fg-primary)] flex items-center gap-2">Фильтры</h3>
-                <button className="flex items-center justify-center w-9 h-9 bg-transparent border border-[rgba(255,255,255,0.08)] rounded-lg text-[var(--fg-muted)] cursor-pointer transition-all hover:bg-gold/10 hover:border-gold/30 hover:text-gold" onClick={() => setMobileFilterOpen(false)}><X size={20} /></button>
+            <div className="absolute right-0 top-0 bottom-0 w-[90vw] max-w-[380px] bg-surface-card border-l border-white/5 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between p-5 pb-4 border-b border-white/5">
+                <h3 className="m-0 text-sm font-bold text-body-text flex items-center gap-2">Фильтры</h3>
+                <button className="flex items-center justify-center w-9 h-9 bg-transparent border border-[rgba(255,255,255,0.08)] rounded-lg text-muted-foreground cursor-pointer transition-all hover:bg-gold/10 hover:border-gold/30 hover:text-gold" onClick={() => setMobileFilterOpen(false)}><X size={20} /></button>
               </div>
               <FilterSidebar
                 mobile
@@ -794,7 +794,7 @@ export function ComponentPickerModal({
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr_280px] gap-4 min-h-0 flex-1 overflow-hidden items-stretch">
-          {/* Filter Sidebar — shown on desktop, hidden on mobile (uses overlay) */}
+          {/* Боковая панель фильтров — видна на десктопе, скрыта на мобилке (использует оверлей) */}
           <div className="overflow-y-auto self-start max-h-full max-md:hidden">
             <FilterSidebar
               selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} categoryLocked={true}
@@ -813,24 +813,24 @@ export function ComponentPickerModal({
             />
           </div>
 
-          {/* Products */}
+          {/* Товары */}
           <div className="min-w-0 flex flex-col gap-2.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.12)] scrollbar-track-transparent">
-            <div className="flex items-center gap-2 py-1.5 px-0 flex-shrink-0 border-b border-[rgba(255,255,255,0.06)]">
+            <div className="flex items-center gap-2 py-1.5 px-0 flex-shrink-0 border-b border-white/5">
               {/* Поиск + кнопка Фильтры (mobile) */}
-              <button className="flex md:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-[rgba(255,255,255,0.08)] bg-[var(--color-black-soft)] text-[var(--fg)] text-xs cursor-pointer flex-shrink-0" onClick={() => setMobileFilterOpen(true)}>
+              <button className="flex md:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-[rgba(255,255,255,0.08)] bg-neutral-900 text-body-text text-xs cursor-pointer flex-shrink-0" onClick={() => setMobileFilterOpen(true)}>
                 <SlidersHorizontal size={16} /> Фильтры
               </button>
               <form className="flex-1 min-w-0 relative" onSubmit={(e) => e.preventDefault()}>
-                <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--fg-dim)] pointer-events-none" />
-                <input type="search" className="w-full py-1.5 pl-[30px] pr-7 rounded-md border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.25)] text-[var(--fg)] text-xs placeholder:text-[var(--fg-dim)] focus:outline-none focus:outline-2 focus:outline-[rgba(252,213,53,0.35)] focus:outline-offset-0" placeholder="Поиск по названию…"
+                <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <input type="search" className="w-full py-1.5 pl-[30px] pr-7 rounded-md border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.25)] text-body-text text-xs placeholder:text-muted-foreground focus:outline-none focus:outline-2 focus:outline-[rgba(252,213,53,0.35)] focus:outline-offset-0" placeholder="Поиск по названию…"
                   value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); setHighlightedId(null); }} />
-                {search && <button type="button" className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-none border-none text-[var(--fg-dim)] cursor-pointer p-0.5 flex hover:text-[var(--fg-muted)]" onClick={() => setSearch('')}><X size={14} /></button>}
+                {search && <button type="button" className="absolute right-1.5 top-1/2 -translate-y-1/2 bg-none border-none text-muted-foreground cursor-pointer p-0.5 flex hover:text-muted-foreground" onClick={() => setSearch('')}><X size={14} /></button>}
               </form>
             </div>
 
-            {/* ✅ Keep old products visible while loading - overlay skeletons on top */}
+            {/* ✅ Показываем старые товары во время загрузки — скелетоны поверх */}
             <div className={`${viewMode === 'grid' ? "grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-6" : "flex flex-col gap-2"} relative`}>
-              {/* Render existing products first */}
+              {/* Рендерим существующие товары первыми */}
               {filteredProducts.length > 0 ? (viewMode === 'grid' ? (
                 filteredProducts.map((p) => (
                   <div key={p.id} className={p.isIncompatible ? "relative" : ''}>
@@ -839,7 +839,7 @@ export function ComponentPickerModal({
                       onSelect={p.isIncompatible ? noopSelect : (prod) => setHighlightedId(prod.id)}
                       onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
                     {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
-                      <div className="text-[0.7rem] text-[var(--error)] p-1.5 bg-[rgba(248,113,113,0.05)] rounded mt-1">
+                      <div className="text-[0.7rem] text-price-rise p-1.5 bg-[rgba(248,113,113,0.05)] rounded mt-1">
                         <Lock size={12} style={LOCK_ICON_STYLE} />
                         {p.incompatibilityIssues.join('; ')}
                       </div>
@@ -854,7 +854,7 @@ export function ComponentPickerModal({
                       onSelect={p.isIncompatible ? noopSelect : (prod) => setHighlightedId(prod.id)}
                       onOpenProduct={handleOpenProduct} slotType={slotType} getDisplaySpecs={getDisplaySpecs} />
                     {p.isIncompatible && p.incompatibilityIssues?.length > 0 && (
-                      <div className="text-[0.7rem] text-[var(--error)] p-1.5 bg-[rgba(248,113,113,0.05)] rounded mt-1">
+                      <div className="text-[0.7rem] text-price-rise p-1.5 bg-[rgba(248,113,113,0.05)] rounded mt-1">
                         <Lock size={12} style={LOCK_ICON_STYLE} />
                         {p.incompatibilityIssues.join('; ')}
                       </div>
@@ -863,7 +863,7 @@ export function ComponentPickerModal({
                 ))
               )) : null}
 
-              {/* Render skeletons over top during pending state */}
+              {/* Рендерим скелетоны поверх во время загрузки */}
               {isPending && (
                 <>
                   {Array.from({ length: 6 }).map((_, i) => <ProductCardSkeleton key={i} />)}
@@ -875,10 +875,10 @@ export function ComponentPickerModal({
 
             {!error && (
               <>
-                {meta && meta.totalItems > 0 && <div className="text-[0.72rem] text-[var(--fg-dim)] pb-1 flex-shrink-0">Найдено: {meta.totalItems}</div>}
+                {meta && meta.totalItems > 0 && <div className="text-[0.72rem] text-muted-foreground pb-1 flex-shrink-0">Найдено: {meta.totalItems}</div>}
 
                 {filteredProducts.length === 0 && !isPending && (
-                  <div className="text-center p-8 text-[var(--fg-muted)]">
+                  <div className="text-center p-8 text-muted-foreground">
                     <h3>Нет товаров</h3>
                     <p>Не найдено подходящих компонентов. Попробуйте изменить параметры поиска.</p>
                   </div>
@@ -894,10 +894,10 @@ export function ComponentPickerModal({
             )}
           </div>
 
-          {/* Preview (desktop only — mobile uses BottomSheet) */}
-          <aside className="max-md:hidden md:sticky top-0 flex flex-col gap-2.5 p-3.5 rounded-md border border-[rgba(255,255,255,0.06)] bg-[var(--color-black-soft)] max-h-full overflow-y-auto flex-shrink-0 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.1)] scrollbar-track-transparent">
+          {/* Предпросмотр (только десктоп — на мобилке используется BottomSheet) */}
+          <aside className="max-md:hidden md:sticky top-0 flex flex-col gap-2.5 p-3.5 rounded-md border border-white/5 bg-neutral-900 max-h-full overflow-y-auto flex-shrink-0 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.1)] scrollbar-track-transparent">
             {fullPreview ? renderPreviewContent() : (
-              <div className="flex flex-col items-center justify-center text-center h-[200px] text-[var(--fg-dim)]">
+              <div className="flex flex-col items-center justify-center text-center h-[200px] text-muted-foreground">
                 <h4>Предпросмотр</h4>
                 <p>Выберите товар из списка, здесь появятся его характеристики.</p>
               </div>
@@ -913,7 +913,7 @@ export function ComponentPickerModal({
         </BottomSheet>
       )}
 
-      {/* Magnifier */}
+      {/* Увеличитель */}
       {magnifierIdx !== null && previewImageUrls.length > 0 && (
         <ImageMagnifier images={previewImageUrls} initIdx={magnifierIdx} onClose={() => setMagnifierIdx(null)} />
       )}

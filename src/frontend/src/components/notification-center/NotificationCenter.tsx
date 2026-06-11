@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import { Package, Wrench, AlertTriangle, MessageSquare, Bell, Circle, Check, Trash2 } from 'lucide-react';
-import { useNotifications } from '../../hooks/useNotifications';
-import type { Notification, NotificationPriorityValue, NotificationTypeValue } from '../../hooks/useNotifications';
+import { useNotifications } from '@/hooks/useNotifications';
+import type { Notification, NotificationPriorityValue, NotificationTypeValue } from '@/hooks/useNotifications';
 
 export const NotificationCenter = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, connectionStatus } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
-  const getPriorityColor = (priority: NotificationPriorityValue) => {
+  const getPriorityStyle = (priority: NotificationPriorityValue) => {
     switch (priority) {
-      case 'Critical': return 'bg-red-100 border-red-400 text-red-800';
-      case 'High': return 'bg-orange-100 border-orange-400 text-orange-800';
-      case 'Medium': return 'bg-yellow-100 border-yellow-400 text-yellow-800';
-      case 'Low': return 'bg-blue-100 border-blue-400 text-blue-800';
+      case 'Critical': return 'border-l-price-rise bg-price-rise/5';
+      case 'High': return 'border-l-price-rise/60 bg-price-rise/5';
+      case 'Medium': return 'border-l-warning bg-warning/5';
+      case 'Low': return 'border-l-info-blue bg-info-blue/5';
     }
   };
 
@@ -26,35 +26,51 @@ export const NotificationCenter = () => {
     }
   };
 
+  const getDateLabel = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'только что';
+    if (diffMins < 60) return `${diffMins}м назад`;
+    if (diffHours < 24) return `${diffHours}ч назад`;
+    if (diffDays < 7) return `${diffDays}д назад`;
+    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  };
+
   return (
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-elevated focus:outline-none"
+        className="relative p-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-elevated focus:outline-none transition-colors"
+        aria-label="Уведомления"
       >
         <Bell className="h-6 w-6" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
+          <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold leading-none text-gold-ink bg-gold rounded-full">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-card rounded-lg shadow-xl border border-border z-50">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">Уведомления</h3>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Circle size={8} className={connectionStatus === 'connected' ? 'text-price-drop' : 'text-price-rise'} fill="currentColor" />
+        <div className="absolute right-0 mt-2 w-96 bg-card rounded-lg shadow-lg border border-border z-50">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <h3 className="font-semibold text-sm text-foreground">Уведомления</h3>
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                <Circle size={6} className={connectionStatus === 'connected' ? 'text-price-drop' : 'text-price-rise'} fill="currentColor" />
                 {connectionStatus === 'connected' ? 'В сети' : 'Не в сети'}
               </span>
               {unreadCount > 0 && (
                 <button
                   onClick={() => void markAllAsRead()}
-                  className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  className="text-[11px] text-info-blue hover:text-info-blue/80 font-medium flex items-center gap-1 transition-colors"
                 >
-                  <Check className="h-4 w-4" />
+                  <Check className="h-3.5 w-3.5" />
                   Прочитать все
                 </button>
               )}
@@ -63,39 +79,53 @@ export const NotificationCenter = () => {
 
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <p>Нет уведомлений</p>
+              <div className="py-10 text-center text-muted-foreground">
+                <Bell className="h-8 w-8 mx-auto mb-3 opacity-40" />
+                <p className="text-sm">Нет уведомлений</p>
               </div>
             ) : (
               notifications.map(notification => (
                 <div
                   key={notification.id}
-                  className={`p-4 border-b border-border hover:bg-elevated cursor-pointer ${!notification.isRead ? getPriorityColor(notification.priority) : ''}`}
+                  className={`px-4 py-3 border-b border-border hover:bg-elevated/50 cursor-pointer transition-colors ${
+                    !notification.isRead
+                      ? `${getPriorityStyle(notification.priority)} border-l-2`
+                      : 'border-l-2 border-l-transparent'
+                  }`}
                   onClick={() => !notification.isRead && void markAsRead(notification.id)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !notification.isRead) void markAsRead(notification.id); }}
                 >
                   <div className="flex items-start gap-3">
-                    <span className="text-xl mt-0.5">{getTypeIcon(notification.type)}</span>
+                    <span className="text-muted-foreground mt-0.5 flex-shrink-0">{getTypeIcon(notification.type)}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{notification.title}</p>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{notification.message}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(notification.createdAt).toLocaleString()}
+                      <p className={`text-sm truncate ${notification.isRead ? 'text-muted-foreground' : 'text-foreground font-medium'}`}>
+                        {notification.title}
+                      </p>
+                      <p className={`text-xs mt-0.5 line-clamp-2 ${notification.isRead ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>
+                        {notification.message}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground/50 mt-1.5">
+                        {getDateLabel(notification.createdAt)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-0.5 flex-shrink-0">
                       {!notification.isRead && (
                         <button
                           onClick={(e) => { e.stopPropagation(); void markAsRead(notification.id); }}
-                          className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                          className="p-1.5 text-muted-foreground/50 hover:text-info-blue rounded transition-colors"
+                          title="Отметить прочитанным"
                         >
-                          <Check className="h-4 w-4" />
+                          <Check className="h-3.5 w-3.5" />
                         </button>
                       )}
                       <button
                         onClick={(e) => { e.stopPropagation(); void deleteNotification(notification.id); }}
-                        className="p-1 text-gray-400 hover:text-red-600 rounded"
+                        className="p-1.5 text-muted-foreground/50 hover:text-price-rise rounded transition-colors"
+                        title="Удалить"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>

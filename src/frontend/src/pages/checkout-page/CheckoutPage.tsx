@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import { isAxiosError } from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
-import { useCartStore } from '../../store/cartStore';
-import { useAuthStore } from '../../store/authStore';
-import { extractApiErrorMessage } from '../../api/orders';
-import { useOrders } from '../../hooks/useOrders';
-import { useAddresses } from '../../hooks/useAddresses';
-import type { UserAddress } from '../../api/addresses';
-import { useToast } from '../../hooks/useToast';
-import { parsePhone, isValidPhone } from '../../utils/phone';
-import { AddressMap } from '../../components/checkout/AddressMap';
-import { DeliveryTimeSlotPicker } from '../../components/checkout/DeliveryTimeSlotPicker';
-import { PaymentForm, type PaymentData } from '../../components/checkout/PaymentForm';
-import { QRCodePayment } from '../../components/checkout/QRCodePayment';
-import { Icon } from '../../components/ui/Icon';
-import { Button } from '../../components/ui/Button';
-import { PhoneInput } from '../../components/ui/PhoneInput';
+import { useCartStore } from '@/store/cartStore';
+import { useAuthStore } from '@/store/authStore';
+import { extractApiErrorMessage } from '@/api/orders';
+import { useOrders } from '@/hooks/useOrders';
+import { useAddresses } from '@/hooks/useAddresses';
+import type { UserAddress } from '@/api/addresses';
+import { useToast } from '@/hooks/useToast';
+import { parsePhone, isValidPhone } from '@/utils/phone';
+import { AddressMap } from '@/components/checkout/AddressMap';
+import { DeliveryTimeSlotPicker } from '@/components/checkout/DeliveryTimeSlotPicker';
+import { PaymentForm, type PaymentData } from '@/components/checkout/PaymentForm';
+import { QRCodePayment } from '@/components/checkout/QRCodePayment';
+import { Icon } from '@/components/ui/Icon';
+import { Button } from '@/components/ui/Button';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 
 type Step = 'delivery' | 'contacts' | 'payment' | 'confirm';
 type DeliveryMethod = 'Delivery' | 'Pickup';
@@ -79,6 +79,7 @@ export function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState<UserAddress[]>([]);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [showQRPayment, setShowQRPayment] = useState(false);
+  const [pendingOrderNumber, setPendingOrderNumber] = useState<string | null>(null);
 
   const [deliveryData, setDeliveryData] = useState<DeliveryData>({
     method: 'Delivery',
@@ -198,10 +199,6 @@ getAddresses()
         setShowPaymentForm(true);
         return;
       }
-      if (paymentMethod === 'SBP') {
-        setShowQRPayment(true);
-        return;
-      }
       setCurrentStep('confirm');
     }
   };
@@ -217,8 +214,9 @@ getAddresses()
     await handlePlaceOrder();
   };
 
-  const handleQRPaymentConfirm = async () => {
-    await handlePlaceOrder();
+  const handleQRPaymentConfirm = () => {
+    showToast('Заказ успешно оформлен!', 'success');
+    void navigate(`/orders/${pendingOrderNumber ?? 'unknown'}/success`);
   };
 
   const handlePlaceOrder = async (): Promise<boolean> => {
@@ -260,6 +258,15 @@ getAddresses()
       });
 
       clearCart();
+
+      // SBP: show QR with real order number after order creation
+      if (paymentMethod === 'SBP') {
+        setPendingOrderNumber(order?.orderNumber ?? null);
+        setShowQRPayment(true);
+        setIsProcessing(false);
+        return true;
+      }
+
       showToast('Заказ успешно оформлен!', 'success');
       void navigate(`/orders/${order?.orderNumber ?? 'unknown'}/success`);
       return true;
@@ -327,9 +334,9 @@ getAddresses()
           <div className="max-w-[600px] mx-auto py-8">
             <QRCodePayment
               amount={total}
-              orderNumber={`TEMP-${Date.now()}`}
+              orderNumber={pendingOrderNumber ?? ''}
               onConfirm={handleQRPaymentConfirm}
-              onCancel={() => setShowQRPayment(false)}
+              onCancel={() => { setShowQRPayment(false); setPendingOrderNumber(null); }}
               isProcessing={isProcessing}
             />
           </div>

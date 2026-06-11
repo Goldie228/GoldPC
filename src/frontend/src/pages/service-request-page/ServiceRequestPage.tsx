@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { Button, Input, PhoneInput } from '../../components/ui';
-import { useToast } from '../../hooks/useToast';
-import { useServiceTickets } from '../../hooks/useServiceTickets';
-import { useAuthStore } from '../../store/authStore';
-import { useAuthModal } from '../../hooks/useAuthModal';
+import { Button, Input, PhoneInput } from '@/components/ui';
+import { useToast } from '@/hooks/useToast';
+import { useServiceTickets } from '@/hooks/useServiceTickets';
+import { useAuthStore } from '@/store/authStore';
+import { useAuthModal } from '@/hooks/useAuthModal';
 import { ServiceSelector } from './ServiceSelector';
 import { PhotoUploader } from './PhotoUploader';
 import { SuccessScreen } from './SuccessScreen';
-import type { CreateServiceRequest } from '../../api/services';
+import type { CreateServiceRequest } from '@/api/services';
 
 /**
  * Способы связи

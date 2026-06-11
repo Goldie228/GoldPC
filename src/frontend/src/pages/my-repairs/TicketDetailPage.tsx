@@ -1,15 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useServiceTickets } from '../../hooks/useServiceTickets';
-import { useTicketChat } from '../../hooks/useTicketChat';
-import { useToast } from '../../hooks/useToast';
-import { useAuthStore } from '../../store/authStore';
-import { TICKET_STATUSES } from '../../api/services';
-import type { ServiceTicket } from '../../api/services';
+import { servicesApi, TICKET_STATUSES } from '@/api/services';
+import type { ServiceRequestDto } from '@/api/services';
+import { useTicketChat } from '@/hooks/useTicketChat';
+import { useToast } from '@/hooks/useToast';
+import { useAuthStore } from '@/store/authStore';
 import { ArrowLeft, Lock } from 'lucide-react';
-import { ChatMessage } from '../../components/chat/ChatMessage';
-import { ChatInput } from '../../components/chat/ChatInput';
-import { TypingIndicator } from '../../components/chat/TypingIndicator';
+import { ChatMessage } from '@/components/chat/ChatMessage';
+import { ChatInput } from '@/components/chat/ChatInput';
+import { TypingIndicator } from '@/components/chat/TypingIndicator';
 import './TicketDetailPage.css';
 
 function getStatusLabel(status: string): string {
@@ -30,11 +29,10 @@ function getStatusLabel(status: string): string {
 export function TicketDetailPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
   const { showToast } = useToast();
-  const { getTicket } = useServiceTickets();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const currentUserId = useAuthStore((state) => state.user?.id);
 
-  const [ticket, setTicket] = useState<ServiceTicket | null>(null);
+  const [ticket, setTicket] = useState<ServiceRequestDto | null>(null);
   const [loading, setLoading] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -57,7 +55,7 @@ export function TicketDetailPage() {
 
     const load = async () => {
       try {
-        const ticketData = await getTicket(ticketId);
+        const ticketData = await servicesApi.getServiceById(ticketId);
         if (ticketData != null) setTicket(ticketData);
       } catch {
         showToast('Ошибка загрузки данных заявки', 'error');
@@ -67,7 +65,7 @@ export function TicketDetailPage() {
     };
 
     void load();
-  }, [ticketId, getTicket, showToast]);
+  }, [ticketId, showToast]);
 
   // Auto-scroll to bottom ONLY if user is already near the bottom
   useEffect(() => {
@@ -90,7 +88,7 @@ export function TicketDetailPage() {
     }
   }, [chatError, showToast]);
 
-  const whoIsTyping = typingUserId && ticket?.technician?.id === typingUserId ? 'Техник' : null;
+  const whoIsTyping = typingUserId ? 'Техник' : null;
 
   const TIMELINE_STEPS = TICKET_STATUSES.filter(s => s.key !== 'Cancelled');
   const currentStepIndex = TIMELINE_STEPS.findIndex(s => s.key === ticket?.status);
@@ -138,7 +136,7 @@ export function TicketDetailPage() {
           </Link>
         </div>
         <div className="ticket-detail__title-row">
-          <h1 className="ticket-detail__title">Заявка #{ticket.ticketNumber}</h1>
+          <h1 className="ticket-detail__title">Заявка #{ticket.requestNumber}</h1>
           <div className={`status-badge status-badge--${ticket.status}`}>
             {getStatusLabel(ticket.status)}
           </div>
@@ -176,53 +174,41 @@ export function TicketDetailPage() {
             <h2 className="section-title">Детали заявки</h2>
             <div className="details-grid">
               <div className="detail-item">
-                <span className="detail-label">Тип устройства:</span>
-                <span className="detail-value">{ticket.deviceType}</span>
+                <span className="detail-label">Тип услуги:</span>
+                <span className="detail-value">{ticket.serviceTypeName}</span>
               </div>
-              {ticket.brand && (
+              {ticket.deviceModel && (
                 <div className="detail-item">
-                  <span className="detail-label">Бренд:</span>
-                  <span className="detail-value">{ticket.brand}</span>
+                  <span className="detail-label">Устройство:</span>
+                  <span className="detail-value">{ticket.deviceModel}</span>
                 </div>
               )}
-              <div className="detail-item">
-                <span className="detail-label">Модель:</span>
-                <span className="detail-value">{ticket.model}</span>
-              </div>
               <div className="detail-item">
                 <span className="detail-label">Дата создания:</span>
                 <span className="detail-value">
                   {new Date(ticket.createdAt).toLocaleDateString('ru-RU')}
                 </span>
               </div>
-              {ticket.technician && (
+              {ticket.masterId && (
                 <div className="detail-item">
                   <span className="detail-label">Техник:</span>
-                  <span className="detail-value">{ticket.technician.name}</span>
-                </div>
-              )}
-              {ticket.estimatedCompletion && (
-                <div className="detail-item">
-                  <span className="detail-label">Ориентировочная готовность:</span>
-                  <span className="detail-value">
-                    {new Date(ticket.estimatedCompletion).toLocaleDateString('ru-RU')}
-                  </span>
+                  <span className="detail-value">{ticket.masterId}</span>
                 </div>
               )}
             </div>
 
             <div className="problem-description">
               <h3 className="subtitle">Описание проблемы</h3>
-              <p>{ticket.issueDescription}</p>
+              <p>{ticket.description}</p>
             </div>
           </div>
 
           {/* Technician Notes */}
-          {ticket.notes && (
+          {ticket.masterComment && (
             <div className="dashboard-section">
               <h2 className="section-title">Примечания техника</h2>
               <div className="technician-notes">
-                <p>{ticket.notes}</p>
+                <p>{ticket.masterComment}</p>
               </div>
             </div>
           )}

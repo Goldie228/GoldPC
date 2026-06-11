@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Settings, Lock, AlertTriangle } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
-import { useToast } from '../../hooks/useToast';
-import { PageHero } from '../../components/ui/PageHero';
-import { ChangePasswordModal } from '../../components/account/change-password-modal/ChangePasswordModal';
-import { DeleteAccountModal } from '../../components/account/delete-account-modal/DeleteAccountModal';
+import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/hooks/useToast';
+import { PageHero } from '@/components/ui/PageHero';
+import { ChangePasswordModal } from '@/components/account/change-password-modal/ChangePasswordModal';
+import { DeleteAccountModal } from '@/components/account/delete-account-modal/DeleteAccountModal';
 
 const inputClass =
   'w-full bg-elevated border border-border rounded-lg px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-info-blue focus:ring-1 focus:ring-info-blue outline-none transition-colors';

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { Modal } from '../../ui/Modal/Modal';
-import { Button } from '../../ui/Button';
-import { useToast } from '../../../hooks/useToast';
-import apiClient from '../../../api/client';
+import { Modal } from '@/ui/Modal/Modal';
+import { Button } from '@/ui/Button';
+import { useToast } from '@/hooks/useToast';
+import apiClient from '@/api/client';
 
 interface DeleteAccountModalProps {
   isOpen: boolean;

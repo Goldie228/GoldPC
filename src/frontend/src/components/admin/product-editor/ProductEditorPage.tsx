@@ -22,10 +22,10 @@ export function ProductEditorPage() {
 
   const productId = id ?? null;
 
-  // --- Tab state ---
+  // --- Состояние вкладки ---
   const [activeTab, setActiveTab] = useState<TabKey>('basic');
 
-  // --- Form state ---
+  // --- Состояние формы ---
   const [form, setForm] = useState<ProductEditForm>({
     name: '',
     category: '',
@@ -38,7 +38,7 @@ export function ProductEditorPage() {
     specifications: {},
   });
 
-  // --- Fetch product ---
+  // --- Загрузка товара ---
   const {
     data: product,
     isLoading,
@@ -49,7 +49,7 @@ export function ProductEditorPage() {
     enabled: !!productId,
   });
 
-  // Populate form when product loads
+  // Заполнение формы при загрузке товара
   useEffect(() => {
     if (product) {
       setForm({
@@ -70,7 +70,7 @@ export function ProductEditorPage() {
     }
   }, [product]);
 
-  // --- hasChanges detection ---
+  // --- Определение наличия изменений ---
   const hasChanges = useMemo(() => {
     if (!product) return false;
     return (
@@ -84,7 +84,7 @@ export function ProductEditorPage() {
     );
   }, [form, product]);
 
-  // --- Save mutation ---
+  // --- Мутация сохранения ---
   const saveMutation = useMutation({
     mutationFn: ({ id: pid, data }: { id: string; data: UpdateProductRequest }) =>
       catalogAdminApi.updateProduct(pid, data),
@@ -112,7 +112,7 @@ export function ProductEditorPage() {
     });
   }, [productId, product, form, saveMutation]);
 
-  // --- Handlers ---
+  // --- Обработчики ---
   const handleFormChange = useCallback(
     (field: string, value: string | number | boolean | null) => {
       setForm((prev) => ({ ...prev, [field]: value }));
@@ -137,9 +137,9 @@ export function ProductEditorPage() {
   const isSaving = saveMutation.isPending;
 
   return (
-    <div className="min-h-screen bg-[var(--bg-card)]">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-[var(--bg-card)] border-b border-[var(--border-muted)]">
+    <div className="min-h-screen bg-surface-card">
+      {/* Заголовок */}
+      <div className="sticky top-0 z-10 bg-surface-card border-b border-hairline-dark">
         <div className="flex items-center justify-between px-6 py-4 max-w-[1400px] mx-auto">
           <div className="flex items-center gap-3">
             <button
@@ -173,7 +173,7 @@ export function ProductEditorPage() {
         </div>
       </div>
 
-      {/* Content */}
+      {/* Содержимое */}
       <div className="max-w-[1400px] mx-auto">
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">

@@ -1,7 +1,7 @@
 /**
  * Утилиты расчёта производительности ПК
  */
-import type { Product, ProductSpecifications } from '../../../api/types';
+import type { Product, ProductSpecifications } from '@/api/types';
 
 export interface EstimatedFps { fps1080p: number; fps1440p: number; fps4k: number; }
 export interface PerformanceResult {

@@ -5,8 +5,8 @@
  */
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { servicesApi, type ServiceType } from '../../api/services';
-import { Button } from '../../components/ui';
+import { servicesApi, type ServiceType } from '@/api/services';
+import { Button } from '@/components/ui';
 
 export interface ServiceSelectorProps {
   selectedServiceId: string | null;

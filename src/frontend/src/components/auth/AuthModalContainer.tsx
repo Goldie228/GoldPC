@@ -4,7 +4,7 @@
  * Рендерит LoginModal или RegisterModal в зависимости от состояния authModalStore
  */
 
-import { useAuthModal } from '../../hooks/useAuthModal';
+import { useAuthModal } from '@/hooks/useAuthModal';
 import { LoginModal } from './LoginModal';
 import { RegisterModal } from './RegisterModal';
 
