@@ -72,6 +72,37 @@ export interface StatsResponse {
   lastUpdated: string;
 }
 
+// === Типы для графиков ===
+
+export interface ChartPoint {
+  label: string;
+  value: number;
+}
+
+export interface ChartResponse {
+  orders: ChartPoint[];
+  revenue: ChartPoint[];
+}
+
+export interface SparklinesResponse {
+  users: number[];
+  orders: number[];
+  revenue: number[];
+}
+
+export interface ActivityItem {
+  id: string;
+  type: 'order' | 'registration' | 'review' | 'product' | 'service';
+  text: string;
+  time: string;
+  icon: string;
+  color: string;
+}
+
+export interface ActivityResponse {
+  items: ActivityItem[];
+}
+
 export interface UpdateUserRoleRequest {
   role: UserRole;
 }
@@ -310,17 +341,12 @@ export const catalogAdminApi = {
     const response = await api.get<CategorySpecificationsDto>(`/admin/specifications/by-category/${categoryId}`);
     return response.data;
   },
-};
 
-/**
- * API статистики дашборда
- */
-export const statsApi = {
   /**
-   * Получить статистику для административной панели
+   * Получить уникальные значения характеристик для категории
    */
-  async getStats(): Promise<StatsResponse> {
-    const response = await api.get<StatsResponse>('/admin/stats');
+  async getUniqueSpecValues(categoryId: string): Promise<Record<string, string[]>> {
+    const response = await api.get<Record<string, string[]>>(`/admin/specifications/unique-values/${categoryId}`);
     return response.data;
   },
 };
@@ -573,6 +599,47 @@ export interface AuditLogResponse {
     hasPrevPage: boolean;
   };
 }
+
+/**
+ * API статистики дашборда
+ */
+export const statsApi = {
+  /**
+   * Получить статистику для административной панели
+   */
+  async getStats(): Promise<StatsResponse> {
+    const response = await api.get<StatsResponse>('/admin/stats');
+    return response.data;
+  },
+
+  /**
+   * Получить данные графиков для дашборда по периоду
+   */
+  async getCharts(period: 'today' | 'week' | 'month' | 'year' = 'month'): Promise<ChartResponse> {
+    const response = await api.get<ChartResponse>('/admin/stats/charts', {
+      params: { period },
+    });
+    return response.data;
+  },
+
+  /**
+   * Получить спарклайны для карточек статистики
+   */
+  async getSparklines(period: 'today' | 'week' | 'month' | 'year' = 'month'): Promise<SparklinesResponse> {
+    const response = await api.get<SparklinesResponse>('/admin/stats/sparklines', {
+      params: { period },
+    });
+    return response.data;
+  },
+
+  /**
+   * Получить ленту активности дашборда
+   */
+  async getActivity(): Promise<ActivityResponse> {
+    const response = await api.get<ActivityResponse>('/admin/stats/activity');
+    return response.data;
+  },
+};
 
 /**
  * API для журнала аудита
