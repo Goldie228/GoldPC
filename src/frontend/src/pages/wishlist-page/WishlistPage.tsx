@@ -162,7 +162,7 @@ export function WishlistPage(): ReactElement {
 
   if (items.length === 0 && !loading) {
     return (
-      <div className="bg-canvas-dark min-h-screen">
+      <div className="bg-canvas-dark min-h-screen pb-12">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center" style={{ minHeight: 'calc(100vh - 400px)' }}>
           <div className="flex flex-col items-center text-center max-w-[400px]">
             <div className="w-[100px] h-[100px] bg-surface-elevated rounded-full flex items-center justify-center mb-8 relative">
@@ -185,7 +185,7 @@ export function WishlistPage(): ReactElement {
   }
 
   return (
-    <div className="bg-canvas-dark min-h-screen">
+    <div className="bg-canvas-dark min-h-screen pb-12">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
         <div className="min-w-0">
           {/* Хлебные крошки */}
