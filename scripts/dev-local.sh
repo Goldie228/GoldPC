@@ -311,6 +311,7 @@ start_infra() {
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_orders;" 2>/dev/null || true
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_services;" 2>/dev/null || true
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_warranty;" 2>/dev/null || true
+    docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_pcbuilder;" 2>/dev/null || true
     
     echo -e "${GREEN}✓ Infrastructure ready${RESET}"
 }
@@ -393,11 +394,7 @@ start_backend() {
         echo -e "${CYAN}Launching $name...${RESET}"
 
         cd "$PROJECT_DIR/$path"
-        if [ "$name" = "AuthService" ] || [ "$name" = "ServicesService" ] || [ "$name" = "AdminPanel" ]; then
-            ASPNETCORE_ENVIRONMENT=Development dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
-        else
-            dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
-        fi
+        ASPNETCORE_ENVIRONMENT=Development dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
         local pid=$!
         SERVICE_PIDS+=($pid)
 
