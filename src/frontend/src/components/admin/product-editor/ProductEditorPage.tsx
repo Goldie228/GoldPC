@@ -80,7 +80,8 @@ export function ProductEditorPage() {
       form.oldPrice !== (product.oldPrice ?? null) ||
       form.stock !== product.stock ||
       form.description !== (product.description ?? '') ||
-      form.isActive !== product.isActive
+      form.isActive !== product.isActive ||
+      JSON.stringify(form.specifications) !== JSON.stringify(product.specifications)
     );
   }, [form, product]);
 
@@ -108,6 +109,7 @@ export function ProductEditorPage() {
         stock: form.stock,
         description: form.description || undefined,
         isActive: form.isActive,
+        specifications: form.specifications,
       },
     });
   }, [productId, product, form, saveMutation]);

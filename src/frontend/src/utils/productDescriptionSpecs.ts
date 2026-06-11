@@ -202,18 +202,35 @@ export function mergeDescriptionIntoSpecifications(
   specs: ProductSpecifications | undefined | null,
   description: string | undefined
 ): ProductSpecifications {
-  const base = (specs != null && typeof specs === 'object' ? { ...specs } : {}) as Record<string, string | number | boolean | undefined | null>;
+  const raw = (specs != null && typeof specs === 'object' ? { ...specs } : {}) as Record<string, string | number | boolean | undefined | null>;
   const pairs = collectKeyValuePairsFromDescription(description);
+
+  // Нормализуем ключи API для корректного сравнения
+  const normalizedBase = new Map<string, string | number | boolean | undefined | null>();
+  for (const [k, v] of Object.entries(raw)) {
+    const nk = normalizeMergedSpecKey(k);
+    if (nk) normalizedBase.set(nk, v);
+  }
+
+  // Добавляем из описания только отсутствующие ключи
   for (const { key, value } of pairs) {
     const nk = normalizeMergedSpecKey(key);
     if (!nk) continue;
-    const current = base[nk];
+    const current = normalizedBase.get(nk);
     if (current !== undefined && current !== null && String(current).trim() !== '') {
       continue;
     }
-    base[nk] = value;
+    normalizedBase.set(nk, value);
   }
-  return base as ProductSpecifications;
+
+  // Возвращаем объект с нормализованными ключами
+  const result: Record<string, string | number | boolean> = {};
+  for (const [k, v] of normalizedBase) {
+    if (v !== undefined && v !== null) {
+      result[k] = v;
+    }
+  }
+  return result as ProductSpecifications;
 }
 
 /**
