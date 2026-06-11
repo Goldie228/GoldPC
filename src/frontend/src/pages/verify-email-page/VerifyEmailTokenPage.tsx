@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
-import { authService } from '../../api/authService';
+import { authService } from '@/api/authService';
 
 /**
  * VerifyEmailTokenPage — Страница подтверждения email по токену из письма

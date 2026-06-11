@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import api from '../../api';
+import api from '@/api';
 
 /**
  * Тип обратной связи
@@ -51,7 +51,7 @@ export function FeedbackWidget() {
       
       setIsSuccess(true);
       
-      // Reset form after success
+      // Сброс формы после успешной отправки
       setTimeout(() => {
         setIsOpen(false);
         setRating(0);
@@ -61,7 +61,7 @@ export function FeedbackWidget() {
       }, 2000);
     } catch (err) {
       setError('Не удалось отправить отзыв. Попробуйте позже.');
-      console.error('Feedback submission error:', err);
+      console.error('Ошибка отправки обратной связи:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -85,7 +85,7 @@ export function FeedbackWidget() {
 
   return (
     <div className="fixed bottom-6 right-6 z-[1000]">
-      {/* Floating button */}
+      {/* Плавающая кнопка */}
       <button
         className="w-14 h-14 rounded-full border-none bg-[linear-gradient(135deg,#667eea_0%,#764ba2_100%)] text-white text-2xl cursor-pointer shadow-[0_4px_12px_rgba(102,126,234,0.4)] transition-all duration-300 flex items-center justify-center hover:scale-110 hover:shadow-[0_6px_20px_rgba(102,126,234,0.5)] active:scale-95"
         onClick={() => setIsOpen(!isOpen)}
@@ -95,7 +95,7 @@ export function FeedbackWidget() {
         💬
       </button>
 
-      {/* Modal overlay */}
+        {/* Затемнение модального окна */}
       {isOpen && (
         <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center z-[1001] animate-[fadeIn_0.2s_ease]" onClick={handleClose}>
           <div 
@@ -104,11 +104,11 @@ export function FeedbackWidget() {
             role="dialog"
             aria-labelledby="feedback-title"
           >
-            {/* Header */}
-            <div className="flex justify-between items-center mb-5 pb-4 border-b border-[#eaeaea]">
-              <h3 id="feedback-title" className="m-0 text-xl font-semibold text-[#1a1a2e]">Обратная связь</h3>
+            {/* Заголовок */}
+            <div className="flex justify-between items-center mb-5 pb-4 border-b border-hairline-dark">
+              <h3 id="feedback-title" className="m-0 text-xl font-semibold text-body-text">Обратная связь</h3>
               <button 
-                className="bg-none border-none text-lg text-[#888] cursor-pointer px-2 py-1 rounded transition-all duration-200 hover:bg-[#f0f0f0] hover:text-[#333]"
+                className="bg-none border-none text-lg text-muted-foreground cursor-pointer px-2 py-1 rounded transition-all duration-200 hover:bg-surface-elevated hover:text-body-text"
                 onClick={handleClose}
                 aria-label="Закрыть"
               >
@@ -116,39 +116,39 @@ export function FeedbackWidget() {
               </button>
             </div>
 
-            {/* Success state */}
+            {/* Состояние успеха */}
             {isSuccess ? (
               <div className="text-center py-8">
                 <span className="text-4xl block mb-4 animate-[scaleIn_0.3s_ease]">✅</span>
-                <p className="text-lg text-[#333] m-0">Спасибо за ваш отзыв!</p>
+                <p className="text-lg text-body-text m-0">Спасибо за ваш отзыв!</p>
               </div>
             ) : (
               <>
-                {/* Type selection */}
+                {/* Выбор типа */}
                 <div className="mb-5">
-                  <label className="block text-sm font-medium text-[#333] mb-2">Тип обращения</label>
+                  <label className="block text-sm font-medium text-body-text mb-2">Тип обращения</label>
                   <div className="flex gap-3">
                     <button
-                      className={`flex-1 px-4 py-3 border-2 border-[#e0e0e0] rounded-lg bg-white text-base cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 hover:border-[#667eea] hover:bg-[#f8f9ff] ${type === 'bug' ? 'border-[#667eea] bg-[linear-gradient(135deg,rgba(102,126,234,0.08)_0%,rgba(118,75,162,0.08)_100%)] text-[#667eea] font-medium' : ''}`}
+                      className={`flex-1 px-4 py-3 border-2 border-hairline-dark rounded-lg bg-white text-base cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 hover:border-info-blue hover:bg-surface-card ${type === 'bug' ? 'border-info-blue bg-[linear-gradient(135deg,rgba(102,126,234,0.08)_0%,rgba(118,75,162,0.08)_100%)] text-info-blue font-medium' : ''}`}
                       onClick={() => setType('bug')}
                       type="button"
                     >
                       🐛 Баг
                     </button>
                     <button
-                      className={`flex-1 px-4 py-3 border-2 border-[#e0e0e0] rounded-lg bg-white text-base cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 hover:border-[#667eea] hover:bg-[#f8f9ff] ${type === 'idea' ? 'border-[#667eea] bg-[linear-gradient(135deg,rgba(102,126,234,0.08)_0%,rgba(118,75,162,0.08)_100%)] text-[#667eea] font-medium' : ''}`}
+                      className={`flex-1 px-4 py-3 border-2 border-hairline-dark rounded-lg bg-white text-base cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 hover:border-info-blue hover:bg-surface-card ${type === 'idea' ? 'border-info-blue bg-[linear-gradient(135deg,rgba(102,126,234,0.08)_0%,rgba(118,75,162,0.08)_100%)] text-info-blue font-medium' : ''}`}
                       onClick={() => setType('idea')}
                       type="button"
                     >
                       💡 Идея
                     </button>
                   </div>
-                  <p className="mt-2 mb-0 text-xs text-[#666]">{getTypeDescription(type)}</p>
+                  <p className="mt-2 mb-0 text-xs text-muted-foreground">{getTypeDescription(type)}</p>
                 </div>
 
-                {/* Rating */}
+                {/* Оценка */}
                 <div className="mb-5">
-                  <label className="block text-sm font-medium text-[#333] mb-2">Оценка</label>
+                  <label className="block text-sm font-medium text-body-text mb-2">Оценка</label>
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -163,20 +163,20 @@ export function FeedbackWidget() {
                         ⭐
                       </button>
                     ))}
-                    <span className="ml-3 text-sm text-[#666]">
+                    <span className="ml-3 text-sm text-muted-foreground">
                       {rating > 0 ? `${rating} из 5` : 'Выберите оценку'}
                     </span>
                   </div>
                 </div>
 
-                {/* Comment */}
+                {/* Комментарий */}
                 <div className="mb-5">
-                  <label className="block text-sm font-medium text-[#333] mb-2" htmlFor="feedback-comment">
+                  <label className="block text-sm font-medium text-body-text mb-2" htmlFor="feedback-comment">
                     Комментарий
                   </label>
                   <textarea
                     id="feedback-comment"
-                    className="w-full p-3 border-2 border-[#e0e0e0] rounded-lg text-sm font-inherit resize-y min-h-[100px] transition-colors duration-200 box-border focus:outline-none focus:border-[#667eea] placeholder:text-[#aaa]"
+                    className="w-full p-3 border-2 border-hairline-dark rounded-lg text-sm font-inherit resize-y min-h-[100px] transition-colors duration-200 box-border focus:outline-none focus:border-info-blue placeholder:text-muted-foreground"
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
                     placeholder={
@@ -187,19 +187,19 @@ export function FeedbackWidget() {
                     rows={4}
                     maxLength={1000}
                   />
-                  <span className="block text-right text-xs text-[#999] mt-1">
+                  <span className="block text-right text-xs text-muted-foreground mt-1">
                     {comment.length}/1000
                   </span>
                 </div>
 
-                {/* Error message */}
+                {/* Сообщение об ошибке */}
                 {error && (
-                  <div className="bg-[#fff5f5] border border-[#feb2b2] text-[#c53030] p-3 rounded-lg text-sm mb-4">
+                  <div className="bg-price-rise/10 border border-price-rise/30 text-price-rise p-3 rounded-lg text-sm mb-4">
                     ⚠️ {error}
                   </div>
                 )}
 
-                {/* Submit button */}
+                {/* Кнопка отправки */}
                 <div className="flex justify-end gap-3 mt-6">
                   <button
                     className="px-6 py-3 bg-[linear-gradient(135deg,#667eea_0%,#764ba2_100%)] text-white border-none rounded-lg text-base font-medium cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(102,126,234,0.4)] disabled:opacity-60 disabled:cursor-not-allowed"

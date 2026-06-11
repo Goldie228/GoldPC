@@ -2,17 +2,17 @@ import { useState, useEffect, useMemo, type ReactElement } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Heart, ArrowRight } from 'lucide-react';
-import { useWishlistStore } from '../../store/wishlistStore';
-import { useCatalog } from '../../hooks/useCatalog';
-import { EmptyState } from '../../components/catalog/EmptyState';
-import { ProductCard } from '../../components/product-card/ProductCard';
-import { Skeleton, ProductCardSkeleton } from '../../components/ui/Skeleton';
-import { Button } from '../../components/ui/Button';
-import { Breadcrumbs } from '../../components/layout/Breadcrumbs';
-import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
-import type { ProductSummary, ProductCategory } from '../../api/types';
-import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
-import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
+import { useWishlistStore } from '@/store/wishlistStore';
+import { useCatalog } from '@/hooks/useCatalog';
+import { EmptyState } from '@/components/catalog/EmptyState';
+import { ProductCard } from '@/components/product-card/ProductCard';
+import { Skeleton, ProductCardSkeleton } from '@/components/ui/Skeleton';
+import { Button } from '@/components/ui/Button';
+import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
+import { ApiErrorBanner } from '@/components/ui/ApiErrorBanner';
+import type { ProductSummary, ProductCategory } from '@/api/types';
+import { formatCountRu, RU_FORMS } from '@/utils/pluralizeRu';
+import { CATEGORY_LABELS_RU } from '@/utils/categoryLabels';
 import './WishlistPage.css';
 
 const containerVariants = {

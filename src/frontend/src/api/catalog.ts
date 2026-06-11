@@ -13,6 +13,7 @@ import type {
   CreateReviewRequest,
   UpdateReviewRequest,
   ProductSummary,
+  CategorySpecificationsDto,
 } from './types';
 export type { ProductSummary, ProductReview, FilterFacetAttribute, GetProductsParams, ProductListResponse } from './types';
 
@@ -365,5 +366,13 @@ export const catalogApi = {
   async getFeaturedProducts(limit?: number): Promise<ProductSummary[]> {
     const response = await this.getProducts({ isFeatured: true, pageSize: limit ?? 10 } as GetProductsParams);
     return response.data ?? [];
+  },
+
+  /**
+   * Получить мета-данные характеристик для категории (локализованные названия из БД)
+   */
+  async getCategorySpecifications(categoryId: string): Promise<CategorySpecificationsDto> {
+    const response = await api.get<CategorySpecificationsDto>(`/catalog/specifications/by-category/${categoryId}`);
+    return response.data;
   },
 };

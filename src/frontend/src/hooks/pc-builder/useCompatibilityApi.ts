@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { checkCompatibilityAPI } from '../../api/pcBuilderService';
-import type { CompatibilityCheckResponse } from '../../api/pcBuilderService';
+import { checkCompatibilityAPI } from '@/api/pcBuilderService';
+import type { CompatibilityCheckResponse } from '@/api/pcBuilderService';
 import type { PCBuilderSelectedState } from '@/features/pc-builder/logic/types';
 import { COMPATIBILITY_DEBOUNCE_MS } from '@/features/pc-builder/logic/constants';
 

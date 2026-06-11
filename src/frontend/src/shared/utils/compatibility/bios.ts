@@ -4,8 +4,8 @@
  */
 
 import type { CompatibilityWarning } from './types';
-import type { CompatibilityRulesConfig, SocketGroup } from '../../../config/compatibilityTypes';
-import rulesConfig from '../../../config/compatibilityRules.json';
+import type { CompatibilityRulesConfig, SocketGroup } from '@/config/compatibilityTypes';
+import rulesConfig from '@/config/compatibilityRules.json';
 
 const config: CompatibilityRulesConfig = rulesConfig as unknown as CompatibilityRulesConfig;
 const SOCKET_GROUPS: SocketGroup[] = config.socketCompatibility.groups;

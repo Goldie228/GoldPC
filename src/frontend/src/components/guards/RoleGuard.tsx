@@ -6,8 +6,8 @@
  * Если роль соответствует - рендерит дочерние маршруты через Outlet.
  */
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import type { User } from '../../api/types';
+import { useAuth } from '@/hooks/useAuth';
+import type { User } from '@/api/types';
 
 type UserRole = User['role'];
 

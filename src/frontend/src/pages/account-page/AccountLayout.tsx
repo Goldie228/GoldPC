@@ -10,6 +10,7 @@ import {
   X,
   ShieldCheck,
   Cpu,
+  Bell,
   Settings,
   Users,
   Warehouse,
@@ -17,7 +18,7 @@ import {
   BarChart3,
   Download,
 } from 'lucide-react';
-import { useAuthStore } from '../../store/authStore';
+import { useAuthStore } from '@/store/authStore';
 
 /**
  * AccountLayout - Layout for /account/* pages with sidebar navigation
@@ -49,6 +50,7 @@ const navItems: NavItem[] = [
     { to: '/account/repairs', icon: Wrench, label: 'Ремонты' },
     { to: '/account/warranty', icon: ShieldCheck, label: 'Гарантия' },
     { to: '/account/saved-builds', icon: Cpu, label: 'Сборки' },
+    { to: '/account/notifications', icon: Bell, label: 'Уведомления' },
     { to: '/account/settings', icon: Settings, label: 'Настройки' },
   ];
 

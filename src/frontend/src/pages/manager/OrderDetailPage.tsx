@@ -7,8 +7,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { ArrowLeft, CircleCheck, Truck, Check, AlertCircle } from 'lucide-react';
-import { useManager } from '../../hooks/useManager';
-import type { RawOrderItem } from '../../api/manager';
+import { useManager } from '@/hooks/useManager';
+import type { RawOrderItem } from '@/api/manager';
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';
 

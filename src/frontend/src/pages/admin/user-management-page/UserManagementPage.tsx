@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usersAdminApi, type UserRole } from '../../../api/admin';
+import { usersAdminApi, type UserRole } from '@/api/admin';
 import {
   Search,
   ChevronLeft,

@@ -1,23 +1,23 @@
 import { useState, useEffect, useMemo, useCallback, type ReactElement } from 'react';
 import { Link } from 'react-router-dom';
-import { useComparisonStore } from '../../store/comparisonStore';
-import { useCatalog } from '../../hooks/useCatalog';
-import { getProductImageUrl } from '../../utils/image';
-import { useCart } from '../../hooks/useCart';
-import { useToastStore } from '../../store/toastStore';
-import { useWishlistStore } from '../../store/wishlistStore';
-import type { Product, ProductSpecifications, ProductCategory, ProductImage } from '../../api/types';
-import { Icon } from '../../components/ui/Icon/Icon';
-import { ApiErrorBanner } from '../../components/ui/ApiErrorBanner';
-import { EmptyState } from '../../components/catalog/EmptyState';
-import { formatCountRu, RU_FORMS } from '../../utils/pluralizeRu';
-import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
-import { CATEGORY_LABELS_RU } from '../../utils/categoryLabels';
-import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
-import { specificationsWithDescriptionFallback } from '../../utils/productDescriptionSpecs';
-import { evaluateComparison } from '../../utils/comparison/comparisonEngine';
-import { getBackendCategorySlug, normalizeCategory, normalizeSpecKey } from '../../utils/comparison/comparisonRules';
-import { sortSpecKeysForComparison } from '../../utils/comparison/specKeysSort';
+import { useComparisonStore } from '@/store/comparisonStore';
+import { useCatalog } from '@/hooks/useCatalog';
+import { getProductImageUrl } from '@/utils/image';
+import { useCart } from '@/hooks/useCart';
+import { useToastStore } from '@/store/toastStore';
+import { useWishlistStore } from '@/store/wishlistStore';
+import type { Product, ProductSpecifications, ProductCategory, ProductImage } from '@/api/types';
+import { Icon } from '@/components/ui/Icon/Icon';
+import { ApiErrorBanner } from '@/components/ui/ApiErrorBanner';
+import { EmptyState } from '@/components/catalog/EmptyState';
+import { formatCountRu, RU_FORMS } from '@/utils/pluralizeRu';
+import { getDisplayManufacturerName } from '@/utils/manufacturerNameOverrides';
+import { CATEGORY_LABELS_RU } from '@/utils/categoryLabels';
+import { specLabel, formatSpecValueForKey } from '@/utils/specifications';
+import { specificationsWithDescriptionFallback } from '@/utils/productDescriptionSpecs';
+import { evaluateComparison } from '@/utils/comparison/comparisonEngine';
+import { getBackendCategorySlug, normalizeCategory, normalizeSpecKey } from '@/utils/comparison/comparisonRules';
+import { sortSpecKeysForComparison } from '@/utils/comparison/specKeysSort';
 
 /** Получить главное изображение товара (mainImage или первое из images) */
 function getMainImage(product: Product): ProductImage | undefined {
@@ -105,7 +105,7 @@ export function ComparisonPage(): ReactElement {
       .catch((err) => {
         if (cancelled) return;
         setError('Не удалось загрузить товары для сравнения.');
-        console.error('Comparison fetch error:', err);
+        console.error('Ошибка загрузки сравнения:', err);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -254,14 +254,14 @@ export function ComparisonPage(): ReactElement {
     return (
       <div className="min-h-screen bg-canvas-dark">
         <div className="max-w-[1440px] mx-auto px-4 md:px-8">
-          {/* Breadcrumb */}
+          {/* Хлебные крошки */}
           <nav className="flex items-center gap-2 text-xs text-muted-text mb-6" aria-label="Breadcrumb">
             <Link to="/" className="hover:text-gold transition-colors no-underline">Главная</Link>
             <span className="text-muted-text/40">/</span>
             <span className="text-body-text">Сравнение</span>
           </nav>
 
-          {/* Empty state card */}
+          {/* Карточка пустого состояния */}
           <div className="bg-card border border-border rounded-xl p-12 flex flex-col items-center justify-center max-w-[600px] mx-auto">
             <EmptyState
               title="Список сравнения пуст"
@@ -270,8 +270,7 @@ export function ComparisonPage(): ReactElement {
             />
             <Link
               to="/catalog"
-              className="mt-6 inline-flex items-center gap-2 px-8 py-3 font-semibold text-sm no-underline rounded-lg"
-style={{ backgroundColor: '#FCD535', color: '#000000' }}
+              className="mt-6 inline-flex items-center gap-2 px-8 py-3 font-semibold text-sm no-underline rounded-lg bg-gold text-black"
             >
               Перейти в каталог
             </Link>
@@ -285,7 +284,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
     return (
       <div className="min-h-screen bg-canvas-dark">
         <div className="max-w-[1440px] mx-auto px-4 md:px-8">
-          {/* Breadcrumb */}
+          {/* Хлебные крошки */}
           <nav className="flex items-center gap-2 text-xs text-muted-text mb-6" aria-label="Breadcrumb">
             <Link to="/" className="hover:text-gold transition-colors no-underline">Главная</Link>
             <span className="text-muted-text/40">/</span>
@@ -316,7 +315,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
   return (
     <div className="min-h-screen bg-canvas-dark">
       <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-8">
-        {/* Breadcrumb */}
+        {/* Хлебные крошки */}
         <nav className="flex items-center gap-2 text-xs text-muted-text mb-6" aria-label="Breadcrumb">
           <Link to="/" className="hover:text-gold transition-colors no-underline">Главная</Link>
           <span className="text-muted-text/40">/</span>
@@ -325,7 +324,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
           <span className="text-gold font-medium">Сравнение</span>
         </nav>
 
-        {/* Header section */}
+        {/* Секция заголовка */}
         <header className="mb-8">
           <div className="flex items-center justify-between flex-wrap gap-4 mb-3">
             <div>
@@ -350,7 +349,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
             )}
           </div>
 
-          {/* Category badge + product count */}
+          {/* Бейдж категории + количество товаров */}
           <div className="flex items-center gap-3 flex-wrap mb-4">
             {activeCategory && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-gold bg-gold/10 border border-gold/30 rounded-full">
@@ -363,7 +362,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
             </p>
           </div>
 
-          {/* Category tabs */}
+          {/* Вкладки категорий */}
           {categories.length > 1 && (
             <div className="flex gap-2 flex-wrap" role="tablist" aria-label="Категории сравнения">
               {categories.map((category) => (
@@ -389,14 +388,14 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
           )}
         </header>
 
-        {/* Loading state */}
+        {/* Состояние загрузки */}
         {loading ? (
           <div className="flex flex-col items-center gap-4 py-20 text-muted-text">
             <Icon name="loader" size="xl" animated color="gold" />
             <span className="text-sm">Загружаем характеристики...</span>
           </div>
         ) : visibleProducts.length === 0 ? (
-          /* Empty state for selected category */
+          /* Пустое состояние для выбранной категории */
           <div className="bg-surface-card border border-hairline-dark rounded-xl p-12 flex flex-col items-center justify-center max-w-[600px] mx-auto">
             <EmptyState
               title="Для этой категории пока нечего сравнивать"
@@ -412,20 +411,20 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
           </div>
         ) : (
           /* ============================================================ */
-          /* Comparison Table                                              */
+          /* Таблица сравнения                                             */
           /* ============================================================ */
           <div className="bg-surface-card border border-hairline-dark rounded-xl overflow-hidden">
             <div className="overflow-x-auto scrollbar-thin">
               <table className="w-full min-w-[860px] border-separate border-spacing-0">
-                {/* ----- Product header row ----- */}
+                {/* ----- Строка заголовка товара ----- */}
                 <thead>
                   <tr>
-                    {/* Sticky specs column header */}
+                    {/* Закреплённый заголовок колонки характеристик */}
                     <th className="sticky left-0 z-15 w-[220px] min-w-[200px] px-4 py-4 text-left text-xs font-semibold text-muted-text uppercase tracking-wider bg-surface-card border-b border-r border-hairline-dark">
                       <span className="text-gold">Характеристики</span>
                     </th>
 
-                    {/* Product columns */}
+                    {/* Колонки товаров */}
                     {visibleProducts.map((product) => {
                       const inCart = isInCart(product.id);
                       const inWishlist = isInWishlist(product.id);
@@ -441,7 +440,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                           className="sticky top-0 z-5 min-w-[280px] px-5 py-4 border-b border-l border-hairline-dark bg-surface-elevated"
                         >
                           <div className="flex flex-col items-center gap-3 relative">
-                            {/* Remove button */}
+                            {/* Кнопка удаления */}
                             <button
                               className="absolute top-0 right-0 w-6 h-6 flex items-center justify-center rounded-full text-muted-text hover:text-price-rise hover:bg-price-rise/10 transition-all"
                               onClick={() => removeItem(product.id)}
@@ -451,7 +450,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                               <Icon name="close" size="xs" />
                             </button>
 
-                            {/* Product image */}
+                            {/* Изображение товара */}
                             <Link
                               to={`/product/${product.slug}`}
                               className="block w-[120px] h-[120px] rounded-xl border border-hairline-dark bg-white overflow-hidden transition-transform hover:scale-[1.03] mt-4"
@@ -470,7 +469,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                               )}
                             </Link>
 
-                            {/* Product name */}
+                            {/* Название товара */}
                             <Link
                               to={`/product/${product.slug}`}
                               className="text-sm font-semibold text-on-dark no-underline line-clamp-2 text-center leading-5 hover:text-gold transition-colors max-w-[220px]"
@@ -478,14 +477,14 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                               {product.name}
                             </Link>
 
-                            {/* Price */}
+                            {/* Цена */}
                             <div className="flex items-baseline gap-1">
                               <span className="text-xl font-bold font-tabular text-on-dark">
                                 {formatPrice(product.price)}
                               </span>
                             </div>
 
-                            {/* Stock badge */}
+                            {/* Бейдж наличия */}
                             <span
                               className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
                                 product.stock === 0
@@ -496,9 +495,9 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                               {product.stock === 0 ? 'Под заказ' : 'В наличии'}
                             </span>
 
-                            {/* Action buttons */}
+                            {/* Кнопки действий */}
                             <div className="flex items-center gap-1.5 w-full justify-center">
-                              {/* Wishlist */}
+                              {/* Избранное */}
                               <button
                                 className={`w-8 h-8 inline-flex items-center justify-center border rounded-lg transition-all ${
                                   inWishlist
@@ -512,7 +511,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                                 <Icon name="heart" size="xs" color={inWishlist ? 'gold' : 'default'} />
                               </button>
 
-                              {/* Cart / Quantity */}
+                              {/* Корзина / Количество */}
                               {inCart ? (
                                 <div className="inline-flex items-center flex-1 max-w-[110px] min-h-[32px] border border-hairline-dark rounded-md overflow-hidden bg-surface-card">
                                   <button
@@ -556,9 +555,9 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                   </tr>
                 </thead>
 
-                {/* ----- Spec rows ----- */}
+                {/* ----- Строки характеристик ----- */}
                 <tbody>
-                  {/* Производитель row */}
+                  {/* Строка производителя */}
                   <tr className="transition-colors hover:[&>td:not(:first-child)]:bg-surface-elevated/40">
                     <td className="sticky left-0 z-10 px-4 py-3 text-sm font-semibold text-muted-text bg-surface-card border-b border-r border-hairline-dark">
                       Производитель
@@ -573,7 +572,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                     ))}
                   </tr>
 
-                  {/* Рейтинг row */}
+                  {/* Строка рейтинга */}
                   <tr className="transition-colors hover:[&>td:not(:first-child)]:bg-surface-elevated/40">
                     <td className="sticky left-0 z-10 px-4 py-3 text-sm font-semibold text-muted-text bg-surface-card border-b border-r border-hairline-dark">
                       Рейтинг
@@ -606,7 +605,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                     })}
                   </tr>
 
-                  {/* Наличие row */}
+                  {/* Строка наличия */}
                   <tr className="transition-colors hover:[&>td:not(:first-child)]:bg-surface-elevated/40">
                     <td className="sticky left-0 z-10 px-4 py-3 text-sm font-semibold text-muted-text bg-surface-card border-b border-r border-hairline-dark">
                       Наличие
@@ -629,7 +628,7 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                     ))}
                   </tr>
 
-                  {/* Dynamic spec rows */}
+                  {/* Динамические строки характеристик */}
                   {specKeys.map((key) => {
                     const values = visibleProducts.map((p) => {
                       const specs = p.specifications as ProductSpecifications | undefined;
@@ -642,12 +641,12 @@ style={{ backgroundColor: '#FCD535', color: '#000000' }}
                         key={key}
                         className="transition-colors hover:[&>td:not(:first-child)]:bg-surface-elevated/40"
                       >
-                        {/* Spec label - sticky left */}
+                        {/* Название характеристики - закреплённая левая колонка */}
                         <td className="sticky left-0 z-10 px-4 py-3 text-sm font-semibold text-muted-text bg-surface-card border-b border-r border-hairline-dark">
                           {resolveSpecLabel(key)}
                         </td>
 
-                        {/* Spec values */}
+                        {/* Значения характеристик */}
                         {visibleProducts.map((product, idx) => {
                           const specs = product.specifications as ProductSpecifications | undefined;
                           const value = specs?.[key];

@@ -4,35 +4,35 @@ import { Button } from '../ui/Button';
 import './ErrorBoundary.css';
 
 /**
- * Props for ErrorBoundary component
+ * Пропсы компонента ErrorBoundary
  */
 interface ErrorBoundaryProps {
-  /** Children to render when there's no error */
+  /** Дочерние элементы для отображения при отсутствии ошибки */
   children: ReactNode;
-  /** Optional fallback UI */
+  /** Необязательный запасной UI */
   fallback?: ReactNode;
 }
 
 /**
- * State for ErrorBoundary component
+ * Состояние компонента ErrorBoundary
  */
 interface ErrorBoundaryState {
-  /** Whether an error has been caught */
+  /** Была ли поймана ошибка */
   hasError: boolean;
-  /** The error that was caught */
+  /** Пойманная ошибка */
   error: Error | null;
 }
 
 /**
- * ErrorBoundary Component
+ * Компонент ErrorBoundary
  * 
- * A class component that catches JavaScript errors anywhere in the child
- * component tree, logs those errors, and displays a fallback UI.
+ * Классовый компонент, который перехватывает ошибки JavaScript в дочерних
+ * компонентах, логирует их и отображает запасной UI.
  * 
- * Features:
- * - Catches errors during rendering, in lifecycle methods, and in constructors
- * - Provides a user-friendly fallback UI
- * - Includes a "Reload" button to recover from the error
+ * Особенности:
+ * - Перехватывает ошибки рендеринга, в жизненном цикле и в конструкторах
+ * - Предоставляет дружелюбный запасной UI
+ * - Включает кнопку "Перезагрузить" для восстановления после ошибки
  * 
  * @example
  * <ErrorBoundary>
@@ -49,8 +49,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   /**
-   * Static lifecycle method called when an error is thrown in a descendant component
-   * Updates the state to trigger a fallback UI render
+   * Статический метод жизненного цикла, вызываемый при выбросе ошибки в дочернем компоненте
+   * Обновляет состояние для отрисовки запасного UI
    */
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return {
@@ -60,21 +60,21 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   /**
-   * Lifecycle method called after an error has been thrown by a descendant component
-   * Used for logging error information
+   * Метод жизненного цикла, вызываемый после выброса ошибки дочерним компонентом
+   * Используется для логирования информации об ошибке
    */
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log error to console in development
+    // Логируем ошибку в консоль в режиме разработки
     console.error('ErrorBoundary caught an error:', error);
     console.error('Error Info:', errorInfo.componentStack);
     
-    // In production, you might want to log to an error reporting service
-    // Example: logErrorToService(error, errorInfo);
+    // В продакшене можно отправлять в сервис сбора ошибок
+    // Пример: logErrorToService(error, errorInfo);
   }
 
   /**
-   * Handler for the reload button
-   * Resets the error state and reloads the page
+   * Обработчик кнопки перезагрузки
+   * Сбрасывает состояние ошибки и перезагружает страницу
    */
   handleReload = (): void => {
     this.setState({
@@ -89,12 +89,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     const { children, fallback } = this.props;
 
     if (hasError) {
-      // Use custom fallback if provided
+      // Используем пользовательский запасной UI если предоставлен
       if (fallback) {
         return fallback;
       }
 
-      // Default fallback UI
+      // Запасной UI по умолчанию
       return (
         <div className="error-boundary">
           <div className="error-boundary__container">

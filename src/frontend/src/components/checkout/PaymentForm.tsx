@@ -7,10 +7,10 @@ import {
   formatCardNumber,
   formatCardExpiry,
   getCardType,
-} from '../../utils/cardValidation';
+} from '@/utils/cardValidation';
 import { Icon } from '../ui/Icon';
 import { Button } from '../ui/Button';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '@/hooks/useToast';
 
 interface PaymentFormProps {
   onSubmit: (data: PaymentData) => Promise<void>;

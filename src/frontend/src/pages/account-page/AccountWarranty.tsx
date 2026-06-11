@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { ShieldCheck, ShieldAlert, Calendar, Loader2, AlertCircle } from 'lucide-react';
-import { useWarranty } from '../../hooks/useWarranty';
-import type { WarrantyCard, WarrantyStatus } from '../../api/warranty';
-import { StatusBadge } from '../../components/ui/StatusBadge';
-import { StatCard } from '../../components/ui/StatCard';
+import { useWarranty } from '@/hooks/useWarranty';
+import type { WarrantyCard, WarrantyStatus } from '@/api/warranty';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { StatCard } from '@/components/ui/StatCard';
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */

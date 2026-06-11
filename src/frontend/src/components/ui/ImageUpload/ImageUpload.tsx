@@ -270,7 +270,7 @@ export function ImageUpload({
 
   return (
     <div className="space-y-4">
-      {/* ======== Drop zone ======== */}
+      {/* ======== Зона перетаскивания ======== */}
       <div
         onDragOver={handleDragOver}
         onDragEnter={handleDragEnter}
@@ -288,12 +288,12 @@ export function ImageUpload({
         aria-label="Перетащите или нажмите для загрузки изображений"
         className={`
           relative flex flex-col items-center justify-center py-10 px-6
-          border-2 border-dashed rounded-[var(--radius-lg)]
+          border-2 border-dashed rounded-lg
           cursor-pointer transition-all duration-200
           ${
             isDragOver
-              ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/5'
-              : 'border-[var(--border-muted)] hover:border-[var(--border-default)] hover:bg-[var(--bg-card)]/50'
+              ? 'border-gold bg-gold/5'
+              : 'border-hairline-dark hover:border-hairline-dark hover:bg-surface-card/50'
           }
         `.trim()}
       >
@@ -307,13 +307,13 @@ export function ImageUpload({
           aria-hidden="true"
         />
 
-        <div className="w-14 h-14 rounded-full bg-[var(--bg-card)] flex items-center justify-center mb-3">
-          <Upload size={26} className="text-[var(--color-muted-text)]" />
+        <div className="w-14 h-14 rounded-full bg-surface-card flex items-center justify-center mb-3">
+          <Upload size={26} className="text-muted-foreground" />
         </div>
-        <p className="text-sm text-[var(--color-body-text)] font-medium">
+        <p className="text-sm text-body-text font-medium">
           Перетащите или нажмите для загрузки
         </p>
-        <p className="text-xs text-[var(--color-muted-text)] mt-1.5">
+        <p className="text-xs text-muted-foreground mt-1.5">
           JPEG, PNG, WebP &bull; до {maxFiles} шт &bull; макс. {Math.round(maxFileSize / 1024 / 1024)} МБ
         </p>
       </div>
@@ -327,20 +327,20 @@ export function ImageUpload({
             animate={{ opacity: 1, y: 0, height: 'auto' }}
             exit={{ opacity: 0, y: -8, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="flex items-center gap-3 p-3 rounded-[var(--radius-md)] bg-[var(--bg-card)] overflow-hidden"
+            className="flex items-center gap-3 p-3 rounded-md bg-surface-card overflow-hidden"
           >
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-[var(--color-body-text)] truncate">{file.name}</p>
-              <div className="mt-1.5 h-1 rounded-full bg-[var(--border-muted)] overflow-hidden">
+              <p className="text-sm text-body-text truncate">{file.name}</p>
+              <div className="mt-1.5 h-1 rounded-full bg-hairline-dark overflow-hidden">
                 <motion.div
-                  className="h-full rounded-full bg-[var(--accent)]"
+                  className="h-full rounded-full bg-gold"
                   initial={{ width: 0 }}
                   animate={{ width: `${file.progress}%` }}
                   transition={{ duration: 0.3 }}
                 />
               </div>
             </div>
-            <span className="text-xs text-[var(--color-muted-text)] tabular-nums flex-shrink-0">
+            <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
               {file.progress}%
             </span>
           </motion.div>
@@ -367,18 +367,18 @@ export function ImageUpload({
                 onDragOver={(e) => handleDragOverItem(e, idx)}
                 onDragEnd={handleDropItem}
                 className={`
-                  relative group aspect-[4/3] rounded-[var(--radius-md)] overflow-hidden
-                  bg-[var(--bg-card)] cursor-grab active:cursor-grabbing
-                  ring-1 ring-[var(--border-muted)] hover:ring-[var(--color-gold)]
+                  relative group aspect-[4/3] rounded-md overflow-hidden
+                  bg-surface-card cursor-grab active:cursor-grabbing
+                  ring-1 ring-hairline-dark hover:ring-gold
                   transition-all duration-200
                   ${
                     image.isMain
-                      ? 'ring-2 ring-[var(--color-gold)] shadow-[0_0_12px_rgba(252,213,53,0.25)]'
+                      ? 'ring-2 ring-gold shadow-[0_0_12px_rgba(252,213,53,0.25)]'
                       : ''
                   }
                   ${
                     dragOverIdx === idx && draggedIdx !== idx
-                      ? 'ring-2 ring-[var(--color-gold)]'
+                      ? 'ring-2 ring-gold'
                       : ''
                   }
                 `.trim()}
@@ -392,7 +392,7 @@ export function ImageUpload({
 
                 {/* Бадж "Главное" */}
                 {image.isMain && (
-                  <div className="absolute top-2 left-2 flex items-center gap-1 bg-[var(--accent)] text-[var(--color-gold-ink)] text-xs font-medium px-2 py-0.5 rounded-[var(--radius-sm)] z-10">
+                  <div className="absolute top-2 left-2 flex items-center gap-1 bg-gold text-gold-ink text-xs font-medium px-2 py-0.5 rounded-sm z-10">
                     <Star size={12} fill="currentColor" />
                     <span>Главное</span>
                   </div>
@@ -405,7 +405,7 @@ export function ImageUpload({
                   className="
                     absolute top-2 right-2 z-10
                     w-7 h-7 flex items-center justify-center
-                    bg-[var(--color-price-rise)] text-white
+                    bg-price-rise text-white
                     rounded-full opacity-0 group-hover:opacity-100
                     transition-opacity duration-150
                     hover:brightness-110
@@ -424,9 +424,9 @@ export function ImageUpload({
                       onClick={() => handleSetPrimary(image.id)}
                       className="
                         flex items-center gap-1.5 px-3 py-1.5
-                        bg-[var(--bg-card)] text-[var(--color-body-text)]
-                        text-xs font-medium rounded-[var(--radius-sm)]
-                        hover:bg-[var(--color-gold)] hover:text-[var(--color-gold-ink)]
+                        bg-surface-card text-body-text
+                        text-xs font-medium rounded-sm
+                        hover:bg-gold hover:text-gold-ink
                         transition-colors duration-150
                       "
                       title="Сделать главным"
@@ -443,12 +443,12 @@ export function ImageUpload({
         </div>
       ) : (
         /* Плейсхолдер пустого состояния */
-        <div className="aspect-[4/3] border-2 border-dashed border-[var(--border-muted)] rounded-[var(--radius-md)] flex flex-col items-center justify-center bg-[var(--bg-card)]/30">
-          <ImageIcon size={48} className="text-[var(--color-muted-text)] opacity-30" />
-          <p className="text-sm text-[var(--color-muted-text)] mt-3 font-medium">
+        <div className="aspect-[4/3] border-2 border-dashed border-hairline-dark rounded-md flex flex-col items-center justify-center bg-surface-card/30">
+          <ImageIcon size={48} className="text-muted-foreground opacity-30" />
+          <p className="text-sm text-muted-foreground mt-3 font-medium">
             Изображения не добавлены
           </p>
-          <p className="text-xs text-[var(--color-muted-text)] mt-1 opacity-60">
+          <p className="text-xs text-muted-foreground mt-1 opacity-60">
             Используйте зону загрузки выше
           </p>
         </div>

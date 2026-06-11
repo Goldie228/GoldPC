@@ -6,7 +6,6 @@ import './styles/tokens.css' // Старые дизайн-tokens (сохране
 import './styles/globals.css'
 import './styles/staff.css'
 import App from './App.tsx'
-import { performanceMonitor } from './utils/performance'
 import { initializePWA } from './utils/pwa'
 
 // Initialize PWA service worker
@@ -39,27 +38,6 @@ const queryClient = new QueryClient({
     },
   },
 })
-
-// Инициализация мониторинга производительности
-// Монитор автоматически начинает сбор Core Web Vitals при импорте
-// В режиме разработки проверяем бюджеты при загрузке страницы
-const enablePerformanceBudgetChecks =
-  import.meta.env.DEV && import.meta.env.VITE_ENABLE_PERFORMANCE_BUDGET_CHECKS === 'true'
-
-if (enablePerformanceBudgetChecks) {
-  window.addEventListener('load', () => {
-    // Даём время на сбор метрик
-    setTimeout(() => {
-      const result = performanceMonitor.checkBudgets()
-      if (!result.passed) {
-        console.warn(
-          '[Performance] Budget violations detected on page load:',
-          result.violations
-        )
-      }
-    }, 3000)
-  })
-}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -2,12 +2,12 @@ import { Link } from 'react-router-dom';
 import { Instagram, Facebook, Youtube, Send } from 'lucide-react';
 
 /**
- * Footer Component — Premium Dark Variant
+ * Компонент футера — тёмный премиальный вариант
  *
- * Design: footer-dark (DESIGN.md)
- * Background: #0b0e11 (canvas-dark, matching header)
- * Accent: muted brass #c9a84c (restrained, not neon)
- * Text hierarchy: title → link → copyright (descending contrast)
+ * Дизайн: footer-dark (DESIGN.md)
+ * Фон: #0b0e11 (canvas-dark, совпадает с хедером)
+ * Акцент: приглушённая латунь #c9a84c (сдержанная, не неоновая)
+ * Иерархия текста: заголовок → ссылка → копирайт (убывающий контраст)
  */
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -80,24 +80,24 @@ export function Footer() {
   return (
     <footer className="py-16 px-6 bg-background border-t border-border">
       <div className="max-w-[1200px] mx-auto">
-        {/* Main grid */}
+        {/* Основная сетка */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-x-6 gap-y-10 lg:gap-y-12">
-          {/* Brand Column */}
+          {/* Колонка бренда */}
           <div className="max-w-[220px] min-w-0">
             <Link to="/" className="flex items-center gap-2.5 no-underline group">
-              <span className="footer__brand-logo text-xl font-semibold text-[#c9a84c] tracking-tight transition-colors duration-300 group-hover:text-[#d4b86a]">
+              <span className="footer__brand-logo text-xl font-semibold text-gold tracking-tight transition-colors duration-300 group-hover:text-gold-active">
                 Gold
-                <span className="text-[#5a6270] transition-colors duration-300 group-hover:text-[#707a8a]">
+                <span className="text-muted-foreground transition-colors duration-300 group-hover:text-muted-foreground">
                   PC
                 </span>
               </span>
             </Link>
-            <p className="footer__brand-text text-sm text-[#5a6270] leading-relaxed mt-5">
+            <p className="footer__brand-text text-sm text-muted-foreground leading-relaxed mt-5">
               Премиальный магазин компьютерных компонентов с профессиональной сборкой и гарантией качества.
             </p>
           </div>
 
-          {/* Catalog Column */}
+          {/* Колонка каталога */}
           <div className="min-w-0">
             <h4 className="footer__title uppercase tracking-[0.14em] font-semibold text-muted-strong mb-5 w-fit">
               Каталог
@@ -107,7 +107,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     to={link.href}
-                    className="footer__link text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                    className="footer__link text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-gold"
                   >
                     {link.label}
                   </Link>
@@ -116,7 +116,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Service Column */}
+          {/* Колонка сервиса */}
           <div className="min-w-0">
             <h4 className="footer__title uppercase tracking-[0.14em] font-semibold text-muted-strong mb-5 w-fit">
               Сервис
@@ -126,7 +126,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     to={link.href}
-                    className="footer__link text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                    className="footer__link text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-gold"
                   >
                     {link.label}
                   </Link>
@@ -135,7 +135,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Info Column */}
+          {/* Колонка информации */}
           <div className="min-w-0">
             <h4 className="footer__title uppercase tracking-[0.14em] font-semibold text-muted-strong mb-5 w-fit">
               Информация
@@ -145,7 +145,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     to={link.href}
-                    className="footer__link text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                    className="footer__link text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-gold"
                   >
                     {link.label}
                   </Link>
@@ -154,7 +154,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Customers Column */}
+          {/* Колонка покупателям */}
           <div className="min-w-0">
             <h4 className="footer__title uppercase tracking-[0.14em] font-semibold text-muted-strong mb-5 w-fit">
               Покупателям
@@ -164,7 +164,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     to={link.href}
-                    className="footer__link text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                    className="footer__link text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-gold"
                   >
                     {link.label}
                   </Link>
@@ -173,7 +173,7 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Contacts Column */}
+          {/* Колонка контактов */}
           <div className="min-w-0">
             <h4 className="footer__title uppercase tracking-[0.14em] font-semibold text-muted-strong mb-5 w-fit">
               Контакты
@@ -182,11 +182,11 @@ export function Footer() {
               {contactInfo.map((item, index) => (
                 <li key={index}>
                   {item.type === 'address' ? (
-                    <span className="footer__link text-sm text-[#5a6270]">{item.label}</span>
+                    <span className="footer__link text-sm text-muted-foreground">{item.label}</span>
                   ) : (
                     <a
                       href={item.href}
-                      className="footer__link text-sm text-[#5a6270] no-underline transition-colors duration-200 hover:text-[#c9a84c]"
+                      className="footer__link text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-gold"
                     >
                       {item.label}
                     </a>
@@ -197,15 +197,15 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Footer Bottom */}
+        {/* Низ футера */}
         <div className="mt-12 pt-6 border-t border-border">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            {/* Copyright */}
-            <span className="footer__copyright text-xs text-[#3d4450] tracking-wide">
+            {/* Копирайт */}
+            <span className="footer__copyright text-xs text-muted-foreground tracking-wide">
               © {currentYear} GoldPC. Все права защищены.
             </span>
 
-            {/* Social */}
+            {/* Соцсети */}
             <div className="flex gap-3">
               {socialLinks.map((social) => (
                 <a
@@ -214,7 +214,7 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="footer__social-icon w-8 h-8 flex items-center justify-center bg-transparent border border-[#2a3040] text-[#5a6270] no-underline rounded transition-colors duration-200 hover:border-[#c9a84c] hover:text-[#c9a84c]"
+                  className="footer__social-icon w-8 h-8 flex items-center justify-center bg-transparent border border-hairline-dark text-muted-foreground no-underline rounded transition-colors duration-200 hover:border-gold hover:text-gold"
                 >
                   {renderSocialIcon(social.icon)}
                 </a>

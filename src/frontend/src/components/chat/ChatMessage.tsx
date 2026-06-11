@@ -1,5 +1,5 @@
 import { FileText, Download, ImageIcon } from 'lucide-react';
-import type { TicketMessage } from '../../hooks/useTicketChat';
+import type { TicketMessage } from '@/hooks/useTicketChat';
 
 interface ChatMessageProps {
   message: TicketMessage;

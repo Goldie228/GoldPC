@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { useToast } from '../../../hooks/useToast';
+import { useToast } from '@/hooks/useToast';
 import { Toast } from './Toast';
 
 export function ToastContainer(): ReactElement | null {

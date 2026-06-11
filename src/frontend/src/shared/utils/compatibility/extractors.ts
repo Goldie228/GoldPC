@@ -3,9 +3,9 @@
  * Pure functions for extracting and normalizing product specifications
  */
 
-import type { Product, ProductSpecifications, ProductSummary } from '../../../api/types';
+import type { Product, ProductSpecifications, ProductSummary } from '@/api/types';
 import type { CompatibilityRulesConfig, SocketGroup, MemoryType, MemoryFormFactor } from './types';
-import rulesConfig from '../../../config/compatibilityRules.json';
+import rulesConfig from '@/config/compatibilityRules.json';
 
 const config: CompatibilityRulesConfig = rulesConfig as unknown as CompatibilityRulesConfig;
 const SOCKET_GROUPS: SocketGroup[] = config.socketCompatibility.groups;

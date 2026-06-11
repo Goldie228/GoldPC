@@ -3,7 +3,7 @@
  * Coordinates compatibility checks for component groups
  */
 
-import type { Product } from '../../../api/types';
+import type { Product } from '@/api/types';
 import type { CompatibilityIssue, CompatibilityWarning, CompatibilityCheckResult, ComponentMap } from './types';
 import { 
   checkCPUSocket, checkRAM, checkMixedRAM, checkCooler, checkCoolerHeightCheck, checkPSU, 

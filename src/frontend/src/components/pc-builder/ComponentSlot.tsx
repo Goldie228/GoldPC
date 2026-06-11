@@ -1,13 +1,13 @@
 /**
- * ComponentSlot - Slot for PC Builder component selection
+ * ComponentSlot - Слот для выбора компонента в конструкторе ПК
  *
- * Features:
- * - Dark background with gold/gray/red borders (3 states)
- * - 64x64 product thumbnail in white frame
- * - Inline StatusBadge for compatibility errors
- * - Smooth transitions 0.3s, scale on add
- * - CPU/GPU priority placement (120% size)
- * - Staggered animations
+ * Особенности:
+ * - Тёмный фон с золотистыми/серыми/красными рамками (3 состояния)
+ * - Миниатюра товара 64x64 в белой рамке
+ * - Встроенный StatusBadge для ошибок совместимости
+ * - Плавные переходы 0.3s, масштабирование при добавлении
+ * - Приоритетное размещение CPU/GPU (размер 120%)
+ * - Поэтапные анимации
  */
 
 import React from 'react';
@@ -16,43 +16,43 @@ import { AlertTriangle } from 'lucide-react';
 import './ComponentSlot.css';
 
 export interface ComponentSlotProps {
-  /** Component type label (e.g., "Процессор", "Видеокарта") */
+  /** Тип компонента (например, "Процессор", "Видеокарта") */
   type: string;
-  /** Component name (or placeholder if empty) */
+  /** Название компонента (или плейсхолдер если пусто) */
   name: string;
-  /** Component price in BYN */
+  /** Цена компонента в BYN */
   price: number | null;
-  /** Slot state */
+  /** Состояние слота */
   state: 'empty' | 'selected' | 'incompatible';
-  /** Icon SVG element */
+  /** SVG-элемент иконки */
   icon: React.ReactNode;
-  /** Optional specs array */
+  /** Необязательный массив спецификаций */
   specs?: string[];
-  /** Optional warning message for compatibility errors */
+  /** Необязательное сообщение об ошибке совместимости */
   warning?: string;
-  /** Button click handler */
+  /** Обработчик нажатия кнопки */
   onSelect: () => void;
   /** Снять выбор (кнопка «Снять» рядом с основным действием) */
   onClear?: () => void;
-  /** Button text (default: "Выбрать" for empty, "Изменить" for selected) */
+  /** Текст кнопки (по умолчанию: "Выбрать" для пустого, "Изменить" для выбранного) */
   buttonText?: string;
-  /** Animation index for staggered entry */
+  /** Индекс анимации для поэтапного появления */
   index?: number;
-  /** Product image URL for 64x64 thumbnail */
+  /** URL изображения товара для миниатюры 64x64 */
   imageUrl?: string;
-  /** Is this a priority slot (CPU/GPU) - gets 120% size */
+  /** Приоритетный слот (CPU/GPU) — размер 120% */
   isPriority?: boolean;
-  /** Short description/hint for the component type (e.g., "Мозг компьютера. Отвечает за все вычисления.") */
+  /** Краткое описание/подсказка для типа компонента (например, "Мозг компьютера. Отвечает за все вычисления.") */
   description?: string;
-  /** Current quantity for multi-slot types (RAM, fan, storage) */
+  /** Текущее количество для мульти-слотовых типов (ОЗУ, вентилятор, накопитель) */
   quantity?: number;
-  /** Max quantity for this multi-slot type */
+  /** Максимальное количество для этого мульти-слотового типа */
   maxQuantity?: number;
-  /** Change quantity: negative = remove, positive = add more */
+  /** Изменение количества: отрицательное = удалить, положительное = добавить */
   onChangeQuantity?: (delta: number) => void;
 }
 
-/** Inline StatusBadge for compatibility errors */
+/** Встроенный StatusBadge для ошибок совместимости */
 function StatusBadge({ message, duration }: { message: string; duration: number }) {
   return (
     <motion.div
@@ -88,7 +88,7 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
     maxQuantity,
     onChangeQuantity,
   } = componentSlotProps;
-  /** BUG-24: Respect prefers-reduced-motion to disable JS animations for a11y */
+  /** BUG-24: Учитываем prefers-reduced-motion для отключения JS-анимаций (а11y) */
   const reducedMotion = useReducedMotion();
   const animDuration = reducedMotion ? 0 : 0.3;
 
@@ -122,7 +122,7 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
         <div className="component-slot__tooltip">{description}</div>
       )}
       <div className="component-slot__inner">
-        {/* Icon or Thumbnail */}
+        {/* Иконка или миниатюра */}
         <motion.div
           className={`component-slot__icon${state !== 'empty' && imageUrl ? ' component-slot__icon--has-thumbnail' : ''}`}
           animate={{
@@ -139,7 +139,7 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
           )}
         </motion.div>
 
-        {/* Info */}
+        {/* Информация */}
         <div className="component-slot__info">
           {state === 'empty' && (
             <div className="component-slot__type-row">
@@ -154,7 +154,7 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  // Double guard: check both current state and immediate value
+                  // Двойная проверка: проверяем и текущее состояние, и немедленное значение
                   if (quantity > 1) {
                     onChangeQuantity(-1);
                   }
@@ -198,11 +198,11 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
               ))}
             </motion.div>
           )}
-          {/* Inline StatusBadge for incompatible state */}
+          {/* Встроенный StatusBadge для несовместимого состояния */}
           {warning && state === 'incompatible' && <StatusBadge message={warning} duration={animDuration} />}
         </div>
 
-        {/* Price */}
+        {/* Цена */}
         <div className="component-slot__price">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}

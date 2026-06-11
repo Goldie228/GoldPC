@@ -1,8 +1,8 @@
 import { type ReactElement, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { X, ShoppingBag, ArrowRight } from 'lucide-react';
-import { useCart } from '../../../hooks/useCart';
-import { hasValidProductImage } from '../../../utils/image';
+import { useCart } from '@/hooks/useCart';
+import { hasValidProductImage } from '@/utils/image';
 
 interface MiniCartProps {
   isOpen: boolean;

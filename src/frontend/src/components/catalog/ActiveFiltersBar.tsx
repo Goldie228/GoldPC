@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 import type { ReactElement } from 'react';
-import { specLabel, formatSpecValueForKey } from '../../utils/specifications';
+import { specLabel, formatSpecValueForKey } from '@/utils/specifications';
 
 type Chip = {
   id: string;

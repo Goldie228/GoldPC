@@ -17,7 +17,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { settingsApi } from '@/api/admin';
 import type { SiteSettings } from '@/api/admin';
-import { useToast } from '../../../hooks/useToast';
+import { useToast } from '@/hooks/useToast';
 import {
   Save,
   RotateCcw,

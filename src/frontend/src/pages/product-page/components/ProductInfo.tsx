@@ -1,13 +1,13 @@
 import { type ReactElement, useCallback, useState } from 'react';
 import { ShoppingCart, Heart, Share2, Minus, Plus, ArrowRight } from 'lucide-react';
-import { Button } from '../../../components/ui/Button';
-import { useCart } from '../../../hooks/useCart';
-import { useWishlistStore } from '../../../store/wishlistStore';
-import { useToastStore } from '../../../store/toastStore';
-import { useComparisonStore } from '../../../store/comparisonStore';
-import { Icon } from '../../../components/ui/Icon/Icon';
-import { getDisplayManufacturerName } from '../../../utils/manufacturerNameOverrides';
-import type { Product } from '../../../api/types';
+import { Button } from '@/components/ui/Button';
+import { useCart } from '@/hooks/useCart';
+import { useWishlistStore } from '@/store/wishlistStore';
+import { useToastStore } from '@/store/toastStore';
+import { useComparisonStore } from '@/store/comparisonStore';
+import { Icon } from '@/components/ui/Icon/Icon';
+import { getDisplayManufacturerName } from '@/utils/manufacturerNameOverrides';
+import type { Product } from '@/api/types';
 import { Link } from 'react-router-dom';
 
 export interface ProductInfoProps {

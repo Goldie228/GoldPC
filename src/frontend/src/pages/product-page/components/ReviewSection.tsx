@@ -1,8 +1,8 @@
 import { useId, useState, useEffect, useCallback, useMemo, type KeyboardEvent, type ReactElement } from 'react';
-import { Button } from '../../../components/ui/Button';
-import { Skeleton } from '../../../components/ui/Skeleton';
-import { useCatalog } from '../../../hooks/useCatalog';
-import type { Product, ProductReview, UpdateReviewRequest, ProductReviewsResponse } from '../../../api/types';
+import { Button } from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useCatalog } from '@/hooks/useCatalog';
+import type { Product, ProductReview, UpdateReviewRequest, ProductReviewsResponse } from '@/api/types';
 import { ProductReviewCard } from './ProductReviewCard';
 
 export interface ReviewSectionProps {

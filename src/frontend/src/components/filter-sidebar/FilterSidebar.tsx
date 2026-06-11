@@ -6,14 +6,14 @@ import {
   Tag, Star, Package, Grid3X3, DollarSign, Check,
   ArrowUpDown, SlidersHorizontal,
 } from 'lucide-react';
-import { catalogApi } from '../../api/catalog';
-import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
+import { catalogApi } from '@/api/catalog';
+import { getDisplayManufacturerName } from '@/utils/manufacturerNameOverrides';
 import { DualRangeSlider } from './DualRangeSlider';
 import { Skeleton } from '../ui/Skeleton';
-import type { ProductCategory, Manufacturer, Category, FilterFacetAttribute } from '../../api/types';
+import type { ProductCategory, Manufacturer, Category, FilterFacetAttribute } from '@/api/types';
 
 // ============================================================
-// Constants
+// Константы
 // ============================================================
 
 const CATEGORY_ORDER: ProductCategory[] = [
@@ -221,7 +221,7 @@ export interface FilterSidebarProps {
   selectedCategory: ProductCategory | null;
   onCategoryChange: (category: ProductCategory | null) => void;
   categoryLocked?: boolean;
-  /** Render in mobile overlay mode (no sticky, no borders) */
+  /** Рендер в режиме мобильного оверлея (без sticky, без границ) */
   mobile?: boolean;
   priceRange: { min: number; max: number };
   onPriceChange: (range: { min: number; max: number }) => void;
@@ -282,7 +282,7 @@ export function FilterSidebar({
   viewMode: _viewMode,
   onViewModeChange: _onViewModeChange,
 }: FilterSidebarProps) {
-  // === Local state ===
+  // === Локальное состояние ===
   const [mfrSearch, setMfrSearch] = useState('');
   const [showAllMfrs, setShowAllMfrs] = useState(false);
   const [showAllCats, setShowAllCats] = useState(false);
@@ -299,22 +299,22 @@ export function FilterSidebar({
   /** Локальные значения range-слайдеров характеристик (обновляются только по onCommit) */
   const [localSpecRanges, setLocalSpecRanges] = useState<Record<string, { min: number; max: number }>>({});
 
-  // === Sync local price with props ===
+  // === Синхронизация локальной цены с пропсами ===
   useEffect(() => {
     setLocalPriceRange({ min: priceRange.min || 0, max: priceRange.max || 0 });
   }, [priceRange]);
 
-  // === Debounce local price → parent ===
+  // === Дебаунс локальной цены → родитель ===
   useEffect(() => {
-    // Don't fire on initial sync (when local === prop)
+    // Не срабатываем при начальной синхронизации (когда локальное === пропс)
     if (localPriceRange.min === priceRange.min && localPriceRange.max === priceRange.max) return;
     const timer = window.setTimeout(() => {
       onPriceChange(localPriceRange);
     }, 400);
     return () => clearTimeout(timer);
-  }, [localPriceRange, onPriceChange, /* priceRange — intentionally omitted to avoid loop */]);
+  }, [localPriceRange, onPriceChange, /* priceRange — намеренно исключён во избежание цикла */]);
 
-  // === Reset local spec ranges when category changes or specs are cleared ===
+  // === Сброс локальных диапазонов характеристик при смене категории или очистке спецификаций ===
   useEffect(() => {
     setLocalSpecRanges({});
     setShowAllCats(false);
@@ -326,7 +326,7 @@ export function FilterSidebar({
     }
   }, [selectedSpecifications]);
 
-  // === Fetch categories with product counts ===
+  // === Загрузка категорий с количеством товаров ===
   useEffect(() => {
     let cancelled = false;
     const fetchCategories = async () => {
@@ -344,7 +344,7 @@ export function FilterSidebar({
         setCategories(data || []);
         setCategoryCounts(counts);
       } catch (err) {
-        console.error('Failed to fetch categories:', err);
+        console.error('Не удалось загрузить категории:', err);
       } finally {
         if (!cancelled) setCategoriesLoading(false);
       }
@@ -353,7 +353,7 @@ export function FilterSidebar({
     return () => { cancelled = true; };
   }, []);
 
-  // === Fetch filter facets for specifications ===
+  // === Загрузка фасетов фильтров для спецификаций ===
   useEffect(() => {
     if (!selectedCategory) {
       setFilterFacets([]);
@@ -364,8 +364,8 @@ export function FilterSidebar({
     const fetchFacets = async () => {
       try {
         const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
-        // Facets always show ALL options with real counts.
-        // Spec constraints are applied at the product query level.
+        // Фасеты всегда показывают ВСЕ опции с реальными количествами.
+        // Ограничения спецификаций применяются на уровне запроса товаров.
         const isInStock = selectedAvailability.includes('in_stock');
         const attrs = await catalogApi.getFilterFacets(backendSlug, {
           specifications: undefined,
@@ -376,7 +376,7 @@ export function FilterSidebar({
           setSpecSearchQuery({});
         }
       } catch (err) {
-        console.error('Failed to fetch filter facets:', err);
+        console.error('Не удалось загрузить фасеты фильтров:', err);
         if (!cancelled) setFilterFacets([]);
       }
     };
@@ -384,13 +384,13 @@ export function FilterSidebar({
     return () => { cancelled = true; };
   }, [selectedCategory, selectedAvailability]);
 
-  // === Fetch real price bounds ===
+  // === Загрузка реальных границ цен ===
   useEffect(() => {
     if (!selectedCategory) {
       setPriceBounds({ min: 0, max: 10000 });
       return;
     }
-    // If parent provides price bounds, use them directly
+    // Если родитель предоставляет границы цен, используем их напрямую
     if (propPriceMin != null && propPriceMin > 0 && propPriceMax != null && propPriceMax > 0) {
       setPriceBounds({ min: propPriceMin, max: propPriceMax });
       return;
@@ -410,7 +410,7 @@ export function FilterSidebar({
           setPriceBounds({ min: Math.floor(minP), max: Math.ceil(maxP) });
         }
       } catch (err) {
-        console.error('Failed to fetch price bounds:', err);
+        console.error('Не удалось загрузить границы цен:', err);
       } finally {
         if (!cancelled) setPriceBoundsLoading(false);
       }
@@ -419,7 +419,7 @@ export function FilterSidebar({
     return () => { cancelled = true; };
   }, [selectedCategory, propPriceMin, propPriceMax]);
 
-  // === Fetch manufacturers ===
+  // === Загрузка производителей ===
   useEffect(() => {
     let cancelled = false;
     const fetchManufacturers = async () => {
@@ -431,7 +431,7 @@ export function FilterSidebar({
         if (list.length > 0) {
           setManufacturers(list);
         } else {
-          // Fallback: extract brands from product names
+          // Запасной вариант: извлечение брендов из названий товаров
           const productsResponse = await catalogApi.getProducts(
             selectedCategory ? { category: selectedCategory, pageSize: 500 } : { pageSize: 500 }
           );
@@ -444,7 +444,7 @@ export function FilterSidebar({
           setManufacturers(Array.from(brandSet).sort().map((name, _i) => ({ id: `brand-${name}`, name })));
         }
       } catch (err) {
-        console.error('Failed to fetch manufacturers:', err);
+        console.error('Не удалось загрузить производителей:', err);
         setManufacturers([]);
       } finally {
         if (!cancelled) setManufacturersLoading(false);
@@ -454,7 +454,7 @@ export function FilterSidebar({
     return () => { cancelled = true; };
   }, [selectedCategory]);
 
-  // === Computed ===
+  // === Вычисляемые значения ===
   // Дедупликация производителей с одинаковым отображаемым именем
   // (например, BE и be quiet! — одно и то же)
   const dedupedManufacturers = useMemo(() => {
@@ -484,7 +484,7 @@ export function FilterSidebar({
   const PRICE_MAX = priceBounds.max;
   const PRICE_STEP = Math.max(1, Math.ceil((PRICE_MAX - PRICE_MIN) / 200));
 
-  // === Handlers ===
+  // === Обработчики ===
   const handlePriceSliderChange = (values: { min: number; max: number }) => {
     setLocalPriceRange(values);
   };
@@ -535,7 +535,7 @@ export function FilterSidebar({
   };
 
   // ============================================================
-  // Render
+  // Рендер
   // ============================================================
   return (
     <div
@@ -545,7 +545,7 @@ export function FilterSidebar({
           : 'rounded-xl sticky top-[64px] max-h-[calc(100vh-80px)] overflow-y-auto mt-2 lg:rounded-xl'
       }`}
     >
-      {/* Header — hidden in mobile mode (CatalogPage renders its own) */}
+      {/* Заголовок — скрыт в мобильном режиме (CatalogPage рендерит свой) */}
       {!mobile && (
         <div className="flex items-center justify-between px-4 py-3 border-b border-hairline-dark sticky top-0 bg-surface-card z-10">
           <div>
@@ -574,7 +574,7 @@ export function FilterSidebar({
         </div>
       )}
 
-      {/* Mobile: compact reset bar */}
+      {/* Мобильная версия: компактная панель сброса */}
       {mobile && activeCount > 0 && (
         <div className="bg-surface-card border-b border-hairline-dark px-3 py-2">
           <button
@@ -589,7 +589,7 @@ export function FilterSidebar({
       )}
 
       <div className={`${mobile ? 'p-3 pt-3' : 'p-4 pt-4'}`}>
-        {/* Sorting — desktop only (mobile has it in toolbar) */}
+        {/* Сортировка — только для десктопа (в мобильной версии в тулбаре) */}
         {!mobile && (sortBy && onSortChange) && (
           <div className="mb-4">
             <div className="flex items-center gap-2">
@@ -610,9 +610,9 @@ export function FilterSidebar({
           </div>
         )}
 
-        {/* View toggle — removed from sidebar, handled by CatalogPage toolbar */}
+        {/* Переключатель вида — удалён из сайдбара, обрабатывается тулбаром CatalogPage */}
 
-        {/* === Categories === */}
+        {/* === Категории === */}
         {!categoryLocked && (
           <FilterGroup
             title="Категории"
@@ -666,7 +666,7 @@ export function FilterSidebar({
           </FilterGroup>
         )}
 
-        {/* === Price === */}
+        {/* === Цена === */}
         <FilterGroup title="Цена" icon={<DollarSign size={14} />} defaultOpen={false} mobile={mobile}>
           <div className={`${mobile ? 'space-y-4' : 'space-y-3'}`}>
             <DualRangeSlider
@@ -714,7 +714,7 @@ export function FilterSidebar({
           </div>
         </FilterGroup>
 
-        {/* === Dynamic Specifications === */}
+        {/* === Динамические спецификации === */}
         {selectedCategory && filterFacets.length > 0 && (() => {
           const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
           const order = SPEC_ORDER[backendSlug] ?? [];
@@ -726,7 +726,7 @@ export function FilterSidebar({
           const groups = orderedKeys.map(key => ({ keys: [key] }));
 
           const renderAttr = (attr: FilterFacetAttribute, options?: { hideLabel?: boolean }) => {
-            // --- Range filter ---
+            // --- Фильтр диапазона ---
             if (attr.filterType === 'range') {
               if (attr.minValue == null && attr.maxValue == null) return null;
               const isVideoMemory = attr.key === 'videopamyat';
@@ -799,7 +799,7 @@ export function FilterSidebar({
               );
             }
 
-            // --- Select filter ---
+            // --- Фильтр выбора ---
             if (attr.filterType === 'select') {
               const optionsList = attr.options ?? [];
               const showSearch = optionsList.length > 15;
@@ -959,7 +959,7 @@ export function FilterSidebar({
           );
         })()}
 
-        {/* === Manufacturers === */}
+        {/* === Производители === */}
         <FilterGroup title="Производители" icon={<Tag size={14} />} defaultOpen={false} mobile={mobile}>
           <div className="space-y-0.5">
             <div className="relative mb-2">
@@ -1019,14 +1019,14 @@ export function FilterSidebar({
           </div>
         </FilterGroup>
 
-        {/* === Rating === */}
+        {/* === Рейтинг === */}
         <FilterGroup title="Рейтинг" icon={<Star size={14} />} defaultOpen={false} mobile={mobile}>
           <div className="space-y-0.5">
             <StarRating rating={minRating} onChange={onRatingChange} />
           </div>
         </FilterGroup>
 
-        {/* === Availability === */}
+        {/* === Наличие === */}
         <FilterGroup title="Наличие" icon={<Package size={14} />} defaultOpen={false} mobile={mobile}>
           <div className="space-y-0.5">
             {/* Все товары */}
@@ -1098,7 +1098,7 @@ export function FilterSidebar({
           </div>
         </FilterGroup>
 
-        {/* Mobile: sticky footer with apply button — handled by CatalogPage overlay */}
+        {/* Мобильная версия: закреплённый футер с кнопкой применения — обрабатывается оверлеем CatalogPage */}
 
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react';
-import { Button } from '../../../components/ui/Button';
-import type { ProductReview, UpdateReviewRequest } from '../../../api/types';
+import { Button } from '@/components/ui/Button';
+import type { ProductReview, UpdateReviewRequest } from '@/api/types';
 
 export interface ProductReviewCardProps {
   review: ProductReview;

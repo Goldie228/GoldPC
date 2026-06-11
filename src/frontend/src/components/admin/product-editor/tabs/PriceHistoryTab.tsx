@@ -70,13 +70,13 @@ export function PriceHistoryTab({ productId, currentPrice }: PriceHistoryTabProp
       ) : (
         <div className="relative">
           {/* Линия таймлайна */}
-          <div className="absolute left-4 top-0 bottom-0 w-px bg-[var(--border-muted)]" />
+          <div className="absolute left-4 top-0 bottom-0 w-px bg-hairline-dark" />
 
           <div className="space-y-4">
             {entries.map((entry) => (
               <div key={entry.id} className="relative pl-10">
                 {/* Точка на таймлайне */}
-                <div className="absolute left-3 top-3 w-3 h-3 rounded-full bg-gold border-2 border-[var(--bg-primary)]" />
+                <div className="absolute left-3 top-3 w-3 h-3 rounded-full bg-gold border-2 border-surface-card" />
 
                 <div className="p-4 rounded-lg bg-surface-card">
                   <div className="flex items-center justify-between">

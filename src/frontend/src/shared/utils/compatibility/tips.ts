@@ -4,7 +4,7 @@
  */
 
 import type { CompatibilityWarning } from './types';
-import type { Product } from '../../../api/types';
+import type { Product } from '@/api/types';
 import { extractMemoryType, extractRAMSpeed, extractBaseRAMSpeed, extractThermalPasteIncluded } from './extractors';
 import { extractMemorySlots } from './extractors';
 

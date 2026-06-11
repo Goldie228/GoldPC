@@ -1,6 +1,6 @@
 /**
  * BuildSummaryPanel — правая панель итогов сборки
- * Redesign: compact, grouped, DESIGN.md compliant
+ * Redesign: компактная, сгруппированная, по DESIGN.md
  */
 
 import React, { useMemo } from 'react';
@@ -10,9 +10,9 @@ import {
   calculatePerformance,
   getPerformanceLabel,
   getPerformanceColor,
-} from '../../features/pc-builder/logic/performance';
-import type { PCComponentType, PCBuilderSelectedState } from '../../hooks';
-import { PC_BUILDER_SLOTS } from '../../hooks';
+} from '@/features/pc-builder/logic/performance';
+import type { PCComponentType, PCBuilderSelectedState } from '@/hooks';
+import { PC_BUILDER_SLOTS } from '@/hooks';
 import './BuildSummaryPanel.css';
 
 export interface BuildSummaryPanelProps {
@@ -34,7 +34,7 @@ export interface BuildSummaryPanelProps {
 
 const MAX_POWER = 850;
 
-// Group slots for display
+// Группировка слотов для отображения
 const SLOT_GROUPS = [
   { label: 'Основа', keys: ['cpu', 'motherboard', 'ram'] },
   { label: 'Накопители', keys: ['storage'] },
@@ -76,7 +76,7 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
   const scoreDur = reducedMotion ? 0 : 0.5;
   const priceDur = reducedMotion ? 0 : 0.3;
 
-  // Build grouped component list (only selected)
+  // Построение сгруппированного списка компонентов (только выбранные)
   const groupedItems = useMemo(() => {
     const groups: { label: string; items: { key: string; label: string; price: number }[] }[] = [];
 

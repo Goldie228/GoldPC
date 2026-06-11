@@ -4,7 +4,7 @@
 
 import { Package } from 'lucide-react';
 import { ProductCard } from './ProductCard';
-import type { Product } from '../../../api/types';
+import type { Product } from '@/api/types';
 
 interface ProductCardGridProps {
   products: Product[];

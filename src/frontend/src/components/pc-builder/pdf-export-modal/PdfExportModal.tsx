@@ -8,14 +8,14 @@
 import { useEffect, useRef, useCallback } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Modal } from '../../ui/Modal/Modal';
-import { Button } from '../../ui/Button';
-import type { PCBuilderSelectedState, SelectedComponent } from '../../../hooks';
-import { PC_BUILDER_SLOTS } from '../../../hooks';
+import { Modal } from '@/components/ui/Modal/Modal';
+import { Button } from '@/components/ui/Button';
+import type { PCBuilderSelectedState, SelectedComponent } from '@/hooks';
+import { PC_BUILDER_SLOTS } from '@/hooks';
 import {
   calculatePerformance,
   getPerformanceLabel,
-} from '../../../features/pc-builder/logic/performance';
+} from '@/features/pc-builder/logic/performance';
 import { Download, FileText, CheckCircle, AlertTriangle, Zap, BarChart3 } from 'lucide-react';
 
 
@@ -31,7 +31,7 @@ export interface PdfExportModalProps {
   compatibilityWarnings: string[];
 }
 
-/** Internal performance computation for use inside the modal. */
+/** Внутренний расчёт производительности для использования внутри модалки. */
 function computePerformance(s: PCBuilderSelectedState) {
   const cpu = s.cpu?.product ?? null;
   const gpu = s.gpu?.product ?? null;
@@ -138,13 +138,13 @@ function generatePdf(props: PdfExportModalProps): Blob {
   const yellow = [234, 179, 8]; // #eab308
   let y = 0;
 
-  // Add Roboto font with full Cyrillic support
+  // Добавляем шрифт Roboto с полной поддержкой кириллицы
   doc.addFileToVFS('Roboto-Regular.ttf', 'AAEAAAAUAQA...');
   doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
   doc.addFont('Roboto-Medium.ttf', 'Roboto', 'bold');
   doc.setFont('Roboto');
 
-  // === Header ===
+  // === Шапка ===
   doc.setFillColor(dark[0], dark[1], dark[2]);
   doc.rect(0, 0, pageW, 48, 'F');
   doc.setFillColor(accent[0], accent[1], accent[2]);
@@ -167,7 +167,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
 
   y = 56;
 
-  // === Compatibility Status ===
+  // === Статус совместимости ===
   doc.setFontSize(13);
   doc.setFont('Roboto', 'bold');
   doc.setTextColor(...(text as [number, number, number]));
@@ -212,7 +212,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   }
   y += 4;
 
-  // === Component Table ===
+  // === Таблица компонентов ===
   const rows = getComponentRows(selectedComponents);
   doc.setFontSize(13);
   doc.setFont('Roboto', 'bold');
@@ -253,16 +253,16 @@ function generatePdf(props: PdfExportModalProps): Blob {
 
   y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
 
-  // Check if we need a new page
+  // Проверяем, нужна ли новая страница
   if (y > 220) {
     doc.addPage();
     y = 20;
   }
 
-  // === Power & Performance Side by Side ===
+  // === Мощность и производительность рядом ===
   const sectionW = (contentW - 10) / 2;
 
-  // Power Section
+  // Блок мощности
   doc.setFillColor(20, 20, 23);
   doc.roundedRect(margin, y, sectionW, 36, 3, 3, 'F');
   doc.setDrawColor(...(accent as [number, number, number]));
@@ -280,7 +280,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   doc.text(`Потребление: ~${Math.round(powerConsumption)} Вт`, margin + 6, y + 17);
   doc.text(`Рекомендуемый БП: ${recommendedPsu ?? Math.ceil(powerConsumption * 1.3)} Вт`, margin + 6, y + 25);
 
-  // Performance Section
+  // Блок производительности
   const perfX = margin + sectionW + 10;
   doc.setFillColor(20, 20, 23);
   doc.roundedRect(perfX, y, sectionW, 36, 3, 3, 'F');
@@ -300,7 +300,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
 
   y += 44;
 
-  // FPS estimates
+  // Оценка FPS
   if (performance.estimatedFps.fps1080p > 0) {
     doc.setFontSize(11);
     doc.setFont('Roboto', 'bold');
@@ -340,7 +340,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
     y = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
   }
 
-  // === Total Price ===
+  // === Итоговая цена ===
   if (y > 220) {
     doc.addPage();
     y = 20;
@@ -362,7 +362,7 @@ function generatePdf(props: PdfExportModalProps): Blob {
   doc.setFont('Roboto', 'bold');
   doc.text(`${totalPrice.toLocaleString('ru-BY')} BYN`, pageW - margin - 8, y + 14, { align: 'right' });
 
-  // === Footer ===
+  // === Подвал ===
   const footerY = doc.internal.pageSize.getHeight() - 14;
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
@@ -414,14 +414,14 @@ export function PdfExportModal({
     onClose();
   }, [onClose, selectedComponents]);
 
-  // Auto-generate on open
+  // Автогенерация при открытии
   useEffect(() => {
     if (isOpen) {
       handleGenerate();
     }
   }, [isOpen, handleGenerate]);
 
-  // Cleanup on unmount
+  // Очистка при размонтировании
   useEffect(() => {
     return () => {
       if (generatedUrlRef.current) URL.revokeObjectURL(generatedUrlRef.current);
@@ -438,41 +438,41 @@ export function PdfExportModal({
       size="medium"
     >
       <div className="flex flex-col gap-5 py-2">
-        <div className="flex flex-col items-center gap-2 p-6 bg-[var(--border-brand)] border border-dashed border-[var(--border-brand)] rounded-lg">
-          <FileText size={48} strokeWidth={1.5} className="text-[var(--accent)] opacity-90" />
-          <p className="text-xs font-semibold text-[var(--fg)] m-0">{buildName}.pdf</p>
-          <p className="text-xs text-[var(--fg-muted)] m-0 text-center">
+        <div className="flex flex-col items-center gap-2 p-6 bg-gold/15 border border-dashed border-gold/15 rounded-lg">
+          <FileText size={48} strokeWidth={1.5} className="text-gold opacity-90" />
+          <p className="text-xs font-semibold text-body-text m-0">{buildName}.pdf</p>
+          <p className="text-xs text-muted-foreground m-0 text-center">
             Готовый PDF-файл с конфигурацией вашей сборки
           </p>
         </div>
 
         <div className="flex flex-col gap-[10px]">
-          <div className="flex items-center gap-2.5 text-xs text-[var(--fg)]">
-            <CheckCircle size={16} color="#d4a574" />
+          <div className="flex items-center gap-2.5 text-xs text-body-text">
+            <CheckCircle size={16} color="var(--color-gold-300)" />
             <span>Список всех компонентов ({Object.values(selectedComponents).flat().filter(Boolean).length || selectedComponents.cpu ? '✓' : '—'})</span>
           </div>
-          <div className="flex items-center gap-2.5 text-xs text-[var(--fg)]">
-            <CheckCircle size={16} color="#d4a574" />
+          <div className="flex items-center gap-2.5 text-xs text-body-text">
+            <CheckCircle size={16} color="var(--color-gold-300)" />
             <span>Цена компонентов: {totalPrice.toLocaleString('ru-BY')} BYN</span>
           </div>
-          <div className="flex items-center gap-2.5 text-xs text-[var(--fg)]">
+          <div className="flex items-center gap-2.5 text-xs text-body-text">
             {isCompatible
-              ? <CheckCircle size={16} color="#d4a574" />
-              : <AlertTriangle size={16} color="#eab308" />
+              ? <CheckCircle size={16} color="var(--color-gold-300)" />
+              : <AlertTriangle size={16} color="var(--color-warning)" />
             }
             <span>Совместимость: {isCompatible ? 'Все совместимо' : `Ошибки: ${compatibilityErrors.length}`}</span>
           </div>
-          <div className="flex items-center gap-2.5 text-xs text-[var(--fg)]">
-            <Zap size={16} color="#d4a574" />
+          <div className="flex items-center gap-2.5 text-xs text-body-text">
+            <Zap size={16} color="var(--color-gold-300)" />
             <span>Энергопотребление: ~{Math.round(powerConsumption)} Вт</span>
           </div>
-          <div className="flex items-center gap-2.5 text-xs text-[var(--fg)]">
-            <BarChart3 size={16} color="#d4a574" />
+          <div className="flex items-center gap-2.5 text-xs text-body-text">
+            <BarChart3 size={16} color="var(--color-gold-300)" />
             <span>Игровой рейтинг: {perf.gamingScore}/100</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 justify-end pt-2 border-t border-[var(--border)]">
+        <div className="flex items-center gap-3 justify-end pt-2 border-t border-border">
           <Button variant="ghost" onClick={onClose}>
             Отмена
           </Button>

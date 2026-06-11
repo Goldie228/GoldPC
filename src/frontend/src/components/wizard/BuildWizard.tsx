@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Check, HardDrive } from 'lucide-react';
-import type { PCComponentType } from '../../hooks';
+import type { PCComponentType } from '@/hooks';
 import { type WizardState, type Purpose, type Budget, STEP_LABELS, COMPONENT_LABELS, getTemplate } from './types';
 import { StepPurpose } from './StepPurpose';
 import { StepBudget } from './StepBudget';

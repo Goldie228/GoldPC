@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Button } from '../../components/ui';
-import { TICKET_STATUSES } from '../../api/services';
+import { Button } from '@/components/ui';
+import { TICKET_STATUSES } from '@/api/services';
 
 export interface SuccessScreenProps {
   ticketNumber: string;

@@ -3,7 +3,7 @@
  * Validation logic for component compatibility
  */
 
-import type { Product, ProductSpecifications } from '../../../api/types';
+import type { Product, ProductSpecifications } from '@/api/types';
 import type { CompatibilityIssue, CompatibilityWarning, ComponentMap } from './types';
 import {
   extractSocket,

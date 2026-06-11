@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Check } from 'lucide-react';
-import { useOrders } from '../../hooks/useOrders';
-import { Button } from '../../components/ui/Button';
-import type { Order } from '../../api/orders';
+import { useOrders } from '@/hooks/useOrders';
+import { Button } from '@/components/ui/Button';
+import type { Order } from '@/api/orders';
 
 export function OrderSuccessPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();

@@ -3,8 +3,8 @@
  * Extracted from usePCBuilder.ts for better organization
  */
 
-import compatibilityRules from '../../../config/compatibilityRules.json';
-import type { CompatibilityRulesConfig } from '../../../config/compatibilityTypes';
+import compatibilityRules from '@/config/compatibilityRules.json';
+import type { CompatibilityRulesConfig } from '@/config/compatibilityTypes';
 
 const rules = compatibilityRules as CompatibilityRulesConfig;
 

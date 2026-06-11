@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Modal } from '../ui/Modal/Modal';
 import { Button } from '../ui/Button';
-import apiClient from '../../api/client';
+import apiClient from '@/api/client';
 
 /** Ответ API на запрос генерации ссылки */
 interface _ShareResponse {

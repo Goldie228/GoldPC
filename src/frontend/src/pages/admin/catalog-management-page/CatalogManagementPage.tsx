@@ -6,10 +6,10 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { catalogAdminApi, type CreateProductRequest } from '../../../api/admin';
-import { useToast } from '../../../hooks/useToast';
-import { hasValidProductImage } from '../../../utils/image';
-import type { Product, ProductCategory } from '../../../api/types';
+import { catalogAdminApi, type CreateProductRequest } from '@/api/admin';
+import { useToast } from '@/hooks/useToast';
+import { hasValidProductImage } from '@/utils/image';
+import type { Product, ProductCategory } from '@/api/types';
 import {
   Package,
   Plus,
@@ -21,9 +21,9 @@ import {
   ChevronRight,
   Loader2,
 } from 'lucide-react';
-import { ProductCardGrid } from '../../../components/admin/product-card/ProductCardGrid';
-import { ViewToggle } from '../../../components/admin/product-card/ViewToggle';
-import { ProductEditorDrawer } from '../../../components/admin/product-editor/ProductEditorDrawer';
+import { ProductCardGrid } from '@/components/admin/product-card/ProductCardGrid';
+import { ViewToggle } from '@/components/admin/product-card/ViewToggle';
+import { ProductEditorDrawer } from '@/components/admin/product-editor/ProductEditorDrawer';
 
 const CATEGORY_LABELS: Record<ProductCategory, string> = {
   cpu: 'Процессоры',
@@ -126,8 +126,7 @@ export function CatalogManagementPage() {
       closeModal();
       showToast('Товар успешно создан', 'success');
     },
-    onError: (err) => {
-      console.error('Failed to create product:', err);
+    onError: () => {
       showToast('Не удалось создать товар', 'error');
     },
   });
@@ -139,8 +138,7 @@ export function CatalogManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
       showToast('Товар удалён', 'success');
     },
-    onError: (err) => {
-      console.error('Failed to delete product:', err);
+    onError: () => {
       showToast('Не удалось удалить товар', 'error');
     },
   });

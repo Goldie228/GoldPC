@@ -4,8 +4,8 @@
  */
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, Loader2 } from 'lucide-react';
-import { useServiceBySlug } from '../../hooks/useServices';
-import type { ServiceCategory, ServicePriceItem } from '../../api/types';
+import { useServiceBySlug } from '@/hooks/useServices';
+import type { ServiceCategory, ServicePriceItem } from '@/api/types';
 
 // Названия категорий
 const categoryNames: Record<ServiceCategory, string> = {

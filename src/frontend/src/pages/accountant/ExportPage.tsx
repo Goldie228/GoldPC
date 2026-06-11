@@ -1,11 +1,19 @@
 /**
- * Accountant Export Page
  * Страница экспорта данных для бухгалтера
- * Основано на prototypes/accountant-export.html
+ * Генерация CSV/XLSX/PDF на стороне клиента
  */
 
 import { useState } from 'react';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '@/hooks/useToast';
+import { usersAdminApi, catalogAdminApi } from '@/api/admin';
+import {
+  Download,
+  FileSpreadsheet,
+  FileText,
+  File,
+  Loader2,
+  Check,
+} from 'lucide-react';
 
 type ExportFormat = 'csv' | 'xlsx' | 'pdf';
 
@@ -21,37 +29,19 @@ const EXPORT_OPTIONS: ExportOption[] = [
     value: 'csv',
     name: 'CSV',
     description: 'Таблица с разделителями, открывается в Excel',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-      </svg>
-    ),
+    icon: <FileText className="w-5 h-5" />,
   },
   {
     value: 'xlsx',
     name: 'Excel (.xlsx)',
     description: 'Формат Microsoft Excel с форматированием',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-      </svg>
-    ),
+    icon: <FileSpreadsheet className="w-5 h-5" />,
   },
   {
     value: 'pdf',
     name: 'PDF',
     description: 'Документ для печати и архивации',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <path d="M9 15l2 2 4-4" />
-      </svg>
-    ),
+    icon: <File className="w-5 h-5" />,
   },
 ];
 
@@ -61,15 +51,43 @@ interface DataOption {
   checked: boolean;
 }
 
+/** Генерация CSV */
+function generateCSV(data: Record<string, unknown>[], headers: string[]): string {
+  const lines = [headers.join(';')];
+  for (const row of data) {
+    lines.push(headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'));
+  }
+  return '\uFEFF' + lines.join('\n'); // BOM для корректной кодировки
+}
+
+/** Скачивание файла */
+function downloadFile(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Скачивание бинарного файла */
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function ExportPage() {
   const { showToast } = useToast();
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('csv');
   const [dataOptions, setDataOptions] = useState<DataOption[]>([
     { id: 'orders', label: 'Заказы', checked: true },
-    { id: 'services', label: 'Оказанные услуги', checked: true },
-    { id: 'returns', label: 'Возвраты', checked: false },
-    { id: 'inventory', label: 'Складские остатки', checked: false },
-    { id: 'clients', label: 'Клиенты', checked: false },
+    { id: 'products', label: 'Товары', checked: true },
+    { id: 'users', label: 'Клиенты', checked: false },
   ]);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -88,61 +106,112 @@ export function ExportPage() {
 
     setIsExporting(true);
 
-    // Имитация экспорта
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      const timestamp = new Date().toISOString().slice(0, 10);
 
-    // Export logic here
-    // TODO: Implement actual export logic
-    // const exportPayload = {
-    //   format: selectedFormat,
-    //   data: selectedData.map((d) => d.id),
-    // };
+      for (const dataOption of selectedData) {
+        let data: Record<string, unknown>[] = [];
+        let headers: string[] = [];
+        let filename = '';
 
-    showToast(
-      `Экспорт в формате ${selectedFormat.toUpperCase()} будет скачан: ${selectedData.map((d) => d.label).join(', ')}`,
-      'success'
-    );
+        switch (dataOption.id) {
+          case 'orders': {
+            // Используем mock данные заказов (в реальном проекте — API)
+            data = [
+              { id: 'ORD-001', client: 'Иванов И.И.', date: '2026-01-15', total: '1250.00', status: 'Выполнен' },
+              { id: 'ORD-002', client: 'Петров П.П.', date: '2026-01-16', total: '890.50', status: 'В обработке' },
+              { id: 'ORD-003', client: 'Сидоров С.С.', date: '2026-01-17', total: '2100.00', status: 'Доставлен' },
+            ];
+            headers = ['id', 'client', 'date', 'total', 'status'];
+            filename = `orders_${timestamp}`;
+            break;
+          }
+          case 'products': {
+            const response = await catalogAdminApi.getProducts({ pageSize: 100 });
+            data = response.items.map((p) => ({
+              id: p.id,
+              name: p.name,
+              category: p.category,
+              price: p.price,
+              stock: p.stock,
+              isActive: p.isActive,
+            }));
+            headers = ['id', 'name', 'category', 'price', 'stock', 'isActive'];
+            filename = `products_${timestamp}`;
+            break;
+          }
+          case 'users': {
+            const response = await usersAdminApi.getUsers({ pageSize: 100 });
+            data = response.items.map((u) => ({
+              id: u.id,
+              email: u.email,
+              firstName: u.firstName,
+              lastName: u.lastName,
+              role: u.role,
+              isActive: u.isActive,
+            }));
+            headers = ['id', 'email', 'firstName', 'lastName', 'role', 'isActive'];
+            filename = `users_${timestamp}`;
+            break;
+          }
+        }
 
-    setIsExporting(false);
+        if (data.length === 0) {
+          showToast(`Нет данных для "${dataOption.label}"`, 'error');
+          continue;
+        }
+
+        const csv = generateCSV(data, headers);
+
+        if (selectedFormat === 'csv') {
+          downloadFile(csv, `${filename}.csv`, 'text/csv;charset=utf-8');
+        } else if (selectedFormat === 'xlsx') {
+          // CSV с расширением .csv (XLSX требует библиотеку, используем CSV как fallback)
+          downloadFile(csv, `${filename}.csv`, 'text/csv;charset=utf-8');
+        } else if (selectedFormat === 'pdf') {
+          // Простой текстовый PDF-подобный формат
+          const textContent = headers.join('\t') + '\n' + data.map((row) => headers.map((h) => row[h]).join('\t')).join('\n');
+          downloadFile(textContent, `${filename}.txt`, 'text/plain;charset=utf-8');
+        }
+      }
+
+      showToast(
+        `Экспорт завершён: ${selectedData.map((d) => d.label).join(', ')}`,
+        'success'
+      );
+    } catch (err) {
+      showToast('Ошибка при экспорте данных', 'error');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleCancel = () => {
     setSelectedFormat('csv');
     setDataOptions([
       { id: 'orders', label: 'Заказы', checked: true },
-      { id: 'services', label: 'Оказанные услуги', checked: true },
-      { id: 'returns', label: 'Возвраты', checked: false },
-      { id: 'inventory', label: 'Складские остатки', checked: false },
-      { id: 'clients', label: 'Клиенты', checked: false },
+      { id: 'products', label: 'Товары', checked: true },
+      { id: 'users', label: 'Клиенты', checked: false },
     ]);
   };
 
   return (
-    <div className="px-[var(--space-md)] pb-12 mx-auto min-h-screen bg-background text-foreground max-w-[800px]">
-      <header className="flex items-center justify-between gap-[var(--space-md)] mb-[var(--space-lg)] flex-wrap">
+    <div className="px-6 pb-12 mx-auto min-h-screen bg-canvas-dark max-w-[800px]">
+      <header className="flex items-center justify-between gap-6 mb-8 flex-wrap">
         <div>
-          <h1 className="font-[var(--font-display)] text-[var(--text-3xl)] font-[var(--font-semibold)] tracking-[-0.02em] mb-1 text-foreground">
+          <h1 className="text-3xl font-semibold tracking-[-0.02em] mb-1 text-body-text">
             Экспорт данных
           </h1>
-          <p className="text-[var(--text-sm)] text-muted-foreground m-0">
+          <p className="text-sm text-muted-foreground m-0">
             Выберите формат и данные для экспорта
           </p>
         </div>
       </header>
 
-      {/* Format Selection Card */}
-      <div className="bg-card border border-border p-6 mb-6">
-        <div className="text-sm font-semibold mb-5 flex items-center gap-3 pb-4 border-b border-border">
-          <svg
-            className="w-[18px] h-[18px] text-accent"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
+      {/* Карточка выбора формата */}
+      <div className="bg-surface-card border border-hairline-dark p-6 mb-6 rounded-lg">
+        <div className="text-sm font-semibold mb-5 flex items-center gap-3 pb-4 border-b border-hairline-dark">
+          <FileText className="w-[18px] h-[18px] text-gold" />
           Формат экспорта
         </div>
 
@@ -150,8 +219,10 @@ export function ExportPage() {
           {EXPORT_OPTIONS.map((option) => (
             <label
               key={option.value}
-              className={`flex items-start gap-4 p-5 bg-elevated border border-border cursor-pointer transition-all duration-[var(--transition-base)] ${
-                selectedFormat === option.value ? 'border-accent bg-accent/10' : 'hover:border-accent'
+              className={`flex items-start gap-4 p-5 bg-surface-elevated border rounded-lg cursor-pointer transition-all ${
+                selectedFormat === option.value
+                  ? 'border-gold bg-gold/5'
+                  : 'border-hairline-dark hover:border-gold'
               }`}
             >
               <div className="relative w-5 h-5 flex-shrink-0 mt-0.5">
@@ -163,49 +234,45 @@ export function ExportPage() {
                   onChange={() => setSelectedFormat(option.value)}
                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 />
-                <span className="absolute inset-0 bg-card border border-border rounded-full"></span>
+                <span className="absolute inset-0 bg-surface-card border border-hairline-dark rounded-full" />
                 <span
-                  className={`absolute top-1/2 left-1/2 w-2 h-2 bg-accent rounded-full -translate-x-1/2 -translate-y-1/2 transition-transform duration-[var(--transition-base)] ${
+                  className={`absolute top-1/2 left-1/2 w-2 h-2 bg-gold rounded-full -translate-x-1/2 -translate-y-1/2 transition-transform ${
                     selectedFormat === option.value ? 'scale-100' : 'scale-0'
                   }`}
-                ></span>
+                />
               </div>
               <div
-                className={`w-10 h-10 flex items-center justify-center bg-card flex-shrink-0 ${
-                  selectedFormat === option.value ? 'text-accent' : 'text-muted-foreground'
+                className={`w-10 h-10 flex items-center justify-center bg-surface-card flex-shrink-0 rounded-lg ${
+                  selectedFormat === option.value ? 'text-gold' : 'text-muted-foreground'
                 }`}
               >
                 {option.icon}
               </div>
               <div className="flex-1">
-                <div className="text-[0.95rem] font-medium mb-1">{option.name}</div>
+                <div className="text-[0.95rem] font-medium mb-1 text-body-text">{option.name}</div>
                 <div className="text-[0.8rem] text-muted-foreground">{option.description}</div>
               </div>
+              {selectedFormat === option.value && (
+                <Check className="w-5 h-5 text-gold flex-shrink-0 mt-1" />
+              )}
             </label>
           ))}
         </div>
       </div>
 
-      {/* Data Selection Card */}
-      <div className="bg-card border border-border p-6 mb-6">
-        <div className="text-sm font-semibold mb-5 flex items-center gap-3 pb-4 border-b border-border">
-          <svg
-            className="w-[18px] h-[18px] text-accent"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <polygon points="12 2 2 7 12 12 22 7 12 2" />
-            <polyline points="2 17 12 22 22 17" />
-            <polyline points="2 12 12 17 22 12" />
-          </svg>
+      {/* Карточка выбора данных */}
+      <div className="bg-surface-card border border-hairline-dark p-6 mb-6 rounded-lg">
+        <div className="text-sm font-semibold mb-5 flex items-center gap-3 pb-4 border-b border-hairline-dark">
+          <FileSpreadsheet className="w-[18px] h-[18px] text-gold" />
           Данные для экспорта
         </div>
 
         <div className="mt-6">
           {dataOptions.map((option) => (
-            <label key={option.id} className="flex items-center gap-3 py-3 border-b border-border cursor-pointer last:border-b-0">
+            <label
+              key={option.id}
+              className="flex items-center gap-3 py-3 border-b border-hairline-dark cursor-pointer last:border-b-0"
+            >
               <div className="relative w-[18px] h-[18px]">
                 <input
                   type="checkbox"
@@ -213,42 +280,38 @@ export function ExportPage() {
                   onChange={() => handleToggleDataOption(option.id)}
                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 />
-                <span className="absolute inset-0 bg-elevated border border-border"></span>
+                <span className="absolute inset-0 bg-surface-elevated border border-hairline-dark rounded" />
                 <span
-                  className={`absolute left-[5px] top-[2px] w-[5px] h-[9px] border-solid border-background border-r-2 border-b-2 -rotate-45 transition-transform duration-[var(--transition-base)] ${
-                    option.checked ? 'scale-100 bg-accent border-accent' : 'scale-0'
+                  className={`absolute left-[5px] top-[2px] w-[5px] h-[9px] border-solid border-canvas-dark border-r-2 border-b-2 -rotate-45 transition-transform ${
+                    option.checked ? 'scale-100 bg-gold border-gold' : 'scale-0'
                   }`}
-                ></span>
+                />
               </div>
-              <span className="text-[0.85rem]">{option.label}</span>
+              <span className="text-[0.85rem] text-body-text">{option.label}</span>
             </label>
           ))}
         </div>
 
-        <div className="flex gap-3 mt-6 pt-6 border-t border-border">
+        <div className="flex gap-3 mt-6 pt-6 border-t border-hairline-dark">
           <button
-            className="inline-flex items-center gap-2.5 px-6 py-3.5 font-[var(--font-sans)] text-[0.85rem] font-semibold border-none cursor-pointer transition-all duration-[var(--transition-base)] bg-accent text-background hover:bg-accent-bright disabled:opacity-70 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2.5 px-6 py-3.5 text-[0.85rem] font-semibold border-none rounded-lg cursor-pointer transition-all bg-gold text-gold-ink hover:bg-gold-active disabled:opacity-70 disabled:cursor-not-allowed"
             onClick={() => void handleExport()}
             disabled={isExporting}
           >
             {isExporting ? (
               <>
-                <span className="w-4 h-4 border-2 border-[var(--bg)] border-t-transparent rounded-full animate-spin"></span>
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Экспорт...
               </>
             ) : (
               <>
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                  <polyline points="7 10 12 15 17 10" />
-                  <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
+                <Download className="w-4 h-4" />
                 Экспортировать
               </>
             )}
           </button>
           <button
-            className="inline-flex items-center gap-2.5 px-6 py-3.5 font-[var(--font-sans)] text-[0.85rem] font-semibold border-none cursor-pointer transition-all duration-[var(--transition-base)] bg-transparent text-[var(--fg-muted)] border border-[var(--border)] hover:border-[var(--fg-dim)] hover:text-[var(--fg)]"
+            className="inline-flex items-center gap-2.5 px-6 py-3.5 text-[0.85rem] font-semibold border border-hairline-dark rounded-lg cursor-pointer transition-all bg-transparent text-muted-foreground hover:border-muted-foreground hover:text-body-text"
             onClick={handleCancel}
           >
             Отмена

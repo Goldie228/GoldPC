@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { useManager } from '../../hooks/useManager';
+import { useManager } from '@/hooks/useManager';
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';
 
@@ -150,7 +150,7 @@ export function OrdersPage() {
         </select>
         <input
           type="date"
-          className="filter-input"
+          className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text focus:border-gold focus:ring-1 focus:ring-gold outline-none [color-scheme:dark]"
           value={dateFrom}
           onChange={(e) => {
             setDateFrom(e.target.value);
@@ -160,7 +160,7 @@ export function OrdersPage() {
         />
         <input
           type="date"
-          className="filter-input"
+          className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text focus:border-gold focus:ring-1 focus:ring-gold outline-none [color-scheme:dark]"
           value={dateTo}
           onChange={(e) => {
             setDateTo(e.target.value);

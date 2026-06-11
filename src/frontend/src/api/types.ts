@@ -390,6 +390,18 @@ export interface NotificationPreferenceRequest {
    marketingNotifications: boolean;
 }
 
+/**
+ * Per-user notification type preferences (notification types, not channels).
+ * Matches backend UserNotificationPrefs record.
+ */
+export interface UserNotificationPreferences {
+  orderStatusChanged: boolean;
+  lowStockAlert: boolean;
+  loginNotification: boolean;
+  systemAnnouncement: boolean;
+  newSupportMessage: boolean;
+}
+
 export interface NotificationPreferenceResponse {
    emailNotifications: boolean;
    smsNotifications: boolean;

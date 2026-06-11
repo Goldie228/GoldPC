@@ -63,8 +63,8 @@ export function ProductEditorTabs({
 
   return (
     <div className="flex flex-col flex-1">
-      {/* Tab bar */}
-      <div className="flex border-b border-[var(--border-muted)] px-6">
+      {/* Панель вкладок */}
+      <div className="flex border-b border-hairline-dark px-6">
         {TABS.map((tab) => (
           <button
             key={tab.key}
@@ -81,7 +81,7 @@ export function ProductEditorTabs({
         ))}
       </div>
 
-      {/* Tab content */}
+      {/* Содержимое вкладки */}
       <div className="flex-1 p-6 overflow-y-auto">
         {renderTabContent()}
       </div>

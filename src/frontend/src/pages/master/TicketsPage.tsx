@@ -6,9 +6,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { servicesApi, TICKET_STATUSES } from '../../api/services';
-import type { ServiceRequestDto } from '../../api/services';
-import { useToastStore } from '../../store/toastStore';
+import { servicesApi, TICKET_STATUSES } from '@/api/services';
+import type { ServiceRequestDto } from '@/api/services';
+import { useToastStore } from '@/store/toastStore';
 
 // ─── Константы ───────────────────────────────────────────────────────────────
 

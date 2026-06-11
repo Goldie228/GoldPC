@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { calculateFpsApi } from '../../api/pcBuilderService';
-import type { FpsApiResponse } from '../../api/pcBuilderService';
+import { calculateFpsApi } from '@/api/pcBuilderService';
+import type { FpsApiResponse } from '@/api/pcBuilderService';
 import type { PCBuilderSelectedState } from '@/features/pc-builder/logic/types';
 import { FPS_DEBOUNCE_MS } from '@/features/pc-builder/logic/constants';
 

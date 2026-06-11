@@ -1,7 +1,10 @@
-import React, { useEffect, useCallback, useState, useRef, createContext, useContext } from 'react';
+import { useEffect, useCallback, useState, createContext, useContext } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useAuthStore } from '../store/authStore';
 import { useToastStore } from '../store/toastStore';
+import { getUserNotifications, markAsRead as apiMarkAsRead, markAllAsRead as apiMarkAllAsRead, deleteNotification as apiDeleteNotification } from '../api/notifications';
+
+// ── Типы ────────────────────────────────────────────────────────
 
 export interface Notification {
   id: string;
@@ -17,7 +20,14 @@ export interface Notification {
   metadata?: string;
 }
 
-export type NotificationTypeValue = 'OrderStatusChanged' | 'RepairTicketUpdated' | 'LowStockAlert' | 'NewSupportMessage' | 'SystemAnnouncement' | 'TaskAssigned' | 'InventoryAlert';
+export type NotificationTypeValue =
+  | 'OrderStatusChanged'
+  | 'RepairTicketUpdated'
+  | 'LowStockAlert'
+  | 'NewSupportMessage'
+  | 'SystemAnnouncement'
+  | 'TaskAssigned'
+  | 'InventoryAlert';
 
 export const NotificationType = {
   OrderStatusChanged: 'OrderStatusChanged' as const,
@@ -38,10 +48,14 @@ export const NotificationPriority = {
   Critical: 'Critical' as const,
 } as const;
 
+export type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting';
+
+// ── Контекст ──────────────────────────────────────────────────────
+
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
-  connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error';
+  connectionStatus: ConnectionStatus;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
@@ -49,55 +63,113 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
 
-export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-  const isMountedRef = useRef(false);
+// ── Чистые вспомогательные функции (без побочных эффектов) ──────────────────────
 
+/** Чтение токена доступа из хранилища (сначала localStorage, затем sessionStorage) */
+const getAccessToken = (): string | null =>
+  localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken');
+
+/** Маппинг приоритета уведомления на вариант toast */
+const priorityToToastVariant = (priority: NotificationPriorityValue): 'info' | 'warning' | 'error' | 'success' => {
+  switch (priority) {
+    case 'Critical':
+    case 'High':
+      return 'error';
+    case 'Medium':
+      return 'warning';
+    default:
+      return 'info';
+  }
+};
+
+// ── Вспомогательные функции с побочными эффектами ──────────────────────────────────
+
+/** Воспроизведение звука уведомления для высокоприоритетных оповещений (браузер может заблокировать автовоспроизведение) */
+const playNotificationSound = (priority: NotificationPriorityValue): void => {
+  const soundEnabled = localStorage.getItem('notification_sound') !== 'false';
+  if (soundEnabled && (priority === 'High' || priority === 'Critical')) {
+    const audio = new Audio('/notification-sound.mp3');
+    audio.volume = 0.3;
+    audio.play().catch(() => { /* Браузер может заблокировать автовоспроизведение */ });
+  }
+};
+
+/** Показать toast-уведомление через глобальный стор уведомлений */
+const showNotificationToast = (notification: Notification): void => {
+  useToastStore.getState().showToast(
+    `${notification.title}: ${notification.message}`,
+    priorityToToastVariant(notification.priority),
+    5000,
+  );
+};
+
+// ── Провайдер ─────────────────────────────────────────────────────
+
+export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+
+  // ── Жизненный цикл подключения SignalR ──
+  // Выполняется только при изменении состояния авторизации (вход/выход)
   useEffect(() => {
-    // Пропускаем первый mount при StrictMode (development двойной рендер)
-    if (!isMountedRef.current) {
-      isMountedRef.current = true;
+    // Не авторизован — нечего подключать
+    if (!isAuthenticated) {
+      setConnectionStatus('disconnected');
       return;
     }
 
-    const getToken = () => localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken');
-    if (!getToken()) return;
+    const token = getAccessToken();
+    if (!token) {
+      setConnectionStatus('disconnected');
+      return;
+    }
 
-    let hubConnection: signalR.HubConnection | null = null;
     let isMounted = true;
+    let hubConnection: signalR.HubConnection | null = null;
 
-    const startConnection = async () => {
+    const initialize = async () => {
+      // 1. Загрузка существующих уведомлений из REST API (перед SignalR)
+      try {
+        const existingNotifications = await getUserNotifications();
+        if (isMounted) setNotifications(existingNotifications as Notification[]);
+      } catch {
+        // API может быть ещё недоступен — SignalR подхватит при переподключении
+      }
+
+      // 2. Создание HubConnection SignalR
       hubConnection = new signalR.HubConnectionBuilder()
         .configureLogging(signalR.LogLevel.Warning)
         .withUrl('/hubs/notifications', {
-          accessTokenFactory: () => getToken() ?? ''
+          accessTokenFactory: () => getAccessToken() ?? '',
         })
-        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+        // Экспоненциальная задержка: 0с → 2с → 10с → 30с (максимум, повторы)
+        .withAutomaticReconnect([0, 2000, 10000, 30000])
         .build();
 
+      // ── Обработчик входящих уведомлений ──
       hubConnection.on('ReceiveNotification', (notification: Notification) => {
         if (!isMounted) return;
 
-        setNotifications(prev => [notification, ...prev]);
+        // Дедупликация: заменяем, если существует тот же ID (например, обновлено сервером),
+        // иначе добавляем новое уведомление в начало
+        setNotifications(prev => {
+          const index = prev.findIndex(n => n.id === notification.id);
+          if (index !== -1) {
+            const updated = [...prev];
+            updated[index] = notification;
+            return updated;
+          }
+          return [notification, ...prev];
+        });
 
-        // Play notification sound if enabled
-        const soundEnabled = localStorage.getItem('notification_sound') !== 'false';
-        const priority = notification.priority as unknown as string;
-        if (soundEnabled && (priority === 'High' || priority === 'Critical')) {
-          const audio = new Audio('/notification-sound.mp3');
-          audio.volume = 0.3;
-          audio.play().catch(() => {});
-        }
-
-        // Show toast notification
-        showToast(notification);
+        playNotificationSound(notification.priority);
+        showNotificationToast(notification);
       });
 
+      // ── Отслеживание состояния подключения ──
       hubConnection.onreconnecting(() => {
-        if (isMounted) setConnectionStatus('connecting');
+        if (isMounted) setConnectionStatus('reconnecting');
       });
 
       hubConnection.onreconnected(() => {
@@ -108,83 +180,96 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         if (isMounted) setConnectionStatus('disconnected');
       });
 
-      // Первая попытка может失败了 (e.g. negotiate 401), 
-      // но withAutomaticReconnect переподключится автоматически.
-      // Ошибку не логируем — reconnect сам всё исправит.
+      // 3. Запуск подключения
       try {
-        if (isMounted) setConnectionStatus('connecting');
+        if (isMounted) setConnectionStatus('reconnecting');
         await hubConnection.start();
-        if (isMounted) {
-          setConnectionStatus('connected');
-          setConnection(hubConnection);
-        }
+        if (isMounted) setConnectionStatus('connected');
       } catch {
-        // automatic reconnect will retry — keep status as 'connecting'
-        if (isMounted) {
-          setConnectionStatus('connecting');
-        }
+        // Автоматическое переподключение повторит попытку с настроенной задержкой
+        if (isMounted) setConnectionStatus('reconnecting');
       }
     };
 
-    void startConnection();
+    initialize();
 
+    // Очистка при размонтировании или изменении состояния авторизации
     return () => {
       isMounted = false;
       hubConnection?.off('ReceiveNotification');
-      void hubConnection?.stop();
-      setConnection(null);
+      hubConnection?.stop().catch(() => {});
     };
+    // isAuthenticated — единственный триггер; изменение авторизации требует нового подключения
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
-  const showToast = (notification: Notification) => {
-    const toastType = (() => {
-      switch (notification.priority) {
-        case 'Critical': case 'High': return 'error';
-        case 'Medium': return 'warning';
-        default: return 'info';
-      }
-    })();
-    useToastStore.getState().showToast(
-      `${notification.title}: ${notification.message}`,
-      toastType as 'info' | 'warning' | 'error' | 'success',
-      5000,
-    );
-  };
+  // ── CRUD-действия (все используют оптимистичные обновления с откатом) ──
 
   const markAsRead = useCallback(async (id: string) => {
-    setNotifications(prev => prev.map(n =>
-      n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n
-    ));
+    // Оптимистичное обновление
+    setNotifications(prev =>
+      prev.map(n => (n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n)),
+    );
+
+    try {
+      await apiMarkAsRead(id);
+    } catch {
+      // Откат при ошибке
+      setNotifications(prev =>
+        prev.map(n => (n.id === id ? { ...n, isRead: false, readAt: undefined } : n)),
+      );
+    }
   }, []);
 
   const markAllAsRead = useCallback(async () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true, readAt: new Date().toISOString() })));
-  }, []);
+    const snapshot = notifications;
+    setNotifications(prev =>
+      prev.map(n => ({ ...n, isRead: true, readAt: new Date().toISOString() })),
+    );
+
+    try {
+      await apiMarkAllAsRead();
+    } catch {
+      setNotifications(snapshot);
+    }
+  }, [notifications]);
 
   const deleteNotification = useCallback(async (id: string) => {
+    const snapshot = notifications;
     setNotifications(prev => prev.filter(n => n.id !== id));
-  }, []);
+
+    try {
+      await apiDeleteNotification(id);
+    } catch {
+      // Откат при ошибке — восстанавливаем удаленное уведомление из снимка
+      setNotifications(snapshot);
+    }
+  }, [notifications]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <NotificationContext.Provider value={{
-      notifications,
-      unreadCount,
-      connectionStatus,
-      markAsRead,
-      markAllAsRead,
-      deleteNotification
-    }}>
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        unreadCount,
+        connectionStatus,
+        markAsRead,
+        markAllAsRead,
+        deleteNotification,
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );
 };
 
-export const useNotifications = () => {
+// ── Хук-потребитель ────────────────────────────────────────────────
+
+export const useNotifications = (): NotificationContextType => {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotifications must be used within a NotificationProvider');
+    throw new Error('useNotifications должен использоваться внутри NotificationProvider');
   }
   return context;
 };

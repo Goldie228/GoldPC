@@ -1,37 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { stubApi, type Stub, type StubMode, type StubUpdateRequest } from '@/api/admin';
 import './StubManager.css';
-
-/**
- * Режим работы заглушки
- */
-type StubMode = 'Normal' | 'Slow' | 'Failing' | 'Unstable';
-
-/**
- * Конфигурация Chaos Engineering
- */
-interface ChaosConfig {
-  failureRate: number;
-  latencyRate: number;
-  maxLatencyMs?: number;
-}
-
-/**
- * Определение заглушки
- */
-interface Stub {
-  name: string;
-  serviceName: string;
-  mode: StubMode;
-  chaos?: ChaosConfig;
-}
-
-/**
- * API ответ для обновления заглушки
- */
-interface StubUpdateRequest {
-  mode: StubMode;
-  chaos?: ChaosConfig;
-}
 
 /**
  * Статусы режимов для отображения
@@ -72,18 +41,11 @@ export const StubManager: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/internal/stubs');
-      
-      if (!response.ok) {
-        throw new Error(`Ошибка загрузки: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json() as unknown;
-      setStubs(Array.isArray(data) ? (data as Stub[]) : []);
+      const data = await stubApi.getStubs();
+      setStubs(Array.isArray(data) ? data : []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
       setError(errorMessage);
-      console.error('Ошибка при загрузке заглушек:', err);
     } finally {
       setLoading(false);
     }
@@ -98,19 +60,7 @@ export const StubManager: React.FC = () => {
       setError(null);
       setSuccessMessage(null);
       
-      const updateData: StubUpdateRequest = { mode };
-      
-      const response = await fetch(`/api/internal/stubs/${encodeURIComponent(name)}`, {
-        method: 'PATCH',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Ошибка обновления: ${response.status} ${response.statusText}`);
-      }
+      await stubApi.updateStub(name, { mode });
       
       // Обновляем локальное состояние
       setStubs(prevStubs => 
@@ -126,7 +76,6 @@ export const StubManager: React.FC = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Неизвестная ошибка';
       setError(`Ошибка при обновлении "${name}": ${errorMessage}`);
-      console.error('Ошибка при обновлении заглушки:', err);
     } finally {
       setUpdating(null);
     }
@@ -155,7 +104,7 @@ export const StubManager: React.FC = () => {
     <div className="stub-manager">
       <div className="stub-manager__header">
         <h1 className="stub-manager__title">
-          🎛️ Stub Manager
+          🎛️ Менеджер заглушек
         </h1>
         <p className="stub-manager__subtitle">
           Управление заглушками и Chaos Engineering для тестирования

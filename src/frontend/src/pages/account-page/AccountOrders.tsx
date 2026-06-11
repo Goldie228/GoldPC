@@ -2,14 +2,14 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Info, RefreshCw, Search, X } from 'lucide-react';
-import { useOrders } from '../../hooks/useOrders';
-import { useToast } from '../../hooks/useToast';
-import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { ordersApi } from '../../api/orders';
-import type { Order, OrderItem } from '../../api/orders';
-import { Modal } from '../../components/ui/Modal';
-import { StatusBadge } from '../../components/ui/StatusBadge';
-import type { StatusVariant } from '../../components/ui/StatusBadge';
+import { useOrders } from '@/hooks/useOrders';
+import { useToast } from '@/hooks/useToast';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { ordersApi } from '@/api/orders';
+import type { Order, OrderItem } from '@/api/orders';
+import { Modal } from '@/components/ui/Modal';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import type { StatusVariant } from '@/components/ui/StatusBadge';
 
 /**
  * Map Order status to StatusBadge variant
