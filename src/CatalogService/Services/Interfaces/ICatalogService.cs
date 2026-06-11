@@ -51,4 +51,7 @@ public interface ICatalogService
 
     // Мета-данные спецификаций
     Task<CategorySpecificationsDto> GetCategorySpecificationsAsync(Guid categoryId);
+
+    // Уникальные значения характеристик для категории
+    Task<Dictionary<string, List<string>>> GetUniqueSpecValuesAsync(Guid categoryId);
 }

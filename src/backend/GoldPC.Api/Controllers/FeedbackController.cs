@@ -70,7 +70,9 @@ public class FeedbackController : ControllerBase
 
             return Ok(new { message = "Спасибо за ваш отзыв!" });
         }
+#pragma warning disable CA1031 // Ловим все исключения на уровне контроллера для обработки ошибок сервиса
         catch (Exception ex)
+#pragma warning restore CA1031
         {
             _logger.LogError(ex, "Failed to submit feedback for user {UserId}", userId);
             return StatusCode(500, new { error = "Не удалось отправить отзыв. Попробуйте позже." });
@@ -303,11 +305,12 @@ public class FeedbackService : IFeedbackService
             query = query.Where(f => f.Type == typeFilter.Value);
         }
 
-        var orderedQuery = query.OrderByDescending(f => f.Timestamp);
-        var totalItems = orderedQuery.Count();
+        // Материализуем запрос для избежания повторной итерации (CA1851)
+        var orderedList = query.OrderByDescending(f => f.Timestamp).ToList();
+        var totalItems = orderedList.Count;
         var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
-        var data = orderedQuery
+        var data = orderedList
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToList();

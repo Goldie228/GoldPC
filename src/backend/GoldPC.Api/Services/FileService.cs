@@ -114,7 +114,7 @@ public class FileService : IFileService
         if (Directory.Exists(dir))
         {
             try { Directory.Delete(dir, recursive: true); }
-            catch (Exception ex) { _logger.LogWarning(ex, "Failed to delete directory {Dir}", dir); }
+            catch (IOException ex) { _logger.LogWarning(ex, "Failed to delete directory {Dir}", dir); }
         }
 
         _logger.LogInformation("All images deleted for product {ProductId}", productId);
@@ -190,7 +190,7 @@ public class FileService : IFileService
         if (File.Exists(fullPath))
         {
             try { File.Delete(fullPath); }
-            catch (Exception ex) { _logger.LogWarning(ex, "Failed to delete file {Path}", fullPath); }
+            catch (IOException ex) { _logger.LogWarning(ex, "Failed to delete file {Path}", fullPath); }
         }
     }
 }

@@ -31,7 +31,7 @@ public class OrderExpirationWorker : BackgroundService
             {
                 await CancelExpiredOrdersAsync(stoppingToken);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 _logger.LogError(ex, "Error occurred while cancelling expired orders");
             }

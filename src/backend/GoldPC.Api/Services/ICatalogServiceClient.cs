@@ -147,5 +147,12 @@ public interface ICatalogServiceClient
     /// <param name="categoryId">Идентификатор категории.</param>
     /// <returns>Мета-данные спецификаций или <c>null</c>, если категория не найдена.</returns>
     Task<CategorySpecificationsDto?> GetCategorySpecificationsAsync(Guid categoryId);
+
+    /// <summary>
+    /// Получает уникальные значения характеристик для всех товаров указанной категории.
+    /// </summary>
+    /// <param name="categoryId">Идентификатор категории.</param>
+    /// <returns>Словарь: ключ характеристики → список уникальных значений.</returns>
+    Task<Dictionary<string, List<string>>> GetUniqueSpecValuesAsync(Guid categoryId);
 }
 #pragma warning restore CS1591

@@ -1167,5 +1167,88 @@ public class CatalogService : ICatalogService
             Attributes = attributes
         };
     }
+
+    public async Task<Dictionary<string, List<string>>> GetUniqueSpecValuesAsync(Guid categoryId)
+    {
+        var result = new Dictionary<string, List<string>>();
+        var rawMap = new Dictionary<string, HashSet<string>>();
+
+        // 1. Уникальные значения из ProductSpecificationValues (с привязкой к атрибутам)
+        var specValues = await _dbContext.Products
+            .Where(p => p.CategoryId == categoryId)
+            .SelectMany(p => p.SpecificationValues)
+            .Include(sv => sv.Attribute)
+            .Include(sv => sv.CanonicalValue)
+            .ToListAsync();
+
+        foreach (var sv in specValues)
+        {
+            if (sv.Attribute == null) continue;
+            var key = sv.Attribute.Key;
+            string? value = null;
+            if (sv.CanonicalValue != null)
+                value = sv.CanonicalValue.ValueText;
+            else if (sv.ValueNumber.HasValue)
+                value = sv.ValueNumber.Value.ToString();
+
+            if (string.IsNullOrWhiteSpace(value)) continue;
+            if (!rawMap.TryGetValue(key, out var set))
+            {
+                set = new HashSet<string>();
+                rawMap[key] = set;
+            }
+            set.Add(value.Trim());
+        }
+
+        // 2. Уникальные значения из описаний товаров (парсим пары ключ-значение)
+        var products = await _dbContext.Products
+            .Where(p => p.CategoryId == categoryId && !string.IsNullOrEmpty(p.Description))
+            .Select(p => p.Description)
+            .ToListAsync();
+
+        foreach (var desc in products)
+        {
+            if (string.IsNullOrWhiteSpace(desc)) continue;
+            var lines = desc.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var line in lines)
+            {
+                var trimmed = line.Trim();
+                // Парсим "Ключ — Значение" или "Ключ: Значение"
+                var dashIdx = trimmed.IndexOf(" — ");
+                var colonIdx = trimmed.IndexOf(':');
+                string? key = null;
+                string? value = null;
+
+                if (dashIdx > 0 && dashIdx < trimmed.Length - 3)
+                {
+                    key = trimmed[..dashIdx].Trim();
+                    value = trimmed[(dashIdx + 3)..].Trim();
+                }
+                else if (colonIdx > 0 && colonIdx < trimmed.Length - 1)
+                {
+                    key = trimmed[..colonIdx].Trim();
+                    value = trimmed[(colonIdx + 1)..].Trim();
+                }
+
+                if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(value)) continue;
+                if (key.Length > 100 || value.Length > 200) continue; // пропускаем слишком длинные
+
+                if (!rawMap.TryGetValue(key, out var set))
+                {
+                    set = new HashSet<string>();
+                    rawMap[key] = set;
+                }
+                set.Add(value);
+            }
+        }
+
+        foreach (var (key, values) in rawMap)
+        {
+            if (values.Count > 0)
+                result[key] = values.OrderBy(v => v).ToList();
+        }
+
+        return result;
+    }
 #pragma warning restore CA1724
 }

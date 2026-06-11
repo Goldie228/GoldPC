@@ -26,7 +26,7 @@ public class OutboxProcessor : BackgroundService
             {
                 await ProcessOutboxMessages(stoppingToken);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 _logger.LogError(ex, "Error occurred while processing outbox messages.");
             }
@@ -73,7 +73,9 @@ public class OutboxProcessor : BackgroundService
                     }
                 }
             }
+#pragma warning disable CA1031 // Логируется и помечается как ошибка — повторная обработка не требуется
             catch (Exception ex)
+#pragma warning restore CA1031
             {
                 _logger.LogError(ex, "Failed to process outbox message {Id}.", message.Id);
                 message.Error = ex.Message;
