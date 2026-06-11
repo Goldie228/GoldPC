@@ -196,7 +196,7 @@ function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpen
 
   return (
     <div
-      className={`flex flex-col items-stretch gap-0 border border-white/5 rounded-lg bg-neutral-900 cursor-pointer text-left text-inherit font-inherit overflow-hidden transition-all hover:border-gold/25 hover:-translate-y-[1px] ${isSelected ? "border-gold bg-gold/5" : ""} ${outOfStock ? "opacity-60" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
+      className={`flex flex-col items-stretch gap-0 border border-white/5 rounded-lg bg-surface-card cursor-pointer text-left text-inherit font-inherit overflow-hidden transition-all hover:border-gold/25 hover:-translate-y-[1px] ${isSelected ? "border-gold bg-gold/5" : ""} ${outOfStock ? "opacity-60" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
       onClick={isCompatible === false ? undefined : () => onSelect(product)}
     >
       <CardImageGallery product={product} hasDiscount={hasDiscount} discountPercent={discountPercent} outOfStock={outOfStock} />
@@ -240,7 +240,7 @@ function PickerProductCardCompact({ product, isSelected, isCompatible, onSelect,
 
   return (
     <div
-      className={`flex items-center gap-3 p-2 border border-white/5 rounded-md bg-neutral-900 text-inherit font-inherit transition-all hover:border-gold/25 ${isSelected ? "border-gold bg-gold/5" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
+      className={`flex items-center gap-3 p-2 border border-white/5 rounded-md bg-surface-card text-inherit font-inherit transition-all hover:border-gold/25 ${isSelected ? "border-gold bg-gold/5" : ""} ${isCompatible === false ? "opacity-45 pointer-events-none relative" : ""}`}
       onClick={isCompatible === false ? undefined : () => onSelect(product)}
     >
       <div className="w-14 h-14 rounded-md bg-white p-1.5 flex items-center justify-center flex-shrink-0 box-border">
@@ -658,7 +658,7 @@ export function ComponentPickerModal({
     // Сохраняем вычисленные границы цен, просто сбрасываем min/max на полный диапазон
     setPriceRange((prev) => prev); // don't zero out — keep derived bounds
     setSelectedManufacturerIds([]);
-    setSelectedSpecifications({}); setSelectedAvailability([]); setInStockOnly(false); setPage(1);
+    setSelectedSpecifications({}); setSelectedAvailability([]); setMinRating(0); setInStockOnly(false); setPage(1);
   }, []);
 
   const handleOpenProduct = useCallback((slug: string) => {
@@ -779,9 +779,9 @@ export function ComponentPickerModal({
                 selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} categoryLocked={true}
                 priceRange={priceRange} onPriceChange={setPriceRange}
                 selectedManufacturerIds={selectedManufacturerIds} onManufacturerIdsChange={setSelectedManufacturerIds}
-                minRating={minRating} onRatingChange={() => {}}
-                selectedAvailability={selectedAvailability} onAvailabilityChange={setSelectedAvailability}
-                selectedSpecifications={selectedSpecifications} onSpecificationsChange={setSelectedSpecifications}
+              minRating={minRating} onRatingChange={setMinRating}
+              selectedAvailability={selectedAvailability} onAvailabilityChange={setSelectedAvailability}
+              selectedSpecifications={selectedSpecifications} onSpecificationsChange={setSelectedSpecifications}
                 onReset={handleResetFilters}
                 restrictedSpecValues={restrictedSpecValues}
                 effectiveSpecifications={effectiveSpecs}
@@ -800,7 +800,7 @@ export function ComponentPickerModal({
               selectedCategory={selectedCategory} onCategoryChange={handleCategoryChange} categoryLocked={true}
               priceRange={priceRange} onPriceChange={setPriceRange}
               selectedManufacturerIds={selectedManufacturerIds} onManufacturerIdsChange={setSelectedManufacturerIds}
-              minRating={minRating} onRatingChange={() => {}}
+              minRating={minRating} onRatingChange={setMinRating}
               selectedAvailability={selectedAvailability} onAvailabilityChange={setSelectedAvailability}
               selectedSpecifications={selectedSpecifications}
               effectiveSpecifications={effectiveSpecs}
@@ -817,7 +817,7 @@ export function ComponentPickerModal({
           <div className="min-w-0 flex flex-col gap-2.5 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.12)] scrollbar-track-transparent">
             <div className="flex items-center gap-2 py-1.5 px-0 flex-shrink-0 border-b border-white/5">
               {/* Поиск + кнопка Фильтры (mobile) */}
-              <button className="flex md:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-[rgba(255,255,255,0.08)] bg-neutral-900 text-body-text text-xs cursor-pointer flex-shrink-0" onClick={() => setMobileFilterOpen(true)}>
+              <button className="flex md:hidden items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-[rgba(255,255,255,0.08)] bg-surface-card text-body-text text-xs cursor-pointer flex-shrink-0" onClick={() => setMobileFilterOpen(true)}>
                 <SlidersHorizontal size={16} /> Фильтры
               </button>
               <form className="flex-1 min-w-0 relative" onSubmit={(e) => e.preventDefault()}>
@@ -895,7 +895,7 @@ export function ComponentPickerModal({
           </div>
 
           {/* Предпросмотр (только десктоп — на мобилке используется BottomSheet) */}
-          <aside className="max-md:hidden md:sticky top-0 flex flex-col gap-2.5 p-3.5 rounded-md border border-white/5 bg-neutral-900 max-h-full overflow-y-auto flex-shrink-0 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.1)] scrollbar-track-transparent">
+          <aside className="max-md:hidden md:sticky top-0 flex flex-col gap-2.5 p-3.5 rounded-md border border-white/5 bg-surface-card max-h-full overflow-y-auto flex-shrink-0 scrollbar-thin scrollbar-thumb-[rgba(255,255,255,0.1)] scrollbar-track-transparent">
             {fullPreview ? renderPreviewContent() : (
               <div className="flex flex-col items-center justify-center text-center h-[200px] text-muted-foreground">
                 <h4>Предпросмотр</h4>
