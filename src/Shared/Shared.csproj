@@ -32,7 +32,7 @@
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.11" />
     <PackageReference Include="Stripe.net" Version="47.0.0" />
     <PackageReference Include="Twilio" Version="7.8.0" />
-    <PackageReference Include="MailKit" Version="4.10.0" />
+    <PackageReference Include="MailKit" Version="4.16.0" />
     <PackageReference Include="Handlebars.Net" Version="2.1.6" />
   </ItemGroup>
 
