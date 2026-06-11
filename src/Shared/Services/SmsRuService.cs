@@ -90,7 +90,7 @@ public class SmsRuService : INotificationService
         return Task.CompletedTask;
     }
 
-    public Task SendEmailAsync(string to, string subject, string body)
+    public Task SendEmailAsync(string recipientEmail, string subject, string body)
     {
         _logger.LogDebug("SmsRuService SendEmailAsync called - not supported");
         return Task.CompletedTask;

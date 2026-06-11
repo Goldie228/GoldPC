@@ -196,7 +196,7 @@ public class NotificationServiceMock : INotificationService
         }
     }
 
-    public async Task SendEmailAsync(string to, string subject, string body)
+    public async Task SendEmailAsync(string recipientEmail, string subject, string body)
     {
         if (SimulatedDelayMs > 0)
         {
@@ -205,7 +205,7 @@ public class NotificationServiceMock : INotificationService
 
         if (EnableConsoleLogging)
         {
-            _logger.LogInformation("[Mock NotificationService] Email: To={To}, Subject={Subject}", to, subject);
+            _logger.LogInformation("[Mock NotificationService] Email: To={To}, Subject={Subject}", recipientEmail, subject);
         }
     }
 }

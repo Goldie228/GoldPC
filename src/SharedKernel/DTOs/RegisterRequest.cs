@@ -24,7 +24,6 @@ public class RegisterRequest
     [MaxLength(50, ErrorMessage = "Имя не должно превышать 50 символов")]
     public string FirstName { get; set; } = string.Empty;
 
-
     [MaxLength(100, ErrorMessage = "Фамилия не может превышать 100 символов")]
     public string? LastName { get; set; }
 

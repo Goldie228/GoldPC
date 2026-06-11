@@ -93,16 +93,18 @@ public static class RolePermissions
             Permissions.WarrantyManage
         },
 
-        // Employee - работа с заказами и товарами
-        [Roles.Employee] = new[]
+        // Accountant - финансовые отчёты и аналитика
+        [Roles.Accountant] = new[]
         {
-            // Products
+            // Products (только просмотр)
             Permissions.ProductsView,
 
-            // Orders
+            // Orders (просмотр + отчёты)
             Permissions.OrdersView,
-            Permissions.OrdersManage,
-            Permissions.OrdersCreate,
+
+            // Reports
+            Permissions.ReportsView,
+            Permissions.ReportsExport,
 
             // Categories
             Permissions.CategoriesView,
@@ -117,8 +119,8 @@ public static class RolePermissions
             Permissions.WarrantyView
         },
 
-        // Customer - базовые права клиента
-        [Roles.Customer] = new[]
+        // Client - базовые права клиента
+        [Roles.Client] = new[]
         {
             // Products
             Permissions.ProductsView,

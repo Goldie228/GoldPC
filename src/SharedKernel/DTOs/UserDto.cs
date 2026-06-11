@@ -16,12 +16,12 @@ public class UserDto
      public string Email { get; set; } = string.Empty;
 
      /// <summary>
-     /// Дефолтная роль (устарело, используйте Roles для множественных ролей)
+     /// Gets or sets the default role (deprecated, use Roles for multiple roles).
      /// </summary>
      public UserRole Role { get; set; }
 
      /// <summary>
-     /// Множественные роли пользователя
+     /// Gets or sets the user's assigned roles.
      /// </summary>
      public List<UserRole> Roles { get; set; } = new List<UserRole>();
 

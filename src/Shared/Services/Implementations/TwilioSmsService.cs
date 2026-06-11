@@ -1,5 +1,4 @@
 #pragma warning disable CA1031, CA1859, CS1591, SA1117, SA1203, SA1204, SA1600
-using System.Collections.Concurrent;
 using GoldPC.Shared.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -17,22 +16,16 @@ namespace GoldPC.Shared.Services.Implementations;
 public class TwilioSmsService : INotificationService
 {
     private readonly ILogger<TwilioSmsService> _logger;
-    private readonly IConfiguration _configuration;
     private readonly IAsyncPolicy _resiliencePolicy;
-
-    // Простой in-memory tracker для rate-limiting (по номеру телефона)
-    private static readonly ConcurrentDictionary<string, List<DateTime>> _rateLimiter = new();
-    private const int MaxSmsPerHourPerNumber = 5;
 
     public TwilioSmsService(
         ILogger<TwilioSmsService> logger,
         IConfiguration configuration)
     {
         _logger = logger;
-        _configuration = configuration;
 
-        var accountSid = _configuration["Twilio:AccountSid"] ?? "AC_MOCK_SID_123";
-        var authToken = _configuration["Twilio:AuthToken"] ?? "MOCK_TOKEN_123";
+        var accountSid = configuration["Twilio:AccountSid"] ?? "AC_MOCK_SID_123";
+        var authToken = configuration["Twilio:AuthToken"] ?? "MOCK_TOKEN_123";
         TwilioClient.Init(accountSid, authToken);
 
         // Polly политика: Retry (3 раза) + Circuit Breaker
@@ -102,30 +95,10 @@ public class TwilioSmsService : INotificationService
         return Task.CompletedTask;
     }
 
-    public Task SendEmailAsync(string to, string subject, string body)
+    public Task SendEmailAsync(string recipientEmail, string subject, string body)
     {
         _logger.LogDebug("TwilioSmsService SendEmailAsync called - not supported");
         return Task.CompletedTask;
-    }
-
-    private static bool IsRateLimited(string phone)
-    {
-        var now = DateTime.UtcNow;
-        if (!_rateLimiter.TryGetValue(phone, out var timestamps))
-        {
-            timestamps = new List<DateTime>();
-            _rateLimiter[phone] = timestamps;
-        }
-
-        timestamps.RemoveAll(t => t < now.AddHours(-1));
-
-        if (timestamps.Count >= MaxSmsPerHourPerNumber)
-        {
-            return true;
-        }
-
-        timestamps.Add(now);
-        return false;
     }
 }
 #pragma warning restore CA1031, CA1859, CS1591, SA1117, SA1203, SA1204, SA1600

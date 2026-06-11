@@ -18,5 +18,16 @@ public class AuthResponse
     public int ExpiresIn { get; set; } = 900;
 
     public UserDto User { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether two-factor authentication is required to complete login.
+    /// </summary>
+    public bool RequiresTwoFactor { get; set; }
+
+    /// <summary>
+    /// Gets or sets the two-factor authentication verification token.
+    /// Sent to /api/v1/auth/login/verify-2fa along with the TOTP code.
+    /// </summary>
+    public string? TwoFactorToken { get; set; }
 }
 #pragma warning restore CS1591, SA1600
