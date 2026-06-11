@@ -54,8 +54,7 @@ public class JwtService : IJwtService
             audience: _audience,
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(_accessTokenExpirationMinutes),
-            signingCredentials: credentials
-        );
+            signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }

@@ -1,3 +1,7 @@
+// CA1724: Имя класса User конфликтует с System.Security.Principal.User и Twilio.User.
+// Это основная сущность пользователя в домене AuthService, переименование нецелесообразно.
+#pragma warning disable CA1724
+
 using GoldPC.SharedKernel.Entities;
 using GoldPC.SharedKernel.Enums;
 

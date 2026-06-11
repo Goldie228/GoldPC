@@ -41,14 +41,14 @@ public class AuthDbContext : DbContext
     /// <summary>
     /// Токены подтверждения email
     /// </summary>
-public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
 
     /// <summary>
     /// История входов пользователей
     /// </summary>
     public DbSet<LoginHistory> LoginHistories => Set<LoginHistory>();
 
-/// <summary>
+    /// <summary>
     /// Предпочтения уведомлений пользователей
     /// </summary>
     public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
@@ -62,23 +62,23 @@ public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerific
     {
         base.OnModelCreating(modelBuilder);
 
-// Конфигурация User
-         modelBuilder.Entity<User>(entity =>
-         {
-             entity.ToTable("users");
-             entity.HasKey(e => e.Id);
-             entity.HasIndex(e => e.Email).IsUnique();
-             entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
-             entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(500);
-             entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
-             entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
-             entity.Property(e => e.Phone).IsRequired().HasMaxLength(20);
-             entity.Property(e => e.Role).HasConversion<string>().HasMaxLength(20);
-             entity.Ignore(e => e.Roles);
-             entity.Property(e => e.BirthDate).HasColumnType("timestamp with time zone");
-             entity.Property(e => e.Company).HasMaxLength(200);
-             entity.Property(e => e.CreatedAt).IsRequired();
-         });
+        // Конфигурация User
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("users");
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Phone).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Role).HasConversion<string>().HasMaxLength(20);
+            entity.Ignore(e => e.Roles);
+            entity.Property(e => e.BirthDate).HasColumnType("timestamp with time zone");
+            entity.Property(e => e.Company).HasMaxLength(200);
+            entity.Property(e => e.CreatedAt).IsRequired();
+        });
 
         // Конфигурация RefreshToken
         modelBuilder.Entity<RefreshToken>(entity =>
@@ -153,47 +153,47 @@ public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerific
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-// Конфигурация EmailVerificationToken
-         modelBuilder.Entity<EmailVerificationToken>(entity =>
-         {
-             entity.ToTable("email_verification_tokens");
-             entity.HasKey(e => e.Id);
+        // Конфигурация EmailVerificationToken
+        modelBuilder.Entity<EmailVerificationToken>(entity =>
+        {
+            entity.ToTable("email_verification_tokens");
+            entity.HasKey(e => e.Id);
 
-             entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(128);
-             entity.Property(e => e.CreatedAt).IsRequired();
-             entity.Property(e => e.ExpiresAt).IsRequired();
-             entity.Property(e => e.UsedByIp).HasMaxLength(45);
+            entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(128);
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.ExpiresAt).IsRequired();
+            entity.Property(e => e.UsedByIp).HasMaxLength(45);
 
-             entity.HasIndex(e => e.TokenHash).IsUnique();
-             entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasIndex(e => e.UserId);
 
-             entity.HasOne(e => e.User)
-                 .WithMany(u => u.EmailVerificationTokens)
-                 .HasForeignKey(e => e.UserId)
-                 .OnDelete(DeleteBehavior.Cascade);
-         });
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.EmailVerificationTokens)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
-         // Конфигурация LoginHistory
-         modelBuilder.Entity<LoginHistory>(entity =>
-         {
-             entity.ToTable("login_history");
-             entity.HasKey(e => e.Id);
+        // Конфигурация LoginHistory
+        modelBuilder.Entity<LoginHistory>(entity =>
+        {
+            entity.ToTable("login_history");
+            entity.HasKey(e => e.Id);
 
-             entity.Property(e => e.IpAddress).IsRequired().HasMaxLength(45);
-             entity.Property(e => e.UserAgent).HasMaxLength(512);
-             entity.Property(e => e.Timestamp).IsRequired();
-             entity.Property(e => e.Success).IsRequired();
-             entity.Property(e => e.FailureReason).HasMaxLength(500);
+            entity.Property(e => e.IpAddress).IsRequired().HasMaxLength(45);
+            entity.Property(e => e.UserAgent).HasMaxLength(512);
+            entity.Property(e => e.Timestamp).IsRequired();
+            entity.Property(e => e.Success).IsRequired();
+            entity.Property(e => e.FailureReason).HasMaxLength(500);
 
-             entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.UserId);
 
-             entity.HasOne(e => e.User)
-                 .WithMany()
-                 .HasForeignKey(e => e.UserId)
-                 .OnDelete(DeleteBehavior.Cascade);
-         });
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
-         // Конфигурация NotificationPreference
+        // Конфигурация NotificationPreference
         modelBuilder.Entity<NotificationPreference>(entity =>
         {
             entity.ToTable("notification_preferences");

@@ -1,13 +1,13 @@
 #pragma warning disable CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
+using GoldPC.AuthService.Services;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Models;
-using GoldPC.AuthService.Services;
-using PagedResultLoginHistory = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.LoginHistoryItem>;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using PagedResultLoginHistory = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.LoginHistoryItem>;
 
 namespace GoldPC.AuthService.Controllers;
 
