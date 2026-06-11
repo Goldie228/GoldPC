@@ -3,9 +3,22 @@ using GoldPC.SharedKernel.Models;
 using GoldPC.AuthService.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace GoldPC.AuthService.Controllers;
+
+/// <summary>
+/// Запрос на верификацию TOTP-кода при входе с обязательной 2FA.
+/// </summary>
+public class TwoFactorLoginVerifyRequest
+{
+    /// <summary>Токен, полученный на первом шаге входа (/api/v1/auth/login) в поле twoFactorToken.</summary>
+    public string TwoFactorToken { get; set; } = string.Empty;
+
+    /// <summary>6-значный TOTP-код из приложения-аутентификатора.</summary>
+    public string Code { get; set; } = string.Empty;
+}
 
 /// <summary>
 /// Контроллер аутентификации
@@ -27,6 +40,7 @@ public class AuthController : ControllerBase
     /// Регистрация нового пользователя
     /// </summary>
     [HttpPost("register")]
+    [EnableRateLimiting("RegisterPolicy")]
     [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
@@ -46,6 +60,7 @@ public class AuthController : ControllerBase
     /// Вход в систему
     /// </summary>
     [HttpPost("login")]
+    [EnableRateLimiting("LoginPolicy")]
     [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -61,6 +76,37 @@ public class AuthController : ControllerBase
         }
 
         _logger.LogInformation("User logged in: {Email}", request.Email);
+        return Ok(ApiResponse<AuthResponse>.Ok(response!));
+    }
+
+    /// <summary>
+    /// Верификация TOTP-кода при обязательной двухфакторной аутентификации (Force2FA).
+    /// Вызывается после /api/v1/auth/login, если ответ содержит requiresTwoFactor: true.
+    /// При успехе возвращает полноценный JWT и refresh-токен.
+    /// </summary>
+    [HttpPost("login/verify-2fa")]
+    [EnableRateLimiting("LoginPolicy")]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> VerifyTwoFactorLogin([FromBody] TwoFactorLoginVerifyRequest request)
+    {
+        if (string.IsNullOrEmpty(request.TwoFactorToken) || string.IsNullOrEmpty(request.Code))
+        {
+            return BadRequest(ApiResponse.Fail("Токен и код двухфакторной аутентификации обязательны."));
+        }
+
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var userAgent = HttpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "unknown";
+        var (response, error) = await _authService.VerifyTwoFactorLoginAsync(
+            request.TwoFactorToken, request.Code, ipAddress, userAgent);
+
+        if (error != null)
+        {
+            _logger.LogWarning("2FA verification failed: {Error}", error);
+            return BadRequest(ApiResponse.Fail(error));
+        }
+
+        _logger.LogInformation("User completed 2FA login: {Email}", response!.User.Email);
         return Ok(ApiResponse<AuthResponse>.Ok(response!));
     }
 
@@ -191,6 +237,7 @@ public class AuthController : ControllerBase
     /// Запрос на сброс пароля (отправляет email со ссылкой)
     /// </summary>
     [HttpPost("forgot-password")]
+    [EnableRateLimiting("PasswordResetPolicy")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
@@ -213,6 +260,7 @@ public class AuthController : ControllerBase
     /// Сброс пароля по токену (из email)
     /// </summary>
     [HttpPost("reset-password")]
+    [EnableRateLimiting("PasswordResetPolicy")]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
