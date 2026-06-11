@@ -60,7 +60,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "agent-browser": "^0.23.4",
-    "cline": "^0.8.2"
+    "cline": "^0.8.2",
+    "opencode-codebase-index": "^0.10.0",
+    "zod": "^3.25.76"
   }
 }
