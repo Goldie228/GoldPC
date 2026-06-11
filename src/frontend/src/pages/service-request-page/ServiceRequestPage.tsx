@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { Button, Input, PhoneInput } from '@/components/ui';
 import { useToast } from '@/hooks/useToast';
 import { useServiceTickets } from '@/hooks/useServiceTickets';
@@ -445,20 +446,75 @@ export function ServiceRequestPage() {
         </p>
       </div>
 
-      {/* Метка шага */}
-      <div className="flex items-center gap-3 mb-6">
-        <span
-          className={`text-xs font-semibold uppercase tracking-[0.08em] px-3 py-1 rounded-full ${
-            currentStep === 1
-              ? 'bg-gold/15 text-gold'
-              : 'bg-surface-elevated text-muted-text'
-          }`}
-        >
-          Шаг {currentStep} из 2
-        </span>
-        <span className="text-sm text-muted-text">
-          {currentStep === 1 ? 'Услуга и описание' : 'Контакты и отправка'}
-        </span>
+      {/* Step Progress Bar */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between relative">
+          {/* Connecting line (background) */}
+          <div className="absolute top-5 left-0 right-0 h-0.5 bg-border mx-[20px]" />
+          {/* Connecting line (active fill) */}
+          <div className="absolute top-5 left-0 right-0 h-0.5 mx-[20px] overflow-hidden">
+            <motion.div
+              className="h-full bg-gold"
+              initial={false}
+              animate={{ width: currentStep === 1 ? '0%' : '100%' }}
+              transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            />
+          </div>
+
+          {/* Step 1 */}
+          <div className="flex flex-col items-center z-10">
+            <motion.div
+              className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-colors duration-300 ${
+                currentStep >= 1
+                  ? 'bg-gold border-gold text-background'
+                  : 'bg-surface-elevated border-border text-muted-text'
+              }`}
+              animate={
+                currentStep === 1
+                  ? { scale: [1, 1.1, 1] }
+                  : { scale: 1 }
+              }
+              transition={{ duration: 0.3 }}
+            >
+              {currentStep > 1 ? (
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : (
+                '1'
+              )}
+            </motion.div>
+            <span className={`text-xs mt-2 font-medium whitespace-nowrap ${
+              currentStep >= 1 ? 'text-gold' : 'text-muted-text'
+            }`}>
+              Услуга
+            </span>
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex flex-col items-center z-10">
+            <motion.div
+              className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-colors duration-300 ${
+                currentStep >= 2
+                  ? 'bg-gold border-gold text-background'
+                  : 'bg-surface-elevated border-border text-muted-text'
+              }`}
+              animate={
+                currentStep === 2
+                  ? { scale: [1, 1.1, 1] }
+                  : { scale: 1 }
+              }
+              transition={{ duration: 0.3 }}
+            >
+              2
+            </motion.div>
+            <span className={`text-xs mt-2 font-medium whitespace-nowrap ${
+              currentStep >= 2 ? 'text-gold' : 'text-muted-text'
+            }`}>
+              Детали
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Блок авторизации — виден сразу, над карточкой */}

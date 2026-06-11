@@ -12,6 +12,7 @@ import { NotificationProvider } from './hooks/useNotifications';
 import { useAuthStore } from './store/authStore';
 import { useWishlistStore } from './store/wishlistStore';
 import { useTokenRefresh } from './hooks/useTokenRefresh';
+import { ScrollToTopOnNavigate } from '@/components/ui/ScrollToTopOnNavigate';
 import './App.css';
 
 // PC Builder — eager import. Lazy imports can fail intermittently due to
@@ -191,6 +192,7 @@ const router = createBrowserRouter([
     element: (
       <>
         <RouteMeta />
+        <ScrollToTopOnNavigate />
         <AuthModalContainer />
         <ModalContainer />
         <MainLayout />

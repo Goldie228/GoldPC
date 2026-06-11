@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Modal } from '@/ui/Modal/Modal';
-import { Button } from '@/ui/Button';
+import { Modal } from '@/components/ui/Modal/Modal';
+import { Button } from '@/components/ui/Button';
 import { useToast } from '@/hooks/useToast';
 import { authService } from '@/api/authService';
 import { Clock, Loader2, Globe, Monitor, CheckCircle2, XCircle } from 'lucide-react';
