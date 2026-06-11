@@ -16,7 +16,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { MiniCart } from './MiniCart';
-import { NotificationCenter } from '@/notification-center/NotificationCenter';
+import { NotificationCenter } from '@/components/notification-center/NotificationCenter';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useComparison } from '@/hooks/useComparison';
@@ -251,7 +251,7 @@ export function Header(): ReactElement {
               className="relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-gold hover:bg-surface-elevated hidden md:flex"
               aria-label="Админ-панель"
             >
-              <Shield size={20} />
+              <Shield size={24} />
             </Link>
           )}
 

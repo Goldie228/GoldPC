@@ -6,6 +6,8 @@
   width: 100%;
   overflow: visible;
   isolation: isolate;
+  /* Отступ снизу чтобы метки min/max не наезжали на следующий элемент */
+  margin-bottom: 20px;
 }
 
 /* Трек (фон) — от края до края, кружки упираются в грани благодаря calc() в JSX */
@@ -41,7 +43,7 @@
   /* Центрируем ползунок относительно его left позиции */
   transform: translate(-50%, -50%);
   cursor: grab;
-  z-index: 99999; /* Всегда поверх всего */
+  z-index: 50; /* Поверх соседних элементов в фильтре */
   transition: transform 150ms ease, z-index 0s;
 }
 
@@ -91,7 +93,7 @@
   visibility: hidden;
   transition: opacity 150ms ease, visibility 150ms ease;
   pointer-events: none;
-  z-index: 99999; /* Тултипы тоже поверх всего */
+  z-index: 50; /* Тултипы поверх ползунков */
 }
 
 .dual-range-thumb:hover .dual-range-thumb-tooltip,
