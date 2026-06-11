@@ -16,14 +16,29 @@ public static class Roles
     public const string Manager = "Manager";
 
     /// <summary>
-    /// Сотрудник. Работа с заказами и товарами.
+    /// Бухгалтер. Финансовые отчёты и аналитика.
     /// </summary>
-    public const string Employee = "Employee";
+    public const string Accountant = "Accountant";
 
     /// <summary>
     /// Клиент (покупатель). Просмотр товаров и управление своими заказами.
     /// </summary>
+    public const string Client = "Client";
+
+    /// <summary>
+    /// Сотрудник. Работа с заказами и товарами. (Синтаксический сахар для Accountant)
+    /// </summary>
+    public const string Employee = "Employee";
+
+    /// <summary>
+    /// Клиент (покупатель). (Синтаксический сахар для Client)
+    /// </summary>
     public const string Customer = "Customer";
+
+    /// <summary>
+    /// Гость (неавторизованный пользователь).
+    /// </summary>
+    public const string Guest = "Guest";
 
     /// <summary>
     /// Мастер. Выполнение ремонтных и сборочных работ.
@@ -32,6 +47,7 @@ public static class Roles
 
     /// <summary>
     /// Возвращает список всех доступных ролей.
+    /// Соответствует enum UserRole из SharedKernel.
     /// </summary>
-    public static readonly string[] AllRoles = { Customer, Manager, Master, Admin, Employee };
+    public static readonly string[] AllRoles = { Client, Manager, Master, Admin, Accountant };
 }

@@ -79,32 +79,9 @@ public class NotificationServiceLoggingDecorator : INotificationService
         await _inner.SendPushNotificationAsync(userId, title, message);
     }
 
-    public async Task SendEmailAsync(string to, string subject, string body)
+    public async Task SendEmailAsync(string recipientEmail, string subject, string body)
     {
-        _logger.LogInformation("Sending email: To={To}, Subject={Subject}", to, subject);
-        await _inner.SendEmailAsync(to, subject, body);
-    }
-
-    private static string MaskPhone(string phone)
-    {
-        if (string.IsNullOrEmpty(phone) || phone.Length < 7)
-        {
-            return phone;
-        }
-
-        return phone[..3] + "****" + phone[^2..];
-    }
-
-    private static string MaskEmail(string email)
-    {
-        if (string.IsNullOrEmpty(email))
-            return email;
-
-        var parts = email.Split('@');
-        if (parts.Length != 2)
-            return email;
-
-        var username = parts[0].Length > 2 ? parts[0][..2] + "****" : parts[0];
-        return username + "@" + parts[1];
+        _logger.LogInformation("Sending email: To={To}, Subject={Subject}", recipientEmail, subject);
+        await _inner.SendEmailAsync(recipientEmail, subject, body);
     }
 }

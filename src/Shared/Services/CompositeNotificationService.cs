@@ -76,9 +76,9 @@ public class CompositeNotificationService : INotificationService
         return Task.CompletedTask;
     }
 
-    public Task SendEmailAsync(string to, string subject, string body)
+    public Task SendEmailAsync(string recipientEmail, string subject, string body)
     {
-        _logger.LogDebug("CompositeNotificationService SendEmailAsync called for {To}", to);
+        _logger.LogDebug("CompositeNotificationService SendEmailAsync called for {To}", recipientEmail);
         return Task.CompletedTask;
     }
 }

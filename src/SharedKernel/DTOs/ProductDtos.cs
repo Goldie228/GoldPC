@@ -116,7 +116,7 @@ public record ProductDetailDto
 
     public DateTime? UpdatedAt { get; init; }
 
-    /// <summary>Gets указывает, была ли категория определена автоматически</summary>
+    /// <summary>Gets a value indicating whether the category was auto-detected.</summary>
     public bool IsCategoryAutoDetected { get; init; }
 }
 
@@ -383,7 +383,7 @@ public record FilterAttributesQueryDto
 
     public Dictionary<string, string>? SpecificationRanges { get; init; }
 
-    /// <summary>Фильтр по наличию на складе. Используется для согласования фасетов с выдачей товаров.</summary>
+    /// <summary>Gets the in-stock filter flag used to align facets with product results.</summary>
     public bool? InStock { get; init; }
 }
 
@@ -525,43 +525,43 @@ public record GenerateNameResponse
 /// </summary>
 public record SpecificationAttributeDto
 {
-    /// <summary>ID атрибута</summary>
+    /// <summary>Gets the attribute identifier.</summary>
     public Guid Id { get; init; }
 
-    /// <summary>Ключ (socket, cores, frequency...)</summary>
+    /// <summary>Gets the attribute key (socket, cores, frequency...).</summary>
     public string Key { get; init; } = string.Empty;
 
-    /// <summary>Отображаемое название ("Сокет", "Количество ядер")</summary>
+    /// <summary>Gets the display name of the attribute ("Socket", "Core Count").</summary>
     public string DisplayName { get; init; } = string.Empty;
 
-    /// <summary>Тип значения: "select" или "range"</summary>
+    /// <summary>Gets the value type: "select" or "range".</summary>
     public string ValueType { get; init; } = "select";
 
-    /// <summary>Может ли быть несколько значений</summary>
+    /// <summary>Gets a value indicating whether the attribute supports multiple values.</summary>
     public bool IsMultiValue { get; init; }
 
-    /// <summary>Единица измерения (МГц, ГБ, мм, Ом...)</summary>
+    /// <summary>Gets the unit of measurement (MHz, GB, mm, Ohm...).</summary>
     public string? Unit { get; init; }
 
-    /// <summary>Группа для группировки</summary>
+    /// <summary>Gets the group name for grouping attributes.</summary>
     public string? GroupName { get; init; }
 
-    /// <summary>Порядок сортировки</summary>
+    /// <summary>Gets the sort order of the attribute.</summary>
     public int SortOrder { get; init; }
 
-    /// <summary>Минимальное значение (для range)</summary>
+    /// <summary>Gets the minimum allowed value for range attributes.</summary>
     public decimal? ValidationMin { get; init; }
 
-    /// <summary>Максимальное значение (для range)</summary>
+    /// <summary>Gets the maximum allowed value for range attributes.</summary>
     public decimal? ValidationMax { get; init; }
 
-    /// <summary>Шаг значения (для range)</summary>
+    /// <summary>Gets the step increment for range attributes.</summary>
     public decimal? ValidationStep { get; init; }
 
-    /// <summary>Обязательное поле</summary>
+    /// <summary>Gets a value indicating whether the attribute is required.</summary>
     public bool IsRequired { get; init; }
 
-    /// <summary>Доступные значения (для select)</summary>
+    /// <summary>Gets the list of available options for select attributes.</summary>
     public List<string> Options { get; init; } = new();
 }
 
@@ -570,13 +570,13 @@ public record SpecificationAttributeDto
 /// </summary>
 public record CategorySpecificationsDto
 {
-    /// <summary>ID категории</summary>
+    /// <summary>Gets the category identifier.</summary>
     public Guid CategoryId { get; init; }
 
-    /// <summary>Название категории</summary>
+    /// <summary>Gets the category name.</summary>
     public string CategoryName { get; init; } = string.Empty;
 
-    /// <summary>Характеристики категории</summary>
+    /// <summary>Gets the list of specification attributes for the category.</summary>
     public List<SpecificationAttributeDto> Attributes { get; init; } = new();
 }
 #pragma warning restore CA1002, CA1056, CA1805, CS1591, SA1402, SA1600, SA1649

@@ -176,7 +176,6 @@ public class ContractChangeNotifier : IContractChangeNotifier
             changeEvent.NewVersion,
             changeEvent.ChangeType);
 
-
     }
 }
 #pragma warning restore S1135, S125
