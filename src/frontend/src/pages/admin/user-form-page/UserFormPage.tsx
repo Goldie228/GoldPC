@@ -204,7 +204,7 @@ export function UserFormPage() {
 
   if (loading) {
     return (
-      <div className="p-8 min-h-screen bg-canvas-dark text-body-text">
+      <div className="pb-8 min-h-screen bg-canvas-dark text-body-text">
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <div className="w-8 h-8 border-2 border-hairline-dark border-t-gold rounded-full animate-spin mb-4"></div>
           <p>Загрузка данных...</p>
@@ -214,7 +214,7 @@ export function UserFormPage() {
   }
 
   return (
-    <div className="p-8 min-h-screen bg-canvas-dark text-body-text">
+    <div className="pb-8 min-h-screen bg-canvas-dark text-body-text">
       <header className="flex justify-between items-start mb-8">
         <div>
           <h1 className="text-2xl font-semibold mb-2 tracking-tight text-body-text">
