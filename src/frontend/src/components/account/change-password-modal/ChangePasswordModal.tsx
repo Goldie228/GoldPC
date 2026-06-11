@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Modal } from '@/ui/Modal/Modal';
-import { Button } from '@/ui/Button';
+import { Modal } from '@/components/ui/Modal/Modal';
+import { Button } from '@/components/ui/Button';
 import { useToast } from '@/hooks/useToast';
 import { authService, getAuthErrorMessage } from '@/api/authService';
 import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
