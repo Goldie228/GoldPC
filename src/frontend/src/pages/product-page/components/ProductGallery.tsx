@@ -73,7 +73,7 @@ export function ProductGallery({ product }: ProductGalleryProps): ReactElement {
     <><div className="flex flex-col gap-4">
       {/* Main Image */}
       <div
-        className="relative aspect-square bg-[#FFFFFF] border border-border rounded-xl overflow-hidden flex items-center justify-center"
+        className="relative aspect-square bg-[#FFFFFF] border border-border rounded-xl overflow-hidden flex items-center justify-center group"
         aria-label="Фото товара"
       >
         {/* Discount Badge */}
@@ -135,11 +135,11 @@ export function ProductGallery({ product }: ProductGalleryProps): ReactElement {
           </motion.div>
         </AnimatePresence>
 
-        {/* Zoom Button */}
+        {/* Zoom Button — появляется при наведении на контейнер */}
         {hasImage && (
           <button
             type="button"
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-border bg-card/90 text-foreground inline-flex items-center justify-center cursor-pointer opacity-0 pointer-events-none transition-all duration-200 z-20 hover:bg-card hover:border-primary/40 hover:text-primary focus-visible:opacity-100 focus-visible:pointer-events-auto"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-border bg-card/90 text-foreground inline-flex items-center justify-center cursor-pointer opacity-0 pointer-events-none transition-all duration-200 z-20 hover:bg-card hover:border-primary/40 hover:text-primary group-hover:opacity-100 group-hover:pointer-events-auto"
             aria-label="Увеличить фото"
             onClick={(e) => {
               e.stopPropagation();
