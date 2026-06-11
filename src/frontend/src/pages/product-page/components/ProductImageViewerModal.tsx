@@ -248,7 +248,7 @@ export function ProductImageViewerModal({
               <img
                 src={active.url}
                 alt={active.alt || productName}
-                className="max-w-full max-h-full object-contain select-none p-4"
+                className="w-full h-full object-contain select-none"
                 style={{
                   transform: imgTransform,
                   transformOrigin: imgOrigin,
