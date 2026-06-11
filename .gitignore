@@ -294,3 +294,12 @@ get-docker.sh
 # AI process docs in root
 /AI_*.md
 /AI_*.mmd
+
+# OpenCode internal files
+.opencode/
+
+# Implementation reports
+.reports/impl-findings/
+
+# App Data (runtime)
+src/backend/GoldPC.Api/App_Data/
