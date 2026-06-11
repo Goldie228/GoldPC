@@ -23,6 +23,7 @@ public class FileService : IFileService
         _logger = logger;
     }
 
+    /// <inheritdoc/>
     public async Task<FileUploadResult> SaveAsync(IFormFile file, string productId)
     {
         // 1. Validate extension
@@ -76,6 +77,7 @@ public class FileService : IFileService
         return new FileUploadResult { Success = true, Image = image };
     }
 
+    /// <inheritdoc/>
     public Task<bool> DeleteAsync(string imageId)
     {
         var index = _images.FindIndex(i => i.Id == imageId);
@@ -93,6 +95,7 @@ public class FileService : IFileService
         return Task.FromResult(true);
     }
 
+    /// <inheritdoc/>
     public Task DeleteAllForProductAsync(string productId)
     {
         var toDelete = _images
@@ -118,6 +121,7 @@ public class FileService : IFileService
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc/>
     public Task<List<ProductImageDto>> GetImagesForProductAsync(string productId)
     {
         var result = _images
@@ -128,6 +132,7 @@ public class FileService : IFileService
         return Task.FromResult(result);
     }
 
+    /// <inheritdoc/>
     public Task<ProductImageDto?> SetPrimaryAsync(string productId, string imageId)
     {
         ProductImageDto? result = null;
@@ -153,6 +158,7 @@ public class FileService : IFileService
         return Task.FromResult(result);
     }
 
+    /// <inheritdoc/>
     public Task<List<ProductImageDto>> ReorderAsync(string productId, List<string> imageIds)
     {
         var updated = new List<ProductImageDto>();
@@ -176,7 +182,6 @@ public class FileService : IFileService
     // ====================================================================
     // Helpers
     // ====================================================================
-
     private void DeleteFileFromDisk(string url)
     {
         var relativePath = url.TrimStart('/');

@@ -6,7 +6,7 @@ namespace GoldPC.Api.Services;
 
 /// <summary>
 /// DelegatingHandler, который копирует JWT Bearer токен из входящего HTTP-запроса
-/// в исходящие запросы к CatalogService.
+/// в исходящие запросы к downstream микросервисам (CatalogService, AuthService и др.).
 /// </summary>
 public class AuthForwardingHandler : DelegatingHandler
 {
