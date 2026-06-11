@@ -1,4 +1,5 @@
 using GoldPC.SharedKernel.DTOs;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace GoldPC.AuthService.Services;
@@ -104,6 +105,13 @@ public interface IAuthService
     /// Отключение двухфакторной аутентификации
     /// </summary>
     Task<(bool Success, string? Error)> DisableTwoFactorAsync(Guid userId, TwoFactorDisableRequest request);
+
+    /// <summary>
+    /// Верификация TOTP-кода при входе с обязательной 2FA (Force2FA).
+    /// После успешной проверки выдаёт полноценный JWT и refresh-токен.
+    /// </summary>
+    Task<(AuthResponse? Response, string? Error)> VerifyTwoFactorLoginAsync(
+        string twoFactorToken, string totpCode, string ipAddress, string userAgent);
 }
 
 /// <summary>
@@ -111,6 +119,9 @@ public interface IAuthService
 /// </summary>
 public class ForgotPasswordRequest
 {
+    [Required(ErrorMessage = "Email обязателен")]
+    [EmailAddress(ErrorMessage = "Некорректный формат email")]
+    [StringLength(255, ErrorMessage = "Email не может превышать 255 символов")]
     [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
 }
@@ -120,7 +131,12 @@ public class ForgotPasswordRequest
 /// </summary>
 public class ResetPasswordRequest
 {
+    [Required(ErrorMessage = "Токен обязателен")]
     public string Token { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Новый пароль обязателен")]
+    [MinLength(8, ErrorMessage = "Пароль должен содержать минимум 8 символов")]
+    [StringLength(128, ErrorMessage = "Пароль не может превышать 128 символов")]
     public string Password { get; set; } = string.Empty;
 }
 
@@ -129,7 +145,12 @@ public class ResetPasswordRequest
 /// </summary>
 public class ChangePasswordRequest
 {
+    [Required(ErrorMessage = "Текущий пароль обязателен")]
     public string CurrentPassword { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Новый пароль обязателен")]
+    [MinLength(8, ErrorMessage = "Пароль должен содержать минимум 8 символов")]
+    [StringLength(128, ErrorMessage = "Пароль не может превышать 128 символов")]
     public string NewPassword { get; set; } = string.Empty;
 }
 
