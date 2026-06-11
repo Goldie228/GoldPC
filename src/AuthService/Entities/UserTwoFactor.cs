@@ -8,7 +8,7 @@ public class UserTwoFactor : BaseEntity
     public string? TOTPSecret { get; set; }
     public bool IsEnabled { get; set; }
     public string? RecoveryCodes { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public new DateTime CreatedAt { get; set; }
 
     public virtual User? User { get; set; }
 }

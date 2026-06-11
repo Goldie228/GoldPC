@@ -1,6 +1,10 @@
 #pragma warning disable CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
+// CA1724: Имя класса AuthService конфликтует с именем пространства имён GoldPC.AuthService.
+// Это осознанный выбор — сервис аутентификации размещён в одноимённом пространстве имён.
+#pragma warning disable CA1724
+
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -27,13 +31,15 @@ public class AuthService : IAuthService
     private readonly ILogger<AuthService> _logger;
     private readonly SmtpEmailService _emailService;
     private readonly ITokenCache _tokenCache;
+    private readonly TwoFactorSettingsService _twoFactorSettings;
     private const int MaxFailedAttempts = 5;
     private const int LockoutMinutes = 15;
-    private const int RefreshTokenExpirationDays = 7;
+    private const int RefreshTokenExpirationDays = 30;
     private const int PasswordResetTokenExpirationHours = 1;
     private const int EmailVerificationTokenExpirationHours = 24;
     private const int TOTPStepSeconds = 30;
     private const int TOTPDigits = 6;
+    private const int TwoFactorLoginTokenExpirationMinutes = 5;
 
     public AuthService(
         AuthDbContext context,
@@ -41,7 +47,8 @@ public class AuthService : IAuthService
         IConfiguration configuration,
         ILogger<AuthService> logger,
         SmtpEmailService emailService,
-        ITokenCache tokenCache)
+        ITokenCache tokenCache,
+        TwoFactorSettingsService twoFactorSettings)
     {
         _context = context;
         _jwtService = jwtService;
@@ -49,6 +56,7 @@ public class AuthService : IAuthService
         _logger = logger;
         _emailService = emailService;
         _tokenCache = tokenCache;
+        _twoFactorSettings = twoFactorSettings;
     }
 
     /// <inheritdoc />
@@ -142,6 +150,41 @@ public class AuthService : IAuthService
             user.FailedLoginAttempts = 0;
             user.LockedUntil = null;
             user.UpdatedAt = DateTime.UtcNow;
+
+            // === Force2FA: если включено, проверяем привилегированные роли ===
+            var isPrivilegedRole = user.Roles.Any(r => r is UserRole.Admin or UserRole.Manager);
+            if (isPrivilegedRole && _twoFactorSettings.IsTwoFactorRequired)
+            {
+                var twoFactorRecord = await _context.UserTwoFactors
+                    .FirstOrDefaultAsync(t => t.UserId == user.Id && t.IsEnabled);
+
+                if (twoFactorRecord == null)
+                {
+                    // 2FA не настроена — отклоняем вход
+                    _logger.LogWarning("Force2FA: user {Email} ({Role}) has no 2FA configured", user.Email, user.Role);
+                    return (null, "Для входа требуется двухфакторная аутентификация. Настройте 2FA в личном кабинете.");
+                }
+
+                // 2FA настроена — выдаём challenge-токен, не выдавая полноценный JWT
+                var tokenBytes = RandomNumberGenerator.GetBytes(32);
+                var plainToken = Convert.ToHexString(tokenBytes).ToLowerInvariant();
+                var tokenHash = ComputeSha256Hash(plainToken);
+
+                await _tokenCache.StoreTokenAsync(
+                    tokenHash,
+                    user.Id,
+                    TimeSpan.FromMinutes(TwoFactorLoginTokenExpirationMinutes));
+
+                _logger.LogInformation("Force2FA: 2FA challenge issued for user {Email}", user.Email);
+
+                return (new AuthResponse
+                {
+                    RequiresTwoFactor = true,
+                    TwoFactorToken = plainToken,
+                    ExpiresIn = TwoFactorLoginTokenExpirationMinutes * 60,
+                    User = MapToUserDto(user)
+                }, null);
+            }
 
             var accessToken = _jwtService.GenerateAccessToken(user);
             var refreshToken = await CreateRefreshTokenAsync(user.Id, ipAddress);
@@ -355,8 +398,7 @@ public class AuthService : IAuthService
                 user.Email,
                 "Восстановление пароля — GoldPC",
                 emailBody,
-                isHtml: true
-            );
+                isHtml: true);
 
             if (!sent)
             {
@@ -800,7 +842,7 @@ public class AuthService : IAuthService
             return (new TwoFactorStatusResponse
             {
                 IsEnabled = true,
-                RecoveryCodes = null, // Recovery codes были показаны при Enable
+                RecoveryCodes = new List<string>(), // Recovery codes были показаны при Enable
                 QRCodeUrl = null
             }, null);
         }
@@ -848,6 +890,88 @@ public class AuthService : IAuthService
         {
             _logger.LogError(ex, "Ошибка при отключении двухфакторной аутентификации для пользователя {UserId}", userId);
             return (false, "Произошла ошибка при отключении двухфакторной аутентификации.");
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<(AuthResponse? Response, string? Error)> VerifyTwoFactorLoginAsync(
+        string twoFactorToken, string totpCode, string ipAddress, string userAgent)
+    {
+        try
+        {
+            var tokenHash = ComputeSha256Hash(twoFactorToken);
+            var userId = await _tokenCache.ValidateTokenAsync(tokenHash);
+
+            if (userId is null)
+            {
+                _logger.LogWarning("Force2FA: challenge token expired or invalid");
+                return (null, "Время для подтверждения двухфакторной аутентификации истекло. Повторите вход.");
+            }
+
+            var user = await _context.Users
+                .Include(u => u.RefreshTokens)
+                .FirstOrDefaultAsync(u => u.Id == userId.Value);
+
+            if (user is null || !user.IsActive)
+            {
+                await _tokenCache.InvalidateTokenAsync(tokenHash);
+                return (null, "Пользователь не найден или деактивирован.");
+            }
+
+            var twoFactor = await _context.UserTwoFactors
+                .FirstOrDefaultAsync(t => t.UserId == userId.Value && t.IsEnabled);
+
+            if (twoFactor is null || string.IsNullOrEmpty(twoFactor.TOTPSecret))
+            {
+                await _tokenCache.InvalidateTokenAsync(tokenHash);
+                return (null, "Двухфакторная аутентификация не настроена. Настройте 2FA в личном кабинете.");
+            }
+
+            if (!VerifyTOTP(twoFactor.TOTPSecret, totpCode))
+            {
+                _logger.LogWarning("Force2FA: invalid TOTP code for user {Email}", user.Email);
+                return (null, "Неверный код двухфакторной аутентификации.");
+            }
+
+            // Успех — инвалидируем challenge-токен
+            await _tokenCache.InvalidateTokenAsync(tokenHash);
+
+            // Сбрасываем счётчик неудачных попыток
+            user.FailedLoginAttempts = 0;
+            user.LockedUntil = null;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            var accessToken = _jwtService.GenerateAccessToken(user);
+            var refreshToken = await CreateRefreshTokenAsync(user.Id, ipAddress);
+
+            // Записываем историю входа с отметкой об успешной 2FA
+            var loginHistory = new LoginHistory
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                Timestamp = DateTime.UtcNow,
+                Success = true,
+                FailureReason = "2FA_VERIFIED"
+            };
+            _context.LoginHistories.Add(loginHistory);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Force2FA: user {Email} completed 2FA verification and logged in", user.Email);
+
+            return (new AuthResponse
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken.Token,
+                ExpiresIn = 900,
+                User = MapToUserDto(user)
+            }, null);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Force2FA: critical error during 2FA verification");
+            return (null, "Произошла ошибка при проверке двухфакторной аутентификации. Попробуйте позже.");
         }
     }
 
@@ -910,8 +1034,7 @@ public class AuthService : IAuthService
                 user.Email,
                 "Подтверждение email — GoldPC",
                 emailBody,
-                isHtml: true
-            );
+                isHtml: true);
 
             if (!sent)
             {

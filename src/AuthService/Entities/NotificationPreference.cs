@@ -10,7 +10,7 @@ public class NotificationPreference : BaseEntity
     public bool TelegramNotifications { get; set; }
     public bool OrderStatusNotifications { get; set; } = true;
     public bool MarketingNotifications { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public new DateTime UpdatedAt { get; set; }
 
     public virtual User? User { get; set; }
 }
