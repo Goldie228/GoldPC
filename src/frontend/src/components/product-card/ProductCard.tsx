@@ -2,35 +2,16 @@ import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, GitCompareArrows, ShoppingCart, Bell, Plus, Minus, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getProductImageUrl } from '../../utils/image';
-import { getDisplayManufacturerName } from '../../utils/manufacturerNameOverrides';
-import type { ProductSummary, Product } from '../../api/types';
-import { BynPrice } from '../ui/BynPrice';
-import { useWishlist } from '../../hooks/useWishlist';
-import { useComparison } from '../../hooks/useComparison';
-import { useCart } from '../../hooks/useCart';
-import { useToast } from '../../hooks/useToast';
-import { catalogApi } from '../../api/catalog';
-
-/**
- * Stock status badge - flat design per design system.
- */
-function StockBadge({ stock }: { stock: number }) {
-  let config;
-  if (stock === 0) {
-    config = { dot: 'bg-price-rise', text: 'text-price-rise', label: 'Нет в наличии' };
-  } else if (stock <= 3) {
-    config = { dot: 'bg-gold', text: 'text-gold', label: 'Мало' };
-  } else {
-    config = { dot: 'bg-price-drop', text: 'text-price-drop', label: 'В наличии' };
-  }
-  return (
-    <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-surface-elevated/80 backdrop-blur-sm ${config.text}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
-      {config.label}
-    </span>
-  );
-}
+import { getProductImageUrl } from '@/utils/image';
+import { getDisplayManufacturerName } from '@/utils/manufacturerNameOverrides';
+import type { ProductSummary, Product } from '@/api/types';
+import { BynPrice } from '@/components/ui/BynPrice';
+import { StockBadge } from '@/components/ui/StockBadge';
+import { useWishlist } from '@/hooks/useWishlist';
+import { useComparison } from '@/hooks/useComparison';
+import { useCart } from '@/hooks/useCart';
+import { useToast } from '@/hooks/useToast';
+import { catalogApi } from '@/api/catalog';
 
 interface ProductCardProps {
   product: ProductSummary;
@@ -57,7 +38,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
   const ratingValue = typeof product.rating === 'number' ? product.rating : product.rating?.average ?? 0;
   const reviewCount = product.reviewCount ?? 0;
 
-  // Load full product to get all images (cached by React Query)
+  // Загружаем полный продукт для получения всех изображений (кэшируется React Query)
   const hasImagesInList = !!product.images && product.images.length > 1;
   const { data: fullProduct } = useQuery({
     queryKey: ['product', product.slug],
@@ -132,9 +113,9 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           hovered ? 'bg-surface-elevated ring-1 ring-gold/20' : ''
         }`}
       >
-        {/* Image - smaller for list view */}
+        {/* Изображение — уменьшенное для 리스트ного вида */}
         <div className={`relative w-[100px] h-[100px] flex-shrink-0 bg-white rounded-lg overflow-hidden ${isOutOfStock ? 'opacity-50' : ''}`}>
-          {/* Watermark text for list view */}
+          {/* Текст водяного знака для 리스트ного вида */}
           {product.shortName && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
               <span
@@ -160,7 +141,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           )}
         </div>
 
-        {/* Info */}
+        {/* Информация */}
         <div className="flex-1 flex flex-col justify-between">
           <div>
             <span className="text-xs text-muted-strong font-medium uppercase tracking-wider truncate">
@@ -197,7 +178,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Действия */}
         <div className="flex flex-col gap-2 self-center">
           {isOutOfStock ? (
             <button className="h-9 px-5 border border-border text-foreground bg-transparent text-xs font-semibold rounded-sm flex items-center justify-center gap-1.5 cursor-not-allowed hover:bg-surface-elevated transition-colors">
@@ -250,9 +231,9 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
         hovered ? 'bg-surface-elevated -translate-y-1 shadow-lg shadow-black/30 ring-1 ring-gold/20' : ''
       }`}
     >
-      {/* Image Zone - WHITE BACKGROUND */}
+      {/* Зона изображения — БЕЛЫЙ ФОН */}
       <div className={`relative aspect-square bg-white overflow-hidden ${isOutOfStock ? 'opacity-50' : ''}`}>
-        {/* Watermark text (shortName) — large, behind */}
+        {/* Текст водяного знака (shortName) — крупный, позади */}
         {product.shortName && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
             <span
@@ -264,7 +245,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           </div>
         )}
 
-        {/* Product Image */}
+        {/* Изображение товара */}
         {images.length > 0 && images[currentImageIndex]?.url ? (
           <img
             src={getProductImageUrl(images[currentImageIndex].url) ?? ''}
@@ -278,7 +259,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           </div>
         )}
 
-        {/* Image Navigation (arrows) */}
+        {/* Навигация по изображениям (стрелки) */}
         {hasMultipleImages && hovered && (
           <>
             <button
@@ -298,7 +279,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           </>
         )}
 
-        {/* Hover Zones for Image Switching */}
+        {/* Зоны наведения для переключения изображений */}
         {hasMultipleImages && (
           <div className="absolute inset-0 flex z-20">
             {images.map((_, i) => (
@@ -311,7 +292,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           </div>
         )}
 
-        {/* Image Indicators */}
+        {/* Индикаторы изображений */}
         {hasMultipleImages && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-1 z-20">
             {images.map((_, i) => (
@@ -325,7 +306,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           </div>
         )}
 
-        {/* Badges */}
+        {/* Бейджи */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-30">
           {hasDiscount && (
             <span className="h-6 px-2.5 bg-surface-elevated/90 text-price-drop text-[11px] font-bold rounded-md flex items-center backdrop-blur-sm shadow-sm">
@@ -339,7 +320,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           )}
         </div>
 
-        {/* Quick Actions - on hover */}
+        {/* Быстрые действия — при наведении */}
         <div className={`absolute top-3 right-3 flex flex-col gap-1.5 transition-all duration-200 z-30 ${
           hovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
         }`}>
@@ -388,13 +369,13 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
           </button>
         </div>
 
-        {/* Stock Status */}
+        {/* Статус наличия */}
         <div className="absolute bottom-3 left-3 z-30">
           <StockBadge stock={product.stock} />
         </div>
       </div>
 
-      {/* Information */}
+      {/* Информация */}
       <div className="pt-3 px-4 pb-3 flex flex-col gap-2 flex-1">
         <span className="product-card__brand text-[11px] text-muted-text font-medium uppercase tracking-wider truncate">
           {getDisplayManufacturerName(product.manufacturer?.name) || product.brand || ''}
@@ -415,7 +396,7 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
         </div>
       </div>
 
-      {/* Price + Button */}
+      {/* Цена + кнопка */}
       <div className="px-4 pb-4">
         <div className="flex items-baseline gap-2 mb-3">
           <BynPrice
