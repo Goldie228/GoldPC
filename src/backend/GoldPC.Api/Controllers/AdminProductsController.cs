@@ -229,4 +229,18 @@ public class AdminProductsController : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>Получить уникальные значения характеристик для категории</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    [HttpGet("specifications/unique-values/{categoryId}")]
+    [Authorize(Policy = Permissions.ProductsView)]
+    [ProducesResponseType(typeof(Dictionary<string, List<string>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<Dictionary<string, List<string>>>> GetUniqueSpecValues(string categoryId)
+    {
+        if (!Guid.TryParse(categoryId, out var guid))
+            return BadRequest(new { error = "Неверный формат ID категории" });
+
+        var result = await _catalogClient.GetUniqueSpecValuesAsync(guid);
+        return Ok(result);
+    }
 }

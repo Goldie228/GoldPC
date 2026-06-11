@@ -562,6 +562,17 @@ public class AdminCatalogController : ControllerBase
             return Ok(new GenerateNameResponse { Name = "Без названия" });
         }
     }
+
+    /// <summary>
+    /// Получить уникальные значения характеристик для категории
+    /// </summary>
+    [HttpGet("specifications/unique-values/{categoryId:guid}")]
+    [ProducesResponseType(typeof(Dictionary<string, List<string>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<Dictionary<string, List<string>>>> GetUniqueValues(Guid categoryId)
+    {
+        var result = await _catalogService.GetUniqueSpecValuesAsync(categoryId);
+        return Ok(result);
+    }
 }
 
 /// <summary>

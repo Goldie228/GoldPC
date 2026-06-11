@@ -156,4 +156,4 @@ app.MapControllers();
 // Map SignalR hubs
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-app.Run();
+await app.RunAsync();

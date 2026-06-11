@@ -367,6 +367,27 @@ public class CatalogServiceClient : ICatalogServiceClient
         }
     }
 
+    public async Task<Dictionary<string, List<string>>> GetUniqueSpecValuesAsync(Guid categoryId)
+    {
+        try
+        {
+            _logger.LogDebug("GetUniqueSpecValuesAsync: {CategoryId}", categoryId);
+
+            var response = await _http.GetAsync(new Uri($"api/v1/admin/specifications/unique-values/{categoryId}", UriKind.Relative));
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return new Dictionary<string, List<string>>();
+
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<Dictionary<string, List<string>>>()
+                ?? new Dictionary<string, List<string>>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error calling CatalogService GetUniqueSpecValues {CategoryId}", categoryId);
+            return new Dictionary<string, List<string>>();
+        }
+    }
+
     // ====================================================================
     // Внутренние DTO-обёртки (ответ CatalogService обёрнут в { "data": [...] })
     // ====================================================================
