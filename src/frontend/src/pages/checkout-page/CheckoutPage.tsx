@@ -358,7 +358,7 @@ getAddresses()
         <h1 className="font-sans text-[clamp(1.5rem,4vw,2rem)] font-semibold tracking-tight text-foreground mb-2">Оформление заказа</h1>
 
         {/* Steps Indicator */}
-        <nav className="flex items-center gap-0 mb-8 p-3.5 px-4.5 bg-card border border-border rounded-lg shadow">
+        <nav className="flex flex-wrap items-center gap-0 mb-8 p-3.5 px-4.5 bg-card border border-border rounded-lg shadow">
           {[
             { id: 'delivery', label: 'Доставка', num: 1 },
             { id: 'contacts', label: 'Контакты', num: 2 },
@@ -392,13 +392,13 @@ getAddresses()
           })}
         </nav>
 
-        <div className="grid grid-cols-[1fr_400px] gap-8 items-start pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_400px] gap-8 items-start pb-8">
           <div className="flex flex-col gap-6">
 
             {/* Step 1: Delivery */}
             {currentStep === 'delivery' && (
               <div className="bg-card border border-border rounded-xl p-6 shadow">
-                <h2 className="text-[0.95rem] font-semibold text-foreground mb-5 pb-3.5 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Спосо доставки</h2>
+                <h2 className="text-[0.95rem] font-semibold text-foreground mb-5 pb-3.5 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Способ доставки</h2>
                 <div className="flex flex-col gap-3">
                   <label className={`flex items-center gap-4 p-4 bg-elevated border rounded-lg cursor-pointer transition-all
                     ${deliveryData.method === 'Delivery' ? 'border-accent bg-border-muted shadow-sm shadow-accent/20' : 'border-border hover:border-border-muted'}
@@ -614,7 +614,7 @@ getAddresses()
             {/* Step 3: Payment */}
             {currentStep === 'payment' && (
               <div className="bg-card border border-border rounded-xl p-6 shadow">
-                <h2 className="text-[0.95rem] font-semibold text-foreground mb-5 pb-3.5 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Спосо оплаты</h2>
+                <h2 className="text-[0.95rem] font-semibold text-foreground mb-5 pb-3.5 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Способ оплаты</h2>
                 <div className="flex flex-col gap-3">
                   <label className={`flex items-center gap-4 p-4 bg-elevated border rounded-lg cursor-pointer transition-all
                     ${paymentMethod === 'CardOnline' ? 'border-accent bg-border-muted shadow-[0_0_0_1px_accent]' : 'border-border hover:border-border-muted hover:bg-border-muted'}
