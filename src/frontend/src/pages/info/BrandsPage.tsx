@@ -11,6 +11,7 @@ import { getProductImageUrl, hasValidProductImage } from '@/utils/image';
 
 type Brand = {
   name: string;
+  displayName?: string;
   description: string;
   icon: React.ComponentType<{ size?: number }>;
   category: string;
@@ -56,7 +57,7 @@ const brands: Brand[] = [
   { name: 'Razer', description: 'Игровые мыши, клавиатуры, наушники и коврики', icon: Mouse, category: 'Периферия' },
   { name: 'HyperX', description: 'Игровые гарнитуры, клавиатуры и оперативная память', icon: Headphones, category: 'Периферия' },
   // Cooling & PSU
-  { name: 'BE QUIET!', description: 'Блоки питания, корпуса и системы охлаждения', icon: CircuitBoard, category: 'Охлаждение и БП' },
+  { name: 'BE QUIET!', displayName: 'be quiet!', description: 'Блоки питания, корпуса и системы охлаждения', icon: CircuitBoard, category: 'Охлаждение и БП' },
   { name: 'DeepCool', description: 'Системы жидкостного и воздушного охлаждения, корпусные вентиляторы', icon: CircuitBoard, category: 'Охлаждение и БП' },
   { name: 'Corsair', description: 'Блоки питания, корпуса, оперативная память и периферия', icon: CircuitBoard, category: 'Комплектующие' },
   // Monitors
@@ -81,8 +82,8 @@ const brands: Brand[] = [
 // Принудительный UUID производителя для брендов, у которых автопарсинг
 // разъехался с canonical-именем (например, be quiet! → Be).
 const manufacturerIdOverrides: Record<string, string> = {
-  // BE QUIET! → UUID производителя "be" (авто-парсер создал именно такую запись)
-  'BE QUIET!': 'a7265f70-2dd6-49a1-a9e4-aa94095eb463',
+  // BE QUIET! → UUID производителя "be quiet!" (авто-парсер создал несколько записей)
+  'BE QUIET!': 'a7265f70-2dd6-49a1-a9e4-aa94095eb463,6c84d8d5-ee2e-440a-aab6-5d447dccf60d',
 };
 
 // Заглушки-изображения для брендов, у которых нет товаров в каталоге
@@ -126,7 +127,7 @@ export function BrandsPage(): ReactElement {
             pageSize: 1,
           };
           // Не фильтруем по категории — ищем самый дорогой товар бренда в принципе
-          if (manId) params.manufacturerIds = [manId];
+          if (manId) params.manufacturerIds = manId.includes(',') ? manId.split(',') : [manId];
           try {
             const result = await catalogApi.getProducts(params);
             return result.data?.[0] ?? null;
@@ -143,7 +144,7 @@ export function BrandsPage(): ReactElement {
   const brandResults = useQueries({ queries: brandProductQueries });
 
   return (
-    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
+    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8 pb-12">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
         <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
@@ -190,7 +191,7 @@ export function BrandsPage(): ReactElement {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <h3 className="text-lg font-semibold text-body-text">{brand.name}</h3>
+                    <h3 className="text-lg font-semibold text-body-text">{brand.displayName ?? brand.name}</h3>
                     <span className="text-[10px] uppercase tracking-wider text-muted-text bg-surface-elevated px-2 py-0.5 rounded shrink-0">
                       {brand.category}
                     </span>

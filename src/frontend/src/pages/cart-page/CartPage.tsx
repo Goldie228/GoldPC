@@ -124,7 +124,7 @@ export function CartPage(): ReactElement {
   }
 
   return (
-    <div className="w-full max-w-[var(--layout-page-wide)] mx-auto px-[var(--layout-page-pad-x)] py-5 min-h-[calc(100vh-200px)] bg-background" role="main" aria-label="Корзина GoldPC">
+    <div className="w-full max-w-[var(--layout-page-wide)] mx-auto px-[var(--layout-page-pad-x)] pt-5 pb-12 min-h-[calc(100vh-200px)] bg-background" role="main" aria-label="Корзина GoldPC">
       {/* Header */}
       <header className="mb-4">
         <Breadcrumbs

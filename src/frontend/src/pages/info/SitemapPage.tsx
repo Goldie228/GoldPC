@@ -74,7 +74,7 @@ const categories: SitemapCategory[] = [
 
 export function SitemapPage(): ReactElement {
   return (
-    <div className="max-w-[900px] mx-auto px-4 md:px-8 pt-8">
+    <div className="max-w-[900px] mx-auto px-4 md:px-8 pt-8 pb-12">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
         <Link to="/" className="hover:text-gold transition-colors">Главная</Link>

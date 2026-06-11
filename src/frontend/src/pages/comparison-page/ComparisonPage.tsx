@@ -8,6 +8,7 @@ import { useToastStore } from '@/store/toastStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import type { Product, ProductSpecifications, ProductCategory, ProductImage } from '@/api/types';
 import { Icon } from '@/components/ui/Icon/Icon';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { ApiErrorBanner } from '@/components/ui/ApiErrorBanner';
 import { EmptyState } from '@/components/catalog/EmptyState';
 import { formatCountRu, RU_FORMS } from '@/utils/pluralizeRu';
@@ -252,7 +253,7 @@ export function ComparisonPage(): ReactElement {
 
   if (items.length === 0 && !loading) {
     return (
-      <div className="min-h-screen bg-canvas-dark">
+      <div className="min-h-screen bg-canvas-dark pb-12 pt-6">
         <div className="max-w-[1440px] mx-auto px-4 md:px-8">
           {/* Хлебные крошки */}
           <nav className="flex items-center gap-2 text-xs text-muted-text mb-6" aria-label="Breadcrumb">
@@ -282,7 +283,7 @@ export function ComparisonPage(): ReactElement {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-canvas-dark">
+      <div className="min-h-screen bg-canvas-dark pb-12 pt-6">
         <div className="max-w-[1440px] mx-auto px-4 md:px-8">
           {/* Хлебные крошки */}
           <nav className="flex items-center gap-2 text-xs text-muted-text mb-6" aria-label="Breadcrumb">
@@ -313,7 +314,7 @@ export function ComparisonPage(): ReactElement {
   // ============================================================
 
   return (
-    <div className="min-h-screen bg-canvas-dark">
+    <div className="min-h-screen bg-canvas-dark pb-12 pt-6">
       <div className="max-w-[1440px] mx-auto px-4 md:px-8 py-8">
         {/* Хлебные крошки */}
         <nav className="flex items-center gap-2 text-xs text-muted-text mb-6" aria-label="Breadcrumb">
@@ -388,11 +389,73 @@ export function ComparisonPage(): ReactElement {
           )}
         </header>
 
-        {/* Состояние загрузки */}
+        {/* Состояние загрузки — skeleton таблицы */}
         {loading ? (
-          <div className="flex flex-col items-center gap-4 py-20 text-muted-text">
-            <Icon name="loader" size="xl" animated color="gold" />
-            <span className="text-sm">Загружаем характеристики...</span>
+          <div className="bg-surface-card border border-hairline-dark rounded-xl overflow-hidden">
+            <div className="overflow-x-auto scrollbar-thin">
+              <table className="w-full min-w-[860px] border-separate border-spacing-0">
+                {/* ----- Строка заголовков товаров (skeleton) ----- */}
+                <thead>
+                  <tr>
+                    {/* Закреплённый заголовок колонки характеристик */}
+                    <th className="sticky left-0 z-15 w-[220px] min-w-[200px] px-4 py-4 text-left bg-surface-card border-b border-r border-hairline-dark">
+                      <Skeleton width={120} height={14} borderRadius="sm" />
+                    </th>
+
+                    {/* 4 skeleton карточки товаров */}
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <th
+                        key={i}
+                        className="sticky top-0 z-5 min-w-[280px] px-5 py-4 border-b border-l border-hairline-dark bg-surface-elevated"
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          {/* Изображение */}
+                          <Skeleton width={120} height={120} borderRadius="lg" className="mt-4" />
+                          {/* Название */}
+                          <Skeleton width={160} height={14} borderRadius="sm" />
+                          <Skeleton width={110} height={14} borderRadius="sm" />
+                          {/* Цена */}
+                          <Skeleton width={100} height={22} borderRadius="sm" />
+                          {/* Бейдж */}
+                          <Skeleton width={80} height={20} borderRadius="full" />
+                          {/* Кнопки */}
+                          <div className="flex items-center gap-1.5">
+                            <Skeleton width={32} height={32} borderRadius="lg" />
+                            <Skeleton width={110} height={32} borderRadius="lg" />
+                          </div>
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+
+                {/* ----- Строки характеристик (skeleton) ----- */}
+                <tbody>
+                  {Array.from({ length: 6 }).map((_, rowIdx) => (
+                    <tr key={rowIdx} className="transition-colors">
+                      {/* Label */}
+                      <td className="sticky left-0 z-10 px-4 py-3 bg-surface-card border-b border-r border-hairline-dark">
+                        <Skeleton width={rowIdx === 0 ? 110 : rowIdx === 1 ? 70 : rowIdx === 2 ? 80 : 100} height={14} borderRadius="sm" />
+                      </td>
+                      {/* Значения для 4 товаров */}
+                      {Array.from({ length: 4 }).map((_, colIdx) => (
+                        <td
+                          key={colIdx}
+                          className="px-4 py-3 border-b border-l border-hairline-dark text-center"
+                        >
+                          <Skeleton
+                            width={rowIdx === 1 ? 50 : colIdx % 2 === 0 ? 80 : 65}
+                            height={14}
+                            borderRadius="sm"
+                            className="mx-auto"
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : visibleProducts.length === 0 ? (
           /* Пустое состояние для выбранной категории */

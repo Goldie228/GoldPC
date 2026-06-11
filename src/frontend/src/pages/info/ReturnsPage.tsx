@@ -60,7 +60,7 @@ function Clock({ size, className }: { size?: number; className?: string }) {
 
 export function ReturnsPage(): ReactElement {
   return (
-    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
+    <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8 pb-12">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-text mb-8">
         <Link to="/" className="hover:text-gold transition-colors">Главная</Link>
@@ -135,21 +135,31 @@ export function ReturnsPage(): ReactElement {
         </section>
 
 {/* Help links */}
-        <section className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Link
-            to="/faq"
-            className="inline-flex items-center gap-2 px-5 py-3 bg-surface-card border border-hairline-dark rounded-lg text-sm text-body-text hover:text-gold hover:border-gold/30 transition-colors"
-          >
-            Частые вопросы
-            <ArrowRight size={16} />
-          </Link>
-          <Link
-            to="/contacts"
-            className="inline-flex items-center gap-2 px-5 py-3 bg-surface-card border border-hairline-dark rounded-lg text-sm text-body-text hover:text-gold hover:border-gold/30 transition-colors"
-          >
-            Связаться с поддержкой
-            <ArrowRight size={16} />
-          </Link>
+        <section className="mt-16">
+          <div className="bg-surface-card rounded-xl border border-hairline-dark p-8 md:p-10 text-center">
+            <h2 className="text-xl md:text-2xl font-semibold text-body-text mb-3">
+              Остались вопросы?
+            </h2>
+            <p className="text-muted-text text-sm mb-6 max-w-[400px] mx-auto">
+              Не нашли ответ? Мы поможем разобраться с возвратом или обменом товара.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link
+                to="/faq"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gold text-black font-semibold text-sm rounded-lg hover:bg-gold-active transition-colors"
+              >
+                Частые вопросы
+                <ArrowRight size={16} />
+              </Link>
+              <Link
+                to="/contacts"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-surface-elevated border border-hairline-dark text-body-text text-sm font-medium rounded-lg hover:border-gold/30 hover:text-gold transition-colors"
+              >
+                Связаться с поддержкой
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
         </section>
       </div>
     );
