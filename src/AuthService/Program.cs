@@ -19,6 +19,20 @@ using GoldPC.AuthService.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// === SECURITY: JWT SecretKey must come from environment variables in Production ===
+// Environment variables override appsettings.json via the pattern: Jwt__SecretKey
+// In Production, fail fast if the secret is a hardcoded/development value.
+if (builder.Environment.IsProduction())
+{
+    var jwtKey = builder.Configuration["Jwt:SecretKey"];
+    if (string.IsNullOrEmpty(jwtKey) || jwtKey.Contains("Dev", StringComparison.OrdinalIgnoreCase) || jwtKey.Contains("development_secret_key", StringComparison.OrdinalIgnoreCase))
+    {
+        throw new InvalidOperationException(
+            "CRITICAL SECURITY: Jwt:SecretKey is not configured via environment variable in Production. " +
+            "Set the Jwt__SecretKey environment variable (or use Docker secrets).");
+    }
+}
+
 // Настройка Serilog с разделением форматов для Development/Production
 var loggerConfiguration = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -55,6 +69,11 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<SmtpEmailService>();
 builder.Services.AddSingleton<ITokenCache, RedisTokenCache>();
+
+// TwoFactorSettings — синглтон, инициализируется из appsettings.json
+var twoFactorSettings = new TwoFactorSettingsService();
+twoFactorSettings.SetTwoFactorRequired(builder.Configuration.GetValue<bool>("Force2FA:Enabled"));
+builder.Services.AddSingleton(twoFactorSettings);
 
 // Фоновый сервис очистки просроченных refresh-токенов
 builder.Services.AddHostedService<RefreshTokenCleanupWorker>();
@@ -145,12 +164,10 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    })
-    .AddFluentValidation(fv =>
-    {
-        fv.RegisterValidatorsFromAssemblyContaining<RegisterRequestValidator>();
-        fv.DisableDataAnnotationsValidation = false; // Сохраняем DataAnnotations как fallback
     });
+
+// FluentValidation автоматическая валидация моделей
+builder.Services.AddFluentValidationAutoValidation();
 
 // Регистрация валидаторов
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
@@ -191,14 +208,17 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// CORS
+// CORS — разрешаем только конкретные origins (не AllowAnyOrigin в продакшне!)
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        var frontendOrigins = builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>()
+            ?? new[] { builder.Configuration["Frontend:BaseUrl"] ?? "http://localhost:5173" };
+        policy.WithOrigins(frontendOrigins)
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 

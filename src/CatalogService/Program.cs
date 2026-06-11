@@ -137,12 +137,14 @@ builder.Services.AddMessaging(builder.Configuration, x =>
     x.AddConsumer<OrderPlacedConsumer>();
 });
 
-// Настройка CORS
+// Настройка CORS — не AllowAnyOrigin в продакшне, читаем из конфигурации
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        var allowedOrigins = builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>()
+            ?? new[] { "http://localhost:5173", "http://localhost:3000" };
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
