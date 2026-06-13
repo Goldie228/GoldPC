@@ -26,7 +26,7 @@ export function StatCard({
     variant === 'callout' ? 'text-gold' : 'text-foreground';
 
   return (
-    <div className="bg-card rounded-xl border border-border p-4">
+    <div className="bg-surface-card rounded-xl border border-hairline-dark p-4">
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
           <div

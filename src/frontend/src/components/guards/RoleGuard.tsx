@@ -7,6 +7,7 @@
  */
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/store/authStore';
 import type { User } from '@/api/types';
 
 type UserRole = User['role'];
@@ -23,6 +24,7 @@ export function RoleGuard({
   showForbidden = true 
 }: RoleGuardProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { currentRole } = useAuthStore();
 
   // Пока загружается состояние авторизации
   if (isLoading) {
@@ -40,7 +42,7 @@ export function RoleGuard({
   }
 
   // Если пользователь есть, но роль не соответствует
-  if (user && !allowedRoles.includes(user.role)) {
+  if (user && currentRole && !allowedRoles.includes(currentRole as UserRole)) {
     if (showForbidden) {
       return (
         <div className="forbidden-container">
@@ -53,7 +55,7 @@ export function RoleGuard({
             <p className="forbidden-details">
               Требуемая роль: {allowedRoles.join(' или ')}
               <br />
-              Ваша роль: {user.role}
+              Ваша роль: {currentRole}
             </p>
             <a href="/" className="forbidden-link">
               Вернуться на главную
