@@ -1,163 +1,195 @@
 /**
  * Manager Dashboard Page
- * Главная панель менеджера
+ * Главная панель менеджера — статистика, товары с низким остатком,
+ * ожидающие заказы.
+ *
+ * Использует целевые запросы вместо bulk-загрузки 1000+ элементов.
  */
 
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useManager } from '@/hooks/useManager';
+import { useQuery } from '@tanstack/react-query';
+import {
+  ShoppingCart,
+  Clock,
+  AlertTriangle,
+  DollarSign,
+  ArrowRight,
+  AlertCircle,
+} from 'lucide-react';
+import { managerApi } from '@/api/manager';
+import { StatCard } from '@/components/ui/StatCard';
+import { Skeleton } from '@/components/ui/Skeleton/Skeleton';
+import { formatPrice } from '@/utils/format';
 
-// Dashboard Widget Interface
-interface DashboardWidget {
-  id: string;
-  title: string;
-  value: string | number;
-  change?: string;
-  icon: string;
-  trend?: 'up' | 'down' | 'neutral';
-  color: 'blue' | 'green' | 'yellow' | 'red' | 'purple';
-  link?: string;
+/* ─── Скелетон загрузки ─── */
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <Skeleton width={280} height={32} className="mb-2" />
+        <Skeleton width={400} height={18} />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} height={100} borderRadius="lg" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Skeleton height={240} borderRadius="lg" />
+        <Skeleton height={240} borderRadius="lg" />
+      </div>
+    </div>
+  );
 }
 
-interface LowStockItem {
-  id: string;
-  name: string;
-  sku: string;
-  stock: number;
-  threshold: number;
-}
-
-interface PendingTicket {
-  id: string;
-  customer: string;
-  subject: string;
-  createdAt: string;
-  priority: 'low' | 'medium' | 'high';
-}
-
-
-
-
-const PRIORITY_LABELS: Record<string, string> = {
-  low: 'Низкий',
-  medium: 'Средний',
-  high: 'Высокий'
-};
-
-const PRIORITY_CLASSES: Record<string, string> = {
-  low: 'priority-low',
-  medium: 'priority-medium',
-  high: 'priority-high'
-};
+/* ─── Основной компонент ─── */
 
 export function ManagerDashboard() {
-  const { getDashboardData } = useManager();
-  const [widgets, setWidgets] = useState<DashboardWidget[]>([]);
-  const [lowStock, setLowStock] = useState<LowStockItem[]>([]);
-  const [pendingTickets, setPendingTickets] = useState<PendingTicket[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Целевой запрос: заказы за сегодня (вместо загрузки всех 1000)
+  const { data: todayOrders, isLoading: loadingToday, error: errorToday } = useQuery({
+    queryKey: ['manager', 'dashboard', 'today-orders'],
+    queryFn: () => managerApi.getTodayOrders(),
+  });
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      setIsLoading(true);
-      try {
-        const data = await getDashboardData();
-        if (data != null) {
-          setWidgets(data.widgets);
-          setLowStock(data.lowStock);
-          setPendingTickets(data.pendingTickets);
-        }
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Целевой запрос: ожидающие заказы (вместо загрузки всех 1000)
+  const { data: pendingOrders, isLoading: loadingPending, error: errorPending } = useQuery({
+    queryKey: ['manager', 'dashboard', 'pending-orders'],
+    queryFn: () => managerApi.getPendingOrders(10),
+  });
 
-    void loadDashboardData();
-  }, []);
+  // Целевой запрос: товары с низким остатком (вместо загрузки всех 1000 товаров)
+  const { data: lowStockProducts, isLoading: loadingLowStock, error: errorLowStock } = useQuery({
+    queryKey: ['manager', 'dashboard', 'low-stock'],
+    queryFn: () => managerApi.getLowStockProducts(8),
+  });
+
+  // Целевой запрос: выручка за месяц (вместо загрузки всех 1000 заказов)
+  const { data: monthlyRevenue, isLoading: loadingRevenue, error: errorRevenue } = useQuery({
+    queryKey: ['manager', 'dashboard', 'monthly-revenue'],
+    queryFn: () => managerApi.getMonthlyRevenue(),
+  });
+
+  const isLoading = loadingToday || loadingPending || loadingLowStock || loadingRevenue;
+  const hasError = errorToday || errorPending || errorLowStock || errorRevenue;
 
   if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (hasError) {
     return (
-      <div className="staff-page manager-dashboard">
-        <div className="manager-dashboard__loading">
-          <div className="loading-spinner" />
-          <p>Загрузка данных панели...</p>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Панель менеджера</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Обзор ключевых показателей и актуальных задач
+          </p>
+        </div>
+        <div className="bg-surface-card border border-hairline-dark rounded-lg p-8 text-center">
+          <AlertCircle size={32} className="mx-auto text-price-rise mb-3" />
+          <p className="text-price-rise font-medium">Ошибка загрузки данных панели</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            Попробуйте обновить страницу
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 text-sm font-medium text-foreground bg-surface-card border border-hairline-dark rounded-lg hover:bg-surface-elevated transition-colors"
+          >
+            Обновить
+          </button>
         </div>
       </div>
     );
   }
 
+  // Значения для карточек статистики
+  const todayCount = todayOrders?.length ?? 0;
+  const pendingCount = pendingOrders?.length ?? 0;
+  const lowStockCount = lowStockProducts?.length ?? 0;
+  const revenue = monthlyRevenue?.revenue ?? 0;
+
   return (
-    <div className="staff-page manager-dashboard">
-      <header className="staff-page__header manager-dashboard__header">
-        <div className="manager-dashboard__title-section">
-          <h1 className="staff-page__title manager-dashboard__title">Панель менеджера</h1>
-          <p className="staff-page__subtitle manager-dashboard__subtitle">
-            Обзор ключевых показателей и актуальных задач
-          </p>
-        </div>
-      </header>
-
-      {/* Widget Grid */}
-      <div className="dashboard-widgets">
-        {widgets.map(widget => (
-          <div
-            key={widget.id}
-            className={`dashboard-widget dashboard-widget--${widget.color}`}
-          >
-            <div className="dashboard-widget__content">
-              <div className="dashboard-widget__icon">{widget.icon}</div>
-              <div className="dashboard-widget__info">
-                <div className="dashboard-widget__title">{widget.title}</div>
-                <div className="dashboard-widget__value">{widget.value}</div>
-                {widget.change && (
-                  <div className={`dashboard-widget__change dashboard-widget__change--${widget.trend}`}>
-                    {widget.change}
-                  </div>
-                )}
-              </div>
-            </div>
-            {widget.link && (
-              <Link to={widget.link} className="dashboard-widget__link">
-                Подробнее →
-              </Link>
-            )}
-          </div>
-        ))}
+    <div className="space-y-6">
+      {/* Заголовок */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Панель менеджера</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Обзор ключевых показателей и актуальных задач
+        </p>
       </div>
 
-      {/* Dashboard Content Grid */}
-      <div className="dashboard-content-grid">
-        {/* Low Stock Alerts */}
-        <div className="dashboard-panel">
-          <div className="dashboard-panel__header">
-            <h3 className="dashboard-panel__title">⚠️ Товары с низким остатком</h3>
-            <Link to="/manager/inventory" className="dashboard-panel__action">
-              Все товары →
+      {/* Карточки статистики */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div aria-label="Заказы сегодня">
+          <StatCard
+            label="Заказы сегодня"
+            value={todayCount}
+            icon={ShoppingCart}
+          />
+        </div>
+        <div aria-label="Ожидают обработки">
+          <StatCard
+            label="Ожидают обработки"
+            value={pendingCount}
+            icon={Clock}
+            variant={pendingCount > 0 ? 'callout' : 'default'}
+          />
+        </div>
+        <div aria-label="Товары с низким остатком">
+          <StatCard
+            label="Низкий остаток"
+            value={lowStockCount}
+            icon={AlertTriangle}
+            variant={lowStockCount > 0 ? 'callout' : 'default'}
+          />
+        </div>
+        <div aria-label="Выручка за месяц">
+          <StatCard
+            label="Выручка за месяц"
+            value={formatPrice(revenue)}
+            icon={DollarSign}
+          />
+        </div>
+      </div>
+
+      {/* Нижняя секция: два блока */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Товары с низким остатком */}
+        <div className="bg-surface-card border border-hairline-dark rounded-lg">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-hairline-dark">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <AlertTriangle size={16} className="text-gold" />
+              Товары с низким остатком
+            </h3>
+            <Link
+              to="/manager/inventory"
+              className="text-xs text-gold hover:text-gold-active transition-colors flex items-center gap-1"
+            >
+              Все товары
+              <ArrowRight size={12} />
             </Link>
           </div>
-          <div className="dashboard-panel__content">
-            {lowStock.length === 0 ? (
-              <div className="dashboard-panel__empty">
+          <div className="p-5">
+            {lowStockProducts == null || lowStockProducts.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
                 Все товары в достаточном количестве
-              </div>
+              </p>
             ) : (
-              <div className="low-stock-list">
-                {lowStock.map(item => (
-                  <div key={item.id} className="low-stock-item">
-                    <div className="low-stock-item__info">
-                      <div className="low-stock-item__name">{item.name}</div>
-                      <div className="low-stock-item__sku">{item.sku}</div>
+              <div className="space-y-2">
+                {lowStockProducts.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between py-2 border-b border-hairline-dark last:border-0"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm text-foreground truncate">
+                        {p.name}
+                      </div>
                     </div>
-                    <div className="low-stock-item__stock">
-                      <span className="low-stock-item__stock-value low-stock-item__stock-value--critical">
-                        {item.stock} шт.
-                      </span>
-                      <span className="low-stock-item__threshold">
-                        (мин. {item.threshold})
-                      </span>
-                    </div>
+                    <span className="text-sm font-medium text-gold ml-4 shrink-0">
+                      {p.stock} шт.
+                    </span>
                   </div>
                 ))}
               </div>
@@ -165,73 +197,56 @@ export function ManagerDashboard() {
           </div>
         </div>
 
-        {/* Pending Support Tickets */}
-        <div className="dashboard-panel">
-          <div className="dashboard-panel__header">
-            <h3 className="dashboard-panel__title">🎫 Активные запросы в поддержку</h3>
-            <Link to="/master/tickets" className="dashboard-panel__action">
-              Все запросы →
+        {/* Ожидающие заказы */}
+        <div className="bg-surface-card border border-hairline-dark rounded-lg">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-hairline-dark">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Clock size={16} className="text-gold" />
+              Ожидающие заказы
+            </h3>
+            <Link
+              to="/manager/orders"
+              className="text-xs text-gold hover:text-gold-active transition-colors flex items-center gap-1"
+            >
+              Все заказы
+              <ArrowRight size={12} />
             </Link>
           </div>
-          <div className="dashboard-panel__content">
-            {pendingTickets.length === 0 ? (
-              <div className="dashboard-panel__empty">
-                Нет ожидающих запросов
-              </div>
+          <div className="p-5">
+            {pendingOrders == null || pendingOrders.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Нет ожидающих заказов
+              </p>
             ) : (
-              <div className="tickets-list">
-                {pendingTickets.map(ticket => (
-                  <div key={ticket.id} className="ticket-list-item">
-                    <div className="ticket-list-item__info">
-                      <div className="ticket-list-item__id">{ticket.id}</div>
-                      <div className="ticket-list-item__subject">{ticket.subject}</div>
-                      <div className="ticket-list-item__customer">{ticket.customer}</div>
+              <div className="space-y-2">
+                {pendingOrders.map((o) => (
+                  <Link
+                    key={o.id}
+                    to={`/manager/orders/${o.id}`}
+                    className="flex items-center justify-between py-2 border-b border-hairline-dark last:border-0 hover:bg-surface-elevated rounded px-2 -mx-2 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm text-foreground font-medium">
+                        #{o.id}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {o.customerName ?? 'Клиент'}
+                      </div>
                     </div>
-                    <div className="ticket-list-item__meta">
-                      <span className={`priority-badge ${PRIORITY_CLASSES[ticket.priority]}`}>
-                        {PRIORITY_LABELS[ticket.priority]}
-                      </span>
-                      <span className="ticket-list-item__date">{ticket.createdAt}</span>
+                    <div className="text-right ml-4 shrink-0">
+                      <div className="text-sm font-medium text-foreground">
+                        {formatPrice(o.total ?? 0)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {o.createdAt
+                          ? new Date(o.createdAt).toLocaleDateString('ru-BY')
+                          : '--'}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="dashboard-panel">
-        <div className="dashboard-panel__header">
-          <h3 className="dashboard-panel__title">⚡ Быстрые действия</h3>
-        </div>
-        <div className="dashboard-panel__content">
-          <div className="quick-actions-grid">
-            <Link to="/manager/orders" className="quick-action-btn">
-              <span className="quick-action-btn__icon">📦</span>
-              <span className="quick-action-btn__text">Управление заказами</span>
-            </Link>
-            <Link to="/manager/inventory" className="quick-action-btn">
-              <span className="quick-action-btn__icon">📊</span>
-              <span className="quick-action-btn__text">Инвентаризация</span>
-            </Link>
-            <Link to="/manager/orders?status=pending" className="quick-action-btn">
-              <span className="quick-action-btn__icon">⏳</span>
-              <span className="quick-action-btn__text">Ожидающие заказы</span>
-            </Link>
-            <Link to="/master/tickets" className="quick-action-btn">
-              <span className="quick-action-btn__icon">🎫</span>
-              <span className="quick-action-btn__text">Запросы поддержки</span>
-            </Link>
-            <Link to="/admin/catalog" className="quick-action-btn">
-              <span className="quick-action-btn__icon">🏷️</span>
-              <span className="quick-action-btn__text">Каталог товаров</span>
-            </Link>
-            <Link to="/accountant/reports" className="quick-action-btn">
-              <span className="quick-action-btn__icon">📈</span>
-              <span className="quick-action-btn__text">Отчеты</span>
-            </Link>
           </div>
         </div>
       </div>
