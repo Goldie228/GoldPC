@@ -112,6 +112,16 @@ public interface IAuthService
     /// </summary>
     Task<(AuthResponse? Response, string? Error)> VerifyTwoFactorLoginAsync(
         string twoFactorToken, string totpCode, string ipAddress, string userAgent);
+
+    /// <summary>
+    /// Загрузка аватара пользователя
+    /// </summary>
+    Task<(string? AvatarUrl, string? Error)> UploadAvatarAsync(Guid userId, IFormFile file);
+
+    /// <summary>
+    /// Удаление аватара пользователя
+    /// </summary>
+    Task<(bool Success, string? Error)> DeleteAvatarAsync(Guid userId);
 }
 
 /// <summary>

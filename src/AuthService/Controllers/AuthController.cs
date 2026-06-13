@@ -207,6 +207,64 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// Загрузка аватара пользователя
+    /// </summary>
+    [HttpPost("avatar")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            ?? User.FindFirst("sub")?.Value;
+        
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+        }
+
+        if (avatar == null || avatar.Length == 0)
+        {
+            return BadRequest(ApiResponse.Fail("Файл не загружен"));
+        }
+
+        var (avatarUrl, error) = await _authService.UploadAvatarAsync(userId, avatar);
+        
+        if (error != null)
+        {
+            return BadRequest(ApiResponse.Fail(error));
+        }
+
+        return Ok(ApiResponse<object>.Ok(new { avatarUrl }));
+    }
+
+    /// <summary>
+    /// Удаление аватара пользователя
+    /// </summary>
+    [HttpDelete("avatar")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteAvatar()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+            ?? User.FindFirst("sub")?.Value;
+        
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+        }
+
+        var (success, error) = await _authService.DeleteAvatarAsync(userId);
+        
+        if (!success)
+        {
+            return BadRequest(ApiResponse.Fail(error!));
+        }
+
+        return Ok(ApiResponse.Ok("Аватар удалён"));
+    }
+
+    /// <summary>
     /// Смена пароля
     /// </summary>
     [HttpPost("change-password")]

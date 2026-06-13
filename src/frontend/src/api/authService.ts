@@ -250,7 +250,9 @@ export const authService = {
     const formData = new FormData();
     formData.append('avatar', file);
     const response = await apiClient.post(`${AUTH_BASE_URL}/avatar`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     });
     const data = extractData<{ avatarUrl: string }>(response.data);
     return data;
