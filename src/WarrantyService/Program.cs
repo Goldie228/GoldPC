@@ -111,7 +111,7 @@ using (var scope = app.Services.CreateScope())
 
 if (app.Environment.IsDevelopment()) { app.UseSwagger(); app.UseSwaggerUI(); }
 
-app.UseHttpsRedirection();
+// HTTPS-редирект отключён: сервис работает за Vite-прокси по HTTP/1.1
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

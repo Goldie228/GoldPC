@@ -55,7 +55,7 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/api/v1/warranty': {
-        target: 'http://localhost:5006',
+        target: 'http://localhost:5004',
         changeOrigin: true,
       },
       '/hubs/chat': {
@@ -72,8 +72,20 @@ export default defineConfig({
         target: 'http://localhost:5007',
         changeOrigin: true,
       },
+      '/api/v1/notifications': {
+        target: 'http://localhost:5007',
+        changeOrigin: true,
+      },
+      '/api/v1/feedback': {
+        target: 'http://localhost:5007',
+        changeOrigin: true,
+      },
       '/api': {
         target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/uploads/avatars': {
+        target: 'http://localhost:5001',
         changeOrigin: true,
       },
       '/uploads': {
