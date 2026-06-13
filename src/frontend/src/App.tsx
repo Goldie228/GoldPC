@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { MainLayout } from './components/layout/main-layout/MainLayout';
 import { AuthGuard, RoleGuard, AdminRedirect } from './components/guards';
 import { AdminLayout } from './components/layout/admin-layout/AdminLayout';
+import { ManagerLayout } from './components/layout/manager-layout/ManagerLayout';
 import { AuthModalContainer } from './components/auth';
 import { ModalContainer } from './components/ui/Modal/ModalContainer';
 import { RouteMeta } from './components/seo/RouteMeta';
@@ -73,6 +74,14 @@ const OrdersPage = lazy(() => import('./pages/manager/OrdersPage').then(m => ({ 
 const OrderDetailPage = lazy(() => import('./pages/manager/OrderDetailPage').then(m => ({ default: m.OrderDetailPage })));
 const ManagerDashboard = lazy(() => import('./pages/manager/ManagerDashboard').then(m => ({ default: m.ManagerDashboard })));
 const InventoryPage = lazy(() => import('./pages/manager/InventoryPage').then(m => ({ default: m.InventoryPage })));
+const ServiceRequestsPage = lazy(() => import('./pages/manager/ServiceRequestsPage').then(m => ({ default: m.ServiceRequestsPage })));
+const ServiceRequestDetailPage = lazy(() => import('./pages/manager/ServiceRequestDetailPage').then(m => ({ default: m.ServiceRequestDetailPage })));
+const WarrantyClaimsPage = lazy(() => import('./pages/manager/WarrantyClaimsPage').then(m => ({ default: m.WarrantyClaimsPage })));
+const WarrantyClaimDetailPage = lazy(() => import('./pages/manager/WarrantyClaimDetailPage').then(m => ({ default: m.WarrantyClaimDetailPage })));
+const FeedbackPage = lazy(() => import('./pages/manager/FeedbackPage').then(m => ({ default: m.FeedbackPage })));
+const ManagerCatalogPage = lazy(() => import('./pages/manager/ManagerCatalogPage').then(m => ({ default: m.ManagerCatalogPage })));
+const ManagerDictionariesPage = lazy(() => import('./pages/manager/ManagerDictionariesPage').then(m => ({ default: m.ManagerDictionariesPage })));
+const ManagerUsersPage = lazy(() => import('./pages/manager/ManagerUsersPage').then(m => ({ default: m.ManagerUsersPage })));
 const TicketsPage = lazy(() => import('./pages/master').then(m => ({ default: m.TicketsPage })));
 const TicketDetailPage = lazy(() => import('./pages/master').then(m => ({ default: m.TicketDetailPage })));
 const ReportsPage = lazy(() => import('./pages/accountant').then(m => ({ default: m.ReportsPage })));
@@ -259,11 +268,25 @@ const router = createBrowserRouter([
       {
         element: <RoleGuard allowedRoles={['Manager', 'Admin', 'Master']} />,
         children: [
-          { path: '/manager', element: <Navigate to="/manager/dashboard" replace /> },
-          { path: '/manager/dashboard', element: <ManagerDashboard /> },
-          { path: '/manager/orders', element: <OrdersPage /> },
-          { path: '/manager/orders/:id', element: <OrderDetailPage /> },
-          { path: '/manager/inventory', element: <InventoryPage /> },
+          {
+            element: <ManagerLayout />,
+            children: [
+              { path: '/manager', element: <Navigate to="/manager/dashboard" replace /> },
+              { path: '/manager/dashboard', element: <ManagerDashboard /> },
+              { path: '/manager/orders', element: <OrdersPage /> },
+              { path: '/manager/orders/:id', element: <OrderDetailPage /> },
+              { path: '/manager/inventory', element: <InventoryPage /> },
+              { path: '/manager/services', element: <ServiceRequestsPage /> },
+              { path: '/manager/services/:id', element: <ServiceRequestDetailPage /> },
+              { path: '/manager/warranty', element: <WarrantyClaimsPage /> },
+              { path: '/manager/warranty/:id', element: <WarrantyClaimDetailPage /> },
+              { path: '/manager/feedback', element: <FeedbackPage /> },
+              { path: '/manager/catalog', element: <ManagerCatalogPage /> },
+              { path: '/manager/dictionaries', element: <ManagerDictionariesPage /> },
+              { path: '/manager/users', element: <ManagerUsersPage /> },
+              { path: '/manager/products/:id/edit', element: <ProductEditorPage /> },
+            ],
+          },
         ],
       },
       {
@@ -289,24 +312,29 @@ const router = createBrowserRouter([
   // Админ-панель — с path="/admin" чтобы не матчить корневые URL
   {
     path: '/admin',
-    element: <RoleGuard allowedRoles={['Admin']} />,
     children: [
       { index: true, element: <Navigate to="users" replace /> },
+      // Все маршруты админки — только Admin (менеджерские версии на /manager/*)
       {
-        element: <AdminLayout />,
+        element: <RoleGuard allowedRoles={['Admin']} />,
         children: [
-          { path: 'users', element: <UserManagementPage /> },
-          { path: 'users/new', element: <UserFormPage /> },
-          { path: 'users/:id/edit', element: <UserFormPage /> },
-          { path: 'catalog', element: <CatalogManagementPage /> },
-          { path: 'dictionaries', element: <DictionariesPage /> },
-          { path: 'coordinator', element: <CoordinatorDashboard /> },
-          { path: 'audit-log', element: <AuditLogPage /> },
-          { path: 'settings', element: <SettingsPage /> },
+          {
+            element: <AdminLayout />,
+            children: [
+              { path: 'catalog', element: <CatalogManagementPage /> },
+              { path: 'dictionaries', element: <DictionariesPage /> },
+              { path: 'users', element: <UserManagementPage /> },
+              { path: 'users/new', element: <UserFormPage /> },
+              { path: 'users/:id/edit', element: <UserFormPage /> },
+              { path: 'coordinator', element: <CoordinatorDashboard /> },
+              { path: 'audit-log', element: <AuditLogPage /> },
+              { path: 'settings', element: <SettingsPage /> },
+            ],
+          },
+          // ProductEditor — отдельный route без AdminLayout (полноэкранный режим)
+          { path: 'products/:id/edit', element: <ProductEditorPage /> },
         ],
       },
-      // ProductEditor — отдельный route без AdminLayout (полноэкранный режим)
-      { path: 'products/:id/edit', element: <ProductEditorPage /> },
     ],
   },
 ], {

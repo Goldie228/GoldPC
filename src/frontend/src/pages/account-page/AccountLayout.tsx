@@ -42,7 +42,7 @@ export function AccountLayout() {
 
   interface NavItem {
     to: string;
-    icon: React.ComponentType<{ size?: number }>;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
     label: string;
     end?: boolean;
   }
@@ -62,8 +62,8 @@ const navItems: NavItem[] = [
     [
       'flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors shrink-0',
       isActive
-        ? 'text-gold bg-surface-elevated border-l-2 border-gold'
-        : 'text-muted-text hover:text-body-text hover:bg-surface-elevated',
+        ? 'text-gold bg-surface-card border-l-2 border-gold'
+        : 'text-muted-foreground hover:text-foreground hover:bg-surface-elevated',
       collapsed ? 'justify-center px-2' : '',
     ].join(' ');
 
@@ -99,7 +99,7 @@ const navItems: NavItem[] = [
         {/* Close button — mobile only */}
         <button
           onClick={closeSidebar}
-          className="absolute top-4 right-4 p-1 text-muted-text hover:text-body-text rounded-lg lg:hidden hover:bg-surface-elevated transition-colors"
+          className="absolute top-4 right-4 p-1 text-muted-foreground hover:text-foreground rounded-lg lg:hidden hover:bg-surface-elevated transition-colors"
           aria-label="Закрыть меню"
         >
           <X size={20} />
@@ -108,7 +108,7 @@ const navItems: NavItem[] = [
         {/* Collapse toggle — desktop only */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="hidden lg:flex absolute top-2 right-2 w-7 h-7 items-center justify-center rounded-md text-muted-text hover:text-gold hover:bg-gold/10 transition-all cursor-pointer z-10"
+          className="hidden lg:flex absolute top-2 right-2 w-7 h-7 items-center justify-center rounded-md text-muted-foreground hover:text-gold hover:bg-gold/10 transition-all cursor-pointer z-10"
           aria-label={collapsed ? 'Развернуть меню' : 'Свернуть меню'}
         >
           {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
@@ -129,10 +129,10 @@ const navItems: NavItem[] = [
           )}
           {!collapsed && (
             <>
-              <div className="font-semibold text-body-text text-center">
+              <div className="font-semibold text-foreground text-center">
                 {user ? `${firstName} ${lastName}` : 'Гость'}
               </div>
-              <div className="text-sm text-muted-text text-center truncate max-w-full">
+              <div className="text-sm text-muted-foreground text-center truncate max-w-full">
                 {user?.email ?? 'Войдите в аккаунт'}
               </div>
             </>
@@ -172,7 +172,7 @@ const navItems: NavItem[] = [
                 </Link>
               )}
 
-              {currentRole === 'Manager' && (
+              {['Manager', 'Admin', 'Master'].includes(currentRole ?? '') && (
                 <NavLink
                   to="/manager/dashboard"
                   onClick={closeSidebar}
@@ -229,12 +229,12 @@ const navItems: NavItem[] = [
         <div className="sticky top-0 z-30 bg-canvas-dark border-b border-hairline-dark px-4 py-3 lg:hidden flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 text-muted-text hover:text-body-text rounded-lg hover:bg-surface-elevated transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-surface-elevated transition-colors"
             aria-label="Открыть меню"
           >
             <Menu size={22} />
           </button>
-          <span className="text-sm font-semibold text-body-text">Личный кабинет</span>
+          <span className="text-sm font-semibold text-foreground">Личный кабинет</span>
         </div>
 
         <div className="p-6 lg:p-8">

@@ -244,7 +244,7 @@ export function Header(): ReactElement {
             <NotificationCenter />
           </div>
 
-          {/* Admin panel button - only for admins */}
+          {/* Кнопка панели администратора — только для Admin */}
           {isAuthenticated && user?.role === 'Admin' && (
             <Link
               to="/admin/users"
@@ -252,6 +252,17 @@ export function Header(): ReactElement {
               aria-label="Админ-панель"
             >
               <Shield size={24} />
+            </Link>
+          )}
+
+          {/* Кнопка панели менеджера — для Manager, Admin, Master */}
+          {isAuthenticated && ['Manager', 'Admin', 'Master'].includes(user?.role ?? '') && (
+            <Link
+              to="/manager/dashboard"
+              className="relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-gold hover:bg-surface-elevated hidden md:flex"
+              aria-label="Панель менеджера"
+            >
+              <LayoutDashboard size={24} />
             </Link>
           )}
 
@@ -343,6 +354,16 @@ export function Header(): ReactElement {
                         <Link to="/admin/users" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleProfileDropdownClose}>
                           <Shield size={18} />
                           <span>Админ-панель</span>
+                        </Link>
+                      </>
+                    )}
+
+                    {['Manager', 'Admin', 'Master'].includes(user?.role ?? '') && (
+                      <>
+                        <div className="h-px bg-hairline-dark mx-4" />
+                        <Link to="/manager/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleProfileDropdownClose}>
+                          <LayoutDashboard size={18} />
+                          <span>Панель менеджера</span>
                         </Link>
                       </>
                     )}
@@ -503,13 +524,24 @@ export function Header(): ReactElement {
                         </Link>
                       </nav>
 
-                      {/* Admin panel - only for admins */}
+                      {/* Панель администратора — только для Admin */}
                       {user?.role === 'Admin' && (
                         <>
                           <div className="h-px bg-hairline-dark mx-4" />
                           <Link to="/admin/users" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                             <Shield size={18} />
                             <span>Админ-панель</span>
+                          </Link>
+                        </>
+                      )}
+
+                      {/* Панель менеджера — для Manager, Admin, Master */}
+                      {['Manager', 'Admin', 'Master'].includes(user?.role ?? '') && (
+                        <>
+                          <div className="h-px bg-hairline-dark mx-4" />
+                          <Link to="/manager/dashboard" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
+                            <LayoutDashboard size={18} />
+                            <span>Панель менеджера</span>
                           </Link>
                         </>
                       )}
