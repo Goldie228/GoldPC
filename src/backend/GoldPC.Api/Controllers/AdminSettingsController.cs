@@ -30,22 +30,6 @@ public class AdminSettingsController : ControllerBase
         _hubContext = hubContext;
     }
 
-    /// <summary>Получить IP-адрес клиента</summary>
-    private string GetClientIp()
-    {
-        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-        // За обратным прокси: X-Forwarded-For — инфраструктурный заголовок, не привязывается через model binding
-#pragma warning disable S6932 // Use model binding instead of raw request data
-        if (HttpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var forwardedFor))
-#pragma warning restore S6932
-        {
-            var first = forwardedFor.FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(first))
-                ip = first.Split(',')[0].Trim();
-        }
-        return ip ?? "";
-    }
-
     /// <summary>Получить ID текущего пользователя из JWT-токена</summary>
     private Guid GetCurrentUserId()
     {
@@ -96,9 +80,8 @@ public class AdminSettingsController : ControllerBase
         var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "unknown";
         var currentUserName = User.Identity?.Name ?? "unknown";
         var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "unknown";
-        var ip = GetClientIp();
         await _adminService.AddAuditLogAsync("SETTINGS_UPDATED", currentUserId, currentUserName, currentUserEmail,
-            "Обновлены настройки сайта", "WARNING", ipAddress: ip);
+            "Обновлены настройки сайта", "WARNING");
 
         // Логируем отдельные аудит-события при изменении режима обслуживания
         if (update.MaintenanceMode.HasValue && update.MaintenanceMode.Value != wasMaintenance)
@@ -108,7 +91,7 @@ public class AdminSettingsController : ControllerBase
                 ? "Режим обслуживания включён"
                 : "Режим обслуживания выключен";
             await _adminService.AddAuditLogAsync(action, currentUserId, currentUserName, currentUserEmail,
-                desc, "WARNING", ipAddress: ip);
+                desc, "WARNING");
         }
 
         // Очищаем кэш настроек уведомлений, чтобы изменения вступили в силу немедленно

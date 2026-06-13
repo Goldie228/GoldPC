@@ -30,22 +30,6 @@ public class AdminProductsController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>Получить IP-адрес клиента</summary>
-    private string GetClientIp()
-    {
-        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-        // За обратным прокси: X-Forwarded-For — инфраструктурный заголовок, не привязывается через model binding
-#pragma warning disable S6932 // Use model binding instead of raw request data
-        if (HttpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var forwardedFor))
-#pragma warning restore S6932
-        {
-            var first = forwardedFor.FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(first))
-                ip = first.Split(',')[0].Trim();
-        }
-        return ip ?? "";
-    }
-
     /// <summary>Получить ID текущего пользователя из JWT-токена</summary>
     private Guid GetCurrentUserId()
     {
@@ -108,7 +92,7 @@ public class AdminProductsController : ControllerBase
         var currentUserName = User.Identity?.Name ?? "unknown";
         var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "unknown";
         await _adminService.AddAuditLogAsync("PRODUCT_CREATED", currentUserId, currentUserName, currentUserEmail,
-            $"Создан товар: {create.Name}", ipAddress: GetClientIp());
+            $"Создан товар: {create.Name}");
         await _notificationService.SendNotificationToRoleAsync("Admin", new Notification
         {
             UserId = GetCurrentUserId(),
@@ -139,7 +123,7 @@ public class AdminProductsController : ControllerBase
         var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "unknown";
         var nameForLog = product.Name ?? id;
         await _adminService.AddAuditLogAsync("PRODUCT_UPDATED", currentUserId, currentUserName, currentUserEmail,
-            $"Обновлён товар: {nameForLog}", ipAddress: GetClientIp());
+            $"Обновлён товар: {nameForLog}");
         await _notificationService.SendNotificationToRoleAsync("Admin", new Notification
         {
             UserId = GetCurrentUserId(),
@@ -169,7 +153,7 @@ public class AdminProductsController : ControllerBase
         var currentUserName = User.Identity?.Name ?? "unknown";
         var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "unknown";
         await _adminService.AddAuditLogAsync("PRODUCT_DELETED", currentUserId, currentUserName, currentUserEmail,
-            $"Удалён товар (ID: {id})", "WARNING", ipAddress: GetClientIp());
+            $"Удалён товар (ID: {id})", "WARNING");
         await _notificationService.SendNotificationToRoleAsync("Admin", new Notification
         {
             UserId = GetCurrentUserId(),
