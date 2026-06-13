@@ -56,6 +56,11 @@ public class User : BaseEntity
     public string Phone { get; set; } = string.Empty;
 
     /// <summary>
+    /// URL аватара пользователя
+    /// </summary>
+    public string? AvatarUrl { get; set; }
+
+    /// <summary>
     /// Дата рождения
     /// </summary>
     public DateTime? BirthDate { get; set; }
