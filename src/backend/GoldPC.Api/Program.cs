@@ -51,6 +51,9 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 // Add File Service
 builder.Services.AddScoped<IFileService, FileService>();
 
+// Сервис обратной связи (FeedbackController)
+builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+
 // Add HttpContextAccessor for auth forwarding
 builder.Services.AddHttpContextAccessor();
 
