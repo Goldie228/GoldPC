@@ -1,484 +1,443 @@
 /**
  * Manager Order Detail Page
  * Страница детального просмотра и управления заказом
- * Основано на prototypes/manager-order-detail.html
+ * Реальные API-вызовы для смены статуса (без моков)
  */
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { ArrowLeft, CircleCheck, Truck, Check, AlertCircle } from 'lucide-react';
-import { useManager } from '@/hooks/useManager';
-import type { RawOrderItem } from '@/api/manager';
+import { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  ArrowLeft,
+  CircleCheck,
+  Truck,
+  Check,
+  AlertCircle,
+  User,
+  Mail,
+  Phone,
+  CreditCard,
+  MapPin,
+} from 'lucide-react';
+import { managerApi } from '@/api/manager';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Button } from '@/components/ui/Button';
+import { Skeleton } from '@/components/ui/Skeleton/Skeleton';
+import { getStatusConfig } from '@/utils/order-status';
+import { formatPrice, formatDateTime } from '@/utils/format';
 
-type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';
+/* ─── Маппинг методов оплаты ─── */
 
-interface OrderItem {
-  id: string;
-  name: string;
-  sku: string;
-  quantity: number;
-  price: number;
-  total: number;
-}
-
-interface Order {
-  id: string;
-  customer: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  status: OrderStatus;
-  date: string;
-  paymentMethod: string;
-  deliveryMethod: string;
-  deliveryAddress: string;
-  deliveryComment?: string;
-  items: OrderItem[];
-  subtotal: number;
-  deliveryCost: number;
-  total: number;
-  timeline: TimelineItem[];
-}
-
-interface TimelineItem {
-  status: string;
-  date: string;
-  active?: boolean;
-}
-
-// Моковые данные для демонстрации
-const MOCK_ORDER: Order = {
-  id: 'ORD-2025-001',
-  customer: {
-    name: 'Александр Петров',
-    email: 'alex@example.com',
-    phone: '+375 (29) 123-45-67',
-  },
-  status: 'processing',
-  date: '2025-03-17T14:32:00',
-  paymentMethod: 'Картой онлайн',
-  deliveryMethod: 'Курьером по Минску',
-  deliveryAddress: 'г. Минск, ул. Примерная, д. 10, кв. 25',
-  deliveryComment: 'Домофон не работает, позвонить за 15 минут',
-  items: [
-    {
-      id: '1',
-      name: 'AMD Ryzen 7 7800X3D',
-      sku: 'CPU-AMD-7800X3D',
-      quantity: 1,
-      price: 1450,
-      total: 1450,
-    },
-    {
-      id: '2',
-      name: 'NVIDIA RTX 4070 Ti Super 16GB',
-      sku: 'GPU-NV-4070TIS',
-      quantity: 1,
-      price: 3200,
-      total: 3200,
-    },
-    {
-      id: '3',
-      name: 'G.Skill Trident Z5 32GB DDR5',
-      sku: 'RAM-GSK-TZ5-32',
-      quantity: 1,
-      price: 650,
-      total: 650,
-    },
-    {
-      id: '4',
-      name: 'Samsung 990 Pro 2TB NVMe',
-      sku: 'SSD-SAM-990P-2T',
-      quantity: 1,
-      price: 380,
-      total: 380,
-    },
-  ],
-  subtotal: 5680,
-  deliveryCost: 0,
-  total: 5430,
-  timeline: [
-    { status: 'В обработке', date: '2025-03-17T14:45:00', active: true },
-    { status: 'Оплата подтверждена', date: '2025-03-17T14:33:00' },
-    { status: 'Заказ создан', date: '2025-03-17T14:32:00' },
-  ],
+const PAYMENT_LABELS: Record<string, string> = {
+  OnReceipt: 'При получении',
+  Card: 'Карта',
+  CardOnReceipt: 'Карта при получении',
+  Transfer: 'Банковский перевод',
+  Online: 'Онлайн-оплата',
 };
 
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'Ожидает',
-  processing: 'В обработке',
-  shipped: 'Отправлен',
-  completed: 'Завершён',
-  cancelled: 'Отменён',
-};
+/* ─── Скелетон загрузки ─── */
 
-const STATUS_CLASSES: Record<OrderStatus, string> = {
-  pending: 'status-badge--pending',
-  processing: 'status-badge--processing',
-  shipped: 'status-badge--shipped',
-  completed: 'status-badge--completed',
-  cancelled: 'status-badge--cancelled',
-};
-
-function formatPrice(price: number): string {
-  return price.toLocaleString('ru-BY') + ' BYN';
+function OrderDetailSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton width={200} height={20} />
+      <Skeleton width={300} height={36} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <Skeleton height={200} borderRadius="lg" />
+          <Skeleton height={300} borderRadius="lg" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton height={160} borderRadius="lg" />
+          <Skeleton height={200} borderRadius="lg" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function formatDateTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+/* ─── Компонент таймлайна ─── */
+
+function OrderTimeline({ items }: { items: Array<{ status: string; date: string; active?: boolean }> }) {
+  return (
+    <div className="space-y-3">
+      {items.map((item, index) => (
+        <div key={index} className="flex gap-3">
+          <div className="flex flex-col items-center">
+            <div
+              className={`w-2.5 h-2.5 rounded-full shrink-0 mt-1.5 ${
+                item.active ? 'bg-gold' : 'bg-muted-foreground/40'
+              }`}
+            />
+            {index < items.length - 1 && (
+              <div className="w-px flex-1 bg-hairline-dark mt-1" />
+            )}
+          </div>
+          <div className="pb-4">
+            <div className={`text-sm font-medium ${item.active ? 'text-foreground' : 'text-muted-foreground'}`}>
+              {item.status}
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {formatDateTime(item.date)}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-function formatDateTimeShort(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).replace(',', '');
-}
+/* ─── Основной компонент ─── */
 
 export function OrderDetailPage() {
-  const { getOrderById } = useManager();
-  const { orderId } = useParams<{ orderId: string }>();
-  const [order, setOrder] = useState<Order | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { id: orderId } = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
-  // Transform RawOrderItem to Order for type compatibility
-  const transformRawOrderToOrder = (raw: RawOrderItem): Order => {
-    // Use mock data as base and override with actual values from API
-    const mock = { ...MOCK_ORDER };
-    return {
-      ...mock,
-      id: raw.id ?? mock.id,
-      status: raw.status as OrderStatus ?? mock.status,
-    };
-  };
+  // Запрос данных заказа
+  const { data: order, isLoading, error } = useQuery({
+    queryKey: ['manager', 'order', orderId],
+    queryFn: () => managerApi.getOrderById(orderId!),
+    enabled: !!orderId,
+  });
 
-  useEffect(() => {
-    const loadOrder = async () => {
-      if (!orderId) return;
-      setIsLoading(true);
-      try {
-        const data = await getOrderById(orderId);
-        if (data != null) setOrder(transformRawOrderToOrder(data));
-      } catch (error) {
-        console.error('Failed to load order:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    void loadOrder();
-  }, [orderId, getOrderById]);
+  // Мутация смены статуса
+  const statusMutation = useMutation({
+    mutationFn: ({ orderId: id, status }: { orderId: string; status: string }) =>
+      managerApi.updateOrderStatus(id, status),
+    onSuccess: () => {
+      // Инвалидируем кэш заказов и конкретный заказ
+      queryClient.invalidateQueries({ queryKey: ['manager', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['manager', 'order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['manager', 'dashboard'] });
+    },
+    onError: () => {
+      // Ошибка обрабатывается через UI
+    },
+  });
+
+  // Мутация отмены заказа
+  const cancelMutation = useMutation({
+    mutationFn: (id: string) => managerApi.cancelOrder(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['manager', 'orders'] });
+      queryClient.invalidateQueries({ queryKey: ['manager', 'order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['manager', 'dashboard'] });
+      setShowCancelConfirm(false);
+    },
+    onError: () => {
+      // Ошибка обрабатывается через UI
+    },
+  });
 
   if (isLoading) {
-    return <div className="loading">Загрузка заказа...</div>;
+    return <OrderDetailSkeleton />;
   }
 
-  if (order == null) {
-    return <div className="error">Заказ не найден</div>;
+  if (error || !order) {
+    return (
+      <div className="space-y-4">
+        <Link
+          to="/manager/orders"
+          className="inline-flex items-center gap-1.5 text-gold hover:text-gold-active text-sm font-medium transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Назад к заказам
+        </Link>
+        <div className="bg-surface-card border border-hairline-dark rounded-lg p-8 text-center">
+          <p className="text-price-rise font-medium">Заказ не найден</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            Заказ #{orderId} не существует или был удалён
+          </p>
+        </div>
+      </div>
+    );
   }
-  const [isUpdating, setIsUpdating] = useState(false);
 
-  // Обработчики действий
-  const handleProcess = async () => {
-    setIsUpdating(true);
-    // Имитация API вызова
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setOrder((prev) => {
-      if (prev == null) return prev;
-      return {
-        ...prev,
-        id: prev.id,
-        status: 'processing',
-        timeline: [
-          { status: 'В обработке', date: new Date().toISOString(), active: true },
-          ...prev.timeline.map((t) => ({ ...t, active: false })),
-        ],
-      };
-    });
-    setIsUpdating(false);
+  const status = getStatusConfig(order.status);
+  const currentStatus = String(order.status ?? '');
+
+  // Определяем доступные действия (числовые статусы из OrderStatus.cs)
+  // 0=New, 1=Processing, 2=Paid, 3=InProgress, 4=Ready, 5=Completed, 6=Cancelled
+  const canProcess = currentStatus === '0' || currentStatus === 'new';
+  const canShip = currentStatus === '1' || currentStatus === 'processing';
+  const canComplete = currentStatus === '3' || currentStatus === 'inprogress';
+  const canCancel = currentStatus !== '5' && currentStatus !== 'completed' && currentStatus !== '6' && currentStatus !== 'cancelled';
+
+  const isUpdating = statusMutation.isPending || cancelMutation.isPending;
+
+  // Обработчики действий (отправляем числовые статусы)
+  const handleProcess = () => {
+    statusMutation.mutate({ orderId: orderId!, status: '1' }); // Processing
   };
 
-  const handleShip = async () => {
-    setIsUpdating(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setOrder((prev) => {
-      if (prev == null) return prev;
-      return {
-        ...prev,
-        id: prev.id,
-        status: 'shipped',
-        timeline: [
-          { status: 'Отправлен', date: new Date().toISOString(), active: true },
-          ...prev.timeline.map((t) => ({ ...t, active: false })),
-        ],
-      };
-    });
-    setIsUpdating(false);
+  const handleShip = () => {
+    statusMutation.mutate({ orderId: orderId!, status: '3' }); // InProgress (в сборку)
   };
 
-  const handleComplete = async () => {
-    setIsUpdating(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setOrder((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        status: 'completed',
-        timeline: [
-          { status: 'Завершён', date: new Date().toISOString(), active: true },
-          ...prev.timeline.map((t) => ({ ...t, active: false })),
-        ],
-      };
-    });
-    setIsUpdating(false);
+  const handleComplete = () => {
+    statusMutation.mutate({ orderId: orderId!, status: '5' }); // Completed (выдан)
   };
 
-  const handleCancel = async () => {
-    if (!window.confirm('Вы уверены, что хотите отменить заказ?')) {
-      return;
-    }
-    setIsUpdating(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    setOrder((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        status: 'cancelled',
-        timeline: [
-          { status: 'Отменён', date: new Date().toISOString(), active: true },
-          ...prev.timeline.map((t) => ({ ...t, active: false })),
-        ],
-      };
-    });
-    setIsUpdating(false);
-  };
+  // Парсим таймлайн из данных заказа
+  const timeline = order.timeline ?? [];
 
-  // Определяем доступные действия на основе текущего статуса
-  const availableActions = {
-    canProcess: order.status === 'pending',
-    canShip: order.status === 'processing',
-    canComplete: order.status === 'shipped',
-    canCancel: order.status !== 'completed' && order.status !== 'cancelled',
-  };
+  // Товары заказа
+  const items = order.items ?? [];
 
   return (
-    <div className="order-detail">
-      {/* Header */}
-      <header className="order-detail__header">
-        <div className="order-detail__title-section">
-          <a href="/manager/orders" className="back-link">
-            <ArrowLeft size={20} />
-            Назад к заказам
-          </a>
-          <h1 className="order-detail__title">#{order.id}</h1>
-          <div className="order-detail__status">
-            <span className={'status-badge ' + STATUS_CLASSES[order.status]}>
-              {STATUS_LABELS[order.status]}
-            </span>
-          </div>
-        </div>
-      </header>
+    <div className="space-y-6">
+      {/* Навигация назад */}
+      <Link
+        to="/manager/orders"
+        className="inline-flex items-center gap-1.5 text-gold hover:text-gold-active text-sm font-medium transition-colors"
+      >
+        <ArrowLeft size={16} />
+        Назад к заказам
+      </Link>
 
-      <div className="order-detail__content">
-        {/* Main Content */}
-        <div className="order-detail__main">
-          {/* Order Info Card */}
-          <div className="card">
-            <div className="card__header">
-              <span className="card__title">Информация о заказе</span>
-            </div>
-            <div className="card__body">
-              <div className="info-grid">
-                <div className="info-item">
-                  <span className="info-item__label">Клиент</span>
-                  <span className="info-item__value">{order.customer.name}</span>
+      {/* Заголовок заказа */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <h1 className="text-2xl font-bold text-foreground">Заказ #{order.id}</h1>
+        <StatusBadge variant={status.variant} label={status.label} />
+      </div>
+
+      {/* Основной контент: 2 колонки */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Левая колонка: информация + товары */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Информация о клиенте */}
+          <div className="bg-surface-card border border-hairline-dark rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-4">Информация о клиенте</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="flex items-center gap-2.5">
+                <User size={16} className="text-muted-foreground shrink-0" />
+                <div>
+                  <div className="text-xs text-muted-foreground">Клиент</div>
+                  <div className="text-sm text-foreground">{order.customerName ?? 'Не указан'}</div>
                 </div>
-                <div className="info-item">
-                  <span className="info-item__label">Email</span>
-                  <span className="info-item__value">{order.customer.email}</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Mail size={16} className="text-muted-foreground shrink-0" />
+                <div>
+                  <div className="text-xs text-muted-foreground">Email</div>
+                  <div className="text-sm text-foreground">{order.customerEmail ?? '--'}</div>
                 </div>
-                <div className="info-item">
-                  <span className="info-item__label">Телефон</span>
-                  <span className="info-item__value info-item__value--mono">
-                    {order.customer.phone}
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-item__label">Дата заказа</span>
-                  <span className="info-item__value info-item__value--mono">
-                    {formatDateTime(order.date)}
-                  </span>
-                </div>
-                <div className="info-item">
-                  <span className="info-item__label">Способ оплаты</span>
-                  <span className="info-item__value">{order.paymentMethod}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-item__label">Доставка</span>
-                  <span className="info-item__value">{order.deliveryMethod}</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <Phone size={16} className="text-muted-foreground shrink-0" />
+                <div>
+                  <div className="text-xs text-muted-foreground">Телефон</div>
+                  <div className="text-sm text-foreground font-mono">{order.customerPhone ?? '--'}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Items List */}
-          <div className="card order-detail__items">
-            <div className="card__header">
-              <span className="card__title">Товары в заказе</span>
+          {/* Товары в заказе */}
+          <div className="bg-surface-card border border-hairline-dark rounded-lg overflow-hidden">
+            <div className="px-5 py-4 border-b border-hairline-dark">
+              <h3 className="text-sm font-semibold text-foreground">Товары в заказе</h3>
             </div>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Товар</th>
-                  <th>Кол-во</th>
-                  <th>Цена</th>
-                  <th>Сумма</th>
-                </tr>
-              </thead>
-              <tbody>
-                {order.items.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className="item-name">{item.name}</div>
-                      <div className="item-sku">SKU: {item.sku}</div>
-                    </td>
-                    <td>
-                      <span className="item-qty">{item.quantity}</span>
-                    </td>
-                    <td>
-                      <span className="item-price">{formatPrice(item.price)}</span>
-                    </td>
-                    <td>
-                      <span className="item-total">{formatPrice(item.total)}</span>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-hairline-dark">
+                    <th className="text-left px-5 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Товар
+                    </th>
+                    <th className="text-right px-5 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Кол-во
+                    </th>
+                    <th className="text-right px-5 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Цена
+                    </th>
+                    <th className="text-right px-5 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Сумма
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            <div className="order-summary">
-              <div className="summary-row">
-                <span className="summary-label">Подытог</span>
-                <span className="summary-value">{formatPrice(order.subtotal)}</span>
-              </div>
-              <div className="summary-row">
-                <span className="summary-label">Доставка</span>
-                <span className="summary-value">
-                  {order.deliveryCost === 0 ? '0 BYN' : formatPrice(order.deliveryCost)}
+                </thead>
+                <tbody>
+                  {items.map((item, idx) => (
+                    <tr key={item.id ?? idx} className="border-b border-hairline-dark last:border-0">
+                      <td className="px-5 py-3">
+                        <div className="text-sm text-foreground">{item.productName ?? 'Товар'}</div>
+                      </td>
+                      <td className="px-5 py-3 text-right text-sm text-foreground">
+                        {item.quantity}
+                      </td>
+                      <td className="px-5 py-3 text-right text-sm text-foreground font-tabular-nums">
+                        {formatPrice(item.price ?? 0)}
+                      </td>
+                      <td className="px-5 py-3 text-right text-sm text-foreground font-medium font-tabular-nums">
+                        {formatPrice((item.price ?? 0) * (item.quantity ?? 0))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Итого */}
+            <div className="px-5 py-4 border-t border-hairline-dark space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Подытог</span>
+                <span className="text-foreground font-tabular-nums">
+                  {formatPrice(items.reduce((sum, i) => sum + (i.price ?? 0) * (i.quantity ?? 0), 0))}
                 </span>
               </div>
-              <div className="summary-row summary-row--total">
-                <span className="summary-label">Итого</span>
-                <span className="summary-value">{formatPrice(order.total)}</span>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Доставка</span>
+                <span className="text-foreground font-tabular-nums">
+                  {formatPrice(0)}
+                </span>
+              </div>
+              <div className="flex justify-between text-base font-semibold pt-2 border-t border-hairline-dark">
+                <span className="text-foreground">Итого</span>
+                <span className="text-gold font-tabular-nums">
+                  {formatPrice(order.total ?? items.reduce((sum, i) => sum + (i.price ?? 0) * (i.quantity ?? 0), 0))}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="order-detail__sidebar">
-          {/* Timeline */}
-          <div className="card">
-            <div className="card__header">
-              <span className="card__title">История статусов</span>
+        {/* Правая колонка: таймлайн + действия + доставка */}
+        <div className="space-y-4">
+          {/* Таймлайн */}
+          <div className="bg-surface-card border border-hairline-dark rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-4">История статусов</h3>
+            {timeline.length > 0 ? (
+              <OrderTimeline items={timeline} />
+            ) : (
+              <p className="text-sm text-muted-foreground">Нет данных об изменении статуса</p>
+            )}
+          </div>
+
+          {/* Действия */}
+          <div className="bg-surface-card border border-hairline-dark rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-4">Действия</h3>
+            <div className="space-y-2">
+              {canProcess && (
+                <Button
+                  variant="primary"
+                  fullWidth
+                  leftIcon={<CircleCheck size={16} />}
+                  onClick={handleProcess}
+                  disabled={isUpdating}
+                  aria-busy={isUpdating}
+                  aria-label="Перевести в обработку"
+                >
+                  В обработку
+                </Button>
+              )}
+              {canShip && (
+                <Button
+                  variant="primary"
+                  fullWidth
+                  leftIcon={<Truck size={16} />}
+                  onClick={handleShip}
+                  disabled={isUpdating}
+                  aria-busy={isUpdating}
+                  aria-label="Отметить как отправленный"
+                >
+                  Отправлен
+                </Button>
+              )}
+              {canComplete && (
+                <Button
+                  variant="primary"
+                  fullWidth
+                  leftIcon={<Check size={16} />}
+                  onClick={handleComplete}
+                  disabled={isUpdating}
+                  aria-busy={isUpdating}
+                  aria-label="Отметить как доставленный"
+                >
+                  Доставлен
+                </Button>
+              )}
+              {canCancel && (
+                <Button
+                  variant="danger"
+                  fullWidth
+                  leftIcon={<AlertCircle size={16} />}
+                  onClick={() => setShowCancelConfirm(true)}
+                  disabled={isUpdating}
+                  aria-busy={isUpdating}
+                  aria-label="Отменить заказ"
+                >
+                  Отменить заказ
+                </Button>
+              )}
+              {!canProcess && !canShip && !canComplete && !canCancel && (
+                <p className="text-sm text-muted-foreground text-center py-2">
+                  Заказ завершён или отменён
+                </p>
+              )}
+
+              {/* Сообщения об ошибках мутаций */}
+              {statusMutation.isError && (
+                <p className="text-sm text-price-rise">Ошибка смены статуса. Попробуйте ещё раз.</p>
+              )}
+              {cancelMutation.isError && (
+                <p className="text-sm text-price-rise">Ошибка отмены заказа. Попробуйте ещё раз.</p>
+              )}
             </div>
-            <div className="card__body">
-              <div className="timeline">
-                {order.timeline.map((item, index) => (
-                  <div
-                    key={index}
-                    className={'timeline-item' + (item.active ? ' timeline-item--active' : '')}
+
+            {/* Инлайн-подтверждение отмены */}
+            {showCancelConfirm && (
+              <div className="bg-surface-elevated border border-hairline-dark rounded-lg p-4 space-y-3 mt-3">
+                <p className="text-sm text-foreground">Вы уверены, что хотите отменить заказ?</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => cancelMutation.mutate(orderId!)}
+                    className="px-3 py-1.5 text-sm font-medium text-white bg-price-rise rounded-lg hover:bg-price-rise/90"
                   >
-                    <div className="timeline-item__marker"></div>
-                    <div className="timeline-item__content">
-                      <div className="timeline-item__title">{item.status}</div>
-                      <div className="timeline-item__date">{formatDateTimeShort(item.date)}</div>
+                    Да, отменить
+                  </button>
+                  <button
+                    onClick={() => setShowCancelConfirm(false)}
+                    className="px-3 py-1.5 text-sm font-medium text-foreground bg-surface-card border border-hairline-dark rounded-lg hover:bg-surface-elevated"
+                  >
+                    Нет
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Доставка */}
+          <div className="bg-surface-card border border-hairline-dark rounded-lg p-5">
+            <h3 className="text-sm font-semibold text-foreground mb-4">Доставка</h3>
+            <div className="space-y-3">
+              {order.deliveryAddress && (
+                <div className="flex items-start gap-2.5">
+                  <MapPin size={16} className="text-muted-foreground shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs text-muted-foreground">Адрес</div>
+                    <div className="text-sm text-foreground">{order.deliveryAddress}</div>
+                  </div>
+                </div>
+              )}
+              {order.deliveryComment && (
+                <div className="bg-surface-elevated rounded-md p-3">
+                  <div className="text-xs text-muted-foreground mb-1">Комментарий</div>
+                  <div className="text-sm text-foreground">{order.deliveryComment}</div>
+                </div>
+              )}
+              {order.paymentMethod && (
+                <div className="flex items-center gap-2.5">
+                  <CreditCard size={16} className="text-muted-foreground shrink-0" />
+                  <div>
+                    <div className="text-xs text-muted-foreground">Оплата</div>
+                    <div className="text-sm text-foreground">
+                      {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="card">
-            <div className="card__header">
-              <span className="card__title">Действия</span>
-            </div>
-            <div className="card__body">
-              <div className="actions-group">
-                {availableActions.canProcess && (
-                  <button
-                    className="btn btn--primary btn--full"
-                    onClick={() => void handleProcess()}
-                    disabled={isUpdating}
-                  >
-                    <CircleCheck size={16} />
-                    Обработать
-                  </button>
-                )}
-                {availableActions.canShip && (
-                  <button
-                    className="btn btn--primary btn--full"
-                    onClick={() => void handleShip()}
-                    disabled={isUpdating}
-                  >
-                    <Truck size={16} />
-                    Отправить
-                  </button>
-                )}
-                {availableActions.canComplete && (
-                  <button
-                    className="btn btn--primary btn--full"
-                    onClick={() => void handleComplete()}
-                    disabled={isUpdating}
-                  >
-                    <Check size={16} />
-                    Завершить
-                  </button>
-                )}
-                {availableActions.canCancel && (
-                  <button
-                    className="btn btn--secondary btn--full"
-                    onClick={() => void handleCancel()}
-                    disabled={isUpdating}
-                  >
-                    <AlertCircle size={16} />
-                    Отменить заказ
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Delivery Info */}
-          <div className="card">
-            <div className="card__header">
-              <span className="card__title">Доставка</span>
-            </div>
-            <div className="card__body">
-              <div className="info-grid info-grid--single">
-                <div className="info-item">
-                  <span className="info-item__label">Адрес</span>
-                  <span className="info-item__value">{order.deliveryAddress}</span>
                 </div>
-                {order.deliveryComment && (
-                  <div className="info-item">
-                    <span className="info-item__label">Комментарий</span>
-                    <span className="info-item__value">{order.deliveryComment}</span>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
           </div>
         </div>

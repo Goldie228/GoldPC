@@ -1,35 +1,21 @@
 /**
  * Inventory Page for Manager
  * Страница управления запасами для менеджера
+ * Реальные данные с API, без моков
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Search, Package, AlertTriangle, XCircle, CheckCircle } from 'lucide-react';
 import { managerApi } from '@/api/manager';
+import type { RawProductItem } from '@/api/manager';
+import { StockBadge } from '@/components/ui/StockBadge';
+import { Skeleton } from '@/components/ui/Skeleton/Skeleton';
+import { PagePagination } from '@/components/ui/PagePagination';
+import { formatPrice } from '@/utils/format';
 
-interface InventoryItem {
-  id: string;
-  name: string;
-  sku: string;
-  category: string;
-  price: number;
-  stock: number;
-  minStock: number;
-  reserved: number;
-  lastUpdated: string;
-}
-
-const MOCK_INVENTORY: InventoryItem[] = [
-  { id: '1', name: 'AMD Ryzen 5 5600X', sku: 'CPU-AMD-5600X', category: 'cpu', price: 599, stock: 15, minStock: 5, reserved: 2, lastUpdated: '2026-05-14T10:00:00Z' },
-  { id: '2', name: 'Intel Core i5-12400F', sku: 'CPU-INT-12400F', category: 'cpu', price: 479, stock: 8, minStock: 5, reserved: 1, lastUpdated: '2026-05-14T10:00:00Z' },
-  { id: '3', name: 'NVIDIA RTX 4060 Ti', sku: 'GPU-NV-4060TI', category: 'gpu', price: 1299, stock: 3, minStock: 5, reserved: 0, lastUpdated: '2026-05-13T15:30:00Z' },
-  { id: '4', name: 'AMD RX 7600', sku: 'GPU-AMD-7600', category: 'gpu', price: 749, stock: 0, minStock: 3, reserved: 0, lastUpdated: '2026-05-12T09:00:00Z' },
-  { id: '5', name: 'ASUS TUF B650-PLUS', sku: 'MB-ASU-B650', category: 'motherboard', price: 449, stock: 12, minStock: 4, reserved: 3, lastUpdated: '2026-05-14T08:00:00Z' },
-  { id: '6', name: 'Kingston Fury 16GB DDR5', sku: 'RAM-KIN-16D5', category: 'ram', price: 189, stock: 25, minStock: 10, reserved: 5, lastUpdated: '2026-05-14T11:00:00Z' },
-  { id: '7', name: 'Samsung 980 PRO 1TB', sku: 'SSD-SAM-980P1', category: 'storage', price: 259, stock: 20, minStock: 8, reserved: 4, lastUpdated: '2026-05-14T07:00:00Z' },
-  { id: '8', name: 'Corsair RM750x', sku: 'PSU-COR-RM750', category: 'psu', price: 329, stock: 6, minStock: 3, reserved: 1, lastUpdated: '2026-05-13T14:00:00Z' },
-  { id: '9', name: 'NZXT H5 Flow', sku: 'CASE-NZT-H5F', category: 'case', price: 249, stock: 4, minStock: 3, reserved: 0, lastUpdated: '2026-05-14T09:00:00Z' },
-  { id: '10', name: 'AMD Ryzen 7 7800X3D', sku: 'CPU-AMD-7800X3D', category: 'cpu', price: 999, stock: 2, minStock: 3, reserved: 1, lastUpdated: '2026-05-14T12:00:00Z' },
-];
+/* ─── Маппинг категорий ─── */
 
 const CATEGORY_LABELS: Record<string, string> = {
   cpu: 'Процессоры',
@@ -38,126 +24,206 @@ const CATEGORY_LABELS: Record<string, string> = {
   ram: 'Оперативная память',
   storage: 'Накопители',
   psu: 'Блоки питания',
-  case: 'Корпуса'
+  case: 'Корпуса',
+  cooling: 'Охлаждение',
+  fan: 'Вентиляторы',
+  monitor: 'Мониторы',
+  keyboard: 'Клавиатуры',
+  mouse: 'Мыши',
+  headphones: 'Наушники',
 };
 
-function formatPrice(price: number): string {
-  return price.toLocaleString('ru-BY') + ' BYN';
+/* ─── Фильтры ─── */
+
+const STOCK_FILTER_OPTIONS = [
+  { value: '', label: 'Все статусы' },
+  { value: 'in_stock', label: 'В наличии' },
+  { value: 'low', label: 'Мало' },
+  { value: 'out_of_stock', label: 'Нет в наличии' },
+] as const;
+
+/* ─── Скелетон ─── */
+
+function InventorySkeleton() {
+  return (
+    <div className="space-y-4">
+      {/* Скелетон статистики */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} height={72} borderRadius="lg" />
+        ))}
+      </div>
+      <Skeleton height={48} borderRadius="lg" />
+      <Skeleton height={400} borderRadius="lg" />
+    </div>
+  );
 }
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
-function getStockStatus(stock: number, minStock: number): 'critical' | 'warning' | 'ok' | 'outofstock' {
-  if (stock === 0) return 'outofstock';
-  if (stock <= minStock / 2) return 'critical';
-  if (stock <= minStock) return 'warning';
-  return 'ok';
-}
+/* ─── Основной компонент ─── */
 
 export function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
-  const [stockFilter, setStockFilter] = useState<string>('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [stockFilter, setStockFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const PAGE_SIZE = 20;
 
-  const filteredItems = useMemo(() => {
-    return MOCK_INVENTORY.filter((item) => {
-      const searchLower = searchQuery.toLowerCase();
-      const matchesSearch =
-        searchQuery === '' ||
-        item.name.toLowerCase().includes(searchLower) ||
-        item.sku.toLowerCase().includes(searchLower);
+  // Запрос товаров через API (без фильтрации по inStock -- показываем все для полной картины склада)
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['manager', 'inventory', currentPage, PAGE_SIZE],
+    queryFn: () => managerApi.getInventory(currentPage, PAGE_SIZE),
+  });
 
-      const matchesCategory = categoryFilter === '' || item.category === categoryFilter;
+  // Отдельный запрос ВСЕХ товаров для статистики (чтобы статистика не менялась при пагинации)
+  const { data: allProductsData } = useQuery({
+    queryKey: ['manager-inventory-all'],
+    queryFn: () => managerApi.getInventory(1, 1000),
+  });
 
-      let matchesStock = true;
-      if (stockFilter === 'low') {
-        matchesStock = item.stock <= item.minStock;
-      } else if (stockFilter === 'outofstock') {
-        matchesStock = item.stock === 0;
-      } else if (stockFilter === 'ok') {
-        matchesStock = item.stock > item.minStock;
+  const allProducts: RawProductItem[] = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
+
+  // Клиентская фильтрация
+  const filteredProducts = useMemo(() => {
+    return allProducts.filter((p) => {
+      // Поиск по названию
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const nameMatch = (p.name ?? '').toLowerCase().includes(q);
+        const skuMatch = (p.sku ?? '').toLowerCase().includes(q);
+        if (!nameMatch && !skuMatch) return false;
       }
 
-      return matchesSearch && matchesCategory && matchesStock;
-    });
-  }, [searchQuery, categoryFilter, stockFilter]);
+      // Фильтр по категории
+      if (categoryFilter && p.category !== categoryFilter) {
+        return false;
+      }
 
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const paginatedItems = filteredItems.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+      // Фильтр по остатку
+      if (stockFilter) {
+        const stock = p.stock ?? 0;
+        switch (stockFilter) {
+          case 'in_stock':
+            if (stock <= 3) return false;
+            break;
+          case 'low':
+            if (stock === 0 || stock > 3) return false;
+            break;
+          case 'out_of_stock':
+            if (stock !== 0) return false;
+            break;
+        }
+      }
+
+      return true;
+    });
+  }, [allProducts, searchQuery, categoryFilter, stockFilter]);
+
+  // Статистика считается по всем товарам (все 1000), а не по текущей странице
+  const stats = useMemo(() => {
+    const allItems = allProductsData?.items ?? [];
+    const inStock = allItems.filter((p) => (p.stock ?? 0) > 3).length;
+    const lowStock = allItems.filter((p) => {
+      const s = p.stock ?? 0;
+      return s > 0 && s <= 3;
+    }).length;
+    const outOfStock = allItems.filter((p) => (p.stock ?? 0) === 0).length;
+    return { total: allProductsData?.totalCount ?? allItems.length, inStock, lowStock, outOfStock };
+  }, [allProductsData]);
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
-  // Stats calculation
-  const stats = useMemo(() => {
-    const totalItems = MOCK_INVENTORY.length;
-    const lowStockItems = MOCK_INVENTORY.filter((i: InventoryItem) => i.stock <= i.minStock).length;
-    const outOfStockItems = MOCK_INVENTORY.filter((i: InventoryItem) => i.stock === 0).length;
-    const totalValue = MOCK_INVENTORY.reduce((sum: number, item: InventoryItem) => sum + (item.stock * item.price), 0);
+  if (isLoading) {
+    return <InventorySkeleton />;
+  }
 
-    return { totalItems, lowStockItems, outOfStockItems, totalValue };
-  }, []);
+  if (error) {
+    return (
+      <div className="bg-surface-card border border-hairline-dark rounded-lg p-8 text-center">
+        <p className="text-price-rise font-medium">Ошибка загрузки данных склада</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          Попробуйте обновить страницу
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="staff-page inventory-page">
-      <header className="staff-page__header inventory-page__header">
-        <div className="inventory-page__title-section">
-          <h1 className="staff-page__title inventory-page__title">Управление запасами</h1>
-          <p className="staff-page__subtitle inventory-page__subtitle">
-            Текущие остатки товаров на складе
-          </p>
-        </div>
-      </header>
+    <div className="space-y-4">
+      {/* Заголовок */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Управление запасами</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Текущие остатки товаров на складе
+        </p>
+      </div>
 
-      {/* Stats Bar */}
-      <div className="inventory-stats">
-        <div className="inventory-stat">
-          <div className="inventory-stat__value">{stats.totalItems}</div>
-          <div className="inventory-stat__label">Всего товаров</div>
+      {/* Статистика */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-surface-card border border-hairline-dark rounded-lg p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-surface-elevated flex items-center justify-center shrink-0">
+            <Package size={20} className="text-muted-foreground" />
+          </div>
+          <div>
+            <div className="text-lg font-bold font-tabular-nums text-foreground">{stats.total}</div>
+            <div className="text-xs text-muted-foreground">Всего товаров</div>
+          </div>
         </div>
-        <div className="inventory-stat inventory-stat--warning">
-          <div className="inventory-stat__value">{stats.lowStockItems}</div>
-          <div className="inventory-stat__label">Низкий остаток</div>
+        <div className="bg-surface-card border border-hairline-dark rounded-lg p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-surface-elevated flex items-center justify-center shrink-0">
+            <CheckCircle size={20} className="text-price-drop" />
+          </div>
+          <div>
+            <div className="text-lg font-bold font-tabular-nums text-foreground">{stats.inStock}</div>
+            <div className="text-xs text-muted-foreground">В наличии</div>
+          </div>
         </div>
-        <div className="inventory-stat inventory-stat--danger">
-          <div className="inventory-stat__value">{stats.outOfStockItems}</div>
-          <div className="inventory-stat__label">Нет в наличии</div>
+        <div className="bg-surface-card border border-hairline-dark rounded-lg p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-surface-elevated flex items-center justify-center shrink-0">
+            <AlertTriangle size={20} className="text-gold" />
+          </div>
+          <div>
+            <div className="text-lg font-bold font-tabular-nums text-foreground">{stats.lowStock}</div>
+            <div className="text-xs text-muted-foreground">Мало остатков</div>
+          </div>
         </div>
-        <div className="inventory-stat inventory-stat--success">
-          <div className="inventory-stat__value">{formatPrice(stats.totalValue)}</div>
-          <div className="inventory-stat__label">Общая стоимость</div>
+        <div className="bg-surface-card border border-hairline-dark rounded-lg p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-surface-elevated flex items-center justify-center shrink-0">
+            <XCircle size={20} className="text-price-rise" />
+          </div>
+          <div>
+            <div className="text-lg font-bold font-tabular-nums text-foreground">{stats.outOfStock}</div>
+            <div className="text-xs text-muted-foreground">Нет в наличии</div>
+          </div>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="filter-bar">
-        <input
-          type="text"
-          className="filter-input"
-          placeholder="Поиск по названию или артикулу..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
+      {/* Фильтры */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Поиск */}
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            className="w-full pl-9 pr-4 py-2.5 bg-surface-card border border-hairline-dark rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+            placeholder="Поиск по названию или артикулу..."
+            aria-label="Поиск товаров"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+
+        {/* Фильтр категории */}
         <select
-          className="filter-select"
+          className="px-4 py-2.5 bg-surface-card border border-hairline-dark rounded-lg text-sm text-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors cursor-pointer"
+          aria-label="Фильтр по категории"
           value={categoryFilter}
           onChange={(e) => {
             setCategoryFilter(e.target.value);
@@ -169,110 +235,109 @@ export function InventoryPage() {
             <option key={key} value={key}>{label}</option>
           ))}
         </select>
+
+        {/* Фильтр остатка */}
         <select
-          className="filter-select"
+          className="px-4 py-2.5 bg-surface-card border border-hairline-dark rounded-lg text-sm text-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors cursor-pointer"
+          aria-label="Фильтр по остатку"
           value={stockFilter}
           onChange={(e) => {
             setStockFilter(e.target.value);
             setCurrentPage(1);
           }}
         >
-          <option value="">Все статусы</option>
-          <option value="low">Низкий остаток</option>
-          <option value="outofstock">Нет в наличии</option>
-          <option value="ok">В наличии</option>
+          {STOCK_FILTER_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
 
-      {/* Inventory Table */}
-      <div className="table-container">
-        <table className="data-table inventory-table">
-          <thead>
-            <tr>
-              <th>Артикул</th>
-              <th>Наименование</th>
-              <th>Категория</th>
-              <th>Цена</th>
-              <th>В наличии</th>
-              <th>Резерв</th>
-              <th>Мин. остаток</th>
-              <th>Статус</th>
-              <th>Обновлено</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedItems.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="data-table__empty">
-                  Товары не найдены
-                </td>
+      {/* Таблица */}
+      <div className="bg-surface-card border border-hairline-dark rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+           <table className="w-full text-sm min-w-[700px]">
+            <thead>
+              <tr className="border-b border-hairline-dark">
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Товар
+                </th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Категория
+                </th>
+                <th scope="col" className="text-right px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Остаток
+                </th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Статус
+                </th>
+                <th scope="col" className="text-right px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Цена
+                </th>
               </tr>
-            ) : (
-              paginatedItems.map((item) => {
-                const stockStatus = getStockStatus(item.stock, item.minStock);
-                return (
-                  <tr key={item.id} className={`inventory-row--${stockStatus}`}>
-                    <td>
-                      <span className="inventory-sku">{item.sku}</span>
-                    </td>
-                    <td>
-                      <div className="inventory-name">{item.name}</div>
-                    </td>
-                    <td>
-                      <span className="inventory-category">{CATEGORY_LABELS[item.category]}</span>
-                    </td>
-                    <td>{formatPrice(item.price)}</td>
-                    <td>
-                      <span className={`inventory-stock inventory-stock--${stockStatus}`}>
-                        {item.stock} шт.
-                      </span>
-                    </td>
-                    <td>{item.reserved} шт.</td>
-                    <td>{item.minStock} шт.</td>
-                    <td>
-                      <span className={`stock-status stock-status--${stockStatus}`}>
-                        {stockStatus === 'outofstock' ? 'Нет в наличии' :
-                         stockStatus === 'critical' ? 'Критически мало' :
-                         stockStatus === 'warning' ? 'Мало' : 'В норме'}
-                      </span>
-                    </td>
-                    <td>{formatDate(item.lastUpdated)}</td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredProducts.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-5 py-12 text-center text-muted-foreground">
+                    Товары не найдены
+                  </td>
+                </tr>
+              ) : (
+                filteredProducts.map((product) => {
+                  const stock = product.stock ?? 0;
+                  return (
+                    <tr
+                      key={product.id}
+                      className="border-b border-hairline-dark last:border-0 hover:bg-surface-elevated/50 transition-colors"
+                    >
+                      <td className="px-5 py-3">
+                        <div className="text-sm font-medium">
+                          {product.slug ? (
+                            <Link
+                              to={`/product/${product.slug}`}
+                              className="text-foreground hover:text-gold transition-colors"
+                            >
+                              {product.name}
+                            </Link>
+                          ) : (
+                            <span className="text-foreground">{product.name}</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {product.sku}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3">
+                        <span className="text-sm text-muted-foreground">
+                          {CATEGORY_LABELS[product.category ?? ''] ?? product.category ?? '--'}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <span className="text-sm font-medium font-tabular-nums text-foreground">
+                          {stock} шт.
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <StockBadge stock={stock} />
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <span className="text-sm text-foreground font-tabular-nums">
+                          {formatPrice(product.price ?? 0)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            className="pagination-btn"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            ←
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              className={'pagination-btn ' + (page === currentPage ? 'pagination-btn--active' : '')}
-              onClick={() => handlePageChange(page)}
-            >
-              {page}
-            </button>
-          ))}
-          <button
-            className="pagination-btn"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            →
-          </button>
-        </div>
-      )}
+      {/* Пагинация */}
+      <PagePagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
     </div>
   );
 }

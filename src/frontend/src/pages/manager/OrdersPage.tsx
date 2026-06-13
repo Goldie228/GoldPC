@@ -1,254 +1,217 @@
 /**
  * Manager Orders Page
  * Страница управления заказами для менеджеров
- * Основано на prototypes/manager-orders.html
+ * Таблица с поиском, фильтрацией по статусу, пагинацией
  */
 
-import { useState, useEffect, useMemo } from 'react';
-import { useManager } from '@/hooks/useManager';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { Search, Eye } from 'lucide-react';
+import { managerApi } from '@/api/manager';
+import type { RawOrderItem } from '@/api/manager';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Skeleton } from '@/components/ui/Skeleton/Skeleton';
+import { PagePagination } from '@/components/ui/PagePagination';
+import { getStatusConfig } from '@/utils/order-status';
+import { formatPrice, formatDate } from '@/utils/format';
 
-type OrderStatus = 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled';
+/* ─── Типы ─── */
 
-interface Order {
-  id: string;
-  customerName: string;
-  customerEmail: string;
-  total: number;
-  status: OrderStatus;
-  date: string;
+type OrderStatusFilter = '' | '0' | '1' | '2' | '3' | '4' | '5' | '6';
+
+/* ─── Скелетон таблицы ─── */
+
+function OrdersTableSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton height={48} borderRadius="lg" />
+      <Skeleton height={400} borderRadius="lg" />
+      <Skeleton height={48} borderRadius="lg" />
+    </div>
+  );
 }
 
+/* ─── Константы ─── */
 
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'Ожидает',
-  processing: 'В обработке',
-  shipped: 'Отправлен',
-  completed: 'Завершён',
-  cancelled: 'Отменён',
-};
+const STATUS_FILTER_OPTIONS: { value: OrderStatusFilter; label: string }[] = [
+  { value: '', label: 'Все статусы' },
+  { value: '0', label: 'Новый' },
+  { value: '1', label: 'В обработке' },
+  { value: '2', label: 'Оплачен' },
+  { value: '3', label: 'В сборке' },
+  { value: '4', label: 'Готов' },
+  { value: '5', label: 'Выдан' },
+  { value: '6', label: 'Отменён' },
+];
 
-const STATUS_CLASSES: Record<OrderStatus, string> = {
-  pending: 'status-badge--pending',
-  processing: 'status-badge--processing',
-  shipped: 'status-badge--shipped',
-  completed: 'status-badge--completed',
-  cancelled: 'status-badge--cancelled',
-};
+const PAGE_SIZE = 20;
 
-function formatPrice(price: number): string {
-  return price.toLocaleString('ru-BY') + ' BYN';
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
+/* ─── Основной компонент ─── */
 
 export function OrdersPage() {
-  const { getOrders } = useManager();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | ''>('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Серверная фильтрация по статусу и поиску
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['manager', 'orders', currentPage, PAGE_SIZE, statusFilter, searchQuery],
+    queryFn: () => managerApi.getOrders(currentPage, PAGE_SIZE, statusFilter || undefined, searchQuery || undefined),
+  });
 
-   useEffect(() => {
-     const loadOrders = async () => {
-       setIsLoading(true);
-       try {
-         const data = await getOrders(currentPage, itemsPerPage, statusFilter || undefined);
-         if (data != null) {
-           // Transform RawOrderItem[] to Order[]
-           const transformedOrders = (data.items || []).map((item) => ({
-             id: item.id ?? '',
-             customerName: 'Unknown Customer',
-             customerEmail: 'unknown@example.com',
-             total: 0,
-             status: (item.status ?? 'pending') as OrderStatus,
-             date: new Date().toISOString(),
-           }));
-           setOrders(transformedOrders);
-         }
-       } catch (error) {
-         console.error('Failed to load orders:', error);
-       } finally {
-         setIsLoading(false);
-       }
-     };
-     void loadOrders();
-   }, [currentPage, statusFilter, getOrders]);
-
-  const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      const searchLower = searchQuery.toLowerCase();
-      const matchesSearch =
-        searchQuery === '' ||
-        order.id.toLowerCase().includes(searchLower) ||
-        order.customerName.toLowerCase().includes(searchLower) ||
-        order.customerEmail.toLowerCase().includes(searchLower);
-
-      const matchesDateFrom = dateFrom === '' || order.date >= dateFrom;
-      const matchesDateTo = dateTo === '' || order.date <= dateTo;
-
-      return matchesSearch && matchesDateFrom && matchesDateTo;
-    });
-  }, [orders, searchQuery, dateFrom, dateTo]);
-
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage) || 1;
-  const paginatedOrders = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return filteredOrders.slice(start, start + itemsPerPage);
-  }, [filteredOrders, currentPage, itemsPerPage]);
+  const allOrders: RawOrderItem[] = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
-  return (
-    <div className="staff-page manager-orders">
-      <header className="staff-page__header manager-orders__header">
-        <div className="manager-orders__title-section">
-          <h1 className="staff-page__title manager-orders__title">Управление заказами</h1>
-          <p className="staff-page__subtitle manager-orders__subtitle">Все заказы магазина</p>
-        </div>
-      </header>
+  if (isLoading) {
+    return <OrdersTableSkeleton />;
+  }
 
-      {/* Filter Bar */}
-      <div className="filter-bar">
-        <input
-          type="text"
-          className="filter-input"
-          placeholder="Поиск по ID или клиенту..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            setCurrentPage(1);
-          }}
-        />
+  if (error) {
+    return (
+      <div className="bg-surface-card border border-hairline-dark rounded-lg p-8 text-center">
+        <p className="text-price-rise font-medium">Ошибка загрузки заказов</p>
+        <p className="text-muted-foreground text-sm mt-1">
+          Попробуйте обновить страницу
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Заголовок */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Управление заказами</h1>
+        <p className="text-sm text-muted-foreground mt-1">Все заказы магазина</p>
+      </div>
+
+      {/* Панель фильтров */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Поиск */}
+        <div className="relative flex-1">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            className="w-full pl-9 pr-4 py-2.5 bg-surface-card border border-hairline-dark rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
+            placeholder="Поиск по номеру, клиенту..."
+            aria-label="Поиск заказов"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+
+        {/* Фильтр по статусу */}
         <select
-          className="filter-select"
+          className="px-4 py-2.5 bg-surface-card border border-hairline-dark rounded-lg text-sm text-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors cursor-pointer"
+          aria-label="Фильтр по статусу"
           value={statusFilter}
           onChange={(e) => {
-            setStatusFilter(e.target.value as OrderStatus | '');
+            setStatusFilter(e.target.value as OrderStatusFilter);
             setCurrentPage(1);
           }}
         >
-          <option value="">Все статусы</option>
-          <option value="pending">Ожидает</option>
-          <option value="processing">В обработке</option>
-          <option value="shipped">Отправлен</option>
-          <option value="completed">Завершён</option>
-          <option value="cancelled">Отменён</option>
+          {STATUS_FILTER_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
-        <input
-          type="date"
-          className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text focus:border-gold focus:ring-1 focus:ring-gold outline-none [color-scheme:dark]"
-          value={dateFrom}
-          onChange={(e) => {
-            setDateFrom(e.target.value);
-            setCurrentPage(1);
-          }}
-          title="Дата от"
-        />
-        <input
-          type="date"
-          className="bg-surface-card border border-hairline-dark rounded-md px-3 py-2 text-sm text-body-text focus:border-gold focus:ring-1 focus:ring-gold outline-none [color-scheme:dark]"
-          value={dateTo}
-          onChange={(e) => {
-            setDateTo(e.target.value);
-            setCurrentPage(1);
-          }}
-          title="Дата до"
-        />
       </div>
 
-      {/* Orders Table */}
-      <div className="table-container">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>ID заказа</th>
-              <th>Клиент</th>
-              <th>Сумма</th>
-              <th>Статус</th>
-              <th>Дата</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedOrders.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="data-table__empty">
-                  Заказы не найдены
-                </td>
+      {/* Таблица заказов */}
+      <div className="bg-surface-card border border-hairline-dark rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+           <table className="w-full text-sm min-w-[700px]">
+            <thead>
+              <tr className="border-b border-hairline-dark">
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Номер
+                </th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Клиент
+                </th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Сумма
+                </th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Статус
+                </th>
+                <th scope="col" className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Дата
+                </th>
+                <th scope="col" className="text-right px-5 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Действия
+                </th>
               </tr>
-            ) : (
-              paginatedOrders.map((order) => (
-                <tr key={order.id}>
-                  <td>
-                    <span className="order-id">#{order.id}</span>
-                  </td>
-                  <td>
-                    <div className="customer-name">{order.customerName}</div>
-                    <div className="customer-email">{order.customerEmail}</div>
-                  </td>
-                  <td>
-                    <span className="order-total">{formatPrice(order.total)}</span>
-                  </td>
-                  <td>
-                    <span className={'status-badge ' + STATUS_CLASSES[order.status]}>
-                      {STATUS_LABELS[order.status]}
-                    </span>
-                  </td>
-                  <td>{formatDate(order.date)}</td>
-                  <td>
-                    <a href={'/manager/orders/' + order.id} className="action-link">
-                      Подробнее →
-                    </a>
+            </thead>
+            <tbody>
+              {allOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-12 text-center text-muted-foreground">
+                    Заказы не найдены
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                allOrders.map((order) => {
+                  const status = getStatusConfig(order.status);
+                  return (
+                    <tr
+                      key={order.id}
+                      className="border-b border-hairline-dark last:border-0 hover:bg-surface-elevated/50 transition-colors"
+                    >
+                      <td className="px-5 py-3">
+                        <span className="font-medium text-foreground">
+                          #{order.id}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <div className="text-foreground">
+                          {order.customerName ?? 'Клиент'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {order.customerEmail ?? ''}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3">
+                        <span className="font-tabular-nums text-foreground">
+                          {formatPrice(order.total ?? 0)}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <StatusBadge variant={status.variant} label={status.label} />
+                      </td>
+                      <td className="px-5 py-3 text-muted-foreground">
+                        {formatDate(order.createdAt)}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <Link
+                          to={`/manager/orders/${order.id}`}
+                          className="inline-flex items-center gap-1.5 text-gold hover:text-gold-active text-sm font-medium transition-colors"
+                        >
+                          <Eye size={14} />
+                          Подробнее
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            className="pagination-btn"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            ←
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              className={'pagination-btn ' + (page === currentPage ? 'pagination-btn--active' : '')}
-              onClick={() => handlePageChange(page)}
-            >
-              {page}
-            </button>
-          ))}
-          <button
-            className="pagination-btn"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            →
-          </button>
-        </div>
-      )}
+      {/* Пагинация */}
+      <PagePagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
     </div>
   );
 }
