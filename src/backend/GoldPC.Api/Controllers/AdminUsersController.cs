@@ -26,22 +26,6 @@ public class AdminUsersController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>Получить IP-адрес клиента</summary>
-    private string GetClientIp()
-    {
-        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-        // За обратным прокси: X-Forwarded-For — инфраструктурный заголовок, не привязывается через model binding
-#pragma warning disable S6932 // Use model binding instead of raw request data
-        if (HttpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var forwardedFor))
-#pragma warning restore S6932
-        {
-            var first = forwardedFor.FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(first))
-                ip = first.Split(',')[0].Trim();
-        }
-        return ip ?? "";
-    }
-
     /// <summary>Получить ID текущего пользователя из JWT-токена</summary>
     private Guid GetCurrentUserId()
     {
@@ -97,7 +81,7 @@ public class AdminUsersController : ControllerBase
         var currentUserName = User.Identity?.Name ?? "unknown";
         var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "unknown";
         await _adminService.AddAuditLogAsync("USER_UPDATED", currentUserId, currentUserName, currentUserEmail,
-            $"Обновлён пользователь {user.Email} ({user.FirstName} {user.LastName})", ipAddress: GetClientIp());
+            $"Обновлён пользователь {user.Email} ({user.FirstName} {user.LastName})");
         return Ok(user);
     }
 
@@ -118,7 +102,7 @@ public class AdminUsersController : ControllerBase
         var currentUserName = User.Identity?.Name ?? "unknown";
         var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "unknown";
         await _adminService.AddAuditLogAsync("USER_ROLE_CHANGED", currentUserId, currentUserName, currentUserEmail,
-            $"Изменена роль пользователя {user.Email} на {request.Role}", "WARNING", ipAddress: GetClientIp());
+            $"Изменена роль пользователя {user.Email} на {request.Role}", "WARNING");
         return Ok(user);
     }
 
@@ -138,7 +122,7 @@ public class AdminUsersController : ControllerBase
             var currentUserName = User.Identity?.Name ?? "unknown";
             var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "unknown";
             await _adminService.AddAuditLogAsync("USER_DELETED", currentUserId, currentUserName, currentUserEmail,
-                $"Деактивирован пользователь {user.Email}", "WARNING", ipAddress: GetClientIp());
+                $"Деактивирован пользователь {user.Email}", "WARNING");
             await _notificationService.SendNotificationToRoleAsync("Admin", new Notification
             {
                 UserId = GetCurrentUserId(),
@@ -172,7 +156,7 @@ public class AdminUsersController : ControllerBase
             var currentUserName = User.Identity?.Name ?? "unknown";
             var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "unknown";
             await _adminService.AddAuditLogAsync("USER_ACTIVATED", currentUserId, currentUserName, currentUserEmail,
-                $"Активирован пользователь {user.Email}", ipAddress: GetClientIp());
+                $"Активирован пользователь {user.Email}");
             await _notificationService.SendNotificationToRoleAsync("Admin", new Notification
             {
                 UserId = GetCurrentUserId(),
@@ -221,7 +205,7 @@ public class AdminUsersController : ControllerBase
             var currentUserName = User.Identity?.Name ?? "unknown";
             var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "unknown";
             await _adminService.AddAuditLogAsync("USER_CREATED", currentUserId, currentUserName, currentUserEmail,
-                $"Создан пользователь: {create.Email} (роль: {create.Role})", ipAddress: GetClientIp());
+                $"Создан пользователь: {create.Email} (роль: {create.Role})");
             await _notificationService.SendNotificationToRoleAsync("Admin", new Notification
             {
                 UserId = GetCurrentUserId(),
@@ -258,7 +242,7 @@ public class AdminUsersController : ControllerBase
         var currentUserName = User.Identity?.Name ?? "unknown";
         var currentUserEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "unknown";
         await _adminService.AddAuditLogAsync("USER_UPDATED", currentUserId, currentUserName, currentUserEmail,
-            $"Сброшен пароль пользователя {id}", ipAddress: GetClientIp());
+            $"Сброшен пароль пользователя {id}");
         return Ok(new { message = "Пароль успешно сброшен" });
     }
 }
