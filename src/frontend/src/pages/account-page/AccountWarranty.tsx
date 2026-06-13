@@ -209,7 +209,7 @@ export function AccountWarranty() {
                     </div>
                   )}
 
-                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
                     <div>
                       <span className="text-muted-foreground block">Срок гарантии</span>
                       <span className="text-foreground">
@@ -224,13 +224,7 @@ export function AccountWarranty() {
                       <span className="text-muted-foreground block">Действует до</span>
                       <span className="text-foreground">{formatDate(card.endDate)}</span>
                     </div>
-                    <div className="flex items-end justify-end">
-                      {/* Страница деталей гарантии пока не реализована — показываем только иконку */}
-                      <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <Calendar size={14} />
-                        Подробнее
-                      </span>
-                    </div>
+
                   </div>
                 </div>
               );

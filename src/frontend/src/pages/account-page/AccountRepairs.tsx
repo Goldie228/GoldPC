@@ -123,33 +123,7 @@ function ActiveRepairTimeline({ status }: { status: string }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  Mobile card styles — data-label based
-// ═══════════════════════════════════════════════════════════════════
 
-const mobileCardStyles = `
-@media (max-width: 767px) {
-  .repair-cell {
-    display: flex !important;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .repair-cell::before {
-    content: attr(data-label);
-    font-size: 0.75rem;
-    color: var(--color-muted-foreground);
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-  .repair-device-cell {
-    flex-direction: column;
-    align-items: flex-end;
-  }
-  .repair-device-cell::before {
-    align-self: flex-start;
-  }
-}
-`;
 
 // ═══════════════════════════════════════════════════════════════════
 //  AccountRepairs — My Repairs page
@@ -161,31 +135,53 @@ export function AccountRepairs() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [tickets, setTickets] = useState<ServiceRequestDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page] = useState(1);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const pageSize = 10;
+  const hasMore = tickets.length < totalCount;
 
   useEffect(() => {
     void loadTickets();
 
-    // Poll for updates every 30 seconds
-    const interval = setInterval(() => { void loadTickets(); }, 30000);
+    // Poll for updates every 30 seconds (background refresh — no spinner)
+    const interval = setInterval(() => { void loadTickets(true); }, 30000);
     return () => clearInterval(interval);
-  }, [page, activeFilter]);
+  }, [activeFilter]);
 
-  const loadTickets = useCallback(async () => {
-    setLoading(true);
+  const loadTickets = useCallback(async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
     try {
-      const result = await getMyServices(page, pageSize, activeFilter === 'all' ? undefined : activeFilter);
+      const result = await getMyServices(1, pageSize, activeFilter === 'all' ? undefined : activeFilter);
       if (result != null) {
         setTickets(result.items);
+        setTotalCount(result.total);
+        setPage(1);
       }
     } catch {
       // Silent fail — show empty state instead
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
-  }, [page, activeFilter, getMyServices]);
+  }, [activeFilter, getMyServices]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const result = await getMyServices(page + 1, pageSize, activeFilter === 'all' ? undefined : activeFilter);
+      if (result != null) {
+        setTickets(prev => [...prev, ...result.items]);
+        setTotalCount(result.total);
+        setPage(prev => prev + 1);
+      }
+    } catch {
+      // Silent
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [page, pageSize, activeFilter, getMyServices, loadingMore, hasMore]);
 
   const stats = {
     total: tickets.length,
@@ -216,8 +212,6 @@ export function AccountRepairs() {
 
   return (
     <div className="bg-background min-h-screen">
-      <style>{mobileCardStyles}</style>
-
       <div className="max-w-[1280px] mx-auto px-4 py-6">
         {/* ── Header ────────────────────────────────────────────── */}
         <div className="flex justify-between items-center mb-6">
@@ -297,20 +291,16 @@ export function AccountRepairs() {
                 {/* Main row — grid on desktop, block on mobile */}
                 <div className="block md:grid md:grid-cols-12 md:gap-4 px-4 md:px-6 py-4">
                   {/* Ticket number */}
-                  <div
-                    className="repair-cell mb-3 md:mb-0 md:col-span-2"
-                    data-label="Номер"
-                  >
+                  <div className="flex items-center justify-between mb-3 md:mb-0 md:col-span-2">
+                    <span className="text-xs text-muted-foreground md:hidden shrink-0">Номер</span>
                     <span className="text-foreground font-mono text-sm">
                       #{ticket.requestNumber}
                     </span>
                   </div>
 
                   {/* Device info */}
-                  <div
-                    className="repair-cell repair-device-cell mb-3 md:mb-0 md:col-span-3"
-                    data-label="Устройство"
-                  >
+                  <div className="flex flex-col items-end mb-3 md:mb-0 md:col-span-3 md:flex-row md:items-center">
+                    <span className="text-xs text-muted-foreground md:hidden self-start">Устройство</span>
                     <div className="text-right md:text-left">
                       <div className="text-foreground text-sm font-medium">{ticket.serviceTypeName}</div>
                       {ticket.deviceModel && (
@@ -320,10 +310,8 @@ export function AccountRepairs() {
                   </div>
 
                   {/* Status badge */}
-                  <div
-                    className="repair-cell mb-3 md:mb-0 md:col-span-2"
-                    data-label="Статус"
-                  >
+                  <div className="flex items-center justify-between mb-3 md:mb-0 md:col-span-2">
+                    <span className="text-xs text-muted-foreground md:hidden shrink-0">Статус</span>
                     <StatusBadge
                       variant={getStatusVariant(ticket.status)}
                       label={getStatusLabel(ticket.status)}
@@ -332,20 +320,15 @@ export function AccountRepairs() {
                   </div>
 
                   {/* Date */}
-                  <div
-                    className="repair-cell mb-3 md:mb-0 md:col-span-3"
-                    data-label="Дата создания"
-                  >
+                  <div className="flex items-center justify-between mb-3 md:mb-0 md:col-span-3">
+                    <span className="text-xs text-muted-foreground md:hidden shrink-0">Дата создания</span>
                     <span className="text-muted-foreground text-sm">
                       {new Date(ticket.createdAt).toLocaleDateString('ru-RU')}
                     </span>
                   </div>
 
                   {/* Actions */}
-                  <div
-                    className="repair-cell md:col-span-2 md:text-right"
-                    data-label=""
-                  >
+                  <div className="flex items-center justify-between md:col-span-2 md:text-right">
                     <Link
                       to={`/my-repairs/${ticket.id}`}
                       className="inline-flex items-center gap-1.5 bg-elevated border border-border text-foreground text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-gold hover:text-gold-ink hover:border-gold transition-all"
@@ -365,6 +348,25 @@ export function AccountRepairs() {
               </motion.div>
             ))}
             </motion.div>
+          </div>
+        )}
+
+        {/* ── Load more ──────────────────────────────────────────── */}
+        {hasMore && (
+          <div className="flex items-center justify-center py-6">
+            {loadingMore ? (
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <RefreshCw size={16} className="animate-spin" />
+                <span>Загрузка</span>
+              </div>
+            ) : (
+              <button
+                onClick={loadMore}
+                className="px-6 py-3 rounded-lg bg-elevated text-foreground border border-border hover:border-foreground/20 transition-colors text-sm font-medium"
+              >
+                Загрузить ещё
+              </button>
+            )}
           </div>
         )}
       </div>

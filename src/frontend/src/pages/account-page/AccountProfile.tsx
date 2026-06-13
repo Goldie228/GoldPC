@@ -5,6 +5,7 @@ import { authService } from '@/api/authService';
 import { useToast } from '@/hooks/useToast';
 import { ChangePasswordModal } from '@/components/account/change-password-modal/ChangePasswordModal';
 import { LoginHistoryModal } from '@/components/account/login-history-modal/LoginHistoryModal';
+import { AvatarCropModal } from '@/components/account/avatar-crop-modal/AvatarCropModal';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 
 type SecurityModal = 'password' | 'history' | null;
@@ -21,6 +22,8 @@ export function AccountProfile() {
   const { showToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [activeModal, setActiveModal] = useState<SecurityModal>(null);
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
+  const [avatarSaving, setAvatarSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: user?.firstName || '',
@@ -59,34 +62,20 @@ export function AccountProfile() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      showToast('Выберите файл изображения', 'error');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('Размер файла не должен превышать 5 МБ', 'error');
-      return;
-    }
-
+  const handleAvatarUpload = async (file: File) => {
+    setAvatarSaving(true);
     try {
       const result = await authService.uploadAvatar(file);
       if (result?.avatarUrl) {
         setUser({ ...user!, avatarUrl: result.avatarUrl });
         showToast('Аватар обновлён', 'success');
+        setAvatarModalOpen(false);
       }
     } catch {
       showToast('Ошибка загрузки аватара', 'error');
+    } finally {
+      setAvatarSaving(false);
     }
-
-    // Reset input so same file can be re-selected
-    e.target.value = '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,7 +113,7 @@ export function AccountProfile() {
         <div className="bg-card rounded-xl border border-border p-6 mb-6">
           <div className="flex items-center gap-4">
             {/* Avatar with hover upload overlay */}
-            <div className="relative shrink-0 group cursor-pointer" onClick={() => document.getElementById('avatar-upload')?.click()}>
+            <div className="relative shrink-0 group cursor-pointer" onClick={() => setAvatarModalOpen(true)}>
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -139,22 +128,11 @@ export function AccountProfile() {
               <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <Camera size={20} className="text-white" />
               </div>
-              <label
-                htmlFor="avatar-upload"
-                className="absolute inset-0 rounded-full cursor-pointer"
-              />
             </div>
-            <input
-              id="avatar-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => void handleAvatarUpload(e)}
-            />
             <div>
               <div className="font-semibold text-foreground">Аватар профиля</div>
               <div className="text-sm text-muted-foreground">
-                {user?.avatarUrl ? 'Нажмите на иконку + чтобы заменить' : 'Нажмите + чтобы загрузить'}
+                {user?.avatarUrl ? 'Нажмите чтобы заменить' : 'Нажмите чтобы загрузить'}
               </div>
             </div>
           </div>
@@ -294,6 +272,12 @@ export function AccountProfile() {
         <LoginHistoryModal
           isOpen={activeModal === 'history'}
           onClose={() => setActiveModal(null)}
+        />
+        <AvatarCropModal
+          isOpen={avatarModalOpen}
+          onClose={() => setAvatarModalOpen(false)}
+          onCrop={handleAvatarUpload}
+          isSaving={avatarSaving}
         />
       </div>
     </div>
