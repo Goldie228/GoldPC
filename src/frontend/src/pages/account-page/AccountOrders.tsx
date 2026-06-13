@@ -1,13 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Info, RefreshCw, Search, X } from 'lucide-react';
+import { Info, RefreshCw, Search, X, Package, Truck, Clock, CheckCircle } from 'lucide-react';
 import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/useToast';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { ordersApi } from '@/api/orders';
 import type { Order, OrderItem } from '@/api/orders';
+import type { ProductSummary } from '@/api/types';
+import { useCartStore } from '@/store/cartStore';
 import { Modal } from '@/components/ui/Modal';
+import { StatCard } from '@/components/ui/StatCard';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import type { StatusVariant } from '@/components/ui/StatusBadge';
 
@@ -227,8 +230,31 @@ export function AccountOrders() {
 
   // ── Actions ─────────────────────────────────────────────────────────
 
-  const handleRepeatOrder = (orderId: string) => {
-    showToast(`Товары из заказа ${orderId} добавлены в корзину`, 'success');
+  const handleRepeatOrder = async (orderNumber: string) => {
+    const fullOrder = orders.find(o => o.orderNumber === orderNumber);
+    if (!fullOrder) {
+      showToast('Заказ не найден', 'error');
+      return;
+    }
+
+    const addItem = useCartStore.getState().addItem;
+
+    for (const item of fullOrder.items) {
+      // Construct a minimal ProductSummary from OrderItem data.
+      // The cart store only uses id, name, category, price, slug, mainImage — safe defaults for the rest.
+      const product: ProductSummary = {
+        id: item.productId,
+        name: item.productName,
+        sku: '',
+        category: 'monitor', // placeholder — cart display does not depend on this
+        price: item.unitPrice,
+        stock: 0,
+        isActive: true,
+      };
+      addItem(product, item.quantity);
+    }
+
+    showToast(`Товары из заказа #${orderNumber} добавлены в корзину`, 'success');
     void navigate('/cart');
   };
 
@@ -309,7 +335,7 @@ export function AccountOrders() {
                     {step.label}
                   </div>
                   {index < arr.length - 1 && (
-                    <div className={`absolute top-2.5 left-[60%] w-[80%] h-0.5 -z-0 ${
+                    <div className={`absolute top-2.5 left-1/2 right-0 h-0.5 -z-0 ${
                       currentProgress > stepProgress ? 'bg-primary' : 'bg-border'
                     }`} />
                   )}
@@ -433,21 +459,17 @@ export function AccountOrders() {
           animate="visible"
           className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6"
         >
-          <motion.div variants={itemVariants} className="bg-card rounded-xl border border-border p-4 md:p-5">
-            <div className="text-3xl font-bold text-foreground">{stats.total}</div>
-            <div className="text-sm text-muted-foreground mt-1">Всего заказов</div>
+          <motion.div variants={itemVariants}>
+            <StatCard label="Всего заказов" value={stats.total} icon={Package} />
           </motion.div>
-          <motion.div variants={itemVariants} className="bg-card rounded-xl border border-border p-4 md:p-5">
-            <div className="text-3xl font-bold text-foreground">{stats.delivered}</div>
-            <div className="text-sm text-muted-foreground mt-1">Доставлено</div>
+          <motion.div variants={itemVariants}>
+            <StatCard label="Доставлено" value={stats.delivered} icon={CheckCircle} />
           </motion.div>
-          <motion.div variants={itemVariants} className="bg-card rounded-xl border border-border p-4 md:p-5">
-            <div className="text-3xl font-bold text-foreground">{stats.shipped}</div>
-            <div className="text-sm text-muted-foreground mt-1">В пути</div>
+          <motion.div variants={itemVariants}>
+            <StatCard label="В пути" value={stats.shipped} icon={Truck} />
           </motion.div>
-          <motion.div variants={itemVariants} className="bg-card rounded-xl border border-border p-4 md:p-5">
-            <div className="text-3xl font-bold text-foreground">{stats.processing}</div>
-            <div className="text-sm text-muted-foreground mt-1">В обработке</div>
+          <motion.div variants={itemVariants}>
+            <StatCard label="В обработке" value={stats.processing} icon={Clock} />
           </motion.div>
         </motion.div>
 
@@ -544,7 +566,7 @@ export function AccountOrders() {
                               <button
                                 className="flex items-center justify-center w-11 h-11 rounded-lg bg-elevated text-muted-foreground hover:text-info-blue hover:border-info-blue/40 border border-border transition-colors"
                                 aria-label="Отследить"
-                                onClick={() => void navigate(`/orders/${order.id}/tracking`)}
+                                onClick={() => void navigate(`/orders/${fullOrder?.orderNumber ?? order.id}/tracking`)}
                               >
                                 <Info size={18} />
                               </button>

@@ -10,6 +10,7 @@ import {
   Heart,
   Sparkles,
   ArrowRight,
+  Loader2,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useOrders } from '@/hooks/useOrders';
@@ -130,37 +131,37 @@ function PcIllustration() {
       aria-hidden="true"
     >
       {/* Monitor */}
-      <rect x="50" y="10" width="140" height="95" rx="8" fill="#1e2329" stroke="#2b3139" strokeWidth="2" />
-      <rect x="58" y="18" width="124" height="74" rx="4" fill="#0b0e11" />
+      <rect x="50" y="10" width="140" height="95" rx="8" style={{ fill: 'var(--color-surface-card, #1e2329)', stroke: 'var(--color-border, #2b3139)' }} strokeWidth="2" />
+      <rect x="58" y="18" width="124" height="74" rx="4" style={{ fill: 'var(--color-canvas-dark, #0b0e11)' }} />
       {/* Screen glow */}
       <rect x="58" y="18" width="124" height="74" rx="4" fill="url(#screenGlow)" opacity="0.4" />
       {/* Stand */}
-      <rect x="105" y="105" width="30" height="12" rx="2" fill="#2b3139" />
-      <rect x="95" y="117" width="50" height="6" rx="3" fill="#2b3139" />
+      <rect x="105" y="105" width="30" height="12" rx="2" style={{ fill: 'var(--color-border, #2b3139)' }} />
+      <rect x="95" y="117" width="50" height="6" rx="3" style={{ fill: 'var(--color-border, #2b3139)' }} />
       {/* CPU chip */}
-      <rect x="80" y="36" width="36" height="36" rx="4" fill="#2b3139" stroke="#FCD535" strokeWidth="1" opacity="0.7" />
-      <rect x="88" y="44" width="20" height="20" rx="2" fill="#FCD535" opacity="0.15" />
+      <rect x="80" y="36" width="36" height="36" rx="4" style={{ fill: 'var(--color-border, #2b3139)', stroke: 'var(--color-gold, #FCD535)' }} strokeWidth="1" opacity="0.7" />
+      <rect x="88" y="44" width="20" height="20" rx="2" style={{ fill: 'var(--color-gold, #FCD535)' }} opacity="0.15" />
       {/* Chip pins */}
-      <rect x="76" y="42" width="4" height="3" rx="1" fill="#FCD535" opacity="0.4" />
-      <rect x="76" y="50" width="4" height="3" rx="1" fill="#FCD535" opacity="0.4" />
-      <rect x="76" y="58" width="4" height="3" rx="1" fill="#FCD535" opacity="0.4" />
-      <rect x="116" y="42" width="4" height="3" rx="1" fill="#FCD535" opacity="0.4" />
-      <rect x="116" y="50" width="4" height="3" rx="1" fill="#FCD535" opacity="0.4" />
-      <rect x="116" y="58" width="4" height="3" rx="1" fill="#FCD535" opacity="0.4" />
+      <rect x="76" y="42" width="4" height="3" rx="1" style={{ fill: 'var(--color-gold, #FCD535)' }} opacity="0.4" />
+      <rect x="76" y="50" width="4" height="3" rx="1" style={{ fill: 'var(--color-gold, #FCD535)' }} opacity="0.4" />
+      <rect x="76" y="58" width="4" height="3" rx="1" style={{ fill: 'var(--color-gold, #FCD535)' }} opacity="0.4" />
+      <rect x="116" y="42" width="4" height="3" rx="1" style={{ fill: 'var(--color-gold, #FCD535)' }} opacity="0.4" />
+      <rect x="116" y="50" width="4" height="3" rx="1" style={{ fill: 'var(--color-gold, #FCD535)' }} opacity="0.4" />
+      <rect x="116" y="58" width="4" height="3" rx="1" style={{ fill: 'var(--color-gold, #FCD535)' }} opacity="0.4" />
       {/* RAM sticks */}
-      <rect x="130" y="40" width="6" height="28" rx="2" fill="#3b82f6" opacity="0.5" />
-      <rect x="140" y="40" width="6" height="28" rx="2" fill="#3b82f6" opacity="0.35" />
-      <rect x="150" y="40" width="6" height="28" rx="2" fill="#3b82f6" opacity="0.25" />
+      <rect x="130" y="40" width="6" height="28" rx="2" style={{ fill: 'var(--color-info-blue, #3b82f6)' }} opacity="0.5" />
+      <rect x="140" y="40" width="6" height="28" rx="2" style={{ fill: 'var(--color-info-blue, #3b82f6)' }} opacity="0.35" />
+      <rect x="150" y="40" width="6" height="28" rx="2" style={{ fill: 'var(--color-info-blue, #3b82f6)' }} opacity="0.25" />
       {/* Floating particles */}
-      <circle cx="42" cy="30" r="2" fill="#FCD535" opacity="0.5" />
-      <circle cx="200" cy="50" r="1.5" fill="#FCD535" opacity="0.4" />
-      <circle cx="35" cy="70" r="1" fill="#3b82f6" opacity="0.3" />
-      <circle cx="210" cy="25" r="1.5" fill="#2dbdb6" opacity="0.3" />
+      <circle cx="42" cy="30" r="2" style={{ fill: 'var(--color-gold, #FCD535)' }} opacity="0.5" />
+      <circle cx="200" cy="50" r="1.5" style={{ fill: 'var(--color-gold, #FCD535)' }} opacity="0.4" />
+      <circle cx="35" cy="70" r="1" style={{ fill: 'var(--color-info-blue, #3b82f6)' }} opacity="0.3" />
+      <circle cx="210" cy="25" r="1.5" style={{ fill: 'var(--color-teal, #2dbdb6)' }} opacity="0.3" />
       <defs>
         <linearGradient id="screenGlow" x1="58" y1="18" x2="182" y2="92" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#FCD535" stopOpacity="0.1" />
-          <stop offset="0.5" stopColor="#3b82f6" stopOpacity="0.05" />
-          <stop offset="1" stopColor="#FCD535" stopOpacity="0.08" />
+          <stop style={{ stopColor: 'var(--color-gold, #FCD535)' }} stopOpacity="0.1" />
+          <stop offset="0.5" style={{ stopColor: 'var(--color-info-blue, #3b82f6)' }} stopOpacity="0.05" />
+          <stop offset="1" style={{ stopColor: 'var(--color-gold, #FCD535)' }} stopOpacity="0.08" />
         </linearGradient>
       </defs>
     </svg>
@@ -280,6 +281,11 @@ export function AccountOverview() {
   const [ticketsTotal, setTicketsTotal] = useState(0);
 
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -299,6 +305,15 @@ export function AccountOverview() {
 
   const isLoading = initialLoading;
   const userName = user?.firstName || 'Пользователь';
+
+  /* ── Ждём гидратации — показываем спиннер ── */
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="animate-spin text-muted-foreground" size={32} />
+      </div>
+    );
+  }
 
   /* ── Guest → показываем страницу приветствия ── */
   if (!isAuthenticated) {

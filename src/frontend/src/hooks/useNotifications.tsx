@@ -222,21 +222,25 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const markAllAsRead = useCallback(async () => {
-    const snapshot = notifications;
-    setNotifications(prev =>
-      prev.map(n => ({ ...n, isRead: true, readAt: new Date().toISOString() })),
-    );
+    let snapshot: Notification[] = [];
+    setNotifications(prev => {
+      snapshot = prev;
+      return prev.map(n => ({ ...n, isRead: true, readAt: new Date().toISOString() }));
+    });
 
     try {
       await apiMarkAllAsRead();
     } catch {
       setNotifications(snapshot);
     }
-  }, [notifications]);
+  }, []);
 
   const deleteNotification = useCallback(async (id: string) => {
-    const snapshot = notifications;
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    let snapshot: Notification[] = [];
+    setNotifications(prev => {
+      snapshot = prev;
+      return prev.filter(n => n.id !== id);
+    });
 
     try {
       await apiDeleteNotification(id);
@@ -244,7 +248,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       // Откат при ошибке — восстанавливаем удаленное уведомление из снимка
       setNotifications(snapshot);
     }
-  }, [notifications]);
+  }, []);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 

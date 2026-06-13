@@ -66,3 +66,9 @@ export type { BottomSheetProps } from './BottomSheet';
 
 // ImageUpload Component
 export { ImageUpload } from './ImageUpload/ImageUpload';
+
+// ToggleSwitch Component
+export { ToggleSwitch } from './ToggleSwitch';
+
+// SectionCard Component
+export { SectionCard } from './SectionCard';

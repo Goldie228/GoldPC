@@ -28,67 +28,8 @@ import {
   Settings as SettingsIcon,
   Loader2,
 } from 'lucide-react';
-
-// =============================================================================
-// ToggleSwitch — кастомный переключатель (off → bg-surface-elevated, on → bg-gold)
-// =============================================================================
-
-interface ToggleSwitchProps {
-  name: keyof SiteSettings;
-  checked: boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  label: string;
-  description?: string;
-}
-
-function ToggleSwitch({ name, checked, onChange, label, description }: ToggleSwitchProps) {
-  return (
-    <div className="flex items-center justify-between py-3">
-      <div className="pr-4">
-        <div className="text-sm font-medium text-body-text">{label}</div>
-        {description && (
-          <div className="text-xs text-muted-foreground mt-1">{description}</div>
-        )}
-      </div>
-      <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-        <input
-          type="checkbox"
-          name={name}
-          className="sr-only peer"
-          checked={checked}
-          onChange={onChange}
-          aria-label={label}
-        />
-        <div className="w-11 h-6 bg-surface-elevated rounded-full peer peer-checked:bg-gold peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
-      </label>
-    </div>
-  );
-}
-
-// =============================================================================
-// SectionCard — карточка-секция с заголовком и иконкой
-// =============================================================================
-
-interface SectionCardProps {
-  icon: React.ReactNode;
-  title: string;
-  children: React.ReactNode;
-  warning?: boolean;
-}
-
-function SectionCard({ icon, title, children, warning }: SectionCardProps) {
-  return (
-    <div className="bg-surface-card rounded-xl p-6">
-      <div className="flex items-center gap-3 pb-4 mb-5 border-b border-hairline-dark">
-        <span className={warning ? 'text-price-rise' : 'text-gold'}>{icon}</span>
-        <h2 className={`text-base font-semibold ${warning ? 'text-price-rise' : 'text-body-text'}`}>
-          {title}
-        </h2>
-      </div>
-      {children}
-    </div>
-  );
-}
+import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
+import { SectionCard } from '@/components/ui/SectionCard';
 
 // =============================================================================
 // SettingsSkeleton — заглушка загрузки

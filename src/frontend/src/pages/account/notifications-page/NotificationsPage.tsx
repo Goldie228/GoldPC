@@ -14,64 +14,8 @@ import { Bell, AlertTriangle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { notificationPreferencesApi } from '@/api/notifications';
 import type { UserNotificationPreferences } from '@/api/notifications';
-
-// =============================================================================
-// ToggleSwitch — идентичный компоненту из SettingsPage
-// =============================================================================
-
-interface ToggleSwitchProps {
-  name: keyof UserNotificationPreferences;
-  checked: boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  label: string;
-  description?: string;
-}
-
-function ToggleSwitch({ name, checked, onChange, label, description }: ToggleSwitchProps) {
-  return (
-    <div className="flex items-center justify-between py-3">
-      <div className="pr-4">
-        <div className="text-sm font-medium text-body-text">{label}</div>
-        {description && (
-          <div className="text-xs text-muted-foreground mt-1">{description}</div>
-        )}
-      </div>
-      <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-        <input
-          type="checkbox"
-          name={name}
-          className="sr-only peer"
-          checked={checked}
-          onChange={onChange}
-          aria-label={label}
-        />
-        <div className="w-11 h-6 bg-surface-elevated rounded-full peer peer-checked:bg-gold peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
-      </label>
-    </div>
-  );
-}
-
-// =============================================================================
-// SectionCard — идентичный компоненту из SettingsPage
-// =============================================================================
-
-interface SectionCardProps {
-  icon: React.ReactNode;
-  title: string;
-  children: React.ReactNode;
-}
-
-function SectionCard({ icon, title, children }: SectionCardProps) {
-  return (
-    <div className="bg-surface-card rounded-xl p-6">
-      <div className="flex items-center gap-3 pb-4 mb-5 border-b border-hairline-dark">
-        <span className="text-gold">{icon}</span>
-        <h2 className="text-base font-semibold text-body-text">{title}</h2>
-      </div>
-      {children}
-    </div>
-  );
-}
+import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
+import { SectionCard } from '@/components/ui/SectionCard';
 
 // =============================================================================
 // Типы уведомлений с описаниями
@@ -197,7 +141,7 @@ export function NotificationsPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-canvas-dark p-6">
-        <div className="mx-auto max-w-[900px]">
+        <div className="mx-auto max-w-[1280px]">
           <div className="mb-8">
             <div className="mb-2 h-7 w-56 animate-pulse rounded bg-surface-elevated" />
             <div className="h-4 w-72 animate-pulse rounded bg-surface-elevated" />
@@ -213,16 +157,14 @@ export function NotificationsPage() {
   if (isError || !preferences) {
     return (
       <div className="min-h-screen bg-canvas-dark p-6">
-        <div className="mx-auto max-w-[900px]">
+        <div className="mx-auto max-w-[1280px]">
           <div className="flex flex-col items-center justify-center rounded-xl bg-surface-card p-12 text-center">
             <AlertTriangle className="mb-4 h-12 w-12 text-price-rise" />
-            <h2 className="mb-2 text-lg font-semibold text-body-text">
+            <h2 className="mb-2 text-lg font-semibold text-foreground">
               Ошибка загрузки настроек
             </h2>
             <p className="mb-6 text-sm text-muted-foreground">
-              {error instanceof Error
-                ? error.message
-                : 'Не удалось загрузить настройки уведомлений.'}
+              Не удалось загрузить настройки уведомлений. Сервис уведомлений временно недоступен.
             </p>
             <button
               onClick={() => refetch()}
@@ -242,10 +184,10 @@ export function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-canvas-dark p-6">
-      <div className="mx-auto max-w-[900px]">
+      <div className="mx-auto max-w-[1280px]">
         {/* Шапка страницы */}
         <header className="mb-8">
-          <h1 className="flex items-center gap-3 text-lg font-semibold text-body-text">
+          <h1 className="flex items-center gap-3 text-lg font-semibold text-foreground">
             <Bell className="h-5 w-5 text-gold" />
             Настройки уведомлений
           </h1>

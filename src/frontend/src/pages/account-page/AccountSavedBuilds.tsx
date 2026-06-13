@@ -3,19 +3,8 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cpu, Trash2, Share2, ExternalLink, Loader2, Package, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
-import apiClient from '@/api/client';
+import { pcbuilderApi, type SavedBuild } from '@/api/pcbuilder';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-
-interface SavedBuild {
-  id: string;
-  name: string;
-  purpose?: string;
-  totalPrice: number;
-  isCompatible: boolean;
-  createdAt: string;
-  shareToken?: string;
-  components: Record<string, string>;
-}
 
 const PURPOSE_LABELS: Record<string, string> = {
   Gaming: 'Игровой',
@@ -86,8 +75,8 @@ export function AccountSavedBuilds() {
   const loadBuilds = async () => {
     setLoading(true);
     try {
-      const { data } = await apiClient.get<SavedBuild[]>('/pcbuilder/configurations');
-      setBuilds(data || []);
+      const builds = await pcbuilderApi.getConfigurations();
+      setBuilds(builds);
     } catch {
       // Endpoint may not be implemented on backend yet — show empty state silently
       setBuilds([]);
@@ -101,7 +90,7 @@ export function AccountSavedBuilds() {
 
     setDeletingId(id);
     try {
-      await apiClient.delete(`/pcbuilder/configurations/${id}`);
+      await pcbuilderApi.deleteConfiguration(id);
       setBuilds((prev) => prev.filter((b) => b.id !== id));
       showToast(`Сборка «${name}» удалена`, 'success');
     } catch {
@@ -120,10 +109,8 @@ export function AccountSavedBuilds() {
   const handleShare = async (id: string) => {
     setSharingId(id);
     try {
-      const { data } = await apiClient.post<{ shareUrl: string; shareToken: string }>(
-        `/pcbuilder/configurations/${id}/share`
-      );
-      const url = data?.shareUrl || `${window.location.origin}/pc-builder/shared/${data?.shareToken}`;
+      const { shareUrl, shareToken } = await pcbuilderApi.shareConfiguration(id);
+      const url = shareUrl || `${window.location.origin}/pc-builder/shared/${shareToken}`;
       await navigator.clipboard.writeText(url);
       showToast('Ссылка скопирована в буфер обмена', 'success');
     } catch {
