@@ -21,7 +21,7 @@ import {
 
 interface NavItem {
   to: string;
-  icon: React.ComponentType<{ size?: number }>;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
 }
 
@@ -205,7 +205,7 @@ export function AdminLayout() {
         </header>
 
         {/* Page content via nested routes */}
-        <main className="flex-1 p-4 lg:p-6">
+        <main className="flex-1 p-3 lg:p-5">
           <Outlet />
         </main>
       </div>
