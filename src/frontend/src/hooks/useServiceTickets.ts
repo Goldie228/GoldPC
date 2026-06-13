@@ -51,11 +51,11 @@ export function useServiceTickets(): UseServiceTicketsReturn {
     }
   }, []);
 
-  const getMyServices = useCallback(async (page = 1, pageSize = 10, status?: string) => {
+  const getMyServices = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
     setError(null);
     try {
-      return await servicesApi.getMyServices(page, pageSize, status);
+      return await servicesApi.getMyServices(page, pageSize);
     } catch (e) {
       const err = e instanceof Error ? e : new Error('Failed to fetch services');
       setError(err);

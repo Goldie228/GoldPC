@@ -76,7 +76,7 @@ function removeKey(
 
 /** Получить значение характеристики из form.specifications по ключу */
 function getSpecValue(
-  specs: Record<string, string | number | boolean>,
+  specs: Record<string, string | number | boolean | undefined>,
   key: string,
 ): string {
   const v = specs[key];
@@ -592,7 +592,7 @@ function GroupSection({
 }: {
   groupName: string;
   entries: SpecEntry[];
-  specs: Record<string, string | number | boolean>;
+  specs: Record<string, string | number | boolean | undefined>;
   metaKeys: Set<string>;
   onValueChange: (key: string, value: string) => void;
   onDelete: (key: string) => void;
@@ -1088,9 +1088,9 @@ export function SpecificationsTab({ form, onChange }: SpecificationsTabProps) {
       // Пропускаем если уже добавлено (по нормализованному или оригинальному ключу)
       if (addedKeys.has(key) || (nk && addedKeys.has(nk))) continue;
       // Ищем фасет по нормализованному или оригинальному ключу
-      const facet = (nk && facetByKey.get(nk)) ?? facetByKey.get(key);
+      const facet: FilterFacetAttribute | undefined = nk ? facetByKey.get(nk) : facetByKey.get(key);
       // Уникальные значения из других товаров категории (для dropdown)
-      const uv = (nk && uniqueValuesByKey.get(nk)) ?? uniqueValuesByKey.get(key);
+      const uv: string[] | undefined = nk ? uniqueValuesByKey.get(nk) : uniqueValuesByKey.get(key);
       entries.push({
         key,
         label: specLabel(key),

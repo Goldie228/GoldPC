@@ -128,7 +128,7 @@ export function ExportPage() {
           }
           case 'products': {
             const response = await catalogAdminApi.getProducts({ pageSize: 100 });
-            data = response.items.map((p) => ({
+            data = response.data.map((p: any) => ({
               id: p.id,
               name: p.name,
               category: p.category,
@@ -142,7 +142,7 @@ export function ExportPage() {
           }
           case 'users': {
             const response = await usersAdminApi.getUsers({ pageSize: 100 });
-            data = response.items.map((u) => ({
+            data = response.data.map((u: any) => ({
               id: u.id,
               email: u.email,
               firstName: u.firstName,

@@ -1,11 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock axios with working interceptor chain
+// Типы для мока перехватчиков Axios
+interface MockInterceptor {
+  fulfilled: (value: any) => any;
+  rejected: (error: any) => any;
+}
+
+// Мок Axios с рабочей цепочкой перехватчиков
 const mockAxiosPost = vi.hoisted(() => vi.fn());
 
 vi.mock('axios', () => {
-  const requestHandlers: Array<{ fulfilled: (c: any) => any; rejected: (e: any) => any }> = [];
-  const responseHandlers: Array<{ fulfilled: (r: any) => any; rejected: (e: any) => any }> = [];
+  const requestHandlers: MockInterceptor[] = [];
+  const responseHandlers: MockInterceptor[] = [];
 
   const instanceFn = vi.fn().mockResolvedValue({ data: {} });
 
@@ -54,7 +60,7 @@ describe('api/client', () => {
   describe('Request Interceptor — Authorization header', () => {
     it('adds Bearer token from localStorage', () => {
       localStorage.setItem('accessToken', 'local-access-token');
-      const handler = apiClient.interceptors.request.handlers[0].fulfilled;
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
       const config = { headers: {} } as any;
 
       const result = handler(config);
@@ -64,7 +70,7 @@ describe('api/client', () => {
 
     it('adds Bearer token from sessionStorage', () => {
       sessionStorage.setItem('accessToken', 'session-access-token');
-      const handler = apiClient.interceptors.request.handlers[0].fulfilled;
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
       const config = { headers: {} } as any;
 
       const result = handler(config);
@@ -75,7 +81,7 @@ describe('api/client', () => {
     it('prefers localStorage over sessionStorage', () => {
       localStorage.setItem('accessToken', 'local-token');
       sessionStorage.setItem('accessToken', 'session-token');
-      const handler = apiClient.interceptors.request.handlers[0].fulfilled;
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
       const config = { headers: {} } as any;
 
       const result = handler(config);
@@ -84,7 +90,7 @@ describe('api/client', () => {
     });
 
     it('does not add header when no token exists', () => {
-      const handler = apiClient.interceptors.request.handlers[0].fulfilled;
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
       const config = { headers: {} } as any;
 
       const result = handler(config);
@@ -106,7 +112,7 @@ describe('api/client', () => {
         },
       });
 
-      const handler = apiClient.interceptors.response.handlers[0].rejected;
+      const handler = (apiClient.interceptors.response.handlers as unknown as MockInterceptor[])[0].rejected;
       const originalRequest = { _retry: false, headers: {} as Record<string, string> };
       const error = { response: { status: 401 }, config: originalRequest };
 
@@ -137,7 +143,7 @@ describe('api/client', () => {
         },
       });
 
-      const handler = apiClient.interceptors.response.handlers[0].rejected;
+      const handler = (apiClient.interceptors.response.handlers as unknown as MockInterceptor[])[0].rejected;
       const originalRequest = { _retry: false, headers: {} as Record<string, string> };
       const error = { response: { status: 401 }, config: originalRequest };
 
@@ -157,7 +163,7 @@ describe('api/client', () => {
 
       mockAxiosPost.mockRejectedValueOnce(new Error('Network error'));
 
-      const handler = apiClient.interceptors.response.handlers[0].rejected;
+      const handler = (apiClient.interceptors.response.handlers as unknown as MockInterceptor[])[0].rejected;
       const error = {
         response: { status: 401 },
         config: { _retry: false, headers: {} },
@@ -175,7 +181,7 @@ describe('api/client', () => {
     it('does not retry when _retry is already true', async () => {
       localStorage.setItem('refreshToken', 'refresh-token-123');
 
-      const handler = apiClient.interceptors.response.handlers[0].rejected;
+      const handler = (apiClient.interceptors.response.handlers as unknown as MockInterceptor[])[0].rejected;
       const error = {
         response: { status: 401 },
         config: { _retry: true, headers: {} },
@@ -187,7 +193,7 @@ describe('api/client', () => {
     });
 
     it('passes through non-401 errors without refresh attempt', async () => {
-      const handler = apiClient.interceptors.response.handlers[0].rejected;
+      const handler = (apiClient.interceptors.response.handlers as unknown as MockInterceptor[])[0].rejected;
       const error = {
         response: { status: 500 },
         config: { _retry: false, headers: {} },

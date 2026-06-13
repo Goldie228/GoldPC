@@ -155,7 +155,6 @@ public static class RolePermissions
 
             // Users
             Permissions.UsersView,
-            Permissions.UsersManageRoles,
 
             // Categories
             Permissions.CategoriesView,

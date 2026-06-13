@@ -26,21 +26,6 @@ public static class Roles
     public const string Client = "Client";
 
     /// <summary>
-    /// Сотрудник. Работа с заказами и товарами. (Синтаксический сахар для Accountant)
-    /// </summary>
-    public const string Employee = "Employee";
-
-    /// <summary>
-    /// Клиент (покупатель). (Синтаксический сахар для Client)
-    /// </summary>
-    public const string Customer = "Customer";
-
-    /// <summary>
-    /// Гость (неавторизованный пользователь).
-    /// </summary>
-    public const string Guest = "Guest";
-
-    /// <summary>
     /// Мастер. Выполнение ремонтных и сборочных работ.
     /// </summary>
     public const string Master = "Master";

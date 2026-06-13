@@ -2,8 +2,6 @@
  * Auth Store - Zustand store для управления состоянием аутентификации
  */
 import { create } from 'zustand';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { persist } from 'zustand/middleware';
 import type { User } from '../api/types';
 import { decodeHtmlEntities } from '../utils/decodeHtml';
 import { mapBackendRole, normalizeUserRoles } from '../utils/roleMapper';
