@@ -112,6 +112,11 @@ public class AuthService : IAuthService
                 .Include(u => u.RefreshTokens)
                 .FirstOrDefaultAsync(u => u.EmailHash == emailHash);
 
+            // Fallback: если EmailHash не найден, ищем по открытому email (совместимость со старыми пользователями)
+            user ??= await _context.Users
+                .Include(u => u.RefreshTokens)
+                .FirstOrDefaultAsync(u => u.Email == request.Email.ToLower());
+
             if (user == null)
             {
                 return (null, "Неверные учётные данные");
@@ -281,6 +286,8 @@ public class AuthService : IAuthService
     {
         var emailHash = _encryption.ComputeHash(email.ToLower());
         var user = await _context.Users.FirstOrDefaultAsync(u => u.EmailHash == emailHash);
+        // Fallback для совместимости со старыми пользователями
+        user ??= await _context.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower());
         return user != null ? MapToUserDto(user) : null;
     }
 
@@ -339,6 +346,8 @@ public class AuthService : IAuthService
         {
             var emailHash = _encryption.ComputeHash(email.ToLower());
             var user = await _context.Users.FirstOrDefaultAsync(u => u.EmailHash == emailHash);
+            // Fallback для совместимости со старыми пользователями
+            user ??= await _context.Users.FirstOrDefaultAsync(u => u.Email == email.ToLower());
             if (user == null)
             {
                 _logger.LogInformation("Password reset requested for non-existent email hash");

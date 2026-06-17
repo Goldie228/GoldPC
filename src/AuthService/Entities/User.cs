@@ -20,7 +20,7 @@ public class User : BaseEntity
     /// <summary>
     /// SHA256-хеш email (в открытом виде) для поиска и логина.
     /// </summary>
-    public string EmailHash { get; set; } = string.Empty;
+    public string? EmailHash { get; set; }
 
     /// <summary>
     /// Хэш пароля (bcrypt)
