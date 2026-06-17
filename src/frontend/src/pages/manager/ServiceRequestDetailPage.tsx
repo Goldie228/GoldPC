@@ -4,7 +4,7 @@
  * Назначение мастера, смена статуса, просмотр сообщений
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -18,12 +18,18 @@ import {
   Clock,
 } from 'lucide-react';
 import { managerApi } from '@/api/manager';
+import { usersAdminApi } from '@/api/admin';
+import { formatPrice, formatDateTime } from '@/utils/format';
 import type { ServiceRequestItem } from '@/api/manager';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton/Skeleton';
 import { getServiceStatusConfig, SERVICE_STATUS_OPTIONS } from '@/utils/service-status';
-import { formatDateTime } from '@/utils/format';
+import { useToast } from '@/hooks/useToast';
+import { useTicketChat } from '@/hooks/useTicketChat';
+import { ChatMessage } from '@/components/chat/ChatMessage';
+import { ChatInput } from '@/components/chat/ChatInput';
+import { TypingIndicator } from '@/components/chat/TypingIndicator';
 
 /* ─── Скелетон загрузки ─── */
 
@@ -46,20 +52,38 @@ function ServiceRequestDetailSkeleton() {
   );
 }
 
-/* ─── Список мастеров (захардкожен для демо) ─── */
-
-const MASTERS = [
-  { id: 'master-1', name: 'Иванов И.И.' },
-  { id: 'master-2', name: 'Петров П.П.' },
-  { id: 'master-3', name: 'Сидоров С.С.' },
-];
-
 /* ─── Основной компонент ─── */
 
 export function ServiceRequestDetailPage() {
   const { id: serviceId } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [selectedMasterId, setSelectedMasterId] = useState('');
+  const [confirmClose, setConfirmClose] = useState(false);
+
+  /* ── Chat ──────────────────────────────────────────────────────── */
+  const chatBottomRef = useRef<HTMLDivElement>(null);
+  const {
+    messages,
+    loading: messagesLoading,
+    error: chatError,
+    typingUserId,
+    connectionStatus,
+    sendMessage,
+  } = useTicketChat({ ticketId: serviceId });
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Запрос мастеров из API
+  const { data: mastersData } = useQuery({
+    queryKey: ['admin', 'masters'],
+    queryFn: async () => {
+      const response = await usersAdminApi.getUsers({ page: 1, pageSize: 100, role: 'Master' as any });
+      return response.data;
+    },
+  });
 
   // Запрос данных заявки
   const { data: request, isLoading, error } = useQuery({
@@ -76,6 +100,7 @@ export function ServiceRequestDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['manager', 'serviceRequest', serviceId] });
       queryClient.invalidateQueries({ queryKey: ['manager', 'serviceRequests'] });
       setSelectedMasterId('');
+      showToast('Мастер назначен', 'success');
     },
     onError: () => {
       // Ошибка обрабатывается через UI
@@ -89,6 +114,7 @@ export function ServiceRequestDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['manager', 'serviceRequest', serviceId] });
       queryClient.invalidateQueries({ queryKey: ['manager', 'serviceRequests'] });
+      showToast('Статус обновлён', 'success');
     },
     onError: () => {
       // Ошибка обрабатывается через UI
@@ -101,6 +127,8 @@ export function ServiceRequestDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['manager', 'serviceRequest', serviceId] });
       queryClient.invalidateQueries({ queryKey: ['manager', 'serviceRequests'] });
+      setConfirmClose(false);
+      showToast('Заявка закрыта', 'success');
     },
     onError: () => {
       // Ошибка обрабатывается через UI
@@ -258,7 +286,7 @@ export function ServiceRequestDetailPage() {
               {request.estimatedCost != null && (
                 <div>
                   <div className="text-xs text-muted-foreground">Примерная стоимость</div>
-                  <div className="text-sm text-foreground font-medium">{request.estimatedCost} BYN</div>
+                  <div className="text-sm text-foreground font-medium">{formatPrice(request.estimatedCost)}</div>
                 </div>
               )}
               <div className="flex items-center gap-2.5">
@@ -269,6 +297,45 @@ export function ServiceRequestDetailPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Чат с клиентом */}
+          <div className="bg-surface-card rounded-xl border border-hairline-dark p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <MessageSquare size={18} className="text-gold" />
+              <h3 className="text-sm font-semibold text-foreground">Чат с клиентом</h3>
+              <span className={`w-2.5 h-2.5 rounded-full ${
+                connectionStatus === 'connected' ? 'bg-price-drop' : 'bg-neutral-400'
+              }`} />
+            </div>
+
+            {chatError && (
+              <div className="bg-price-rise/10 border border-price-rise/20 rounded-lg p-3 mb-3 text-sm text-price-rise">
+                {chatError}
+              </div>
+            )}
+
+            <div className="max-h-[400px] overflow-y-auto space-y-1 mb-4">
+              {messagesLoading && messages.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Загрузка сообщений...</p>
+              ) : messages.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">
+                  Нет сообщений. Напишите первое сообщение клиенту.
+                </p>
+              ) : (
+                messages.map((msg) => (
+                  <ChatMessage key={msg.id} message={msg} isOwn={msg.authorRole === 'Manager'} />
+                ))
+              )}
+              {typingUserId && <TypingIndicator who="Клиент" />}
+              <div ref={chatBottomRef} />
+            </div>
+
+            <ChatInput
+              onSend={sendMessage}
+              disabled={false}
+              placeholder="Сообщение клиенту..."
+            />
           </div>
         </div>
 
@@ -295,8 +362,8 @@ export function ServiceRequestDetailPage() {
                   aria-label="Выбрать мастера"
                 >
                   <option value="">Выберите мастера</option>
-                  {MASTERS.map((m) => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
+                  {(mastersData ?? []).map((m: any) => (
+                    <option key={m.id} value={m.id}>{m.name ?? m.email ?? m.id}</option>
                   ))}
                 </select>
                 <Button
@@ -345,17 +412,35 @@ export function ServiceRequestDetailPage() {
                 </Button>
               )}
               {canClose && (
-                <Button
-                  variant="danger"
-                  fullWidth
-                  leftIcon={<ArrowLeft size={16} />}
-                  onClick={handleClose}
-                  disabled={isUpdating}
-                  aria-busy={isUpdating}
-                  aria-label="Закрыть заявку"
-                >
-                  Закрыть заявку
-                </Button>
+                confirmClose ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleClose}
+                      disabled={isUpdating}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-price-rise rounded-lg hover:bg-price-rise/90 transition-colors disabled:opacity-50"
+                    >
+                      Да, закрыть
+                    </button>
+                    <button
+                      onClick={() => setConfirmClose(false)}
+                      className="px-3 py-1.5 text-sm font-medium text-foreground bg-surface-card border border-hairline-dark rounded-lg hover:bg-surface-elevated transition-colors"
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="danger"
+                    fullWidth
+                    leftIcon={<ArrowLeft size={16} />}
+                    onClick={() => setConfirmClose(true)}
+                    disabled={isUpdating}
+                    aria-busy={isUpdating}
+                    aria-label="Закрыть заявку"
+                  >
+                    Закрыть заявку
+                  </Button>
+                )
               )}
               {!canStartWork && !canComplete && !canClose && (
                 <p className="text-sm text-muted-foreground text-center py-2">
@@ -365,13 +450,13 @@ export function ServiceRequestDetailPage() {
 
               {/* Сообщения об ошибках мутаций */}
               {assignMasterMutation.isError && (
-                <p className="text-sm text-red-400">Ошибка назначения мастера. Попробуйте ещё раз.</p>
+                <p className="text-sm text-price-rise">Ошибка назначения мастера. Попробуйте ещё раз.</p>
               )}
               {statusMutation.isError && (
-                <p className="text-sm text-red-400">Ошибка смены статуса. Попробуйте ещё раз.</p>
+                <p className="text-sm text-price-rise">Ошибка смены статуса. Попробуйте ещё раз.</p>
               )}
               {closeMutation.isError && (
-                <p className="text-sm text-red-400">Ошибка закрытия заявки. Попробуйте ещё раз.</p>
+                <p className="text-sm text-price-rise">Ошибка закрытия заявки. Попробуйте ещё раз.</p>
               )}
             </div>
           </div>

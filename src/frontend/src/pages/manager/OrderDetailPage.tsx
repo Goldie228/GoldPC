@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton/Skeleton';
 import { getStatusConfig } from '@/utils/order-status';
 import { formatPrice, formatDateTime } from '@/utils/format';
+import { useToast } from '@/hooks/useToast';
 
 /* ─── Маппинг методов оплаты ─── */
 
@@ -93,6 +94,7 @@ function OrderTimeline({ items }: { items: Array<{ status: string; date: string;
 export function OrderDetailPage() {
   const { id: orderId } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   // Запрос данных заказа
@@ -111,6 +113,7 @@ export function OrderDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['manager', 'orders'] });
       queryClient.invalidateQueries({ queryKey: ['manager', 'order', orderId] });
       queryClient.invalidateQueries({ queryKey: ['manager', 'dashboard'] });
+      showToast('Статус обновлён', 'success');
     },
     onError: () => {
       // Ошибка обрабатывается через UI
@@ -125,6 +128,7 @@ export function OrderDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['manager', 'order', orderId] });
       queryClient.invalidateQueries({ queryKey: ['manager', 'dashboard'] });
       setShowCancelConfirm(false);
+      showToast('Заказ отменён', 'success');
     },
     onError: () => {
       // Ошибка обрабатывается через UI

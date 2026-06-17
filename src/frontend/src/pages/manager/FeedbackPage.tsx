@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/Skeleton/Skeleton';
 import { PagePagination } from '@/components/ui/PagePagination';
 import { Modal } from '@/components/ui/Modal/Modal';
 import { formatDate } from '@/utils/format';
+import { useToast } from '@/hooks/useToast';
 
 /* ─── Константы ─── */
 
@@ -54,6 +55,7 @@ export function FeedbackPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<FeedbackItem | null>(null);
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['manager', 'feedback', currentPage, PAGE_SIZE],
@@ -65,6 +67,7 @@ export function FeedbackPage() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['manager', 'feedback'] });
       setDeleteTarget(null);
+      showToast('Отзыв удалён', 'success');
     },
   });
 

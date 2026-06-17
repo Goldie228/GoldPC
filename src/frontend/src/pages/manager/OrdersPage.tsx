@@ -4,7 +4,7 @@
  * Таблица с поиском, фильтрацией по статусу, пагинацией
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, Eye } from 'lucide-react';
@@ -50,9 +50,20 @@ const PAGE_SIZE = 20;
 /* ─── Основной компонент ─── */
 
 export function OrdersPage() {
+  const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatusFilter>('');
   const [currentPage, setCurrentPage] = useState(1);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearchQuery(searchInput);
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [searchInput]);
 
   // Серверная фильтрация по статусу и поиску
   const { data, isLoading, error } = useQuery({
@@ -101,11 +112,8 @@ export function OrdersPage() {
             className="w-full pl-9 pr-4 py-2.5 bg-surface-card border border-hairline-dark rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
             placeholder="Поиск по номеру, клиенту..."
             aria-label="Поиск заказов"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
 

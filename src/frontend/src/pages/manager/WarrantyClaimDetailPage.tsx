@@ -4,6 +4,7 @@
  * Смена статуса, просмотр информации о клиенте и товаре
  */
 
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -26,6 +27,7 @@ import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton/Skeleton';
 import { getWarrantyStatusConfig } from '@/utils/warranty-status';
 import { formatDateTime } from '@/utils/format';
+import { useToast } from '@/hooks/useToast';
 
 /* ─── Скелетон загрузки ─── */
 
@@ -53,6 +55,8 @@ function WarrantyClaimDetailSkeleton() {
 export function WarrantyClaimDetailPage() {
   const { id: claimId } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
+  const [confirmReject, setConfirmReject] = useState(false);
 
   // Запрос данных претензии
   const { data: claim, isLoading, error } = useQuery({
@@ -68,6 +72,8 @@ export function WarrantyClaimDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['manager', 'warrantyClaim', claimId] });
       queryClient.invalidateQueries({ queryKey: ['manager', 'warrantyClaims'] });
+      setConfirmReject(false);
+      showToast('Статус обновлён', 'success');
     },
     onError: () => {
       // Ошибка обрабатывается через UI
@@ -80,6 +86,7 @@ export function WarrantyClaimDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['manager', 'warrantyClaim', claimId] });
       queryClient.invalidateQueries({ queryKey: ['manager', 'warrantyClaims'] });
+      showToast('Претензия завершена', 'success');
     },
     onError: () => {
       // Ошибка обрабатывается через UI
@@ -281,17 +288,36 @@ export function WarrantyClaimDetailPage() {
                 </Button>
               )}
               {canReject && (
-                <Button
-                  variant="danger"
-                  fullWidth
-                  leftIcon={<XCircle size={16} />}
-                  onClick={handleReject}
-                  disabled={isUpdating}
-                  aria-busy={isUpdating}
-                  aria-label="Отклонить претензию"
-                >
-                  Отклонить
-                </Button>
+                confirmReject ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => statusMutation.mutate({ id: claimId!, status: '3' })}
+                      disabled={isUpdating}
+                      className="px-3 py-1.5 text-sm font-medium text-white bg-price-rise rounded-lg hover:bg-price-rise/90 transition-colors disabled:opacity-50"
+                    >
+                      Да, отклонить
+                    </button>
+                    <button
+                      onClick={() => setConfirmReject(false)}
+                      className="px-3 py-1.5 text-sm font-medium text-foreground bg-surface-card border border-hairline-dark rounded-lg hover:bg-surface-elevated transition-colors"
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    fullWidth
+                    leftIcon={<XCircle size={16} />}
+                    onClick={() => setConfirmReject(true)}
+                    disabled={isUpdating}
+                    aria-busy={isUpdating}
+                    aria-label="Отклонить претензию"
+                    className="text-price-rise border border-price-rise/30 hover:bg-price-rise/10"
+                  >
+                    Отклонить
+                  </Button>
+                )
               )}
               {canComplete && (
                 <Button
@@ -314,10 +340,10 @@ export function WarrantyClaimDetailPage() {
 
               {/* Сообщения об ошибках мутаций */}
               {statusMutation.isError && (
-                <p className="text-sm text-red-400">Ошибка смены статуса. Попробуйте ещё раз.</p>
+                <p className="text-sm text-price-rise">Ошибка смены статуса. Попробуйте ещё раз.</p>
               )}
               {resolveMutation.isError && (
-                <p className="text-sm text-red-400">Ошибка завершения претензии. Попробуйте ещё раз.</p>
+                <p className="text-sm text-price-rise">Ошибка завершения претензии. Попробуйте ещё раз.</p>
               )}
             </div>
           </div>

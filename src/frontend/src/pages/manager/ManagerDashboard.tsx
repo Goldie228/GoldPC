@@ -12,7 +12,7 @@ import {
   ShoppingCart,
   Clock,
   AlertTriangle,
-  DollarSign,
+  Banknote,
   ArrowRight,
   AlertCircle,
 } from 'lucide-react';
@@ -148,7 +148,7 @@ export function ManagerDashboard() {
           <StatCard
             label="Выручка за месяц"
             value={formatPrice(revenue)}
-            icon={DollarSign}
+            icon={Banknote}
           />
         </div>
       </div>
