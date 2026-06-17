@@ -161,10 +161,10 @@ function GamingCarousel({ slides }: { slides: GamingSlide[] }) {
           >
             {imgError ? (
               <div className="home-gaming__carousel-fallback">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                  <rect x="2" y="3" width="20" height="14" rx="2" />
-                  <path d="M8 21h8M12 17v4" />
-                </svg>
+      <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="max-w-[80%] max-h-[80%]" role="img" aria-label={`Фото ${slide.label} отсутствует`}>
+                       <rect x="2" y="3" width="20" height="14" rx="2" />
+                       <path d="M8 21h8M12 17v4" />
+                     </svg>
               </div>
             ) : (
               <img

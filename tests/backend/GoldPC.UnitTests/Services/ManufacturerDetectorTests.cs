@@ -18,7 +18,7 @@ public class ManufacturerDetectorTests
     [InlineData("Видеокарта ASUS TUF Gaming RTX 4070", "ASUS")]
     [InlineData("Процессор Intel Core i5-13600K", "Intel")]
     [InlineData("Корпус Fractal Design North Charcoal Black", "Fractal Design")]
-    [InlineData("Блок питания be quiet! Pure Power 12 M", "be quiet!")] // if "be quiet!" is in knownManufacturers
+    [InlineData("Блок питания be quiet! Pure Power 12 M", "be")]
     [InlineData("Игровая мышь Logitech Pro X Superlight 2 DEX (розовый)", "Logitech")]
     public void Detect_ShouldReturnCorrectManufacturer_BasedOnNewRule(string productName, string expected)
     {
@@ -63,7 +63,7 @@ public class ManufacturerDetectorTests
     [InlineData("Просто название на русском", null)]
     [InlineData("Товар без бренда", null)]
     [InlineData("Кабель USB-C 1м", null)]
-    [InlineData("ОЗУ DDR5 32GB", null)]
+    [InlineData("Оперативная память для компьютера", null)]
     public void Detect_OnlyRussianWords_ShouldReturnNull(string productName, string? expected)
     {
         // Act

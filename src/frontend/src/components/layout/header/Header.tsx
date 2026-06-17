@@ -15,6 +15,7 @@ import {
   Bell,
   Shield,
   Wrench,
+  BarChart3,
 } from 'lucide-react';
 import { MiniCart } from './MiniCart';
 import { NotificationCenter } from '@/components/notification-center/NotificationCenter';
@@ -198,7 +199,7 @@ export function Header(): ReactElement {
          </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1" aria-label="Основная навигация">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
@@ -278,6 +279,17 @@ export function Header(): ReactElement {
             </Link>
           )}
 
+          {/* Кнопка панели бухгалтера — для Accountant, Admin */}
+          {isAuthenticated && ['Accountant', 'Admin'].includes(user?.role ?? '') && (
+            <Link
+              to="/accountant/reports"
+              className="relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-gold hover:bg-surface-elevated hidden md:flex"
+              aria-label="Панель бухгалтера"
+            >
+              <BarChart3 size={24} />
+            </Link>
+          )}
+
           {/* Profile / Auth - hidden on mobile (in drawer instead) */}
           <div className="relative hidden md:block" ref={profileDropdownRef}>
             <button
@@ -337,7 +349,7 @@ export function Header(): ReactElement {
                       </div>
                     </div>
 
-                    <nav className="flex flex-col py-2">
+                    <nav className="flex flex-col py-2" aria-label="Навигация профиля">
                       <Link to="/account" className="flex items-center gap-3 px-4 py-2.5 text-sm text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleProfileDropdownClose}>
                         <LayoutDashboard />
                         <span>Панель управления</span>
@@ -386,6 +398,16 @@ export function Header(): ReactElement {
                         <Link to="/master/tickets" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleProfileDropdownClose}>
                           <Wrench size={18} />
                           <span>Панель мастера</span>
+                        </Link>
+                      </>
+                    )}
+
+                    {['Accountant', 'Admin'].includes(user?.role ?? '') && (
+                      <>
+                        <div className="h-px bg-hairline-dark mx-4" />
+                        <Link to="/accountant/reports" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleProfileDropdownClose}>
+                          <BarChart3 size={18} />
+                          <span>Панель бухгалтера</span>
                         </Link>
                       </>
                     )}
@@ -445,8 +467,8 @@ export function Header(): ReactElement {
                  </button>
                </div>
 
-               {/* Nav Links */}
-               <nav className="flex flex-col py-1">
+                {/* Nav Links */}
+                <nav className="flex flex-col py-1" aria-label="Навигация в мобильном меню">
                  {NAV_ITEMS.map((item) => (
                    <NavLink
                      key={item.to}
@@ -461,8 +483,8 @@ export function Header(): ReactElement {
 
                <div className="h-px bg-hairline-dark my-2" />
 
-               {/* Quick Actions — Card Grid */}
-                <div className="grid grid-cols-4 gap-px bg-hairline-dark mx-4 mb-3 rounded-lg overflow-hidden">
+                {/* Quick Actions — Card Grid */}
+                 <nav className="grid grid-cols-4 gap-px bg-hairline-dark mx-4 mb-3 rounded-lg overflow-hidden" aria-label="Быстрые действия">
                   <Link to="/cart" className="flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card text-center cursor-pointer transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                     <div className="w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text transition-colors group-hover:border-gold/30 group-hover:text-body-text">
                       <ShoppingCart size={18} />
@@ -484,13 +506,13 @@ export function Header(): ReactElement {
                     <span className="text-[11px] font-medium text-muted-text leading-tight">Сравнение</span>
                     {comparisonCount > 0 && <span className="text-[10px] font-semibold text-gold">{comparisonCount}</span>}
                   </Link>
-                  <button type="button" className="relative flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card cursor-pointer transition-colors hover:bg-surface-elevated">
-                    <div className="w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text">
-                      <Bell size={18} />
-                    </div>
-                    <span className="text-[11px] font-medium text-muted-text leading-tight">Уведомления</span>
-                  </button>
-                </div>
+                   <button type="button" className="relative flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card cursor-pointer transition-colors hover:bg-surface-elevated" aria-label="Уведомления">
+                     <div className="w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text">
+                       <Bell size={18} />
+                     </div>
+                     <span className="text-[11px] font-medium text-muted-text leading-tight">Уведомления</span>
+                   </button>
+                 </nav>
 
 {/* CTA Section */}
                 <div className="flex flex-col gap-px bg-hairline-dark mx-4 mb-3 rounded-lg overflow-hidden">
@@ -523,7 +545,7 @@ export function Header(): ReactElement {
                       </div>
 
                       {/* Navigation */}
-                      <nav className="flex flex-col">
+                      <nav className="flex flex-col" aria-label="Навигация профиля (мобильное меню)">
                         <Link to="/account" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-muted-text no-underline transition-colors hover:bg-surface-elevated hover:text-body-text" onClick={handleCloseMenu}>
                           <LayoutDashboard size={18} />
                           <span>Панель управления</span>
@@ -575,6 +597,17 @@ export function Header(): ReactElement {
                           <Link to="/master/tickets" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                             <Wrench size={18} />
                             <span>Панель мастера</span>
+                          </Link>
+                        </>
+                      )}
+
+                      {/* Панель бухгалтера — для Accountant, Admin */}
+                      {['Accountant', 'Admin'].includes(user?.role ?? '') && (
+                        <>
+                          <div className="h-px bg-hairline-dark mx-4" />
+                          <Link to="/accountant/reports" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
+                            <BarChart3 size={18} />
+                            <span>Панель бухгалтера</span>
                           </Link>
                         </>
                       )}

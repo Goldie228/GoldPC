@@ -68,11 +68,13 @@ public class AuthDbContext : DbContext
             entity.ToTable("users");
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.Email).IsUnique();
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
+            entity.HasIndex(e => e.EmailHash).IsUnique();
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(512); // Увеличен для зашифрованных данных
+            entity.Property(e => e.EmailHash).IsRequired().HasMaxLength(64); // SHA256 hex = 64 символа
             entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(500);
             entity.Property(e => e.FirstName).IsRequired().HasMaxLength(50);
             entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.Phone).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Phone).IsRequired().HasMaxLength(512); // Увеличен для зашифрованных данных
             entity.Property(e => e.Role).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(e => e.Roles);
             entity.Property(e => e.BirthDate).HasColumnType("timestamp with time zone");
@@ -121,9 +123,9 @@ public class AuthDbContext : DbContext
             entity.HasKey(e => e.Id);
 
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.City).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Address).IsRequired().HasMaxLength(500);
-            entity.Property(e => e.Apartment).HasMaxLength(50);
+            entity.Property(e => e.City).IsRequired().HasMaxLength(512); // Увеличен для зашифрованных данных
+            entity.Property(e => e.Address).IsRequired().HasMaxLength(2048); // Увеличен для зашифрованных данных
+            entity.Property(e => e.Apartment).HasMaxLength(512); // Увеличен для зашифрованных данных
             entity.Property(e => e.PostalCode).HasMaxLength(20);
             entity.Property(e => e.IsDefault).IsRequired();
 

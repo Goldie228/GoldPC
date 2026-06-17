@@ -349,7 +349,7 @@ getAddresses()
     <div className="min-h-[calc(100vh-200px)] bg-background text-foreground pt-8">
       <div className="w-full max-w-7xl mx-auto px-[var(--layout-page-pad-x)]">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-[0.7rem] text-foreground-dim mb-2">
+        <nav aria-label="Хлебные крошки" className="flex items-center gap-2 text-[0.7rem] text-foreground-dim mb-2">
           <Link to="/" className="text-muted-foreground no-underline transition-colors hover:text-accent">Главная</Link>
           <span>/</span>
           <span>Оформление заказа</span>
@@ -358,7 +358,7 @@ getAddresses()
         <h1 className="font-sans text-[clamp(1.5rem,4vw,2rem)] font-semibold tracking-tight text-foreground mb-2">Оформление заказа</h1>
 
         {/* Steps Indicator */}
-        <nav className="flex flex-wrap items-center gap-0 mb-8 p-3.5 px-4.5 bg-card border border-border rounded-lg shadow">
+        <nav aria-label="Шаги оформления заказа" className="flex flex-wrap items-center gap-0 mb-8 p-3.5 px-4.5 bg-card border border-border rounded-lg shadow">
           {[
             { id: 'delivery', label: 'Доставка', num: 1 },
             { id: 'contacts', label: 'Контакты', num: 2 },
@@ -373,7 +373,7 @@ getAddresses()
             return (
               <div key={step.id} className="flex items-center">
                 <div className={`flex items-center gap-2.5 ${isCurrent ? '' : ''} ${isCompleted ? '' : ''}`}>
-                  <span className={`w-8 h-8 flex items-center justify-center border rounded-md font-mono text-sm transition-all
+                  <span aria-current={isCurrent ? 'step' : undefined} className={`w-8 h-8 flex items-center justify-center border rounded-md font-mono text-sm transition-all
                     ${isCurrent ? 'bg-gold/10 border-gold text-gold font-medium' : ''}
                     ${isCompleted ? 'bg-border-muted border-border-muted text-accent' : ''}
                     ${!isCurrent && !isCompleted ? 'bg-elevated border-border text-muted-foreground' : ''}
@@ -429,10 +429,12 @@ getAddresses()
                 </div>
 
                 <div className="flex flex-col gap-2 mt-3">
-                  <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Город</label>
+                  <label htmlFor="checkout-city" className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Город</label>
                   <select
+                    id="checkout-city"
                     value={deliveryData.city}
                     onChange={(e) => setDeliveryData(prev => ({...prev, city: e.target.value}))}
+                    aria-required="true"
                     className="w-full p-3 bg-elevated border border-border rounded-lg text-foreground text-sm transition-all appearance-none bg-[url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%2371717a%27 stroke-width=%272%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E')] bg-no-repeat bg-[right_12px_center] bg-[length:16px] pr-10 focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--border-muted))]"
                   >
                     <option value="Минск">Минск</option>
@@ -446,8 +448,9 @@ getAddresses()
 
                 {deliveryData.method === 'Delivery' && user && savedAddresses.length > 0 && (
                   <div className="flex flex-col gap-2">
-                    <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Сохранённые адреса</label>
+                    <label htmlFor="checkout-saved-addresses" className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Сохранённые адреса</label>
                     <select
+                      id="checkout-saved-addresses"
                       onChange={(e) => {
                         const addr = savedAddresses.find(a => a.id === e.target.value);
                         if (addr) {
@@ -490,19 +493,22 @@ getAddresses()
                 {deliveryData.method === 'Delivery' && (
                   <>
                     <div className="flex flex-col gap-2">
-                      <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Адрес доставки</label>
+                      <label htmlFor="checkout-address" className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Адрес доставки</label>
                       <input
+                        id="checkout-address"
                         type="text"
                         placeholder="ул. Примерная, д. 1, кв. 1"
                         value={deliveryData.address}
                         onChange={(e) => setDeliveryData(prev => ({...prev, address: e.target.value}))}
+                        aria-required="true"
                         className="w-full p-3 bg-elevated border border-border rounded-lg text-foreground text-sm transition-all focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--border-muted)]"
                       />
                     </div>
 
                     {user && (
-                      <label className="flex items-center gap-3 p-3 cursor-pointer rounded-lg transition-all hover:bg-border-muted">
+                      <label htmlFor="checkout-save-address" className="flex items-center gap-3 p-3 cursor-pointer rounded-lg transition-all hover:bg-border-muted">
                         <input
+                          id="checkout-save-address"
                           type="checkbox"
                           checked={deliveryData.saveAddress}
                           onChange={(e) => setDeliveryData(prev => ({...prev, saveAddress: e.target.checked}))}
@@ -553,11 +559,15 @@ getAddresses()
                 <h2 className="text-[0.95rem] font-semibold text-foreground mb-5 pb-3.5 border-b border-border relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-10 after:h-0.5 after:bg-gradient-to-r after:from-border-muted after:to-border-muted after:rounded-sm">Контактные данные</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
-                    <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Имя*</label>
+                    <label htmlFor="checkout-first-name" className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Имя*</label>
                     <input
+                      id="checkout-first-name"
                       value={contactData.firstName}
                       onChange={(e) => handleContactChange('firstName', e.target.value)}
                       onBlur={() => handleContactBlur('firstName')}
+                      aria-required="true"
+                      aria-invalid={contactTouched.firstName && contactErrors.firstName ? 'true' : undefined}
+                      aria-describedby={contactTouched.firstName && contactErrors.firstName ? 'checkout-first-name-error' : undefined}
                       className={`w-full p-3 bg-elevated border text-foreground text-sm transition-all rounded-lg focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--border-muted)]
                         ${contactTouched.firstName && contactErrors.firstName ? 'border-error/65 shadow-[0_0_0_1px_rgba(239,68,68,0.25)]' : 'border-border'}
                       `}
@@ -565,30 +575,38 @@ getAddresses()
                       autoComplete="given-name"
                     />
                     {contactTouched.firstName && contactErrors.firstName && (
-                      <span className="text-[0.78rem] leading-relaxed text-red-300">{contactErrors.firstName}</span>
+                      <span id="checkout-first-name-error" className="text-[0.78rem] leading-relaxed text-red-300" role="alert">{contactErrors.firstName}</span>
                     )}
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Телефон*</label>
+                    <label htmlFor="checkout-phone" className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Телефон*</label>
                     <PhoneInput
+                      id="checkout-phone"
                       value={contactData.phone}
                       onChange={(value) => handleContactChange('phone', value)}
                       onBlur={() => handleContactBlur('phone')}
+                      aria-required="true"
+                      aria-invalid={contactTouched.phone && contactErrors.phone ? 'true' : undefined}
+                      aria-describedby={contactTouched.phone && contactErrors.phone ? 'checkout-phone-error' : undefined}
                       className={`${contactTouched.phone && contactErrors.phone ? 'border-error/65' : ''}`}
                       placeholder="+375 (29) 123-45-67"
                       autoComplete="tel"
                     />
                     {contactTouched.phone && contactErrors.phone && (
-                      <span className="text-[0.78rem] leading-relaxed text-red-300">{contactErrors.phone}</span>
+                      <span id="checkout-phone-error" className="text-[0.78rem] leading-relaxed text-red-300" role="alert">{contactErrors.phone}</span>
                     )}
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Email*</label>
+                    <label htmlFor="checkout-email" className="text-[0.75rem] font-medium text-muted-foreground uppercase tracking-[0.05em]">Email*</label>
                     <input
+                      id="checkout-email"
                       type="email"
                       value={contactData.email}
                       onChange={(e) => handleContactChange('email', e.target.value)}
                       onBlur={() => handleContactBlur('email')}
+                      aria-required="true"
+                      aria-invalid={contactTouched.email && contactErrors.email ? 'true' : undefined}
+                      aria-describedby={contactTouched.email && contactErrors.email ? 'checkout-email-error' : undefined}
                       className={`w-full p-3 bg-elevated border text-foreground text-sm transition-all rounded-lg focus:outline-none focus:border-accent focus:shadow-[0_0_0_3px_var(--border-muted)]
                         ${contactTouched.email && contactErrors.email ? 'border-error/65 shadow-[0_0_0_1px_rgba(239,68,68,0.25)]' : 'border-border'}
                       `}
@@ -596,7 +614,7 @@ getAddresses()
                       autoComplete="email"
                     />
                     {contactTouched.email && contactErrors.email && (
-                      <span className="text-[0.78rem] leading-relaxed text-red-300">{contactErrors.email}</span>
+                      <span id="checkout-email-error" className="text-[0.78rem] leading-relaxed text-red-300" role="alert">{contactErrors.email}</span>
                     )}
                   </div>
                 </div>

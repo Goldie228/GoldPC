@@ -123,12 +123,18 @@ builder.Services.AddScoped<ICatalogService, CatalogService.Services.CatalogServi
 builder.Services.AddScoped<CatalogService.Services.CatalogJsonImporter>();
 builder.Services.AddScoped<CatalogService.Services.FilterAttributesSeeder>();
 
-// Redis Caching
+// Redis Caching с fallback на in-memory кэш
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
     options.InstanceName = "Catalog_";
 });
+
+// In-memory кэш как fallback при недоступности Redis
+builder.Services.AddSingleton<MemoryCacheService>();
+
+// ICacheService: декоратор с graceful degradation Redis → in-memory
+builder.Services.AddScoped<ICacheService, CacheService>();
 
 // Messaging (Consumers for OrderPaidEvent and OrderPlacedEvent)
 builder.Services.AddMessaging(builder.Configuration, x =>

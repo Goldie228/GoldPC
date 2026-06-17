@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using GoldPC.AuthService.Entities;
+using GoldPC.Shared.Services;
 using Microsoft.IdentityModel.Tokens;
 
 namespace GoldPC.AuthService.Services;
@@ -17,10 +18,12 @@ public class JwtService : IJwtService
     private readonly string _issuer;
     private readonly string _audience;
     private readonly int _accessTokenExpirationMinutes;
+    private readonly IEncryptionService _encryption;
 
-    public JwtService(IConfiguration configuration)
+    public JwtService(IConfiguration configuration, IEncryptionService encryption)
     {
         _configuration = configuration;
+        _encryption = encryption;
         _secretKey = configuration["Jwt:SecretKey"] 
             ?? throw new InvalidOperationException("JWT SecretKey not configured");
         _issuer = configuration["Jwt:Issuer"] ?? "GoldPC";
@@ -34,10 +37,13 @@ public class JwtService : IJwtService
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
+        // Расшифровываем email для JWT claim (в токене хранится открытый текст)
+        var decryptedEmail = _encryption.Decrypt(user.Email);
+
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Email, decryptedEmail),
             new Claim(ClaimTypes.Name, user.FullName),
             // Добавляем все роли пользователя (поддерживается стандартной .NET авторизацией)
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())

@@ -43,5 +43,15 @@ public class ServiceRequestDto
     public ICollection<ServicePartDto> ServiceParts { get; set; } = new List<ServicePartDto>();
 
     public ICollection<WorkReportDto> WorkReports { get; set; } = new List<WorkReportDto>();
+
+    /// <summary>
+    /// Email клиента для уведомлений (опционально, заполняется при необходимости)
+    /// </summary>
+    public string? ClientEmail { get; set; }
+
+    /// <summary>
+    /// Имя мастера для уведомлений (опционально, заполняется при необходимости)
+    /// </summary>
+    public string? MasterName { get; set; }
 }
 #pragma warning restore CA2227, CS1591, SA1600

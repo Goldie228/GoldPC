@@ -119,7 +119,7 @@ public class ProductFaker : Faker<Product>
             Id = p.CategoryId,
             Name = f.PickRandom(CategoryNames),
             Slug = f.Lorem.Slug(2),
-            ComponentType = f.PickRandom<ComponentType?>(),
+            ComponentType = f.PickRandom(Enum.GetValues<ComponentType>()),
             Order = f.Random.Int(1, 10)
         });
         RuleFor(p => p.ManufacturerId, f => f.Random.Guid());

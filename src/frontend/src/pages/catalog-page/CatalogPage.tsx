@@ -391,18 +391,20 @@ export function CatalogPage() {
                {/* Left: Title + count */}
                <div className="flex items-baseline gap-2 flex-shrink-0">
                  <div className="font-bold text-body-text tracking-tight" style={{ fontSize: '24px' }}>{categoryName}</div>
-                 <span className="text-xs md:text-sm text-muted-text font-tabular">
-                   {totalItems > 0 ? `${formatCountRu(totalItems, RU_FORMS.tovar)}` : 'Товары не найдены'}
+                  <span className="text-xs md:text-sm text-muted-text font-tabular" aria-live="polite">
+                    {totalItems > 0 ? `${formatCountRu(totalItems, RU_FORMS.tovar)}` : 'Товары не найдены'}
                  </span>
                </div>
 
                {/* Center: Search — desktop (inline) */}
                <div className="flex justify-center items-center flex-1">
                  {/* Desktop search bar */}
-                 <form
-                   className="hidden sm:flex items-center gap-0 w-full max-w-[280px] flex-1"
-                   onSubmit={handleSearch}
-                 >
+                  <form
+                    className="hidden sm:flex items-center gap-0 w-full max-w-[280px] flex-1"
+                    onSubmit={handleSearch}
+                    role="search"
+                    aria-label="Поиск товаров в каталоге"
+                  >
                    <input
                      type="text"
                      ref={searchInputRef}
@@ -411,12 +413,13 @@ export function CatalogPage() {
                      aria-label="Поиск в каталоге"
                      defaultValue={searchQuery}
                    />
-                   <button
-                     type="submit"
-                     className="h-9 px-3 bg-gold text-gold-ink text-sm font-semibold rounded-r-lg hover:bg-gold-active transition-colors flex items-center"
-                   >
-                     <Search size={16} />
-                   </button>
+                    <button
+                      type="submit"
+                      className="h-9 px-3 bg-gold text-gold-ink text-sm font-semibold rounded-r-lg hover:bg-gold-active transition-colors flex items-center"
+                      aria-label="Найти"
+                    >
+                      <Search size={16} />
+                    </button>
                  </form>
                </div>
 
@@ -429,16 +432,18 @@ export function CatalogPage() {
                      { value: 'list' as const, icon: <List size={18} /> },
                      { value: 'table' as const, icon: <Table2 size={18} /> },
                    ].map(mode => (
-                     <button
-                       key={mode.value}
-                       onClick={() => setViewMode(mode.value)}
-                       className={`w-8 h-7 rounded-md flex items-center justify-center transition-all ${
-                         viewMode === mode.value
-                           ? 'bg-gold text-gold-ink shadow-sm'
-                           : 'text-muted-text hover:text-body-text'
-                       }`}
-                       title={mode.value === 'grid' ? 'Сетка' : mode.value === 'list' ? 'Список' : 'Таблица'}
-                     >
+                      <button
+                        key={mode.value}
+                        onClick={() => setViewMode(mode.value)}
+                        className={`w-8 h-7 rounded-md flex items-center justify-center transition-all ${
+                          viewMode === mode.value
+                            ? 'bg-gold text-gold-ink shadow-sm'
+                            : 'text-muted-text hover:text-body-text'
+                        }`}
+                        aria-label={mode.value === 'grid' ? 'Сетка' : mode.value === 'list' ? 'Список' : 'Таблица'}
+                        aria-pressed={viewMode === mode.value}
+                        type="button"
+                      >
                        {mode.icon}
                      </button>
                    ))}
@@ -453,11 +458,13 @@ export function CatalogPage() {
                    <Search size={16} />
                  </button>
 
-                 {/* Mobile filter button — compact icon + badge */}
-                 <button
-                   onClick={() => setMobileFilterOpen(true)}
-                   className="lg:hidden h-9 px-2 bg-surface-elevated text-body-text text-sm rounded-lg border border-hairline-dark flex items-center gap-1 hover:bg-surface-card transition-colors relative"
-                 >
+                  {/* Mobile filter button — compact icon + badge */}
+                  <button
+                    onClick={() => setMobileFilterOpen(true)}
+                    className="lg:hidden h-9 px-2 bg-surface-elevated text-body-text text-sm rounded-lg border border-hairline-dark flex items-center gap-1 hover:bg-surface-card transition-colors relative"
+                    aria-label={`Фильтры${activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}`}
+                    type="button"
+                  >
                    <SlidersHorizontal size={16} />
                    {activeFilterCount > 0 && (
                      <span className="absolute -top-1 -right-1 h-4 w-4 bg-gold text-gold-ink text-[11px] font-bold rounded-full flex items-center justify-center">
@@ -506,11 +513,9 @@ export function CatalogPage() {
             {mobileFilterOpen && (
               <div
                 className="fixed inset-0 bg-canvas-dark/92 backdrop-blur-[4px] z-[1000] lg:hidden"
-                role="button"
-                tabIndex={0}
                 onClick={() => setMobileFilterOpen(false)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMobileFilterOpen(false); } }}
-                aria-label="Закрыть фильтры"
+                onKeyDown={(e) => { if (e.key === 'Escape') { setMobileFilterOpen(false); } }}
+                role="presentation"
               >
                 <div 
                   className="absolute left-0 top-0 bottom-0 w-[90vw] max-w-[380px] bg-surface-elevated flex flex-col"
@@ -530,6 +535,7 @@ export function CatalogPage() {
                       className="flex items-center justify-center w-9 h-9 bg-surface-elevated border border-hairline-dark rounded-lg text-muted-text hover:bg-gold/10 hover:border-gold/30 hover:text-gold transition-all"
                       onClick={() => setMobileFilterOpen(false)}
                       aria-label="Закрыть панель фильтров"
+                      type="button"
                     >
                       <X size={20} />
                     </button>
@@ -567,6 +573,7 @@ export function CatalogPage() {
                       onClick={() => setMobileFilterOpen(false)}
                       className="w-full h-11 bg-gold text-gold-ink text-sm font-semibold rounded-lg hover:bg-gold-active transition-colors flex items-center justify-center gap-2"
                       type="button"
+                      aria-label={`Применить фильтры, показать ${totalItems > 0 ? totalItems.toLocaleString('ru-RU') : '—'} товаров`}
                     >
                       Показать {totalItems > 0 ? totalItems.toLocaleString('ru-RU') : '—'} товаров
                     </button>
@@ -579,17 +586,15 @@ export function CatalogPage() {
             {searchModalOpen && (
               <div
                 className="fixed inset-0 bg-canvas-dark/92 backdrop-blur-[4px] z-[1000] lg:hidden"
-                role="button"
-                tabIndex={0}
                 onClick={() => setSearchModalOpen(false)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSearchModalOpen(false); } }}
-                aria-label="Закрыть поиск"
+                onKeyDown={(e) => { if (e.key === 'Escape') { setSearchModalOpen(false); } }}
+                role="presentation"
               >
                 <div 
                   className="absolute left-0 right-0 top-0 p-5 pb-4 bg-surface-elevated border-b border-hairline-dark flex items-center gap-3"
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
-                  <form className="flex-1 flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); setSearchModalOpen(false); handleSearch(e); }}>
+                  <form className="flex-1 flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); setSearchModalOpen(false); handleSearch(e); }} role="search" aria-label="Поиск товаров в каталоге">
                     <input
                       type="text"
                       className="flex-1 h-9 bg-canvas-dark text-body-text text-sm rounded-lg py-1.5 pl-4 pr-3 placeholder:text-muted-text focus:outline-none focus:ring-2 focus:ring-gold/30 border border-hairline-dark transition-all"
@@ -602,6 +607,7 @@ export function CatalogPage() {
                     <button
                       type="submit"
                       className="h-9 px-3 bg-gold text-gold-ink text-sm font-semibold rounded-lg hover:bg-gold-active transition-colors flex items-center"
+                      aria-label="Найти"
                     >
                       <Search size={16} />
                     </button>
@@ -610,6 +616,7 @@ export function CatalogPage() {
                     className="flex items-center justify-center w-9 h-9 bg-surface-elevated border border-hairline-dark rounded-lg text-muted-text hover:bg-gold/10 hover:border-gold/30 hover:text-gold transition-all"
                     onClick={() => setSearchModalOpen(false)}
                     aria-label="Закрыть поиск"
+                    type="button"
                   >
                     <X size={20} />
                   </button>
@@ -635,10 +642,11 @@ export function CatalogPage() {
                   </div>
                   <h3 className="text-lg font-bold text-body-text mb-2">Ошибка загрузки</h3>
                   <p className="text-sm text-muted-text max-w-xs mb-6">{error}</p>
-                  <button 
-                    onClick={() => void fetchProducts(page)}
-                    className="px-6 py-2.5 bg-gold text-gold-ink text-sm font-semibold rounded-lg hover:bg-gold-active transition-colors"
-                  >
+                <button 
+                  onClick={() => void fetchProducts(page)}
+                  className="px-6 py-2.5 bg-gold text-gold-ink text-sm font-semibold rounded-lg hover:bg-gold-active transition-colors"
+                  aria-label="Повторить загрузку товаров"
+                >
                     Повторить
                   </button>
                 </div>
@@ -654,9 +662,9 @@ export function CatalogPage() {
                   <div className="relative">
                     <ProductList products={products} onAddToCart={handleAddToCart} />
                     {loading && hasLoadedOnce && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-canvas-dark/35 backdrop-blur-[2px] rounded-xl pointer-events-none">
+                      <div className="absolute inset-0 flex items-center justify-center bg-canvas-dark/35 backdrop-blur-[2px] rounded-xl pointer-events-none" role="status" aria-live="polite">
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-hairline-dark/8 bg-surface-elevated/80 text-body-text text-xs">
-                          <span className="animate-spin">⟳</span>
+                          <span className="animate-spin" aria-hidden="true">⟳</span>
                           <span>Обновляем список…</span>
                         </div>
                       </div>
@@ -666,9 +674,9 @@ export function CatalogPage() {
                   <div className="relative">
                     <ProductGrid products={products} onAddToCart={handleAddToCart} />
                     {loading && hasLoadedOnce && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-canvas-dark/35 backdrop-blur-[2px] rounded-xl pointer-events-none">
+                      <div className="absolute inset-0 flex items-center justify-center bg-canvas-dark/35 backdrop-blur-[2px] rounded-xl pointer-events-none" role="status" aria-live="polite">
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-hairline-dark/8 bg-surface-elevated/80 text-body-text text-xs">
-                          <span className="animate-spin">⟳</span>
+                          <span className="animate-spin" aria-hidden="true">⟳</span>
                           <span>Обновляем список…</span>
                         </div>
                       </div>
@@ -705,6 +713,7 @@ export function CatalogPage() {
                 <button 
                   onClick={handleResetFilters}
                   className="px-6 py-2.5 bg-gold/10 text-gold text-sm font-semibold rounded-lg hover:bg-gold/20 transition-colors"
+                  aria-label="Сбросить все фильтры"
                 >
                   Сбросить фильтры
                 </button>

@@ -24,6 +24,9 @@ public static class ServiceRegistrationExtensions
                     SimulatedDelayMs = 50
                 };
             });
+
+            // Mock Order Email Service (dev mode — логирует вместо отправки)
+            services.AddSingleton<IOrderEmailService, MockOrderEmailService>();
             return services;
         }
 
@@ -35,7 +38,10 @@ public static class ServiceRegistrationExtensions
         // 2. SMS Integration (Twilio)
         services.AddSingleton<TwilioSmsService>();
 
-        // 3. Combined Notification Service with Logging Decorator
+        // 3. Order Email Service (уведомления о заказах, гарантиях, сервисных заявках)
+        services.AddScoped<IOrderEmailService, OrderEmailService>();
+
+        // 4. Combined Notification Service with Logging Decorator
         services.AddScoped<ProductionNotificationService>();
         services.AddScoped<INotificationService>(sp =>
         {

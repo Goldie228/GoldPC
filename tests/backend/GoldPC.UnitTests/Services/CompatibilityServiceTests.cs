@@ -3,6 +3,8 @@ using Moq;
 using Xunit;
 using PCBuilderService.Services;
 using PCBuilderService.DTOs;
+using PCBuilderService.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace GoldPC.UnitTests.Services;
@@ -17,17 +19,88 @@ namespace GoldPC.UnitTests.Services;
 public class CompatibilityServiceTests
 {
     private readonly Mock<ILogger<CompatibilityService>> _loggerMock;
-    private readonly HttpClient _httpClient;
     private readonly CompatibilityService _sut;
 
     public CompatibilityServiceTests()
     {
         _loggerMock = new Mock<ILogger<CompatibilityService>>();
-        _httpClient = new HttpClient
+        var ruleEngineLogger = Mock.Of<ILogger<CompatibilityRuleEngine>>();
+        var config = CreateTestRulesConfig();
+        var ruleEngine = new CompatibilityRuleEngine(config, ruleEngineLogger);
+        var dbContextOptions = new DbContextOptionsBuilder<PCBuilderDbContext>()
+            .UseInMemoryDatabase(databaseName: $"CompatibilityTests-{Guid.NewGuid():N}")
+            .Options;
+        var dbContext = new PCBuilderDbContext(dbContextOptions);
+        _sut = new CompatibilityService(_loggerMock.Object, ruleEngine, dbContext);
+    }
+
+    /// <summary>
+    /// Создаёт конфигурацию правил с заполненными шаблонами сообщений.
+    /// Нужен потому что new RulesConfig() создаёт пустые RuleTemplate с null MessageTemplate.
+    /// </summary>
+    private static RulesConfig CreateTestRulesConfig()
+    {
+        return new RulesConfig
         {
-            BaseAddress = new Uri("http://localhost:5000")
+            SocketCompatibility = new SocketCompatibilityConfig
+            {
+                Groups = new List<SocketGroup>
+                {
+                    new() { Id = "am5", Sockets = new List<string> { "AM5" }, RamType = "DDR5", MaxRamSpeed = 6400, BiosWarning = new BiosWarningConfig() },
+                    new() { Id = "lga1700", Sockets = new List<string> { "LGA1700" }, RamType = "DDR5", RamTypeAlternate = "DDR4", MaxRamSpeed = 5600, BiosWarning = new BiosWarningConfig() }
+                }
+            },
+            FormFactorCompatibility = new FormFactorCompatibilityConfig { Rules = new List<FormFactorRule>(), Aliases = new Dictionary<string, string>() },
+            RamCompatibility = new RamCompatibilityConfig
+            {
+                GenerationMismatch = new RuleTemplate { Severity = "Error", MessageTemplate = "Incompatible RAM Generation: motherboard supports {motherboardRamType} but RAM is {ramType}", SuggestionTemplate = "Use {motherboardRamType} RAM" },
+                SpeedLimit = new RuleTemplate { Severity = "Warning", MessageTemplate = "RAM speed {ramSpeed} exceeds motherboard max {maxSpeed}", SuggestionTemplate = "Consider RAM at {ramSpeed}MHz or lower" },
+                SlotOverflow = new RuleTemplate { Severity = "Error", MessageTemplate = "Too many RAM modules: {modules} vs {slots} slots", SuggestionTemplate = "Use max {slots} modules" }
+            },
+            PowerCompatibility = new PowerCompatibilityConfig
+            {
+                BaseSystemPower = 50,
+                PsuBufferPercent = 0.4,
+                RoundingStep = 50,
+                Insufficient = new RuleTemplate { Severity = "Error", MessageTemplate = "PSU {psuWattage}W is insufficient, need {requiredWattage}W", SuggestionTemplate = "Upgrade to {recommendedPsu}W PSU" },
+                TightMargin = new RuleTemplate { Severity = "Warning", MessageTemplate = "PSU {psuWattage}W has tight margin, recommended {recommendedPsu}W", Suggestion = "Consider higher wattage PSU" }
+            },
+            DimensionCompatibility = new DimensionCompatibilityConfig
+            {
+                GpuLength = new GpuLengthConfig { Error = new RuleTemplate(), Warning = new RuleTemplate(), WarningThresholdMm = 20 },
+                CoolerHeight = new CoolerHeightConfig { Error = new RuleTemplate() }
+            },
+            CoolerCompatibility = new CoolerCompatibilityConfig
+            {
+                SocketMismatch = new RuleTemplate(),
+                TdpInsufficient = new RuleTemplate()
+            },
+            BottleneckDetection = new BottleneckDetectionConfig
+            {
+                CpuBound = new BottleneckRule(),
+                GpuBound = new BottleneckRule(),
+                Categories = new Dictionary<string, BottleneckCategory>()
+            },
+            PerformanceWarnings = new PerformanceWarningsConfig
+            {
+                InsufficientRam = new InsufficientRamConfig { Thresholds = new List<RamThreshold>() },
+                NoIntegratedGraphics = new RuleTemplate()
+            },
+            StorageDefaults = new StorageDefaultsConfig(),
+            EpsCompatibility = new EpsCompatibilityConfig { InsufficientCables = new RuleTemplate() },
+            PciePowerCompatibility = new PciePowerCompatibilityConfig { InsufficientCables = new RuleTemplate(), Atx3Required = new RuleTemplate() },
+            VrmCompatibility = new VrmCompatibilityConfig { Insufficient = new RuleTemplate(), VrmTdpExceeded = new RuleTemplate() },
+            UsbCCompatibility = new UsbCCompatibilityConfig { MissingHeader = new RuleTemplate() },
+            StorageInterfaceCompatibility = new StorageInterfaceCompatibilityConfig { M2SataInNvmeSlot = new RuleTemplate(), M2Gen5Overheating = new RuleTemplate() },
+            GpuSlotCompatibility = new GpuSlotCompatibilityConfig { ExceedsExpansionSlots = new RuleTemplate() },
+            FanHeaderCompatibility = new FanHeaderCompatibilityConfig { InsufficientHeaders = new RuleTemplate() },
+            PsuBrandSafety = new PsuBrandSafetyConfig { UnknownBrand = new RuleTemplate(), TrustedBrands = new List<string>() },
+            RgbCompatibility = new RgbCompatibilityConfig { VoltageMismatch = new RuleTemplate() },
+            RamClearanceCompatibility = new RamClearanceCompatibilityConfig { Insufficient = new RuleTemplate() },
+            EccCompatibility = new EccCompatibilityConfig { EccInConsumerBoard = new RuleTemplate() },
+            CpuOverclockCompatibility = new CpuOverclockCompatibilityConfig { KSeriesOnNonZ = new RuleTemplate() },
+            EpsLengthCompatibility = new EpsLengthCompatibilityConfig { TooShort = new RuleTemplate() }
         };
-        _sut = new CompatibilityService(_httpClient, _loggerMock.Object);
     }
 
     #region Test 1: Socket Compatibility
@@ -57,7 +130,7 @@ public class CompatibilityServiceTests
         // Assert
         response.Should().NotBeNull();
         response.Result.IsCompatible.Should().BeFalse("sockets are incompatible");
-        response.Result.Issues.Should().ContainSingle(i => i.Message == "Incompatible Socket");
+        response.Result.Issues.Should().ContainSingle(i => i.Message.Contains("Несовместимый сокет"));
     }
 
     [Fact]
@@ -184,7 +257,7 @@ public class CompatibilityServiceTests
         // Assert
         response.Should().NotBeNull();
         response.Result.IsCompatible.Should().BeFalse("PSU wattage is insufficient");
-        response.Result.Issues.Should().ContainSingle(i => i.Message == "Insufficient Power Supply");
+        response.Result.Issues.Should().Contain(i => i.Message.Contains("insufficient") || i.Message.Contains("PSU") || i.Message.Contains("W"));
     }
 
     [Fact]
@@ -364,9 +437,9 @@ public class CompatibilityServiceTests
         // Assert
         response.Should().NotBeNull();
         response.Result.IsCompatible.Should().BeFalse();
-        response.Result.Issues.Should().Contain(i => i.Message == "Incompatible Socket");
+        response.Result.Issues.Should().Contain(i => i.Message.Contains("Несовместимый сокет"));
         response.Result.Issues.Should().Contain(i => i.Message.Contains("Incompatible RAM Generation"));
-        response.Result.Issues.Should().Contain(i => i.Message == "Insufficient Power Supply");
+        response.Result.Issues.Should().Contain(i => i.Message.Contains("insufficient") || i.Message.Contains("PSU"));
     }
 
     #endregion

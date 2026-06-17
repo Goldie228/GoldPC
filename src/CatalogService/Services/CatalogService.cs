@@ -7,7 +7,7 @@ using CatalogService.Services.Interfaces;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Utilities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
+
 using CatalogServiceModels = CatalogService.Models;
 
 namespace CatalogService.Services;
@@ -24,7 +24,7 @@ public class CatalogService : ICatalogService
     private readonly IReviewRepository _reviewRepository;
     private readonly ICategoryParser _categoryParser;
     private readonly ILogger<CatalogService> _logger;
-    private readonly IDistributedCache _cache;
+    private readonly ICacheService _cache;
     private readonly CatalogDbContext _dbContext;
 
     public CatalogService(
@@ -34,7 +34,7 @@ public class CatalogService : ICatalogService
         IReviewRepository reviewRepository,
         ICategoryParser categoryParser,
         ILogger<CatalogService> logger,
-        IDistributedCache cache,
+        ICacheService cache,
         CatalogDbContext dbContext)
     {
         _productRepository = productRepository;
@@ -55,7 +55,7 @@ public class CatalogService : ICatalogService
 
         if (cacheKey != null)
         {
-            var cached = await _cache.GetStringAsync(cacheKey);
+            var cached = await _cache.GetAsync(cacheKey);
             if (!string.IsNullOrEmpty(cached))
             {
                 _logger.LogInformation("Returning cached featured products.");
@@ -83,10 +83,7 @@ public class CatalogService : ICatalogService
 
         if (cacheKey != null)
         {
-            await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(pagedResult), new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
-            });
+            await _cache.SetAsync(cacheKey, JsonSerializer.Serialize(pagedResult), TimeSpan.FromMinutes(15));
         }
 
         return pagedResult;
@@ -307,7 +304,7 @@ public class CatalogService : ICatalogService
     public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
     {
         var cacheKey = "all_categories";
-        var cachedCategories = await _cache.GetStringAsync(cacheKey);
+        var cachedCategories = await _cache.GetAsync(cacheKey);
 
         if (!string.IsNullOrEmpty(cachedCategories))
         {
@@ -329,12 +326,7 @@ public class CatalogService : ICatalogService
         var counts = await _productRepository.GetProductCountsByCategoryAsync();
         var result = categories.Select(c => MapToCategoryDto(c, counts.GetValueOrDefault(c.Id, 0)));
 
-        var cacheOptions = new DistributedCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
-        };
-
-        await _cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(result), cacheOptions);
+        await _cache.SetAsync(cacheKey, JsonSerializer.Serialize(result), TimeSpan.FromHours(1));
 
         return result;
     }

@@ -99,6 +99,9 @@ if (builder.Environment.IsDevelopment() && builder.Configuration.GetValue<bool>(
             SimulatedDelayMs = 50
         };
     });
+
+    // Order Email Service Mock (dev mode — логирует вместо отправки)
+    builder.Services.AddSingleton<GoldPC.Shared.Services.IOrderEmailService, GoldPC.Shared.Services.MockOrderEmailService>();
 }
 else
 {
@@ -121,7 +124,10 @@ else
     // 3. SMS Integration (Twilio)
     builder.Services.AddSingleton<TwilioSmsService>();
 
-    // 4. Combined Notification Service with Logging Decorator
+    // 4. Order Email Service (уведомления о заказах)
+    builder.Services.AddScoped<GoldPC.Shared.Services.IOrderEmailService, GoldPC.Shared.Services.OrderEmailService>();
+
+    // 5. Combined Notification Service with Logging Decorator
     builder.Services.AddScoped<ProductionNotificationService>();
     builder.Services.AddScoped<INotificationService>(sp => 
     {

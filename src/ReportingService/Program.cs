@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using GoldPC.ReportingService.Data;
+using GoldPC.ReportingService.Services;
 using GoldPC.Shared.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -94,6 +95,9 @@ builder.Services.AddDbContext<ReportingDbContext>(options =>
     {
         npgsqlOptions.EnableRetryOnFailure(maxRetryCount: 5);
     }));
+
+// Сервис финансовых отчётов
+builder.Services.AddScoped<IFinancialReportService, FinancialReportService>();
 
 // Настройка JWT-аутентификации
 var jwtSettings = builder.Configuration.GetSection("Jwt");

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Mail;
+using GoldPC.SharedKernel.DTOs;
 
 namespace GoldPC.Api.Services;
 
@@ -24,6 +25,21 @@ public interface IEmailService
 {
     Task SendEmailAsync(string recipientEmail, string subject, string body, bool isHtml = true);
     Task SendEmailAsync(List<string> recipientEmails, string subject, string body, bool isHtml = true);
+
+    /// <summary>Отправить подтверждение заказа</summary>
+    Task SendOrderConfirmationAsync(OrderDto order);
+
+    /// <summary>Отправить уведомление о смене статуса заказа</summary>
+    Task SendOrderStatusChangedAsync(OrderDto order, string oldStatus, string newStatus);
+
+    /// <summary>Отправить уведомление о создании гарантийного талона</summary>
+    Task SendWarrantyCreatedAsync(WarrantyDto card, string userEmail);
+
+    /// <summary>Отправить напоминание об окончании гарантии</summary>
+    Task SendWarrantyExpiryReminderAsync(WarrantyDto card, string userEmail);
+
+    /// <summary>Отправить уведомление о назначении мастера</summary>
+    Task SendServiceAssignedAsync(ServiceRequestDto service, string masterName, string clientEmail);
 }
 
 /// <summary>
@@ -114,5 +130,46 @@ public class EmailService : IEmailService
             _logger.LogError(ex, "Failed to send email: To={To}, Subject={Subject}",
                 string.Join(",", recipientEmails), subject);
         }
+    }
+
+    /// <inheritdoc/>
+    public Task SendOrderConfirmationAsync(OrderDto order)
+    {
+        if (string.IsNullOrWhiteSpace(order.CustomerEmail)) return Task.CompletedTask;
+        // Делегирует в Shared.OrderEmailService через IOrderEmailService
+        _logger.LogInformation("SendOrderConfirmationAsync called for order {OrderNumber}", order.OrderNumber);
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public Task SendOrderStatusChangedAsync(OrderDto order, string oldStatus, string newStatus)
+    {
+        if (string.IsNullOrWhiteSpace(order.CustomerEmail)) return Task.CompletedTask;
+        _logger.LogInformation("SendOrderStatusChangedAsync called for order {OrderNumber}: {Old} → {New}", order.OrderNumber, oldStatus, newStatus);
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public Task SendWarrantyCreatedAsync(WarrantyDto card, string userEmail)
+    {
+        if (string.IsNullOrWhiteSpace(userEmail)) return Task.CompletedTask;
+        _logger.LogInformation("SendWarrantyCreatedAsync called for warranty {WarrantyNumber}", card.WarrantyNumber);
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public Task SendWarrantyExpiryReminderAsync(WarrantyDto card, string userEmail)
+    {
+        if (string.IsNullOrWhiteSpace(userEmail)) return Task.CompletedTask;
+        _logger.LogInformation("SendWarrantyExpiryReminderAsync called for warranty {WarrantyNumber}", card.WarrantyNumber);
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc/>
+    public Task SendServiceAssignedAsync(ServiceRequestDto service, string masterName, string clientEmail)
+    {
+        if (string.IsNullOrWhiteSpace(clientEmail)) return Task.CompletedTask;
+        _logger.LogInformation("SendServiceAssignedAsync called for request {RequestNumber}, master: {MasterName}", service.RequestNumber, masterName);
+        return Task.CompletedTask;
     }
 }

@@ -1,11 +1,17 @@
 using GoldPC.AuthService.Data;
 using GoldPC.AuthService.Entities;
 using GoldPC.AuthService.Services;
+using GoldPC.AuthService.Infrastructure;
+using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using FluentAssertions;
 using Xunit;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using GoldPC.Shared.Services.Implementations;
+using GoldPC.Shared.Services;
 
 namespace GoldPC.AuthService.Tests;
 
@@ -21,14 +27,35 @@ public class AuthServiceUnitTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
         _context = new AuthDbContext(options);
-        
+
         _jwtServiceMock = new Mock<IJwtService>();
         _jwtServiceMock.Setup(x => x.GenerateAccessToken(It.IsAny<User>()))
             .Returns("test-access-token");
         _jwtServiceMock.Setup(x => x.GenerateRefreshToken())
             .Returns("test-refresh-token");
-        
-        _authService = new AuthService.Services.AuthService(_context, _jwtServiceMock.Object, Mock.Of<ILogger<AuthService.Services.AuthService>>());
+
+        // Моки для зависимостей AuthService
+        var configurationMock = new Mock<IConfiguration>();
+        var loggerMock = new Mock<ILogger<AuthService.Services.AuthService>>();
+        var emailServiceMock = new Mock<SmtpEmailService>(
+            Mock.Of<ILogger<SmtpEmailService>>(),
+            configurationMock.Object);
+        var tokenCacheMock = new Mock<ITokenCache>();
+        var twoFactorSettings = new TwoFactorSettingsService();
+        var encryptionMock = new Mock<IEncryptionService>();
+        encryptionMock.Setup(x => x.Encrypt(It.IsAny<string>())).Returns((string s) => $"enc_{s}");
+        encryptionMock.Setup(x => x.Decrypt(It.IsAny<string>())).Returns((string s) => s.StartsWith("enc_") ? s[4..] : s);
+        encryptionMock.Setup(x => x.ComputeHash(It.IsAny<string>())).Returns((string s) => $"hash_{s}");
+
+        _authService = new AuthService.Services.AuthService(
+            _context,
+            _jwtServiceMock.Object,
+            configurationMock.Object,
+            loggerMock.Object,
+            emailServiceMock.Object,
+            tokenCacheMock.Object,
+            twoFactorSettings,
+            encryptionMock.Object);
     }
 
     [Fact]
@@ -52,7 +79,7 @@ public class AuthServiceUnitTests
         response.Should().NotBeNull();
         response!.User.Email.Should().Be(request.Email);
         response.User.FirstName.Should().Be(request.FirstName);
-        response.User.Role.Should().Be(UserRole.User);
+        response.User.Role.Should().Be(UserRole.Client);
         response.AccessToken.Should().NotBeNullOrEmpty();
     }
 
@@ -65,7 +92,8 @@ public class AuthServiceUnitTests
             Email = "duplicate@example.com",
             Password = "Test123!",
             FirstName = "Test",
-            LastName = "User"
+            LastName = "User",
+            Phone = "+375291234567"
         };
         await _authService.RegisterAsync(request);
 
@@ -87,7 +115,8 @@ public class AuthServiceUnitTests
             Email = "login@example.com",
             Password = "Test123!",
             FirstName = "Test",
-            LastName = "User"
+            LastName = "User",
+            Phone = "+375291234567"
         };
         await _authService.RegisterAsync(registerRequest);
 
@@ -98,7 +127,7 @@ public class AuthServiceUnitTests
         };
 
         // Act
-        var (response, error) = await _authService.LoginAsync(loginRequest, "127.0.0.1");
+        var (response, error) = await _authService.LoginAsync(loginRequest, "127.0.0.1", "test-agent");
 
         // Assert
         error.Should().BeNull();
@@ -116,7 +145,8 @@ public class AuthServiceUnitTests
             Email = "wrongpass@example.com",
             Password = "Correct123!",
             FirstName = "Test",
-            LastName = "User"
+            LastName = "User",
+            Phone = "+375291234567"
         };
         await _authService.RegisterAsync(registerRequest);
 
@@ -127,7 +157,7 @@ public class AuthServiceUnitTests
         };
 
         // Act
-        var (response, error) = await _authService.LoginAsync(loginRequest, "127.0.0.1");
+        var (response, error) = await _authService.LoginAsync(loginRequest, "127.0.0.1", "test-agent");
 
         // Assert
         error.Should().NotBeNull();
@@ -143,7 +173,8 @@ public class AuthServiceUnitTests
             Email = "getuser@example.com",
             Password = "Test123!",
             FirstName = "Test",
-            LastName = "User"
+            LastName = "User",
+            Phone = "+375291234567"
         };
         var (regResponse, _) = await _authService.RegisterAsync(registerRequest);
 
@@ -164,13 +195,14 @@ public class AuthServiceUnitTests
             Email = "changepass@example.com",
             Password = "Old123!",
             FirstName = "Test",
-            LastName = "User"
+            LastName = "User",
+            Phone = "+375291234567"
         };
         var (regResponse, _) = await _authService.RegisterAsync(registerRequest);
 
         var changeRequest = new ChangePasswordRequest
         {
-            OldPassword = "Old123!",
+            CurrentPassword = "Old123!",
             NewPassword = "New123!"
         };
 
@@ -183,7 +215,7 @@ public class AuthServiceUnitTests
 
         // Verify can login with new password
         var loginRequest = new LoginRequest { Email = "changepass@example.com", Password = "New123!" };
-        var (loginResponse, loginError) = await _authService.LoginAsync(loginRequest, "127.0.0.1");
+        var (loginResponse, loginError) = await _authService.LoginAsync(loginRequest, "127.0.0.1", "test-agent");
         loginError.Should().BeNull();
         loginResponse.Should().NotBeNull();
     }

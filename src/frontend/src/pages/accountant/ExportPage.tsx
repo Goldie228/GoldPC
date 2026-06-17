@@ -1,11 +1,13 @@
 /**
  * Страница экспорта данных для бухгалтера
- * Генерация CSV/XLSX/PDF на стороне клиента
+ * Заказы и товары — экспорт через ReportingService (CSV с сервера)
+ * Клиенты — через usersAdminApi (клиентская генерация CSV)
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useToast } from '@/hooks/useToast';
-import { usersAdminApi, catalogAdminApi } from '@/api/admin';
+import { usersAdminApi } from '@/api/admin';
+import { accountantApi } from '@/api/accountant';
 import {
   Download,
   FileSpreadsheet,
@@ -15,6 +17,8 @@ import {
   Check,
 } from 'lucide-react';
 
+/* ─── Типы ─── */
+
 type ExportFormat = 'csv' | 'xlsx' | 'pdf';
 
 interface ExportOption {
@@ -23,6 +27,14 @@ interface ExportOption {
   description: string;
   icon: React.ReactNode;
 }
+
+interface DataOption {
+  id: string;
+  label: string;
+  checked: boolean;
+}
+
+/* ─── Константы ─── */
 
 const EXPORT_OPTIONS: ExportOption[] = [
   {
@@ -45,13 +57,15 @@ const EXPORT_OPTIONS: ExportOption[] = [
   },
 ];
 
-interface DataOption {
-  id: string;
-  label: string;
-  checked: boolean;
-}
+const DEFAULT_DATA_OPTIONS: DataOption[] = [
+  { id: 'orders', label: 'Заказы', checked: true },
+  { id: 'products', label: 'Товары', checked: true },
+  { id: 'users', label: 'Клиенты', checked: false },
+];
 
-/** Генерация CSV */
+/* ─── Утилиты ─── */
+
+/** Генерация CSV на клиенте */
 function generateCSV(data: Record<string, unknown>[], headers: string[]): string {
   const lines = [headers.join(';')];
   for (const row of data) {
@@ -60,7 +74,7 @@ function generateCSV(data: Record<string, unknown>[], headers: string[]): string
   return '\uFEFF' + lines.join('\n'); // BOM для корректной кодировки
 }
 
-/** Скачивание файла */
+/** Скачивание текстового файла */
 function downloadFile(content: string, filename: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -71,7 +85,7 @@ function downloadFile(content: string, filename: string, mimeType: string) {
   URL.revokeObjectURL(url);
 }
 
-/** Скачивание бинарного файла */
+/** Скачивание бинарного Blob */
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -81,15 +95,27 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+/** Форматирование даты для period params */
+function toISODate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+/* ─── Компонент ─── */
+
 export function ExportPage() {
   const { showToast } = useToast();
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('csv');
-  const [dataOptions, setDataOptions] = useState<DataOption[]>([
-    { id: 'orders', label: 'Заказы', checked: true },
-    { id: 'products', label: 'Товары', checked: true },
-    { id: 'users', label: 'Клиенты', checked: false },
-  ]);
+  const [dataOptions, setDataOptions] = useState<DataOption[]>(DEFAULT_DATA_OPTIONS);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Период для экспорта заказов (по умолчанию — текущий месяц)
+  const today = useMemo(() => new Date(), []);
+  const firstDayOfMonth = useMemo(
+    () => new Date(today.getFullYear(), today.getMonth(), 1),
+    [today]
+  );
+  const [dateFrom, setDateFrom] = useState(toISODate(firstDayOfMonth));
+  const [dateTo, setDateTo] = useState(toISODate(today));
 
   const handleToggleDataOption = (id: string) => {
     setDataOptions((prev) =>
@@ -105,73 +131,69 @@ export function ExportPage() {
     }
 
     setIsExporting(true);
+    const timestamp = new Date().toISOString().slice(0, 10);
 
     try {
-      const timestamp = new Date().toISOString().slice(0, 10);
-
       for (const dataOption of selectedData) {
-        let data: Record<string, unknown>[] = [];
-        let headers: string[] = [];
-        let filename = '';
-
         switch (dataOption.id) {
           case 'orders': {
-            // Используем mock данные заказов (в реальном проекте — API)
-            data = [
-              { id: 'ORD-001', client: 'Иванов И.И.', date: '2026-01-15', total: '1250.00', status: 'Выполнен' },
-              { id: 'ORD-002', client: 'Петров П.П.', date: '2026-01-16', total: '890.50', status: 'В обработке' },
-              { id: 'ORD-003', client: 'Сидоров С.С.', date: '2026-01-17', total: '2100.00', status: 'Доставлен' },
-            ];
-            headers = ['id', 'client', 'date', 'total', 'status'];
-            filename = `orders_${timestamp}`;
+            // Заказы — экспорт через серверный CSV
+            const { blob, fileName } = await accountantApi.exportCsv('orders', dateFrom, dateTo);
+
+            if (selectedFormat === 'csv' || selectedFormat === 'xlsx') {
+              downloadBlob(blob, fileName);
+            } else if (selectedFormat === 'pdf') {
+              // PDF: читаем CSV как текст и конвертируем в простой txt
+              const text = await blob.text();
+              downloadFile(text, fileName.replace('.csv', '.txt'), 'text/plain;charset=utf-8');
+            }
             break;
           }
+
           case 'products': {
-            const response = await catalogAdminApi.getProducts({ pageSize: 100 });
-            data = response.data.map((p: any) => ({
-              id: p.id,
-              name: p.name,
-              category: p.category,
-              price: p.price,
-              stock: p.stock,
-              isActive: p.isActive,
-            }));
-            headers = ['id', 'name', 'category', 'price', 'stock', 'isActive'];
-            filename = `products_${timestamp}`;
+            // Товары — экспорт через серверный CSV
+            const { blob, fileName } = await accountantApi.exportCsv('products', dateFrom, dateTo);
+
+            if (selectedFormat === 'csv' || selectedFormat === 'xlsx') {
+              downloadBlob(blob, fileName);
+            } else if (selectedFormat === 'pdf') {
+              const text = await blob.text();
+              downloadFile(text, fileName.replace('.csv', '.txt'), 'text/plain;charset=utf-8');
+            }
             break;
           }
+
           case 'users': {
+            // Клиенты — генерация CSV на клиенте через существующий API
             const response = await usersAdminApi.getUsers({ pageSize: 100 });
-            data = response.data.map((u: any) => ({
-              id: u.id,
-              email: u.email,
-              firstName: u.firstName,
-              lastName: u.lastName,
-              role: u.role,
-              isActive: u.isActive,
+            const data = response.data.map((u) => ({
+              id: String(u.id ?? ''),
+              email: String(u.email ?? ''),
+              firstName: String(u.firstName ?? ''),
+              lastName: String(u.lastName ?? ''),
+              role: String(u.role ?? ''),
+              isActive: String(u.isActive ?? ''),
             }));
-            headers = ['id', 'email', 'firstName', 'lastName', 'role', 'isActive'];
-            filename = `users_${timestamp}`;
+            const headers = ['id', 'email', 'firstName', 'lastName', 'role', 'isActive'];
+            const filename = `users_${timestamp}`;
+
+            if (data.length === 0) {
+              showToast(`Нет данных для "${dataOption.label}"`, 'error');
+              continue;
+            }
+
+            if (selectedFormat === 'csv' || selectedFormat === 'xlsx') {
+              const csv = generateCSV(data, headers);
+              downloadFile(csv, `${filename}.csv`, 'text/csv;charset=utf-8');
+            } else if (selectedFormat === 'pdf') {
+              const textContent =
+                headers.join('\t') +
+                '\n' +
+                data.map((row) => headers.map((h) => String((row as Record<string, unknown>)[h] ?? '')).join('\t')).join('\n');
+              downloadFile(textContent, `${filename}.txt`, 'text/plain;charset=utf-8');
+            }
             break;
           }
-        }
-
-        if (data.length === 0) {
-          showToast(`Нет данных для "${dataOption.label}"`, 'error');
-          continue;
-        }
-
-        const csv = generateCSV(data, headers);
-
-        if (selectedFormat === 'csv') {
-          downloadFile(csv, `${filename}.csv`, 'text/csv;charset=utf-8');
-        } else if (selectedFormat === 'xlsx') {
-          // CSV с расширением .csv (XLSX требует библиотеку, используем CSV как fallback)
-          downloadFile(csv, `${filename}.csv`, 'text/csv;charset=utf-8');
-        } else if (selectedFormat === 'pdf') {
-          // Простой текстовый PDF-подобный формат
-          const textContent = headers.join('\t') + '\n' + data.map((row) => headers.map((h) => row[h]).join('\t')).join('\n');
-          downloadFile(textContent, `${filename}.txt`, 'text/plain;charset=utf-8');
         }
       }
 
@@ -188,28 +210,21 @@ export function ExportPage() {
 
   const handleCancel = () => {
     setSelectedFormat('csv');
-    setDataOptions([
-      { id: 'orders', label: 'Заказы', checked: true },
-      { id: 'products', label: 'Товары', checked: true },
-      { id: 'users', label: 'Клиенты', checked: false },
-    ]);
+    setDataOptions(DEFAULT_DATA_OPTIONS);
   };
 
   return (
-    <div className="px-6 pb-12 mx-auto min-h-screen bg-canvas-dark max-w-[800px]">
-      <header className="flex items-center justify-between gap-6 mb-8 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-[-0.02em] mb-1 text-body-text">
-            Экспорт данных
-          </h1>
-          <p className="text-sm text-muted-foreground m-0">
-            Выберите формат и данные для экспорта
-          </p>
-        </div>
-      </header>
+    <div className="space-y-6 max-w-[800px]">
+      {/* Заголовок */}
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Экспорт данных</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Выберите формат и данные для экспорта
+        </p>
+      </div>
 
       {/* Карточка выбора формата */}
-      <div className="bg-surface-card border border-hairline-dark p-6 mb-6 rounded-lg">
+      <div className="bg-surface-card border border-hairline-dark rounded-lg p-6">
         <div className="text-sm font-semibold mb-5 flex items-center gap-3 pb-4 border-b border-hairline-dark">
           <FileText className="w-[18px] h-[18px] text-gold" />
           Формат экспорта
@@ -249,8 +264,8 @@ export function ExportPage() {
                 {option.icon}
               </div>
               <div className="flex-1">
-                <div className="text-[0.95rem] font-medium mb-1 text-body-text">{option.name}</div>
-                <div className="text-[0.8rem] text-muted-foreground">{option.description}</div>
+                <div className="text-sm font-medium mb-1 text-foreground">{option.name}</div>
+                <div className="text-xs text-muted-foreground">{option.description}</div>
               </div>
               {selectedFormat === option.value && (
                 <Check className="w-5 h-5 text-gold flex-shrink-0 mt-1" />
@@ -260,8 +275,44 @@ export function ExportPage() {
         </div>
       </div>
 
+      {/* Период для экспорта заказов */}
+      <div className="bg-surface-card border border-hairline-dark rounded-lg p-6">
+        <div className="text-sm font-semibold mb-5 flex items-center gap-3 pb-4 border-b border-hairline-dark">
+          <FileSpreadsheet className="w-[18px] h-[18px] text-gold" />
+          Период данных
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">
+              Дата начала
+            </label>
+            <input
+              type="date"
+              className="w-full p-3 bg-surface-elevated border border-hairline-dark rounded-lg text-foreground font-mono text-sm transition-colors focus:outline-none focus:border-gold [color-scheme:dark]"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wider">
+              Дата окончания
+            </label>
+            <input
+              type="date"
+              className="w-full p-3 bg-surface-elevated border border-hairline-dark rounded-lg text-foreground font-mono text-sm transition-colors focus:outline-none focus:border-gold [color-scheme:dark]"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground mt-3">
+          Период используется для экспорта заказов. Товары и клиенты экспортируются полностью.
+        </p>
+      </div>
+
       {/* Карточка выбора данных */}
-      <div className="bg-surface-card border border-hairline-dark p-6 mb-6 rounded-lg">
+      <div className="bg-surface-card border border-hairline-dark rounded-lg p-6">
         <div className="text-sm font-semibold mb-5 flex items-center gap-3 pb-4 border-b border-hairline-dark">
           <FileSpreadsheet className="w-[18px] h-[18px] text-gold" />
           Данные для экспорта
@@ -282,19 +333,19 @@ export function ExportPage() {
                 />
                 <span className="absolute inset-0 bg-surface-elevated border border-hairline-dark rounded" />
                 <span
-                  className={`absolute left-[5px] top-[2px] w-[5px] h-[9px] border-solid border-canvas-dark border-r-2 border-b-2 -rotate-45 transition-transform ${
+                  className={`absolute left-[5px] top-[2px] w-[5px] h-[9px] border-solid border-foreground border-r-2 border-b-2 -rotate-45 transition-transform ${
                     option.checked ? 'scale-100 bg-gold border-gold' : 'scale-0'
                   }`}
                 />
               </div>
-              <span className="text-[0.85rem] text-body-text">{option.label}</span>
+              <span className="text-sm text-foreground">{option.label}</span>
             </label>
           ))}
         </div>
 
         <div className="flex gap-3 mt-6 pt-6 border-t border-hairline-dark">
           <button
-            className="inline-flex items-center gap-2.5 px-6 py-3.5 text-[0.85rem] font-semibold border-none rounded-lg cursor-pointer transition-all bg-gold text-gold-ink hover:bg-gold-active disabled:opacity-70 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2.5 px-6 py-3.5 text-sm font-semibold rounded-lg border-none cursor-pointer transition-all bg-gold text-gold-ink hover:bg-gold-active disabled:opacity-70 disabled:cursor-not-allowed"
             onClick={() => void handleExport()}
             disabled={isExporting}
           >
@@ -311,7 +362,7 @@ export function ExportPage() {
             )}
           </button>
           <button
-            className="inline-flex items-center gap-2.5 px-6 py-3.5 text-[0.85rem] font-semibold border border-hairline-dark rounded-lg cursor-pointer transition-all bg-transparent text-muted-foreground hover:border-muted-foreground hover:text-body-text"
+            className="inline-flex items-center gap-2.5 px-6 py-3.5 text-sm font-semibold border border-hairline-dark rounded-lg cursor-pointer transition-all bg-transparent text-muted-foreground hover:border-muted-foreground hover:text-foreground"
             onClick={handleCancel}
           >
             Отмена

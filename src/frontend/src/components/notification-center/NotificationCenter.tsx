@@ -111,7 +111,7 @@ export const NotificationCenter = () => {
                         <button
                           onClick={(e) => { e.stopPropagation(); void markAsRead(notification.id); }}
                           className="p-1.5 text-muted-foreground/50 hover:text-info-blue rounded transition-colors"
-                          title="Отметить прочитанным"
+                          aria-label="Отметить прочитанным"
                         >
                           <Check className="h-3.5 w-3.5" />
                         </button>
@@ -119,7 +119,7 @@ export const NotificationCenter = () => {
                       <button
                         onClick={(e) => { e.stopPropagation(); void deleteNotification(notification.id); }}
                         className="p-1.5 text-muted-foreground/50 hover:text-price-rise rounded transition-colors"
-                        title="Удалить"
+                        aria-label="Удалить уведомление"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

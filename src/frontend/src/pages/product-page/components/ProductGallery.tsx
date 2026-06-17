@@ -127,7 +127,7 @@ export function ProductGallery({ product }: ProductGalleryProps): ReactElement {
                 className="w-[85%] h-[85%] object-contain transition-transform duration-500 ease-out pointer-events-none"
               />
             ) : (
-              <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-muted-foreground opacity-30">
+              <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-muted-foreground opacity-30" role="img" aria-label={`Фото ${product.name} отсутствует`}>
                 <rect x="40" y="40" width="120" height="120" rx="8" fill="currentColor" fillOpacity="0.05" stroke="currentColor" strokeWidth="1"/>
                 <text x="100" y="110" textAnchor="middle" fill="currentColor" fontSize="12">Нет фото</text>
               </svg>
@@ -178,6 +178,8 @@ export function ProductGallery({ product }: ProductGalleryProps): ReactElement {
                   e.stopPropagation();
                   setCurrentIndex(idx);
                 }}
+                aria-label={`Фото ${idx + 1} из ${images.length}`}
+                aria-current={currentIndex === idx ? 'true' : undefined}
               >
                 <img src={img.url} alt={img.alt || product.name} className="w-full h-full object-contain" />
               </button>
