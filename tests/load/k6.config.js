@@ -189,7 +189,7 @@ function getMockToken() {
   }
   
   // Реальная авторизация (если mock отключен)
-  const loginResponse = http.post(`${BASE_URL}/api/v1/auth/login`, JSON.stringify({
+  const loginResponse = http.post(`${BASE_URL}/api/v1/Auth/login`, JSON.stringify({
     email: 'loadtest@example.com',
     password: 'LoadTest123!@#',
   }), {
@@ -251,7 +251,7 @@ export function catalogBrowsingScenario() {
       // Поиск товаров
       if (Math.random() < 0.3) {
         const query = ['ryzen', 'intel', 'rtx', 'ddr5'][Math.floor(Math.random() * 4)];
-        const searchResponse = http.get(`${BASE_URL}/api/v1/catalog/products/search?q=${query}`);
+        const searchResponse = http.get(`${BASE_URL}/api/v1/catalog/products?q=${query}&page=1&limit=20`);
         check(searchResponse, { 'search status is 200': (r) => r.status === 200 });
         errorRate.add(searchResponse.status >= 500);
       }
@@ -277,7 +277,7 @@ export function pcBuilderScenario() {
     
     // Шаг 1: Проверка совместимости
     const compatibilityResponse = http.post(
-      `${BASE_URL}/api/v1/pcbuilder/check-compatibility`,
+      `${BASE_URL}/api/v1/PCBuilder/check-compatibility`,
       JSON.stringify(config),
       { headers: { 'Content-Type': 'application/json' } }
     );
@@ -294,7 +294,7 @@ export function pcBuilderScenario() {
     
     // Шаг 2: Расчет мощности
     const powerResponse = http.post(
-      `${BASE_URL}/api/v1/pcbuilder/calculate-power`,
+      `${BASE_URL}/api/v1/PCBuilder/calculate-power`,
       JSON.stringify({ componentIds: Object.values(config).flat() }),
       { headers: { 'Content-Type': 'application/json' } }
     );
@@ -309,7 +309,7 @@ export function pcBuilderScenario() {
     if (Math.random() < 0.2) {
       const token = getMockToken();
       const saveResponse = http.post(
-        `${BASE_URL}/api/v1/pcbuilder/configurations`,
+        `${BASE_URL}/api/v1/PCBuilder/configurations`,
         JSON.stringify({ ...config, name: `LoadTest-${__VU}` }),
         { headers: getAuthHeaders(token) }
       );

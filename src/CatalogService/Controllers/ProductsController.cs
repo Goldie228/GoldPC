@@ -299,6 +299,7 @@ public record FilterFacetsResponse
 /// </summary>
 [ApiController]
 [Route("api/v1/admin")]
+[Authorize(Roles = "Admin,Manager")]
 public class AdminCatalogController : ControllerBase
 {
     private readonly ICatalogService _catalogService;
