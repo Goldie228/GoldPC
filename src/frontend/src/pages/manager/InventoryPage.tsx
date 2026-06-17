@@ -255,6 +255,11 @@ export function InventoryPage() {
       </div>
 
       {/* Таблица */}
+      {stockFilter !== 'all' && stockFilter !== '' && (
+        <p className="text-xs text-muted-foreground mb-2">
+          Фильтр применяется к текущей странице. Для полного поиска используйте поиск по названию.
+        </p>
+      )}
       <div className="bg-surface-card border border-hairline-dark rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
            <table className="w-full text-sm min-w-[700px]">

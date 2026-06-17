@@ -43,7 +43,7 @@ const navItems: NavItem[] = [
   { to: '/manager/dictionaries', icon: BookOpen, label: 'Справочники' },
   { to: '/manager/users', icon: Users, label: 'Пользователи' },
   { to: '/manager/feedback', icon: MessageSquare, label: 'Отзывы' },
-  { to: '/account/notifications', icon: Bell, label: 'Уведомления' },
+  { to: '/manager/notifications', icon: Bell, label: 'Уведомления' },
 ];
 
 /* ------------------------------------------------------------------ */
