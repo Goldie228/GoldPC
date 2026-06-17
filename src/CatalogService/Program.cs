@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using OpenTelemetry;
-using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -179,12 +178,11 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddChaosMiddleware(builder.Configuration);
 }
 
-// Настройка OpenTelemetry Tracing с Jaeger Exporter
-var jaegerHost = builder.Configuration["Jaeger:Host"] 
-    ?? Environment.GetEnvironmentVariable("JAEGER_HOST") 
-    ?? "localhost";
-var jaegerPort = builder.Configuration.GetValue<int>("Jaeger:Port", 
-    int.TryParse(Environment.GetEnvironmentVariable("JAEGER_PORT"), out var port) ? port : 6831);
+// Настройка OpenTelemetry Tracing с OTLP Exporter
+// Endpoint читается из OTEL_EXPORTER_OTLP_ENDPOINT (по умолчанию http://localhost:4317 для gRPC)
+var otlpEndpoint = builder.Configuration["Otlp:Endpoint"]
+    ?? Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT")
+    ?? "http://localhost:4317";
 
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracerProviderBuilder =>
@@ -213,21 +211,9 @@ builder.Services.AddOpenTelemetry()
             .AddHttpClientInstrumentation(options =>
             {
                 options.RecordException = true;
-            })
-            .AddJaegerExporter(options =>
-            {
-                options.AgentHost = jaegerHost;
-                options.AgentPort = jaegerPort;
-                options.ExportProcessorType = ExportProcessorType.Batch;
-                options.BatchExportProcessorOptions = new BatchExportProcessorOptions<Activity>
-                {
-                    MaxQueueSize = 2048,
-                    ScheduledDelayMilliseconds = 5000,
-                    ExporterTimeoutMilliseconds = 30000,
-                    MaxExportBatchSize = 512
-                };
             });
     })
+    .UseOtlpExporter()
     .WithMetrics(meterProviderBuilder =>
     {
         meterProviderBuilder
@@ -243,7 +229,7 @@ builder.Services.AddOpenTelemetry()
             });
     });
 
-Log.Information("OpenTelemetry configured with Jaeger exporter: {Host}:{Port}", jaegerHost, jaegerPort);
+Log.Information("OpenTelemetry configured with OTLP exporter: {Endpoint}", otlpEndpoint);
 
 var app = builder.Build();
 
