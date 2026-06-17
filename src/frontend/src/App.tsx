@@ -4,6 +4,7 @@ import { MainLayout } from './components/layout/main-layout/MainLayout';
 import { AuthGuard, RoleGuard, AdminRedirect } from './components/guards';
 import { AdminLayout } from './components/layout/admin-layout/AdminLayout';
 import { ManagerLayout } from './components/layout/manager-layout/ManagerLayout';
+import { MasterLayout } from './components/layout/master-layout/MasterLayout';
 import { AuthModalContainer } from './components/auth';
 import { ModalContainer } from './components/ui/Modal/ModalContainer';
 import { RouteMeta } from './components/seo/RouteMeta';
@@ -84,6 +85,8 @@ const ManagerDictionariesPage = lazy(() => import('./pages/manager/ManagerDictio
 const ManagerUsersPage = lazy(() => import('./pages/manager/ManagerUsersPage').then(m => ({ default: m.ManagerUsersPage })));
 const TicketsPage = lazy(() => import('./pages/master').then(m => ({ default: m.TicketsPage })));
 const TicketDetailPage = lazy(() => import('./pages/master').then(m => ({ default: m.TicketDetailPage })));
+const AvailableTicketsPage = lazy(() => import('./pages/master').then(m => ({ default: m.AvailableTicketsPage })));
+const WorkHistoryPage = lazy(() => import('./pages/master').then(m => ({ default: m.WorkHistoryPage })));
 const ReportsPage = lazy(() => import('./pages/accountant').then(m => ({ default: m.ReportsPage })));
 const ExportPage = lazy(() => import('./pages/accountant').then(m => ({ default: m.ExportPage })));
 const NotFoundPage = lazy(() => import('./pages/errors').then(m => ({ default: m.NotFoundPage })));
@@ -285,6 +288,7 @@ const router = createBrowserRouter([
               { path: '/manager/dictionaries', element: <ManagerDictionariesPage /> },
               { path: '/manager/users', element: <ManagerUsersPage /> },
               { path: '/manager/products/:id/edit', element: <ProductEditorPage /> },
+              { path: '/manager/notifications', element: <NotificationsPage /> },
             ],
           },
         ],
@@ -292,8 +296,16 @@ const router = createBrowserRouter([
       {
         element: <RoleGuard allowedRoles={['Master', 'Admin']} />,
         children: [
-          { path: '/master/tickets', element: <TicketsPage /> },
-          { path: '/master/tickets/:id', element: <TicketDetailPage /> },
+          {
+            element: <MasterLayout />,
+            children: [
+              { path: '/master', element: <Navigate to="/master/tickets" replace /> },
+              { path: '/master/tickets', element: <TicketsPage /> },
+              { path: '/master/tickets/:ticketId', element: <TicketDetailPage /> },
+              { path: '/master/available', element: <AvailableTicketsPage /> },
+              { path: '/master/history', element: <WorkHistoryPage /> },
+            ],
+          },
         ],
       },
       {

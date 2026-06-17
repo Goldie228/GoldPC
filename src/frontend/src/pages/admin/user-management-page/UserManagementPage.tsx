@@ -6,10 +6,11 @@
  * - Все стили через DESIGN.md токены Tailwind
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersAdminApi, type UserRole } from '@/api/admin';
+import { useToast } from '@/hooks/useToast';
 import {
   Search,
   ChevronLeft,
@@ -45,6 +46,7 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 export function UserManagementPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   /* ————— Состояние ————— */
 
@@ -54,9 +56,21 @@ export function UserManagementPage() {
   const [pageSize, setPageSize] = useState<number>(10);
   const [page, setPage] = useState(1);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [confirmDeactivateId, setConfirmDeactivateId] = useState<string | null>(null);
   const [updatingRoles, setUpdatingRoles] = useState<Record<string, boolean>>(
     {},
   );
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearchQuery(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [searchInput]);
 
   /* ————— React Query: получение пользователей ————— */
 
@@ -88,6 +102,7 @@ export function UserManagementPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       setMutationError(null);
+      showToast('Пользователь деактивирован', 'success');
     },
     onError: (err: Error) => {
       setMutationError(err.message || 'Ошибка деактивации пользователя');
@@ -99,6 +114,7 @@ export function UserManagementPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       setMutationError(null);
+      showToast('Пользователь активирован', 'success');
     },
     onError: (err: Error) => {
       setMutationError(err.message || 'Ошибка активации пользователя');
@@ -116,6 +132,7 @@ export function UserManagementPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       setMutationError(null);
+      showToast('Роль обновлена', 'success');
     },
     onError: (err: Error) => {
       setMutationError(err.message || 'Ошибка изменения роли');
@@ -142,13 +159,12 @@ export function UserManagementPage() {
   };
 
   const handleDeactivate = (userId: string) => {
-    if (
-      window.confirm(
-        'Вы уверены, что хотите деактивировать этого пользователя?',
-      )
-    ) {
-      deactivateMutation.mutate(userId);
-    }
+    setConfirmDeactivateId(userId);
+  };
+
+  const confirmDeactivate = (userId: string) => {
+    deactivateMutation.mutate(userId);
+    setConfirmDeactivateId(null);
   };
 
   const handleActivate = (userId: string) => {
@@ -242,7 +258,7 @@ export function UserManagementPage() {
               </div>
               <button
                 type="submit"
-                className="bg-gold text-black hover:bg-gold-active rounded-md px-4 py-2 text-sm font-semibold"
+                className="bg-gold text-gold-ink hover:bg-gold-active rounded-md px-4 py-2 text-sm font-semibold"
               >
                 Найти
               </button>
@@ -402,15 +418,33 @@ export function UserManagementPage() {
                       <td className="py-3 px-4 text-sm border-b border-hairline-dark">
                         <div className="flex items-center justify-end gap-2">
                           {user.isActive ? (
-                            <button
-                              onClick={() => handleDeactivate(user.id)}
-                              disabled={deactivateMutation.isPending}
-                              title="Деактивировать пользователя"
-                              className="bg-price-rise text-white hover:bg-red-700 rounded-md px-3 py-1.5 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <UserX className="h-3.5 w-3.5 inline-block mr-1" />
-                              Деактивировать
-                            </button>
+                            confirmDeactivateId === user.id ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => confirmDeactivate(user.id)}
+                                  disabled={deactivateMutation.isPending}
+                                  className="bg-price-rise text-white hover:bg-red-700 rounded-md px-2 py-1.5 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {deactivateMutation.isPending ? 'Деактивация...' : 'Да, деактивировать'}
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDeactivateId(null)}
+                                  className="bg-surface-card text-body-text hover:bg-surface-elevated border border-hairline-dark rounded-md px-2 py-1.5 text-xs font-semibold"
+                                >
+                                  Отмена
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleDeactivate(user.id)}
+                                disabled={deactivateMutation.isPending}
+                                title="Деактивировать пользователя"
+                                className="bg-price-rise text-white hover:bg-red-700 rounded-md px-3 py-1.5 text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <UserX className="h-3.5 w-3.5 inline-block mr-1" />
+                                Деактивировать
+                              </button>
+                            )
                           ) : (
                             <button
                               onClick={() => handleActivate(user.id)}
@@ -480,7 +514,7 @@ export function UserManagementPage() {
                         onClick={() => setPage(pageNum)}
                         className={`flex items-center justify-center h-8 w-8 text-sm font-medium rounded-md ${
                           pageNum === page
-                            ? 'bg-gold text-black'
+                            ? 'bg-gold text-gold-ink'
                             : 'bg-surface-card text-body-text hover:bg-surface-elevated'
                         }`}
                         aria-current={pageNum === page ? 'page' : undefined}

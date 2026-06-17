@@ -211,7 +211,7 @@ export function SettingsPage() {
             </p>
             <button
               onClick={() => refetch()}
-              className="rounded-md bg-gold px-6 py-2 text-sm font-semibold text-black transition-colors hover:bg-gold-hover"
+              className="rounded-md bg-gold px-6 py-2 text-sm font-semibold text-gold-ink transition-colors hover:bg-gold-active"
             >
               Попробовать снова
             </button>
@@ -250,7 +250,7 @@ export function SettingsPage() {
             }`}
           >
             {inlineMessage.type === 'success' ? (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-price-drop/20 text-[10px]">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-price-drop/20 text-xs">
                 ✓
               </span>
             ) : (
@@ -460,6 +460,12 @@ export function SettingsPage() {
                   className="sr-only peer"
                   checked={formData.maintenanceMode || false}
                   onChange={handleInputChange}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' || e.key === 'Enter') {
+                      e.preventDefault();
+                      setFormData((prev) => ({ ...prev, maintenanceMode: !prev.maintenanceMode }));
+                    }
+                  }}
                   aria-label="Режим обслуживания"
                 />
                 <div className="h-6 w-11 rounded-full bg-surface-elevated transition-colors after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-gold peer-checked:after:translate-x-full peer-focus:outline-none peer-focus:ring-1 peer-focus:ring-gold" />
@@ -486,7 +492,7 @@ export function SettingsPage() {
           <button
             onClick={handleSave}
             disabled={isSaving || isResetting}
-            className="flex items-center gap-2 rounded-md bg-gold px-6 py-2 text-sm font-semibold text-black transition-colors hover:bg-gold-hover disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-md bg-gold px-6 py-2 text-sm font-semibold text-gold-ink transition-colors hover:bg-gold-active disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSaving ? (
               <Loader2 className="h-4 w-4 animate-spin" />

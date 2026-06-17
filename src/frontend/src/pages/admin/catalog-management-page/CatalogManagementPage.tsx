@@ -4,7 +4,7 @@
  * и модалкой создания/редактирования товара
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { catalogAdminApi, type CreateProductRequest } from '@/api/admin';
 import { useToast } from '@/hooks/useToast';
@@ -74,11 +74,23 @@ export function CatalogManagementPage() {
   const { showToast } = useToast();
 
   // Filter & pagination state
+  const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory | ''>('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [pageSize, setPageSize] = useState<number>(10);
   const [page, setPage] = useState(1);
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearchQuery(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [searchInput]);
 
   // View mode state (table/grid) with localStorage persistence
   const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
@@ -216,7 +228,7 @@ export function CatalogManagementPage() {
           </div>
           <button
             onClick={openCreateModal}
-            className="inline-flex items-center gap-2 bg-gold text-black hover:bg-gold-active rounded-md px-4 py-2 text-sm font-semibold transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 bg-gold text-gold-ink hover:bg-gold-active rounded-md px-4 py-2 text-sm font-semibold transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Добавить товар
@@ -250,8 +262,8 @@ export function CatalogManagementPage() {
                 type="text"
                 className="w-full pl-9 pr-3 py-2 bg-surface-card border border-hairline-dark rounded-md text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
                 placeholder="Поиск по названию или артикулу (SKU)..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
               />
             </div>
             <button
@@ -530,7 +542,7 @@ export function CatalogManagementPage() {
                         onClick={() => setPage(pageNum)}
                         className={`w-8 h-8 flex items-center justify-center rounded-md text-sm font-mono transition-colors cursor-pointer ${
                           page === pageNum
-                            ? 'bg-gold text-black'
+                            ? 'bg-gold text-gold-ink'
                             : 'bg-transparent border border-hairline-dark text-muted-foreground hover:text-body-text hover:bg-surface-elevated'
                         }`}
                       >
@@ -668,6 +680,12 @@ export function CatalogManagementPage() {
                   role="switch"
                   aria-checked={formData.isActive}
                   onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' || e.key === 'Enter') {
+                      e.preventDefault();
+                      setFormData({ ...formData, isActive: !formData.isActive });
+                    }
+                  }}
                   className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-hairline-dark transition-colors ${
                     formData.isActive ? 'bg-price-drop' : 'bg-surface-elevated'
                   }`}
@@ -699,7 +717,7 @@ export function CatalogManagementPage() {
               <button
                 onClick={handleSave}
                 disabled={isSaving || !formData.name || !formData.category}
-                className="bg-gold text-black rounded-md px-4 py-2 text-sm font-semibold hover:bg-gold-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-2"
+                className="bg-gold text-gold-ink rounded-md px-4 py-2 text-sm font-semibold hover:bg-gold-active transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer inline-flex items-center gap-2"
               >
                 {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {isSaving ? 'Создание...' : 'Создать'}

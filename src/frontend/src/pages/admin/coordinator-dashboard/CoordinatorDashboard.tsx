@@ -127,7 +127,7 @@ function MiniBarChart({
               animate={{ height: barHeight }}
               transition={{ duration: 0.5, delay: i * 0.05, ease: 'easeOut' }}
             />
-            <span className="text-[10px] text-muted-text truncate w-full text-center">
+            <span className="text-xs text-muted-foreground truncate w-full text-center">
               {d.label}
             </span>
           </div>
@@ -176,7 +176,7 @@ function StatSkeleton() {
 function ChangeIndicator({ change }: { change: number }) {
   if (change === 0) {
     return (
-      <span className="inline-flex items-center gap-1 text-sm text-muted-text">
+      <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
         0%
       </span>
     );
@@ -227,7 +227,7 @@ function PeriodSelector({
           className={`relative px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-200 ${
             value === p.key
               ? 'text-gold-ink'
-              : 'text-muted-text hover:text-body-text'
+              : 'text-muted-foreground hover:text-body-text'
           }`}
         >
           {value === p.key && (
@@ -291,7 +291,7 @@ function StatCard({
           <div className="w-9 h-9 rounded-lg bg-gold/10 flex items-center justify-center text-gold group-hover:bg-gold/15 transition-colors duration-200">
             {icon}
           </div>
-          <span className="text-muted-text text-xs font-medium uppercase tracking-wider">
+          <span className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
             {title}
           </span>
         </div>
@@ -317,7 +317,7 @@ function StatCard({
 
 function StatsGrid({ period }: { period: Period }) {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['adminStats'],
+    queryKey: ['adminStats', period],
     queryFn: () => statsApi.getStats(),
     staleTime: 30000,
   });
@@ -400,7 +400,7 @@ function StatsGrid({ period }: { period: Period }) {
       icon: <Clock className="w-4.5 h-4.5" />,
       title: 'Обновлено',
       value: (
-        <span className="text-sm font-normal text-muted-text">
+        <span className="text-sm font-normal text-muted-foreground">
           {formatDate(lastUpdated)}
         </span>
       ),
@@ -457,7 +457,7 @@ function ActivityFeed() {
             Последние действия
           </h3>
         </div>
-        <span className="text-xs text-muted-text">
+        <span className="text-xs text-muted-foreground">
           {isLoading ? '...' : `${activities.length} событий`}
         </span>
       </div>
@@ -478,7 +478,7 @@ function ActivityFeed() {
         ) : error ? (
           <div className="px-5 py-6 text-center">
             <AlertTriangle className="w-6 h-6 text-price-rise mx-auto mb-2" />
-            <p className="text-xs text-muted-text">Не удалось загрузить активность</p>
+            <p className="text-xs text-muted-foreground">Не удалось загрузить активность</p>
           </div>
         ) : (
           <AnimatePresence>
@@ -495,7 +495,7 @@ function ActivityFeed() {
                   <p className="text-sm text-body-text leading-snug">
                     {item.text}
                   </p>
-                  <p className="text-xs text-muted-text mt-0.5">{item.time}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{item.time}</p>
                 </div>
               </motion.div>
             ))}
@@ -556,7 +556,7 @@ function ChartsSection({ period }: { period: Period }) {
               Заказы по периоду
             </h3>
           </div>
-          <span className="text-xs text-muted-text font-tabular">
+          <span className="text-xs text-muted-foreground font-tabular">
             {isLoading ? '...' : `${totalOrders.toLocaleString('ru-BY')} всего`}
           </span>
         </div>
@@ -564,7 +564,7 @@ function ChartsSection({ period }: { period: Period }) {
           <div className="h-[140px] bg-surface-elevated rounded animate-pulse" />
         ) : error ? (
           <div className="h-[140px] flex items-center justify-center">
-            <p className="text-xs text-muted-text">Нет данных</p>
+            <p className="text-xs text-muted-foreground">Нет данных</p>
           </div>
         ) : (
           <MiniBarChart data={ordersData} color="var(--color-gold)" height={140} />
@@ -585,7 +585,7 @@ function ChartsSection({ period }: { period: Period }) {
               Выручка по периоду
             </h3>
           </div>
-          <span className="text-xs text-muted-text font-tabular">
+          <span className="text-xs text-muted-foreground font-tabular">
             {isLoading ? '...' : formatCurrency(totalRevenue)}
           </span>
         </div>
@@ -593,7 +593,7 @@ function ChartsSection({ period }: { period: Period }) {
           <div className="h-[140px] bg-surface-elevated rounded animate-pulse" />
         ) : error ? (
           <div className="h-[140px] flex items-center justify-center">
-            <p className="text-xs text-muted-text">Нет данных</p>
+            <p className="text-xs text-muted-foreground">Нет данных</p>
           </div>
         ) : (
           <MiniBarChart data={revenueData} color="var(--color-price-drop)" height={140} />
@@ -653,11 +653,11 @@ function QuickActions() {
             to={action.to}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg border border-hairline-dark bg-surface-elevated/50 text-body-text text-sm font-medium transition-all duration-200 group ${action.color}`}
           >
-            <span className="text-muted-text group-hover:text-gold transition-colors duration-200">
+            <span className="text-muted-foreground group-hover:text-gold transition-colors duration-200">
               {action.icon}
             </span>
             <span className="flex-1">{action.label}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-muted-text group-hover:text-gold group-hover:translate-x-0.5 transition-all duration-200" />
+            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-gold group-hover:translate-x-0.5 transition-all duration-200" />
           </Link>
         ))}
       </div>
@@ -685,17 +685,17 @@ export function CoordinatorDashboard() {
               <LayoutDashboard className="w-5 h-5 text-gold" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-body-text">
+              <h1 className="text-lg font-semibold text-body-text">
                 Панель координатора
               </h1>
-              <p className="text-xs text-muted-text">
+              <p className="text-xs text-muted-foreground">
                 Обзор активности и ключевых метрик
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <PeriodSelector value={period} onChange={setPeriod} />
-            <div className="flex items-center gap-1.5 text-xs text-muted-text">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Calendar className="w-3.5 h-3.5" />
               <span className="font-tabular">
                 {new Date().toLocaleDateString('ru-RU', {

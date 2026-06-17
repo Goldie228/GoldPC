@@ -4,7 +4,7 @@
  * Inline-редактирование, добавление, удаление с подтверждением
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   dictionariesApi,
@@ -24,6 +24,8 @@ import {
   Check,
   X,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -54,6 +56,8 @@ const TABS: TabConfig[] = [
   { key: 'attributes', label: 'Характеристики' },
 ];
 
+const PAGE_SIZE = 20;
+
 function isCategory(item: DictionaryUnion): item is DictionaryCategory {
   return 'productCount' in item && !('country' in item);
 }
@@ -82,6 +86,7 @@ export function DictionariesPage() {
   // ----- Tab & filter state -----------------------------------------------
   const [activeTab, setActiveTab] = useState<TabType>('categories');
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
 
   // ----- Inline edit state ------------------------------------------------
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -133,6 +138,26 @@ export function DictionariesPage() {
         item.slug.toLowerCase().includes(q),
     );
   }, [allData, searchQuery]);
+
+  // ----- Client-side pagination -------------------------------------------
+  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+  const paginatedItems = filteredData.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  );
+
+  const getPageNumbers = useCallback((): number[] => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (page <= 3) {
+      return [1, 2, 3, 4, 5];
+    }
+    if (page >= totalPages - 2) {
+      return Array.from({ length: 5 }, (_, i) => totalPages - 4 + i);
+    }
+    return [page - 2, page - 1, page, page + 1, page + 2];
+  }, [page, totalPages]);
 
   // ===== Mutations =========================================================
 
@@ -313,7 +338,7 @@ export function DictionariesPage() {
                 <button
                   onClick={() => handleSaveAdd()}
                   disabled={createMutation.isPending}
-                  className="w-8 h-8 flex items-center justify-center bg-gold text-black rounded-md hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-8 h-8 flex items-center justify-center bg-gold text-gold-ink rounded-md hover:bg-gold-active transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Сохранить"
                 >
                   {createMutation.isPending ? (
@@ -336,7 +361,7 @@ export function DictionariesPage() {
         )}
 
         {/* ---- Existing rows ---- */}
-        {filteredData.map((item) => {
+        {paginatedItems.map((item) => {
           const isEditing = editingId === item.id;
           const isPending =
             updateMutation.isPending && updateMutation.variables?.id === item.id;
@@ -356,7 +381,7 @@ export function DictionariesPage() {
                       <button
                         onClick={() => handleSaveEdit(item.id)}
                         disabled={isPending}
-                        className="w-8 h-8 flex items-center justify-center bg-gold text-black rounded-md hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-8 h-8 flex items-center justify-center bg-gold text-gold-ink rounded-md hover:bg-gold-active transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Сохранить"
                       >
                         {isPending ? (
@@ -534,10 +559,11 @@ export function DictionariesPage() {
                 setEditingId(null);
                 setShowAddForm(false);
                 setSearchQuery('');
+                setPage(1);
               }}
               className={`inline-flex px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                 activeTab === tab.key
-                  ? 'bg-gold text-black'
+                  ? 'bg-gold text-gold-ink'
                   : 'text-muted-foreground hover:text-body-text hover:bg-surface-elevated'
               }`}
             >
@@ -553,7 +579,10 @@ export function DictionariesPage() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
               placeholder="Поиск по названию..."
               className="w-full pl-10 pr-4 py-2 bg-surface-card border border-hairline-dark rounded-md text-sm text-body-text placeholder:text-muted-foreground focus:border-gold focus:ring-1 focus:ring-gold outline-none transition-colors"
             />
@@ -562,7 +591,7 @@ export function DictionariesPage() {
           <button
             onClick={handleStartAdd}
             disabled={showAddForm}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gold text-black text-sm font-semibold rounded-md hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gold text-gold-ink text-sm font-semibold rounded-md hover:bg-gold-active transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-4 h-4" />
             Добавить
@@ -604,11 +633,54 @@ export function DictionariesPage() {
 
         {/* ---- Summary footer ---- */}
         {!isLoading && !isError && filteredData.length > 0 && (
-          <p className="text-xs text-muted-foreground mt-3 text-right">
-            {showAddForm
-              ? 'Добавление новой записи'
-              : `Всего: ${filteredData.length} ${filteredData.length % 10 === 1 && filteredData.length % 100 !== 11 ? 'запись' : filteredData.length % 10 >= 2 && filteredData.length % 10 <= 4 && (filteredData.length % 100 < 10 || filteredData.length % 100 >= 20) ? 'записи' : 'записей'}`}
-          </p>
+          <>
+            <div className="flex items-center justify-between pt-4 border-t border-hairline-dark mt-3">
+              <span className="text-xs text-muted-foreground">
+                {showAddForm
+                  ? 'Добавление новой записи'
+                  : `Всего: ${filteredData.length} ${filteredData.length % 10 === 1 && filteredData.length % 100 !== 11 ? 'запись' : filteredData.length % 10 >= 2 && filteredData.length % 10 <= 4 && (filteredData.length % 100 < 10 || filteredData.length % 100 >= 20) ? 'записи' : 'записей'}`}
+              </span>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setPage(page - 1)}
+                    disabled={page <= 1}
+                    className="flex items-center justify-center h-8 w-8 bg-surface-card text-body-text hover:bg-surface-elevated rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Предыдущая страница"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  {getPageNumbers().map((pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      className={`flex items-center justify-center h-8 w-8 text-sm font-medium rounded-md transition-colors ${
+                        pageNum === page
+                          ? 'bg-gold text-gold-ink'
+                          : 'bg-surface-card text-body-text hover:bg-surface-elevated'
+                      }`}
+                      aria-current={pageNum === page ? 'page' : undefined}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setPage(page + 1)}
+                    disabled={page >= totalPages}
+                    className="flex items-center justify-center h-8 w-8 bg-surface-card text-body-text hover:bg-surface-elevated rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Следующая страница"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+            {totalPages > 1 && (
+              <p className="text-xs text-muted-foreground mt-1 text-right">
+                Страница {page} из {totalPages}
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>
