@@ -217,22 +217,24 @@ export function AuditLogPage() {
         {/* ===== Статистика ===== */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-surface-card rounded-xl p-5 border border-hairline-dark">
-            <span className="block text-2xl font-bold text-gold font-[family-name:var(--font-mono)]">
+            <span className="block text-2xl font-bold text-gold font-mono">
               {totalItems.toLocaleString('ru-RU')}
             </span>
             <span className="text-xs text-muted-foreground mt-1 block">Всего записей</span>
           </div>
           <div className="bg-surface-card rounded-xl p-5 border border-hairline-dark">
-            <span className="block text-2xl font-bold text-gold font-[family-name:var(--font-mono)]">
+            <span className="block text-2xl font-bold text-gold font-mono">
               {logs.filter((l) => l.severity === 'WARNING').length}
             </span>
             <span className="text-xs text-muted-foreground mt-1 block">Предупреждений</span>
+            <span className="text-xs text-muted-foreground">На странице</span>
           </div>
           <div className="bg-surface-card rounded-xl p-5 border border-hairline-dark">
-            <span className="block text-2xl font-bold text-price-rise font-[family-name:var(--font-mono)]">
+            <span className="block text-2xl font-bold text-price-rise font-mono">
               {logs.filter((l) => l.severity === 'CRITICAL').length}
             </span>
             <span className="text-xs text-muted-foreground mt-1 block">Критических событий</span>
+            <span className="text-xs text-muted-foreground">На странице</span>
           </div>
         </div>
 
@@ -414,7 +416,7 @@ export function AuditLogPage() {
                       >
                         {/* Время */}
                         <td className="py-3 px-4 text-sm text-body-text border-b border-hairline-dark">
-                          <span className="font-[family-name:var(--font-mono)] text-xs text-muted-foreground">
+                          <span className="font-mono text-xs text-muted-foreground">
                             {formatDate(entry.createdAt)}
                           </span>
                         </td>
@@ -438,7 +440,7 @@ export function AuditLogPage() {
 
                         {/* IP */}
                         <td className="py-3 px-4 text-sm text-body-text border-b border-hairline-dark">
-                          <span className="font-[family-name:var(--font-mono)] text-xs text-muted-foreground">
+                          <span className="font-mono text-xs text-muted-foreground">
                             {entry.ipAddress || '—'}
                           </span>
                         </td>

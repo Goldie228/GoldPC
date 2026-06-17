@@ -14,6 +14,7 @@ import {
   Settings,
   Bell,
   Shield,
+  Wrench,
 } from 'lucide-react';
 import { MiniCart } from './MiniCart';
 import { NotificationCenter } from '@/components/notification-center/NotificationCenter';
@@ -255,14 +256,25 @@ export function Header(): ReactElement {
             </Link>
           )}
 
-          {/* Кнопка панели менеджера — для Manager, Admin, Master */}
-          {isAuthenticated && ['Manager', 'Admin', 'Master'].includes(user?.role ?? '') && (
+          {/* Кнопка панели менеджера — для Manager, Admin */}
+          {isAuthenticated && ['Manager', 'Admin'].includes(user?.role ?? '') && (
             <Link
               to="/manager/dashboard"
               className="relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-gold hover:bg-surface-elevated hidden md:flex"
               aria-label="Панель менеджера"
             >
               <LayoutDashboard size={24} />
+            </Link>
+          )}
+
+          {/* Кнопка панели мастера — для Master */}
+          {isAuthenticated && user?.role === 'Master' && (
+            <Link
+              to="/master/tickets"
+              className="relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-gold hover:bg-surface-elevated hidden md:flex"
+              aria-label="Панель мастера"
+            >
+              <Wrench size={24} />
             </Link>
           )}
 
@@ -358,12 +370,22 @@ export function Header(): ReactElement {
                       </>
                     )}
 
-                    {['Manager', 'Admin', 'Master'].includes(user?.role ?? '') && (
+                    {['Manager', 'Admin'].includes(user?.role ?? '') && (
                       <>
                         <div className="h-px bg-hairline-dark mx-4" />
                         <Link to="/manager/dashboard" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleProfileDropdownClose}>
                           <LayoutDashboard size={18} />
                           <span>Панель менеджера</span>
+                        </Link>
+                      </>
+                    )}
+
+                    {user?.role === 'Master' && (
+                      <>
+                        <div className="h-px bg-hairline-dark mx-4" />
+                        <Link to="/master/tickets" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleProfileDropdownClose}>
+                          <Wrench size={18} />
+                          <span>Панель мастера</span>
                         </Link>
                       </>
                     )}
@@ -535,13 +557,24 @@ export function Header(): ReactElement {
                         </>
                       )}
 
-                      {/* Панель менеджера — для Manager, Admin, Master */}
-                      {['Manager', 'Admin', 'Master'].includes(user?.role ?? '') && (
+                      {/* Панель менеджера — для Manager, Admin */}
+                      {['Manager', 'Admin'].includes(user?.role ?? '') && (
                         <>
                           <div className="h-px bg-hairline-dark mx-4" />
                           <Link to="/manager/dashboard" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
                             <LayoutDashboard size={18} />
                             <span>Панель менеджера</span>
+                          </Link>
+                        </>
+                      )}
+
+                      {/* Панель мастера — для Master */}
+                      {user?.role === 'Master' && (
+                        <>
+                          <div className="h-px bg-hairline-dark mx-4" />
+                          <Link to="/master/tickets" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>
+                            <Wrench size={18} />
+                            <span>Панель мастера</span>
                           </Link>
                         </>
                       )}
