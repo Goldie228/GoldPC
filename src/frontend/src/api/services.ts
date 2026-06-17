@@ -229,6 +229,32 @@ async function closeTicket(id: string, comment?: string): Promise<ServiceRequest
   return unwrapData<ServiceRequestDto>(response.data);
 }
 
+/**
+ * GET /services/unassigned — список неназначенных заявок (для мастеров)
+ * [Authorize(Roles = "Master,Manager,Admin")]
+ */
+async function getAvailableServices(
+  page = 1,
+  pageSize = 10,
+): Promise<{ items: ServiceRequestDto[]; total: number }> {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  const response = await apiClient.get(`/services/unassigned?${params}`);
+  const data = unwrapData<{ items: ServiceRequestDto[]; totalCount: number }>(response.data);
+  return {
+    items: data.items ?? [],
+    total: data.totalCount ?? 0,
+  };
+}
+
+/**
+ * POST /services/{id}/assign/{masterId} — назначить мастера на заявку
+ * [Authorize(Roles = "Manager,Admin")]
+ */
+async function assignMasterToService(serviceId: string, masterId: string): Promise<ServiceRequestDto> {
+  const response = await apiClient.post(`/services/${serviceId}/assign/${masterId}`);
+  return unwrapData<ServiceRequestDto>(response.data);
+}
+
 // ═══════════════════════════════════════════════
 //  ЭКСПОРТ
 // ═══════════════════════════════════════════════
@@ -241,6 +267,8 @@ export const servicesApi = {
   getServiceById,
   // Master
   getMasterServices,
+  getAvailableServices,
+  assignMasterToService,
   updateTicketStatus,
   completeTicket,
   addServicePart,

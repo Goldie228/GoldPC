@@ -87,6 +87,17 @@ public class ServicesController : ControllerBase
         return Ok(ApiResponse<PagedResultServiceRequest>.Ok(result));
     }
 
+    /// <summary>
+    /// Получить неназначенные заявки (для мастеров — самоназначение)
+    /// </summary>
+    [HttpGet("unassigned")]
+    [Authorize(Roles = "Master,Manager,Admin")]
+    public async Task<IActionResult> GetUnassigned([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var result = await _servicesService.GetAllAsync(page, pageSize, ServiceRequestStatus.Submitted);
+        return Ok(ApiResponse<PagedResultServiceRequest>.Ok(result));
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateServiceRequestRequest request)
     {

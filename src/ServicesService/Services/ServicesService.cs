@@ -564,6 +564,7 @@ public class ServicesService : IServicesService
             SerialNumber = request.SerialNumber,
             EstimatedCost = request.EstimatedCost,
             ActualCost = request.ActualCost,
+            MasterComment = request.MasterComment,
             CreatedAt = request.CreatedAt,
             CompletedAt = request.CompletedAt,
             ServiceParts = request.ServiceParts?.Select(p => new ServicePartDto
