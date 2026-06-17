@@ -5,7 +5,7 @@ export interface TicketMessage {
   id: string;
   serviceRequestId: string;
   authorId: string;
-  authorRole: 'Client' | 'Master' | 'System';
+  authorRole: 'Client' | 'Master' | 'Manager' | 'System';
   content: string;
   fileUrl?: string;
   fileName?: string;

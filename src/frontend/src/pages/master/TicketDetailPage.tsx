@@ -1,10 +1,25 @@
 /**
- * Детальная страница заявки для мастера
- * Использует реальное API: servicesApi, useTicketChat (SignalR)
+ * Детальная страница заявки — панель мастера
+ *
+ * Полный функционал: информация, управление статусом, запчасти, чат (SignalR).
+ * Дизайн-токены, TanStack Query, inline confirmation.
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  ArrowLeft,
+  User,
+  Wrench,
+  Clock,
+  MessageSquare,
+  Package,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
+  Trash2,
+} from 'lucide-react';
 import { servicesApi, TICKET_STATUSES } from '@/api/services';
 import type { ServiceRequestDto, TicketStatus, ServicePartDto } from '@/api/services';
 import { useAuthStore } from '@/store/authStore';
@@ -14,30 +29,35 @@ import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { TypingIndicator } from '@/components/chat/TypingIndicator';
 
-// ─── Статус-бейджи Tailwind ─────────────────────────────────────────────────
+/* ------------------------------------------------------------------ */
+/*  Constants                                                          */
+/* ------------------------------------------------------------------ */
 
-const STATUS_TAILWIND: Record<string, string> = {
-  Submitted: 'bg-blue-100 text-blue-800',
-  InProgress: 'bg-yellow-100 text-yellow-800',
-  PartsPending: 'bg-purple-100 text-purple-800',
-  ReadyForPickup: 'bg-green-100 text-green-800',
-  Completed: 'bg-gray-100 text-gray-800',
-  Cancelled: 'bg-red-100 text-red-800',
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  Submitted:       { label: 'Подана', className: 'bg-gold/15 text-gold' },
+  InProgress:      { label: 'В работе', className: 'bg-gold/25 text-gold' },
+  PartsPending:    { label: 'Ожидание запчастей', className: 'bg-surface-elevated text-muted-strong' },
+  ReadyForPickup:  { label: 'Готова к выдаче', className: 'bg-price-drop/15 text-price-drop' },
+  Completed:       { label: 'Завершена', className: 'bg-surface-elevated text-muted-foreground' },
+  Cancelled:       { label: 'Отменена', className: 'bg-price-rise/15 text-price-rise' },
 };
 
-// ─── Вспомогательные функции ────────────────────────────────────────────────
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
 
-function getStatusLabel(key: string): string {
-  const found = TICKET_STATUSES.find((s) => s.key === key);
-  return found?.label ?? key;
+function getStatusBadge(status: string) {
+    return STATUS_BADGE[status] ?? { label: status, className: 'bg-surface-elevated text-muted-foreground' };
 }
 
-/** Разрешённые переходы статуса для мастера */
 function getAllowedStatuses(current: TicketStatus): { value: TicketStatus; label: string }[] {
   const map: Record<string, { value: TicketStatus; label: string }[]> = {
-    Submitted: [{ value: 'InProgress', label: 'В работе' }],
-    InProgress: [{ value: 'PartsPending', label: 'Ожидание запчастей' }],
-    PartsPending: [{ value: 'InProgress', label: 'В работе' }],
+    Submitted: [{ value: 'InProgress', label: 'Взять в работу' }],
+    InProgress: [
+      { value: 'PartsPending', label: 'Ожидание запчастей' },
+      { value: 'ReadyForPickup', label: 'Готова к выдаче' },
+    ],
+    PartsPending: [{ value: 'InProgress', label: 'В работу' }],
     ReadyForPickup: [],
     Completed: [],
     Cancelled: [],
@@ -45,10 +65,9 @@ function getAllowedStatuses(current: TicketStatus): { value: TicketStatus; label
   return map[current] ?? [];
 }
 
-function formatDate(iso: string): string {
+function formatDateTime(iso: string): string {
   if (!iso) return '—';
-  const d = new Date(iso);
-  return d.toLocaleDateString('ru-RU', {
+  return new Date(iso).toLocaleDateString('ru-RU', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -58,53 +77,72 @@ function formatDate(iso: string): string {
 }
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'BYN',
-    minimumFractionDigits: 2,
-  }).format(value);
+  return value.toLocaleString('ru-RU', { minimumFractionDigits: 0 }) + ' ₽';
 }
 
-function getInitials(id: string): string {
-  return (id?.charAt(0) ?? '?').toUpperCase();
-}
-
-/** Проверяет, можно ли переходить к статусу (не Cancelled/Completed) */
 function isTerminal(status: TicketStatus): boolean {
   return status === 'Completed' || status === 'Cancelled';
 }
 
-// ─── Компонент ──────────────────────────────────────────────────────────────
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
 
 export function TicketDetailPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { showToast } = useToast();
   const currentUserId = useAuthStore((state) => state.user?.id);
 
-  // ── Данные заявки ────────────────────────────────────────────────────────
-  const [ticket, setTicket] = useState<ServiceRequestDto | null>(null);
-  const [loading, setLoading] = useState(true);
+  /* ── Queries ──────────────────────────────────────────────────── */
+  const { data: ticket, isLoading, isError, refetch } = useQuery({
+    queryKey: ['master', 'ticket', ticketId],
+    queryFn: () => servicesApi.getServiceById(ticketId!),
+    enabled: !!ticketId,
+  });
 
-  // ── Форма статуса ────────────────────────────────────────────────────────
-  const [selectedStatus, setSelectedStatus] = useState<TicketStatus | ''>('');
-  const [statusComment, setStatusComment] = useState('');
-  const [statusUpdating, setStatusUpdating] = useState(false);
+  /* ── Mutations ────────────────────────────────────────────────── */
+  const statusMutation = useMutation({
+    mutationFn: ({ status, comment }: { status: TicketStatus; comment?: string }) =>
+      servicesApi.updateTicketStatus(ticketId!, status, comment),
+    onSuccess: () => {
+      showToast('Статус обновлён', 'success');
+      queryClient.invalidateQueries({ queryKey: ['master', 'ticket', ticketId] });
+      queryClient.invalidateQueries({ queryKey: ['master', 'tickets'] });
+    },
+    onError: () => showToast('Ошибка при обновлении статуса', 'error'),
+  });
 
-  // ── Форма завершения работы ──────────────────────────────────────────────
-  const [completeComment, setCompleteComment] = useState('');
-  const [completing, setCompleting] = useState(false);
+  const completeMutation = useMutation({
+    mutationFn: (comment?: string) => servicesApi.completeTicket(ticketId!, comment),
+    onSuccess: () => {
+      showToast('Работа завершена', 'success');
+      queryClient.invalidateQueries({ queryKey: ['master', 'ticket', ticketId] });
+      queryClient.invalidateQueries({ queryKey: ['master', 'tickets'] });
+    },
+    onError: () => showToast('Ошибка при завершении', 'error'),
+  });
 
-  // ── Форма добавления запчасти ────────────────────────────────────────────
-  const [partName, setPartName] = useState('');
-  const [partQty, setPartQty] = useState('1');
-  const [partPrice, setPartPrice] = useState('0');
-  const [addingPart, setAddingPart] = useState(false);
+  const partMutation = useMutation({
+    mutationFn: (dto: ServicePartDto) => servicesApi.addServicePart(ticketId!, dto),
+    onSuccess: () => {
+      showToast('Запчасть добавлена', 'success');
+      queryClient.invalidateQueries({ queryKey: ['master', 'ticket', ticketId] });
+    },
+    onError: () => showToast('Ошибка при добавлении запчасти', 'error'),
+  });
 
-  // ── Отмена ───────────────────────────────────────────────────────────────
-  const [cancelling, setCancelling] = useState(false);
+  const cancelMutation = useMutation({
+    mutationFn: () => servicesApi.cancelTicket(ticketId!),
+    onSuccess: () => {
+      showToast('Заявка отменена', 'success');
+      navigate('/master/tickets');
+    },
+    onError: () => showToast('Ошибка при отмене', 'error'),
+  });
 
-  // ── Чат ──────────────────────────────────────────────────────────────────
+  /* ── Chat ──────────────────────────────────────────────────────── */
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const {
     messages,
@@ -115,261 +153,319 @@ export function TicketDetailPage() {
     sendMessage,
   } = useTicketChat({ ticketId });
 
-  // ── Загрузка заявки ──────────────────────────────────────────────────────
-
-  const loadTicket = useCallback(async () => {
-    if (!ticketId) return;
-    try {
-      setLoading(true);
-      const data = await servicesApi.getServiceById(ticketId);
-      setTicket(data);
-      setSelectedStatus('');
-      setStatusComment('');
-    } catch (err) {
-      showToast('Ошибка загрузки заявки', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [ticketId, showToast]);
-
-  useEffect(() => {
-    loadTicket();
-  }, [loadTicket]);
-
-  // Автоскролл чата вниз при новых сообщениях
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // ── Обработчики ──────────────────────────────────────────────────────────
+  /* ── Form states ──────────────────────────────────────────────── */
+  const [selectedStatus, setSelectedStatus] = useState<TicketStatus | ''>('');
+  const [statusComment, setStatusComment] = useState('');
+  const [completeComment, setCompleteComment] = useState('');
+  const [partName, setPartName] = useState('');
+  const [partQty, setPartQty] = useState('1');
+  const [partPrice, setPartPrice] = useState('0');
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
-  const handleUpdateStatus = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!ticketId || !selectedStatus) return;
-
-    setStatusUpdating(true);
-    try {
-      await servicesApi.updateTicketStatus(ticketId, selectedStatus as TicketStatus, statusComment || undefined);
-      showToast('Статус обновлён', 'success');
-      await loadTicket();
-    } catch {
-      showToast('Ошибка при обновлении статуса', 'error');
-    } finally {
-      setStatusUpdating(false);
-    }
-  };
-
-  const handleComplete = async () => {
-    if (!ticketId) return;
-
-    setCompleting(true);
-    try {
-      await servicesApi.completeTicket(ticketId, completeComment || undefined);
-      showToast('Работа завершена', 'success');
-      await loadTicket();
-      setCompleteComment('');
-    } catch {
-      showToast('Ошибка при завершении работы', 'error');
-    } finally {
-      setCompleting(false);
-    }
-  };
-
-  const handleAddPart = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!ticketId || !partName.trim()) return;
-
-    setAddingPart(true);
-    try {
-      const dto: ServicePartDto = {
-        productId: crypto.randomUUID(),
-        productName: partName.trim(),
-        quantity: Number(partQty) || 1,
-        unitPrice: Number(partPrice) || 0,
-      };
-      await servicesApi.addServicePart(ticketId, dto);
-      showToast('Запчасть добавлена', 'success');
-      await loadTicket();
-      setPartName('');
-      setPartQty('1');
-      setPartPrice('0');
-    } catch {
-      showToast('Ошибка при добавлении запчасти', 'error');
-    } finally {
-      setAddingPart(false);
-    }
-  };
-
-  const handleCancel = async () => {
-    if (!ticketId) return;
-    if (!window.confirm('Вы уверены, что хотите отменить заявку?')) return;
-
-    setCancelling(true);
-    try {
-      await servicesApi.cancelTicket(ticketId);
-      showToast('Заявка отменена', 'success');
-      navigate('/master/tickets');
-    } catch {
-      showToast('Ошибка при отмене заявки', 'error');
-      setCancelling(false);
-    }
-  };
-
-  // ── Состояние загрузки ───────────────────────────────────────────────────
-
-  if (loading) {
+  /* ── Loading state ────────────────────────────────────────────── */
+  if (isLoading) {
     return (
-      <div className="staff-page">
-        <p className="text-center py-12 text-gray-500">Загрузка заявки...</p>
+      <div className="flex items-center justify-center py-20">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <Loader2 size={20} className="animate-spin" />
+          <span>Загрузка заявки...</span>
+        </div>
       </div>
     );
   }
 
-  if (!ticket) {
+  if (isError || !ticket) {
     return (
-      <div className="staff-page">
-        <p className="text-center py-12 text-gray-500">Заявка не найдена</p>
+      <div className="bg-price-rise/10 border border-price-rise/20 rounded-xl p-8 text-center">
+        <AlertTriangle size={32} className="mx-auto mb-3 text-price-rise" />
+        <p className="text-price-rise font-medium">Заявка не найдена</p>
+        <Link
+          to="/master/tickets"
+          className="mt-3 inline-flex items-center gap-1 text-sm text-gold hover:underline"
+        >
+          <ArrowLeft size={14} />
+          Вернуться к списку
+        </Link>
       </div>
     );
   }
 
+  const badge = getStatusBadge(ticket.status);
   const allowedStatuses = getAllowedStatuses(ticket.status);
   const terminal = isTerminal(ticket.status);
   const assignedToOther = ticket.masterId && ticket.masterId !== currentUserId;
-
-  // ── Рендер ───────────────────────────────────────────────────────────────
+  const totalPartsCost = (ticket.serviceParts ?? []).reduce((sum, p) => sum + p.quantity * p.unitPrice, 0);
+  const displayCost = ticket.actualCost > 0 ? ticket.actualCost : ticket.estimatedCost + totalPartsCost;
 
   return (
-    <div className="staff-page">
-      {/* Header */}
-      <div className="staff-page__header">
+    <div className="space-y-6">
+      {/* ── Header ──────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between">
         <div>
           <Link
             to="/master/tickets"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-body-text transition-colors mb-1"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-2"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            Назад к списку
+            <ArrowLeft size={14} />
+            К списку заявок
           </Link>
-          <h1 className="staff-page__title">
-            #{ticket.requestNumber}
-            <span className={`ml-3 inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_TAILWIND[ticket.status] ?? 'bg-gray-100 text-gray-800'}`}>
-              {getStatusLabel(ticket.status)}
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
+            <span className="font-mono text-gold">#{ticket.requestNumber}</span>
+            <span className={`inline-block px-2.5 py-0.5 rounded-md text-xs font-medium ${badge.className}`}>
+              {badge.label}
             </span>
           </h1>
         </div>
+        <div className="text-right text-sm text-muted-foreground">
+          <p>{formatDateTime(ticket.createdAt)}</p>
+          {ticket.completedAt && (
+            <p className="text-price-drop">Завершена: {formatDateTime(ticket.completedAt)}</p>
+          )}
+        </div>
       </div>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        {/* ════════════════ LEFT COLUMN (lg:col-span-2) ════════════════ */}
+      {/* ── Content Grid ────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ═══ LEFT COLUMN ═══════════════════════════════════════ */}
         <div className="lg:col-span-2 space-y-6">
 
-          {/* ── Карточка "Информация о заявке" ─────────────────────────── */}
-          <div className="bg-white rounded-lg border p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-body-text">Информация о заявке</h2>
+          {/* ── Информация о заявке ──────────────────────────────── */}
+          <div className="bg-surface-card rounded-xl border border-hairline-dark p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Wrench size={18} className="text-gold" />
+              Информация о заявке
+            </h2>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-muted-foreground block">ID заявки</span>
-                <span className="font-medium text-body-text">{ticket.id}</span>
+                <span className="text-muted-foreground block mb-0.5">Тип услуги</span>
+                <span className="font-medium text-foreground">{ticket.serviceTypeName}</span>
               </div>
               <div>
-                <span className="text-muted-foreground block">Тип услуги</span>
-                <span className="font-medium text-body-text">{ticket.serviceTypeName}</span>
+                <span className="text-muted-foreground block mb-0.5">Устройство</span>
+                <span className="font-medium text-foreground">{ticket.deviceModel || '—'}</span>
               </div>
               <div>
-                <span className="text-muted-foreground block">Устройство</span>
-                <span className="font-medium text-body-text">{ticket.deviceModel || '—'}</span>
+                <span className="text-muted-foreground block mb-0.5">Серийный номер</span>
+                <span className="font-medium text-foreground font-mono text-xs">{ticket.serialNumber || '—'}</span>
               </div>
               <div>
-                <span className="text-muted-foreground block">Серийный номер</span>
-                <span className="font-medium text-body-text">{ticket.serialNumber || '—'}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block">Стоимость</span>
-                <span className="font-medium text-body-text">
-                  {ticket.actualCost > 0 ? formatCurrency(ticket.actualCost) : formatCurrency(ticket.estimatedCost)}
-                </span>
-              </div>
-              <div>
-                <span className="text-muted-foreground block">Дата создания</span>
-                <span className="font-medium text-body-text">{formatDate(ticket.createdAt)}</span>
+                <span className="text-muted-foreground block mb-0.5">Стоимость</span>
+                <span className="font-semibold text-gold text-lg">{formatCurrency(displayCost)}</span>
               </div>
             </div>
 
-            {/* Описание проблемы */}
-            <div>
-              <h3 className="text-sm font-semibold text-body-text mb-1">Описание проблемы</h3>
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{ticket.description}</p>
+            <div className="mt-4 pt-4 border-t border-hairline-dark">
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">Описание проблемы</h3>
+              <p className="text-sm text-foreground whitespace-pre-wrap">{ticket.description}</p>
             </div>
 
-            {/* Комментарий мастера */}
             {ticket.masterComment && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
-                <h3 className="text-sm font-semibold text-yellow-800 mb-1">Комментарий мастера</h3>
-                <p className="text-sm text-yellow-700 whitespace-pre-wrap">{ticket.masterComment}</p>
+              <div className="mt-4 pt-4 border-t border-hairline-dark">
+                <h3 className="text-sm font-medium text-gold mb-1">Комментарий мастера</h3>
+                <p className="text-sm text-foreground whitespace-pre-wrap">{ticket.masterComment}</p>
               </div>
             )}
           </div>
 
-          {/* ── Карточка "История изменений" ──────────────────────────── */}
-          <div className="bg-white rounded-lg border p-6">
-            <h2 className="text-lg font-semibold text-body-text mb-4">История изменений</h2>
+          {/* ── Запчасти ─────────────────────────────────────────── */}
+          <div className="bg-surface-card rounded-xl border border-hairline-dark p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Package size={18} className="text-gold" />
+              Запчасти
+              {totalPartsCost > 0 && (
+                <span className="text-sm font-normal text-muted-foreground">
+                  (Итого: {formatCurrency(totalPartsCost)})
+                </span>
+              )}
+            </h2>
+
+            {(ticket.serviceParts ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                Запчасти не добавлены
+              </p>
+            ) : (
+              <div className="overflow-x-auto mb-4">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-hairline-dark">
+                      <th scope="col" className="text-left py-2 pr-3 font-medium text-muted-foreground">Название</th>
+                      <th scope="col" className="text-right py-2 px-3 font-medium text-muted-foreground">Кол-во</th>
+                      <th scope="col" className="text-right py-2 px-3 font-medium text-muted-foreground">Цена</th>
+                      <th scope="col" className="text-right py-2 pl-3 font-medium text-muted-foreground">Сумма</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(ticket.serviceParts ?? []).map((part, idx) => (
+                      <tr key={`${part.productName}-${idx}`} className="border-b border-hairline-dark/50 last:border-b-0">
+                        <td className="py-2 pr-3 text-foreground">{part.productName}</td>
+                        <td className="text-right py-2 px-3 text-foreground">{part.quantity}</td>
+                        <td className="text-right py-2 px-3 text-foreground">{formatCurrency(part.unitPrice)}</td>
+                        <td className="text-right py-2 pl-3 text-foreground font-medium">
+                          {formatCurrency(part.quantity * part.unitPrice)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Форма добавления */}
+            {!terminal && !assignedToOther && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!partName.trim()) return;
+                  partMutation.mutate({
+                    productId: crypto.randomUUID(),
+                    productName: partName.trim(),
+                    quantity: Number(partQty) || 1,
+                    unitPrice: Number(partPrice) || 0,
+                  });
+                  setPartName('');
+                  setPartQty('1');
+                  setPartPrice('0');
+                }}
+                className="mt-4 pt-4 border-t border-hairline-dark space-y-3"
+              >
+                <h3 className="text-sm font-medium text-foreground">Добавить запчасть</h3>
+                <div>
+                  <label htmlFor="partName" className="block text-xs font-medium text-muted-foreground mb-1">
+                    Название *
+                  </label>
+                  <input
+                    id="partName"
+                    className="w-full rounded-lg border border-hairline-dark px-3 py-2 text-sm bg-surface-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40"
+                    placeholder="Наименование запчасти"
+                    value={partName}
+                    onChange={(e) => setPartName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label htmlFor="partQty" className="block text-xs font-medium text-muted-foreground mb-1">
+                      Кол-во
+                    </label>
+                    <input
+                      id="partQty"
+                      type="number"
+                      min="1"
+                      step="1"
+                      className="w-full rounded-lg border border-hairline-dark px-3 py-2 text-sm bg-surface-card text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40"
+                      value={partQty}
+                      onChange={(e) => setPartQty(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="partPrice" className="block text-xs font-medium text-muted-foreground mb-1">
+                      Цена за ед.
+                    </label>
+                    <input
+                      id="partPrice"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full rounded-lg border border-hairline-dark px-3 py-2 text-sm bg-surface-card text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40"
+                      value={partPrice}
+                      onChange={(e) => setPartPrice(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={partMutation.isPending || !partName.trim()}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gold-ink bg-gold rounded-lg hover:bg-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {partMutation.isPending ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin border-gold-ink" />
+                      Добавление...
+                    </>
+                  ) : (
+                    'Добавить запчасть'
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* ── История изменений ────────────────────────────────── */}
+          <div className="bg-surface-card rounded-xl border border-hairline-dark p-6">
+            <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Clock size={18} className="text-gold" />
+              История изменений
+            </h2>
             {(ticket.workReports ?? []).length === 0 ? (
-              <p className="text-sm text-gray-500">История изменений отсутствует</p>
+              <p className="text-sm text-muted-foreground py-4 text-center">
+                История изменений отсутствует
+              </p>
             ) : (
               <div className="space-y-0">
-                {(ticket.workReports ?? []).map((report, idx) => (
-                  <div key={report.id} className="flex gap-3 pb-4 relative">
-                    {/* Маркер-кружок */}
-                    <div className="flex flex-col items-center">
-                      <div className={`w-3 h-3 rounded-full border-2 mt-1 ${
-                        idx === 0
-                          ? 'bg-blue-500 border-blue-500'
-                          : 'bg-white border-gray-300'
-                      }`} />
-                      {idx < (ticket.workReports ?? []).length - 1 && (
-                        <div className="w-0.5 flex-1 bg-gray-200 mt-1" />
-                      )}
-                    </div>
-                    {/* Контент */}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs text-gray-500">{formatDate(report.changedAt)}</div>
-                      <div className="text-sm font-medium text-body-text mt-0.5">
-                        Статус изменён: {getStatusLabel(report.previousStatus)} → {getStatusLabel(report.newStatus)}
+                {(ticket.workReports ?? []).map((report, idx) => {
+                  const prevBadge = getStatusBadge(report.previousStatus);
+                  const newBadge = getStatusBadge(report.newStatus);
+                  return (
+                    <div key={report.id} className="flex gap-3 pb-4 relative">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-3 h-3 rounded-full border-2 mt-1 shrink-0 ${
+                          idx === 0
+                            ? 'bg-gold border-gold'
+                            : 'bg-surface-card border-hairline-dark'
+                        }`} />
+                        {idx < (ticket.workReports ?? []).length - 1 && (
+                          <div className="w-0.5 flex-1 bg-hairline-dark mt-1" />
+                        )}
                       </div>
-                      {report.comment && (
-                        <p className="text-sm text-muted-foreground mt-1">{report.comment}</p>
-                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-muted-foreground">{formatDateTime(report.changedAt)}</div>
+                        <div className="text-sm text-foreground mt-0.5 flex items-center gap-1.5 flex-wrap">
+                          <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${prevBadge.className}`}>
+                            {prevBadge.label}
+                          </span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${newBadge.className}`}>
+                            {newBadge.label}
+                          </span>
+                        </div>
+                        {report.comment && (
+                          <p className="text-sm text-muted-foreground mt-1">{report.comment}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
 
-          {/* ── Карточка "Чат с клиентом" ─────────────────────────────── */}
-          <div className="bg-white rounded-lg border p-6">
+          {/* ── Чат с клиентом ───────────────────────────────────── */}
+          <div className="bg-surface-card rounded-xl border border-hairline-dark p-6">
             <div className="flex items-center gap-2 mb-4">
-              <h2 className="text-lg font-semibold text-body-text">Чат с клиентом</h2>
-              <span className={`inline-block w-2.5 h-2.5 rounded-full ${
-                connectionStatus === 'connected' ? 'bg-green-500' : 'bg-gray-400'
+              <MessageSquare size={18} className="text-gold" />
+              <h2 className="text-lg font-semibold text-foreground">Чат с клиентом</h2>
+              <span className={`w-2.5 h-2.5 rounded-full ${
+                connectionStatus === 'connected' ? 'bg-price-drop' : 'bg-neutral-400'
               }`} />
             </div>
 
             {chatError && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-3 text-sm text-red-700">
+              <div className="bg-price-rise/10 border border-price-rise/20 rounded-lg p-3 mb-3 text-sm text-price-rise">
                 {chatError}
               </div>
             )}
 
             <div className="max-h-[400px] overflow-y-auto space-y-1 mb-4">
               {messagesLoading && messages.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-8">Загрузка сообщений...</p>
+                <p className="text-sm text-muted-foreground text-center py-8">Загрузка сообщений...</p>
               ) : messages.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-8">
+                <p className="text-sm text-muted-foreground text-center py-8">
                   Нет сообщений. Напишите первое сообщение клиенту.
                 </p>
               ) : (
@@ -389,88 +485,111 @@ export function TicketDetailPage() {
           </div>
         </div>
 
-        {/* ════════════════ RIGHT COLUMN (lg:col-span-1) ════════════════ */}
+        {/* ═══ RIGHT COLUMN ═══════════════════════════════════════ */}
         <div className="lg:col-span-1 space-y-4">
 
-          {/* ── Карточка "Клиент" ──────────────────────────────────────── */}
-          <div className="bg-white rounded-lg border p-4">
-            <h3 className="text-sm font-semibold text-body-text mb-3">Клиент</h3>
+          {/* ── Клиент ───────────────────────────────────────────── */}
+          <div className="bg-surface-card rounded-xl border border-hairline-dark p-4">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <User size={16} className="text-gold" />
+              Клиент
+            </h3>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold">
-                {getInitials(ticket.clientId)}
+              <div className="w-10 h-10 rounded-full bg-gold/10 text-gold flex items-center justify-center text-sm font-bold shrink-0">
+                {ticket.clientId?.charAt(0)?.toUpperCase() ?? '?'}
               </div>
-              <div>
-                <p className="text-sm font-medium text-body-text">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
                   ID: {ticket.clientId.length > 8 ? ticket.clientId.slice(0, 8) + '…' : ticket.clientId}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {ticket.clientId}
-                </p>
+                <p className="text-xs text-muted-foreground truncate">{ticket.clientId}</p>
               </div>
             </div>
           </div>
 
-          {/* ── Баннер "Назначена другому мастеру" ─────────────────────── */}
+          {/* ── Предупреждение ───────────────────────────────────── */}
           {assignedToOther && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 text-sm text-orange-800">
-              Заявка назначена другому мастеру. Управление статусом недоступно.
+            <div className="bg-gold/10 border border-gold/20 rounded-xl p-4 text-sm text-gold flex items-center gap-2">
+              <AlertTriangle size={16} />
+              Заявка назначена другому мастеру
             </div>
           )}
 
-          {/* ── Карточка "Управление статусом" ─────────────────────────── */}
-          {!terminal && !assignedToOther && (
-            <div className="bg-white rounded-lg border p-4">
-              <h3 className="text-sm font-semibold text-body-text mb-3">Управление статусом</h3>
-
-              {allowedStatuses.length === 0 ? (
-                <p className="text-xs text-gray-500">Нет доступных переходов для текущего статуса</p>
-              ) : (
-                <form onSubmit={handleUpdateStatus} className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">Новый статус</label>
-                    <select
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={selectedStatus}
-                      onChange={(e) => setSelectedStatus(e.target.value as TicketStatus)}
-                      required
-                    >
-                      <option value="" disabled>Выберите статус...</option>
-                      {allowedStatuses.map((s) => (
-                        <option key={s.value} value={s.value}>{s.label}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">Комментарий</label>
-                    <textarea
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                      rows={2}
-                      placeholder="Комментарий к изменению..."
-                      value={statusComment}
-                      onChange={(e) => setStatusComment(e.target.value)}
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={statusUpdating || !selectedStatus}
-                    className="w-full rounded-md bg-blue-600 text-white py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          {/* ── Управление статусом ──────────────────────────────── */}
+          {!terminal && !assignedToOther && allowedStatuses.length > 0 && (
+            <div className="bg-surface-card rounded-xl border border-hairline-dark p-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3">Управление статусом</h3>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!selectedStatus) return;
+                  statusMutation.mutate({
+                    status: selectedStatus as TicketStatus,
+                    comment: statusComment || undefined,
+                  });
+                  setSelectedStatus('');
+                  setStatusComment('');
+                }}
+                className="space-y-3"
+              >
+                <div>
+                  <label htmlFor="newStatus" className="block text-xs font-medium text-muted-foreground mb-1">
+                    Новый статус
+                  </label>
+                  <select
+                    id="newStatus"
+                    className="w-full rounded-lg border border-hairline-dark px-3 py-2 text-sm bg-surface-card text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40"
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value as TicketStatus)}
+                    required
                   >
-                    {statusUpdating ? 'Обновление...' : 'Обновить статус'}
-                  </button>
-                </form>
-              )}
+                    <option value="" disabled>Выберите...</option>
+                    {allowedStatuses.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="statusComment" className="block text-xs font-medium text-muted-foreground mb-1">
+                    Комментарий
+                  </label>
+                  <textarea
+                    id="statusComment"
+                    className="w-full rounded-lg border border-hairline-dark px-3 py-2 text-sm bg-surface-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40 resize-none"
+                    rows={2}
+                    placeholder="Комментарий к изменению..."
+                    value={statusComment}
+                    onChange={(e) => setStatusComment(e.target.value)}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={statusMutation.isPending || !selectedStatus}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gold-ink bg-gold rounded-lg hover:bg-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {statusMutation.isPending ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin border-gold-ink" />
+                      Обновление...
+                    </>
+                  ) : (
+                    'Обновить статус'
+                  )}
+                </button>
+              </form>
             </div>
           )}
 
-          {/* ── Кнопка "Завершить работу" ───────────────────────────────── */}
+          {/* ── Завершить работу ──────────────────────────────────── */}
           {ticket.status === 'InProgress' && !assignedToOther && (
-            <div className="bg-white rounded-lg border p-4">
-              <h3 className="text-sm font-semibold text-body-text mb-3">Завершить работу</h3>
+            <div className="bg-surface-card rounded-xl border border-hairline-dark p-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-price-drop" />
+                Завершить работу
+              </h3>
               <div className="space-y-3">
                 <textarea
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+                  className="w-full rounded-lg border border-hairline-dark px-3 py-2 text-sm bg-surface-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40 resize-none"
                   rows={2}
                   placeholder="Финальный комментарий..."
                   value={completeComment}
@@ -478,119 +597,60 @@ export function TicketDetailPage() {
                 />
                 <button
                   type="button"
-                  disabled={completing}
-                  onClick={handleComplete}
-                  className="w-full rounded-md bg-green-600 text-white py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  disabled={completeMutation.isPending}
+                  onClick={() => {
+                    completeMutation.mutate(completeComment || undefined);
+                    setCompleteComment('');
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-on-dark bg-price-drop rounded-lg hover:bg-price-drop/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {completing ? 'Завершение...' : 'Завершить работу'}
+                  {completeMutation.isPending ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Завершение...
+                    </>
+                  ) : (
+                    'Завершить работу'
+                  )}
                 </button>
               </div>
             </div>
           )}
 
-          {/* ── Карточка "Запчасти" ─────────────────────────────────────── */}
-          <div className="bg-white rounded-lg border p-4">
-            <h3 className="text-sm font-semibold text-body-text mb-3">Запчасти</h3>
-
-            {/* Список запчастей */}
-            {(ticket.serviceParts ?? []).length === 0 ? (
-              <p className="text-xs text-gray-500 mb-3">Запчасти не добавлены</p>
-            ) : (
-              <div className="overflow-x-auto mb-4">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-1 pr-2 font-medium text-muted-foreground">Название</th>
-                      <th className="text-right py-1 px-2 font-medium text-muted-foreground">Кол-во</th>
-                      <th className="text-right py-1 px-2 font-medium text-muted-foreground">Цена</th>
-                      <th className="text-right py-1 pl-2 font-medium text-muted-foreground">Сумма</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(ticket.serviceParts ?? []).map((part, idx) => (
-                      <tr key={`${part.productId}-${idx}`} className="border-b border-gray-100">
-                        <td className="py-1.5 pr-2 text-body-text">{part.productName}</td>
-                        <td className="text-right py-1.5 px-2 text-body-text">{part.quantity}</td>
-                        <td className="text-right py-1.5 px-2 text-body-text">{formatCurrency(part.unitPrice)}</td>
-                        <td className="text-right py-1.5 pl-2 text-body-text font-medium">
-                          {formatCurrency(part.quantity * part.unitPrice)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Форма добавления запчасти */}
-            {!terminal && !assignedToOther && (
-              <form onSubmit={handleAddPart} className="space-y-2">
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-0.5">Название</label>
-                  <input
-                    className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Наименование запчасти"
-                    value={partName}
-                    onChange={(e) => setPartName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-0.5">Кол-во</label>
-                    <input
-                      type="number"
-                      min="1"
-                      step="1"
-                      className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={partQty}
-                      onChange={(e) => setPartQty(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-0.5">Цена за ед.</label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className="w-full rounded-md border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={partPrice}
-                      onChange={(e) => setPartPrice(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={addingPart || !partName.trim()}
-                  className="w-full rounded-md bg-blue-600 text-white py-1.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {addingPart ? 'Добавление...' : 'Добавить'}
-                </button>
-              </form>
-            )}
-          </div>
-
-          {/* ── Быстрые действия ────────────────────────────────────────── */}
+          {/* ── Отмена заявки ─────────────────────────────────────── */}
           {!terminal && !assignedToOther && (
-            <div className="bg-white rounded-lg border p-4">
-              <h3 className="text-sm font-semibold text-body-text mb-3">Быстрые действия</h3>
-              <button
-                type="button"
-                disabled={cancelling}
-                onClick={handleCancel}
-                className="w-full rounded-md border border-red-300 text-red-700 py-2 text-sm font-medium hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {cancelling ? 'Отмена...' : 'Отменить заявку'}
-              </button>
-            </div>
-          )}
-
-          {ticket.completedAt && (
-            <div className="bg-white rounded-lg border p-4">
-              <h3 className="text-sm font-semibold text-body-text mb-1">Дата завершения</h3>
-              <p className="text-sm text-muted-foreground">{formatDate(ticket.completedAt)}</p>
+            <div className="bg-surface-card rounded-xl border border-hairline-dark p-4">
+              {confirmCancel ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-price-rise font-medium">Вы уверены?</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={cancelMutation.isPending}
+                      onClick={() => cancelMutation.mutate()}
+                      className="flex-1 px-3 py-2 text-sm font-medium text-on-dark bg-price-rise rounded-lg hover:bg-price-rise/90 disabled:opacity-50 transition-colors"
+                    >
+                      {cancelMutation.isPending ? 'Отмена...' : 'Да, отменить'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmCancel(false)}
+                      className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground border border-hairline-dark rounded-lg hover:bg-surface-elevated transition-colors"
+                    >
+                      Нет
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmCancel(true)}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-price-rise border border-price-rise/30 rounded-lg hover:bg-price-rise/10 transition-colors"
+                >
+                  <Trash2 size={14} />
+                  Отменить заявку
+                </button>
+              )}
             </div>
           )}
         </div>

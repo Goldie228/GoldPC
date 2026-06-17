@@ -1,17 +1,16 @@
 /**
- * Мои заявки — панель мастера
+ * История работ — панель мастера
  *
- * Список заявок, назначенных на текущего мастера.
- * Серверная пагинация, TanStack Query, дизайн-токены.
+ * Архив выполненных/отменённых заявок с фильтрацией по статусу и дате.
+ * Серверная пагинация, TanStack Query.
  */
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ClipboardList, Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
-import { servicesApi, TICKET_STATUSES } from '@/api/services';
-import type { ServiceRequestDto, TicketStatus } from '@/api/services';
-import { PagePagination } from '@/components/ui/PagePagination';
+import { History, Search, Eye, ChevronLeft, ChevronRight, CheckCircle2, XCircle } from 'lucide-react';
+import { servicesApi } from '@/api/services';
+import type { ServiceRequestDto } from '@/api/services';
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -19,31 +18,21 @@ import { PagePagination } from '@/components/ui/PagePagination';
 
 const PAGE_SIZE = 15;
 
+const HISTORY_STATUSES = [
+  { key: 'Completed', label: 'Завершена', icon: CheckCircle2, className: 'text-price-drop' },
+  { key: 'Cancelled', label: 'Отменена', icon: XCircle, className: 'text-price-rise' },
+  { key: 'ReadyForPickup', label: 'Готова к выдаче', icon: Eye, className: 'text-gold' },
+] as const;
+
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
-  Submitted:       { label: 'Подана', className: 'bg-gold/15 text-gold' },
-  InProgress:      { label: 'В работе', className: 'bg-gold/25 text-gold' },
-  PartsPending:    { label: 'Ожидание запчастей', className: 'bg-surface-elevated text-muted-strong' },
-  ReadyForPickup:  { label: 'Готова к выдаче', className: 'bg-price-drop/15 text-price-drop' },
-  Completed:       { label: 'Завершена', className: 'bg-surface-elevated text-muted-foreground' },
-  Cancelled:       { label: 'Отменена', className: 'bg-price-rise/15 text-price-rise' },
+  Completed: { label: 'Завершена', className: 'bg-surface-elevated text-muted-foreground' },
+  Cancelled: { label: 'Отменена', className: 'bg-price-rise/15 text-price-rise' },
+  ReadyForPickup: { label: 'Готова к выдаче', className: 'bg-price-drop/15 text-price-drop' },
 };
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
-
-function getStatusBadge(status: string) {
-    return STATUS_BADGE[status] ?? { label: status, className: 'bg-surface-elevated text-muted-foreground' };
-}
-
-function formatDate(iso: string): string {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
 
 function formatDateTime(iso: string): string {
   if (!iso) return '—';
@@ -65,13 +54,13 @@ function truncate(text: string, max: number): string {
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
-export function TicketsPage() {
+export function WorkHistoryPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['master', 'tickets', page, PAGE_SIZE, statusFilter],
+    queryKey: ['master', 'history', page, PAGE_SIZE, statusFilter],
     queryFn: () => servicesApi.getMasterServices(page, PAGE_SIZE, statusFilter || undefined),
     placeholderData: (prev) => prev,
   });
@@ -80,7 +69,6 @@ export function TicketsPage() {
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  /* ── Client-side search filter ────────────────────────────────── */
   const filteredTickets = searchQuery.trim()
     ? tickets.filter((t) => {
         const q = searchQuery.toLowerCase();
@@ -93,42 +81,25 @@ export function TicketsPage() {
       })
     : tickets;
 
-  /* ── Allowed status transitions ───────────────────────────────── */
-  function getAllowedNext(status: TicketStatus): { value: TicketStatus; label: string }[] {
-    const map: Record<string, { value: TicketStatus; label: string }[]> = {
-      InProgress: [
-        { value: 'PartsPending', label: 'Ожидание запчастей' },
-        { value: 'ReadyForPickup', label: 'Готова к выдаче' },
-      ],
-      PartsPending: [{ value: 'InProgress', label: 'В работу' }],
-    };
-    return map[status] ?? [];
-  }
-
   return (
     <div className="space-y-6">
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <ClipboardList size={24} className="text-gold" />
-            Мои заявки
+            <History size={24} className="text-gold" />
+            История работ
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Заявки, назначенные на вас
+            Завершённые и отменённые заявки
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            Активных: <span className="font-semibold text-foreground">{total}</span>
-          </span>
-          <button
-            onClick={() => refetch()}
-            className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-surface-elevated rounded-lg transition-colors"
-          >
-            Обновить
-          </button>
-        </div>
+        <button
+          onClick={() => refetch()}
+          className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-surface-elevated rounded-lg transition-colors"
+        >
+          Обновить
+        </button>
       </div>
 
       {/* ── Filters ─────────────────────────────────────────────── */}
@@ -152,7 +123,7 @@ export function TicketsPage() {
           }}
         >
           <option value="">Все статусы</option>
-          {TICKET_STATUSES.map((s) => (
+          {HISTORY_STATUSES.map((s) => (
             <option key={s.key} value={s.key}>
               {s.label}
             </option>
@@ -165,7 +136,7 @@ export function TicketsPage() {
         <div className="flex items-center justify-center py-16">
           <div className="flex items-center gap-3 text-muted-foreground">
             <div className="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-            <span>Загрузка заявок...</span>
+            <span>Загрузка истории...</span>
           </div>
         </div>
       )}
@@ -198,7 +169,7 @@ export function TicketsPage() {
                   <th scope="col" className="text-left px-4 py-3 font-medium text-muted-foreground">Описание</th>
                   <th scope="col" className="text-left px-4 py-3 font-medium text-muted-foreground">Статус</th>
                   <th scope="col" className="text-right px-4 py-3 font-medium text-muted-foreground">Стоимость</th>
-                  <th scope="col" className="text-left px-4 py-3 font-medium text-muted-foreground">Дата</th>
+                  <th scope="col" className="text-left px-4 py-3 font-medium text-muted-foreground">Завершена</th>
                   <th scope="col" className="text-center px-4 py-3 font-medium text-muted-foreground">Действия</th>
                 </tr>
               </thead>
@@ -206,14 +177,13 @@ export function TicketsPage() {
                 {filteredTickets.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-12 text-muted-foreground">
-                      <ClipboardList size={40} className="mx-auto mb-3 opacity-30" />
-                      <p>Заявки не найдены</p>
+                      <History size={40} className="mx-auto mb-3 opacity-30" />
+                      <p>История работ пуста</p>
                     </td>
                   </tr>
                 ) : (
                   filteredTickets.map((ticket) => {
-                    const badge = getStatusBadge(ticket.status);
-                    const allowedNext = getAllowedNext(ticket.status);
+                    const badge = STATUS_BADGE[ticket.status] ?? STATUS_BADGE.Completed;
                     return (
                       <tr
                         key={ticket.id}
@@ -243,27 +213,16 @@ export function TicketsPage() {
                             : `${ticket.estimatedCost.toLocaleString('ru-RU')} ₽`}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                          {formatDateTime(ticket.createdAt)}
+                          {ticket.completedAt ? formatDateTime(ticket.completedAt) : '—'}
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-center gap-1">
-                            <Link
-                              to={`/master/tickets/${ticket.id}`}
-                              className="p-1.5 rounded-lg text-muted-foreground hover:text-gold hover:bg-gold/10 transition-colors"
-                              title="Открыть"
-                            >
-                              <Eye size={16} />
-                            </Link>
-                            {allowedNext.map((next) => (
-                              <QuickStatusButton
-                                key={next.value}
-                                ticketId={ticket.id}
-                                targetStatus={next.value}
-                                label={next.label}
-                                onDone={() => refetch()}
-                              />
-                            ))}
-                          </div>
+                        <td className="px-4 py-3 text-center">
+                          <Link
+                            to={`/master/tickets/${ticket.id}`}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-gold hover:bg-gold/10 transition-colors"
+                            title="Просмотреть"
+                          >
+                            <Eye size={16} />
+                          </Link>
                         </td>
                       </tr>
                     );
@@ -277,7 +236,7 @@ export function TicketsPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-hairline-dark">
               <span className="text-sm text-muted-foreground">
-                Страница {page} из {totalPages} ({total} заявок)
+                Страница {page} из {totalPages} ({total} записей)
               </span>
               <div className="flex items-center gap-1">
                 <button
@@ -328,45 +287,4 @@ export function TicketsPage() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Quick Status Button (inline)                                       */
-/* ------------------------------------------------------------------ */
-
-function QuickStatusButton({
-  ticketId,
-  targetStatus,
-  label,
-  onDone,
-}: {
-  ticketId: string;
-  targetStatus: TicketStatus;
-  label: string;
-  onDone: () => void;
-}) {
-  const [updating, setUpdating] = useState(false);
-
-  const handleClick = async () => {
-    setUpdating(true);
-    try {
-      await servicesApi.updateTicketStatus(ticketId, targetStatus);
-      onDone();
-    } catch {
-      // Ошибка молча — основное действие через детальную страницу
-    } finally {
-      setUpdating(false);
-    }
-  };
-
-  return (
-    <button
-      onClick={handleClick}
-      disabled={updating}
-      className="px-2 py-1 text-xs font-medium text-gold bg-gold/10 rounded-lg hover:bg-gold/20 disabled:opacity-50 transition-colors"
-      title={label}
-    >
-      {updating ? '...' : label}
-    </button>
-  );
-}
-
-export default TicketsPage;
+export default WorkHistoryPage;
