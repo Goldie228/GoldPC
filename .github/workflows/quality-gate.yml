@@ -48,21 +48,21 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: kursovaya/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install frontend dependencies
         if: matrix.component == 'frontend'
-        working-directory: kursovaya/src/frontend
+        working-directory: src/frontend
         run: npm ci
 
       - name: Run ESLint
         if: matrix.component == 'frontend'
-        working-directory: kursovaya/src/frontend
+        working-directory: src/frontend
         run: npm run lint -- --max-warnings 0
 
       - name: Run Prettier check
         if: matrix.component == 'frontend'
-        working-directory: kursovaya
+        working-directory: .
         run: npx prettier --check "src/frontend/src/**/*.{ts,tsx,css,json}" "src/frontend/*.{json,js,ts}"
 
       # Backend lint
@@ -74,17 +74,17 @@ jobs:
 
       - name: Restore .NET dependencies
         if: matrix.component == 'backend'
-        working-directory: kursovaya/src
+        working-directory: src
         run: dotnet restore GoldPC.sln
 
       - name: Run dotnet format
         if: matrix.component == 'backend'
-        working-directory: kursovaya/src
+        working-directory: src
         run: dotnet format GoldPC.sln --verify-no-changes --severity warn --no-restore
 
       - name: Build with warnings as errors
         if: matrix.component == 'backend'
-        working-directory: kursovaya/src
+        working-directory: src
         run: dotnet build GoldPC.sln --configuration Release --warnaserror --no-restore
 
   # ===========================================
@@ -107,15 +107,15 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore .NET dependencies
-        working-directory: kursovaya/src
+        working-directory: src
         run: dotnet restore GoldPC.sln
 
       - name: Build solution
-        working-directory: kursovaya/src
+        working-directory: src
         run: dotnet build GoldPC.sln --configuration Release --no-restore
 
       - name: Run Architecture Tests
-        working-directory: kursovaya
+        working-directory: .
         run: dotnet test tests/ArchitectureTests/ArchitectureTests.csproj --configuration Release --no-build --logger "console;verbosity=detailed"
 
       # Frontend Dependency Cruiser
@@ -124,18 +124,18 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: kursovaya/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install frontend dependencies
-        working-directory: kursovaya/src/frontend
+        working-directory: src/frontend
         run: npm ci
 
       - name: Install dependency-cruiser
-        working-directory: kursovaya
+        working-directory: .
         run: npm install -D dependency-cruiser
 
       - name: Run Dependency Cruiser
-        working-directory: kursovaya
+        working-directory: .
         run: |
           npx depcruise src/frontend/src \
             --config .dependency-cruiser-frontend.json \
@@ -161,11 +161,11 @@ jobs:
           node-version: '20'
 
       - name: Validate all dependencies exist
-        working-directory: kursovaya
+        working-directory: .
         run: node scripts/validate-all-dependencies.js
 
       - name: Run Neuroslop Check
-        working-directory: kursovaya
+        working-directory: .
         run: node scripts/neuroslop-check.js
 
   # ===========================================
@@ -187,7 +187,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Run Provider Verification
-        working-directory: kursovaya
+        working-directory: .
         run: dotnet test tests/backend/GoldPC.ContractTests/GoldPC.ContractTests.csproj --configuration Release
 
   # ===========================================
@@ -209,14 +209,14 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Run Backend Tests with Coverage
-        working-directory: kursovaya/src
+        working-directory: src
         run: |
           dotnet test GoldPC.sln --configuration Release \
             --collect:"XPlat Code Coverage" \
             --settings ../tests/backend/coverlet.runsettings
 
       - name: Check Coverage Threshold
-        working-directory: kursovaya
+        working-directory: .
         run: |
           # В реальности здесь используется ReportGenerator или другой инструмент
           # для проверки суммарного покрытия из XML отчетов.

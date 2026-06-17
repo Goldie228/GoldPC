@@ -35,8 +35,8 @@ jobs:
       # ---------------------------------------------------------------------------
       - name: Start Test Environment
         run: |
-          echo "🚀 Starting test environment with docker-compose..."
-          docker-compose -f docker-compose.test.yml up -d
+          echo "🚀 Starting test environment with docker compose..."
+          docker compose -f docker-compose.test.yml up -d
         env:
           COMPOSE_PROJECT_NAME: goldpc-test
 
@@ -156,7 +156,7 @@ jobs:
         if: always()
         run: |
           echo "🧹 Cleaning up test environment..."
-          docker-compose -f docker-compose.test.yml down -v --remove-orphans
+          docker compose -f docker-compose.test.yml down -v --remove-orphans
         env:
           COMPOSE_PROJECT_NAME: goldpc-test
 

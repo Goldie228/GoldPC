@@ -39,7 +39,7 @@ jobs:
         continue-on-error: true
       
       - name: Restore Backend Dependencies
-        working-directory: src/backend
+        working-directory: src
         run: dotnet restore
         continue-on-error: true
       
@@ -49,7 +49,7 @@ jobs:
         continue-on-error: true
       
       - name: Snyk Test Backend
-        working-directory: src/backend
+        working-directory: src
         run: snyk test --severity-threshold=high --fail-on=upgradable --json-file-output=snyk-backend.json
         continue-on-error: true
       
@@ -61,7 +61,7 @@ jobs:
       - name: Snyk Monitor (main only)
         if: github.ref == 'refs/heads/main'
         run: |
-          snyk monitor --file=src/backend/GoldPC.sln || true
+          snyk monitor --file=src/GoldPC.sln || true
           snyk monitor --file=src/frontend/package.json || true
         continue-on-error: true
       
@@ -71,7 +71,7 @@ jobs:
         with:
           name: snyk-reports
           path: |
-            src/backend/snyk-backend.json
+            src/snyk-backend.json
             src/frontend/snyk-frontend.json
 
   npm-audit:
@@ -116,12 +116,12 @@ jobs:
           dotnet-version: '8.0.x'
       
       - name: Restore Packages
-        working-directory: src/backend
+        working-directory: src
         run: dotnet restore
         continue-on-error: true
       
       - name: Check for Vulnerable Packages
-        working-directory: src/backend
+        working-directory: src
         run: |
           dotnet list package --vulnerable --include-transitive --output-format json > vulnerable-packages.json || true
           cat vulnerable-packages.json || echo "No vulnerable packages or no project found"
@@ -140,5 +140,3 @@ jobs:
         with:
           fail-on-severity: high
           allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
-</task_progress>
-</write_to_file>
