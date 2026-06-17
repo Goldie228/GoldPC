@@ -39,12 +39,14 @@ public class WarrantyService : IWarrantyService
     private readonly WarrantyDbContext _context;
     private readonly ILogger<WarrantyService> _logger;
     private readonly INotificationService? _notificationService;
+    private readonly IServiceProvider? _serviceProvider;
 
-    public WarrantyService(WarrantyDbContext context, ILogger<WarrantyService> logger, INotificationService? notificationService = null)
+    public WarrantyService(WarrantyDbContext context, ILogger<WarrantyService> logger, INotificationService? notificationService = null, IServiceProvider? serviceProvider = null)
     {
         _context = context;
         _logger = logger;
         _notificationService = notificationService;
+        _serviceProvider = serviceProvider;
     }
 
     #region Claims
@@ -199,6 +201,7 @@ public class WarrantyService : IWarrantyService
             ProductName = request.ProductName,
             SerialNumber = request.SerialNumber,
             UserId = request.UserId,
+            UserEmail = request.UserEmail,
             StartDate = DateTime.UtcNow,
             EndDate = request.WarrantyDays.HasValue 
                 ? DateTime.UtcNow.AddDays(request.WarrantyDays.Value)
@@ -290,30 +293,63 @@ public class WarrantyService : IWarrantyService
 
     public async Task<int> NotifyExpiringWarrantiesAsync()
     {
-        if (_notificationService == null)
-        {
-            _logger.LogWarning("Notification service not registered, skipping notifications");
-            return 0;
-        }
-
         var targetDate = DateTime.UtcNow.Date.AddDays(30);
         var expiringSoon = await _context.WarrantyCards
             .Where(w => w.Status == WarrantyStatus.Active && w.EndDate.Date == targetDate)
             .ToListAsync();
 
+        if (expiringSoon.Count == 0)
+            return 0;
+
+        // Пытаемся отправить email через OrderEmailService (если зарегистрирован)
+        // Используем IEmailQueue из IServiceScope
         int notifiedCount = 0;
         foreach (var card in expiringSoon)
         {
-            // В реальности здесь нужно получить Email пользователя через Identity сервис
-            // Для целей этой задачи используем заглушку
-            string userEmail = "customer@example.com"; // Mock email
-            
-            await _notificationService.SendEmailAsync(
-                userEmail, 
-                "Срок действия гарантии истекает скоро", 
-                $"Уважаемый клиент, гарантия на товар {card.ProductName} (номер {card.WarrantyNumber}) истекает через 30 дней ({card.EndDate:d}).");
+            try
+            {
+                // Строим DTO для отправки
+                var dto = new WarrantyDto
+                {
+                    Id = card.Id,
+                    WarrantyNumber = card.WarrantyNumber,
+                    ProductId = card.ProductId,
+                    ProductName = card.ProductName,
+                    UserId = card.UserId,
+                    UserEmail = card.UserEmail,
+                    StartDate = DateOnly.FromDateTime(card.StartDate),
+                    EndDate = DateOnly.FromDateTime(card.EndDate),
+                    WarrantyMonths = card.WarrantyMonths,
+                    Status = card.Status,
+                    CreatedAt = card.CreatedAt
+                };
 
-            notifiedCount++;
+                // Отправляем email если есть адрес
+                if (!string.IsNullOrWhiteSpace(card.UserEmail))
+                {
+                    // Используем IEmailQueue напрямую
+                    var emailQueue = _serviceProvider?.GetService(typeof(Shared.Services.Background.IEmailQueue)) 
+                        as Shared.Services.Background.IEmailQueue;
+                    
+                    if (emailQueue != null)
+                    {
+                        var subject = $"⚠️ Гарантия на «{card.ProductName}» истекает через 30 дней — GoldPC";
+                        var body = BuildExpiryReminderHtml(card);
+                        
+                        await emailQueue.QueueEmailAsync(new Shared.Services.Background.EmailJob(
+                            card.UserEmail, subject, body, IsHtml: true));
+                        
+                        _logger.LogInformation("Напоминание о гарантии отправлено: {WarrantyNumber} → {Email}", 
+                            card.WarrantyNumber, card.UserEmail);
+                    }
+                }
+
+                notifiedCount++;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Не удалось отправить напоминание для гарантии {WarrantyNumber}", card.WarrantyNumber);
+            }
         }
 
         if (notifiedCount > 0)
@@ -322,6 +358,52 @@ public class WarrantyService : IWarrantyService
         }
 
         return notifiedCount;
+    }
+
+    /// <summary>
+    /// Построить HTML-письмо-напоминание об окончании гарантии (золотая тема GoldPC)
+    /// </summary>
+    private static string BuildExpiryReminderHtml(WarrantyCard card)
+    {
+        var daysLeft = (card.EndDate - DateTime.UtcNow.Date).Days;
+        
+        return $@"<!DOCTYPE html>
+<html lang=""ru"">
+<head><meta charset=""utf-8""><meta name=""viewport"" content=""width=device-width, initial-scale=1.0""></head>
+<body style=""margin:0;padding:0;background-color:#1e2329;font-family:'Segoe UI',Arial,sans-serif;color:#eaecef;"">
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#1e2329;padding:32px 16px;"">
+<tr><td align=""center"">
+<table width=""600"" cellpadding=""0"" cellspacing=""0"" style=""background-color:#2b3139;border-radius:12px;border:1px solid #363c45;overflow:hidden;"">
+  <tr><td style=""background:linear-gradient(135deg,#f0b90b,#e67e22);padding:28px 32px;text-align:center;"">
+    <h1 style=""margin:0;font-size:24px;color:#1e2329;font-weight:700;"">⚠️ Гарантия истекает</h1>
+    <p style=""margin:6px 0 0;font-size:14px;color:#1e2329;opacity:0.8;"">Осталось {daysLeft} дн.</p>
+  </td></tr>
+  <tr><td style=""padding:28px 32px;"">
+    <p style=""margin:0;font-size:15px;color:#848e9c;line-height:1.6;"">
+      Срок действия гарантии на ваш товар приближается к завершению. Рекомендуем проверить работоспособность оборудования.
+    </p>
+    <table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""margin-top:20px;background-color:#1e2329;border-radius:8px;border:1px solid #363c45;overflow:hidden;"">
+      <tr><td style=""padding:20px;"">
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"">
+          <tr><td style=""padding:8px 0;font-size:14px;color:#848e9c;width:40%;"">Товар</td><td style=""padding:8px 0;font-size:14px;color:#eaecef;font-weight:600;text-align:right;"" align=""right"">{card.ProductName}</td></tr>
+          <tr><td style=""padding:8px 0;font-size:14px;color:#848e9c;"">Номер талона</td><td style=""padding:8px 0;font-size:14px;color:#FCD535;text-align:right;"" align=""right"">{card.WarrantyNumber}</td></tr>
+          <tr><td style=""padding:8px 0;font-size:14px;color:#848e9c;"">Дата окончания</td><td style=""padding:8px 0;font-size:14px;color:#f6465d;font-weight:600;text-align:right;"" align=""right"">{card.EndDate:dd.MM.yyyy}</td></tr>
+          <tr><td style=""padding:8px 0;font-size:14px;color:#848e9c;"">Осталось дней</td><td style=""padding:8px 0;font-size:14px;color:#f6465d;font-weight:700;text-align:right;"" align=""right"">{daysLeft}</td></tr>
+        </table>
+      </td></tr>
+    </table>
+    <p style=""margin:20px 0 0;font-size:14px;color:#848e9c;line-height:1.6;"">
+      Если вы обнаружили неисправность, обратитесь в сервисный центр: <a href=""https://goldpc.by/service-request"" style=""color:#FCD535;text-decoration:none;"">Оставить заявку</a>
+    </p>
+  </td></tr>
+  <tr><td style=""background-color:#1e2329;padding:20px 32px;border-top:1px solid #363c45;text-align:center;"">
+    <p style=""margin:0;font-size:12px;color:#848e9c;line-height:1.6;"">
+      Это автоматическое письмо от магазина <a href=""https://goldpc.by"" style=""color:#FCD535;text-decoration:none;"">GoldPC</a>. Пожалуйста, не отвечайте на него.
+    </p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>";
     }
 
     #endregion
@@ -351,7 +433,8 @@ public class WarrantyService : IWarrantyService
             EndDate = DateOnly.FromDateTime(card.EndDate),
             WarrantyMonths = card.WarrantyMonths,
             Status = card.Status,
-            CreatedAt = card.CreatedAt
+            CreatedAt = card.CreatedAt,
+            UserEmail = card.UserEmail
         };
 
         foreach (var op in operations)

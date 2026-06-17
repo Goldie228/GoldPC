@@ -5,6 +5,7 @@ using FluentValidation.AspNetCore;
 using GoldPC.AuthService.Data;
 using GoldPC.AuthService.Services;
 using GoldPC.AuthService.Validators;
+using GoldPC.Shared.Services;
 using GoldPC.Shared.Services.Implementations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
@@ -66,6 +67,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
 
 // Регистрация сервисов
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddSingleton<IEncryptionService, AesGcmEncryptionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<SmtpEmailService>();
 builder.Services.AddSingleton<ITokenCache, RedisTokenCache>();

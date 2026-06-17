@@ -6,6 +6,8 @@ using GoldPC.Shared.Authorization;
 using GoldPC.Shared.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -64,8 +66,14 @@ builder.Services.AddHttpClient<ICatalogServiceClient, CatalogServiceClient>(clie
     var baseUrl = servicesConfig["CatalogService"]
         ?? throw new InvalidOperationException("ServiceUrls:CatalogService is not configured");
     client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
 })
-.AddHttpMessageHandler<AuthForwardingHandler>();
+.AddHttpMessageHandler<AuthForwardingHandler>()
+.AddResilienceHandler("CatalogServiceRetry", (builder, sp) =>
+{
+    var logger = sp.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("GoldPC.Api.CatalogServiceClient");
+    PollyPolicies.ConfigureRetryPipeline(builder, logger);
+});
 
 // Add Auth Service Client (HTTP client to AuthService for admin user management)
 builder.Services.AddHttpClient<IAuthServiceClient, AuthServiceClient>(client =>
@@ -75,7 +83,12 @@ builder.Services.AddHttpClient<IAuthServiceClient, AuthServiceClient>(client =>
     client.BaseAddress = new Uri(baseUrl);
     client.Timeout = TimeSpan.FromSeconds(30);
 })
-.AddHttpMessageHandler<AuthForwardingHandler>();
+.AddHttpMessageHandler<AuthForwardingHandler>()
+.AddResilienceHandler("AuthServiceRetry", (builder, sp) =>
+{
+    var logger = sp.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("GoldPC.Api.AuthServiceClient");
+    PollyPolicies.ConfigureRetryPipeline(builder, logger);
+});
 
 // Add Orders Service Client (HTTP client to OrdersService for dashboard stats)
 builder.Services.AddHttpClient<IOrdersServiceClient, OrdersServiceClient>(client =>
@@ -83,9 +96,29 @@ builder.Services.AddHttpClient<IOrdersServiceClient, OrdersServiceClient>(client
     var baseUrl = servicesConfig["OrdersService"]
         ?? throw new InvalidOperationException("ServiceUrls:OrdersService is not configured");
     client.BaseAddress = new Uri(baseUrl);
-    client.Timeout = TimeSpan.FromSeconds(10);
+    client.Timeout = TimeSpan.FromSeconds(30);
 })
-.AddHttpMessageHandler<AuthForwardingHandler>();
+.AddHttpMessageHandler<AuthForwardingHandler>()
+.AddResilienceHandler("OrdersServiceRetry", (builder, sp) =>
+{
+    var logger = sp.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("GoldPC.Api.OrdersServiceClient");
+    PollyPolicies.ConfigureRetryPipeline(builder, logger);
+});
+
+// Add Reporting Service Client (HTTP client to ReportingService for financial reports)
+builder.Services.AddHttpClient<IReportingServiceClient, ReportingServiceClient>(client =>
+{
+    var baseUrl = servicesConfig["ReportingService"]
+        ?? throw new InvalidOperationException("ServiceUrls:ReportingService is not configured");
+    client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+})
+.AddHttpMessageHandler<AuthForwardingHandler>()
+.AddResilienceHandler("ReportingServiceRetry", (builder, sp) =>
+{
+    var logger = sp.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("GoldPC.Api.ReportingServiceClient");
+    PollyPolicies.ConfigureRetryPipeline(builder, logger);
+});
 
 // Configure form options for file uploads
 builder.Services.Configure<FormOptions>(o =>
@@ -153,6 +186,12 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+#pragma warning disable S125 // Middleware для CSRF-защиты — проверяет токен при unsafe методах
+// CSRF middleware — генерирует и проверяет CSRF-токены для защиты от атак на state-changing операции
+// Размещён ПОСЛЕ UseAuthorization(), чтобы не блокировать JWT-запросы (Bearer токены уже защищены от CSRF)
+#pragma warning restore S125
+app.UseMiddleware<GoldPC.Api.Middleware.CsrfMiddleware>();
 
 app.MapControllers();
 

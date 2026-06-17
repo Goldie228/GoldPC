@@ -206,7 +206,7 @@ export function Footer() {
             </span>
 
             {/* Соцсети */}
-            <div className="flex gap-3">
+            <div className="flex gap-3" role="list" aria-label="Социальные сети">
               {socialLinks.map((social) => (
                 <a
                   key={social.icon}

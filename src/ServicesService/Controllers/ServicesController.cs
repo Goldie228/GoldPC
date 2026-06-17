@@ -2,6 +2,7 @@ using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
 using GoldPC.SharedKernel.Models;
 using GoldPC.ServicesService.Services;
+using GoldPC.Shared.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -16,12 +17,17 @@ namespace GoldPC.ServicesService.Controllers;
 public class ServicesController : ControllerBase
 {
     private readonly IServicesService _servicesService;
+    private readonly IOrderEmailService? _orderEmailService;
     private readonly ILogger<ServicesController> _logger;
 
-    public ServicesController(IServicesService servicesService, ILogger<ServicesController> logger)
+    public ServicesController(
+        IServicesService servicesService,
+        ILogger<ServicesController> logger,
+        IOrderEmailService? orderEmailService = null)
     {
         _servicesService = servicesService;
         _logger = logger;
+        _orderEmailService = orderEmailService;
     }
 
     [HttpGet("types")]
@@ -119,6 +125,24 @@ public class ServicesController : ControllerBase
         var (result, error) = await _servicesService.AssignMasterAsync(id, masterId);
         if (error != null)
             return BadRequest(ApiResponse.Fail(error));
+
+        // Отправить уведомление клиенту о назначении мастера (fire-and-forget)
+        if (result != null && _orderEmailService != null)
+        {
+            try
+            {
+                var clientEmail = result.ClientEmail ?? string.Empty;
+                var masterName = result.MasterName ?? "Не указан";
+                if (!string.IsNullOrWhiteSpace(clientEmail))
+                {
+                    await _orderEmailService.SendServiceAssignedAsync(result, masterName, clientEmail);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Не удалось отправить уведомление о назначении мастера для заявки {RequestNumber}", result.RequestNumber);
+            }
+        }
 
         return Ok(ApiResponse<ServiceRequestDto>.Ok(result!));
     }

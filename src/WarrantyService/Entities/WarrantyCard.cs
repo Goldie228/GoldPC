@@ -45,6 +45,11 @@ public class WarrantyCard
     public Guid UserId { get; set; }
     
     /// <summary>
+    /// Email пользователя для уведомлений
+    /// </summary>
+    public string? UserEmail { get; set; }
+    
+    /// <summary>
     /// Дата начала гарантии (UTC)
     /// </summary>
     public DateTime StartDate { get; set; }

@@ -163,6 +163,7 @@ function FilterGroup({
           mobile ? 'py-2.5 text-xs' : 'py-3 text-xs'
         } font-semibold text-on-dark hover:text-gold`}
         aria-expanded={open}
+        aria-label={`${open ? 'Свернуть' : 'Развернуть'} секцию «${title}»`}
         type="button"
       >
         <span className="flex items-center gap-1.5">
@@ -186,7 +187,7 @@ function FilterGroup({
 
 function StarRating({ rating, onChange }: { rating: number; onChange: (r: number) => void }) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1" role="radiogroup" aria-label="Минимальный рейтинг">
       {[4, 3, 2, 1].map(r => (
         <label key={r} className="flex items-center gap-2.5 cursor-pointer group py-1 px-1.5 -mx-1.5 rounded-md hover:bg-surface-elevated/50 transition-colors">
           <input
@@ -195,6 +196,7 @@ function StarRating({ rating, onChange }: { rating: number; onChange: (r: number
             checked={rating === r}
             onChange={() => onChange(rating === r ? 0 : r)}
             className="filter-radio self-center"
+            aria-label={`${r} звёзды и выше`}
           />
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map(s => (
@@ -205,7 +207,7 @@ function StarRating({ rating, onChange }: { rating: number; onChange: (r: number
         </label>
       ))}
       {rating > 0 && (
-        <button onClick={() => onChange(0)} className="text-[11px] text-gold hover:text-gold-active transition-colors ml-1.5 mt-1">
+        <button onClick={() => onChange(0)} className="text-[11px] text-gold hover:text-gold-active transition-colors ml-1.5 mt-1" type="button" aria-label="Сбросить фильтр рейтинга">
           Сбросить
         </button>
       )}
@@ -567,6 +569,7 @@ export function FilterSidebar({
                 : 'text-muted-text hover:text-body-text hover:bg-surface-elevated/50'
             }`}
             type="button"
+            aria-label={`Сбросить фильтры${activeCount > 0 ? ` (${activeCount} активных)` : ''}`}
           >
             <RotateCcw size={11} />
             Сбросить
@@ -581,6 +584,7 @@ export function FilterSidebar({
             onClick={onReset}
             className="flex items-center gap-1.5 text-xs font-medium text-gold hover:text-gold-active transition-colors w-full justify-center py-1.5 rounded-lg bg-gold/5"
             type="button"
+            aria-label={`Сбросить все фильтры (${activeCount} активных)`}
           >
             <RotateCcw size={12} />
             Сбросить все фильтры ({activeCount})
@@ -597,6 +601,7 @@ export function FilterSidebar({
               <select
                 value={sortBy}
                 onChange={(e) => onSortChange(e.target.value)}
+                aria-label="Сортировка товаров"
                 className="flex-1 h-9 bg-surface-elevated text-on-dark text-xs rounded-lg px-3 pr-8 border border-hairline-dark focus:outline-none focus:ring-1 focus:ring-gold/30 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22%23707a8a%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M8%2011L3%206h10z%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_10px_center] bg-no-repeat hover:border-muted-strong transition-colors"
               >
                 <option value="popular">По популярности</option>
@@ -658,6 +663,7 @@ export function FilterSidebar({
                   type="button"
                   onClick={() => setShowAllCats(true)}
                   className="text-gold text-xs font-medium hover:text-gold-active transition-colors w-full text-left py-1.5 pl-3"
+                  aria-label={`Показать ещё ${CATEGORY_ORDER.length - 6} категорий`}
                 >
                   Ещё {CATEGORY_ORDER.length - 6} категорий
                 </button>
@@ -864,6 +870,7 @@ export function FilterSidebar({
                         onChange={e =>
                           setSpecSearchQuery(prev => ({ ...prev, [attr.key]: e.target.value }))
                         }
+                        aria-label={`Поиск по атрибуту «${attr.displayName}»`}
                         className="w-full h-8 bg-surface-elevated text-on-dark text-xs rounded-lg pl-8 pr-3 border border-hairline-dark placeholder:text-muted-text focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
                       />
                     </div>
@@ -968,6 +975,7 @@ export function FilterSidebar({
                 placeholder="Поиск брендов..."
                 value={mfrSearch}
                 onChange={e => setMfrSearch(e.target.value)}
+                aria-label="Поиск производителей"
                 className="w-full h-9 bg-surface-elevated text-on-dark text-xs rounded-lg pl-8 pr-3 border border-hairline-dark placeholder:text-muted-text focus:outline-none focus:ring-1 focus:ring-gold/30 focus:border-gold/40 transition-all"
               />
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-text" size={13} />
@@ -1012,6 +1020,7 @@ export function FilterSidebar({
                 type="button"
                 onClick={() => setShowAllMfrs(true)}
                 className="text-gold text-xs font-medium hover:text-gold-active transition-colors w-full text-left py-2"
+                aria-label={`Показать ещё ${filteredMfrs.length - 5} брендов`}
               >
                 Ещё {filteredMfrs.length - 5} брендов
               </button>

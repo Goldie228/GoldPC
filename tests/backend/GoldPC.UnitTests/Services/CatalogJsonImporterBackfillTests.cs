@@ -63,7 +63,7 @@ public class CatalogJsonImporterBackfillTests
         var product = new Product
         {
             Id = Guid.NewGuid(),
-            Name = "ОЗУ DDR5 32GB",
+            Name = "Оперативная память для компьютера",
             Sku = "TEST-RAM-001",
             Slug = "test_ram_001",
             CategoryId = categoryId,
@@ -115,7 +115,7 @@ public class CatalogJsonImporterBackfillTests
 
         return new CatalogJsonImporter(
             context,
-            new SpecImportNormalizer(context),
+            new SpecImportNormalizer(context, NullLogger<SpecImportNormalizer>.Instance),
             new ManufacturerDetector(),
             NullLogger<CatalogJsonImporter>.Instance,
             hostEnvironmentMock.Object,

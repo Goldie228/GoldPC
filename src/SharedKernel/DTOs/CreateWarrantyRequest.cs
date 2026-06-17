@@ -26,5 +26,10 @@ public class CreateWarrantyRequest
     public int WarrantyMonths { get; set; } = 12;
 
     public int? WarrantyDays { get; set; }
+
+    /// <summary>
+    /// Email клиента для отправки уведомления (опционально)
+    /// </summary>
+    public string? UserEmail { get; set; }
 }
 #pragma warning restore CS1591, SA1600

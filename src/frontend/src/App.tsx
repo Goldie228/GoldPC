@@ -5,6 +5,7 @@ import { AuthGuard, RoleGuard, AdminRedirect } from './components/guards';
 import { AdminLayout } from './components/layout/admin-layout/AdminLayout';
 import { ManagerLayout } from './components/layout/manager-layout/ManagerLayout';
 import { MasterLayout } from './components/layout/master-layout/MasterLayout';
+import { AccountantLayout } from './components/layout/accountant-layout/AccountantLayout';
 import { AuthModalContainer } from './components/auth';
 import { ModalContainer } from './components/ui/Modal/ModalContainer';
 import { RouteMeta } from './components/seo/RouteMeta';
@@ -311,8 +312,14 @@ const router = createBrowserRouter([
       {
         element: <RoleGuard allowedRoles={['Accountant', 'Admin']} />,
         children: [
-          { path: '/accountant/reports', element: <ReportsPage /> },
-          { path: '/accountant/export', element: <ExportPage /> },
+          {
+            element: <AccountantLayout />,
+            children: [
+              { path: '/accountant', element: <Navigate to="/accountant/reports" replace /> },
+              { path: '/accountant/reports', element: <ReportsPage /> },
+              { path: '/accountant/export', element: <ExportPage /> },
+            ],
+          },
         ],
       },
       { path: '/orders/:orderNumber/success', element: <OrderSuccessPage /> },

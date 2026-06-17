@@ -3,6 +3,7 @@ using GoldPC.SharedKernel.Enums;
 using GoldPC.SharedKernel.Models;
 using PagedResultOrder = GoldPC.SharedKernel.Models.PagedResult<GoldPC.SharedKernel.DTOs.OrderDto>;
 using GoldPC.OrdersService.Services;
+using GoldPC.Shared.Services;
 using GoldPC.Shared.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,12 +17,18 @@ public class OrdersController : ControllerBase
 {
     private readonly IOrdersService _ordersService;
     private readonly IPaymentService _paymentService;
+    private readonly IOrderEmailService _orderEmailService;
     private readonly ILogger<OrdersController> _logger;
 
-    public OrdersController(IOrdersService ordersService, IPaymentService paymentService, ILogger<OrdersController> logger)
+    public OrdersController(
+        IOrdersService ordersService,
+        IPaymentService paymentService,
+        IOrderEmailService orderEmailService,
+        ILogger<OrdersController> logger)
     {
         _ordersService = ordersService;
         _paymentService = paymentService;
+        _orderEmailService = orderEmailService;
         _logger = logger;
     }
 
@@ -116,6 +123,19 @@ public class OrdersController : ControllerBase
                 return BadRequest(ApiResponse.Fail(error));
             }
 
+            // Отправить подтверждение заказа по email (fire-and-forget)
+            if (order != null)
+            {
+                try
+                {
+                    await _orderEmailService.SendOrderConfirmationAsync(order);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Не удалось отправить подтверждение заказа {OrderNumber}", order.OrderNumber);
+                }
+            }
+
             return CreatedAtAction(nameof(GetById), new { id = order!.Id }, ApiResponse<OrderDto>.Ok(order, "Заказ успешно создан"));
         // }
         // catch (Exception ex)
@@ -153,10 +173,28 @@ public class OrdersController : ControllerBase
             return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
         }
 
+        // Получить текущий статус до обновления
+        var existingOrder = await _ordersService.GetByIdAsync(id);
+        var oldStatus = existingOrder?.Status.ToString() ?? "Неизвестный";
+
         var (order, error) = await _ordersService.UpdateStatusAsync(id, request.Status, userId.Value, request.Comment);
         if (error != null)
         {
             return BadRequest(ApiResponse.Fail(error));
+        }
+
+        // Отправить уведомление о смене статуса по email (fire-and-forget)
+        if (order != null)
+        {
+            try
+            {
+                var newStatus = request.Status.ToString();
+                await _orderEmailService.SendOrderStatusChangedAsync(order, oldStatus, newStatus);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Не удалось отправить уведомление о статусе заказа {OrderNumber}", order.OrderNumber);
+            }
         }
 
         return Ok(ApiResponse<OrderDto>.Ok(order!));

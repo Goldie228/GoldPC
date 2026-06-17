@@ -583,7 +583,11 @@ public class ServicesService : IServicesService
                 Comment = h.Comment,
                 ChangedBy = h.ChangedBy,
                 ChangedAt = h.ChangedAt
-            }).ToList() ?? new List<WorkReportDto>()
+            }).ToList() ?? new List<WorkReportDto>(),
+            // ClientEmail и MasterName заполняются при наличии данных AuthService
+            // Для email-уведомлений требует внедрения IAuthServiceClient
+            ClientEmail = null,
+            MasterName = null
         };
     }
 

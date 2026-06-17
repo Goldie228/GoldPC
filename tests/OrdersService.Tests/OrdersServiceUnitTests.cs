@@ -6,6 +6,9 @@ using GoldPC.SharedKernel.Enums;
 using Microsoft.EntityFrameworkCore;
 using FluentAssertions;
 using Xunit;
+using Moq;
+using Microsoft.Extensions.Logging;
+using Shared.Protos;
 
 namespace GoldPC.OrdersService.Tests;
 
@@ -20,7 +23,10 @@ public class OrdersServiceUnitTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
         _context = new OrdersDbContext(options);
-        _ordersService = new OrdersService.Services.OrdersService(_context, Mock.Of<ILogger<OrdersService.Services.OrdersService>>());
+        _ordersService = new OrdersService.Services.OrdersService(
+            _context,
+            Mock.Of<ILogger<OrdersService.Services.OrdersService>>(),
+            Mock.Of<CatalogGrpc.CatalogGrpcClient>());
     }
 
     [Fact]
@@ -32,7 +38,14 @@ public class OrdersServiceUnitTests
         {
             DeliveryMethod = "Pickup",
             PaymentMethod = "Online",
-            Comment = "Test order"
+            Comment = "Test order",
+            FirstName = "Тест",
+            Email = "test@example.com",
+            Phone = "+375291234567",
+            Items = new List<CreateOrderItemRequest>
+            {
+                new() { ProductId = Guid.NewGuid(), ProductName = "Тестовый товар", Quantity = 1, UnitPrice = 100m }
+            }
         };
 
         // Act
@@ -41,7 +54,7 @@ public class OrdersServiceUnitTests
         // Assert
         error.Should().BeNull();
         order.Should().NotBeNull();
-        order!.OrderNumber.Should().StartWith("GP-");
+        order!.OrderNumber.Should().StartWith("ORD-");
         order.UserId.Should().Be(userId);
         order.Status.Should().Be(OrderStatus.New);
     }
@@ -51,7 +64,18 @@ public class OrdersServiceUnitTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var request = new CreateOrderRequest { DeliveryMethod = "Pickup", PaymentMethod = "Online" };
+        var request = new CreateOrderRequest
+        {
+            DeliveryMethod = "Pickup",
+            PaymentMethod = "Online",
+            FirstName = "Тест",
+            Email = "test@example.com",
+            Phone = "+375291234567",
+            Items = new List<CreateOrderItemRequest>
+            {
+                new() { ProductId = Guid.NewGuid(), ProductName = "Тестовый товар", Quantity = 1, UnitPrice = 100m }
+            }
+        };
         var (order, _) = await _ordersService.CreateAsync(userId, request);
 
         // Act
@@ -67,7 +91,18 @@ public class OrdersServiceUnitTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var request = new CreateOrderRequest { DeliveryMethod = "Pickup", PaymentMethod = "Online" };
+        var request = new CreateOrderRequest
+        {
+            DeliveryMethod = "Pickup",
+            PaymentMethod = "Online",
+            FirstName = "Тест",
+            Email = "test@example.com",
+            Phone = "+375291234567",
+            Items = new List<CreateOrderItemRequest>
+            {
+                new() { ProductId = Guid.NewGuid(), ProductName = "Тестовый товар", Quantity = 1, UnitPrice = 100m }
+            }
+        };
         var (order, _) = await _ordersService.CreateAsync(userId, request);
 
         // Act
@@ -88,7 +123,18 @@ public class OrdersServiceUnitTests
         var userId = Guid.NewGuid();
         for (int i = 0; i < 15; i++)
         {
-            await _ordersService.CreateAsync(userId, new CreateOrderRequest { DeliveryMethod = "Pickup", PaymentMethod = "Online" });
+            await _ordersService.CreateAsync(userId, new CreateOrderRequest
+            {
+                DeliveryMethod = "Pickup",
+                PaymentMethod = "Online",
+                FirstName = "Тест",
+                Email = "test@example.com",
+                Phone = "+375291234567",
+                Items = new List<CreateOrderItemRequest>
+                {
+                    new() { ProductId = Guid.NewGuid(), ProductName = $"Товар {i}", Quantity = 1, UnitPrice = 100m }
+                }
+            });
         }
 
         // Act
@@ -106,9 +152,43 @@ public class OrdersServiceUnitTests
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
         
-        await _ordersService.CreateAsync(userId1, new CreateOrderRequest { DeliveryMethod = "Pickup", PaymentMethod = "Online" });
-        await _ordersService.CreateAsync(userId1, new CreateOrderRequest { DeliveryMethod = "Delivery", PaymentMethod = "OnReceipt" });
-        await _ordersService.CreateAsync(userId2, new CreateOrderRequest { DeliveryMethod = "Pickup", PaymentMethod = "Online" });
+        await _ordersService.CreateAsync(userId1, new CreateOrderRequest
+        {
+            DeliveryMethod = "Pickup",
+            PaymentMethod = "Online",
+            FirstName = "Тест",
+            Email = "test@example.com",
+            Phone = "+375291234567",
+            Items = new List<CreateOrderItemRequest>
+            {
+                new() { ProductId = Guid.NewGuid(), ProductName = "Товар 1", Quantity = 1, UnitPrice = 100m }
+            }
+        });
+        await _ordersService.CreateAsync(userId1, new CreateOrderRequest
+        {
+            DeliveryMethod = "Delivery",
+            PaymentMethod = "OnReceipt",
+            FirstName = "Тест",
+            Email = "test@example.com",
+            Phone = "+375291234567",
+            Address = "Минск, ул. Тестовая, д. 1",
+            Items = new List<CreateOrderItemRequest>
+            {
+                new() { ProductId = Guid.NewGuid(), ProductName = "Товар 2", Quantity = 1, UnitPrice = 200m }
+            }
+        });
+        await _ordersService.CreateAsync(userId2, new CreateOrderRequest
+        {
+            DeliveryMethod = "Pickup",
+            PaymentMethod = "Online",
+            FirstName = "Другой",
+            Email = "other@example.com",
+            Phone = "+375297654321",
+            Items = new List<CreateOrderItemRequest>
+            {
+                new() { ProductId = Guid.NewGuid(), ProductName = "Товар 3", Quantity = 1, UnitPrice = 300m }
+            }
+        });
 
         // Act
         var result = await _ordersService.GetByUserIdAsync(userId1, 1, 10);

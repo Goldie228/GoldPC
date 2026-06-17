@@ -11,6 +11,7 @@ using System.Text.Json;
 using GoldPC.AuthService.Data;
 using GoldPC.AuthService.Entities;
 using GoldPC.AuthService.Infrastructure;
+using GoldPC.Shared.Services;
 using GoldPC.Shared.Services.Implementations;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
@@ -32,6 +33,7 @@ public class AuthService : IAuthService
     private readonly SmtpEmailService _emailService;
     private readonly ITokenCache _tokenCache;
     private readonly TwoFactorSettingsService _twoFactorSettings;
+    private readonly IEncryptionService _encryption;
     private const int MaxFailedAttempts = 5;
     private const int LockoutMinutes = 15;
     private const int RefreshTokenExpirationDays = 30;
@@ -48,7 +50,8 @@ public class AuthService : IAuthService
         ILogger<AuthService> logger,
         SmtpEmailService emailService,
         ITokenCache tokenCache,
-        TwoFactorSettingsService twoFactorSettings)
+        TwoFactorSettingsService twoFactorSettings,
+        IEncryptionService encryption)
     {
         _context = context;
         _jwtService = jwtService;
@@ -57,12 +60,15 @@ public class AuthService : IAuthService
         _emailService = emailService;
         _tokenCache = tokenCache;
         _twoFactorSettings = twoFactorSettings;
+        _encryption = encryption;
     }
 
     /// <inheritdoc />
     public async Task<(AuthResponse? Response, string? Error)> RegisterAsync(RegisterRequest request)
     {
-        if (await _context.Users.AnyAsync(u => u.Email.ToLower() == request.Email.ToLower()))
+        // Проверяем уникальность по EmailHash (хеш email в открытом виде)
+        var emailHash = _encryption.ComputeHash(request.Email.ToLower());
+        if (await _context.Users.AnyAsync(u => u.EmailHash == emailHash))
         {
             return (null, "Пользователь с таким email уже существует");
         }
@@ -70,11 +76,12 @@ public class AuthService : IAuthService
         var user = new User
         {
             Id = Guid.NewGuid(),
-            Email = request.Email.ToLower(),
+            Email = _encryption.Encrypt(request.Email.ToLower()),
+            EmailHash = emailHash,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12),
             FirstName = StringSanitizer.SanitizeText(request.FirstName),
             LastName = request.LastName != null ? StringSanitizer.SanitizeText(request.LastName) : string.Empty,
-            Phone = StringSanitizer.SanitizeText(request.Phone),
+            Phone = _encryption.Encrypt(StringSanitizer.SanitizeText(request.Phone)),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -99,9 +106,11 @@ public class AuthService : IAuthService
     {
         try
         {
+            // Ищем пользователя по EmailHash (хеш email в открытом виде)
+            var emailHash = _encryption.ComputeHash(request.Email.ToLower());
             var user = await _context.Users
                 .Include(u => u.RefreshTokens)
-                .FirstOrDefaultAsync(u => u.Email.ToLower() == request.Email.ToLower());
+                .FirstOrDefaultAsync(u => u.EmailHash == emailHash);
 
             if (user == null)
             {
@@ -161,7 +170,7 @@ public class AuthService : IAuthService
                 if (twoFactorRecord == null)
                 {
                     // 2FA не настроена — отклоняем вход
-                    _logger.LogWarning("Force2FA: user {Email} ({Role}) has no 2FA configured", user.Email, user.Role);
+                    _logger.LogWarning("Force2FA: user {Email} ({Role}) has no 2FA configured", _encryption.Decrypt(user.Email), user.Role);
                     return (null, "Для входа требуется двухфакторная аутентификация. Настройте 2FA в личном кабинете.");
                 }
 
@@ -175,7 +184,7 @@ public class AuthService : IAuthService
                     user.Id,
                     TimeSpan.FromMinutes(TwoFactorLoginTokenExpirationMinutes));
 
-                _logger.LogInformation("Force2FA: 2FA challenge issued for user {Email}", user.Email);
+                _logger.LogInformation("Force2FA: 2FA challenge issued for user {Email}", _encryption.Decrypt(user.Email));
 
                 return (new AuthResponse
                 {
@@ -270,7 +279,8 @@ public class AuthService : IAuthService
     /// <inheritdoc />
     public async Task<UserDto?> GetUserByEmailAsync(string email)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+        var emailHash = _encryption.ComputeHash(email.ToLower());
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.EmailHash == emailHash);
         return user != null ? MapToUserDto(user) : null;
     }
 
@@ -288,7 +298,7 @@ public class AuthService : IAuthService
         if (request.LastName != null)
             user.LastName = StringSanitizer.SanitizeText(request.LastName);
         if (request.Phone != null)
-            user.Phone = StringSanitizer.SanitizeText(request.Phone);
+            user.Phone = _encryption.Encrypt(StringSanitizer.SanitizeText(request.Phone));
         if (request.BirthDate != null)
             user.BirthDate = request.BirthDate;
         if (request.Company != null)
@@ -327,16 +337,17 @@ public class AuthService : IAuthService
         // Всегда возвращаем успех, чтобы не раскрывать факт существования email
         try
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+            var emailHash = _encryption.ComputeHash(email.ToLower());
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.EmailHash == emailHash);
             if (user == null)
             {
-                _logger.LogInformation("Password reset requested for non-existent email: {Email}", email);
+                _logger.LogInformation("Password reset requested for non-existent email hash");
                 return (true, null);
             }
 
             if (!user.IsActive)
             {
-                _logger.LogInformation("Password reset requested for inactive user: {Email}", email);
+                _logger.LogInformation("Password reset requested for inactive user");
                 return (true, null);
             }
 
@@ -394,19 +405,20 @@ public class AuthService : IAuthService
             });
 
             // Отправляем письмо
+            var decryptedEmail = _encryption.Decrypt(user.Email);
             var (sent, sendError) = await _emailService.SendEmailAsync(
-                user.Email,
+                decryptedEmail,
                 "Восстановление пароля — GoldPC",
                 emailBody,
                 isHtml: true);
 
             if (!sent)
             {
-                _logger.LogError("Failed to send password reset email to {Email}: {Error}", user.Email, sendError);
+                _logger.LogError("Failed to send password reset email: {Error}", sendError);
                 return (false, "Не удалось отправить письмо для восстановления пароля. Попробуйте позже.");
             }
 
-            _logger.LogInformation("Password reset email sent to {Email}", user.Email);
+            _logger.LogInformation("Password reset email sent to user {UserId}", user.Id);
             return (true, null);
         }
         catch (Exception ex)
@@ -490,7 +502,7 @@ public class AuthService : IAuthService
             // 4. Удаляем токен из Redis — он больше недействителен
             await _tokenCache.InvalidateTokenAsync(tokenHash);
 
-            _logger.LogInformation("Password successfully reset for user {Email}", user.Email);
+            _logger.LogInformation("Password successfully reset for user {UserId}", user.Id);
             return (true, null);
         }
         catch (Exception ex)
@@ -536,7 +548,7 @@ public class AuthService : IAuthService
 
             if (user.IsEmailVerified)
             {
-                _logger.LogInformation("Verification email requested for already verified user: {Email}", user.Email);
+                _logger.LogInformation("Verification email requested for already verified user: {UserId}", userId);
                 return (true, null); // Не ошибка — просто ничего не делаем
             }
 
@@ -600,7 +612,7 @@ public class AuthService : IAuthService
 
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Email verified for user {Email}", user.Email);
+            _logger.LogInformation("Email verified for user {UserId}", user.Id);
             return (true, null);
         }
         catch (Exception ex)
@@ -775,7 +787,8 @@ public class AuthService : IAuthService
 
             // Формируем otpauth:// URI для QR-кода
             var issuer = "GoldPC";
-            var label = Uri.EscapeDataString($"{issuer}:{user.Email}");
+            var decryptedEmail = _encryption.Decrypt(user.Email);
+            var label = Uri.EscapeDataString($"{issuer}:{decryptedEmail}");
             var qrCodeUrl = $"otpauth://totp/{label}?secret={totpSecret}&issuer={issuer}&digits={TOTPDigits}&period={TOTPStepSeconds}";
 
             if (twoFactor == null)
@@ -929,7 +942,7 @@ public class AuthService : IAuthService
 
             if (!VerifyTOTP(twoFactor.TOTPSecret, totpCode))
             {
-                _logger.LogWarning("Force2FA: invalid TOTP code for user {Email}", user.Email);
+                _logger.LogWarning("Force2FA: invalid TOTP code for user {UserId}", userId.Value);
                 return (null, "Неверный код двухфакторной аутентификации.");
             }
 
@@ -958,7 +971,7 @@ public class AuthService : IAuthService
             _context.LoginHistories.Add(loginHistory);
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("Force2FA: user {Email} completed 2FA verification and logged in", user.Email);
+            _logger.LogInformation("Force2FA: user {UserId} completed 2FA verification and logged in", user.Id);
 
             return (new AuthResponse
             {
@@ -1030,19 +1043,20 @@ public class AuthService : IAuthService
             });
 
             // Отправляем письмо
+            var decryptedEmail = _encryption.Decrypt(user.Email);
             var (sent, sendError) = await _emailService.SendEmailAsync(
-                user.Email,
+                decryptedEmail,
                 "Подтверждение email — GoldPC",
                 emailBody,
                 isHtml: true);
 
             if (!sent)
             {
-                _logger.LogError("Failed to send verification email to {Email}: {Error}", user.Email, sendError);
+                _logger.LogError("Failed to send verification email: {Error}", sendError);
                 return (false, "Не удалось отправить письмо для подтверждения email. Попробуйте позже.");
             }
 
-            _logger.LogInformation("Verification email sent to {Email}", user.Email);
+            _logger.LogInformation("Verification email sent to user {UserId}", user.Id);
             return (true, null);
         }
         catch (Exception ex)
@@ -1287,17 +1301,17 @@ public class AuthService : IAuthService
         }
     }
 
-    private static UserDto MapToUserDto(User user)
+    private UserDto MapToUserDto(User user)
     {
         return new UserDto
         {
             Id = user.Id,
-            Email = user.Email,
+            Email = _encryption.Decrypt(user.Email),
             Role = user.Role,
             Roles = user.Roles,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            Phone = user.Phone,
+            Phone = _encryption.Decrypt(user.Phone),
             AvatarUrl = user.AvatarUrl,
             IsActive = user.IsActive,
             IsEmailVerified = user.IsEmailVerified,

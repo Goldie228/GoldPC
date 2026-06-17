@@ -2,6 +2,7 @@
 using GoldPC.AuthService.Data;
 using GoldPC.AuthService.Entities;
 using GoldPC.AuthService.Services;
+using GoldPC.Shared.Services;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -61,15 +62,18 @@ public class AdminController : ControllerBase
     private readonly AuthDbContext _context;
     private readonly ILogger<AdminController> _logger;
     private readonly TwoFactorSettingsService _twoFactorSettings;
+    private readonly IEncryptionService _encryption;
 
     public AdminController(
         AuthDbContext context,
         ILogger<AdminController> logger,
-        TwoFactorSettingsService twoFactorSettings)
+        TwoFactorSettingsService twoFactorSettings,
+        IEncryptionService encryption)
     {
         _context = context;
         _logger = logger;
         _twoFactorSettings = twoFactorSettings;
+        _encryption = encryption;
     }
 
     /// <summary>Создать пользователя (администратором)</summary>
@@ -81,8 +85,9 @@ public class AdminController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // Проверка дубликата email
-        if (await _context.Users.AnyAsync(u => u.Email.ToLower() == request.Email.ToLower()))
+        // Проверка дубликата email по EmailHash
+        var emailHash = _encryption.ComputeHash(request.Email.ToLower().Trim());
+        if (await _context.Users.AnyAsync(u => u.EmailHash == emailHash))
             return BadRequest(new { error = "Пользователь с таким email уже существует" });
 
         var role = Enum.TryParse<UserRole>(request.Role, ignoreCase: true, out var parsedRole)
@@ -92,7 +97,8 @@ public class AdminController : ControllerBase
         var user = new User
         {
             Id = Guid.NewGuid(),
-            Email = request.Email.ToLower().Trim(),
+            Email = _encryption.Encrypt(request.Email.ToLower().Trim()),
+            EmailHash = emailHash,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12),
             FirstName = request.FirstName.Trim(),
             LastName = request.LastName.Trim(),
@@ -107,7 +113,7 @@ public class AdminController : ControllerBase
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Admin created user {UserId} ({Email}) with role {Role}", user.Id, user.Email, role);
+        _logger.LogInformation("Admin created user {UserId} with role {Role}", user.Id, role);
 
         return CreatedAtAction(nameof(GetUser), new { id = user.Id }, MapToUserDto(user));
     }
@@ -156,7 +162,7 @@ public class AdminController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Admin reset password for user {UserId} ({Email})", id, user.Email);
+        _logger.LogInformation("Admin reset password for user {UserId}", id);
         return Ok(new { success = true });
     }
 
@@ -174,7 +180,7 @@ public class AdminController : ControllerBase
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Admin deactivated user {UserId} ({Email})", id, user.Email);
+        _logger.LogInformation("Admin deactivated user {UserId}", id);
         return Ok(new { success = true });
     }
 
@@ -192,7 +198,7 @@ public class AdminController : ControllerBase
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Admin activated user {UserId} ({Email})", id, user.Email);
+        _logger.LogInformation("Admin activated user {UserId}", id);
         return Ok(new { success = true });
     }
 
@@ -223,7 +229,7 @@ public class AdminController : ControllerBase
         if (user == null)
             return NotFound(new { error = "Пользователь не найден" });
 
-        var email = user.Email;
+        var emailHash = user.EmailHash;
 
         // Удаляем связанные сущности
         _context.RefreshTokens.RemoveRange(user.RefreshTokens);
@@ -251,21 +257,21 @@ public class AdminController : ControllerBase
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Admin deleted user {UserId} ({Email})", id, email);
+        _logger.LogInformation("Admin deleted user {UserId}", id);
         return Ok(new { success = true });
     }
 
-    private static UserDto MapToUserDto(User user)
+    private UserDto MapToUserDto(User user)
     {
         return new UserDto
         {
             Id = user.Id,
-            Email = user.Email,
+            Email = _encryption.Decrypt(user.Email),
             Role = user.Role,
             Roles = user.Roles,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            Phone = user.Phone,
+            Phone = _encryption.Decrypt(user.Phone),
             IsActive = user.IsActive,
             IsEmailVerified = user.IsEmailVerified,
             BirthDate = user.BirthDate,

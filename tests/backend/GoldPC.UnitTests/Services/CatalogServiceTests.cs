@@ -4,11 +4,14 @@
 
 using AutoFixture;
 using GoldPC.SharedKernel.DTOs;
+using CatalogService.Data;
 using CatalogService.Models;
 using CatalogService.Repositories;
 using CatalogService.Repositories.Interfaces;
 using CatalogService.Services;
+using CatalogService.Services.Interfaces;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
@@ -31,6 +34,8 @@ public class CatalogServiceTests
     private readonly Mock<ICategoryRepository> _categoryRepositoryMock;
     private readonly Mock<IManufacturerRepository> _manufacturerRepositoryMock;
     private readonly Mock<IReviewRepository> _reviewRepositoryMock;
+    private readonly Mock<ICategoryParser> _categoryParserMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<ILogger<CatalogService.Services.CatalogService>> _loggerMock;
     private readonly CatalogService.Services.CatalogService _sut; // System Under Test
 
@@ -40,14 +45,24 @@ public class CatalogServiceTests
         _categoryRepositoryMock = new Mock<ICategoryRepository>();
         _manufacturerRepositoryMock = new Mock<IManufacturerRepository>();
         _reviewRepositoryMock = new Mock<IReviewRepository>();
+        _categoryParserMock = new Mock<ICategoryParser>();
+        _cacheServiceMock = new Mock<ICacheService>();
         _loggerMock = new Mock<ILogger<CatalogService.Services.CatalogService>>();
+
+        var dbContextOptions = new DbContextOptionsBuilder<CatalogDbContext>()
+            .UseInMemoryDatabase(databaseName: $"CatalogServiceTests-{Guid.NewGuid():N}")
+            .Options;
+        var dbContext = new CatalogDbContext(dbContextOptions);
 
         _sut = new CatalogService.Services.CatalogService(
             _productRepositoryMock.Object,
             _categoryRepositoryMock.Object,
             _manufacturerRepositoryMock.Object,
             _reviewRepositoryMock.Object,
-            _loggerMock.Object
+            _categoryParserMock.Object,
+            _loggerMock.Object,
+            _cacheServiceMock.Object,
+            dbContext
         );
 
         // Настройка AutoFixture для генерации DTO
@@ -84,7 +99,7 @@ public class CatalogServiceTests
         result.Sku.Should().Be(expectedProduct.Sku);
         result.Price.Should().Be(expectedProduct.Price);
         result.Stock.Should().Be(expectedProduct.Stock);
-        result.Category.Should().Be(category.Name);
+        result.Category.Should().Be(category.Slug);
         result.Manufacturer.Should().NotBeNull();
         result.Manufacturer!.Name.Should().Be(manufacturer.Name);
         
@@ -119,7 +134,7 @@ public class CatalogServiceTests
 
         _productRepositoryMock
             .Setup(r => r.GetDetailByIdAsync(productId))
-            .ReturnsAsync(inactiveProduct);
+            .ReturnsAsync((Product?)null);
 
         // Act
         var result = await _sut.GetProductByIdAsync(productId);
@@ -139,6 +154,7 @@ public class CatalogServiceTests
             Id = Guid.NewGuid(),
             ProductId = productId,
             Url = "https://example.com/image1.jpg",
+            Path = "/uploads/products/image1.jpg",
             IsPrimary = true,
             SortOrder = 0
         });
@@ -147,6 +163,7 @@ public class CatalogServiceTests
             Id = Guid.NewGuid(),
             ProductId = productId,
             Url = "https://example.com/image2.jpg",
+            Path = "/uploads/products/image2.jpg",
             IsPrimary = false,
             SortOrder = 1
         });
@@ -162,7 +179,7 @@ public class CatalogServiceTests
         result.Should().NotBeNull();
         result!.Images.Should().HaveCount(2);
         result.Images[0].IsMain.Should().BeTrue();
-        result.Images[0].Url.Should().Be("https://example.com/image1.jpg");
+        result.Images[0].Url.Should().Be("/uploads/products/image1.jpg");
     }
 
     [Fact]
@@ -605,7 +622,7 @@ public class CatalogServiceTests
         };
 
         _productRepositoryMock
-            .Setup(r => r.SkuExistsAsync(createDto.Sku))
+            .Setup(r => r.SkuExistsAsync(createDto.Sku, null))
             .ReturnsAsync(false);
 
         _productRepositoryMock
@@ -627,7 +644,6 @@ public class CatalogServiceTests
                 product.Stock = createDto.Stock;
                 product.WarrantyMonths = createDto.WarrantyMonths;
                 product.Description = createDto.Description;
-                product.Specifications = createDto.Specifications;
                 return product;
             });
 
@@ -658,7 +674,7 @@ public class CatalogServiceTests
         };
 
         _productRepositoryMock
-            .Setup(r => r.SkuExistsAsync(createDto.Sku))
+            .Setup(r => r.SkuExistsAsync(createDto.Sku, null))
             .ReturnsAsync(true);
 
         // Act
@@ -692,7 +708,7 @@ public class CatalogServiceTests
         };
 
         _productRepositoryMock
-            .Setup(r => r.SkuExistsAsync(createDto.Sku))
+            .Setup(r => r.SkuExistsAsync(createDto.Sku, null))
             .ReturnsAsync(false);
 
         _categoryRepositoryMock
@@ -827,10 +843,6 @@ public class CatalogServiceTests
             ReviewCount = 10,
             IsActive = true,
             IsFeatured = false,
-            Specifications = new Dictionary<string, object>
-            {
-                ["test_spec"] = "test_value"
-            },
             Images = new List<ProductImage>(),
             Reviews = new List<Review>(),
             CreatedAt = DateTime.UtcNow,

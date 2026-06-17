@@ -162,7 +162,7 @@ export function CartPage(): ReactElement {
                       {hasValidProductImage(item.imageUrl) ? (
                         <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain block" />
                       ) : (
-                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="max-w-[80%] max-h-[80%]">
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="max-w-[80%] max-h-[80%]" role="img" aria-label={`Фото ${item.name} отсутствует`}>
                           <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>
                           <text x="50" y="55" textAnchor="middle" fill="#d4a574" fontSize="10">Нет фото</text>
                         </svg>

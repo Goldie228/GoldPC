@@ -1,5 +1,6 @@
 using GoldPC.AuthService.Data;
 using GoldPC.AuthService.Entities;
+using GoldPC.Shared.Services;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -19,11 +20,13 @@ public class AddressController : ControllerBase
 {
     private readonly AuthDbContext _context;
     private readonly ILogger<AddressController> _logger;
+    private readonly IEncryptionService _encryption;
 
-    public AddressController(AuthDbContext context, ILogger<AddressController> logger)
+    public AddressController(AuthDbContext context, ILogger<AddressController> logger, IEncryptionService encryption)
     {
         _context = context;
         _logger = logger;
+        _encryption = encryption;
     }
 
     /// <summary>
@@ -110,9 +113,9 @@ public class AddressController : ControllerBase
             Id = Guid.NewGuid(),
             UserId = userId.Value,
             Name = request.Name,
-            City = request.City,
-            Address = request.Address,
-            Apartment = request.Apartment,
+            City = _encryption.Encrypt(request.City),
+            Address = _encryption.Encrypt(request.Address),
+            Apartment = _encryption.Encrypt(request.Apartment ?? string.Empty),
             PostalCode = request.PostalCode,
             IsDefault = isDefault,
             CreatedAt = DateTime.UtcNow
@@ -165,9 +168,9 @@ public class AddressController : ControllerBase
         }
 
         address.Name = request.Name;
-        address.City = request.City;
-        address.Address = request.Address;
-        address.Apartment = request.Apartment;
+        address.City = _encryption.Encrypt(request.City);
+        address.Address = _encryption.Encrypt(request.Address);
+        address.Apartment = _encryption.Encrypt(request.Apartment ?? string.Empty);
         address.PostalCode = request.PostalCode;
         address.IsDefault = request.IsDefault;
         address.UpdatedAt = DateTime.UtcNow;
@@ -261,16 +264,16 @@ public class AddressController : ControllerBase
             : null;
     }
 
-    private static UserAddressDto MapToDto(UserAddress address)
+    private UserAddressDto MapToDto(UserAddress address)
     {
         return new UserAddressDto
         {
             Id = address.Id,
             UserId = address.UserId,
             Name = address.Name,
-            City = address.City,
-            Address = address.Address,
-            Apartment = address.Apartment,
+            City = _encryption.Decrypt(address.City),
+            Address = _encryption.Decrypt(address.Address),
+            Apartment = _encryption.Decrypt(address.Apartment ?? string.Empty),
             PostalCode = address.PostalCode,
             IsDefault = address.IsDefault,
             CreatedAt = address.CreatedAt

@@ -4,11 +4,12 @@ using GoldPC.ServicesService.Services;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using FluentAssertions;
 using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
-using GoldPC.Shared.Services.Interfaces;
+using GoldPC.Shared.Services;
 
 namespace GoldPC.ServicesService.Tests;
 
@@ -21,6 +22,7 @@ public class ServicesServiceUnitTests
     {
         var options = new DbContextOptionsBuilder<ServicesDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
         _context = new ServicesDbContext(options);
         _servicesService = new ServicesService.Services.ServicesService(

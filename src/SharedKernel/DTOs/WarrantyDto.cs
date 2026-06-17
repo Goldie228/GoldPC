@@ -22,6 +22,11 @@ public class WarrantyDto
 
     public Guid UserId { get; set; }
 
+    /// <summary>
+    /// Email пользователя для уведомлений (опционально)
+    /// </summary>
+    public string? UserEmail { get; set; }
+
     public DateOnly StartDate { get; set; }
 
     public DateOnly EndDate { get; set; }

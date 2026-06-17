@@ -24,10 +24,27 @@ const apiClient: AxiosInstance = axios.create({
 });
 
 /**
- * Перехватчик запросов для добавления токена авторизации
+ * Читает значение cookie по имени (простой парсер без сторонних библиотек)
+ */
+function getCookieValue(name: string): string | null {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match != null ? decodeURIComponent(match[2]) : null;
+}
+
+/**
+ * Перехватчик запросов для добавления CSRF-токена и токена авторизации
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // ✅ Добавляем CSRF-токен из cookie для unsafe методов
+    const unsafeMethods = ['post', 'put', 'delete', 'patch'];
+    if (config.method != null && unsafeMethods.includes(config.method.toLowerCase())) {
+      const xsrfToken = getCookieValue('XSRF-TOKEN');
+      if (xsrfToken != null && config.headers != null) {
+        config.headers['X-XSRF-TOKEN'] = xsrfToken;
+      }
+    }
+
     // ✅ Проверяем ВСЕ хранилища в правильном порядке
     const token = localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken');
     if (token != null && config.headers != null) {

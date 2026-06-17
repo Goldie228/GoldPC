@@ -13,9 +13,14 @@ namespace GoldPC.AuthService.Entities;
 public class User : BaseEntity
 {
     /// <summary>
-    /// Email пользователя (логин)
+    /// Email пользователя (логин). Зашифрован AES-256-GCM если включено шифрование.
     /// </summary>
     public string Email { get; set; } = string.Empty;
+
+    /// <summary>
+    /// SHA256-хеш email (в открытом виде) для поиска и логина.
+    /// </summary>
+    public string EmailHash { get; set; } = string.Empty;
 
     /// <summary>
     /// Хэш пароля (bcrypt)

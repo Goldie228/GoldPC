@@ -2,6 +2,7 @@ using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
 using GoldPC.SharedKernel.Models;
 using GoldPC.WarrantyService.Services;
+using GoldPC.Shared.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -16,12 +17,17 @@ namespace GoldPC.WarrantyService.Controllers;
 public class WarrantyController : ControllerBase
 {
     private readonly IWarrantyService _warrantyService;
+    private readonly IOrderEmailService? _orderEmailService;
     private readonly ILogger<WarrantyController> _logger;
 
-    public WarrantyController(IWarrantyService warrantyService, ILogger<WarrantyController> logger)
+    public WarrantyController(
+        IWarrantyService warrantyService,
+        ILogger<WarrantyController> logger,
+        IOrderEmailService? orderEmailService = null)
     {
         _warrantyService = warrantyService;
         _logger = logger;
+        _orderEmailService = orderEmailService;
     }
 
     #region Claims
@@ -148,6 +154,20 @@ public class WarrantyController : ControllerBase
     {
         var (card, error) = await _warrantyService.CreateCardAsync(request);
         if (error != null) return BadRequest(ApiResponse.Fail(error));
+
+        // Отправить уведомление о создании гарантии по email (fire-and-forget)
+        if (card != null && _orderEmailService != null && !string.IsNullOrWhiteSpace(request.UserEmail))
+        {
+            try
+            {
+                await _orderEmailService.SendWarrantyCreatedAsync(card, request.UserEmail);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Не удалось отправить уведомление о гарантии {WarrantyNumber}", card.WarrantyNumber);
+            }
+        }
+
         return CreatedAtAction(nameof(GetCardById), new { id = card!.Id }, ApiResponse<WarrantyDto>.Ok(card, "Гарантийный талон создан"));
     }
 
