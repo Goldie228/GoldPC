@@ -41,6 +41,7 @@ After(async function (this: HappyPathWorld) {
 // GIVEN
 Given('Я на главной странице', async function (this: HappyPathWorld) {
   await this.page.goto('/');
+  await this.page.waitForLoadState('networkidle');
 });
 
 // WHEN
@@ -67,8 +68,8 @@ When('Я авторизуюсь как {string} с паролем {string}', asy
     await this.loginPage.goto();
   }
   await this.loginPage.login(email, password);
-  // Ждем возврата на страницу, с которой пришли или в профиль
-  await this.page.waitForLoadState('networkidle');
+  // Ждём закрытия модалки или редирект
+  await this.page.waitForTimeout(2000);
 });
 
 When('Я заполняю данные доставки', async function (this: HappyPathWorld) {
@@ -112,11 +113,11 @@ Then('Номер заказа должен отображаться на стр�
 
 // PC Builder steps
 When('Я выбираю совместимые компоненты для сборки', async function (this: HappyPathWorld) {
-  await this.pcBuilderPage.selectComponent('cpu', 'AMD Ryzen 9 7950X');
-  await this.pcBuilderPage.selectComponent('motherboard', 'ASUS ROG Crosshair X670E');
-  await this.pcBuilderPage.selectComponent('ram', 'DDR5-6000 32GB');
-  await this.pcBuilderPage.selectComponent('gpu', 'RTX 4090');
-  await this.pcBuilderPage.selectComponent('psu', '850W');
+  await this.pcBuilderPage.selectComponent('Процессор', 'AMD Ryzen 9 7950X');
+  await this.pcBuilderPage.selectComponent('Материнская плата', 'ASUS ROG Crosshair X670E');
+  await this.pcBuilderPage.selectComponent('Оперативная память', 'DDR5-6000 32GB');
+  await this.pcBuilderPage.selectComponent('Видеокарта', 'RTX 4090');
+  await this.pcBuilderPage.selectComponent('Блок питания', '850W');
 });
 
 Then('Все компоненты сборки должны быть в корзине', async function (this: HappyPathWorld) {
@@ -128,5 +129,5 @@ Then('Все компоненты сборки должны быть в корз
 Then('Общая стоимость корзины должна соответствовать стоимости сборки', async function (this: HappyPathWorld) {
   const total = await this.cartPage.getTotalSum();
   expect(total).not.toBeNull();
-  expect(total).toMatch(/[\d\s]+₽/);
+  expect(total).toMatch(/[\d\s]+BYN|[\d\s]+₽/);
 });

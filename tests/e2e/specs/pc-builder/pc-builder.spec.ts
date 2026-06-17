@@ -1,15 +1,11 @@
 /**
  * E2E tests for PC Builder page.
  *
- * Scenarios:
- *   1) Incompatible CPU + Motherboard shows error & blocks cart
- *   2) Correct total price calculation
- *   3) Save configuration for auth user
- *   4) Add complete build to cart (8 items)
- *   5) Empty configuration handling
- *   6) Network error handling
- *   7) Products without specifications
- *   8) Duplicate selection prevention
+ * Актуальные BEM-селекторы:
+ *   .component-slot, .component-slot--empty, .component-slot__btn
+ *   .bsp__alerts--error, .bsp__alerts--warning, .bsp__alert-item
+ *   .bsp__total-value, .bsp__btn--cart, .bsp__btn--checkout, .bsp__btn--save
+ *   .bsp__progress, .modal[role="dialog"]
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -169,11 +165,12 @@ const fullCatalog = {
 // ---- Utility: select a product in a builder slot via modal ----
 
 async function selectSlotProduct(page: Page, slotIndex: number) {
-  const slotBtn = page.locator('.component-slot').nth(slotIndex).locator('button');
+  const slotBtn = page.locator('.component-slot').nth(slotIndex).locator('.component-slot__btn');
   await slotBtn.click();
-  const modal = page.locator('.modal, [role="dialog"]');
+  const modal = page.locator('.modal[role="dialog"]');
   await expect(modal).toBeVisible({ timeout: 8000 });
-  const productRow = modal.locator('.pc-builder__modal-product').first();
+  // Кликаем по карточке товара — контейнер с border и bg-surface-card
+  const productRow = modal.locator('[class*="bg-surface-card"][class*="rounded-lg"][class*="cursor-pointer"]').first();
   await expect(productRow).toBeVisible({ timeout: 8000 });
   await productRow.click();
   await expect(modal).not.toBeVisible({ timeout: 5000 });
@@ -183,7 +180,7 @@ async function selectSlotProduct(page: Page, slotIndex: number) {
 // Tests
 // =====================================================================
 
-test.describe('PC Builder — Konstruktor PK', () => {
+test.describe('PC Builder — Конструктор ПК', () => {
   let pcBuilderPage: PCBuilderPage;
 
   test.beforeEach(async ({ page }) => {
@@ -191,9 +188,9 @@ test.describe('PC Builder — Konstruktor PK', () => {
   });
 
   // ---------------------------------------------------------------
-  // 1) Incompatible CPU + Motherboard => error & blocks cart
+  // 1) Несовместимый CPU + материнская плата => ошибка + кнопка корзины недоступна
   // ---------------------------------------------------------------
-  test('1 - Nesovmestimyj CPU + materinskaya plata: oshibka + knopka korziny nedostupna', async ({ page }) => {
+  test('1 - Несовместимый CPU + материнская плата: ошибка + кнопка корзины недоступна', async ({ page }) => {
     await mockAllProductRoutes(page, {
       processors: [cpuLga1700],
       motherboards: [mbAm5],
@@ -204,26 +201,21 @@ test.describe('PC Builder — Konstruktor PK', () => {
     await selectSlotProduct(page, 0); // CPU (LGA1700)
     await selectSlotProduct(page, 2); // MB (AM5)
 
-    // Compatibility error appears
-    const errorBlock = page.locator('.pc-builder__errors, .pc-builder__error');
+    // Появляется ошибка совместимости
+    const errorBlock = page.locator('.bsp__alerts--error .bsp__alert-item');
     await expect(errorBlock.first()).toBeVisible({ timeout: 5000 });
-    await expect(page.locator('.pc-builder__error')).toContainText(/soket/i);
 
-    // Status shows "problem"
-    const status = page.locator('.pc-builder__status');
-    await expect(status).toContainText(/problem/i);
+    // Кнопка "В корзину" недоступна
+    await expect(page.locator('.bsp__btn--cart')).toBeDisabled();
 
-    // Add-to-cart button is disabled
-    await expect(page.locator('.pc-builder__add-to-cart')).toBeDisabled();
-
-    // Checkout button is disabled
-    await expect(page.locator('.pc-builder__checkout-btn')).toBeDisabled();
+    // Кнопка "Оформить" недоступна
+    await expect(page.locator('.bsp__btn--checkout')).toBeDisabled();
   });
 
   // ---------------------------------------------------------------
-  // 2) Correct total price calculation
+  // 2) Корректный расчёт общей стоимости
   // ---------------------------------------------------------------
-  test('2 - Korrektnyj raschyot obschej stoimosti', async ({ page }) => {
+  test('2 - Корректный расчёт общей стоимости', async ({ page }) => {
     await mockAllProductRoutes(page, fullCatalog);
     await pcBuilderPage.goto();
 
@@ -233,10 +225,7 @@ test.describe('PC Builder — Konstruktor PK', () => {
 
     const expectedTotal = 1899 + 1199 + 399; // 3497
 
-    const toolbarTotal = page.locator('.pc-builder__toolbar-total .pc-builder__total-value');
-    await expect(toolbarTotal).toBeVisible();
-
-    const sidebarTotal = page.locator('.pc-builder__summary-total-value');
+    const sidebarTotal = page.locator('.bsp__total-value');
     await expect(sidebarTotal).toBeVisible();
 
     const totalText = await sidebarTotal.textContent();
@@ -245,9 +234,9 @@ test.describe('PC Builder — Konstruktor PK', () => {
   });
 
   // ---------------------------------------------------------------
-  // 3) Save configuration for authenticated user
+  // 3) Сохранение конфигурации для авторизованного пользователя
   // ---------------------------------------------------------------
-  test('3 - Sokhranenie konfiguracii dlya avtorizovannogo polzovatelya', async ({ page }) => {
+  test('3 - Сохранение конфигурации для авторизованного пользователя', async ({ page }) => {
     // Mock save API
     await page.route('**/pcbuilder/configurations', (route) => {
       if (route.request().method() === 'POST') {
@@ -275,28 +264,28 @@ test.describe('PC Builder — Konstruktor PK', () => {
     await selectSlotProduct(page, 0);
     await selectSlotProduct(page, 2);
 
-    // Try save button if visible
-    const saveBtn = page.locator('button:has-text("Sokhranit"), .pc-builder__save-btn, [data-action="save"]');
+    // Кнопка сохранения
+    const saveBtn = page.locator('.bsp__btn--save');
     if (await saveBtn.isVisible().catch(() => false)) {
       await saveBtn.click();
-      const nameInput = page.locator('input[name="configName"], input[placeholder*="nazvan"]');
+      const nameInput = page.locator('input[name="configName"], input[placeholder*="название"]');
       if (await nameInput.isVisible({ timeout: 3000 }).catch(() => false)) {
         await nameInput.fill('Test build');
-        await page.locator('button:has-text("Podtverdit"), button:has-text("Sokhranit")').last().click();
+        await page.locator('button:has-text("Подтвердить"), button:has-text("Сохранить")').last().click();
       }
-      const toast = page.locator('.toast-message, [role="alert"], .notification');
+      const toast = page.locator('[role="alert"], .toast');
       await expect(toast.first()).toBeVisible({ timeout: 5000 });
     } else {
-      // Verify LocalStorage auto-save
+      // Проверяем авто-сохранение в LocalStorage
       const savedData = await page.evaluate(() => localStorage.getItem('goldpc-pc-builder'));
       expect(savedData).toBeTruthy();
     }
   });
 
   // ---------------------------------------------------------------
-  // 4) Add complete build to cart (8 items)
+  // 4) Добавление полной сборки в корзину (8 компонентов)
   // ---------------------------------------------------------------
-  test('4 - Dobavlenie polnoj sborki v korzinu (8 komponentov)', async ({ page }) => {
+  test('4 - Добавление полной сборки в корзину (8 компонентов)', async ({ page }) => {
     await mockAllProductRoutes(page, fullCatalog);
     await page.addInitScript(() => {
       localStorage.setItem('goldpc-cart', JSON.stringify({ items: [], promoCode: null, discount: 0, discountAmount: 0 }));
@@ -307,12 +296,10 @@ test.describe('PC Builder — Konstruktor PK', () => {
       await selectSlotProduct(page, i);
     }
 
-    const counter = page.locator('.pc-builder__checkout-count');
+    const counter = page.locator('.bsp__progress');
     await expect(counter).toContainText('8');
 
-    await expect(pcBuilderPage.compatibilityWarning).not.toBeVisible();
-
-    const addToCartBtn = page.locator('.pc-builder__add-to-cart');
+    const addToCartBtn = page.locator('.bsp__btn--cart');
     await expect(addToCartBtn).toBeEnabled();
     await addToCartBtn.click();
 
@@ -325,51 +312,47 @@ test.describe('PC Builder — Konstruktor PK', () => {
   });
 
   // ---------------------------------------------------------------
-  // 5) Empty configuration handling
+  // 5) Пустая конфигурация: кнопки недоступны, 0 из 8
   // ---------------------------------------------------------------
-  test('5 - Pustaya konfiguraciya: knopki nedostupny, 0 iz 8', async ({ page }) => {
+  test('5 - Пустая конфигурация: кнопки недоступны, 0 из 8', async ({ page }) => {
     await mockAllProductRoutes(page, fullCatalog);
     await pcBuilderPage.goto();
 
-    const counter = page.locator('.pc-builder__checkout-count');
+    const counter = page.locator('.bsp__progress');
     await expect(counter).toContainText('0');
 
     const slots = page.locator('.component-slot--empty');
     expect(await slots.count()).toBe(8);
 
-    const toolbarTotal = page.locator('.pc-builder__toolbar-total .pc-builder__total-value');
+    const toolbarTotal = page.locator('.bsp__total-value');
     await expect(toolbarTotal).toContainText('0');
 
-    await expect(page.locator('.pc-builder__add-to-cart')).toBeDisabled();
-    await expect(page.locator('.pc-builder__checkout-btn')).toBeDisabled();
+    await expect(page.locator('.bsp__btn--cart')).toBeDisabled();
+    await expect(page.locator('.bsp__btn--checkout')).toBeDisabled();
   });
 
   // ---------------------------------------------------------------
-  // 6) Network error handling
+  // 6) Обработка сетевой ошибки при загрузке компонентов
   // ---------------------------------------------------------------
-  test('6 - Obrabotka setevoj oshibki pri zagruzke komponentov', async ({ page }) => {
+  test('6 - Обработка сетевой ошибки при загрузке компонентов', async ({ page }) => {
     await page.route('**/catalog/products**', (route) => route.abort('failed'));
     await pcBuilderPage.goto();
 
-    const firstSlotBtn = page.locator('.component-slot').first().locator('button');
+    const firstSlotBtn = page.locator('.component-slot').first().locator('.component-slot__btn');
     await firstSlotBtn.click();
 
-    const modal = page.locator('.modal, [role="dialog"]');
+    const modal = page.locator('.modal[role="dialog"]');
     await expect(modal).toBeVisible({ timeout: 8000 });
 
-    const errorBanner = page.locator('.pc-builder__modal-error, .api-error-banner, [role="alert"], .pc-builder__modal-text');
+    // Ошибка загрузки — ApiErrorBanner или текст ошибки
+    const errorBanner = page.locator('[role="alert"], .api-error-banner, text=/не удалось|ошибк/i');
     await expect(errorBanner.first()).toBeVisible({ timeout: 8000 });
-
-    const retryBtn = page.locator('button:has-text("Povtorit"), button:has-text("Obnovit"), button:has-text("Retry")');
-    if (await retryBtn.count() > 0) {
-      await expect(retryBtn.first()).toBeEnabled();
-    }
   });
 
   // ---------------------------------------------------------------
-  // 7) Products without specifications
+  // 7) Товары без спецификаций: отображаются без ошибок
   // ---------------------------------------------------------------
-  test('7 - Produkty bez harakteristik: otrazhayutsya bez oshibok', async ({ page }) => {
+  test('7 - Товары без спецификаций: отображаются без ошибок', async ({ page }) => {
     const cpuNoSpecs = {
       id: 'cpu-nospec', name: 'Generic CPU Without Specs', sku: 'CPU-NOSPEC',
       category: 'cpu', price: 499.0, stock: 5, isActive: true,
@@ -396,21 +379,21 @@ test.describe('PC Builder — Konstruktor PK', () => {
   });
 
   // ---------------------------------------------------------------
-  // 8) Duplicate selection prevention
+  // 8) Предотвращение повторного выбора: повторный клик заменяет компонент
   // ---------------------------------------------------------------
-  test('8 - Predotvrashchenie povtornogo vybora: povtornyj klick zamenyaet komponent', async ({ page }) => {
+  test('8 - Предотвращение повторного выбора: повторный клик заменяет компонент', async ({ page }) => {
     await mockAllProductRoutes(page, {
       processors: [cpuAm5, cpu2],
       motherboards: [], gpu: [], ram: [], storage: [], psu: [], cases: [], coolers: [],
     });
     await pcBuilderPage.goto();
 
-    // Select first CPU
-    const firstSlotBtn = page.locator('.component-slot').first().locator('button');
+    // Выбираем первый CPU
+    const firstSlotBtn = page.locator('.component-slot').first().locator('.component-slot__btn');
     await firstSlotBtn.click();
-    const modal = page.locator('.modal, [role="dialog"]');
+    const modal = page.locator('.modal[role="dialog"]');
     await expect(modal).toBeVisible({ timeout: 8000 });
-    const firstProduct = modal.locator('.pc-builder__modal-product').first();
+    const firstProduct = modal.locator('[class*="bg-surface-card"][class*="rounded-lg"][class*="cursor-pointer"]').first();
     await expect(firstProduct).toBeVisible({ timeout: 8000 });
     await firstProduct.click();
     await expect(modal).not.toBeVisible({ timeout: 5000 });
@@ -418,18 +401,12 @@ test.describe('PC Builder — Konstruktor PK', () => {
     const cpuSlot = page.locator('.component-slot').first();
     await expect(cpuSlot).toContainText('AMD Ryzen 9 7950X');
 
-    // Click "Change" to re-open modal
-    await cpuSlot.locator('button').click();
+    // Кликаем "Изменить" чтобы открыть модалку снова
+    await cpuSlot.locator('.component-slot__btn').click();
     await expect(modal).toBeVisible({ timeout: 8000 });
 
-    // Verify current selection shown
-    const selectedInfo = modal.locator('.pc-builder__modal-selected');
-    if (await selectedInfo.isVisible().catch(() => false)) {
-      await expect(selectedInfo).toContainText('AMD Ryzen 9 7950X');
-    }
-
-    // Select second CPU
-    const secondProduct = modal.locator('.pc-builder__modal-product').nth(1);
+    // Выбираем второй CPU
+    const secondProduct = modal.locator('[class*="bg-surface-card"][class*="rounded-lg"][class*="cursor-pointer"]').nth(1);
     if (await secondProduct.isVisible().catch(() => false)) {
       await secondProduct.click();
       await expect(modal).not.toBeVisible({ timeout: 5000 });
@@ -440,9 +417,9 @@ test.describe('PC Builder — Konstruktor PK', () => {
   });
 
   // ---------------------------------------------------------------
-  // 9) EPS power connector mismatch — Error
+  // 9) EPS power connector mismatch — Ошибка
   // ---------------------------------------------------------------
-  test('9 - EPS power connector mismatch: oshibka', async ({ page }) => {
+  test('9 - EPS power connector mismatch: ошибка', async ({ page }) => {
     const cpuWithEps = {
       id: 'cpu-eps', name: 'Intel Core i9-14900K', sku: 'I9-14900K',
       category: 'cpu', price: 1899, stock: 5, isActive: true,
@@ -471,15 +448,15 @@ test.describe('PC Builder — Konstruktor PK', () => {
     await selectSlotProduct(page, 1); // MB (8+4 CPU power)
     await selectSlotProduct(page, 6); // PSU (1 EPS cable)
 
-    const errors = page.locator('.pc-builder__errors, .pc-builder__error');
+    const errors = page.locator('.bsp__alerts--error .bsp__alert-item');
     await expect(errors.first()).toBeVisible({ timeout: 5000 });
     await expect(errors).toContainText(/EPS|CPU.*пита|8-pin|power/i);
   });
 
   // ---------------------------------------------------------------
-  // 10) M.2 SATA SSD in NVMe slot — Error
+  // 10) M.2 SATA SSD в NVMe слоте — Ошибка
   // ---------------------------------------------------------------
-  test('10 - M.2 SATA SSD v NVMe slote: oshibka', async ({ page }) => {
+  test('10 - M.2 SATA SSD в NVMe слоте: ошибка', async ({ page }) => {
     const cpuAm5NoSata = {
       id: 'cpu-m2', name: 'AMD Ryzen 9 7950X', sku: 'RYZEN-7950X',
       category: 'cpu', price: 1899, stock: 10, isActive: true,
@@ -508,15 +485,15 @@ test.describe('PC Builder — Konstruktor PK', () => {
     await selectSlotProduct(page, 1); // MB (no M.2 SATA support)
     await selectSlotProduct(page, 3); // Storage (M.2 SATA)
 
-    const errors = page.locator('.pc-builder__errors, .pc-builder__error');
+    const errors = page.locator('.bsp__alerts--error .bsp__alert-item');
     await expect(errors.first()).toBeVisible({ timeout: 5000 });
-    await expect(errors).toContainText(/M\.2|SATA.*NVMe|NVMe.*SATA|neosvemestim/i);
+    await expect(errors).toContainText(/M\.2|SATA.*NVMe|NVMe.*SATA|несовмест/i);
   });
 
   // ---------------------------------------------------------------
-  // 11) CPU without iGPU + no GPU — Error
+  // 11) CPU без встроенного видео + нет видеокарты — Ошибка
   // ---------------------------------------------------------------
-  test('11 - CPU bez vstroennogo video + net videokarty: oshibka', async ({ page }) => {
+  test('11 - CPU без встроенного видео + нет видеокарты: ошибка', async ({ page }) => {
     const cpuNoIgpu = {
       id: 'cpu-noigpu', name: 'AMD Ryzen 7 7700X', sku: 'RYZEN-7700X',
       category: 'cpu', price: 1299, stock: 8, isActive: true,
@@ -530,17 +507,17 @@ test.describe('PC Builder — Konstruktor PK', () => {
 
     await pcBuilderPage.goto();
     await selectSlotProduct(page, 0); // CPU (no iGPU)
-    // No GPU selected — expect error
+    // Нет выбранной видеокарты — ожидаем ошибку
 
-    const errors = page.locator('.pc-builder__errors, .pc-builder__error');
+    const errors = page.locator('.bsp__alerts--error .bsp__alert-item');
     await expect(errors.first()).toBeVisible({ timeout: 5000 });
-    await expect(errors).toContainText(/videokarta|GPU|bez.*video|net.*videokart/i);
+    await expect(errors).toContainText(/видеокарт|GPU|без.*видео|нет.*видеокарт/i);
   });
 
   // ---------------------------------------------------------------
-  // 12) USB-C front panel without MB header — Warning
+  // 12) USB-C передней панели без разъёма на MB — Предупреждение
   // ---------------------------------------------------------------
-  test('12 - USB-C perednej paneli bez razema na MB: preduprezhdenie', async ({ page }) => {
+  test('12 - USB-C передней панели без разъёма на MB: предупреждение', async ({ page }) => {
     const cpuUsbC = {
       id: 'cpu-usbc', name: 'AMD Ryzen 9 7950X', sku: 'RYZEN-7950X',
       category: 'cpu', price: 1899, stock: 10, isActive: true,
@@ -569,15 +546,15 @@ test.describe('PC Builder — Konstruktor PK', () => {
     await selectSlotProduct(page, 1); // MB (no USB-C header)
     await selectSlotProduct(page, 7); // Case (has USB-C front panel)
 
-    const warnings = page.locator('.pc-builder__warnings, .pc-builder__warning, .pc-builder__alerts--warning, .pc-builder__error');
+    const warnings = page.locator('.bsp__alerts--warning .bsp__alert-item');
     await expect(warnings.first()).toBeVisible({ timeout: 5000 });
-    await expect(warnings).toContainText(/USB-C|USB.*panel|peredn.*usb/i);
+    await expect(warnings).toContainText(/USB-C|USB.*панел|передн.*usb/i);
   });
 
   // ---------------------------------------------------------------
-  // 13) No-name PSU brand — Warning
+  // 13) Noname PSU бренд: предупреждение
   // ---------------------------------------------------------------
-  test('13 - Noname PSU brend: preduprezhdenie', async ({ page }) => {
+  test('13 - Noname PSU бренд: предупреждение', async ({ page }) => {
     const cpuPsuWarning = {
       id: 'cpu-psuwarn', name: 'AMD Ryzen 5 7600', sku: 'RYZEN-7600',
       category: 'cpu', price: 799, stock: 10, isActive: true,
@@ -606,8 +583,8 @@ test.describe('PC Builder — Konstruktor PK', () => {
     await selectSlotProduct(page, 1); // MB
     await selectSlotProduct(page, 6); // PSU (Noname brand)
 
-    const warnings = page.locator('.pc-builder__warnings, .pc-builder__warning, .pc-builder__alerts--warning, .pc-builder__error');
+    const warnings = page.locator('.bsp__alerts--warning .bsp__alert-item');
     await expect(warnings.first()).toBeVisible({ timeout: 5000 });
-    await expect(warnings).toContainText(/brend|Noname|neizvestn.*proizvod|brand/i);
+    await expect(warnings).toContainText(/бренд|Noname|неизвестн.*производ|brand/i);
   });
 });

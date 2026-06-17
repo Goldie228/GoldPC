@@ -35,8 +35,8 @@ export default defineConfig({
   
   // Общие настройки
   use: {
-    // Базовый URL для docker-compose.test.yml окружения
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    // Базовый URL dev-сервера Vite (порт 5173)
+    baseURL: process.env.BASE_URL || 'http://localhost:5173',
     
     // API URL для backend запросов
     extraHTTPHeaders: {

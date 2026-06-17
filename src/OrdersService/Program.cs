@@ -248,7 +248,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseDeveloperExceptionPage();
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
 // app.UseHttpsRedirection();
 app.UseCors("SignalR");
 app.UseAuthentication();

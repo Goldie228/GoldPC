@@ -1,4 +1,4 @@
-import http from 'k6';
+import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 /**
@@ -31,8 +31,8 @@ export const options = {
 };
 
 export default function () {
-    // GET /api/products - получение списка продуктов
-    const response = http.get(`${BASE_URL}/api/products`);
+    // GET /api/v1/catalog/products - получение списка продуктов
+    const response = http.get(`${BASE_URL}/api/v1/catalog/products?page=1&limit=20`);
 
     // Проверки
     check(response, {
