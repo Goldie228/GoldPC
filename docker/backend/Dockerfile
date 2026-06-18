@@ -10,7 +10,7 @@ ARG SERVICE_PORT=5001
 # =============================================================================
 # Stage 1: Build - Compile and test
 # =============================================================================
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG SERVICE_NAME
 
 WORKDIR /src
