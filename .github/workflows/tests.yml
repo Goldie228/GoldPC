@@ -35,7 +35,7 @@ jobs:
         run: dotnet test -c Release --collect:"XPlat Code Coverage" --results-directory ./coverage
       
       - name: Upload Coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           files: ./tests/backend/GoldPC.UnitTests/coverage/*/coverage.cobertura.xml
           flags: backend-unit
@@ -159,7 +159,7 @@ jobs:
         run: npm run test:coverage
       
       - name: Upload Coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           files: ./tests/frontend/coverage/lcov.info
           flags: frontend-unit

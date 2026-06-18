@@ -39,7 +39,7 @@ jobs:
           dotnet test tests/backend/GoldPC.UnitTests/GoldPC.UnitTests.csproj -c Release --collect:"XPlat Code Coverage"
       
       - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           files: ./tests/backend/GoldPC.UnitTests/coverage/*/coverage.cobertura.xml
           flags: backend-unit
@@ -72,7 +72,7 @@ jobs:
         run: npm run test:coverage
       
       - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           files: ./tests/frontend/coverage/lcov.info
           flags: frontend-unit
