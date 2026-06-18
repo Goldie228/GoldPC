@@ -57,7 +57,7 @@ RUN dotnet publish "${SERVICE_NAME}.csproj" -c Release -o /app/publish --no-rest
 # =============================================================================
 # Stage 3: Runtime - Minimal secure image
 # =============================================================================
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 ARG SERVICE_NAME
 ARG SERVICE_PORT
 

@@ -55,7 +55,7 @@ RUN dotnet publish "${SERVICE_NAME}.csproj" -c Release -o /app/publish --no-rest
 # =============================================================================
 # Stage 3: Runtime - Minimal secure production image
 # =============================================================================
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 
 # Security: Install curl for health checks and ca-certificates for TLS
 RUN apt-get update && \

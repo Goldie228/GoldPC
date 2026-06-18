@@ -37,7 +37,7 @@ RUN dotnet publish "AuthService.csproj" -c Release -o /app/publish --no-restore 
 # =============================================================================
 # Stage 3: Runtime - Minimal secure image
 # =============================================================================
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
 
 # Security: Install required packages
 # - ca-certificates: For TLS/SSL connections
