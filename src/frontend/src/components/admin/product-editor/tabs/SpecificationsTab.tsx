@@ -16,6 +16,7 @@ import { dictionariesApi } from '@/api/admin';
 import { catalogAdminApi } from '@/api/admin';
 import { catalogApi } from '@/api/catalog';
 import { specLabel } from '@/utils/specifications';
+import { FRONTEND_TO_BACKEND } from '@/utils/category-mappings';
 import { mergeDescriptionIntoSpecifications, normalizeMergedSpecKey } from '@/utils/productDescriptionSpecs';
 import type { ProductEditForm } from '../types';
 import type { SpecificationAttributeDto, ProductCategory, FilterFacetAttribute } from '@/api/types';
@@ -32,23 +33,6 @@ interface SpecificationsTabProps {
 // Приоритетные ключи (как на странице товара)
 // ---------------------------------------------------------------------------
 const PRIORITY_KEYS = ['socket', 'chipset', 'cores', 'threads', 'vram', 'capacity', 'frequency'];
-
-/** Маппинг frontend-категории → backend-slug для getFilterFacets */
-const FRONTEND_TO_BACKEND: Record<ProductCategory, string> = {
-  cpu: 'processors',
-  gpu: 'gpu',
-  motherboard: 'motherboards',
-  ram: 'ram',
-  storage: 'storage',
-  psu: 'psu',
-  case: 'cases',
-  cooling: 'coolers',
-  fan: 'coolers',
-  monitor: 'monitors',
-  keyboard: 'keyboards',
-  mouse: 'mice',
-  headphones: 'headphones',
-};
 
 /** Сравнение ключей: приоритетные — в начале, остальные — по алфавиту */
 function compareSpecKeys(a: string, b: string): number {
