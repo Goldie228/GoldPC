@@ -32,6 +32,18 @@ var servicesConfig = builder.Configuration.GetSection("ServiceUrls");
 // Add services to the container.
 builder.Services.AddControllers();
 
+// Генерация OpenAPI спецификации для шлюза
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "GoldPC Gateway API",
+        Version = "v1",
+        Description = "BFF-шлюз для фронтенда GoldPC. Агрегирует эндпоинты микросервисов."
+    });
+});
+
 // Add SignalR
 builder.Services.AddSignalR();
 
@@ -209,6 +221,14 @@ app.UseAuthorization();
 app.UseMiddleware<GoldPC.Api.Middleware.CsrfMiddleware>();
 
 app.MapControllers();
+
+// OpenAPI (Swagger) только в Development
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "GoldPC Gateway v1"));
+}
 
 // Map SignalR hubs
 app.MapHub<NotificationHub>("/hubs/notifications");
