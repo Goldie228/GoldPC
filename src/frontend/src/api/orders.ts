@@ -122,7 +122,7 @@ export const ordersApi = {
    * Получить расчёт стоимости доставки
    */
   async getDeliveryQuote(payload: DeliveryQuoteRequest): Promise<DeliveryQuoteResponse> {
-    const response = await goldpcApi.postApiV1OrdersDeliveryQuote({
+    const response = await goldpcApi.postOrdersDeliveryQuote({
       deliveryMethod: payload.deliveryMethod,
       subtotal: payload.subtotal,
       city: payload.city ?? null,
@@ -139,7 +139,7 @@ export const ordersApi = {
    * Создать новый заказ
    */
   async createOrder(data: CreateOrderRequest): Promise<Order> {
-    const response = await goldpcApi.postApiV1Orders({
+    const response = await goldpcApi.postOrders({
       firstName: data.firstName,
       lastName: data.lastName ?? null,
       phone: data.phone,
@@ -167,7 +167,7 @@ export const ordersApi = {
    * Получить мои заказы
    */
   async getMyOrders(page = 1, pageSize = 10, status?: string): Promise<PagedResult<Order>> {
-    const response = await goldpcApi.getApiV1OrdersMy({
+    const response = await goldpcApi.getOrdersMy({
       page,
       pageSize,
       ...(status != null && status !== '' ? { status: Number(status) as never } : {}),
@@ -179,7 +179,7 @@ export const ordersApi = {
    * Получить заказ по ID
    */
   async getOrder(id: string): Promise<Order> {
-    const response = await goldpcApi.getApiV1OrdersId(id);
+    const response = await goldpcApi.getOrdersId(id);
     return unwrapResponse<Order>(response.data);
   },
 
@@ -187,7 +187,7 @@ export const ordersApi = {
    * Получить заказ по номеру
    */
   async getOrderByNumber(orderNumber: string): Promise<Order> {
-    const response = await goldpcApi.getApiV1OrdersNumberOrderNumber(orderNumber);
+    const response = await goldpcApi.getOrdersNumberOrderNumber(orderNumber);
     return unwrapResponse<Order>(response.data);
   },
 
@@ -202,7 +202,7 @@ export const ordersApi = {
    * Отменить заказ
    */
   async cancelOrder(id: string): Promise<Order> {
-    const response = await goldpcApi.postApiV1OrdersIdCancel(id);
+    const response = await goldpcApi.postOrdersIdCancel(id);
     return unwrapResponse<Order>(response.data);
   },
 };

@@ -206,7 +206,7 @@ export const usersAdminApi = {
    * Получить пользователя по ID
    */
   async getUser(userId: string): Promise<User> {
-    const response = await goldpcApi.getApiV1AuthAdminUsersId(userId);
+    const response = await goldpcApi.getAuthAdminUsersId(userId);
     return response.data as User;
   },
 
@@ -221,14 +221,14 @@ export const usersAdminApi = {
    * Деактивировать пользователя
    */
   async deactivateUser(userId: string): Promise<void> {
-    await goldpcApi.postApiV1AuthAdminUsersIdDeactivate(userId);
+    await goldpcApi.postAuthAdminUsersIdDeactivate(userId);
   },
 
   /**
    * Активировать пользователя
    */
   async activateUser(userId: string): Promise<void> {
-    await goldpcApi.postApiV1AuthAdminUsersIdActivate(userId);
+    await goldpcApi.postAuthAdminUsersIdActivate(userId);
   },
 
   /**
@@ -249,7 +249,7 @@ export const usersAdminApi = {
     password: string;
     role: string;
   }): Promise<User> {
-    const response = await goldpcApi.postApiV1AuthAdminUsers(data);
+    const response = await goldpcApi.postAuthAdminUsers(data);
     return response.data as User;
   },
 
@@ -257,7 +257,7 @@ export const usersAdminApi = {
    * Удалить пользователя
    */
   async deleteUser(userId: string): Promise<void> {
-    await goldpcApi.deleteApiV1AuthAdminUsersId(userId);
+    await goldpcApi.deleteAuthAdminUsersId(userId);
   },
 };
 
@@ -284,7 +284,7 @@ export const catalogAdminApi = {
       ? { ...params, category: FRONTEND_TO_BACKEND[params.category as keyof typeof FRONTEND_TO_BACKEND] ?? params.category }
       : params;
 
-    const response = await goldpcApi.getApiV1AdminProducts(apiParams);
+    const response = await goldpcApi.getAdminProducts(apiParams);
     const result = response.data as PagedResponse<Product>;
 
     // Нормализуем category: CatalogService возвращает "Процессоры", а фронтенд ждёт "cpu"
@@ -304,7 +304,7 @@ export const catalogAdminApi = {
    * Обновить продукт
    */
   async updateProduct(productId: string, data: UpdateProductRequest): Promise<Product> {
-    const response = await goldpcApi.putApiV1AdminProductsProductId(productId, data);
+    const response = await goldpcApi.putAdminProductsProductId(productId, data);
     return response.data as Product;
   },
 
@@ -312,14 +312,14 @@ export const catalogAdminApi = {
    * Удалить продукт
    */
   async deleteProduct(productId: string): Promise<void> {
-    await goldpcApi.deleteApiV1AdminProductsProductId(productId);
+    await goldpcApi.deleteAdminProductsProductId(productId);
   },
 
   /**
    * Создать новый продукт
    */
   async createProduct(data: CreateProductRequest): Promise<Product> {
-    const response = await goldpcApi.postApiV1AdminProducts(data);
+    const response = await goldpcApi.postAdminProducts(data);
     return response.data as Product;
   },
 
@@ -336,7 +336,7 @@ export const catalogAdminApi = {
    * Получить историю цен продукта
    */
   async getPriceHistory(productId: string): Promise<PriceHistoryDto[]> {
-    const response = await goldpcApi.getApiV1AdminProductsProductIdPriceHistory(productId);
+    const response = await goldpcApi.getAdminProductsProductIdPriceHistory(productId);
     return (response.data ?? []) as PriceHistoryDto[];
   },
 
@@ -347,7 +347,7 @@ export const catalogAdminApi = {
     category: string;
     specifications: Record<string, unknown>;
   }): Promise<{ name: string }> {
-    const response = await goldpcApi.postApiV1AdminProductsGenerateName(data);
+    const response = await goldpcApi.postAdminProductsGenerateName(data);
     return response.data as { name: string };
   },
 
@@ -355,7 +355,7 @@ export const catalogAdminApi = {
    * Получить спецификации для категории
    */
   async getCategorySpecifications(categoryId: string): Promise<CategorySpecificationsDto> {
-    const response = await goldpcApi.getApiV1AdminSpecificationsByCategoryCategoryId(categoryId);
+    const response = await goldpcApi.getAdminSpecificationsByCategoryCategoryId(categoryId);
     return response.data as CategorySpecificationsDto;
   },
 
@@ -363,7 +363,7 @@ export const catalogAdminApi = {
    * Получить уникальные значения характеристик для фильтрации
    */
   async getUniqueSpecValues(categoryId: string): Promise<Record<string, string[]>> {
-    const response = await goldpcApi.getApiV1AdminSpecificationsUniqueValuesCategoryId(categoryId);
+    const response = await goldpcApi.getAdminSpecificationsUniqueValuesCategoryId(categoryId);
     return (response.data ?? {}) as Record<string, string[]>;
   },
 };
