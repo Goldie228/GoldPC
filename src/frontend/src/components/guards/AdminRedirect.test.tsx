@@ -3,6 +3,7 @@ import { render, screen, cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { AdminRedirect } from './AdminRedirect';
+import type { UseAuthReturn } from '@/hooks/useAuth';
 
 vi.mock('@/hooks/useAuth', () => ({
   useAuth: vi.fn(),
@@ -14,7 +15,18 @@ const mockUseAuth = vi.mocked(useAuth);
 afterEach(() => cleanup());
 
 function renderWithRouter(role: string | null) {
-  mockUseAuth.mockReturnValue({ user: role ? { role } : null } as any);
+  mockUseAuth.mockReturnValue({
+    user: role ? { id: '1', role, firstName: '', lastName: '', email: '', isBlocked: false, createdAt: '', updatedAt: '' } as UseAuthReturn['user'] & { role: string } : null,
+    isAuthenticated: role !== null,
+    isLoading: false,
+    isImpersonating: false,
+    originalUser: null,
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
+    startImpersonation: vi.fn(),
+    stopImpersonation: vi.fn(),
+  } as UseAuthReturn);
   return render(
     <MemoryRouter initialEntries={['/']}>
       <Routes>

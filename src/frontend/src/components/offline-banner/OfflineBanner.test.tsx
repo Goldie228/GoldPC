@@ -4,7 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import OfflineBanner from './OfflineBanner';
 
 vi.mock('@/hooks/useOfflineStatus', () => ({
-  useOfflineStatus: vi.fn(() => ({ isOffline: false })),
+  useOfflineStatus: vi.fn(() => ({ isOffline: false, isOnline: true })),
 }));
 
 import { useOfflineStatus } from '@/hooks/useOfflineStatus';
@@ -14,13 +14,13 @@ afterEach(() => cleanup());
 
 describe('OfflineBanner', () => {
   it('renders nothing when online', () => {
-    mockUseOfflineStatus.mockReturnValue({ isOffline: false } as any);
+    mockUseOfflineStatus.mockReturnValue({ isOffline: false, isOnline: true });
     const { container } = render(<OfflineBanner />);
     expect(container.firstChild).toBeNull();
   });
 
   it('shows banner when offline', () => {
-    mockUseOfflineStatus.mockReturnValue({ isOffline: true } as any);
+    mockUseOfflineStatus.mockReturnValue({ isOffline: true, isOnline: false });
     render(<OfflineBanner />);
     expect(screen.getByText(/you are offline/i)).toBeInTheDocument();
   });

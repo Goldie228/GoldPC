@@ -7,6 +7,7 @@ vi.mock('@/hooks/useNotifications', () => ({
   useNotifications: vi.fn(() => ({
     notifications: [],
     unreadCount: 0,
+    connectionStatus: 'disconnected',
     markAsRead: vi.fn(),
     markAllAsRead: vi.fn(),
     deleteNotification: vi.fn(),
@@ -24,12 +25,13 @@ describe('NotificationCenter', () => {
   it('shows badge with unread count', async () => {
     const { useNotifications } = await import('@/hooks/useNotifications');
     vi.mocked(useNotifications).mockReturnValue({
-      notifications: [{ id: '1', title: 'Test', message: 'msg', createdAt: new Date().toISOString(), read: false, type: 'OrderStatusChanged' as const, priority: 'Medium' as const, entityType: 'Order', entityId: '1' }],
+      notifications: [{ id: '1', title: 'Test', message: 'msg', createdAt: new Date().toISOString(), isRead: false, type: 'OrderStatusChanged' as const, priority: 'Medium' as const, userId: 'user-1' }],
       unreadCount: 1,
+      connectionStatus: 'connected' as const,
       markAsRead: vi.fn(),
       markAllAsRead: vi.fn(),
       deleteNotification: vi.fn(),
-    } as any);
+    });
     render(<NotificationCenter />);
     expect(screen.getByText('1')).toBeInTheDocument();
   });
