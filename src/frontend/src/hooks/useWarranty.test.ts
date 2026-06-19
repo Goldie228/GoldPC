@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import type { WarrantyCard, PagedResult } from '../api/warranty';
 
 const mockGetMyCards = vi.fn();
 const mockGetCard = vi.fn();
@@ -12,6 +13,17 @@ vi.mock('../api/warranty', () => ({
 }));
 
 import { useWarranty } from './useWarranty';
+
+const mockCard: WarrantyCard = {
+  id: 'w1',
+  warrantyNumber: 'WC-001',
+  productName: 'Test Product',
+  serialNumber: null,
+  startDate: '2024-01-01',
+  endDate: '2025-01-01',
+  warrantyMonths: 12,
+  status: 'active',
+};
 
 describe('hooks/useWarranty', () => {
   beforeEach(() => {
@@ -27,11 +39,11 @@ describe('hooks/useWarranty', () => {
   });
 
   it('getMyCards loads cards', async () => {
-    const response = { items: [{ id: 'w1', productId: 'p1' }], totalCount: 1 } as any;
+    const response: PagedResult<WarrantyCard> = { items: [mockCard], totalCount: 1, pageNumber: 1, pageSize: 10 };
     mockGetMyCards.mockResolvedValue(response);
 
     const { result } = renderHook(() => useWarranty());
-    let res: any;
+    let res: PagedResult<WarrantyCard> | null = null;
     await act(async () => {
       res = await result.current.getMyCards(1, 10);
     });
@@ -54,16 +66,15 @@ describe('hooks/useWarranty', () => {
   });
 
   it('getCard returns card by id', async () => {
-    const card = { id: 'w1', orderId: 'o1' } as any;
-    mockGetCard.mockResolvedValue(card);
+    mockGetCard.mockResolvedValue(mockCard);
 
     const { result } = renderHook(() => useWarranty());
-    let res: any;
+    let res: WarrantyCard | null = null;
     await act(async () => {
       res = await result.current.getCard('w1');
     });
 
-    expect(res).toEqual(card);
+    expect(res).toEqual(mockCard);
   });
 
   it('getCard sets error on failure', async () => {

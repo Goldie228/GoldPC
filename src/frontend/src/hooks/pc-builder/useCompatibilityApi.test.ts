@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useCompatibilityApi } from './useCompatibilityApi';
+import type { PCBuilderSelectedState } from '@/features/pc-builder/logic/types';
 
 const mockCheckCompatibilityAPI = vi.fn();
 
@@ -14,6 +15,8 @@ vi.mock('@/features/pc-builder/logic/constants', () => ({
 
 vi.mock('@/features/pc-builder/logic/types', () => ({}));
 
+const emptyComponents: PCBuilderSelectedState = { ram: [], storage: [], fan: [] };
+
 describe('hooks/pc-builder/useCompatibilityApi', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -25,14 +28,14 @@ describe('hooks/pc-builder/useCompatibilityApi', () => {
   });
 
   it('returns initial state', () => {
-    const { result } = renderHook(() => useCompatibilityApi({} as any));
+    const { result } = renderHook(() => useCompatibilityApi(emptyComponents));
     expect(result.current.apiResult).toBeNull();
     expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBeNull();
   });
 
   it('does not call API when components is empty', () => {
-    renderHook(() => useCompatibilityApi({} as any));
+    renderHook(() => useCompatibilityApi(emptyComponents));
 
     act(() => {
       vi.advanceTimersByTime(1500);
@@ -44,7 +47,13 @@ describe('hooks/pc-builder/useCompatibilityApi', () => {
   it('debounces API call and sets result', async () => {
     mockCheckCompatibilityAPI.mockResolvedValue({ isCompatible: true, issues: [] });
 
-    const components = { cpu: { id: 'cpu-1' }, gpu: { id: 'gpu-1' } } as any;
+    const components: PCBuilderSelectedState = {
+      cpu: { product: { id: 'cpu-1', name: 'CPU', sku: 'SKU', category: 'cpu', price: 100, stock: 1, isActive: true } as never, type: 'cpu' },
+      gpu: { product: { id: 'gpu-1', name: 'GPU', sku: 'SKU', category: 'gpu', price: 200, stock: 1, isActive: true } as never, type: 'gpu' },
+      ram: [],
+      storage: [],
+      fan: [],
+    };
     renderHook(() => useCompatibilityApi(components));
 
     // Before debounce (120ms) - not called yet
@@ -64,7 +73,13 @@ describe('hooks/pc-builder/useCompatibilityApi', () => {
   it('sets error on API failure', async () => {
     mockCheckCompatibilityAPI.mockRejectedValue(new Error('Service unavailable'));
 
-    const { result } = renderHook(() => useCompatibilityApi({ cpu: { id: 'cpu-1' } } as any));
+    const components: PCBuilderSelectedState = {
+      cpu: { product: { id: 'cpu-1', name: 'CPU', sku: 'SKU', category: 'cpu', price: 100, stock: 1, isActive: true } as never, type: 'cpu' },
+      ram: [],
+      storage: [],
+      fan: [],
+    };
+    const { result } = renderHook(() => useCompatibilityApi(components));
 
     await act(async () => {
       vi.advanceTimersByTime(200);

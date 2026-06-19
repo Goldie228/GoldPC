@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import type { User, AuthResponse } from '../api/types';
 
 const mockSetUser = vi.fn();
 const mockSetLoading = vi.fn();
@@ -29,7 +30,7 @@ vi.mock('../store/authStore', () => ({
 }));
 
 vi.mock('../store/wishlistStore', () => ({
-  useWishlistStore: vi.fn((selector: any) => {
+  useWishlistStore: vi.fn((selector: (...args: unknown[]) => unknown) => {
     if (typeof selector === 'function') {
       return selector({ syncWithServer: mockSyncWithServer });
     }
@@ -72,8 +73,18 @@ describe('hooks/useAuth', () => {
   });
 
   it('login calls authService.login and sets user', async () => {
-    const fakeUser = { id: '1', email: 'test@test.com', firstName: 'A', lastName: 'B', role: 'Client' } as any;
-    vi.mocked(authService.login).mockResolvedValue({ user: fakeUser, accessToken: 'at', refreshToken: 'rt' } as any);
+    const fakeUser: User = {
+      id: '1',
+      email: 'test@test.com',
+      firstName: 'A',
+      lastName: 'B',
+      role: 'Client',
+      isActive: true,
+      isEmailVerified: false,
+      createdAt: '2024-01-01',
+    };
+    const authResponse: AuthResponse = { user: fakeUser, accessToken: 'at', refreshToken: 'rt', expiresIn: 3600 };
+    vi.mocked(authService.login).mockResolvedValue(authResponse);
 
     const { result } = renderHook(() => useAuth());
 
@@ -96,8 +107,18 @@ describe('hooks/useAuth', () => {
   });
 
   it('register calls authService.register and sets user', async () => {
-    const fakeUser = { id: '2', email: 'new@test.com' } as any;
-    vi.mocked(authService.register).mockResolvedValue({ user: fakeUser, accessToken: 'at', refreshToken: 'rt' } as any);
+    const fakeUser: User = {
+      id: '2',
+      email: 'new@test.com',
+      firstName: 'N',
+      lastName: 'U',
+      role: 'Client',
+      isActive: true,
+      isEmailVerified: false,
+      createdAt: '2024-01-01',
+    };
+    const authResponse: AuthResponse = { user: fakeUser, accessToken: 'at', refreshToken: 'rt', expiresIn: 3600 };
+    vi.mocked(authService.register).mockResolvedValue(authResponse);
 
     const { result } = renderHook(() => useAuth());
 
@@ -124,7 +145,16 @@ describe('hooks/useAuth', () => {
 
   it('startImpersonation delegates to store', () => {
     const { result } = renderHook(() => useAuth());
-    const targetUser = { id: 'target' } as any;
+    const targetUser: User = {
+      id: 'target',
+      email: 'target@test.com',
+      firstName: 'T',
+      lastName: 'U',
+      role: 'Client',
+      isActive: true,
+      isEmailVerified: false,
+      createdAt: '2024-01-01',
+    };
 
     act(() => {
       result.current.startImpersonation(targetUser);

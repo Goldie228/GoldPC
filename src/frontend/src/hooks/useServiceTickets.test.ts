@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import type { ServiceType, ServiceRequestDto, CreateServiceRequest } from '../api/services';
 
 const mockGetServiceTypes = vi.fn();
 const mockCreateService = vi.fn();
@@ -17,6 +18,28 @@ vi.mock('../api/services', () => ({
 
 import { useServiceTickets } from './useServiceTickets';
 
+const mockServiceType: ServiceType = {
+  id: 't1',
+  name: 'Repair',
+  slug: 'repair',
+  description: 'Repair service',
+  basePrice: 50,
+  estimatedDurationMinutes: 60,
+};
+
+const mockServiceRequest: ServiceRequestDto = {
+  id: 's1',
+  requestNumber: 'SR-001',
+  clientId: 'c1',
+  serviceTypeId: 't1',
+  serviceTypeName: 'Repair',
+  description: 'Repair',
+  status: 'Submitted',
+  statusLabel: 'Подана',
+  createdAt: '2024-01-01',
+  updatedAt: '2024-01-01',
+};
+
 describe('hooks/useServiceTickets', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -30,11 +53,11 @@ describe('hooks/useServiceTickets', () => {
   });
 
   it('fetchServiceTypes loads service types', async () => {
-    const types = [{ id: 't1', name: 'Repair' }] as any[];
+    const types = [mockServiceType];
     mockGetServiceTypes.mockResolvedValue(types);
 
     const { result } = renderHook(() => useServiceTickets());
-    let res: any;
+    let res: ServiceType[] = [];
     await act(async () => {
       res = await result.current.fetchServiceTypes();
     });
@@ -57,13 +80,13 @@ describe('hooks/useServiceTickets', () => {
   });
 
   it('createService calls API', async () => {
-    const newService = { id: 's1', title: 'New' } as any;
+    const newService = mockServiceRequest;
     mockCreateService.mockResolvedValue(newService);
 
     const { result } = renderHook(() => useServiceTickets());
-    let res: any;
+    let res: ServiceRequestDto | null = null;
     await act(async () => {
-      res = await result.current.createService({ title: 'New', description: 'desc', serviceTypeId: 't1' } as any);
+      res = await result.current.createService({ serviceTypeId: 't1', description: 'desc' });
     });
 
     expect(res).toEqual(newService);
@@ -73,9 +96,9 @@ describe('hooks/useServiceTickets', () => {
     mockCreateService.mockRejectedValue(new Error('Bad Request'));
 
     const { result } = renderHook(() => useServiceTickets());
-    let res: any;
+    let res: ServiceRequestDto | null = null;
     await act(async () => {
-      res = await result.current.createService({} as any);
+      res = await result.current.createService({ serviceTypeId: '', description: '' });
     });
 
     expect(res).toBeNull();
@@ -83,11 +106,11 @@ describe('hooks/useServiceTickets', () => {
   });
 
   it('getMyServices loads services', async () => {
-    const services = { items: [{ id: 's1' }], total: 1 } as any;
+    const services = { items: [mockServiceRequest], total: 1 };
     mockGetMyServices.mockResolvedValue(services);
 
     const { result } = renderHook(() => useServiceTickets());
-    let res: any;
+    let res: { items: ServiceRequestDto[]; total: number } | null = null;
     await act(async () => {
       res = await result.current.getMyServices(1, 10);
     });
@@ -97,11 +120,11 @@ describe('hooks/useServiceTickets', () => {
   });
 
   it('getServiceById returns service', async () => {
-    const service = { id: 's1', title: 'Repair' } as any;
+    const service = mockServiceRequest;
     mockGetServiceById.mockResolvedValue(service);
 
     const { result } = renderHook(() => useServiceTickets());
-    let res: any;
+    let res: ServiceRequestDto | null = null;
     await act(async () => {
       res = await result.current.getServiceById('s1');
     });

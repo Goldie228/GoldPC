@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import type { Order, PagedResult, CreateOrderRequest, DeliveryQuoteRequest, DeliveryQuoteResponse } from '../api/orders';
 
 const mockGetMyOrders = vi.fn();
 const mockGetOrder = vi.fn();
@@ -23,6 +24,25 @@ vi.mock('../api/orders', () => ({
 
 import { useOrders } from './useOrders';
 
+const mockOrder: Order = {
+  id: 'o1',
+  userId: 'u1',
+  orderNumber: 'ORD-001',
+  customerFirstName: 'John',
+  customerLastName: 'Doe',
+  customerPhone: '+375291234567',
+  customerEmail: 'john@test.com',
+  status: 'Confirmed',
+  total: 100,
+  subtotal: 90,
+  deliveryCost: 10,
+  discountAmount: 0,
+  deliveryMethod: 'Delivery',
+  paymentMethod: 'Online',
+  createdAt: '2024-01-01',
+  items: [],
+};
+
 describe('hooks/useOrders', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -37,11 +57,11 @@ describe('hooks/useOrders', () => {
   });
 
   it('getMyOrders loads orders', async () => {
-    const response = { items: [{ id: 'o1', status: 'Confirmed' }], totalCount: 1 } as any;
+    const response: PagedResult<Order> = { items: [mockOrder], totalCount: 1, pageNumber: 1, pageSize: 10 };
     mockGetMyOrders.mockResolvedValue(response);
 
     const { result } = renderHook(() => useOrders());
-    let res: any;
+    let res: PagedResult<Order> | null = null;
     await act(async () => {
       res = await result.current.getMyOrders(1, 10);
     });
@@ -64,16 +84,15 @@ describe('hooks/useOrders', () => {
   });
 
   it('getOrder returns order by id', async () => {
-    const order = { id: 'o1', status: 'Delivered' } as any;
-    mockGetOrder.mockResolvedValue(order);
+    mockGetOrder.mockResolvedValue(mockOrder);
 
     const { result } = renderHook(() => useOrders());
-    let res: any;
+    let res: Order | null = null;
     await act(async () => {
       res = await result.current.getOrder('o1');
     });
 
-    expect(res).toEqual(order);
+    expect(res).toEqual(mockOrder);
   });
 
   it('getOrder sets error on failure', async () => {
@@ -88,26 +107,34 @@ describe('hooks/useOrders', () => {
   });
 
   it('createOrder calls API', async () => {
-    const newOrder = { id: 'o2' } as any;
+    const newOrder: Order = { ...mockOrder, id: 'o2' };
     mockCreateOrder.mockResolvedValue(newOrder);
 
     const { result } = renderHook(() => useOrders());
-    let res: any;
+    let res: Order | null = null;
     await act(async () => {
-      res = await result.current.createOrder({} as any);
+      res = await result.current.createOrder({
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: '+375291234567',
+        email: 'john@test.com',
+        deliveryMethod: 'Pickup',
+        paymentMethod: 'Online',
+        items: [],
+      } as CreateOrderRequest);
     });
 
     expect(res).toEqual(newOrder);
   });
 
   it('getDeliveryQuote returns quote', async () => {
-    const quote = { subtotal: 100, deliveryCost: 10, total: 110 } as any;
+    const quote: DeliveryQuoteResponse = { subtotal: 100, deliveryCost: 10, total: 110 };
     mockGetDeliveryQuote.mockResolvedValue(quote);
 
     const { result } = renderHook(() => useOrders());
-    let res: any;
+    let res: DeliveryQuoteResponse | null = null;
     await act(async () => {
-      res = await result.current.getDeliveryQuote({} as any);
+      res = await result.current.getDeliveryQuote({ deliveryMethod: 'Delivery', subtotal: 100 } as DeliveryQuoteRequest);
     });
 
     expect(res).toEqual(quote);

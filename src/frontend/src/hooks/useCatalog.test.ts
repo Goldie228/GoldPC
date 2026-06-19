@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import type { Product, ProductReview, FilterFacetAttribute, ProductListResponse } from '../api/catalog';
 
 const mockGetProduct = vi.fn();
 const mockGetProducts = vi.fn();
@@ -39,11 +40,19 @@ describe('hooks/useCatalog', () => {
   });
 
   it('getProduct fetches product by id', async () => {
-    const product = { id: 'p1', name: 'Test' } as any;
+    const product: Product = {
+      id: 'p1',
+      name: 'Test',
+      sku: 'SKU-001',
+      category: 'cpu',
+      price: 100,
+      stock: 10,
+      isActive: true,
+    };
     mockGetProduct.mockResolvedValue(product);
 
     const { result } = renderHook(() => useCatalog());
-    let res: any;
+    let res: Product | null = null;
     await act(async () => {
       res = await result.current.getProduct('p1');
     });
@@ -64,11 +73,14 @@ describe('hooks/useCatalog', () => {
   });
 
   it('getProducts calls API with params', async () => {
-    const response = { items: [], totalCount: 0 } as any;
+    const response: ProductListResponse = {
+      data: [],
+      meta: { page: 1, pageSize: 12, totalPages: 1, totalItems: 0, hasNextPage: false, hasPrevPage: false },
+    };
     mockGetProducts.mockResolvedValue(response);
 
     const { result } = renderHook(() => useCatalog());
-    let res: any;
+    let res: ProductListResponse | null = null;
     await act(async () => {
       res = await result.current.getProducts({ page: 1 });
     });
@@ -77,11 +89,19 @@ describe('hooks/useCatalog', () => {
   });
 
   it('addProductReview posts review', async () => {
-    const review = { id: 'r1', rating: 5 } as any;
+    const review: ProductReview = {
+      id: 'r1',
+      productId: 'p1',
+      userId: 'u1',
+      userName: 'Test',
+      rating: 5,
+      isVerified: true,
+      createdAt: '2024-01-01',
+    };
     mockAddProductReview.mockResolvedValue(review);
 
     const { result } = renderHook(() => useCatalog());
-    let res: any;
+    let res: ProductReview | null = null;
     await act(async () => {
       res = await result.current.addProductReview('p1', { rating: 5, comment: 'Great' });
     });
@@ -110,7 +130,7 @@ describe('hooks/useCatalog', () => {
   });
 
   it('getFilterFacets calls API', async () => {
-    const facets = [{ name: 'Brand', values: [] }] as any[];
+    const facets: FilterFacetAttribute[] = [{ key: 'brand', displayName: 'Brand', filterType: 'select', sortOrder: 0 }];
     mockGetFilterFacets.mockResolvedValue(facets);
     const { result } = renderHook(() => useCatalog());
 

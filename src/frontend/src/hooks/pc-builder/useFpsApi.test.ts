@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useFpsApi } from './useFpsApi';
+import type { PCBuilderSelectedState } from '@/features/pc-builder/logic/types';
 
 const mockCalculateFpsApi = vi.fn();
 
@@ -11,6 +12,8 @@ vi.mock('@/api/pcBuilderService', () => ({
 vi.mock('@/features/pc-builder/logic/constants', () => ({
   FPS_DEBOUNCE_MS: 300,
 }));
+
+const emptyComponents: PCBuilderSelectedState = { ram: [], storage: [], fan: [] };
 
 describe('hooks/pc-builder/useFpsApi', () => {
   beforeEach(() => {
@@ -23,14 +26,14 @@ describe('hooks/pc-builder/useFpsApi', () => {
   });
 
   it('returns initial state', () => {
-    const { result } = renderHook(() => useFpsApi({ ram: [], storage: [], fan: [] } as any));
+    const { result } = renderHook(() => useFpsApi(emptyComponents));
     expect(result.current.fpsData).toBeNull();
     expect(result.current.isLoading).toBe(false);
     expect(result.current.error).toBeNull();
   });
 
   it('does not call API when no cpu or gpu', () => {
-    renderHook(() => useFpsApi({ ram: [], storage: [], fan: [] } as any));
+    renderHook(() => useFpsApi(emptyComponents));
 
     act(() => {
       vi.advanceTimersByTime(1500);
@@ -42,13 +45,13 @@ describe('hooks/pc-builder/useFpsApi', () => {
   it('debounces API call with valid components', async () => {
     mockCalculateFpsApi.mockResolvedValue({ fps: 120 });
 
-    const components = {
-      cpu: { product: { id: 'cpu-1' } },
-      gpu: { product: { id: 'gpu-1' } },
+    const components: PCBuilderSelectedState = {
+      cpu: { product: { id: 'cpu-1', name: 'CPU', sku: 'SKU', category: 'cpu', price: 100, stock: 1, isActive: true } as never, type: 'cpu' },
+      gpu: { product: { id: 'gpu-1', name: 'GPU', sku: 'SKU', category: 'gpu', price: 200, stock: 1, isActive: true } as never, type: 'gpu' },
       ram: [],
       storage: [],
       fan: [],
-    } as any;
+    };
 
     renderHook(() => useFpsApi(components));
 
@@ -74,13 +77,13 @@ describe('hooks/pc-builder/useFpsApi', () => {
   it('sets error on API failure', async () => {
     mockCalculateFpsApi.mockRejectedValue(new Error('Unavailable'));
 
-    const components = {
-      cpu: { product: { id: 'cpu-1' } },
-      gpu: { product: { id: 'gpu-1' } },
+    const components: PCBuilderSelectedState = {
+      cpu: { product: { id: 'cpu-1', name: 'CPU', sku: 'SKU', category: 'cpu', price: 100, stock: 1, isActive: true } as never, type: 'cpu' },
+      gpu: { product: { id: 'gpu-1', name: 'GPU', sku: 'SKU', category: 'gpu', price: 200, stock: 1, isActive: true } as never, type: 'gpu' },
       ram: [],
       storage: [],
       fan: [],
-    } as any;
+    };
 
     const { result } = renderHook(() => useFpsApi(components));
 
