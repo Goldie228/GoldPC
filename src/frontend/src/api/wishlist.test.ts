@@ -23,6 +23,10 @@ describe('api/wishlist', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('getItems', () => {
     it('sends GET /wishlist and returns unwrapped array', async () => {
       mockGet.mockResolvedValueOnce({ data: { data: ['id-1', 'id-2'] } });

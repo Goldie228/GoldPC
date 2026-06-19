@@ -21,6 +21,10 @@ describe('api/accountant', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('getFinancialSummary', () => {
     it('sends GET /reports/financial-summary with from/to params', async () => {
       mockGet.mockResolvedValueOnce({

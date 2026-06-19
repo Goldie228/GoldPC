@@ -34,6 +34,10 @@ describe('hooks/useComparison', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns initial state', () => {
     const { result } = renderHook(() => useComparison());
     expect(result.current.items).toEqual([]);

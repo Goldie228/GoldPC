@@ -23,6 +23,10 @@ describe('api/pcbuilder', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('getConfigurations', () => {
     it('sends GET /pcbuilder/configurations', async () => {
       const mockBuilds = [

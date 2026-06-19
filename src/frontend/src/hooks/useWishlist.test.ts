@@ -36,6 +36,10 @@ describe('hooks/useWishlist', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns initial state from store', () => {
     const { result } = renderHook(() => useWishlist());
     expect(result.current.items).toEqual([]);

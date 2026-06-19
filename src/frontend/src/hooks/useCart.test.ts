@@ -69,6 +69,10 @@ describe('hooks/useCart', () => {
     mockGetDiscountedTotal.mockReturnValue(0);
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   // ─── addToCart ────────────────────────────────────────────────
 
   describe('addToCart', () => {

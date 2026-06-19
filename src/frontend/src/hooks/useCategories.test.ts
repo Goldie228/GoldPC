@@ -21,6 +21,10 @@ function createWrapper() {
 }
 
 describe('hooks/useCategories', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('exports correct query keys', () => {
     expect(categoriesKeys.all).toEqual(['categories']);
     expect(categoriesKeys.list()).toEqual(['categories', 'list']);

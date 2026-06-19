@@ -48,6 +48,10 @@ describe('hooks/useOrders', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns initial state', () => {
     const { result } = renderHook(() => useOrders());
     expect(result.current.orders).toBeNull();

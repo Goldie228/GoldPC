@@ -42,6 +42,10 @@ describe('hooks/useNotifications', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('exports NotificationType enum', () => {
     expect(NotificationType.OrderStatusChanged).toBe('OrderStatusChanged');
     expect(NotificationType.RepairTicketUpdated).toBe('RepairTicketUpdated');

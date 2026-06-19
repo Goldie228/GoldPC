@@ -52,6 +52,10 @@ describe('cartStore', () => {
     });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('Начальное состояние', () => {
     it('корзина пуста', () => {
       const state = useCartStore.getState();

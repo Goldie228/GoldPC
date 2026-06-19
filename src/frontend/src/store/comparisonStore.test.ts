@@ -23,6 +23,10 @@ describe('comparisonStore', () => {
     useComparisonStore.setState({ items: [] });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('Начальное состояние', () => {
     it('items — пустой массив', () => {
       expect(useComparisonStore.getState().items).toEqual([]);

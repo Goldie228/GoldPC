@@ -38,6 +38,10 @@ describe('ImageUpload', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders upload zone', () => {
     render(<ImageUpload {...defaultProps} />);
     expect(screen.getByText(/нажмите для загрузки/i)).toBeInTheDocument();

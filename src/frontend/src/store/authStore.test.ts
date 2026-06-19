@@ -68,6 +68,10 @@ describe('authStore', () => {
     });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('getUserRoles (pure function)', () => {
     it('возвращает roles если есть', () => {
       const user: User = { ...mockUser, roles: ['Admin', 'Manager'] };

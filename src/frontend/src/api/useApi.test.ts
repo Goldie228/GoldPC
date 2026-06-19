@@ -38,6 +38,10 @@ vi.mock('./index', () => ({
 import { useApiQuery, useApiQueryWithParams, useApiMutation, useApiUtils } from './useApi';
 
 describe('api/useApi', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('useApiQuery', () => {
     it('calls useQuery with correct queryKey and queryFn', () => {
       mockUseQuery.mockReturnValue({ data: null, isLoading: true, error: null });

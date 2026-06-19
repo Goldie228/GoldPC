@@ -25,6 +25,10 @@ describe('hooks/useServices', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('exports correct query keys', () => {
     expect(servicesKeys.all).toEqual(['services']);
     expect(servicesKeys.lists()).toEqual(['services', 'list']);

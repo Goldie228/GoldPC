@@ -37,6 +37,10 @@ describe('api/keycloak', () => {
     vi.stubEnv('VITE_KEYCLOAK_CLIENT_ID', 'custom-client');
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('initKeycloak', () => {
     it('calls keycloak.init with check-sso and pkceMethod S256', async () => {
       mockKeycloak.init.mockResolvedValueOnce(false);

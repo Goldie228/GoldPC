@@ -53,6 +53,10 @@ describe('api/admin', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   // ─── usersAdminApi ────────────────────────────────────────────
 
   describe('usersAdminApi', () => {

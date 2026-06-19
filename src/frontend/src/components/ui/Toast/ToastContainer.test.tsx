@@ -10,6 +10,10 @@ import { useToast } from '@/hooks/useToast';
 const mockUseToast = vi.mocked(useToast);
 
 describe('ToastContainer', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders nothing when no toasts', () => {
     mockUseToast.mockReturnValue({
       toasts: [],

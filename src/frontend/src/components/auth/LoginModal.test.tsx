@@ -53,6 +53,10 @@ describe('LoginModal', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders when open', () => {
     renderInRouter(<LoginModal isOpen={true} onClose={vi.fn()} />);
     expect(screen.getByText('Вход в аккаунт')).toBeInTheDocument();

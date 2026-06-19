@@ -16,6 +16,10 @@ vi.mock('@/components/ui/Modal', () => ({
 }));
 
 describe('AuthModalBase', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders children', () => {
     render(
       <AuthModalBase isOpen={true} onClose={vi.fn()} title="Auth">

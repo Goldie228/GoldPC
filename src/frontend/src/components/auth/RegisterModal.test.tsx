@@ -49,6 +49,10 @@ describe('RegisterModal', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders when open', () => {
     renderInRouter(<RegisterModal isOpen={true} onClose={vi.fn()} />);
     expect(screen.getByText('Создать аккаунт')).toBeInTheDocument();

@@ -25,6 +25,10 @@ describe('api/manager', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('getDashboardStats', () => {
     it('sends GET /admin/stats and unwraps nested data', async () => {
       mockGet.mockResolvedValueOnce({

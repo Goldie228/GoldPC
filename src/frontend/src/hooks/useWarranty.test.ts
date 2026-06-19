@@ -30,6 +30,10 @@ describe('hooks/useWarranty', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns initial state', () => {
     const { result } = renderHook(() => useWarranty());
     expect(result.current.cards).toBeNull();

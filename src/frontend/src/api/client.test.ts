@@ -57,6 +57,10 @@ describe('api/client', () => {
     sessionStorage.clear();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('Request Interceptor — Authorization header', () => {
     it('adds Bearer token from localStorage', () => {
       localStorage.setItem('accessToken', 'local-access-token');

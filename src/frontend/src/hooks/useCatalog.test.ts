@@ -33,6 +33,10 @@ describe('hooks/useCatalog', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns initial state', () => {
     const { result } = renderHook(() => useCatalog());
     expect(result.current.loading).toBe(false);

@@ -39,6 +39,10 @@ describe('hooks/useTicketChat', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns initial state with correct types', () => {
     const { result } = renderHook(() => useTicketChat({ ticketId: 'ticket-1' }));
     expect(result.current.messages).toEqual([]);

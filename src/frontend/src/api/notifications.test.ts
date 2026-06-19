@@ -29,6 +29,10 @@ describe('api/notifications', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('getUserNotifications', () => {
     it('sends GET /notifications with default params', async () => {
       const mockNotifications = [{ id: 'n1', title: 'Test', message: 'Hello' }];

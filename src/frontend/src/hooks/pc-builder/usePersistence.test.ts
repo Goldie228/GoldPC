@@ -13,6 +13,10 @@ describe('hooks/pc-builder/usePersistence', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('exports loadInitialState function', () => {
     expect(typeof loadInitialState).toBe('function');
   });

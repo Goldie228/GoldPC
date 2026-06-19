@@ -48,6 +48,10 @@ describe('wishlistStore', () => {
     useWishlistStore.setState({ items: [] });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('Начальное состояние', () => {
     it('items — пустой массив', () => {
       expect(useWishlistStore.getState().items).toEqual([]);

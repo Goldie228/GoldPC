@@ -21,6 +21,10 @@ describe('hooks/useAuthModal', () => {
     mockStore.activeModal = null;
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns activeModal as null by default', () => {
     const { result } = renderHook(() => useAuthModal());
     expect(result.current.activeModal).toBeNull();

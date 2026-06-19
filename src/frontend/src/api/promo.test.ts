@@ -21,6 +21,10 @@ describe('api/promo', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('validatePromoCode', () => {
     it('sends POST /promo/validate with code and orderAmount', async () => {
       const mockResponse = {

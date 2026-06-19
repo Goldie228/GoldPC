@@ -25,6 +25,10 @@ describe('hooks/useProducts', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('exports correct query keys', () => {
     expect(productsKeys.all).toEqual(['products']);
     expect(productsKeys.lists()).toEqual(['products', 'list']);

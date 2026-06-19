@@ -25,6 +25,10 @@ describe('hooks/useProduct', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns loading state initially with slug', () => {
     mockGetProductBySlug.mockReturnValue(new Promise(() => {}));
     const { result } = renderHook(() => useProduct('test-slug'), { wrapper: createWrapper() });

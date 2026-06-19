@@ -24,6 +24,10 @@ describe('hooks/useToast', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns default state', () => {
     const { result } = renderHook(() => useToast());
     expect(result.current.toasts).toEqual([]);

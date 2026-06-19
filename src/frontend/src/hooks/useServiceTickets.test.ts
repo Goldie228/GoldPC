@@ -45,6 +45,10 @@ describe('hooks/useServiceTickets', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns initial state', () => {
     const { result } = renderHook(() => useServiceTickets());
     expect(result.current.serviceTypes).toEqual([]);

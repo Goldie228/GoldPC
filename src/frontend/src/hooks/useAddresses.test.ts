@@ -27,6 +27,10 @@ describe('hooks/useAddresses', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns initial state', () => {
     const { result } = renderHook(() => useAddresses());
     expect(result.current.addresses).toEqual([]);

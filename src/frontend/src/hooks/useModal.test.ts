@@ -25,6 +25,10 @@ describe('hooks/useModal', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('returns default state from store', () => {
     const { result } = renderHook(() => useModal());
     expect(result.current.isOpen).toBe(false);

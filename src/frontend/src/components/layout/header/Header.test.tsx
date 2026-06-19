@@ -94,6 +94,10 @@ describe('Header', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders without crashing', () => {
     renderInRouter(<Header />);
     expect(document.querySelector('header')).toBeInTheDocument();

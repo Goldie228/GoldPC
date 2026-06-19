@@ -10,6 +10,10 @@ import { useModal } from '@/hooks/useModal';
 const mockUseModal = vi.mocked(useModal);
 
 describe('ModalContainer', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders nothing when modal is closed', () => {
     mockUseModal.mockReturnValue({
       isOpen: false,

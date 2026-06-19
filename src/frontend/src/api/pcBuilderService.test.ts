@@ -22,6 +22,10 @@ describe('api/pcBuilderService', () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe('buildComponentsDTO', () => {
     it('builds DTO from full components state', () => {
       const components: SelectedComponentsState = {
