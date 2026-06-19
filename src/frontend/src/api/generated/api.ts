@@ -46,30 +46,30 @@ import type {
   FpsCalculationResponse,
   GenerateNameRequest,
   GenerateNameResponse,
+  GetAdminProductsParams,
+  GetAdminSpecificationsUniqueValuesCategoryId200One,
+  GetAdminSpecificationsUniqueValuesCategoryId200Three,
+  GetAdminSpecificationsUniqueValuesCategoryId200Two,
   GetApiIntegration1cExportCsvParams,
   GetApiIntegration1cExportXmlParams,
-  GetApiV1AdminProductsParams,
-  GetApiV1AdminSpecificationsUniqueValuesCategoryId200One,
-  GetApiV1AdminSpecificationsUniqueValuesCategoryId200Three,
-  GetApiV1AdminSpecificationsUniqueValuesCategoryId200Two,
-  GetApiV1AuthSecurityLoginHistoryParams,
-  GetApiV1CatalogCategoriesSlugFilterAttributesParams,
-  GetApiV1CatalogCategoriesSlugFilterFacetsParams,
-  GetApiV1CatalogManufacturersParams,
-  GetApiV1CatalogProductsParams,
-  GetApiV1CatalogProductsProductIdReviewsParams,
-  GetApiV1OrdersMyParams,
-  GetApiV1OrdersParams,
-  GetApiV1PCBuilderConfigurationsParams,
-  GetApiV1ServicesIdMessagesParams,
-  GetApiV1ServicesMasterParams,
-  GetApiV1ServicesMyParams,
-  GetApiV1ServicesParams,
-  GetApiV1ServicesUnassignedParams,
-  GetApiV1WarrantyCardMyParams,
-  GetApiV1WarrantyClaimMyParams,
-  GetApiV1WarrantyClaimParams,
-  GetApiV1WebhooksStripeSimulateParams,
+  GetAuthSecurityLoginHistoryParams,
+  GetCatalogCategoriesSlugFilterAttributesParams,
+  GetCatalogCategoriesSlugFilterFacetsParams,
+  GetCatalogManufacturersParams,
+  GetCatalogProductsParams,
+  GetCatalogProductsProductIdReviewsParams,
+  GetOrdersMyParams,
+  GetOrdersParams,
+  GetPCBuilderConfigurationsParams,
+  GetServicesIdMessagesParams,
+  GetServicesMasterParams,
+  GetServicesMyParams,
+  GetServicesParams,
+  GetServicesUnassignedParams,
+  GetWarrantyCardMyParams,
+  GetWarrantyClaimMyParams,
+  GetWarrantyClaimParams,
+  GetWebhooksStripeSimulateParams,
   GuidListApiResponse,
   LoginHistoryItemPagedResultApiResponse,
   LoginRequest,
@@ -80,10 +80,10 @@ import type {
   NotificationPreferenceResponseApiResponse,
   OrderDtoApiResponse,
   PCConfigurationDto,
-  PatchApiV1ServicesIdStatusParams,
+  PatchServicesIdStatusParams,
   PostApiIntegration1cImportStockParams,
-  PostApiV1AuthAvatarBody,
-  PostApiV1ServicesIdUploadBody,
+  PostAuthAvatarBody,
+  PostServicesIdUploadBody,
   PowerConsumptionResult,
   PriceHistoryDto,
   ProductDetailDto,
@@ -129,305 +129,305 @@ import type {
 } from './model';
 
 export const getGoldPCAPI = (axiosInstance: AxiosInstance = axios.default) => {
-const getApiV1AdminProducts = (
-    params?: GetApiV1AdminProductsParams, options?: AxiosRequestConfig
+const getAdminProducts = (
+    params?: GetAdminProductsParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ProductListDtoPagedResult>> => {
     return axiosInstance.get(
-      `/api/v1/admin/products`,{
+      `/admin/products`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const postApiV1AdminProducts = (
+const postAdminProducts = (
     createProductDto?: CreateProductDto, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ProductDetailDto>> => {
     return axiosInstance.post(
-      `/api/v1/admin/products`,
+      `/admin/products`,
       createProductDto,options
     );
   }
 
-const putApiV1AdminProductsProductId = (
+const putAdminProductsProductId = (
     productId: string,
     updateProductDto?: UpdateProductDto, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ProductDetailDto>> => {
     return axiosInstance.put(
-      `/api/v1/admin/products/${productId}`,
+      `/admin/products/${productId}`,
       updateProductDto,options
     );
   }
 
-const deleteApiV1AdminProductsProductId = (
+const deleteAdminProductsProductId = (
     productId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.delete(
-      `/api/v1/admin/products/${productId}`,options
+      `/admin/products/${productId}`,options
     );
   }
 
-const postApiV1AdminManufacturers = (
+const postAdminManufacturers = (
     createManufacturerDto?: CreateManufacturerDto, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ManufacturerDto>> => {
     return axiosInstance.post(
-      `/api/v1/admin/manufacturers`,
+      `/admin/manufacturers`,
       createManufacturerDto,options
     );
   }
 
-const putApiV1AdminManufacturersManufacturerId = (
+const putAdminManufacturersManufacturerId = (
     manufacturerId: string,
     updateManufacturerDto?: UpdateManufacturerDto, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ManufacturerDto>> => {
     return axiosInstance.put(
-      `/api/v1/admin/manufacturers/${manufacturerId}`,
+      `/admin/manufacturers/${manufacturerId}`,
       updateManufacturerDto,options
     );
   }
 
-const deleteApiV1AdminManufacturersManufacturerId = (
+const deleteAdminManufacturersManufacturerId = (
     manufacturerId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.delete(
-      `/api/v1/admin/manufacturers/${manufacturerId}`,options
+      `/admin/manufacturers/${manufacturerId}`,options
     );
   }
 
-const postApiV1AdminCategories = (
+const postAdminCategories = (
     createCategoryDto?: CreateCategoryDto, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<CategoryDto>> => {
     return axiosInstance.post(
-      `/api/v1/admin/categories`,
+      `/admin/categories`,
       createCategoryDto,options
     );
   }
 
-const putApiV1AdminCategoriesCategoryId = (
+const putAdminCategoriesCategoryId = (
     categoryId: string,
     updateCategoryDto?: UpdateCategoryDto, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<CategoryDto>> => {
     return axiosInstance.put(
-      `/api/v1/admin/categories/${categoryId}`,
+      `/admin/categories/${categoryId}`,
       updateCategoryDto,options
     );
   }
 
-const deleteApiV1AdminCategoriesCategoryId = (
+const deleteAdminCategoriesCategoryId = (
     categoryId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.delete(
-      `/api/v1/admin/categories/${categoryId}`,options
+      `/admin/categories/${categoryId}`,options
     );
   }
 
-const getApiV1AdminProductsProductIdPriceHistory = (
+const getAdminProductsProductIdPriceHistory = (
     productId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<PriceHistoryDto[]>> => {
     return axiosInstance.get(
-      `/api/v1/admin/products/${productId}/price-history`,options
+      `/admin/products/${productId}/price-history`,options
     );
   }
 
-const getApiV1AdminSpecificationsByCategoryCategoryId = (
+const getAdminSpecificationsByCategoryCategoryId = (
     categoryId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<CategorySpecificationsDto>> => {
     return axiosInstance.get(
-      `/api/v1/admin/specifications/by-category/${categoryId}`,options
+      `/admin/specifications/by-category/${categoryId}`,options
     );
   }
 
-const postApiV1AdminProductsGenerateName = (
+const postAdminProductsGenerateName = (
     generateNameRequest?: GenerateNameRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<GenerateNameResponse>> => {
     return axiosInstance.post(
-      `/api/v1/admin/products/generate-name`,
+      `/admin/products/generate-name`,
       generateNameRequest,options
     );
   }
 
-const getApiV1AdminSpecificationsUniqueValuesCategoryId = (
+const getAdminSpecificationsUniqueValuesCategoryId = (
     categoryId: string, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<GetApiV1AdminSpecificationsUniqueValuesCategoryId200One | GetApiV1AdminSpecificationsUniqueValuesCategoryId200Two | GetApiV1AdminSpecificationsUniqueValuesCategoryId200Three>> => {
+ ): Promise<AxiosResponse<GetAdminSpecificationsUniqueValuesCategoryId200One | GetAdminSpecificationsUniqueValuesCategoryId200Two | GetAdminSpecificationsUniqueValuesCategoryId200Three>> => {
     return axiosInstance.get(
-      `/api/v1/admin/specifications/unique-values/${categoryId}`,options
+      `/admin/specifications/unique-values/${categoryId}`,options
     );
   }
 
-const postApiV1AdminDataMigrateFixRangeOutliers = (
+const postAdminDataMigrateFixRangeOutliers = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<MigrationResultDto>> => {
     return axiosInstance.post(
-      `/api/v1/admin/data/migrate/fix-range-outliers`,
+      `/admin/data/migrate/fix-range-outliers`,
       undefined,options
     );
   }
 
-const postApiV1AdminDataMigrateRemoveLeakedValues = (
+const postAdminDataMigrateRemoveLeakedValues = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<MigrationResultDto>> => {
     return axiosInstance.post(
-      `/api/v1/admin/data/migrate/remove-leaked-values`,
+      `/admin/data/migrate/remove-leaked-values`,
       undefined,options
     );
   }
 
-const postApiV1AdminDataMigrateNormalizeDuplicates = (
+const postAdminDataMigrateNormalizeDuplicates = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<MigrationResultDto>> => {
     return axiosInstance.post(
-      `/api/v1/admin/data/migrate/normalize-duplicates`,
+      `/admin/data/migrate/normalize-duplicates`,
       undefined,options
     );
   }
 
-const postApiV1AdminDataMigrateRecalculateFrequencies = (
+const postAdminDataMigrateRecalculateFrequencies = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<MigrationResultDto>> => {
     return axiosInstance.post(
-      `/api/v1/admin/data/migrate/recalculate-frequencies`,
+      `/admin/data/migrate/recalculate-frequencies`,
       undefined,options
     );
   }
 
-const postApiV1AdminDataMigrateRecalculateVram = (
+const postAdminDataMigrateRecalculateVram = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<MigrationResultDto>> => {
     return axiosInstance.post(
-      `/api/v1/admin/data/migrate/recalculate-vram`,
+      `/admin/data/migrate/recalculate-vram`,
       undefined,options
     );
   }
 
-const postApiV1AdminDataMigrateAll = (
+const postAdminDataMigrateAll = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<AllMigrationsResultDto>> => {
     return axiosInstance.post(
-      `/api/v1/admin/data/migrate/all`,
+      `/admin/data/migrate/all`,
       undefined,options
     );
   }
 
-const postApiV1AdminDataProductsCheckStock = (
+const postAdminDataProductsCheckStock = (
     stockCheckRequestDto?: StockCheckRequestDto[], options?: AxiosRequestConfig
  ): Promise<AxiosResponse<StockCheckResponseDto[]>> => {
     return axiosInstance.post(
-      `/api/v1/admin/data/products/check-stock`,
+      `/admin/data/products/check-stock`,
       stockCheckRequestDto,options
     );
   }
 
-const getApiV1CatalogProducts = (
-    params?: GetApiV1CatalogProductsParams, options?: AxiosRequestConfig
+const getCatalogProducts = (
+    params?: GetCatalogProductsParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ProductListDtoPagedResult>> => {
     return axiosInstance.get(
-      `/api/v1/catalog/products`,{
+      `/catalog/products`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const getApiV1CatalogProductsProductId = (
+const getCatalogProductsProductId = (
     productId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ProductDetailDto>> => {
     return axiosInstance.get(
-      `/api/v1/catalog/products/${productId}`,options
+      `/catalog/products/${productId}`,options
     );
   }
 
-const getApiV1CatalogProductsBySlugSlug = (
+const getCatalogProductsBySlugSlug = (
     slug: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ProductDetailDto>> => {
     return axiosInstance.get(
-      `/api/v1/catalog/products/by-slug/${slug}`,options
+      `/catalog/products/by-slug/${slug}`,options
     );
   }
 
-const getApiV1CatalogProductsProductIdReviews = (
+const getCatalogProductsProductIdReviews = (
     productId: string,
-    params?: GetApiV1CatalogProductsProductIdReviewsParams, options?: AxiosRequestConfig
+    params?: GetCatalogProductsProductIdReviewsParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ReviewDtoPagedResult>> => {
     return axiosInstance.get(
-      `/api/v1/catalog/products/${productId}/reviews`,{
+      `/catalog/products/${productId}/reviews`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const postApiV1CatalogProductsProductIdReviews = (
+const postCatalogProductsProductIdReviews = (
     productId: string,
     createReviewDto?: CreateReviewDto, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ReviewDto>> => {
     return axiosInstance.post(
-      `/api/v1/catalog/products/${productId}/reviews`,
+      `/catalog/products/${productId}/reviews`,
       createReviewDto,options
     );
   }
 
-const putApiV1CatalogProductsProductIdReviewsReviewId = (
+const putCatalogProductsProductIdReviewsReviewId = (
     productId: string,
     reviewId: string,
     updateReviewDto?: UpdateReviewDto, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ReviewDto>> => {
     return axiosInstance.put(
-      `/api/v1/catalog/products/${productId}/reviews/${reviewId}`,
+      `/catalog/products/${productId}/reviews/${reviewId}`,
       updateReviewDto,options
     );
   }
 
-const deleteApiV1CatalogProductsProductIdReviewsReviewId = (
+const deleteCatalogProductsProductIdReviewsReviewId = (
     productId: string,
     reviewId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.delete(
-      `/api/v1/catalog/products/${productId}/reviews/${reviewId}`,options
+      `/catalog/products/${productId}/reviews/${reviewId}`,options
     );
   }
 
-const patchApiV1CatalogProductsProductIdReviewsReviewIdHelpful = (
+const patchCatalogProductsProductIdReviewsReviewIdHelpful = (
     productId: string,
     reviewId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.patch(
-      `/api/v1/catalog/products/${productId}/reviews/${reviewId}/helpful`,
+      `/catalog/products/${productId}/reviews/${reviewId}/helpful`,
       undefined,options
     );
   }
 
-const getApiV1CatalogCategories = (
+const getCatalogCategories = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<CategoriesResponse>> => {
     return axiosInstance.get(
-      `/api/v1/catalog/categories`,options
+      `/catalog/categories`,options
     );
   }
 
-const getApiV1CatalogCategoriesSlugFilterAttributes = (
+const getCatalogCategoriesSlugFilterAttributes = (
     slug: string,
-    params?: GetApiV1CatalogCategoriesSlugFilterAttributesParams, options?: AxiosRequestConfig
+    params?: GetCatalogCategoriesSlugFilterAttributesParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<FilterAttributesResponse>> => {
     return axiosInstance.get(
-      `/api/v1/catalog/categories/${slug}/filter-attributes`,{
+      `/catalog/categories/${slug}/filter-attributes`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const getApiV1CatalogCategoriesSlugFilterFacets = (
+const getCatalogCategoriesSlugFilterFacets = (
     slug: string,
-    params?: GetApiV1CatalogCategoriesSlugFilterFacetsParams, options?: AxiosRequestConfig
+    params?: GetCatalogCategoriesSlugFilterFacetsParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<FilterFacetsResponse>> => {
     return axiosInstance.get(
-      `/api/v1/catalog/categories/${slug}/filter-facets`,{
+      `/catalog/categories/${slug}/filter-facets`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const getApiV1CatalogManufacturers = (
-    params?: GetApiV1CatalogManufacturersParams, options?: AxiosRequestConfig
+const getCatalogManufacturers = (
+    params?: GetCatalogManufacturersParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ManufacturersResponse>> => {
     return axiosInstance.get(
-      `/api/v1/catalog/manufacturers`,{
+      `/catalog/manufacturers`,{
     ...options,
         params: {...params, ...options?.params},}
     );
@@ -513,262 +513,262 @@ const postApiInternalStubsReset = (
     );
   }
 
-const postApiV1CatalogTelemetryEvents = (
+const postCatalogTelemetryEvents = (
     telemetryBatchRequest?: TelemetryBatchRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/catalog/telemetry/events`,
+      `/catalog/telemetry/events`,
       telemetryBatchRequest,options
     );
   }
 
-const getApiV1AuthAddress = (
+const getAuthAddress = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<UserAddressDtoListApiResponse>> => {
     return axiosInstance.get(
-      `/api/v1/auth/address`,options
+      `/auth/address`,options
     );
   }
 
-const postApiV1AuthAddress = (
+const postAuthAddress = (
     createUserAddressRequest?: CreateUserAddressRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<UserAddressDtoApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/auth/address`,
+      `/auth/address`,
       createUserAddressRequest,options
     );
   }
 
-const getApiV1AuthAddressId = (
+const getAuthAddressId = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<UserAddressDtoApiResponse>> => {
     return axiosInstance.get(
-      `/api/v1/auth/address/${id}`,options
+      `/auth/address/${id}`,options
     );
   }
 
-const putApiV1AuthAddressId = (
+const putAuthAddressId = (
     id: string,
     updateUserAddressRequest?: UpdateUserAddressRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<UserAddressDtoApiResponse>> => {
     return axiosInstance.put(
-      `/api/v1/auth/address/${id}`,
+      `/auth/address/${id}`,
       updateUserAddressRequest,options
     );
   }
 
-const deleteApiV1AuthAddressId = (
+const deleteAuthAddressId = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.delete(
-      `/api/v1/auth/address/${id}`,options
+      `/auth/address/${id}`,options
     );
   }
 
-const putApiV1AuthAddressIdDefault = (
+const putAuthAddressIdDefault = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<UserAddressDtoApiResponse>> => {
     return axiosInstance.put(
-      `/api/v1/auth/address/${id}/default`,
+      `/auth/address/${id}/default`,
       undefined,options
     );
   }
 
-const postApiV1AuthAdminUsers = (
+const postAuthAdminUsers = (
     adminCreateUserRequest?: AdminCreateUserRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<UserDto>> => {
     return axiosInstance.post(
-      `/api/v1/auth/admin/users`,
+      `/auth/admin/users`,
       adminCreateUserRequest,options
     );
   }
 
-const getApiV1AuthAdminUsersId = (
+const getAuthAdminUsersId = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<UserDto>> => {
     return axiosInstance.get(
-      `/api/v1/auth/admin/users/${id}`,options
+      `/auth/admin/users/${id}`,options
     );
   }
 
-const deleteApiV1AuthAdminUsersId = (
+const deleteAuthAdminUsersId = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.delete(
-      `/api/v1/auth/admin/users/${id}`,options
+      `/auth/admin/users/${id}`,options
     );
   }
 
-const postApiV1AuthAdminUsersIdResetPassword = (
+const postAuthAdminUsersIdResetPassword = (
     id: string,
     adminResetPasswordRequest?: AdminResetPasswordRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/auth/admin/users/${id}/reset-password`,
+      `/auth/admin/users/${id}/reset-password`,
       adminResetPasswordRequest,options
     );
   }
 
-const postApiV1AuthAdminUsersIdDeactivate = (
+const postAuthAdminUsersIdDeactivate = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/auth/admin/users/${id}/deactivate`,
+      `/auth/admin/users/${id}/deactivate`,
       undefined,options
     );
   }
 
-const postApiV1AuthAdminUsersIdActivate = (
+const postAuthAdminUsersIdActivate = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/auth/admin/users/${id}/activate`,
+      `/auth/admin/users/${id}/activate`,
       undefined,options
     );
   }
 
-const postApiV1AuthAdminSettingsTwoFactor = (
+const postAuthAdminSettingsTwoFactor = (
     twoFactorSettingRequest?: TwoFactorSettingRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/auth/admin/settings/two-factor`,
+      `/auth/admin/settings/two-factor`,
       twoFactorSettingRequest,options
     );
   }
 
-const postApiV1AuthRegister = (
+const postAuthRegister = (
     registerRequest?: RegisterRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<AuthResponseApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/Auth/register`,
+      `/Auth/register`,
       registerRequest,options
     );
   }
 
-const postApiV1AuthLogin = (
+const postAuthLogin = (
     loginRequest?: LoginRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<AuthResponseApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/Auth/login`,
+      `/Auth/login`,
       loginRequest,options
     );
   }
 
-const postApiV1AuthLoginVerify2fa = (
+const postAuthLoginVerify2fa = (
     twoFactorLoginVerifyRequest?: TwoFactorLoginVerifyRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<AuthResponseApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/Auth/login/verify-2fa`,
+      `/Auth/login/verify-2fa`,
       twoFactorLoginVerifyRequest,options
     );
   }
 
-const postApiV1AuthRefresh = (
+const postAuthRefresh = (
     refreshTokenRequest?: RefreshTokenRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<AuthResponseApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/Auth/refresh`,
+      `/Auth/refresh`,
       refreshTokenRequest,options
     );
   }
 
-const postApiV1AuthLogout = (
+const postAuthLogout = (
     refreshTokenRequest?: RefreshTokenRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/Auth/logout`,
+      `/Auth/logout`,
       refreshTokenRequest,options
     );
   }
 
-const getApiV1AuthProfile = (
+const getAuthProfile = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<UserDtoApiResponse>> => {
     return axiosInstance.get(
-      `/api/v1/Auth/profile`,options
+      `/Auth/profile`,options
     );
   }
 
-const putApiV1AuthProfile = (
+const putAuthProfile = (
     updateUserRequest?: UpdateUserRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<UserDtoApiResponse>> => {
     return axiosInstance.put(
-      `/api/v1/Auth/profile`,
+      `/Auth/profile`,
       updateUserRequest,options
     );
   }
 
-const postApiV1AuthAvatar = (
-    postApiV1AuthAvatarBody?: PostApiV1AuthAvatarBody, options?: AxiosRequestConfig
+const postAuthAvatar = (
+    postAuthAvatarBody?: PostAuthAvatarBody, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {const formData = new FormData();
-if(postApiV1AuthAvatarBody?.avatar !== undefined) {
- formData.append(`avatar`, postApiV1AuthAvatarBody.avatar);
+if(postAuthAvatarBody?.avatar !== undefined) {
+ formData.append(`avatar`, postAuthAvatarBody.avatar);
  }
 
     return axiosInstance.post(
-      `/api/v1/Auth/avatar`,
+      `/Auth/avatar`,
       formData,options
     );
   }
 
-const deleteApiV1AuthAvatar = (
+const deleteAuthAvatar = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.delete(
-      `/api/v1/Auth/avatar`,options
+      `/Auth/avatar`,options
     );
   }
 
-const postApiV1AuthChangePassword = (
+const postAuthChangePassword = (
     changePasswordRequest?: ChangePasswordRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/Auth/change-password`,
+      `/Auth/change-password`,
       changePasswordRequest,options
     );
   }
 
-const postApiV1AuthForgotPassword = (
+const postAuthForgotPassword = (
     forgotPasswordRequest?: ForgotPasswordRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/Auth/forgot-password`,
+      `/Auth/forgot-password`,
       forgotPasswordRequest,options
     );
   }
 
-const postApiV1AuthResetPassword = (
+const postAuthResetPassword = (
     resetPasswordRequest?: ResetPasswordRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/Auth/reset-password`,
+      `/Auth/reset-password`,
       resetPasswordRequest,options
     );
   }
 
-const postApiV1AuthValidateResetToken = (
+const postAuthValidateResetToken = (
     validateResetTokenRequest?: ValidateResetTokenRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/Auth/validate-reset-token`,
+      `/Auth/validate-reset-token`,
       validateResetTokenRequest,options
     );
   }
 
-const postApiV1AuthSendVerification = (
+const postAuthSendVerification = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/Auth/send-verification`,
+      `/Auth/send-verification`,
       undefined,options
     );
   }
 
-const postApiV1AuthVerifyEmail = (
+const postAuthVerifyEmail = (
     verifyEmailRequest?: VerifyEmailRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/Auth/verify-email`,
+      `/Auth/verify-email`,
       verifyEmailRequest,options
     );
   }
@@ -781,91 +781,91 @@ const getHealth = (
     );
   }
 
-const getApiV1AuthNotifications = (
+const getAuthNotifications = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<NotificationPreferenceResponseApiResponse>> => {
     return axiosInstance.get(
-      `/api/v1/auth/notifications`,options
+      `/auth/notifications`,options
     );
   }
 
-const putApiV1AuthNotifications = (
+const putAuthNotifications = (
     notificationPreferenceRequest?: NotificationPreferenceRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<NotificationPreferenceResponseApiResponse>> => {
     return axiosInstance.put(
-      `/api/v1/auth/notifications`,
+      `/auth/notifications`,
       notificationPreferenceRequest,options
     );
   }
 
-const getApiV1AuthSecurityLoginHistory = (
-    params?: GetApiV1AuthSecurityLoginHistoryParams, options?: AxiosRequestConfig
+const getAuthSecurityLoginHistory = (
+    params?: GetAuthSecurityLoginHistoryParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<LoginHistoryItemPagedResultApiResponse>> => {
     return axiosInstance.get(
-      `/api/v1/auth/security/login-history`,{
+      `/auth/security/login-history`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const postApiV1AuthSecurity2faEnable = (
+const postAuthSecurity2faEnable = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<TwoFactorStatusResponseApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/auth/security/2fa/enable`,
+      `/auth/security/2fa/enable`,
       undefined,options
     );
   }
 
-const postApiV1AuthSecurity2faVerify = (
+const postAuthSecurity2faVerify = (
     twoFactorVerifyRequest?: TwoFactorVerifyRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<TwoFactorStatusResponseApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/auth/security/2fa/verify`,
+      `/auth/security/2fa/verify`,
       twoFactorVerifyRequest,options
     );
   }
 
-const postApiV1AuthSecurity2faDisable = (
+const postAuthSecurity2faDisable = (
     twoFactorDisableRequest?: TwoFactorDisableRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/auth/security/2fa/disable`,
+      `/auth/security/2fa/disable`,
       twoFactorDisableRequest,options
     );
   }
 
-const getApiV1Wishlist = (
+const getWishlist = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<GuidListApiResponse>> => {
     return axiosInstance.get(
-      `/api/v1/wishlist`,options
+      `/wishlist`,options
     );
   }
 
-const postApiV1WishlistProductId = (
+const postWishlistProductId = (
     productId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/wishlist/${productId}`,
+      `/wishlist/${productId}`,
       undefined,options
     );
   }
 
-const deleteApiV1WishlistProductId = (
+const deleteWishlistProductId = (
     productId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ApiResponse>> => {
     return axiosInstance.delete(
-      `/api/v1/wishlist/${productId}`,options
+      `/wishlist/${productId}`,options
     );
   }
 
-const putApiV1WishlistSync = (
-    putApiV1WishlistSyncBody?: string[], options?: AxiosRequestConfig
+const putWishlistSync = (
+    putWishlistSyncBody?: string[], options?: AxiosRequestConfig
  ): Promise<AxiosResponse<GuidListApiResponse>> => {
     return axiosInstance.put(
-      `/api/v1/wishlist/sync`,
-      putApiV1WishlistSyncBody,options
+      `/wishlist/sync`,
+      putWishlistSyncBody,options
     );
   }
 
@@ -900,565 +900,565 @@ const postApiIntegration1cImportStock = (
     );
   }
 
-const getApiV1OrdersId = (
+const getOrdersId = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<OrderDtoApiResponse>> => {
     return axiosInstance.get(
-      `/api/v1/orders/${id}`,options
+      `/orders/${id}`,options
     );
   }
 
-const getApiV1OrdersNumberOrderNumber = (
+const getOrdersNumberOrderNumber = (
     orderNumber: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<OrderDtoApiResponse>> => {
     return axiosInstance.get(
-      `/api/v1/orders/number/${orderNumber}`,options
+      `/orders/number/${orderNumber}`,options
     );
   }
 
-const getApiV1OrdersMy = (
-    params?: GetApiV1OrdersMyParams, options?: AxiosRequestConfig
+const getOrdersMy = (
+    params?: GetOrdersMyParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/orders/my`,{
+      `/orders/my`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const getApiV1Orders = (
-    params?: GetApiV1OrdersParams, options?: AxiosRequestConfig
+const getOrders = (
+    params?: GetOrdersParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/orders`,{
+      `/orders`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const postApiV1Orders = (
+const postOrders = (
     createOrderRequest?: CreateOrderRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<OrderDtoApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/orders`,
+      `/orders`,
       createOrderRequest,options
     );
   }
 
-const postApiV1OrdersDeliveryQuote = (
+const postOrdersDeliveryQuote = (
     deliveryQuoteRequest?: DeliveryQuoteRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<DeliveryQuoteResponseApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/orders/delivery/quote`,
+      `/orders/delivery/quote`,
       deliveryQuoteRequest,options
     );
   }
 
-const putApiV1OrdersIdStatus = (
+const putOrdersIdStatus = (
     id: string,
     updateOrderStatusRequest?: UpdateOrderStatusRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.put(
-      `/api/v1/orders/${id}/status`,
+      `/orders/${id}/status`,
       updateOrderStatusRequest,options
     );
   }
 
-const postApiV1OrdersIdCancel = (
+const postOrdersIdCancel = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/orders/${id}/cancel`,
+      `/orders/${id}/cancel`,
       undefined,options
     );
   }
 
-const postApiV1OrdersIdPay = (
+const postOrdersIdPay = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/orders/${id}/pay`,
+      `/orders/${id}/pay`,
       undefined,options
     );
   }
 
-const postApiV1PromoValidate = (
+const postPromoValidate = (
     validatePromoCodeRequest?: ValidatePromoCodeRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ValidatePromoCodeResponseApiResponse>> => {
     return axiosInstance.post(
-      `/api/v1/promo/validate`,
+      `/promo/validate`,
       validatePromoCodeRequest,options
     );
   }
 
-const postApiV1WebhooksStripe = (
+const postWebhooksStripe = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/webhooks/stripe`,
+      `/webhooks/stripe`,
       undefined,options
     );
   }
 
-const getApiV1WebhooksStripeSimulate = (
-    params?: GetApiV1WebhooksStripeSimulateParams, options?: AxiosRequestConfig
+const getWebhooksStripeSimulate = (
+    params?: GetWebhooksStripeSimulateParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/webhooks/stripe/simulate`,{
+      `/webhooks/stripe/simulate`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const getApiV1ServicesTypes = (
+const getServicesTypes = (
      options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Services/types`,options
+      `/Services/types`,options
     );
   }
 
-const getApiV1ServicesTypesSlug = (
+const getServicesTypesSlug = (
     slug: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Services/types/${slug}`,options
+      `/Services/types/${slug}`,options
     );
   }
 
-const getApiV1ServicesId = (
+const getServicesId = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Services/${id}`,options
+      `/Services/${id}`,options
     );
   }
 
-const getApiV1ServicesMy = (
-    params?: GetApiV1ServicesMyParams, options?: AxiosRequestConfig
+const getServicesMy = (
+    params?: GetServicesMyParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Services/my`,{
+      `/Services/my`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const getApiV1ServicesMaster = (
-    params?: GetApiV1ServicesMasterParams, options?: AxiosRequestConfig
+const getServicesMaster = (
+    params?: GetServicesMasterParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Services/master`,{
+      `/Services/master`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const getApiV1Services = (
-    params?: GetApiV1ServicesParams, options?: AxiosRequestConfig
+const getServices = (
+    params?: GetServicesParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Services`,{
+      `/Services`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const postApiV1Services = (
+const postServices = (
     createServiceRequestRequest?: CreateServiceRequestRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/Services`,
+      `/Services`,
       createServiceRequestRequest,options
     );
   }
 
-const getApiV1ServicesUnassigned = (
-    params?: GetApiV1ServicesUnassignedParams, options?: AxiosRequestConfig
+const getServicesUnassigned = (
+    params?: GetServicesUnassignedParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Services/unassigned`,{
+      `/Services/unassigned`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const postApiV1ServicesIdAssignMasterId = (
+const postServicesIdAssignMasterId = (
     id: string,
     masterId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/Services/${id}/assign/${masterId}`,
+      `/Services/${id}/assign/${masterId}`,
       undefined,options
     );
   }
 
-const putApiV1ServicesIdComplete = (
+const putServicesIdComplete = (
     id: string,
     updateServiceRequestRequest?: UpdateServiceRequestRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.put(
-      `/api/v1/Services/${id}/complete`,
+      `/Services/${id}/complete`,
       updateServiceRequestRequest,options
     );
   }
 
-const patchApiV1ServicesIdStatus = (
+const patchServicesIdStatus = (
     id: string,
-    params?: PatchApiV1ServicesIdStatusParams, options?: AxiosRequestConfig
+    params?: PatchServicesIdStatusParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.patch(
-      `/api/v1/Services/${id}/status`,
+      `/Services/${id}/status`,
       undefined,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const postApiV1ServicesIdParts = (
+const postServicesIdParts = (
     id: string,
     servicePartDto?: ServicePartDto, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/Services/${id}/parts`,
+      `/Services/${id}/parts`,
       servicePartDto,options
     );
   }
 
-const getApiV1ServicesIdReport = (
+const getServicesIdReport = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Services/${id}/report`,options
+      `/Services/${id}/report`,options
     );
   }
 
-const getApiV1ServicesIdMessages = (
+const getServicesIdMessages = (
     id: string,
-    params?: GetApiV1ServicesIdMessagesParams, options?: AxiosRequestConfig
+    params?: GetServicesIdMessagesParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Services/${id}/messages`,{
+      `/Services/${id}/messages`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const postApiV1ServicesIdMessages = (
+const postServicesIdMessages = (
     id: string,
     sendMessageRequest?: SendMessageRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/Services/${id}/messages`,
+      `/Services/${id}/messages`,
       sendMessageRequest,options
     );
   }
 
-const getApiV1ServicesIdMessagesUnreadCount = (
+const getServicesIdMessagesUnreadCount = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Services/${id}/messages/unread-count`,options
+      `/Services/${id}/messages/unread-count`,options
     );
   }
 
-const postApiV1ServicesIdUpload = (
+const postServicesIdUpload = (
     id: string,
-    postApiV1ServicesIdUploadBody?: PostApiV1ServicesIdUploadBody, options?: AxiosRequestConfig
+    postServicesIdUploadBody?: PostServicesIdUploadBody, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {const formData = new FormData();
-if(postApiV1ServicesIdUploadBody?.file !== undefined) {
- formData.append(`file`, postApiV1ServicesIdUploadBody.file);
+if(postServicesIdUploadBody?.file !== undefined) {
+ formData.append(`file`, postServicesIdUploadBody.file);
  }
 
     return axiosInstance.post(
-      `/api/v1/Services/${id}/upload`,
+      `/Services/${id}/upload`,
       formData,options
     );
   }
 
-const postApiV1ServicesIdCancel = (
+const postServicesIdCancel = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/Services/${id}/cancel`,
+      `/Services/${id}/cancel`,
       undefined,options
     );
   }
 
-const postApiV1ServicesIdClose = (
+const postServicesIdClose = (
     id: string,
     closeServiceRequestRequest?: CloseServiceRequestRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/Services/${id}/close`,
+      `/Services/${id}/close`,
       closeServiceRequestRequest,options
     );
   }
 
-const getApiV1WarrantyClaimId = (
+const getWarrantyClaimId = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Warranty/claim/${id}`,options
+      `/Warranty/claim/${id}`,options
     );
   }
 
-const getApiV1WarrantyClaimMy = (
-    params?: GetApiV1WarrantyClaimMyParams, options?: AxiosRequestConfig
+const getWarrantyClaimMy = (
+    params?: GetWarrantyClaimMyParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Warranty/claim/my`,{
+      `/Warranty/claim/my`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const getApiV1WarrantyClaim = (
-    params?: GetApiV1WarrantyClaimParams, options?: AxiosRequestConfig
+const getWarrantyClaim = (
+    params?: GetWarrantyClaimParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Warranty/claim`,{
+      `/Warranty/claim`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const postApiV1WarrantyClaim = (
+const postWarrantyClaim = (
     createWarrantyClaimRequest?: CreateWarrantyClaimRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/Warranty/claim`,
+      `/Warranty/claim`,
       createWarrantyClaimRequest,options
     );
   }
 
-const putApiV1WarrantyClaimIdStatus = (
+const putWarrantyClaimIdStatus = (
     id: string,
     updateWarrantyStatusRequest?: UpdateWarrantyStatusRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.put(
-      `/api/v1/Warranty/claim/${id}/status`,
+      `/Warranty/claim/${id}/status`,
       updateWarrantyStatusRequest,options
     );
   }
 
-const postApiV1WarrantyClaimIdResolve = (
+const postWarrantyClaimIdResolve = (
     id: string,
     resolveWarrantyRequest?: ResolveWarrantyRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/Warranty/claim/${id}/resolve`,
+      `/Warranty/claim/${id}/resolve`,
       resolveWarrantyRequest,options
     );
   }
 
-const getApiV1WarrantyCardId = (
+const getWarrantyCardId = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Warranty/card/${id}`,options
+      `/Warranty/card/${id}`,options
     );
   }
 
-const getApiV1WarrantyCardNumberNumber = (
+const getWarrantyCardNumberNumber = (
     number: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Warranty/card/number/${number}`,options
+      `/Warranty/card/number/${number}`,options
     );
   }
 
-const getApiV1WarrantyCardOrderOrderId = (
+const getWarrantyCardOrderOrderId = (
     orderId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Warranty/card/order/${orderId}`,options
+      `/Warranty/card/order/${orderId}`,options
     );
   }
 
-const getApiV1WarrantyCardServiceServiceId = (
+const getWarrantyCardServiceServiceId = (
     serviceId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Warranty/card/service/${serviceId}`,options
+      `/Warranty/card/service/${serviceId}`,options
     );
   }
 
-const getApiV1WarrantyCardSerialSerialNumber = (
+const getWarrantyCardSerialSerialNumber = (
     serialNumber: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Warranty/card/serial/${serialNumber}`,options
+      `/Warranty/card/serial/${serialNumber}`,options
     );
   }
 
-const getApiV1WarrantyCardMy = (
-    params?: GetApiV1WarrantyCardMyParams, options?: AxiosRequestConfig
+const getWarrantyCardMy = (
+    params?: GetWarrantyCardMyParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.get(
-      `/api/v1/Warranty/card/my`,{
+      `/Warranty/card/my`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const postApiV1WarrantyCard = (
+const postWarrantyCard = (
     createWarrantyRequest?: CreateWarrantyRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/Warranty/card`,
+      `/Warranty/card`,
       createWarrantyRequest,options
     );
   }
 
-const postApiV1WarrantyCardIdAnnul = (
+const postWarrantyCardIdAnnul = (
     id: string,
     annulWarrantyRequest?: AnnulWarrantyRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(
-      `/api/v1/Warranty/card/${id}/annul`,
+      `/Warranty/card/${id}/annul`,
       annulWarrantyRequest,options
     );
   }
 
-const postApiV1PCBuilderCheckCompatibility = (
+const postPCBuilderCheckCompatibility = (
     compatibilityCheckRequest?: CompatibilityCheckRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<CompatibilityCheckResponse>> => {
     return axiosInstance.post(
-      `/api/v1/PCBuilder/check-compatibility`,
+      `/PCBuilder/check-compatibility`,
       compatibilityCheckRequest,options
     );
   }
 
-const postApiV1PCBuilderConfigurations = (
+const postPCBuilderConfigurations = (
     pCConfigurationDto?: PCConfigurationDto, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<PCConfigurationDto>> => {
     return axiosInstance.post(
-      `/api/v1/PCBuilder/configurations`,
+      `/PCBuilder/configurations`,
       pCConfigurationDto,options
     );
   }
 
-const getApiV1PCBuilderConfigurations = (
-    params?: GetApiV1PCBuilderConfigurationsParams, options?: AxiosRequestConfig
+const getPCBuilderConfigurations = (
+    params?: GetPCBuilderConfigurationsParams, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<PCConfigurationDto[]>> => {
     return axiosInstance.get(
-      `/api/v1/PCBuilder/configurations`,{
+      `/PCBuilder/configurations`,{
     ...options,
         params: {...params, ...options?.params},}
     );
   }
 
-const getApiV1PCBuilderConfigurationsId = (
+const getPCBuilderConfigurationsId = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<PCConfigurationDto>> => {
     return axiosInstance.get(
-      `/api/v1/PCBuilder/configurations/${id}`,options
+      `/PCBuilder/configurations/${id}`,options
     );
   }
 
-const deleteApiV1PCBuilderConfigurationsId = (
+const deletePCBuilderConfigurationsId = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<void>> => {
     return axiosInstance.delete(
-      `/api/v1/PCBuilder/configurations/${id}`,options
+      `/PCBuilder/configurations/${id}`,options
     );
   }
 
-const postApiV1PCBuilderConfigurationsIdShare = (
+const postPCBuilderConfigurationsIdShare = (
     id: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ShareTokenResponse>> => {
     return axiosInstance.post(
-      `/api/v1/PCBuilder/configurations/${id}/share`,
+      `/PCBuilder/configurations/${id}/share`,
       undefined,options
     );
   }
 
-const getApiV1PCBuilderShareToken = (
+const getPCBuilderShareToken = (
     token: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<PCConfigurationDto>> => {
     return axiosInstance.get(
-      `/api/v1/PCBuilder/share/${token}`,options
+      `/PCBuilder/share/${token}`,options
     );
   }
 
-const getApiV1PCBuilderCompatibleMotherboardsProcessorId = (
+const getPCBuilderCompatibleMotherboardsProcessorId = (
     processorId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<string[]>> => {
     return axiosInstance.get(
-      `/api/v1/PCBuilder/compatible-motherboards/${processorId}`,options
+      `/PCBuilder/compatible-motherboards/${processorId}`,options
     );
   }
 
-const getApiV1PCBuilderCompatibleRamMotherboardId = (
+const getPCBuilderCompatibleRamMotherboardId = (
     motherboardId: string, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<string[]>> => {
     return axiosInstance.get(
-      `/api/v1/PCBuilder/compatible-ram/${motherboardId}`,options
+      `/PCBuilder/compatible-ram/${motherboardId}`,options
     );
   }
 
-const postApiV1PCBuilderCalculatePower = (
+const postPCBuilderCalculatePower = (
     pCConfigurationDto?: PCConfigurationDto, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<PowerConsumptionResult>> => {
     return axiosInstance.post(
-      `/api/v1/PCBuilder/calculate-power`,
+      `/PCBuilder/calculate-power`,
       pCConfigurationDto,options
     );
   }
 
-const postApiV1PCBuilderCalculatePrice = (
+const postPCBuilderCalculatePrice = (
     calculatePriceRequest?: CalculatePriceRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<ConfigurationPriceResult>> => {
     return axiosInstance.post(
-      `/api/v1/PCBuilder/calculate-price`,
+      `/PCBuilder/calculate-price`,
       calculatePriceRequest,options
     );
   }
 
-const postApiV1PCBuilderCalculateFps = (
+const postPCBuilderCalculateFps = (
     fpsCalculationRequest?: FpsCalculationRequest, options?: AxiosRequestConfig
  ): Promise<AxiosResponse<FpsCalculationResponse>> => {
     return axiosInstance.post(
-      `/api/v1/PCBuilder/calculate-fps`,
+      `/PCBuilder/calculate-fps`,
       fpsCalculationRequest,options
     );
   }
 
-return {getApiV1AdminProducts,postApiV1AdminProducts,putApiV1AdminProductsProductId,deleteApiV1AdminProductsProductId,postApiV1AdminManufacturers,putApiV1AdminManufacturersManufacturerId,deleteApiV1AdminManufacturersManufacturerId,postApiV1AdminCategories,putApiV1AdminCategoriesCategoryId,deleteApiV1AdminCategoriesCategoryId,getApiV1AdminProductsProductIdPriceHistory,getApiV1AdminSpecificationsByCategoryCategoryId,postApiV1AdminProductsGenerateName,getApiV1AdminSpecificationsUniqueValuesCategoryId,postApiV1AdminDataMigrateFixRangeOutliers,postApiV1AdminDataMigrateRemoveLeakedValues,postApiV1AdminDataMigrateNormalizeDuplicates,postApiV1AdminDataMigrateRecalculateFrequencies,postApiV1AdminDataMigrateRecalculateVram,postApiV1AdminDataMigrateAll,postApiV1AdminDataProductsCheckStock,getApiV1CatalogProducts,getApiV1CatalogProductsProductId,getApiV1CatalogProductsBySlugSlug,getApiV1CatalogProductsProductIdReviews,postApiV1CatalogProductsProductIdReviews,putApiV1CatalogProductsProductIdReviewsReviewId,deleteApiV1CatalogProductsProductIdReviewsReviewId,patchApiV1CatalogProductsProductIdReviewsReviewIdHelpful,getApiV1CatalogCategories,getApiV1CatalogCategoriesSlugFilterAttributes,getApiV1CatalogCategoriesSlugFilterFacets,getApiV1CatalogManufacturers,getApiInternalStubs,postApiInternalStubs,getApiInternalStubsStats,getApiInternalStubsName,patchApiInternalStubsName,deleteApiInternalStubsName,putApiInternalStubsNameMode,putApiInternalStubsNameEnabled,postApiInternalStubsReset,postApiV1CatalogTelemetryEvents,getApiV1AuthAddress,postApiV1AuthAddress,getApiV1AuthAddressId,putApiV1AuthAddressId,deleteApiV1AuthAddressId,putApiV1AuthAddressIdDefault,postApiV1AuthAdminUsers,getApiV1AuthAdminUsersId,deleteApiV1AuthAdminUsersId,postApiV1AuthAdminUsersIdResetPassword,postApiV1AuthAdminUsersIdDeactivate,postApiV1AuthAdminUsersIdActivate,postApiV1AuthAdminSettingsTwoFactor,postApiV1AuthRegister,postApiV1AuthLogin,postApiV1AuthLoginVerify2fa,postApiV1AuthRefresh,postApiV1AuthLogout,getApiV1AuthProfile,putApiV1AuthProfile,postApiV1AuthAvatar,deleteApiV1AuthAvatar,postApiV1AuthChangePassword,postApiV1AuthForgotPassword,postApiV1AuthResetPassword,postApiV1AuthValidateResetToken,postApiV1AuthSendVerification,postApiV1AuthVerifyEmail,getHealth,getApiV1AuthNotifications,putApiV1AuthNotifications,getApiV1AuthSecurityLoginHistory,postApiV1AuthSecurity2faEnable,postApiV1AuthSecurity2faVerify,postApiV1AuthSecurity2faDisable,getApiV1Wishlist,postApiV1WishlistProductId,deleteApiV1WishlistProductId,putApiV1WishlistSync,getApiIntegration1cExportXml,getApiIntegration1cExportCsv,postApiIntegration1cImportStock,getApiV1OrdersId,getApiV1OrdersNumberOrderNumber,getApiV1OrdersMy,getApiV1Orders,postApiV1Orders,postApiV1OrdersDeliveryQuote,putApiV1OrdersIdStatus,postApiV1OrdersIdCancel,postApiV1OrdersIdPay,postApiV1PromoValidate,postApiV1WebhooksStripe,getApiV1WebhooksStripeSimulate,getApiV1ServicesTypes,getApiV1ServicesTypesSlug,getApiV1ServicesId,getApiV1ServicesMy,getApiV1ServicesMaster,getApiV1Services,postApiV1Services,getApiV1ServicesUnassigned,postApiV1ServicesIdAssignMasterId,putApiV1ServicesIdComplete,patchApiV1ServicesIdStatus,postApiV1ServicesIdParts,getApiV1ServicesIdReport,getApiV1ServicesIdMessages,postApiV1ServicesIdMessages,getApiV1ServicesIdMessagesUnreadCount,postApiV1ServicesIdUpload,postApiV1ServicesIdCancel,postApiV1ServicesIdClose,getApiV1WarrantyClaimId,getApiV1WarrantyClaimMy,getApiV1WarrantyClaim,postApiV1WarrantyClaim,putApiV1WarrantyClaimIdStatus,postApiV1WarrantyClaimIdResolve,getApiV1WarrantyCardId,getApiV1WarrantyCardNumberNumber,getApiV1WarrantyCardOrderOrderId,getApiV1WarrantyCardServiceServiceId,getApiV1WarrantyCardSerialSerialNumber,getApiV1WarrantyCardMy,postApiV1WarrantyCard,postApiV1WarrantyCardIdAnnul,postApiV1PCBuilderCheckCompatibility,postApiV1PCBuilderConfigurations,getApiV1PCBuilderConfigurations,getApiV1PCBuilderConfigurationsId,deleteApiV1PCBuilderConfigurationsId,postApiV1PCBuilderConfigurationsIdShare,getApiV1PCBuilderShareToken,getApiV1PCBuilderCompatibleMotherboardsProcessorId,getApiV1PCBuilderCompatibleRamMotherboardId,postApiV1PCBuilderCalculatePower,postApiV1PCBuilderCalculatePrice,postApiV1PCBuilderCalculateFps}};
-export type GetApiV1AdminProductsResult = AxiosResponse<ProductListDtoPagedResult>
-export type PostApiV1AdminProductsResult = AxiosResponse<ProductDetailDto>
-export type PutApiV1AdminProductsProductIdResult = AxiosResponse<ProductDetailDto>
-export type DeleteApiV1AdminProductsProductIdResult = AxiosResponse<void>
-export type PostApiV1AdminManufacturersResult = AxiosResponse<ManufacturerDto>
-export type PutApiV1AdminManufacturersManufacturerIdResult = AxiosResponse<ManufacturerDto>
-export type DeleteApiV1AdminManufacturersManufacturerIdResult = AxiosResponse<void>
-export type PostApiV1AdminCategoriesResult = AxiosResponse<CategoryDto>
-export type PutApiV1AdminCategoriesCategoryIdResult = AxiosResponse<CategoryDto>
-export type DeleteApiV1AdminCategoriesCategoryIdResult = AxiosResponse<void>
-export type GetApiV1AdminProductsProductIdPriceHistoryResult = AxiosResponse<PriceHistoryDto[]>
-export type GetApiV1AdminSpecificationsByCategoryCategoryIdResult = AxiosResponse<CategorySpecificationsDto>
-export type PostApiV1AdminProductsGenerateNameResult = AxiosResponse<GenerateNameResponse>
-export type GetApiV1AdminSpecificationsUniqueValuesCategoryIdResult = AxiosResponse<GetApiV1AdminSpecificationsUniqueValuesCategoryId200One | GetApiV1AdminSpecificationsUniqueValuesCategoryId200Two | GetApiV1AdminSpecificationsUniqueValuesCategoryId200Three>
-export type PostApiV1AdminDataMigrateFixRangeOutliersResult = AxiosResponse<MigrationResultDto>
-export type PostApiV1AdminDataMigrateRemoveLeakedValuesResult = AxiosResponse<MigrationResultDto>
-export type PostApiV1AdminDataMigrateNormalizeDuplicatesResult = AxiosResponse<MigrationResultDto>
-export type PostApiV1AdminDataMigrateRecalculateFrequenciesResult = AxiosResponse<MigrationResultDto>
-export type PostApiV1AdminDataMigrateRecalculateVramResult = AxiosResponse<MigrationResultDto>
-export type PostApiV1AdminDataMigrateAllResult = AxiosResponse<AllMigrationsResultDto>
-export type PostApiV1AdminDataProductsCheckStockResult = AxiosResponse<StockCheckResponseDto[]>
-export type GetApiV1CatalogProductsResult = AxiosResponse<ProductListDtoPagedResult>
-export type GetApiV1CatalogProductsProductIdResult = AxiosResponse<ProductDetailDto>
-export type GetApiV1CatalogProductsBySlugSlugResult = AxiosResponse<ProductDetailDto>
-export type GetApiV1CatalogProductsProductIdReviewsResult = AxiosResponse<ReviewDtoPagedResult>
-export type PostApiV1CatalogProductsProductIdReviewsResult = AxiosResponse<ReviewDto>
-export type PutApiV1CatalogProductsProductIdReviewsReviewIdResult = AxiosResponse<ReviewDto>
-export type DeleteApiV1CatalogProductsProductIdReviewsReviewIdResult = AxiosResponse<void>
-export type PatchApiV1CatalogProductsProductIdReviewsReviewIdHelpfulResult = AxiosResponse<void>
-export type GetApiV1CatalogCategoriesResult = AxiosResponse<CategoriesResponse>
-export type GetApiV1CatalogCategoriesSlugFilterAttributesResult = AxiosResponse<FilterAttributesResponse>
-export type GetApiV1CatalogCategoriesSlugFilterFacetsResult = AxiosResponse<FilterFacetsResponse>
-export type GetApiV1CatalogManufacturersResult = AxiosResponse<ManufacturersResponse>
+return {getAdminProducts,postAdminProducts,putAdminProductsProductId,deleteAdminProductsProductId,postAdminManufacturers,putAdminManufacturersManufacturerId,deleteAdminManufacturersManufacturerId,postAdminCategories,putAdminCategoriesCategoryId,deleteAdminCategoriesCategoryId,getAdminProductsProductIdPriceHistory,getAdminSpecificationsByCategoryCategoryId,postAdminProductsGenerateName,getAdminSpecificationsUniqueValuesCategoryId,postAdminDataMigrateFixRangeOutliers,postAdminDataMigrateRemoveLeakedValues,postAdminDataMigrateNormalizeDuplicates,postAdminDataMigrateRecalculateFrequencies,postAdminDataMigrateRecalculateVram,postAdminDataMigrateAll,postAdminDataProductsCheckStock,getCatalogProducts,getCatalogProductsProductId,getCatalogProductsBySlugSlug,getCatalogProductsProductIdReviews,postCatalogProductsProductIdReviews,putCatalogProductsProductIdReviewsReviewId,deleteCatalogProductsProductIdReviewsReviewId,patchCatalogProductsProductIdReviewsReviewIdHelpful,getCatalogCategories,getCatalogCategoriesSlugFilterAttributes,getCatalogCategoriesSlugFilterFacets,getCatalogManufacturers,getApiInternalStubs,postApiInternalStubs,getApiInternalStubsStats,getApiInternalStubsName,patchApiInternalStubsName,deleteApiInternalStubsName,putApiInternalStubsNameMode,putApiInternalStubsNameEnabled,postApiInternalStubsReset,postCatalogTelemetryEvents,getAuthAddress,postAuthAddress,getAuthAddressId,putAuthAddressId,deleteAuthAddressId,putAuthAddressIdDefault,postAuthAdminUsers,getAuthAdminUsersId,deleteAuthAdminUsersId,postAuthAdminUsersIdResetPassword,postAuthAdminUsersIdDeactivate,postAuthAdminUsersIdActivate,postAuthAdminSettingsTwoFactor,postAuthRegister,postAuthLogin,postAuthLoginVerify2fa,postAuthRefresh,postAuthLogout,getAuthProfile,putAuthProfile,postAuthAvatar,deleteAuthAvatar,postAuthChangePassword,postAuthForgotPassword,postAuthResetPassword,postAuthValidateResetToken,postAuthSendVerification,postAuthVerifyEmail,getHealth,getAuthNotifications,putAuthNotifications,getAuthSecurityLoginHistory,postAuthSecurity2faEnable,postAuthSecurity2faVerify,postAuthSecurity2faDisable,getWishlist,postWishlistProductId,deleteWishlistProductId,putWishlistSync,getApiIntegration1cExportXml,getApiIntegration1cExportCsv,postApiIntegration1cImportStock,getOrdersId,getOrdersNumberOrderNumber,getOrdersMy,getOrders,postOrders,postOrdersDeliveryQuote,putOrdersIdStatus,postOrdersIdCancel,postOrdersIdPay,postPromoValidate,postWebhooksStripe,getWebhooksStripeSimulate,getServicesTypes,getServicesTypesSlug,getServicesId,getServicesMy,getServicesMaster,getServices,postServices,getServicesUnassigned,postServicesIdAssignMasterId,putServicesIdComplete,patchServicesIdStatus,postServicesIdParts,getServicesIdReport,getServicesIdMessages,postServicesIdMessages,getServicesIdMessagesUnreadCount,postServicesIdUpload,postServicesIdCancel,postServicesIdClose,getWarrantyClaimId,getWarrantyClaimMy,getWarrantyClaim,postWarrantyClaim,putWarrantyClaimIdStatus,postWarrantyClaimIdResolve,getWarrantyCardId,getWarrantyCardNumberNumber,getWarrantyCardOrderOrderId,getWarrantyCardServiceServiceId,getWarrantyCardSerialSerialNumber,getWarrantyCardMy,postWarrantyCard,postWarrantyCardIdAnnul,postPCBuilderCheckCompatibility,postPCBuilderConfigurations,getPCBuilderConfigurations,getPCBuilderConfigurationsId,deletePCBuilderConfigurationsId,postPCBuilderConfigurationsIdShare,getPCBuilderShareToken,getPCBuilderCompatibleMotherboardsProcessorId,getPCBuilderCompatibleRamMotherboardId,postPCBuilderCalculatePower,postPCBuilderCalculatePrice,postPCBuilderCalculateFps}};
+export type GetAdminProductsResult = AxiosResponse<ProductListDtoPagedResult>
+export type PostAdminProductsResult = AxiosResponse<ProductDetailDto>
+export type PutAdminProductsProductIdResult = AxiosResponse<ProductDetailDto>
+export type DeleteAdminProductsProductIdResult = AxiosResponse<void>
+export type PostAdminManufacturersResult = AxiosResponse<ManufacturerDto>
+export type PutAdminManufacturersManufacturerIdResult = AxiosResponse<ManufacturerDto>
+export type DeleteAdminManufacturersManufacturerIdResult = AxiosResponse<void>
+export type PostAdminCategoriesResult = AxiosResponse<CategoryDto>
+export type PutAdminCategoriesCategoryIdResult = AxiosResponse<CategoryDto>
+export type DeleteAdminCategoriesCategoryIdResult = AxiosResponse<void>
+export type GetAdminProductsProductIdPriceHistoryResult = AxiosResponse<PriceHistoryDto[]>
+export type GetAdminSpecificationsByCategoryCategoryIdResult = AxiosResponse<CategorySpecificationsDto>
+export type PostAdminProductsGenerateNameResult = AxiosResponse<GenerateNameResponse>
+export type GetAdminSpecificationsUniqueValuesCategoryIdResult = AxiosResponse<GetAdminSpecificationsUniqueValuesCategoryId200One | GetAdminSpecificationsUniqueValuesCategoryId200Two | GetAdminSpecificationsUniqueValuesCategoryId200Three>
+export type PostAdminDataMigrateFixRangeOutliersResult = AxiosResponse<MigrationResultDto>
+export type PostAdminDataMigrateRemoveLeakedValuesResult = AxiosResponse<MigrationResultDto>
+export type PostAdminDataMigrateNormalizeDuplicatesResult = AxiosResponse<MigrationResultDto>
+export type PostAdminDataMigrateRecalculateFrequenciesResult = AxiosResponse<MigrationResultDto>
+export type PostAdminDataMigrateRecalculateVramResult = AxiosResponse<MigrationResultDto>
+export type PostAdminDataMigrateAllResult = AxiosResponse<AllMigrationsResultDto>
+export type PostAdminDataProductsCheckStockResult = AxiosResponse<StockCheckResponseDto[]>
+export type GetCatalogProductsResult = AxiosResponse<ProductListDtoPagedResult>
+export type GetCatalogProductsProductIdResult = AxiosResponse<ProductDetailDto>
+export type GetCatalogProductsBySlugSlugResult = AxiosResponse<ProductDetailDto>
+export type GetCatalogProductsProductIdReviewsResult = AxiosResponse<ReviewDtoPagedResult>
+export type PostCatalogProductsProductIdReviewsResult = AxiosResponse<ReviewDto>
+export type PutCatalogProductsProductIdReviewsReviewIdResult = AxiosResponse<ReviewDto>
+export type DeleteCatalogProductsProductIdReviewsReviewIdResult = AxiosResponse<void>
+export type PatchCatalogProductsProductIdReviewsReviewIdHelpfulResult = AxiosResponse<void>
+export type GetCatalogCategoriesResult = AxiosResponse<CategoriesResponse>
+export type GetCatalogCategoriesSlugFilterAttributesResult = AxiosResponse<FilterAttributesResponse>
+export type GetCatalogCategoriesSlugFilterFacetsResult = AxiosResponse<FilterFacetsResponse>
+export type GetCatalogManufacturersResult = AxiosResponse<ManufacturersResponse>
 export type GetApiInternalStubsResult = AxiosResponse<StubResponse[]>
 export type PostApiInternalStubsResult = AxiosResponse<StubResponse>
 export type GetApiInternalStubsStatsResult = AxiosResponse<StubRegistryStatsResponse>
@@ -1468,103 +1468,103 @@ export type DeleteApiInternalStubsNameResult = AxiosResponse<void>
 export type PutApiInternalStubsNameModeResult = AxiosResponse<StubResponse>
 export type PutApiInternalStubsNameEnabledResult = AxiosResponse<StubResponse>
 export type PostApiInternalStubsResetResult = AxiosResponse<void>
-export type PostApiV1CatalogTelemetryEventsResult = AxiosResponse<void>
-export type GetApiV1AuthAddressResult = AxiosResponse<UserAddressDtoListApiResponse>
-export type PostApiV1AuthAddressResult = AxiosResponse<UserAddressDtoApiResponse>
-export type GetApiV1AuthAddressIdResult = AxiosResponse<UserAddressDtoApiResponse>
-export type PutApiV1AuthAddressIdResult = AxiosResponse<UserAddressDtoApiResponse>
-export type DeleteApiV1AuthAddressIdResult = AxiosResponse<ApiResponse>
-export type PutApiV1AuthAddressIdDefaultResult = AxiosResponse<UserAddressDtoApiResponse>
-export type PostApiV1AuthAdminUsersResult = AxiosResponse<UserDto>
-export type GetApiV1AuthAdminUsersIdResult = AxiosResponse<UserDto>
-export type DeleteApiV1AuthAdminUsersIdResult = AxiosResponse<void>
-export type PostApiV1AuthAdminUsersIdResetPasswordResult = AxiosResponse<void>
-export type PostApiV1AuthAdminUsersIdDeactivateResult = AxiosResponse<void>
-export type PostApiV1AuthAdminUsersIdActivateResult = AxiosResponse<void>
-export type PostApiV1AuthAdminSettingsTwoFactorResult = AxiosResponse<void>
-export type PostApiV1AuthRegisterResult = AxiosResponse<AuthResponseApiResponse>
-export type PostApiV1AuthLoginResult = AxiosResponse<AuthResponseApiResponse>
-export type PostApiV1AuthLoginVerify2faResult = AxiosResponse<AuthResponseApiResponse>
-export type PostApiV1AuthRefreshResult = AxiosResponse<AuthResponseApiResponse>
-export type PostApiV1AuthLogoutResult = AxiosResponse<ApiResponse>
-export type GetApiV1AuthProfileResult = AxiosResponse<UserDtoApiResponse>
-export type PutApiV1AuthProfileResult = AxiosResponse<UserDtoApiResponse>
-export type PostApiV1AuthAvatarResult = AxiosResponse<void>
-export type DeleteApiV1AuthAvatarResult = AxiosResponse<ApiResponse>
-export type PostApiV1AuthChangePasswordResult = AxiosResponse<ApiResponse>
-export type PostApiV1AuthForgotPasswordResult = AxiosResponse<ApiResponse>
-export type PostApiV1AuthResetPasswordResult = AxiosResponse<ApiResponse>
-export type PostApiV1AuthValidateResetTokenResult = AxiosResponse<ApiResponse>
-export type PostApiV1AuthSendVerificationResult = AxiosResponse<ApiResponse>
-export type PostApiV1AuthVerifyEmailResult = AxiosResponse<ApiResponse>
+export type PostCatalogTelemetryEventsResult = AxiosResponse<void>
+export type GetAuthAddressResult = AxiosResponse<UserAddressDtoListApiResponse>
+export type PostAuthAddressResult = AxiosResponse<UserAddressDtoApiResponse>
+export type GetAuthAddressIdResult = AxiosResponse<UserAddressDtoApiResponse>
+export type PutAuthAddressIdResult = AxiosResponse<UserAddressDtoApiResponse>
+export type DeleteAuthAddressIdResult = AxiosResponse<ApiResponse>
+export type PutAuthAddressIdDefaultResult = AxiosResponse<UserAddressDtoApiResponse>
+export type PostAuthAdminUsersResult = AxiosResponse<UserDto>
+export type GetAuthAdminUsersIdResult = AxiosResponse<UserDto>
+export type DeleteAuthAdminUsersIdResult = AxiosResponse<void>
+export type PostAuthAdminUsersIdResetPasswordResult = AxiosResponse<void>
+export type PostAuthAdminUsersIdDeactivateResult = AxiosResponse<void>
+export type PostAuthAdminUsersIdActivateResult = AxiosResponse<void>
+export type PostAuthAdminSettingsTwoFactorResult = AxiosResponse<void>
+export type PostAuthRegisterResult = AxiosResponse<AuthResponseApiResponse>
+export type PostAuthLoginResult = AxiosResponse<AuthResponseApiResponse>
+export type PostAuthLoginVerify2faResult = AxiosResponse<AuthResponseApiResponse>
+export type PostAuthRefreshResult = AxiosResponse<AuthResponseApiResponse>
+export type PostAuthLogoutResult = AxiosResponse<ApiResponse>
+export type GetAuthProfileResult = AxiosResponse<UserDtoApiResponse>
+export type PutAuthProfileResult = AxiosResponse<UserDtoApiResponse>
+export type PostAuthAvatarResult = AxiosResponse<void>
+export type DeleteAuthAvatarResult = AxiosResponse<ApiResponse>
+export type PostAuthChangePasswordResult = AxiosResponse<ApiResponse>
+export type PostAuthForgotPasswordResult = AxiosResponse<ApiResponse>
+export type PostAuthResetPasswordResult = AxiosResponse<ApiResponse>
+export type PostAuthValidateResetTokenResult = AxiosResponse<ApiResponse>
+export type PostAuthSendVerificationResult = AxiosResponse<ApiResponse>
+export type PostAuthVerifyEmailResult = AxiosResponse<ApiResponse>
 export type GetHealthResult = AxiosResponse<void>
-export type GetApiV1AuthNotificationsResult = AxiosResponse<NotificationPreferenceResponseApiResponse>
-export type PutApiV1AuthNotificationsResult = AxiosResponse<NotificationPreferenceResponseApiResponse>
-export type GetApiV1AuthSecurityLoginHistoryResult = AxiosResponse<LoginHistoryItemPagedResultApiResponse>
-export type PostApiV1AuthSecurity2faEnableResult = AxiosResponse<TwoFactorStatusResponseApiResponse>
-export type PostApiV1AuthSecurity2faVerifyResult = AxiosResponse<TwoFactorStatusResponseApiResponse>
-export type PostApiV1AuthSecurity2faDisableResult = AxiosResponse<ApiResponse>
-export type GetApiV1WishlistResult = AxiosResponse<GuidListApiResponse>
-export type PostApiV1WishlistProductIdResult = AxiosResponse<ApiResponse>
-export type DeleteApiV1WishlistProductIdResult = AxiosResponse<ApiResponse>
-export type PutApiV1WishlistSyncResult = AxiosResponse<GuidListApiResponse>
+export type GetAuthNotificationsResult = AxiosResponse<NotificationPreferenceResponseApiResponse>
+export type PutAuthNotificationsResult = AxiosResponse<NotificationPreferenceResponseApiResponse>
+export type GetAuthSecurityLoginHistoryResult = AxiosResponse<LoginHistoryItemPagedResultApiResponse>
+export type PostAuthSecurity2faEnableResult = AxiosResponse<TwoFactorStatusResponseApiResponse>
+export type PostAuthSecurity2faVerifyResult = AxiosResponse<TwoFactorStatusResponseApiResponse>
+export type PostAuthSecurity2faDisableResult = AxiosResponse<ApiResponse>
+export type GetWishlistResult = AxiosResponse<GuidListApiResponse>
+export type PostWishlistProductIdResult = AxiosResponse<ApiResponse>
+export type DeleteWishlistProductIdResult = AxiosResponse<ApiResponse>
+export type PutWishlistSyncResult = AxiosResponse<GuidListApiResponse>
 export type GetApiIntegration1cExportXmlResult = AxiosResponse<void>
 export type GetApiIntegration1cExportCsvResult = AxiosResponse<void>
 export type PostApiIntegration1cImportStockResult = AxiosResponse<void>
-export type GetApiV1OrdersIdResult = AxiosResponse<OrderDtoApiResponse>
-export type GetApiV1OrdersNumberOrderNumberResult = AxiosResponse<OrderDtoApiResponse>
-export type GetApiV1OrdersMyResult = AxiosResponse<void>
-export type GetApiV1OrdersResult = AxiosResponse<void>
-export type PostApiV1OrdersResult = AxiosResponse<OrderDtoApiResponse>
-export type PostApiV1OrdersDeliveryQuoteResult = AxiosResponse<DeliveryQuoteResponseApiResponse>
-export type PutApiV1OrdersIdStatusResult = AxiosResponse<void>
-export type PostApiV1OrdersIdCancelResult = AxiosResponse<void>
-export type PostApiV1OrdersIdPayResult = AxiosResponse<void>
-export type PostApiV1PromoValidateResult = AxiosResponse<ValidatePromoCodeResponseApiResponse>
-export type PostApiV1WebhooksStripeResult = AxiosResponse<void>
-export type GetApiV1WebhooksStripeSimulateResult = AxiosResponse<void>
-export type GetApiV1ServicesTypesResult = AxiosResponse<void>
-export type GetApiV1ServicesTypesSlugResult = AxiosResponse<void>
-export type GetApiV1ServicesIdResult = AxiosResponse<void>
-export type GetApiV1ServicesMyResult = AxiosResponse<void>
-export type GetApiV1ServicesMasterResult = AxiosResponse<void>
-export type GetApiV1ServicesResult = AxiosResponse<void>
-export type PostApiV1ServicesResult = AxiosResponse<void>
-export type GetApiV1ServicesUnassignedResult = AxiosResponse<void>
-export type PostApiV1ServicesIdAssignMasterIdResult = AxiosResponse<void>
-export type PutApiV1ServicesIdCompleteResult = AxiosResponse<void>
-export type PatchApiV1ServicesIdStatusResult = AxiosResponse<void>
-export type PostApiV1ServicesIdPartsResult = AxiosResponse<void>
-export type GetApiV1ServicesIdReportResult = AxiosResponse<void>
-export type GetApiV1ServicesIdMessagesResult = AxiosResponse<void>
-export type PostApiV1ServicesIdMessagesResult = AxiosResponse<void>
-export type GetApiV1ServicesIdMessagesUnreadCountResult = AxiosResponse<void>
-export type PostApiV1ServicesIdUploadResult = AxiosResponse<void>
-export type PostApiV1ServicesIdCancelResult = AxiosResponse<void>
-export type PostApiV1ServicesIdCloseResult = AxiosResponse<void>
-export type GetApiV1WarrantyClaimIdResult = AxiosResponse<void>
-export type GetApiV1WarrantyClaimMyResult = AxiosResponse<void>
-export type GetApiV1WarrantyClaimResult = AxiosResponse<void>
-export type PostApiV1WarrantyClaimResult = AxiosResponse<void>
-export type PutApiV1WarrantyClaimIdStatusResult = AxiosResponse<void>
-export type PostApiV1WarrantyClaimIdResolveResult = AxiosResponse<void>
-export type GetApiV1WarrantyCardIdResult = AxiosResponse<void>
-export type GetApiV1WarrantyCardNumberNumberResult = AxiosResponse<void>
-export type GetApiV1WarrantyCardOrderOrderIdResult = AxiosResponse<void>
-export type GetApiV1WarrantyCardServiceServiceIdResult = AxiosResponse<void>
-export type GetApiV1WarrantyCardSerialSerialNumberResult = AxiosResponse<void>
-export type GetApiV1WarrantyCardMyResult = AxiosResponse<void>
-export type PostApiV1WarrantyCardResult = AxiosResponse<void>
-export type PostApiV1WarrantyCardIdAnnulResult = AxiosResponse<void>
-export type PostApiV1PCBuilderCheckCompatibilityResult = AxiosResponse<CompatibilityCheckResponse>
-export type PostApiV1PCBuilderConfigurationsResult = AxiosResponse<PCConfigurationDto>
-export type GetApiV1PCBuilderConfigurationsResult = AxiosResponse<PCConfigurationDto[]>
-export type GetApiV1PCBuilderConfigurationsIdResult = AxiosResponse<PCConfigurationDto>
-export type DeleteApiV1PCBuilderConfigurationsIdResult = AxiosResponse<void>
-export type PostApiV1PCBuilderConfigurationsIdShareResult = AxiosResponse<ShareTokenResponse>
-export type GetApiV1PCBuilderShareTokenResult = AxiosResponse<PCConfigurationDto>
-export type GetApiV1PCBuilderCompatibleMotherboardsProcessorIdResult = AxiosResponse<string[]>
-export type GetApiV1PCBuilderCompatibleRamMotherboardIdResult = AxiosResponse<string[]>
-export type PostApiV1PCBuilderCalculatePowerResult = AxiosResponse<PowerConsumptionResult>
-export type PostApiV1PCBuilderCalculatePriceResult = AxiosResponse<ConfigurationPriceResult>
-export type PostApiV1PCBuilderCalculateFpsResult = AxiosResponse<FpsCalculationResponse>
+export type GetOrdersIdResult = AxiosResponse<OrderDtoApiResponse>
+export type GetOrdersNumberOrderNumberResult = AxiosResponse<OrderDtoApiResponse>
+export type GetOrdersMyResult = AxiosResponse<void>
+export type GetOrdersResult = AxiosResponse<void>
+export type PostOrdersResult = AxiosResponse<OrderDtoApiResponse>
+export type PostOrdersDeliveryQuoteResult = AxiosResponse<DeliveryQuoteResponseApiResponse>
+export type PutOrdersIdStatusResult = AxiosResponse<void>
+export type PostOrdersIdCancelResult = AxiosResponse<void>
+export type PostOrdersIdPayResult = AxiosResponse<void>
+export type PostPromoValidateResult = AxiosResponse<ValidatePromoCodeResponseApiResponse>
+export type PostWebhooksStripeResult = AxiosResponse<void>
+export type GetWebhooksStripeSimulateResult = AxiosResponse<void>
+export type GetServicesTypesResult = AxiosResponse<void>
+export type GetServicesTypesSlugResult = AxiosResponse<void>
+export type GetServicesIdResult = AxiosResponse<void>
+export type GetServicesMyResult = AxiosResponse<void>
+export type GetServicesMasterResult = AxiosResponse<void>
+export type GetServicesResult = AxiosResponse<void>
+export type PostServicesResult = AxiosResponse<void>
+export type GetServicesUnassignedResult = AxiosResponse<void>
+export type PostServicesIdAssignMasterIdResult = AxiosResponse<void>
+export type PutServicesIdCompleteResult = AxiosResponse<void>
+export type PatchServicesIdStatusResult = AxiosResponse<void>
+export type PostServicesIdPartsResult = AxiosResponse<void>
+export type GetServicesIdReportResult = AxiosResponse<void>
+export type GetServicesIdMessagesResult = AxiosResponse<void>
+export type PostServicesIdMessagesResult = AxiosResponse<void>
+export type GetServicesIdMessagesUnreadCountResult = AxiosResponse<void>
+export type PostServicesIdUploadResult = AxiosResponse<void>
+export type PostServicesIdCancelResult = AxiosResponse<void>
+export type PostServicesIdCloseResult = AxiosResponse<void>
+export type GetWarrantyClaimIdResult = AxiosResponse<void>
+export type GetWarrantyClaimMyResult = AxiosResponse<void>
+export type GetWarrantyClaimResult = AxiosResponse<void>
+export type PostWarrantyClaimResult = AxiosResponse<void>
+export type PutWarrantyClaimIdStatusResult = AxiosResponse<void>
+export type PostWarrantyClaimIdResolveResult = AxiosResponse<void>
+export type GetWarrantyCardIdResult = AxiosResponse<void>
+export type GetWarrantyCardNumberNumberResult = AxiosResponse<void>
+export type GetWarrantyCardOrderOrderIdResult = AxiosResponse<void>
+export type GetWarrantyCardServiceServiceIdResult = AxiosResponse<void>
+export type GetWarrantyCardSerialSerialNumberResult = AxiosResponse<void>
+export type GetWarrantyCardMyResult = AxiosResponse<void>
+export type PostWarrantyCardResult = AxiosResponse<void>
+export type PostWarrantyCardIdAnnulResult = AxiosResponse<void>
+export type PostPCBuilderCheckCompatibilityResult = AxiosResponse<CompatibilityCheckResponse>
+export type PostPCBuilderConfigurationsResult = AxiosResponse<PCConfigurationDto>
+export type GetPCBuilderConfigurationsResult = AxiosResponse<PCConfigurationDto[]>
+export type GetPCBuilderConfigurationsIdResult = AxiosResponse<PCConfigurationDto>
+export type DeletePCBuilderConfigurationsIdResult = AxiosResponse<void>
+export type PostPCBuilderConfigurationsIdShareResult = AxiosResponse<ShareTokenResponse>
+export type GetPCBuilderShareTokenResult = AxiosResponse<PCConfigurationDto>
+export type GetPCBuilderCompatibleMotherboardsProcessorIdResult = AxiosResponse<string[]>
+export type GetPCBuilderCompatibleRamMotherboardIdResult = AxiosResponse<string[]>
+export type PostPCBuilderCalculatePowerResult = AxiosResponse<PowerConsumptionResult>
+export type PostPCBuilderCalculatePriceResult = AxiosResponse<ConfigurationPriceResult>
+export type PostPCBuilderCalculateFpsResult = AxiosResponse<FpsCalculationResponse>

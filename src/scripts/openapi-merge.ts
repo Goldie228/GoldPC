@@ -100,10 +100,12 @@ async function main(): Promise<void> {
     // ── Merge paths ──
     const pathCount = Object.keys(spec.paths || {}).length;
     for (const [path, methods] of Object.entries(spec.paths || {})) {
-      if (merged.paths[path]) {
-        console.warn(`  [WARN] Конфликт пути: ${path} (из ${service.label}) — пути перезаписаны`);
+      // Убираем /api/v1 префикс — apiClient уже имеет baseURL: '/api/v1'
+      const normalizedPath = path.startsWith('/api/v1') ? path.slice(7) : path;
+      if (merged.paths[normalizedPath]) {
+        console.warn(`  [WARN] Конфликт пути: ${normalizedPath} (из ${service.label}) — пути перезаписаны`);
       }
-      merged.paths[path] = methods;
+      merged.paths[normalizedPath] = methods;
     }
     console.log(`  + ${pathCount} путей`);
 
