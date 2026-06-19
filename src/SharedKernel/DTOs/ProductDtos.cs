@@ -51,6 +51,9 @@ public record ProductListDto
 
     /// <summary>Gets мощность блока питания в ваттах (для проверки совместимости PSU/system)</summary>
     public int? Wattage { get; init; }
+
+    /// <summary>Gets список изображений товара (для галереи в карточке)</summary>
+    public List<ProductImageDto> Images { get; init; } = new();
 }
 
 /// <summary>
