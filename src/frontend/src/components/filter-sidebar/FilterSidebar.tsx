@@ -289,7 +289,7 @@ export function FilterSidebar({
   const [showAllMfrs, setShowAllMfrs] = useState(false);
   const [showAllCats, setShowAllCats] = useState(false);
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
-  const [_categories, setCategories] = useState<Category[]>([]);
+  const [, setCategories] = useState<Category[]>([]);
   const [filterFacets, setFilterFacets] = useState<FilterFacetAttribute[]>([]);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -942,28 +942,18 @@ export function FilterSidebar({
             return null;
           };
 
-          return false ? (
-            <FilterGroup title="Характеристики" icon={<Tag size={14} />} defaultOpen={false}>
-              <div className="space-y-2">
-                <Skeleton width="100%" height={20} borderRadius="sm" />
-                <Skeleton width="100%" height={20} borderRadius="sm" />
-                <Skeleton width="100%" height={20} borderRadius="sm" />
-              </div>
-            </FilterGroup>
-          ) : (
-            groups.map(group => {
-              const attrsInGroup = group.keys.map(k => attrMap.get(k)).filter(Boolean) as FilterFacetAttribute[];
-              const singleAttrGroup = attrsInGroup.length === 1;
-              const rendered = attrsInGroup.map(attr => renderAttr(attr, { hideLabel: singleAttrGroup })).filter(Boolean);
-              if (rendered.length === 0) return null;
-              const title = attrsInGroup[0]?.displayName ?? group.keys[0];
-              return (
-                <FilterGroup key={group.keys[0]} title={title} icon={<Tag size={14} />} defaultOpen={false} mobile={mobile}>
-                  {rendered}
-                </FilterGroup>
-              );
-            })
-          );
+          return groups.map(group => {
+            const attrsInGroup = group.keys.map(k => attrMap.get(k)).filter(Boolean) as FilterFacetAttribute[];
+            const singleAttrGroup = attrsInGroup.length === 1;
+            const rendered = attrsInGroup.map(attr => renderAttr(attr, { hideLabel: singleAttrGroup })).filter(Boolean);
+            if (rendered.length === 0) return null;
+            const title = attrsInGroup[0]?.displayName ?? group.keys[0];
+            return (
+              <FilterGroup key={group.keys[0]} title={title} icon={<Tag size={14} />} defaultOpen={false} mobile={mobile}>
+                {rendered}
+              </FilterGroup>
+            );
+          });
         })()}
 
         {/* === Производители === */}

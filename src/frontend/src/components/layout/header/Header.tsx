@@ -335,7 +335,7 @@ export function Header(): ReactElement {
                   <>
                     <div className="flex items-center gap-3 p-4 bg-surface-elevated rounded-t-xl">
                       {user?.avatarUrl ? (
-                        <img src={user.avatarUrl} alt="Аватар" className="w-11 h-11 rounded-full object-cover flex-shrink-0" />
+                        <img src={user.avatarUrl} alt="Аватар" className="w-11 h-11 rounded-full object-cover flex-shrink-0" width={44} height={44} loading="eager" />
                       ) : (
                         <div className="w-11 h-11 bg-gold rounded-full flex items-center justify-center text-gold-ink font-semibold text-lg uppercase flex-shrink-0">
                           {((decodeHtmlEntities(user?.firstName ?? '') ?? '') || (decodeHtmlEntities(user?.email ?? '') ?? ''))?.charAt(0) || 'U'}
@@ -521,7 +521,7 @@ export function Header(): ReactElement {
                       {/* User Card */}
                       <div className="flex items-center gap-3 px-4 py-3 bg-surface-elevated">
                         {user?.avatarUrl ? (
-                          <img src={user.avatarUrl} alt="Аватар" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                          <img src={user.avatarUrl} alt="Аватар" className="w-10 h-10 rounded-full object-cover flex-shrink-0" width={40} height={40} loading="lazy" />
                         ) : (
                           <div className="w-10 h-10 bg-gold rounded-full flex items-center justify-center text-gold-ink font-semibold text-sm uppercase flex-shrink-0">
                             {(() => {

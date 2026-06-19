@@ -125,6 +125,10 @@ export function ProductGallery({ product }: ProductGalleryProps): ReactElement {
                 src={activeImage}
                 alt={product.name}
                 className="w-[85%] h-[85%] object-contain transition-transform duration-500 ease-out pointer-events-none"
+                width={400}
+                height={400}
+                loading="eager"
+                fetchPriority="high"
               />
             ) : (
               <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-muted-foreground opacity-30" role="img" aria-label={`Фото ${product.name} отсутствует`}>
@@ -181,7 +185,7 @@ export function ProductGallery({ product }: ProductGalleryProps): ReactElement {
                 aria-label={`Фото ${idx + 1} из ${images.length}`}
                 aria-current={currentIndex === idx ? 'true' : undefined}
               >
-                <img src={img.url} alt={img.alt || product.name} className="w-full h-full object-contain" />
+                <img src={img.url} alt={img.alt || product.name} className="w-full h-full object-contain" width={64} height={64} loading="lazy" />
               </button>
             ))}
           </div>

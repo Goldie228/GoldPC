@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, memo } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, GitCompareArrows, ShoppingCart, Bell, Plus, Minus, Star, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Heart, GitCompareArrows, ShoppingCart, Bell, Plus, Minus, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getProductImageUrl } from '@/utils/image';
 import { getDisplayManufacturerName } from '@/utils/manufacturerNameOverrides';
@@ -14,13 +14,14 @@ import { useComparison } from '@/hooks/useComparison';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/useToast';
 import { catalogApi } from '@/api/catalog';
+import { EmptyState } from './EmptyState';
 
 interface ProductCardProps {
   product: ProductSummary;
   onAddToCart?: (productId: string) => void;
 }
 
-function ProductCard({ product, onAddToCart }: ProductCardProps) {
+const ProductCard = memo(function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const [hovered, setHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { isInWishlist, toggleWishlist } = useWishlist();
@@ -60,33 +61,33 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
   }, [product.images, product.mainImage, fullProduct, hasImagesInList]);
   const hasMultipleImages = images.length > 1;
 
-  const handlePrevImage = (e: React.MouseEvent) => {
+  const handlePrevImage = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
-  };
+  }, [images.length]);
 
-  const handleNextImage = (e: React.MouseEvent) => {
+  const handleNextImage = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
-  };
+  }, [images.length]);
 
-  const handleZoneHover = (index: number) => {
+  const handleZoneHover = useCallback((index: number) => {
     if (hovered && hasMultipleImages) {
       setCurrentImageIndex(index);
     }
-  };
+  }, [hovered, hasMultipleImages]);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product);
     onAddToCart?.(product.id);
     showToast('Товар добавлен в корзину', 'success');
-  };
+  }, [addToCart, product, onAddToCart, showToast]);
 
-  const handleUpdateQty = (e: React.MouseEvent, delta: number) => {
+  const handleUpdateQty = useCallback((e: React.MouseEvent, delta: number) => {
     e.preventDefault();
     e.stopPropagation();
     const next = quantityInCart + delta;
@@ -99,15 +100,43 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
       return;
     }
     updateQuantity(product.id, next);
-  };
+  }, [quantityInCart, removeFromCart, product.id, product.stock, updateQuantity, showToast]);
+
+  const handleMouseEnter = useCallback(() => setHovered(true), []);
+  const handleMouseLeave = useCallback(() => {
+    setHovered(false);
+    setCurrentImageIndex(0);
+  }, []);
+
+  const handleWishlistToggle = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const newState = !isInWishlist(product.id);
+    toggleWishlist(product.id);
+    showToast(newState ? 'Добавлено в избранное' : 'Удалено из избранного', newState ? 'success' : 'info');
+  }, [isInWishlist, product.id, toggleWishlist, showToast]);
+
+  const handleComparisonToggle = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const inComp = isInComparison(product.id);
+    if (inComp) {
+      toggleComparison(product.id, product.category);
+      showToast('Удалено из сравнения', 'info');
+    } else {
+      const result = toggleComparison(product.id, product.category);
+      if (result.success) {
+        showToast('Добавлено в сравнение', 'success');
+      } else if (result.reason === 'limit') {
+        showToast('В сравнении уже 4 товара этой категории', 'info');
+      }
+    }
+  }, [isInComparison, product.id, product.category, toggleComparison, showToast]);
 
   return (
     <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => {
-        setHovered(false);
-        setCurrentImageIndex(0);
-      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className={`bg-surface-card rounded-xl overflow-hidden flex flex-col transition-all duration-300 ease-out text-white ${
         hovered ? 'bg-surface-elevated -translate-y-1 shadow-lg shadow-black/30 ring-1 ring-gold/20' : ''
       }`}
@@ -118,8 +147,8 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
         {product.shortName && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
             <span
-              className="text-surface-elevated/50 font-bold uppercase tracking-tighter leading-none whitespace-nowrap"
-              style={{ fontSize: '5.5rem', textShadow: '0 0 40px rgba(0,0,0,0.06)' }}
+              className="text-surface-elevated/50 font-bold uppercase tracking-tighter leading-none whitespace-nowrap text-7xl"
+              style={{ textShadow: '0 0 40px rgba(0,0,0,0.06)' }}
             >
               {product.shortName}
             </span>
@@ -206,13 +235,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
           hovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-2'
         }`}>
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const newState = !isInWishlist(product.id);
-              toggleWishlist(product.id);
-              showToast(newState ? 'Добавлено в избранное' : 'Удалено из избранного', newState ? 'success' : 'info');
-            }}
+            onClick={handleWishlistToggle}
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm backdrop-blur-sm ${
               isInWishlist(product.id)
                 ? 'bg-price-rise/20 text-price-rise'
@@ -223,22 +246,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
             <Heart size={14} fill={isInWishlist(product.id) ? 'currentColor' : 'none'} />
           </button>
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const inComp = isInComparison(product.id);
-              if (inComp) {
-                toggleComparison(product.id, product.category);
-                showToast('Удалено из сравнения', 'info');
-              } else {
-                const result = toggleComparison(product.id, product.category);
-                if (result.success) {
-                  showToast('Добавлено в сравнение', 'success');
-                } else if (result.reason === 'limit') {
-                  showToast('В сравнении уже 4 товара этой категории', 'info');
-                }
-              }
-            }}
+            onClick={handleComparisonToggle}
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shadow-sm backdrop-blur-sm ${
               isInComparison(product.id)
                 ? 'bg-info-blue/20 text-info-blue'
@@ -261,7 +269,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
         <span className="text-[10px] text-white/70 font-medium uppercase tracking-wider truncate">
           {getDisplayManufacturerName(product.manufacturer?.name) || product.brand || ''}
         </span>
-        <h3 style={{ fontSize: '17px' }} className={`!font-semibold !leading-tight line-clamp-3 min-h-[3.5rem] ${isOutOfStock ? 'opacity-60' : ''}`}>
+        <h3 className="text-sm !font-semibold !leading-tight line-clamp-3 min-h-[3.5rem]">
           <Link to={`/product/${product.slug || product.id}`} className="!text-white hover:!text-gold transition-colors">
             {product.name}
           </Link>
@@ -332,7 +340,7 @@ function ProductCard({ product, onAddToCart }: ProductCardProps) {
       </div>
     </div>
   );
-}
+});
 
 interface ProductGridProps {
   products: ProductSummary[];
@@ -342,13 +350,11 @@ interface ProductGridProps {
 export function ProductGrid({ products, onAddToCart }: ProductGridProps) {
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="w-16 h-16 rounded-full bg-surface-card flex items-center justify-center mb-5">
-          <Search size={28} className="text-muted-text" />
-        </div>
-        <h3 className="text-lg font-semibold text-on-dark mb-2">Товары не найдены</h3>
-        <p className="text-sm text-muted-text max-w-xs">Попробуйте изменить фильтры или поисковый запрос</p>
-      </div>
+      <EmptyState
+        title="Товары не найдены"
+        description="Попробуйте изменить фильтры или поисковый запрос"
+        showResetButton={false}
+      />
     );
   }
 

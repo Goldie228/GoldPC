@@ -1,7 +1,7 @@
 import { type ReactElement, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Bell, Star, Search } from 'lucide-react';
+import { ShoppingCart, Bell, Star } from 'lucide-react';
 import type { ProductSummary } from '@/api/types';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
@@ -11,6 +11,7 @@ import { Icon } from '../ui/Icon/Icon';
 import { telemetryTrack } from '@/utils/telemetry';
 import { getProductImageUrl, hasValidProductImage } from '@/utils/image';
 import { getDisplayManufacturerName } from '@/utils/manufacturerNameOverrides';
+import { EmptyState } from './EmptyState';
 
 interface ProductTableProps {
   products: ProductSummary[];
@@ -73,13 +74,11 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
 
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="w-16 h-16 rounded-full bg-surface-card flex items-center justify-center mb-5">
-          <Search size={28} className="text-muted-text" />
-        </div>
-        <h3 className="text-lg font-bold text-on-dark mb-2">Товары не найдены</h3>
-        <p className="text-sm text-muted-text max-w-xs">Попробуйте изменить фильтры или поисковый запрос</p>
-      </div>
+      <EmptyState
+        title="Товары не найдены"
+        description="Попробуйте изменить фильтры или поисковый запрос"
+        showResetButton={false}
+      />
     );
   }
 

@@ -122,7 +122,7 @@ export function MiniCart({ isOpen, onClose }: MiniCartProps): ReactElement {
                 <div key={item.id} className="grid grid-cols-[52px_1fr_auto_auto] gap-3 items-center p-3 bg-[var(--bg)] border border-[var(--border)] rounded-lg transition-colors hover:border-[var(--border-brand)] max-[768px]:grid-cols-[44px_1fr_auto_auto] max-[768px]:gap-2.5 max-[768px]:p-2.5">
                   <div className="w-[52px] h-[52px] flex items-center justify-center bg-white rounded-lg overflow-hidden p-1 max-[768px]:w-11 max-[768px]:h-11">
                     {hasValidProductImage(item.imageUrl) ? (
-                      <img src={item.imageUrl} alt={item.name} />
+                      <img src={item.imageUrl} alt={item.name} width={52} height={52} loading="lazy" />
                     ) : (
                       <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>

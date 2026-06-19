@@ -160,7 +160,7 @@ export function CartPage(): ReactElement {
                     {/* Image */}
                     <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-white rounded-xl flex-shrink-0 p-2 md:p-3 overflow-hidden">
                       {hasValidProductImage(item.imageUrl) ? (
-                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain block" />
+                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain block" width={80} height={80} loading="lazy" />
                       ) : (
                         <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="max-w-[80%] max-h-[80%]" role="img" aria-label={`Фото ${item.name} отсутствует`}>
                           <rect x="15" y="15" width="70" height="70" rx="4" fill="#1a1a1e" stroke="#3a3a3e"/>

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useCartStore, type PromoValidationResult } from '../store/cartStore';
 import { promoApi } from '../api/promo';
 import type { ProductSummary } from '../api/types';
@@ -13,36 +13,37 @@ export function useCart() {
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
 
-  // Вычисляемые значения
-  const totalPrice = store.getTotal();
-  const itemCount = store.getItemCount();
-  const discountedTotal = store.getDiscountedTotal();
-  const discountAmount = totalPrice - discountedTotal;
+  // Вычисляемые значения (мемоизированы по items)
+  const items = store.items;
+  const totalPrice = useMemo(() => store.getTotal(), [items]);
+  const itemCount = useMemo(() => store.getItemCount(), [items]);
+  const discountedTotal = useMemo(() => store.getDiscountedTotal(), [items]);
+  const discountAmount = useMemo(() => totalPrice - discountedTotal, [totalPrice, discountedTotal]);
 
   // Обёртки для действий
-  const addToCart = (product: ProductSummary, quantity = 1) => {
+  const addToCart = useCallback((product: ProductSummary, quantity = 1) => {
     store.addItem(product, quantity);
-  };
+  }, [store]);
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = useCallback((productId: string) => {
     store.removeItem(productId);
-  };
+  }, [store]);
 
-  const changeQuantity = (productId: string, delta: number) => {
+  const changeQuantity = useCallback((productId: string, delta: number) => {
     const item = store.items.find((i) => i.productId === productId);
     if (item != null) {
       store.updateQuantity(productId, item.quantity + delta);
     }
-  };
+  }, [store]);
 
-  const setQuantity = (productId: string, quantity: number) => {
+  const setQuantity = useCallback((productId: string, quantity: number) => {
     store.updateQuantity(productId, quantity);
-  };
+  }, [store]);
 
   // Backward-compatible alias (used in some components)
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = useCallback((productId: string, quantity: number) => {
     store.updateQuantity(productId, quantity);
-  };
+  }, [store]);
 
   const validateAndApplyPromo = useCallback(async (code: string): Promise<{ success: boolean; message: string }> => {
     setIsValidatingPromo(true);
@@ -75,29 +76,29 @@ export function useCart() {
     }
   }, [store]);
 
-  const clearPromoCode = () => {
+  const clearPromoCode = useCallback(() => {
     store.clearPromo();
-  };
+  }, [store]);
 
-  const emptyCart = () => {
+  const emptyCart = useCallback(() => {
     store.clearCart();
-  };
+  }, [store]);
 
-  const isInCart = (productId: string): boolean => {
+  const isInCart = useCallback((productId: string): boolean => {
     return store.items.some((item) => item.productId === productId);
-  };
+  }, [store.items]);
 
-  const getItemQuantity = (productId: string): number => {
+  const getItemQuantity = useCallback((productId: string): number => {
     const item = store.items.find((i) => i.productId === productId);
     return item?.quantity ?? 0;
-  };
+  }, [store.items]);
 
-  return {
+  return useMemo(() => ({
     // Состояние
-    items: store.items,
+    items,
     promoCode: store.promoCode,
     discount: store.discount,
-    isEmpty: store.items.length === 0,
+    isEmpty: items.length === 0,
 
     // Вычисляемые значения
     totalPrice,
@@ -122,5 +123,12 @@ export function useCart() {
     // Утилиты
     isInCart,
     getItemQuantity,
-  };
+  }), [
+    items, store.promoCode, store.discount,
+    totalPrice, itemCount, discountedTotal, discountAmount,
+    isValidatingPromo, promoError,
+    addToCart, removeFromCart, changeQuantity, setQuantity, updateQuantity,
+    validateAndApplyPromo, clearPromoCode, emptyCart,
+    isInCart, getItemQuantity,
+  ]);
 }

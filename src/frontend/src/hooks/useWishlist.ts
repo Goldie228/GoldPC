@@ -1,6 +1,7 @@
 /**
  * useWishlist Hook - Управление списком желаний
  */
+import { useMemo } from 'react';
 import { useWishlistStore } from '../store/wishlistStore';
 
 export interface UseWishlistReturn {
@@ -24,7 +25,7 @@ export function useWishlist(): UseWishlistReturn {
   const getCount = useWishlistStore((state) => state.getCount);
   const syncWithServer = useWishlistStore((state) => state.syncWithServer);
 
-  return {
+  return useMemo(() => ({
     items,
     isInWishlist,
     toggleWishlist,
@@ -33,7 +34,10 @@ export function useWishlist(): UseWishlistReturn {
     clearWishlist,
     getCount,
     syncWithServer,
-  };
+  }), [
+    items, isInWishlist, toggleWishlist, addItem, removeItem,
+    clearWishlist, getCount, syncWithServer,
+  ]);
 }
 
 export default useWishlist;
