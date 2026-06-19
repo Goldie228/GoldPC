@@ -7,18 +7,18 @@
  */
 import * as zod from 'zod';
 
-export const getApiV1AdminProductsQueryPageDefault = 1;
-export const getApiV1AdminProductsQueryPageSizeDefault = 10;
+export const getAdminProductsQueryPageDefault = 1;
+export const getAdminProductsQueryPageSizeDefault = 10;
 
-export const GetApiV1AdminProductsQueryParams = zod.object({
-  "page": zod.number().default(getApiV1AdminProductsQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1AdminProductsQueryPageSizeDefault),
+export const GetAdminProductsQueryParams = zod.object({
+  "page": zod.number().default(getAdminProductsQueryPageDefault),
+  "pageSize": zod.number().default(getAdminProductsQueryPageSizeDefault),
   "category": zod.string().optional(),
   "isActive": zod.boolean().optional(),
   "search": zod.string().optional()
 })
 
-export const GetApiV1AdminProductsResponse = zod.object({
+export const GetAdminProductsResponse = zod.object({
   "data": zod.array(zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
@@ -65,7 +65,7 @@ export const GetApiV1AdminProductsResponse = zod.object({
 })
 
 
-export const PostApiV1AdminProductsBody = zod.object({
+export const PostAdminProductsBody = zod.object({
   "name": zod.string().nullish(),
   "sku": zod.string().nullish(),
   "slug": zod.string().nullish(),
@@ -82,7 +82,7 @@ export const PostApiV1AdminProductsBody = zod.object({
   "isFeatured": zod.boolean().optional()
 })
 
-export const PostApiV1AdminProductsResponse = zod.object({
+export const PostAdminProductsResponse = zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
   "sku": zod.string().nullish(),
@@ -132,11 +132,11 @@ export const PostApiV1AdminProductsResponse = zod.object({
 })
 
 
-export const PutApiV1AdminProductsProductIdParams = zod.object({
+export const PutAdminProductsProductIdParams = zod.object({
   "productId": zod.uuid()
 })
 
-export const PutApiV1AdminProductsProductIdBody = zod.object({
+export const PutAdminProductsProductIdBody = zod.object({
   "name": zod.string().nullish(),
   "slug": zod.string().nullish(),
   "manufacturerId": zod.uuid().nullish(),
@@ -150,7 +150,7 @@ export const PutApiV1AdminProductsProductIdBody = zod.object({
   "isFeatured": zod.boolean().nullish()
 })
 
-export const PutApiV1AdminProductsProductIdResponse = zod.object({
+export const PutAdminProductsProductIdResponse = zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
   "sku": zod.string().nullish(),
@@ -200,21 +200,21 @@ export const PutApiV1AdminProductsProductIdResponse = zod.object({
 })
 
 
-export const DeleteApiV1AdminProductsProductIdParams = zod.object({
+export const DeleteAdminProductsProductIdParams = zod.object({
   "productId": zod.uuid()
 })
 
-export const DeleteApiV1AdminProductsProductIdResponse = zod.void()
+export const DeleteAdminProductsProductIdResponse = zod.void()
 
 
-export const PostApiV1AdminManufacturersBody = zod.object({
+export const PostAdminManufacturersBody = zod.object({
   "name": zod.string().nullish(),
   "country": zod.string().nullish(),
   "logoUrl": zod.string().nullish(),
   "description": zod.string().nullish()
 })
 
-export const PostApiV1AdminManufacturersResponse = zod.object({
+export const PostAdminManufacturersResponse = zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
   "logo": zod.string().nullish(),
@@ -223,18 +223,18 @@ export const PostApiV1AdminManufacturersResponse = zod.object({
 })
 
 
-export const PutApiV1AdminManufacturersManufacturerIdParams = zod.object({
+export const PutAdminManufacturersManufacturerIdParams = zod.object({
   "manufacturerId": zod.uuid()
 })
 
-export const PutApiV1AdminManufacturersManufacturerIdBody = zod.object({
+export const PutAdminManufacturersManufacturerIdBody = zod.object({
   "name": zod.string().nullish(),
   "country": zod.string().nullish(),
   "logoUrl": zod.string().nullish(),
   "description": zod.string().nullish()
 })
 
-export const PutApiV1AdminManufacturersManufacturerIdResponse = zod.object({
+export const PutAdminManufacturersManufacturerIdResponse = zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
   "logo": zod.string().nullish(),
@@ -243,21 +243,21 @@ export const PutApiV1AdminManufacturersManufacturerIdResponse = zod.object({
 })
 
 
-export const DeleteApiV1AdminManufacturersManufacturerIdParams = zod.object({
+export const DeleteAdminManufacturersManufacturerIdParams = zod.object({
   "manufacturerId": zod.uuid()
 })
 
-export const DeleteApiV1AdminManufacturersManufacturerIdResponse = zod.void()
+export const DeleteAdminManufacturersManufacturerIdResponse = zod.void()
 
 
-export const PostApiV1AdminCategoriesBody = zod.object({
+export const PostAdminCategoriesBody = zod.object({
   "name": zod.string().nullish(),
   "slug": zod.string().nullish(),
   "description": zod.string().nullish(),
   "parentId": zod.uuid().nullish()
 })
 
-export const PostApiV1AdminCategoriesResponse = zod.object({
+export const PostAdminCategoriesResponse = zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
   "slug": zod.string().nullish(),
@@ -270,18 +270,18 @@ export const PostApiV1AdminCategoriesResponse = zod.object({
 })
 
 
-export const PutApiV1AdminCategoriesCategoryIdParams = zod.object({
+export const PutAdminCategoriesCategoryIdParams = zod.object({
   "categoryId": zod.uuid()
 })
 
-export const PutApiV1AdminCategoriesCategoryIdBody = zod.object({
+export const PutAdminCategoriesCategoryIdBody = zod.object({
   "name": zod.string().nullish(),
   "slug": zod.string().nullish(),
   "description": zod.string().nullish(),
   "parentId": zod.uuid().nullish()
 })
 
-export const PutApiV1AdminCategoriesCategoryIdResponse = zod.object({
+export const PutAdminCategoriesCategoryIdResponse = zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
   "slug": zod.string().nullish(),
@@ -294,32 +294,32 @@ export const PutApiV1AdminCategoriesCategoryIdResponse = zod.object({
 })
 
 
-export const DeleteApiV1AdminCategoriesCategoryIdParams = zod.object({
+export const DeleteAdminCategoriesCategoryIdParams = zod.object({
   "categoryId": zod.uuid()
 })
 
-export const DeleteApiV1AdminCategoriesCategoryIdResponse = zod.void()
+export const DeleteAdminCategoriesCategoryIdResponse = zod.void()
 
 
-export const GetApiV1AdminProductsProductIdPriceHistoryParams = zod.object({
+export const GetAdminProductsProductIdPriceHistoryParams = zod.object({
   "productId": zod.uuid()
 })
 
-export const GetApiV1AdminProductsProductIdPriceHistoryResponseItem = zod.object({
+export const GetAdminProductsProductIdPriceHistoryResponseItem = zod.object({
   "id": zod.uuid().optional(),
   "price": zod.number().optional(),
   "oldPrice": zod.number().nullish(),
   "changedAt": zod.iso.datetime({"offset":true}).optional(),
   "changedBy": zod.string().nullish()
 })
-export const GetApiV1AdminProductsProductIdPriceHistoryResponse = zod.array(GetApiV1AdminProductsProductIdPriceHistoryResponseItem)
+export const GetAdminProductsProductIdPriceHistoryResponse = zod.array(GetAdminProductsProductIdPriceHistoryResponseItem)
 
 
-export const GetApiV1AdminSpecificationsByCategoryCategoryIdParams = zod.object({
+export const GetAdminSpecificationsByCategoryCategoryIdParams = zod.object({
   "categoryId": zod.uuid()
 })
 
-export const GetApiV1AdminSpecificationsByCategoryCategoryIdResponse = zod.object({
+export const GetAdminSpecificationsByCategoryCategoryIdResponse = zod.object({
   "categoryId": zod.uuid().optional(),
   "categoryName": zod.string().nullish(),
   "attributes": zod.array(zod.object({
@@ -340,25 +340,25 @@ export const GetApiV1AdminSpecificationsByCategoryCategoryIdResponse = zod.objec
 })
 
 
-export const PostApiV1AdminProductsGenerateNameBody = zod.object({
+export const PostAdminProductsGenerateNameBody = zod.object({
   "manufacturerName": zod.string().nullish(),
   "categorySlug": zod.string().nullish(),
   "specifications": zod.record(zod.string(), zod.unknown()).nullish()
 })
 
-export const PostApiV1AdminProductsGenerateNameResponse = zod.object({
+export const PostAdminProductsGenerateNameResponse = zod.object({
   "name": zod.string().nullish()
 })
 
 
-export const GetApiV1AdminSpecificationsUniqueValuesCategoryIdParams = zod.object({
+export const GetAdminSpecificationsUniqueValuesCategoryIdParams = zod.object({
   "categoryId": zod.uuid()
 })
 
-export const GetApiV1AdminSpecificationsUniqueValuesCategoryIdResponse = zod.record(zod.string(), zod.array(zod.string()))
+export const GetAdminSpecificationsUniqueValuesCategoryIdResponse = zod.record(zod.string(), zod.array(zod.string()))
 
 
-export const PostApiV1AdminDataMigrateFixRangeOutliersResponse = zod.object({
+export const PostAdminDataMigrateFixRangeOutliersResponse = zod.object({
   "valid": zod.number().optional(),
   "fixed": zod.number().optional(),
   "removed": zod.number().optional(),
@@ -366,7 +366,7 @@ export const PostApiV1AdminDataMigrateFixRangeOutliersResponse = zod.object({
 })
 
 
-export const PostApiV1AdminDataMigrateRemoveLeakedValuesResponse = zod.object({
+export const PostAdminDataMigrateRemoveLeakedValuesResponse = zod.object({
   "valid": zod.number().optional(),
   "fixed": zod.number().optional(),
   "removed": zod.number().optional(),
@@ -374,7 +374,7 @@ export const PostApiV1AdminDataMigrateRemoveLeakedValuesResponse = zod.object({
 })
 
 
-export const PostApiV1AdminDataMigrateNormalizeDuplicatesResponse = zod.object({
+export const PostAdminDataMigrateNormalizeDuplicatesResponse = zod.object({
   "valid": zod.number().optional(),
   "fixed": zod.number().optional(),
   "removed": zod.number().optional(),
@@ -382,7 +382,7 @@ export const PostApiV1AdminDataMigrateNormalizeDuplicatesResponse = zod.object({
 })
 
 
-export const PostApiV1AdminDataMigrateRecalculateFrequenciesResponse = zod.object({
+export const PostAdminDataMigrateRecalculateFrequenciesResponse = zod.object({
   "valid": zod.number().optional(),
   "fixed": zod.number().optional(),
   "removed": zod.number().optional(),
@@ -390,7 +390,7 @@ export const PostApiV1AdminDataMigrateRecalculateFrequenciesResponse = zod.objec
 })
 
 
-export const PostApiV1AdminDataMigrateRecalculateVramResponse = zod.object({
+export const PostAdminDataMigrateRecalculateVramResponse = zod.object({
   "valid": zod.number().optional(),
   "fixed": zod.number().optional(),
   "removed": zod.number().optional(),
@@ -398,7 +398,7 @@ export const PostApiV1AdminDataMigrateRecalculateVramResponse = zod.object({
 })
 
 
-export const PostApiV1AdminDataMigrateAllResponse = zod.object({
+export const PostAdminDataMigrateAllResponse = zod.object({
   "rangeOutliers": zod.object({
   "valid": zod.number().optional(),
   "fixed": zod.number().optional(),
@@ -421,22 +421,22 @@ export const PostApiV1AdminDataMigrateAllResponse = zod.object({
 })
 
 
-export const PostApiV1AdminDataProductsCheckStockBodyItem = zod.object({
+export const PostAdminDataProductsCheckStockBodyItem = zod.object({
   "productId": zod.uuid().optional(),
   "quantity": zod.number().optional()
 })
-export const PostApiV1AdminDataProductsCheckStockBody = zod.array(PostApiV1AdminDataProductsCheckStockBodyItem)
+export const PostAdminDataProductsCheckStockBody = zod.array(PostAdminDataProductsCheckStockBodyItem)
 
-export const PostApiV1AdminDataProductsCheckStockResponseItem = zod.object({
+export const PostAdminDataProductsCheckStockResponseItem = zod.object({
   "productId": zod.uuid().optional(),
   "available": zod.boolean().optional(),
   "availableQuantity": zod.number().optional(),
   "message": zod.string().nullish()
 })
-export const PostApiV1AdminDataProductsCheckStockResponse = zod.array(PostApiV1AdminDataProductsCheckStockResponseItem)
+export const PostAdminDataProductsCheckStockResponse = zod.array(PostAdminDataProductsCheckStockResponseItem)
 
 
-export const GetApiV1CatalogProductsQueryParams = zod.object({
+export const GetCatalogProductsQueryParams = zod.object({
   "Category": zod.string().optional(),
   "CategoryId": zod.uuid().optional(),
   "ManufacturerId": zod.uuid().optional(),
@@ -455,7 +455,7 @@ export const GetApiV1CatalogProductsQueryParams = zod.object({
   "SortOrder": zod.string().optional()
 })
 
-export const GetApiV1CatalogProductsResponse = zod.object({
+export const GetCatalogProductsResponse = zod.object({
   "data": zod.array(zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
@@ -502,11 +502,11 @@ export const GetApiV1CatalogProductsResponse = zod.object({
 })
 
 
-export const GetApiV1CatalogProductsProductIdParams = zod.object({
+export const GetCatalogProductsProductIdParams = zod.object({
   "productId": zod.uuid()
 })
 
-export const GetApiV1CatalogProductsProductIdResponse = zod.object({
+export const GetCatalogProductsProductIdResponse = zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
   "sku": zod.string().nullish(),
@@ -556,11 +556,11 @@ export const GetApiV1CatalogProductsProductIdResponse = zod.object({
 })
 
 
-export const GetApiV1CatalogProductsBySlugSlugParams = zod.object({
+export const GetCatalogProductsBySlugSlugParams = zod.object({
   "slug": zod.string()
 })
 
-export const GetApiV1CatalogProductsBySlugSlugResponse = zod.object({
+export const GetCatalogProductsBySlugSlugResponse = zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
   "sku": zod.string().nullish(),
@@ -610,19 +610,19 @@ export const GetApiV1CatalogProductsBySlugSlugResponse = zod.object({
 })
 
 
-export const GetApiV1CatalogProductsProductIdReviewsParams = zod.object({
+export const GetCatalogProductsProductIdReviewsParams = zod.object({
   "productId": zod.uuid()
 })
 
-export const getApiV1CatalogProductsProductIdReviewsQueryPageDefault = 1;
-export const getApiV1CatalogProductsProductIdReviewsQueryPageSizeDefault = 20;
+export const getCatalogProductsProductIdReviewsQueryPageDefault = 1;
+export const getCatalogProductsProductIdReviewsQueryPageSizeDefault = 20;
 
-export const GetApiV1CatalogProductsProductIdReviewsQueryParams = zod.object({
-  "page": zod.number().default(getApiV1CatalogProductsProductIdReviewsQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1CatalogProductsProductIdReviewsQueryPageSizeDefault)
+export const GetCatalogProductsProductIdReviewsQueryParams = zod.object({
+  "page": zod.number().default(getCatalogProductsProductIdReviewsQueryPageDefault),
+  "pageSize": zod.number().default(getCatalogProductsProductIdReviewsQueryPageSizeDefault)
 })
 
-export const GetApiV1CatalogProductsProductIdReviewsResponse = zod.object({
+export const GetCatalogProductsProductIdReviewsResponse = zod.object({
   "data": zod.array(zod.object({
   "id": zod.uuid().optional(),
   "productId": zod.uuid().optional(),
@@ -649,11 +649,11 @@ export const GetApiV1CatalogProductsProductIdReviewsResponse = zod.object({
 })
 
 
-export const PostApiV1CatalogProductsProductIdReviewsParams = zod.object({
+export const PostCatalogProductsProductIdReviewsParams = zod.object({
   "productId": zod.uuid()
 })
 
-export const PostApiV1CatalogProductsProductIdReviewsBody = zod.object({
+export const PostCatalogProductsProductIdReviewsBody = zod.object({
   "rating": zod.number().optional(),
   "title": zod.string().nullish(),
   "comment": zod.string().nullish(),
@@ -661,7 +661,7 @@ export const PostApiV1CatalogProductsProductIdReviewsBody = zod.object({
   "cons": zod.string().nullish()
 })
 
-export const PostApiV1CatalogProductsProductIdReviewsResponse = zod.object({
+export const PostCatalogProductsProductIdReviewsResponse = zod.object({
   "id": zod.uuid().optional(),
   "productId": zod.uuid().optional(),
   "userId": zod.uuid().optional(),
@@ -678,12 +678,12 @@ export const PostApiV1CatalogProductsProductIdReviewsResponse = zod.object({
 })
 
 
-export const PutApiV1CatalogProductsProductIdReviewsReviewIdParams = zod.object({
+export const PutCatalogProductsProductIdReviewsReviewIdParams = zod.object({
   "productId": zod.uuid(),
   "reviewId": zod.uuid()
 })
 
-export const PutApiV1CatalogProductsProductIdReviewsReviewIdBody = zod.object({
+export const PutCatalogProductsProductIdReviewsReviewIdBody = zod.object({
   "rating": zod.number().optional(),
   "title": zod.string().nullish(),
   "comment": zod.string().nullish(),
@@ -691,7 +691,7 @@ export const PutApiV1CatalogProductsProductIdReviewsReviewIdBody = zod.object({
   "cons": zod.string().nullish()
 })
 
-export const PutApiV1CatalogProductsProductIdReviewsReviewIdResponse = zod.object({
+export const PutCatalogProductsProductIdReviewsReviewIdResponse = zod.object({
   "id": zod.uuid().optional(),
   "productId": zod.uuid().optional(),
   "userId": zod.uuid().optional(),
@@ -708,23 +708,23 @@ export const PutApiV1CatalogProductsProductIdReviewsReviewIdResponse = zod.objec
 })
 
 
-export const DeleteApiV1CatalogProductsProductIdReviewsReviewIdParams = zod.object({
+export const DeleteCatalogProductsProductIdReviewsReviewIdParams = zod.object({
   "productId": zod.uuid(),
   "reviewId": zod.uuid()
 })
 
-export const DeleteApiV1CatalogProductsProductIdReviewsReviewIdResponse = zod.void()
+export const DeleteCatalogProductsProductIdReviewsReviewIdResponse = zod.void()
 
 
-export const PatchApiV1CatalogProductsProductIdReviewsReviewIdHelpfulParams = zod.object({
+export const PatchCatalogProductsProductIdReviewsReviewIdHelpfulParams = zod.object({
   "productId": zod.uuid(),
   "reviewId": zod.uuid()
 })
 
-export const PatchApiV1CatalogProductsProductIdReviewsReviewIdHelpfulResponse = zod.unknown()
+export const PatchCatalogProductsProductIdReviewsReviewIdHelpfulResponse = zod.unknown()
 
 
-export const GetApiV1CatalogCategoriesResponse = zod.object({
+export const GetCatalogCategoriesResponse = zod.object({
   "data": zod.array(zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
@@ -739,18 +739,18 @@ export const GetApiV1CatalogCategoriesResponse = zod.object({
 })
 
 
-export const GetApiV1CatalogCategoriesSlugFilterAttributesParams = zod.object({
+export const GetCatalogCategoriesSlugFilterAttributesParams = zod.object({
   "slug": zod.string()
 })
 
-export const GetApiV1CatalogCategoriesSlugFilterAttributesQueryParams = zod.object({
+export const GetCatalogCategoriesSlugFilterAttributesQueryParams = zod.object({
   "ManufacturerIds": zod.array(zod.uuid()).optional(),
   "Specifications": zod.record(zod.string(), zod.string()).optional(),
   "SpecificationRanges": zod.record(zod.string(), zod.string()).optional(),
   "InStock": zod.boolean().optional()
 })
 
-export const GetApiV1CatalogCategoriesSlugFilterAttributesResponse = zod.object({
+export const GetCatalogCategoriesSlugFilterAttributesResponse = zod.object({
   "data": zod.array(zod.object({
   "key": zod.string().nullish(),
   "displayName": zod.string().nullish(),
@@ -763,18 +763,18 @@ export const GetApiV1CatalogCategoriesSlugFilterAttributesResponse = zod.object(
 })
 
 
-export const GetApiV1CatalogCategoriesSlugFilterFacetsParams = zod.object({
+export const GetCatalogCategoriesSlugFilterFacetsParams = zod.object({
   "slug": zod.string()
 })
 
-export const GetApiV1CatalogCategoriesSlugFilterFacetsQueryParams = zod.object({
+export const GetCatalogCategoriesSlugFilterFacetsQueryParams = zod.object({
   "ManufacturerIds": zod.array(zod.uuid()).optional(),
   "Specifications": zod.record(zod.string(), zod.string()).optional(),
   "SpecificationRanges": zod.record(zod.string(), zod.string()).optional(),
   "InStock": zod.boolean().optional()
 })
 
-export const GetApiV1CatalogCategoriesSlugFilterFacetsResponse = zod.object({
+export const GetCatalogCategoriesSlugFilterFacetsResponse = zod.object({
   "data": zod.array(zod.object({
   "key": zod.string().nullish(),
   "displayName": zod.string().nullish(),
@@ -790,11 +790,11 @@ export const GetApiV1CatalogCategoriesSlugFilterFacetsResponse = zod.object({
 })
 
 
-export const GetApiV1CatalogManufacturersQueryParams = zod.object({
+export const GetCatalogManufacturersQueryParams = zod.object({
   "category": zod.string().optional()
 })
 
-export const GetApiV1CatalogManufacturersResponse = zod.object({
+export const GetCatalogManufacturersResponse = zod.object({
   "data": zod.array(zod.object({
   "id": zod.uuid().optional(),
   "name": zod.string().nullish(),
@@ -974,7 +974,7 @@ export const PutApiInternalStubsNameEnabledResponse = zod.object({
 export const PostApiInternalStubsResetResponse = zod.unknown()
 
 
-export const PostApiV1CatalogTelemetryEventsBody = zod.object({
+export const PostCatalogTelemetryEventsBody = zod.object({
   "sessionId": zod.string().nullish(),
   "events": zod.array(zod.object({
   "name": zod.string().nullish(),
@@ -983,10 +983,10 @@ export const PostApiV1CatalogTelemetryEventsBody = zod.object({
 })).nullish()
 })
 
-export const PostApiV1CatalogTelemetryEventsResponse = zod.void()
+export const PostCatalogTelemetryEventsResponse = zod.void()
 
 
-export const GetApiV1AuthAddressResponse = zod.object({
+export const GetAuthAddressResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.array(zod.object({
@@ -1008,28 +1008,28 @@ export const GetApiV1AuthAddressResponse = zod.object({
 })
 
 
-export const postApiV1AuthAddressBodyNameMax = 100;
+export const postAuthAddressBodyNameMax = 100;
 
-export const postApiV1AuthAddressBodyCityMax = 100;
+export const postAuthAddressBodyCityMax = 100;
 
-export const postApiV1AuthAddressBodyAddressMax = 500;
+export const postAuthAddressBodyAddressMax = 500;
 
-export const postApiV1AuthAddressBodyApartmentMax = 50;
+export const postAuthAddressBodyApartmentMax = 50;
 
-export const postApiV1AuthAddressBodyPostalCodeMax = 20;
+export const postAuthAddressBodyPostalCodeMax = 20;
 
 
 
-export const PostApiV1AuthAddressBody = zod.object({
-  "name": zod.string().min(1).max(postApiV1AuthAddressBodyNameMax),
-  "city": zod.string().min(1).max(postApiV1AuthAddressBodyCityMax),
-  "address": zod.string().min(1).max(postApiV1AuthAddressBodyAddressMax),
-  "apartment": zod.string().max(postApiV1AuthAddressBodyApartmentMax).nullish(),
-  "postalCode": zod.string().max(postApiV1AuthAddressBodyPostalCodeMax).nullish(),
+export const PostAuthAddressBody = zod.object({
+  "name": zod.string().min(1).max(postAuthAddressBodyNameMax),
+  "city": zod.string().min(1).max(postAuthAddressBodyCityMax),
+  "address": zod.string().min(1).max(postAuthAddressBodyAddressMax),
+  "apartment": zod.string().max(postAuthAddressBodyApartmentMax).nullish(),
+  "postalCode": zod.string().max(postAuthAddressBodyPostalCodeMax).nullish(),
   "isDefault": zod.boolean().optional()
 })
 
-export const PostApiV1AuthAddressResponse = zod.object({
+export const PostAuthAddressResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1051,11 +1051,11 @@ export const PostApiV1AuthAddressResponse = zod.object({
 })
 
 
-export const GetApiV1AuthAddressIdParams = zod.object({
+export const GetAuthAddressIdParams = zod.object({
   "id": zod.uuid()
 })
 
-export const GetApiV1AuthAddressIdResponse = zod.object({
+export const GetAuthAddressIdResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1077,32 +1077,32 @@ export const GetApiV1AuthAddressIdResponse = zod.object({
 })
 
 
-export const PutApiV1AuthAddressIdParams = zod.object({
+export const PutAuthAddressIdParams = zod.object({
   "id": zod.uuid()
 })
 
-export const putApiV1AuthAddressIdBodyNameMax = 100;
+export const putAuthAddressIdBodyNameMax = 100;
 
-export const putApiV1AuthAddressIdBodyCityMax = 100;
+export const putAuthAddressIdBodyCityMax = 100;
 
-export const putApiV1AuthAddressIdBodyAddressMax = 500;
+export const putAuthAddressIdBodyAddressMax = 500;
 
-export const putApiV1AuthAddressIdBodyApartmentMax = 50;
+export const putAuthAddressIdBodyApartmentMax = 50;
 
-export const putApiV1AuthAddressIdBodyPostalCodeMax = 20;
+export const putAuthAddressIdBodyPostalCodeMax = 20;
 
 
 
-export const PutApiV1AuthAddressIdBody = zod.object({
-  "name": zod.string().min(1).max(putApiV1AuthAddressIdBodyNameMax),
-  "city": zod.string().min(1).max(putApiV1AuthAddressIdBodyCityMax),
-  "address": zod.string().min(1).max(putApiV1AuthAddressIdBodyAddressMax),
-  "apartment": zod.string().max(putApiV1AuthAddressIdBodyApartmentMax).nullish(),
-  "postalCode": zod.string().max(putApiV1AuthAddressIdBodyPostalCodeMax).nullish(),
+export const PutAuthAddressIdBody = zod.object({
+  "name": zod.string().min(1).max(putAuthAddressIdBodyNameMax),
+  "city": zod.string().min(1).max(putAuthAddressIdBodyCityMax),
+  "address": zod.string().min(1).max(putAuthAddressIdBodyAddressMax),
+  "apartment": zod.string().max(putAuthAddressIdBodyApartmentMax).nullish(),
+  "postalCode": zod.string().max(putAuthAddressIdBodyPostalCodeMax).nullish(),
   "isDefault": zod.boolean().optional()
 })
 
-export const PutApiV1AuthAddressIdResponse = zod.object({
+export const PutAuthAddressIdResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1124,11 +1124,11 @@ export const PutApiV1AuthAddressIdResponse = zod.object({
 })
 
 
-export const DeleteApiV1AuthAddressIdParams = zod.object({
+export const DeleteAuthAddressIdParams = zod.object({
   "id": zod.uuid()
 })
 
-export const DeleteApiV1AuthAddressIdResponse = zod.object({
+export const DeleteAuthAddressIdResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1139,11 +1139,11 @@ export const DeleteApiV1AuthAddressIdResponse = zod.object({
 })
 
 
-export const PutApiV1AuthAddressIdDefaultParams = zod.object({
+export const PutAuthAddressIdDefaultParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PutApiV1AuthAddressIdDefaultResponse = zod.object({
+export const PutAuthAddressIdDefaultResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1165,25 +1165,25 @@ export const PutApiV1AuthAddressIdDefaultResponse = zod.object({
 })
 
 
-export const postApiV1AuthAdminUsersBodyFirstNameMax = 100;
+export const postAuthAdminUsersBodyFirstNameMax = 100;
 
-export const postApiV1AuthAdminUsersBodyLastNameMax = 100;
-
-
-export const postApiV1AuthAdminUsersBodyPasswordMin = 8;
+export const postAuthAdminUsersBodyLastNameMax = 100;
 
 
+export const postAuthAdminUsersBodyPasswordMin = 8;
 
 
-export const PostApiV1AuthAdminUsersBody = zod.object({
-  "firstName": zod.string().min(1).max(postApiV1AuthAdminUsersBodyFirstNameMax),
-  "lastName": zod.string().min(1).max(postApiV1AuthAdminUsersBodyLastNameMax),
+
+
+export const PostAuthAdminUsersBody = zod.object({
+  "firstName": zod.string().min(1).max(postAuthAdminUsersBodyFirstNameMax),
+  "lastName": zod.string().min(1).max(postAuthAdminUsersBodyLastNameMax),
   "email": zod.email().min(1),
-  "password": zod.string().min(postApiV1AuthAdminUsersBodyPasswordMin),
+  "password": zod.string().min(postAuthAdminUsersBodyPasswordMin),
   "role": zod.string().min(1)
 })
 
-export const PostApiV1AuthAdminUsersResponse = zod.object({
+export const PostAuthAdminUsersResponse = zod.object({
   "id": zod.uuid().optional(),
   "email": zod.string().nullish(),
   "role": zod.enum(['Client', 'Manager', 'Master', 'Admin', 'Accountant']).optional(),
@@ -1199,11 +1199,11 @@ export const PostApiV1AuthAdminUsersResponse = zod.object({
 })
 
 
-export const GetApiV1AuthAdminUsersIdParams = zod.object({
+export const GetAuthAdminUsersIdParams = zod.object({
   "id": zod.uuid()
 })
 
-export const GetApiV1AuthAdminUsersIdResponse = zod.object({
+export const GetAuthAdminUsersIdResponse = zod.object({
   "id": zod.uuid().optional(),
   "email": zod.string().nullish(),
   "role": zod.enum(['Client', 'Manager', 'Master', 'Admin', 'Accountant']).optional(),
@@ -1219,72 +1219,72 @@ export const GetApiV1AuthAdminUsersIdResponse = zod.object({
 })
 
 
-export const DeleteApiV1AuthAdminUsersIdParams = zod.object({
+export const DeleteAuthAdminUsersIdParams = zod.object({
   "id": zod.uuid()
 })
 
-export const DeleteApiV1AuthAdminUsersIdResponse = zod.unknown()
+export const DeleteAuthAdminUsersIdResponse = zod.unknown()
 
 
-export const PostApiV1AuthAdminUsersIdResetPasswordParams = zod.object({
+export const PostAuthAdminUsersIdResetPasswordParams = zod.object({
   "id": zod.uuid()
 })
 
-export const postApiV1AuthAdminUsersIdResetPasswordBodyNewPasswordMin = 8;
+export const postAuthAdminUsersIdResetPasswordBodyNewPasswordMin = 8;
 
 
 
-export const PostApiV1AuthAdminUsersIdResetPasswordBody = zod.object({
-  "newPassword": zod.string().min(postApiV1AuthAdminUsersIdResetPasswordBodyNewPasswordMin)
+export const PostAuthAdminUsersIdResetPasswordBody = zod.object({
+  "newPassword": zod.string().min(postAuthAdminUsersIdResetPasswordBodyNewPasswordMin)
 })
 
-export const PostApiV1AuthAdminUsersIdResetPasswordResponse = zod.unknown()
+export const PostAuthAdminUsersIdResetPasswordResponse = zod.unknown()
 
 
-export const PostApiV1AuthAdminUsersIdDeactivateParams = zod.object({
+export const PostAuthAdminUsersIdDeactivateParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PostApiV1AuthAdminUsersIdDeactivateResponse = zod.unknown()
+export const PostAuthAdminUsersIdDeactivateResponse = zod.unknown()
 
 
-export const PostApiV1AuthAdminUsersIdActivateParams = zod.object({
+export const PostAuthAdminUsersIdActivateParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PostApiV1AuthAdminUsersIdActivateResponse = zod.unknown()
+export const PostAuthAdminUsersIdActivateResponse = zod.unknown()
 
 
-export const PostApiV1AuthAdminSettingsTwoFactorBody = zod.object({
+export const PostAuthAdminSettingsTwoFactorBody = zod.object({
   "enabled": zod.boolean().optional()
 })
 
-export const PostApiV1AuthAdminSettingsTwoFactorResponse = zod.unknown()
+export const PostAuthAdminSettingsTwoFactorResponse = zod.unknown()
 
 
 
-export const postApiV1AuthRegisterBodyPasswordMin = 8;
-export const postApiV1AuthRegisterBodyPasswordMax = 128;
+export const postAuthRegisterBodyPasswordMin = 8;
+export const postAuthRegisterBodyPasswordMax = 128;
 
-export const postApiV1AuthRegisterBodyFirstNameMin = 2;
-export const postApiV1AuthRegisterBodyFirstNameMax = 50;
+export const postAuthRegisterBodyFirstNameMin = 2;
+export const postAuthRegisterBodyFirstNameMax = 50;
 
-export const postApiV1AuthRegisterBodyLastNameMax = 100;
-
-
-
-export const postApiV1AuthRegisterBodyPhoneRegExp = new RegExp('^\\+375\\d{9}$');
+export const postAuthRegisterBodyLastNameMax = 100;
 
 
-export const PostApiV1AuthRegisterBody = zod.object({
+
+export const postAuthRegisterBodyPhoneRegExp = new RegExp('^\\+375\\d{9}$');
+
+
+export const PostAuthRegisterBody = zod.object({
   "email": zod.email().min(1),
-  "password": zod.string().min(postApiV1AuthRegisterBodyPasswordMin).max(postApiV1AuthRegisterBodyPasswordMax),
-  "firstName": zod.string().min(postApiV1AuthRegisterBodyFirstNameMin).max(postApiV1AuthRegisterBodyFirstNameMax),
-  "lastName": zod.string().max(postApiV1AuthRegisterBodyLastNameMax).nullish(),
-  "phone": zod.string().min(1).regex(postApiV1AuthRegisterBodyPhoneRegExp)
+  "password": zod.string().min(postAuthRegisterBodyPasswordMin).max(postAuthRegisterBodyPasswordMax),
+  "firstName": zod.string().min(postAuthRegisterBodyFirstNameMin).max(postAuthRegisterBodyFirstNameMax),
+  "lastName": zod.string().max(postAuthRegisterBodyLastNameMax).nullish(),
+  "phone": zod.string().min(1).regex(postAuthRegisterBodyPhoneRegExp)
 })
 
-export const PostApiV1AuthRegisterResponse = zod.object({
+export const PostAuthRegisterResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1320,12 +1320,12 @@ export const PostApiV1AuthRegisterResponse = zod.object({
 
 
 
-export const PostApiV1AuthLoginBody = zod.object({
+export const PostAuthLoginBody = zod.object({
   "email": zod.email().min(1),
   "password": zod.string().min(1)
 })
 
-export const PostApiV1AuthLoginResponse = zod.object({
+export const PostAuthLoginResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1357,12 +1357,12 @@ export const PostApiV1AuthLoginResponse = zod.object({
 })
 
 
-export const PostApiV1AuthLoginVerify2faBody = zod.object({
+export const PostAuthLoginVerify2faBody = zod.object({
   "twoFactorToken": zod.string().nullish(),
   "code": zod.string().nullish()
 })
 
-export const PostApiV1AuthLoginVerify2faResponse = zod.object({
+export const PostAuthLoginVerify2faResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1397,11 +1397,11 @@ export const PostApiV1AuthLoginVerify2faResponse = zod.object({
 
 
 
-export const PostApiV1AuthRefreshBody = zod.object({
+export const PostAuthRefreshBody = zod.object({
   "refreshToken": zod.string().min(1)
 })
 
-export const PostApiV1AuthRefreshResponse = zod.object({
+export const PostAuthRefreshResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1436,11 +1436,11 @@ export const PostApiV1AuthRefreshResponse = zod.object({
 
 
 
-export const PostApiV1AuthLogoutBody = zod.object({
+export const PostAuthLogoutBody = zod.object({
   "refreshToken": zod.string().min(1)
 })
 
-export const PostApiV1AuthLogoutResponse = zod.object({
+export const PostAuthLogoutResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1451,51 +1451,7 @@ export const PostApiV1AuthLogoutResponse = zod.object({
 })
 
 
-export const GetApiV1AuthProfileResponse = zod.object({
-  "success": zod.boolean().optional(),
-  "message": zod.string().nullish(),
-  "data": zod.object({
-  "id": zod.uuid().optional(),
-  "email": zod.string().nullish(),
-  "role": zod.enum(['Client', 'Manager', 'Master', 'Admin', 'Accountant']).optional(),
-  "roles": zod.array(zod.enum(['Client', 'Manager', 'Master', 'Admin', 'Accountant'])).nullish(),
-  "firstName": zod.string().nullish(),
-  "lastName": zod.string().nullish(),
-  "phone": zod.string().nullish(),
-  "avatarUrl": zod.string().nullish(),
-  "isActive": zod.boolean().optional(),
-  "isEmailVerified": zod.boolean().optional(),
-  "birthDate": zod.iso.datetime({"offset":true}).nullish(),
-  "company": zod.string().nullish()
-}).optional(),
-  "errors": zod.array(zod.object({
-  "code": zod.string().nullish(),
-  "message": zod.string().nullish(),
-  "field": zod.string().nullish()
-})).nullish()
-})
-
-
-export const putApiV1AuthProfileBodyFirstNameMin = 2;
-export const putApiV1AuthProfileBodyFirstNameMax = 100;
-
-export const putApiV1AuthProfileBodyLastNameMin = 2;
-export const putApiV1AuthProfileBodyLastNameMax = 100;
-
-
-
-export const putApiV1AuthProfileBodyPhoneRegExp = new RegExp('^\\+375\\s?\\(?\\d{2}\\)?\\s?\\d{3}[\\s\\-]?\\d{2}[\\s\\-]?\\d{2}$');
-
-
-export const PutApiV1AuthProfileBody = zod.object({
-  "firstName": zod.string().min(putApiV1AuthProfileBodyFirstNameMin).max(putApiV1AuthProfileBodyFirstNameMax),
-  "lastName": zod.string().min(putApiV1AuthProfileBodyLastNameMin).max(putApiV1AuthProfileBodyLastNameMax),
-  "phone": zod.string().min(1).regex(putApiV1AuthProfileBodyPhoneRegExp),
-  "birthDate": zod.iso.datetime({"offset":true}).nullish(),
-  "company": zod.string().nullish()
-})
-
-export const PutApiV1AuthProfileResponse = zod.object({
+export const GetAuthProfileResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1520,14 +1476,58 @@ export const PutApiV1AuthProfileResponse = zod.object({
 })
 
 
-export const PostApiV1AuthAvatarBody = zod.object({
+export const putAuthProfileBodyFirstNameMin = 2;
+export const putAuthProfileBodyFirstNameMax = 100;
+
+export const putAuthProfileBodyLastNameMin = 2;
+export const putAuthProfileBodyLastNameMax = 100;
+
+
+
+export const putAuthProfileBodyPhoneRegExp = new RegExp('^\\+375\\s?\\(?\\d{2}\\)?\\s?\\d{3}[\\s\\-]?\\d{2}[\\s\\-]?\\d{2}$');
+
+
+export const PutAuthProfileBody = zod.object({
+  "firstName": zod.string().min(putAuthProfileBodyFirstNameMin).max(putAuthProfileBodyFirstNameMax),
+  "lastName": zod.string().min(putAuthProfileBodyLastNameMin).max(putAuthProfileBodyLastNameMax),
+  "phone": zod.string().min(1).regex(putAuthProfileBodyPhoneRegExp),
+  "birthDate": zod.iso.datetime({"offset":true}).nullish(),
+  "company": zod.string().nullish()
+})
+
+export const PutAuthProfileResponse = zod.object({
+  "success": zod.boolean().optional(),
+  "message": zod.string().nullish(),
+  "data": zod.object({
+  "id": zod.uuid().optional(),
+  "email": zod.string().nullish(),
+  "role": zod.enum(['Client', 'Manager', 'Master', 'Admin', 'Accountant']).optional(),
+  "roles": zod.array(zod.enum(['Client', 'Manager', 'Master', 'Admin', 'Accountant'])).nullish(),
+  "firstName": zod.string().nullish(),
+  "lastName": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isActive": zod.boolean().optional(),
+  "isEmailVerified": zod.boolean().optional(),
+  "birthDate": zod.iso.datetime({"offset":true}).nullish(),
+  "company": zod.string().nullish()
+}).optional(),
+  "errors": zod.array(zod.object({
+  "code": zod.string().nullish(),
+  "message": zod.string().nullish(),
+  "field": zod.string().nullish()
+})).nullish()
+})
+
+
+export const PostAuthAvatarBody = zod.object({
   "avatar": zod.instanceof(File).optional()
 })
 
-export const PostApiV1AuthAvatarResponse = zod.unknown()
+export const PostAuthAvatarResponse = zod.unknown()
 
 
-export const DeleteApiV1AuthAvatarResponse = zod.object({
+export const DeleteAuthAvatarResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1539,17 +1539,17 @@ export const DeleteApiV1AuthAvatarResponse = zod.object({
 
 
 
-export const postApiV1AuthChangePasswordBodyNewPasswordMin = 0;
-export const postApiV1AuthChangePasswordBodyNewPasswordMax = 128;
+export const postAuthChangePasswordBodyNewPasswordMin = 0;
+export const postAuthChangePasswordBodyNewPasswordMax = 128;
 
 
 
-export const PostApiV1AuthChangePasswordBody = zod.object({
+export const PostAuthChangePasswordBody = zod.object({
   "currentPassword": zod.string().min(1),
-  "newPassword": zod.string().min(postApiV1AuthChangePasswordBodyNewPasswordMin).max(postApiV1AuthChangePasswordBodyNewPasswordMax)
+  "newPassword": zod.string().min(postAuthChangePasswordBodyNewPasswordMin).max(postAuthChangePasswordBodyNewPasswordMax)
 })
 
-export const PostApiV1AuthChangePasswordResponse = zod.object({
+export const PostAuthChangePasswordResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1560,16 +1560,16 @@ export const PostApiV1AuthChangePasswordResponse = zod.object({
 })
 
 
-export const postApiV1AuthForgotPasswordBodyEmailMin = 0;
-export const postApiV1AuthForgotPasswordBodyEmailMax = 255;
+export const postAuthForgotPasswordBodyEmailMin = 0;
+export const postAuthForgotPasswordBodyEmailMax = 255;
 
 
 
-export const PostApiV1AuthForgotPasswordBody = zod.object({
-  "email": zod.email().min(postApiV1AuthForgotPasswordBodyEmailMin).max(postApiV1AuthForgotPasswordBodyEmailMax)
+export const PostAuthForgotPasswordBody = zod.object({
+  "email": zod.email().min(postAuthForgotPasswordBodyEmailMin).max(postAuthForgotPasswordBodyEmailMax)
 })
 
-export const PostApiV1AuthForgotPasswordResponse = zod.object({
+export const PostAuthForgotPasswordResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1581,17 +1581,17 @@ export const PostApiV1AuthForgotPasswordResponse = zod.object({
 
 
 
-export const postApiV1AuthResetPasswordBodyPasswordMin = 0;
-export const postApiV1AuthResetPasswordBodyPasswordMax = 128;
+export const postAuthResetPasswordBodyPasswordMin = 0;
+export const postAuthResetPasswordBodyPasswordMax = 128;
 
 
 
-export const PostApiV1AuthResetPasswordBody = zod.object({
+export const PostAuthResetPasswordBody = zod.object({
   "token": zod.string().min(1),
-  "password": zod.string().min(postApiV1AuthResetPasswordBodyPasswordMin).max(postApiV1AuthResetPasswordBodyPasswordMax)
+  "password": zod.string().min(postAuthResetPasswordBodyPasswordMin).max(postAuthResetPasswordBodyPasswordMax)
 })
 
-export const PostApiV1AuthResetPasswordResponse = zod.object({
+export const PostAuthResetPasswordResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1602,11 +1602,11 @@ export const PostApiV1AuthResetPasswordResponse = zod.object({
 })
 
 
-export const PostApiV1AuthValidateResetTokenBody = zod.object({
+export const PostAuthValidateResetTokenBody = zod.object({
   "token": zod.string().nullish()
 })
 
-export const PostApiV1AuthValidateResetTokenResponse = zod.object({
+export const PostAuthValidateResetTokenResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1617,7 +1617,7 @@ export const PostApiV1AuthValidateResetTokenResponse = zod.object({
 })
 
 
-export const PostApiV1AuthSendVerificationResponse = zod.object({
+export const PostAuthSendVerificationResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1628,11 +1628,11 @@ export const PostApiV1AuthSendVerificationResponse = zod.object({
 })
 
 
-export const PostApiV1AuthVerifyEmailBody = zod.object({
+export const PostAuthVerifyEmailBody = zod.object({
   "token": zod.string().nullish()
 })
 
-export const PostApiV1AuthVerifyEmailResponse = zod.object({
+export const PostAuthVerifyEmailResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1646,7 +1646,7 @@ export const PostApiV1AuthVerifyEmailResponse = zod.object({
 export const GetHealthResponse = zod.unknown()
 
 
-export const GetApiV1AuthNotificationsResponse = zod.object({
+export const GetAuthNotificationsResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1665,7 +1665,7 @@ export const GetApiV1AuthNotificationsResponse = zod.object({
 })
 
 
-export const PutApiV1AuthNotificationsBody = zod.object({
+export const PutAuthNotificationsBody = zod.object({
   "emailNotifications": zod.boolean().optional(),
   "smsNotifications": zod.boolean().optional(),
   "telegramNotifications": zod.boolean().optional(),
@@ -1673,7 +1673,7 @@ export const PutApiV1AuthNotificationsBody = zod.object({
   "marketingNotifications": zod.boolean().optional()
 })
 
-export const PutApiV1AuthNotificationsResponse = zod.object({
+export const PutAuthNotificationsResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1692,15 +1692,15 @@ export const PutApiV1AuthNotificationsResponse = zod.object({
 })
 
 
-export const getApiV1AuthSecurityLoginHistoryQueryPageDefault = 1;
-export const getApiV1AuthSecurityLoginHistoryQueryPageSizeDefault = 20;
+export const getAuthSecurityLoginHistoryQueryPageDefault = 1;
+export const getAuthSecurityLoginHistoryQueryPageSizeDefault = 20;
 
-export const GetApiV1AuthSecurityLoginHistoryQueryParams = zod.object({
-  "page": zod.number().default(getApiV1AuthSecurityLoginHistoryQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1AuthSecurityLoginHistoryQueryPageSizeDefault)
+export const GetAuthSecurityLoginHistoryQueryParams = zod.object({
+  "page": zod.number().default(getAuthSecurityLoginHistoryQueryPageDefault),
+  "pageSize": zod.number().default(getAuthSecurityLoginHistoryQueryPageSizeDefault)
 })
 
-export const GetApiV1AuthSecurityLoginHistoryResponse = zod.object({
+export const GetAuthSecurityLoginHistoryResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1727,7 +1727,7 @@ export const GetApiV1AuthSecurityLoginHistoryResponse = zod.object({
 })
 
 
-export const PostApiV1AuthSecurity2faEnableResponse = zod.object({
+export const PostAuthSecurity2faEnableResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1743,11 +1743,11 @@ export const PostApiV1AuthSecurity2faEnableResponse = zod.object({
 })
 
 
-export const PostApiV1AuthSecurity2faVerifyBody = zod.object({
+export const PostAuthSecurity2faVerifyBody = zod.object({
   "totpCode": zod.string().nullish()
 })
 
-export const PostApiV1AuthSecurity2faVerifyResponse = zod.object({
+export const PostAuthSecurity2faVerifyResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1763,11 +1763,11 @@ export const PostApiV1AuthSecurity2faVerifyResponse = zod.object({
 })
 
 
-export const PostApiV1AuthSecurity2faDisableBody = zod.object({
+export const PostAuthSecurity2faDisableBody = zod.object({
   "password": zod.string().nullish()
 })
 
-export const PostApiV1AuthSecurity2faDisableResponse = zod.object({
+export const PostAuthSecurity2faDisableResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1778,7 +1778,7 @@ export const PostApiV1AuthSecurity2faDisableResponse = zod.object({
 })
 
 
-export const GetApiV1WishlistResponse = zod.object({
+export const GetWishlistResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.array(zod.uuid()).nullish(),
@@ -1790,11 +1790,11 @@ export const GetApiV1WishlistResponse = zod.object({
 })
 
 
-export const PostApiV1WishlistProductIdParams = zod.object({
+export const PostWishlistProductIdParams = zod.object({
   "productId": zod.uuid()
 })
 
-export const PostApiV1WishlistProductIdResponse = zod.object({
+export const PostWishlistProductIdResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1805,11 +1805,11 @@ export const PostApiV1WishlistProductIdResponse = zod.object({
 })
 
 
-export const DeleteApiV1WishlistProductIdParams = zod.object({
+export const DeleteWishlistProductIdParams = zod.object({
   "productId": zod.uuid()
 })
 
-export const DeleteApiV1WishlistProductIdResponse = zod.object({
+export const DeleteWishlistProductIdResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "errors": zod.array(zod.object({
@@ -1820,10 +1820,10 @@ export const DeleteApiV1WishlistProductIdResponse = zod.object({
 })
 
 
-export const PutApiV1WishlistSyncBodyItem = zod.uuid()
-export const PutApiV1WishlistSyncBody = zod.array(PutApiV1WishlistSyncBodyItem)
+export const PutWishlistSyncBodyItem = zod.uuid()
+export const PutWishlistSyncBody = zod.array(PutWishlistSyncBodyItem)
 
-export const PutApiV1WishlistSyncResponse = zod.object({
+export const PutWishlistSyncResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.array(zod.uuid()).nullish(),
@@ -1860,11 +1860,11 @@ export const PostApiIntegration1cImportStockQueryParams = zod.object({
 export const PostApiIntegration1cImportStockResponse = zod.unknown()
 
 
-export const GetApiV1OrdersIdParams = zod.object({
+export const GetOrdersIdParams = zod.object({
   "id": zod.uuid()
 })
 
-export const GetApiV1OrdersIdResponse = zod.object({
+export const GetOrdersIdResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1906,11 +1906,11 @@ export const GetApiV1OrdersIdResponse = zod.object({
 })
 
 
-export const GetApiV1OrdersNumberOrderNumberParams = zod.object({
+export const GetOrdersNumberOrderNumberParams = zod.object({
   "orderNumber": zod.string()
 })
 
-export const GetApiV1OrdersNumberOrderNumberResponse = zod.object({
+export const GetOrdersNumberOrderNumberResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -1952,81 +1952,81 @@ export const GetApiV1OrdersNumberOrderNumberResponse = zod.object({
 })
 
 
-export const getApiV1OrdersMyQueryPageDefault = 1;
-export const getApiV1OrdersMyQueryPageSizeDefault = 10;
+export const getOrdersMyQueryPageDefault = 1;
+export const getOrdersMyQueryPageSizeDefault = 10;
 
-export const GetApiV1OrdersMyQueryParams = zod.object({
-  "page": zod.number().default(getApiV1OrdersMyQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1OrdersMyQueryPageSizeDefault)
+export const GetOrdersMyQueryParams = zod.object({
+  "page": zod.number().default(getOrdersMyQueryPageDefault),
+  "pageSize": zod.number().default(getOrdersMyQueryPageSizeDefault)
 })
 
-export const GetApiV1OrdersMyResponse = zod.unknown()
+export const GetOrdersMyResponse = zod.unknown()
 
 
-export const getApiV1OrdersQueryPageDefault = 1;
-export const getApiV1OrdersQueryPageSizeDefault = 10;
+export const getOrdersQueryPageDefault = 1;
+export const getOrdersQueryPageSizeDefault = 10;
 
-export const GetApiV1OrdersQueryParams = zod.object({
-  "page": zod.number().default(getApiV1OrdersQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1OrdersQueryPageSizeDefault),
+export const GetOrdersQueryParams = zod.object({
+  "page": zod.number().default(getOrdersQueryPageDefault),
+  "pageSize": zod.number().default(getOrdersQueryPageSizeDefault),
   "status": zod.union([zod.literal(0),zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5),zod.literal(6)]).optional()
 })
 
-export const GetApiV1OrdersResponse = zod.unknown()
+export const GetOrdersResponse = zod.unknown()
 
 
-export const postApiV1OrdersBodyFirstNameMax = 100;
+export const postOrdersBodyFirstNameMax = 100;
 
-export const postApiV1OrdersBodyLastNameMax = 100;
+export const postOrdersBodyLastNameMax = 100;
 
-export const postApiV1OrdersBodyPhoneMax = 20;
+export const postOrdersBodyPhoneMax = 20;
 
-export const postApiV1OrdersBodyEmailMax = 255;
-
-
-
-export const postApiV1OrdersBodyAddressMax = 500;
-
-export const postApiV1OrdersBodyCityMax = 100;
-
-export const postApiV1OrdersBodyCommentMax = 1000;
-
-export const postApiV1OrdersBodyPromoCodeMax = 50;
-
-export const postApiV1OrdersBodyDeliveryTimeSlotMax = 20;
-
-export const postApiV1OrdersBodyItemsItemProductNameMax = 255;
-
-export const postApiV1OrdersBodyItemsItemQuantityMax = 5;
-
-export const postApiV1OrdersBodyItemsItemUnitPriceMin = 0.01;
+export const postOrdersBodyEmailMax = 255;
 
 
 
+export const postOrdersBodyAddressMax = 500;
 
-export const PostApiV1OrdersBody = zod.object({
-  "firstName": zod.string().min(1).max(postApiV1OrdersBodyFirstNameMax),
-  "lastName": zod.string().max(postApiV1OrdersBodyLastNameMax).nullish(),
-  "phone": zod.string().min(1).max(postApiV1OrdersBodyPhoneMax),
-  "email": zod.email().min(1).max(postApiV1OrdersBodyEmailMax),
+export const postOrdersBodyCityMax = 100;
+
+export const postOrdersBodyCommentMax = 1000;
+
+export const postOrdersBodyPromoCodeMax = 50;
+
+export const postOrdersBodyDeliveryTimeSlotMax = 20;
+
+export const postOrdersBodyItemsItemProductNameMax = 255;
+
+export const postOrdersBodyItemsItemQuantityMax = 5;
+
+export const postOrdersBodyItemsItemUnitPriceMin = 0.01;
+
+
+
+
+export const PostOrdersBody = zod.object({
+  "firstName": zod.string().min(1).max(postOrdersBodyFirstNameMax),
+  "lastName": zod.string().max(postOrdersBodyLastNameMax).nullish(),
+  "phone": zod.string().min(1).max(postOrdersBodyPhoneMax),
+  "email": zod.email().min(1).max(postOrdersBodyEmailMax),
   "deliveryMethod": zod.string().min(1),
   "paymentMethod": zod.string().min(1),
-  "address": zod.string().max(postApiV1OrdersBodyAddressMax).nullish(),
-  "city": zod.string().max(postApiV1OrdersBodyCityMax).nullish(),
-  "comment": zod.string().max(postApiV1OrdersBodyCommentMax).nullish(),
-  "promoCode": zod.string().max(postApiV1OrdersBodyPromoCodeMax).nullish(),
+  "address": zod.string().max(postOrdersBodyAddressMax).nullish(),
+  "city": zod.string().max(postOrdersBodyCityMax).nullish(),
+  "comment": zod.string().max(postOrdersBodyCommentMax).nullish(),
+  "promoCode": zod.string().max(postOrdersBodyPromoCodeMax).nullish(),
   "discountAmount": zod.number().optional(),
   "deliveryDate": zod.string().nullish(),
-  "deliveryTimeSlot": zod.string().max(postApiV1OrdersBodyDeliveryTimeSlotMax).nullish(),
+  "deliveryTimeSlot": zod.string().max(postOrdersBodyDeliveryTimeSlotMax).nullish(),
   "items": zod.array(zod.object({
   "productId": zod.uuid(),
-  "productName": zod.string().min(1).max(postApiV1OrdersBodyItemsItemProductNameMax),
-  "quantity": zod.number().min(1).max(postApiV1OrdersBodyItemsItemQuantityMax),
-  "unitPrice": zod.number().min(postApiV1OrdersBodyItemsItemUnitPriceMin)
+  "productName": zod.string().min(1).max(postOrdersBodyItemsItemProductNameMax),
+  "quantity": zod.number().min(1).max(postOrdersBodyItemsItemQuantityMax),
+  "unitPrice": zod.number().min(postOrdersBodyItemsItemUnitPriceMin)
 })).min(1)
 })
 
-export const PostApiV1OrdersResponse = zod.object({
+export const PostOrdersResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -2069,20 +2069,20 @@ export const PostApiV1OrdersResponse = zod.object({
 
 
 
-export const postApiV1OrdersDeliveryQuoteBodySubtotalMin = 0;
-export const postApiV1OrdersDeliveryQuoteBodySubtotalMax = 1000000;
+export const postOrdersDeliveryQuoteBodySubtotalMin = 0;
+export const postOrdersDeliveryQuoteBodySubtotalMax = 1000000;
 
-export const postApiV1OrdersDeliveryQuoteBodyCityMax = 100;
+export const postOrdersDeliveryQuoteBodyCityMax = 100;
 
 
 
-export const PostApiV1OrdersDeliveryQuoteBody = zod.object({
+export const PostOrdersDeliveryQuoteBody = zod.object({
   "deliveryMethod": zod.string().min(1),
-  "subtotal": zod.number().min(postApiV1OrdersDeliveryQuoteBodySubtotalMin).max(postApiV1OrdersDeliveryQuoteBodySubtotalMax),
-  "city": zod.string().max(postApiV1OrdersDeliveryQuoteBodyCityMax).nullish()
+  "subtotal": zod.number().min(postOrdersDeliveryQuoteBodySubtotalMin).max(postOrdersDeliveryQuoteBodySubtotalMax),
+  "city": zod.string().max(postOrdersDeliveryQuoteBodyCityMax).nullish()
 })
 
-export const PostApiV1OrdersDeliveryQuoteResponse = zod.object({
+export const PostOrdersDeliveryQuoteResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -2098,48 +2098,48 @@ export const PostApiV1OrdersDeliveryQuoteResponse = zod.object({
 })
 
 
-export const PutApiV1OrdersIdStatusParams = zod.object({
+export const PutOrdersIdStatusParams = zod.object({
   "id": zod.uuid()
 })
 
-export const putApiV1OrdersIdStatusBodyCommentMax = 500;
+export const putOrdersIdStatusBodyCommentMax = 500;
 
 
 
-export const PutApiV1OrdersIdStatusBody = zod.object({
+export const PutOrdersIdStatusBody = zod.object({
   "status": zod.union([zod.literal(0),zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5),zod.literal(6)]),
-  "comment": zod.string().max(putApiV1OrdersIdStatusBodyCommentMax).nullish()
+  "comment": zod.string().max(putOrdersIdStatusBodyCommentMax).nullish()
 })
 
-export const PutApiV1OrdersIdStatusResponse = zod.unknown()
+export const PutOrdersIdStatusResponse = zod.unknown()
 
 
-export const PostApiV1OrdersIdCancelParams = zod.object({
+export const PostOrdersIdCancelParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PostApiV1OrdersIdCancelResponse = zod.unknown()
+export const PostOrdersIdCancelResponse = zod.unknown()
 
 
-export const PostApiV1OrdersIdPayParams = zod.object({
+export const PostOrdersIdPayParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PostApiV1OrdersIdPayResponse = zod.unknown()
+export const PostOrdersIdPayResponse = zod.unknown()
 
 
-export const postApiV1PromoValidateBodyCodeMax = 50;
+export const postPromoValidateBodyCodeMax = 50;
 
-export const postApiV1PromoValidateBodyOrderAmountMin = 0.01;
+export const postPromoValidateBodyOrderAmountMin = 0.01;
 
 
 
-export const PostApiV1PromoValidateBody = zod.object({
-  "code": zod.string().min(1).max(postApiV1PromoValidateBodyCodeMax),
-  "orderAmount": zod.number().min(postApiV1PromoValidateBodyOrderAmountMin).optional()
+export const PostPromoValidateBody = zod.object({
+  "code": zod.string().min(1).max(postPromoValidateBodyCodeMax),
+  "orderAmount": zod.number().min(postPromoValidateBodyOrderAmountMin).optional()
 })
 
-export const PostApiV1PromoValidateResponse = zod.object({
+export const PostPromoValidateResponse = zod.object({
   "success": zod.boolean().optional(),
   "message": zod.string().nullish(),
   "data": zod.object({
@@ -2156,117 +2156,117 @@ export const PostApiV1PromoValidateResponse = zod.object({
 })
 
 
-export const PostApiV1WebhooksStripeResponse = zod.unknown()
+export const PostWebhooksStripeResponse = zod.unknown()
 
 
-export const GetApiV1WebhooksStripeSimulateQueryParams = zod.object({
+export const GetWebhooksStripeSimulateQueryParams = zod.object({
   "orderId": zod.uuid().optional(),
   "amount": zod.number().optional()
 })
 
-export const GetApiV1WebhooksStripeSimulateResponse = zod.unknown()
+export const GetWebhooksStripeSimulateResponse = zod.unknown()
 
 
-export const GetApiV1ServicesTypesResponse = zod.unknown()
+export const GetServicesTypesResponse = zod.unknown()
 
 
-export const GetApiV1ServicesTypesSlugParams = zod.object({
+export const GetServicesTypesSlugParams = zod.object({
   "slug": zod.string()
 })
 
-export const GetApiV1ServicesTypesSlugResponse = zod.unknown()
+export const GetServicesTypesSlugResponse = zod.unknown()
 
 
-export const GetApiV1ServicesIdParams = zod.object({
+export const GetServicesIdParams = zod.object({
   "id": zod.uuid()
 })
 
-export const GetApiV1ServicesIdResponse = zod.unknown()
+export const GetServicesIdResponse = zod.unknown()
 
 
-export const getApiV1ServicesMyQueryPageDefault = 1;
-export const getApiV1ServicesMyQueryPageSizeDefault = 10;
+export const getServicesMyQueryPageDefault = 1;
+export const getServicesMyQueryPageSizeDefault = 10;
 
-export const GetApiV1ServicesMyQueryParams = zod.object({
-  "page": zod.number().default(getApiV1ServicesMyQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1ServicesMyQueryPageSizeDefault)
+export const GetServicesMyQueryParams = zod.object({
+  "page": zod.number().default(getServicesMyQueryPageDefault),
+  "pageSize": zod.number().default(getServicesMyQueryPageSizeDefault)
 })
 
-export const GetApiV1ServicesMyResponse = zod.unknown()
+export const GetServicesMyResponse = zod.unknown()
 
 
-export const getApiV1ServicesMasterQueryPageDefault = 1;
-export const getApiV1ServicesMasterQueryPageSizeDefault = 10;
+export const getServicesMasterQueryPageDefault = 1;
+export const getServicesMasterQueryPageSizeDefault = 10;
 
-export const GetApiV1ServicesMasterQueryParams = zod.object({
-  "page": zod.number().default(getApiV1ServicesMasterQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1ServicesMasterQueryPageSizeDefault)
+export const GetServicesMasterQueryParams = zod.object({
+  "page": zod.number().default(getServicesMasterQueryPageDefault),
+  "pageSize": zod.number().default(getServicesMasterQueryPageSizeDefault)
 })
 
-export const GetApiV1ServicesMasterResponse = zod.unknown()
+export const GetServicesMasterResponse = zod.unknown()
 
 
-export const getApiV1ServicesQueryPageDefault = 1;
-export const getApiV1ServicesQueryPageSizeDefault = 10;
+export const getServicesQueryPageDefault = 1;
+export const getServicesQueryPageSizeDefault = 10;
 
-export const GetApiV1ServicesQueryParams = zod.object({
-  "page": zod.number().default(getApiV1ServicesQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1ServicesQueryPageSizeDefault),
+export const GetServicesQueryParams = zod.object({
+  "page": zod.number().default(getServicesQueryPageDefault),
+  "pageSize": zod.number().default(getServicesQueryPageSizeDefault),
   "status": zod.enum(['Submitted', 'InProgress', 'PartsPending', 'ReadyForPickup', 'Completed', 'Cancelled']).optional()
 })
 
-export const GetApiV1ServicesResponse = zod.unknown()
+export const GetServicesResponse = zod.unknown()
 
 
-export const postApiV1ServicesBodyDescriptionMin = 10;
-export const postApiV1ServicesBodyDescriptionMax = 2000;
+export const postServicesBodyDescriptionMin = 10;
+export const postServicesBodyDescriptionMax = 2000;
 
-export const postApiV1ServicesBodyDeviceModelMax = 100;
+export const postServicesBodyDeviceModelMax = 100;
 
-export const postApiV1ServicesBodySerialNumberMax = 50;
+export const postServicesBodySerialNumberMax = 50;
 
 
 
-export const PostApiV1ServicesBody = zod.object({
+export const PostServicesBody = zod.object({
   "serviceTypeId": zod.uuid(),
-  "description": zod.string().min(postApiV1ServicesBodyDescriptionMin).max(postApiV1ServicesBodyDescriptionMax),
-  "deviceModel": zod.string().max(postApiV1ServicesBodyDeviceModelMax).nullish(),
-  "serialNumber": zod.string().max(postApiV1ServicesBodySerialNumberMax).nullish()
+  "description": zod.string().min(postServicesBodyDescriptionMin).max(postServicesBodyDescriptionMax),
+  "deviceModel": zod.string().max(postServicesBodyDeviceModelMax).nullish(),
+  "serialNumber": zod.string().max(postServicesBodySerialNumberMax).nullish()
 })
 
-export const PostApiV1ServicesResponse = zod.unknown()
+export const PostServicesResponse = zod.unknown()
 
 
-export const getApiV1ServicesUnassignedQueryPageDefault = 1;
-export const getApiV1ServicesUnassignedQueryPageSizeDefault = 10;
+export const getServicesUnassignedQueryPageDefault = 1;
+export const getServicesUnassignedQueryPageSizeDefault = 10;
 
-export const GetApiV1ServicesUnassignedQueryParams = zod.object({
-  "page": zod.number().default(getApiV1ServicesUnassignedQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1ServicesUnassignedQueryPageSizeDefault)
+export const GetServicesUnassignedQueryParams = zod.object({
+  "page": zod.number().default(getServicesUnassignedQueryPageDefault),
+  "pageSize": zod.number().default(getServicesUnassignedQueryPageSizeDefault)
 })
 
-export const GetApiV1ServicesUnassignedResponse = zod.unknown()
+export const GetServicesUnassignedResponse = zod.unknown()
 
 
-export const PostApiV1ServicesIdAssignMasterIdParams = zod.object({
+export const PostServicesIdAssignMasterIdParams = zod.object({
   "id": zod.uuid(),
   "masterId": zod.uuid()
 })
 
-export const PostApiV1ServicesIdAssignMasterIdResponse = zod.unknown()
+export const PostServicesIdAssignMasterIdResponse = zod.unknown()
 
 
-export const PutApiV1ServicesIdCompleteParams = zod.object({
+export const PutServicesIdCompleteParams = zod.object({
   "id": zod.uuid()
 })
 
-export const putApiV1ServicesIdCompleteBodyMasterCommentMax = 2000;
+export const putServicesIdCompleteBodyMasterCommentMax = 2000;
 
 
 
-export const PutApiV1ServicesIdCompleteBody = zod.object({
+export const PutServicesIdCompleteBody = zod.object({
   "status": zod.enum(['Submitted', 'InProgress', 'PartsPending', 'ReadyForPickup', 'Completed', 'Cancelled']).optional(),
-  "masterComment": zod.string().max(putApiV1ServicesIdCompleteBodyMasterCommentMax).nullish(),
+  "masterComment": zod.string().max(putServicesIdCompleteBodyMasterCommentMax).nullish(),
   "actualCost": zod.number().nullish(),
   "serviceParts": zod.array(zod.object({
   "productId": zod.uuid().optional(),
@@ -2276,62 +2276,62 @@ export const PutApiV1ServicesIdCompleteBody = zod.object({
 })).nullish()
 })
 
-export const PutApiV1ServicesIdCompleteResponse = zod.unknown()
+export const PutServicesIdCompleteResponse = zod.unknown()
 
 
-export const PatchApiV1ServicesIdStatusParams = zod.object({
+export const PatchServicesIdStatusParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PatchApiV1ServicesIdStatusQueryParams = zod.object({
+export const PatchServicesIdStatusQueryParams = zod.object({
   "status": zod.enum(['Submitted', 'InProgress', 'PartsPending', 'ReadyForPickup', 'Completed', 'Cancelled']).optional(),
   "comment": zod.string().optional()
 })
 
-export const PatchApiV1ServicesIdStatusResponse = zod.unknown()
+export const PatchServicesIdStatusResponse = zod.unknown()
 
 
-export const PostApiV1ServicesIdPartsParams = zod.object({
+export const PostServicesIdPartsParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PostApiV1ServicesIdPartsBody = zod.object({
+export const PostServicesIdPartsBody = zod.object({
   "productId": zod.uuid().optional(),
   "productName": zod.string().nullish(),
   "quantity": zod.number().optional(),
   "unitPrice": zod.number().optional()
 })
 
-export const PostApiV1ServicesIdPartsResponse = zod.unknown()
+export const PostServicesIdPartsResponse = zod.unknown()
 
 
-export const GetApiV1ServicesIdReportParams = zod.object({
+export const GetServicesIdReportParams = zod.object({
   "id": zod.uuid()
 })
 
-export const GetApiV1ServicesIdReportResponse = zod.unknown()
+export const GetServicesIdReportResponse = zod.unknown()
 
 
-export const GetApiV1ServicesIdMessagesParams = zod.object({
+export const GetServicesIdMessagesParams = zod.object({
   "id": zod.uuid()
 })
 
-export const getApiV1ServicesIdMessagesQueryPageDefault = 1;
-export const getApiV1ServicesIdMessagesQueryPageSizeDefault = 50;
+export const getServicesIdMessagesQueryPageDefault = 1;
+export const getServicesIdMessagesQueryPageSizeDefault = 50;
 
-export const GetApiV1ServicesIdMessagesQueryParams = zod.object({
-  "page": zod.number().default(getApiV1ServicesIdMessagesQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1ServicesIdMessagesQueryPageSizeDefault)
+export const GetServicesIdMessagesQueryParams = zod.object({
+  "page": zod.number().default(getServicesIdMessagesQueryPageDefault),
+  "pageSize": zod.number().default(getServicesIdMessagesQueryPageSizeDefault)
 })
 
-export const GetApiV1ServicesIdMessagesResponse = zod.unknown()
+export const GetServicesIdMessagesResponse = zod.unknown()
 
 
-export const PostApiV1ServicesIdMessagesParams = zod.object({
+export const PostServicesIdMessagesParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PostApiV1ServicesIdMessagesBody = zod.object({
+export const PostServicesIdMessagesBody = zod.object({
   "content": zod.string().nullish(),
   "fileUrl": zod.string().nullish(),
   "fileName": zod.string().nullish(),
@@ -2339,80 +2339,80 @@ export const PostApiV1ServicesIdMessagesBody = zod.object({
   "contentType": zod.string().nullish()
 })
 
-export const PostApiV1ServicesIdMessagesResponse = zod.unknown()
+export const PostServicesIdMessagesResponse = zod.unknown()
 
 
-export const GetApiV1ServicesIdMessagesUnreadCountParams = zod.object({
+export const GetServicesIdMessagesUnreadCountParams = zod.object({
   "id": zod.uuid()
 })
 
-export const GetApiV1ServicesIdMessagesUnreadCountResponse = zod.unknown()
+export const GetServicesIdMessagesUnreadCountResponse = zod.unknown()
 
 
-export const PostApiV1ServicesIdUploadParams = zod.object({
+export const PostServicesIdUploadParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PostApiV1ServicesIdUploadBody = zod.object({
+export const PostServicesIdUploadBody = zod.object({
   "file": zod.instanceof(File).optional()
 })
 
-export const PostApiV1ServicesIdUploadResponse = zod.unknown()
+export const PostServicesIdUploadResponse = zod.unknown()
 
 
-export const PostApiV1ServicesIdCancelParams = zod.object({
+export const PostServicesIdCancelParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PostApiV1ServicesIdCancelResponse = zod.unknown()
+export const PostServicesIdCancelResponse = zod.unknown()
 
 
-export const PostApiV1ServicesIdCloseParams = zod.object({
+export const PostServicesIdCloseParams = zod.object({
   "id": zod.uuid()
 })
 
-export const postApiV1ServicesIdCloseBodyCommentMax = 500;
+export const postServicesIdCloseBodyCommentMax = 500;
 
 
 
-export const PostApiV1ServicesIdCloseBody = zod.object({
-  "comment": zod.string().max(postApiV1ServicesIdCloseBodyCommentMax).nullish()
+export const PostServicesIdCloseBody = zod.object({
+  "comment": zod.string().max(postServicesIdCloseBodyCommentMax).nullish()
 })
 
-export const PostApiV1ServicesIdCloseResponse = zod.unknown()
+export const PostServicesIdCloseResponse = zod.unknown()
 
 
-export const GetApiV1WarrantyClaimIdParams = zod.object({
+export const GetWarrantyClaimIdParams = zod.object({
   "id": zod.uuid()
 })
 
-export const GetApiV1WarrantyClaimIdResponse = zod.unknown()
+export const GetWarrantyClaimIdResponse = zod.unknown()
 
 
-export const getApiV1WarrantyClaimMyQueryPageDefault = 1;
-export const getApiV1WarrantyClaimMyQueryPageSizeDefault = 10;
+export const getWarrantyClaimMyQueryPageDefault = 1;
+export const getWarrantyClaimMyQueryPageSizeDefault = 10;
 
-export const GetApiV1WarrantyClaimMyQueryParams = zod.object({
-  "page": zod.number().default(getApiV1WarrantyClaimMyQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1WarrantyClaimMyQueryPageSizeDefault)
+export const GetWarrantyClaimMyQueryParams = zod.object({
+  "page": zod.number().default(getWarrantyClaimMyQueryPageDefault),
+  "pageSize": zod.number().default(getWarrantyClaimMyQueryPageSizeDefault)
 })
 
-export const GetApiV1WarrantyClaimMyResponse = zod.unknown()
+export const GetWarrantyClaimMyResponse = zod.unknown()
 
 
-export const getApiV1WarrantyClaimQueryPageDefault = 1;
-export const getApiV1WarrantyClaimQueryPageSizeDefault = 10;
+export const getWarrantyClaimQueryPageDefault = 1;
+export const getWarrantyClaimQueryPageSizeDefault = 10;
 
-export const GetApiV1WarrantyClaimQueryParams = zod.object({
-  "page": zod.number().default(getApiV1WarrantyClaimQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1WarrantyClaimQueryPageSizeDefault),
+export const GetWarrantyClaimQueryParams = zod.object({
+  "page": zod.number().default(getWarrantyClaimQueryPageDefault),
+  "pageSize": zod.number().default(getWarrantyClaimQueryPageSizeDefault),
   "status": zod.union([zod.literal(0),zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5),zod.literal(6)]).optional()
 })
 
-export const GetApiV1WarrantyClaimResponse = zod.unknown()
+export const GetWarrantyClaimResponse = zod.unknown()
 
 
-export const PostApiV1WarrantyClaimBody = zod.object({
+export const PostWarrantyClaimBody = zod.object({
   "orderId": zod.uuid().optional(),
   "productId": zod.uuid().optional(),
   "productName": zod.string().nullish(),
@@ -2421,79 +2421,79 @@ export const PostApiV1WarrantyClaimBody = zod.object({
   "warrantyPeriodMonths": zod.number().optional()
 })
 
-export const PostApiV1WarrantyClaimResponse = zod.unknown()
+export const PostWarrantyClaimResponse = zod.unknown()
 
 
-export const PutApiV1WarrantyClaimIdStatusParams = zod.object({
+export const PutWarrantyClaimIdStatusParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PutApiV1WarrantyClaimIdStatusBody = zod.object({
+export const PutWarrantyClaimIdStatusBody = zod.object({
   "status": zod.union([zod.literal(0),zod.literal(1),zod.literal(2),zod.literal(3),zod.literal(4),zod.literal(5),zod.literal(6)]).optional(),
   "comment": zod.string().nullish()
 })
 
-export const PutApiV1WarrantyClaimIdStatusResponse = zod.unknown()
+export const PutWarrantyClaimIdStatusResponse = zod.unknown()
 
 
-export const PostApiV1WarrantyClaimIdResolveParams = zod.object({
+export const PostWarrantyClaimIdResolveParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PostApiV1WarrantyClaimIdResolveBody = zod.object({
+export const PostWarrantyClaimIdResolveBody = zod.object({
   "resolution": zod.string().nullish()
 })
 
-export const PostApiV1WarrantyClaimIdResolveResponse = zod.unknown()
+export const PostWarrantyClaimIdResolveResponse = zod.unknown()
 
 
-export const GetApiV1WarrantyCardIdParams = zod.object({
+export const GetWarrantyCardIdParams = zod.object({
   "id": zod.uuid()
 })
 
-export const GetApiV1WarrantyCardIdResponse = zod.unknown()
+export const GetWarrantyCardIdResponse = zod.unknown()
 
 
-export const GetApiV1WarrantyCardNumberNumberParams = zod.object({
+export const GetWarrantyCardNumberNumberParams = zod.object({
   "number": zod.string()
 })
 
-export const GetApiV1WarrantyCardNumberNumberResponse = zod.unknown()
+export const GetWarrantyCardNumberNumberResponse = zod.unknown()
 
 
-export const GetApiV1WarrantyCardOrderOrderIdParams = zod.object({
+export const GetWarrantyCardOrderOrderIdParams = zod.object({
   "orderId": zod.uuid()
 })
 
-export const GetApiV1WarrantyCardOrderOrderIdResponse = zod.unknown()
+export const GetWarrantyCardOrderOrderIdResponse = zod.unknown()
 
 
-export const GetApiV1WarrantyCardServiceServiceIdParams = zod.object({
+export const GetWarrantyCardServiceServiceIdParams = zod.object({
   "serviceId": zod.uuid()
 })
 
-export const GetApiV1WarrantyCardServiceServiceIdResponse = zod.unknown()
+export const GetWarrantyCardServiceServiceIdResponse = zod.unknown()
 
 
-export const GetApiV1WarrantyCardSerialSerialNumberParams = zod.object({
+export const GetWarrantyCardSerialSerialNumberParams = zod.object({
   "serialNumber": zod.string()
 })
 
-export const GetApiV1WarrantyCardSerialSerialNumberResponse = zod.unknown()
+export const GetWarrantyCardSerialSerialNumberResponse = zod.unknown()
 
 
-export const getApiV1WarrantyCardMyQueryPageDefault = 1;
-export const getApiV1WarrantyCardMyQueryPageSizeDefault = 10;
+export const getWarrantyCardMyQueryPageDefault = 1;
+export const getWarrantyCardMyQueryPageSizeDefault = 10;
 
-export const GetApiV1WarrantyCardMyQueryParams = zod.object({
-  "page": zod.number().default(getApiV1WarrantyCardMyQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1WarrantyCardMyQueryPageSizeDefault)
+export const GetWarrantyCardMyQueryParams = zod.object({
+  "page": zod.number().default(getWarrantyCardMyQueryPageDefault),
+  "pageSize": zod.number().default(getWarrantyCardMyQueryPageSizeDefault)
 })
 
-export const GetApiV1WarrantyCardMyResponse = zod.unknown()
+export const GetWarrantyCardMyResponse = zod.unknown()
 
 
-export const PostApiV1WarrantyCardBody = zod.object({
+export const PostWarrantyCardBody = zod.object({
   "orderId": zod.uuid().nullish(),
   "serviceRequestId": zod.uuid().nullish(),
   "productId": zod.uuid(),
@@ -2505,26 +2505,26 @@ export const PostApiV1WarrantyCardBody = zod.object({
   "userEmail": zod.string().nullish()
 })
 
-export const PostApiV1WarrantyCardResponse = zod.unknown()
+export const PostWarrantyCardResponse = zod.unknown()
 
 
-export const PostApiV1WarrantyCardIdAnnulParams = zod.object({
+export const PostWarrantyCardIdAnnulParams = zod.object({
   "id": zod.uuid()
 })
 
-export const postApiV1WarrantyCardIdAnnulBodyReasonMin = 10;
-export const postApiV1WarrantyCardIdAnnulBodyReasonMax = 500;
+export const postWarrantyCardIdAnnulBodyReasonMin = 10;
+export const postWarrantyCardIdAnnulBodyReasonMax = 500;
 
 
 
-export const PostApiV1WarrantyCardIdAnnulBody = zod.object({
-  "reason": zod.string().min(postApiV1WarrantyCardIdAnnulBodyReasonMin).max(postApiV1WarrantyCardIdAnnulBodyReasonMax)
+export const PostWarrantyCardIdAnnulBody = zod.object({
+  "reason": zod.string().min(postWarrantyCardIdAnnulBodyReasonMin).max(postWarrantyCardIdAnnulBodyReasonMax)
 })
 
-export const PostApiV1WarrantyCardIdAnnulResponse = zod.unknown()
+export const PostWarrantyCardIdAnnulResponse = zod.unknown()
 
 
-export const PostApiV1PCBuilderCheckCompatibilityBody = zod.object({
+export const PostPCBuilderCheckCompatibilityBody = zod.object({
   "components": zod.object({
   "cpu": zod.object({
   "productId": zod.uuid().optional(),
@@ -2640,7 +2640,7 @@ export const PostApiV1PCBuilderCheckCompatibilityBody = zod.object({
   "purpose": zod.string().nullish()
 })
 
-export const PostApiV1PCBuilderCheckCompatibilityResponse = zod.object({
+export const PostPCBuilderCheckCompatibilityResponse = zod.object({
   "result": zod.object({
   "isCompatible": zod.boolean().optional(),
   "issues": zod.array(zod.object({
@@ -2668,7 +2668,7 @@ export const PostApiV1PCBuilderCheckCompatibilityResponse = zod.object({
 })
 
 
-export const PostApiV1PCBuilderConfigurationsBody = zod.object({
+export const PostPCBuilderConfigurationsBody = zod.object({
   "id": zod.uuid().nullish(),
   "name": zod.string().nullish(),
   "purpose": zod.string().nullish(),
@@ -2699,7 +2699,7 @@ export const PostApiV1PCBuilderConfigurationsBody = zod.object({
   "unavailableComponents": zod.array(zod.string()).nullish()
 })
 
-export const PostApiV1PCBuilderConfigurationsResponse = zod.object({
+export const PostPCBuilderConfigurationsResponse = zod.object({
   "id": zod.uuid().nullish(),
   "name": zod.string().nullish(),
   "purpose": zod.string().nullish(),
@@ -2731,15 +2731,15 @@ export const PostApiV1PCBuilderConfigurationsResponse = zod.object({
 })
 
 
-export const getApiV1PCBuilderConfigurationsQueryPageDefault = 1;
-export const getApiV1PCBuilderConfigurationsQueryPageSizeDefault = 20;
+export const getPCBuilderConfigurationsQueryPageDefault = 1;
+export const getPCBuilderConfigurationsQueryPageSizeDefault = 20;
 
-export const GetApiV1PCBuilderConfigurationsQueryParams = zod.object({
-  "page": zod.number().default(getApiV1PCBuilderConfigurationsQueryPageDefault),
-  "pageSize": zod.number().default(getApiV1PCBuilderConfigurationsQueryPageSizeDefault)
+export const GetPCBuilderConfigurationsQueryParams = zod.object({
+  "page": zod.number().default(getPCBuilderConfigurationsQueryPageDefault),
+  "pageSize": zod.number().default(getPCBuilderConfigurationsQueryPageSizeDefault)
 })
 
-export const GetApiV1PCBuilderConfigurationsResponseItem = zod.object({
+export const GetPCBuilderConfigurationsResponseItem = zod.object({
   "id": zod.uuid().nullish(),
   "name": zod.string().nullish(),
   "purpose": zod.string().nullish(),
@@ -2769,14 +2769,14 @@ export const GetApiV1PCBuilderConfigurationsResponseItem = zod.object({
 })).nullish(),
   "unavailableComponents": zod.array(zod.string()).nullish()
 })
-export const GetApiV1PCBuilderConfigurationsResponse = zod.array(GetApiV1PCBuilderConfigurationsResponseItem)
+export const GetPCBuilderConfigurationsResponse = zod.array(GetPCBuilderConfigurationsResponseItem)
 
 
-export const GetApiV1PCBuilderConfigurationsIdParams = zod.object({
+export const GetPCBuilderConfigurationsIdParams = zod.object({
   "id": zod.uuid()
 })
 
-export const GetApiV1PCBuilderConfigurationsIdResponse = zod.object({
+export const GetPCBuilderConfigurationsIdResponse = zod.object({
   "id": zod.uuid().nullish(),
   "name": zod.string().nullish(),
   "purpose": zod.string().nullish(),
@@ -2808,28 +2808,28 @@ export const GetApiV1PCBuilderConfigurationsIdResponse = zod.object({
 })
 
 
-export const DeleteApiV1PCBuilderConfigurationsIdParams = zod.object({
+export const DeletePCBuilderConfigurationsIdParams = zod.object({
   "id": zod.uuid()
 })
 
-export const DeleteApiV1PCBuilderConfigurationsIdResponse = zod.void()
+export const DeletePCBuilderConfigurationsIdResponse = zod.void()
 
 
-export const PostApiV1PCBuilderConfigurationsIdShareParams = zod.object({
+export const PostPCBuilderConfigurationsIdShareParams = zod.object({
   "id": zod.uuid()
 })
 
-export const PostApiV1PCBuilderConfigurationsIdShareResponse = zod.object({
+export const PostPCBuilderConfigurationsIdShareResponse = zod.object({
   "shareToken": zod.string().nullish(),
   "shareUrl": zod.string().nullish()
 })
 
 
-export const GetApiV1PCBuilderShareTokenParams = zod.object({
+export const GetPCBuilderShareTokenParams = zod.object({
   "token": zod.string()
 })
 
-export const GetApiV1PCBuilderShareTokenResponse = zod.object({
+export const GetPCBuilderShareTokenResponse = zod.object({
   "id": zod.uuid().nullish(),
   "name": zod.string().nullish(),
   "purpose": zod.string().nullish(),
@@ -2861,23 +2861,23 @@ export const GetApiV1PCBuilderShareTokenResponse = zod.object({
 })
 
 
-export const GetApiV1PCBuilderCompatibleMotherboardsProcessorIdParams = zod.object({
+export const GetPCBuilderCompatibleMotherboardsProcessorIdParams = zod.object({
   "processorId": zod.uuid()
 })
 
-export const GetApiV1PCBuilderCompatibleMotherboardsProcessorIdResponseItem = zod.uuid()
-export const GetApiV1PCBuilderCompatibleMotherboardsProcessorIdResponse = zod.array(GetApiV1PCBuilderCompatibleMotherboardsProcessorIdResponseItem)
+export const GetPCBuilderCompatibleMotherboardsProcessorIdResponseItem = zod.uuid()
+export const GetPCBuilderCompatibleMotherboardsProcessorIdResponse = zod.array(GetPCBuilderCompatibleMotherboardsProcessorIdResponseItem)
 
 
-export const GetApiV1PCBuilderCompatibleRamMotherboardIdParams = zod.object({
+export const GetPCBuilderCompatibleRamMotherboardIdParams = zod.object({
   "motherboardId": zod.uuid()
 })
 
-export const GetApiV1PCBuilderCompatibleRamMotherboardIdResponseItem = zod.uuid()
-export const GetApiV1PCBuilderCompatibleRamMotherboardIdResponse = zod.array(GetApiV1PCBuilderCompatibleRamMotherboardIdResponseItem)
+export const GetPCBuilderCompatibleRamMotherboardIdResponseItem = zod.uuid()
+export const GetPCBuilderCompatibleRamMotherboardIdResponse = zod.array(GetPCBuilderCompatibleRamMotherboardIdResponseItem)
 
 
-export const PostApiV1PCBuilderCalculatePowerBody = zod.object({
+export const PostPCBuilderCalculatePowerBody = zod.object({
   "id": zod.uuid().nullish(),
   "name": zod.string().nullish(),
   "purpose": zod.string().nullish(),
@@ -2908,14 +2908,14 @@ export const PostApiV1PCBuilderCalculatePowerBody = zod.object({
   "unavailableComponents": zod.array(zod.string()).nullish()
 })
 
-export const PostApiV1PCBuilderCalculatePowerResponse = zod.object({
+export const PostPCBuilderCalculatePowerResponse = zod.object({
   "totalPowerConsumption": zod.number().optional(),
   "recommendedPsuWattage": zod.number().optional(),
   "minPsuWattage": zod.number().optional()
 })
 
 
-export const PostApiV1PCBuilderCalculatePriceBody = zod.object({
+export const PostPCBuilderCalculatePriceBody = zod.object({
   "configuration": zod.object({
   "id": zod.uuid().nullish(),
   "name": zod.string().nullish(),
@@ -2949,7 +2949,7 @@ export const PostApiV1PCBuilderCalculatePriceBody = zod.object({
   "promoCode": zod.string().nullish()
 })
 
-export const PostApiV1PCBuilderCalculatePriceResponse = zod.object({
+export const PostPCBuilderCalculatePriceResponse = zod.object({
   "totalPrice": zod.number().optional(),
   "basePrice": zod.number().optional(),
   "saleDiscount": zod.number().optional(),
@@ -2969,14 +2969,14 @@ export const PostApiV1PCBuilderCalculatePriceResponse = zod.object({
 })
 
 
-export const PostApiV1PCBuilderCalculateFpsBody = zod.object({
+export const PostPCBuilderCalculateFpsBody = zod.object({
   "cpuId": zod.string().nullish(),
   "gpuId": zod.string().nullish(),
   "ramCapacity": zod.number().nullish(),
   "ramFrequency": zod.number().nullish()
 })
 
-export const PostApiV1PCBuilderCalculateFpsResponse = zod.object({
+export const PostPCBuilderCalculateFpsResponse = zod.object({
   "cpuScore": zod.number().optional(),
   "gpuScore": zod.number().optional(),
   "overallScore": zod.number().optional(),

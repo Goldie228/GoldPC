@@ -6,7 +6,7 @@
     "description": "Объединённая OpenAPI-спецификация всех микросервисов GoldPC."
   },
   "paths": {
-    "/api/v1/admin/products": {
+    "/admin/products": {
       "get": {
         "tags": [
           "AdminCatalog"
@@ -142,7 +142,7 @@
         }
       }
     },
-    "/api/v1/admin/products/{productId}": {
+    "/admin/products/{productId}": {
       "put": {
         "tags": [
           "AdminCatalog"
@@ -262,7 +262,7 @@
         }
       }
     },
-    "/api/v1/admin/manufacturers": {
+    "/admin/manufacturers": {
       "post": {
         "tags": [
           "AdminCatalog"
@@ -330,7 +330,7 @@
         }
       }
     },
-    "/api/v1/admin/manufacturers/{manufacturerId}": {
+    "/admin/manufacturers/{manufacturerId}": {
       "put": {
         "tags": [
           "AdminCatalog"
@@ -450,7 +450,7 @@
         }
       }
     },
-    "/api/v1/admin/categories": {
+    "/admin/categories": {
       "post": {
         "tags": [
           "AdminCatalog"
@@ -518,7 +518,7 @@
         }
       }
     },
-    "/api/v1/admin/categories/{categoryId}": {
+    "/admin/categories/{categoryId}": {
       "put": {
         "tags": [
           "AdminCatalog"
@@ -658,7 +658,7 @@
         }
       }
     },
-    "/api/v1/admin/products/{productId}/price-history": {
+    "/admin/products/{productId}/price-history": {
       "get": {
         "tags": [
           "AdminCatalog"
@@ -727,7 +727,7 @@
         }
       }
     },
-    "/api/v1/admin/specifications/by-category/{categoryId}": {
+    "/admin/specifications/by-category/{categoryId}": {
       "get": {
         "tags": [
           "AdminCatalog"
@@ -787,7 +787,7 @@
         }
       }
     },
-    "/api/v1/admin/products/generate-name": {
+    "/admin/products/generate-name": {
       "post": {
         "tags": [
           "AdminCatalog"
@@ -835,7 +835,7 @@
         }
       }
     },
-    "/api/v1/admin/specifications/unique-values/{categoryId}": {
+    "/admin/specifications/unique-values/{categoryId}": {
       "get": {
         "tags": [
           "AdminCatalog"
@@ -893,7 +893,7 @@
         }
       }
     },
-    "/api/v1/admin/data/migrate/fix-range-outliers": {
+    "/admin/data/migrate/fix-range-outliers": {
       "post": {
         "tags": [
           "AdminData"
@@ -922,7 +922,7 @@
         }
       }
     },
-    "/api/v1/admin/data/migrate/remove-leaked-values": {
+    "/admin/data/migrate/remove-leaked-values": {
       "post": {
         "tags": [
           "AdminData"
@@ -951,7 +951,7 @@
         }
       }
     },
-    "/api/v1/admin/data/migrate/normalize-duplicates": {
+    "/admin/data/migrate/normalize-duplicates": {
       "post": {
         "tags": [
           "AdminData"
@@ -980,7 +980,7 @@
         }
       }
     },
-    "/api/v1/admin/data/migrate/recalculate-frequencies": {
+    "/admin/data/migrate/recalculate-frequencies": {
       "post": {
         "tags": [
           "AdminData"
@@ -1009,7 +1009,7 @@
         }
       }
     },
-    "/api/v1/admin/data/migrate/recalculate-vram": {
+    "/admin/data/migrate/recalculate-vram": {
       "post": {
         "tags": [
           "AdminData"
@@ -1038,7 +1038,7 @@
         }
       }
     },
-    "/api/v1/admin/data/migrate/all": {
+    "/admin/data/migrate/all": {
       "post": {
         "tags": [
           "AdminData"
@@ -1067,7 +1067,7 @@
         }
       }
     },
-    "/api/v1/admin/data/products/check-stock": {
+    "/admin/data/products/check-stock": {
       "post": {
         "tags": [
           "AdminData"
@@ -1133,7 +1133,7 @@
         }
       }
     },
-    "/api/v1/catalog/products": {
+    "/catalog/products": {
       "get": {
         "tags": [
           "Catalog"
@@ -1292,7 +1292,7 @@
         }
       }
     },
-    "/api/v1/catalog/products/{productId}": {
+    "/catalog/products/{productId}": {
       "get": {
         "tags": [
           "Catalog"
@@ -1352,7 +1352,7 @@
         }
       }
     },
-    "/api/v1/catalog/products/by-slug/{slug}": {
+    "/catalog/products/by-slug/{slug}": {
       "get": {
         "tags": [
           "Catalog"
@@ -1411,7 +1411,7 @@
         }
       }
     },
-    "/api/v1/catalog/products/{productId}/reviews": {
+    "/catalog/products/{productId}/reviews": {
       "get": {
         "tags": [
           "Catalog"
@@ -1566,7 +1566,7 @@
         }
       }
     },
-    "/api/v1/catalog/products/{productId}/reviews/{reviewId}": {
+    "/catalog/products/{productId}/reviews/{reviewId}": {
       "put": {
         "tags": [
           "Catalog"
@@ -1784,7 +1784,7 @@
         }
       }
     },
-    "/api/v1/catalog/products/{productId}/reviews/{reviewId}/helpful": {
+    "/catalog/products/{productId}/reviews/{reviewId}/helpful": {
       "patch": {
         "tags": [
           "Catalog"
@@ -1836,7 +1836,7 @@
         }
       }
     },
-    "/api/v1/catalog/categories": {
+    "/catalog/categories": {
       "get": {
         "tags": [
           "Catalog"
@@ -1865,84 +1865,7 @@
         }
       }
     },
-    "/api/v1/catalog/categories/{slug}/filter-attributes": {
-      "get": {
-        "tags": [
-          "Catalog"
-        ],
-        "parameters": [
-          {
-            "name": "slug",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "ManufacturerIds",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "format": "uuid"
-              }
-            }
-          },
-          {
-            "name": "Specifications",
-            "in": "query",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "SpecificationRanges",
-            "in": "query",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "InStock",
-            "in": "query",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/FilterAttributesResponse"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FilterAttributesResponse"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FilterAttributesResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/catalog/categories/{slug}/filter-facets": {
+    "/catalog/categories/{slug}/filter-attributes": {
       "get": {
         "tags": [
           "Catalog"
@@ -2001,6 +1924,83 @@
             "content": {
               "text/plain": {
                 "schema": {
+                  "$ref": "#/components/schemas/FilterAttributesResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilterAttributesResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FilterAttributesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/catalog/categories/{slug}/filter-facets": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ManufacturerIds",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          },
+          {
+            "name": "Specifications",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "SpecificationRanges",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "InStock",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
                   "$ref": "#/components/schemas/FilterFacetsResponse"
                 }
               },
@@ -2019,7 +2019,7 @@
         }
       }
     },
-    "/api/v1/catalog/manufacturers": {
+    "/catalog/manufacturers": {
       "get": {
         "tags": [
           "Catalog"
@@ -2417,7 +2417,7 @@
         }
       }
     },
-    "/api/v1/catalog/telemetry/events": {
+    "/catalog/telemetry/events": {
       "post": {
         "tags": [
           "Telemetry"
@@ -2468,7 +2468,7 @@
         }
       }
     },
-    "/api/v1/auth/address": {
+    "/auth/address": {
       "get": {
         "tags": [
           "Address"
@@ -2563,7 +2563,7 @@
         }
       }
     },
-    "/api/v1/auth/address/{id}": {
+    "/auth/address/{id}": {
       "get": {
         "tags": [
           "Address"
@@ -2758,7 +2758,7 @@
         }
       }
     },
-    "/api/v1/auth/address/{id}/default": {
+    "/auth/address/{id}/default": {
       "put": {
         "tags": [
           "Address"
@@ -2818,7 +2818,7 @@
         }
       }
     },
-    "/api/v1/auth/admin/users": {
+    "/auth/admin/users": {
       "post": {
         "tags": [
           "Admin"
@@ -2886,7 +2886,7 @@
         }
       }
     },
-    "/api/v1/auth/admin/users/{id}": {
+    "/auth/admin/users/{id}": {
       "get": {
         "tags": [
           "Admin"
@@ -2987,7 +2987,7 @@
         }
       }
     },
-    "/api/v1/auth/admin/users/{id}/reset-password": {
+    "/auth/admin/users/{id}/reset-password": {
       "post": {
         "tags": [
           "Admin"
@@ -3069,7 +3069,7 @@
         }
       }
     },
-    "/api/v1/auth/admin/users/{id}/deactivate": {
+    "/auth/admin/users/{id}/deactivate": {
       "post": {
         "tags": [
           "Admin"
@@ -3112,7 +3112,7 @@
         }
       }
     },
-    "/api/v1/auth/admin/users/{id}/activate": {
+    "/auth/admin/users/{id}/activate": {
       "post": {
         "tags": [
           "Admin"
@@ -3155,7 +3155,7 @@
         }
       }
     },
-    "/api/v1/auth/admin/settings/two-factor": {
+    "/auth/admin/settings/two-factor": {
       "post": {
         "tags": [
           "Admin"
@@ -3186,7 +3186,7 @@
         }
       }
     },
-    "/api/v1/Auth/register": {
+    "/Auth/register": {
       "post": {
         "tags": [
           "Auth"
@@ -3254,7 +3254,7 @@
         }
       }
     },
-    "/api/v1/Auth/login": {
+    "/Auth/login": {
       "post": {
         "tags": [
           "Auth"
@@ -3322,7 +3322,7 @@
         }
       }
     },
-    "/api/v1/Auth/login/verify-2fa": {
+    "/Auth/login/verify-2fa": {
       "post": {
         "tags": [
           "Auth"
@@ -3390,7 +3390,7 @@
         }
       }
     },
-    "/api/v1/Auth/refresh": {
+    "/Auth/refresh": {
       "post": {
         "tags": [
           "Auth"
@@ -3458,7 +3458,7 @@
         }
       }
     },
-    "/api/v1/Auth/logout": {
+    "/Auth/logout": {
       "post": {
         "tags": [
           "Auth"
@@ -3506,7 +3506,7 @@
         }
       }
     },
-    "/api/v1/Auth/profile": {
+    "/Auth/profile": {
       "get": {
         "tags": [
           "Auth"
@@ -3621,7 +3621,7 @@
         }
       }
     },
-    "/api/v1/Auth/avatar": {
+    "/Auth/avatar": {
       "post": {
         "tags": [
           "Auth"
@@ -3700,7 +3700,7 @@
         }
       }
     },
-    "/api/v1/Auth/change-password": {
+    "/Auth/change-password": {
       "post": {
         "tags": [
           "Auth"
@@ -3768,7 +3768,7 @@
         }
       }
     },
-    "/api/v1/Auth/forgot-password": {
+    "/Auth/forgot-password": {
       "post": {
         "tags": [
           "Auth"
@@ -3836,7 +3836,7 @@
         }
       }
     },
-    "/api/v1/Auth/reset-password": {
+    "/Auth/reset-password": {
       "post": {
         "tags": [
           "Auth"
@@ -3904,7 +3904,7 @@
         }
       }
     },
-    "/api/v1/Auth/validate-reset-token": {
+    "/Auth/validate-reset-token": {
       "post": {
         "tags": [
           "Auth"
@@ -3972,7 +3972,7 @@
         }
       }
     },
-    "/api/v1/Auth/send-verification": {
+    "/Auth/send-verification": {
       "post": {
         "tags": [
           "Auth"
@@ -4041,7 +4041,7 @@
         }
       }
     },
-    "/api/v1/Auth/verify-email": {
+    "/Auth/verify-email": {
       "post": {
         "tags": [
           "Auth"
@@ -4121,7 +4121,7 @@
         }
       }
     },
-    "/api/v1/auth/notifications": {
+    "/auth/notifications": {
       "get": {
         "tags": [
           "NotificationPreferences"
@@ -4256,7 +4256,7 @@
         }
       }
     },
-    "/api/v1/auth/security/login-history": {
+    "/auth/security/login-history": {
       "get": {
         "tags": [
           "Security"
@@ -4325,7 +4325,7 @@
         }
       }
     },
-    "/api/v1/auth/security/2fa/enable": {
+    "/auth/security/2fa/enable": {
       "post": {
         "tags": [
           "Security"
@@ -4394,7 +4394,7 @@
         }
       }
     },
-    "/api/v1/auth/security/2fa/verify": {
+    "/auth/security/2fa/verify": {
       "post": {
         "tags": [
           "Security"
@@ -4482,7 +4482,7 @@
         }
       }
     },
-    "/api/v1/auth/security/2fa/disable": {
+    "/auth/security/2fa/disable": {
       "post": {
         "tags": [
           "Security"
@@ -4570,7 +4570,7 @@
         }
       }
     },
-    "/api/v1/wishlist": {
+    "/wishlist": {
       "get": {
         "tags": [
           "Wishlist"
@@ -4599,7 +4599,7 @@
         }
       }
     },
-    "/api/v1/wishlist/{productId}": {
+    "/wishlist/{productId}": {
       "post": {
         "tags": [
           "Wishlist"
@@ -4697,7 +4697,7 @@
         }
       }
     },
-    "/api/v1/wishlist/sync": {
+    "/wishlist/sync": {
       "put": {
         "tags": [
           "Wishlist"
@@ -4852,7 +4852,7 @@
         }
       }
     },
-    "/api/v1/orders/{id}": {
+    "/orders/{id}": {
       "get": {
         "tags": [
           "Orders"
@@ -4892,7 +4892,7 @@
         }
       }
     },
-    "/api/v1/orders/number/{orderNumber}": {
+    "/orders/number/{orderNumber}": {
       "get": {
         "tags": [
           "Orders"
@@ -4931,7 +4931,7 @@
         }
       }
     },
-    "/api/v1/orders/my": {
+    "/orders/my": {
       "get": {
         "tags": [
           "Orders"
@@ -4963,7 +4963,7 @@
         }
       }
     },
-    "/api/v1/orders": {
+    "/orders": {
       "get": {
         "tags": [
           "Orders"
@@ -5048,7 +5048,7 @@
         }
       }
     },
-    "/api/v1/orders/delivery/quote": {
+    "/orders/delivery/quote": {
       "post": {
         "tags": [
           "Orders"
@@ -5096,7 +5096,7 @@
         }
       }
     },
-    "/api/v1/orders/{id}/status": {
+    "/orders/{id}/status": {
       "put": {
         "tags": [
           "Orders"
@@ -5138,7 +5138,7 @@
         }
       }
     },
-    "/api/v1/orders/{id}/cancel": {
+    "/orders/{id}/cancel": {
       "post": {
         "tags": [
           "Orders"
@@ -5161,7 +5161,7 @@
         }
       }
     },
-    "/api/v1/orders/{id}/pay": {
+    "/orders/{id}/pay": {
       "post": {
         "tags": [
           "Orders"
@@ -5184,7 +5184,7 @@
         }
       }
     },
-    "/api/v1/promo/validate": {
+    "/promo/validate": {
       "post": {
         "tags": [
           "Promo"
@@ -5252,7 +5252,7 @@
         }
       }
     },
-    "/api/v1/webhooks/stripe": {
+    "/webhooks/stripe": {
       "post": {
         "tags": [
           "StripeWebhook"
@@ -5264,7 +5264,7 @@
         }
       }
     },
-    "/api/v1/webhooks/stripe/simulate": {
+    "/webhooks/stripe/simulate": {
       "get": {
         "tags": [
           "StripeWebhook"
@@ -5294,7 +5294,7 @@
         }
       }
     },
-    "/api/v1/Services/types": {
+    "/Services/types": {
       "get": {
         "tags": [
           "Services"
@@ -5306,7 +5306,7 @@
         }
       }
     },
-    "/api/v1/Services/types/{slug}": {
+    "/Services/types/{slug}": {
       "get": {
         "tags": [
           "Services"
@@ -5328,7 +5328,7 @@
         }
       }
     },
-    "/api/v1/Services/{id}": {
+    "/Services/{id}": {
       "get": {
         "tags": [
           "Services"
@@ -5351,7 +5351,7 @@
         }
       }
     },
-    "/api/v1/Services/my": {
+    "/Services/my": {
       "get": {
         "tags": [
           "Services"
@@ -5383,7 +5383,7 @@
         }
       }
     },
-    "/api/v1/Services/master": {
+    "/Services/master": {
       "get": {
         "tags": [
           "Services"
@@ -5415,7 +5415,7 @@
         }
       }
     },
-    "/api/v1/Services": {
+    "/Services": {
       "get": {
         "tags": [
           "Services"
@@ -5483,7 +5483,7 @@
         }
       }
     },
-    "/api/v1/Services/unassigned": {
+    "/Services/unassigned": {
       "get": {
         "tags": [
           "Services"
@@ -5515,7 +5515,7 @@
         }
       }
     },
-    "/api/v1/Services/{id}/assign/{masterId}": {
+    "/Services/{id}/assign/{masterId}": {
       "post": {
         "tags": [
           "Services"
@@ -5547,7 +5547,7 @@
         }
       }
     },
-    "/api/v1/Services/{id}/complete": {
+    "/Services/{id}/complete": {
       "put": {
         "tags": [
           "Services"
@@ -5589,7 +5589,7 @@
         }
       }
     },
-    "/api/v1/Services/{id}/status": {
+    "/Services/{id}/status": {
       "patch": {
         "tags": [
           "Services"
@@ -5626,7 +5626,7 @@
         }
       }
     },
-    "/api/v1/Services/{id}/parts": {
+    "/Services/{id}/parts": {
       "post": {
         "tags": [
           "Services"
@@ -5668,7 +5668,7 @@
         }
       }
     },
-    "/api/v1/Services/{id}/report": {
+    "/Services/{id}/report": {
       "get": {
         "tags": [
           "Services"
@@ -5691,7 +5691,7 @@
         }
       }
     },
-    "/api/v1/Services/{id}/messages": {
+    "/Services/{id}/messages": {
       "get": {
         "tags": [
           "Services"
@@ -5772,7 +5772,7 @@
         }
       }
     },
-    "/api/v1/Services/{id}/messages/unread-count": {
+    "/Services/{id}/messages/unread-count": {
       "get": {
         "tags": [
           "Services"
@@ -5795,7 +5795,7 @@
         }
       }
     },
-    "/api/v1/Services/{id}/upload": {
+    "/Services/{id}/upload": {
       "post": {
         "tags": [
           "Services"
@@ -5838,7 +5838,7 @@
         }
       }
     },
-    "/api/v1/Services/{id}/cancel": {
+    "/Services/{id}/cancel": {
       "post": {
         "tags": [
           "Services"
@@ -5861,7 +5861,7 @@
         }
       }
     },
-    "/api/v1/Services/{id}/close": {
+    "/Services/{id}/close": {
       "post": {
         "tags": [
           "Services"
@@ -5903,7 +5903,7 @@
         }
       }
     },
-    "/api/v1/Warranty/claim/{id}": {
+    "/Warranty/claim/{id}": {
       "get": {
         "tags": [
           "Warranty"
@@ -5926,7 +5926,7 @@
         }
       }
     },
-    "/api/v1/Warranty/claim/my": {
+    "/Warranty/claim/my": {
       "get": {
         "tags": [
           "Warranty"
@@ -5958,7 +5958,7 @@
         }
       }
     },
-    "/api/v1/Warranty/claim": {
+    "/Warranty/claim": {
       "get": {
         "tags": [
           "Warranty"
@@ -6026,7 +6026,7 @@
         }
       }
     },
-    "/api/v1/Warranty/claim/{id}/status": {
+    "/Warranty/claim/{id}/status": {
       "put": {
         "tags": [
           "Warranty"
@@ -6068,7 +6068,7 @@
         }
       }
     },
-    "/api/v1/Warranty/claim/{id}/resolve": {
+    "/Warranty/claim/{id}/resolve": {
       "post": {
         "tags": [
           "Warranty"
@@ -6110,7 +6110,7 @@
         }
       }
     },
-    "/api/v1/Warranty/card/{id}": {
+    "/Warranty/card/{id}": {
       "get": {
         "tags": [
           "Warranty"
@@ -6133,7 +6133,7 @@
         }
       }
     },
-    "/api/v1/Warranty/card/number/{number}": {
+    "/Warranty/card/number/{number}": {
       "get": {
         "tags": [
           "Warranty"
@@ -6155,7 +6155,7 @@
         }
       }
     },
-    "/api/v1/Warranty/card/order/{orderId}": {
+    "/Warranty/card/order/{orderId}": {
       "get": {
         "tags": [
           "Warranty"
@@ -6178,7 +6178,7 @@
         }
       }
     },
-    "/api/v1/Warranty/card/service/{serviceId}": {
+    "/Warranty/card/service/{serviceId}": {
       "get": {
         "tags": [
           "Warranty"
@@ -6201,7 +6201,7 @@
         }
       }
     },
-    "/api/v1/Warranty/card/serial/{serialNumber}": {
+    "/Warranty/card/serial/{serialNumber}": {
       "get": {
         "tags": [
           "Warranty"
@@ -6223,7 +6223,7 @@
         }
       }
     },
-    "/api/v1/Warranty/card/my": {
+    "/Warranty/card/my": {
       "get": {
         "tags": [
           "Warranty"
@@ -6255,7 +6255,7 @@
         }
       }
     },
-    "/api/v1/Warranty/card": {
+    "/Warranty/card": {
       "post": {
         "tags": [
           "Warranty"
@@ -6286,7 +6286,7 @@
         }
       }
     },
-    "/api/v1/Warranty/card/{id}/annul": {
+    "/Warranty/card/{id}/annul": {
       "post": {
         "tags": [
           "Warranty"
@@ -6328,7 +6328,7 @@
         }
       }
     },
-    "/api/v1/PCBuilder/check-compatibility": {
+    "/PCBuilder/check-compatibility": {
       "post": {
         "tags": [
           "PCBuilder"
@@ -6396,7 +6396,7 @@
         }
       }
     },
-    "/api/v1/PCBuilder/configurations": {
+    "/PCBuilder/configurations": {
       "post": {
         "tags": [
           "PCBuilder"
@@ -6560,7 +6560,7 @@
         }
       }
     },
-    "/api/v1/PCBuilder/configurations/{id}": {
+    "/PCBuilder/configurations/{id}": {
       "get": {
         "tags": [
           "PCBuilder"
@@ -6701,7 +6701,7 @@
         }
       }
     },
-    "/api/v1/PCBuilder/configurations/{id}/share": {
+    "/PCBuilder/configurations/{id}/share": {
       "post": {
         "tags": [
           "PCBuilder"
@@ -6781,7 +6781,7 @@
         }
       }
     },
-    "/api/v1/PCBuilder/share/{token}": {
+    "/PCBuilder/share/{token}": {
       "get": {
         "tags": [
           "PCBuilder"
@@ -6840,7 +6840,7 @@
         }
       }
     },
-    "/api/v1/PCBuilder/compatible-motherboards/{processorId}": {
+    "/PCBuilder/compatible-motherboards/{processorId}": {
       "get": {
         "tags": [
           "PCBuilder"
@@ -6892,7 +6892,7 @@
         }
       }
     },
-    "/api/v1/PCBuilder/compatible-ram/{motherboardId}": {
+    "/PCBuilder/compatible-ram/{motherboardId}": {
       "get": {
         "tags": [
           "PCBuilder"
@@ -6944,7 +6944,7 @@
         }
       }
     },
-    "/api/v1/PCBuilder/calculate-power": {
+    "/PCBuilder/calculate-power": {
       "post": {
         "tags": [
           "PCBuilder"
@@ -6992,7 +6992,7 @@
         }
       }
     },
-    "/api/v1/PCBuilder/calculate-price": {
+    "/PCBuilder/calculate-price": {
       "post": {
         "tags": [
           "PCBuilder"
@@ -7040,7 +7040,7 @@
         }
       }
     },
-    "/api/v1/PCBuilder/calculate-fps": {
+    "/PCBuilder/calculate-fps": {
       "post": {
         "tags": [
           "PCBuilder"
