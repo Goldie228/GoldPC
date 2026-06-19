@@ -216,60 +216,72 @@ public class OrdersService : IOrdersService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Orders.Add(order);
-
-        // Добавление позиций заказа
-        var reserveRequest = new ReserveStockRequest();
-        foreach (var itemRequest in request.Items)
+        // Оборачиваем создание заказа в транзакцию для атомарности:
+        // либо создаётся заказ + позиции + история, либо всё откатывается
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
         {
-            var orderItem = new OrderItem
+            _context.Orders.Add(order);
+
+            // Добавление позиций заказа
+            var reserveRequest = new ReserveStockRequest();
+            foreach (var itemRequest in request.Items)
+            {
+                var orderItem = new OrderItem
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = order.Id,
+                    ProductId = itemRequest.ProductId,
+                    ProductName = itemRequest.ProductName,
+                    Quantity = itemRequest.Quantity,
+                    UnitPrice = itemRequest.UnitPrice
+                };
+                _context.OrderItems.Add(orderItem);
+
+                reserveRequest.Items.Add(new StockItem
+                {
+                    ProductId = itemRequest.ProductId.ToString(),
+                    Quantity = itemRequest.Quantity
+                });
+            }
+
+            // Резервирование товара в каталоге (ФТ-3.5)
+            // Временно отключено пока CatalogService не будет настроен
+            // try
+            // {
+            //     var stockResponse = await _catalogClient.ReserveStockAsync(reserveRequest);
+            //     if (!stockResponse.Success)
+            //     {
+            //         return (null, stockResponse.ErrorMessage ?? "Ошибка при резервировании товара в каталоге");
+            //     }
+            // }
+            // catch (Exception ex)
+            // {
+            //     _logger.LogError(ex, "Ошибка при вызове CatalogService для резервирования товара");
+            //     return (null, "Сервис каталога временно недоступен. Пожалуйста, попробуйте позже.");
+            // }
+
+            // Добавляем запись в историю (ФТ-3.12 - ведение истории)
+            var history = new OrderHistory
             {
                 Id = Guid.NewGuid(),
                 OrderId = order.Id,
-                ProductId = itemRequest.ProductId,
-                ProductName = itemRequest.ProductName,
-                Quantity = itemRequest.Quantity,
-                UnitPrice = itemRequest.UnitPrice
+                PreviousStatus = OrderStatus.New,
+                NewStatus = OrderStatus.New,
+                Comment = "Заказ создан",
+                ChangedBy = userId,
+                ChangedAt = DateTime.UtcNow
             };
-            _context.OrderItems.Add(orderItem);
-            
-            reserveRequest.Items.Add(new StockItem 
-            { 
-                ProductId = itemRequest.ProductId.ToString(), 
-                Quantity = itemRequest.Quantity 
-            });
+            _context.OrderHistory.Add(history);
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
         }
-
-        // Резервирование товара в каталоге (ФТ-3.5)
-        // Временно отключено пока CatalogService не будет настроен
-        // try
-        // {
-        //     var stockResponse = await _catalogClient.ReserveStockAsync(reserveRequest);
-        //     if (!stockResponse.Success)
-        //     {
-        //         return (null, stockResponse.ErrorMessage ?? "Ошибка при резервировании товара в каталоге");
-        //     }
-        // }
-        // catch (Exception ex)
-        // {
-        //     _logger.LogError(ex, "Ошибка при вызове CatalogService для резервирования товара");
-        //     return (null, "Сервис каталога временно недоступен. Пожалуйста, попробуйте позже.");
-        // }
-
-        // Добавляем запись в историю (ФТ-3.12 - ведение истории)
-        var history = new OrderHistory
+        catch
         {
-            Id = Guid.NewGuid(),
-            OrderId = order.Id,
-            PreviousStatus = OrderStatus.New,
-            NewStatus = OrderStatus.New,
-            Comment = "Заказ создан",
-            ChangedBy = userId,
-            ChangedAt = DateTime.UtcNow
-        };
-        _context.OrderHistory.Add(history);
-
-        await _context.SaveChangesAsync();
+            await transaction.RollbackAsync();
+            throw;
+        }
 
         _logger.LogInformation("Order created: {OrderNumber} for user {UserId} with {ItemCount} items, total: {Total}", 
             orderNumber, userId, request.Items.Count, total);

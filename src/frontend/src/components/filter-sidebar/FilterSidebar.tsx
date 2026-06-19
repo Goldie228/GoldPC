@@ -10,64 +10,8 @@ import { catalogApi } from '@/api/catalog';
 import { getDisplayManufacturerName } from '@/utils/manufacturerNameOverrides';
 import { DualRangeSlider } from './DualRangeSlider';
 import { Skeleton } from '../ui/Skeleton';
+import { CATEGORY_LABELS, CATEGORY_ORDER, BACKEND_TO_FRONTEND, FRONTEND_TO_BACKEND } from '@/utils/category-mappings';
 import type { ProductCategory, Manufacturer, Category, FilterFacetAttribute } from '@/api/types';
-
-// ============================================================
-// Константы
-// ============================================================
-
-const CATEGORY_ORDER: ProductCategory[] = [
-  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu',
-  'case', 'cooling', 'fan', 'monitor', 'keyboard', 'mouse', 'headphones',
-];
-
-const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  cpu: 'Процессоры',
-  gpu: 'Видеокарты',
-  motherboard: 'Материнские платы',
-  ram: 'Оперативная память',
-  storage: 'Накопители',
-  psu: 'Блоки питания',
-  case: 'Корпуса',
-  cooling: 'Охлаждение',
-  fan: 'Вентиляторы',
-  monitor: 'Мониторы',
-  keyboard: 'Клавиатуры',
-  mouse: 'Мыши',
-  headphones: 'Наушники',
-};
-
-const BACKEND_SLUG_MAP: Record<string, ProductCategory> = {
-  processors: 'cpu',
-  motherboards: 'motherboard',
-  ram: 'ram',
-  gpu: 'gpu',
-  psu: 'psu',
-  storage: 'storage',
-  cases: 'case',
-  coolers: 'cooling',
-  monitors: 'monitor',
-  keyboards: 'keyboard',
-  mice: 'mouse',
-  headphones: 'headphones',
-  periphery: 'keyboard',
-};
-
-const FRONTEND_TO_BACKEND: Record<ProductCategory, string> = {
-  cpu: 'processors',
-  gpu: 'gpu',
-  motherboard: 'motherboards',
-  ram: 'ram',
-  storage: 'storage',
-  psu: 'psu',
-  case: 'cases',
-  cooling: 'coolers',
-  fan: 'coolers',
-  monitor: 'monitors',
-  keyboard: 'keyboards',
-  mouse: 'mice',
-  headphones: 'headphones',
-};
 
 /**
  * Порядок атрибутов по категориям (backend slug -> ключи).
@@ -339,7 +283,7 @@ export function FilterSidebar({
         const counts: Record<string, number> = {};
         data?.forEach((cat) => {
           if (cat?.slug != null) {
-            const key = (BACKEND_SLUG_MAP[cat.slug] ?? cat.slug);
+            const key = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug);
             counts[key] = (counts[key] ?? 0) + (cat.productCount ?? 0);
           }
         });

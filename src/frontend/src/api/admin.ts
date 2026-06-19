@@ -3,54 +3,21 @@
  */
 
 import api from './index';
+import { CATEGORY_NAME_TO_SLUG, FRONTEND_TO_BACKEND } from '@/utils/category-mappings';
 import type { ProductImage, User, Product, PagedResponse, ProductCategory, PriceHistoryDto, CategorySpecificationsDto } from './types';
 export type { ProductImage, User, Product, PagedResponse, ProductCategory, PriceHistoryDto } from './types';
 
 // === Маппинг категорий ===
-
-/** Маппинг русских названий категорий из CatalogService → frontend ProductCategory slug */
-const CATEGORY_NAME_TO_SLUG: Record<string, ProductCategory> = {
-  'Процессоры': 'cpu',
-  'Видеокарты': 'gpu',
-  'Материнские платы': 'motherboard',
-  'Оперативная память': 'ram',
-  'Накопители': 'storage',
-  'Блоки питания': 'psu',
-  'Корпуса': 'case',
-  'Охлаждение': 'cooling',
-  'Вентиляторы': 'fan',
-  'Мониторы': 'monitor',
-  'Клавиатуры': 'keyboard',
-  'Мыши': 'mouse',
-  'Наушники': 'headphones',
-};
 
 /**
  * Преобразует category из ответа CatalogService (название на русском) в ProductCategory slug.
  * Если значение уже является валидным ProductCategory — возвращает как есть.
  */
 function normalizeCategory(raw: string): ProductCategory {
-  if (raw in CATEGORY_NAME_TO_SLUG) return CATEGORY_NAME_TO_SLUG[raw];
+  if (raw in CATEGORY_NAME_TO_SLUG) return CATEGORY_NAME_TO_SLUG[raw as keyof typeof CATEGORY_NAME_TO_SLUG];
   // Уже slug или неизвестное значение — возвращаем как есть
   return raw as ProductCategory;
 }
-
-/** Маппинг frontend ProductCategory slug → backend Category slug (для фильтрации) */
-const FRONTEND_TO_BACKEND_SLUG: Record<string, string> = {
-  cpu: 'processors',
-  gpu: 'gpu',
-  motherboard: 'motherboards',
-  ram: 'ram',
-  storage: 'storage',
-  psu: 'psu',
-  case: 'cases',
-  cooling: 'coolers',
-  monitor: 'monitors',
-  keyboard: 'keyboards',
-  mouse: 'mice',
-  headphones: 'headphones',
-  fan: 'coolers',
-};
 
 // === Типы для администрирования ===
 
@@ -262,7 +229,7 @@ export const catalogAdminApi = {
   }): Promise<PagedResponse<Product>> {
     // Маппим frontend slug → backend slug для фильтрации (CatalogService ожидает slug категории)
     const apiParams = params?.category
-      ? { ...params, category: FRONTEND_TO_BACKEND_SLUG[params.category] ?? params.category }
+      ? { ...params, category: FRONTEND_TO_BACKEND[params.category] ?? params.category }
       : params;
 
     const response = await api.get<PagedResponse<Product>>('/admin/products', {

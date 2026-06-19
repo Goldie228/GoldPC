@@ -2,8 +2,7 @@
 
 import { useState, useMemo, useCallback, memo } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, GitCompareArrows, ShoppingCart, Bell, Plus, Minus, Star, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { Heart, GitCompareArrows, ShoppingCart, Bell, Plus, Minus, Star, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { getProductImageUrl } from '@/utils/image';
 import { getDisplayManufacturerName } from '@/utils/manufacturerNameOverrides';
 import type { ProductSummary, Product } from '@/api/types';
@@ -13,7 +12,6 @@ import { useWishlist } from '@/hooks/useWishlist';
 import { useComparison } from '@/hooks/useComparison';
 import { useCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/useToast';
-import { catalogApi } from '@/api/catalog';
 import { EmptyState } from './EmptyState';
 
 interface ProductCardProps {
@@ -39,18 +37,9 @@ const ProductCard = memo(function ProductCard({ product, onAddToCart }: ProductC
   const ratingValue = typeof product.rating === 'number' ? product.rating : product.rating?.average ?? 0;
   const reviewCount = product.reviewCount ?? 0;
 
-  // Lazy-load full product images
-  const hasImagesInList = !!product.images && product.images.length > 1;
-  const { data: fullProduct } = useQuery({
-    queryKey: ['product', product.slug],
-    queryFn: () => catalogApi.getProductBySlug(product.slug!),
-    enabled: !!product.slug && !hasImagesInList,
-    staleTime: 5 * 60 * 1000,
-  });
-
+  // Изображения загружаются в ProductSummary (без N+1 запроса)
   const images = useMemo(() => {
-    if (hasImagesInList) return product.images!;
-    if (fullProduct?.images && fullProduct.images.length > 1) return fullProduct.images;
+    if (product.images && product.images.length > 0) return product.images;
     if (product.mainImage) {
       return [{
         url: typeof product.mainImage === 'string' ? product.mainImage : product.mainImage.url,
@@ -58,7 +47,7 @@ const ProductCard = memo(function ProductCard({ product, onAddToCart }: ProductC
       }];
     }
     return [];
-  }, [product.images, product.mainImage, fullProduct, hasImagesInList]);
+  }, [product.images, product.mainImage]);
   const hasMultipleImages = images.length > 1;
 
   const handlePrevImage = useCallback((e: React.MouseEvent) => {

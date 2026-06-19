@@ -18,7 +18,7 @@ public class NotificationService : INotificationService
     private readonly INotificationPreferenceService _prefService;
     private readonly IEmailService _emailService;
     private readonly ILogger<NotificationService> _logger;
-    private static readonly ConcurrentDictionary<Guid, Notification> _notifications = new();
+    private readonly ConcurrentDictionary<Guid, Notification> _notifications = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="NotificationService"/> class.
