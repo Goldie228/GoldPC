@@ -1,7 +1,8 @@
 /**
  * Auth Service - API методы для аутентификации
+ * Переписан на сгенерированные orval API функции
  */
-import apiClient from './client';
+import { goldpcApi } from './generated/client';
 import type {
   LoginRequest,
   RegisterRequest,
@@ -14,10 +15,15 @@ import type {
   NotificationPreferenceResponse,
   LoginHistoryItem,
 } from './types';
-import { AxiosError } from 'axios';
+import type {
+  AuthResponseApiResponse,
+  UserDtoApiResponse,
+  TwoFactorStatusResponseApiResponse,
+  NotificationPreferenceResponseApiResponse,
+  LoginHistoryItemPagedResultApiResponse,
+  PostApiV1AuthAvatarBody,
+} from './generated/client';
 import { normalizeUserRoles } from '../utils/roleMapper';
-
-const AUTH_BASE_URL = '/auth';
 
 /**
  * Извлекает полезные данные из обёрнутого ответа ApiResponse<T>
@@ -52,43 +58,53 @@ const AUTH_ERROR_MESSAGES: Record<number, string> = {
  * Возвращает понятное пользователю сообщение об ошибке
  */
 export const getAuthErrorMessage = (error: unknown): string => {
-  if (error instanceof AxiosError && error.response) {
-    const status = error.response.status;
-    // Пробуем достать сообщение из тела ответа (ApiResponse.message)
-    const body = error.response.data as { message?: string } | undefined;
-    if (body?.message != null && body.message !== '') {
-      return body.message;
+  if (error instanceof Error && 'response' in error) {
+    const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+    const status = axiosError.response?.status;
+    const serverMessage = axiosError.response?.data?.message;
+
+    if (status && AUTH_ERROR_MESSAGES[status]) {
+      return serverMessage || AUTH_ERROR_MESSAGES[status];
     }
-    // Если тела нет — используем стандартное сообщение для статуса
-    return AUTH_ERROR_MESSAGES[status] || 'Произошла ошибка. Попробуйте еще раз.';
+
+    if (status && status >= 500) {
+      return 'Ошибка сервера. Попробуйте через несколько минут.';
+    }
   }
-  return 'Проблема с подключением. Проверьте интернет соединение.';
+
+  if (error instanceof Error && error.message.includes('Network Error')) {
+    return 'Ошибка сети. Проверьте подключение к интернету.';
+  }
+
+  return 'Произошла неизвестная ошибка. Попробуйте позже.';
 };
 
+/**
+ * Сервис аутентификации — все методы для работы с авторизацией
+ */
 export const authService = {
   /**
-   * Авторизация пользователя
+   * Вход в систему
    */
-  async login(credentials: LoginRequest): Promise<AuthResponse> {
-    const response = await apiClient.post(`${AUTH_BASE_URL}/login`, credentials);
-    const data = extractData<AuthResponse>(response.data);
-    // Нормализуем роли: бэкенд возвращает числа (0=Client), фронтенд ожидает строки
+  async login(data: LoginRequest): Promise<AuthResponse> {
+    const response = await goldpcApi.postApiV1AuthLogin(data);
+    const authData = extractData<AuthResponseApiResponse['data']>(response.data);
     return {
-      ...data,
-      user: normalizeUserRoles(data.user)!,
-    };
+      ...authData!,
+      user: normalizeUserRoles(authData!.user)!,
+    } as AuthResponse;
   },
 
   /**
    * Регистрация нового пользователя
    */
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await apiClient.post(`${AUTH_BASE_URL}/register`, data);
-    const authData = extractData<AuthResponse>(response.data);
+    const response = await goldpcApi.postApiV1AuthRegister(data);
+    const authData = extractData<AuthResponseApiResponse['data']>(response.data);
     return {
-      ...authData,
-      user: normalizeUserRoles(authData.user)!,
-    };
+      ...authData!,
+      user: normalizeUserRoles(authData!.user)!,
+    } as AuthResponse;
   },
 
   /**
@@ -96,7 +112,7 @@ export const authService = {
    */
   async logout(): Promise<void> {
     try {
-      await apiClient.post(`${AUTH_BASE_URL}/logout`);
+      await goldpcApi.postApiV1AuthLogout();
     } catch {
       // Игнорируем ошибки при logout - очищаем токены локально в любом случае
     }
@@ -106,20 +122,20 @@ export const authService = {
    * Обновление токенов
    */
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
-    const response = await apiClient.post(`${AUTH_BASE_URL}/refresh`, { refreshToken });
-    const data = extractData<AuthResponse>(response.data);
+    const response = await goldpcApi.postApiV1AuthRefresh({ refreshToken });
+    const data = extractData<AuthResponseApiResponse['data']>(response.data);
     return {
-      ...data,
-      user: normalizeUserRoles(data.user)!,
-    };
+      ...data!,
+      user: normalizeUserRoles(data!.user)!,
+    } as AuthResponse;
   },
 
   /**
    * Получение текущего пользователя
    */
   async getCurrentUser(): Promise<AuthResponse['user']> {
-    const response = await apiClient.get(`${AUTH_BASE_URL}/profile`);
-    const user = extractData<AuthResponse['user']>(response.data);
+    const response = await goldpcApi.getApiV1AuthProfile();
+    const user = extractData<UserDtoApiResponse['data']>(response.data);
     return normalizeUserRoles(user)!;
   },
 
@@ -127,14 +143,14 @@ export const authService = {
    * Запрос на восстановление пароля (отправляет email со ссылкой)
    */
   async forgotPassword(data: ForgotPasswordRequest): Promise<void> {
-    await apiClient.post(`${AUTH_BASE_URL}/forgot-password`, data);
+    await goldpcApi.postApiV1AuthForgotPassword(data);
   },
 
   /**
    * Сброс пароля по токену из email
    */
   async resetPassword(data: ResetPasswordRequest): Promise<void> {
-    await apiClient.post(`${AUTH_BASE_URL}/reset-password`, data);
+    await goldpcApi.postApiV1AuthResetPassword(data);
   },
 
   /**
@@ -144,15 +160,15 @@ export const authService = {
    * Бросает ошибку, если токен недействителен — используйте getAuthErrorMessage.
    */
   async validateResetToken(token: string): Promise<void> {
-    await apiClient.post(`${AUTH_BASE_URL}/validate-reset-token`, { token });
+    await goldpcApi.postApiV1AuthValidateResetToken({ token });
   },
 
-/**
+  /**
    * Отправка письма с подтверждением email (или повторная отправка).
    * Требует авторизации — userId извлекается из JWT на сервере.
    */
   async sendVerificationEmail(): Promise<void> {
-    await apiClient.post(`${AUTH_BASE_URL}/send-verification`);
+    await goldpcApi.postApiV1AuthSendVerification();
   },
 
   /**
@@ -160,22 +176,22 @@ export const authService = {
    * Не требует авторизации — токен одноразовый.
    */
   async verifyEmail(token: string): Promise<void> {
-    await apiClient.post(`${AUTH_BASE_URL}/verify-email`, { token });
+    await goldpcApi.postApiV1AuthVerifyEmail({ token });
   },
 
   /**
    * Смена пароля
    */
   async changePassword(data: ChangePasswordRequest): Promise<void> {
-    await apiClient.post(`${AUTH_BASE_URL}/change-password`, data);
+    await goldpcApi.postApiV1AuthChangePassword(data);
   },
 
   /**
    * Получение текущих предпочтений уведомлений
    */
   async getNotificationPreferences(): Promise<NotificationPreferenceResponse> {
-    const response = await apiClient.get(`${AUTH_BASE_URL}/notification-preferences`);
-    return extractData<NotificationPreferenceResponse>(response.data);
+    const response = await goldpcApi.getApiV1AuthNotifications();
+    return extractData<NotificationPreferenceResponseApiResponse['data']>(response.data) as NotificationPreferenceResponse;
   },
 
   /**
@@ -184,31 +200,31 @@ export const authService = {
   async updateNotificationPreferences(
     data: NotificationPreferenceRequest
   ): Promise<NotificationPreferenceResponse> {
-    const response = await apiClient.put(`${AUTH_BASE_URL}/notification-preferences`, data);
-    return extractData<NotificationPreferenceResponse>(response.data);
+    const response = await goldpcApi.putApiV1AuthNotifications(data);
+    return extractData<NotificationPreferenceResponseApiResponse['data']>(response.data) as NotificationPreferenceResponse;
   },
 
   /**
    * Включение двухфакторной аутентификации
    */
   async enableTwoFactor(): Promise<TwoFactorStatusResponse> {
-    const response = await apiClient.post(`${AUTH_BASE_URL}/security/2fa/enable`);
-    return extractData<TwoFactorStatusResponse>(response.data);
+    const response = await goldpcApi.postApiV1AuthSecurity2faEnable();
+    return extractData<TwoFactorStatusResponseApiResponse['data']>(response.data) as TwoFactorStatusResponse;
   },
 
   /**
    * Подтверждение включения двухфакторной аутентификации
    */
   async verifyTwoFactor(code: string): Promise<TwoFactorStatusResponse> {
-    const response = await apiClient.post(`${AUTH_BASE_URL}/security/2fa/verify`, { totpCode: code });
-    return extractData<TwoFactorStatusResponse>(response.data);
+    const response = await goldpcApi.postApiV1AuthSecurity2faVerify({ totpCode: code });
+    return extractData<TwoFactorStatusResponseApiResponse['data']>(response.data) as TwoFactorStatusResponse;
   },
 
   /**
    * Отключение двухфакторной аутентификации
    */
   async disableTwoFactor(password: string): Promise<void> {
-    await apiClient.post(`${AUTH_BASE_URL}/security/2fa/disable`, { password });
+    await goldpcApi.postApiV1AuthSecurity2faDisable({ password });
   },
 
   /**
@@ -219,11 +235,15 @@ export const authService = {
     pageSize = 20
   ): Promise<{ items: LoginHistoryItem[]; total: number }> {
     try {
-      const response = await apiClient.get(`${AUTH_BASE_URL}/login-history`, {
-        params: { page, pageSize },
+      const response = await goldpcApi.getApiV1AuthSecurityLoginHistory({
+        pageNumber: page,
+        pageSize,
       });
-      const data = extractData<{ items: LoginHistoryItem[]; total: number }>(response.data);
-      return data;
+      const data = extractData<LoginHistoryItemPagedResultApiResponse['data']>(response.data);
+      return {
+        items: (data?.items ?? []) as LoginHistoryItem[],
+        total: data?.totalCount ?? 0,
+      };
     } catch {
       // Endpoint not implemented on backend yet — return empty gracefully
       return { items: [], total: 0 };
@@ -238,8 +258,8 @@ export const authService = {
     lastName: string;
     phone?: string;
   }): Promise<AuthResponse['user']> {
-    const response = await apiClient.put(`${AUTH_BASE_URL}/profile`, data);
-    const user = extractData<AuthResponse['user']>(response.data);
+    const response = await goldpcApi.putApiV1AuthProfile(data);
+    const user = extractData<UserDtoApiResponse['data']>(response.data);
     return normalizeUserRoles(user)!;
   },
 
@@ -247,13 +267,8 @@ export const authService = {
    * Загрузить аватар пользователя
    */
   async uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
-    const formData = new FormData();
-    formData.append('avatar', file);
-    const response = await apiClient.post(`${AUTH_BASE_URL}/avatar`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const body: PostApiV1AuthAvatarBody = { avatar: file };
+    const response = await goldpcApi.postApiV1AuthAvatar(body);
     const data = extractData<{ avatarUrl: string }>(response.data);
     return data;
   },
@@ -262,6 +277,6 @@ export const authService = {
    * Удалить аватар пользователя
    */
   async deleteAvatar(): Promise<void> {
-    await apiClient.delete(`${AUTH_BASE_URL}/avatar`);
+    await goldpcApi.deleteApiV1AuthAvatar();
   },
 };

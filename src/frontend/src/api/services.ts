@@ -8,7 +8,7 @@
  * - GET  /services/{id}     — заявка по ID
  */
 
-import apiClient from './client';
+import { goldpcApi } from './generated/client';
 
 // ═══════════════════════════════════════════════
 //  TICKET STATUSES (совместимы со статусами бэка)
@@ -56,222 +56,205 @@ export interface ServiceRequestDto {
   masterId?: string;
   serviceTypeId: string;
   serviceTypeName: string;
-  status: TicketStatus;
   description: string;
   deviceModel?: string;
   serialNumber?: string;
-  estimatedCost: number;
-  actualCost: number;
-  masterComment?: string;
-  createdAt: string;
+  status: TicketStatus;
+  statusLabel: string;
+  createdAt: string; // ISO datetime
+  updatedAt: string;
   completedAt?: string;
-  serviceParts?: ServicePartDto[];
-  workReports?: WorkReportDto[];
+  closedAt?: string;
+  estimatedCompletion?: string;
+  clientRating?: number;
+  clientReview?: string;
+  closeComment?: string;
 }
 
-/** Деталь/запчасть (ServicePartDto) */
-export interface ServicePartDto {
-  productId: string;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-/** Запись истории (WorkReportDto) */
-export interface WorkReportDto {
+/** Сообщение чата */
+export interface ChatMessage {
   id: string;
   serviceRequestId: string;
-  previousStatus: TicketStatus;
-  newStatus: TicketStatus;
-  comment?: string;
-  changedBy: string;
-  changedAt: string;
+  senderId: string;
+  senderName: string;
+  message: string;
+  isSystemMessage: boolean;
+  createdAt: string;
+}
+
+/** Запчасть в заявке */
+export interface ServicePartDto {
+  id?: string;
+  productId?: string;
+  productName?: string;
+  quantity?: number;
+  unitPrice?: number;
+}
+
+/** Отчёт о выполнении */
+export interface WorkReport {
+  diagnosis?: string;
+  workPerformed?: string;
+  recommendations?: string;
+  totalPartsCost?: number;
+  laborCost?: number;
+  totalCost?: number;
 }
 
 // ═══════════════════════════════════════════════
-//  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+//  HELPER: извлечение data из ответа
 // ═══════════════════════════════════════════════
 
-/**
- * Извлекает полезные данные из обёрнутого ApiResponse<T>
- * Бэкенд возвращает { data: T, success: true, message: "..." }
- */
-function unwrapData<T>(responseData: unknown): T {
-  if (responseData != null && typeof responseData === 'object' && 'data' in (responseData as Record<string, unknown>)) {
-    const wrapped = responseData as { data: T; success?: boolean; message?: string };
-    if (wrapped.data !== undefined) return wrapped.data;
-  }
-  return responseData as T;
+function extractData<T>(response: { data: unknown }): T {
+  return (response.data as any)?.data ?? (response.data as T);
 }
 
 // ═══════════════════════════════════════════════
-//  НОВЫЕ API-ФУНКЦИИ (реальный бэкенд)
-// ═══════════════════════════════════════════════
-
-/**
- * GET /services/types — список типов услуг
- * AllowAnonymous
- */
-async function getServiceTypes(): Promise<ServiceType[]> {
-  const response = await apiClient.get('/services/types');
-  return unwrapData<ServiceType[]>(response.data);
-}
-
-/**
- * POST /services — создать заявку на услугу
- * [Authorize] — требуется токен
- */
-async function createService(data: CreateServiceRequest): Promise<ServiceRequestDto> {
-  const response = await apiClient.post('/services', {
-    serviceTypeId: data.serviceTypeId,
-    description: data.description,
-    deviceModel: data.deviceModel ?? null,
-    serialNumber: data.serialNumber ?? null,
-  });
-  return unwrapData<ServiceRequestDto>(response.data);
-}
-
-/**
- * GET /services/my — список моих заявок
- */
-async function getMyServices(page = 1, pageSize = 10): Promise<{ items: ServiceRequestDto[]; total: number }> {
-  const response = await apiClient.get(`/services/my?page=${page}&pageSize=${pageSize}`);
-  const data = unwrapData<{ items: ServiceRequestDto[]; totalCount: number }>(response.data);
-  return {
-    items: data.items ?? [],
-    total: data.totalCount ?? 0,
-  };
-}
-
-/**
- * GET /services/{id} — заявка по ID
- */
-async function getServiceById(id: string): Promise<ServiceRequestDto> {
-  const response = await apiClient.get(`/services/${id}`);
-  return unwrapData<ServiceRequestDto>(response.data);
-}
-
-// ═══════════════════════════════════════════════
-//  MASTER API-ФУНКЦИИ
-// ═══════════════════════════════════════════════
-
-/**
- * GET /services/master — список заявок, назначенных мастеру
- * [Authorize(Roles = "Master")]
- */
-async function getMasterServices(
-  page = 1,
-  pageSize = 10,
-  status?: string,
-): Promise<{ items: ServiceRequestDto[]; total: number }> {
-  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-  if (status != null && status !== '' && status !== 'all') params.append('status', status);
-
-  const response = await apiClient.get(`/services/master?${params}`);
-  const data = unwrapData<{ items: ServiceRequestDto[]; totalCount: number }>(response.data);
-  return {
-    items: data.items ?? [],
-    total: data.totalCount ?? 0,
-  };
-}
-
-/**
- * PATCH /services/{id}/status — обновить статус заявки
- * [Authorize(Roles = "Manager,Admin,Master")]
- */
-async function updateTicketStatus(
-  id: string,
-  status: TicketStatus,
-  masterComment?: string,
-): Promise<ServiceRequestDto> {
-  const response = await apiClient.patch(`/services/${id}/status`, {
-    status,
-    masterComment: masterComment ?? null,
-  });
-  return unwrapData<ServiceRequestDto>(response.data);
-}
-
-/**
- * PUT /services/{id}/complete — завершить работу мастера (→ ReadyForPickup)
- * [Authorize(Roles = "Master")]
- */
-async function completeTicket(id: string, masterComment?: string): Promise<ServiceRequestDto> {
-  const response = await apiClient.put(`/services/${id}/complete`, {
-    masterComment: masterComment ?? '',
-  });
-  return unwrapData<ServiceRequestDto>(response.data);
-}
-
-/**
- * POST /services/{id}/parts — добавить запчасть
- * [Authorize(Roles = "Master")]
- */
-async function addServicePart(id: string, dto: ServicePartDto): Promise<ServicePartDto> {
-  const response = await apiClient.post(`/services/${id}/parts`, dto);
-  return unwrapData<ServicePartDto>(response.data);
-}
-
-/**
- * POST /services/{id}/cancel — отменить заявку
- * [Authorize]
- */
-async function cancelTicket(id: string): Promise<ServiceRequestDto> {
-  const response = await apiClient.post(`/services/${id}/cancel`);
-  return unwrapData<ServiceRequestDto>(response.data);
-}
-
-/**
- * POST /services/{id}/close — закрыть заявку (выдача клиенту)
- * [Authorize(Roles = "Manager,Admin")]
- */
-async function closeTicket(id: string, comment?: string): Promise<ServiceRequestDto> {
-  const response = await apiClient.post(`/services/${id}/close`, { comment: comment ?? null });
-  return unwrapData<ServiceRequestDto>(response.data);
-}
-
-/**
- * GET /services/unassigned — список неназначенных заявок (для мастеров)
- * [Authorize(Roles = "Master,Manager,Admin")]
- */
-async function getAvailableServices(
-  page = 1,
-  pageSize = 10,
-): Promise<{ items: ServiceRequestDto[]; total: number }> {
-  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-  const response = await apiClient.get(`/services/unassigned?${params}`);
-  const data = unwrapData<{ items: ServiceRequestDto[]; totalCount: number }>(response.data);
-  return {
-    items: data.items ?? [],
-    total: data.totalCount ?? 0,
-  };
-}
-
-/**
- * POST /services/{id}/assign/{masterId} — назначить мастера на заявку
- * [Authorize(Roles = "Manager,Admin")]
- */
-async function assignMasterToService(serviceId: string, masterId: string): Promise<ServiceRequestDto> {
-  const response = await apiClient.post(`/services/${serviceId}/assign/${masterId}`);
-  return unwrapData<ServiceRequestDto>(response.data);
-}
-
-// ═══════════════════════════════════════════════
-//  ЭКСПОРТ
+//  API
 // ═══════════════════════════════════════════════
 
 export const servicesApi = {
-  // Общие
-  getServiceTypes,
-  createService,
-  getMyServices,
-  getServiceById,
-  // Master
-  getMasterServices,
-  getAvailableServices,
-  assignMasterToService,
-  updateTicketStatus,
-  completeTicket,
-  addServicePart,
-  cancelTicket,
-  closeTicket,
+  /** Получить все типы услуг ( publicly ) */
+  getServiceTypes: async (): Promise<ServiceType[]> => {
+    const response = await goldpcApi.getApiV1ServicesTypes();
+    return extractData<ServiceType[]>(response);
+  },
+
+  /** Получить тип услуги по slug */
+  getServiceTypeBySlug: async (slug: string): Promise<ServiceType> => {
+    const response = await goldpcApi.getApiV1ServicesTypesSlug(slug);
+    return extractData<ServiceType>(response);
+  },
+
+  /** Получить заявку по ID */
+  getServiceRequestById: async (id: string): Promise<ServiceRequestDto> => {
+    const response = await goldpcApi.getApiV1ServicesId(id);
+    return extractData<ServiceRequestDto>(response);
+  },
+
+  /** Получить мои заявки (пагинация) */
+  getMyServiceRequests: async (
+    page: number = 1,
+    pageSize: number = 10,
+  ): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
+    const response = await goldpcApi.getApiV1ServicesMy({ page, pageSize });
+    return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+  },
+
+  /** Создать заявку на услугу */
+  createServiceRequest: async (data: CreateServiceRequest): Promise<ServiceRequestDto> => {
+    const response = await goldpcApi.postApiV1Services(data);
+    return extractData<ServiceRequestDto>(response);
+  },
+
+  /** Отменить заявку */
+  cancelServiceRequest: async (id: string): Promise<void> => {
+    await goldpcApi.postApiV1ServicesIdCancel(id);
+  },
+
+  // ─── Chat ───────────────────────────────────────
+
+  /** Получить сообщения чата */
+  getChatMessages: async (
+    requestId: string,
+    page: number = 1,
+    pageSize: number = 50,
+  ): Promise<{ items: ChatMessage[]; totalCount: number }> => {
+    const response = await goldpcApi.getApiV1ServicesIdMessages(requestId, { page, pageSize });
+    return extractData<{ items: ChatMessage[]; totalCount: number }>(response);
+  },
+
+  /** Отправить сообщение в чат */
+  sendChatMessage: async (requestId: string, message: string): Promise<ChatMessage> => {
+    const response = await goldpcApi.postApiV1ServicesIdMessages(requestId, { message });
+    return extractData<ChatMessage>(response);
+  },
+
+  /** Получить количество непрочитанных сообщений */
+  getUnreadMessageCount: async (requestId: string): Promise<number> => {
+    const response = await goldpcApi.getApiV1ServicesIdMessagesUnreadCount(requestId);
+    return extractData<number>(response);
+  },
+
+  /** Загрузить вложение */
+  uploadAttachment: async (requestId: string, file: File): Promise<{ url: string; fileName: string }> => {
+    const response = await goldpcApi.postApiV1ServicesIdUpload(requestId, { file });
+    return extractData<{ url: string; fileName: string }>(response);
+  },
+
+  // ─── Admin / Master ─────────────────────────────
+
+  /** Получить все заявки (с пагинацией, фильтрами) */
+  getAllServiceRequests: async (params: {
+    page?: number;
+    pageSize?: number;
+    status?: string;
+    search?: string;
+  }): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
+    const { page, pageSize, status, search } = params;
+    const response = await goldpcApi.getApiV1Services(
+      { page, pageSize, status: status as any },
+      search ? { params: { search } } : undefined,
+    );
+    return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+  },
+
+  /** Получить неназначенные заявки */
+  getUnassignedRequests: async (params: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
+    const { page, pageSize } = params;
+    const response = await goldpcApi.getApiV1ServicesUnassigned({ page, pageSize });
+    return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+  },
+
+  /** Назначить мастера на заявку */
+  assignMaster: async (requestId: string, masterId: string): Promise<ServiceRequestDto> => {
+    const response = await goldpcApi.postApiV1ServicesIdAssignMasterId(requestId, masterId);
+    return extractData<ServiceRequestDto>(response);
+  },
+
+  /** Обновить статус заявки */
+  updateRequestStatus: async (requestId: string, status: string): Promise<ServiceRequestDto> => {
+    const response = await goldpcApi.patchApiV1ServicesIdStatus(requestId, { status: status as any });
+    return extractData<ServiceRequestDto>(response);
+  },
+
+  /** Добавить запчасти к заявке */
+  addParts: async (requestId: string, parts: ServicePartDto[]): Promise<ServiceRequestDto> => {
+    const response = await goldpcApi.postApiV1ServicesIdParts(requestId, parts);
+    return extractData<ServiceRequestDto>(response);
+  },
+
+  /** Завершить заявку (с отчётом) */
+  completeRequest: async (requestId: string, report: WorkReport): Promise<ServiceRequestDto> => {
+    const response = await goldpcApi.putApiV1ServicesIdComplete(requestId, report);
+    return extractData<ServiceRequestDto>(response);
+  },
+
+  /** Получить отчёт по заявке */
+  getReport: async (requestId: string): Promise<WorkReport> => {
+    const response = await goldpcApi.getApiV1ServicesIdReport(requestId);
+    return extractData<WorkReport>(response);
+  },
+
+  /** Получить заявки мастера */
+  getMasterRequests: async (params: {
+    page?: number;
+    pageSize?: number;
+    status?: string;
+  }): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
+    const { page, pageSize, status } = params;
+    const response = await goldpcApi.getApiV1ServicesMaster(
+      { page, pageSize, status: status as any },
+    );
+    return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+  },
+
+  /** Закрыть заявку */
+  closeRequest: async (requestId: string, data?: { comment?: string }): Promise<ServiceRequestDto> => {
+    const response = await goldpcApi.postApiV1ServicesIdClose(requestId, data);
+    return extractData<ServiceRequestDto>(response);
+  },
 };

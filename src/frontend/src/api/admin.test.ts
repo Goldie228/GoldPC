@@ -19,6 +19,27 @@ vi.mock('./index', () => ({
   },
 }));
 
+// Mock the generated goldpcApi — functions that use orval-generated API
+const mockGoldpcApi = vi.hoisted(() => ({
+  getApiV1AuthAdminUsersId: vi.fn(),
+  postApiV1AuthAdminUsersIdDeactivate: vi.fn(),
+  postApiV1AuthAdminUsersIdActivate: vi.fn(),
+  postApiV1AuthAdminUsers: vi.fn(),
+  deleteApiV1AuthAdminUsersId: vi.fn(),
+  getApiV1AdminProducts: vi.fn(),
+  putApiV1AdminProductsProductId: vi.fn(),
+  deleteApiV1AdminProductsProductId: vi.fn(),
+  postApiV1AdminProducts: vi.fn(),
+  getApiV1AdminProductsProductIdPriceHistory: vi.fn(),
+  postApiV1AdminProductsGenerateName: vi.fn(),
+  getApiV1AdminSpecificationsByCategoryCategoryId: vi.fn(),
+  getApiV1AdminSpecificationsUniqueValuesCategoryId: vi.fn(),
+}));
+
+vi.mock('./generated/client', () => ({
+  goldpcApi: mockGoldpcApi,
+}));
+
 import {
   usersAdminApi,
   catalogAdminApi,
@@ -35,7 +56,7 @@ describe('api/admin', () => {
   // ─── usersAdminApi ────────────────────────────────────────────
 
   describe('usersAdminApi', () => {
-    it('getUsers — sends GET /admin/users with params', async () => {
+    it('getUsers — sends GET /auth/admin/users with params', async () => {
       const mockResponse = {
         data: {
           data: [{ id: '1', firstName: 'John', lastName: 'Doe' }],
@@ -46,53 +67,49 @@ describe('api/admin', () => {
 
       const result = await usersAdminApi.getUsers({ page: 1, pageSize: 10, search: 'John' });
 
-      expect(mockGet).toHaveBeenCalledWith('/admin/users', {
+      expect(mockGet).toHaveBeenCalledWith('/auth/admin/users', {
         params: { page: 1, pageSize: 10, search: 'John' },
       });
       expect(result).toEqual(mockResponse.data);
     });
 
-    it('getUser — sends GET /admin/users/:id', async () => {
+    it('getUser — sends GET /admin/users/:id via goldpcApi', async () => {
       const mockUser = { id: 'user-1', firstName: 'Jane', email: 'jane@test.com' };
-      mockGet.mockResolvedValueOnce({ data: mockUser });
+      mockGoldpcApi.getApiV1AuthAdminUsersId.mockResolvedValueOnce({ data: mockUser });
 
       const result = await usersAdminApi.getUser('user-1');
 
-      expect(mockGet).toHaveBeenCalledWith('/admin/users/user-1');
+      expect(mockGoldpcApi.getApiV1AuthAdminUsersId).toHaveBeenCalledWith('user-1');
       expect(result).toEqual(mockUser);
     });
 
-    it('updateUser — sends PUT /admin/users/:id with data', async () => {
+    it('updateUser — sends PUT /auth/admin/users/:id with data', async () => {
       const mockUser = { id: 'user-1', firstName: 'Updated' };
       mockPut.mockResolvedValueOnce({ data: mockUser });
 
       const result = await usersAdminApi.updateUser('user-1', { firstName: 'Updated' });
 
-      expect(mockPut).toHaveBeenCalledWith('/admin/users/user-1', { firstName: 'Updated' });
+      expect(mockPut).toHaveBeenCalledWith('/auth/admin/users/user-1', { firstName: 'Updated' });
       expect(result).toEqual(mockUser);
     });
 
-    it('updateUserRole — sends PATCH /admin/users/:id/role', async () => {
-      const mockUser = { id: 'user-1', role: 'Admin' };
-      mockPatch.mockResolvedValueOnce({ data: mockUser });
+    it('updateUserRole — sends PATCH /auth/admin/users/:id/role', async () => {
+      await usersAdminApi.updateUserRole('user-1', 'Admin');
 
-      const result = await usersAdminApi.updateUserRole('user-1', { role: 'Admin' });
-
-      expect(mockPatch).toHaveBeenCalledWith('/admin/users/user-1/role', { role: 'Admin' });
-      expect(result).toEqual(mockUser);
+      expect(mockPatch).toHaveBeenCalledWith('/auth/admin/users/user-1/role', { role: 'Admin' });
     });
 
-    it('deleteUser — sends DELETE /admin/users/:id', async () => {
-      mockDelete.mockResolvedValueOnce({});
+    it('deleteUser — sends DELETE /admin/users/:id via goldpcApi', async () => {
+      mockGoldpcApi.deleteApiV1AuthAdminUsersId.mockResolvedValueOnce({});
 
       await usersAdminApi.deleteUser('user-1');
 
-      expect(mockDelete).toHaveBeenCalledWith('/admin/users/user-1');
+      expect(mockGoldpcApi.deleteApiV1AuthAdminUsersId).toHaveBeenCalledWith('user-1');
     });
 
-    it('createUser — sends POST /admin/users', async () => {
+    it('createUser — sends POST /admin/users via goldpcApi', async () => {
       const mockUser = { id: 'user-new', firstName: 'New' };
-      mockPost.mockResolvedValueOnce({ data: mockUser });
+      mockGoldpcApi.postApiV1AuthAdminUsers.mockResolvedValueOnce({ data: mockUser });
 
       const result = await usersAdminApi.createUser({
         firstName: 'New',
@@ -102,7 +119,7 @@ describe('api/admin', () => {
         password: 'pass123',
       });
 
-      expect(mockPost).toHaveBeenCalledWith('/admin/users', {
+      expect(mockGoldpcApi.postApiV1AuthAdminUsers).toHaveBeenCalledWith({
         firstName: 'New',
         lastName: 'User',
         email: 'new@test.com',
@@ -112,31 +129,27 @@ describe('api/admin', () => {
       expect(result).toEqual(mockUser);
     });
 
-    it('activateUser — sends POST /admin/users/:id/activate', async () => {
-      const mockUser = { id: 'user-1', isActive: true };
-      mockPost.mockResolvedValueOnce({ data: mockUser });
+    it('activateUser — sends POST /auth/admin/users/:id/activate via goldpcApi', async () => {
+      mockGoldpcApi.postApiV1AuthAdminUsersIdActivate.mockResolvedValueOnce({});
 
-      const result = await usersAdminApi.activateUser('user-1');
+      await usersAdminApi.activateUser('user-1');
 
-      expect(mockPost).toHaveBeenCalledWith('/admin/users/user-1/activate');
-      expect(result).toEqual(mockUser);
+      expect(mockGoldpcApi.postApiV1AuthAdminUsersIdActivate).toHaveBeenCalledWith('user-1');
     });
 
-    it('deactivateUser — sends POST /admin/users/:id/deactivate', async () => {
-      const mockUser = { id: 'user-1', isActive: false };
-      mockPost.mockResolvedValueOnce({ data: mockUser });
+    it('deactivateUser — sends POST /auth/admin/users/:id/deactivate via goldpcApi', async () => {
+      mockGoldpcApi.postApiV1AuthAdminUsersIdDeactivate.mockResolvedValueOnce({});
 
-      const result = await usersAdminApi.deactivateUser('user-1');
+      await usersAdminApi.deactivateUser('user-1');
 
-      expect(mockPost).toHaveBeenCalledWith('/admin/users/user-1/deactivate');
-      expect(result).toEqual(mockUser);
+      expect(mockGoldpcApi.postApiV1AuthAdminUsersIdDeactivate).toHaveBeenCalledWith('user-1');
     });
   });
 
   // ─── catalogAdminApi ──────────────────────────────────────────
 
   describe('catalogAdminApi', () => {
-    it('getProducts — sends GET /admin/products and normalizes Russian category names', async () => {
+    it('getProducts — sends GET /admin/products and normalizes Russian category names via goldpcApi', async () => {
       const mockResponse = {
         data: {
           data: [
@@ -146,48 +159,48 @@ describe('api/admin', () => {
           meta: { page: 1, pageSize: 10, totalItems: 2, totalPages: 1 },
         },
       };
-      mockGet.mockResolvedValueOnce(mockResponse);
+      mockGoldpcApi.getApiV1AdminProducts.mockResolvedValueOnce(mockResponse);
 
       const result = await catalogAdminApi.getProducts({ page: 1 });
 
-      expect(mockGet).toHaveBeenCalledWith('/admin/products', { params: { page: 1 } });
+      expect(mockGoldpcApi.getApiV1AdminProducts).toHaveBeenCalledWith({ page: 1 });
       expect(result.data[0].category).toBe('cpu');
       expect(result.data[1].category).toBe('gpu');
     });
 
-    it('getProducts — maps frontend category slug to backend slug for filtering', async () => {
-      mockGet.mockResolvedValueOnce({ data: { data: [], meta: {} } });
+    it('getProducts — maps frontend category slug to backend slug for filtering via goldpcApi', async () => {
+      mockGoldpcApi.getApiV1AdminProducts.mockResolvedValueOnce({ data: { data: [], meta: {} } });
 
       await catalogAdminApi.getProducts({ category: 'cpu' });
 
-      expect(mockGet).toHaveBeenCalledWith('/admin/products', {
-        params: { category: 'processors' },
+      expect(mockGoldpcApi.getApiV1AdminProducts).toHaveBeenCalledWith({
+        category: 'processors',
       });
     });
 
-    it('getProducts — passes through unknown category as-is', async () => {
-      mockGet.mockResolvedValueOnce({ data: { data: [], meta: {} } });
+    it('getProducts — passes through unknown category as-is via goldpcApi', async () => {
+      mockGoldpcApi.getApiV1AdminProducts.mockResolvedValueOnce({ data: { data: [], meta: {} } });
 
       await catalogAdminApi.getProducts({ category: 'unknown-category' });
 
-      expect(mockGet).toHaveBeenCalledWith('/admin/products', {
-        params: { category: 'unknown-category' },
+      expect(mockGoldpcApi.getApiV1AdminProducts).toHaveBeenCalledWith({
+        category: 'unknown-category',
       });
     });
 
-    it('updateProduct — sends PUT /admin/products/:id', async () => {
+    it('updateProduct — sends PUT /admin/products/:id via goldpcApi', async () => {
       const mockProduct = { id: 'p1', name: 'Updated Product' };
-      mockPut.mockResolvedValueOnce({ data: mockProduct });
+      mockGoldpcApi.putApiV1AdminProductsProductId.mockResolvedValueOnce({ data: mockProduct });
 
       const result = await catalogAdminApi.updateProduct('p1', { name: 'Updated Product' });
 
-      expect(mockPut).toHaveBeenCalledWith('/admin/products/p1', { name: 'Updated Product' });
+      expect(mockGoldpcApi.putApiV1AdminProductsProductId).toHaveBeenCalledWith('p1', { name: 'Updated Product' });
       expect(result).toEqual(mockProduct);
     });
 
-    it('createProduct — sends POST /admin/products', async () => {
+    it('createProduct — sends POST /admin/products via goldpcApi', async () => {
       const mockProduct = { id: 'p-new', name: 'New Product' };
-      mockPost.mockResolvedValueOnce({ data: mockProduct });
+      mockGoldpcApi.postApiV1AdminProducts.mockResolvedValueOnce({ data: mockProduct });
 
       const result = await catalogAdminApi.createProduct({
         name: 'New Product',
@@ -197,7 +210,7 @@ describe('api/admin', () => {
         stock: 10,
       });
 
-      expect(mockPost).toHaveBeenCalledWith('/admin/products', {
+      expect(mockGoldpcApi.postApiV1AdminProducts).toHaveBeenCalledWith({
         name: 'New Product',
         sku: 'SKU-001',
         category: 'cpu',
@@ -207,12 +220,12 @@ describe('api/admin', () => {
       expect(result).toEqual(mockProduct);
     });
 
-    it('deleteProduct — sends DELETE /admin/products/:id', async () => {
-      mockDelete.mockResolvedValueOnce({});
+    it('deleteProduct — sends DELETE /admin/products/:id via goldpcApi', async () => {
+      mockGoldpcApi.deleteApiV1AdminProductsProductId.mockResolvedValueOnce({});
 
       await catalogAdminApi.deleteProduct('p1');
 
-      expect(mockDelete).toHaveBeenCalledWith('/admin/products/p1');
+      expect(mockGoldpcApi.deleteApiV1AdminProductsProductId).toHaveBeenCalledWith('p1');
     });
 
     it('getProductById — sends GET /admin/products/:id', async () => {
@@ -225,13 +238,13 @@ describe('api/admin', () => {
       expect(result).toEqual(mockProduct);
     });
 
-    it('getPriceHistory — sends GET /admin/products/:id/price-history', async () => {
+    it('getPriceHistory — sends GET /admin/products/:id/price-history via goldpcApi', async () => {
       const mockHistory = [{ id: 'h1', price: 100, changedAt: '2025-01-01' }];
-      mockGet.mockResolvedValueOnce({ data: mockHistory });
+      mockGoldpcApi.getApiV1AdminProductsProductIdPriceHistory.mockResolvedValueOnce({ data: mockHistory });
 
       const result = await catalogAdminApi.getPriceHistory('p1');
 
-      expect(mockGet).toHaveBeenCalledWith('/admin/products/p1/price-history');
+      expect(mockGoldpcApi.getApiV1AdminProductsProductIdPriceHistory).toHaveBeenCalledWith('p1');
       expect(result).toEqual(mockHistory);
     });
   });
