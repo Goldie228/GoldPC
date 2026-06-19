@@ -512,7 +512,9 @@ public class AdminCatalogController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<List<PriceHistoryDto>>> GetPriceHistory(Guid productId)
     {
-        if (!await _catalogService.GetProductByIdAsync(productId).ContinueWith(t => t.Result != null))
+        // Проверяем существование товара перед получением истории цен
+        var product = await _catalogService.GetProductByIdAsync(productId);
+        if (product == null)
         {
             return NotFound(new { error = "Товар не найден", productId });
         }
