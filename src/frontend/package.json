@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "generate:spec-labels": "tsx ../../scripts/specs/generateSpecLabels.ts",
     "generate:api": "orval",
     "generate:api:watch": "orval --watch",

@@ -26,6 +26,10 @@ export default defineConfig({
       interval: 100,
     },
     proxy: {
+      '/api/v1/Auth': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
       '/api/v1/auth': {
         target: 'http://localhost:5001',
         changeOrigin: true,

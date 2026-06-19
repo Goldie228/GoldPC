@@ -46,9 +46,19 @@ apiClient.interceptors.request.use(
     }
 
     // ✅ Проверяем ВСЕ хранилища в правильном порядке
-    const token = localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken');
-    if (token != null && config.headers != null) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Исключаем публичные эндпоинты (login, register, forgot-password) — они не требуют токена
+    const publicPaths = ['/Auth/login', '/Auth/register', '/Auth/forgot-password', '/Auth/reset-password'];
+    const isPublic = publicPaths.some((p) => config.url?.startsWith(p));
+    if (isPublic) {
+      // Удаляем Authorization для публичных эндпоинтов, чтобы дефолтный заголовок не мешал
+      if (config.headers != null) {
+        delete config.headers.Authorization;
+      }
+    } else {
+      const token = localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken');
+      if (token != null && config.headers != null) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
@@ -84,7 +94,10 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     // Если 401 и есть refresh token - пытаемся обновить
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // НЕ перехватываем 401 от auth-эндпоинтов — там 401 = неверные credentials, а не истёкший токен
+    const authEndpoints = ['/Auth/login', '/Auth/register', '/Auth/forgot-password', '/Auth/reset-password', '/auth/login', '/auth/register'];
+    const isAuthRequest = authEndpoints.some((p) => originalRequest.url?.startsWith(p));
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       originalRequest._retry = true;
 
       // ✅ Ищем refresh token в ОБОИХ хранилищах
