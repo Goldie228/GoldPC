@@ -7,9 +7,20 @@ import { CatalogPage } from './CatalogPage';
 
 vi.mock('@/hooks/useCatalog', () => ({
   useCatalog: vi.fn(() => ({
-    data: { products: [], total: 0, page: 1, pageSize: 12, totalPages: 0 },
-    isLoading: false,
+    loading: false,
     error: null,
+    getProducts: vi.fn().mockResolvedValue({
+      data: [],
+      meta: { page: 1, pageSize: 12, totalPages: 0, totalItems: 0, hasNextPage: false, hasPrevPage: false },
+    }),
+    getProduct: vi.fn(),
+    getProductsByIds: vi.fn(),
+    getProductReviews: vi.fn(),
+    addProductReview: vi.fn(),
+    updateProductReview: vi.fn(),
+    deleteProductReview: vi.fn(),
+    toggleHelpful: vi.fn(),
+    getFilterFacets: vi.fn(),
   })),
 }));
 
@@ -38,8 +49,8 @@ describe('CatalogPage', () => {
     expect(document.body).toBeInTheDocument();
   });
 
-  it('displays the search input', () => {
+  it('displays the search input with correct placeholder', () => {
     renderWithProviders(<CatalogPage />);
-    expect(screen.getByPlaceholderText(/поиск/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Все товары/i)).toBeInTheDocument();
   });
 });

@@ -32,6 +32,12 @@ import { initKeycloak, doLogin, doLogout, getToken, updateToken, getUsername, ha
 describe('api/keycloak', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset mockKeycloak state to defaults (clearAllMocks only clears mock.fn state, not properties)
+    mockKeycloak.token = 'mock-access-token';
+    mockKeycloak.refreshToken = 'mock-refresh-token';
+    mockKeycloak.tokenParsed = { preferred_username: 'testuser' };
+    // Clear localStorage to prevent state leaking between tests
+    localStorage.clear();
     vi.stubEnv('VITE_KEYCLOAK_URL', 'https://custom-keycloak.example.com');
     vi.stubEnv('VITE_KEYCLOAK_REALM', 'custom-realm');
     vi.stubEnv('VITE_KEYCLOAK_CLIENT_ID', 'custom-client');
@@ -76,6 +82,30 @@ describe('api/keycloak', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
 
       expect(callback).toHaveBeenCalled();
+    });
+
+    it('stores tokens in localStorage when authenticated', async () => {
+      mockKeycloak.init.mockResolvedValueOnce(true);
+      mockKeycloak.token = 'real-access-token';
+      mockKeycloak.refreshToken = 'real-refresh-token';
+      const callback = vi.fn();
+
+      initKeycloak(callback);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(localStorage.getItem('accessToken')).toBe('real-access-token');
+      expect(localStorage.getItem('refreshToken')).toBe('real-refresh-token');
+    });
+
+    it('does NOT store tokens in localStorage when not authenticated', async () => {
+      mockKeycloak.init.mockResolvedValueOnce(false);
+      const callback = vi.fn();
+
+      initKeycloak(callback);
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      expect(localStorage.getItem('accessToken')).toBeNull();
+      expect(localStorage.getItem('refreshToken')).toBeNull();
     });
   });
 
@@ -154,6 +184,19 @@ describe('api/keycloak', () => {
       mockKeycloak.updateToken.mockResolvedValueOnce(true);
       const result = await updateToken(() => 'done');
       expect(result).toBe('done');
+    });
+
+    it('calls doLogin and returns false on failure (refresh token expired)', async () => {
+      mockKeycloak.updateToken.mockRejectedValueOnce(new Error('Token refresh failed'));
+      mockKeycloak.login.mockResolvedValueOnce(undefined);
+      const successCb = vi.fn();
+
+      const result = await updateToken(successCb);
+
+      expect(mockKeycloak.updateToken).toHaveBeenCalledWith(5);
+      expect(successCb).not.toHaveBeenCalled();
+      expect(mockKeycloak.login).toHaveBeenCalled();
+      expect(result).toBe(false);
     });
   });
 });

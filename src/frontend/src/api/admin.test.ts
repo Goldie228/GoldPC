@@ -34,6 +34,8 @@ const mockGoldpcApi = vi.hoisted(() => ({
   postAdminProductsGenerateName: vi.fn(),
   getAdminSpecificationsByCategoryCategoryId: vi.fn(),
   getAdminSpecificationsUniqueValuesCategoryId: vi.fn(),
+  getApiInternalStubs: vi.fn(),
+  patchApiInternalStubsName: vi.fn(),
 }));
 
 vi.mock('./generated/client', () => ({
@@ -46,6 +48,9 @@ import {
   statsApi,
   settingsApi,
   dictionariesApi,
+  imagesAdminApi,
+  auditLogApi,
+  stubApi,
 } from './admin';
 
 describe('api/admin', () => {
@@ -349,6 +354,186 @@ describe('api/admin', () => {
       await dictionariesApi.deleteItem('manufacturers', 'm1');
 
       expect(mockDelete).toHaveBeenCalledWith('/admin/dictionaries/manufacturers/m1');
+    });
+
+    it('getAttributes — sends GET /admin/dictionaries/attributes', async () => {
+      const mockAttrs = [{ id: 'a1', name: 'Frequency', attributeKey: 'frequency' }];
+      mockGet.mockResolvedValueOnce({ data: mockAttrs });
+
+      const result = await dictionariesApi.getAttributes();
+
+      expect(mockGet).toHaveBeenCalledWith('/admin/dictionaries/attributes');
+      expect(result).toEqual(mockAttrs);
+    });
+  });
+
+  // ─── settingsApi (missing methods) ────────────────────────────
+
+  describe('settingsApi (additional)', () => {
+    it('resetSettings — sends POST /admin/settings/reset', async () => {
+      const mockDefaults = { siteName: 'GoldPC' };
+      mockPost.mockResolvedValueOnce({ data: mockDefaults });
+
+      const result = await settingsApi.resetSettings();
+
+      expect(mockPost).toHaveBeenCalledWith('/admin/settings/reset');
+      expect(result).toEqual(mockDefaults);
+    });
+  });
+
+  // ─── statsApi (missing methods) ───────────────────────────────
+
+  describe('statsApi (additional)', () => {
+    it('getCharts — sends GET /admin/stats/charts', async () => {
+      const mockCharts = { orders: [{ label: 'Mon', value: 10 }], revenue: [{ label: 'Mon', value: 1000 }] };
+      mockGet.mockResolvedValueOnce({ data: mockCharts });
+
+      const result = await statsApi.getCharts();
+
+      expect(mockGet).toHaveBeenCalledWith('/admin/stats/charts');
+      expect(result).toEqual(mockCharts);
+    });
+
+    it('getSparklines — sends GET /admin/stats/sparklines', async () => {
+      const mockSparklines = { users: [1, 2, 3], orders: [4, 5, 6], revenue: [7, 8, 9] };
+      mockGet.mockResolvedValueOnce({ data: mockSparklines });
+
+      const result = await statsApi.getSparklines();
+
+      expect(mockGet).toHaveBeenCalledWith('/admin/stats/sparklines');
+      expect(result).toEqual(mockSparklines);
+    });
+
+    it('getActivity — sends GET /admin/stats/activity', async () => {
+      const mockActivity = [{ id: '1', type: 'order', description: 'New order', timestamp: '2026-06-19T10:00:00Z' }];
+      mockGet.mockResolvedValueOnce({ data: mockActivity });
+
+      const result = await statsApi.getActivity();
+
+      expect(mockGet).toHaveBeenCalledWith('/admin/stats/activity');
+      expect(result).toEqual(mockActivity);
+    });
+  });
+
+  // ─── imagesAdminApi ───────────────────────────────────────────
+
+  describe('imagesAdminApi', () => {
+    it('upload — sends POST /admin/products/:productId/images with FormData', async () => {
+      const mockResult = { id: 'img-1', url: '/images/test.jpg', sortOrder: 0 };
+      mockPost.mockResolvedValueOnce({ data: mockResult });
+
+      const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+      const result = await imagesAdminApi.upload('prod-1', file);
+
+      expect(mockPost).toHaveBeenCalledWith('/admin/products/prod-1/images', expect.any(FormData), {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      expect(result).toEqual(mockResult);
+    });
+
+    it('upload — sends alt text when provided', async () => {
+      const mockResult = { id: 'img-1', url: '/images/test.jpg', sortOrder: 0 };
+      mockPost.mockResolvedValueOnce({ data: mockResult });
+
+      const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+      await imagesAdminApi.upload('prod-1', file, 'My alt text');
+
+      const formData = mockPost.mock.calls[0][1] as FormData;
+      expect(formData.get('alt')).toBe('My alt text');
+    });
+
+    it('delete — sends DELETE /admin/products/:productId/images/:imageId', async () => {
+      mockDelete.mockResolvedValueOnce({});
+
+      await imagesAdminApi.delete('prod-1', 'img-1');
+
+      expect(mockDelete).toHaveBeenCalledWith('/admin/products/prod-1/images/img-1');
+    });
+
+    it('setPrimary — sends PUT /admin/products/:productId/images/:imageId/primary', async () => {
+      mockPut.mockResolvedValueOnce({});
+
+      await imagesAdminApi.setPrimary('prod-1', 'img-1');
+
+      expect(mockPut).toHaveBeenCalledWith('/admin/products/prod-1/images/img-1/primary');
+    });
+
+    it('reorder — sends PUT /admin/products/:productId/images/reorder', async () => {
+      mockPut.mockResolvedValueOnce({});
+
+      await imagesAdminApi.reorder('prod-1', ['img-2', 'img-1', 'img-3']);
+
+      expect(mockPut).toHaveBeenCalledWith('/admin/products/prod-1/images/reorder', { imageIds: ['img-2', 'img-1', 'img-3'] });
+    });
+  });
+
+  // ─── auditLogApi ──────────────────────────────────────────────
+
+  describe('auditLogApi', () => {
+    it('getLogs — sends GET /admin/audit-logs with params', async () => {
+      const mockLogs = { data: [{ id: '1', action: 'USER_LOGIN', userId: 'u1' }], meta: { totalItems: 1 } };
+      mockGet.mockResolvedValueOnce({ data: mockLogs });
+
+      const result = await auditLogApi.getLogs({ page: 1, pageSize: 10, action: 'USER_LOGIN' });
+
+      expect(mockGet).toHaveBeenCalledWith('/admin/audit-logs', {
+        params: { page: 1, pageSize: 10, action: 'USER_LOGIN' },
+      });
+      expect(result).toEqual(mockLogs);
+    });
+
+    it('getLogs — sends GET /admin/audit-logs without params', async () => {
+      const mockLogs = { data: [], meta: { totalItems: 0 } };
+      mockGet.mockResolvedValueOnce({ data: mockLogs });
+
+      const result = await auditLogApi.getLogs();
+
+      expect(mockGet).toHaveBeenCalledWith('/admin/audit-logs', { params: undefined });
+      expect(result).toEqual(mockLogs);
+    });
+  });
+
+  // ─── stubApi ──────────────────────────────────────────────────
+
+  describe('stubApi', () => {
+    it('getStubs — calls goldpcApi.getApiInternalStubs and returns data', async () => {
+      const mockStubs = [{ name: 'CatalogService', serviceName: 'catalog', mode: 'Normal' }];
+      mockGoldpcApi.getApiInternalStubs.mockResolvedValueOnce({ data: mockStubs });
+
+      const result = await stubApi.getStubs();
+
+      expect(mockGoldpcApi.getApiInternalStubs).toHaveBeenCalled();
+      expect(result).toEqual(mockStubs);
+    });
+
+    it('getStubs — returns empty array when data is null', async () => {
+      mockGoldpcApi.getApiInternalStubs.mockResolvedValueOnce({ data: null });
+
+      const result = await stubApi.getStubs();
+
+      expect(result).toEqual([]);
+    });
+
+    it('updateStub — calls goldpcApi.patchApiInternalStubsName with mode', async () => {
+      mockGoldpcApi.patchApiInternalStubsName.mockResolvedValueOnce({});
+
+      await stubApi.updateStub('CatalogService', { mode: 'Failing' });
+
+      expect(mockGoldpcApi.patchApiInternalStubsName).toHaveBeenCalledWith('CatalogService', { mode: 'Failing' });
+    });
+
+    it('updateStub — passes chaos config', async () => {
+      mockGoldpcApi.patchApiInternalStubsName.mockResolvedValueOnce({});
+
+      await stubApi.updateStub('CatalogService', {
+        mode: 'Unstable',
+        chaos: { failureRate: 0.5, latencyRate: 0.3, maxLatencyMs: 5000 },
+      });
+
+      expect(mockGoldpcApi.patchApiInternalStubsName).toHaveBeenCalledWith('CatalogService', {
+        mode: 'Unstable',
+        chaos: { failureRate: 0.5, latencyRate: 0.3, maxLatencyMs: 5000 },
+      });
     });
   });
 });

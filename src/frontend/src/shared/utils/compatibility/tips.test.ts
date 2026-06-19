@@ -27,6 +27,20 @@ describe('tipMonitorToGPU', () => {
   it('returns null when gpu is undefined', () => {
     expect(tipMonitorToGPU(makeProduct(), undefined)).toBeNull();
   });
+
+  it('returns tip when cpu has integrated graphics', () => {
+    const cpu = makeProduct({ integratedGraphics: 'true' });
+    const gpu = makeProduct();
+    const result = tipMonitorToGPU(cpu, gpu);
+    expect(result).not.toBeNull();
+    expect(result!.message).toContain('монитор');
+  });
+
+  it('returns null when cpu has no integrated graphics', () => {
+    const cpu = makeProduct({ integratedGraphics: 'false' });
+    const gpu = makeProduct();
+    expect(tipMonitorToGPU(cpu, gpu)).toBeNull();
+  });
 });
 
 describe('tipDDR5Training', () => {
@@ -35,11 +49,15 @@ describe('tipDDR5Training', () => {
   });
 
   it('returns tip for DDR5 memory', () => {
-    const ram = makeProduct({ 'Тип памяти': 'DDR5' });
+    const ram = makeProduct({ memoryType: 'DDR5' });
     const result = tipDDR5Training(ram);
-    if (result) {
-      expect(result.message).toContain('DDR5');
-    }
+    expect(result).not.toBeNull();
+    expect(result!.message).toContain('DDR5');
+  });
+
+  it('returns null for DDR4 memory', () => {
+    const ram = makeProduct({ memoryType: 'DDR4' });
+    expect(tipDDR5Training(ram)).toBeNull();
   });
 });
 
@@ -50,8 +68,9 @@ describe('tipXMPNeeded', () => {
 });
 
 describe('tipDualChannel', () => {
-  it('returns null when ram is undefined', () => {
-    expect(tipDualChannel(undefined, undefined)).toBeNull();
+  it('returns null when ramCount is less than 2', () => {
+    expect(tipDualChannel(0, undefined)).toBeNull();
+    expect(tipDualChannel(1, undefined)).toBeNull();
   });
 });
 
@@ -62,18 +81,23 @@ describe('tipThermalPaste', () => {
 });
 
 describe('tipSingleChannel', () => {
-  it('returns null when ram is undefined', () => {
-    expect(tipSingleChannel(undefined)).toBeNull();
+  it('returns null when ramCount is not 1', () => {
+    expect(tipSingleChannel(0)).toBeNull();
+    expect(tipSingleChannel(2)).toBeNull();
+  });
+
+  it('returns tip when ramCount is 1', () => {
+    const result = tipSingleChannel(1);
+    expect(result).not.toBeNull();
+    expect(result!.message).toContain('одноканальном');
   });
 });
 
 describe('tipRemoveCoolerFilm', () => {
-  it('returns a tip when cooler is provided', () => {
-    const cooler = makeProduct();
-    const result = tipRemoveCoolerFilm(cooler);
-    if (result) {
-      expect(result.message).toBeDefined();
-    }
+  it('returns a tip unconditionally', () => {
+    const result = tipRemoveCoolerFilm();
+    expect(result).not.toBeNull();
+    expect(result.message).toContain('плёнку');
   });
 });
 

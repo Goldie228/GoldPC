@@ -61,6 +61,68 @@ describe('api/client', () => {
     vi.restoreAllMocks();
   });
 
+  describe('Request Interceptor — CSRF token', () => {
+    it('adds X-XSRF-TOKEN header on POST requests', () => {
+      document.cookie = 'XSRF-TOKEN=csrf-value-123';
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
+      const config = { method: 'post', url: '/products', headers: {} } as any;
+
+      const result = handler(config);
+
+      expect(result.headers['X-XSRF-TOKEN']).toBe('csrf-value-123');
+    });
+
+    it('adds X-XSRF-TOKEN header on PUT requests', () => {
+      document.cookie = 'XSRF-TOKEN=csrf-put';
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
+      const config = { method: 'put', url: '/products/1', headers: {} } as any;
+
+      const result = handler(config);
+
+      expect(result.headers['X-XSRF-TOKEN']).toBe('csrf-put');
+    });
+
+    it('adds X-XSRF-TOKEN header on DELETE requests', () => {
+      document.cookie = 'XSRF-TOKEN=csrf-del';
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
+      const config = { method: 'delete', url: '/products/1', headers: {} } as any;
+
+      const result = handler(config);
+
+      expect(result.headers['X-XSRF-TOKEN']).toBe('csrf-del');
+    });
+
+    it('adds X-XSRF-TOKEN header on PATCH requests', () => {
+      document.cookie = 'XSRF-TOKEN=csrf-patch';
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
+      const config = { method: 'patch', url: '/users/1', headers: {} } as any;
+
+      const result = handler(config);
+
+      expect(result.headers['X-XSRF-TOKEN']).toBe('csrf-patch');
+    });
+
+    it('does NOT add X-XSRF-TOKEN header on GET requests', () => {
+      document.cookie = 'XSRF-TOKEN=csrf-get';
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
+      const config = { method: 'get', url: '/products', headers: {} } as any;
+
+      const result = handler(config);
+
+      expect(result.headers['X-XSRF-TOKEN']).toBeUndefined();
+    });
+
+    it('does NOT add X-XSRF-TOKEN when cookie is absent', () => {
+      document.cookie = 'XSRF-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
+      const config = { method: 'post', url: '/products', headers: {} } as any;
+
+      const result = handler(config);
+
+      expect(result.headers['X-XSRF-TOKEN']).toBeUndefined();
+    });
+  });
+
   describe('Request Interceptor — Authorization header', () => {
     it('adds Bearer token from localStorage', () => {
       localStorage.setItem('accessToken', 'local-access-token');
@@ -100,6 +162,58 @@ describe('api/client', () => {
       const result = handler(config);
 
       expect(result.headers.Authorization).toBeUndefined();
+    });
+  });
+
+  describe('Request Interceptor — public path exclusion', () => {
+    it('removes Authorization header for /Auth/login', () => {
+      localStorage.setItem('accessToken', 'my-token');
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
+      const config = { url: '/Auth/login', headers: { Authorization: 'Bearer my-token' } } as any;
+
+      const result = handler(config);
+
+      expect(result.headers.Authorization).toBeUndefined();
+    });
+
+    it('removes Authorization header for /Auth/register', () => {
+      localStorage.setItem('accessToken', 'my-token');
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
+      const config = { url: '/Auth/register', headers: { Authorization: 'Bearer my-token' } } as any;
+
+      const result = handler(config);
+
+      expect(result.headers.Authorization).toBeUndefined();
+    });
+
+    it('removes Authorization header for /Auth/forgot-password', () => {
+      localStorage.setItem('accessToken', 'my-token');
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
+      const config = { url: '/Auth/forgot-password', headers: { Authorization: 'Bearer my-token' } } as any;
+
+      const result = handler(config);
+
+      expect(result.headers.Authorization).toBeUndefined();
+    });
+
+    it('removes Authorization header for /Auth/reset-password', () => {
+      localStorage.setItem('accessToken', 'my-token');
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
+      const config = { url: '/Auth/reset-password', headers: { Authorization: 'Bearer my-token' } } as any;
+
+      const result = handler(config);
+
+      expect(result.headers.Authorization).toBeUndefined();
+    });
+
+    it('still adds Authorization header for non-public paths', () => {
+      localStorage.setItem('accessToken', 'my-token');
+      const handler = (apiClient.interceptors.request.handlers as unknown as MockInterceptor[])[0].fulfilled;
+      const config = { url: '/admin/products', headers: {} } as any;
+
+      const result = handler(config);
+
+      expect(result.headers.Authorization).toBe('Bearer my-token');
     });
   });
 
@@ -206,6 +320,53 @@ describe('api/client', () => {
       await expect(handler(error)).rejects.toBeDefined();
 
       expect(mockAxiosPost).not.toHaveBeenCalled();
+    });
+
+    it('does not retry 401 from auth endpoints (login)', async () => {
+      localStorage.setItem('refreshToken', 'refresh-token-123');
+      const handler = (apiClient.interceptors.response.handlers as unknown as MockInterceptor[])[0].rejected;
+      const error = {
+        response: { status: 401 },
+        config: { url: '/Auth/login', _retry: false, headers: {} },
+      };
+
+      await expect(handler(error)).rejects.toBeDefined();
+
+      expect(mockAxiosPost).not.toHaveBeenCalled();
+    });
+
+    it('does not retry 401 from auth endpoints (register)', async () => {
+      localStorage.setItem('refreshToken', 'refresh-token-123');
+      const handler = (apiClient.interceptors.response.handlers as unknown as MockInterceptor[])[0].rejected;
+      const error = {
+        response: { status: 401 },
+        config: { url: '/Auth/register', _retry: false, headers: {} },
+      };
+
+      await expect(handler(error)).rejects.toBeDefined();
+
+      expect(mockAxiosPost).not.toHaveBeenCalled();
+    });
+
+    it('redirects to /login after failed refresh', async () => {
+      localStorage.setItem('refreshToken', 'refresh-token-123');
+      localStorage.setItem('accessToken', 'old-access-token');
+      localStorage.setItem('auth-storage', '{"user":"test"}');
+
+      mockAxiosPost.mockRejectedValueOnce(new Error('Refresh failed'));
+
+      const handler = (apiClient.interceptors.response.handlers as unknown as MockInterceptor[])[0].rejected;
+      const error = {
+        response: { status: 401 },
+        config: { _retry: false, headers: {} },
+      };
+
+      await expect(handler(error)).rejects.toThrow();
+
+      // Tokens cleared
+      expect(localStorage.getItem('accessToken')).toBeNull();
+      expect(localStorage.getItem('refreshToken')).toBeNull();
+      expect(localStorage.getItem('auth-storage')).toBeNull();
     });
   });
 
