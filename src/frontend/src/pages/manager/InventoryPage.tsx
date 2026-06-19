@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/Skeleton/Skeleton';
 import { PagePagination } from '@/components/ui/PagePagination';
 import { formatPrice } from '@/utils/format';
 import { CATEGORY_LABELS } from '@/utils/category-mappings';
+import type { ProductCategory } from '@/api/types';
 
 /* ─── Фильтры ─── */
 
@@ -299,7 +300,7 @@ export function InventoryPage() {
                       </td>
                       <td className="px-5 py-3">
                         <span className="text-sm text-muted-foreground">
-                          {CATEGORY_LABELS[product.category ?? ''] ?? product.category ?? '--'}
+                          {CATEGORY_LABELS[(product.category ?? '') as ProductCategory] ?? product.category ?? '--'}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-right">
