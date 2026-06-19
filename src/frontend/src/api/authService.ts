@@ -87,7 +87,7 @@ export const authService = {
    * Вход в систему
    */
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await goldpcApi.postApiV1AuthLogin(data);
+    const response = await goldpcApi.postAuthLogin(data);
     const authData = extractData<AuthResponseApiResponse['data']>(response.data);
     return {
       ...authData!,
@@ -99,7 +99,7 @@ export const authService = {
    * Регистрация нового пользователя
    */
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await goldpcApi.postApiV1AuthRegister(data);
+    const response = await goldpcApi.postAuthRegister(data);
     const authData = extractData<AuthResponseApiResponse['data']>(response.data);
     return {
       ...authData!,
@@ -112,7 +112,7 @@ export const authService = {
    */
   async logout(): Promise<void> {
     try {
-      await goldpcApi.postApiV1AuthLogout();
+      await goldpcApi.postAuthLogout();
     } catch {
       // Игнорируем ошибки при logout - очищаем токены локально в любом случае
     }
@@ -122,7 +122,7 @@ export const authService = {
    * Обновление токенов
    */
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
-    const response = await goldpcApi.postApiV1AuthRefresh({ refreshToken });
+    const response = await goldpcApi.postAuthRefresh({ refreshToken });
     const data = extractData<AuthResponseApiResponse['data']>(response.data);
     return {
       ...data!,
@@ -134,7 +134,7 @@ export const authService = {
    * Получение текущего пользователя
    */
   async getCurrentUser(): Promise<AuthResponse['user']> {
-    const response = await goldpcApi.getApiV1AuthProfile();
+    const response = await goldpcApi.getAuthProfile();
     const user = extractData<UserDtoApiResponse['data']>(response.data);
     return normalizeUserRoles(user)!;
   },
@@ -143,14 +143,14 @@ export const authService = {
    * Запрос на восстановление пароля (отправляет email со ссылкой)
    */
   async forgotPassword(data: ForgotPasswordRequest): Promise<void> {
-    await goldpcApi.postApiV1AuthForgotPassword(data);
+    await goldpcApi.postAuthForgotPassword(data);
   },
 
   /**
    * Сброс пароля по токену из email
    */
   async resetPassword(data: ResetPasswordRequest): Promise<void> {
-    await goldpcApi.postApiV1AuthResetPassword(data);
+    await goldpcApi.postAuthResetPassword(data);
   },
 
   /**
@@ -160,7 +160,7 @@ export const authService = {
    * Бросает ошибку, если токен недействителен — используйте getAuthErrorMessage.
    */
   async validateResetToken(token: string): Promise<void> {
-    await goldpcApi.postApiV1AuthValidateResetToken({ token });
+    await goldpcApi.postAuthValidateResetToken({ token });
   },
 
   /**
@@ -168,7 +168,7 @@ export const authService = {
    * Требует авторизации — userId извлекается из JWT на сервере.
    */
   async sendVerificationEmail(): Promise<void> {
-    await goldpcApi.postApiV1AuthSendVerification();
+    await goldpcApi.postAuthSendVerification();
   },
 
   /**
@@ -176,21 +176,21 @@ export const authService = {
    * Не требует авторизации — токен одноразовый.
    */
   async verifyEmail(token: string): Promise<void> {
-    await goldpcApi.postApiV1AuthVerifyEmail({ token });
+    await goldpcApi.postAuthVerifyEmail({ token });
   },
 
   /**
    * Смена пароля
    */
   async changePassword(data: ChangePasswordRequest): Promise<void> {
-    await goldpcApi.postApiV1AuthChangePassword(data);
+    await goldpcApi.postAuthChangePassword(data);
   },
 
   /**
    * Получение текущих предпочтений уведомлений
    */
   async getNotificationPreferences(): Promise<NotificationPreferenceResponse> {
-    const response = await goldpcApi.getApiV1AuthNotifications();
+    const response = await goldpcApi.getAuthNotifications();
     return extractData<NotificationPreferenceResponseApiResponse['data']>(response.data) as NotificationPreferenceResponse;
   },
 
@@ -200,7 +200,7 @@ export const authService = {
   async updateNotificationPreferences(
     data: NotificationPreferenceRequest
   ): Promise<NotificationPreferenceResponse> {
-    const response = await goldpcApi.putApiV1AuthNotifications(data);
+    const response = await goldpcApi.putAuthNotifications(data);
     return extractData<NotificationPreferenceResponseApiResponse['data']>(response.data) as NotificationPreferenceResponse;
   },
 
@@ -208,7 +208,7 @@ export const authService = {
    * Включение двухфакторной аутентификации
    */
   async enableTwoFactor(): Promise<TwoFactorStatusResponse> {
-    const response = await goldpcApi.postApiV1AuthSecurity2faEnable();
+    const response = await goldpcApi.postAuthSecurity2faEnable();
     return extractData<TwoFactorStatusResponseApiResponse['data']>(response.data) as TwoFactorStatusResponse;
   },
 
@@ -216,7 +216,7 @@ export const authService = {
    * Подтверждение включения двухфакторной аутентификации
    */
   async verifyTwoFactor(code: string): Promise<TwoFactorStatusResponse> {
-    const response = await goldpcApi.postApiV1AuthSecurity2faVerify({ totpCode: code });
+    const response = await goldpcApi.postAuthSecurity2faVerify({ totpCode: code });
     return extractData<TwoFactorStatusResponseApiResponse['data']>(response.data) as TwoFactorStatusResponse;
   },
 
@@ -224,7 +224,7 @@ export const authService = {
    * Отключение двухфакторной аутентификации
    */
   async disableTwoFactor(password: string): Promise<void> {
-    await goldpcApi.postApiV1AuthSecurity2faDisable({ password });
+    await goldpcApi.postAuthSecurity2faDisable({ password });
   },
 
   /**
@@ -235,7 +235,7 @@ export const authService = {
     pageSize = 20
   ): Promise<{ items: LoginHistoryItem[]; total: number }> {
     try {
-      const response = await goldpcApi.getApiV1AuthSecurityLoginHistory({
+      const response = await goldpcApi.getAuthSecurityLoginHistory({
         pageNumber: page,
         pageSize,
       });
@@ -258,7 +258,7 @@ export const authService = {
     lastName: string;
     phone?: string;
   }): Promise<AuthResponse['user']> {
-    const response = await goldpcApi.putApiV1AuthProfile(data);
+    const response = await goldpcApi.putAuthProfile(data);
     const user = extractData<UserDtoApiResponse['data']>(response.data);
     return normalizeUserRoles(user)!;
   },
@@ -268,7 +268,7 @@ export const authService = {
    */
   async uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
     const body: PostApiV1AuthAvatarBody = { avatar: file };
-    const response = await goldpcApi.postApiV1AuthAvatar(body);
+    const response = await goldpcApi.postAuthAvatar(body);
     const data = extractData<{ avatarUrl: string }>(response.data);
     return data;
   },
@@ -277,6 +277,6 @@ export const authService = {
    * Удалить аватар пользователя
    */
   async deleteAvatar(): Promise<void> {
-    await goldpcApi.deleteApiV1AuthAvatar();
+    await goldpcApi.deleteAuthAvatar();
   },
 };

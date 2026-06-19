@@ -90,7 +90,7 @@ export const warrantyApi = {
    */
   async getMyCards(page = 1, pageSize = 10): Promise<PagedResult<WarrantyCard>> {
     try {
-      const response = await goldpcApi.getApiV1WarrantyCardMy({ page, pageSize });
+      const response = await goldpcApi.getWarrantyCardMy({ page, pageSize });
       const raw = unwrap(response.data as ApiResponse<{
         items: unknown[];
         totalCount: number;
@@ -114,7 +114,7 @@ export const warrantyApi = {
    * Получить гарантийную карту по ID
    */
   async getCard(id: string): Promise<WarrantyCard> {
-    const response = await goldpcApi.getApiV1WarrantyCardId(id);
+    const response = await goldpcApi.getWarrantyCardId(id);
     const raw = unwrap(response.data as ApiResponse<Parameters<typeof mapCard>[0]>);
     return mapCard(raw);
   },

@@ -88,7 +88,7 @@ export const addressesApi = {
    * Получить список адресов пользователя
    */
   async getAddresses(): Promise<UserAddress[]> {
-    const response = await goldpcApi.getApiV1AuthAddress();
+    const response = await goldpcApi.getAuthAddress();
     const list = unwrap(response.data as ApiResponse<RawAddress[]>);
     return (Array.isArray(list) ? list : []).map(mapAddress);
   },
@@ -97,7 +97,7 @@ export const addressesApi = {
    * Получить адрес по ID
    */
   async getAddress(id: string): Promise<UserAddress> {
-    const response = await goldpcApi.getApiV1AuthAddressId(id);
+    const response = await goldpcApi.getAuthAddressId(id);
     const raw = unwrap(response.data as ApiResponse<RawAddress>);
     return mapAddress(raw);
   },
@@ -106,7 +106,7 @@ export const addressesApi = {
    * Создать новый адрес
    */
   async createAddress(data: CreateAddressRequest): Promise<UserAddress> {
-    const response = await goldpcApi.postApiV1AuthAddress(data);
+    const response = await goldpcApi.postAuthAddress(data);
     const raw = unwrap(response.data as ApiResponse<RawAddress>);
     return mapAddress(raw);
   },
@@ -115,7 +115,7 @@ export const addressesApi = {
    * Обновить адрес
    */
   async updateAddress(id: string, data: UpdateAddressRequest): Promise<UserAddress> {
-    const response = await goldpcApi.putApiV1AuthAddressId(id, data);
+    const response = await goldpcApi.putAuthAddressId(id, data);
     const raw = unwrap(response.data as ApiResponse<RawAddress>);
     return mapAddress(raw);
   },
@@ -124,14 +124,14 @@ export const addressesApi = {
    * Удалить адрес
    */
   async deleteAddress(id: string): Promise<void> {
-    await goldpcApi.deleteApiV1AuthAddressId(id);
+    await goldpcApi.deleteAuthAddressId(id);
   },
 
   /**
    * Установить адрес как основной
    */
   async setDefaultAddress(id: string): Promise<UserAddress> {
-    const response = await goldpcApi.putApiV1AuthAddressIdDefault(id);
+    const response = await goldpcApi.putAuthAddressIdDefault(id);
     const raw = unwrap(response.data as ApiResponse<RawAddress>);
     return mapAddress(raw);
   },

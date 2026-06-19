@@ -116,19 +116,19 @@ function extractData<T>(response: { data: unknown }): T {
 export const servicesApi = {
   /** Получить все типы услуг ( publicly ) */
   getServiceTypes: async (): Promise<ServiceType[]> => {
-    const response = await goldpcApi.getApiV1ServicesTypes();
+    const response = await goldpcApi.getServicesTypes();
     return extractData<ServiceType[]>(response);
   },
 
   /** Получить тип услуги по slug */
   getServiceTypeBySlug: async (slug: string): Promise<ServiceType> => {
-    const response = await goldpcApi.getApiV1ServicesTypesSlug(slug);
+    const response = await goldpcApi.getServicesTypesSlug(slug);
     return extractData<ServiceType>(response);
   },
 
   /** Получить заявку по ID */
   getServiceRequestById: async (id: string): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.getApiV1ServicesId(id);
+    const response = await goldpcApi.getServicesId(id);
     return extractData<ServiceRequestDto>(response);
   },
 
@@ -137,19 +137,19 @@ export const servicesApi = {
     page: number = 1,
     pageSize: number = 10,
   ): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
-    const response = await goldpcApi.getApiV1ServicesMy({ page, pageSize });
+    const response = await goldpcApi.getServicesMy({ page, pageSize });
     return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
   },
 
   /** Создать заявку на услугу */
   createServiceRequest: async (data: CreateServiceRequest): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.postApiV1Services(data);
+    const response = await goldpcApi.postServices(data);
     return extractData<ServiceRequestDto>(response);
   },
 
   /** Отменить заявку */
   cancelServiceRequest: async (id: string): Promise<void> => {
-    await goldpcApi.postApiV1ServicesIdCancel(id);
+    await goldpcApi.postServicesIdCancel(id);
   },
 
   // ─── Chat ───────────────────────────────────────
@@ -160,25 +160,25 @@ export const servicesApi = {
     page: number = 1,
     pageSize: number = 50,
   ): Promise<{ items: ChatMessage[]; totalCount: number }> => {
-    const response = await goldpcApi.getApiV1ServicesIdMessages(requestId, { page, pageSize });
+    const response = await goldpcApi.getServicesIdMessages(requestId, { page, pageSize });
     return extractData<{ items: ChatMessage[]; totalCount: number }>(response);
   },
 
   /** Отправить сообщение в чат */
   sendChatMessage: async (requestId: string, message: string): Promise<ChatMessage> => {
-    const response = await goldpcApi.postApiV1ServicesIdMessages(requestId, { message });
+    const response = await goldpcApi.postServicesIdMessages(requestId, { message });
     return extractData<ChatMessage>(response);
   },
 
   /** Получить количество непрочитанных сообщений */
   getUnreadMessageCount: async (requestId: string): Promise<number> => {
-    const response = await goldpcApi.getApiV1ServicesIdMessagesUnreadCount(requestId);
+    const response = await goldpcApi.getServicesIdMessagesUnreadCount(requestId);
     return extractData<number>(response);
   },
 
   /** Загрузить вложение */
   uploadAttachment: async (requestId: string, file: File): Promise<{ url: string; fileName: string }> => {
-    const response = await goldpcApi.postApiV1ServicesIdUpload(requestId, { file });
+    const response = await goldpcApi.postServicesIdUpload(requestId, { file });
     return extractData<{ url: string; fileName: string }>(response);
   },
 
@@ -192,7 +192,7 @@ export const servicesApi = {
     search?: string;
   }): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
     const { page, pageSize, status, search } = params;
-    const response = await goldpcApi.getApiV1Services(
+    const response = await goldpcApi.getServices(
       { page, pageSize, status: status as any },
       search ? { params: { search } } : undefined,
     );
@@ -205,37 +205,37 @@ export const servicesApi = {
     pageSize?: number;
   }): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
     const { page, pageSize } = params;
-    const response = await goldpcApi.getApiV1ServicesUnassigned({ page, pageSize });
+    const response = await goldpcApi.getServicesUnassigned({ page, pageSize });
     return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
   },
 
   /** Назначить мастера на заявку */
   assignMaster: async (requestId: string, masterId: string): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.postApiV1ServicesIdAssignMasterId(requestId, masterId);
+    const response = await goldpcApi.postServicesIdAssignMasterId(requestId, masterId);
     return extractData<ServiceRequestDto>(response);
   },
 
   /** Обновить статус заявки */
   updateRequestStatus: async (requestId: string, status: string): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.patchApiV1ServicesIdStatus(requestId, { status: status as any });
+    const response = await goldpcApi.patchServicesIdStatus(requestId, { status: status as any });
     return extractData<ServiceRequestDto>(response);
   },
 
   /** Добавить запчасти к заявке */
   addParts: async (requestId: string, parts: ServicePartDto[]): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.postApiV1ServicesIdParts(requestId, parts);
+    const response = await goldpcApi.postServicesIdParts(requestId, parts);
     return extractData<ServiceRequestDto>(response);
   },
 
   /** Завершить заявку (с отчётом) */
   completeRequest: async (requestId: string, report: WorkReport): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.putApiV1ServicesIdComplete(requestId, report);
+    const response = await goldpcApi.putServicesIdComplete(requestId, report);
     return extractData<ServiceRequestDto>(response);
   },
 
   /** Получить отчёт по заявке */
   getReport: async (requestId: string): Promise<WorkReport> => {
-    const response = await goldpcApi.getApiV1ServicesIdReport(requestId);
+    const response = await goldpcApi.getServicesIdReport(requestId);
     return extractData<WorkReport>(response);
   },
 
@@ -246,7 +246,7 @@ export const servicesApi = {
     status?: string;
   }): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
     const { page, pageSize, status } = params;
-    const response = await goldpcApi.getApiV1ServicesMaster(
+    const response = await goldpcApi.getServicesMaster(
       { page, pageSize, status: status as any },
     );
     return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
@@ -254,7 +254,7 @@ export const servicesApi = {
 
   /** Закрыть заявку */
   closeRequest: async (requestId: string, data?: { comment?: string }): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.postApiV1ServicesIdClose(requestId, data);
+    const response = await goldpcApi.postServicesIdClose(requestId, data);
     return extractData<ServiceRequestDto>(response);
   },
 };
