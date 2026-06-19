@@ -15,17 +15,17 @@ public class AdminService : IAdminService
     private readonly string _attributesFilePath;
     private readonly string _settingsFilePath;
     private readonly string _auditLogFilePath;
-    private static readonly object _lock = new();
+    private readonly object _lock = new();
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    private static readonly List<UserDto> _users = new();
-    private static readonly List<DictionaryItemDto> _attributes = new();
-    private static readonly List<AuditLogDto> _auditLogs = new();
-    private static volatile SiteSettingsDto _settings = new();
+    private readonly List<UserDto> _users = new();
+    private readonly List<DictionaryItemDto> _attributes = new();
+    private readonly List<AuditLogDto> _auditLogs = new();
+    private SiteSettingsDto _settings = new();
 
     public AdminService(ILogger<AdminService> logger, IWebHostEnvironment env, IAuthServiceClient authClient)
     {
