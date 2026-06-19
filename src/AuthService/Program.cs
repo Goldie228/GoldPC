@@ -69,6 +69,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddSingleton<IEncryptionService, AesGcmEncryptionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<TOTPService>();
+builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<AvatarService>();
 builder.Services.AddSingleton<SmtpEmailService>();
 builder.Services.AddSingleton<ITokenCache, RedisTokenCache>();
 
