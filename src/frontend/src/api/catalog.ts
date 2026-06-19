@@ -70,7 +70,7 @@ export const catalogApi = {
    * Получить товар по ID
    */
   async getProduct(productId: string): Promise<Product> {
-    const response = await goldpcApi.catalog.getApiV1CatalogProductsProductId(productId);
+    const response = await goldpcApi.getApiV1CatalogProductsProductId(productId);
     const data = response.data as unknown as Product;
     if (data && typeof data.category === 'string' && data.category in CATEGORY_NAME_TO_SLUG) {
       data.category = CATEGORY_NAME_TO_SLUG[data.category] as ProductCategory;
@@ -82,7 +82,7 @@ export const catalogApi = {
    * Получить товар по slug
    */
   async getProductBySlug(slug: string): Promise<Product> {
-    const response = await goldpcApi.catalog.getApiV1CatalogProductsBySlugSlug(slug);
+    const response = await goldpcApi.getApiV1CatalogProductsBySlugSlug(slug);
     const data = response.data as unknown as Product;
     if (data && typeof data.category === 'string' && data.category in CATEGORY_NAME_TO_SLUG) {
       data.category = CATEGORY_NAME_TO_SLUG[data.category] as ProductCategory;
@@ -97,7 +97,7 @@ export const catalogApi = {
   async getProducts(params?: GetProductsParams): Promise<ProductListResponse> {
     const apiParams: Record<string, string | number | boolean | undefined> = {};
     if (params == null) {
-      const response = await goldpcApi.catalog.getApiV1CatalogProducts();
+      const response = await goldpcApi.getApiV1CatalogProducts();
       const data = response.data as unknown as ProductListResponse;
       if (data?.data && Array.isArray(data.data)) {
         for (const p of data.data) {
@@ -156,7 +156,7 @@ export const catalogApi = {
       return new URLSearchParams(pairs).toString();
     };
 
-    const response = await goldpcApi.catalog.getApiV1CatalogProducts(
+    const response = await goldpcApi.getApiV1CatalogProducts(
       apiParams as unknown as GetApiV1CatalogProductsParams,
       { paramsSerializer },
     );
@@ -176,7 +176,7 @@ export const catalogApi = {
    * Получить категории (дерево)
    */
   async getCategories(): Promise<Category[]> {
-    const response = await goldpcApi.catalog.getApiV1CatalogCategories();
+    const response = await goldpcApi.getApiV1CatalogCategories();
     const data = response.data as unknown as { data?: Category[]; categories?: Category[] } | Category[];
     if (Array.isArray(data)) {
       return data;
@@ -215,7 +215,7 @@ export const catalogApi = {
       }
       return new URLSearchParams(pairs).toString();
     };
-    const response = await goldpcApi.catalog.getApiV1CatalogCategoriesSlugFilterAttributes(
+    const response = await goldpcApi.getApiV1CatalogCategoriesSlugFilterAttributes(
       categorySlug,
       Object.keys(apiParams).length > 0 ? apiParams as never : undefined,
       { paramsSerializer },
@@ -255,7 +255,7 @@ export const catalogApi = {
       }
       return new URLSearchParams(pairs).toString();
     };
-    const response = await goldpcApi.catalog.getApiV1CatalogCategoriesSlugFilterFacets(
+    const response = await goldpcApi.getApiV1CatalogCategoriesSlugFilterFacets(
       categorySlug,
       Object.keys(apiParams).length > 0 ? apiParams as never : undefined,
       { paramsSerializer },
@@ -268,7 +268,7 @@ export const catalogApi = {
    */
   async getManufacturers(category?: string): Promise<Manufacturer[]> {
     const params = category ? { category } : {};
-    const response = await goldpcApi.catalog.getApiV1CatalogManufacturers(
+    const response = await goldpcApi.getApiV1CatalogManufacturers(
       Object.keys(params).length > 0 ? params as never : undefined,
     );
     const data = response.data as unknown as { data?: Manufacturer[] } | Manufacturer[];
@@ -297,7 +297,7 @@ export const catalogApi = {
    * Получить отзывы о товаре
    */
   async getProductReviews(productId: string, page: number = 1, pageSize: number = 5): Promise<ProductReviewsResponse> {
-    const response = await goldpcApi.catalog.getApiV1CatalogProductsProductIdReviews(productId, { page, pageSize });
+    const response = await goldpcApi.getApiV1CatalogProductsProductIdReviews(productId, { page, pageSize });
     return response.data as unknown as ProductReviewsResponse;
   },
 
@@ -305,7 +305,7 @@ export const catalogApi = {
    * Добавить отзыв о товаре
    */
   async addProductReview(productId: string, payload: CreateReviewRequest): Promise<ProductReview> {
-    const response = await goldpcApi.catalog.postApiV1CatalogProductsProductIdReviews(productId, payload);
+    const response = await goldpcApi.postApiV1CatalogProductsProductIdReviews(productId, payload);
     return response.data as unknown as ProductReview;
   },
 
@@ -313,7 +313,7 @@ export const catalogApi = {
    * Обновить отзыв о товаре
    */
   async updateProductReview(productId: string, reviewId: string, payload: UpdateReviewRequest): Promise<ProductReview> {
-    const response = await goldpcApi.catalog.putApiV1CatalogProductsProductIdReviewsReviewId(productId, reviewId, payload);
+    const response = await goldpcApi.putApiV1CatalogProductsProductIdReviewsReviewId(productId, reviewId, payload);
     return response.data as unknown as ProductReview;
   },
 
@@ -321,14 +321,14 @@ export const catalogApi = {
    * Удалить отзыв о товаре
    */
   async deleteProductReview(productId: string, reviewId: string): Promise<void> {
-    await goldpcApi.catalog.deleteApiV1CatalogProductsProductIdReviewsReviewId(productId, reviewId);
+    await goldpcApi.deleteApiV1CatalogProductsProductIdReviewsReviewId(productId, reviewId);
   },
 
   /**
    * Переключить helpful для отзыва
    */
   async toggleHelpful(productId: string, reviewId: string): Promise<void> {
-    await goldpcApi.catalog.patchApiV1CatalogProductsProductIdReviewsReviewIdHelpful(productId, reviewId);
+    await goldpcApi.patchApiV1CatalogProductsProductIdReviewsReviewIdHelpful(productId, reviewId);
   },
 
   /**
