@@ -1,6 +1,7 @@
 /**
  * useComparison Hook - Управление списком товаров для сравнения
  */
+import { useMemo } from 'react';
 import { useComparisonStore, type ComparisonItem } from '../store/comparisonStore';
 
 export interface UseComparisonReturn {
@@ -26,7 +27,7 @@ export function useComparison(): UseComparisonReturn {
   const canAdd = useComparisonStore((state) => state.canAdd);
   const getItems = useComparisonStore((state) => state.getItems);
 
-  return {
+  return useMemo(() => ({
     items,
     isInComparison,
     toggleComparison,
@@ -36,7 +37,10 @@ export function useComparison(): UseComparisonReturn {
     getCount,
     canAdd,
     getItems,
-  };
+  }), [
+    items, isInComparison, toggleComparison, addItem, removeItem,
+    clearComparison, getCount, canAdd, getItems,
+  ]);
 }
 
 export default useComparison;

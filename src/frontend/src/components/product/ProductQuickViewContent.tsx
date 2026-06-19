@@ -137,6 +137,10 @@ export function ProductQuickViewContent({
               src={activeImage.url}
               alt={activeImage.alt ?? product.name}
               className="w-[85%] h-[85%] object-contain block"
+              width={400}
+              height={400}
+              loading="eager"
+              fetchPriority="high"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-surface-card">
@@ -184,7 +188,7 @@ export function ProductQuickViewContent({
                     setCurrentImageIndex(index);
                   }}
                 >
-                  <img src={img.url} alt={img.alt ?? product.name} className="w-full h-full object-contain" />
+                  <img src={img.url} alt={img.alt ?? product.name} className="w-full h-full object-contain" width={54} height={54} loading="lazy" />
                 </button>
               ))}
             </div>

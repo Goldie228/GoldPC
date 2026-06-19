@@ -15,6 +15,7 @@ import { ProductGallery } from './components/ProductGallery';
 import { ProductInfo } from './components/ProductInfo';
 import { ReviewSection } from './components/ReviewSection';
 import { RelatedProducts } from './components/RelatedProducts';
+import { ProductJsonLd } from '@/components/seo/ProductJsonLd';
 import {
   trimDescriptionBeforeMain,
   splitDescriptionByHeadings,
@@ -281,6 +282,19 @@ export function ProductPage(): ReactElement {
       initial="hidden"
       animate="visible"
     >
+      <ProductJsonLd
+        name={product.name}
+        description={product.description ?? product.name}
+        price={product.price}
+        imageUrl={product.images?.[0]?.url ?? product.mainImage?.url ?? ''}
+        brand={product.brand}
+        sku={product.sku}
+        url={`${window.location.origin}/product/${product.slug}`}
+        ratingValue={typeof product.rating === 'number' ? product.rating : product.rating?.average}
+        reviewCount={product.reviewCount}
+        availability={product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'}
+      />
+
       <header className="flex items-center gap-2 text-xs text-muted-foreground pt-8 mb-8">
         <Breadcrumbs
           items={[

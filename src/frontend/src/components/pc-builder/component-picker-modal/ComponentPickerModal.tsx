@@ -141,7 +141,7 @@ function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }:
     <div className="relative w-full h-[200px] bg-white flex items-center justify-center overflow-hidden" onMouseLeave={() => setCurrentIdx(0)}>
       <div className="w-full h-full flex items-center justify-center p-2.5 box-border">
         {url
-          ? <img src={url} alt={product.name} loading="lazy" className="max-w-full max-h-full w-auto h-auto object-contain" />
+          ? <img src={url} alt={product.name} loading="lazy" className="max-w-full max-h-full w-auto h-auto object-contain" width={200} height={200} />
           : <div className="w-[30%] aspect-square rounded-full bg-surface-elevated opacity-50" />
         }
       </div>
@@ -244,7 +244,7 @@ function PickerProductCardCompact({ product, isSelected, isCompatible, onSelect,
       onClick={isCompatible === false ? undefined : () => onSelect(product)}
     >
       <div className="w-14 h-14 rounded-md bg-white p-1.5 flex items-center justify-center flex-shrink-0 box-border">
-        {url ? <img src={url} alt="" className="w-full h-full object-contain" /> : <div className="w-1/2 aspect-square rounded-full bg-zinc-200 opacity-50" />}
+        {url ? <img src={url} alt="" className="w-full h-full object-contain" width={56} height={56} loading="lazy" /> : <div className="w-1/2 aspect-square rounded-full bg-zinc-200 opacity-50" />}
       </div>
       <div className="flex-1 min-w-0">
         <h4 className="m-0 whitespace-nowrap overflow-hidden text-ellipsis">
@@ -286,7 +286,7 @@ function ImageMagnifier({ images, initIdx, onClose }: { images: string[]; initId
   return (
     <Modal isOpen onClose={onClose} title="Изображение товара" size="large" showCloseButton>
       <div className="flex flex-col items-center gap-4 py-4 pb-6">
-        <img src={cur} alt="Изображение товара" className="max-w-[90%] max-h-[75vh] w-auto h-auto object-contain bg-white rounded-2xl p-6 box-border shadow-[0_4px_24px_var(--border-muted)]" />
+        <img src={cur} alt="Изображение товара" className="max-w-[90%] max-h-[75vh] w-auto h-auto object-contain bg-white rounded-2xl p-6 box-border shadow-[0_4px_24px_var(--border-muted)]" width={800} height={600} loading="eager" />
         {images.length > 1 && (
           <div className="flex items-center gap-4">
             <button type="button" className="w-10 h-10 rounded-full border border-white/10 bg-black/60 text-body-text flex items-center justify-center cursor-pointer transition-all hover:bg-black/85 hover:border-gold"
@@ -692,6 +692,9 @@ export function ComponentPickerModal({
                 src={previewImageUrls[previewImgIdx]}
                 alt=""
                 className="max-w-[90%] max-h-[90%] w-auto h-auto object-contain"
+                width={240}
+                height={240}
+                loading="eager"
               />
               <button type="button" className="absolute bottom-2 right-2 w-9 h-9 rounded-full border border-[rgba(255,255,255,0.2)] bg-black/60 text-white/80 flex items-center justify-center cursor-pointer transition-all z-2 hover:bg-[rgba(0,0,0,0.8)] hover:text-white hover:border-gold"
                 onClick={() => setMagnifierIdx(previewImgIdx)}
@@ -706,7 +709,7 @@ export function ComponentPickerModal({
                     className={`w-11 h-11 rounded-md border border-white/5 bg-body-text p-[3px] flex-shrink-0 cursor-pointer flex items-center justify-center box-border transition-colors ${i === previewImgIdx ? "border-gold shadow-[0_0_0_1px_rgba(252,213,53,0.3)]" : ""}`}
                     onClick={() => setPreviewImgIdx(i)}
                   >
-                    <img src={img} alt="" />
+                    <img src={img} alt="" width={44} height={44} loading="lazy" />
                   </button>
                 ))}
               </div>

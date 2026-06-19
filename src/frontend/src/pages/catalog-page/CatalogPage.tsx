@@ -8,6 +8,7 @@ import { buildCatalogFilterChips } from '@/components/catalog/ActiveFiltersBar';
 import { ProductCardSkeleton } from '@/components/ui/Skeleton';
 import { ProductGrid } from '@/components/catalog/ProductGrid';
 import { ProductList } from '@/components/catalog/ProductList';
+import { EmptyState } from '@/components/catalog';
 import { useCatalog } from '@/hooks/useCatalog';
 import { useDebounce } from '@/hooks/useDebounce';
 import { formatCountRu, RU_FORMS } from '@/utils/pluralizeRu';
@@ -346,17 +347,17 @@ export function CatalogPage() {
     minRating,
     selectedAvailability,
     selectedSpecifications,
-    onClearSearch: () => setSearchQuery(''),
-    onClearPrice: () => setPriceRange({ min: 0, max: 0 }),
-    onClearManufacturers: () => setSelectedManufacturerIds([]),
-    onClearRating: () => setMinRating(0),
-    onClearAvailability: () => setSelectedAvailability([]),
-    onClearSpecKey: (key: string) => setSelectedSpecifications(prev => {
+    onClearSearch: useCallback(() => setSearchQuery(''), []),
+    onClearPrice: useCallback(() => setPriceRange({ min: 0, max: 0 }), []),
+    onClearManufacturers: useCallback(() => setSelectedManufacturerIds([]), []),
+    onClearRating: useCallback(() => setMinRating(0), []),
+    onClearAvailability: useCallback(() => setSelectedAvailability([]), []),
+    onClearSpecKey: useCallback((key: string) => setSelectedSpecifications(prev => {
       const next = { ...prev };
       delete next[key];
       return next;
-    }),
-    onClearCategory: () => handleCategoryChange(null),
+    }), []),
+    onClearCategory: useCallback(() => handleCategoryChange(null), [handleCategoryChange]),
   });
 
   const activeFilterCount = useMemo(() => {
@@ -370,12 +371,12 @@ export function CatalogPage() {
     return count;
   }, [selectedCategory, isCategoryLocked, priceRange, selectedManufacturerIds, minRating, selectedAvailability, selectedSpecifications]);
 
-  const handleAddToCart = (_productId: string) => {
+  const handleAddToCart = useCallback((_productId: string) => {
     telemetryTrack('catalog_add_to_cart', {
       category: selectedCategory ?? 'all',
       viewMode,
     });
-  };
+  }, [selectedCategory, viewMode]);
 
   const categoryName = selectedCategory 
     ? CATEGORY_LABELS_RU[selectedCategory] 
@@ -390,7 +391,7 @@ export function CatalogPage() {
             <div className="flex flex-row items-center gap-2 pt-2 pb-2">
                {/* Left: Title + count */}
                <div className="flex items-baseline gap-2 flex-shrink-0">
-                 <div className="font-bold text-body-text tracking-tight" style={{ fontSize: '24px' }}>{categoryName}</div>
+                  <div className="font-bold text-body-text tracking-tight text-xl">{categoryName}</div>
                   <span className="text-xs md:text-sm text-muted-text font-tabular" aria-live="polite">
                     {totalItems > 0 ? `${formatCountRu(totalItems, RU_FORMS.tovar)}` : 'Товары не найдены'}
                  </span>
@@ -704,20 +705,11 @@ export function CatalogPage() {
 
             {/* Empty State */}
             {!loading && !error && hasLoadedOnce && products.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <div className="w-16 h-16 rounded-full bg-surface-card flex items-center justify-center mb-5">
-                  <Search size={28} className="text-muted-text" />
-                </div>
-                <h3 className="text-lg font-bold text-body-text mb-2">Товары не найдены</h3>
-                <p className="text-sm text-muted-text max-w-xs mb-6">Попробуйте изменить фильтры или поисковый запрос</p>
-                <button 
-                  onClick={handleResetFilters}
-                  className="px-6 py-2.5 bg-gold/10 text-gold text-sm font-semibold rounded-lg hover:bg-gold/20 transition-colors"
-                  aria-label="Сбросить все фильтры"
-                >
-                  Сбросить фильтры
-                </button>
-              </div>
+              <EmptyState
+                title="Товары не найдены"
+                description="Попробуйте изменить фильтры или поисковый запрос"
+                onReset={handleResetFilters}
+              />
             )}
           </div>
         </div>

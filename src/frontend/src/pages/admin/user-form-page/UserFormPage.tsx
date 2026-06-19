@@ -274,7 +274,7 @@ export function UserFormPage() {
               }}
             />
             {avatarPreview ? (
-              <img src={avatarPreview} alt="Preview" className="w-20 h-20 object-cover border border-hairline-dark" />
+              <img src={avatarPreview} alt="Preview" className="w-20 h-20 object-cover border border-hairline-dark" width={80} height={80} loading="eager" />
             ) : (
               <div className="w-20 h-20 bg-surface-card border border-hairline-dark flex items-center justify-center text-muted-foreground text-2xl font-medium">
                 {getInitials()}

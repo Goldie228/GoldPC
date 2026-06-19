@@ -132,7 +132,7 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
         >
           {state !== 'empty' && imageUrl ? (
             <div className="component-slot__thumbnail">
-              <img src={imageUrl} alt={name} loading="lazy" />
+              <img src={imageUrl} alt={name} loading="lazy" width={64} height={64} />
             </div>
           ) : (
             icon

@@ -19,6 +19,19 @@
   font-display: swap;
 }
 
+/* Font metric overrides for CLS reduction — match fallback to Nunito Sans metrics */
+@font-face {
+  font-family: 'Nunito Sans Fallback';
+  src: local('Arial');
+  font-weight: 200 1000;
+  font-style: normal;
+  font-display: swap;
+  size-adjust: 100%;
+  ascent-override: 90%;
+  descent-override: 25%;
+  line-gap-override: 0%;
+}
+
 /* ======== Nunito (GoldPlex replacement — numbers / tabular data) ======== */
 @font-face {
   font-family: 'Nunito';
@@ -37,8 +50,8 @@
 
 @theme inline {
   /* Font definitions — Nunito Sans for display/body, Nunito for numbers */
-  --font-sans: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-sans: 'Nunito Sans', 'Nunito Sans Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Nunito Sans', 'Nunito Sans Fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'Nunito', 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, monospace;
   
   /* Color system */
