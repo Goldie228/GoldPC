@@ -8,27 +8,7 @@ import { Loader2 } from 'lucide-react';
 import type { ProductEditForm } from '../types';
 import type { ProductCategory } from '@/api/types';
 import { catalogAdminApi } from '@/api/admin';
-
-const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  cpu: 'Процессоры',
-  gpu: 'Видеокарты',
-  motherboard: 'Материнские платы',
-  ram: 'Оперативная память',
-  storage: 'Накопители',
-  psu: 'Блоки питания',
-  case: 'Корпуса',
-  cooling: 'Охлаждение',
-  fan: 'Вентиляторы',
-  monitor: 'Мониторы',
-  keyboard: 'Клавиатуры',
-  mouse: 'Мыши',
-  headphones: 'Наушники',
-};
-
-const CATEGORY_OPTIONS: ProductCategory[] = [
-  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu',
-  'case', 'cooling', 'fan', 'monitor', 'keyboard', 'mouse', 'headphones',
-];
+import { CATEGORY_LABELS, CATEGORY_ORDER } from '@/utils/category-mappings';
 
 interface BasicInfoTabProps {
   form: ProductEditForm;
@@ -108,7 +88,7 @@ export function BasicInfoTab({ form, onChange }: BasicInfoTabProps) {
           onChange={(e) => onChange('category', e.target.value)}
         >
           <option value="">Выберите категорию</option>
-          {CATEGORY_OPTIONS.map((cat) => (
+          {CATEGORY_ORDER.map((cat) => (
             <option key={cat} value={cat}>
               {CATEGORY_LABELS[cat]}
             </option>

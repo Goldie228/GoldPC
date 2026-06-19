@@ -14,24 +14,7 @@ import { StockBadge } from '@/components/ui/StockBadge';
 import { Skeleton } from '@/components/ui/Skeleton/Skeleton';
 import { PagePagination } from '@/components/ui/PagePagination';
 import { formatPrice } from '@/utils/format';
-
-/* ─── Маппинг категорий ─── */
-
-const CATEGORY_LABELS: Record<string, string> = {
-  cpu: 'Процессоры',
-  gpu: 'Видеокарты',
-  motherboard: 'Материнские платы',
-  ram: 'Оперативная память',
-  storage: 'Накопители',
-  psu: 'Блоки питания',
-  case: 'Корпуса',
-  cooling: 'Охлаждение',
-  fan: 'Вентиляторы',
-  monitor: 'Мониторы',
-  keyboard: 'Клавиатуры',
-  mouse: 'Мыши',
-  headphones: 'Наушники',
-};
+import { CATEGORY_LABELS } from '@/utils/category-mappings';
 
 /* ─── Фильтры ─── */
 

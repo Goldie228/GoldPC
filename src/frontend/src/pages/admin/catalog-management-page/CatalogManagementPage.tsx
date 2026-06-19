@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { catalogAdminApi, type CreateProductRequest } from '@/api/admin';
 import { useToast } from '@/hooks/useToast';
 import { hasValidProductImage } from '@/utils/image';
+import { CATEGORY_LABELS, CATEGORY_ORDER } from '@/utils/category-mappings';
 import type { Product, ProductCategory } from '@/api/types';
 import {
   Package,
@@ -24,27 +25,6 @@ import {
 import { ProductCardGrid } from '@/components/admin/product-card/ProductCardGrid';
 import { ViewToggle } from '@/components/admin/product-card/ViewToggle';
 import { ProductEditorDrawer } from '@/components/admin/product-editor/ProductEditorDrawer';
-
-const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  cpu: 'Процессоры',
-  gpu: 'Видеокарты',
-  motherboard: 'Материнские платы',
-  ram: 'Оперативная память',
-  storage: 'Накопители',
-  psu: 'Блоки питания',
-  case: 'Корпуса',
-  cooling: 'Охлаждение',
-  fan: 'Вентиляторы',
-  monitor: 'Мониторы',
-  keyboard: 'Клавиатуры',
-  mouse: 'Мыши',
-  headphones: 'Наушники',
-};
-
-const CATEGORY_OPTIONS: ProductCategory[] = [
-  'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu',
-  'case', 'cooling', 'fan', 'monitor', 'keyboard', 'mouse', 'headphones',
-];
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 
@@ -287,7 +267,7 @@ export function CatalogManagementPage() {
               }}
             >
               <option value="">Все категории</option>
-              {CATEGORY_OPTIONS.map((cat) => (
+              {CATEGORY_ORDER.map((cat) => (
                 <option key={cat} value={cat}>
                   {CATEGORY_LABELS[cat]}
                 </option>
@@ -616,7 +596,7 @@ export function CatalogManagementPage() {
                   onChange={(e) => setFormData({ ...formData, category: e.target.value as ProductCategory })}
                 >
                   <option value="">Выберите категорию</option>
-                  {CATEGORY_OPTIONS.map((cat) => (
+                  {CATEGORY_ORDER.map((cat) => (
                     <option key={cat} value={cat}>
                       {CATEGORY_LABELS[cat]}
                     </option>
