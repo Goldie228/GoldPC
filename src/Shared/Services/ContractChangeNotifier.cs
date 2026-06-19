@@ -120,46 +120,27 @@ public class ContractChangeNotifier : IContractChangeNotifier
                 changeEvent.MigrationGuide);
         }
 
-        // Вывод в консоль для наглядности (симуляция уведомления агентов)
-        Console.WriteLine();
-        Console.WriteLine(new string('═', 70));
-        Console.WriteLine($"  {changeTypeIcon} CONTRACT CHANGE NOTIFICATION");
-        Console.WriteLine(new string('═', 70));
-        Console.WriteLine($"  Contract:     {changeEvent.ContractName}");
-        Console.WriteLine($"  Version:      {changeEvent.PreviousVersion ?? "N/A"} → {changeEvent.NewVersion}");
-        Console.WriteLine($"  Change Type:  {changeEvent.ChangeType}");
-        Console.WriteLine($"  Changed By:   {changeEvent.ChangedBy ?? "Unknown"}");
-        Console.WriteLine($"  Event ID:     {changeEvent.EventId}");
-        Console.WriteLine($"  Timestamp:    {changeEvent.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC");
+        // Уведомление об изменении контракта через structured logging
+        var breakingChangesText = changeEvent.BreakingChanges.Count > 0
+            ? string.Join(", ", changeEvent.BreakingChanges)
+            : "нет";
+        var affectedEndpointsText = changeEvent.AffectedEndpoints.Count > 0
+            ? string.Join(", ", changeEvent.AffectedEndpoints)
+            : "нет";
 
-        if (changeEvent.BreakingChanges.Count > 0)
-        {
-            Console.WriteLine();
-            Console.WriteLine("  ⚠️  BREAKING CHANGES:");
-            foreach (var change in changeEvent.BreakingChanges)
-            {
-                Console.WriteLine($"      - {change}");
-            }
-        }
-
-        if (changeEvent.AffectedEndpoints.Count > 0)
-        {
-            Console.WriteLine();
-            Console.WriteLine("  🔗 AFFECTED ENDPOINTS:");
-            foreach (var endpoint in changeEvent.AffectedEndpoints)
-            {
-                Console.WriteLine($"      - {endpoint}");
-            }
-        }
-
-        if (!string.IsNullOrEmpty(changeEvent.MigrationGuide))
-        {
-            Console.WriteLine();
-            Console.WriteLine($"  📖 MIGRATION GUIDE: {changeEvent.MigrationGuide}");
-        }
-
-        Console.WriteLine(new string('═', 70));
-        Console.WriteLine();
+        _logger.LogWarning(
+            "{Icon} CONTRACT CHANGE NOTIFICATION — Contract: {ContractName}, Version: {PreviousVersion} → {NewVersion}, Type: {ChangeType}, ChangedBy: {ChangedBy}, EventId: {EventId}, Timestamp: {Timestamp:yyyy-MM-dd HH:mm:ss} UTC, BreakingChanges: {BreakingChanges}, AffectedEndpoints: {AffectedEndpoints}, MigrationGuide: {MigrationGuide}",
+            changeTypeIcon,
+            changeEvent.ContractName,
+            changeEvent.PreviousVersion ?? "N/A",
+            changeEvent.NewVersion,
+            changeEvent.ChangeType,
+            changeEvent.ChangedBy ?? "Unknown",
+            changeEvent.EventId,
+            changeEvent.CreatedAt,
+            breakingChangesText,
+            affectedEndpointsText,
+            changeEvent.MigrationGuide ?? "Нет");
     }
 
     /// <summary>
