@@ -1,4 +1,5 @@
 import api from './index';
+import { FRONTEND_TO_BACKEND, CATEGORY_NAME_TO_SLUG } from '@/utils/category-mappings';
 import type {
   ProductListResponse,
   GetProductsParams,
@@ -37,40 +38,6 @@ export async function getProducts(params?: GetProductsParams): Promise<ProductLi
 export async function getCategories(): Promise<Category[]> {
   return catalogApi.getCategories();
 }
-
-/** Маппинг frontend category -> backend slug для API */
-const FRONTEND_TO_BACKEND_SLUG: Record<ProductCategory, string> = {
-  cpu: 'processors',
-  gpu: 'gpu',
-  motherboard: 'motherboards',
-  ram: 'ram',
-  storage: 'storage',
-  psu: 'psu',
-  case: 'cases',
-  cooling: 'coolers',
-  monitor: 'monitors',
-  keyboard: 'keyboards',
-  mouse: 'mice',
-  headphones: 'headphones',
-  fan: 'coolers',
-};
-
-/** Маппинг русских названий категорий из API -> frontend slug */
-const CATEGORY_NAME_TO_SLUG: Record<string, ProductCategory> = {
-  'Процессоры': 'cpu',
-  'Видеокарты': 'gpu',
-  'Материнские платы': 'motherboard',
-  'Оперативная память': 'ram',
-  'Накопители': 'storage',
-  'Блоки питания': 'psu',
-  'Корпуса': 'case',
-  'Охлаждение': 'cooling',
-  'Вентиляторы': 'fan',
-  'Мониторы': 'monitor',
-  'Клавиатуры': 'keyboard',
-  'Мыши': 'mouse',
-  'Наушники': 'headphones',
-};
 
 /**
  * API сервиса каталога
@@ -123,8 +90,8 @@ export const catalogApi = {
       // Увеличиваем pageSize, чтобы все диски попали в первый запрос.
       apiParams.pageSize = 200;
     }
-    if (params.category && FRONTEND_TO_BACKEND_SLUG[params.category]) {
-      apiParams.category = FRONTEND_TO_BACKEND_SLUG[params.category];
+    if (params.category && FRONTEND_TO_BACKEND[params.category]) {
+      apiParams.category = FRONTEND_TO_BACKEND[params.category];
     }
     if (params.search) apiParams.search = params.search;
     if (params.priceMin != null && params.priceMin > 0) apiParams.priceMin = params.priceMin;

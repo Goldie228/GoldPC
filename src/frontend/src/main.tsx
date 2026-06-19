@@ -2,14 +2,9 @@ import { StrictMode, lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './index.css'          // Новые прототипные tokens + Tailwind (первый!)
-import './styles/tokens.css' // Старые дизайн-tokens (сохранена оболочка)
 import './styles/globals.css'
 import './styles/staff.css'
 import App from './App.tsx'
-import { initializePWA } from './utils/pwa'
-
-// Initialize PWA service worker
-initializePWA()
 
 // Lazy load React Query DevTools - only in development and only when needed
 const ReactQueryDevtools = lazy(() => 
@@ -21,19 +16,17 @@ const ReactQueryDevtools = lazy(() =>
 const enableReactQueryDevtools =
   import.meta.env.DEV && import.meta.env.VITE_ENABLE_QUERY_DEVTOOLS === 'true'
 
-// Создаем QueryClient с настройками по умолчанию + PWA оффлайн поддержка
+// Создаем QueryClient с настройками по умолчанию
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 минут - данные считаются свежими
-      gcTime: 24 * 60 * 60 * 1000, // 24 часа для оффлайн доступа
+      gcTime: 24 * 60 * 60 * 1000, // 24 часа кэширования
       retry: 1, // Одна попытка повторного запроса при ошибке
       refetchOnWindowFocus: false, // Не обновлять при фокусе окна
-      networkMode: 'offlineFirst' // Оффлайн-first режим для PWA
     },
     mutations: {
       retry: 3, // 3 попытки повторного запроса при ошибке мутации
-      networkMode: 'offlineFirst',
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
   },

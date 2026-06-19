@@ -7,8 +7,8 @@ public class FileService : IFileService
 {
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<FileService> _logger;
-    private static readonly List<ProductImageDto> _images = new();
-    private static readonly object _lock = new();
+    private readonly List<ProductImageDto> _images = new();
+    private readonly object _lock = new();
 
     private static readonly HashSet<string> _allowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {

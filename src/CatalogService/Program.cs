@@ -320,8 +320,8 @@ if (args is ["seed-xcore-images"] or ["seed-xcore-images", _])
     }
     if (!File.Exists(jsonPath))
     {
-        Console.WriteLine($"Файл не найден: {jsonPath}");
-        Console.WriteLine("Сначала выполните: cd scripts/scraper && node fetch-product-images.mjs");
+        Log.Warning("Файл не найден: {JsonPath}", jsonPath);
+        Log.Information("Сначала выполните: cd scripts/scraper && node fetch-product-images.mjs");
         return 1;
     }
     using var scope = app.Services.CreateScope();
@@ -361,8 +361,8 @@ if (args is ["seed-xcore-images-merge"] or ["seed-xcore-images-merge", _])
 
     if (!File.Exists(jsonPath))
     {
-        Console.WriteLine($"Файл не найден: {jsonPath}");
-        Console.WriteLine("Сначала выполните: cd scripts/scraper && npm run fetch-images");
+        Log.Warning("Файл не найден: {JsonPath}", jsonPath);
+        Log.Information("Сначала выполните: cd scripts/scraper && npm run fetch-images");
         return 1;
     }
 
@@ -399,7 +399,7 @@ if (args is ["seed-catalog-reset"] or ["seed-xcore-reset"])
 
     if (!File.Exists(productsPath))
     {
-        Console.WriteLine($"Файл не найден: {productsPath}");
+        Log.Warning("Файл не найден: {ProductsPath}", productsPath);
         return 1;
     }
 
@@ -519,7 +519,7 @@ if (args is ["seed-filter-attributes"] or ["seed-filter-attributes", _])
     }
     if (!File.Exists(jsonPath))
     {
-        Console.WriteLine($"Файл не найден: {jsonPath}");
+        Log.Warning("Файл не найден: {JsonPath}", jsonPath);
         return 1;
     }
     using var scope = app.Services.CreateScope();
@@ -593,7 +593,6 @@ if (args is ["delete-demo-catalog-products"])
         context.Products.RemoveRange(toDelete);
         await context.SaveChangesAsync();
         logger.LogInformation("Удалено демо-товаров каталога: {Count}", toDelete.Count);
-        Console.WriteLine($"Удалено демо-товаров: {toDelete.Count}");
     }
     catch (Exception ex)
     {
@@ -702,7 +701,8 @@ if (args is ["migrate-descriptions-to-specs"])
         logger.LogInformation(
             "Миграция описаний завершена: обработано {Processed}, найдено пар {ParsedPairs}, сопоставлено {Mapped}, сохранено {Saved}, пропущено {Skipped}, ошибок {Errors}",
             result.Processed, result.ParsedPairs, result.Mapped, result.Saved, result.Skipped, result.Errors);
-        Console.WriteLine($"Processed: {result.Processed}, Parsed: {result.ParsedPairs}, Mapped: {result.Mapped}, Saved: {result.Saved}, Skipped: {result.Skipped}, Errors: {result.Errors}");
+        logger.LogInformation("Processed: {Processed}, Parsed: {ParsedPairs}, Mapped: {Mapped}, Saved: {Saved}, Skipped: {Skipped}, Errors: {Errors}",
+            result.Processed, result.ParsedPairs, result.Mapped, result.Saved, result.Skipped, result.Errors);
     }
     catch (Exception ex)
     {

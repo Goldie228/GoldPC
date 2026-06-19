@@ -880,6 +880,11 @@ public class CatalogService : ICatalogService
                     .Where(HasLocallyStoredImage)
                     .Select(MapToImageDto)
                     .FirstOrDefault(),
+            // Все изображения товара для галереи в карточке (убирает N+1 запрос)
+            Images = product.Images
+                .Where(HasLocallyStoredImage)
+                .Select(MapToImageDto)
+                .ToList(),
             Rating = product.Rating > 0 ? new RatingDto { Average = product.Rating, Count = product.ReviewCount } : null,
             IsActive = product.IsActive,
             DescriptionShort = descShort,
