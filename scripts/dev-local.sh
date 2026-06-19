@@ -89,6 +89,7 @@ run_with_heartbeat() {
 FRONTEND_ONLY=false
 BACKEND_ONLY=false
 INFRA_ONLY=false
+RESET_DB=false
 SKIP_SEED=false
 TAIL_LOGS=false
 
@@ -104,6 +105,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --infra-only)
             INFRA_ONLY=true
+            shift
+            ;;
+        --reset)
+            RESET_DB=true
             shift
             ;;
         --skip-seed)
@@ -172,11 +177,54 @@ check_port() {
     return 0
 }
 
+# Kill process occupying a port. Returns 0 if port is now free, 1 if still occupied.
+free_port() {
+    local port=$1
+
+    # First try: if it's a Docker container proxy, stop the container
+    local container_id
+    container_id=$(sudo lsof -i :"$port" -sTCP:LISTEN -t 2>/dev/null | head -1)
+    if [ -n "$container_id" ]; then
+        # Find the container that maps this port
+        local container_name
+        container_name=$(sudo docker ps --filter "publish=$port" --format '{{.Names}}' 2>/dev/null | head -1)
+        if [ -n "$container_name" ]; then
+            log_warn "Port $port occupied by container '$container_name' — stopping & removing it..."
+            sudo docker stop "$container_name" >/dev/null 2>&1
+            sudo docker rm "$container_name" >/dev/null 2>&1
+            sleep 1
+            if check_port "$port"; then
+                log_ok "Port $port freed (removed container '$container_name')"
+                return 0
+            fi
+        fi
+    fi
+
+    # Second try: kill the process directly
+    local pids
+    pids=$(sudo lsof -i :"$port" -sTCP:LISTEN -t 2>/dev/null)
+    if [ -n "$pids" ]; then
+        for pid in $pids; do
+            local proc_name
+            proc_name=$(ps -p "$pid" -o comm= 2>/dev/null || echo "unknown")
+            log_warn "Port $port occupied by $proc_name (PID $pid) — killing..."
+            sudo kill "$pid" 2>/dev/null
+        done
+        sleep 1
+        if check_port "$port"; then
+            log_ok "Port $port freed"
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
 # Pre-flight environment validation
 check_env() {
     echo -e "${CYAN}Validating environment...${RESET}"
     local missing_tools=0
-    
+
     for tool in dotnet node docker npm rsync; do
         if ! command -v "$tool" &> /dev/null; then
             echo -e "${RED}✗ $tool is not installed${RESET}"
@@ -195,8 +243,10 @@ check_env() {
     local ports=(5000 5001 5002 5003 5004 5005 5173 5434 6379)
     for port in "${ports[@]}"; do
         if ! check_port "$port"; then
-            echo -e "${RED}✗ Port $port is already in use${RESET}"
-            exit 1
+            if ! free_port "$port"; then
+                echo -e "${RED}✗ Port $port is already in use and could not be freed${RESET}"
+                exit 1
+            fi
         fi
     done
     echo -e "${GREEN}✓ All required ports are available${RESET}"
@@ -229,14 +279,27 @@ cleanup() {
 trap cleanup SIGINT SIGTERM EXIT
 
 # Function to wait for service health
+# Usage: wait_for_health URL NAME [PID] [LOG_FILE]
 wait_for_health() {
     local url=$1
     local name=$2
+    local pid=$3
+    local log_file=$4
     local timeout=120
     local count=0
-    
+
     echo -ne "${CYAN}Waiting for $name to be ready...${RESET}"
     while [ $count -lt $timeout ]; do
+        # Check if process is still alive
+        if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
+            echo -e " ${RED}CRASHED${RESET}"
+            echo -e "${RED}  ✗ $name process exited unexpectedly.${RESET}"
+            if [ -n "$log_file" ] && [ -f "$log_file" ]; then
+                echo -e "${RED}  Last 10 lines of log:${RESET}"
+                tail -n 10 "$log_file" | sed 's/^/    │ /'
+            fi
+            return 1
+        fi
         if curl -sf "$url" >/dev/null 2>&1; then
             echo -e " ${GREEN}OK${RESET}"
             return 0
@@ -246,11 +309,31 @@ wait_for_health() {
         count=$((count + 1))
     done
     echo -e " ${RED}FAILED (timeout)${RESET}"
+    if [ -n "$log_file" ] && [ -f "$log_file" ]; then
+        echo -e "${RED}  Last 10 lines of $name log:${RESET}"
+        tail -n 10 "$log_file" | sed 's/^/    │ /'
+    fi
     return 1
+}
+
+# Auto-generate JWT_SECRET if still placeholder
+ensure_jwt_secret() {
+    local env_file="$PROJECT_DIR/.env"
+    if [ ! -f "$env_file" ]; then
+        cp "$PROJECT_DIR/.env.example" "$env_file"
+    fi
+    if grep -q "CHANGE_ME" "$env_file" 2>/dev/null; then
+        local secret
+        secret=$(openssl rand -base64 32)
+        sed -i "s|JWT_SECRET=.*|JWT_SECRET=$secret|" "$env_file"
+        sed -i "s|ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$(openssl rand -base64 32)|" "$env_file"
+        log_ok "Generated JWT_SECRET and ENCRYPTION_KEY in .env"
+    fi
 }
 
 # Function to start infrastructure
 start_infra() {
+    ensure_jwt_secret
     echo -e "${CYAN}Starting infrastructure (PostgreSQL, Redis, RabbitMQ)...${RESET}"
     docker compose -f "$PROJECT_DIR/docker/docker-compose.yml" up -d postgres redis rabbitmq
     
@@ -302,6 +385,15 @@ start_infra() {
     done
     if [ $count -eq $rabbit_timeout ]; then
         echo -e " ${RED}FAILED (timeout)${RESET}"
+    fi
+
+    # Reset databases if requested
+    if [ "$RESET_DB" = true ]; then
+        echo -e "${YELLOW}Resetting databases (--reset)...${RESET}"
+        for db in goldpc_catalog goldpc_auth goldpc_orders goldpc_services goldpc_warranty goldpc_pcbuilder; do
+            docker exec goldpc-postgres psql -U postgres -c "DROP DATABASE IF EXISTS $db;" 2>/dev/null || true
+        done
+        echo -e "${GREEN}✓ Databases dropped${RESET}"
     fi
 
     # Create databases if not exist
@@ -409,11 +501,9 @@ start_backend() {
         fi
 
         # Wait for health before starting next service
-        wait_for_health "http://localhost:$port$health_path" "$name"
-        if [ $? -ne 0 ]; then
-            echo -e "${RED}✗ $name health check failed${RESET}"
-            echo -e "${CYAN}Last 15 lines of ${name,,}.log:${RESET}"
-            tail -15 "$LOG_DIR/${name,,}.log" 2>/dev/null | sed 's/^/  /'
+        local log_file="$LOG_DIR/${name,,}.log"
+        if ! wait_for_health "http://localhost:$port$health_path" "$name" "$pid" "$log_file"; then
+            echo -e "${RED}✗ $name failed to start. Fix the errors above and retry.${RESET}"
             exit 1
         fi
     done

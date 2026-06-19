@@ -52,7 +52,7 @@ if [ "$REG_SUCCESS" = "True" ]; then
 
   # Promote to Admin role via psql
   echo "🔧 Promoting to Admin role..."
-  if PGPASSWORD=admin psql -h localhost -p 5434 -U postgres -d goldpc_auth \
+  if PGPASSWORD=admin psql -h localhost -p 5432 -U postgres -d goldpc_auth \
     -c "UPDATE users SET \"Role\" = 'Admin' WHERE \"Email\" = '$ADMIN_EMAIL';" 2>/dev/null; then
     echo "✅ User promoted to Admin"
   else
