@@ -1,6 +1,10 @@
 /**
- * Конфигурация orval для генерации TypeScript-типов, API-функций и Zod-схем
+ * Конфигурация orval для генерации TypeScript-типов и API-функций
  * из OpenAPI спецификации GoldPC
+ *
+ * React Query хуки — пишутся вручную (орval генерирует fetch-based,
+ * а нам нужен Axios с JWT/CSRF перехватчиками).
+ * Zod-схемы — генерируются отдельным output.
  */
 import { defineConfig } from 'orval';
 
@@ -10,7 +14,7 @@ export default defineConfig({
       target: './openapi/gateway.json',
     },
     output: {
-      target: './src/api/generated/index.ts',
+      target: './src/api/generated/api.ts',
       schemas: './src/api/generated/model',
       client: 'axios',
       override: {
@@ -18,11 +22,16 @@ export default defineConfig({
           instance: 'apiClient',
           importPath: '@/api/client',
         },
-        query: {
-          useQuery: true,
-          useMutation: true,
-        },
       },
+    },
+  },
+  goldpcZod: {
+    input: {
+      target: './openapi/gateway.json',
+    },
+    output: {
+      target: './src/api/generated/zod.ts',
+      client: 'zod',
     },
   },
 });

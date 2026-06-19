@@ -3,7 +3,7 @@
  * Бэкенд: WarrantyService (порт 5006)
  */
 
-import apiClient from './client';
+import { goldpcApi } from './generated/client';
 
 export type WarrantyStatus = 'active' | 'expired' | 'annulled';
 
@@ -90,14 +90,13 @@ export const warrantyApi = {
    */
   async getMyCards(page = 1, pageSize = 10): Promise<PagedResult<WarrantyCard>> {
     try {
-      const response = await apiClient.get<ApiResponse<{
+      const response = await goldpcApi.getApiV1WarrantyCardMy({ page, pageSize });
+      const raw = unwrap(response.data as ApiResponse<{
         items: unknown[];
         totalCount: number;
         pageNumber: number;
         pageSize: number;
-      }>>('/warranty/card/my', { params: { page, pageSize } });
-
-      const raw = unwrap(response.data);
+      }>);
 
       return {
         items: (raw.items ?? []).map((item) => mapCard(item as Parameters<typeof mapCard>[0])),
@@ -115,10 +114,8 @@ export const warrantyApi = {
    * Получить гарантийную карту по ID
    */
   async getCard(id: string): Promise<WarrantyCard> {
-    const response = await apiClient.get<ApiResponse<Parameters<typeof mapCard>[0]>>(
-      `/warranty/card/${id}`
-    );
-    const raw = unwrap(response.data);
+    const response = await goldpcApi.getApiV1WarrantyCardId(id);
+    const raw = unwrap(response.data as ApiResponse<Parameters<typeof mapCard>[0]>);
     return mapCard(raw);
   },
 };

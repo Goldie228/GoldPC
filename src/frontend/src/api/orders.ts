@@ -1,10 +1,4 @@
-import apiClient from './client';
-
-interface ApiResponse<T> {
-  data?: T;
-  success?: boolean;
-  message?: string;
-}
+import { goldpcApi } from './generated/client';
 
 interface ApiErrorResponse {
   message?: string;
@@ -114,9 +108,10 @@ export interface PagedResult<T> {
   pageSize: number;
 }
 
-function unwrap<T>(response: T | ApiResponse<T>): T {
-  if (response != null && typeof response === 'object' && 'data' in (response as object)) {
-    const wrapped = response as ApiResponse<T>;
+/** Extract data from ApiResponse wrapper (success + data envelope) */
+function unwrapResponse<T>(data: unknown): T {
+  if (data != null && typeof data === 'object' && 'data' in (data as object)) {
+    const wrapped = data as { data?: T };
     if (wrapped.data !== undefined) return wrapped.data;
   }
   throw new Error('Unable to unwrap API response: data is undefined');
@@ -124,54 +119,80 @@ function unwrap<T>(response: T | ApiResponse<T>): T {
 
 export const ordersApi = {
   /**
-   * Пولучить расчёт стоимости доставки
+   * Получить расчёт стоимости доставки
    */
   async getDeliveryQuote(payload: DeliveryQuoteRequest): Promise<DeliveryQuoteResponse> {
-    const response = await apiClient.post<ApiResponse<DeliveryQuoteResponse>>(
-      '/orders/delivery/quote',
-      payload
-    );
-    return unwrap<DeliveryQuoteResponse>(response.data);
+    const response = await goldpcApi.postApiV1OrdersDeliveryQuote({
+      deliveryMethod: payload.deliveryMethod,
+      subtotal: payload.subtotal,
+      city: payload.city ?? null,
+    });
+    const result = unwrapResponse<{ subtotal?: number; deliveryCost?: number; total?: number }>(response.data);
+    return {
+      subtotal: result.subtotal ?? 0,
+      deliveryCost: result.deliveryCost ?? 0,
+      total: result.total ?? 0,
+    };
   },
 
   /**
    * Создать новый заказ
    */
   async createOrder(data: CreateOrderRequest): Promise<Order> {
-    const response = await apiClient.post<ApiResponse<Order>>('/orders', data);
-    return unwrap<Order>(response.data);
+    const response = await goldpcApi.postApiV1Orders({
+      firstName: data.firstName,
+      lastName: data.lastName ?? null,
+      phone: data.phone,
+      email: data.email,
+      deliveryMethod: data.deliveryMethod,
+      paymentMethod: data.paymentMethod,
+      address: data.address ?? null,
+      city: data.city ?? null,
+      comment: data.comment ?? null,
+      promoCode: data.promoCode ?? null,
+      discountAmount: data.discountAmount,
+      deliveryDate: data.deliveryDate ?? null,
+      deliveryTimeSlot: data.deliveryTimeSlot ?? null,
+      items: data.items.map((item) => ({
+        productId: item.productId,
+        productName: item.productName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      })),
+    });
+    return unwrapResponse<Order>(response.data);
   },
 
   /**
-   * Пولучить мои заказы
+   * Получить мои заказы
    */
   async getMyOrders(page = 1, pageSize = 10, status?: string): Promise<PagedResult<Order>> {
-    const params: Record<string, string | number> = { page, pageSize };
-    if (status != null && status !== '') {
-      params.status = status;
-    }
-    const response = await apiClient.get<ApiResponse<PagedResult<Order>>>('/orders/my', { params });
-    return unwrap<PagedResult<Order>>(response.data);
+    const response = await goldpcApi.getApiV1OrdersMy({
+      page,
+      pageSize,
+      ...(status != null && status !== '' ? { status: Number(status) as never } : {}),
+    });
+    return unwrapResponse<PagedResult<Order>>(response.data);
   },
 
   /**
-   * Пولучить заказ по ID
+   * Получить заказ по ID
    */
   async getOrder(id: string): Promise<Order> {
-    const response = await apiClient.get<ApiResponse<Order>>(`/orders/${id}`);
-    return unwrap<Order>(response.data);
+    const response = await goldpcApi.getApiV1OrdersId(id);
+    return unwrapResponse<Order>(response.data);
   },
 
   /**
-   * Пولучить заказ по номеру
+   * Получить заказ по номеру
    */
   async getOrderByNumber(orderNumber: string): Promise<Order> {
-    const response = await apiClient.get<ApiResponse<Order>>(`/orders/number/${orderNumber}`);
-    return unwrap<Order>(response.data);
+    const response = await goldpcApi.getApiV1OrdersNumberOrderNumber(orderNumber);
+    return unwrapResponse<Order>(response.data);
   },
 
   /**
-   * Пولучить информацию об отслеживании заказа
+   * Получить информацию об отслеживании заказа
    */
   async getOrderTracking(orderNumber: string): Promise<Order> {
     return this.getOrderByNumber(orderNumber);
@@ -181,7 +202,7 @@ export const ordersApi = {
    * Отменить заказ
    */
   async cancelOrder(id: string): Promise<Order> {
-    const response = await apiClient.post<ApiResponse<Order>>(`/orders/${id}/cancel`);
-    return unwrap<Order>(response.data);
+    const response = await goldpcApi.postApiV1OrdersIdCancel(id);
+    return unwrapResponse<Order>(response.data);
   },
 };

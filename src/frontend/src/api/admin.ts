@@ -1,8 +1,13 @@
 /**
  * API для административных функций
+ *
+ * Использует сгенерированные orval-функции (goldpcApi) там, где есть
+ * соответствующие эндпоинты в OpenAPI-спецификации. Для эндпоинтов,
+ * отсутствующих в спеке, сохранены ручные вызовы через apiClient.
  */
 
 import api from './index';
+import { goldpcApi } from './generated/client';
 import { CATEGORY_NAME_TO_SLUG, FRONTEND_TO_BACKEND } from '@/utils/category-mappings';
 import type { ProductImage, User, Product, PagedResponse, ProductCategory, PriceHistoryDto, CategorySpecificationsDto } from './types';
 export type { ProductImage, User, Product, PagedResponse, ProductCategory, PriceHistoryDto } from './types';
@@ -70,31 +75,37 @@ export interface ActivityResponse {
   items: ActivityItem[];
 }
 
-export interface UpdateUserRoleRequest {
-  role: UserRole;
+// === Типы для аудит-лога ===
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  userId?: string;
+  userName?: string;
+  action: string;
+  entity: string;
+  entityId?: string;
+  details?: Record<string, unknown>;
+  ipAddress?: string;
 }
 
-export interface UpdateUserRequest {
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  role?: UserRole;
-  isActive?: boolean;
+export interface AuditLogResponse {
+  entries: AuditLogEntry[];
+  total: number;
 }
 
-export interface CreateUserRequest {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-  role: UserRole;
-  password: string;
+export interface AuditLogParams {
+  page?: number;
+  pageSize?: number;
+  action?: string;
+  entity?: string;
+  userId?: string;
+  from?: string;
+  to?: string;
 }
 
-/**
- * Тело запроса обновления товара — соответствует UpdateProductDto из SharedKernel
- */
+// === Типы для продуктов (админ) ===
+
 export interface UpdateProductRequest {
   name?: string;
   slug?: string;
@@ -104,52 +115,90 @@ export interface UpdateProductRequest {
   stock?: number;
   warrantyMonths?: number;
   description?: string;
-  specifications?: Record<string, string | number | boolean>;
+  specifications?: Record<string, unknown>;
   isActive?: boolean;
   isFeatured?: boolean;
 }
 
-/**
- * Тело запроса создания товара — соответствует CreateProductDto из SharedKernel
- */
 export interface CreateProductRequest {
-  name: string;
-  sku: string;
+  name?: string;
+  sku?: string;
   slug?: string;
-  category: string;
+  category?: string;
   categoryId?: string;
   manufacturerId?: string;
-  price: number;
+  price?: number;
   oldPrice?: number;
-  stock: number;
+  stock?: number;
   warrantyMonths?: number;
   description?: string;
-  specifications?: Record<string, string | number | boolean>;
+  specifications?: Record<string, unknown>;
   isActive?: boolean;
   isFeatured?: boolean;
 }
 
-export interface GetUsersParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  role?: UserRole;
+// === Типы для справочников ===
+
+export interface DictionaryItem {
+  id: string;
+  name: string;
+  slug?: string;
+  description?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DictionaryCategory extends DictionaryItem {
+  productCount?: number;
+}
+
+export interface DictionaryManufacturer extends DictionaryItem {
+  country?: string;
+  logo?: string;
+  productCount?: number;
+}
+
+export interface CreateDictionaryItemRequest {
+  name: string;
+  slug?: string;
+  description?: string;
   isActive?: boolean;
 }
 
-export type UserListResponse = PagedResponse<User>;
+export interface UpdateDictionaryItemRequest {
+  name?: string;
+  slug?: string;
+  description?: string;
+  isActive?: boolean;
+}
 
 /**
- * API администрирования пользователей
+ * Параметры фильтрации для каталога товаров (админ).
+ */
+export interface AdminProductFilter {
+  page?: number;
+  pageSize?: number;
+  category?: string;
+  search?: string;
+  isActive?: boolean;
+}
+
+/**
+ * API управления пользователями
  */
 export const usersAdminApi = {
   /**
-   * Получить список пользователей с пагинацией
+   * Получить список пользователей с пагинацией и фильтрами
    */
-  async getUsers(params?: GetUsersParams): Promise<UserListResponse> {
-    const response = await api.get<UserListResponse>('/admin/users', {
-      params,
-    });
+  async getUsers(params?: {
+    page?: number;
+    pageSize?: number;
+    role?: string;
+    search?: string;
+    isActive?: boolean;
+  }): Promise<PagedResponse<User>> {
+    const response = await api.get<PagedResponse<User>>('/auth/admin/users', { params });
     return response.data;
   },
 
@@ -157,55 +206,58 @@ export const usersAdminApi = {
    * Получить пользователя по ID
    */
   async getUser(userId: string): Promise<User> {
-    const response = await api.get<User>(`/admin/users/${userId}`);
-    return response.data;
+    const response = await goldpcApi.getApiV1AuthAdminUsersId(userId);
+    return response.data as User;
   },
 
   /**
    * Изменить роль пользователя
    */
-  async updateUserRole(userId: string, data: UpdateUserRoleRequest): Promise<User> {
-    const response = await api.patch<User>(`/admin/users/${userId}/role`, data);
-    return response.data;
+  async updateUserRole(userId: string, role: UserRole): Promise<void> {
+    await api.patch(`/auth/admin/users/${userId}/role`, { role });
   },
 
   /**
    * Деактивировать пользователя
    */
-  async deactivateUser(userId: string): Promise<User> {
-    const response = await api.post<User>(`/admin/users/${userId}/deactivate`);
-    return response.data;
+  async deactivateUser(userId: string): Promise<void> {
+    await goldpcApi.postApiV1AuthAdminUsersIdDeactivate(userId);
   },
 
   /**
    * Активировать пользователя
    */
-  async activateUser(userId: string): Promise<User> {
-    const response = await api.post<User>(`/admin/users/${userId}/activate`);
-    return response.data;
+  async activateUser(userId: string): Promise<void> {
+    await goldpcApi.postApiV1AuthAdminUsersIdActivate(userId);
   },
 
   /**
    * Обновить пользователя
    */
-  async updateUser(userId: string, data: UpdateUserRequest): Promise<User> {
-    const response = await api.put<User>(`/admin/users/${userId}`, data);
+  async updateUser(userId: string, data: Partial<User>): Promise<User> {
+    const response = await api.put<User>(`/auth/admin/users/${userId}`, data);
     return response.data;
   },
 
   /**
-   * Создать нового пользователя (только Admin)
+   * Создать нового пользователя
    */
-  async createUser(data: CreateUserRequest): Promise<User> {
-    const response = await api.post<User>('/admin/users', data);
-    return response.data;
+  async createUser(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role: string;
+  }): Promise<User> {
+    const response = await goldpcApi.postApiV1AuthAdminUsers(data);
+    return response.data as User;
   },
 
   /**
    * Удалить пользователя
    */
   async deleteUser(userId: string): Promise<void> {
-    await api.delete(`/admin/users/${userId}`);
+    await goldpcApi.deleteApiV1AuthAdminUsersId(userId);
   },
 };
 
@@ -232,10 +284,8 @@ export const catalogAdminApi = {
       ? { ...params, category: FRONTEND_TO_BACKEND[params.category as keyof typeof FRONTEND_TO_BACKEND] ?? params.category }
       : params;
 
-    const response = await api.get<PagedResponse<Product>>('/admin/products', {
-      params: apiParams,
-    });
-    const result = response.data;
+    const response = await goldpcApi.getApiV1AdminProducts(apiParams);
+    const result = response.data as PagedResponse<Product>;
 
     // Нормализуем category: CatalogService возвращает "Процессоры", а фронтенд ждёт "cpu"
     if (result?.data && Array.isArray(result.data)) {
@@ -254,30 +304,31 @@ export const catalogAdminApi = {
    * Обновить продукт
    */
   async updateProduct(productId: string, data: UpdateProductRequest): Promise<Product> {
-    const response = await api.put<Product>(`/admin/products/${productId}`, data);
-    return response.data;
+    const response = await goldpcApi.putApiV1AdminProductsProductId(productId, data);
+    return response.data as Product;
   },
 
   /**
    * Удалить продукт
    */
   async deleteProduct(productId: string): Promise<void> {
-    await api.delete(`/admin/products/${productId}`);
+    await goldpcApi.deleteApiV1AdminProductsProductId(productId);
   },
 
   /**
-   * Создать продукт
+   * Создать новый продукт
    */
   async createProduct(data: CreateProductRequest): Promise<Product> {
-    const response = await api.post<Product>('/admin/products', data);
-    return response.data;
+    const response = await goldpcApi.postApiV1AdminProducts(data);
+    return response.data as Product;
   },
 
   /**
-   * Получить продукт по ID (для редактора)
+   * Получить продукт по ID (админ)
    */
-  async getProductById(id: string): Promise<Product> {
-    const response = await api.get<Product>(`/admin/products/${id}`);
+  async getProductById(productId: string): Promise<Product> {
+    // В OpenAPI-спеке нет отдельного GET /admin/products/{id} — используем ручной вызов
+    const response = await api.get<Product>(`/admin/products/${productId}`);
     return response.data;
   },
 
@@ -285,79 +336,65 @@ export const catalogAdminApi = {
    * Получить историю цен продукта
    */
   async getPriceHistory(productId: string): Promise<PriceHistoryDto[]> {
-    const response = await api.get<PriceHistoryDto[]>(`/admin/products/${productId}/price-history`);
-    return response.data;
+    const response = await goldpcApi.getApiV1AdminProductsProductIdPriceHistory(productId);
+    return (response.data ?? []) as PriceHistoryDto[];
   },
 
   /**
-   * Сгенерировать название товара по шаблону
+   * Сгенерировать название продукта по характеристикам
    */
   async generateProductName(data: {
-    manufacturerName?: string;
-    categorySlug?: string;
-    specifications?: Record<string, string | number | boolean>;
+    category: string;
+    specifications: Record<string, unknown>;
   }): Promise<{ name: string }> {
-    const response = await api.post<{ name: string }>('/admin/products/generate-name', data);
-    return response.data;
+    const response = await goldpcApi.postApiV1AdminProductsGenerateName(data);
+    return response.data as { name: string };
   },
 
   /**
-   * Получить мета-данные характеристик для категории
+   * Получить спецификации для категории
    */
   async getCategorySpecifications(categoryId: string): Promise<CategorySpecificationsDto> {
-    const response = await api.get<CategorySpecificationsDto>(`/admin/specifications/by-category/${categoryId}`);
-    return response.data;
+    const response = await goldpcApi.getApiV1AdminSpecificationsByCategoryCategoryId(categoryId);
+    return response.data as CategorySpecificationsDto;
   },
 
   /**
-   * Получить уникальные значения характеристик для категории
+   * Получить уникальные значения характеристик для фильтрации
    */
   async getUniqueSpecValues(categoryId: string): Promise<Record<string, string[]>> {
-    const response = await api.get<Record<string, string[]>>(`/admin/specifications/unique-values/${categoryId}`);
-    return response.data;
+    const response = await goldpcApi.getApiV1AdminSpecificationsUniqueValuesCategoryId(categoryId);
+    return (response.data ?? {}) as Record<string, string[]>;
   },
 };
 
 /**
- * API для управления изображениями товаров
+ * API для загрузки изображений продуктов
  */
 export const imagesAdminApi = {
   /**
-   * Загрузить изображение для товара (multipart/form-data)
+   * Загрузить изображение для продукта
    */
-  async upload(
-    productId: string,
-    file: File,
-    onProgress?: (progress: number) => void
-  ): Promise<ProductImage> {
+  async upload(productId: string, file: File, alt?: string): Promise<ProductImage> {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await api.post<ProductImage>(
-      `/admin/products/${productId}/images`,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: onProgress
-          ? (progressEvent) => {
-              if (progressEvent.total) {
-                onProgress(Math.round((progressEvent.loaded * 100) / progressEvent.total));
-              }
-            }
-          : undefined,
-      }
-    );
+    if (alt) formData.append('alt', alt);
+
+    const response = await api.post<ProductImage>(`/admin/products/${productId}/images`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
 
   /**
-   * Удалить изображение товара
+   * Удалить изображение
    */
   async delete(productId: string, imageId: string): Promise<void> {
     await api.delete(`/admin/products/${productId}/images/${imageId}`);
   },
 
   /**
-   * Установить изображение как главное
+   * Установить главное изображение
    */
   async setPrimary(productId: string, imageId: string): Promise<void> {
     await api.put(`/admin/products/${productId}/images/${imageId}/primary`);
@@ -371,32 +408,13 @@ export const imagesAdminApi = {
   },
 };
 
-// === Типы для справочников ===
-
-export interface DictionaryItem {
-  id: string;
-  name: string;
-  slug: string;
-  isActive: boolean;
-}
-
-export interface DictionaryCategory extends DictionaryItem {
-  productCount: number;
-}
-
-export interface DictionaryManufacturer extends DictionaryItem {
-  productCount: number;
-  country?: string;
-}
-
-export interface CreateDictionaryItemRequest {
-  name: string;
-  slug: string;
-}
-
-export interface UpdateDictionaryItemRequest {
-  name?: string;
-  slug?: string;
+/**
+ * Параметры фильтрации для справочников
+ */
+export interface DictionaryFilter {
+  page?: number;
+  pageSize?: number;
+  search?: string;
   isActive?: boolean;
 }
 
@@ -465,31 +483,46 @@ export const dictionariesApi = {
 // === Типы для настроек системы ===
 
 export interface SiteSettings {
-  siteName: string;
-  adminEmail: string;
-  storeAddress: string;
-  phone: string;
-  workingHours: string;
-  freeDeliveryThreshold: number;
-  deliveryCost: number;
-  deliveryTime: string;
-  twoFactorRequired: boolean;
-  auditLogging: boolean;
-  loginNotifications: boolean;
-  orderEmailNotifications: boolean;
-  smsNotifications: boolean;
-  lowStockNotifications: boolean;
-  maintenanceMode: boolean;
+  general: GeneralSettings;
+  delivery: DeliverySettings;
+  notifications: NotificationSettings;
+  maintenance: MaintenanceSettings;
 }
 
-export type UpdateSettingsRequest = Partial<SiteSettings>;
+export interface GeneralSettings {
+  siteName: string;
+  siteDescription: string;
+  contactEmail: string;
+  contactPhone: string;
+  workingHours: string;
+}
+
+export interface DeliverySettings {
+  freeShippingThreshold: number;
+  standardDeliveryPrice: number;
+  expressDeliveryPrice: number;
+  deliveryTimeMin: number;
+  deliveryTimeMax: number;
+}
+
+export interface NotificationSettings {
+  emailNotifications: boolean;
+  orderConfirmation: boolean;
+  shipmentUpdates: boolean;
+  promotionalEmails: boolean;
+}
+
+export interface MaintenanceSettings {
+  isMaintenanceMode: boolean;
+  maintenanceMessage: string;
+}
 
 /**
- * API для управления настройками системы
+ * API для настроек системы
  */
 export const settingsApi = {
   /**
-   * Получить текущие настройки
+   * Получить настройки
    */
   async getSettings(): Promise<SiteSettings> {
     const response = await api.get<SiteSettings>('/admin/settings');
@@ -499,13 +532,13 @@ export const settingsApi = {
   /**
    * Обновить настройки
    */
-  async updateSettings(data: UpdateSettingsRequest): Promise<SiteSettings> {
-    const response = await api.put<SiteSettings>('/admin/settings', data);
+  async updateSettings(settings: Partial<SiteSettings>): Promise<SiteSettings> {
+    const response = await api.put<SiteSettings>('/admin/settings', settings);
     return response.data;
   },
 
   /**
-   * Сбросить настройки к значениям по умолчанию
+   * Сбросить настройки по умолчанию
    */
   async resetSettings(): Promise<SiteSettings> {
     const response = await api.post<SiteSettings>('/admin/settings/reset');
@@ -513,66 +546,12 @@ export const settingsApi = {
   },
 };
 
-// === Типы для журнала аудита ===
-
-export type AuditActionType =
-  | 'USER_CREATED'
-  | 'USER_UPDATED'
-  | 'USER_DELETED'
-  | 'USER_ROLE_CHANGED'
-  | 'USER_LOGIN'
-  | 'USER_LOGOUT'
-  | 'USER_ACTIVATED'
-  | 'SETTINGS_UPDATED'
-  | 'PRODUCT_CREATED'
-  | 'PRODUCT_UPDATED'
-  | 'PRODUCT_DELETED'
-  | 'ORDER_STATUS_CHANGED'
-  | 'MAINTENANCE_MODE_ENABLED'
-  | 'MAINTENANCE_MODE_DISABLED'
-  | 'SECURITY_EVENT';
-
-export interface AuditLogEntry {
-  id: string;
-  actionType: AuditActionType;
-  userId: string;
-  userName: string;
-  userEmail: string;
-  ipAddress: string;
-  description: string;
-  additionalData?: Record<string, unknown>;
-  createdAt: string;
-  severity: 'INFO' | 'WARNING' | 'CRITICAL';
-}
-
-export interface AuditLogParams {
-  page?: number;
-  pageSize?: number;
-  actionType?: AuditActionType;
-  userId?: string;
-  startDate?: string;
-  endDate?: string;
-  severity?: string;
-}
-
-export interface AuditLogResponse {
-  data: AuditLogEntry[];
-  meta: {
-    page: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
-}
-
 /**
- * API статистики дашборда
+ * API для статистики дашборда
  */
 export const statsApi = {
   /**
-   * Получить статистику для административной панели
+   * Получить статистику дашборда
    */
   async getStats(): Promise<StatsResponse> {
     const response = await api.get<StatsResponse>('/admin/stats');
@@ -580,22 +559,18 @@ export const statsApi = {
   },
 
   /**
-   * Получить данные графиков для дашборда по периоду
+   * Получить данные для графиков
    */
-  async getCharts(period: 'today' | 'week' | 'month' | 'year' = 'month'): Promise<ChartResponse> {
-    const response = await api.get<ChartResponse>('/admin/stats/charts', {
-      params: { period },
-    });
+  async getCharts(): Promise<ChartResponse> {
+    const response = await api.get<ChartResponse>('/admin/stats/charts');
     return response.data;
   },
 
   /**
-   * Получить спарклайны для карточек статистики
+   * Получить спарклайны
    */
-  async getSparklines(period: 'today' | 'week' | 'month' | 'year' = 'month'): Promise<SparklinesResponse> {
-    const response = await api.get<SparklinesResponse>('/admin/stats/sparklines', {
-      params: { period },
-    });
+  async getSparklines(): Promise<SparklinesResponse> {
+    const response = await api.get<SparklinesResponse>('/admin/stats/sparklines');
     return response.data;
   },
 
@@ -649,12 +624,12 @@ export interface StubUpdateRequest {
 export const stubApi = {
   /** Получить список всех заглушек */
   async getStubs(): Promise<Stub[]> {
-    const response = await api.get<Stub[]>('/internal/stubs');
-    return response.data;
+    const response = await goldpcApi.getApiInternalStubs();
+    return (response.data ?? []) as Stub[];
   },
 
   /** Обновить режим заглушки */
   async updateStub(name: string, data: StubUpdateRequest): Promise<void> {
-    await api.patch(`/internal/stubs/${encodeURIComponent(name)}`, data);
+    await goldpcApi.patchApiInternalStubsName(name, data);
   },
 };
