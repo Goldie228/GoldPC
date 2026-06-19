@@ -128,7 +128,22 @@ builder.Services.Configure<FormOptions>(o =>
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"] ?? "development_secret_key_32_chars_long!!";
+var secretKey = jwtSettings["SecretKey"];
+if (string.IsNullOrEmpty(secretKey))
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        // В development разрешаем использование ключа по умолчанию
+        secretKey = "development_secret_key_32_chars_long!!";
+        Console.WriteLine("WARNING: Using default development JWT key. Set Jwt:SecretKey for production.");
+    }
+    else
+    {
+        throw new InvalidOperationException(
+            "CRITICAL SECURITY: Jwt:SecretKey is not configured. " +
+            "Set the Jwt__SecretKey environment variable or configure in appsettings.json.");
+    }
+}
 
 builder.Services.AddAuthentication(options =>
 {
