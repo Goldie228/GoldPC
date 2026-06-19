@@ -37,9 +37,9 @@ export function getCardType(cardNumber: string): 'visa' | 'mastercard' | 'maestr
   const digits = cardNumber.replace(/\s/g, '');
 
   if (/^4/.test(digits)) return 'visa';
+  if (/^220[0-4]/.test(digits)) return 'mir';
   if (/^(5[1-5]|2[2-7])/.test(digits)) return 'mastercard';
   if (/^(5[06-8]|6\d)/.test(digits)) return 'maestro';
-  if (/^220[0-4]/.test(digits)) return 'mir';
 
   return 'unknown';
 }

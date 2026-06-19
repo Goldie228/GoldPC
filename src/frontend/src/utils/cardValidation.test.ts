@@ -58,9 +58,14 @@ describe('getCardType', () => {
     expect(getCardType('5500000000000004')).toBe('mastercard');
   });
 
-  it('returns mastercard for 22xx-27xx (before mir check)', () => {
-    // Note: mastercard regex (5[1-5]|2[2-7]) is checked before mir (220[0-4])
-    expect(getCardType('2200000000000000')).toBe('mastercard');
+  it('returns mir for 2200-2204', () => {
+    expect(getCardType('2200000000000000')).toBe('mir');
+    expect(getCardType('2201000000000000')).toBe('mir');
+    expect(getCardType('2204000000000000')).toBe('mir');
+  });
+
+  it('returns mastercard for 2205-27xx (outside MIR range)', () => {
+    expect(getCardType('2205000000000000')).toBe('mastercard');
     expect(getCardType('2700000000000000')).toBe('mastercard');
   });
 
