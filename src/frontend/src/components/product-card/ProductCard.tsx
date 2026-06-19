@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, GitCompareArrows, ShoppingCart, Bell, Plus, Minus, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -20,7 +20,7 @@ interface ProductCardProps {
   imageFetchPriority?: 'high' | 'low';
 }
 
-export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetchPriority }: ProductCardProps) {
+const ProductCard = memo(function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetchPriority }: ProductCardProps) {
   const [hovered, setHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { isInWishlist, toggleWishlist } = useWishlist();
@@ -451,4 +451,6 @@ export function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetc
       </div>
     </div>
   );
-}
+});
+
+export { ProductCard };
