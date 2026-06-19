@@ -278,7 +278,7 @@ public interface IFeedbackService
 public class FeedbackService : IFeedbackService
 {
     private readonly ILogger<FeedbackService> _logger;
-    private static readonly List<Feedback> _feedbackStorage = new();
+    private readonly List<Feedback> _feedbackStorage = new();
 
     public FeedbackService(ILogger<FeedbackService> logger)
     {
