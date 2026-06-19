@@ -3,6 +3,7 @@
  * Отображает изображение, название, цену, индикатор остатка и кнопки действий
  */
 
+import { memo } from 'react';
 import { Package, Edit2, ExternalLink, Trash2, ChevronRight } from 'lucide-react';
 import { hasValidProductImage } from '@/utils/image';
 import type { Product } from '@/api/types';
@@ -21,7 +22,7 @@ interface ProductCardProps {
   onDelete: (product: Product) => void;
 }
 
-export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
   // Определяем URL изображения: mainImage или первое из массива images
   const imageUrl =
     (hasValidProductImage(product.mainImage?.url) && product.mainImage?.url) ||
@@ -147,4 +148,4 @@ export function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
       </div>
     </div>
   );
-}
+});
