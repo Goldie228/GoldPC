@@ -18,6 +18,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "generate:spec-labels": "tsx ../../scripts/specs/generateSpecLabels.ts",
+    "generate:api": "orval",
+    "generate:api:watch": "orval --watch",
     "clean": "rm -rf dist coverage node_modules/.vite"
   },
   "dependencies": {
@@ -46,6 +48,7 @@
     "use-debounce": "^10.1.1",
     "use-deep-compare-effect": "^1.8.1",
     "web-vitals": "^5.1.0",
+    "zod": "^4.4.3",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
@@ -71,6 +74,7 @@
     "globals": "^17.4.0",
     "jsdom": "^25.0.1",
     "msw": "^2.14.6",
+    "orval": "^8.18.0",
     "playwright": "^1.58.2",
     "prettier": "^3.4.2",
     "tailwindcss": "^4.2.4",
