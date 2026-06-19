@@ -478,6 +478,7 @@ start_backend() {
         "ServicesService:5003:src/ServicesService:/health"
         "WarrantyService:5004:src/WarrantyService:/health"
         "PCBuilderService:5005:src/PCBuilderService:/health"
+        "ReportingService:5008:src/ReportingService:/health"
         "AdminPanel:5007:src/backend/GoldPC.Api:/health"
     )
 
@@ -705,6 +706,7 @@ stream_logs() {
             -t "Services" "$LOG_DIR/servicesservice.log" \
             -t "Warranty" "$LOG_DIR/warrantyservice.log" \
             -t "PCBuilder" "$LOG_DIR/pcbuilderservice.log" \
+            -t "Reporting" "$LOG_DIR/reportingservice.log" \
             -t "Frontend" "$LOG_DIR/frontend.log"
     else
         # Fallback to tail -f with prefixes
@@ -715,6 +717,7 @@ stream_logs() {
                 "$LOG_DIR/servicesservice.log" \
                 "$LOG_DIR/warrantyservice.log" \
                 "$LOG_DIR/pcbuilderservice.log" \
+                "$LOG_DIR/reportingservice.log" \
                 "$LOG_DIR/frontend.log" 2>/dev/null | awk '
             /==> .*catalogservice.log <==/ { prefix="\033[32m[Catalog]\033[0m "; next }
             /==> .*authservice.log <==/ { prefix="\033[34m[Auth]\033[0m "; next }
@@ -722,6 +725,7 @@ stream_logs() {
             /==> .*servicesservice.log <==/ { prefix="\033[36m[Services]\033[0m "; next }
             /==> .*warrantyservice.log <==/ { prefix="\033[33m[Warranty]\033[0m "; next }
             /==> .*pcbuilderservice.log <==/ { prefix="\033[37m[PCBuilder]\033[0m "; next }
+            /==> .*reportingservice.log <==/ { prefix="\033[36m[Reporting]\033[0m "; next }
             /==> .*frontend.log <==/ { prefix="\033[33m[Frontend]\033[0m "; next }
             { print prefix $0 }
         '
