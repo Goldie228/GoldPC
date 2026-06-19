@@ -229,7 +229,7 @@ export const catalogAdminApi = {
   }): Promise<PagedResponse<Product>> {
     // Маппим frontend slug → backend slug для фильтрации (CatalogService ожидает slug категории)
     const apiParams = params?.category
-      ? { ...params, category: FRONTEND_TO_BACKEND[params.category] ?? params.category }
+      ? { ...params, category: FRONTEND_TO_BACKEND[params.category as keyof typeof FRONTEND_TO_BACKEND] ?? params.category }
       : params;
 
     const response = await api.get<PagedResponse<Product>>('/admin/products', {
