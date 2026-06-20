@@ -320,7 +320,11 @@ export function FilterSidebar({
       let cancelled = false;
       try {
         const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
-        const isInStock = selectedAvailability.includes('in_stock');
+        const inStockFilter = selectedAvailability.includes('in_stock')
+          ? true
+          : selectedAvailability.includes('on_order')
+            ? false
+            : undefined;
         const { specifications, specificationRanges } = splitSpecsAndRanges(selectedSpecifications);
 
         const attrs = await catalogApi.getFilterFacets(backendSlug, {
@@ -329,7 +333,7 @@ export function FilterSidebar({
             : undefined,
           specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
           specificationRanges: Object.keys(specificationRanges).length > 0 ? specificationRanges : undefined,
-          inStock: isInStock,
+          inStock: inStockFilter,
         });
         if (!cancelled) {
           setFilterFacets(attrs);

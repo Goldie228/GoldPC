@@ -137,8 +137,10 @@ export function CatalogPage() {
         if (debouncedSearchQuery.trim()) params.search = debouncedSearchQuery.trim();
         if (selectedManufacturerIds.length > 0) params.manufacturerIds = selectedManufacturerIds;
         if (minRating > 0) params.rating = minRating;
-        if (selectedAvailability.length > 0) {
-          params.inStock = selectedAvailability.includes('in_stock');
+        if (selectedAvailability.includes('in_stock')) {
+          params.inStock = true;
+        } else if (selectedAvailability.includes('on_order')) {
+          params.inStock = false;
         }
         if (Object.keys(selectedSpecifications).length > 0) {
           const { specifications, specificationRanges } = splitSpecsAndRanges(selectedSpecifications);
@@ -189,8 +191,10 @@ export function CatalogPage() {
     if (debouncedPriceRange.max > 0 && debouncedPriceRange.max < PRICE_MAX) params.priceMax = debouncedPriceRange.max;
     if (selectedManufacturerIds.length > 0) params.manufacturerIds = selectedManufacturerIds;
     if (minRating > 0) params.rating = minRating;
-    if (selectedAvailability.length > 0) {
-      params.inStock = selectedAvailability.includes('in_stock');
+    if (selectedAvailability.includes('in_stock')) {
+      params.inStock = true;
+    } else if (selectedAvailability.includes('on_order')) {
+      params.inStock = false;
     }
     if (Object.keys(selectedSpecifications).length > 0) {
       const { specifications, specificationRanges } = splitSpecsAndRanges(selectedSpecifications);
