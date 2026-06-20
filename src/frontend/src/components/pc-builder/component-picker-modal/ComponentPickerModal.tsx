@@ -14,7 +14,7 @@ import { ApiErrorBanner } from '@/components/ui/ApiErrorBanner';
 import { Pagination } from '@/components/catalog/Pagination';
 import { FilterSidebar } from '@/components/filter-sidebar/FilterSidebar';
 import { getProductImageUrl, hasValidProductImage } from '@/utils/image';
-import { specLabel, formatSpecValueForKey } from '@/utils/specifications';
+import { specLabel, formatSpecValueForKey, splitSpecsAndRanges } from '@/utils/specifications';
 import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryType, extractStorageType, extractM2Slots, extractSataPorts } from '@/shared/utils/compatibility/extractors';
 import { checkRAM, detectMemoryFormFactorFromName } from '@/shared/utils/compatibility/checks';
 import { useQuery } from '@tanstack/react-query';
@@ -411,13 +411,19 @@ export function ComponentPickerModal({
   }, [JSON.stringify(selectedSpecifications), slotType, buildContext]);
 
   // 🔹 Единый объединённый объект фильтров — ВСЕ зависимости ЗДЕСЬ
+  const { specifications: splitSpecs, specificationRanges: splitRanges } = useMemo(
+    () => splitSpecsAndRanges(effectiveSpecs),
+    [effectiveSpecs],
+  );
+
   const filters = useMemo(() => ({
     category: selectedCategory,
     search: debouncedSearch,
     sortBy,
     sortOrder,
     inStockOnly,
-    specifications: Object.keys(effectiveSpecs).length > 0 ? effectiveSpecs : undefined,
+    specifications: Object.keys(splitSpecs).length > 0 ? splitSpecs : undefined,
+    specificationRanges: Object.keys(splitRanges).length > 0 ? splitRanges : undefined,
     manufacturerIds: selectedManufacturerIds.length > 0 ? selectedManufacturerIds : undefined,
     page,
     priceMin,
@@ -428,7 +434,8 @@ export function ComponentPickerModal({
     sortBy,
     sortOrder,
     inStockOnly,
-    effectiveSpecs,
+    splitSpecs,
+    splitRanges,
     selectedManufacturerIds,
     page,
     priceMin,

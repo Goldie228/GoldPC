@@ -454,6 +454,13 @@ public class CatalogService : ICatalogService
                     maxVal = maxVal.HasValue ? maxVal.Value / 1024m : null;
                 }
 
+                // Исправление яркости: значения хранятся ×10, делим на 10 для UI
+                if (a.AttributeKey.Equals("brightness", StringComparison.OrdinalIgnoreCase))
+                {
+                    minVal = minVal.HasValue ? minVal.Value / 10m : null;
+                    maxVal = maxVal.HasValue ? maxVal.Value / 10m : null;
+                }
+
                 result.Add(new FilterFacetAttributeDto
                 {
                     Key = a.AttributeKey,

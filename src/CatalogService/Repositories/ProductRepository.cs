@@ -197,6 +197,13 @@ public class ProductRepository : IProductRepository
                     max = max.HasValue ? max.Value * 1024m : null;
                 }
 
+                // UI показывает яркость /10, в базе хранится ×10.
+                if (string.Equals(key, "brightness", StringComparison.OrdinalIgnoreCase))
+                {
+                    min = min.HasValue ? min.Value * 10m : null;
+                    max = max.HasValue ? max.Value * 10m : null;
+                }
+
                 var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == key);
                 if (attr == null) continue;
 
@@ -414,6 +421,13 @@ public class ProductRepository : IProductRepository
                     max = max.HasValue ? max.Value * 1024m : null;
                 }
 
+                // UI показывает яркость /10, в базе хранится ×10.
+                if (string.Equals(rangeKey, "brightness", StringComparison.OrdinalIgnoreCase))
+                {
+                    min = min.HasValue ? min.Value * 10m : null;
+                    max = max.HasValue ? max.Value * 10m : null;
+                }
+
                 var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
                 if (attr == null) continue;
                 productIds = await _readContext.ProductSpecificationValues
@@ -496,6 +510,13 @@ public class ProductRepository : IProductRepository
                 {
                     min = min.HasValue ? min.Value * 1024m : null;
                     max = max.HasValue ? max.Value * 1024m : null;
+                }
+
+                // UI показывает яркость /10, в базе хранится ×10.
+                if (string.Equals(rangeKey, "brightness", StringComparison.OrdinalIgnoreCase))
+                {
+                    min = min.HasValue ? min.Value * 10m : null;
+                    max = max.HasValue ? max.Value * 10m : null;
                 }
 
                 var rangeAttr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);
@@ -601,6 +622,13 @@ public class ProductRepository : IProductRepository
                 {
                     minR = minR.HasValue ? minR.Value * 1024m : null;
                     maxR = maxR.HasValue ? maxR.Value * 1024m : null;
+                }
+
+                // UI показывает яркость /10, в базе хранится ×10.
+                if (string.Equals(rangeKey, "brightness", StringComparison.OrdinalIgnoreCase))
+                {
+                    minR = minR.HasValue ? minR.Value * 10m : null;
+                    maxR = maxR.HasValue ? maxR.Value * 10m : null;
                 }
 
                 var rangeAttr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == rangeKey);

@@ -1,5 +1,5 @@
 import { useState, useMemo, memo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, GitCompareArrows, ShoppingCart, Bell, Plus, Minus, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { getProductImageUrl } from '@/utils/image';
@@ -21,6 +21,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = memo(function ProductCard({ product, onAddToCart, viewMode = 'grid', imageFetchPriority }: ProductCardProps) {
+  const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { isInWishlist, toggleWishlist } = useWishlist();
@@ -223,7 +224,11 @@ const ProductCard = memo(function ProductCard({ product, onAddToCart, viewMode =
       }`}
     >
       {/* Зона изображения — БЕЛЫЙ ФОН */}
-      <div className={`relative aspect-square bg-white overflow-hidden ${isOutOfStock ? 'opacity-50' : ''}`}>
+      <div
+        className={`relative aspect-square bg-white overflow-hidden cursor-pointer ${isOutOfStock ? 'opacity-50' : ''}`}
+        style={{ backgroundColor: '#FFFFFF' }}
+        onClick={() => navigate(`/product/${product.slug || product.id}`)}
+      >
         {/* Текст водяного знака (shortName) — крупный, позади */}
         {product.shortName && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">

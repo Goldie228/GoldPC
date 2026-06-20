@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ChevronDown, ChevronUp, Search, RotateCcw,
   Tag, Star, Package, Grid3X3, DollarSign, Check,
   ArrowUpDown, SlidersHorizontal,
 } from 'lucide-react';
 import { catalogApi } from '@/api/catalog';
+import { splitSpecsAndRanges } from '@/utils/specifications';
 import { getDisplayManufacturerName } from '@/utils/manufacturerNameOverrides';
 import { DualRangeSlider } from './DualRangeSlider';
 import { Skeleton } from '../ui/Skeleton';
@@ -58,6 +59,10 @@ const SPEC_ORDER: Record<string, string[]> = {
     'type', 'socket', 'tdp', 'fan_size', 'fan_count', 'noise',
     'data_vykhoda_na_rynok',
   ],
+  fans: [
+    'connection_type', 'fan_size', 'fan_count', 'noise',
+    'color', 'data_vykhoda_na_rynok',
+  ],
   monitors: [
     'diagonal', 'aspect_ratio', 'curved', 'sync_technology',
     'resolution', 'refresh_rate', 'matrix', 'type', 'brightness',
@@ -72,7 +77,7 @@ const SPEC_ORDER: Record<string, string[]> = {
     'sensor_type', 'dpi', 'data_vykhoda_na_rynok',
   ],
   headphones: [
-    'type', 'form_factor', 'interface', 'connection_type', 'driver_size',
+    'type', 'connection_type', 'driver_size',
     'frequency_range', 'impedance', 'color', 'data_vykhoda_na_rynok',
   ],
   periphery: [
@@ -300,21 +305,30 @@ export function FilterSidebar({
   }, []);
 
   // === Загрузка фасетов фильтров для спецификаций ===
+  const facetFetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!selectedCategory) {
       setFilterFacets([]);
       setSpecSearchQuery({});
       return;
     }
-    let cancelled = false;
-    const fetchFacets = async () => {
+
+    if (facetFetchTimerRef.current) clearTimeout(facetFetchTimerRef.current);
+
+    facetFetchTimerRef.current = setTimeout(async () => {
+      let cancelled = false;
       try {
         const backendSlug = FRONTEND_TO_BACKEND[selectedCategory];
-        // Фасеты всегда показывают ВСЕ опции с реальными количествами.
-        // Ограничения спецификаций применяются на уровне запроса товаров.
         const isInStock = selectedAvailability.includes('in_stock');
+        const { specifications, specificationRanges } = splitSpecsAndRanges(selectedSpecifications);
+
         const attrs = await catalogApi.getFilterFacets(backendSlug, {
-          specifications: undefined,
+          manufacturerIds: selectedManufacturerIds.length > 0
+            ? selectedManufacturerIds as string[]
+            : undefined,
+          specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
+          specificationRanges: Object.keys(specificationRanges).length > 0 ? specificationRanges : undefined,
           inStock: isInStock,
         });
         if (!cancelled) {
@@ -325,10 +339,17 @@ export function FilterSidebar({
         console.error('Не удалось загрузить фасеты фильтров:', err);
         if (!cancelled) setFilterFacets([]);
       }
+    }, 300);
+
+    return () => {
+      if (facetFetchTimerRef.current) clearTimeout(facetFetchTimerRef.current);
     };
-    void fetchFacets();
-    return () => { cancelled = true; };
-  }, [selectedCategory, selectedAvailability]);
+  }, [
+    selectedCategory,
+    selectedAvailability,
+    selectedManufacturerIds,
+    selectedSpecifications,
+  ]);
 
   // === Загрузка реальных границ цен ===
   useEffect(() => {
@@ -751,7 +772,7 @@ export function FilterSidebar({
 
             // --- Фильтр выбора ---
             if (attr.filterType === 'select') {
-              const optionsList = attr.options ?? [];
+              const optionsList = (attr.options ?? []).filter(o => o.count > 0);
               const showSearch = optionsList.length > 15;
               const query = (specSearchQuery[attr.key] ?? '').trim().toLowerCase();
               const filteredOptions = showSearch && query
@@ -902,7 +923,7 @@ export function FilterSidebar({
 
         {/* === Производители === */}
         <FilterGroup title="Производители" icon={<Tag size={14} />} defaultOpen={false} mobile={mobile}>
-          <div className="space-y-0.5">
+          <div className="space-y-0.5 max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent">
             <div className="relative mb-2">
               <input
                 type="text"

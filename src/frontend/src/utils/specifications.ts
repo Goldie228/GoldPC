@@ -81,3 +81,30 @@ export function formatSpecValueForKey(key: string, value: SpecValue): string {
   return formatSpecValue(value);
 }
 
+export interface SplitSpecsResult {
+  specifications: Record<string, string | number | string[]>;
+  specificationRanges: Record<string, string>;
+}
+
+export function splitSpecsAndRanges(
+  specs: Record<string, string | number | string[]>,
+): SplitSpecsResult {
+  const specifications: Record<string, string | number | string[]> = {};
+  const specificationRanges: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(specs)) {
+    if (Array.isArray(value)) {
+      specifications[key] = value;
+    } else {
+      const str = String(value);
+      if (str.includes(',')) {
+        specificationRanges[key] = str;
+      } else {
+        specifications[key] = value;
+      }
+    }
+  }
+
+  return { specifications, specificationRanges };
+}
+

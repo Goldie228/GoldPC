@@ -4,7 +4,7 @@ import { Search, X, SlidersHorizontal, LayoutGrid, List, Table2 } from 'lucide-r
 import { FilterSidebar } from '@/components/filter-sidebar/FilterSidebar';
 import { Pagination } from '@/components/catalog/Pagination';
 import { ProductTable } from '@/components/catalog/ProductTable';
-import { buildCatalogFilterChips } from '@/components/catalog/ActiveFiltersBar';
+import { ActiveFiltersBar, buildCatalogFilterChips } from '@/components/catalog/ActiveFiltersBar';
 import { ProductCardSkeleton } from '@/components/ui/Skeleton';
 import { ProductGrid } from '@/components/catalog/ProductGrid';
 import { ProductList } from '@/components/catalog/ProductList';
@@ -15,6 +15,7 @@ import { formatCountRu, RU_FORMS } from '@/utils/pluralizeRu';
 import type { ProductSummary, ProductCategory, GetProductsParams } from '@/api/types';
 import { CATEGORY_LABELS_RU } from '@/utils/categoryLabels';
 import { telemetryTrack } from '@/utils/telemetry';
+import { splitSpecsAndRanges } from '@/utils/specifications';
 
 const VALID_CATEGORIES: ProductCategory[] = [
   'cpu', 'gpu', 'motherboard', 'ram', 'storage', 'psu', 'case', 'cooling', 'fan', 'monitor', 'keyboard', 'mouse', 'headphones'
@@ -140,7 +141,9 @@ export function CatalogPage() {
           params.inStock = selectedAvailability.includes('in_stock');
         }
         if (Object.keys(selectedSpecifications).length > 0) {
-          params.specifications = selectedSpecifications;
+          const { specifications, specificationRanges } = splitSpecsAndRanges(selectedSpecifications);
+          if (Object.keys(specifications).length > 0) params.specifications = specifications;
+          if (Object.keys(specificationRanges).length > 0) params.specificationRanges = specificationRanges;
         }
         params.page = 1;
         params.pageSize = 10000; // Get enough products to find real bounds
@@ -190,7 +193,9 @@ export function CatalogPage() {
       params.inStock = selectedAvailability.includes('in_stock');
     }
     if (Object.keys(selectedSpecifications).length > 0) {
-      params.specifications = selectedSpecifications;
+      const { specifications, specificationRanges } = splitSpecsAndRanges(selectedSpecifications);
+      if (Object.keys(specifications).length > 0) params.specifications = specifications;
+      if (Object.keys(specificationRanges).length > 0) params.specificationRanges = specificationRanges;
     }
 
     switch (sortBy) {
@@ -337,7 +342,7 @@ export function CatalogPage() {
     return map;
   }, [selectedManufacturerIds]);
 
-  const _chips = buildCatalogFilterChips({
+  const activeChips = buildCatalogFilterChips({
     isCategoryLocked,
     selectedCategory,
     searchQuery,
@@ -654,6 +659,23 @@ export function CatalogPage() {
               </div>
             )}
 
+            {/* Active Filter Chips */}
+            {activeChips.length > 0 && (
+              <ActiveFiltersBar
+                chips={activeChips}
+                activeCount={activeFilterCount}
+                onClearAll={() => {
+                  setSearchQuery('');
+                  setPriceRange({ min: 0, max: 0 });
+                  setSelectedManufacturerIds([]);
+                  setMinRating(0);
+                  setSelectedAvailability([]);
+                  setSelectedSpecifications({});
+                  handleCategoryChange(null);
+                }}
+              />
+            )}
+
             {/* Products */}
             {!error && products.length > 0 && (
               <>
@@ -705,11 +727,13 @@ export function CatalogPage() {
 
             {/* Empty State */}
             {!loading && !error && hasLoadedOnce && products.length === 0 && (
-              <EmptyState
-                title="Товары не найдены"
-                description="Попробуйте изменить фильтры или поисковый запрос"
-                onReset={handleResetFilters}
-              />
+              <div className="flex items-center justify-center w-full min-h-[400px]">
+                <EmptyState
+                  title="Товары не найдены"
+                  description="Попробуйте изменить фильтры или поисковый запрос"
+                  onReset={handleResetFilters}
+                />
+              </div>
             )}
           </div>
         </div>
