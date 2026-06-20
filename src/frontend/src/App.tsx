@@ -11,6 +11,7 @@ import { ModalContainer } from './components/ui/Modal/ModalContainer';
 import { RouteMeta } from './components/seo/RouteMeta';
 import { ProductCardSkeleton, SimplePageLoader } from './components/ui/Skeleton';
 import OfflineBanner from './components/offline-banner/OfflineBanner';
+import { ErrorBoundary } from './components/errors/ErrorBoundary';
 import { NotificationProvider } from './hooks/useNotifications';
 import { useAuthStore } from './store/authStore';
 import { useWishlistStore } from './store/wishlistStore';
@@ -374,10 +375,12 @@ function App(): React.ReactElement {
 
   return (
     <NotificationProvider>
-      <Suspense fallback={<RouteAwarePageLoader />}>
-        <OfflineBanner />
-        <RouterProvider router={router} />
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<RouteAwarePageLoader />}>
+          <OfflineBanner />
+          <RouterProvider router={router} />
+        </Suspense>
+      </ErrorBoundary>
     </NotificationProvider>
   );
 }

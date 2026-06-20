@@ -15,10 +15,7 @@ import {
   BuildSummaryPanel,
   ComponentPickerModal,
 } from '@/components/pc-builder';
-import { lazy, Suspense } from 'react';
-const PdfExportModal = lazy(() =>
-  import('@/components/pc-builder/pdf-export-modal/PdfExportModal').then(m => ({ default: m.PdfExportModal }))
-);
+import { PdfExportModal } from '@/components/pc-builder/pdf-export-modal/PdfExportModal';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import {
   usePCBuilder,
@@ -732,7 +729,6 @@ export function PCBuilderPage() {
       )}
 
       {pdfModalOpen && (
-        <Suspense fallback={null}>
           <PdfExportModal
             isOpen={pdfModalOpen}
             onClose={() => setPdfModalOpen(false)}
@@ -744,7 +740,6 @@ export function PCBuilderPage() {
             compatibilityErrors={compatibility.errors}
             compatibilityWarnings={compatibility.warnings}
           />
-        </Suspense>
       )}
     </div>
   );
