@@ -96,14 +96,6 @@ namespace GoldPC.ServicesService.Migrations
                 oldMaxLength: 500,
                 oldNullable: true);
 
-            migrationBuilder.AddColumn<string>(
-                name: "slug",
-                table: "service_types",
-                type: "character varying(100)",
-                maxLength: 100,
-                nullable: false,
-                defaultValue: "");
-
             migrationBuilder.AlterColumn<string>(
                 name: "status",
                 table: "service_requests",
@@ -115,26 +107,6 @@ namespace GoldPC.ServicesService.Migrations
                 oldType: "character varying(30)",
                 oldMaxLength: 30,
                 oldNullable: true);
-
-            migrationBuilder.AddColumn<DateTime>(
-                name: "created_at",
-                table: "service_requests",
-                type: "timestamp with time zone",
-                nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
-
-            migrationBuilder.AddColumn<DateTime>(
-                name: "updated_at",
-                table: "service_requests",
-                type: "timestamp with time zone",
-                nullable: true);
-
-            migrationBuilder.AddColumn<Guid>(
-                name: "product_id",
-                table: "service_parts",
-                type: "uuid",
-                nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
 
             migrationBuilder.CreateTable(
                 name: "ticket_messages",
@@ -210,22 +182,6 @@ namespace GoldPC.ServicesService.Migrations
 
             migrationBuilder.DropTable(
                 name: "ticket_messages");
-
-            migrationBuilder.DropColumn(
-                name: "slug",
-                table: "service_types");
-
-            migrationBuilder.DropColumn(
-                name: "created_at",
-                table: "service_requests");
-
-            migrationBuilder.DropColumn(
-                name: "updated_at",
-                table: "service_requests");
-
-            migrationBuilder.DropColumn(
-                name: "product_id",
-                table: "service_parts");
 
             migrationBuilder.AlterColumn<string>(
                 name: "previous_status",

@@ -208,7 +208,12 @@ namespace CatalogService.Migrations
                         .HasColumnName("filter_type");
 
                     b.Property<bool>("IsMultiValue")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_multi_value");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_required");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer")
@@ -232,6 +237,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Объём видеопамяти",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -243,6 +249,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Серия GPU",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -254,6 +261,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Сокет",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -265,6 +273,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Количество ядер",
                             FilterType = 1,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -276,6 +285,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Сокет",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -287,6 +297,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Чипсет",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -298,6 +309,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Тип памяти",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -309,6 +321,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Объём",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -320,6 +333,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Объём",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -331,6 +345,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Интерфейс",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -342,6 +357,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Мощность",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -353,6 +369,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Сертификат",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -364,6 +381,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Форм-фактор",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -375,6 +393,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Цвет",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -386,6 +405,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Тип кулера",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -397,6 +417,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Поддерживаемые сокеты",
                             FilterType = 0,
                             IsMultiValue = true,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -408,6 +429,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Макс. TDP кулера",
                             FilterType = 1,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 3
                         },
                         new
@@ -419,6 +441,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Диагональ",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -430,6 +453,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Разрешение",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -441,6 +465,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Частота обновления",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 3
                         },
                         new
@@ -452,6 +477,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Тип устройства",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -463,6 +489,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Подключение",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -474,6 +501,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Тип/типоразмер",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -485,6 +513,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Интерфейс",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -496,6 +525,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Цвет",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 3
                         },
                         new
@@ -507,6 +537,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Тип",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -518,6 +549,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Интерфейс",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -529,6 +561,7 @@ namespace CatalogService.Migrations
                             DisplayName = "DPI",
                             FilterType = 1,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 3
                         },
                         new
@@ -540,6 +573,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Тип сенсора",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 4
                         },
                         new
@@ -551,6 +585,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Тип",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 1
                         },
                         new
@@ -562,6 +597,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Интерфейс",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 2
                         },
                         new
@@ -573,6 +609,7 @@ namespace CatalogService.Migrations
                             DisplayName = "Цвет",
                             FilterType = 0,
                             IsMultiValue = false,
+                            IsRequired = false,
                             SortOrder = 3
                         });
                 });
@@ -762,6 +799,45 @@ namespace CatalogService.Migrations
                             Country = "USA",
                             Name = "Dell"
                         });
+                });
+
+            modelBuilder.Entity("CatalogService.Models.PriceHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<decimal?>("OldPrice")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("old_price");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("price");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedAt");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("price_history", (string)null);
                 });
 
             modelBuilder.Entity("CatalogService.Models.Product", b =>
@@ -1508,7 +1584,7 @@ namespace CatalogService.Migrations
                         {
                             Id = new Guid("60000000-0000-0000-0000-00000000000a"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000015"),
-                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000027"),
+                            CanonicalValueId = new Guid("50000000-0000-0000-0000-000000000026"),
                             ProductId = new Guid("20000000-0000-0000-0000-000000000002")
                         },
                         new
@@ -2135,15 +2211,45 @@ namespace CatalogService.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("display_name");
 
+                    b.Property<string>("GroupName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("group_name");
+
                     b.Property<bool>("IsMultiValue")
                         .HasColumnType("boolean")
                         .HasColumnName("is_multi_value");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_required");
 
                     b.Property<string>("Key")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("key");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("unit");
+
+                    b.Property<decimal?>("ValidationMax")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("validation_max");
+
+                    b.Property<decimal?>("ValidationMin")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("validation_min");
+
+                    b.Property<decimal?>("ValidationStep")
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("validation_step");
 
                     b.Property<int>("ValueType")
                         .HasColumnType("integer")
@@ -2162,7 +2268,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000001"),
                             DisplayName = "Сокет",
                             IsMultiValue = true,
+                            IsRequired = false,
                             Key = "socket",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2170,7 +2278,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000002"),
                             DisplayName = "Объём видеопамяти",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "vram",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2178,7 +2288,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000003"),
                             DisplayName = "Серия GPU",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "gpu",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2186,7 +2298,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000004"),
                             DisplayName = "Количество ядер",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "cores",
+                            SortOrder = 0,
                             ValueType = 1
                         },
                         new
@@ -2194,7 +2308,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000005"),
                             DisplayName = "Чипсет",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "chipset",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2202,7 +2318,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000006"),
                             DisplayName = "Тип",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "type",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2210,7 +2328,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000007"),
                             DisplayName = "Объём",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "capacity",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2218,7 +2338,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000008"),
                             DisplayName = "Мощность",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "wattage",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2226,7 +2348,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000009"),
                             DisplayName = "Сертификат",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "efficiency",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2234,7 +2358,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-00000000000a"),
                             DisplayName = "Форм-фактор",
                             IsMultiValue = true,
+                            IsRequired = false,
                             Key = "form_factor",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2242,7 +2368,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-00000000000b"),
                             DisplayName = "Цвет",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "color",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2250,7 +2378,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-00000000000c"),
                             DisplayName = "TDP",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "tdp",
+                            SortOrder = 0,
                             ValueType = 1
                         },
                         new
@@ -2258,7 +2388,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-00000000000d"),
                             DisplayName = "Диагональ",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "diagonal",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2266,7 +2398,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-00000000000e"),
                             DisplayName = "Разрешение",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "resolution",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2274,7 +2408,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-00000000000f"),
                             DisplayName = "Частота обновления",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "refresh_rate",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2282,7 +2418,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000010"),
                             DisplayName = "Подключение",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "connection",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2290,7 +2428,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000011"),
                             DisplayName = "DPI",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "dpi",
+                            SortOrder = 0,
                             ValueType = 1
                         },
                         new
@@ -2298,7 +2438,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000012"),
                             DisplayName = "Тип сенсора",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "sensor_type",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2306,7 +2448,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000013"),
                             DisplayName = "Тип памяти",
                             IsMultiValue = true,
+                            IsRequired = false,
                             Key = "memory_type",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2314,7 +2458,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000014"),
                             DisplayName = "Потоков",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "threads",
+                            SortOrder = 0,
                             ValueType = 1
                         },
                         new
@@ -2322,7 +2468,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000015"),
                             DisplayName = "Встроенная графика",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "integrated_graphics",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2330,7 +2478,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000016"),
                             DisplayName = "Модульный",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "modular",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2338,7 +2488,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000017"),
                             DisplayName = "Слотов памяти",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "memory_slots",
+                            SortOrder = 0,
                             ValueType = 1
                         },
                         new
@@ -2346,7 +2498,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000018"),
                             DisplayName = "Макс. память",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "max_memory",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2354,7 +2508,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000019"),
                             DisplayName = "Интерфейс",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "interface",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2362,7 +2518,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000021"),
                             DisplayName = "Длина видеокарты",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "dlina_videokarty",
+                            SortOrder = 0,
                             ValueType = 1
                         },
                         new
@@ -2370,15 +2528,29 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000022"),
                             DisplayName = "Высота видеокарты",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "vysota_videokarty",
+                            SortOrder = 0,
                             ValueType = 1
+                        },
+                        new
+                        {
+                            Id = new Guid("40000000-0000-0000-0000-000000000026"),
+                            DisplayName = "Форм-фактор памяти",
+                            IsMultiValue = false,
+                            IsRequired = false,
+                            Key = "memory_form_factor",
+                            SortOrder = 0,
+                            ValueType = 0
                         },
                         new
                         {
                             Id = new Guid("40000000-0000-0000-0000-000000000023"),
                             DisplayName = "Тип кулера",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "cooler_type",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2386,7 +2558,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000024"),
                             DisplayName = "Поддерживаемые сокеты",
                             IsMultiValue = true,
+                            IsRequired = false,
                             Key = "supported_sockets",
+                            SortOrder = 0,
                             ValueType = 0
                         },
                         new
@@ -2394,7 +2568,9 @@ namespace CatalogService.Migrations
                             Id = new Guid("40000000-0000-0000-0000-000000000025"),
                             DisplayName = "Макс. TDP кулера",
                             IsMultiValue = false,
+                            IsRequired = false,
                             Key = "max_tdp",
+                            SortOrder = 0,
                             ValueType = 1
                         });
                 });
@@ -2718,258 +2894,272 @@ namespace CatalogService.Migrations
                         new
                         {
                             Id = new Guid("50000000-0000-0000-0000-000000000042"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000026"),
+                            SortOrder = 1,
+                            ValueText = "DIMM"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000043"),
+                            AttributeId = new Guid("40000000-0000-0000-0000-000000000026"),
+                            SortOrder = 2,
+                            ValueText = "SO-DIMM"
+                        },
+                        new
+                        {
+                            Id = new Guid("50000000-0000-0000-0000-000000000044"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000023"),
                             SortOrder = 1,
                             ValueText = "Воздушный"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000043"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000045"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000023"),
                             SortOrder = 2,
                             ValueText = "Жидкостный"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000044"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000046"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000024"),
                             SortOrder = 1,
                             ValueText = "AM4"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000045"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000047"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000024"),
                             SortOrder = 2,
                             ValueText = "AM5"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000046"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000048"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000024"),
                             SortOrder = 3,
                             ValueText = "LGA1700"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000047"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000049"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000025"),
                             SortOrder = 1,
                             ValueText = "150W"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000048"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000050"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000025"),
                             SortOrder = 2,
                             ValueText = "200W"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000049"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000051"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000025"),
                             SortOrder = 3,
                             ValueText = "250W"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000050"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000052"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000025"),
                             SortOrder = 4,
                             ValueText = "300W"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000051"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000053"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
                             SortOrder = 5,
                             ValueText = "1TB"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000052"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000054"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000007"),
                             SortOrder = 6,
                             ValueText = "2TB"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000053"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000055"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
                             SortOrder = 1,
                             ValueText = "NVMe PCIe 4.0"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000054"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000056"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
                             SortOrder = 2,
                             ValueText = "NVMe PCIe 3.0"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000055"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000057"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
                             SortOrder = 3,
                             ValueText = "SATA III"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000056"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000058"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
                             SortOrder = 4,
                             ValueText = "USB Type-C"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000057"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000059"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
                             SortOrder = 5,
                             ValueText = "USB Type-A"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000058"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000060"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
                             SortOrder = 6,
                             ValueText = "Bluetooth"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000059"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000061"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000019"),
                             SortOrder = 7,
                             ValueText = "3.5 мм"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000060"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000062"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
                             SortOrder = 1,
                             ValueText = "Черный"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000061"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000063"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000b"),
                             SortOrder = 2,
                             ValueText = "Белый"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000062"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000064"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
                             SortOrder = 3,
                             ValueText = "Механическая"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000063"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000065"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
                             SortOrder = 4,
                             ValueText = "Мембранная"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000064"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000066"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
                             SortOrder = 5,
                             ValueText = "Игровая"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000065"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000067"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
                             SortOrder = 6,
                             ValueText = "Офисная"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000066"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000068"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
                             SortOrder = 7,
                             ValueText = "Полноразмерные"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000067"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000069"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000006"),
                             SortOrder = 8,
                             ValueText = "Вкладыши"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000068"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000070"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000d"),
                             SortOrder = 1,
                             ValueText = "27\""
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000069"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000071"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000d"),
                             SortOrder = 2,
                             ValueText = "32\""
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000070"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000072"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000d"),
                             SortOrder = 3,
                             ValueText = "24\""
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000071"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000073"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000e"),
                             SortOrder = 1,
                             ValueText = "1920x1080 (Full HD)"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000072"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000074"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000e"),
                             SortOrder = 2,
                             ValueText = "2560x1440 (QHD)"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000073"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000075"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000e"),
                             SortOrder = 3,
                             ValueText = "3840x2160 (4K UHD)"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000074"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000076"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000f"),
                             SortOrder = 1,
                             ValueText = "144 Гц"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000075"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000077"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000f"),
                             SortOrder = 2,
                             ValueText = "165 Гц"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000076"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000078"),
                             AttributeId = new Guid("40000000-0000-0000-0000-00000000000f"),
                             SortOrder = 3,
                             ValueText = "60 Гц"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000077"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000079"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000012"),
                             SortOrder = 1,
                             ValueText = "Оптический"
                         },
                         new
                         {
-                            Id = new Guid("50000000-0000-0000-0000-000000000078"),
+                            Id = new Guid("50000000-0000-0000-0000-000000000080"),
                             AttributeId = new Guid("40000000-0000-0000-0000-000000000012"),
                             SortOrder = 2,
                             ValueText = "Лазерный"
@@ -3003,6 +3193,17 @@ namespace CatalogService.Migrations
                     b.Navigation("Attribute");
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("CatalogService.Models.PriceHistory", b =>
+                {
+                    b.HasOne("CatalogService.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("CatalogService.Models.Product", b =>

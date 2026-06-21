@@ -637,6 +637,86 @@ if (args is ["backfill-manufacturers"] or ["backfill-manufacturers", _])
     return 0;
 }
 
+// CLI: dotnet run -- backfill-spec-attributes
+// Создаёт SpecificationAttribute записи из уникальных ключей specifications в JSON-файле.
+// Должен выполняться ПЕРЕД seed-catalog, чтобы SpecImportNormalizer мог сопоставить ключи.
+if (args is ["backfill-spec-attributes"])
+{
+    using var scope = app.Services.CreateScope();
+    var ctx = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        // Читаем уникальные ключи из catalog-seed.json
+        var seedPaths = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "scripts", "seed-data", "catalog-seed.json"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "scripts", "scraper", "data", "xcore-products.json"),
+        };
+
+        var seedFile = seedPaths.FirstOrDefault(File.Exists)
+            ?? throw new FileNotFoundException("catalog-seed.json не найден. Запустите seed-all.sh сначала.");
+
+        var json = File.ReadAllText(seedFile);
+        using var doc = System.Text.Json.JsonDocument.Parse(json);
+        var root = doc.RootElement;
+        var products = root.GetProperty("products");
+
+        var allKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var product in products.EnumerateArray())
+        {
+            if (product.TryGetProperty("specifications", out var specs))
+            {
+                foreach (var prop in specs.EnumerateObject())
+                {
+                    allKeys.Add(prop.Name.Trim().ToLowerInvariant().Replace(" ", "_"));
+                }
+            }
+        }
+
+        // Загружаем существующие ключи из БД
+        var existingKeys = await ctx.SpecificationAttributes.Select(a => a.Key).ToListAsync();
+        var existingSet = new HashSet<string>(existingKeys, StringComparer.OrdinalIgnoreCase);
+
+        var toAdd = allKeys
+            .Where(k => !existingSet.Contains(k))
+            .Select(k => new CatalogService.Models.SpecificationAttribute
+            {
+                Id = Guid.NewGuid(),
+                Key = k,
+                DisplayName = k.Replace('_', ' '),
+                ValueType = CatalogService.Models.SpecificationAttributeValueType.Select,
+                IsMultiValue = false,
+                GroupName = null,
+                IsRequired = false,
+                SortOrder = 0,
+                Unit = null,
+                ValidationMin = null,
+                ValidationMax = null,
+                ValidationStep = null,
+            })
+            .ToList();
+
+        if (toAdd.Count > 0)
+        {
+            ctx.SpecificationAttributes.AddRange(toAdd);
+            await ctx.SaveChangesAsync();
+        }
+
+        logger.LogInformation(
+            "Backfill spec attributes: из JSON {JsonKeys} уникальных ключей, в БД {Existing}, добавлено {Added}",
+            allKeys.Count, existingSet.Count, toAdd.Count);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Ошибка backfill-spec-attributes");
+        throw;
+    }
+
+    return 0;
+}
+
 // CLI: dotnet run -- sync-image-paths-from-disk
 // Проставляет path в product_images, если файл уже есть на диске (как download-images.mjs).
 if (args is ["sync-image-paths-from-disk"])

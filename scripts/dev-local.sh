@@ -390,7 +390,7 @@ start_infra() {
     # Reset databases if requested
     if [ "$RESET_DB" = true ]; then
         echo -e "${YELLOW}Resetting databases (--reset)...${RESET}"
-        for db in goldpc_catalog goldpc_auth goldpc_orders goldpc_services goldpc_warranty goldpc_pcbuilder; do
+        for db in goldpc_catalog goldpc_auth goldpc_orders goldpc_services goldpc_warranty goldpc_pcbuilder goldpc_reporting; do
             docker exec goldpc-postgres psql -U postgres -c "DROP DATABASE IF EXISTS $db;" 2>/dev/null || true
         done
         echo -e "${GREEN}✓ Databases dropped${RESET}"
@@ -404,7 +404,8 @@ start_infra() {
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_services;" 2>/dev/null || true
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_warranty;" 2>/dev/null || true
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_pcbuilder;" 2>/dev/null || true
-    
+    docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_reporting;" 2>/dev/null || true
+
     echo -e "${GREEN}✓ Infrastructure ready${RESET}"
 }
 
@@ -460,11 +461,42 @@ seed_admin() {
         log_warn "Skipping admin seed (--skip-seed)"
         return
     fi
-    log_info "Seeding admin user..."
-    bash "$PROJECT_DIR/scripts/seed-data/seed-admin-user.sh" 2>&1 | while IFS= read -r line; do
-        log_info "  [admin-seed] $line"
+    log_info "Seeding users..."
+    bash "$PROJECT_DIR/scripts/seed-data/seed-users.sh" 2>&1 | while IFS= read -r line; do
+        log_info "  [user-seed] $line"
     done
-    log_ok "Admin seed completed"
+    log_ok "User seed completed"
+}
+
+# Function to apply EF Core migrations for all services
+apply_migrations() {
+    log_info "Applying EF Core migrations..."
+
+    local services=(
+        "src/CatalogService"
+        "src/AuthService"
+        "src/OrdersService"
+        "src/ServicesService"
+        "src/WarrantyService"
+        "src/PCBuilderService"
+        "src/ReportingService"
+    )
+
+    for path in "${services[@]}"; do
+        local name
+        name=$(basename "$path")
+        local ctx_flag=""
+        if [ "$name" = "CatalogService" ]; then
+            ctx_flag="--context CatalogDbContext"
+        fi
+        if (cd "$PROJECT_DIR/$path" && dotnet ef database update $ctx_flag --no-color >> "$LOG_DIR/migrations.log" 2>&1); then
+            log_ok "Migrations applied: $name"
+        else
+            log_warn "Migrations failed for $name (see $LOG_DIR/migrations.log)"
+        fi
+    done
+
+    log_ok "All migrations applied"
 }
 
 # Function to start backend services
@@ -742,6 +774,7 @@ elif [ "$BACKEND_ONLY" = true ]; then
 else
     # Start everything
     start_infra
+    apply_migrations
     seed_catalog
     start_backend
     seed_admin

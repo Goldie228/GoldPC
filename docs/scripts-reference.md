@@ -6,6 +6,52 @@
 
 ## KEEP — Критически важные
 
+### `seed-all.sh`
+**Назначение:** Единый скрипт "от скрапинга до данных в БД" — полный пайплайн.
+**Что делает:**
+1. Устанавливает зависимости скрапера (`npm install` в `scripts/scraper/`)
+2. Парсит товары с x-core.by (`node index.mjs --all`)
+3. Скачивает картинки товаров
+4. Парсит характеристики из HTML
+5. Копирует данные в `scripts/seed-data/catalog-seed.json`
+6. Импортирует в БД через `dotnet run -- seed-catalog`
+7. Backfill производителей, sync путей к картинкам, нормализация фильтров
+8. Очистка невалидных товаров
+
+**Использование:**
+```bash
+./scripts/seed-all.sh              # Полный цикл (скрапинг + seed)
+./scripts/seed-all.sh --seed-only  # Только seed из уже скачанных данных
+./scripts/seed-all.sh --slow       # Медленный режим (увеличенные таймауты)
+```
+
+**Флаг `--slow`:** Увеличивает задержку между запросами (100мс→800мс) и таймауты загрузки страниц (30сек→60сек). Для медленного интернета.
+
+**Ценность:** Критическая — заменяет ручной запуск 10+ скриптов.
+
+---
+
+### `seed-users.sh`
+**Назначение:** Создание всех тестовых пользователей напрямую в PostgreSQL.
+**Что делает:** Вставляет 5 пользователей (admin, manager, master, accountant, client) через SQL `INSERT ... ON CONFLICT DO NOTHING`. Обходит rate limiter AuthService.
+
+| Email | Пароль | Роль |
+|-------|--------|------|
+| admin@goldpc.by | G0ldPC#Adm1n2026! | Admin |
+| manager@goldpc.by | Test1234! | Manager |
+| master@goldpc.by | Test1234! | Master |
+| accountant@goldpc.by | Test1234! | Accountant |
+| client@goldpc.by | Test1234! | Client |
+
+**Использование:**
+```bash
+bash scripts/seed-data/seed-users.sh
+```
+
+**Ценность:** Критическая — единственный способ войти в систему. Вызывается из `dev-local.sh`.
+
+---
+
 ### `start-dev.sh`
 **Назначение:** Основной скрипт запуска окружения разработки.
 **Что делает:**

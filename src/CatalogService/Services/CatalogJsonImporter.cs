@@ -185,12 +185,7 @@ public class CatalogJsonImporter
             }
 
             var path = TryResolveStoredImagePath(imgRaw);
-            if (path == null)
-            {
-                continue;
-            }
-
-            var urlForDb = imgRaw.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase) ? path : imgRaw;
+            var urlForDb = path != null && imgRaw.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase) ? path : imgRaw;
             _context.ProductImages.Add(CreateProductImageRow(product.Id, urlForDb, path, product.Name, i == 0, i));
         }
     }
@@ -898,7 +893,7 @@ public class CatalogJsonImporter
             .ToHashSet();
 
         var invalidByImages = candidates
-            .Where(p => !p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)))
+            .Where(p => !p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path) || !string.IsNullOrWhiteSpace(i.Url)))
             .Select(p => p.Id)
             .ToHashSet();
 

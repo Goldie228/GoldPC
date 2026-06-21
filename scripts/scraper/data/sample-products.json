@@ -1,0 +1,55 @@
+{
+  "source": "x-core.by",
+  "scrapedAt": "2025-03-20T00:00:00.000Z",
+  "productCount": 3,
+  "products": [
+    {
+      "url": "https://x-core.by/catalog/komplektuyushchie_dlya_kompyuterov/videokarty/videokarta_msi_geforce_rtx_5060_8g_shadow_2x_oc_max",
+      "externalId": "videokarta_msi_geforce_rtx_5060_8g_shadow_2x_oc_max",
+      "categorySlug": "gpu",
+      "categoryPath": "catalog/komplektuyushchie_dlya_kompyuterov/videokarty",
+      "name": "Видеокарта MSI GeForce RTX 5060 8G Shadow 2X OC Max",
+      "price": 1581.80,
+      "oldPrice": 1740.01,
+      "stock": 5,
+      "description": "Видеокарта MSI GeForce RTX 5060 8G Shadow 2X OC Max",
+      "specifications": { "vram": "8GB", "gpu": "GeForce RTX 5060" },
+      "warrantyMonths": 24,
+      "manufacturer": "MSI",
+      "images": ["https://x-core.by/upload/iblock/xxx/example.png"],
+      "sku": "XCORE-videokarta_msi_geforce_rtx_5060_8g_shadow_2x_oc_max"
+    },
+    {
+      "url": "https://x-core.by/catalog/komplektuyushchie_dlya_kompyuterov/videokarty/videokarta_palit_geforce_rtx_5060_dual_oc",
+      "externalId": "videokarta_palit_geforce_rtx_5060_dual_oc",
+      "categorySlug": "gpu",
+      "categoryPath": "catalog/komplektuyushchie_dlya_kompyuterov/videokarty",
+      "name": "Видеокарта Palit GeForce RTX 5060 Dual OC",
+      "price": 1382.70,
+      "oldPrice": 1521,
+      "stock": 5,
+      "description": "Видеокарта Palit GeForce RTX 5060 Dual OC",
+      "specifications": { "vram": "8GB", "gpu": "GeForce RTX 5060" },
+      "warrantyMonths": 24,
+      "manufacturer": "Palit",
+      "images": ["https://x-core.by/upload/iblock/yyy/example2.png"],
+      "sku": "XCORE-videokarta_palit_geforce_rtx_5060_dual_oc"
+    },
+    {
+      "url": "https://x-core.by/catalog/komplektuyushchie_dlya_kompyuterov/protsessory/processor_amd_ryzen_5_5600",
+      "externalId": "processor_amd_ryzen_5_5600",
+      "categorySlug": "processors",
+      "categoryPath": "catalog/komplektuyushchie_dlya_kompyuterov/protsessory",
+      "name": "Процессор AMD Ryzen 5 5600",
+      "price": 349.90,
+      "oldPrice": null,
+      "stock": 5,
+      "description": "Процессор AMD Ryzen 5 5600",
+      "specifications": { "socket": "AM4", "cores": 6, "threads": 12 },
+      "warrantyMonths": 36,
+      "manufacturer": "AMD",
+      "images": [],
+      "sku": "XCORE-processor_amd_ryzen_5_5600"
+    }
+  ]
+}

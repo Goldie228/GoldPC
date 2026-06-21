@@ -32,6 +32,10 @@ namespace GoldPC.ServicesService.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
                     b.Property<string>("ProductName")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -70,15 +74,6 @@ namespace GoldPC.ServicesService.Migrations
                         .HasColumnType("numeric(12,2)")
                         .HasColumnName("actual_cost");
 
-                    b.Property<Guid?>("MasterId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("master_id");
-
-                    b.Property<string>("MasterComment")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)")
-                        .HasColumnName("master_comment");
-
                     b.Property<Guid>("ClientId")
                         .HasColumnType("uuid")
                         .HasColumnName("client_id");
@@ -86,6 +81,10 @@ namespace GoldPC.ServicesService.Migrations
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("completed_at");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -103,6 +102,15 @@ namespace GoldPC.ServicesService.Migrations
                         .HasColumnType("numeric(12,2)")
                         .HasColumnName("estimated_cost");
 
+                    b.Property<string>("MasterComment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("master_comment");
+
+                    b.Property<Guid?>("MasterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("master_id");
+
                     b.Property<string>("RequestNumber")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -119,9 +127,14 @@ namespace GoldPC.ServicesService.Migrations
                         .HasColumnName("service_type_id");
 
                     b.Property<string>("Status")
+                        .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -146,6 +159,7 @@ namespace GoldPC.ServicesService.Migrations
                         .HasColumnName("base_price");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("description");
@@ -164,6 +178,12 @@ namespace GoldPC.ServicesService.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("slug");
+
                     b.HasKey("Id");
 
                     b.ToTable("service_types", (string)null);
@@ -176,7 +196,8 @@ namespace GoldPC.ServicesService.Migrations
                             Description = "Диагностика и ремонт настольных ПК любой сложности. Замена компонентов, устранение перегрева, восстановление после залития.",
                             EstimatedDurationMinutes = 120,
                             IsActive = true,
-                            Name = "Ремонт компьютеров"
+                            Name = "Ремонт компьютеров",
+                            Slug = "ремонт-компьютеров"
                         },
                         new
                         {
@@ -185,7 +206,8 @@ namespace GoldPC.ServicesService.Migrations
                             Description = "Ремонт материнских плат, замена матриц, клавиатур, аккумуляторов. Работаем со всеми брендами.",
                             EstimatedDurationMinutes = 180,
                             IsActive = true,
-                            Name = "Ремонт ноутбуков"
+                            Name = "Ремонт ноутбуков",
+                            Slug = "ремонт-ноутбуков"
                         },
                         new
                         {
@@ -194,7 +216,8 @@ namespace GoldPC.ServicesService.Migrations
                             Description = "Апгрейд процессора, видеокарты, оперативной памяти, SSD. Подберём совместимые компоненты под ваш бюджет.",
                             EstimatedDurationMinutes = 60,
                             IsActive = true,
-                            Name = "Модернизация ПК"
+                            Name = "Модернизация ПК",
+                            Slug = "модернизация-пк"
                         },
                         new
                         {
@@ -203,7 +226,8 @@ namespace GoldPC.ServicesService.Migrations
                             Description = "Полная аппаратная и программная диагностика. Определим причину неисправности и предложим варианты ремонта.",
                             EstimatedDurationMinutes = 90,
                             IsActive = true,
-                            Name = "Диагностика"
+                            Name = "Диагностика",
+                            Slug = "диагностика"
                         },
                         new
                         {
@@ -212,7 +236,8 @@ namespace GoldPC.ServicesService.Migrations
                             Description = "Подбор комплектующих и профессиональная сборка компьютера под ваши задачи: игры, работа, стриминг.",
                             EstimatedDurationMinutes = 120,
                             IsActive = true,
-                            Name = "Сборка ПК на заказ"
+                            Name = "Сборка ПК на заказ",
+                            Slug = "assembly"
                         },
                         new
                         {
@@ -221,7 +246,8 @@ namespace GoldPC.ServicesService.Migrations
                             Description = "Восстановление удалённых файлов, данных с повреждённых HDD/SSD, флешек и карт памяти.",
                             EstimatedDurationMinutes = 240,
                             IsActive = true,
-                            Name = "Восстановление данных"
+                            Name = "Восстановление данных",
+                            Slug = "восстановление-данных"
                         },
                         new
                         {
@@ -230,8 +256,70 @@ namespace GoldPC.ServicesService.Migrations
                             Description = "Чистка от пыли, замена термопасты, профилактика системы охлаждения. Продлим жизнь вашему ПК.",
                             EstimatedDurationMinutes = 90,
                             IsActive = true,
-                            Name = "Чистка и обслуживание"
+                            Name = "Чистка и обслуживание",
+                            Slug = "чистка-и-обслуживание"
                         });
+                });
+
+            modelBuilder.Entity("GoldPC.ServicesService.Entities.TicketMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("author_id");
+
+                    b.Property<string>("AuthorRole")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("author_role");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("content");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("content_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("file_name");
+
+                    b.Property<long?>("FileSize")
+                        .HasColumnType("bigint")
+                        .HasColumnName("file_size");
+
+                    b.Property<string>("FileUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("file_url");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("read_at");
+
+                    b.Property<Guid>("ServiceRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("service_request_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceRequestId");
+
+                    b.ToTable("ticket_messages", (string)null);
                 });
 
             modelBuilder.Entity("GoldPC.ServicesService.Entities.WorkReport", b =>
@@ -241,13 +329,13 @@ namespace GoldPC.ServicesService.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("ChangedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("changed_by");
-
                     b.Property<DateTime>("ChangedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("changed_at");
+
+                    b.Property<Guid>("ChangedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("changed_by");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(1000)
@@ -255,11 +343,13 @@ namespace GoldPC.ServicesService.Migrations
                         .HasColumnName("comment");
 
                     b.Property<string>("NewStatus")
+                        .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("new_status");
 
                     b.Property<string>("PreviousStatus")
+                        .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("previous_status");
@@ -281,7 +371,8 @@ namespace GoldPC.ServicesService.Migrations
                         .WithMany("ServiceParts")
                         .HasForeignKey("ServiceRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_service_parts_service_request");
 
                     b.Navigation("ServiceRequest");
                 });
@@ -291,9 +382,23 @@ namespace GoldPC.ServicesService.Migrations
                     b.HasOne("GoldPC.ServicesService.Entities.ServiceType", "ServiceType")
                         .WithMany("ServiceRequests")
                         .HasForeignKey("ServiceTypeId")
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_service_requests_service_type");
 
                     b.Navigation("ServiceType");
+                });
+
+            modelBuilder.Entity("GoldPC.ServicesService.Entities.TicketMessage", b =>
+                {
+                    b.HasOne("GoldPC.ServicesService.Entities.ServiceRequest", "ServiceRequest")
+                        .WithMany("TicketMessages")
+                        .HasForeignKey("ServiceRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_ticket_messages_service_request");
+
+                    b.Navigation("ServiceRequest");
                 });
 
             modelBuilder.Entity("GoldPC.ServicesService.Entities.WorkReport", b =>
@@ -302,7 +407,8 @@ namespace GoldPC.ServicesService.Migrations
                         .WithMany("WorkReports")
                         .HasForeignKey("ServiceRequestId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_work_reports_service_request");
 
                     b.Navigation("ServiceRequest");
                 });
@@ -310,7 +416,9 @@ namespace GoldPC.ServicesService.Migrations
             modelBuilder.Entity("GoldPC.ServicesService.Entities.ServiceRequest", b =>
                 {
                     b.Navigation("ServiceParts");
-                    b.Navigation("ServiceType");
+
+                    b.Navigation("TicketMessages");
+
                     b.Navigation("WorkReports");
                 });
 
