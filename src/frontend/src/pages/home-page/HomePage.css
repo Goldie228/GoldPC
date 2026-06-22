@@ -414,21 +414,11 @@
 /* ─── Carousel ─── */
 .home-gaming__carousel {
   position: relative;
-  border-radius: 16px;
+  border-radius: 0;
   overflow: hidden;
   background: var(--color-canvas-dark, #0b0e11);
   user-select: none;
-  margin-left: -48px;
-  margin-right: -48px;
-  width: calc(100% + 96px);
-}
-
-@media (max-width: 768px) {
-  .home-gaming__carousel {
-    margin-left: -24px;
-    margin-right: -24px;
-    width: calc(100% + 48px);
-  }
+  width: 100%;
 }
 
 .home-gaming__carousel-viewport {
@@ -484,13 +474,17 @@
 /* Оверлей текста поверх картинки */
 .home-gaming__carousel-overlay {
   position: absolute;
-  inset: auto 40px 40px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 40px;
   z-index: 2;
+  text-align: center;
 }
 
 @media (max-width: 768px) {
   .home-gaming__carousel-overlay {
-    inset: auto 20px 24px;
+    padding: 24px 20px;
   }
 }
 
@@ -515,7 +509,7 @@
   font-size: 15px;
   color: rgba(255, 255, 255, 0.8);
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
-  margin: 0;
+  margin: 0 0 12px;
 }
 
 @media (max-width: 768px) {
@@ -562,11 +556,11 @@
 }
 
 .home-gaming__carousel-arrow--left {
-  left: 20px;
+  left: 48px;
 }
 
 .home-gaming__carousel-arrow--right {
-  right: 20px;
+  right: 48px;
 }
 
 /* Footer: dots + pause */
