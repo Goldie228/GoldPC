@@ -402,7 +402,9 @@ export function FilterSidebar({
       }
     };
     void fetchManufacturers();
-    return () => { cancelled = true; };
+    // Safety timeout: if loading never resolves, force it off
+    const timeout = setTimeout(() => { if (!cancelled) setManufacturersLoading(false); }, 5000);
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, [selectedCategory]);
 
   // === Вычисляемые значения ===
