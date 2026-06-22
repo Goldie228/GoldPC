@@ -148,24 +148,24 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
             <div key={label} className="flex items-center gap-2">
               <div className="flex items-center gap-1.5">
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold font-['Nunito'] transition-all ${
                     i < step
-                      ? 'bg-[var(--color-brand-primary)] text-[var(--color-canvas-dark)]'
+                      ? 'bg-gold text-gold-ink'
                       : i === step
-                        ? 'bg-[var(--color-brand-primary)] text-[var(--color-canvas-dark)] scale-110'
-                        : 'bg-[var(--color-surface-raised)] text-[var(--color-text-muted)]'
+                        ? 'bg-gold text-gold-ink scale-110'
+                        : 'bg-surface-elevated text-muted-text'
                   }`}
                 >
                   {i < step ? <Check size={14} /> : i + 1}
                 </div>
-                <span className="hidden sm:inline text-sm text-[var(--color-text-secondary)]">
+                <span className="hidden sm:inline text-sm text-body-text">
                   {label}
                 </span>
               </div>
               {i < STEP_LABELS.length - 1 && (
                 <div
                   className={`w-8 h-0.5 ${
-                    i < step ? 'bg-[var(--color-brand-primary)]' : 'bg-[var(--color-surface-raised)]'
+                    i < step ? 'bg-gold' : 'bg-surface-elevated'
                   }`}
                 />
               )}
@@ -185,10 +185,10 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+            <h2 className="text-title-lg font-semibold text-on-dark mb-2">
               Что важнее всего?
             </h2>
-            <p className="text-sm text-[var(--color-text-muted)] mb-5">
+            <p className="text-body-md text-muted-text mb-5">
               От назначения зависит распределение бюджета по компонентам
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -196,23 +196,23 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                 <button
                   key={opt.id}
                   onClick={() => setState((s) => ({ ...s, purpose: opt.id }))}
-                  className={`group flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all cursor-pointer ${
+                  className={`group flex flex-col items-center gap-3 p-6 rounded-xl border transition-all cursor-pointer ${
                     state.purpose === opt.id
-                      ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10'
-                      : 'border-[var(--color-border-default)] bg-[var(--color-surface-card)] hover:border-[var(--color-brand-primary)]/50'
+                      ? 'border-2 border-gold bg-gold/10 shadow-[0_0_20px_rgba(252,213,53,0.15)]'
+                      : 'border border-hairline-dark bg-surface-card hover:border-gold/50'
                   }`}
                 >
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
                       state.purpose === opt.id
-                        ? 'bg-[var(--color-brand-primary)] text-[var(--color-canvas-dark)]'
-                        : 'bg-[var(--color-surface-raised)] text-[var(--color-text-secondary)] group-hover:text-[var(--color-brand-primary)]'
+                        ? 'bg-gold text-gold-ink'
+                        : 'bg-surface-elevated text-body-text group-hover:text-gold'
                     }`}
                   >
                     {PURPOSE_ICONS[opt.id as Purpose]}
                   </div>
-                  <span className="font-medium text-[var(--color-text-primary)]">{opt.label}</span>
-                  <span className="text-xs text-[var(--color-text-muted)] text-center">
+                  <span className="font-semibold text-on-dark">{opt.label}</span>
+                  <span className="text-xs text-muted-text text-center">
                     {opt.description}
                   </span>
                 </button>
@@ -230,10 +230,10 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+            <h2 className="text-title-lg font-semibold text-on-dark mb-2">
               Какой бюджет?
             </h2>
-            <p className="text-sm text-[var(--color-text-muted)] mb-5">
+            <p className="text-body-md text-muted-text mb-5">
               Выберите ценовую категорию. Мастер подберет лучшие компоненты в рамках бюджета.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -241,23 +241,23 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                 <button
                   key={opt.id}
                   onClick={() => setState((s) => ({ ...s, budget: opt.id }))}
-                  className={`flex flex-col p-5 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                  className={`flex flex-col p-6 rounded-xl border transition-all text-left cursor-pointer ${
                     state.budget === opt.id
-                      ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10'
-                      : 'border-[var(--color-border-default)] bg-[var(--color-surface-card)] hover:border-[var(--color-brand-primary)]/50'
+                      ? 'border-2 border-gold bg-gold/10 shadow-[0_0_20px_rgba(252,213,53,0.15)]'
+                      : 'border border-hairline-dark bg-surface-card hover:border-gold/50'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="font-medium text-[var(--color-text-primary)]">{opt.label}</span>
-                    <span className="text-sm font-semibold text-[var(--color-brand-primary)]">
+                    <span className="font-semibold text-on-dark">{opt.label}</span>
+                    <span className="font-['Nunito'] text-sm font-medium text-gold">
                       {opt.range}
                     </span>
                   </div>
-                  <span className="text-xs text-[var(--color-text-muted)]">{opt.description}</span>
+                  <span className="text-xs text-muted-text">{opt.description}</span>
                   {/* Budget bar */}
-                  <div className="mt-3 h-1.5 rounded-full bg-[var(--color-surface-raised)] overflow-hidden">
+                  <div className="mt-3 h-1.5 rounded-full bg-surface-elevated overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-[var(--color-brand-primary)] transition-all"
+                      className="h-full rounded-full bg-gold transition-all"
                       style={{
                         width:
                           opt.id === 'economy' ? '25%'
@@ -282,17 +282,17 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
           >
-            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+            <h2 className="text-title-lg font-semibold text-on-dark mb-2">
               Предпочтения
             </h2>
-            <p className="text-sm text-[var(--color-text-muted)] mb-5">
+            <p className="text-body-md text-muted-text mb-5">
               Настройте подбор под себя
             </p>
 
             <div className="space-y-5">
               {/* CPU Brand */}
               <div>
-                <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
+                <h3 className="text-title-sm font-semibold text-body-text mb-3">
                   Процессор
                 </h3>
                 <div className="grid grid-cols-3 gap-2">
@@ -306,10 +306,10 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                       <button
                         key={brand}
                         onClick={() => setState((s) => ({ ...s, cpuBrand: brand }))}
-                        className={`py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all cursor-pointer ${
+                        className={`py-2.5 px-4 rounded-md border text-body-md font-medium transition-all cursor-pointer ${
                           state.cpuBrand === brand
-                            ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'
-                            : 'border-[var(--color-border-default)] bg-[var(--color-surface-card)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/50'
+                            ? 'border-2 border-gold bg-gold text-gold-ink font-semibold'
+                            : 'border border-hairline-dark bg-surface-elevated text-body-text hover:border-gold/50'
                         }`}
                       >
                         {labels[brand]}
@@ -322,7 +322,7 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
               {/* Resolution (only for gaming/workstation) */}
               {(state.purpose === 'gaming' || state.purpose === 'workstation') && (
                 <div>
-                  <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
+                  <h3 className="text-title-sm font-semibold text-body-text mb-3">
                     Разрешение (для подбора видеокарты)
                   </h3>
                   <div className="grid grid-cols-3 gap-2">
@@ -336,10 +336,10 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                         <button
                           key={res}
                           onClick={() => setState((s) => ({ ...s, resolution: res }))}
-                          className={`py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all cursor-pointer ${
+                          className={`py-2.5 px-4 rounded-md border text-body-md font-medium transition-all cursor-pointer ${
                             state.resolution === res
-                              ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'
-                              : 'border-[var(--color-border-default)] bg-[var(--color-surface-card)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/50'
+                              ? 'border-2 border-gold bg-gold text-gold-ink font-semibold'
+                              : 'border border-hairline-dark bg-surface-elevated text-body-text hover:border-gold/50'
                           }`}
                         >
                           {labels[res]}
@@ -362,18 +362,18 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
             exit={{ opacity: 0 }}
             className="flex flex-col items-center justify-center py-16 gap-4"
           >
-            <Loader2 size={40} className="text-[var(--color-brand-primary)] animate-spin" />
-            <p className="text-[var(--color-text-secondary)]">
+            <Loader2 size={40} className="text-gold animate-spin" />
+            <p className="text-body-text">
               Подбираем компоненты...
             </p>
             <div className="w-64 space-y-2">
-              <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
+              <div className="flex justify-between text-xs text-muted-text">
                 <span>{COMPONENT_LABELS[loadingProgress.category] ?? loadingProgress.category}</span>
                 <span>{loadingProgress.current}/{loadingProgress.total}</span>
               </div>
-              <div className="h-1.5 rounded-full bg-[var(--color-surface-raised)] overflow-hidden">
+              <div className="h-1.5 rounded-full bg-surface-elevated overflow-hidden">
                 <motion.div
-                  className="h-full rounded-full bg-[var(--color-brand-primary)]"
+                  className="h-full rounded-full bg-gold"
                   initial={{ width: 0 }}
                   animate={{
                     width: `${(loadingProgress.current / loadingProgress.total) * 100}%`,
@@ -398,13 +398,13 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
             <div className="flex gap-3">
               <button
                 onClick={handleRetry}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-brand-primary)] text-[var(--color-canvas-dark)] text-sm font-medium hover:opacity-90 cursor-pointer"
+                className="flex items-center gap-2 px-6 py-3 rounded-md bg-gold text-gold-ink text-body-md font-semibold hover:bg-gold-active transition-colors cursor-pointer"
               >
                 <RefreshCw size={16} /> Повторить
               </button>
               <button
                 onClick={handleReset}
-                className="px-4 py-2 rounded-lg bg-[var(--color-surface-raised)] text-[var(--color-text-secondary)] text-sm hover:bg-[var(--color-surface-card)] cursor-pointer"
+                className="px-6 py-3 rounded-md bg-surface-elevated text-body-text text-body-md hover:bg-surface-card transition-colors cursor-pointer"
               >
                 Начать заново
               </button>
@@ -429,7 +429,7 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
         <div className="flex items-center justify-between pt-2">
           <button
             onClick={step === 0 ? onBack : handlePrev}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-raised)] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-6 py-3 rounded-md text-body-md text-body-text hover:bg-surface-elevated transition-colors cursor-pointer"
           >
             <ArrowLeft size={16} />
             {step === 0 ? 'Назад' : 'Предыдущий шаг'}
@@ -437,10 +437,10 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
           <button
             onClick={handleNext}
             disabled={!canGoNext}
-            className={`flex items-center gap-1.5 px-6 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 px-6 py-3 rounded-md text-body-md font-semibold transition-all cursor-pointer ${
               canGoNext
-                ? 'bg-[var(--color-brand-primary)] text-[var(--color-canvas-dark)] hover:opacity-90'
-                : 'bg-[var(--color-surface-raised)] text-[var(--color-text-muted)] cursor-not-allowed'
+                ? 'bg-gold text-gold-ink hover:bg-gold-active'
+                : 'bg-surface-elevated text-muted-text cursor-not-allowed'
             }`}
           >
             {step === 2 ? 'Подобрать конфигурацию' : 'Далее'}
