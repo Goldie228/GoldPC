@@ -381,9 +381,8 @@
 }
 
 .home-gaming__inner {
-  max-width: 1440px;
   margin: 0 auto;
-  padding: 0 48px;
+  padding: 0;
 }
 
 @media (max-width: 768px) {
@@ -631,9 +630,8 @@
 }
 
 .home-gaming__inner {
-  max-width: 1440px;
   margin: 0 auto;
-  padding: 0 48px;
+  padding: 0;
 }
 
 @media (max-width: 768px) {
