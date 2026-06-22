@@ -684,7 +684,7 @@ public class AdminService : IAdminService
     }
 
     /// <inheritdoc/>
-    public Task AddAuditLogAsync(string actionType, string userId, string userName, string userEmail, string description, string severity = "INFO", string? additionalData = null, string? ipAddress = null)
+    public Task AddAuditLogAsync(string actionType, string userId, string userName, string userEmail, string description, string severity = "INFO", string? additionalData = null)
     {
         var log = new AuditLogDto
         {
@@ -693,7 +693,7 @@ public class AdminService : IAdminService
             UserId = userId,
             UserName = userName,
             UserEmail = userEmail,
-            IpAddress = ipAddress ?? "",
+            IpAddress = "",
             Description = description,
             AdditionalData = additionalData,
             CreatedAt = DateTime.UtcNow,

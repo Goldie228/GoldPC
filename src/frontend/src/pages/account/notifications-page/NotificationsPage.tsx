@@ -219,12 +219,6 @@ export function NotificationsPage() {
             ))}
           </div>
         </SectionCard>
-
-        {/* Пояснение */}
-        <div className="mt-6 rounded-lg bg-surface-elevated/50 px-4 py-3 text-xs text-muted-foreground">
-          Некоторые типы уведомлений могут быть отключены администратором на уровне системы.
-          В этом случае переключатель не повлияет на получение.
-        </div>
       </div>
     </div>
   );

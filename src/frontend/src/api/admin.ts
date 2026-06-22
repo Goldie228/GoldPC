@@ -199,7 +199,7 @@ export const usersAdminApi = {
     isActive?: boolean;
   }): Promise<PagedResponse<User>> {
     try {
-      const response = await api.get<PagedResponse<User>>('/auth/admin/users', { params });
+      const response = await api.get<PagedResponse<User>>('/admin/users', { params });
       return response.data;
     } catch (e) {
       throw new Error('Failed to fetch users: ' + (e instanceof Error ? e.message : String(e)));
@@ -211,8 +211,8 @@ export const usersAdminApi = {
    */
   async getUser(userId: string): Promise<User> {
     try {
-      const response = await goldpcApi.getAuthAdminUsersId(userId);
-      return response.data as User;
+      const response = await api.get<User>(`/admin/users/${userId}`);
+      return response.data;
     } catch (e) {
       throw new Error('Failed to fetch user: ' + (e instanceof Error ? e.message : String(e)));
     }
@@ -223,7 +223,7 @@ export const usersAdminApi = {
    */
   async updateUserRole(userId: string, role: UserRole): Promise<void> {
     try {
-      await api.patch(`/auth/admin/users/${userId}/role`, { role });
+      await api.patch(`/admin/users/${userId}/role`, { role });
     } catch (e) {
       throw new Error('Failed to update user role: ' + (e instanceof Error ? e.message : String(e)));
     }
@@ -234,7 +234,7 @@ export const usersAdminApi = {
    */
   async deactivateUser(userId: string): Promise<void> {
     try {
-      await goldpcApi.postAuthAdminUsersIdDeactivate(userId);
+      await api.post(`/admin/users/${userId}/deactivate`);
     } catch (e) {
       throw new Error('Failed to deactivate user: ' + (e instanceof Error ? e.message : String(e)));
     }
@@ -245,7 +245,7 @@ export const usersAdminApi = {
    */
   async activateUser(userId: string): Promise<void> {
     try {
-      await goldpcApi.postAuthAdminUsersIdActivate(userId);
+      await api.post(`/admin/users/${userId}/activate`);
     } catch (e) {
       throw new Error('Failed to activate user: ' + (e instanceof Error ? e.message : String(e)));
     }
@@ -256,7 +256,7 @@ export const usersAdminApi = {
    */
   async updateUser(userId: string, data: Partial<User>): Promise<User> {
     try {
-      const response = await api.put<User>(`/auth/admin/users/${userId}`, data);
+      const response = await api.put<User>(`/admin/users/${userId}`, data);
       return response.data;
     } catch (e) {
       throw new Error('Failed to update user: ' + (e instanceof Error ? e.message : String(e)));
@@ -274,8 +274,8 @@ export const usersAdminApi = {
     role: string;
   }): Promise<User> {
     try {
-      const response = await goldpcApi.postAuthAdminUsers(data);
-      return response.data as User;
+      const response = await api.post<User>('/admin/users', data);
+      return response.data;
     } catch (e) {
       throw new Error('Failed to create user: ' + (e instanceof Error ? e.message : String(e)));
     }
@@ -286,7 +286,7 @@ export const usersAdminApi = {
    */
   async deleteUser(userId: string): Promise<void> {
     try {
-      await goldpcApi.deleteAuthAdminUsersId(userId);
+      await api.delete(`/admin/users/${userId}`);
     } catch (e) {
       throw new Error('Failed to delete user: ' + (e instanceof Error ? e.message : String(e)));
     }

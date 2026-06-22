@@ -324,7 +324,7 @@ const ProductCard = memo(function ProductCard({ product, onAddToCart }: ProductC
         ) : (
           <button
             onClick={handleAddToCart}
-            className="w-full h-10 bg-price-drop text-on-dark text-sm font-semibold rounded-lg flex items-center justify-center gap-2 hover:brightness-110 transition-all active:scale-[0.98]"
+            className="w-full h-10 bg-gold text-gold-ink text-sm font-semibold rounded-lg flex items-center justify-center gap-2 hover:bg-gold-active transition-all active:scale-[0.98]"
           >
             <ShoppingCart size={14} />
             В корзину
