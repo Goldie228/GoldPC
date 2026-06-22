@@ -299,7 +299,8 @@ export function FilterSidebar({
       }
     };
     void fetchCategories();
-    return () => { cancelled = true; };
+    const timeout = setTimeout(() => { if (!cancelled) setCategoriesLoading(false); }, 30000);
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, []);
 
   // === Загрузка фасетов фильтров для спецификаций ===
