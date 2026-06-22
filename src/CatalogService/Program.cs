@@ -280,7 +280,13 @@ app.UseStaticFiles(new StaticFileOptions
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"] ?? "development_secret_key_32_chars_long!!";
+var secretKey = jwtSettings["SecretKey"];
+if (string.IsNullOrEmpty(secretKey) || secretKey == "development_secret_key_32_chars_long!!")
+{
+    if (builder.Environment.IsProduction())
+        throw new InvalidOperationException("Jwt:SecretKey must be configured in production");
+    secretKey = "development_secret_key_32_chars_long!!";
+}
 
 builder.Services.AddAuthentication(options =>
 {

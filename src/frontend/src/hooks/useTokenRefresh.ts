@@ -74,12 +74,17 @@ export function useTokenRefresh(): void {
 
           console.debug('[useTokenRefresh] Token refreshed successfully');
         }
-      } catch {
-        // Рефреш не удался — очищаем
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('auth-storage');
-        console.debug('[useTokenRefresh] Refresh failed, cleared tokens');
+      } catch (err: unknown) {
+        // Only clear tokens on auth errors (401/403), not network/server errors
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        if (status === 401 || status === 403) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('auth-storage');
+          console.debug('[useTokenRefresh] Auth rejected, cleared tokens');
+        } else {
+          console.debug('[useTokenRefresh] Refresh failed (network/server error), tokens preserved');
+        }
       } finally {
         isRefreshing = false;
       }

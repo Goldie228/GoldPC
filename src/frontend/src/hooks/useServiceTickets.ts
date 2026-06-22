@@ -10,7 +10,7 @@ export interface UseServiceTicketsReturn {
   serviceTypes: ServiceType[];
   fetchServiceTypes: () => Promise<ServiceType[]>;
   createService: (data: CreateServiceRequest) => Promise<ServiceRequestDto | null>;
-  getMyServices: (page?: number, pageSize?: number, status?: string) => Promise<{ items: ServiceRequestDto[]; total: number } | null>;
+  getMyServices: (page?: number, pageSize?: number, status?: string) => Promise<{ items: ServiceRequestDto[]; totalCount: number } | null>;
   getServiceById: (id: string) => Promise<ServiceRequestDto | null>;
   loading: boolean;
   error: Error | null;
