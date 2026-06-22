@@ -215,7 +215,7 @@ export const catalogApi = {
    */
   async getCategories(): Promise<Category[]> {
     try {
-      const response = await goldpcApi.getCatalogCategories();
+      const response = await goldpcApi.getCatalogCategories({ timeout: 30000 });
       const data = response.data as unknown as { data?: Category[]; categories?: Category[] } | Category[];
       if (Array.isArray(data)) {
         return data;
