@@ -121,8 +121,8 @@ public class AdminController : ControllerBase
 
     /// <summary>Список пользователей с пагинацией, поиском и фильтром по роли</summary>
     [HttpGet("users")]
-    [ProducesResponseType(typeof(DTOs.PagedResult<UserDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<DTOs.PagedResult<UserDto>>> GetUsers(
+    [ProducesResponseType(typeof(GoldPC.SharedKernel.Models.PagedResult<UserDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<GoldPC.SharedKernel.Models.PagedResult<UserDto>>> GetUsers(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? search = null,
@@ -157,7 +157,7 @@ public class AdminController : ControllerBase
             .Take(pageSize)
             .ToListAsync();
 
-        return Ok(new PagedResult<UserDto>
+        return Ok(new GoldPC.SharedKernel.Models.PagedResult<UserDto>
         {
             Items = users.Select(MapToUserDto).ToList(),
             TotalCount = totalCount,

@@ -112,11 +112,35 @@ public class CompatibilityService : ICompatibilityService
 
     public async Task<IEnumerable<Guid>> GetCompatibleMotherboardsAsync(Guid processorId)
     {
-        return await _dbContext.CompatibilityRules
+        // 1. Try explicit compatibility rules first
+        var ruleBased = await _dbContext.CompatibilityRules
             .Where(r => r.RuleType == "cpu_motherboard" && r.IsCompatible)
             .Where(r => r.Component1Id == processorId || r.Component2Id == processorId)
             .Select(r => r.Component1Id == processorId ? r.Component2Id : r.Component1Id)
             .ToListAsync();
+
+        if (ruleBased.Count > 0)
+            return ruleBased;
+
+        // 2. Fallback: find processor socket from any rule that mentions it, then match motherboards by socket
+        var processorSocket = await _dbContext.CompatibilityRules
+            .Where(r => (r.Component1Id == processorId || r.Component2Id == processorId) && r.Socket != null)
+            .Select(r => r.Socket)
+            .FirstOrDefaultAsync();
+
+        if (string.IsNullOrEmpty(processorSocket))
+            return ruleBased;
+
+        _logger.LogInformation("No cpu_motherboard rules for {ProcessorId}, falling back to socket match: {Socket}", processorId, processorSocket);
+
+        var socketBased = await _dbContext.CompatibilityRules
+            .Where(r => r.Socket == processorSocket && r.IsCompatible)
+            .Where(r => r.Component1Type == "motherboard" || r.Component2Type == "motherboard")
+            .Select(r => r.Component1Type == "motherboard" ? r.Component1Id : r.Component2Id)
+            .Distinct()
+            .ToListAsync();
+
+        return socketBased;
     }
 
     public async Task<IEnumerable<Guid>> GetCompatibleRamAsync(Guid motherboardId)

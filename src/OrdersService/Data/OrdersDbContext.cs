@@ -83,7 +83,6 @@ public class OrdersDbContext : DbContext
                 .WithMany(o => o.Items)
                 .HasForeignKey(e => e.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
-
             entity.HasIndex(e => e.OrderId);
         });
         

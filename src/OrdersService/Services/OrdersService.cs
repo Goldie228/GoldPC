@@ -1,5 +1,6 @@
 using GoldPC.OrdersService.Data;
 using GoldPC.OrdersService.Entities;
+using GoldPC.OrdersService.Services.Interfaces;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
 using GoldPC.SharedKernel.Models;
@@ -22,17 +23,20 @@ public class OrdersService : IOrdersService
     private readonly OrdersDbContext _context;
     private readonly ILogger<OrdersService> _logger;
     private readonly CatalogGrpc.CatalogGrpcClient _catalogClient;
-    
+    private readonly IPromoCodeService _promoCodeService;
+
     private const int MaxItemQuantity = 5;
 
     public OrdersService(
-        OrdersDbContext context, 
-        ILogger<OrdersService> logger, 
-        CatalogGrpc.CatalogGrpcClient catalogClient)
+        OrdersDbContext context,
+        ILogger<OrdersService> logger,
+        CatalogGrpc.CatalogGrpcClient catalogClient,
+        IPromoCodeService promoCodeService)
     {
         _context = context;
         _logger = logger;
         _catalogClient = catalogClient;
+        _promoCodeService = promoCodeService;
     }
 
     public async Task<OrderDto?> GetByIdAsync(Guid id)
@@ -181,10 +185,20 @@ public class OrdersService : IOrdersService
         var subtotal = request.Items.Sum(i => i.Quantity * i.UnitPrice);
         var deliveryCost = CalculateDeliveryCost(request.DeliveryMethod, subtotal, request.City);
         
-        // Применение скидки по промокоду
+        // Серверная валидация промокода — клиент не может подставить произвольную скидку
         var discountAmount = request.DiscountAmount;
+        if (!string.IsNullOrEmpty(request.PromoCode))
+        {
+            var promoResult = await _promoCodeService.UsePromoCodeAsync(request.PromoCode, subtotal);
+            if (promoResult == null || !promoResult.Valid)
+            {
+                return (null, promoResult?.Message ?? "Промокод недействителен");
+            }
+            discountAmount = promoResult.DiscountAmount;
+        }
+
         var total = subtotal - discountAmount + deliveryCost;
-        
+
         // Валидация общей стоимости
         if (total < 0)
         {

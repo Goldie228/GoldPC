@@ -22,21 +22,21 @@ export interface SaveConfigurationRequest {
 }
 
 export const pcbuilderApi = {
+  /** Save a new configuration */
+  async saveConfiguration(config: SaveConfigurationRequest): Promise<SavedBuild> {
+    const { data } = await apiClient.post<SavedBuild>('/pcbuilder/configurations', config);
+    return data;
+  },
+
   /** Get all saved configurations for the current user */
   async getConfigurations(): Promise<SavedBuild[]> {
     const { data } = await apiClient.get<SavedBuild[]>('/pcbuilder/configurations');
     return data || [];
   },
 
-  /** Save a new configuration (POST) */
-  async saveConfiguration(payload: SaveConfigurationRequest): Promise<SavedBuild> {
-    const { data } = await apiClient.post<SavedBuild>('/pcbuilder/configurations', payload);
-    return data;
-  },
-
-  /** Update an existing configuration (PUT) */
-  async updateConfiguration(id: string, payload: SaveConfigurationRequest): Promise<SavedBuild> {
-    const { data } = await apiClient.put<SavedBuild>(`/pcbuilder/configurations/${id}`, payload);
+  /** Get a single configuration by ID */
+  async getConfiguration(id: string): Promise<SavedBuild> {
+    const { data } = await apiClient.get<SavedBuild>(`/pcbuilder/configurations/${id}`);
     return data;
   },
 

@@ -6,6 +6,10 @@ import { useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { BASE_URL } from '../api/client';
+import apiClient from '../api/client';
+
+// Модульный флаг для предотвращения параллельных refresh-запросов
+let isRefreshing = false;
 
 export function useTokenRefresh(): void {
   const hasRefreshed = useRef(false);
@@ -40,8 +44,10 @@ export function useTokenRefresh(): void {
       }
     }
 
-    // Тихий рефреш
+    // Тихий рефреш — с защитой от параллельных вызовов
     void (async () => {
+      if (isRefreshing) return;
+      isRefreshing = true;
       try {
         const response = await axios.post(`${BASE_URL}/auth/refresh`, {
           refreshToken,
@@ -63,8 +69,8 @@ export function useTokenRefresh(): void {
             setUser(user);
           }
 
-          // Обновляем axios дефолтный хедер
-          axios.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+          // Обновляем токен в apiClient (НЕ в глобальном axios)
+          apiClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
 
           console.debug('[useTokenRefresh] Token refreshed successfully');
         }
@@ -74,6 +80,8 @@ export function useTokenRefresh(): void {
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('auth-storage');
         console.debug('[useTokenRefresh] Refresh failed, cleared tokens');
+      } finally {
+        isRefreshing = false;
       }
     })();
   }, [setUser, isAuthenticated]);

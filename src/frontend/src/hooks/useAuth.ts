@@ -3,7 +3,7 @@
  * Объединяет API вызовы, хранение токенов и управление состоянием
  */
 import { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useWishlistStore } from '../store/wishlistStore';
 import { authService } from '../api/authService';
@@ -25,6 +25,7 @@ interface UseAuthReturn {
 
 export function useAuth(): UseAuthReturn {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     user,
     isAuthenticated,
@@ -74,16 +75,17 @@ export function useAuth(): UseAuthReturn {
         });
       }, 0);
 
-      // Редирект делаем ПОСЛЕ ВСЕГО
+      // Редирект делаем ПОСЛЕ ВСЕГО — возвращаемся на страницу, откуда пришли
       setTimeout(() => {
-        void navigate('/');
+        const from = (location.state as { from?: { pathname: string; search: string; hash: string } } | null)?.from;
+        void navigate(from ? `${from.pathname}${from.search}${from.hash}` : '/', { replace: true });
       }, 0);
 
     } catch (error) {
       storeLogout();
       throw error;
     }
-  }, [setLoading, setUser, storeLogout, saveTokens, navigate, syncWishlistWithServer]);
+  }, [setLoading, setUser, storeLogout, saveTokens, navigate, location, syncWishlistWithServer]);
 
   /**
    * Регистрация

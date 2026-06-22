@@ -286,7 +286,7 @@ export const servicesApi = {
   },
 
   /** Alias for getMyServiceRequests (used by useServiceTickets) */
-  getMyServices: async (page: number = 1, pageSize: number = 10): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
+  getMyServices: async (page: number = 1, pageSize: number = 10, status?: string): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
     return servicesApi.getMyServiceRequests(page, pageSize);
   },
 };
