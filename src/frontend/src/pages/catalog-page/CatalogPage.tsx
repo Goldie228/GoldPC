@@ -87,6 +87,13 @@ export function CatalogPage() {
     setPriceBounds({ min: 0, max: 0 });
   }, [selectedCategory]);
 
+  // Reset spec filters and manufacturer when category changes
+  useEffect(() => {
+    setSelectedSpecifications({});
+    setSelectedManufacturerIds([]);
+    setPage(1);
+  }, [selectedCategory]);
+
   // Filter state — must be declared before useEffect that references them (fetchPriceBounds)
   const [sortBy, setSortBy] = useState(
     () => searchParams.get('sortBy') || 'popular'
