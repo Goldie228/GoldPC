@@ -1,4 +1,4 @@
-import { BuildWizard } from '@/components/wizard/BuildWizard';
+import BuildWizard from '@/components/wizard/BuildWizard';
 
 export function BuildWizardPage() {
   return <BuildWizard />;
