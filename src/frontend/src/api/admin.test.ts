@@ -65,7 +65,7 @@ describe('api/admin', () => {
   // ─── usersAdminApi ────────────────────────────────────────────
 
   describe('usersAdminApi', () => {
-    it('getUsers — sends GET /auth/admin/users with params', async () => {
+    it('getUsers — sends GET /admin/users with params', async () => {
       const mockResponse = {
         data: {
           data: [{ id: '1', firstName: 'John', lastName: 'Doe' }],
@@ -76,49 +76,49 @@ describe('api/admin', () => {
 
       const result = await usersAdminApi.getUsers({ page: 1, pageSize: 10, search: 'John' });
 
-      expect(mockGet).toHaveBeenCalledWith('/auth/admin/users', {
+      expect(mockGet).toHaveBeenCalledWith('/admin/users', {
         params: { page: 1, pageSize: 10, search: 'John' },
       });
       expect(result).toEqual(mockResponse.data);
     });
 
-    it('getUser — sends GET /admin/users/:id via goldpcApi', async () => {
+    it('getUser — sends GET /admin/users/:id', async () => {
       const mockUser = { id: 'user-1', firstName: 'Jane', email: 'jane@test.com' };
-      mockGoldpcApi.getAuthAdminUsersId.mockResolvedValueOnce({ data: mockUser });
+      mockGet.mockResolvedValueOnce({ data: mockUser });
 
       const result = await usersAdminApi.getUser('user-1');
 
-      expect(mockGoldpcApi.getAuthAdminUsersId).toHaveBeenCalledWith('user-1');
+      expect(mockGet).toHaveBeenCalledWith('/admin/users/user-1');
       expect(result).toEqual(mockUser);
     });
 
-    it('updateUser — sends PUT /auth/admin/users/:id with data', async () => {
+    it('updateUser — sends PUT /admin/users/:id with data', async () => {
       const mockUser = { id: 'user-1', firstName: 'Updated' };
       mockPut.mockResolvedValueOnce({ data: mockUser });
 
       const result = await usersAdminApi.updateUser('user-1', { firstName: 'Updated' });
 
-      expect(mockPut).toHaveBeenCalledWith('/auth/admin/users/user-1', { firstName: 'Updated' });
+      expect(mockPut).toHaveBeenCalledWith('/admin/users/user-1', { firstName: 'Updated' });
       expect(result).toEqual(mockUser);
     });
 
-    it('updateUserRole — sends PATCH /auth/admin/users/:id/role', async () => {
+    it('updateUserRole — sends PATCH /admin/users/:id/role', async () => {
       await usersAdminApi.updateUserRole('user-1', 'Admin');
 
-      expect(mockPatch).toHaveBeenCalledWith('/auth/admin/users/user-1/role', { role: 'Admin' });
+      expect(mockPatch).toHaveBeenCalledWith('/admin/users/user-1/role', { role: 'Admin' });
     });
 
-    it('deleteUser — sends DELETE /admin/users/:id via goldpcApi', async () => {
-      mockGoldpcApi.deleteAuthAdminUsersId.mockResolvedValueOnce({});
+    it('deleteUser — sends DELETE /admin/users/:id', async () => {
+      mockDelete.mockResolvedValueOnce({});
 
       await usersAdminApi.deleteUser('user-1');
 
-      expect(mockGoldpcApi.deleteAuthAdminUsersId).toHaveBeenCalledWith('user-1');
+      expect(mockDelete).toHaveBeenCalledWith('/admin/users/user-1');
     });
 
-    it('createUser — sends POST /admin/users via goldpcApi', async () => {
+    it('createUser — sends POST /admin/users', async () => {
       const mockUser = { id: 'user-new', firstName: 'New' };
-      mockGoldpcApi.postAuthAdminUsers.mockResolvedValueOnce({ data: mockUser });
+      mockPost.mockResolvedValueOnce({ data: mockUser });
 
       const result = await usersAdminApi.createUser({
         firstName: 'New',
@@ -128,7 +128,7 @@ describe('api/admin', () => {
         password: 'pass123',
       });
 
-      expect(mockGoldpcApi.postAuthAdminUsers).toHaveBeenCalledWith({
+      expect(mockPost).toHaveBeenCalledWith('/admin/users', {
         firstName: 'New',
         lastName: 'User',
         email: 'new@test.com',
@@ -138,20 +138,20 @@ describe('api/admin', () => {
       expect(result).toEqual(mockUser);
     });
 
-    it('activateUser — sends POST /auth/admin/users/:id/activate via goldpcApi', async () => {
-      mockGoldpcApi.postAuthAdminUsersIdActivate.mockResolvedValueOnce({});
+    it('activateUser — sends POST /admin/users/:id/activate', async () => {
+      mockPost.mockResolvedValueOnce({});
 
       await usersAdminApi.activateUser('user-1');
 
-      expect(mockGoldpcApi.postAuthAdminUsersIdActivate).toHaveBeenCalledWith('user-1');
+      expect(mockPost).toHaveBeenCalledWith('/admin/users/user-1/activate');
     });
 
-    it('deactivateUser — sends POST /auth/admin/users/:id/deactivate via goldpcApi', async () => {
-      mockGoldpcApi.postAuthAdminUsersIdDeactivate.mockResolvedValueOnce({});
+    it('deactivateUser — sends POST /admin/users/:id/deactivate', async () => {
+      mockPost.mockResolvedValueOnce({});
 
       await usersAdminApi.deactivateUser('user-1');
 
-      expect(mockGoldpcApi.postAuthAdminUsersIdDeactivate).toHaveBeenCalledWith('user-1');
+      expect(mockPost).toHaveBeenCalledWith('/admin/users/user-1/deactivate');
     });
   });
 
