@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ChevronDown, ChevronUp, Search, RotateCcw,
@@ -395,21 +393,7 @@ export function FilterSidebar({
         const backendSlug = selectedCategory ? FRONTEND_TO_BACKEND[selectedCategory] : undefined;
         const list = await catalogApi.getManufacturers(backendSlug);
         if (cancelled) return;
-        if (list.length > 0) {
-          setManufacturers(list);
-        } else {
-          // Запасной вариант: извлечение брендов из названий товаров
-          const productsResponse = await catalogApi.getProducts(
-            selectedCategory ? { category: selectedCategory, pageSize: 500 } : { pageSize: 500 }
-          );
-          const brandSet = new Set<string>();
-          const brandRe = /^[\p{Script=Cyrillic}\p{P}\s]*([A-Za-z][A-Za-z0-9-]+)/u;
-          for (const p of productsResponse?.data ?? []) {
-            const m = p.name?.match(brandRe);
-            if (m) brandSet.add(m[1]);
-          }
-          setManufacturers(Array.from(brandSet).sort().map((name, _i) => ({ id: `brand-${name}`, name })));
-        }
+        setManufacturers(list);
       } catch (err) {
         console.error('Не удалось загрузить производителей:', err);
         setManufacturers([]);
