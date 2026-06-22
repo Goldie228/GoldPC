@@ -76,15 +76,19 @@ public class ReportingDbContext : DbContext
 
         foreach (var serverName in new[] { "catalog_server", "orders_server", "services_server" })
         {
+            // Use parameterized approach — escape single quotes to prevent SQL injection
+            var escapedUser = dbUser.Replace("'", "''");
+            var escapedPassword = dbPassword.Replace("'", "''");
+            var escapedServer = serverName.Replace("'", "''");
             await Database.ExecuteSqlRawAsync($@"
                 DO $$
                 BEGIN
                     IF NOT EXISTS (
                         SELECT 1 FROM pg_user_mappings
-                        WHERE srvname = '{serverName}' AND usename = current_user
+                        WHERE srvname = '{escapedServer}' AND usename = current_user
                     ) THEN
-                        CREATE USER MAPPING FOR current_user SERVER {serverName}
-                            OPTIONS (user '{dbUser}', password '{dbPassword}');
+                        CREATE USER MAPPING FOR current_user SERVER {escapedServer}
+                            OPTIONS (user '{escapedUser}', password '{escapedPassword}');
                     END IF;
                 END $$;");
         }

@@ -71,7 +71,7 @@ services:
       ASPNETCORE_URLS: http://+:5001
       ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER};Password=${DB_PASSWORD}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
-      ConnectionStrings__Redis: redis:6379
+      ConnectionStrings__Redis: redis:${REDIS_PASSWORD}@redis:6379
       Redis__Host: redis
       Redis__Port: "6379"
     ports:
@@ -101,7 +101,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5002
       ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER};Password=${DB_PASSWORD}
-      ConnectionStrings__Redis: redis:6379
+      ConnectionStrings__Redis: redis:${REDIS_PASSWORD}@redis:6379
       Redis__Host: redis
       Redis__Port: "6379"
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
@@ -199,7 +199,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5011
       ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER};Password=${DB_PASSWORD}
-      ConnectionStrings__Redis: redis:6379
+      ConnectionStrings__Redis: redis:${REDIS_PASSWORD}@redis:6379
       Redis__Host: redis
       Redis__Port: "6379"
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
@@ -230,7 +230,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5012
       ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER};Password=${DB_PASSWORD}
-      ConnectionStrings__Redis: redis:6379
+      ConnectionStrings__Redis: redis:${REDIS_PASSWORD}@redis:6379
       Redis__Host: redis
       Redis__Port: "6379"
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
