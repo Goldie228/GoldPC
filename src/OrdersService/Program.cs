@@ -6,11 +6,15 @@ using GoldPC.Shared.Services.Background;
 using GoldPC.Shared.Services.Implementations;
 using GoldPC.Shared.Services.Interfaces;
 using GoldPC.Shared.Services.Mocks;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Serilog.Formatting.Compact;
 using Shared.Data;
 using Shared.Middleware;
 using Shared.Messaging;
@@ -34,9 +38,15 @@ if (builder.Environment.IsProduction())
     }
 }
 
-// Serilog
+// Serilog — structured logging with JSON in Production, human-readable in Development
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "GoldPC")
+    .Enrich.WithProperty("Service", "OrdersService")
+    .WriteTo.Console(
+        formatter: builder.Environment.IsProduction()
+            ? new CompactJsonFormatter()
+            : null) // Plain text in Development, JSON in Production
     .WriteTo.File("logs/orders-service-.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
@@ -45,6 +55,15 @@ builder.Host.UseSerilog();
 // Database
 builder.Services.AddDbContext<OrdersDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Health Checks
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured."),
+        name: "postgresql",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: ["db", "ready"]);
 
 // Services
 builder.Services.AddScoped<IOrdersService, GoldPC.OrdersService.Services.OrdersService>();
@@ -239,6 +258,9 @@ var app = builder.Build();
 // Security Headers Middleware - должен быть в начале pipeline
 app.UseSecurityHeaders();
 
+// Correlation ID middleware
+app.UseCorrelationId();
+
 // Применение миграций при запуске с использованием extension метода
 app.ApplyMigrations<OrdersDbContext>();
 
@@ -258,7 +280,24 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<NotificationsHub>("/hubs/notifications");
-app.MapGet("/health", () => Results.Ok());
+
+// Health check endpoints
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+    Predicate = _ => true
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+    Predicate = check => check.Tags.Contains("ready")
+});
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
 
 Log.Information("Orders Service starting on port 5002");
 app.Run();

@@ -4,11 +4,18 @@ using GoldPC.Api.Hubs;
 using GoldPC.Api.Services;
 using GoldPC.Shared.Authorization;
 using GoldPC.Shared.Services;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +32,17 @@ if (builder.Environment.IsProduction())
             "Set the Jwt__SecretKey environment variable (or use Docker secrets).");
     }
 }
+
+// === Structured Logging (Serilog) ===
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "GoldPC")
+    .Enrich.WithProperty("Service", "Gateway")
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Загрузка конфигурации для доступа к ServiceUrls
 var servicesConfig = builder.Configuration.GetSection("ServiceUrls");
@@ -71,6 +89,43 @@ builder.Services.AddScoped<IFeedbackService, FeedbackService>();
 // Add HttpContextAccessor for auth forwarding
 builder.Services.AddHttpContextAccessor();
 
+// === API Versioning ===
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),
+        new HeaderApiVersionReader("X-Api-Version"));
+});
+
+// === Health Checks ===
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured."),
+        name: "postgresql",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: ["db", "ready"])
+    .AddRedis(
+        builder.Configuration.GetValue<string>("Redis:Connection")
+            ?? builder.Configuration.GetConnectionString("Redis")
+            ?? "localhost:6379",
+        name: "redis",
+        failureStatus: HealthStatus.Degraded,
+        tags: ["cache", "ready"])
+    .AddUrlGroup(
+        new Uri(servicesConfig["CatalogService"] ?? "http://localhost:5000"),
+        name: "catalogservice",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: ["downstream", "ready"])
+    .AddUrlGroup(
+        new Uri(servicesConfig["AuthService"] ?? "http://localhost:5002"),
+        name: "authservice",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: ["downstream", "ready"]);
+
 // Add Catalog Service Client (HTTP client to CatalogService)
 builder.Services.AddTransient<AuthForwardingHandler>();
 builder.Services.AddHttpClient<ICatalogServiceClient, CatalogServiceClient>(client =>
@@ -81,10 +136,11 @@ builder.Services.AddHttpClient<ICatalogServiceClient, CatalogServiceClient>(clie
     client.Timeout = TimeSpan.FromSeconds(30);
 })
 .AddHttpMessageHandler<AuthForwardingHandler>()
-.AddResilienceHandler("CatalogServiceRetry", (builder, sp) =>
+.AddResilienceHandler("CatalogServiceResilience", (builder, sp) =>
 {
     var logger = sp.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("GoldPC.Api.CatalogServiceClient");
     PollyPolicies.ConfigureRetryPipeline(builder, logger);
+    PollyPolicies.ConfigureCircuitBreaker(builder, logger);
 });
 
 // Add Auth Service Client (HTTP client to AuthService for admin user management)
@@ -96,10 +152,11 @@ builder.Services.AddHttpClient<IAuthServiceClient, AuthServiceClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 })
 .AddHttpMessageHandler<AuthForwardingHandler>()
-.AddResilienceHandler("AuthServiceRetry", (builder, sp) =>
+.AddResilienceHandler("AuthServiceResilience", (builder, sp) =>
 {
     var logger = sp.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("GoldPC.Api.AuthServiceClient");
     PollyPolicies.ConfigureRetryPipeline(builder, logger);
+    PollyPolicies.ConfigureCircuitBreaker(builder, logger);
 });
 
 // Add Orders Service Client (HTTP client to OrdersService for dashboard stats)
@@ -111,10 +168,11 @@ builder.Services.AddHttpClient<IOrdersServiceClient, OrdersServiceClient>(client
     client.Timeout = TimeSpan.FromSeconds(30);
 })
 .AddHttpMessageHandler<AuthForwardingHandler>()
-.AddResilienceHandler("OrdersServiceRetry", (builder, sp) =>
+.AddResilienceHandler("OrdersServiceResilience", (builder, sp) =>
 {
     var logger = sp.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("GoldPC.Api.OrdersServiceClient");
     PollyPolicies.ConfigureRetryPipeline(builder, logger);
+    PollyPolicies.ConfigureCircuitBreaker(builder, logger);
 });
 
 // Add Reporting Service Client (HTTP client to ReportingService for financial reports)
@@ -126,10 +184,11 @@ builder.Services.AddHttpClient<IReportingServiceClient, ReportingServiceClient>(
     client.Timeout = TimeSpan.FromSeconds(30);
 })
 .AddHttpMessageHandler<AuthForwardingHandler>()
-.AddResilienceHandler("ReportingServiceRetry", (builder, sp) =>
+.AddResilienceHandler("ReportingServiceResilience", (builder, sp) =>
 {
     var logger = sp.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("GoldPC.Api.ReportingServiceClient");
     PollyPolicies.ConfigureRetryPipeline(builder, logger);
+    PollyPolicies.ConfigureCircuitBreaker(builder, logger);
 });
 
 // Configure form options for file uploads
@@ -197,8 +256,26 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-// Health check endpoint (unauthenticated — для docker-compose / dev-local health probes)
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+// Health check endpoints (unauthenticated — для docker-compose / dev-local health probes)
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+    Predicate = _ => true // Include all health checks
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+    Predicate = check => check.Tags.Contains("ready") // Only "ready" tagged checks
+});
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false // Liveness: just confirms the process is alive
+});
+
+// Correlation ID middleware — assigns/propagates X-Correlation-Id across all requests
+app.UseCorrelationId();
 
 app.UseHttpsRedirection();
 

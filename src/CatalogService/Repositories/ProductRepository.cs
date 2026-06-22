@@ -338,6 +338,7 @@ public class ProductRepository : IProductRepository
             "createdat" or "created" => sortDesc ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt),
             "name" => sortDesc ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name),
             "stock" => sortDesc ? query.OrderByDescending(p => p.Stock) : query.OrderBy(p => p.Stock),
+            "popularity" => query.OrderByDescending(p => p.ReviewCount).ThenByDescending(p => p.CreatedAt),
             _ => sortDesc ? query.OrderByDescending(p => p.CreatedAt) : query.OrderBy(p => p.CreatedAt)
         };
     }

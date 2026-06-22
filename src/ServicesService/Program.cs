@@ -6,11 +6,15 @@ using GoldPC.Shared.Services;
 using GoldPC.Shared.Services.Interfaces;
 using GoldPC.Shared.Services.Mocks;
 using GoldPC.Shared.Services.Implementations;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Serilog.Formatting.Compact;
 using Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,8 +31,15 @@ if (builder.Environment.IsProduction())
     }
 }
 
+// Serilog — structured logging with JSON in Production, human-readable in Development
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
+    .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "GoldPC")
+    .Enrich.WithProperty("Service", "ServicesService")
+    .WriteTo.Console(
+        formatter: builder.Environment.IsProduction()
+            ? new CompactJsonFormatter()
+            : null) // Plain text in Development, JSON in Production
     .WriteTo.File("logs/services-service-.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
@@ -36,6 +47,15 @@ builder.Host.UseSerilog();
 
 builder.Services.AddDbContext<ServicesDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Health Checks
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured."),
+        name: "postgresql",
+        failureStatus: HealthStatus.Unhealthy,
+        tags: ["db", "ready"]);
 
 builder.Services.AddScoped<IServicesService, ServicesService>();
 
@@ -139,6 +159,9 @@ var app = builder.Build();
 // Security Headers Middleware - должен быть в начале pipeline
 app.UseSecurityHeaders();
 
+// Correlation ID middleware
+app.UseCorrelationId();
+
 try
 {
     using (var scope = app.Services.CreateScope())
@@ -183,7 +206,23 @@ app.UseStaticFiles();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapGet("/health", () => Results.Ok());
+// Health check endpoints
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+    Predicate = _ => true
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+    Predicate = check => check.Tags.Contains("ready")
+});
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false
+});
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
 

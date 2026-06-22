@@ -319,7 +319,9 @@ public class AdminService : IAdminService
 
         SaveUsers();
         _logger.LogInformation("User {UserId} updated by admin", id);
-        // HACK(TV-XXX): sync update to AuthService when IAuthServiceClient.UpdateUserAsync is available
+
+        _ = _authClient.UpdateUserAsync(id, updated.FirstName, updated.LastName, updated.Phone);
+
         return Task.FromResult<UserDto?>(updated);
     }
 
@@ -343,7 +345,9 @@ public class AdminService : IAdminService
 
         SaveUsers();
         _logger.LogInformation("User {UserId} role changed to {Role} by admin", id, role);
-        // HACK(TV-XXX): sync role change to AuthService when IAuthServiceClient.UpdateUserRoleAsync is available
+
+        _ = _authClient.UpdateUserRoleAsync(id, role);
+
         return Task.FromResult<UserDto?>(updated);
     }
 

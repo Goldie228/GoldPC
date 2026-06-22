@@ -90,5 +90,73 @@ public static class PollyPolicies
             }
         });
     }
+
+    /// <summary>
+    /// Конфигурирует circuit breaker для HTTP-клиентов.
+    /// Открытие цепи после 5 последовательных сбоев, автозакрытие через 30 секунд.
+    /// </summary>
+    /// <param name="builder">Строитель resilience pipeline.</param>
+    public static void ConfigureCircuitBreaker(ResiliencePipelineBuilder<HttpResponseMessage> builder)
+    {
+        builder.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
+        {
+            SamplingDuration = TimeSpan.FromSeconds(30),
+            FailureRatio = 0.5,
+            MinimumThroughput = 5,
+            BreakDuration = TimeSpan.FromSeconds(30),
+            ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+                .Handle<HttpRequestException>()
+                .Handle<TimeoutRejectedException>()
+                .HandleResult(r =>
+                    (int)r.StatusCode >= (int)HttpStatusCode.InternalServerError
+                    || r.StatusCode == HttpStatusCode.TooManyRequests),
+            OnOpened = args =>
+            {
+                return ValueTask.CompletedTask;
+            },
+            OnClosed = args =>
+            {
+                return ValueTask.CompletedTask;
+            }
+        });
+    }
+
+    /// <summary>
+    /// Конфигурирует circuit breaker с логированием через ILogger.
+    /// </summary>
+    /// <param name="builder">Строитель resilience pipeline.</param>
+    /// <param name="logger">ILogger для логирования событий circuit breaker.</param>
+    public static void ConfigureCircuitBreaker(
+        ResiliencePipelineBuilder<HttpResponseMessage> builder,
+        ILogger logger)
+    {
+        builder.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
+        {
+            SamplingDuration = TimeSpan.FromSeconds(30),
+            FailureRatio = 0.5,
+            MinimumThroughput = 5,
+            BreakDuration = TimeSpan.FromSeconds(30),
+            ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+                .Handle<HttpRequestException>()
+                .Handle<TimeoutRejectedException>()
+                .HandleResult(r =>
+                    (int)r.StatusCode >= (int)HttpStatusCode.InternalServerError
+                    || r.StatusCode == HttpStatusCode.TooManyRequests),
+            OnOpened = args =>
+            {
+                logger.LogWarning(
+                    "Circuit breaker OPENED for downstream service. " +
+                    "Will retry after {BreakDuration}s.",
+                    30);
+                return ValueTask.CompletedTask;
+            },
+            OnClosed = args =>
+            {
+                logger.LogInformation(
+                    "Circuit breaker CLOSED. Downstream service recovered.");
+                return ValueTask.CompletedTask;
+            }
+        });
+    }
 }
 #pragma warning restore CA1031, CS1591, SA1600

@@ -134,6 +134,52 @@ public class AuthServiceClient : IAuthServiceClient
     }
 
     /// <inheritdoc />
+    public async Task<bool> UpdateUserAsync(Guid userId, string? firstName, string? lastName, string? phone)
+    {
+        try
+        {
+            _logger.LogInformation("AuthService UpdateUser: {UserId}", userId);
+
+            var request = new { FirstName = firstName, LastName = lastName, Phone = phone };
+            var response = await _http.PutAsJsonAsync(
+                new Uri($"api/v1/auth/admin/users/{userId}", UriKind.Relative), request, _jsonOptions);
+
+            if (response.IsSuccessStatusCode) return true;
+
+            _logger.LogWarning("AuthService UpdateUser returned {StatusCode}", response.StatusCode);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AuthService UpdateUser failed for {UserId}", userId);
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> UpdateUserRoleAsync(Guid userId, string role)
+    {
+        try
+        {
+            _logger.LogInformation("AuthService UpdateUserRole: {UserId}, role={Role}", userId, role);
+
+            var request = new { Role = role };
+            var response = await _http.PutAsJsonAsync(
+                new Uri($"api/v1/auth/admin/users/{userId}/role", UriKind.Relative), request, _jsonOptions);
+
+            if (response.IsSuccessStatusCode) return true;
+
+            _logger.LogWarning("AuthService UpdateUserRole returned {StatusCode}", response.StatusCode);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AuthService UpdateUserRole failed for {UserId}", userId);
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<bool> SetTwoFactorRequiredAsync(bool enabled)
     {
         try

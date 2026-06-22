@@ -28,6 +28,14 @@ public interface IAuthServiceClient
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task<bool> DeleteUserAsync(Guid userId);
 
+    /// <summary>Обновить данные пользователя (имя, фамилия, телефон)</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    Task<bool> UpdateUserAsync(Guid userId, string? firstName, string? lastName, string? phone);
+
+    /// <summary>Изменить роль пользователя</summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    Task<bool> UpdateUserRoleAsync(Guid userId, string role);
+
     /// <summary>Синхронизировать настройку TwoFactorRequired с AuthService.</summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task<bool> SetTwoFactorRequiredAsync(bool enabled);
