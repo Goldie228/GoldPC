@@ -137,21 +137,28 @@
 }
 
 .home-categories__grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
 }
 
+.home-categories__grid > * {
+  flex: 1 1 calc(20% - 16px);
+  min-width: 0;
+}
+
 @media (max-width: 1024px) {
-  .home-categories__grid {
-    grid-template-columns: repeat(3, 1fr);
+  .home-categories__grid > * {
+    flex-basis: calc(33.333% - 16px);
   }
 }
 
 @media (max-width: 640px) {
   .home-categories__grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: 10px;
+  }
+  .home-categories__grid > * {
+    flex-basis: calc(50% - 10px);
   }
 }
 
