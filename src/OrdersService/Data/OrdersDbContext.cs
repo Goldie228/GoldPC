@@ -79,6 +79,7 @@ public class OrdersDbContext : DbContext
                 .WithMany(o => o.Items)
                 .HasForeignKey(e => e.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+            entity.Ignore(e => e.TotalPrice);
         });
         
         // Конфигурация OrderHistory
