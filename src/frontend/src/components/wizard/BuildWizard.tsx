@@ -1,132 +1,453 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Check, HardDrive } from 'lucide-react';
-import type { PCComponentType } from '@/hooks';
-import { type WizardState, type Purpose, type Budget, STEP_LABELS, COMPONENT_LABELS, getTemplate } from './types';
-import { StepPurpose } from './StepPurpose';
-import { StepBudget } from './StepBudget';
-import { StepPreferences } from './StepPreferences';
-import { BuildResult } from './BuildResult';
+/**
+ * BuildWizard — Multi-step PC configuration wizard
+ *
+ * Step 1: Purpose (Gaming / Office / Workstation)
+ * Step 2: Budget (Economy / Optimal / Gaming / Max)
+ * Step 3: Preferences (CPU brand + resolution for gaming)
+ * Step 4: Loading + Result
+ */
 
-function ProgressBar({ currentStep, totalSteps }: { currentStep: number; totalSteps: number }) {
-  return (
-    <div className="flex items-start justify-center gap-0 mb-10 px-5">
-      {STEP_LABELS.map((label, index) => (
-        <div key={label} className="flex flex-col items-center relative flex-none">
-          <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold bg-[var(--surface-secondary,#1a1a2e)] border-2 border-[var(--border-default)] text-[var(--fg-muted)] transition-all duration-300 z-10 ${
-              index < currentStep ? 'bg-[var(--brand-primary,#c9a84c)] border-[var(--brand-primary,#c9a84c)] text-black' : index === currentStep ? 'bg-[var(--brand-primary,#c9a84c)] border-[var(--brand-primary,#c9a84c)] text-black' : ''
-            }`}
-          >
-            {index < currentStep ? <Check size={16} /> : index + 1}
-          </div>
-          <span className={`mt-2 text-xs text-[var(--fg-muted)] whitespace-nowrap transition-colors duration-300 ${index <= currentStep ? 'text-[var(--brand-primary,#c9a84c)]' : ''}`}>
-            {label}
-          </span>
-          {index < totalSteps - 1 && (
-            <div className={`absolute top-[18px] left-[calc(50%+20px)] w-[calc(100%-20px)] h-0.5 bg-[var(--border-default)] transition-colors duration-300 ${index < currentStep ? 'bg-[var(--brand-primary,#c9a84c)]' : ''}`} />
-          )}
-        </div>
-      ))}
-    </div>
-  );
+import { useState, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Monitor, Briefcase, Film, Cpu, Check, ArrowRight, ArrowLeft, Zap, HardDrive,
+  CircuitBoard, MemoryStick, Box, Thermometer, AlertCircle, Loader2, RefreshCw,
+} from 'lucide-react';
+
+import type {
+  WizardState, Purpose, Budget, CpuBrand, Resolution,
+} from './types';
+import {
+  PURPOSE_OPTIONS, BUDGET_OPTIONS, STEP_LABELS,
+  COMPONENT_LABELS, BUDGET_RANGES, PURPOSE_BUDGET_ALLOC,
+} from './types';
+import { buildRecommendation, type RecommendedBuild } from './recommendationEngine';
+import BuildResult from './BuildResult';
+
+const PURPOSE_ICONS: Record<Purpose, React.ReactNode> = {
+  gaming: <Monitor size={28} />,
+  office: <Briefcase size={28} />,
+  workstation: <Film size={28} />,
+};
+
+const COMPONENT_ICONS: Record<string, React.ReactNode> = {
+  cpu: <Cpu size={18} />,
+  gpu: <Monitor size={18} />,
+  motherboard: <CircuitBoard size={18} />,
+  ram: <MemoryStick size={18} />,
+  storage: <HardDrive size={18} />,
+  psu: <Zap size={18} />,
+  case: <Box size={18} />,
+  cooling: <Thermometer size={18} />,
+};
+
+interface BuildWizardProps {
+  onBack?: () => void;
 }
 
-export function BuildWizard() {
-  const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [showResult, setShowResult] = useState(false);
-  const [wizardState, setWizardState] = useState<WizardState>({
-    purpose: null, budget: null, cpuPreference: 'any', gpuPreference: 'any', minRam: 16,
+export default function BuildWizard({ onBack }: BuildWizardProps) {
+  const [step, setStep] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 8, category: '' });
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<RecommendedBuild | null>(null);
+
+  const [state, setState] = useState<WizardState>({
+    purpose: null,
+    budget: null,
+    cpuBrand: 'any',
+    resolution: '1080p',
   });
 
-  const totalSteps = STEP_LABELS.length;
+  const canGoNext = useMemo(() => {
+    if (step === 0) return state.purpose !== null;
+    if (step === 1) return state.budget !== null;
+    if (step === 2) return true;
+    return false;
+  }, [step, state]);
 
-  const canProceed = () => {
-    if (currentStep === 0) return wizardState.purpose !== null;
-    if (currentStep === 1) return wizardState.budget !== null;
-    return true;
-  };
+  const handleNext = useCallback(() => {
+    if (step < 2) {
+      setStep(step + 1);
+    } else if (step === 2) {
+      // Start recommendation
+      setStep(3);
+      setLoading(true);
+      setError(null);
 
-  const handleNext = () => {
-    if (currentStep < totalSteps - 1) setCurrentStep((prev) => prev + 1);
-    else setShowResult(true);
-  };
+      buildRecommendation(
+        state.purpose!,
+        state.budget!,
+        state.cpuBrand,
+        state.resolution,
+        (current, total, category) => {
+          setLoadingProgress({ current, total, category });
+        },
+      )
+        .then((build) => {
+          setResult(build);
+          setLoading(false);
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : 'Произошла ошибка при подборе');
+          setLoading(false);
+        });
+    }
+  }, [step, state]);
 
-  const handleBack = () => {
-    if (showResult) setShowResult(false);
-    else if (currentStep > 0) setCurrentStep((prev) => prev - 1);
-  };
+  const handlePrev = useCallback(() => {
+    if (step > 0 && step < 3) {
+      setStep(step - 1);
+    }
+  }, [step]);
 
-  const handleReset = () => {
-    setCurrentStep(0);
-    setShowResult(false);
-    setWizardState({ purpose: null, budget: null, cpuPreference: 'any', gpuPreference: 'any', minRam: 16 });
-  };
+  const handleReset = useCallback(() => {
+    setStep(0);
+    setLoading(false);
+    setError(null);
+    setResult(null);
+    setLoadingProgress({ current: 0, total: 8, category: '' });
+    setState({
+      purpose: null,
+      budget: null,
+      cpuBrand: 'any',
+      resolution: '1080p',
+    });
+  }, []);
+
+  const handleRetry = useCallback(() => {
+    setError(null);
+    setResult(null);
+    setStep(3);
+    setLoading(true);
+    buildRecommendation(
+      state.purpose!,
+      state.budget!,
+      state.cpuBrand,
+      state.resolution,
+      (current, total, category) => {
+        setLoadingProgress({ current, total, category });
+      },
+    )
+      .then((build) => {
+        setResult(build);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : 'Произошла ошибка при подборе');
+        setLoading(false);
+      });
+  }, [state]);
 
   return (
-    <div className="max-w-[900px] mx-auto px-6 pb-[120px]">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-[var(--fg-primary,#f5f5f5)] mb-2">Мастер подбора ПК</h1>
-        <p className="text-base text-[var(--fg-muted)]">Ответьте на 3 вопроса, и мы подберём оптимальную конфигурацию</p>
-      </div>
+    <div className="flex flex-col gap-6">
+      {/* Progress indicator */}
+      {step < 3 && (
+        <div className="flex items-center justify-center gap-2">
+          {STEP_LABELS.map((label, i) => (
+            <div key={label} className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
+                    i < step
+                      ? 'bg-[var(--color-brand-primary)] text-[var(--color-canvas-dark)]'
+                      : i === step
+                        ? 'bg-[var(--color-brand-primary)] text-[var(--color-canvas-dark)] scale-110'
+                        : 'bg-[var(--color-surface-raised)] text-[var(--color-text-muted)]'
+                  }`}
+                >
+                  {i < step ? <Check size={14} /> : i + 1}
+                </div>
+                <span className="hidden sm:inline text-sm text-[var(--color-text-secondary)]">
+                  {label}
+                </span>
+              </div>
+              {i < STEP_LABELS.length - 1 && (
+                <div
+                  className={`w-8 h-0.5 ${
+                    i < step ? 'bg-[var(--color-brand-primary)]' : 'bg-[var(--color-surface-raised)]'
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
-      {!showResult && <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />}
+      {/* Step content */}
+      <AnimatePresence mode="wait">
+        {/* Step 0: Purpose */}
+        {step === 0 && (
+          <motion.div
+            key="purpose"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+              Что важнее всего?
+            </h2>
+            <p className="text-sm text-[var(--color-text-muted)] mb-5">
+              От назначения зависит распределение бюджета по компонентам
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {PURPOSE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => setState((s) => ({ ...s, purpose: opt.id }))}
+                  className={`group flex flex-col items-center gap-3 p-5 rounded-xl border-2 transition-all cursor-pointer ${
+                    state.purpose === opt.id
+                      ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10'
+                      : 'border-[var(--color-border-default)] bg-[var(--color-surface-card)] hover:border-[var(--color-brand-primary)]/50'
+                  }`}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                      state.purpose === opt.id
+                        ? 'bg-[var(--color-brand-primary)] text-[var(--color-canvas-dark)]'
+                        : 'bg-[var(--color-surface-raised)] text-[var(--color-text-secondary)] group-hover:text-[var(--color-brand-primary)]'
+                    }`}
+                  >
+                    {PURPOSE_ICONS[opt.id as Purpose]}
+                  </div>
+                  <span className="font-medium text-[var(--color-text-primary)]">{opt.label}</span>
+                  <span className="text-xs text-[var(--color-text-muted)] text-center">
+                    {opt.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
-      <div className="[&>*]:animate-[fadeIn_0.3s_ease]">
-        <AnimatePresence mode="wait">
-          {showResult ? (
-            <BuildResult key="result" wizardState={wizardState} onAddToBuilder={() => {
-              // Persist wizard selections before navigation
-              try {
-                const template = getTemplate(wizardState.purpose as Purpose, wizardState.budget as Budget);
-                const selectionMap: Partial<Record<PCComponentType, string[]>> = {};
-                (Object.keys(template) as BuildTemplateKey[]).forEach((key) => {
-                  const ids = template[key];
-                  if (ids.length > 0) {
-                    selectionMap[key as PCComponentType] = [...ids];
-                  }
-                });
-                localStorage.setItem('pcBuilder_wizardSelections', JSON.stringify(selectionMap));
-                localStorage.setItem('pcBuilder_wizardState', JSON.stringify({
-                  purpose: wizardState.purpose,
-                  budget: wizardState.budget,
-                }));
-              } catch { /* ignore quota errors */ }
-              navigate('/pc-builder');
-            }} />
-          ) : currentStep === 0 ? (
-            <StepPurpose key="purpose" selected={wizardState.purpose} onSelect={(purpose) => setWizardState((prev) => ({ ...prev, purpose }))} />
-          ) : currentStep === 1 ? (
-            <StepBudget key="budget" selected={wizardState.budget} onSelect={(budget) => setWizardState((prev) => ({ ...prev, budget }))} />
-          ) : (
-            <StepPreferences key="preferences"
-              cpuPreference={wizardState.cpuPreference} gpuPreference={wizardState.gpuPreference} minRam={wizardState.minRam}
-              onCpuChange={(cpuPreference) => setWizardState((prev) => ({ ...prev, cpuPreference }))}
-              onGpuChange={(gpuPreference) => setWizardState((prev) => ({ ...prev, gpuPreference }))}
-              onRamChange={(minRam) => setWizardState((prev) => ({ ...prev, minRam }))}
-            />
-          )}
-        </AnimatePresence>
-      </div>
+        {/* Step 1: Budget */}
+        {step === 1 && (
+          <motion.div
+            key="budget"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+              Какой бюджет?
+            </h2>
+            <p className="text-sm text-[var(--color-text-muted)] mb-5">
+              Выберите ценовую категорию. Мастер подберет лучшие компоненты в рамках бюджета.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {BUDGET_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => setState((s) => ({ ...s, budget: opt.id }))}
+                  className={`flex flex-col p-5 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                    state.budget === opt.id
+                      ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10'
+                      : 'border-[var(--color-border-default)] bg-[var(--color-surface-card)] hover:border-[var(--color-brand-primary)]/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-[var(--color-text-primary)]">{opt.label}</span>
+                    <span className="text-sm font-semibold text-[var(--color-brand-primary)]">
+                      {opt.range}
+                    </span>
+                  </div>
+                  <span className="text-xs text-[var(--color-text-muted)]">{opt.description}</span>
+                  {/* Budget bar */}
+                  <div className="mt-3 h-1.5 rounded-full bg-[var(--color-surface-raised)] overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[var(--color-brand-primary)] transition-all"
+                      style={{
+                        width:
+                          opt.id === 'economy' ? '25%'
+                          : opt.id === 'optimal' ? '50%'
+                          : opt.id === 'gaming' ? '75%'
+                          : '100%',
+                      }}
+                    />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
-      <div className="flex justify-between items-center mt-9 pt-6 border-t border-[var(--border-muted,#2a2a3e)]">
-        <button className="flex items-center gap-1.5 px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-all duration-200 border-none bg-transparent text-[var(--fg-secondary,#ccc)] border border-[var(--border-default)] hover:border-[var(--brand-primary,#c9a84c)] hover:text-[var(--brand-primary,#c9a84c)] disabled:opacity-40 disabled:cursor-not-allowed" onClick={handleBack} disabled={currentStep === 0 && !showResult}>
-          <ChevronLeft size={18} /> Назад
-        </button>
-        {!showResult && (
-          <button className="flex items-center gap-1.5 px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-all duration-200 border-none bg-[var(--brand-primary,#c9a84c)] text-black hover:bg-[var(--accent)] disabled:opacity-40 disabled:cursor-not-allowed" onClick={handleNext} disabled={!canProceed()}>
-            {currentStep === totalSteps - 1 ? 'Подобрать' : 'Далее'}
-            {currentStep < totalSteps - 1 && <ChevronRight size={18} />}
+        {/* Step 2: Preferences */}
+        {step === 2 && (
+          <motion.div
+            key="preferences"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <h2 className="text-xl font-semibold text-[var(--color-text-primary)] mb-2">
+              Предпочтения
+            </h2>
+            <p className="text-sm text-[var(--color-text-muted)] mb-5">
+              Настройте подбор под себя
+            </p>
+
+            <div className="space-y-5">
+              {/* CPU Brand */}
+              <div>
+                <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
+                  Процессор
+                </h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['intel', 'amd', 'any'] as CpuBrand[]).map((brand) => {
+                    const labels: Record<CpuBrand, string> = {
+                      intel: 'Intel',
+                      amd: 'AMD',
+                      any: 'Без разницы',
+                    };
+                    return (
+                      <button
+                        key={brand}
+                        onClick={() => setState((s) => ({ ...s, cpuBrand: brand }))}
+                        className={`py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all cursor-pointer ${
+                          state.cpuBrand === brand
+                            ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'
+                            : 'border-[var(--color-border-default)] bg-[var(--color-surface-card)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/50'
+                        }`}
+                      >
+                        {labels[brand]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Resolution (only for gaming/workstation) */}
+              {(state.purpose === 'gaming' || state.purpose === 'workstation') && (
+                <div>
+                  <h3 className="text-sm font-medium text-[var(--color-text-secondary)] mb-3">
+                    Разрешение (для подбора видеокарты)
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['1080p', '1440p', '4k'] as Resolution[]).map((res) => {
+                      const labels: Record<Resolution, string> = {
+                        '1080p': '1080p',
+                        '1440p': '1440p',
+                        '4k': '4K',
+                      };
+                      return (
+                        <button
+                          key={res}
+                          onClick={() => setState((s) => ({ ...s, resolution: res }))}
+                          className={`py-2.5 px-4 rounded-lg border-2 text-sm font-medium transition-all cursor-pointer ${
+                            state.resolution === res
+                              ? 'border-[var(--color-brand-primary)] bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'
+                              : 'border-[var(--color-border-default)] bg-[var(--color-surface-card)] text-[var(--color-text-secondary)] hover:border-[var(--color-brand-primary)]/50'
+                          }`}
+                        >
+                          {labels[res]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 3: Loading */}
+        {step === 3 && loading && (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center justify-center py-16 gap-4"
+          >
+            <Loader2 size={40} className="text-[var(--color-brand-primary)] animate-spin" />
+            <p className="text-[var(--color-text-secondary)]">
+              Подбираем компоненты...
+            </p>
+            <div className="w-64 space-y-2">
+              <div className="flex justify-between text-xs text-[var(--color-text-muted)]">
+                <span>{COMPONENT_LABELS[loadingProgress.category] ?? loadingProgress.category}</span>
+                <span>{loadingProgress.current}/{loadingProgress.total}</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-[var(--color-surface-raised)] overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-[var(--color-brand-primary)]"
+                  initial={{ width: 0 }}
+                  animate={{
+                    width: `${(loadingProgress.current / loadingProgress.total) * 100}%`,
+                  }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 3: Error */}
+        {step === 3 && error && !loading && (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center py-12 gap-4"
+          >
+            <AlertCircle size={40} className="text-red-400" />
+            <p className="text-red-300 text-center max-w-md">{error}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleRetry}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-brand-primary)] text-[var(--color-canvas-dark)] text-sm font-medium hover:opacity-90 cursor-pointer"
+              >
+                <RefreshCw size={16} /> Повторить
+              </button>
+              <button
+                onClick={handleReset}
+                className="px-4 py-2 rounded-lg bg-[var(--color-surface-raised)] text-[var(--color-text-secondary)] text-sm hover:bg-[var(--color-surface-card)] cursor-pointer"
+              >
+                Начать заново
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 3: Result */}
+        {step === 3 && !loading && !error && result && (
+          <motion.div
+            key="result"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <BuildResult build={result} onReset={handleReset} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Navigation buttons */}
+      {step < 3 && (
+        <div className="flex items-center justify-between pt-2">
+          <button
+            onClick={step === 0 ? onBack : handlePrev}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-raised)] transition-colors cursor-pointer"
+          >
+            <ArrowLeft size={16} />
+            {step === 0 ? 'Назад' : 'Предыдущий шаг'}
           </button>
-        )}
-        {showResult && (
-          <button className="flex items-center gap-1.5 px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer transition-all duration-200 border-none bg-transparent text-[var(--fg-secondary,#ccc)] border border-[var(--border-default)] hover:border-[var(--brand-primary,#c9a84c)] hover:text-[var(--brand-primary,#c9a84c)]" onClick={handleReset}>Начать заново</button>
-        )}
-      </div>
+          <button
+            onClick={handleNext}
+            disabled={!canGoNext}
+            className={`flex items-center gap-1.5 px-6 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+              canGoNext
+                ? 'bg-[var(--color-brand-primary)] text-[var(--color-canvas-dark)] hover:opacity-90'
+                : 'bg-[var(--color-surface-raised)] text-[var(--color-text-muted)] cursor-not-allowed'
+            }`}
+          >
+            {step === 2 ? 'Подобрать конфигурацию' : 'Далее'}
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
-
-export default BuildWizard;
