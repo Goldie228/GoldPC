@@ -51,9 +51,14 @@ const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
 function HeroBackground() {
   return (
     <div className="home-hero__bg--placeholder" aria-hidden="true">
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[140px]" />
-      <div className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-accent-turquoise/5 rounded-full blur-[120px]" />
-      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gold/10 to-transparent" />
+      <img
+        src="/placeholders/setup-1.png"
+        alt=""
+        className="home-hero__bg-img"
+        loading="eager"
+        decoding="async"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-canvas-dark/60 via-canvas-dark/40 to-canvas-dark" />
     </div>
   );
 }
