@@ -395,12 +395,6 @@ export function HomePage() {
       {/* ════════════ 2. GAMING SETUP CAROUSEL ════════════ */}
       <section className="home-gaming" aria-label="Вдохновляющие сетапы">
         <div className="home-gaming__inner">
-          <div className="home-gaming__header">
-            <h2 className="home-gaming__title">Вдохновляющие сетапы</h2>
-            <p className="home-gaming__desc">
-              Настоящие рабочие и игровые станции наших клиентов
-            </p>
-          </div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
