@@ -29,6 +29,7 @@ import { decodeHtmlEntities } from '@/utils/decodeHtml';
 
 const NAV_ITEMS = [
   { to: '/catalog', label: 'Каталог' },
+  { to: '/promotions', label: 'Акции' },
   { to: '/pc-builder', label: 'Конструктор' },
   { to: '/services', label: 'Сервис' },
   { to: '/about', label: 'О нас' },
