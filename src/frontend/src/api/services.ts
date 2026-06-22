@@ -257,4 +257,36 @@ export const servicesApi = {
     const response = await goldpcApi.postServicesIdClose(requestId, data);
     return extractData<ServiceRequestDto>(response);
   },
+
+  // ─── Backward-compatible aliases ────────────────
+
+  /** Alias for getMasterRequests (used by master panel pages) */
+  getMasterServices: async (page: number = 1, pageSize: number = 10, status?: string): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
+    return servicesApi.getMasterRequests({ page, pageSize, status });
+  },
+
+  /** Alias for updateRequestStatus (used by master panel) */
+  updateTicketStatus: async (requestId: string, status: string): Promise<ServiceRequestDto> => {
+    return servicesApi.updateRequestStatus(requestId, status);
+  },
+
+  /** Alias for completeRequest (used by TicketDetailPage) */
+  completeTicket: async (requestId: string, report: WorkReport): Promise<ServiceRequestDto> => {
+    return servicesApi.completeRequest(requestId, report);
+  },
+
+  /** Alias for getServiceRequestById (used by useServiceTickets) */
+  getServiceById: async (id: string): Promise<ServiceRequestDto> => {
+    return servicesApi.getServiceRequestById(id);
+  },
+
+  /** Alias for createServiceRequest (used by useServiceTickets) */
+  createService: async (data: CreateServiceRequest): Promise<ServiceRequestDto> => {
+    return servicesApi.createServiceRequest(data);
+  },
+
+  /** Alias for getMyServiceRequests (used by useServiceTickets) */
+  getMyServices: async (page: number = 1, pageSize: number = 10): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
+    return servicesApi.getMyServiceRequests(page, pageSize);
+  },
 };

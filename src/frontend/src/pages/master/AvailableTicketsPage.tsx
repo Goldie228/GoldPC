@@ -69,7 +69,7 @@ export function AvailableTicketsPage() {
   });
 
   const tickets = data?.items ?? [];
-  const total = data?.total ?? 0;
+  const total = data?.totalCount ?? 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const filteredTickets = searchQuery.trim()
