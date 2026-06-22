@@ -140,7 +140,8 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
   }, [state]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="w-full max-w-4xl mx-auto px-6 md:px-10 py-12">
+      <div className="flex flex-col gap-8">
       {/* Progress indicator */}
       {step < 3 && (
         <div className="flex items-center justify-center gap-2">
@@ -448,6 +449,7 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }
