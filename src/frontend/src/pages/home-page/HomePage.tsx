@@ -392,7 +392,52 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* ════════════ 2. GAMING SETUP CAROUSEL ════════════ */}
+      {/* ════════════ 2. CATEGORIES ════════════ */}
+      <section className="home-categories" aria-label="Категории">
+        <div className="home-categories__inner">
+          <div className="home-categories__header">
+            <h2 className="home-categories__title">Категории</h2>
+            <p className="home-categories__desc">Выберите компонент для вашего ПК</p>
+          </div>
+          <div className="home-categories__grid">
+            {(() => {
+              const cats = categoriesLoading && categories.length === 0
+                ? staticCategories
+                : categories.map((cat) => ({
+                    ...cat,
+                    icon: CATEGORY_ICONS[(BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug)] ?? Cpu,
+                  }));
+              const COLS = 5;
+              const remainder = cats.length % COLS;
+              return cats.map((cat, i) => {
+                const frontendId = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug);
+                const IconComponent = cat.icon ?? CATEGORY_ICONS[frontendId] ?? Cpu;
+                const isLastRow = remainder !== 0 && i >= cats.length - remainder;
+                const span = isLastRow ? COLS / remainder : 1;
+                return (
+                  <motion.div
+                    key={cat.id}
+                    style={isLastRow ? { gridColumn: `span ${span}` } : undefined}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-20px' }}
+                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                  >
+                    <CategoryCard
+                      Icon={IconComponent}
+                      name={cat.name}
+                      count={cat.productCount ?? 0}
+                      href={`/catalog/${frontendId}`}
+                    />
+                  </motion.div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════ 3. GAMING SETUP CAROUSEL ════════════ */}
       <section className="home-gaming" aria-label="Вдохновляющие сетапы">
         <div className="home-gaming__inner">
           <motion.div
@@ -403,44 +448,6 @@ export function HomePage() {
           >
             <GamingCarousel slides={gamingSlides} />
           </motion.div>
-        </div>
-      </section>
-
-      {/* ════════════ 3. CATEGORIES ════════════ */}
-      <section className="home-categories" aria-label="Категории">
-        <div className="home-categories__inner">
-          <div className="home-categories__header">
-            <h2 className="home-categories__title">Категории</h2>
-            <p className="home-categories__desc">Выберите компонент для вашего ПК</p>
-          </div>
-          <div className="home-categories__grid">
-            {(categoriesLoading && categories.length === 0
-              ? staticCategories
-              : categories.map((cat) => ({
-                  ...cat,
-                  icon: CATEGORY_ICONS[(BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug)] ?? Cpu,
-                }))
-            ).map((cat, i) => {
-              const frontendId = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug);
-              const IconComponent = cat.icon ?? CATEGORY_ICONS[frontendId] ?? Cpu;
-              return (
-                <motion.div
-                  key={cat.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-20px' }}
-                  transition={{ duration: 0.5, delay: i * 0.05 }}
-                >
-                  <CategoryCard
-                    Icon={IconComponent}
-                    name={cat.name}
-                    count={cat.productCount ?? 0}
-                    href={`/catalog/${frontendId}`}
-                  />
-                </motion.div>
-              );
-            })}
-          </div>
         </div>
       </section>
 
