@@ -109,8 +109,8 @@ export function useAuth(): UseAuthReturn {
       localStorage.setItem('refreshToken', response.refreshToken);
       setUser(response.user);
 
-      // Редиректим на главную (нет отдельной страницы подтверждения email)
-      void navigate('/');
+      // Редиректим на страницу подтверждения email
+      void navigate('/verify-email');
 
       // А потом уже в фоне синхронизируем избранное
       // Не используем await чтобы не блокировать поток регистрации
