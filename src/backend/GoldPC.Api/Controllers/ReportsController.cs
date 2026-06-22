@@ -10,7 +10,7 @@ namespace GoldPC.Api.Controllers;
 /// Позволяет фронтенду обращаться к отчётам через единую точку входа (gateway).
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/reports")]
 [Authorize]
 public class ReportsController : ControllerBase
 {

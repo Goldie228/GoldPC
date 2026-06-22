@@ -40,5 +40,5 @@ public interface IAdminService
 
     // Аудит-логи
     Task<PagedResult<AuditLogDto>> GetAuditLogsAsync(int page, int pageSize, string? actionType, string? severity, DateTime? startDate, DateTime? endDate);
-    Task AddAuditLogAsync(string actionType, string userId, string userName, string userEmail, string description, string severity = "INFO", string? additionalData = null, string? ipAddress = null);
+    Task AddAuditLogAsync(string actionType, string userId, string userName, string userEmail, string description, string severity = "INFO", string? additionalData = null);
 }

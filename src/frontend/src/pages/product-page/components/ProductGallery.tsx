@@ -165,29 +165,47 @@ export function ProductGallery({ product }: ProductGalleryProps): ReactElement {
       {/* Thumbnails */}
       {images.length > 1 && (
         <div className="bg-card border border-border rounded-xl p-3">
-          <div
-            ref={thumbsRef}
-            className="flex gap-2.5 overflow-x-auto items-center overflow-y-hidden scroll-smooth scrollbar-thin scrollbar-color-[var(--border)_transparent]"
-          >
-            {images.map((img, idx) => (
-              <button
-                key={img.id}
-                ref={(node) => { thumbBtnRefs.current[idx] = node; }}
-                className={`flex-shrink-0 w-16 h-16 rounded-lg bg-[#FFFFFF] border-2 p-1 cursor-pointer transition-all duration-150 hover:border-primary/50 ${
-                    currentIndex === idx
-                      ? 'border-primary shadow-[0_0_0_2px_rgba(252,213,53,0.15)]'
-                      : 'border-border'
-                  }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentIndex(idx);
-                }}
-                aria-label={`Фото ${idx + 1} из ${images.length}`}
-                aria-current={currentIndex === idx ? 'true' : undefined}
-              >
-                <img src={img.url} alt={img.alt || product.name} className="w-full h-full object-contain" width={64} height={64} loading="lazy" />
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <button
+              className="flex-shrink-0 w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              onClick={(e) => { e.stopPropagation(); setCurrentIndex(Math.max(0, currentIndex - 1)); }}
+              disabled={currentIndex === 0}
+              aria-label="Предыдущее фото"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <div
+              ref={thumbsRef}
+              className="flex gap-2.5 overflow-x-auto items-center overflow-y-hidden scroll-smooth scrollbar-thin scrollbar-color-[var(--border)_transparent] flex-1"
+            >
+              {images.map((img, idx) => (
+                <button
+                  key={img.id}
+                  ref={(node) => { thumbBtnRefs.current[idx] = node; }}
+                  className={`flex-shrink-0 w-16 h-16 rounded-lg bg-[#FFFFFF] border-2 p-1 cursor-pointer transition-all duration-150 hover:border-primary/50 ${
+                      currentIndex === idx
+                        ? 'border-primary shadow-[0_0_0_2px_rgba(252,213,53,0.15)]'
+                        : 'border-border'
+                    }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentIndex(idx);
+                  }}
+                  aria-label={`Фото ${idx + 1} из ${images.length}`}
+                  aria-current={currentIndex === idx ? 'true' : undefined}
+                >
+                  <img src={img.url} alt={img.alt || product.name} className="w-full h-full object-contain" width={64} height={64} loading="lazy" />
+                </button>
+              ))}
+            </div>
+            <button
+              className="flex-shrink-0 w-7 h-7 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              onClick={(e) => { e.stopPropagation(); setCurrentIndex(Math.min(images.length - 1, currentIndex + 1)); }}
+              disabled={currentIndex === images.length - 1}
+              aria-label="Следующее фото"
+            >
+              <ChevronRight size={14} />
+            </button>
           </div>
         </div>
       )}

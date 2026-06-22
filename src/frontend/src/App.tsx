@@ -270,10 +270,6 @@ const router = createBrowserRouter([
       },
       { path: '/login', element: <Navigate to="/" replace /> },
       { path: '/register', element: <Navigate to="/" replace /> },
-      { path: '/forgot-password', element: <ForgotPasswordPage /> },
-      { path: '/reset-password/:token', element: <ResetPasswordPage /> },
-      { path: '/verify-email', element: <VerifyEmailPendingPage /> },
-      { path: '/verify-email/:token', element: <VerifyEmailTokenPage /> },
       {
         element: <RoleGuard allowedRoles={['Manager', 'Admin', 'Master']} />,
         children: [
@@ -333,6 +329,11 @@ const router = createBrowserRouter([
       { path: '*', element: <NotFoundPage /> },
     ],
   },
+  // Auth pages — standalone, no header/footer
+  { path: '/forgot-password', element: <ForgotPasswordPage /> },
+  { path: '/reset-password/:token', element: <ResetPasswordPage /> },
+  { path: '/verify-email', element: <VerifyEmailPendingPage /> },
+  { path: '/verify-email/:token', element: <VerifyEmailTokenPage /> },
   // Админ-панель — с path="/admin" чтобы не матчить корневые URL
   {
     path: '/admin',
