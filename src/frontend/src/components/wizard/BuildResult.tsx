@@ -77,17 +77,17 @@ export default function BuildResult({ build, onReset }: BuildResultProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">
+          <h2 className="text-title-lg font-semibold text-on-dark">
             Рекомендуемая конфигурация
           </h2>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1">
+          <p className="text-body-md text-muted-text mt-1">
             {foundCount} из 8 компонентов подобрано
           </p>
         </div>
         {build.totalPrice > 0 && (
           <div className="text-right">
-            <p className="text-xs text-[var(--color-text-muted)]">Общая стоимость</p>
-            <p className="text-2xl font-bold text-[var(--color-brand-primary)]">
+            <p className="text-xs text-muted-text">Общая стоимость</p>
+            <p className="font-['Nunito'] text-[28px] font-bold text-gold">
               {build.totalPrice.toLocaleString('ru-RU')} BYN
             </p>
           </div>
@@ -103,36 +103,36 @@ export default function BuildResult({ build, onReset }: BuildResultProps) {
           return (
             <div
               key={cat}
-              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+              className={`flex items-center gap-3 p-6 rounded-xl border transition-colors ${
                 hasProduct
-                  ? 'border-[var(--color-border-default)] bg-[var(--color-surface-card)]'
-                  : 'border-[var(--color-surface-raised)] bg-[var(--color-surface-raised)]/50 opacity-50'
+                  ? 'border border-hairline-dark bg-surface-card'
+                  : 'border border-surface-elevated bg-surface-elevated/50 opacity-50'
               }`}
             >
               <div
-                className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
                   hasProduct
-                    ? 'bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]'
-                    : 'bg-[var(--color-surface-raised)] text-[var(--color-text-muted)]'
+                    ? 'bg-gold/10 text-gold'
+                    : 'bg-surface-elevated text-muted-text'
                 }`}
               >
                 {COMPONENT_ICONS[cat]}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs text-[var(--color-text-muted)]">
+                <p className="text-xs text-muted-text">
                   {COMPONENT_LABELS[cat]}
                 </p>
                 {hasProduct ? (
                   <>
-                    <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                    <p className="font-['Nunito_Sans'] text-body-md font-semibold text-on-dark truncate">
                       {(product as { name: string }).name}
                     </p>
-                    <p className="text-xs text-[var(--color-brand-primary)] font-medium">
+                    <p className="font-['Nunito'] text-sm font-medium text-gold">
                       {(product as { price: number }).price.toLocaleString('ru-RU')} BYN
                     </p>
                   </>
                 ) : (
-                  <p className="text-xs text-[var(--color-text-muted)] italic">
+                  <p className="text-xs text-muted-text italic">
                     Не найден
                   </p>
                 )}
@@ -143,13 +143,13 @@ export default function BuildResult({ build, onReset }: BuildResultProps) {
       </div>
 
       {/* Compatibility note */}
-      <div className="flex items-start gap-2 p-3 rounded-lg bg-[var(--color-surface-raised)]">
+      <div className="flex items-start gap-2 p-3 rounded-lg bg-surface-elevated">
         {foundCount === 8 ? (
           <CheckCircle size={16} className="text-emerald-400 mt-0.5 shrink-0" />
         ) : (
           <AlertTriangle size={16} className="text-amber-400 mt-0.5 shrink-0" />
         )}
-        <div className="text-xs text-[var(--color-text-secondary)]">
+        <div className="text-xs text-body-text">
           {foundCount === 8 ? (
             <p>Все компоненты подобраны. Совместимость будет проверена в конструкторе.</p>
           ) : (
@@ -165,13 +165,13 @@ export default function BuildResult({ build, onReset }: BuildResultProps) {
       <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={handleGoToBuilder}
-          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[var(--color-brand-primary)] text-[var(--color-canvas-dark)] font-medium hover:opacity-90 transition-opacity cursor-pointer"
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gold text-gold-ink font-semibold hover:bg-gold-active transition-colors cursor-pointer"
         >
           Перейти в конструктор
         </button>
         <button
           onClick={onReset}
-          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-raised)] transition-colors cursor-pointer"
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-surface-card border border-hairline-dark text-body-text hover:bg-surface-elevated transition-colors cursor-pointer"
         >
           Изменить выбор
         </button>
