@@ -333,8 +333,8 @@ export function ExportPage() {
                 />
                 <span className="absolute inset-0 bg-surface-elevated border border-hairline-dark rounded" />
                 <span
-                  className={`absolute left-[5px] top-[2px] w-[5px] h-[9px] border-solid border-foreground border-r-2 border-b-2 -rotate-45 transition-transform ${
-                    option.checked ? 'scale-100 bg-gold border-gold' : 'scale-0'
+                  className={`absolute left-[5px] top-[2px] w-[5px] h-[9px] border-solid border-r-2 border-b-2 -rotate-45 transition-transform ${
+                    option.checked ? 'scale-100 border-gold' : 'scale-0 border-foreground'
                   }`}
                 />
               </div>

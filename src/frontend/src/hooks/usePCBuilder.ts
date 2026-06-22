@@ -109,7 +109,8 @@ export function usePCBuilder(): UsePCBuilderReturn {
   const localCompatibility = useMemo(() => {
     const componentMap = buildComponentMap(selectedComponents);
     const allRamSticks = selectedComponents.ram.map(r => r.product);
-    const result = checkCompatibility(componentMap, allRamSticks);
+    const fanCount = selectedComponents.fan.length;
+    const result = checkCompatibility(componentMap, allRamSticks, fanCount);
     return {
       isCompatible: result.isCompatible,
       errors: result.issues.map(i => i.message),
@@ -219,7 +220,8 @@ export function usePCBuilder(): UsePCBuilderReturn {
   const checkCompatibilityAction = useCallback(() => {
     const componentMap = buildComponentMap(selectedComponents);
     const allRamSticks = selectedComponents.ram.map(r => r.product);
-    const result = checkCompatibility(componentMap, allRamSticks);
+    const fanCount = selectedComponents.fan.length;
+    const result = checkCompatibility(componentMap, allRamSticks, fanCount);
     return {
       isCompatible: result.isCompatible,
       errors: result.issues.map(i => i.message),

@@ -49,7 +49,7 @@ export function ServiceRequestPage() {
 
   // --- Состояние формы ---
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
-  const [photos, setPhotos] = useState<File[]>([]);
+
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [selectedServiceName, setSelectedServiceName] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
@@ -223,7 +223,6 @@ export function ServiceRequestPage() {
     setSelectedServiceId(null);
     setSelectedServiceName('');
     setFormData(INITIAL_FORM_DATA);
-    setPhotos([]);
     setErrors({});
   };
 
@@ -402,12 +401,6 @@ export function ServiceRequestPage() {
               {formData.problem}
             </span>
           </div>
-          {photos.length > 0 && (
-            <div className="flex justify-between">
-              <span className="text-muted-text">Фото</span>
-              <span className="text-foreground">{photos.length} шт.</span>
-            </div>
-          )}
         </div>
       </div>
     </div>

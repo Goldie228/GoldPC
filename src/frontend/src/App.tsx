@@ -380,12 +380,10 @@ function App(): React.ReactElement {
 
   return (
     <NotificationProvider>
-      <ErrorBoundary>
-        <Suspense fallback={<RouteAwarePageLoader />}>
-          <OfflineBanner />
-          <RouterProvider router={router} />
-        </Suspense>
-      </ErrorBoundary>
+      <Suspense fallback={<RouteAwarePageLoader />}>
+        <OfflineBanner />
+        <RouterProvider router={router} />
+      </Suspense>
     </NotificationProvider>
   );
 }

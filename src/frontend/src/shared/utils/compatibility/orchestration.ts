@@ -408,7 +408,7 @@ export function runTips(
   warnings.push(tip7);
 }
 
-export function checkCompatibility(components: ComponentMap, ramSticks?: Product[]): CompatibilityCheckResult {
+export function checkCompatibility(components: ComponentMap, ramSticks?: Product[], fanCount?: number): CompatibilityCheckResult {
   const issues: CompatibilityIssue[] = [];
   const warnings: CompatibilityWarning[] = [];
 
@@ -512,7 +512,7 @@ export function checkCompatibility(components: ComponentMap, ramSticks?: Product
   runUSB3HeaderCheck(motherboard ?? undefined, chassis ?? undefined, issues, warnings);
   runM2Checks(storageProducts, motherboard ?? undefined, issues, warnings);
   runM2SataLaneConflictCheck(storageProducts, motherboard ?? undefined, issues, warnings);
-  runFanHeaderCheck(motherboard ?? undefined, cooling ?? undefined, chassis ?? undefined, 0, issues, warnings);
+  runFanHeaderCheck(motherboard ?? undefined, cooling ?? undefined, chassis ?? undefined, fanCount ?? 0, issues, warnings);
   runRGBCheck(motherboard ?? undefined, chassis ?? undefined, issues, warnings);
   runECCCheck(ram ?? undefined, motherboard ?? undefined, issues, warnings);
   runPSUBrandCheck(psu ?? undefined, issues, warnings);

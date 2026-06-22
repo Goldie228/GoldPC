@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Check, HardDrive } from 'lucide-react';
 import type { PCComponentType } from '@/hooks';
@@ -33,6 +34,7 @@ function ProgressBar({ currentStep, totalSteps }: { currentStep: number; totalSt
 }
 
 export function BuildWizard() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [showResult, setShowResult] = useState(false);
   const [wizardState, setWizardState] = useState<WizardState>({
@@ -75,7 +77,25 @@ export function BuildWizard() {
       <div className="[&>*]:animate-[fadeIn_0.3s_ease]">
         <AnimatePresence mode="wait">
           {showResult ? (
-            <BuildResult key="result" wizardState={wizardState} onAddToBuilder={() => { window.location.href = '/pc-builder'; }} />
+            <BuildResult key="result" wizardState={wizardState} onAddToBuilder={() => {
+              // Persist wizard selections before navigation
+              try {
+                const template = getTemplate(wizardState.purpose as Purpose, wizardState.budget as Budget);
+                const selectionMap: Partial<Record<PCComponentType, string[]>> = {};
+                (Object.keys(template) as BuildTemplateKey[]).forEach((key) => {
+                  const ids = template[key];
+                  if (ids.length > 0) {
+                    selectionMap[key as PCComponentType] = [...ids];
+                  }
+                });
+                localStorage.setItem('pcBuilder_wizardSelections', JSON.stringify(selectionMap));
+                localStorage.setItem('pcBuilder_wizardState', JSON.stringify({
+                  purpose: wizardState.purpose,
+                  budget: wizardState.budget,
+                }));
+              } catch { /* ignore quota errors */ }
+              navigate('/pc-builder');
+            }} />
           ) : currentStep === 0 ? (
             <StepPurpose key="purpose" selected={wizardState.purpose} onSelect={(purpose) => setWizardState((prev) => ({ ...prev, purpose }))} />
           ) : currentStep === 1 ? (
