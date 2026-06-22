@@ -13,11 +13,13 @@ export function useCart() {
   const [isValidatingPromo, setIsValidatingPromo] = useState(false);
   const [promoError, setPromoError] = useState<string | null>(null);
 
-  // Вычисляемые значения (мемоизированы по items)
+  // Вычисляемые значения (мемоизированы по items и promo)
   const items = store.items;
-  const totalPrice = useMemo(() => store.getTotal(), [items]);
+  const discount = store.discount;
+  const promoCode = store.promoCode;
+  const totalPrice = useMemo(() => store.getTotal(), [items, discount, promoCode]);
   const itemCount = useMemo(() => store.getItemCount(), [items]);
-  const discountedTotal = useMemo(() => store.getDiscountedTotal(), [items]);
+  const discountedTotal = useMemo(() => store.getDiscountedTotal(), [items, discount, promoCode]);
   const discountAmount = useMemo(() => totalPrice - discountedTotal, [totalPrice, discountedTotal]);
 
   // Обёртки для действий

@@ -142,6 +142,8 @@ export const catalogApi = {
         if (value) apiParams[`specificationRanges[${key}]`] = value;
       }
     }
+    if (params.sortBy) apiParams.sortBy = params.sortBy;
+    if (params.sortOrder) apiParams.sortOrder = params.sortOrder;
 
     const paramsSerializer = (params: Record<string, unknown>) => {
       const pairs: [string, string][] = [];

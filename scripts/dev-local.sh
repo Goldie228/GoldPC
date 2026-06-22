@@ -16,6 +16,10 @@
 
 set -e
 
+# Ensure .NET tools can find the runtime
+export DOTNET_ROOT=/usr/share/dotnet
+export PATH="$DOTNET_ROOT:$PATH"
+
 # Colors
 CYAN='\033[36m'
 GREEN='\033[32m'
@@ -358,7 +362,7 @@ start_infra() {
     echo -ne "${CYAN}Waiting for Redis to be ready...${RESET}"
     count=0
     while [ $count -lt $timeout ]; do
-        if docker exec goldpc-redis redis-cli ping 2>/dev/null | grep -q "PONG"; then
+        if docker exec goldpc-redis redis-cli -a "${REDIS_PASSWORD:-redis_dev_password}" ping 2>/dev/null | grep -q "PONG"; then
             echo -e " ${GREEN}OK${RESET}"
             break
         fi

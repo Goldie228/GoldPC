@@ -184,7 +184,7 @@ export function AccountRepairs() {
   }, [page, pageSize, activeFilter, getMyServices, loadingMore, hasMore]);
 
   const stats = {
-    total: tickets.length,
+    total: totalCount,
     active: tickets.filter(t => !TERMINAL_STATUSES.has(t.status)).length,
     completed: tickets.filter(t => t.status === 'Completed').length,
     urgent: tickets.filter(t => t.status === 'ReadyForPickup').length,

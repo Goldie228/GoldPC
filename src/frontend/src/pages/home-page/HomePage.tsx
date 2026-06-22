@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import './HomePage.css';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cpu, Gpu, MemoryStick, HardDrive, Zap, Box, ThermometerSun, Monitor, Fan, Shield, Truck, Star, ChevronRight, ArrowRight, Award, ChevronLeft, Pause, Play } from 'lucide-react';
+import { Cpu, Gpu, MemoryStick, HardDrive, Zap, Box, ThermometerSun, Monitor, Fan, Shield, Truck, Star, ChevronRight, ArrowRight, Award, ChevronLeft, Pause, Play, Keyboard, Mouse, Headphones } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ProductCard } from '@/components/product-card/ProductCard';
@@ -42,9 +42,9 @@ const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
   cooling: ThermometerSun,
   fan: Fan,
   monitor: Monitor,
-  keyboard: Cpu,
-  mouse: Cpu,
-  headphones: Cpu,
+  keyboard: Keyboard,
+  mouse: Mouse,
+  headphones: Headphones,
 };
 
 // ─── Hero Background Placeholder ───────────────────────────────────

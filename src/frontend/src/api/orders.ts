@@ -195,7 +195,8 @@ export const ordersApi = {
    * Получить информацию об отслеживании заказа
    */
   async getOrderTracking(orderNumber: string): Promise<Order> {
-    return this.getOrderByNumber(orderNumber);
+    const response = await goldpcApi.getOrdersNumberOrderNumber(orderNumber);
+    return unwrapResponse<Order>(response.data);
   },
 
   /**

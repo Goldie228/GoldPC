@@ -1,4 +1,4 @@
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Bell, Star } from 'lucide-react';
@@ -34,10 +34,18 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
   const { isInComparison, toggleComparison } = useComparison();
   const { showToast } = useToast();
   const [addingId, setAddingId] = useState<string | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const handleAddToCart = (product: ProductSummary) => {
     if (product.stock === 0 || !product.isActive) return;
 
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setAddingId(product.id);
     addToCart(product, 1);
     showToast('Товар добавлен в корзину', 'success');
@@ -46,7 +54,7 @@ export function ProductTable({ products, onAddToCart }: ProductTableProps): Reac
       onAddToCart(product.id);
     }
 
-    setTimeout(() => setAddingId(null), 500);
+    timeoutRef.current = setTimeout(() => setAddingId(null), 500);
   };
 
   const _handleToggleWishlist = (productId: string) => {

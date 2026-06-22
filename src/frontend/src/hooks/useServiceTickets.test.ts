@@ -11,7 +11,7 @@ vi.mock('../api/services', () => ({
   servicesApi: {
     getServiceTypes: (...args: any[]) => mockGetServiceTypes(...args),
     createService: (...args: any[]) => mockCreateService(...args),
-    getMyServices: (...args: any[]) => mockGetMyServices(...args),
+    getMyServiceRequests: (...args: any[]) => mockGetMyServices(...args),
     getServiceById: (...args: any[]) => mockGetServiceById(...args),
   },
 }));
@@ -110,11 +110,11 @@ describe('hooks/useServiceTickets', () => {
   });
 
   it('getMyServices loads services', async () => {
-    const services = { items: [mockServiceRequest], total: 1 };
+    const services = { items: [mockServiceRequest], totalCount: 1 };
     mockGetMyServices.mockResolvedValue(services);
 
     const { result } = renderHook(() => useServiceTickets());
-    let res: { items: ServiceRequestDto[]; total: number } | null = null;
+    let res: { items: ServiceRequestDto[]; totalCount: number } | null = null;
     await act(async () => {
       res = await result.current.getMyServices(1, 10);
     });

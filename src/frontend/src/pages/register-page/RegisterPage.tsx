@@ -130,8 +130,35 @@ export function RegisterPage() {
     try {
       const cleanPhone = phone.replace(/[^\d+]/g, '');
       await register({ firstName, lastName: '', phone: cleanPhone, email, password });
-    } catch {
-      setError('Ошибка регистрации. Попробуйте другой email');
+    } catch (error: unknown) {
+      // Показываем реальное сообщение с сервера вместо захардкоженной ошибки
+      const err = error as { response?: { data?: { errors?: Record<string, string[]>, title?: string, message?: string }, status?: number } };
+      const backendErrors = err.response?.data?.errors;
+
+      if (backendErrors && typeof backendErrors === 'object') {
+        // Ошибки валидации по полям
+        const newFieldErrors: Record<string, string> = {};
+        Object.entries(backendErrors).forEach(([field, messages]) => {
+          newFieldErrors[field] = Array.isArray(messages) ? messages[0] : String(messages);
+        });
+        setFieldErrors(newFieldErrors);
+        setError('Пожалуйста, исправьте ошибки в полях формы');
+      } else {
+        // Показываем сообщение от сервера или общее сообщение по коду статуса
+        const serverMessage = err.response?.data?.title || err.response?.data?.message;
+        const status = err.response?.status;
+        if (serverMessage) {
+          setError(serverMessage);
+        } else if (status === 409) {
+          setError('Пользователь с таким email уже зарегистрирован.');
+        } else if (status === 422) {
+          setError('Ошибка валидации данных. Проверьте введённые значения.');
+        } else if (status && status >= 500) {
+          setError('Ошибка сервера. Попробуйте через несколько минут.');
+        } else {
+          setError('Ошибка регистрации. Попробуйте позже.');
+        }
+      }
     }
   };
 

@@ -145,7 +145,7 @@ describe('formatSpecValueForKey', () => {
   });
 
   it('для числового значения возвращает строку', () => {
-    expect(formatSpecValueForKey('capacity', 16)).toBe('16');
+    expect(formatSpecValueForKey('type', 42)).toBe('42');
   });
 
   it('для undefined возвращает прочерк', () => {

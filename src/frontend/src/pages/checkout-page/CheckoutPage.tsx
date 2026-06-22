@@ -267,18 +267,23 @@ getAddresses()
         })),
       });
 
-      clearCart();
+      if (!order) {
+        showToast('Не удалось создать заказ. Попробуйте ещё раз.', 'error');
+        setIsProcessing(false);
+        return false;
+      }
 
       // SBP: show QR with real order number after order creation
       if (paymentMethod === 'SBP') {
-        setPendingOrderNumber(order?.orderNumber ?? null);
+        setPendingOrderNumber(order.orderNumber);
         setShowQRPayment(true);
         setIsProcessing(false);
         return true;
       }
 
+      clearCart();
       showToast('Заказ успешно оформлен!', 'success');
-      void navigate(`/orders/${order?.orderNumber ?? 'unknown'}/success`);
+      void navigate(`/orders/${order.orderNumber}/success`);
       return true;
     } catch (error) {
       if (isAxiosError(error)) {

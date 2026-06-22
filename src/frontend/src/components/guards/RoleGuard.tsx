@@ -5,7 +5,7 @@
  * Если роль не соответствует разрешённым - показывает 403 Forbidden или редирект.
  * Если роль соответствует - рендерит дочерние маршруты через Outlet.
  */
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/authStore';
 import type { User } from '@/api/types';
@@ -25,6 +25,7 @@ export function RoleGuard({
 }: RoleGuardProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { currentRole } = useAuthStore();
+  const location = useLocation();
 
   // Пока загружается состояние авторизации
   if (isLoading) {
@@ -36,8 +37,11 @@ export function RoleGuard({
     );
   }
 
-  // Если не авторизован - редирект на логин
+  // Если не авторизован - редирект на логин с сохранением текущего пути
   if (!isAuthenticated) {
+    if (location.pathname !== '/') {
+      localStorage.setItem('authRedirectPath', location.pathname + location.search);
+    }
     return <Navigate to="/login" replace />;
   }
 

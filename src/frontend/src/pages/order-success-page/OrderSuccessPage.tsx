@@ -47,8 +47,8 @@ const TIMELINE_STEPS = [
   { key: 'delivered', label: 'Получен', icon: Home },
 ] as const;
 
-function getStepIndex(status: string): number {
-  const s = status?.toLowerCase() ?? '';
+function getStepIndex(status: unknown): number {
+  const s = String(status ?? '').toLowerCase();
   if (s.includes('deliver') || s.includes('received') || s.includes('complete')) return 3;
   if (s.includes('ship') || s.includes('transit') || s.includes('courier')) return 2;
   if (s.includes('process') || s.includes('confirm') || s.includes('paid')) return 1;

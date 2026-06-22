@@ -116,15 +116,15 @@ builder.Services.AddHealthChecks()
         failureStatus: HealthStatus.Degraded,
         tags: ["cache", "ready"])
     .AddUrlGroup(
-        new Uri(servicesConfig["CatalogService"] ?? "http://localhost:5000"),
+        new Uri(new Uri(servicesConfig["CatalogService"] ?? "http://localhost:5000"), "/health"),
         name: "catalogservice",
-        failureStatus: HealthStatus.Unhealthy,
-        tags: ["downstream", "ready"])
+        failureStatus: HealthStatus.Degraded,
+        tags: ["downstream"])
     .AddUrlGroup(
-        new Uri(servicesConfig["AuthService"] ?? "http://localhost:5002"),
+        new Uri(new Uri(servicesConfig["AuthService"] ?? "http://localhost:5002"), "/health"),
         name: "authservice",
-        failureStatus: HealthStatus.Unhealthy,
-        tags: ["downstream", "ready"]);
+        failureStatus: HealthStatus.Degraded,
+        tags: ["downstream"]);
 
 // Add Catalog Service Client (HTTP client to CatalogService)
 builder.Services.AddTransient<AuthForwardingHandler>();
@@ -260,7 +260,7 @@ var app = builder.Build();
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
-    Predicate = _ => true // Include all health checks
+    Predicate = check => !check.Tags.Contains("downstream") // Exclude downstream services from /health
 });
 
 app.MapHealthChecks("/health/ready", new HealthCheckOptions

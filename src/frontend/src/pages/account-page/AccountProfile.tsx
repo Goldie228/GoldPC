@@ -66,8 +66,8 @@ export function AccountProfile() {
     setAvatarSaving(true);
     try {
       const result = await authService.uploadAvatar(file);
-      if (result?.avatarUrl) {
-        setUser({ ...user!, avatarUrl: result.avatarUrl });
+      if (result?.avatarUrl && user) {
+        setUser({ ...user, avatarUrl: result.avatarUrl });
         showToast('Аватар обновлён', 'success');
         setAvatarModalOpen(false);
       }

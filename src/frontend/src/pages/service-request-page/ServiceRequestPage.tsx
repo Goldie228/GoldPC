@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/useToast';
 import { useServiceTickets } from '@/hooks/useServiceTickets';
 import { useAuthStore } from '@/store/authStore';
 import { useAuthModal } from '@/hooks/useAuthModal';
+import { isValidPhone } from '@/utils/phone';
 import { ServiceSelector } from './ServiceSelector';
 import { PhotoUploader } from './PhotoUploader';
 import { SuccessScreen } from './SuccessScreen';
@@ -102,7 +103,7 @@ export function ServiceRequestPage() {
       if (!formData.name.trim()) newErrors.name = 'Укажите имя';
       if (!formData.phone.trim()) {
         newErrors.phone = 'Укажите телефон';
-      } else if (!/^\+?[\d\s\-()]{7,}$/.test(formData.phone.trim())) {
+      } else if (!isValidPhone(formData.phone.trim())) {
         newErrors.phone = 'Некорректный формат';
       }
     }

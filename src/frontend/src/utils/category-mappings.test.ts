@@ -45,7 +45,7 @@ describe('FRONTEND_TO_BACKEND', () => {
     expect(FRONTEND_TO_BACKEND.psu).toBe('psu');
     expect(FRONTEND_TO_BACKEND.case).toBe('cases');
     expect(FRONTEND_TO_BACKEND.cooling).toBe('coolers');
-    expect(FRONTEND_TO_BACKEND.fan).toBe('coolers');
+    expect(FRONTEND_TO_BACKEND.fan).toBe('fans');
     expect(FRONTEND_TO_BACKEND.monitor).toBe('monitors');
     expect(FRONTEND_TO_BACKEND.keyboard).toBe('keyboards');
     expect(FRONTEND_TO_BACKEND.mouse).toBe('mice');
@@ -62,11 +62,8 @@ describe('BACKEND_TO_FRONTEND', () => {
     expect(BACKEND_TO_FRONTEND.mice).toBe('mouse');
   });
 
-  it('maps most entries correctly (fan→coolers is many-to-one)', () => {
-    // fan and cooling both map to 'coolers' in FRONTEND_TO_BACKEND,
-    // so BACKEND_TO_FRONTEND['coolers'] can only map to one of them.
+  it('maps all frontend→backend→frontend roundtrips correctly', () => {
     for (const [feSlug, beSlug] of Object.entries(FRONTEND_TO_BACKEND)) {
-      if (feSlug === 'fan') return; // skip fan: many-to-one mapping
       expect(BACKEND_TO_FRONTEND[beSlug]).toBe(feSlug);
     }
   });
