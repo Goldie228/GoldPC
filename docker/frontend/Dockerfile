@@ -13,7 +13,7 @@ WORKDIR /app
 
 # Install dependencies first (better layer caching)
 COPY src/frontend/package*.json ./
-RUN npm install
+RUN npm ci
 
 # Copy source code
 COPY src/frontend/. .
