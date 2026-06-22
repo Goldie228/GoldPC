@@ -146,7 +146,7 @@ export function CatalogPage() {
   const debouncedPriceRange = useDebounce(priceRange, 300);
 
   // Price bounds - computed WITHOUT price filter, using all other active filters
-  const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>({ min: 0, max: 10000 });
+  const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
   const [_priceBoundsLoading, setPriceBoundsLoading] = useState(false);
 
   // Fetch price bounds without price filter
@@ -170,16 +170,15 @@ export function CatalogPage() {
           if (Object.keys(specifications).length > 0) params.specifications = specifications;
           if (Object.keys(specificationRanges).length > 0) params.specificationRanges = specificationRanges;
         }
-        params.page = 1;
-        params.pageSize = 10000; // Get enough products to find real bounds
-
-        const result = await getProducts(params);
-        const prices = (result?.data ?? []).map((p: ProductSummary) => p.price).filter((p: number) => p > 0);
-        if (prices.length > 0) {
-          setPriceBounds({
-            min: Math.floor(Math.min(...prices)),
-            max: Math.floor(Math.max(...prices)),
-          });
+        // Fetch min and max price with 2 fast requests
+        const [minResult, maxResult] = await Promise.all([
+          getProducts({ ...params, pageSize: 1, sortBy: 'price', sortOrder: 'asc' }),
+          getProducts({ ...params, pageSize: 1, sortBy: 'price', sortOrder: 'desc' }),
+        ]);
+        const minPrice = minResult?.data?.[0]?.price ?? 0;
+        const maxPrice = maxResult?.data?.[0]?.price ?? 0;
+        if (minPrice > 0 || maxPrice > 0) {
+          setPriceBounds({ min: minPrice, max: maxPrice });
         }
       } catch (err) {
         console.error('Failed to fetch price bounds:', err);
