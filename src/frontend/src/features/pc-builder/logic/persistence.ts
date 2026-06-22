@@ -1,7 +1,8 @@
 /**
- * LocalStorage Persistence Layer
- * Save/load/migrate PC builder state to localStorage
- * Extracted from usePCBuilder.ts for better organization
+ * Persistence Layer — localStorage + API backend
+ * Save/load/migrate PC builder state to localStorage and sync with backend API.
+ * localStorage is the source of truth for the active build; the API persists
+ * named configurations the user explicitly saves.
  */
 
 import type {
@@ -15,6 +16,7 @@ import {
   STORAGE_KEY,
   emptyPcBuilderState,
 } from './constants';
+import { pcbuilderApi, type SavedBuild } from '@/api/pcbuilder';
 
 /**
  * Runtime validation for deserialized build data.
@@ -193,5 +195,100 @@ export function clearLocalStorage(): void {
     localStorage.removeItem(STORAGE_KEY);
   } catch {
     /* ignore */
+  }
+}
+
+// ============================================================================
+// API-backed persistence
+// ============================================================================
+
+/** Convert a single SelectedComponent to a product ID for the API. */
+function componentToProductId(sc: SelectedComponent): string {
+  return sc.product.id;
+}
+
+/** Build a components map from the current state for the API payload. */
+function stateToComponentsMap(state: PCBuilderSelectedState): Record<string, string> {
+  const map: Record<string, string> = {};
+  if (state.cpu) map.cpu = componentToProductId(state.cpu);
+  if (state.gpu) map.gpu = componentToProductId(state.gpu);
+  if (state.motherboard) map.motherboard = componentToProductId(state.motherboard);
+  if (state.psu) map.psu = componentToProductId(state.psu);
+  if (state.case) map.case = componentToProductId(state.case);
+  if (state.cooling) map.cooling = componentToProductId(state.cooling);
+  if (state.monitor) map.monitor = componentToProductId(state.monitor);
+  if (state.keyboard) map.keyboard = componentToProductId(state.keyboard);
+  if (state.mouse) map.mouse = componentToProductId(state.mouse);
+  if (state.headphones) map.headphones = componentToProductId(state.headphones);
+  state.ram.forEach((sc, i) => { map[`ram_${i}`] = componentToProductId(sc); });
+  state.storage.forEach((sc, i) => { map[`storage_${i}`] = componentToProductId(sc); });
+  state.fan.forEach((sc, i) => { map[`fan_${i}`] = componentToProductId(sc); });
+  return map;
+}
+
+/**
+ * Save a named configuration to the backend API.
+ * localStorage is already the source of truth for the active build;
+ * this persists a snapshot the user explicitly saves.
+ */
+export async function saveConfigurationToApi(
+  state: PCBuilderSelectedState,
+  name: string,
+  purpose?: string,
+): Promise<SavedBuild | null> {
+  try {
+    const payload = {
+      name,
+      purpose: purpose ?? 'gaming',
+      components: stateToComponentsMap(state),
+    };
+    return await pcbuilderApi.saveConfiguration(payload);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Update an existing named configuration on the backend API.
+ */
+export async function updateConfigurationOnApi(
+  id: string,
+  state: PCBuilderSelectedState,
+  name: string,
+  purpose?: string,
+): Promise<SavedBuild | null> {
+  try {
+    const payload = {
+      name,
+      purpose: purpose ?? 'gaming',
+      components: stateToComponentsMap(state),
+    };
+    return await pcbuilderApi.updateConfiguration(id, payload);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Load all saved configurations from the backend API.
+ * Returns null on failure so callers can fall back to localStorage.
+ */
+export async function loadConfigurationsFromApi(): Promise<SavedBuild[] | null> {
+  try {
+    return await pcbuilderApi.getConfigurations();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Delete a saved configuration from the backend API.
+ */
+export async function deleteConfigurationFromApi(id: string): Promise<boolean> {
+  try {
+    await pcbuilderApi.deleteConfiguration(id);
+    return true;
+  } catch {
+    return false;
   }
 }

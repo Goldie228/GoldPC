@@ -45,6 +45,16 @@ const NAME_REGEX = /^[A-Za-zА-Яа-яЁё-]{2,50}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CONTACT_FIELDS: ContactField[] = ['firstName', 'phone', 'email'];
 
+function getTovarForm(count: number): string {
+  const abs = Math.abs(Math.trunc(count));
+  const mod10 = abs % 10;
+  const mod100 = abs % 100;
+  if (mod100 >= 11 && mod100 <= 14) return 'товаров';
+  if (mod10 === 1) return 'товар';
+  if (mod10 >= 2 && mod10 <= 4) return 'товара';
+  return 'товаров';
+}
+
 function isOnlinePaymentMethod(method: PaymentMethod): boolean {
   return method === 'CardOnline' || method === 'SBP';
 }
@@ -751,7 +761,7 @@ getAddresses()
                       </p>
                     ))}
                     {items?.length > 3 && (
-                      <p className="italic text-foreground-dim mt-2 text-sm">... и ещё {items?.length - 3} товар(ов)</p>
+                      <p className="italic text-foreground-dim mt-2 text-sm">... и ещё {items?.length - 3} {getTovarForm(items?.length - 3 ?? 0)}</p>
                     )}
                   </div>
                 </div>
@@ -785,7 +795,7 @@ getAddresses()
               ))}
               {items?.length > 3 && (
                 <div className="text-center text-sm italic text-foreground-dim">
-                  ... и ещё {items?.length - 3} товар(ов)
+                  ... и ещё {items?.length - 3} {getTovarForm(items?.length - 3 ?? 0)}
                 </div>
               )}
             </div>

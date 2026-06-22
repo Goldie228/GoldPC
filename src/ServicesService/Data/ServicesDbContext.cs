@@ -73,6 +73,8 @@ public class ServicesDbContext : DbContext
                 .HasForeignKey(e => e.ServiceRequestId)
                 .HasConstraintName("fk_service_parts_service_request")
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ServiceRequestId);
         });
         
         modelBuilder.Entity<WorkReport>(entity =>
@@ -92,6 +94,8 @@ public class ServicesDbContext : DbContext
                 .HasForeignKey(e => e.ServiceRequestId)
                 .HasConstraintName("fk_work_reports_service_request")
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ServiceRequestId);
         });
         
         modelBuilder.Entity<TicketMessage>(entity =>
@@ -115,6 +119,8 @@ public class ServicesDbContext : DbContext
                 .HasForeignKey(e => e.ServiceRequestId)
                 .HasConstraintName("fk_ticket_messages_service_request")
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ServiceRequestId);
         });
     }
 }

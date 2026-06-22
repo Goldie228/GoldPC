@@ -352,7 +352,7 @@ export function FilterSidebar({
     selectedCategory,
     selectedAvailability,
     selectedManufacturerIds,
-    selectedSpecifications,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
   // === Загрузка реальных границ цен ===

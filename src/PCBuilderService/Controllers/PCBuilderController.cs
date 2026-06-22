@@ -196,6 +196,59 @@ public class PCBuilderController : ControllerBase
     }
 
     // ========================================================================
+    // PUT /api/v1/pcbuilder/configurations/{id}
+    // ========================================================================
+
+    /// <summary>
+    /// Обновить существующую конфигурацию
+    /// </summary>
+    /// <param name="id">Идентификатор конфигурации</param>
+    /// <param name="dto">Данные конфигурации</param>
+    /// <returns>Обновлённая конфигурация</returns>
+    /// <response code="200">Конфигурация обновлена</response>
+    /// <response code="400">Ошибка валидации</response>
+    /// <response code="401">Неавторизован</response>
+    /// <response code="404">Конфигурация не найдена</response>
+    [HttpPut("configurations/{id:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(PCConfigurationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PCConfigurationDto>> UpdateConfiguration(
+        Guid id,
+        [FromBody] PCConfigurationDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var currentUserId))
+        {
+            return Unauthorized(new { error = "Пользователь не авторизован" });
+        }
+
+        var existing = await _configurationService.GetConfigurationAsync(id);
+        if (existing == null)
+        {
+            return NotFound(new { error = "Конфигурация не найдена", id });
+        }
+
+        if (existing.UserId != currentUserId)
+        {
+            return Forbid();
+        }
+
+        var config = MapToConfiguration(dto);
+        config.Id = id;
+        config.UserId = currentUserId;
+
+        var compatibility = await _compatibilityService.CheckCompatibilityAsync(config);
+        config.IsCompatible = compatibility.IsCompatible;
+
+        var saved = await _configurationService.SaveConfigurationAsync(config);
+
+        return Ok(MapToDto(saved));
+    }
+
+    // ========================================================================
     // DELETE /api/v1/pcbuilder/configurations/{id}
     // ========================================================================
 

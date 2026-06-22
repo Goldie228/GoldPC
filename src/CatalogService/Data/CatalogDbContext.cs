@@ -43,6 +43,7 @@ public class CatalogDbContext : DbContext
         SeedSpecificationAttributes(modelBuilder);
         SeedSpecificationCanonicalValues(modelBuilder);
         SeedProducts(modelBuilder);
+        SeedProductSpecificationValues(modelBuilder);
         SeedFilterAttributes(modelBuilder);
     }
 
@@ -1136,22 +1137,11 @@ public class CatalogDbContext : DbContext
         };
 
         modelBuilder.Entity<Product>().HasData(products);
+    }
 
-        // === PRODUCT SPECIFICATION VALUES ===
+    private static void SeedProductSpecificationValues(ModelBuilder modelBuilder)
+    {
         // Canonical value IDs (generated sequentially from 50000000-0000-0000-0000-000000000001)
-        // Socket: AM4=...0001, AM5=...0002, LGA1700=...0003
-        // VRAM: 8GB GDDR6=...0004, 12GB GDDR6X=...0005, 16GB GDDR6=...0006, 8GB=...0007, 12GB=...0008, 16GB=...0009
-        // GPU: NVIDIA GeForce RTX 4070 SUPER=...000a, AMD Radeon RX 7800 XT=...000b, GeForce RTX 4070 SUPER=...000c, Radeon RX 7800 XT=...000d
-        // Chipset: B650=...000e, Z790=...000f
-        // Type (RAM): DDR5=...0010, DDR4=...0011
-        // Capacity: 32GB=...0012, 16GB=...0013, 64GB=...0014, 128GB=...0015
-        // Wattage: 750W=...0016, 850W=...0017, 650W=...0018, 700W=...0019
-        // Efficiency: 80+ Gold=...001a, 80+ Bronze=...001b, 80+ Platinum=...001c, 80+=...001d
-        // Form Factor: ATX=...001e, mATX=...001f, Mini-ITX=...0020, eATX=...0021
-        // Modular: Полностью модульный=...0022, Полумодульный=...0023, Нет=...0024, Full=...0025, Semi=...0026
-        // Max Memory: 128GB=...0027, 64GB=...0028
-        // Integrated Graphics: Есть=...0029, Нет=...002a
-        // Memory Type: DDR5=...002b, DDR4=...002c
         var socketAttrId = Guid.Parse("40000000-0000-0000-0000-000000000001");
         var coresAttrId = Guid.Parse("40000000-0000-0000-0000-000000000004");
         var tdpAttrId = Guid.Parse("40000000-0000-0000-0000-00000000000c");

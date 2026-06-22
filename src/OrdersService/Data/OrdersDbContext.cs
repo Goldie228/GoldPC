@@ -66,6 +66,9 @@ public class OrdersDbContext : DbContext
             entity.Property(e => e.DeliveryDate).HasMaxLength(20);
             entity.Property(e => e.DeliveryTimeSlot).HasMaxLength(20);
             entity.Property(e => e.TrackingNumber).HasMaxLength(100);
+
+            entity.HasIndex(o => o.UserId);
+            entity.HasIndex(o => o.Status);
         });
         
         // Конфигурация OrderItem
@@ -79,6 +82,8 @@ public class OrdersDbContext : DbContext
                 .WithMany(o => o.Items)
                 .HasForeignKey(e => e.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.OrderId);
         });
         
         // Конфигурация OrderHistory
@@ -91,6 +96,8 @@ public class OrdersDbContext : DbContext
                 .WithMany(o => o.History)
                 .HasForeignKey(e => e.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.OrderId);
         });
 
         // Конфигурация OutboxMessage
