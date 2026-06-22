@@ -116,20 +116,32 @@ function extractData<T>(response: { data: unknown }): T {
 export const servicesApi = {
   /** Получить все типы услуг ( publicly ) */
   getServiceTypes: async (): Promise<ServiceType[]> => {
-    const response = await goldpcApi.getServicesTypes();
-    return extractData<ServiceType[]>(response);
+    try {
+      const response = await goldpcApi.getServicesTypes();
+      return extractData<ServiceType[]>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch service types: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Получить тип услуги по slug */
   getServiceTypeBySlug: async (slug: string): Promise<ServiceType> => {
-    const response = await goldpcApi.getServicesTypesSlug(slug);
-    return extractData<ServiceType>(response);
+    try {
+      const response = await goldpcApi.getServicesTypesSlug(slug);
+      return extractData<ServiceType>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch service type: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Получить заявку по ID */
   getServiceRequestById: async (id: string): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.getServicesId(id);
-    return extractData<ServiceRequestDto>(response);
+    try {
+      const response = await goldpcApi.getServicesId(id);
+      return extractData<ServiceRequestDto>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch service request: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Получить мои заявки (пагинация) */
@@ -137,19 +149,31 @@ export const servicesApi = {
     page: number = 1,
     pageSize: number = 10,
   ): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
-    const response = await goldpcApi.getServicesMy({ page, pageSize });
-    return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+    try {
+      const response = await goldpcApi.getServicesMy({ page, pageSize });
+      return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch my service requests: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Создать заявку на услугу */
   createServiceRequest: async (data: CreateServiceRequest): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.postServices(data);
-    return extractData<ServiceRequestDto>(response);
+    try {
+      const response = await goldpcApi.postServices(data);
+      return extractData<ServiceRequestDto>(response);
+    } catch (e) {
+      throw new Error('Failed to create service request: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Отменить заявку */
   cancelServiceRequest: async (id: string): Promise<void> => {
-    await goldpcApi.postServicesIdCancel(id);
+    try {
+      await goldpcApi.postServicesIdCancel(id);
+    } catch (e) {
+      throw new Error('Failed to cancel service request: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   // ─── Chat ───────────────────────────────────────
@@ -160,26 +184,42 @@ export const servicesApi = {
     page: number = 1,
     pageSize: number = 50,
   ): Promise<{ items: ChatMessage[]; totalCount: number }> => {
-    const response = await goldpcApi.getServicesIdMessages(requestId, { page, pageSize });
-    return extractData<{ items: ChatMessage[]; totalCount: number }>(response);
+    try {
+      const response = await goldpcApi.getServicesIdMessages(requestId, { page, pageSize });
+      return extractData<{ items: ChatMessage[]; totalCount: number }>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch chat messages: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Отправить сообщение в чат */
   sendChatMessage: async (requestId: string, message: string): Promise<ChatMessage> => {
-    const response = await goldpcApi.postServicesIdMessages(requestId, { message });
-    return extractData<ChatMessage>(response);
+    try {
+      const response = await goldpcApi.postServicesIdMessages(requestId, { message });
+      return extractData<ChatMessage>(response);
+    } catch (e) {
+      throw new Error('Failed to send chat message: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Получить количество непрочитанных сообщений */
   getUnreadMessageCount: async (requestId: string): Promise<number> => {
-    const response = await goldpcApi.getServicesIdMessagesUnreadCount(requestId);
-    return extractData<number>(response);
+    try {
+      const response = await goldpcApi.getServicesIdMessagesUnreadCount(requestId);
+      return extractData<number>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch unread count: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Загрузить вложение */
   uploadAttachment: async (requestId: string, file: File): Promise<{ url: string; fileName: string }> => {
-    const response = await goldpcApi.postServicesIdUpload(requestId, { file });
-    return extractData<{ url: string; fileName: string }>(response);
+    try {
+      const response = await goldpcApi.postServicesIdUpload(requestId, { file });
+      return extractData<{ url: string; fileName: string }>(response);
+    } catch (e) {
+      throw new Error('Failed to upload attachment: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   // ─── Admin / Master ─────────────────────────────
@@ -191,12 +231,16 @@ export const servicesApi = {
     status?: string;
     search?: string;
   }): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
-    const { page, pageSize, status, search } = params;
-    const response = await goldpcApi.getServices(
-      { page, pageSize, status: status as any },
-      search ? { params: { search } } : undefined,
-    );
-    return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+    try {
+      const { page, pageSize, status, search } = params;
+      const response = await goldpcApi.getServices(
+        { page, pageSize, status: status as any },
+        search ? { params: { search } } : undefined,
+      );
+      return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch all service requests: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Получить неназначенные заявки */
@@ -204,39 +248,63 @@ export const servicesApi = {
     page?: number;
     pageSize?: number;
   }): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
-    const { page, pageSize } = params;
-    const response = await goldpcApi.getServicesUnassigned({ page, pageSize });
-    return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+    try {
+      const { page, pageSize } = params;
+      const response = await goldpcApi.getServicesUnassigned({ page, pageSize });
+      return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch unassigned requests: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Назначить мастера на заявку */
   assignMaster: async (requestId: string, masterId: string): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.postServicesIdAssignMasterId(requestId, masterId);
-    return extractData<ServiceRequestDto>(response);
+    try {
+      const response = await goldpcApi.postServicesIdAssignMasterId(requestId, masterId);
+      return extractData<ServiceRequestDto>(response);
+    } catch (e) {
+      throw new Error('Failed to assign master: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Обновить статус заявки */
   updateRequestStatus: async (requestId: string, status: string): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.patchServicesIdStatus(requestId, { status: status as any });
-    return extractData<ServiceRequestDto>(response);
+    try {
+      const response = await goldpcApi.patchServicesIdStatus(requestId, { status: status as any });
+      return extractData<ServiceRequestDto>(response);
+    } catch (e) {
+      throw new Error('Failed to update request status: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Добавить запчасти к заявке */
   addParts: async (requestId: string, parts: ServicePartDto[]): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.postServicesIdParts(requestId, parts);
-    return extractData<ServiceRequestDto>(response);
+    try {
+      const response = await goldpcApi.postServicesIdParts(requestId, parts);
+      return extractData<ServiceRequestDto>(response);
+    } catch (e) {
+      throw new Error('Failed to add parts: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Завершить заявку (с отчётом) */
   completeRequest: async (requestId: string, report: WorkReport): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.putServicesIdComplete(requestId, report);
-    return extractData<ServiceRequestDto>(response);
+    try {
+      const response = await goldpcApi.putServicesIdComplete(requestId, report);
+      return extractData<ServiceRequestDto>(response);
+    } catch (e) {
+      throw new Error('Failed to complete request: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Получить отчёт по заявке */
   getReport: async (requestId: string): Promise<WorkReport> => {
-    const response = await goldpcApi.getServicesIdReport(requestId);
-    return extractData<WorkReport>(response);
+    try {
+      const response = await goldpcApi.getServicesIdReport(requestId);
+      return extractData<WorkReport>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch report: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Получить заявки мастера */
@@ -245,17 +313,25 @@ export const servicesApi = {
     pageSize?: number;
     status?: string;
   }): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
-    const { page, pageSize, status } = params;
-    const response = await goldpcApi.getServicesMaster(
-      { page, pageSize, status: status as any },
-    );
-    return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+    try {
+      const { page, pageSize, status } = params;
+      const response = await goldpcApi.getServicesMaster(
+        { page, pageSize, status: status as any },
+      );
+      return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch master requests: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /** Закрыть заявку */
   closeRequest: async (requestId: string, data?: { comment?: string }): Promise<ServiceRequestDto> => {
-    const response = await goldpcApi.postServicesIdClose(requestId, data);
-    return extractData<ServiceRequestDto>(response);
+    try {
+      const response = await goldpcApi.postServicesIdClose(requestId, data);
+      return extractData<ServiceRequestDto>(response);
+    } catch (e) {
+      throw new Error('Failed to close request: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   // ─── Backward-compatible aliases ────────────────
