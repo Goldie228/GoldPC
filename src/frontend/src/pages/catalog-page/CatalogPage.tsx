@@ -157,8 +157,6 @@ export function CatalogPage() {
           params.inStock = true;
         } else if (selectedAvailability.includes('on_order')) {
           params.inStock = false;
-        } else {
-          params.inStock = false;
         }
         if (Object.keys(selectedSpecifications).length > 0) {
           const { specifications, specificationRanges } = splitSpecsAndRanges(selectedSpecifications);
@@ -212,8 +210,6 @@ export function CatalogPage() {
     if (selectedAvailability.includes('in_stock')) {
       params.inStock = true;
     } else if (selectedAvailability.includes('on_order')) {
-      params.inStock = false;
-    } else {
       params.inStock = false;
     }
     if (Object.keys(selectedSpecifications).length > 0) {
