@@ -717,6 +717,7 @@ export function PCBuilderPage() {
                 onAddToCart={handleAddToCart}
                 onSave={() => setSaveModalOpen(true)}
                 onCheckout={handleCheckout}
+                onExportPdf={() => setPdfModalOpen(true)}
               />
             </div>
           </div>

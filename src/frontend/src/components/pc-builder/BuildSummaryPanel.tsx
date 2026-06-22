@@ -57,6 +57,7 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
   onAddToCart,
   onSave,
   onCheckout,
+  onExportPdf,
 }: BuildSummaryPanelProps) {
   const cpu = selectedComponents.cpu?.product ?? null;
   const gpu = selectedComponents.gpu?.product ?? null;
@@ -336,6 +337,14 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
         >
           <Save size={16} strokeWidth={2} aria-hidden />
           Сохранить
+        </button>
+        <button
+          type="button"
+          className="bsp__btn bsp__btn--pdf"
+          disabled={selectedCount === 0}
+          onClick={onExportPdf}
+        >
+          PDF
         </button>
       </div>
 
