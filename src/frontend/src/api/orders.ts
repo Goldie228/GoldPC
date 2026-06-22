@@ -122,88 +122,116 @@ export const ordersApi = {
    * Получить расчёт стоимости доставки
    */
   async getDeliveryQuote(payload: DeliveryQuoteRequest): Promise<DeliveryQuoteResponse> {
-    const response = await goldpcApi.postOrdersDeliveryQuote({
-      deliveryMethod: payload.deliveryMethod,
-      subtotal: payload.subtotal,
-      city: payload.city ?? null,
-    });
-    const result = unwrapResponse<{ subtotal?: number; deliveryCost?: number; total?: number }>(response.data);
-    return {
-      subtotal: result.subtotal ?? 0,
-      deliveryCost: result.deliveryCost ?? 0,
-      total: result.total ?? 0,
-    };
+    try {
+      const response = await goldpcApi.postOrdersDeliveryQuote({
+        deliveryMethod: payload.deliveryMethod,
+        subtotal: payload.subtotal,
+        city: payload.city ?? null,
+      });
+      const result = unwrapResponse<{ subtotal?: number; deliveryCost?: number; total?: number }>(response.data);
+      return {
+        subtotal: result.subtotal ?? 0,
+        deliveryCost: result.deliveryCost ?? 0,
+        total: result.total ?? 0,
+      };
+    } catch (e) {
+      throw new Error('Failed to get delivery quote: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /**
    * Создать новый заказ
    */
   async createOrder(data: CreateOrderRequest): Promise<Order> {
-    const response = await goldpcApi.postOrders({
-      firstName: data.firstName,
-      lastName: data.lastName ?? null,
-      phone: data.phone,
-      email: data.email,
-      deliveryMethod: data.deliveryMethod,
-      paymentMethod: data.paymentMethod,
-      address: data.address ?? null,
-      city: data.city ?? null,
-      comment: data.comment ?? null,
-      promoCode: data.promoCode ?? null,
-      discountAmount: data.discountAmount,
-      deliveryDate: data.deliveryDate ?? null,
-      deliveryTimeSlot: data.deliveryTimeSlot ?? null,
-      items: data.items.map((item) => ({
-        productId: item.productId,
-        productName: item.productName,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-      })),
-    });
-    return unwrapResponse<Order>(response.data);
+    try {
+      const response = await goldpcApi.postOrders({
+        firstName: data.firstName,
+        lastName: data.lastName ?? null,
+        phone: data.phone,
+        email: data.email,
+        deliveryMethod: data.deliveryMethod,
+        paymentMethod: data.paymentMethod,
+        address: data.address ?? null,
+        city: data.city ?? null,
+        comment: data.comment ?? null,
+        promoCode: data.promoCode ?? null,
+        discountAmount: data.discountAmount,
+        deliveryDate: data.deliveryDate ?? null,
+        deliveryTimeSlot: data.deliveryTimeSlot ?? null,
+        items: data.items.map((item) => ({
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+        })),
+      });
+      return unwrapResponse<Order>(response.data);
+    } catch (e) {
+      throw new Error('Failed to create order: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /**
    * Получить мои заказы
    */
   async getMyOrders(page = 1, pageSize = 10, status?: string): Promise<PagedResult<Order>> {
-    const response = await goldpcApi.getOrdersMy({
-      page,
-      pageSize,
-      ...(status != null && status !== '' ? { status: Number(status) as never } : {}),
-    });
-    return unwrapResponse<PagedResult<Order>>(response.data);
+    try {
+      const response = await goldpcApi.getOrdersMy({
+        page,
+        pageSize,
+        ...(status != null && status !== '' ? { status: Number(status) as never } : {}),
+      });
+      return unwrapResponse<PagedResult<Order>>(response.data);
+    } catch (e) {
+      throw new Error('Failed to fetch orders: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /**
    * Получить заказ по ID
    */
   async getOrder(id: string): Promise<Order> {
-    const response = await goldpcApi.getOrdersId(id);
-    return unwrapResponse<Order>(response.data);
+    try {
+      const response = await goldpcApi.getOrdersId(id);
+      return unwrapResponse<Order>(response.data);
+    } catch (e) {
+      throw new Error('Failed to fetch order: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /**
    * Получить заказ по номеру
    */
   async getOrderByNumber(orderNumber: string): Promise<Order> {
-    const response = await goldpcApi.getOrdersNumberOrderNumber(orderNumber);
-    return unwrapResponse<Order>(response.data);
+    try {
+      const response = await goldpcApi.getOrdersNumberOrderNumber(orderNumber);
+      return unwrapResponse<Order>(response.data);
+    } catch (e) {
+      throw new Error('Failed to fetch order by number: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /**
    * Получить информацию об отслеживании заказа
    */
   async getOrderTracking(orderNumber: string): Promise<Order> {
-    const response = await goldpcApi.getOrdersNumberOrderNumber(orderNumber);
-    return unwrapResponse<Order>(response.data);
+    try {
+      const response = await goldpcApi.getOrdersNumberOrderNumber(orderNumber);
+      return unwrapResponse<Order>(response.data);
+    } catch (e) {
+      throw new Error('Failed to fetch order tracking: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 
   /**
    * Отменить заказ
    */
   async cancelOrder(id: string): Promise<Order> {
-    const response = await goldpcApi.postOrdersIdCancel(id);
-    return unwrapResponse<Order>(response.data);
+    try {
+      const response = await goldpcApi.postOrdersIdCancel(id);
+      return unwrapResponse<Order>(response.data);
+    } catch (e) {
+      throw new Error('Failed to cancel order: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 };
