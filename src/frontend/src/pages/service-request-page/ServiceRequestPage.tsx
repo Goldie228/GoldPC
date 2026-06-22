@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useAuthModal } from '@/hooks/useAuthModal';
 import { isValidPhone } from '@/utils/phone';
 import { ServiceSelector } from './ServiceSelector';
-import { PhotoUploader } from './PhotoUploader';
+// PhotoUploader removed: backend does not support photo upload
 import { SuccessScreen } from './SuccessScreen';
 import type { CreateServiceRequest } from '@/api/services';
 
@@ -302,13 +302,8 @@ export function ServiceRequestPage() {
         </div>
       </div>
 
-      {/* Фотографии */}
-      <div>
-        <label className="block text-xs font-medium text-muted-text mb-2.5 uppercase tracking-[0.05em]">
-          Фотографии (необязательно)
-        </label>
-        <PhotoUploader files={photos} onFilesChange={setPhotos} />
-      </div>
+      {/* Фотографии — удалены: бэкенд не поддерживает загрузку фото */}
+      {/* PhotoUploader был здесь ранее, но данные не отправлялись на сервер */}
     </div>
   );
 

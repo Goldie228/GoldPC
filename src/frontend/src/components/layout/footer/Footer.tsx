@@ -38,6 +38,7 @@ export function Footer() {
 
   const infoLinks = [
     { label: 'О нас', href: '/about' },
+    { label: 'Акции', href: '/promotions' },
     { label: 'Контакты', href: '/contacts' },
     { label: 'Возврат товара', href: '/returns' },
     { label: 'Частые вопросы', href: '/faq' },
