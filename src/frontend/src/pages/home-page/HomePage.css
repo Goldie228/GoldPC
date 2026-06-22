@@ -85,7 +85,8 @@
   overflow: hidden;
 }
 
-.home-hero__bg-img {
+.home-hero__bg-img,
+.home-hero__bg-video {
   position: absolute;
   inset: 0;
   width: 100%;

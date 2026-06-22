@@ -49,15 +49,74 @@ const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
 
 // ─── Hero Background Placeholder ───────────────────────────────────
 function HeroBackground() {
+  const [videoSrcs, setVideoSrcs] = useState<string[]>([]);
+  const [currentVideo, setCurrentVideo] = useState(0);
+  const [ready, setReady] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Probe for videos on mount
+  useEffect(() => {
+    const MAX_VIDEOS = 10;
+    const found: string[] = [];
+    let completed = 0;
+
+    for (let i = 1; i <= MAX_VIDEOS; i++) {
+      const src = `/hero-videos/video-${i}.mp4`;
+      const probe = new Image();
+      probe.onload = () => { found.push(src); checkDone(); };
+      probe.onerror = () => checkDone();
+      probe.src = src.replace('.mp4', '.jpg'); // won't work, but we use fetch instead
+    }
+
+    // Use fetch HEAD to probe
+    for (let i = 1; i <= MAX_VIDEOS; i++) {
+      const src = `/hero-videos/video-${i}.mp4`;
+      fetch(src, { method: 'HEAD' })
+        .then((r) => { if (r.ok) found.push(src); })
+        .catch(() => {})
+        .finally(() => checkDone());
+    }
+
+    function checkDone() {
+      completed++;
+      if (completed === MAX_VIDEOS) {
+        found.sort();
+        setVideoSrcs(found);
+        setReady(true);
+      }
+    }
+  }, []);
+
+  const handleVideoEnd = useCallback(() => {
+    if (videoSrcs.length === 0) return;
+    setCurrentVideo((prev) => (prev + 1) % videoSrcs.length);
+  }, [videoSrcs.length]);
+
+  const hasVideos = videoSrcs.length > 0;
+
   return (
     <div className="home-hero__bg--placeholder" aria-hidden="true">
-      <img
-        src="/placeholders/setup-1.png"
-        alt=""
-        className="home-hero__bg-img"
-        loading="eager"
-        decoding="async"
-      />
+      {hasVideos && (
+        <video
+          ref={videoRef}
+          key={videoSrcs[currentVideo]}
+          src={videoSrcs[currentVideo]}
+          className="home-hero__bg-video"
+          autoPlay
+          muted
+          playsInline
+          onEnded={handleVideoEnd}
+        />
+      )}
+      {!hasVideos && (
+        <img
+          src="/placeholders/setup-1.png"
+          alt=""
+          className="home-hero__bg-img"
+          loading="eager"
+          decoding="async"
+        />
+      )}
       <div className="absolute inset-0 bg-gradient-to-b from-canvas-dark/60 via-canvas-dark/40 to-canvas-dark" />
     </div>
   );
