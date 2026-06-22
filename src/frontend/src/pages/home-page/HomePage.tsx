@@ -272,6 +272,29 @@ export function HomePage() {
 
   const categories = useMemo(() => (categoriesData ?? []).filter((c) => (c.productCount ?? 0) > 0), [categoriesData]);
 
+  // Static fallback categories for instant render while API loads
+  const staticCategories = useMemo(() => {
+    const known = [
+      { slug: 'processors', name: 'Процессоры', icon: Cpu },
+      { slug: 'motherboards', name: 'Материнские платы', icon: Cpu },
+      { slug: 'memory', name: 'Оперативная память', icon: MemoryStick },
+      { slug: 'graphics', name: 'Видеокарты', icon: Gpu },
+      { slug: 'storage', name: 'Накопители', icon: HardDrive },
+      { slug: 'power', name: 'Блоки питания', icon: Zap },
+      { slug: 'cooling', name: 'Охлаждение', icon: ThermometerSun },
+      { slug: 'cases', name: 'Корпуса', icon: Box },
+      { slug: 'monitors', name: 'Мониторы', icon: Monitor },
+      { slug: 'fan', name: 'Вентиляторы', icon: Fan },
+    ];
+    return known.map((c) => ({
+      id: c.slug,
+      slug: c.slug,
+      name: c.name,
+      icon: c.icon,
+      productCount: categories.find((cat) => cat.slug === c.slug)?.productCount ?? 0,
+    }));
+  }, [categories]);
+
   return (
     <div id="main" className="min-h-screen bg-canvas-dark">
       {/* ════════════ 1. HERO BAND ════════════ */}
@@ -333,35 +356,32 @@ export function HomePage() {
             <p className="home-categories__desc">Выберите компонент для вашего ПК</p>
           </div>
           <div className="home-categories__grid">
-            {categoriesLoading
-              ? Array.from({ length: 8 }).map((_, i) => (
-                  <div key={`cat-skel-${i}`} className="home-categories__link animate-pulse">
-                    <div className="home-categories__icon-wrap">
-                      <div className="w-7 h-7 bg-surface-elevated rounded" />
-                    </div>
-                    <span className="home-categories__name">Загрузка…</span>
-                  </div>
-                ))
-              : categories.map((cat, i) => {
-                  const frontendId = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug);
-                  const IconComponent = CATEGORY_ICONS[frontendId] ?? Cpu;
-                  return (
-                    <motion.div
-                      key={cat.id}
-                      initial={{ opacity: 0, y: 16 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: '-20px' }}
-                      transition={{ duration: 0.5, delay: i * 0.05 }}
-                    >
-                      <CategoryCard
-                        Icon={IconComponent}
-                        name={cat.name}
-                        count={cat.productCount ?? 0}
-                        href={`/catalog/${frontendId}`}
-                      />
-                    </motion.div>
-                  );
-                })}
+            {(categoriesLoading && categories.length === 0
+              ? staticCategories
+              : categories.map((cat) => ({
+                  ...cat,
+                  icon: CATEGORY_ICONS[(BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug)] ?? Cpu,
+                }))
+            ).map((cat, i) => {
+              const frontendId = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug);
+              const IconComponent = cat.icon ?? CATEGORY_ICONS[frontendId] ?? Cpu;
+              return (
+                <motion.div
+                  key={cat.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-20px' }}
+                  transition={{ duration: 0.5, delay: i * 0.05 }}
+                >
+                  <CategoryCard
+                    Icon={IconComponent}
+                    name={cat.name}
+                    count={cat.productCount ?? 0}
+                    href={`/catalog/${frontendId}`}
+                  />
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
