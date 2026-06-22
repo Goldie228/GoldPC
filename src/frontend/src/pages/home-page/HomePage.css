@@ -15,7 +15,9 @@
 .home-hero {
   position: relative;
   overflow: hidden;
-  padding: 120px 0 100px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
   background-color: var(--color-canvas-dark, #0b0e11);
 }
 
