@@ -14,8 +14,8 @@ services:
       -c shared_preload_libraries='pg_stat_statements'
       -c pg_stat_statements.track=all
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_dev_password}
       POSTGRES_DB: goldpc
     ports:
       - "5434:5432"
@@ -37,10 +37,10 @@ services:
     image: postgres:16-alpine
     container_name: goldpc-postgres-replica
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_dev_password}
       POSTGRES_DB: goldpc
-      PGPASSWORD: admin
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres_dev_password}
     command: >
       bash -c "
       until pg_basebackup -h postgres -D /var/lib/postgresql/data -U postgres -vP -R -X stream; do
@@ -68,8 +68,8 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest_dev_password}
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -108,8 +108,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc_catalog;User Id=postgres;Password=admin
-      - ConnectionStrings__PostgreSQL=Server=postgres;Database=goldpc_catalog;User Id=postgres;Password=admin
+      - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc_catalog;User Id=postgres;Password=${POSTGRES_PASSWORD:-postgres_dev_password}
+      - ConnectionStrings__PostgreSQL=Server=postgres;Database=goldpc_catalog;User Id=postgres;Password=${POSTGRES_PASSWORD:-postgres_dev_password}
       - ConnectionStrings__Redis=redis:${REDIS_PASSWORD:-redis_dev_password}@redis:6379
       - Redis__Host=redis
       - Redis__Port=6379
@@ -140,7 +140,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc_auth;User Id=postgres;Password=admin
+      - ConnectionStrings__DefaultConnection=Server=postgres;Database=goldpc_auth;User Id=postgres;Password=${POSTGRES_PASSWORD:-postgres_dev_password}
       - JwtSettings__Secret=${JWT_SECRET}
       - JwtSettings__Issuer=goldpc
       - JwtSettings__Audience=goldpc-users
@@ -176,8 +176,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5003
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=goldpc_services;Username=postgres;Password=admin
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=goldpc_services;Username=postgres;Password=${POSTGRES_PASSWORD:-postgres_dev_password}
       - RabbitMq__Host=rabbitmq
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_dev_password}@redis:6379
       - Redis__ConnectionString=redis:${REDIS_PASSWORD:-redis_dev_password}@redis:6379
       - Services__WarrantyService=http://warranty-service:5004
     ports:

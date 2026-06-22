@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useState, useCallback } from 'react';
 import { ordersApi, type Order, type PagedResult, type CreateOrderRequest, type DeliveryQuoteRequest, type DeliveryQuoteResponse } from '../api/orders';
 
 export interface UseOrdersReturn {
@@ -16,109 +16,111 @@ export interface UseOrdersReturn {
 }
 
 export function useOrders(): UseOrdersReturn {
-  const getMyOrdersMutation = useMutation({
-    mutationFn: ({ page, pageSize, status }: { page: number; pageSize: number; status?: string }) =>
-      ordersApi.getMyOrders(page, pageSize, status),
-  });
+  const [orders, setOrders] = useState<Order[] | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const getOrderMutation = useMutation({
-    mutationFn: (id: string) => ordersApi.getOrder(id),
-  });
-
-  const getOrderByNumberMutation = useMutation({
-    mutationFn: (orderNumber: string) => ordersApi.getOrderByNumber(orderNumber),
-  });
-
-  const getOrderTrackingMutation = useMutation({
-    mutationFn: (orderNumber: string) => ordersApi.getOrderTracking(orderNumber),
-  });
-
-  const cancelOrderMutation = useMutation({
-    mutationFn: (id: string) => ordersApi.cancelOrder(id),
-  });
-
-  const getDeliveryQuoteMutation = useMutation({
-    mutationFn: (payload: DeliveryQuoteRequest) => ordersApi.getDeliveryQuote(payload),
-  });
-
-  const createOrderMutation = useMutation({
-    mutationFn: (data: CreateOrderRequest) => ordersApi.createOrder(data),
-  });
-
-  const getMyOrders = async (page = 1, pageSize = 10, status?: string): Promise<PagedResult<Order> | null> => {
+  const getMyOrders = useCallback(async (page = 1, pageSize = 10, status?: string): Promise<PagedResult<Order> | null> => {
+    setLoading(true);
+    setError(null);
     try {
-      return await getMyOrdersMutation.mutateAsync({ page, pageSize, status });
-    } catch {
+      const result = await ordersApi.getMyOrders(page, pageSize, status);
+      setOrders(result.items);
+      setTotalCount(result.totalCount);
+      return result;
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Failed to fetch orders');
+      setError(err);
       return null;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const getOrder = async (id: string): Promise<Order | null> => {
+  const getOrder = useCallback(async (id: string): Promise<Order | null> => {
+    setLoading(true);
+    setError(null);
     try {
-      return await getOrderMutation.mutateAsync(id);
-    } catch {
+      return await ordersApi.getOrder(id);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Failed to fetch order');
+      setError(err);
       return null;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const getOrderByNumber = async (orderNumber: string): Promise<Order | null> => {
+  const getOrderByNumber = useCallback(async (orderNumber: string): Promise<Order | null> => {
+    setLoading(true);
+    setError(null);
     try {
-      return await getOrderByNumberMutation.mutateAsync(orderNumber);
-    } catch {
+      return await ordersApi.getOrderByNumber(orderNumber);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Failed to fetch order');
+      setError(err);
       return null;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const getOrderTracking = async (orderNumber: string): Promise<Order | null> => {
+  const getOrderTracking = useCallback(async (orderNumber: string): Promise<Order | null> => {
+    setLoading(true);
+    setError(null);
     try {
-      return await getOrderTrackingMutation.mutateAsync(orderNumber);
-    } catch {
+      return await ordersApi.getOrderTracking(orderNumber);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Failed to fetch tracking');
+      setError(err);
       return null;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const cancelOrder = async (id: string): Promise<Order | null> => {
+  const cancelOrder = useCallback(async (id: string): Promise<Order | null> => {
+    setLoading(true);
+    setError(null);
     try {
-      return await cancelOrderMutation.mutateAsync(id);
-    } catch {
+      return await ordersApi.cancelOrder(id);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Failed to cancel order');
+      setError(err);
       return null;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const getDeliveryQuote = async (payload: DeliveryQuoteRequest): Promise<DeliveryQuoteResponse | null> => {
+  const getDeliveryQuote = useCallback(async (payload: DeliveryQuoteRequest): Promise<DeliveryQuoteResponse | null> => {
+    setLoading(true);
+    setError(null);
     try {
-      return await getDeliveryQuoteMutation.mutateAsync(payload);
-    } catch {
+      return await ordersApi.getDeliveryQuote(payload);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Failed to get delivery quote');
+      setError(err);
       return null;
+    } finally {
+      setLoading(false);
     }
-  };
+  }, []);
 
-  const createOrder = async (data: CreateOrderRequest): Promise<Order | null> => {
+  const createOrder = useCallback(async (data: CreateOrderRequest): Promise<Order | null> => {
+    setLoading(true);
+    setError(null);
     try {
-      return await createOrderMutation.mutateAsync(data);
-    } catch {
+      return await ordersApi.createOrder(data);
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error('Failed to create order');
+      setError(err);
       return null;
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const loading = getMyOrdersMutation.isPending
-    || getOrderMutation.isPending
-    || getOrderByNumberMutation.isPending
-    || getOrderTrackingMutation.isPending
-    || cancelOrderMutation.isPending
-    || getDeliveryQuoteMutation.isPending
-    || createOrderMutation.isPending;
-
-  const error = getMyOrdersMutation.error
-    || getOrderMutation.error
-    || getOrderByNumberMutation.error
-    || getOrderTrackingMutation.error
-    || cancelOrderMutation.error
-    || getDeliveryQuoteMutation.error
-    || createOrderMutation.error;
-
-  const orders = getMyOrdersMutation.data?.items ?? null;
-  const totalCount = getMyOrdersMutation.data?.totalCount ?? 0;
+  }, []);
 
   return {
     orders,
@@ -134,3 +136,5 @@ export function useOrders(): UseOrdersReturn {
     createOrder,
   };
 }
+
+export default useOrders;

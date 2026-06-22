@@ -75,6 +75,11 @@ export function formatSpecValueForKey(key: string, value: SpecValue): string {
     if (isTrue) return 'Требуется';
   }
 
+  // capacity stored as number (512, 1024) → append GB
+  if (normKey === 'capacity' && typeof value === 'number') {
+    return `${value} GB`;
+  }
+
   // Default formatting
   if (isTrue) return 'Да';
   if (isFalse) return 'Нет';

@@ -29,12 +29,13 @@ services:
     container_name: goldpc-postgres
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: goldpc
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d goldpc"]
+
       interval: 30s
       timeout: 10s
       retries: 5
@@ -46,11 +47,11 @@ services:
   redis:
     image: redis:7-alpine
     container_name: goldpc-redis
-    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -68,7 +69,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5001
-      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       ConnectionStrings__Redis: redis:6379
       Redis__Host: redis
       Redis__Port: "6379"
@@ -98,10 +100,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5002
-      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD}
       ConnectionStrings__Redis: redis:6379
       Redis__Host: redis
       Redis__Port: "6379"
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       CatalogService__Url: http://catalog-blue:5001
     ports:
       - "5002:5002"
@@ -131,10 +134,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5003
-      ConnectionStrings__PostgreSQL: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
-      JwtSettings__Secret: ${JWT_KEY:-your-production-jwt-key-min-32-characters!}
+      ConnectionStrings__PostgreSQL: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD}
+      JwtSettings__Secret: ${JWT_KEY}
       JwtSettings__Issuer: ${JWT_ISSUER:-goldpc}
       JwtSettings__Audience: ${JWT_AUDIENCE:-goldpc-users}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
     ports:
       - "5003:5003"
     healthcheck:
@@ -194,10 +198,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5011
-      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD}
       ConnectionStrings__Redis: redis:6379
       Redis__Host: redis
       Redis__Port: "6379"
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
     ports:
       - "5011:5011"
     healthcheck:
@@ -224,10 +229,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5012
-      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
+      ConnectionStrings__DefaultConnection: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD}
       ConnectionStrings__Redis: redis:6379
       Redis__Host: redis
       Redis__Port: "6379"
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       CatalogService__Url: http://catalog-green:5011
     ports:
       - "5012:5012"
@@ -257,10 +263,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5013
-      ConnectionStrings__PostgreSQL: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD:-postgres}
-      JwtSettings__Secret: ${JWT_KEY:-your-production-jwt-key-min-32-characters!}
+      ConnectionStrings__PostgreSQL: Server=postgres;Database=goldpc;User Id=${DB_USER:-postgres};Password=${DB_PASSWORD}
+      JwtSettings__Secret: ${JWT_KEY}
       JwtSettings__Issuer: ${JWT_ISSUER:-goldpc}
       JwtSettings__Audience: ${JWT_AUDIENCE:-goldpc-users}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
     ports:
       - "5013:5013"
     healthcheck:
@@ -362,7 +369,7 @@ services:
     container_name: goldpc-grafana
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/goldpc.json
     volumes:

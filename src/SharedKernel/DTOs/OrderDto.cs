@@ -1,6 +1,7 @@
 #pragma warning disable CA2227, CS1591, SA1600
 // Copyright (c) GoldPC. All rights reserved.
 
+using System.Text.Json.Serialization;
 using GoldPC.SharedKernel.Enums;
 
 namespace GoldPC.SharedKernel.DTOs;
@@ -24,6 +25,7 @@ public class OrderDto
 
     public string CustomerEmail { get; set; } = string.Empty;
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public OrderStatus Status { get; set; }
 
     public decimal Total { get; set; }

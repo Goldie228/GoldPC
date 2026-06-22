@@ -24,7 +24,44 @@ public class PromoCodeService : IPromoCodeService
     {
         _logger.LogInformation("Validating promo code: {Code} for order amount: {Amount}", code, orderAmount);
 
-        // Атомарная операция: инкремент UsedCount + проверка всех условий в одном UPDATE.
+        var now = DateTime.UtcNow;
+        var upperCode = code.ToUpper();
+
+        var promoCode = await _context.PromoCodes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Code.ToUpper() == upperCode);
+
+        var reason = GetRejectionReason(promoCode, now, orderAmount);
+        if (reason != null)
+        {
+            _logger.LogWarning("Promo code validation failed: {Code} - {Reason}", code, reason);
+            return new ValidatePromoCodeResponse
+            {
+                Valid = false,
+                Discount = 0,
+                Message = reason,
+                DiscountAmount = 0
+            };
+        }
+
+        var discountAmount = Math.Round(orderAmount * promoCode!.DiscountPercent / 100m, 2);
+
+        _logger.LogInformation("Promo code {Code} is valid. Discount: {Discount}%, Amount: {DiscountAmount}",
+            code, promoCode.DiscountPercent, discountAmount);
+
+        return new ValidatePromoCodeResponse
+        {
+            Valid = true,
+            Discount = promoCode.DiscountPercent,
+            Message = $"Скидка {promoCode.DiscountPercent}%",
+            DiscountAmount = discountAmount
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<ValidatePromoCodeResponse?> UsePromoCodeAsync(string code, decimal orderAmount)
+    {
+        // Атомарная операция: проверка всех условий + инкремент UsedCount в одном UPDATE.
         // Исключает race condition, когда два параллельных запроса оба проходят проверку MaxUses.
         var now = DateTime.UtcNow;
         var upperCode = code.ToUpper();
@@ -40,60 +77,23 @@ public class PromoCodeService : IPromoCodeService
 
         if (rowsUpdated == 0)
         {
-            // Определяем причину отказа для логирования и сообщения
             var promoCode = await _context.PromoCodes
                 .AsNoTracking()
                 .FirstOrDefaultAsync(p => p.Code.ToUpper() == upperCode);
 
-            string message;
-            if (promoCode == null)
-            {
-                message = "Промокод не найден";
-                _logger.LogWarning("Promo code not found: {Code}", code);
-            }
-            else if (!promoCode.IsActive)
-            {
-                message = "Промокод неактивен";
-                _logger.LogWarning("Promo code is inactive: {Code}", code);
-            }
-            else if (promoCode.ValidFrom.HasValue && now < promoCode.ValidFrom.Value)
-            {
-                message = "Промокод еще не действует";
-                _logger.LogWarning("Promo code not yet valid: {Code}", code);
-            }
-            else if (promoCode.ValidTo.HasValue && now > promoCode.ValidTo.Value)
-            {
-                message = "Срок действия промокода истек";
-                _logger.LogWarning("Promo code expired: {Code}", code);
-            }
-            else if (promoCode.MinOrderAmount.HasValue && orderAmount < promoCode.MinOrderAmount.Value)
-            {
-                message = $"Минимальная сумма заказа для этого промокода: {promoCode.MinOrderAmount.Value:N2} BYN";
-                _logger.LogWarning("Order amount {Amount} < min {MinAmount} for {Code}", orderAmount, promoCode.MinOrderAmount.Value, code);
-            }
-            else
-            {
-                message = "Промокод больше недоступен";
-                _logger.LogWarning("Promo code usage limit reached: {Code}", code);
-            }
+            var reason = GetRejectionReason(promoCode, now, orderAmount);
+            _logger.LogWarning("UsePromoCode failed: {Code} - {Reason}", code, reason ?? "unknown");
 
-            return new ValidatePromoCodeResponse
-            {
-                Valid = false,
-                Discount = 0,
-                Message = message,
-                DiscountAmount = 0
-            };
+            return null;
         }
 
-        // Промокод успешно зачтён — загружаем данные для расчёта скидки
         var claimed = await _context.PromoCodes
             .AsNoTracking()
             .FirstAsync(p => p.Code.ToUpper() == upperCode);
 
         var discountAmount = Math.Round(orderAmount * claimed.DiscountPercent / 100m, 2);
 
-        _logger.LogInformation("Promo code {Code} is valid. Discount: {Discount}%, Amount: {DiscountAmount}",
+        _logger.LogInformation("Promo code {Code} applied. Discount: {Discount}%, Amount: {DiscountAmount}",
             code, claimed.DiscountPercent, discountAmount);
 
         return new ValidatePromoCodeResponse
@@ -103,5 +103,22 @@ public class PromoCodeService : IPromoCodeService
             Message = $"Скидка {claimed.DiscountPercent}%",
             DiscountAmount = discountAmount
         };
+    }
+
+    private static string? GetRejectionReason(Entities.PromoCode? promoCode, DateTime now, decimal orderAmount)
+    {
+        if (promoCode == null)
+            return "Промокод не найден";
+        if (!promoCode.IsActive)
+            return "Промокод неактивен";
+        if (promoCode.ValidFrom.HasValue && now < promoCode.ValidFrom.Value)
+            return "Промокод еще не действует";
+        if (promoCode.ValidTo.HasValue && now > promoCode.ValidTo.Value)
+            return "Срок действия промокода истек";
+        if (promoCode.MinOrderAmount.HasValue && orderAmount < promoCode.MinOrderAmount.Value)
+            return $"Минимальная сумма заказа для этого промокода: {promoCode.MinOrderAmount.Value:N2} BYN";
+        if (promoCode.MaxUses.HasValue && promoCode.UsedCount >= promoCode.MaxUses.Value)
+            return "Промокод больше недоступен";
+        return null;
     }
 }
