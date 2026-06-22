@@ -13,6 +13,21 @@ using System.ComponentModel.DataAnnotations;
 
 namespace GoldPC.AuthService.Controllers;
 
+/// <summary>Запрос на обновление данных пользователя администратором</summary>
+public class AdminUpdateUserRequest
+{
+    public string? FirstName { get; init; }
+    public string? LastName { get; init; }
+    public string? Phone { get; init; }
+}
+
+/// <summary>Запрос на смену роли пользователя администратором</summary>
+public class AdminUpdateUserRoleRequest
+{
+    [Required(ErrorMessage = "Роль обязательна")]
+    public string Role { get; init; } = string.Empty;
+}
+
 /// <summary>Запрос на обновление настройки TwoFactorRequired</summary>
 public class TwoFactorSettingRequest
 {
@@ -247,6 +262,53 @@ public class AdminController : ControllerBase
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Admin activated user {UserId}", id);
+        return Ok(new { success = true });
+    }
+
+    /// <summary>Обновить данные пользователя (имя, фамилия, телефон)</summary>
+    [HttpPut("users/{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> UpdateUser(Guid id, [FromBody] AdminUpdateUserRequest request)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+            return NotFound(new { error = "Пользователь не найден" });
+
+        if (request.FirstName != null) user.FirstName = request.FirstName.Trim();
+        if (request.LastName != null) user.LastName = request.LastName.Trim();
+        if (request.Phone != null) user.Phone = request.Phone.Trim();
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Admin updated user {UserId}", id);
+        return Ok(new { success = true });
+    }
+
+    /// <summary>Изменить роль пользователя</summary>
+    [HttpPut("users/{id:guid}/role")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> UpdateUserRole(Guid id, [FromBody] AdminUpdateUserRoleRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+            return NotFound(new { error = "Пользователь не найден" });
+
+        if (!Enum.TryParse<UserRole>(request.Role, ignoreCase: true, out var parsedRole))
+            return BadRequest(new { error = $"Некорректная роль: {request.Role}" });
+
+        user.Role = parsedRole;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Admin changed role for user {UserId} to {Role}", id, parsedRole);
         return Ok(new { success = true });
     }
 
