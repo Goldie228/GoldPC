@@ -5,6 +5,7 @@ using GoldPC.AuthService.Services;
 using GoldPC.Shared.Services;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
+using GoldPC.SharedKernel.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -116,6 +117,53 @@ public class AdminController : ControllerBase
         _logger.LogInformation("Admin created user {UserId} with role {Role}", user.Id, role);
 
         return CreatedAtAction(nameof(GetUser), new { id = user.Id }, MapToUserDto(user));
+    }
+
+    /// <summary>Список пользователей с пагинацией, поиском и фильтром по роли</summary>
+    [HttpGet("users")]
+    [ProducesResponseType(typeof(PagedResult<UserDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<UserDto>>> GetUsers(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null,
+        [FromQuery] string? role = null)
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = _context.Users.AsNoTracking();
+
+        // Поиск по EmailHash (хеш в открытом виде) или по имени/фамилии
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim().ToLower();
+            query = query.Where(u =>
+                u.EmailHash != null && u.EmailHash.Contains(term) ||
+                u.FirstName.ToLower().Contains(term) ||
+                u.LastName.ToLower().Contains(term));
+        }
+
+        // Фильтр по роли
+        if (!string.IsNullOrWhiteSpace(role) && Enum.TryParse<UserRole>(role, ignoreCase: true, out var parsedRole))
+        {
+            query = query.Where(u => u.Roles.Contains(parsedRole));
+        }
+
+        var totalCount = await query.CountAsync();
+        var users = await query
+            .OrderBy(u => u.LastName)
+            .ThenBy(u => u.FirstName)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(new PagedResult<UserDto>
+        {
+            Items = users.Select(MapToUserDto).ToList(),
+            TotalCount = totalCount,
+            PageNumber = page,
+            PageSize = pageSize
+        });
     }
 
     /// <summary>Получить пользователя по ID (для CreatedAtAction redirect)</summary>
