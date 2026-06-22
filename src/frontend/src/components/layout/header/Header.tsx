@@ -30,6 +30,7 @@ import { decodeHtmlEntities } from '@/utils/decodeHtml';
 const NAV_ITEMS = [
   { to: '/catalog', label: 'Каталог' },
   { to: '/pc-builder', label: 'Конструктор' },
+  { to: '/build-wizard', label: 'Мастер сборки' },
   { to: '/services', label: 'Сервис' },
   { to: '/about', label: 'О нас' },
 ];

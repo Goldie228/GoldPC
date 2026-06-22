@@ -29,6 +29,7 @@ export function Footer() {
 
   const serviceLinks = [
     { label: 'Конструктор ПК', href: '/pc-builder' },
+    { label: 'Мастер сборки', href: '/build-wizard' },
     { label: 'Сборка и настройка', href: '/services/assembly' },
     { label: 'Доставка по РБ', href: '/delivery' },
     { label: 'Оплата и рассрочка', href: '/payment' },
