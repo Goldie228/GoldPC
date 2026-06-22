@@ -482,7 +482,7 @@ export function PCBuilderPage() {
 
     switch (type) {
       case 'cpu':
-        if (specs.cores && specs.threads) result.push(`${specs.cores}C/${specs.threads}T`);
+        if (specs.cores && specs.threads) result.push(`${specs.cores} ядр. / ${specs.threads} пот.`);
         if (specs.baseClock) result.push(`${specs.baseClock} GHz`);
         if (specs.socket) result.push(specs.socket as string);
         break;
