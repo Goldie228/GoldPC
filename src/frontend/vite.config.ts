@@ -59,11 +59,11 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/api/v1/catalog': {
-        target: 'http://localhost:5001',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
       '/api/v1/Catalog': {
-        target: 'http://localhost:5001',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
       '/api/v1/pcbuilder': {
