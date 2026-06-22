@@ -61,6 +61,8 @@ const ContactsPage = lazy(() => import('./pages/info/ContactsPage').then(m => ({
 const PrivacyPage = lazy(() => import('./pages/info/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const TermsPage = lazy(() => import('./pages/info/TermsPage').then(m => ({ default: m.TermsPage })));
 const BrandsPage = lazy(() => import('./pages/info/BrandsPage').then(m => ({ default: m.BrandsPage })));
+const PromotionsPage = lazy(() => import('./pages/info/PromotionsPage').then(m => ({ default: m.PromotionsPage })));
+const SitemapPage = lazy(() => import('./pages/info/SitemapPage').then(m => ({ default: m.SitemapPage })));
 const AccountLayout = lazy(() => import('./pages/account-page/AccountLayout').then(m => ({ default: m.AccountLayout })));
 const AccountOverview = lazy(() => import('./pages/account-page/AccountOverview').then(m => ({ default: m.AccountOverview })));
 const AccountProfile = lazy(() => import('./pages/account-page/AccountProfile').then(m => ({ default: m.AccountProfile })));
@@ -239,6 +241,8 @@ const router = createBrowserRouter([
       { path: '/privacy', element: <PrivacyPage /> },
       { path: '/terms', element: <TermsPage /> },
       { path: '/brands', element: <BrandsPage /> },
+      { path: '/promotions', element: <PromotionsPage /> },
+      { path: '/sitemap', element: <SitemapPage /> },
       {
         element: <AuthGuard />,
         children: [

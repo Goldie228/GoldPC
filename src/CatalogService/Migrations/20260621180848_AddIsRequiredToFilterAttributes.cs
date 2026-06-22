@@ -13,11 +13,6 @@ namespace CatalogService.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "IsMultiValue",
-                table: "category_filter_attributes",
-                newName: "is_multi_value");
-
             migrationBuilder.AddColumn<string>(
                 name: "group_name",
                 table: "specification_attributes",
@@ -870,11 +865,6 @@ namespace CatalogService.Migrations
             migrationBuilder.DropColumn(
                 name: "is_required",
                 table: "category_filter_attributes");
-
-            migrationBuilder.RenameColumn(
-                name: "is_multi_value",
-                table: "category_filter_attributes",
-                newName: "IsMultiValue");
 
             migrationBuilder.UpdateData(
                 table: "product_specification_values",
