@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, type ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +8,7 @@ import {
   Plus,
   ArrowLeft,
 } from 'lucide-react';
+import { pluralizeRu } from '@/utils/pluralizeRu';
 import { useCart } from '@/hooks/useCart';
 import { hasValidProductImage } from '@/utils/image';
 import { useToastStore } from '@/store/toastStore';
@@ -27,6 +26,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   psu: 'Блок питания',
   case: 'Корпус',
   cooling: 'Охлаждение',
+  fan: 'Вентилятор',
   monitor: 'Монитор',
   keyboard: 'Клавиатура',
   mouse: 'Мышь',
@@ -136,7 +136,7 @@ export function CartPage(): ReactElement {
         <h1 className="font-sans text-2xl font-semibold tracking-tight text-foreground mb-1">Корзина</h1>
         <p className="text-sm text-muted-foreground">
           {itemCount > 0
-            ? `${itemCount} ${itemCount === 1 ? 'товар' : itemCount < 5 ? 'товара' : 'товаров'} · ${totalPrice.toLocaleString('ru-BY')} BYN`
+            ? `${itemCount} ${pluralizeRu(itemCount, ['товар', 'товара', 'товаров'])} · ${totalPrice.toLocaleString('ru-BY')} BYN`
             : 'Пока пуста'
           }
         </p>

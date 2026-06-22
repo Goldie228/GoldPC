@@ -47,7 +47,7 @@ export function telemetryTrack(name: string, props?: TelemetryProps): void {
   scheduleFlush();
 }
 
-export function telemetryInitAutoFlush(): void {
+export function telemetryInitAutoFlush(): () => void {
   // Best-effort flush on page hide
   const handler = () => {
     if (queue.length === 0) return;
@@ -71,5 +71,10 @@ export function telemetryInitAutoFlush(): void {
 
   window.addEventListener('pagehide', handler);
   window.addEventListener('beforeunload', handler);
+
+  return () => {
+    window.removeEventListener('pagehide', handler);
+    window.removeEventListener('beforeunload', handler);
+  };
 }
 

@@ -58,16 +58,18 @@ const AUTH_ERROR_MESSAGES: Record<number, string> = {
  * Возвращает понятное пользователю сообщение об ошибке
  */
 export const getAuthErrorMessage = (error: unknown): string => {
-  if (error instanceof Error && 'response' in error) {
-    const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
-    const status = axiosError.response?.status;
-    const serverMessage = axiosError.response?.data?.message;
+  // Orval-generated errors may be plain objects with { status, data } or Error instances with response
+  if (error != null && typeof error === 'object') {
+    const obj = error as Record<string, unknown>;
+    const response = obj.response as { status?: number; data?: { message?: string } } | undefined;
+    const status = response?.status ?? (typeof obj.status === 'number' ? obj.status : undefined);
+    const serverMessage = response?.data?.message ?? (typeof obj.message === 'string' ? obj.message : undefined);
 
-    if (status && AUTH_ERROR_MESSAGES[status]) {
+    if (status != null && AUTH_ERROR_MESSAGES[status]) {
       return serverMessage || AUTH_ERROR_MESSAGES[status];
     }
 
-    if (status && status >= 500) {
+    if (status != null && status >= 500) {
       return 'Ошибка сервера. Попробуйте через несколько минут.';
     }
   }

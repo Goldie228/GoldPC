@@ -76,7 +76,15 @@ export function useAuth(): UseAuthReturn {
       }, 0);
 
       // Редирект делаем ПОСЛЕ ВСЕГО — возвращаемся на страницу, откуда пришли
+      // Сначала проверяем localStorage (AuthGuard сохраняет туда),
+      // затем location.state.from (обратная совместимость)
       setTimeout(() => {
+        const storedPath = localStorage.getItem('authRedirectPath');
+        if (storedPath) {
+          localStorage.removeItem('authRedirectPath');
+          void navigate(storedPath, { replace: true });
+          return;
+        }
         const from = (location.state as { from?: { pathname: string; search: string; hash: string } } | null)?.from;
         void navigate(from ? `${from.pathname}${from.search}${from.hash}` : '/', { replace: true });
       }, 0);
@@ -101,8 +109,8 @@ export function useAuth(): UseAuthReturn {
       localStorage.setItem('refreshToken', response.refreshToken);
       setUser(response.user);
 
-      // Редиректим на страницу подтверждения email
-      void navigate('/verify-email');
+      // Редиректим на главную (нет отдельной страницы подтверждения email)
+      void navigate('/');
 
       // А потом уже в фоне синхронизируем избранное
       // Не используем await чтобы не блокировать поток регистрации

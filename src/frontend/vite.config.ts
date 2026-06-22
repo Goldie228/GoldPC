@@ -54,6 +54,18 @@ export default defineConfig({
         target: 'http://localhost:5003',
         changeOrigin: true,
       },
+      '/api/v1/Services': {
+        target: 'http://localhost:5003',
+        changeOrigin: true,
+      },
+      '/api/v1/catalog': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+      '/api/v1/Catalog': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
       '/api/v1/pcbuilder': {
         target: 'http://localhost:5005',
         changeOrigin: true,

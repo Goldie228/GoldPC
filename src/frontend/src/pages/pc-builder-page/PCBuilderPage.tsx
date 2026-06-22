@@ -16,6 +16,7 @@ import {
   ComponentPickerModal,
 } from '@/components/pc-builder';
 import { PdfExportModal } from '@/components/pc-builder/pdf-export-modal/PdfExportModal';
+import SaveConfigurationModal from '@/components/pc-builder/save-configuration-modal/SaveConfigurationModal';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import {
   usePCBuilder,
@@ -27,6 +28,7 @@ import { extractSocket } from '@/features/pc-builder/logic/specExtractors';
 import { extractStorageType, extractM2Slots, extractSataPorts } from '@/shared/utils/compatibility/extractors';
 import type { Product, ProductCategory } from '@/api/types';
 import { useToastStore } from '@/store/toastStore';
+import { pluralizeRu } from '@/utils/pluralizeRu';
 
 const icons = {
   cpu: <Cpu />,
@@ -348,6 +350,7 @@ export function PCBuilderPage() {
   const [selectedSlot, setSelectedSlot] = useState<PCComponentType | null>(null);
   const [multiIndex, setMultiIndex] = useState<number | undefined>(undefined);
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [showPeripherals, setShowPeripherals] = useState(true);
 
   const slotRows = useMemo(() => buildSlotRows(selectedComponents, maxRamQty, maxStorageModules, maxFanModules), [selectedComponents, maxRamQty, maxStorageModules, maxFanModules]);
@@ -500,10 +503,20 @@ export function PCBuilderPage() {
         if (specs.capacity) result.push(`${specs.capacity}GB`);
         if (specs.speed) result.push(`${specs.speed} MHz`);
         break;
-      case 'storage':
+      case 'storage': {
         if (specs.type) result.push(specs.type as string);
-        if (specs.capacity) result.push(`${specs.capacity}GB`);
+        const cap = specs.capacity;
+        if (cap != null) {
+          const capStr = String(cap);
+          // If capacity already includes a unit (e.g. "3 ТБ", "500 ГБ", "1 TB"), show as-is
+          if (/[ГгТтKkMm][БбBb]/i.test(capStr) || /\b(TB|GB|MB|TB|GB|MB)\b/i.test(capStr)) {
+            result.push(capStr);
+          } else {
+            result.push(`${capStr} ГБ`);
+          }
+        }
         break;
+      }
       case 'psu':
         if (specs.wattage) result.push(`${specs.wattage}W`);
         if (specs.efficiency) result.push(specs.efficiency as string);
@@ -560,8 +573,8 @@ export function PCBuilderPage() {
   const handleAddToCart = () => {
     const count = selectedCount;
     addToCart();
-    const ending = count === 1 ? 'добавлен в корзину' : count < 5 ? 'добавлены в корзину' : 'добавлены в корзину';
-    const noun = count === 1 ? 'товар' : count < 5 ? 'товара' : 'товаров';
+    const ending = count === 1 ? 'добавлен в корзину' : 'добавлены в корзину';
+    const noun = pluralizeRu(count, ['товар', 'товара', 'товаров']);
     showToast(`${count} ${noun} ${ending}`, 'success', 4000);
   };
 
@@ -623,8 +636,9 @@ export function PCBuilderPage() {
               <div className="pc-builder__slots">
                 <div className="pc-builder__group-label">Основа</div>
                 {slotRows.map((row, idx) => {
-                  const isCoreEnd = row.kind === 'ram' && row.rowIndex === 0;
-                  const isStorageEnd = row.kind === 'storage';
+                  const nextRow = slotRows[idx + 1];
+                  const isCoreEnd = row.kind === 'ram' && (!nextRow || nextRow.kind !== 'ram');
+                  const isStorageEnd = row.kind === 'storage' && (!nextRow || nextRow.kind !== 'storage');
                   const isGpuEnd = row.kind === 'single' && row.key === 'gpu';
                   const isCaseEnd = row.kind === 'single' && row.key === 'case';
 
@@ -701,7 +715,7 @@ export function PCBuilderPage() {
                 selectedCount={selectedCount}
                 totalCount={totalCount}
                 onAddToCart={handleAddToCart}
-                onSave={() => showToast('Сборка сохранена', 'success', 3000)}
+                onSave={() => setSaveModalOpen(true)}
                 onCheckout={handleCheckout}
               />
             </div>
@@ -740,6 +754,20 @@ export function PCBuilderPage() {
             compatibilityErrors={compatibility.errors}
             compatibilityWarnings={compatibility.warnings}
           />
+      )}
+
+      {saveModalOpen && (
+        <SaveConfigurationModal
+          isOpen={saveModalOpen}
+          onClose={() => setSaveModalOpen(false)}
+          selectedComponents={selectedComponents}
+          totalPrice={totalPrice}
+          isCompatible={isCompatible}
+          selectedCount={selectedCount}
+          totalCount={totalCount}
+          compatibilityErrors={compatibility.errors}
+          compatibilityWarnings={compatibility.warnings}
+        />
       )}
     </div>
   );

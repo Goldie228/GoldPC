@@ -325,14 +325,10 @@ export function FilterSidebar({
           : selectedAvailability.includes('on_order')
             ? false
             : undefined;
-        const { specifications, specificationRanges } = splitSpecsAndRanges(selectedSpecifications);
-
         const attrs = await catalogApi.getFilterFacets(backendSlug, {
           manufacturerIds: selectedManufacturerIds.length > 0
             ? selectedManufacturerIds as string[]
             : undefined,
-          specifications: Object.keys(specifications).length > 0 ? specifications : undefined,
-          specificationRanges: Object.keys(specificationRanges).length > 0 ? specificationRanges : undefined,
           inStock: inStockFilter,
         });
         if (!cancelled) {

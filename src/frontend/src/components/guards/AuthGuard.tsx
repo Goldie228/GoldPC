@@ -23,8 +23,13 @@ export function AuthGuard() {
   }
 
   // Если не авторизован - редирект на логин с сохранением текущего пути
+  // Сохраняем целевой путь в localStorage, т.к. React Router state теряется
+  // при навигации на /login (который редиректит на / через <Navigate>)
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    if (location.pathname !== '/') {
+      localStorage.setItem('authRedirectPath', location.pathname + location.search);
+    }
+    return <Navigate to="/login" replace />;
   }
 
   // Если авторизован - рендерим дочерние маршруты

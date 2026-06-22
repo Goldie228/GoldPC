@@ -603,9 +603,9 @@ export function CatalogPage() {
                       onClick={() => setMobileFilterOpen(false)}
                       className="w-full h-11 bg-gold text-gold-ink text-sm font-semibold rounded-lg hover:bg-gold-active transition-colors flex items-center justify-center gap-2"
                       type="button"
-                      aria-label={`Применить фильтры, показать ${totalItems > 0 ? totalItems.toLocaleString('ru-RU') : '—'} товаров`}
+                      aria-label={`Применить фильтры, показать ${totalItems > 0 ? formatCountRu(totalItems, RU_FORMS.tovar) : '—'}`}
                     >
-                      Показать {totalItems > 0 ? totalItems.toLocaleString('ru-RU') : '—'} товаров
+                      Показать {totalItems > 0 ? formatCountRu(totalItems, RU_FORMS.tovar) : '—'}
                     </button>
                   </div>
                 </div>

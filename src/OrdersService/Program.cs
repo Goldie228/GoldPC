@@ -39,14 +39,17 @@ if (builder.Environment.IsProduction())
 }
 
 // Serilog — structured logging with JSON in Production, human-readable in Development
-Log.Logger = new LoggerConfiguration()
+var loggerConfig = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .Enrich.WithProperty("Application", "GoldPC")
-    .Enrich.WithProperty("Service", "OrdersService")
-    .WriteTo.Console(
-        formatter: builder.Environment.IsProduction()
-            ? new CompactJsonFormatter()
-            : null) // Plain text in Development, JSON in Production
+    .Enrich.WithProperty("Service", "OrdersService");
+
+if (builder.Environment.IsProduction())
+    loggerConfig = loggerConfig.WriteTo.Console(new CompactJsonFormatter());
+else
+    loggerConfig = loggerConfig.WriteTo.Console();
+
+Log.Logger = loggerConfig
     .WriteTo.File("logs/orders-service-.log", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 

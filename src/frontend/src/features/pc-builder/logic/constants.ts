@@ -8,7 +8,7 @@ import type { CompatibilityRulesConfig } from '@/config/compatibilityTypes';
 
 const rules = compatibilityRules as CompatibilityRulesConfig;
 
-export const TOTAL_CATEGORIES = 12;
+export const TOTAL_CATEGORIES = 13;
 
 export const MAX_RAM_MODULES = 8;
 export const MAX_STORAGE_MODULES = 8;

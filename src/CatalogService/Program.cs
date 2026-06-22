@@ -234,6 +234,40 @@ builder.Services.AddOpenTelemetry()
 
 Log.Information("OpenTelemetry configured with OTLP exporter: {Endpoint}", otlpEndpoint);
 
+// JWT Authentication — must be registered BEFORE builder.Build()
+{
+    var jwtSettings = builder.Configuration.GetSection("Jwt");
+    var secretKey = jwtSettings["SecretKey"];
+    if (string.IsNullOrEmpty(secretKey) || secretKey == "development_secret_key_32_chars_long!!")
+    {
+        if (builder.Environment.IsProduction())
+            throw new InvalidOperationException("Jwt:SecretKey must be configured in production");
+        secretKey = "development_secret_key_32_chars_long!!";
+    }
+
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"] ?? "GoldPC",
+            ValidAudience = jwtSettings["Audience"] ?? "GoldPC",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+    builder.Services.AddAuthorization();
+}
+
 var app = builder.Build();
 
 // Security Headers Middleware - должен быть в начале pipeline
@@ -277,38 +311,6 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(uploadsFullPath),
     RequestPath = "/uploads",
 });
-
-// JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var secretKey = jwtSettings["SecretKey"];
-if (string.IsNullOrEmpty(secretKey) || secretKey == "development_secret_key_32_chars_long!!")
-{
-    if (builder.Environment.IsProduction())
-        throw new InvalidOperationException("Jwt:SecretKey must be configured in production");
-    secretKey = "development_secret_key_32_chars_long!!";
-}
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings["Issuer"] ?? "GoldPC",
-        ValidAudience = jwtSettings["Audience"] ?? "GoldPC",
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
-        ClockSkew = TimeSpan.Zero
-    };
-});
-
-builder.Services.AddAuthorization();
 
 app.UseAuthentication();
 app.UseAuthorization();

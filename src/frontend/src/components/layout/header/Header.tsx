@@ -507,12 +507,12 @@ export function Header(): ReactElement {
                     <span className="text-[11px] font-medium text-muted-text leading-tight">Сравнение</span>
                     {comparisonCount > 0 && <span className="text-[10px] font-semibold text-gold">{comparisonCount}</span>}
                   </Link>
-                   <button type="button" className="relative flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card cursor-pointer transition-colors hover:bg-surface-elevated" aria-label="Уведомления">
+                   <Link to="/account/notifications" className="flex flex-col items-center gap-1.5 py-3 px-2 bg-surface-card transition-colors hover:bg-surface-elevated" aria-label="Уведомления" onClick={handleCloseMenu}>
                      <div className="w-10 h-10 flex items-center justify-center bg-transparent border border-hairline-dark rounded-xl text-muted-text">
                        <Bell size={18} />
                      </div>
                      <span className="text-[11px] font-medium text-muted-text leading-tight">Уведомления</span>
-                   </button>
+                   </Link>
                  </nav>
 
 {/* CTA Section */}

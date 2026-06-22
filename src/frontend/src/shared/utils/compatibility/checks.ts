@@ -122,9 +122,36 @@ function detectMemoryFormFactorFromName(productName: string, sku?: string): 'DIM
   return null;
 }
 
+function detectMemoryTypeFromName(productName: string): 'DDR5' | 'DDR4' | 'DDR3' | null {
+  const upper = productName.toUpperCase();
+  if (upper.includes('DDR5')) return 'DDR5';
+  if (upper.includes('DDR4') || upper.includes('LPDDR4')) return 'DDR4';
+  if (upper.includes('DDR3') || upper.includes('DDR3L')) return 'DDR3';
+  return null;
+}
+
+function detectMBMemoryTypeFromName(productName: string, socket?: string | null, chipset?: string | null): 'DDR5' | 'DDR4' | 'DDR3' | null {
+  const upper = productName.toUpperCase();
+  // AM5, LGA1851 → DDR5
+  if (upper.includes('AM5') || upper.includes('LGA1851')) return 'DDR5';
+  const context = ((socket ?? '') + ' ' + (chipset ?? '') + ' ' + upper);
+  if (/\bHM[5678]\d/.test(context)) return 'DDR3';
+  // Everything else (AM4, LGA1151, LGA1200, LGA1700, etc.) → DDR4
+  if (upper.includes('AM4') || upper.includes('LGA1151') || upper.includes('LGA1200') || upper.includes('LGA1700')) return 'DDR4';
+  return null;
+}
+
 function checkRAM(ram: Product, mb: Product, quantity: number = 1): CompatibilityIssue | null {
-  const rt = extractMemoryType(ram.specifications);
-  const mt = extractMemoryType(mb.specifications);
+  let rt = extractMemoryType(ram.specifications);
+  let mt = extractMemoryType(mb.specifications);
+
+  // Fallback: detect from product name if specs don't contain DDR type
+  if (!rt) rt = detectMemoryTypeFromName(ram.name);
+  if (!mt) {
+    const chipset = typeof mb.specifications?.chipset === 'string' ? mb.specifications.chipset : undefined;
+    const socket = typeof mb.specifications?.socket === 'string' ? mb.specifications.socket : undefined;
+    mt = detectMBMemoryTypeFromName(mb.name, socket, chipset);
+  }
 
   // Known memory type mismatch
   if (rt && mt && rt !== mt) {
