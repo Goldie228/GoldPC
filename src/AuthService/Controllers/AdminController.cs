@@ -121,8 +121,8 @@ public class AdminController : ControllerBase
 
     /// <summary>Список пользователей с пагинацией, поиском и фильтром по роли</summary>
     [HttpGet("users")]
-    [ProducesResponseType(typeof(PagedResult<UserDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedResult<UserDto>>> GetUsers(
+    [ProducesResponseType(typeof(DTOs.PagedResult<UserDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<DTOs.PagedResult<UserDto>>> GetUsers(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] string? search = null,
