@@ -379,21 +379,26 @@ export function PCBuilderPage() {
       const hasRam = selectedComponents.ram.length > 0;
       if (hasMb || hasRam) {
         const msg = 'Удаление процессора также удалит материнскую плату и оперативную память. Продолжить?';
-        if (window.confirm(msg)) {
-          removeComponent(type, idx);
-        }
-        return;
+        if (!window.confirm(msg)) return;
+      } else {
+        if (!window.confirm('Удалить процессор?')) return;
       }
-    }
-    if (type === 'motherboard') {
+    } else if (type === 'motherboard') {
       const hasRam = selectedComponents.ram.length > 0;
       if (hasRam) {
         const msg = 'Удаление материнской платы также удалит оперативную память. Продолжить?';
-        if (window.confirm(msg)) {
-          removeComponent(type, idx);
-        }
-        return;
+        if (!window.confirm(msg)) return;
+      } else {
+        if (!window.confirm('Удалить материнскую плату?')) return;
       }
+    } else if (type === 'gpu') {
+      if (!window.confirm('Удалить видеокарту?')) return;
+    } else if (type === 'case') {
+      if (!window.confirm('Удалить корпус?')) return;
+    } else if (type === 'psu') {
+      if (!window.confirm('Удалить блок питания?')) return;
+    } else if (type === 'cooling') {
+      if (!window.confirm('Удалить систему охлаждения?')) return;
     }
     removeComponent(type, idx);
   }, [selectedComponents.motherboard, selectedComponents.ram.length, removeComponent]);

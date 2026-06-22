@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Header } from '../header/Header';
 import { Footer } from '../footer/Footer';
+import { ErrorBoundary } from '@/components/errors/ErrorBoundary';
 import { EmailVerificationBanner } from '@/components/email-verification/EmailVerificationBanner';
 import { ToastContainer } from '@/components/ui/Toast';
 import { ScrollToTop } from '@/components/ui';
@@ -44,7 +45,9 @@ export function MainLayout() {
             ease: [0.33, 1, 0.68, 1] as const,
           }}
         >
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </motion.main>
       </AnimatePresence>
       <Footer />

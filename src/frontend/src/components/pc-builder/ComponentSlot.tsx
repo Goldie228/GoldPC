@@ -146,7 +146,7 @@ export const ComponentSlot = React.memo(function ComponentSlot(componentSlotProp
               <span className="component-slot__type">{type}</span>
             </div>
           )}
-          {quantity !== undefined && maxQuantity && onChangeQuantity && quantity > 0 && type !== 'Накопитель' && (
+          {quantity !== undefined && maxQuantity && onChangeQuantity && quantity > 0 && !type.startsWith('Накопитель') && (
             <div className="component-slot__qty">
               <button
                 type="button"

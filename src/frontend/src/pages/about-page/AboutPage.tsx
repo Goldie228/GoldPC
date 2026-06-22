@@ -112,7 +112,7 @@ export function AboutPage() {
           О компании <span className="text-gold">GoldPC</span>
         </h1>
         <p className="text-lg text-muted-text max-w-3xl leading-relaxed">
-          Мы создаём компьютеры мечты с 2014 года. От геймерских монстров до рабочих станций
+          Мы создаём компьютеры мечты с 2026 года. От геймерских монстров до рабочих станций
           профессионалов — каждая сборка выполнена с любовью к деталям.
         </p>
       </motion.header>
