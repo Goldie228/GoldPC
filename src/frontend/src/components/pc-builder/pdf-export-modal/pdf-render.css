@@ -1,0 +1,242 @@
+/* PDF render styles for html2canvas */
+.pdf-page {
+  width: 794px;
+  padding: 40px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0f0f12;
+  color: #fafafa;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 3px solid #d4a574;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 800;
+  color: #d4a574;
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #a1a1aa;
+  margin-top: 4px;
+}
+
+.build-name {
+  font-size: 12px;
+  color: #a1a1aa;
+}
+
+.date {
+  font-size: 10px;
+  color: #71717a;
+  margin-top: 2px;
+}
+
+.status-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.ok {
+  background: #166534;
+  color: #86efac;
+}
+
+.status-badge.err {
+  background: #991b1b;
+  color: #fca5a5;
+}
+
+.stat-line {
+  font-size: 11px;
+  color: #71717a;
+}
+
+.errors-block {
+  background: #991b1b20;
+  border: 1px solid #991b1b;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.error-item {
+  font-size: 11px;
+  color: #fca5a5;
+  padding: 4px 0;
+}
+
+.warnings-block {
+  background: #854d0e20;
+  border: 1px solid #854d0e;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.warning-item {
+  font-size: 11px;
+  color: #fbbf24;
+  padding: 4px 0;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #d4a574;
+  margin-bottom: 10px;
+}
+
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+}
+
+.comp-table thead th {
+  color: #71717a;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #27272a;
+}
+
+.comp-table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #1c1c21;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.comp-img {
+  width: 56px;
+}
+
+.comp-img img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #1c1c21;
+  padding: 2px;
+}
+
+.no-img {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1c1c21;
+  border-radius: 6px;
+  font-size: 18px;
+}
+
+.comp-cat {
+  color: #a1a1aa;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.comp-name {
+  color: #fafafa;
+  font-weight: 500;
+}
+
+.comp-price {
+  text-align: right;
+  color: #d4a574;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  flex: 1;
+  background: #1c1c21;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #d4a574;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fafafa;
+}
+
+.stat-unit {
+  font-size: 12px;
+  color: #71717a;
+}
+
+.stat-sub {
+  font-size: 10px;
+  color: #71717a;
+  margin-top: 4px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1c1c21;
+  border: 2px solid #d4a574;
+  border-radius: 10px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+}
+
+.total-label {
+  font-size: 14px;
+  color: #fafafa;
+}
+
+.total-price {
+  font-size: 24px;
+  font-weight: 800;
+  color: #d4a574;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #52525b;
+  border-top: 1px solid #27272a;
+  padding-top: 10px;
+}
