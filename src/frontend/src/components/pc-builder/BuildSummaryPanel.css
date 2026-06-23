@@ -363,6 +363,19 @@
   transform: translateY(-1px);
 }
 
+/* PDF button — outline gold */
+.bsp__btn--pdf {
+  background: rgba(252, 213, 53, 0.06);
+  border-color: rgba(252, 213, 53, 0.25);
+  color: var(--primary, #FCD535);
+}
+
+.bsp__btn--pdf:hover:not(:disabled) {
+  background: rgba(252, 213, 53, 0.12);
+  border-color: var(--primary, #FCD535);
+  transform: translateY(-1px);
+}
+
 /* Save button — secondary */
 .bsp__btn--save {
   background: rgba(252, 213, 53, 0.06);

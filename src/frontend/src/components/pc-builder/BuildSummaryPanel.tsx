@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Zap, BarChart3, Save, ShoppingBag, AlertTriangle, XCircle } from 'lucide-react';
+import { Zap, BarChart3, Save, ShoppingBag, AlertTriangle, XCircle, FileDown } from 'lucide-react';
 import {
   calculatePerformance,
   getPerformanceLabel,
@@ -346,7 +346,8 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
           disabled={selectedCount === 0}
           onClick={onExportPdf}
         >
-          PDF
+          <FileDown size={16} strokeWidth={2} aria-hidden />
+          Скачать PDF
         </button>
       </div>
 
