@@ -106,6 +106,7 @@ function HeroBackground() {
 
       const onCanPlay = () => {
         vid.removeEventListener('canplay', onCanPlay);
+        vid.currentTime = 0;
         vid.play().catch(() => {});
 
         // Fade in after a short delay
