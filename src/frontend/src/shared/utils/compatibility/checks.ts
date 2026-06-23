@@ -62,9 +62,69 @@ import {
   extractTPMSupport,
 } from './extractors';
 
+/**
+ * Detect socket from chipset string (from specs or product name).
+ */
+function detectSocketFromChipset(chipset: string): string | null {
+  const c = chipset.toUpperCase().trim();
+  // Intel LGA1851
+  if (/\b(Z890|B860)\b/.test(c)) return 'LGA1851';
+  // Intel LGA1700 (600/700-series desktop)
+  if (/\b(H610|B660|H670|Z690|B760|Z790|H770)\b/.test(c)) return 'LGA1700';
+  // Intel LGA1200 (400/500-series)
+  if (/\b(B460|H470|H410|Z490|B560|H510|H570|Z590)\b/.test(c)) return 'LGA1200';
+  // Intel LGA1151 (200/300-series)
+  if (/\b(B250|H270|Z270|B360|H310|H370|Z370|Z390|B365)\b/.test(c)) return 'LGA1151';
+  // Intel LGA1155 (60/70-series — desktop H61, B75, H77, Z77 etc.)
+  if (/\b(H61|B75|H77|Z75|Z77)\b/.test(c)) return 'LGA1155';
+  // Intel mobile chipsets → LGA1155 (Sandy/Ivy Bridge)
+  if (/\b(HM[567]\d|QM[567]\d|QS[567]\d|UM[567]\d)\b/.test(c)) return 'LGA1155';
+  // Intel mobile 80/90-series → LGA1150
+  if (/\b(HM8\d|QM8\d|HM9\d|QM9\d)\b/.test(c)) return 'LGA1150';
+  // AMD AM5
+  if (/\b(B650E?|X670E?|A620)\b/.test(c)) return 'AM5';
+  // AMD AM4
+  if (/\b(A320|B350|B450|A520|B550|X370|X470|X570)\b/.test(c)) return 'AM4';
+  return null;
+}
+
+function detectSocketFromName(productName: string): string | null {
+  const upper = productName.toUpperCase();
+  // Intel LGA1851: Z890, B860
+  if (/\b(Z890|B860)\b/.test(upper)) return 'LGA1851';
+  // Intel LGA1700 chipsets
+  if (/\b(H610|B660|H670|Z690|B760|Z790|H770)\b/.test(upper)) return 'LGA1700';
+  // Intel LGA1200 chipsets
+  if (/\b(B460|H470|H410|Z490|B560|H510|H570|Z590)\b/.test(upper)) return 'LGA1200';
+  // Intel LGA1151 chipsets
+  if (/\b(B250|H270|Z270|B360|H310|H370|Z370|Z390|B365)\b/.test(upper)) return 'LGA1151';
+  // Intel desktop LGA1155
+  if (/\b(H61|B75|H77|Z77)\b/.test(upper)) return 'LGA1155';
+  // AMD AM5
+  if (/\b(B650E?|X670E?|A620)\b/.test(upper)) return 'AM5';
+  // AMD AM4
+  if (/\b(A320|B350|B450|A520|B550|X370|X470|X570)\b/.test(upper)) return 'AM4';
+  // Socket names directly
+  if (upper.includes('AM5')) return 'AM5';
+  if (upper.includes('AM4')) return 'AM4';
+  if (upper.includes('LGA1851')) return 'LGA1851';
+  if (upper.includes('LGA1700')) return 'LGA1700';
+  if (upper.includes('LGA1200')) return 'LGA1200';
+  if (upper.includes('LGA1151')) return 'LGA1151';
+  if (upper.includes('LGA1155')) return 'LGA1155';
+  return null;
+}
+
 function checkCPUSocket(cpu: Product, mb: Product): CompatibilityIssue | null {
-  const cs = extractSocket(cpu.specifications);
-  const ms = extractSocket(mb.specifications);
+  let cs = extractSocket(cpu.specifications);
+  let ms = extractSocket(mb.specifications);
+
+  // Fallback: detect socket from chipset field in specs
+  if (!cs && cpu.specifications?.chipset) cs = detectSocketFromChipset(cpu.specifications.chipset);
+  if (!ms && mb.specifications?.chipset) ms = detectSocketFromChipset(mb.specifications.chipset);
+  // Fallback: detect socket from product name
+  if (!cs) cs = detectSocketFromName(cpu.name);
+  if (!ms) ms = detectSocketFromName(mb.name);
 
   // Known mismatch
   if (cs && ms && cs !== ms) {
@@ -132,11 +192,15 @@ function detectMemoryTypeFromName(productName: string): 'DDR5' | 'DDR4' | 'DDR3'
 
 function detectMBMemoryTypeFromName(productName: string, socket?: string | null, chipset?: string | null): 'DDR5' | 'DDR4' | 'DDR3' | null {
   const upper = productName.toUpperCase();
+  const context = ((socket ?? '') + ' ' + (chipset ?? '') + ' ' + upper).toUpperCase();
   // AM5, LGA1851 → DDR5
   if (upper.includes('AM5') || upper.includes('LGA1851')) return 'DDR5';
-  const context = ((socket ?? '') + ' ' + (chipset ?? '') + ' ' + upper);
   if (/\bHM[5678]\d/.test(context)) return 'DDR3';
-  // Everything else (AM4, LGA1151, LGA1200, LGA1700, etc.) → DDR4
+  // Server/workstation: EPYC (SP3), Xeon (LGA4677, LGA3647), Threadripper (sTRX4, sWRX8) → DDR4 or DDR5
+  if (context.includes('SP3') || context.includes('EPYC') || upper.includes('SUPERMICRO') || upper.includes('ASUS WS')) return 'DDR4';
+  if (context.includes('LGA4677') || context.includes('LGA3647')) return 'DDR4';
+  if (context.includes('STRX4') || context.includes('SWRX8') || context.includes('THREADRIPPER')) return 'DDR4';
+  // Consumer: AM4, LGA1151, LGA1200, LGA1700 → DDR4
   if (upper.includes('AM4') || upper.includes('LGA1151') || upper.includes('LGA1200') || upper.includes('LGA1700')) return 'DDR4';
   return null;
 }
