@@ -147,6 +147,7 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
       <AnimatePresence>
         {compatibilityErrors && compatibilityErrors.length > 0 && (
           <motion.div
+            key="errors"
             className="bsp__alerts bsp__alerts--error"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -162,6 +163,7 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
         )}
         {compatibilityWarnings && compatibilityWarnings.length > 0 && (
           <motion.div
+            key="warnings"
             className="bsp__alerts bsp__alerts--warning"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
