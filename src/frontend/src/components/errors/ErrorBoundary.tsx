@@ -101,19 +101,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <div className="error-boundary__icon">
               <AlertCircle size={48} />
             </div>
-            <h1 className="error-boundary__title">Something went wrong</h1>
+            <h1 className="error-boundary__title">Произошла ошибка</h1>
             <p className="error-boundary__message">
-              We're sorry, but something unexpected happened. Please try reloading the page.
+              Извините, произошло непредвиденное. Попробуйте перезагрузить страницу.
             </p>
             {error && import.meta.env.DEV && (
               <details className="error-boundary__details">
-                <summary>Error Details</summary>
+                <summary>Детали ошибки</summary>
                 <pre>{error.message}</pre>
                 <pre>{error.stack}</pre>
               </details>
             )}
             <Button variant="primary" onClick={this.handleReload}>
-              Reload
+              Перезагрузить
             </Button>
           </div>
         </div>

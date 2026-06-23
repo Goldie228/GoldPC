@@ -5,15 +5,14 @@
 
 import type { CompatibilityWarning } from './types';
 import type { Product } from '@/api/types';
-import { extractMemoryType, extractRAMSpeed, extractBaseRAMSpeed, extractThermalPasteIncluded } from './extractors';
-import { extractMemorySlots } from './extractors';
+import { extractMemoryType, extractRAMSpeed, extractBaseRAMSpeed, extractThermalPasteIncluded, hasIntegratedGraphics, extractMemorySlots } from './extractors';
 
 /**
  * Совет: подключение монитора к GPU, не к материнской плате
  */
 export function tipMonitorToGPU(cpu: Product | undefined, gpu: Product | undefined): CompatibilityWarning | null {
   if (!cpu || !gpu) return null;
-  const hasIG = hasIntegratedGraphics(cpu.specifications);
+  const hasIG = hasIntegratedGraphics(cpu.specifications, cpu.name);
   if (!hasIG) return null;
   return {
     severity: 'Info' as const,
@@ -130,15 +129,4 @@ export function tipCheckPSUSwitch(): CompatibilityWarning {
   };
 }
 
-/** Helper — дублируем hasIntegratedGraphics чтобы избежать циклических зависимостей */
-function hasIntegratedGraphics(specs: Record<string, unknown> | undefined): boolean {
-  if (!specs) return false;
-  const ig = (specs as Record<string, unknown>).integratedGraphics ?? (specs as Record<string, unknown>).integrated_graphics;
-  if (typeof ig === 'boolean') return ig;
-  if (typeof ig === 'string') {
-    const l = ig.trim().toLowerCase();
-    if (l === 'true' || l === 'да' || l === 'yes') return true;
-    if (l.length > 0 && l !== 'false' && l !== 'нет' && l !== 'no' && l !== 'none' && l !== 'отсутствует' && l !== 'нет встроенной' && l !== 'нет графического ядра') return true;
-  }
-  return false;
-}
+// Используем импорт из extractors.ts вместо дублирования
