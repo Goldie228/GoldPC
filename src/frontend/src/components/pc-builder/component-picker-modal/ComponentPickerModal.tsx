@@ -15,7 +15,7 @@ import { Pagination } from '@/components/catalog/Pagination';
 import { FilterSidebar } from '@/components/filter-sidebar/FilterSidebar';
 import { getProductImageUrl, hasValidProductImage } from '@/utils/image';
 import { specLabel, formatSpecValueForKey, splitSpecsAndRanges } from '@/utils/specifications';
-import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryType, extractStorageType, extractM2Slots, extractSataPorts } from '@/shared/utils/compatibility/extractors';
+import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryType, extractMemoryTypeWithFallback, extractStorageType, extractM2Slots, extractSataPorts } from '@/shared/utils/compatibility/extractors';
 import { checkRAM, checkCooler, detectMemoryFormFactorFromName, resolveSocket } from '@/shared/utils/compatibility/checks';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '@/hooks/useProducts';
@@ -374,16 +374,16 @@ export function ComponentPickerModal({
       out.type = Array.isArray(typeFilter) ? typeFilter : [typeFilter];
     }
     if (slotType === 'cpu' && buildContext?.motherboard?.product) {
-      const s = extractSocket(buildContext.motherboard.product.specifications);
+      const s = resolveSocket(buildContext.motherboard.product);
       if (s) out.socket = s;
     }
     if (slotType === 'motherboard' && buildContext?.cpu?.product) {
-      const s = extractSocket(buildContext.cpu.product.specifications);
+      const s = resolveSocket(buildContext.cpu.product);
       if (s) out.socket = s;
     }
     if (slotType === 'ram' && buildContext?.motherboard?.product) {
       // Фильтруем по типу памяти на сервере, чтобы пагинация была корректной
-      const mt = extractMemoryType(buildContext.motherboard.product.specifications);
+      const mt = extractMemoryTypeWithFallback(buildContext.motherboard.product, buildContext.motherboard.product.specifications);
       if (mt) out.type = mt;
     }
     // Выбор БП: устанавливаем минимальную мощность на основе GPU+CPU
