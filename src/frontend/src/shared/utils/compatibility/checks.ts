@@ -204,20 +204,77 @@ function detectMemoryTypeFromName(productName: string): 'DDR5' | 'DDR4' | 'DDR3'
 function detectMBMemoryTypeFromName(productName: string, socket?: string | null, chipset?: string | null): 'DDR5' | 'DDR4' | 'DDR3' | null {
   const upper = productName.toUpperCase();
   const context = ((socket ?? '') + ' ' + (chipset ?? '') + ' ' + upper).toUpperCase();
-  // AM5, LGA1851 → DDR5
-  if (upper.includes('AM5') || upper.includes('LGA1851')) return 'DDR5';
+
+  // Direct chipset detection (most reliable)
+  const chipU = (chipset ?? '').toUpperCase();
+  if (/\b(Z890|B860|H810)\b/.test(chipU)) return 'DDR5';
+  if (/\b(B650E?|X670E?|X870E?|B850|A620)\b/.test(chipU)) return 'DDR5';
+  if (/\b(H610|B660|H670|Z690|B760|Z790|H770)\b/.test(chipU)) return 'DDR4';
+  if (/\b(B460|H470|H410|Z490|B560|H510|H570|Z590)\b/.test(chipU)) return 'DDR4';
+  if (/\b(B250|H270|Z270|B360|H310|H370|Z370|Z390|B365)\b/.test(chipU)) return 'DDR4';
+  if (/\b(H61|B75|H77|Z77|Z75|B85|H81|H87|Z87|Z97|H97)\b/.test(chipU)) return 'DDR3';
+  if (/\b(HM[567]\d|QM[567]\d)\b/.test(chipU)) return 'DDR3';
+  if (/\b(HM8\d|QM8\d|HM9\d|QM9\d)\b/.test(chipU)) return 'DDR3';
+  if (/\b(X99|X299)\b/.test(chipU)) return 'DDR4';
+  if (/\b(TRX40|WRX80|TRX50)\b/.test(chipU)) return 'DDR4';
+
+  // Socket-based detection
+  if (context.includes('AM5') || context.includes('LGA1851')) return 'DDR5';
   if (/\bHM[5678]\d/.test(context)) return 'DDR3';
-  // Server/workstation: EPYC (SP3), Xeon (LGA4677, LGA3647), Threadripper (sTRX4, sWRX8) → DDR4
+  // Server/workstation
   if (context.includes('SP3') || context.includes('EPYC') || upper.includes('SUPERMICRO') || upper.includes('ASUS WS')) return 'DDR4';
   if (context.includes('LGA4677') || context.includes('LGA3647')) return 'DDR4';
   if (context.includes('STRX4') || context.includes('SWRX8') || context.includes('THREADRIPPER')) return 'DDR4';
-  // Consumer: AM4, LGA1151, LGA1200 → DDR4
+  // Consumer
   if (upper.includes('AM4') || upper.includes('LGA1151') || upper.includes('LGA1200')) return 'DDR4';
-  // LGA1700 can be DDR4 or DDR5 — check product name for DDR5 hint
-  if (upper.includes('LGA1700') || /\b(Z690|Z790|B760|Z890)\b/.test(upper)) {
+  if (upper.includes('LGA1700')) {
     if (upper.includes('DDR5')) return 'DDR5';
-    return 'DDR4'; // Default to DDR4 for LGA1700 (more common)
+    return 'DDR4';
   }
+
+  // Name-based chipset detection (last resort — product name contains chipset)
+  if (/\b(Z890|B860|H810|Z790|Z690)\b/.test(upper)) {
+    if (upper.includes('DDR5')) return 'DDR5';
+    return 'DDR4';
+  }
+  if (/\b(B850|X870E?|B650E?|X670E?|A620)\b/.test(upper)) return 'DDR5';
+  if (/\b(B760|H610|B660|H670|H770)\b/.test(upper)) return 'DDR4';
+  if (/\b(B560|H510|H570|Z590|B460|H470|H410|Z490)\b/.test(upper)) return 'DDR4';
+  if (/\b(B360|H310|H370|Z370|Z390|B365|B250|H270|Z270)\b/.test(upper)) return 'DDR4';
+  if (/\b(H81|Z87|Z97|H97|B85|H77|Z77|H61|B75|Z75)\b/.test(upper)) return 'DDR3';
+  if (/\b(X99|X299)\b/.test(upper)) return 'DDR4';
+  if (/\b(TRX40|WRX80|TRX50)\b/.test(upper)) return 'DDR4';
+
+  return null;
+}
+
+/**
+ * Determine DDR type from chipset: maps chipset family to memory generation.
+ */
+function detectMemoryTypeFromChipset(chipset: string): 'DDR5' | 'DDR4' | 'DDR3' | null {
+  const c = chipset.toUpperCase().trim();
+  // Intel LGA1851 → DDR5
+  if (/\b(Z890|B860|H810)\b/.test(c)) return 'DDR5';
+  // Intel LGA1700 (600/700-series) → DDR4 or DDR5, default DDR4
+  if (/\b(H610|B660|H670|Z690|B760|Z790|H770)\b/.test(c)) return 'DDR4';
+  // Intel LGA1200 (400/500-series) → DDR4
+  if (/\b(B460|H470|H410|Z490|B560|H510|H570|Z590)\b/.test(c)) return 'DDR4';
+  // Intel LGA1151 (200/300-series) → DDR4
+  if (/\b(B250|H270|Z270|B360|H310|H370|Z370|Z390|B365)\b/.test(c)) return 'DDR4';
+  // Intel LGA1155/1150 → DDR3
+  if (/\b(H61|B75|H77|Z77|Z75|B85|H81|H87|Z87|Z97|H97)\b/.test(c)) return 'DDR3';
+  // Intel mobile 50/60/70 series → DDR3
+  if (/\b(HM[567]\d|QM[567]\d)\b/.test(c)) return 'DDR3';
+  // Intel mobile 80/90 series → DDR3L
+  if (/\b(HM8\d|QM8\d|HM9\d|QM9\d)\b/.test(c)) return 'DDR3';
+  // AMD AM5 → DDR5
+  if (/\b(B650E?|X670E?|X870E?|B850|A620)\b/.test(c)) return 'DDR5';
+  // AMD AM4 → DDR4
+  if (/\b(A320|B350|B450|A520|B550|X370|X470|X570)\b/.test(c)) return 'DDR4';
+  // Intel LGA2011-3, LGA2066 (X99, X299) → DDR4
+  if (/\b(X99|X299)\b/.test(c)) return 'DDR4';
+  // AMD TRX40, WRX80, TRX50 → DDR4
+  if (/\b(TRX40|WRX80|TRX50)\b/.test(c)) return 'DDR4';
   return null;
 }
 
@@ -227,10 +284,20 @@ function checkRAM(ram: Product, mb: Product, quantity: number = 1): Compatibilit
 
   // Fallback: detect from product name if specs don't contain DDR type
   if (!rt) rt = detectMemoryTypeFromName(ram.name);
+
+  // Fallback chain for motherboard memory type:
+  // 1. specs.memoryType (direct)
+  // 2. chipset-based detection (most reliable)
+  // 3. socket + name-based detection
   if (!mt) {
     const chipset = typeof mb.specifications?.chipset === 'string' ? mb.specifications.chipset : undefined;
-    const socket = typeof mb.specifications?.socket === 'string' ? mb.specifications.socket : undefined;
-    mt = detectMBMemoryTypeFromName(mb.name, socket, chipset);
+    if (chipset) {
+      mt = detectMemoryTypeFromChipset(chipset);
+    }
+    if (!mt) {
+      const socket = typeof mb.specifications?.socket === 'string' ? mb.specifications.socket : undefined;
+      mt = detectMBMemoryTypeFromName(mb.name, socket, chipset);
+    }
   }
 
   // Known memory type mismatch
