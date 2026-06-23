@@ -5,6 +5,8 @@ import './index.css'          // Новые прототипные tokens + Tail
 import './styles/globals.css'
 import './styles/staff.css'
 import App from './App.tsx'
+import { catalogApi } from './api/catalog'
+import { categoriesKeys } from './hooks/useCategories'
 
 // Lazy load React Query DevTools - only in development and only when needed
 const ReactQueryDevtools = lazy(() => 
@@ -30,6 +32,13 @@ const queryClient = new QueryClient({
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
   },
+})
+
+// Prefetch categories at startup — they're used on every page
+queryClient.prefetchQuery({
+  queryKey: categoriesKeys.list(),
+  queryFn: () => catalogApi.getCategories(),
+  staleTime: 10 * 60 * 1000,
 })
 
 createRoot(document.getElementById('root')!).render(

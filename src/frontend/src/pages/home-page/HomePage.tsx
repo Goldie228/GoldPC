@@ -11,26 +11,9 @@ import { ApiErrorBanner } from '@/components/ui/ApiErrorBanner';
 import { useProducts } from '@/hooks/useProducts';
 import { useCategories } from '@/hooks/useCategories';
 import { formatCountRu, RU_FORMS } from '@/utils/pluralizeRu';
+import { BACKEND_TO_FRONTEND, CATEGORY_LABELS } from '@/utils/category-mappings';
 import type { ProductCategory } from '@/api/types';
 
-// Маппинг backend slug -> frontend id для ссылок
-const BACKEND_TO_FRONTEND: Record<string, ProductCategory> = {
-  processors: 'cpu',
-  motherboards: 'motherboard',
-  ram: 'ram',
-  gpu: 'gpu',
-  psu: 'psu',
-  storage: 'storage',
-  cases: 'case',
-  coolers: 'cooling',
-  monitors: 'monitor',
-  keyboards: 'keyboard',
-  mice: 'mouse',
-  headphones: 'headphones',
-  periphery: 'keyboard',
-};
-
-// Иконки категорий (lucide-react компоненты, а не JSX)
 const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
   cpu: Cpu,
   gpu: Gpu,
@@ -47,15 +30,13 @@ const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
   headphones: Headphones,
 };
 
-// ─── Hero Background Placeholder ───────────────────────────────────
+// ─── Hero Background — sequential video crossfade ────────────────
 function HeroBackground() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const videosRef = useRef<string[]>([]);
   const idxRef = useRef(0);
-  const busyRef = useRef(false);
 
-  // Probe ALL videos, store list, start first
+  // Probe available videos, start first one
   useEffect(() => {
     let cancelled = false;
     const probe = async () => {
@@ -78,10 +59,12 @@ function HeroBackground() {
       if (found.length === 0) return;
       videosRef.current = found;
       idxRef.current = 0;
-      if (videoRef.current) {
-        videoRef.current.src = found[0];
-        videoRef.current.load();
-        videoRef.current.play().catch(() => {});
+      // Start first video immediately
+      const vid = videoRef.current;
+      if (vid) {
+        vid.src = found[0];
+        vid.load();
+        vid.play().catch(() => {});
       }
     };
     probe();
@@ -89,59 +72,36 @@ function HeroBackground() {
   }, []);
 
   const handleEnd = useCallback(() => {
-    const list = videosRef.current;
     const vid = videoRef.current;
-    if (list.length <= 1 || busyRef.current || !vid) return;
-    busyRef.current = true;
+    const list = videosRef.current;
+    if (!vid || list.length <= 1) return;
 
-    const next = (idxRef.current + 1) % list.length;
+    // Find next playable video (skip broken files)
+    const tryNext = (attempt: number) => {
+      const idx = (idxRef.current + attempt) % list.length;
+      vid.src = list[idx];
+      vid.play().then(() => {
+        idxRef.current = idx;
+      }).catch(() => {
+        if (attempt + 1 < list.length) {
+          tryNext(attempt + 1);
+        }
+      });
+    };
 
-    // Fade out
-    if (containerRef.current) containerRef.current.style.opacity = '0';
-
-    setTimeout(() => {
-      // Swap source
-      vid.src = list[next];
-      vid.load();
-
-      const onCanPlay = () => {
-        vid.removeEventListener('canplay', onCanPlay);
-        vid.currentTime = 0;
-        vid.play().catch(() => {});
-
-        // Fade in after a short delay
-        setTimeout(() => {
-          if (containerRef.current) containerRef.current.style.opacity = '1';
-          idxRef.current = next;
-          setTimeout(() => { busyRef.current = false; }, 1600);
-        }, 100);
-      };
-
-      vid.addEventListener('canplay', onCanPlay, { once: true });
-
-      // Safety: if canplay never fires, force after 5s
-      setTimeout(() => {
-        vid.removeEventListener('canplay', onCanPlay);
-        vid.play().catch(() => {});
-        if (containerRef.current) containerRef.current.style.opacity = '1';
-        idxRef.current = next;
-        setTimeout(() => { busyRef.current = false; }, 1600);
-      }, 5000);
-    }, 1200);
+    tryNext(1);
   }, []);
 
   return (
     <div className="home-hero__bg--placeholder" aria-hidden="true">
-      <div ref={containerRef} className="home-hero__bg-fade">
-        <video
-          ref={videoRef}
-          className="home-hero__bg-video"
-          muted
-          playsInline
-          preload="auto"
-          onEnded={handleEnd}
-        />
-      </div>
+      <video
+        ref={videoRef}
+        className="home-hero__bg-video"
+        muted
+        playsInline
+        preload="auto"
+        onEnded={handleEnd}
+      />
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
     </div>
   );
@@ -359,30 +319,36 @@ export function HomePage() {
     },
   ], []);
 
-  const categories = useMemo(() => (categoriesData ?? []).filter((c) => (c.productCount ?? 0) > 0), [categoriesData]);
+  // Static category list — renders instantly, no API wait
+  const STATIC_CATEGORIES = useMemo(() => [
+    { slug: 'cpu', name: 'Процессоры', icon: Cpu },
+    { slug: 'motherboard', name: 'Материнские платы', icon: Cpu },
+    { slug: 'ram', name: 'Оперативная память', icon: MemoryStick },
+    { slug: 'gpu', name: 'Видеокарты', icon: Gpu },
+    { slug: 'storage', name: 'Накопители', icon: HardDrive },
+    { slug: 'psu', name: 'Блоки питания', icon: Zap },
+    { slug: 'case', name: 'Корпуса', icon: Box },
+    { slug: 'cooling', name: 'Охлаждение', icon: ThermometerSun },
+    { slug: 'fan', name: 'Вентиляторы', icon: Fan },
+    { slug: 'monitor', name: 'Мониторы', icon: Monitor },
+    { slug: 'keyboard', name: 'Клавиатуры', icon: Keyboard },
+    { slug: 'mouse', name: 'Мыши', icon: Mouse },
+    { slug: 'headphones', name: 'Наушники', icon: Headphones },
+  ], []);
 
-  // Static fallback categories for instant render while API loads
-  const staticCategories = useMemo(() => {
-    const known = [
-      { slug: 'processors', name: 'Процессоры', icon: Cpu },
-      { slug: 'motherboards', name: 'Материнские платы', icon: Cpu },
-      { slug: 'memory', name: 'Оперативная память', icon: MemoryStick },
-      { slug: 'graphics', name: 'Видеокарты', icon: Gpu },
-      { slug: 'storage', name: 'Накопители', icon: HardDrive },
-      { slug: 'power', name: 'Блоки питания', icon: Zap },
-      { slug: 'cooling', name: 'Охлаждение', icon: ThermometerSun },
-      { slug: 'cases', name: 'Корпуса', icon: Box },
-      { slug: 'monitors', name: 'Мониторы', icon: Monitor },
-      { slug: 'fan', name: 'Вентиляторы', icon: Fan },
-    ];
-    return known.map((c) => ({
+  // Merge productCount from API into static list
+  const displayCategories = useMemo(() => {
+    const counts: Record<string, number> = {};
+    (categoriesData ?? []).forEach((c) => {
+      const key = BACKEND_TO_FRONTEND[c.slug] ?? c.slug;
+      counts[key] = (counts[key] ?? 0) + (c.productCount ?? 0);
+    });
+    return STATIC_CATEGORIES.map((c) => ({
+      ...c,
       id: c.slug,
-      slug: c.slug,
-      name: c.name,
-      icon: c.icon,
-      productCount: categories.find((cat) => cat.slug === c.slug)?.productCount ?? 0,
+      productCount: counts[c.slug] ?? 0,
     }));
-  }, [categories]);
+  }, [categoriesData, STATIC_CATEGORIES]);
 
   return (
     <div id="main" className="min-h-screen bg-canvas-dark">
@@ -425,39 +391,22 @@ export function HomePage() {
             <p className="home-categories__desc">Выберите компонент для вашего ПК</p>
           </div>
           <div className="home-categories__grid">
-            {(() => {
-              const cats = categoriesLoading && categories.length === 0
-                ? staticCategories
-                : categories.map((cat) => ({
-                    ...cat,
-                    icon: CATEGORY_ICONS[(BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug)] ?? Cpu,
-                  }));
-              const COLS = 5;
-              const remainder = cats.length % COLS;
-              return cats.map((cat, i) => {
-                const frontendId = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug);
-                const IconComponent = cat.icon ?? CATEGORY_ICONS[frontendId] ?? Cpu;
-                const isLastRow = remainder !== 0 && i >= cats.length - remainder;
-                const span = isLastRow ? COLS / remainder : 1;
-                return (
-                  <motion.div
-                    key={cat.id}
-                    style={isLastRow ? { gridColumn: `span ${span}` } : undefined}
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-20px' }}
-                    transition={{ duration: 0.5, delay: i * 0.05 }}
-                  >
-                    <CategoryCard
-                      Icon={IconComponent}
-                      name={cat.name}
-                      count={cat.productCount ?? 0}
-                      href={`/catalog/${frontendId}`}
-                    />
-                  </motion.div>
-                );
-              });
-            })()}
+            {displayCategories.map((cat, i) => (
+              <motion.div
+                key={cat.id}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-20px' }}
+                transition={{ duration: 0.5, delay: i * 0.05 }}
+              >
+                <CategoryCard
+                  Icon={cat.icon}
+                  name={cat.name}
+                  count={cat.productCount}
+                  href={`/catalog/${cat.slug}`}
+                />
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
