@@ -49,29 +49,24 @@ const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
 
 // ─── Hero Background Placeholder ───────────────────────────────────
 function HeroBackground() {
-  const videoA = useRef<HTMLVideoElement>(null);
-  const videoB = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const videosRef = useRef<string[]>([]);
-  const activeRef = useRef(0);
-  const transitioningRef = useRef(false);
+  const idxRef = useRef(0);
+  const busyRef = useRef(false);
 
-  // Probe ALL videos in parallel, store list, then start first
+  // Probe ALL videos, store list, start first
   useEffect(() => {
     let cancelled = false;
-
     const probe = async () => {
-      const urls: string[] = [];
-      for (let i = 1; i <= 10; i++) urls.push(`/hero-videos/video-${i}.mp4`);
-
+      const urls = Array.from({ length: 10 }, (_, i) => `/hero-videos/video-${i + 1}.mp4`);
       const results = await Promise.allSettled(
         urls.map(async (url) => {
           const r = await fetch(url, { method: 'HEAD' }).catch(() => null);
           return r && r.ok ? url : null;
         })
       );
-
       if (cancelled) return;
-
       const found = results
         .filter((r): r is PromiseFulfilledResult<string> => r.status === 'fulfilled' && r.value !== null)
         .map(r => r.value)
@@ -80,56 +75,72 @@ function HeroBackground() {
           const nb = parseInt(b.match(/video-(\d+)/)?.[1] ?? '0');
           return na - nb;
         });
-
       if (found.length === 0) return;
-
       videosRef.current = found;
-      activeRef.current = 0;
-
-      if (videoA.current) {
-        videoA.current.src = found[0];
-        videoA.current.load();
-        videoA.current.play().catch(() => {});
+      idxRef.current = 0;
+      if (videoRef.current) {
+        videoRef.current.src = found[0];
+        videoRef.current.load();
+        videoRef.current.play().catch(() => {});
       }
     };
-
     probe();
     return () => { cancelled = true; };
   }, []);
 
   const handleEnd = useCallback(() => {
-    if (transitioningRef.current) return;
     const list = videosRef.current;
-    if (list.length <= 1) return;
+    const vid = videoRef.current;
+    if (list.length <= 1 || busyRef.current || !vid) return;
+    busyRef.current = true;
 
-    transitioningRef.current = true;
-    const idx = activeRef.current;
-    const next = (idx + 1) % list.length;
-    const outgoing = idx % 2 === 0 ? videoA : videoB;
-    const incoming = idx % 2 === 0 ? videoB : videoA;
+    const next = (idxRef.current + 1) % list.length;
 
-    if (incoming.current) {
-      incoming.current.src = list[next];
-      incoming.current.load();
-    }
+    // Fade out
+    if (containerRef.current) containerRef.current.style.opacity = '0';
 
-    if (outgoing.current) outgoing.current.style.opacity = '0';
-    if (incoming.current) incoming.current.style.opacity = '1';
+    setTimeout(() => {
+      // Swap source
+      vid.src = list[next];
+      vid.load();
 
-    incoming.current?.play().catch(() => {}).then(() => {
+      const onCanPlay = () => {
+        vid.removeEventListener('canplay', onCanPlay);
+        vid.play().catch(() => {});
+
+        // Fade in after a short delay
+        setTimeout(() => {
+          if (containerRef.current) containerRef.current.style.opacity = '1';
+          idxRef.current = next;
+          setTimeout(() => { busyRef.current = false; }, 1600);
+        }, 100);
+      };
+
+      vid.addEventListener('canplay', onCanPlay, { once: true });
+
+      // Safety: if canplay never fires, force after 5s
       setTimeout(() => {
-        outgoing.current?.pause();
-        transitioningRef.current = false;
-      }, 1600);
-    });
-
-    activeRef.current = next;
+        vid.removeEventListener('canplay', onCanPlay);
+        vid.play().catch(() => {});
+        if (containerRef.current) containerRef.current.style.opacity = '1';
+        idxRef.current = next;
+        setTimeout(() => { busyRef.current = false; }, 1600);
+      }, 5000);
+    }, 1200);
   }, []);
 
   return (
     <div className="home-hero__bg--placeholder" aria-hidden="true">
-      <video ref={videoA} className="home-hero__bg-video" muted playsInline preload="auto" onEnded={handleEnd} style={{ opacity: 1 }} />
-      <video ref={videoB} className="home-hero__bg-video" muted playsInline preload="auto" onEnded={handleEnd} style={{ opacity: 0 }} />
+      <div ref={containerRef} className="home-hero__bg-fade">
+        <video
+          ref={videoRef}
+          className="home-hero__bg-video"
+          muted
+          playsInline
+          preload="auto"
+          onEnded={handleEnd}
+        />
+      </div>
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
     </div>
   );
