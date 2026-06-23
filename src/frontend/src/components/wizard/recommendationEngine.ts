@@ -64,8 +64,8 @@ function matchesBrandFilter(product: Product, brand: CpuPreference | GpuPreferen
 }
 
 /** Extract numeric price from product */
-function getPrice(product: Product): number {
-  return product.price ?? 0;
+function getPrice(product: Product | null | undefined): number {
+  return product?.price ?? 0;
 }
 
 /** Check if product has specs with given name and value containing */
@@ -89,12 +89,13 @@ function matchesFormFactor(product: Product, ff: FormFactor): boolean {
 }
 
 /** Check cooler type for cooling preference */
-function matchesCoolingType(product: Product, pref: CoolingPreference, category: ProductCategory): boolean {
+function matchesCoolingType(product: Product | null, pref: CoolingPreference, category: ProductCategory): boolean {
+  if (!product) return true;
   if (pref === 'any') return true;
   if (category === 'cooling') {
     const aio = ['жидкостн', 'водян', 'aio', 'сvo', 'liquid'];
     const air = ['башенн', 'башенный', 'tower', 'воздушн'];
-    const name = product.name.toLowerCase();
+    const name = product.name?.toLowerCase() ?? '';
     if (pref === 'aio') return aio.some(v => name.includes(v));
     if (pref === 'air') return air.some(v => name.includes(v)) || !aio.some(v => name.includes(v));
   }
@@ -102,11 +103,11 @@ function matchesCoolingType(product: Product, pref: CoolingPreference, category:
 }
 
 /** Check noise level via specs or name heuristics */
-function matchesNoiseLevel(product: Product, level: NoiseLevel): boolean {
+function matchesNoiseLevel(product: Product | null, level: NoiseLevel): boolean {
+  if (!product) return true;
   if (level === 'performance') return true;
   if (level === 'silent') {
-    // Prefer products labeled quiet/silent or low RPM
-    const name = product.name.toLowerCase();
+    const name = product.name?.toLowerCase() ?? '';
     const quietHints = ['тихи', 'silent', 'quiet', 'low noise', 'шум', 'db', 'аэродинам'];
     if (quietHints.some(v => name.includes(v))) return true;
   }
@@ -115,22 +116,24 @@ function matchesNoiseLevel(product: Product, level: NoiseLevel): boolean {
 }
 
 /** Check RGB preference */
-function matchesRgb(product: Product, pref: RgbPreference): boolean {
+function matchesRgb(product: Product | null, pref: RgbPreference): boolean {
+  if (!product) return true;
   if (pref === 'none') {
-    const name = product.name.toLowerCase();
+    const name = product.name?.toLowerCase() ?? '';
     return !name.includes('rgb');
   }
   if (pref === 'full') {
-    const name = product.name.toLowerCase();
+    const name = product.name?.toLowerCase() ?? '';
     return name.includes('rgb');
   }
   return true;
 }
 
 /** Score product for preference matching (higher = better) */
-function scoreProduct(product: Product, state: WizardState, category: ProductCategory): number {
+function scoreProduct(product: Product | null, state: WizardState, category: ProductCategory): number {
+  if (!product) return 0;
   let score = 0;
-  const name = product.name.toLowerCase();
+  const name = product.name?.toLowerCase() ?? '';
 
   // Noise scoring
   if (state.noiseLevel === 'silent') {
