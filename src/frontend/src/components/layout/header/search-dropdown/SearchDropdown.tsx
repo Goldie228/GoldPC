@@ -122,7 +122,7 @@ export function SearchDropdown({ isOpen, onToggle }: SearchDropdownProps) {
               />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-[var(--fg)] whitespace-nowrap overflow-hidden text-ellipsis">{p.name}</div>
-                <div className="text-xs text-[var(--color-gold-500)] font-semibold mt-0.5">{p.price?.toLocaleString('ru-RU')} ₽</div>
+                <div className="text-xs text-[var(--color-gold-500)] font-semibold mt-0.5">{p.price?.toLocaleString('ru-RU')} BYN</div>
               </div>
             </button>
           ))}

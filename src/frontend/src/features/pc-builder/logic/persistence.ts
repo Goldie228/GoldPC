@@ -158,6 +158,21 @@ export function migrateV1ToState(parsed: SerializedBuildV1): PCBuilderSelectedSt
   return out;
 }
 
+/** Normalize API category names to PCBuilder component types */
+function normalizeCategory(category: string | undefined, fallback: string): string {
+  const map: Record<string, string> = {
+    processors: 'cpu', video_cards: 'gpu', motherboards: 'motherboard',
+    memory: 'ram', storage_devices: 'storage', power_supplies: 'psu',
+    cases: 'case', coolers: 'cooling',
+  };
+  return map[category ?? ''] ?? category ?? fallback;
+}
+
+/** Normalize a product's category field to match builder type */
+function normalizeProduct(product: Record<string, unknown>, targetType: string): Record<string, unknown> {
+  return { ...product, category: normalizeCategory(product.category as string, targetType) };
+}
+
 export function loadFromLocalStorage(): PCBuilderSelectedState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -173,20 +188,20 @@ export function loadFromLocalStorage(): PCBuilderSelectedState {
     if ('v' in parsed && parsed.v === 2 && parsed.components != null) {
       const c = parsed.components;
       return {
-        cpu: c.cpu != null ? { product: c.cpu.product, type: 'cpu' } : undefined,
-        gpu: c.gpu != null ? { product: c.gpu.product, type: 'gpu' } : undefined,
+        cpu: c.cpu != null ? { product: normalizeProduct(c.cpu.product, 'cpu'), type: 'cpu' } : undefined,
+        gpu: c.gpu != null ? { product: normalizeProduct(c.gpu.product, 'gpu'), type: 'gpu' } : undefined,
         motherboard: c.motherboard != null
-          ? { product: c.motherboard.product, type: 'motherboard' }
+          ? { product: normalizeProduct(c.motherboard.product, 'motherboard'), type: 'motherboard' }
           : undefined,
-        psu: c.psu != null ? { product: c.psu.product, type: 'psu' } : undefined,
-        case: c.case != null ? { product: c.case.product, type: 'case' } : undefined,
-        cooling: c.cooling != null ? { product: c.cooling.product, type: 'cooling' } : undefined,
-        ram: (c.ram ?? []).map((x) => ({ product: x.product, type: 'ram' as const })),
+        psu: c.psu != null ? { product: normalizeProduct(c.psu.product, 'psu'), type: 'psu' } : undefined,
+        case: c.case != null ? { product: normalizeProduct(c.case.product, 'case'), type: 'case' } : undefined,
+        cooling: c.cooling != null ? { product: normalizeProduct(c.cooling.product, 'cooling'), type: 'cooling' } : undefined,
+        ram: (c.ram ?? []).map((x) => ({ product: normalizeProduct(x.product, 'ram'), type: 'ram' as const })),
         storage: (c.storage ?? []).map((x) => ({
-          product: x.product,
+          product: normalizeProduct(x.product, 'storage'),
           type: 'storage' as const,
         })),
-        fan: (c.fan ?? []).map((x) => ({ product: x.product, type: 'fan' as const })),
+        fan: (c.fan ?? []).map((x) => ({ product: normalizeProduct(x.product, 'fan'), type: 'fan' as const })),
         monitor: c.monitor != null ? { product: c.monitor.product, type: 'monitor' } : undefined,
         keyboard: c.keyboard != null ? { product: c.keyboard.product, type: 'keyboard' } : undefined,
         mouse: c.mouse != null ? { product: c.mouse.product, type: 'mouse' } : undefined,

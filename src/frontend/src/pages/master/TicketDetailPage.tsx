@@ -77,7 +77,7 @@ function formatDateTime(iso: string): string {
 }
 
 function formatCurrency(value: number): string {
-  return value.toLocaleString('ru-RU', { minimumFractionDigits: 0 }) + ' ₽';
+  return value.toLocaleString('ru-RU', { minimumFractionDigits: 0 }) + ' BYN';
 }
 
 function isTerminal(status: TicketStatus): boolean {

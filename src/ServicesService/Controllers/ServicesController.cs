@@ -74,7 +74,7 @@ public class ServicesController : ControllerBase
     }
 
     [HttpGet("master")]
-    [Authorize(Roles = "Master")]
+    [Authorize(Roles = "Master,Admin")]
     public async Task<IActionResult> GetMasterRequests([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
         var userId = GetCurrentUserId();

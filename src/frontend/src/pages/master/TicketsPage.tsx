@@ -239,8 +239,8 @@ export function TicketsPage() {
                         </td>
                         <td className="px-4 py-3 text-right font-medium text-foreground whitespace-nowrap">
                           {ticket.actualCost > 0
-                            ? `${ticket.actualCost.toLocaleString('ru-RU')} ₽`
-                            : `${ticket.estimatedCost.toLocaleString('ru-RU')} ₽`}
+                            ? `${ticket.actualCost.toLocaleString('ru-RU')} BYN`
+                            : `${ticket.estimatedCost.toLocaleString('ru-RU')} BYN`}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                           {formatDateTime(ticket.createdAt)}
