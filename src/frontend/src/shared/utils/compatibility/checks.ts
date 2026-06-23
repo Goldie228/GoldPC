@@ -974,6 +974,16 @@ function checkTPM(motherboard: Product): CompatibilityWarning | null {
 }
 
 /**
+ * Normalize socket name to canonical DB form.
+ * "LGA1151 V2" → "LGA1151", "sTRX4" → "sTRX4", etc.
+ */
+function normalizeSocket(socket: string): string {
+  // LGA1151 V1 and V2 are the same physical connector — DB stores as "LGA1151"
+  if (/^LGA1151\b/i.test(socket)) return 'LGA1151';
+  return socket;
+}
+
+/**
  * Best-effort socket resolution for any product.
  * Checks in order: promoted field → specs → chipset → product name.
  * Accepts ProductSummary (with promoted fields, no specs dict) or Product (with specs dict).
@@ -986,8 +996,8 @@ export function resolveSocket(
   if (productOrSpecs && typeof productOrSpecs === 'object' && 'socket' in productOrSpecs) {
     const promoted = (productOrSpecs as { socket?: string }).socket;
     if (promoted) {
-      const upper = promoted.toUpperCase().trim();
-      if (KNOWN_SOCKETS.has(upper)) return upper;
+      const normalized = normalizeSocket(promoted.toUpperCase().trim());
+      if (KNOWN_SOCKETS.has(normalized)) return normalized;
     }
   }
 
@@ -996,13 +1006,13 @@ export function resolveSocket(
     ? (productOrSpecs as { specifications?: ProductSpecifications }).specifications
     : (productOrSpecs as ProductSpecifications | null | undefined);
   const fromSpecs = extractSocket(specs);
-  if (fromSpecs) return fromSpecs;
+  if (fromSpecs) return normalizeSocket(fromSpecs);
 
   // 3. Infer from chipset
   const chipset = (specs as Record<string, unknown>)?.chipset;
   if (typeof chipset === 'string') {
     const fromChipset = detectSocketFromChipset(chipset);
-    if (fromChipset) return fromChipset;
+    if (fromChipset) return normalizeSocket(fromChipset);
   }
 
   // 4. Infer from product name
@@ -1010,7 +1020,7 @@ export function resolveSocket(
     ? (productOrSpecs as { name?: string }).name
     : undefined);
   if (name) {
-    return detectSocketFromName(name);
+    return normalizeSocket(detectSocketFromName(name));
   }
   return null;
 }

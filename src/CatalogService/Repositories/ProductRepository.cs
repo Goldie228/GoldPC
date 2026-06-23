@@ -175,7 +175,7 @@ public class ProductRepository : IProductRepository
                 if (attr == null) continue;
 
                 var canonicalIds = await _readContext.SpecificationCanonicalValues
-                    .Where(cv => cv.AttributeId == attr.Id && allowedTexts.Contains(cv.ValueText))
+                    .Where(cv => cv.AttributeId == attr.Id && allowedTexts.Any(t => cv.ValueText.Contains(t)))
                     .Select(cv => cv.Id)
                     .ToListAsync();
                 if (canonicalIds.Count == 0) continue;
