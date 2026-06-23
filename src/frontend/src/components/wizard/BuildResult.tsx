@@ -12,12 +12,9 @@ import {
 
 import type { RecommendedBuild } from './recommendationEngine';
 import { COMPONENT_LABELS } from './types';
-import type { PCComponentType } from '@/features/pc-builder/logic/types';
-import type { PCBuilderSelectedState, SerializedBuildV2 } from '@/features/pc-builder/logic/types';
+import type { PCComponentType, PCBuilderSelectedState, SerializedBuildV2 } from '@/features/pc-builder/logic/types';
 import { STORAGE_KEY } from '@/features/pc-builder/logic/constants';
 import { getProductById } from '@/api/catalog';
-import type { PCBuilderSelectedState, SerializedBuildV2 } from '@/features/pc-builder/logic/types';
-import { STORAGE_KEY } from '@/features/pc-builder/logic/constants';
 
 const COMPONENT_ICONS: Record<string, React.ReactNode> = {
   cpu: <Cpu size={20} />,
