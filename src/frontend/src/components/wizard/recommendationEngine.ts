@@ -24,14 +24,14 @@ export interface RecommendedBuild {
 }
 
 const CATEGORY_MAP: Record<string, keyof RecommendedBuild> = {
-  'Процессоры': 'cpu',
-  'Видеокарты': 'gpu',
-  'Материнские платы': 'motherboard',
-  'Оперативная память': 'ram',
-  'Накопители': 'storage',
-  'Блоки питания': 'psu',
-  'Корпуса': 'case',
-  'Системы охлаждения': 'cooling',
+  cpu: 'cpu',
+  gpu: 'gpu',
+  motherboard: 'motherboard',
+  ram: 'ram',
+  storage: 'storage',
+  psu: 'psu',
+  case: 'case',
+  cooling: 'cooling',
 };
 
 function mockToRecommended(mock: MockBuild, purpose: Purpose, budget: Budget): RecommendedBuild {
@@ -42,7 +42,7 @@ function mockToRecommended(mock: MockBuild, purpose: Purpose, budget: Budget): R
   };
 
   for (const product of mock.components) {
-    const key = CATEGORY_MAP[product.categoryName ?? ''];
+    const key = CATEGORY_MAP[product.category ?? ''];
     if (key) {
       result[key] = product;
     }
