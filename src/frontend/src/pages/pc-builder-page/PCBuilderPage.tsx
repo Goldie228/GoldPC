@@ -17,7 +17,6 @@ import {
 } from '@/components/pc-builder';
 import { PdfExportModal } from '@/components/pc-builder/pdf-export-modal/PdfExportModal';
 import SaveConfigurationModal from '@/components/pc-builder/save-configuration-modal/SaveConfigurationModal';
-import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
 import {
   usePCBuilder,
   PC_BUILDER_SLOTS,
@@ -637,14 +636,6 @@ export function PCBuilderPage() {
       </h1>
 
       <div className="pc-builder__container pageShell pageShellWide">
-        <div className="pc-builder__breadcrumb">
-          <Breadcrumbs
-            items={[
-              { label: 'Конструктор ПК' },
-            ]}
-          />
-        </div>
-
         <h1 className="pc-builder__page-title">Конструктор ПК</h1>
 
         <div className="pc-builder__main">
