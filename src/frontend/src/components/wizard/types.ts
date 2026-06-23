@@ -108,7 +108,7 @@ export const PRESET_BUILDS: PresetBuild[] = [
   {
     id: 'cs2-1080p',
     label: 'CS2 1080p',
-    description: 'Играй в CS2 на高 FPS без компромиссов',
+    description: 'Играй в CS2 на высоком FPS без компромиссов',
     purpose: 'gaming', budget: 'economy', icon: 'Crosshair',
     tags: [' eSports', '1080p', '200+ FPS'],
     cpuPreference: 'any', gpuPreference: 'any', minRam: 16,
