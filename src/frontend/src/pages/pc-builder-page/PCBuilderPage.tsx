@@ -17,6 +17,7 @@ import {
 } from '@/components/pc-builder';
 import { PdfExportModal } from '@/components/pc-builder/pdf-export-modal/PdfExportModal';
 import SaveConfigurationModal from '@/components/pc-builder/save-configuration-modal/SaveConfigurationModal';
+import { useAuthStore } from '@/store/authStore';
 import {
   usePCBuilder,
   PC_BUILDER_SLOTS,
@@ -723,7 +724,14 @@ export function PCBuilderPage() {
                 selectedCount={selectedCount}
                 totalCount={totalCount}
                 onAddToCart={handleAddToCart}
-                onSave={() => setSaveModalOpen(true)}
+                onSave={() => {
+                  const { isAuthenticated } = useAuthStore.getState();
+                  if (!isAuthenticated) {
+                    navigate('/login');
+                    return;
+                  }
+                  setSaveModalOpen(true);
+                }}
                 onCheckout={handleCheckout}
                 onExportPdf={() => setPdfModalOpen(true)}
               />
