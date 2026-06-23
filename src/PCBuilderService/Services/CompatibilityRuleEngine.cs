@@ -136,7 +136,12 @@ public class CompatibilityRuleEngine
     public CompatibilityIssueDto? CheckRamGenerationMismatch(string mbRamType, string ramType)
     {
         if (string.IsNullOrEmpty(mbRamType) || string.IsNullOrEmpty(ramType)) return null;
-        if (!string.Equals(mbRamType, ramType, StringComparison.OrdinalIgnoreCase))
+
+        // Normalize: strip form factor suffixes ("DDR4 DIMM" → "DDR4", "DDR5 SO-DIMM" → "DDR5")
+        var mbNorm = System.Text.RegularExpressions.Regex.Replace(mbRamType.Trim().ToUpperInvariant(), @"\s+(DIMM|SO-DIMM|UDIMM|RDIMM|LRDIMM)$", "");
+        var ramNorm = System.Text.RegularExpressions.Regex.Replace(ramType.Trim().ToUpperInvariant(), @"\s+(DIMM|SO-DIMM|UDIMM|RDIMM|LRDIMM)$", "");
+
+        if (!string.Equals(mbNorm, ramNorm, StringComparison.OrdinalIgnoreCase))
         {
             var rule = _config.RamCompatibility.GenerationMismatch;
             return new CompatibilityIssueDto
@@ -424,12 +429,13 @@ public class CompatibilityRuleEngine
 
     #region Performance Warnings
 
-    public CompatibilityWarningDto? CheckRamCapacity(int capacity, string ramName)
+    public CompatibilityWarningDto? CheckRamCapacity(int capacity, int modules, string ramName)
     {
-        if (capacity <= 0) return null;
+        var totalCapacity = capacity * Math.Max(modules, 1);
+        if (totalCapacity <= 0) return null;
         foreach (var threshold in _config.PerformanceWarnings.InsufficientRam.Thresholds)
         {
-            if (capacity >= threshold.MinCapacity && capacity < threshold.MaxCapacity)
+            if (totalCapacity >= threshold.MinCapacity && totalCapacity < threshold.MaxCapacity)
             {
                 return new CompatibilityWarningDto
                 {
