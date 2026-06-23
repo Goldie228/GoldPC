@@ -85,6 +85,12 @@
   overflow: hidden;
 }
 
+.home-hero__bg-fade {
+  position: absolute;
+  inset: 0;
+  transition: opacity 1.2s ease-in-out;
+}
+
 .home-hero__bg-img,
 .home-hero__bg-video {
   position: absolute;
