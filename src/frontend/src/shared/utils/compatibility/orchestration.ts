@@ -84,7 +84,7 @@ export function runPSUCompatibilityCheck(
   _issues: CompatibilityIssue[],
   warnings: CompatibilityWarning[]
 ): void {
-  if (psu != null) { const w = checkPSU(psu, cpu, gpu, chassis); if (w != null && w.severity !== 'Error') warnings.push(w as unknown as CompatibilityWarning); }
+  if (psu != null) { const w = checkPSU(psu, cpu, gpu, chassis); if (w != null) { if (w.severity === 'Error') _issues.push(w); else warnings.push(w as unknown as CompatibilityWarning); } }
 }
 
 export function runCaseCompatibilityCheck(
