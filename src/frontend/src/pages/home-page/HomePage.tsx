@@ -302,19 +302,19 @@ export function HomePage() {
     {
       label: 'Игровой сетап PRO',
       subtitle: 'Топовая конфигурация для киберспорта на базе RTX 5090',
-      src: '/placeholders/setup-1.png',
+      src: '/placeholders/setup-1.jpg',
       alt: 'Игровой сетап PRO',
     },
     {
       label: 'Стримерская станция',
       subtitle: 'Профессиональное оборудование для стримов и контента',
-      src: '/placeholders/setup-2.png',
+      src: '/placeholders/setup-2.jpg',
       alt: 'Стримерская станция',
     },
     {
       label: 'Домашний офис',
       subtitle: 'Эргономичное рабочее место для продуктивной работы',
-      src: '/placeholders/setup-3.png',
+      src: '/placeholders/setup-3.jpg',
       alt: 'Домашний офис',
     },
   ], []);

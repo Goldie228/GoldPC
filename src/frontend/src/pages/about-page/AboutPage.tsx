@@ -121,7 +121,7 @@ export function AboutPage() {
       <div className="max-w-[1440px] mx-auto px-4 md:px-8 mb-16">
         <div className="rounded-xl overflow-hidden border border-hairline-dark bg-surface-card">
           <img
-            src="/placeholders/about/hero-store.png"
+            src="/placeholders/about/hero-store.webp"
             alt="Магазин GoldPC"
             className="w-full h-auto object-cover"
             style={{ maxHeight: '400px' }}
