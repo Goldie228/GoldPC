@@ -16,7 +16,7 @@ import { FilterSidebar } from '@/components/filter-sidebar/FilterSidebar';
 import { getProductImageUrl, hasValidProductImage } from '@/utils/image';
 import { specLabel, formatSpecValueForKey, splitSpecsAndRanges } from '@/utils/specifications';
 import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryType, extractStorageType, extractM2Slots, extractSataPorts } from '@/shared/utils/compatibility/extractors';
-import { checkRAM, detectMemoryFormFactorFromName } from '@/shared/utils/compatibility/checks';
+import { checkRAM, detectMemoryFormFactorFromName, resolveSocket } from '@/shared/utils/compatibility/checks';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '@/hooks/useProducts';
 import { catalogApi } from '@/api/catalog';
@@ -541,7 +541,34 @@ export function ComponentPickerModal({
     const mbM2Slots = isStorage && mb ? extractM2Slots(mb.specifications) : null;
     const mbSataPorts = isStorage && mb ? extractSataPorts(mb.specifications) : null;
 
+    // CPU↔Motherboard socket check
+    const cpu = componentMap.cpu;
+    const mbSocket = mb ? resolveSocket(mb.specifications, mb.name) : null;
+
     return products.map((p) => {
+      // When selecting a CPU: filter by motherboard socket
+      if (slotType === 'cpu' && mb && mbSocket) {
+        const cpuSocket = resolveSocket(enrichSummaryToProduct(p).specifications, p.name);
+        if (cpuSocket && cpuSocket !== mbSocket) {
+          return {
+            ...p, isIncompatible: true,
+            incompatibilityIssues: [`Сокет ${cpuSocket} несовместим с материнской платой (${mbSocket})`],
+          };
+        }
+      }
+
+      // When selecting a motherboard: filter by CPU socket
+      if (slotType === 'motherboard' && cpu) {
+        const cpuSocket = resolveSocket(cpu.specifications, cpu.name);
+        const mbCandidateSocket = resolveSocket(enrichSummaryToProduct(p).specifications, p.name);
+        if (cpuSocket && mbCandidateSocket && cpuSocket !== mbCandidateSocket) {
+          return {
+            ...p, isIncompatible: true,
+            incompatibilityIssues: [`Сокет ${mbCandidateSocket} несовместим с процессором (${cpuSocket})`],
+          };
+        }
+      }
+
       if (isRam && mb) {
         const ramProduct = enrichSummaryToProduct(p);
         const rt = extractMemoryType(ramProduct.specifications);

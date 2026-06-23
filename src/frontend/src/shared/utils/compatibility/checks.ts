@@ -911,6 +911,23 @@ function checkTPM(motherboard: Product): CompatibilityWarning | null {
   return null; // TPM 2.0 supported
 }
 
+/**
+ * Best-effort socket resolution for any product.
+ * Tries: specs.socket → chipset-based detection → name-based detection.
+ */
+export function resolveSocket(specs: ProductSpecifications | null | undefined, productName?: string): string | null {
+  const fromSpecs = extractSocket(specs);
+  if (fromSpecs) return fromSpecs;
+  if (specs?.chipset) {
+    const fromChipset = detectSocketFromChipset(specs.chipset);
+    if (fromChipset) return fromChipset;
+  }
+  if (productName) {
+    return detectSocketFromName(productName);
+  }
+  return null;
+}
+
 export function calculatePowerConsumption(components: ComponentMap): number {
   let t = 50;
 
