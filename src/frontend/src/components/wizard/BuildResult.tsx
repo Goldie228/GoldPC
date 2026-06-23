@@ -63,10 +63,20 @@ export default function BuildResult({ build, onBack, isResolving }: BuildResultP
         }
       }
 
+      // Build components object, skipping empty arrays
+      const components: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(state)) {
+        if (Array.isArray(value)) {
+          if (value.length > 0) components[key] = value;
+        } else if (value != null) {
+          components[key] = value;
+        }
+      }
+
       const serialized: SerializedBuildV2 = {
         v: 2,
         savedAt: new Date().toISOString(),
-        components: state,
+        components: components as SerializedBuildV2['components'],
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized));
       navigate('/pc-builder');

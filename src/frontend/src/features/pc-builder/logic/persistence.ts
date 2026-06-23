@@ -36,9 +36,19 @@ function isValidSerializedBuild(data: unknown): data is SerializedBuildV2 | Seri
     // At least validate that component entries have product and type
     for (const [, value] of Object.entries(comps)) {
       if (value == null) continue;
-      if (typeof value !== 'object') return false;
-      const entry = value as Record<string, unknown>;
-      if (!entry.product || !entry.type) return false;
+      if (!Array.isArray(value)) {
+        // Single component: must have product and type
+        if (typeof value !== 'object') return false;
+        const entry = value as Record<string, unknown>;
+        if (!entry.product || !entry.type) return false;
+      } else {
+        // Array component (ram, storage, fan): each item must have product and type
+        for (const item of value) {
+          if (item == null || typeof item !== 'object') return false;
+          const entry = item as Record<string, unknown>;
+          if (!entry.product || !entry.type) return false;
+        }
+      }
     }
     return true;
   }
