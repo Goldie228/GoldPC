@@ -19,7 +19,6 @@ import './MainLayout.css';
  */
 export function MainLayout() {
   const location = useLocation();
-  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -32,24 +31,14 @@ export function MainLayout() {
       </a>
       <Header />
       <EmailVerificationBanner />
-      <AnimatePresence mode="wait">
-        <motion.main
-          key={location.pathname}
+      <main
           id="main-content"
           className="main-layout__content pt-0 pb-0"
-          initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={reduceMotion ? undefined : { opacity: 0, y: -20 }}
-          transition={{
-            duration: reduceMotion ? 0 : 0.25,
-            ease: [0.33, 1, 0.68, 1] as const,
-          }}
         >
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>
-        </motion.main>
-      </AnimatePresence>
+      </main>
       <Footer />
       <ToastContainer />
       <ScrollToTop threshold={300} />
