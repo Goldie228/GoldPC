@@ -7,8 +7,11 @@ import type { Product, ProductSpecifications } from '@/api/types';
 import type { CompatibilityIssue, CompatibilityWarning, ComponentMap } from './types';
 import {
   extractSocket,
+  extractSocketWithFallback,
   extractMemoryType,
+  extractMemoryTypeWithFallback,
   extractMemoryFormFactor,
+  extractMemoryFormFactorWithFallback,
   extractMemorySlots,
   extractRAMCapacity,
   extractMaxMemory,
@@ -124,15 +127,8 @@ function detectSocketFromName(productName: string): string | null {
 }
 
 function checkCPUSocket(cpu: Product, mb: Product): CompatibilityIssue | null {
-  let cs = extractSocket(cpu.specifications);
-  let ms = extractSocket(mb.specifications);
-
-  // Fallback: detect socket from chipset field in specs
-  if (!cs && cpu.specifications?.chipset) cs = detectSocketFromChipset(cpu.specifications.chipset);
-  if (!ms && mb.specifications?.chipset) ms = detectSocketFromChipset(mb.specifications.chipset);
-  // Fallback: detect socket from product name
-  if (!cs) cs = detectSocketFromName(cpu.name);
-  if (!ms) ms = detectSocketFromName(mb.name);
+  const cs = extractSocketWithFallback(cpu, cpu.specifications);
+  const ms = extractSocketWithFallback(mb, mb.specifications);
 
   // Known mismatch (normalize LGA1151 variants — V1/V2 share same physical connector)
   if (cs && ms) {
@@ -279,26 +275,8 @@ function detectMemoryTypeFromChipset(chipset: string): 'DDR5' | 'DDR4' | 'DDR3' 
 }
 
 function checkRAM(ram: Product, mb: Product, quantity: number = 1): CompatibilityIssue | null {
-  let rt = extractMemoryType(ram.specifications);
-  let mt = extractMemoryType(mb.specifications);
-
-  // Fallback: detect from product name if specs don't contain DDR type
-  if (!rt) rt = detectMemoryTypeFromName(ram.name);
-
-  // Fallback chain for motherboard memory type:
-  // 1. specs.memoryType (direct)
-  // 2. chipset-based detection (most reliable)
-  // 3. socket + name-based detection
-  if (!mt) {
-    const chipset = typeof mb.specifications?.chipset === 'string' ? mb.specifications.chipset : undefined;
-    if (chipset) {
-      mt = detectMemoryTypeFromChipset(chipset);
-    }
-    if (!mt) {
-      const socket = typeof mb.specifications?.socket === 'string' ? mb.specifications.socket : undefined;
-      mt = detectMBMemoryTypeFromName(mb.name, socket, chipset);
-    }
-  }
+  const rt = extractMemoryTypeWithFallback(ram, ram.specifications);
+  const mt = extractMemoryTypeWithFallback(mb, mb.specifications);
 
   // Known memory type mismatch
   if (rt && mt && rt !== mt) {
@@ -996,17 +974,42 @@ function checkTPM(motherboard: Product): CompatibilityWarning | null {
 
 /**
  * Best-effort socket resolution for any product.
- * Tries: specs.socket → chipset-based detection → name-based detection.
+ * Checks in order: promoted field → specs → chipset → product name.
+ * Accepts ProductSummary (with promoted fields, no specs dict) or Product (with specs dict).
  */
-export function resolveSocket(specs: ProductSpecifications | null | undefined, productName?: string): string | null {
+export function resolveSocket(
+  productOrSpecs: { socket?: string; specifications?: ProductSpecifications; name?: string } | ProductSpecifications | null | undefined,
+  productName?: string,
+): string | null {
+  // 1. Check promoted field (ProductSummary.socket)
+  if (productOrSpecs && typeof productOrSpecs === 'object' && 'socket' in productOrSpecs) {
+    const promoted = (productOrSpecs as { socket?: string }).socket;
+    if (promoted) {
+      const upper = promoted.toUpperCase().trim();
+      if (KNOWN_SOCKETS.has(upper)) return upper;
+    }
+  }
+
+  // 2. Extract from specs dict
+  const specs = (productOrSpecs && typeof productOrSpecs === 'object' && 'specifications' in productOrSpecs)
+    ? (productOrSpecs as { specifications?: ProductSpecifications }).specifications
+    : (productOrSpecs as ProductSpecifications | null | undefined);
   const fromSpecs = extractSocket(specs);
   if (fromSpecs) return fromSpecs;
-  if (specs?.chipset) {
-    const fromChipset = detectSocketFromChipset(specs.chipset);
+
+  // 3. Infer from chipset
+  const chipset = (specs as Record<string, unknown>)?.chipset;
+  if (typeof chipset === 'string') {
+    const fromChipset = detectSocketFromChipset(chipset);
     if (fromChipset) return fromChipset;
   }
-  if (productName) {
-    return detectSocketFromName(productName);
+
+  // 4. Infer from product name
+  const name = productName ?? ((productOrSpecs && typeof productOrSpecs === 'object' && 'name' in productOrSpecs)
+    ? (productOrSpecs as { name?: string }).name
+    : undefined);
+  if (name) {
+    return detectSocketFromName(name);
   }
   return null;
 }
