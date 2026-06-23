@@ -133,10 +133,17 @@ export function runBottleneckAnalysis(
 export function runRAMCapacityWarning(
   ram: Product | undefined,
   _motherboard: Product | undefined,
+  ramCount: number,
   warnings: CompatibilityWarning[]
 ): void {
-  if (ram != null && extractRAMCapacity(ram.specifications) > 0 && extractRAMCapacity(ram.specifications) < 16) {
-    warnings.push({ severity: 'Info', component: ram.name, message: `${extractRAMCapacity(ram.specifications)} ГБ ОЗУ может быть недостаточно для современных задач`, suggestion: 'Рекомендуется 16 ГБ и более' });
+  if (ram != null) {
+    const stickCapacity = extractRAMCapacity(ram.specifications);
+    if (stickCapacity > 0) {
+      const totalCapacity = stickCapacity * Math.max(ramCount, 1);
+      if (totalCapacity < 16) {
+        warnings.push({ severity: 'Info', component: ram.name, message: `${totalCapacity} ГБ ОЗУ может быть недостаточно для современных задач`, suggestion: 'Рекомендуется 16 ГБ и более' });
+      }
+    }
   }
 }
 
@@ -435,6 +442,8 @@ export function checkCompatibility(components: ComponentMap, ramSticks?: Product
     }
   }
 
+  const ramCount = ramSticks ? ramSticks.length : 1;
+
   runCPUMotherboardCompatibilityCheck(cpu ?? undefined, motherboard ?? undefined, issues, warnings);
   runRAMCompatibilityCheck(ram ?? undefined, motherboard ?? undefined, issues, warnings);
   runCoolerCompatibilityCheck(cooling ?? undefined, cpu ?? undefined, chassis ?? undefined, issues, warnings);
@@ -444,7 +453,7 @@ export function checkCompatibility(components: ComponentMap, ramSticks?: Product
   runIntegratedGraphicsCheck(cpu ?? undefined, gpu ?? undefined, issues, warnings);
 
   const bottleneckPct = runBottleneckAnalysis(cpu ?? undefined, gpu ?? undefined, warnings);
-  runRAMCapacityWarning(ram ?? undefined, motherboard ?? undefined, warnings);
+  runRAMCapacityWarning(ram ?? undefined, motherboard ?? undefined, ramCount, warnings);
 
   const storageProducts = components.storage ?? [];
   if (motherboard != null) {
@@ -525,7 +534,6 @@ export function checkCompatibility(components: ComponentMap, ramSticks?: Product
   runMixedRAMCheck(ramSticks ?? [], warnings);
   
   // ===== ПОДСКАЗКИ ДЛЯ НОВИЧКОВ =====
-  const ramCount = ramSticks ? ramSticks.length : 1;
   runTips(cpu ?? undefined, gpu ?? undefined, ram ?? undefined, ramCount, cooling ?? undefined, issues, warnings);
 
   const pc = calculatePowerConsumption(components);

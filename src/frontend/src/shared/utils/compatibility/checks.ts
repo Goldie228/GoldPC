@@ -206,9 +206,10 @@ function detectMBMemoryTypeFromName(productName: string, socket?: string | null,
   const chipU = (chipset ?? '').toUpperCase();
   if (/\b(Z890|B860|H810)\b/.test(chipU)) return 'DDR5';
   if (/\b(B650E?|X670E?|X870E?|B850|A620)\b/.test(chipU)) return 'DDR5';
-  if (/\b(H610|B660|H670|Z690|B760|Z790|H770)\b/.test(chipU)) return 'DDR4';
+  if (/\b(H610|B660|H670|Z690)\b/.test(chipU)) return 'DDR4';
+  if (/\b(B760|Z790|H770)\b/.test(chipU)) return 'DDR5';
   if (/\b(B460|H470|H410|Z490|B560|H510|H570|Z590)\b/.test(chipU)) return 'DDR4';
-  if (/\b(B250|H270|Z270|B360|H310|H370|Z370|Z390|B365)\b/.test(chipU)) return 'DDR4';
+  if (/\b(B250|H270|Z270|B360|H310|H370|H410|Z370|Z390|B365)\b/.test(chipU)) return 'DDR4';
   if (/\b(H61|B75|H77|Z77|Z75|B85|H81|H87|Z87|Z97|H97)\b/.test(chipU)) return 'DDR3';
   if (/\b(HM[567]\d|QM[567]\d)\b/.test(chipU)) return 'DDR3';
   if (/\b(HM8\d|QM8\d|HM9\d|QM9\d)\b/.test(chipU)) return 'DDR3';
@@ -235,9 +236,10 @@ function detectMBMemoryTypeFromName(productName: string, socket?: string | null,
     return 'DDR4';
   }
   if (/\b(B850|X870E?|B650E?|X670E?|A620)\b/.test(upper)) return 'DDR5';
-  if (/\b(B760|H610|B660|H670|H770)\b/.test(upper)) return 'DDR4';
+  if (/\b(H610|B660|H670)\b/.test(upper)) return 'DDR4';
+  if (/\b(B760|H770)\b/.test(upper)) return 'DDR5';
   if (/\b(B560|H510|H570|Z590|B460|H470|H410|Z490)\b/.test(upper)) return 'DDR4';
-  if (/\b(B360|H310|H370|Z370|Z390|B365|B250|H270|Z270)\b/.test(upper)) return 'DDR4';
+  if (/\b(B360|H310|H370|H410|Z370|Z390|B365|B250|H270|Z270)\b/.test(upper)) return 'DDR4';
   if (/\b(H81|Z87|Z97|H97|B85|H77|Z77|H61|B75|Z75)\b/.test(upper)) return 'DDR3';
   if (/\b(X99|X299)\b/.test(upper)) return 'DDR4';
   if (/\b(TRX40|WRX80|TRX50)\b/.test(upper)) return 'DDR4';
@@ -249,15 +251,19 @@ function detectMBMemoryTypeFromName(productName: string, socket?: string | null,
  * Determine DDR type from chipset: maps chipset family to memory generation.
  */
 function detectMemoryTypeFromChipset(chipset: string): 'DDR5' | 'DDR4' | 'DDR3' | null {
-  const c = chipset.toUpperCase().trim();
+  // Strip trailing M (Micro-ATX form factor indicator, not chipset variant): H310M → H310, B450M → B450
+  // Preserves real chipset suffixes like B650E, X670E
+  const c = chipset.toUpperCase().trim().replace(/([A-Z]\d{3})M$/i, '$1');
   // Intel LGA1851 → DDR5
   if (/\b(Z890|B860|H810)\b/.test(c)) return 'DDR5';
-  // Intel LGA1700 (600/700-series) → DDR4 or DDR5, default DDR4
-  if (/\b(H610|B660|H670|Z690|B760|Z790|H770)\b/.test(c)) return 'DDR4';
+  // Intel LGA1700 (600-series) → DDR4
+  if (/\b(H610|B660|H670|Z690)\b/.test(c)) return 'DDR4';
+  // Intel LGA1700 (700-series) → DDR5
+  if (/\b(B760|Z790|H770)\b/.test(c)) return 'DDR5';
   // Intel LGA1200 (400/500-series) → DDR4
   if (/\b(B460|H470|H410|Z490|B560|H510|H570|Z590)\b/.test(c)) return 'DDR4';
   // Intel LGA1151 (200/300-series) → DDR4
-  if (/\b(B250|H270|Z270|B360|H310|H370|Z370|Z390|B365)\b/.test(c)) return 'DDR4';
+  if (/\b(B250|H270|Z270|B360|H310|H370|H410|Z370|Z390|B365)\b/.test(c)) return 'DDR4';
   // Intel LGA1155/1150 → DDR3
   if (/\b(H61|B75|H77|Z77|Z75|B85|H81|H87|Z87|Z97|H97)\b/.test(c)) return 'DDR3';
   // Intel mobile 50/60/70 series → DDR3
@@ -276,8 +282,24 @@ function detectMemoryTypeFromChipset(chipset: string): 'DDR5' | 'DDR4' | 'DDR3' 
 }
 
 function checkRAM(ram: Product, mb: Product, quantity: number = 1): CompatibilityIssue | null {
-  const rt = extractMemoryTypeWithFallback(ram, ram.specifications);
-  const mt = extractMemoryTypeWithFallback(mb, mb.specifications);
+  let rt = extractMemoryTypeWithFallback(ram, ram.specifications);
+  let mt = extractMemoryTypeWithFallback(mb, mb.specifications);
+
+  // Fallback: detect memory type from chipset or socket (works even if specs are empty)
+  if (!mt) {
+    const chipset = (mb.specifications?.['chipset'] as string) ?? '';
+    const chipsetType = detectMemoryTypeFromChipset(chipset);
+    // Also try extracting chipset from product name (e.g. "AFB250" → "B250")
+    const nameChipsetMatch = mb.name.match(/([ABHZ]\d{3}[A-Z]?)\b/i);
+    const nameChipsetType = nameChipsetMatch ? detectMemoryTypeFromChipset(nameChipsetMatch[1]) : null;
+    // Try socket-based detection
+    const socket = extractSocket(mb, mb.specifications);
+    const socketType = socket ? detectMemoryTypeFromChipset(socket) : null;
+    mt = chipsetType ?? nameChipsetType ?? socketType ?? null;
+  }
+  if (!rt) {
+    rt = extractMemoryType(ram.specifications) ?? detectMemoryTypeFromName(ram.name);
+  }
 
   // Known memory type mismatch
   if (rt && mt && rt !== mt) {
@@ -483,8 +505,8 @@ function checkCoolerHeightCheck(cooling: Product, chassis: Product): Compatibili
 }
 
 function checkIG(cpu: Product, gpu: Product | null | undefined): CompatibilityWarning | null {
-  if (gpu || hasIntegratedGraphics(cpu.specifications)) return null;
-  return { severity: 'Warning', component: cpu.name, message: 'No GPU selected and CPU has no integrated graphics', suggestion: 'Add a discrete GPU or choose CPU with iGPU' };
+  if (gpu || hasIntegratedGraphics(cpu.specifications, cpu.name)) return null;
+  return { severity: 'Warning', component: cpu.name, message: 'Процессор не имеет встроенной графики', suggestion: 'Добавьте дискретную видеокарту или выберите процессор со встроенной графикой' };
 }
 
 /**
@@ -865,7 +887,7 @@ function checkPSUBrand(psu: Product): CompatibilityWarning | null {
  */
 function checkNoIGCPU(cpu: Product, gpu: Product | null | undefined): CompatibilityIssue | null {
   if (gpu) return null;
-  if (hasIntegratedGraphics(cpu.specifications)) return null;
+  if (hasIntegratedGraphics(cpu.specifications, cpu.name)) return null;
   return {
     severity: 'Error',
     component1: cpu.name,
@@ -899,7 +921,7 @@ function motherboardHasVideoOutput(specs: ProductSpecifications | undefined): bo
  */
 function checkNoVideoOutput(cpu: Product, motherboard: Product, gpu: Product | null | undefined): CompatibilityIssue | null {
   if (gpu) return null;
-  if (hasIntegratedGraphics(cpu.specifications)) return null;
+  if (hasIntegratedGraphics(cpu.specifications, cpu.name)) return null;
   if (motherboardHasVideoOutput(motherboard.specifications)) return null;
   return {
     severity: 'Error',

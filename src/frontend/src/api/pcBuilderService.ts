@@ -93,10 +93,13 @@ export function buildComponentsDTO(components: SelectedComponentsState): PCCompo
   if (components.case) dto.case = productToDTO(components.case.product);
   if (components.cooling) dto.cooling = productToDTO(components.cooling.product);
 
-  // Отправляем первый модуль ОЗУ (бэкенд currently принимает только один Ram)
-  // TODO: when backend supports multiple RAM sticks, change to send all
+  // Отправляем первый модуль ОЗУ с количеством планок
   if (components.ram.length > 0) {
     dto.ram = productToDTO(components.ram[0].product);
+    // Override modules field with actual stick count for capacity calculation
+    if (dto.ram && dto.ram.specifications) {
+      dto.ram.specifications.modules = components.ram.length;
+    }
   }
 
   if (components.storage.length > 0) {

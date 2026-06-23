@@ -15,7 +15,7 @@ import { Pagination } from '@/components/catalog/Pagination';
 import { FilterSidebar } from '@/components/filter-sidebar/FilterSidebar';
 import { getProductImageUrl, hasValidProductImage } from '@/utils/image';
 import { specLabel, formatSpecValueForKey, splitSpecsAndRanges } from '@/utils/specifications';
-import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryType, extractMemoryTypeWithFallback, extractStorageType, extractM2Slots, extractSataPorts } from '@/shared/utils/compatibility/extractors';
+import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryFormFactorWithFallback, extractMemoryType, extractMemoryTypeWithFallback, extractStorageType, extractM2Slots, extractSataPorts } from '@/shared/utils/compatibility/extractors';
 import { checkRAM, checkCooler, detectMemoryFormFactorFromName, resolveSocket } from '@/shared/utils/compatibility/checks';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '@/hooks/useProducts';
@@ -220,7 +220,7 @@ function PickerProductCard({ product, isSelected, isCompatible, onSelect, onOpen
               <span className="text-[0.64rem] text-muted-foreground line-through">{product.oldPrice.toLocaleString('ru-BY')}</span>
             )}
           </div>
-          <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border border-gold bg-transparent text-gold cursor-pointer whitespace-nowrap transition-all ${isSelected ? "text-black font-bold shadow-sm" : ""}`} style={isSelected ? { backgroundColor: 'var(--accent)' } : undefined} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
+          <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border cursor-pointer whitespace-nowrap transition-all ${isSelected ? "border-gold bg-gold text-black font-bold shadow-sm" : "border-gold bg-transparent text-gold hover:bg-gold/10"}`} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
             {isSelected ? 'Выбрано' : outOfStock ? 'Нет в наличии' : 'Выбрать'}
           </button>
         </div>
@@ -266,7 +266,7 @@ function PickerProductCardCompact({ product, isSelected, isCompatible, onSelect,
             <span className="text-[0.62rem] text-muted-foreground line-through">{product.oldPrice.toLocaleString('ru-BY')}</span>
           )}
         </div>
-          <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border border-gold bg-transparent text-gold cursor-pointer whitespace-nowrap transition-all ${isSelected ? "text-black font-bold shadow-sm" : ""}`} style={isSelected ? { backgroundColor: 'var(--accent)' } : undefined} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
+          <button type="button" className={`px-3 py-1 text-[0.68rem] font-semibold rounded-md border cursor-pointer whitespace-nowrap transition-all ${isSelected ? "border-gold bg-gold text-black font-bold shadow-sm" : "border-gold bg-transparent text-gold hover:bg-gold/10"}`} onClick={isCompatible === false ? undefined : () => onSelect(product)}>
           {isSelected ? 'Выбрано' : outOfStock ? 'Нет в наличии' : 'Выбрать'}
         </button>
         {outOfStock && <span className="text-[0.62rem] text-price-rise">Нет в наличии</span>}
@@ -382,9 +382,14 @@ export function ComponentPickerModal({
       if (s) out.socket = s;
     }
     if (slotType === 'ram' && buildContext?.motherboard?.product) {
-      // Фильтруем по типу памяти на сервере, чтобы пагинация была корректной
-      const mt = extractMemoryTypeWithFallback(buildContext.motherboard.product, buildContext.motherboard.product.specifications);
-      if (mt) out.type = mt;
+      // RAM attribute key is 'type' with combined values like "DDR4 DIMM", "DDR5 SO-DIMM"
+      const mb = buildContext.motherboard.product;
+      const mt = extractMemoryTypeWithFallback(mb, mb.specifications);
+      if (mt) {
+        const ff = extractMemoryFormFactorWithFallback(mb, mb.specifications);
+        // Desktop boards always use DIMM (memoryFormFactor is often null in API)
+        out.type = ff ? `${mt} ${ff}` : `${mt} DIMM`;
+      }
     }
     // Выбор БП: устанавливаем минимальную мощность на основе GPU+CPU
     if (slotType === 'psu' && (buildContext?.gpu?.product || buildContext?.cpu?.product)) {

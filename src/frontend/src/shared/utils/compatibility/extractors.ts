@@ -92,8 +92,9 @@ export function extractMemoryType(specs: ProductSpecifications | undefined): Mem
     if (chipsetUpper.includes('AM5') || chipsetUpper.includes('B850') || chipsetUpper.includes('X870E')) return 'DDR5';
     if (chipsetUpper.includes('B650') || chipsetUpper.includes('X670') || chipsetUpper.includes('A620')) return 'DDR5';
     if (chipsetUpper.includes('B860') || chipsetUpper.includes('Z890') || chipsetUpper.includes('H810')) return 'DDR5';
+    if (chipsetUpper.includes('B760') || chipsetUpper.includes('Z790') || chipsetUpper.includes('H770')) return 'DDR5';
     if (/\bHM[5678]\d/.test(chipsetUpper)) return 'DDR3';
-    // Всё остальное (AM4, LGA1151, LGA1200, LGA1700, B760, Z790, H610, A520, H310 и т.д.) → DDR4
+    // Всё остальное (AM4, LGA1151, LGA1200, LGA1700, H610, A520, H310 и т.д.) → DDR4
     if (chipset || socket) return 'DDR4';
   }
   return null;
@@ -122,8 +123,16 @@ export function extractChipset(specs: ProductSpecifications | undefined): string
 export function extractTDP(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'tdp', 'TDP', 'power_consumption') ?? 0; }
 export function extractPSUWattage(specs: ProductSpecifications | undefined): number { return getNumber(specs, 'wattage', 'power', 'moshchnost') ?? 0; }
 
-export function hasIntegratedGraphics(specs: ProductSpecifications | undefined): boolean {
-  if (!specs) return false;
+export function hasIntegratedGraphics(specs: ProductSpecifications | undefined, cpuName?: string): boolean {
+  if (!specs) {
+    // Fallback: Intel CPUs without "F" suffix have iGPU; AMD "G"/"GE" suffixes have iGPU
+    if (cpuName) {
+      const upper = cpuName.toUpperCase();
+      if (/INTEL\s+(CORE\s+)?(I[3579]|CELERON|PENTIUM)/i.test(upper) && !/\b\d{4}F\b/.test(upper)) return true;
+      if (/AMD\s+RYZEN\s+\d\s+\d{4}[GE]\b/i.test(upper)) return true;
+    }
+    return false;
+  }
   const rec = specs as Record<string, unknown>;
   const ig = rec.integratedGraphics ?? rec.integrated_graphics;
   if (typeof ig === 'boolean') return ig;
@@ -131,6 +140,12 @@ export function hasIntegratedGraphics(specs: ProductSpecifications | undefined):
     const l = ig.trim().toLowerCase();
     if (l === 'true' || l === 'да' || l === 'yes') return true;
     if (l.length > 0 && l !== 'false' && l !== 'нет' && l !== 'no' && l !== 'none' && l !== 'отсутствует' && l !== 'нет встроенной' && l !== 'нет графического ядра') return true;
+  }
+  // Fallback: Intel CPUs without "F" suffix have iGPU; AMD "G"/"GE" suffixes have iGPU
+  if (cpuName) {
+    const upper = cpuName.toUpperCase();
+    if (/INTEL\s+(CORE\s+)?(I[3579]|CELERON|PENTIUM)/i.test(upper) && !/\b\d{4}F\b/.test(upper)) return true;
+    if (/AMD\s+RYZEN\s+\d\s+\d{4}[GE]\b/i.test(upper)) return true;
   }
   return false;
 }

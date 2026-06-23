@@ -493,8 +493,13 @@ export function PCBuilderPage() {
         break;
       case 'gpu':
         if (specs.memory) {
+          const mem = String(specs.memory);
           const memType = specs.memoryType ? ` ${specs.memoryType}` : '';
-          result.push(`${specs.memory}GB${memType}`);
+          if (/[ГгТтKkMm][БбBb]/i.test(mem) || /\b(TB|GB|MB)\b/i.test(mem)) {
+            result.push(`${mem}${memType}`);
+          } else {
+            result.push(`${mem} GB${memType}`);
+          }
         }
         if (specs.tdp) result.push(`${specs.tdp}W`);
         break;
@@ -505,7 +510,14 @@ export function PCBuilderPage() {
         break;
       case 'ram':
         if (specs.memoryType) result.push(specs.memoryType as string);
-        if (specs.capacity) result.push(`${specs.capacity}GB`);
+        if (specs.capacity) {
+          const cap = String(specs.capacity);
+          if (/[ГгТтKkMm][БбBb]/i.test(cap) || /\b(TB|GB|MB)\b/i.test(cap)) {
+            result.push(cap);
+          } else {
+            result.push(`${cap} GB`);
+          }
+        }
         if (specs.speed) result.push(`${specs.speed} MHz`);
         break;
       case 'storage': {
