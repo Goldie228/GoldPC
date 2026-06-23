@@ -184,7 +184,7 @@ const navItems: NavItem[] = [
                 </NavLink>
               )}
 
-              {currentRole === 'Master' && (
+              {['Master', 'Admin'].includes(currentRole ?? '') && (
                 <NavLink
                   to="/master/tickets"
                   onClick={closeSidebar}
@@ -196,7 +196,7 @@ const navItems: NavItem[] = [
                 </NavLink>
               )}
 
-              {currentRole === 'Accountant' && (
+              {['Accountant', 'Admin'].includes(currentRole ?? '') && (
                 <>
                   <NavLink
                     to="/accountant/reports"

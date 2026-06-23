@@ -96,6 +96,10 @@ export default defineConfig({
         target: 'http://localhost:5007',
         changeOrigin: true,
       },
+      '/api/v1/reports': {
+        target: 'http://localhost:5007',
+        changeOrigin: true,
+      },
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,

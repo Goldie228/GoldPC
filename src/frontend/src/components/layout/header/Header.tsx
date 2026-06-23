@@ -269,8 +269,8 @@ export function Header(): ReactElement {
             </Link>
           )}
 
-          {/* Кнопка панели мастера — для Master */}
-          {isAuthenticated && user?.role === 'Master' && (
+          {/* Кнопка панели мастера — для Master, Admin */}
+          {isAuthenticated && ['Master', 'Admin'].includes(user?.role ?? '') && (
             <Link
               to="/master/tickets"
               className="relative w-10 h-10 flex items-center justify-center bg-transparent border border-transparent rounded-xl text-muted-text cursor-pointer transition-all hover:border-gold/30 hover:text-gold hover:bg-surface-elevated hidden md:flex"
@@ -585,8 +585,8 @@ export function Header(): ReactElement {
                         </>
                       )}
 
-                      {/* Панель мастера — для Master */}
-                      {user?.role === 'Master' && (
+                      {/* Панель мастера — для Master, Admin */}
+                      {['Master', 'Admin'].includes(user?.role ?? '') && (
                         <>
                           <div className="h-px bg-hairline-dark mx-4" />
                           <Link to="/master/tickets" className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleCloseMenu}>

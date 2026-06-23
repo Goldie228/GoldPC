@@ -324,6 +324,19 @@ export const servicesApi = {
     }
   },
 
+  /** Получить неназначенные заявки (для мастеров — самоназначение) */
+  getAvailableServices: async (
+    page: number = 1,
+    pageSize: number = 15,
+  ): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
+    try {
+      const response = await goldpcApi.getServicesUnassigned({ page, pageSize });
+      return extractData<{ items: ServiceRequestDto[]; totalCount: number }>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch available requests: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  },
+
   /** Закрыть заявку */
   closeRequest: async (requestId: string, data?: { comment?: string }): Promise<ServiceRequestDto> => {
     try {

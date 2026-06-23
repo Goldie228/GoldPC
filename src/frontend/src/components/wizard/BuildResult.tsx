@@ -14,7 +14,6 @@ import type { RecommendedBuild } from './recommendationEngine';
 import { COMPONENT_LABELS } from './types';
 import type { PCComponentType, PCBuilderSelectedState, SerializedBuildV2 } from '@/features/pc-builder/logic/types';
 import { STORAGE_KEY } from '@/features/pc-builder/logic/constants';
-import { getProductById } from '@/api/catalog';
 
 const COMPONENT_ICONS: Record<string, React.ReactNode> = {
   cpu: <Cpu size={20} />,
@@ -41,34 +40,24 @@ export default function BuildResult({ build, onBack, isResolving }: BuildResultP
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const handleOpenInBuilder = useCallback(async () => {
-    setLoading(true);
+  const handleOpenInBuilder = useCallback(() => {
     try {
-      const typeMap = [
-        ['cpu', build.cpu?.id],
-        ['gpu', build.gpu?.id],
-        ['motherboard', build.motherboard?.id],
-        ['ram', build.ram?.id],
-        ['storage', build.storage?.id],
-        ['psu', build.psu?.id],
-        ['case', build.case?.id],
-        ['cooling', build.cooling?.id],
+      const items = [
+        ['cpu', build.cpu], ['gpu', build.gpu],
+        ['motherboard', build.motherboard], ['ram', build.ram],
+        ['storage', build.storage], ['psu', build.psu],
+        ['case', build.case], ['cooling', build.cooling],
       ] as const;
 
-      // Fetch full product data from API (with images, specs, etc.)
-      const fetched = await Promise.all(
-        typeMap.map(([type, id]) =>
-          id ? getProductById(id).then(p => ([type, p] as const)).catch(() => [type, null] as const) : [type, null] as const
-        )
-      );
-
       const state: PCBuilderSelectedState = { ram: [], storage: [], fan: [] };
-      for (const [type, product] of fetched) {
+      for (const [type, product] of items) {
         if (!product) continue;
+        // Ensure category matches builder type (API returns 'processors' etc)
+        const normalizedProduct = { ...product, category: type };
         if (type === 'ram' || type === 'storage') {
-          state[type].push({ productId: product.id, product, type });
+          state[type].push({ productId: normalizedProduct.id, product: normalizedProduct, type });
         } else {
-          state[type] = { productId: product.id, product, type };
+          state[type] = { productId: normalizedProduct.id, product: normalizedProduct, type };
         }
       }
 

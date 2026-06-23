@@ -265,7 +265,7 @@ function AvailableTicketCard({
           {formatDateTime(ticket.createdAt)}
         </span>
         <span className="font-medium text-foreground">
-          {ticket.estimatedCost.toLocaleString('ru-RU')} ₽
+          {ticket.estimatedCost.toLocaleString('ru-RU')} BYN
         </span>
       </div>
 
