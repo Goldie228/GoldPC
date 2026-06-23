@@ -94,6 +94,10 @@ public class ProductRepository : IProductRepository
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
             .Include(p => p.Images)
+            .Include(p => p.SpecificationValues)
+                .ThenInclude(sv => sv.Attribute)
+            .Include(p => p.SpecificationValues)
+                .ThenInclude(sv => sv.CanonicalValue)
             .Where(p => p.IsActive && p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)));
 
         // Фильтрация по ID категории
