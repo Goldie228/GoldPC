@@ -18,7 +18,7 @@ export function StepPreferences({
           <div className="flex items-center gap-2 text-title-sm font-semibold text-body-text"><Cpu size={20} /> Процессор</div>
           <div className="flex flex-wrap gap-2.5">
             {(['amd', 'intel', 'any'] as CpuPreference[]).map((pref) => (
-              <button key={pref} className={`px-5 py-2.5 bg-surface-elevated border rounded-md text-body-text text-body-md cursor-pointer transition-all duration-200 hover:border-gold ${cpuPreference === pref ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark'}`} onClick={() => onCpuChange(pref)}>
+              <button key={pref} className={`px-5 py-2.5 bg-surface-elevated border rounded-md text-body-md cursor-pointer transition-all duration-200 hover:border-gold ${cpuPreference === pref ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark text-body-text'}`} onClick={() => onCpuChange(pref)}>
                 {pref === 'amd' ? 'AMD' : pref === 'intel' ? 'Intel' : 'Любой'}
               </button>
             ))}
@@ -28,7 +28,7 @@ export function StepPreferences({
           <div className="flex items-center gap-2 text-title-sm font-semibold text-body-text"><Monitor size={20} /> Видеокарта</div>
           <div className="flex flex-wrap gap-2.5">
             {(['amd', 'nvidia', 'any'] as GpuPreference[]).map((pref) => (
-              <button key={pref} className={`px-5 py-2.5 bg-surface-elevated border rounded-md text-body-text text-body-md cursor-pointer transition-all duration-200 hover:border-gold ${gpuPreference === pref ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark'}`} onClick={() => onGpuChange(pref)}>
+              <button key={pref} className={`px-5 py-2.5 bg-surface-elevated border rounded-md text-body-md cursor-pointer transition-all duration-200 hover:border-gold ${gpuPreference === pref ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark text-body-text'}`} onClick={() => onGpuChange(pref)}>
                 {pref === 'amd' ? 'AMD' : pref === 'nvidia' ? 'NVIDIA' : 'Любая'}
               </button>
             ))}
@@ -38,7 +38,7 @@ export function StepPreferences({
           <div className="flex items-center gap-2 text-title-sm font-semibold text-body-text"><MemoryStick size={20} /> Минимальный объём ОЗУ</div>
           <div className="flex flex-wrap gap-2.5">
             {[8, 16, 32, 64].map((ram) => (
-              <button key={ram} className={`px-5 py-2.5 bg-surface-elevated border rounded-md text-body-text text-body-md cursor-pointer transition-all duration-200 hover:border-gold ${minRam === ram ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark'}`} onClick={() => onRamChange(ram)}>
+              <button key={ram} className={`px-5 py-2.5 bg-surface-elevated border rounded-md text-body-md cursor-pointer transition-all duration-200 hover:border-gold ${minRam === ram ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark text-body-text'}`} onClick={() => onRamChange(ram)}>
                 {ram} ГБ
               </button>
             ))}

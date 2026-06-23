@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
-import { Monitor, Briefcase, Film, Sparkles } from 'lucide-react';
+import { Monitor, Briefcase, Film, Radio, Tv, Server } from 'lucide-react';
 import { type Purpose, PURPOSE_OPTIONS } from './types';
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   Monitor: <Monitor size={28} />, Briefcase: <Briefcase size={28} />,
-  Film: <Film size={28} />, Sparkles: <Sparkles size={28} />,
+  Film: <Film size={28} />, Radio: <Radio size={28} />,
+  Tv: <Tv size={28} />, Server: <Server size={28} />,
 };
 
 export function StepPurpose({ selected, onSelect }: { selected: Purpose | null; onSelect: (p: Purpose) => void }) {

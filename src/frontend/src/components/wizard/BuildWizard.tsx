@@ -169,7 +169,7 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
   if (loading || result || error) {
     if (loading) {
       return (
-        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6">
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 px-6 py-10">
           <Loader2 size={48} className="animate-spin text-gold" />
           <div className="text-title-md font-semibold text-on-dark">Подбираем сборку...</div>
           {loadingProgress.category && (
@@ -207,7 +207,7 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto px-6 py-10">
       {/* Progress bar */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-3">
@@ -289,8 +289,8 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                     {(['atx', 'micro-atx', 'mini-itx', 'any'] as FormFactor[]).map((ff) => (
                       <button
                         key={ff}
-                        className={`px-4 py-2 bg-surface-elevated border rounded-md text-body-text text-body-sm cursor-pointer transition-all duration-200 hover:border-gold ${
-                          state.formFactor === ff ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark'
+                        className={`px-4 py-2 bg-surface-elevated border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
+                          state.formFactor === ff ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark text-body-text'
                         }`}
                         onClick={() => handleFormFactorChange(ff)}
                       >
@@ -310,8 +310,8 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                     ] as [NoiseLevel, string][]).map(([val, label]) => (
                       <button
                         key={val}
-                        className={`px-4 py-2 bg-surface-elevated border rounded-md text-body-text text-body-sm cursor-pointer transition-all duration-200 hover:border-gold ${
-                          state.noiseLevel === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark'
+                        className={`px-4 py-2 bg-surface-elevated border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
+                          state.noiseLevel === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark text-body-text'
                         }`}
                         onClick={() => handleNoiseChange(val)}
                       >
@@ -331,8 +331,8 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                     ] as [RgbPreference, string][]).map(([val, label]) => (
                       <button
                         key={val}
-                        className={`px-4 py-2 bg-surface-elevated border rounded-md text-body-text text-body-sm cursor-pointer transition-all duration-200 hover:border-gold ${
-                          state.rgbPreference === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark'
+                        className={`px-4 py-2 bg-surface-elevated border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
+                          state.rgbPreference === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark text-body-text'
                         }`}
                         onClick={() => handleRgbChange(val)}
                       >
@@ -352,8 +352,8 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                     ] as [CoolingPreference, string][]).map(([val, label]) => (
                       <button
                         key={val}
-                        className={`px-4 py-2 bg-surface-elevated border rounded-md text-body-text text-body-sm cursor-pointer transition-all duration-200 hover:border-gold ${
-                          state.coolingPreference === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark'
+                        className={`px-4 py-2 bg-surface-elevated border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
+                          state.coolingPreference === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark text-body-text'
                         }`}
                         onClick={() => handleCoolingChange(val)}
                       >
