@@ -3,7 +3,7 @@
  * total price, and navigation to PC Builder with pre-selected components.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Cpu, Monitor, CircuitBoard, MemoryStick, HardDrive,
@@ -13,6 +13,9 @@ import {
 import type { RecommendedBuild } from './recommendationEngine';
 import { COMPONENT_LABELS } from './types';
 import type { PCComponentType } from '@/features/pc-builder/logic/types';
+import type { PCBuilderSelectedState, SerializedBuildV2 } from '@/features/pc-builder/logic/types';
+import { STORAGE_KEY } from '@/features/pc-builder/logic/constants';
+import { getProductById } from '@/api/catalog';
 import type { PCBuilderSelectedState, SerializedBuildV2 } from '@/features/pc-builder/logic/types';
 import { STORAGE_KEY } from '@/features/pc-builder/logic/constants';
 
@@ -39,22 +42,31 @@ interface BuildResultProps {
 
 export default function BuildResult({ build, onBack, isResolving }: BuildResultProps) {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
   const handleOpenInBuilder = useCallback(async () => {
+    setLoading(true);
     try {
-      const state: PCBuilderSelectedState = { ram: [], storage: [], fan: [] };
-      const items = [
-        ['cpu', build.cpu],
-        ['gpu', build.gpu],
-        ['motherboard', build.motherboard],
-        ['ram', build.ram],
-        ['storage', build.storage],
-        ['psu', build.psu],
-        ['case', build.case],
-        ['cooling', build.cooling],
+      const typeMap = [
+        ['cpu', build.cpu?.id],
+        ['gpu', build.gpu?.id],
+        ['motherboard', build.motherboard?.id],
+        ['ram', build.ram?.id],
+        ['storage', build.storage?.id],
+        ['psu', build.psu?.id],
+        ['case', build.case?.id],
+        ['cooling', build.cooling?.id],
       ] as const;
 
-      for (const [type, product] of items) {
+      // Fetch full product data from API (with images, specs, etc.)
+      const fetched = await Promise.all(
+        typeMap.map(([type, id]) =>
+          id ? getProductById(id).then(p => ([type, p] as const)).catch(() => [type, null] as const) : [type, null] as const
+        )
+      );
+
+      const state: PCBuilderSelectedState = { ram: [], storage: [], fan: [] };
+      for (const [type, product] of fetched) {
         if (!product) continue;
         if (type === 'ram' || type === 'storage') {
           state[type].push({ productId: product.id, product, type });
@@ -63,7 +75,6 @@ export default function BuildResult({ build, onBack, isResolving }: BuildResultP
         }
       }
 
-      // Build components object, skipping empty arrays
       const components: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(state)) {
         if (Array.isArray(value)) {
@@ -82,6 +93,8 @@ export default function BuildResult({ build, onBack, isResolving }: BuildResultP
       navigate('/pc-builder');
     } catch (err) {
       console.error('Failed to save build to localStorage:', err);
+    } finally {
+      setLoading(false);
     }
   }, [build, navigate]);
 
@@ -157,10 +170,11 @@ export default function BuildResult({ build, onBack, isResolving }: BuildResultP
 
       {/* Actions */}
       <button
-        className="w-full py-3.5 px-6 bg-gold text-gold-ink font-semibold text-body-md rounded-xl cursor-pointer transition-all duration-200 hover:brightness-110 shadow-[0_0_20px_rgba(252,213,53,0.15)]"
+        className="w-full py-3.5 px-6 bg-gold text-gold-ink font-semibold text-body-md rounded-xl cursor-pointer transition-all duration-200 hover:brightness-110 shadow-[0_0_20px_rgba(252,213,53,0.15)] disabled:opacity-50 flex items-center justify-center gap-2"
         onClick={handleOpenInBuilder}
+        disabled={loading}
       >
-        Открыть в конструкторе
+        {loading ? <><Loader2 size={18} className="animate-spin" /> Загрузка...</> : 'Открыть в конструкторе'}
       </button>
     </div>
   );
