@@ -171,7 +171,152 @@ public class CompatibilityService : ICompatibilityService
     private sealed class CoolerSpecification { public string Name { get; set; } = ""; public string Type { get; set; } = ""; public int Height { get; set; } public int MaxTdp { get; set; } public List<string> SupportedSockets { get; set; } = new(); public int RamClearance { get; set; } }
     #endregion
 
+    /// <summary>
+    /// Detects RAM type from chipset name.
+    /// B250/B350/H110/H310 → DDR4, B660/H670/Z690 → DDR4 or DDR5, B760/Z790 → DDR5
+    /// </summary>
+    private static string? DetectRamTypeFromChipset(string chipset)
+    {
+        if (string.IsNullOrWhiteSpace(chipset)) return null;
+        var upper = chipset.ToUpperInvariant();
+
+        // DDR5 chipsets
+        if (System.Text.RegularExpressions.Regex.IsMatch(upper, @"^(B760|H770|Z790|B860|H870|Z890|X670|B650|X870)"))
+            return "DDR5";
+
+        // DDR4 chipsets (includes B660/Z690/H670 which can be DDR4 or DDR5 — default DDR4)
+        if (System.Text.RegularExpressions.Regex.IsMatch(upper, @"^(B250|B350|B450|B550|B660|H110|H310|H370|H410|H470|H510|H570|H610|H660|H670|Z170|Z270|Z370|Z390|Z490|Z590|Z690|X370|X470|X570)"))
+            return "DDR4";
+
+        return null;
+    }
+
+    /// <summary>
+    /// Extracts chipset name from product name. E.g. "Arktek AK-H310M EG" → "H310"
+    /// Works even when specifications are empty.
+    /// </summary>
+    private static string ExtractChipsetNameFromProduct(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "";
+        var match = System.Text.RegularExpressions.Regex.Match(name, @"([A-Z]\d{3}[A-Z]?)");
+        return match.Success ? match.Value : "";
+    }
+
+    private static bool IsLGA1151Family(string? socket)
+    {
+        return socket != null && socket.ToUpperInvariant().Contains("LGA1151");
+    }
+
+    /// <summary>
+    /// Determines LGA1151 generation (v1 vs v2) from chipset.
+    /// 100/200-series = v1 (Skylake/Kaby Lake), 300-series = v2 (Coffee Lake)
+    /// </summary>
+    private static string? DetectLGA1151Generation(CpuSpecification cpu)
+    {
+        var nameUpper = (cpu.Name ?? "").ToUpperInvariant();
+
+        // 8th/9th gen = v2 (Coffee Lake): i3-8xxx, i5-8xxx/9xxx, i7-8xxx/9xxx, i9-9xxx
+        if (System.Text.RegularExpressions.Regex.IsMatch(nameUpper, @"\bI[3579]-[89]\d{3}")) return "v2";
+
+        // 6th/7th gen = v1 (Skylake/Kaby Lake): i3-6xxx/7xxx, i5-6xxx/7xxx, i7-6xxx/7xxx
+        if (System.Text.RegularExpressions.Regex.IsMatch(nameUpper, @"\bI[3579]-[67]\d{3}")) return "v1";
+
+        // Celeron/Pentium on LGA1151 — mostly v1
+        if (nameUpper.Contains("CELERON") || nameUpper.Contains("PENTIUM"))
+        {
+            if (System.Text.RegularExpressions.Regex.IsMatch(nameUpper, @"\bG\d{4}\b"))
+            {
+                var match = System.Text.RegularExpressions.Regex.Match(nameUpper, @"\bG(\d)\d{3}\b");
+                if (match.Success)
+                {
+                    var gen = int.Parse(match.Groups[1].Value);
+                    // G4xxx/G5xxx = v1 (Kaby Lake), G5xxx = v1
+                    if (gen <= 5) return "v1";
+                    // G6xxx+ = v2 (Coffee Lake)
+                    if (gen >= 6) return "v2";
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static string? DetectLGA1151Generation(MotherboardSpecification mb)
+    {
+        var chipset = (mb.Chipset ?? "").ToUpperInvariant();
+
+        // 300-series = v2
+        if (System.Text.RegularExpressions.Regex.IsMatch(chipset, @"^(B360|H310|H370|Z370|Z390)")) return "v2";
+        // 100/200-series = v1
+        if (System.Text.RegularExpressions.Regex.IsMatch(chipset, @"^(H110|B150|H170|Z170|B250|H270|Z270)")) return "v1";
+
+        return null;
+    }
+
+    /// <summary>
+    /// Detects socket from product name when specs are empty.
+    /// E.g. "Arktek AK-H310M EG" → "LGA1151", "ASUS PRIME B550M" → "AM4"
+    /// </summary>
+    private static string? DetectSocketFromProductName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return null;
+
+        // Match chipset number from name (e.g. H310M → H310, B650E → B650E)
+        var match = System.Text.RegularExpressions.Regex.Match(name, @"([ABHX])(\d{3}[E]?)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (!match.Success) return null;
+
+        var prefix = match.Groups[1].Value.ToUpperInvariant();
+        var num = match.Groups[2].Value.ToUpperInvariant();
+
+        // AMD AM5 chipsets: A620, B650, X670, X870, B850
+        if (num is "620" or "650" or "670" or "850" or "870" && prefix is "A" or "B" or "X")
+            return "AM5";
+
+        // AMD AM4 chipsets: A320, B350, X370, B450, X470, A520, B550, X570
+        if (num is "320" or "350" or "370" or "450" or "470" or "520" or "550" or "570" && prefix is "A" or "B" or "X")
+            return "AM4";
+
+        // Intel LGA1851: B860, Z890
+        if (num is "860" or "890") return "LGA1851";
+
+        // Intel LGA1700: H610, B660, H670, Z690, B760, H770, Z790
+        if (num is "610" or "660" or "670" or "690" or "760" or "770" or "790") return "LGA1700";
+
+        // Intel LGA1200: H410, B460, H470, B470, Z490, H510, B560, H570, Z590
+        if (num is "410" or "460" or "470" or "490" or "510" or "560" or "570" or "590") return "LGA1200";
+
+        // Intel LGA1151: H110, B150, H170, Z170, B250, H270, Z270, B360, H310, H370, Z370, Z390
+        if (num is "110" or "150" or "170" or "250" or "270" or "310" or "360" or "370" or "390") return "LGA1151";
+
+        return null;
+    }
+
     #region Извлечение спецификаций
+
+    /// <summary>
+    /// Detects integrated graphics from CPU name.
+    /// Intel: all Core i3/i5/i7/i9, Celeron, Pentium have iGPU unless suffix is "F".
+    /// AMD: APUs have "G" suffix (e.g. 5600G), Ryzen without G has no iGPU (except 8000G series).
+    /// </summary>
+    private static bool HasIntegratedGraphicsByName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return false;
+        var upper = name.ToUpperInvariant();
+
+        // Intel: Core i3/i5/i7/i9, Celeron, Pentium — have iGPU unless model ends with "F"
+        if (System.Text.RegularExpressions.Regex.IsMatch(upper, @"INTEL\s+(CORE\s+)?(I[3579]|CELERON|PENTIUM)"))
+        {
+            // F-suffix CPUs (e.g. i5-8400F, i9-13900KF) lack iGPU
+            if (System.Text.RegularExpressions.Regex.IsMatch(upper, @"\b\d{4,5}F\b")) return false;
+            return true;
+        }
+
+        // AMD: "G" suffix = APU with iGPU (e.g. Ryzen 5 5600G, Ryzen 7 8700G)
+        if (System.Text.RegularExpressions.Regex.IsMatch(upper, @"RYZEN\s+\d+\s+\d{4}G"))
+            return true;
+
+        return false;
+    }
 
     private CpuSpecification ExtractCpuSpecs(SelectedComponentDto? cpu)
     {
@@ -184,7 +329,7 @@ public class CompatibilityService : ICompatibilityService
             Socket = GetSpecValueOrNull(s, "socket", componentName: name),
             Tdp = GetSpecValueInt(s, "tdp", 65, componentName: name),
             PerformanceScore = GetSpecValueInt(s, "performanceScore", 0, componentName: name),
-            HasIntegratedGraphics = GetSpecValueBool(s, "integratedGraphics", false, componentName: name),
+            HasIntegratedGraphics = GetSpecValueBool(s, "integratedGraphics", false, componentName: name) || HasIntegratedGraphicsByName(name),
             Overclockable = GetSpecValueBool(s, "unlockedMultiplier", false, componentName: name) || 
                 GetSpecValue(s, "model_series", "", componentName: name).ToUpperInvariant().Contains("K")
         };
@@ -198,12 +343,17 @@ public class CompatibilityService : ICompatibilityService
         return new MotherboardSpecification
         {
             Name = name,
-            Socket = GetSpecValueOrNull(s, "socket", componentName: name),
-            RamType = GetSpecValueOrNull(s, "ramType"),
+            Socket = GetSpecValueOrNull(s, "socket", componentName: name)
+                ?? DetectSocketFromProductName(name),
+            RamType = GetSpecValueOrNull(s, "ramType")
+                ?? DetectRamTypeFromChipset(GetSpecValue(s, "chipset", ""))
+                ?? DetectRamTypeFromChipset(ExtractChipsetNameFromProduct(name)),
             RamSlots = GetSpecValueInt(s, "ramSlots", 4, componentName: name),
             MaxRamSpeed = GetSpecValueInt(s, "maxRamSpeed", 3200, componentName: name),
             FormFactor = GetSpecValue(s, "formFactor", "ATX", componentName: name),
-            Chipset = GetSpecValue(s, "chipset", ""),
+            Chipset = GetSpecValue(s, "chipset", "") is { Length: > 0 } c
+                ? c
+                : ExtractChipsetNameFromProduct(name),
             VrmPhases = GetSpecValueInt(s, "vrmPhases", 0, componentName: name),
             VrmMaxTdp = GetSpecValueInt(s, "vrmMaxTdp", 0, componentName: name) > 0 ? GetSpecValueInt(s, "vrmMaxTdp", 0, componentName: name) : null,
             HasUsbCHeader = GetSpecValueBool(s, "usbCHeader", false, componentName: name),
@@ -427,7 +577,31 @@ public class CompatibilityService : ICompatibilityService
                 Message = $"Несовместимый сокет: CPU ({cpu.Socket}) и материнская плата ({mb.Socket})",
                 Suggestion = $"Выберите материнскую плату с сокетом {cpu.Socket} или CPU с сокетом {mb.Socket}"
             });
+            return;
         }
+
+        // LGA1151 v1/v2 refinement — substring match passes, but chipsets are incompatible
+        if (IsLGA1151Family(cpu.Socket) && IsLGA1151Family(mb.Socket))
+        {
+            var cpuGen = DetectLGA1151Generation(cpu);
+            var mbGen = DetectLGA1151Generation(mb);
+            if (cpuGen != null && mbGen != null && cpuGen != mbGen)
+            {
+                result.IsCompatible = false;
+                result.Issues.Add(new CompatibilityIssueDto
+                {
+                    Severity = "Error",
+                    Component1 = cpu.Name,
+                    Component2 = mb.Name,
+                    Message = $"Процессор {cpu.Name} ({cpuGen}) несовместим с материнской платой {mb.Name} ({mbGen}): разные поколения LGA1151",
+                    Suggestion = cpuGen == "v2"
+                        ? "Процессоры Coffee Lake (v2) совместимы только с материнскими платами 300-серии (B360, H310, H370, Z370, Z390)"
+                        : "Процессоры Skylake/Kaby Lake (v1) совместимы только с материнскими платами 100/200-серии (H110, B150, H170, Z170, B250, H270, Z270)"
+                });
+                return;
+            }
+        }
+
         var biosWarning = _ruleEngine.CheckBiosWarning(cpu.Socket, mb.Chipset);
         if (biosWarning.HasWarning)
         {
@@ -571,7 +745,7 @@ public class CompatibilityService : ICompatibilityService
 
     private void AddPerformanceWarnings(CpuSpecification cpu, GpuSpecification gpu, RamSpecification ram, CompatibilityResultDto result)
     {
-        var ramWarn = _ruleEngine.CheckRamCapacity(ram.Capacity, ram.Name);
+        var ramWarn = _ruleEngine.CheckRamCapacity(ram.Capacity, ram.Modules, ram.Name);
         if (ramWarn != null) result.Warnings.Add(ramWarn);
 
         if (!cpu.HasIntegratedGraphics && gpu.Length == 0)
