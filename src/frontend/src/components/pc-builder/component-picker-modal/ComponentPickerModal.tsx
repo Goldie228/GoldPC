@@ -545,12 +545,12 @@ export function ComponentPickerModal({
     const mbSataPorts = isStorage && mb ? extractSataPorts(mb.specifications) : null;
 
     // CPU↔Motherboard socket check
-    const mbSocket = mb ? resolveSocket(mb.specifications, mb.name) : null;
+    const mbSocket = mb ? resolveSocket(mb) : null;
 
     return products.map((p) => {
       // When selecting a CPU: filter by motherboard socket
       if (slotType === 'cpu' && mb && mbSocket) {
-        const cpuSocket = resolveSocket(enrichSummaryToProduct(p).specifications, p.name);
+        const cpuSocket = resolveSocket(p);
         if (cpuSocket && cpuSocket !== mbSocket) {
           return {
             ...p, isIncompatible: true,
@@ -561,8 +561,8 @@ export function ComponentPickerModal({
 
       // When selecting a motherboard: filter by CPU socket
       if (slotType === 'motherboard' && cpu) {
-        const cpuSocket = resolveSocket(cpu.specifications, cpu.name);
-        const mbCandidateSocket = resolveSocket(enrichSummaryToProduct(p).specifications, p.name);
+        const cpuSocket = resolveSocket(cpu);
+        const mbCandidateSocket = resolveSocket(p);
         if (cpuSocket && mbCandidateSocket && cpuSocket !== mbCandidateSocket) {
           return {
             ...p, isIncompatible: true,
