@@ -7,12 +7,13 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Cpu, Monitor, CircuitBoard, MemoryStick, HardDrive,
-  Zap, Box, Thermometer, CheckCircle, AlertTriangle,
+  Zap, Box, Thermometer, Check, ArrowLeft, Loader2,
 } from 'lucide-react';
 
 import type { RecommendedBuild } from './recommendationEngine';
 import { COMPONENT_LABELS } from './types';
 import type { PCComponentType } from '@/features/pc-builder/logic/types';
+import type { PCBuilderSelectedState, SerializedBuildV2 } from '@/features/pc-builder/logic/types';
 import { STORAGE_KEY } from '@/features/pc-builder/logic/constants';
 
 const COMPONENT_ICONS: Record<string, React.ReactNode> = {
@@ -32,150 +33,125 @@ const COMPONENT_ORDER: PCComponentType[] = [
 
 interface BuildResultProps {
   build: RecommendedBuild;
-  onReset: () => void;
+  onBack: () => void;
+  isResolving?: boolean;
 }
 
-export default function BuildResult({ build, onReset }: BuildResultProps) {
+export default function BuildResult({ build, onBack, isResolving }: BuildResultProps) {
   const navigate = useNavigate();
 
-  const handleGoToBuilder = useCallback(() => {
-    // Save wizard selections to localStorage so PC Builder can load them
-    const selected: Record<string, unknown> = {};
-    for (const cat of COMPONENT_ORDER) {
-      const product = build[cat as keyof RecommendedBuild];
-      if (product && typeof product === 'object' && 'id' in product) {
-        selected[cat] = {
-          productId: (product as { id: string }).id,
-          product,
-          type: cat,
-        };
-      }
-    }
-
-    // Build a V2 serialized build and write to storage
-    const serialized = {
-      v: 2,
-      savedAt: new Date().toISOString(),
-      components: selected,
-    };
-
+  const handleOpenInBuilder = useCallback(async () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized));
-    } catch {
-      // localStorage may be full or unavailable
-    }
+      const state: PCBuilderSelectedState = { ram: [], storage: [], fan: [] };
+      const items = [
+        ['cpu', build.cpu],
+        ['gpu', build.gpu],
+        ['motherboard', build.motherboard],
+        ['ram', build.ram],
+        ['storage', build.storage],
+        ['psu', build.psu],
+        ['case', build.case],
+        ['cooling', build.cooling],
+      ] as const;
 
-    navigate('/pc-builder');
+      for (const [type, product] of items) {
+        if (!product) continue;
+        if (type === 'ram' || type === 'storage') {
+          state[type].push({ productId: product.id, product, type });
+        } else {
+          state[type] = { productId: product.id, product, type };
+        }
+      }
+
+      const serialized: SerializedBuildV2 = {
+        v: 2,
+        savedAt: new Date().toISOString(),
+        components: state,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized));
+      navigate('/pc-builder');
+    } catch (err) {
+      console.error('Failed to save build to localStorage:', err);
+    }
   }, [build, navigate]);
 
-  const foundCount = COMPONENT_ORDER.filter(
-    (cat) => build[cat as keyof RecommendedBuild] != null,
-  ).length;
+  // Loading skeleton while resolving
+  if (isResolving) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <Loader2 size={24} className="animate-spin text-gold" />
+          <div className="text-title-md font-semibold text-on-dark">Загрузка...</div>
+        </div>
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="h-20 bg-surface-card rounded-xl animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-5">
+    <div className="max-w-2xl mx-auto">
+      {/* Back button */}
+      <button
+        className="flex items-center gap-1.5 text-body-sm text-muted-text hover:text-on-dark transition-colors mb-5 cursor-pointer"
+        onClick={onBack}
+      >
+        <ArrowLeft size={16} />
+        Изменить параметры
+      </button>
+
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-title-lg font-semibold text-on-dark">
-            Рекомендуемая конфигурация
-          </h2>
-          <p className="text-body-md text-muted-text mt-1">
-            {foundCount} из 8 компонентов подобрано
-          </p>
+      <div className="mb-6">
+        <h2 className="text-title-lg font-semibold text-on-dark mb-1">Ваша сборка</h2>
+        <div className="flex items-center gap-3 text-body-md text-muted-text">
+          <span className="capitalize">{build.purpose}</span>
+          <span className="text-gold font-semibold font-['Nunito'] text-title-md">
+            {build.totalPrice.toLocaleString('ru-BY')} BYN
+          </span>
         </div>
-        {build.totalPrice > 0 && (
-          <div className="text-right">
-            <p className="text-xs text-muted-text">Общая стоимость</p>
-            <p className="font-['Nunito'] text-[28px] font-bold text-gold">
-              {build.totalPrice.toLocaleString('ru-RU')} BYN
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Component cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {COMPONENT_ORDER.map((cat) => {
-          const product = build[cat as keyof RecommendedBuild];
-          const hasProduct = product != null && typeof product === 'object' && 'id' in product;
+      <div className="flex flex-col gap-3 mb-8">
+        {COMPONENT_ORDER.map((type) => {
+          const product = build[type as keyof RecommendedBuild];
+          if (!product || typeof product !== 'object' || !('id' in product)) return null;
+          const p = product as { id: string; name: string; price: number };
+          const label = COMPONENT_LABELS[type] || type;
 
           return (
             <div
-              key={cat}
-              className={`flex items-center gap-3 p-6 rounded-xl border transition-colors ${
-                hasProduct
-                  ? 'border border-hairline-dark bg-surface-card'
-                  : 'border border-surface-elevated bg-surface-elevated/50 opacity-50'
-              }`}
+              key={type}
+              className="flex items-center gap-4 p-4 bg-surface-card border border-hairline-dark rounded-xl"
             >
-              <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                  hasProduct
-                    ? 'bg-gold/10 text-gold'
-                    : 'bg-surface-elevated text-muted-text'
-                }`}
-              >
-                {COMPONENT_ICONS[cat]}
+              <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-surface-elevated text-gold">
+                {COMPONENT_ICONS[type]}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs text-muted-text">
-                  {COMPONENT_LABELS[cat]}
-                </p>
-                {hasProduct ? (
-                  <>
-                    <p className="font-['Nunito_Sans'] text-body-md font-semibold text-on-dark truncate">
-                      {(product as { name: string }).name}
-                    </p>
-                    <p className="font-['Nunito'] text-sm font-medium text-gold">
-                      {(product as { price: number }).price.toLocaleString('ru-RU')} BYN
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-xs text-muted-text italic">
-                    Не найден
-                  </p>
-                )}
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] text-muted-text font-medium uppercase tracking-wide">{label}</div>
+                <div className="text-body-md text-on-dark truncate">{p.name}</div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Check size={14} className="text-emerald-400" />
+                <span className="font-['Nunito'] font-semibold text-gold whitespace-nowrap">
+                  {p.price.toLocaleString('ru-BY')} BYN
+                </span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Compatibility note */}
-      <div className="flex items-start gap-2 p-3 rounded-lg bg-surface-elevated">
-        {foundCount === 8 ? (
-          <CheckCircle size={16} className="text-emerald-400 mt-0.5 shrink-0" />
-        ) : (
-          <AlertTriangle size={16} className="text-amber-400 mt-0.5 shrink-0" />
-        )}
-        <div className="text-xs text-body-text">
-          {foundCount === 8 ? (
-            <p>Все компоненты подобраны. Совместимость будет проверена в конструкторе.</p>
-          ) : (
-            <p>
-              Не удалось найти некоторые компоненты в наличии.
-              Вы можете добавить их вручную в конструкторе.
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Action buttons */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <button
-          onClick={handleGoToBuilder}
-          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gold text-gold-ink font-semibold hover:bg-gold-active transition-colors cursor-pointer"
-        >
-          Перейти в конструктор
-        </button>
-        <button
-          onClick={onReset}
-          className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-surface-card border border-hairline-dark text-body-text hover:bg-surface-elevated transition-colors cursor-pointer"
-        >
-          Изменить выбор
-        </button>
-      </div>
+      {/* Actions */}
+      <button
+        className="w-full py-3.5 px-6 bg-gold text-gold-ink font-semibold text-body-md rounded-xl cursor-pointer transition-all duration-200 hover:brightness-110 shadow-[0_0_20px_rgba(252,213,53,0.15)]"
+        onClick={handleOpenInBuilder}
+      >
+        Открыть в конструкторе
+      </button>
     </div>
   );
 }
