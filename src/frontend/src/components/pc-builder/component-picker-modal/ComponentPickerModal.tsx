@@ -16,7 +16,7 @@ import { FilterSidebar } from '@/components/filter-sidebar/FilterSidebar';
 import { getProductImageUrl, hasValidProductImage } from '@/utils/image';
 import { specLabel, formatSpecValueForKey, splitSpecsAndRanges } from '@/utils/specifications';
 import { extractSocket, extractFormFactor, extractTDP, extractMemoryFormFactor, extractMemoryType, extractStorageType, extractM2Slots, extractSataPorts } from '@/shared/utils/compatibility/extractors';
-import { checkRAM, detectMemoryFormFactorFromName, resolveSocket } from '@/shared/utils/compatibility/checks';
+import { checkRAM, checkCooler, detectMemoryFormFactorFromName, resolveSocket } from '@/shared/utils/compatibility/checks';
 import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '@/hooks/useProducts';
 import { catalogApi } from '@/api/catalog';
@@ -528,8 +528,11 @@ export function ComponentPickerModal({
   // Проверка совместимости — проверяем тип памяти (DDR3/4/5) когда спецификации доступны
   const productsWithCompatibility = useMemo(() => {
     const mb = componentMap.motherboard;
+    const cpu = componentMap.cpu;
     const isRam = slotType === 'ram';
     const isStorage = slotType === 'storage';
+    const isCooler = slotType === 'cooling';
+
 
     // Предварительный подсчёт текущих накопителей по типу (актуально только при выбранной материнской плате)
     const currentM2 = isStorage && mb && buildContext
@@ -542,7 +545,6 @@ export function ComponentPickerModal({
     const mbSataPorts = isStorage && mb ? extractSataPorts(mb.specifications) : null;
 
     // CPU↔Motherboard socket check
-    const cpu = componentMap.cpu;
     const mbSocket = mb ? resolveSocket(mb.specifications, mb.name) : null;
 
     return products.map((p) => {
@@ -613,6 +615,24 @@ export function ComponentPickerModal({
             return {
               ...p, isIncompatible: true,
               incompatibilityIssues: [`Материнская плата поддерживает только ${mbSataPorts} SATA накопитель(ей); все порты заняты`],
+            };
+          }
+        }
+      }
+
+      // Cooler socket compatibility: warn if cooler may not support CPU socket
+      if (isCooler && cpu) {
+        const cpuSocket = resolveSocket(cpu.specifications, cpu.name);
+        if (cpuSocket) {
+          const coolerProduct = enrichSummaryToProduct(p);
+          const supportedSockets = coolerProduct.specifications?.socket_support
+            ? (coolerProduct.specifications.socket_support as string).split(/[,;]\s*/).map(s => s.trim().toUpperCase())
+            : [];
+          // If cooler lists supported sockets and CPU socket isn't among them, warn
+          if (supportedSockets.length > 0 && !supportedSockets.some(s => cpuSocket.toUpperCase().includes(s) || s.includes(cpuSocket.toUpperCase()))) {
+            return {
+              ...p, isIncompatible: true,
+              incompatibilityIssues: [`Кулер может не поддерживать сокет ${cpuSocket}`],
             };
           }
         }

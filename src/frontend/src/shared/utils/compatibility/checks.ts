@@ -75,8 +75,14 @@ function detectSocketFromChipset(chipset: string): string | null {
   if (/\b(B460|H470|H410|Z490|B560|H510|H570|Z590)\b/.test(c)) return 'LGA1200';
   // Intel LGA1151 (200/300-series)
   if (/\b(B250|H270|Z270|B360|H310|H370|Z370|Z390|B365)\b/.test(c)) return 'LGA1151';
-  // Intel LGA1155 (60/70-series — desktop H61, B75, H77, Z77 etc.)
+  // Intel LGA1155 (60/70-series desktop)
   if (/\b(H61|B75|H77|Z75|Z77)\b/.test(c)) return 'LGA1155';
+  // Intel LGA1150 (80/90-series desktop)
+  if (/\b(B85|H81|H87|Z87|Z97|H97)\b/.test(c)) return 'LGA1150';
+  // Intel LGA2011-3 / LGA2066 (X99, X299)
+  if (/\b(X99|X299)\b/.test(c)) return 'LGA2011-3';
+  // Intel LGA4189 (server)
+  if (/\b(C621|C622|C624|C625|C626)\b/.test(c)) return 'LGA4189';
   // Intel mobile chipsets → LGA1155 (Sandy/Ivy Bridge)
   if (/\b(HM[567]\d|QM[567]\d|QS[567]\d|UM[567]\d)\b/.test(c)) return 'LGA1155';
   // Intel mobile 80/90-series → LGA1150
@@ -85,6 +91,8 @@ function detectSocketFromChipset(chipset: string): string | null {
   if (/\b(B650E?|X670E?|X870E?|B850|A620)\b/.test(c)) return 'AM5';
   // AMD AM4
   if (/\b(A320|B350|B450|A520|B550|X370|X470|X570)\b/.test(c)) return 'AM4';
+  // AMD TRX40, WRX80, TRX50 (Threadripper)
+  if (/\b(TRX40|WRX80|TRX50)\b/.test(c)) return 'sTRX4';
   return null;
 }
 
