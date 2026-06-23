@@ -12,6 +12,7 @@ import {
   extractMemoryTypeWithFallback,
   extractMemoryFormFactor,
   extractMemoryFormFactorWithFallback,
+  KNOWN_SOCKETS,
   extractMemorySlots,
   extractRAMCapacity,
   extractMaxMemory,

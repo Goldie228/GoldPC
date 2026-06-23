@@ -10,7 +10,7 @@ import rulesConfig from '@/config/compatibilityRules.json';
 const config: CompatibilityRulesConfig = rulesConfig as unknown as CompatibilityRulesConfig;
 const SOCKET_GROUPS: SocketGroup[] = config.socketCompatibility.groups;
 
-const KNOWN_SOCKETS = new Set(
+export const KNOWN_SOCKETS = new Set(
   SOCKET_GROUPS.flatMap(g => g.sockets.map(s => s.toUpperCase().trim()))
 );
 
