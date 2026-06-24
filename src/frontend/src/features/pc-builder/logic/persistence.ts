@@ -168,9 +168,26 @@ function normalizeCategory(category: string | undefined, fallback: string): stri
   return map[category ?? ''] ?? category ?? fallback;
 }
 
-/** Normalize a product's category field to match builder type */
+/** Normalize a product's category field and extract direct fields extractors need */
 function normalizeProduct(product: Record<string, unknown>, targetType: string): Record<string, unknown> {
-  return { ...product, category: normalizeCategory(product.category as string, targetType) };
+  const result = { ...product, category: normalizeCategory(product.category as string, targetType) };
+  // Ensure socket/memoryType direct fields exist (extractors check these first)
+  const specs = result.specifications as Record<string, string> | undefined;
+  if (specs && !result.socket && specs['socket']) result.socket = specs['socket'];
+  if (specs && !result.memoryType && specs['memoryType']) result.memoryType = specs['memoryType'];
+  // Fallback: extract from specificationValues array if specs dict is missing
+  const specValues = result.specificationValues as Array<{ specificationAttributeName: string; value: string }> | undefined;
+  if (specValues) {
+    if (!result.memoryType) {
+      const memSpec = specValues.find(sv => sv.specificationAttributeName === 'Тип памяти');
+      if (memSpec) result.memoryType = memSpec.value;
+    }
+    if (!result.socket) {
+      const sockSpec = specValues.find(sv => sv.specificationAttributeName === 'Сокет');
+      if (sockSpec) result.socket = sockSpec.value;
+    }
+  }
+  return result;
 }
 
 export function loadFromLocalStorage(): PCBuilderSelectedState {
