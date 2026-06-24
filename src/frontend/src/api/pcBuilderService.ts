@@ -88,7 +88,14 @@ export function buildComponentsDTO(components: SelectedComponentsState): PCCompo
 
   if (components.cpu) dto.cpu = productToDTO(components.cpu.product);
   if (components.gpu) dto.gpu = productToDTO(components.gpu.product);
-  if (components.motherboard) dto.motherboard = productToDTO(components.motherboard.product);
+  if (components.motherboard) {
+    dto.motherboard = productToDTO(components.motherboard.product);
+    // Backend expects "ramType" but frontend stores "memoryType"
+    if (dto.motherboard?.specifications) {
+      const s = dto.motherboard.specifications;
+      if (!s['ramType'] && s['memoryType']) s['ramType'] = s['memoryType'];
+    }
+  }
   if (components.psu) dto.psu = productToDTO(components.psu.product);
   if (components.case) dto.case = productToDTO(components.case.product);
   if (components.cooling) dto.cooling = productToDTO(components.cooling.product);
@@ -96,9 +103,17 @@ export function buildComponentsDTO(components: SelectedComponentsState): PCCompo
   // Отправляем первый модуль ОЗУ с количеством планок
   if (components.ram.length > 0) {
     dto.ram = productToDTO(components.ram[0].product);
-    // Override modules field with actual stick count for capacity calculation
     if (dto.ram && dto.ram.specifications) {
+      // Override modules field with actual stick count for capacity calculation
       dto.ram.specifications.modules = components.ram.length;
+      // Backend expects "type" but frontend stores "memoryType"
+      if (!dto.ram.specifications['type'] && dto.ram.specifications['memoryType']) {
+        dto.ram.specifications['type'] = dto.ram.specifications['memoryType'];
+      }
+      // Backend expects "speed" but frontend stores "frequency"
+      if (!dto.ram.specifications['speed'] && dto.ram.specifications['frequency']) {
+        dto.ram.specifications['speed'] = dto.ram.specifications['frequency'];
+      }
     }
   }
 
@@ -139,7 +154,8 @@ export async function calculateFpsApi(params: {
   const { data } = await apiClient.post<FpsApiResponse>(
     '/pcbuilder/calculate-fps',
     {
-      components: { cpuId: params.cpuId, gpuId: params.gpuId },
+      cpuId: params.cpuId,
+      gpuId: params.gpuId,
       ramCapacity: params.ramCapacity,
       ramFrequency: params.ramFrequency,
     },

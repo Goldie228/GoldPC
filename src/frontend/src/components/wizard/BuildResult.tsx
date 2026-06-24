@@ -3,7 +3,7 @@
  * total price, and navigation to PC Builder with pre-selected components.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Cpu, Monitor, CircuitBoard, MemoryStick, HardDrive,
@@ -12,8 +12,8 @@ import {
 
 import type { RecommendedBuild } from './recommendationEngine';
 import { COMPONENT_LABELS } from './types';
-import type { PCComponentType, PCBuilderSelectedState, SerializedBuildV2 } from '@/features/pc-builder/logic/types';
-import { STORAGE_KEY } from '@/features/pc-builder/logic/constants';
+import type { PCBuilderSelectedState } from '@/features/pc-builder/logic/types';
+import { saveToLocalStorage } from '@/features/pc-builder/logic/persistence';
 
 const COMPONENT_ICONS: Record<string, React.ReactNode> = {
   cpu: <Cpu size={20} />,
@@ -38,49 +38,31 @@ interface BuildResultProps {
 
 export default function BuildResult({ build, onBack, isResolving }: BuildResultProps) {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-
   const handleOpenInBuilder = useCallback(() => {
     try {
+      // Use mock build data directly (API doesn't return images/specs properly)
       const items = [
         ['cpu', build.cpu], ['gpu', build.gpu],
         ['motherboard', build.motherboard], ['ram', build.ram],
         ['storage', build.storage], ['psu', build.psu],
-        ['case', build.case], ['cooling', build.cooling],
+        ['case', build.case], ['cooling', build.cooling], ['fan', build.fan],
       ] as const;
 
       const state: PCBuilderSelectedState = { ram: [], storage: [], fan: [] };
       for (const [type, product] of items) {
         if (!product) continue;
-        // Ensure category matches builder type (API returns 'processors' etc)
-        const normalizedProduct = { ...product, category: type };
-        if (type === 'ram' || type === 'storage') {
-          state[type].push({ productId: normalizedProduct.id, product: normalizedProduct, type });
+        if (type === 'ram' || type === 'storage' || type === 'fan') {
+          state[type].push({ productId: product.id, product, type });
         } else {
-          state[type] = { productId: normalizedProduct.id, product: normalizedProduct, type };
+          state[type] = { productId: product.id, product, type };
         }
       }
 
-      const components: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(state)) {
-        if (Array.isArray(value)) {
-          if (value.length > 0) components[key] = value;
-        } else if (value != null) {
-          components[key] = value;
-        }
-      }
-
-      const serialized: SerializedBuildV2 = {
-        v: 2,
-        savedAt: new Date().toISOString(),
-        components: components as SerializedBuildV2['components'],
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized));
+      saveToLocalStorage(state);
       navigate('/pc-builder');
     } catch (err) {
       console.error('Failed to save build to localStorage:', err);
     } finally {
-      setLoading(false);
     }
   }, [build, navigate]);
 
@@ -156,11 +138,10 @@ export default function BuildResult({ build, onBack, isResolving }: BuildResultP
 
       {/* Actions */}
       <button
-        className="w-full py-3.5 px-6 bg-gold text-gold-ink font-semibold text-body-md rounded-xl cursor-pointer transition-all duration-200 hover:brightness-110 shadow-[0_0_20px_rgba(252,213,53,0.15)] disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full py-3.5 px-6 bg-gold text-gold-ink font-semibold text-body-md rounded-xl cursor-pointer transition-all duration-200 hover:brightness-110 shadow-[0_0_20px_rgba(252,213,53,0.15)]"
         onClick={handleOpenInBuilder}
-        disabled={loading}
       >
-        {loading ? <><Loader2 size={18} className="animate-spin" /> Загрузка...</> : 'Открыть в конструкторе'}
+        Открыть в конструкторе
       </button>
     </div>
   );

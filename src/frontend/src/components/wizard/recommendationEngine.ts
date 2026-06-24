@@ -18,6 +18,7 @@ export interface RecommendedBuild {
   psu: Product | null;
   case: Product | null;
   cooling: Product | null;
+  fan: Product | null;
   totalPrice: number;
   purpose: Purpose;
   budget: Budget;
@@ -32,12 +33,13 @@ const CATEGORY_MAP: Record<string, keyof RecommendedBuild> = {
   psu: 'psu',
   case: 'case',
   cooling: 'cooling',
+  fan: 'fan',
 };
 
 function mockToRecommended(mock: MockBuild, purpose: Purpose, budget: Budget): RecommendedBuild {
   const result: RecommendedBuild = {
     cpu: null, gpu: null, motherboard: null, ram: null,
-    storage: null, psu: null, case: null, cooling: null,
+    storage: null, psu: null, case: null, cooling: null, fan: null,
     totalPrice: mock.totalPrice, purpose, budget,
   };
 
