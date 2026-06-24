@@ -86,22 +86,32 @@ export function ReportsPage() {
 
   const [dateFrom, setDateFrom] = useState(toISODate(firstDayOfMonth));
   const [dateTo, setDateTo] = useState(toISODate(today));
+  const [submittedFrom, setSubmittedFrom] = useState('');
+  const [submittedTo, setSubmittedTo] = useState('');
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
-  // Запрос финансового отчёта (по умолчанию — текущий месяц)
+  // Запрос финансового отчёта — только по кнопке
   const {
     data: summary,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useQuery<FinancialSummary>({
-    queryKey: ['accountant', 'financial-summary', dateFrom, dateTo],
-    queryFn: () => accountantApi.getFinancialSummary(dateFrom, dateTo),
-    // Не загружать автоматически, если даты пустые
-    enabled: Boolean(dateFrom && dateTo && dateFrom < dateTo),
-    staleTime: 60_000, // Кешируем на минуту
+    queryKey: ['accountant', 'financial-summary', submittedFrom, submittedTo],
+    queryFn: () => accountantApi.getFinancialSummary(submittedFrom, submittedTo),
+    enabled: hasSubmitted && Boolean(submittedFrom && submittedTo && submittedFrom < submittedTo),
+    staleTime: Infinity,
   });
 
-  if (isLoading) {
+  const handleSubmit = () => {
+    setSubmittedFrom(dateFrom);
+    setSubmittedTo(dateTo);
+    setHasSubmitted(true);
+  };
+
+  // Скелетон только после нажатия кнопки
+  if (hasSubmitted && isLoading) {
     return <ReportsSkeleton />;
   }
 
@@ -206,8 +216,8 @@ export function ReportsPage() {
         <div className="flex gap-3 mt-6">
           <button
             className="inline-flex items-center gap-2.5 px-6 py-3 text-sm font-semibold rounded-lg border-none cursor-pointer transition-all bg-gold text-gold-ink hover:bg-gold-active disabled:opacity-70 disabled:cursor-not-allowed"
-            onClick={() => void refetch()}
-            disabled={!dateFrom || !dateTo || dateFrom >= dateTo}
+            onClick={handleSubmit}
+            disabled={!dateFrom || !dateTo || dateFrom >= dateTo || isFetching}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />

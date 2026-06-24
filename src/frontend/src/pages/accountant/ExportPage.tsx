@@ -16,6 +16,9 @@ import {
   Loader2,
   Check,
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import * as XLSX from 'xlsx';
 
 /* ─── Типы ─── */
 
@@ -72,6 +75,90 @@ function generateCSV(data: Record<string, unknown>[], headers: string[]): string
     lines.push(headers.map((h) => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(';'));
   }
   return '\uFEFF' + lines.join('\n'); // BOM для корректной кодировки
+}
+
+/** Конвертация CSV в настоящий XLSX */
+function csvToXlsx(csvText: string): Blob {
+  const lines = csvText.split('\n').filter(Boolean);
+  const rows = lines.map((l) => l.split(';').map((c) => c.replace(/^"|"$/g, '')));
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Данные');
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+}
+
+/** Генерация PDF из CSV через html2canvas (поддержка кириллицы) */
+async function csvToPdfBlob(csvText: string, title: string): Promise<Blob> {
+  const lines = csvText.split('\n').filter(Boolean);
+  const rows = lines.map((l) => l.split(';').map((c) => c.replace(/^"|"$/g, '')));
+  const [headers, ...dataRows] = rows;
+
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;background:#fff;color:#000;padding:20px;font-family:Arial,sans-serif;width:1100px;';
+
+  const h2 = document.createElement('h2');
+  h2.style.margin = '0 0 12px';
+  h2.style.fontSize = '18px';
+  h2.textContent = title;
+  container.appendChild(h2);
+
+  const table = document.createElement('table');
+  table.style.cssText = 'border-collapse:collapse;width:100%;font-size:11px;';
+
+  const thead = document.createElement('thead');
+  const headTr = document.createElement('tr');
+  for (const h of headers) {
+    const th = document.createElement('th');
+    th.style.cssText = 'border:1px solid #ccc;padding:4px 6px;background:#f0f0f0;text-align:left;';
+    th.textContent = h;
+    headTr.appendChild(th);
+  }
+  thead.appendChild(headTr);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  for (const row of dataRows.slice(0, 500)) {
+    const tr = document.createElement('tr');
+    for (const cell of row) {
+      const td = document.createElement('td');
+      td.style.cssText = 'border:1px solid #ddd;padding:3px 6px;';
+      td.textContent = cell;
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  container.appendChild(table);
+
+  if (dataRows.length > 500) {
+    const p = document.createElement('p');
+    p.style.cssText = 'margin:8px 0 0;color:#666;';
+    p.textContent = `Показано 500 из ${dataRows.length} строк`;
+    container.appendChild(p);
+  }
+
+  document.body.appendChild(container);
+
+  try {
+    const canvas = await html2canvas(container, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pdfW = pdf.internal.pageSize.getWidth();
+    const pdfH = (canvas.height * pdfW) / canvas.width;
+    const pageH = pdf.internal.pageSize.getHeight();
+    let position = 0;
+
+    while (position < pdfH) {
+      pdf.addImage(imgData, 'PNG', 0, -position, pdfW, pdfH);
+      position += pageH;
+      if (position < pdfH) pdf.addPage();
+    }
+
+    return pdf.output('blob');
+  } finally {
+    document.body.removeChild(container);
+  }
 }
 
 /** Скачивание текстового файла */
@@ -134,75 +221,77 @@ export function ExportPage() {
     const timestamp = new Date().toISOString().slice(0, 10);
 
     try {
+      let exportedCount = 0;
+
       for (const dataOption of selectedData) {
-        switch (dataOption.id) {
-          case 'orders': {
-            // Заказы — экспорт через серверный CSV
-            const { blob, fileName } = await accountantApi.exportCsv('orders', dateFrom, dateTo);
-
-            if (selectedFormat === 'csv' || selectedFormat === 'xlsx') {
-              downloadBlob(blob, fileName);
-            } else if (selectedFormat === 'pdf') {
-              // PDF: читаем CSV как текст и конвертируем в простой txt
-              const text = await blob.text();
-              downloadFile(text, fileName.replace('.csv', '.txt'), 'text/plain;charset=utf-8');
-            }
-            break;
-          }
-
-          case 'products': {
-            // Товары — экспорт через серверный CSV
-            const { blob, fileName } = await accountantApi.exportCsv('products', dateFrom, dateTo);
-
-            if (selectedFormat === 'csv' || selectedFormat === 'xlsx') {
-              downloadBlob(blob, fileName);
-            } else if (selectedFormat === 'pdf') {
-              const text = await blob.text();
-              downloadFile(text, fileName.replace('.csv', '.txt'), 'text/plain;charset=utf-8');
-            }
-            break;
-          }
-
-          case 'users': {
-            // Клиенты — генерация CSV на клиенте через существующий API
-            const response = await usersAdminApi.getUsers({ pageSize: 100 });
-            const data = response.data.map((u) => ({
-              id: String(u.id ?? ''),
-              email: String(u.email ?? ''),
-              firstName: String(u.firstName ?? ''),
-              lastName: String(u.lastName ?? ''),
-              role: String(u.role ?? ''),
-              isActive: String(u.isActive ?? ''),
-            }));
-            const headers = ['id', 'email', 'firstName', 'lastName', 'role', 'isActive'];
-            const filename = `users_${timestamp}`;
-
-            if (data.length === 0) {
-              showToast(`Нет данных для "${dataOption.label}"`, 'error');
-              continue;
+        try {
+          switch (dataOption.id) {
+            case 'orders': {
+              const { blob, fileName } = await accountantApi.exportCsv('orders', dateFrom, dateTo);
+              if (selectedFormat === 'pdf') {
+                const csvText = await blob.text();
+                const pdfBlob = await csvToPdfBlob(csvText, `Отчёт по заказам (${dateFrom} — ${dateTo})`);
+                downloadBlob(pdfBlob, fileName.replace('.csv', '.pdf'));
+              } else if (selectedFormat === 'xlsx') {
+                const csvText = await blob.text();
+                const xlsxBlob = csvToXlsx(csvText);
+                downloadBlob(xlsxBlob, fileName.replace('.csv', '.xlsx'));
+              } else {
+                downloadBlob(blob, fileName);
+              }
+              exportedCount++;
+              break;
             }
 
-            if (selectedFormat === 'csv' || selectedFormat === 'xlsx') {
+            case 'products': {
+              const { blob, fileName } = await accountantApi.exportCsv('products', dateFrom, dateTo);
+              if (selectedFormat === 'pdf') {
+                const csvText = await blob.text();
+                const pdfBlob = await csvToPdfBlob(csvText, `Отчёт по товарам (${dateFrom} — ${dateTo})`);
+                downloadBlob(pdfBlob, fileName.replace('.csv', '.pdf'));
+              } else if (selectedFormat === 'xlsx') {
+                const csvText = await blob.text();
+                const xlsxBlob = csvToXlsx(csvText);
+                downloadBlob(xlsxBlob, fileName.replace('.csv', '.xlsx'));
+              } else {
+                downloadBlob(blob, fileName);
+              }
+              exportedCount++;
+              break;
+            }
+
+            case 'users': {
+              const response = await usersAdminApi.getUsers({ pageSize: 100 });
+              const data = response.data.map((u) => ({
+                id: String(u.id ?? ''),
+                email: String(u.email ?? ''),
+                firstName: String(u.firstName ?? ''),
+                lastName: String(u.lastName ?? ''),
+                role: String(u.role ?? ''),
+                isActive: String(u.isActive ?? ''),
+              }));
+              const headers = ['id', 'email', 'firstName', 'lastName', 'role', 'isActive'];
+              const filename = `users_${timestamp}`;
+
+              if (data.length === 0) {
+                showToast(`Нет данных для "${dataOption.label}"`, 'error');
+                continue;
+              }
+
               const csv = generateCSV(data, headers);
               downloadFile(csv, `${filename}.csv`, 'text/csv;charset=utf-8');
-            } else if (selectedFormat === 'pdf') {
-              const textContent =
-                headers.join('\t') +
-                '\n' +
-                data.map((row) => headers.map((h) => String((row as Record<string, unknown>)[h] ?? '')).join('\t')).join('\n');
-              downloadFile(textContent, `${filename}.txt`, 'text/plain;charset=utf-8');
+              exportedCount++;
+              break;
             }
-            break;
           }
+        } catch {
+          showToast(`Ошибка экспорта: ${dataOption.label}`, 'error');
         }
       }
 
-      showToast(
-        `Экспорт завершён: ${selectedData.map((d) => d.label).join(', ')}`,
-        'success'
-      );
-    } catch (err) {
-      showToast('Ошибка при экспорте данных', 'error');
+      if (exportedCount > 0) {
+        showToast(`Экспорт завершён: ${exportedCount} файл(ов)`, 'success');
+      }
     } finally {
       setIsExporting(false);
     }
@@ -329,14 +418,12 @@ export function ExportPage() {
                   type="checkbox"
                   checked={option.checked}
                   onChange={() => handleToggleDataOption(option.id)}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                 />
-                <span className="absolute inset-0 bg-surface-elevated border border-hairline-dark rounded" />
-                <span
-                  className={`absolute left-[5px] top-[2px] w-[5px] h-[9px] border-solid border-r-2 border-b-2 -rotate-45 transition-transform ${
-                    option.checked ? 'scale-100 border-gold' : 'scale-0 border-foreground'
-                  }`}
-                />
+                <span className={`absolute inset-0 border rounded transition-colors ${option.checked ? 'bg-gold/20 border-gold' : 'bg-surface-elevated border-white/20'}`} />
+                {option.checked && (
+                  <Check size={12} className="absolute inset-0 w-full h-full text-gold" strokeWidth={3} />
+                )}
               </div>
               <span className="text-sm text-foreground">{option.label}</span>
             </label>
