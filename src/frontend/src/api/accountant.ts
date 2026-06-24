@@ -115,7 +115,7 @@ async function exportCsv(
   to: string
 ): Promise<{ blob: Blob; fileName: string }> {
   const response = await apiClient.get('/reports/export', {
-    params: { format: 'csv', entity, from, to },
+    params: { format: 'csv', entity, from: from + 'T00:00:00', to: to + 'T23:59:59' },
     responseType: 'blob',
   });
 

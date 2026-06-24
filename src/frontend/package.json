@@ -49,6 +49,7 @@
     "use-debounce": "^10.1.1",
     "use-deep-compare-effect": "^1.8.1",
     "web-vitals": "^5.1.0",
+    "xlsx": "^0.18.5",
     "zod": "^4.4.3",
     "zustand": "^5.0.12"
   },
