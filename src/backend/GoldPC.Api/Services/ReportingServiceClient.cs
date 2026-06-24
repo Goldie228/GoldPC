@@ -34,15 +34,19 @@ public class ReportingServiceClient : IReportingServiceClient
             _logger.LogDebug("GetFinancialSummaryAsync: from={From}, to={To}", from, to);
 
             var query = $"api/reports/financial-summary?from={from:O}&to={to:O}";
+            _logger.LogWarning("Proxy → ReportingService: GET {Query}", query);
             var response = await _http.GetAsync(new Uri(query, UriKind.Relative));
+            _logger.LogWarning("Proxy ← ReportingService: {StatusCode}", response.StatusCode);
+            var body = await response.Content.ReadAsStringAsync();
+            _logger.LogWarning("Proxy ← body: {Body}", body.Length > 500 ? body[..500] : body);
             response.EnsureSuccessStatusCode();
 
             return await DeserializeResponseAsync(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка вызова ReportingService GetFinancialSummary");
-            return new ReportingApiResponse { Success = false, Message = "Сервис отчётов недоступен" };
+            _logger.LogError(ex, "Ошибка вызова ReportingService GetFinancialSummary: {Msg}", ex.Message);
+            return new ReportingApiResponse { Success = false, Message = $"Сервис отчётов: {ex.Message}" };
         }
     }
 
