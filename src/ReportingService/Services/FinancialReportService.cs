@@ -4,6 +4,7 @@ using CsvHelper;
 using GoldPC.ReportingService.Data;
 using GoldPC.ReportingService.Models;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace GoldPC.ReportingService.Services;
 
@@ -32,14 +33,14 @@ public class FinancialReportService : IFinancialReportService
 
         // Заказы за период в статусах, считающихся выручкой
         var ordersQuery = _context.Database.SqlQueryRaw<FinancialOrderRow>(@"
-            SELECT 
-                total AS ""Total"",
-                status AS ""Status""
+            SELECT
+                ""Total"" AS ""Total"",
+                ""Status"" AS ""Status""
             FROM fdw_orders.orders
-            WHERE created_at >= @from 
-              AND created_at < @to
-              AND status IN ('Completed', 'Ready', 'Paid')
-        ", from, to);
+            WHERE ""CreatedAt"" >= @p_from
+              AND ""CreatedAt"" < @p_to
+              AND ""Status"" IN ('Completed', 'Ready', 'Paid')
+        ", new NpgsqlParameter("p_from", from), new NpgsqlParameter("p_to", to));
 
         var orders = await ordersQuery.ToListAsync();
 
@@ -51,9 +52,9 @@ public class FinancialReportService : IFinancialReportService
         var servicesCount = await _context.Database.SqlQueryRaw<int>(@"
             SELECT COUNT(*) AS ""Value""
             FROM fdw_services.service_requests
-            WHERE created_at >= @from 
-              AND created_at < @to
-        ", from, to).FirstOrDefaultAsync();
+            WHERE created_at >= @p_from
+              AND created_at < @p_to
+        ", new NpgsqlParameter("p_from", from), new NpgsqlParameter("p_to", to)).FirstOrDefaultAsync();
 
         var profit = revenue * DefaultMarginPercent / 100m;
 
@@ -82,17 +83,17 @@ public class FinancialReportService : IFinancialReportService
         };
 
         var results = await _context.Database.SqlQueryRaw<OrdersByPeriodDto>(@"
-            SELECT 
-                date_trunc(@truncUnit, created_at) AS ""PeriodStart"",
+            SELECT
+                date_trunc(@p_unit, ""CreatedAt"") AS ""PeriodStart"",
                 COUNT(*) AS ""OrdersCount"",
-                COALESCE(SUM(total), 0) AS ""TotalAmount""
+                COALESCE(SUM(""Total""), 0) AS ""TotalAmount""
             FROM fdw_orders.orders
-            WHERE created_at >= @from 
-              AND created_at < @to
-              AND status IN ('Completed', 'Ready', 'Paid')
-            GROUP BY date_trunc(@truncUnit, created_at)
-            ORDER BY date_trunc(@truncUnit, created_at) ASC
-        ", truncUnit, from, to).ToListAsync();
+            WHERE ""CreatedAt"" >= @p_from
+              AND ""CreatedAt"" < @p_to
+              AND ""Status"" IN ('Completed', 'Ready', 'Paid')
+            GROUP BY date_trunc(@p_unit, ""CreatedAt"")
+            ORDER BY date_trunc(@p_unit, ""CreatedAt"") ASC
+        ", new NpgsqlParameter("p_unit", truncUnit), new NpgsqlParameter("p_from", from), new NpgsqlParameter("p_to", to)).ToListAsync();
 
         return results;
     }
@@ -104,30 +105,30 @@ public class FinancialReportService : IFinancialReportService
 
         // Статистика по статусам заявок за период
         var stats = await _context.Database.SqlQueryRaw<ServiceStatsRow>(@"
-            SELECT 
+            SELECT
                 COUNT(*) AS ""TotalRequests"",
                 COUNT(*) FILTER (WHERE status = 'Completed') AS ""CompletedRequests"",
                 COUNT(*) FILTER (WHERE status = 'Cancelled') AS ""CancelledRequests"",
                 COALESCE(SUM(actual_cost), 0) AS ""TotalRevenue"",
                 COALESCE(AVG(NULLIF(actual_cost, 0)), 0) AS ""AverageServiceCost""
             FROM fdw_services.service_requests
-            WHERE created_at >= @from 
-              AND created_at < @to
-        ", from, to).FirstOrDefaultAsync();
+            WHERE created_at >= @p_from
+              AND created_at < @p_to
+        ", new NpgsqlParameter("p_from", from), new NpgsqlParameter("p_to", to)).FirstOrDefaultAsync();
 
         // Выручка по типам услуг
         var byType = await _context.Database.SqlQueryRaw<ServiceTypeRevenueDto>(@"
-            SELECT 
+            SELECT
                 COALESCE(st.name, 'Неизвестно') AS ""ServiceTypeName"",
                 COUNT(sr.id) AS ""RequestsCount"",
                 COALESCE(SUM(sr.actual_cost), 0) AS ""Revenue""
             FROM fdw_services.service_requests sr
             LEFT JOIN fdw_services.service_types st ON sr.service_type_id = st.id
-            WHERE sr.created_at >= @from 
-              AND sr.created_at < @to
+            WHERE sr.created_at >= @p_from
+              AND sr.created_at < @p_to
             GROUP BY st.name
             ORDER BY ""Revenue"" DESC
-        ", from, to).ToListAsync();
+        ", new NpgsqlParameter("p_from", from), new NpgsqlParameter("p_to", to)).ToListAsync();
 
         return new ServicesByPeriodDto
         {
@@ -181,20 +182,20 @@ public class FinancialReportService : IFinancialReportService
     {
         return await _context.Database.SqlQueryRaw<CsvOrderRow>(@"
             SELECT 
-                order_number AS ""OrderNumber"",
-                customer_first_name || ' ' || COALESCE(customer_last_name, '') AS ""CustomerName"",
-                customer_phone AS ""CustomerPhone"",
-                customer_email AS ""CustomerEmail"",
-                status AS ""Status"",
-                total AS ""Total"",
-                payment_method AS ""PaymentMethod"",
-                delivery_method AS ""DeliveryMethod"",
-                created_at AS ""CreatedAt""
+                ""OrderNumber"" AS ""OrderNumber"",
+                ""CustomerFirstName"" || ' ' || COALESCE(""CustomerLastName"", '') AS ""CustomerName"",
+                ""CustomerPhone"" AS ""CustomerPhone"",
+                ""CustomerEmail"" AS ""CustomerEmail"",
+                ""Status"" AS ""Status"",
+                ""Total"" AS ""Total"",
+                ""PaymentMethod"" AS ""PaymentMethod"",
+                ""DeliveryMethod"" AS ""DeliveryMethod"",
+                ""CreatedAt"" AS ""CreatedAt""
             FROM fdw_orders.orders
-            WHERE created_at >= @from 
-              AND created_at < @to
-            ORDER BY created_at DESC
-        ", from, to).ToListAsync();
+            WHERE ""CreatedAt"" >= @p_from
+              AND ""CreatedAt"" < @p_to
+            ORDER BY ""CreatedAt"" DESC
+        ", new NpgsqlParameter("p_from", from), new NpgsqlParameter("p_to", to)).ToListAsync();
     }
 
     /// <summary>

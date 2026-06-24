@@ -33,6 +33,15 @@ public class ReportsController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Ensure DateTime is UTC — PostgreSQL requires timestamp with time zone.
+    /// </summary>
+    private static DateTime EnsureUtc(DateTime? dt, DateTime fallback)
+    {
+        var value = dt ?? fallback;
+        return value.Kind == DateTimeKind.Utc ? value : DateTime.SpecifyKind(value, DateTimeKind.Utc);
+    }
+
     // ========================================================================
     // Существующие эндпоинты (без изменений)
     // ========================================================================
@@ -138,7 +147,9 @@ public class ReportsController : ControllerBase
             return BadRequest(new { success = false, message = "Параметр 'from' должен быть меньше 'to'" });
         }
 
-        var result = await _reportService.GetFinancialSummaryAsync(from.Value, to.Value);
+        var fromUtc = EnsureUtc(from, DateTime.UtcNow.AddMonths(-1));
+        var toUtc = EnsureUtc(to, DateTime.UtcNow);
+        var result = await _reportService.GetFinancialSummaryAsync(fromUtc, toUtc);
         return Ok(new { success = true, data = result });
     }
 
@@ -173,7 +184,9 @@ public class ReportsController : ControllerBase
             return BadRequest(new { success = false, message = $"Параметр 'group' допустимые значения: day, week, month" });
         }
 
-        var result = await _reportService.GetOrdersByPeriodAsync(from.Value, to.Value, groupBy!);
+        var fromUtc = EnsureUtc(from, DateTime.UtcNow.AddMonths(-1));
+        var toUtc = EnsureUtc(to, DateTime.UtcNow);
+        var result = await _reportService.GetOrdersByPeriodAsync(fromUtc, toUtc, groupBy!);
         return Ok(new { success = true, data = result });
     }
 
@@ -199,7 +212,9 @@ public class ReportsController : ControllerBase
             return BadRequest(new { success = false, message = "Параметр 'from' должен быть меньше 'to'" });
         }
 
-        var result = await _reportService.GetServicesByPeriodAsync(from.Value, to.Value);
+        var fromUtc = EnsureUtc(from, DateTime.UtcNow.AddMonths(-1));
+        var toUtc = EnsureUtc(to, DateTime.UtcNow);
+        var result = await _reportService.GetServicesByPeriodAsync(fromUtc, toUtc);
         return Ok(new { success = true, data = result });
     }
 
@@ -247,8 +262,8 @@ public class ReportsController : ControllerBase
         }
 
         // Для products период не нужен — экспортируем всё
-        var effectiveFrom = from ?? DateTime.MinValue;
-        var effectiveTo = to ?? DateTime.MaxValue;
+        var effectiveFrom = EnsureUtc(from, DateTime.MinValue);
+        var effectiveTo = EnsureUtc(to, DateTime.MaxValue);
 
         try
         {
