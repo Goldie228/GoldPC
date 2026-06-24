@@ -393,7 +393,7 @@ export function Header(): ReactElement {
                       </>
                     )}
 
-                    {user?.role === 'Master' && (
+                    {['Master', 'Admin'].includes(user?.role ?? '') && (
                       <>
                         <div className="h-px bg-hairline-dark mx-4" />
                         <Link to="/master/tickets" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gold no-underline transition-colors hover:bg-surface-elevated" onClick={handleProfileDropdownClose}>
