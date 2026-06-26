@@ -21,7 +21,14 @@ const PURPOSE_OPTIONS: { value: PCPurpose; label: string }[] = [
 interface SaveConfigurationPayload {
   name: string;
   purpose?: PCPurpose;
-  components: Record<string, string>;
+  processorId?: string;
+  motherboardId?: string;
+  ramId?: string;
+  gpuId?: string;
+  psuId?: string;
+  storageId?: string;
+  caseId?: string;
+  coolerId?: string;
 }
 
 /** Ответ API на сохранение конфигурации */
@@ -85,20 +92,22 @@ export function SaveConfigurationModal({
 
   const { showToast } = useToast();
 
-  /** Формируем components map для API (несколько ОЗУ/накопителей — id через запятую). */
-  const buildComponentsMap = useCallback((): Record<string, string> => {
-    const map: Record<string, string> = {};
+  /** Формируем плоский payload для API (соответствует backend PCConfigurationDto). */
+  const buildPayload = useCallback((): SaveConfigurationPayload => {
     const s = selectedComponents;
-    if (s.cpu) map.cpu = s.cpu.product.id;
-    if (s.gpu) map.gpu = s.gpu.product.id;
-    if (s.motherboard) map.motherboard = s.motherboard.product.id;
-    if (s.psu) map.psu = s.psu.product.id;
-    if (s.case) map.case = s.case.product.id;
-    if (s.cooling) map.cooling = s.cooling.product.id;
-    if (s.ram.length > 0) map.ram = s.ram.map((r) => r.product.id).join(',');
-    if (s.storage.length > 0) map.storage = s.storage.map((x) => x.product.id).join(',');
-    return map;
-  }, [selectedComponents]);
+    return {
+      name: '',
+      purpose,
+      processorId: s.cpu?.product.id,
+      motherboardId: s.motherboard?.product.id,
+      ramId: s.ram.length > 0 ? s.ram.map((r) => r.product.id).join(',') : undefined,
+      gpuId: s.gpu?.product.id,
+      psuId: s.psu?.product.id,
+      storageId: s.storage.length > 0 ? s.storage.map((x) => x.product.id).join(',') : undefined,
+      caseId: s.case?.product.id,
+      coolerId: s.cooling?.product.id,
+    };
+  }, [selectedComponents, purpose]);
 
   /** Мутация сохранения конфигурации */
   const saveMutation = useMutation<SaveConfigurationResponse, Error, SaveConfigurationPayload>({
@@ -143,9 +152,8 @@ export function SaveConfigurationModal({
     setNameError('');
 
     saveMutation.mutate({
+      ...buildPayload(),
       name: trimmedName,
-      purpose,
-      components: buildComponentsMap(),
     });
   };
 
