@@ -119,7 +119,7 @@ public class ServicesController : ControllerBase
     }
 
     [HttpPost("{id}/assign/{masterId}")]
-    [Authorize(Roles = "Manager,Admin")]
+    [Authorize(Roles = "Manager,Admin,Master")]
     public async Task<IActionResult> AssignMaster(Guid id, Guid masterId)
     {
         var (result, error) = await _servicesService.AssignMasterAsync(id, masterId);
@@ -188,7 +188,7 @@ public class ServicesController : ControllerBase
     /// Добавление запчасти к заявке (ФТ-4.8)
     /// </summary>
     [HttpPost("{id}/parts")]
-    [Authorize(Roles = "Master")]
+    [Authorize(Roles = "Master,Manager,Admin")]
     public async Task<IActionResult> AddPart(Guid id, [FromBody] ServicePartDto partDto)
     {
         var userId = GetCurrentUserId();

@@ -267,6 +267,16 @@ export const servicesApi = {
     }
   },
 
+  /** Добавить запчасть к заявке */
+  addServicePart: async (requestId: string, dto: { productName: string; quantity: number; unitPrice: number }): Promise<void> => {
+    try {
+      const response = await goldpcApi.postServicesIdParts(requestId, dto as any);
+      return extractData<void>(response);
+    } catch (e) {
+      throw new Error('Failed to add part: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  },
+
   /** Обновить статус заявки */
   updateRequestStatus: async (requestId: string, status: string): Promise<ServiceRequestDto> => {
     try {
@@ -277,13 +287,13 @@ export const servicesApi = {
     }
   },
 
-  /** Добавить запчасти к заявке */
-  addParts: async (requestId: string, parts: ServicePartDto[]): Promise<ServiceRequestDto> => {
+  /** Добавить запчасть к заявке */
+  addParts: async (requestId: string, part: ServicePartDto): Promise<ServiceRequestDto> => {
     try {
-      const response = await goldpcApi.postServicesIdParts(requestId, parts);
+      const response = await goldpcApi.postServicesIdParts(requestId, part);
       return extractData<ServiceRequestDto>(response);
     } catch (e) {
-      throw new Error('Failed to add parts: ' + (e instanceof Error ? e.message : String(e)));
+      throw new Error('Failed to add part: ' + (e instanceof Error ? e.message : String(e)));
     }
   },
 

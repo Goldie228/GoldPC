@@ -5,8 +5,9 @@
  * Дизайн-токены, TanStack Query, inline confirmation.
  */
 
+import '../../components/chat/Chat.css';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -15,13 +16,12 @@ import {
   Clock,
   MessageSquare,
   Package,
-  CheckCircle2,
   AlertTriangle,
   Loader2,
-  Trash2,
 } from 'lucide-react';
 import { servicesApi, TICKET_STATUSES } from '@/api/services';
 import type { ServiceRequestDto, TicketStatus, ServicePartDto } from '@/api/services';
+import { usersAdminApi } from '@/api/admin';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/useToast';
 import { useTicketChat } from '@/hooks/useTicketChat';
@@ -90,7 +90,6 @@ function isTerminal(status: TicketStatus): boolean {
 
 export function TicketDetailPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const currentUserId = useAuthStore((state) => state.user?.id);
@@ -100,6 +99,12 @@ export function TicketDetailPage() {
     queryKey: ['master', 'ticket', ticketId],
     queryFn: () => servicesApi.getServiceById(ticketId!),
     enabled: !!ticketId,
+  });
+
+  const { data: clientUser } = useQuery({
+    queryKey: ['admin', 'user', ticket?.clientId],
+    queryFn: () => usersAdminApi.getUser(ticket!.clientId),
+    enabled: !!ticket?.clientId,
   });
 
   /* ── Mutations ────────────────────────────────────────────────── */
@@ -114,32 +119,13 @@ export function TicketDetailPage() {
     onError: () => showToast('Ошибка при обновлении статуса', 'error'),
   });
 
-  const completeMutation = useMutation({
-    mutationFn: (comment?: string) => servicesApi.completeTicket(ticketId!, comment),
-    onSuccess: () => {
-      showToast('Работа завершена', 'success');
-      queryClient.invalidateQueries({ queryKey: ['master', 'ticket', ticketId] });
-      queryClient.invalidateQueries({ queryKey: ['master', 'tickets'] });
-    },
-    onError: () => showToast('Ошибка при завершении', 'error'),
-  });
-
   const partMutation = useMutation({
-    mutationFn: (dto: ServicePartDto) => servicesApi.addServicePart(ticketId!, dto),
+    mutationFn: (dto: ServicePartDto) => servicesApi.addParts(ticketId!, dto),
     onSuccess: () => {
       showToast('Запчасть добавлена', 'success');
       queryClient.invalidateQueries({ queryKey: ['master', 'ticket', ticketId] });
     },
     onError: () => showToast('Ошибка при добавлении запчасти', 'error'),
-  });
-
-  const cancelMutation = useMutation({
-    mutationFn: () => servicesApi.cancelTicket(ticketId!),
-    onSuccess: () => {
-      showToast('Заявка отменена', 'success');
-      navigate('/master/tickets');
-    },
-    onError: () => showToast('Ошибка при отмене', 'error'),
   });
 
   /* ── Chat ──────────────────────────────────────────────────────── */
@@ -151,6 +137,7 @@ export function TicketDetailPage() {
     typingUserId,
     connectionStatus,
     sendMessage,
+    uploadFile,
   } = useTicketChat({ ticketId });
 
   useEffect(() => {
@@ -160,12 +147,9 @@ export function TicketDetailPage() {
   /* ── Form states ──────────────────────────────────────────────── */
   const [selectedStatus, setSelectedStatus] = useState<TicketStatus | ''>('');
   const [statusComment, setStatusComment] = useState('');
-  const [completeComment, setCompleteComment] = useState('');
   const [partName, setPartName] = useState('');
   const [partQty, setPartQty] = useState('1');
   const [partPrice, setPartPrice] = useState('0');
-  const [confirmCancel, setConfirmCancel] = useState(false);
-
   /* ── Loading state ────────────────────────────────────────────── */
   if (isLoading) {
     return (
@@ -479,6 +463,7 @@ export function TicketDetailPage() {
 
             <ChatInput
               onSend={sendMessage}
+              onUpload={uploadFile}
               disabled={terminal || !!assignedToOther}
               placeholder="Введите сообщение..."
             />
@@ -496,11 +481,13 @@ export function TicketDetailPage() {
             </h3>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gold/10 text-gold flex items-center justify-center text-sm font-bold shrink-0">
-                {ticket.clientId?.charAt(0)?.toUpperCase() ?? '?'}
+                {clientUser?.firstName?.charAt(0)?.toUpperCase() ?? '?'}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
-                  ID: {ticket.clientId.length > 8 ? ticket.clientId.slice(0, 8) + '…' : ticket.clientId}
+                  {clientUser
+                    ? `${clientUser.firstName} ${clientUser.lastName}`.trim() || clientUser.email
+                    : 'Загрузка...'}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">{ticket.clientId}</p>
               </div>
@@ -580,77 +567,25 @@ export function TicketDetailPage() {
             </div>
           )}
 
-          {/* ── Завершить работу ──────────────────────────────────── */}
+          {/* ── Быстрое завершение / отмена ────────────────────────── */}
           {ticket.status === 'InProgress' && !assignedToOther && (
-            <div className="bg-surface-card rounded-xl border border-hairline-dark p-4">
-              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-price-drop" />
-                Завершить работу
-              </h3>
-              <div className="space-y-3">
-                <textarea
-                  className="w-full rounded-lg border border-hairline-dark px-3 py-2 text-sm bg-surface-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40 resize-none"
-                  rows={2}
-                  placeholder="Финальный комментарий..."
-                  value={completeComment}
-                  onChange={(e) => setCompleteComment(e.target.value)}
-                />
-                <button
-                  type="button"
-                  disabled={completeMutation.isPending}
-                  onClick={() => {
-                    completeMutation.mutate(completeComment || undefined);
-                    setCompleteComment('');
-                  }}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-on-dark bg-price-drop rounded-lg hover:bg-price-drop/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {completeMutation.isPending ? (
-                    <>
-                      <Loader2 size={14} className="animate-spin" />
-                      Завершение...
-                    </>
-                  ) : (
-                    'Завершить работу'
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ── Отмена заявки ─────────────────────────────────────── */}
-          {!terminal && !assignedToOther && (
-            <div className="bg-surface-card rounded-xl border border-hairline-dark p-4">
-              {confirmCancel ? (
-                <div className="space-y-3">
-                  <p className="text-sm text-price-rise font-medium">Вы уверены?</p>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      disabled={cancelMutation.isPending}
-                      onClick={() => cancelMutation.mutate()}
-                      className="flex-1 px-3 py-2 text-sm font-medium text-on-dark bg-price-rise rounded-lg hover:bg-price-rise/90 disabled:opacity-50 transition-colors"
-                    >
-                      {cancelMutation.isPending ? 'Отмена...' : 'Да, отменить'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmCancel(false)}
-                      className="px-3 py-2 text-sm text-muted-foreground hover:text-foreground border border-hairline-dark rounded-lg hover:bg-surface-elevated transition-colors"
-                    >
-                      Нет
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setConfirmCancel(true)}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-price-rise border border-price-rise/30 rounded-lg hover:bg-price-rise/10 transition-colors"
-                >
-                  <Trash2 size={14} />
-                  Отменить заявку
-                </button>
-              )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => statusMutation.mutate('Completed')}
+                disabled={statusMutation.isPending}
+                className="flex-1 px-3 py-2 text-sm font-medium text-on-dark bg-price-drop rounded-lg hover:bg-price-drop/90 disabled:opacity-50 transition-colors"
+              >
+                {statusMutation.isPending ? 'Отправка...' : 'Завершить работу'}
+              </button>
+              <button
+                type="button"
+                onClick={() => statusMutation.mutate('Cancelled')}
+                disabled={statusMutation.isPending}
+                className="flex-1 px-3 py-2 text-sm font-medium text-price-rise border border-price-rise/30 rounded-lg hover:bg-price-rise/10 disabled:opacity-50 transition-colors"
+              >
+                Отменить заявку
+              </button>
             </div>
           )}
         </div>

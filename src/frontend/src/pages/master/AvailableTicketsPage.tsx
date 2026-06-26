@@ -56,7 +56,7 @@ export function AvailableTicketsPage() {
 
   const assignMutation = useMutation({
     mutationFn: (serviceId: string) =>
-      servicesApi.assignMasterToService(serviceId, currentUserId!),
+      servicesApi.assignMaster(serviceId, currentUserId!),
     onSuccess: () => {
       showToast('Заявка взята в работу', 'success');
       queryClient.invalidateQueries({ queryKey: ['master', 'available'] });
