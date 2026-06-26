@@ -144,7 +144,20 @@ export function AccountSavedBuilds() {
   };
 
   const componentCount = (build: SavedBuild): number => {
-    return Object.keys(build.components).filter((k) => build.components[k]).length;
+    if (build.components) {
+      return Object.keys(build.components).filter((k) => build.components[k]).length;
+    }
+    // Fallback: count individual ID fields from backend DTO
+    let count = 0;
+    if (build.processorId) count++;
+    if (build.motherboardId) count++;
+    if (build.ramId) count++;
+    if (build.gpuId) count++;
+    if (build.psuId) count++;
+    if (build.storageId) count++;
+    if (build.caseId) count++;
+    if (build.coolerId) count++;
+    return count;
   };
 
   if (loading) {

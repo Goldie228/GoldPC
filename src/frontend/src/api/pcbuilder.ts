@@ -12,7 +12,17 @@ export interface SavedBuild {
   isCompatible: boolean;
   createdAt: string;
   shareToken?: string;
-  components: Record<string, string>;
+  /** Frontend-only: populated when saving from pc-builder client-side */
+  components?: Record<string, string>;
+  /** Backend DTO fields */
+  processorId?: string;
+  motherboardId?: string;
+  ramId?: string;
+  gpuId?: string;
+  psuId?: string;
+  storageId?: string;
+  caseId?: string;
+  coolerId?: string;
 }
 
 export interface SaveConfigurationRequest {
