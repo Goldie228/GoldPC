@@ -291,6 +291,15 @@ export const usersAdminApi = {
       throw new Error('Failed to delete user: ' + (e instanceof Error ? e.message : String(e)));
     }
   },
+
+  async getUser(userId: string): Promise<User> {
+    try {
+      const response = await api.get<User>(`/auth/admin/users/${userId}`);
+      return response.data;
+    } catch (e) {
+      throw new Error('Failed to fetch user: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  },
 };
 
 /**

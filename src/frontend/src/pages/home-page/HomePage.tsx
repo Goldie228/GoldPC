@@ -32,9 +32,76 @@ const CATEGORY_ICONS: Record<ProductCategory, LucideIcon> = {
 
 // ─── Hero Background — sequential video crossfade ────────────────
 function HeroBackground() {
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoARef = useRef<HTMLVideoElement>(null);
+  const videoBRef = useRef<HTMLVideoElement>(null);
   const videosRef = useRef<string[]>([]);
   const idxRef = useRef(0);
+  const activeRef = useRef<'A' | 'B'>('A');
+  const transitioningRef = useRef(false);
+  const preloadedRef = useRef<HTMLVideoElement | null>(null);
+
+  const getActiveEl = () => activeRef.current === 'A' ? videoARef.current : videoBRef.current;
+  const getStandbyEl = () => activeRef.current === 'A' ? videoBRef.current : videoARef.current;
+
+  const crossfade = useCallback(() => {
+    if (transitioningRef.current) return;
+    const list = videosRef.current;
+    if (list.length <= 1) return;
+
+    const activeEl = getActiveEl();
+    const standbyEl = getStandbyEl();
+    if (!activeEl || !standbyEl) return;
+
+    transitioningRef.current = true;
+    const nextIdx = (idxRef.current + 1) % list.length;
+
+    // 1. Fade OUT the old video immediately — force reflow so transition fires
+    activeEl.classList.remove('hero-video--fade-in');
+    void activeEl.offsetWidth;
+    activeEl.classList.add('hero-video--fade-out');
+
+    // 2. Fade IN the new video as soon as it's ready
+    const fadeInStandby = () => {
+      standbyEl.classList.remove('hero-video--hidden');
+      void standbyEl.offsetWidth;
+      standbyEl.classList.add('hero-video--fade-in');
+      standbyEl.currentTime = 0;
+      standbyEl.play().catch(() => { transitioningRef.current = false; });
+    };
+
+    if (preloadedRef.current === standbyEl && standbyEl.src.endsWith(list[nextIdx])) {
+      fadeInStandby();
+    } else {
+      standbyEl.src = list[nextIdx];
+      standbyEl.load();
+      standbyEl.onloadeddata = fadeInStandby;
+    }
+
+    // 3. Cleanup after transition completes
+    setTimeout(() => {
+      activeEl.pause();
+      activeEl.classList.remove('hero-video--fade-out');
+      activeEl.classList.add('hero-video--hidden');
+      activeRef.current = activeRef.current === 'A' ? 'B' : 'A';
+      idxRef.current = nextIdx;
+      transitioningRef.current = false;
+    }, 1500);
+  }, []);
+
+  // Preload next video into standby element when current starts playing
+  const handlePlay = useCallback(() => {
+    const list = videosRef.current;
+    if (list.length <= 1) return;
+    const standbyEl = getStandbyEl();
+    if (!standbyEl) return;
+    const nextIdx = (idxRef.current + 1) % list.length;
+    // Only preload if not already loaded with correct video
+    if (!standbyEl.src.endsWith(list[nextIdx])) {
+      standbyEl.src = list[nextIdx];
+      standbyEl.load();
+    }
+    preloadedRef.current = standbyEl;
+  }, []);
 
   // Probe available videos, start first one
   useEffect(() => {
@@ -59,8 +126,7 @@ function HeroBackground() {
       if (found.length === 0) return;
       videosRef.current = found;
       idxRef.current = 0;
-      // Start first video immediately
-      const vid = videoRef.current;
+      const vid = videoARef.current;
       if (vid) {
         vid.src = found[0];
         vid.load();
@@ -71,36 +137,25 @@ function HeroBackground() {
     return () => { cancelled = true; };
   }, []);
 
-  const handleEnd = useCallback(() => {
-    const vid = videoRef.current;
-    const list = videosRef.current;
-    if (!vid || list.length <= 1) return;
-
-    // Find next playable video (skip broken files)
-    const tryNext = (attempt: number) => {
-      const idx = (idxRef.current + attempt) % list.length;
-      vid.src = list[idx];
-      vid.play().then(() => {
-        idxRef.current = idx;
-      }).catch(() => {
-        if (attempt + 1 < list.length) {
-          tryNext(attempt + 1);
-        }
-      });
-    };
-
-    tryNext(1);
-  }, []);
-
   return (
     <div className="home-hero__bg--placeholder" aria-hidden="true">
       <video
-        ref={videoRef}
-        className="home-hero__bg-video"
+        ref={videoARef}
+        className="home-hero__bg-video hero-video--fade-in"
         muted
         playsInline
         preload="auto"
-        onEnded={handleEnd}
+        onEnded={crossfade}
+        onPlay={handlePlay}
+      />
+      <video
+        ref={videoBRef}
+        className="home-hero__bg-video hero-video--hidden"
+        muted
+        playsInline
+        preload="auto"
+        onEnded={crossfade}
+        onPlay={handlePlay}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
     </div>
