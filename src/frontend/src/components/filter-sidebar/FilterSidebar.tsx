@@ -5,12 +5,13 @@ import {
   ArrowUpDown, SlidersHorizontal,
 } from 'lucide-react';
 import { catalogApi } from '@/api/catalog';
+import { useCategories } from '@/hooks/useCategories';
 import { splitSpecsAndRanges } from '@/utils/specifications';
 import { getDisplayManufacturerName } from '@/utils/manufacturerNameOverrides';
 import { DualRangeSlider } from './DualRangeSlider';
 import { Skeleton } from '../ui/Skeleton';
 import { CATEGORY_LABELS, CATEGORY_ORDER, BACKEND_TO_FRONTEND, FRONTEND_TO_BACKEND } from '@/utils/category-mappings';
-import type { ProductCategory, Manufacturer, Category, FilterFacetAttribute } from '@/api/types';
+import type { ProductCategory, Manufacturer, FilterFacetAttribute } from '@/api/types';
 
 /**
  * Порядок атрибутов по категориям (backend slug -> ключи).
@@ -239,7 +240,7 @@ export function FilterSidebar({
   const [, setCategories] = useState<Category[]>([]);
   const [filterFacets, setFilterFacets] = useState<FilterFacetAttribute[]>([]);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
   const [manufacturersLoading, setManufacturersLoading] = useState(false);
   const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>({ min: 0, max: 10000 });
   const [_priceBoundsLoading, setPriceBoundsLoading] = useState(false);
@@ -275,33 +276,19 @@ export function FilterSidebar({
     }
   }, [selectedSpecifications]);
 
-  // === Загрузка категорий с количеством товаров ===
+  // === Подсчёт количества товаров по категориям (из кэшированного useCategories) ===
   useEffect(() => {
-    let cancelled = false;
-    const fetchCategories = async () => {
-      try {
-        setCategoriesLoading(true);
-        const data = await catalogApi.getCategories();
-        if (cancelled) return;
-        const counts: Record<string, number> = {};
-        data?.forEach((cat) => {
-          if (cat?.slug != null) {
-            const key = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug);
-            counts[key] = (counts[key] ?? 0) + (cat.productCount ?? 0);
-          }
-        });
-        setCategories(data || []);
-        setCategoryCounts(counts);
-      } catch (err) {
-        console.error('Не удалось загрузить категории:', err);
-      } finally {
-        if (!cancelled) setCategoriesLoading(false);
+    if (!categoriesData) return;
+    const counts: Record<string, number> = {};
+    categoriesData.forEach((cat) => {
+      if (cat?.slug != null) {
+        const key = (BACKEND_TO_FRONTEND[cat.slug] ?? cat.slug);
+        counts[key] = (counts[key] ?? 0) + (cat.productCount ?? 0);
       }
-    };
-    void fetchCategories();
-    const timeout = setTimeout(() => { if (!cancelled) setCategoriesLoading(false); }, 30000);
-    return () => { cancelled = true; clearTimeout(timeout); };
-  }, []);
+    });
+    setCategories(categoriesData);
+    setCategoryCounts(counts);
+  }, [categoriesData]);
 
   // === Загрузка фасетов фильтров для спецификаций ===
   const facetFetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
