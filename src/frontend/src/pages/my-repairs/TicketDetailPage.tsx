@@ -9,6 +9,7 @@ import { ArrowLeft, Lock } from 'lucide-react';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { TypingIndicator } from '@/components/chat/TypingIndicator';
+import '../../components/chat/Chat.css';
 import './TicketDetailPage.css';
 
 function getStatusLabel(status: string): string {
