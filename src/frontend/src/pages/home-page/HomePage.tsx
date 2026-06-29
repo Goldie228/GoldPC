@@ -43,6 +43,20 @@ function HeroBackground() {
   const getActiveEl = () => activeRef.current === 'A' ? videoARef.current : videoBRef.current;
   const getStandbyEl = () => activeRef.current === 'A' ? videoBRef.current : videoARef.current;
 
+  // Прелоад следующего видео (вызывается из crossfade после смены активного)
+  const preloadNext = useCallback(() => {
+    const list = videosRef.current;
+    if (list.length <= 1) return;
+    const standbyEl = getStandbyEl();
+    if (!standbyEl) return;
+    const nextIdx = (idxRef.current + 1) % list.length;
+    if (!standbyEl.src.endsWith(list[nextIdx])) {
+      standbyEl.src = list[nextIdx];
+      standbyEl.load();
+    }
+    preloadedRef.current = standbyEl;
+  }, []);
+
   const crossfade = useCallback(() => {
     if (transitioningRef.current) return;
     const list = videosRef.current;
@@ -85,23 +99,10 @@ function HeroBackground() {
       activeRef.current = activeRef.current === 'A' ? 'B' : 'A';
       idxRef.current = nextIdx;
       transitioningRef.current = false;
+      // Прелоад следующего видео после смены активного
+      preloadNext();
     }, 1500);
-  }, []);
-
-  // Preload next video into standby element when current starts playing
-  const handlePlay = useCallback(() => {
-    const list = videosRef.current;
-    if (list.length <= 1) return;
-    const standbyEl = getStandbyEl();
-    if (!standbyEl) return;
-    const nextIdx = (idxRef.current + 1) % list.length;
-    // Only preload if not already loaded with correct video
-    if (!standbyEl.src.endsWith(list[nextIdx])) {
-      standbyEl.src = list[nextIdx];
-      standbyEl.load();
-    }
-    preloadedRef.current = standbyEl;
-  }, []);
+  }, [preloadNext]);
 
   // Probe available videos, start first one
   useEffect(() => {
@@ -146,7 +147,6 @@ function HeroBackground() {
         playsInline
         preload="auto"
         onEnded={crossfade}
-        onPlay={handlePlay}
       />
       <video
         ref={videoBRef}
@@ -155,7 +155,6 @@ function HeroBackground() {
         playsInline
         preload="auto"
         onEnded={crossfade}
-        onPlay={handlePlay}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
     </div>
