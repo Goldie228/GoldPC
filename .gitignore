@@ -319,3 +319,10 @@ db-schema/
 
 # App Data (runtime)
 src/backend/GoldPC.Api/App_Data/
+
+# Dev review/build artifacts
+REVIEW-CODE.md
+TESTING-CHECKLIST.md
+PROJECT-REPORT.md
+BUILD-NOTES-*.md
+.reports/

@@ -1,3 +1,0 @@
-{
-  "description": "ServiceTicket fields differ from backend model (deviceType → missing, ticketNumber → requestNumber, etc.)"
-}
