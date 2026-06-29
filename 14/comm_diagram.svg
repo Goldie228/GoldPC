@@ -1,0 +1,100 @@
+<svg width="1000" height="600" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1000" height="600" fill="white"/>
+
+  <!-- ===== ACTOR: Покупатель (proper UML stick figure) ===== -->
+  <g transform="translate(80, 100)">
+    <!-- Head -->
+    <circle cx="0" cy="0" r="12" fill="white" stroke="black" stroke-width="2"/>
+    <!-- Body -->
+    <line x1="0" y1="12" x2="0" y2="55" stroke="black" stroke-width="2"/>
+    <!-- Arms -->
+    <line x1="-25" y1="30" x2="25" y2="30" stroke="black" stroke-width="2"/>
+    <!-- Left leg -->
+    <line x1="0" y1="55" x2="-15" y2="85" stroke="black" stroke-width="2"/>
+    <!-- Right leg -->
+    <line x1="0" y1="55" x2="15" y2="85" stroke="black" stroke-width="2"/>
+    <!-- Label -->
+    <text x="0" y="105" text-anchor="middle" font-family="Arial" font-size="14">Покупатель</text>
+  </g>
+
+  <!-- ===== BOX: CustomerUI ===== -->
+  <rect x="260" y="140" width="160" height="45" fill="#FFFACD" stroke="black" stroke-width="2" rx="8"/>
+  <text x="340" y="167" text-anchor="middle" font-family="Arial" font-size="14">CustomerUI</text>
+
+  <!-- ===== BOX: OrderManager ===== -->
+  <rect x="260" y="210" width="160" height="45" fill="#FFFACD" stroke="black" stroke-width="2" rx="8"/>
+  <text x="340" y="237" text-anchor="middle" font-family="Arial" font-size="14">OrderManager</text>
+
+  <!-- ===== BOX: Order ===== -->
+  <rect x="260" y="280" width="160" height="45" fill="#FFFACD" stroke="black" stroke-width="2" rx="8"/>
+  <text x="340" y="307" text-anchor="middle" font-family="Arial" font-size="14">Order</text>
+
+  <!-- ===== BOX: PaymentGateway (right) ===== -->
+  <rect x="560" y="210" width="160" height="45" fill="#FFFACD" stroke="black" stroke-width="2" rx="8"/>
+  <text x="640" y="237" text-anchor="middle" font-family="Arial" font-size="14">PaymentGateway</text>
+
+  <!-- ===== MESSAGES (numbered, straight horizontal lines) ===== -->
+
+  <!-- 1: Покупатель -> CustomerUI: нажать «Оформить заказ» -->
+  <line x1="95" y1="85" x2="260" y2="162" stroke="#333" stroke-width="1.5"/>
+  <polygon points="260,162 254,158 258,162" fill="#333"/>
+  <text x="175" y="130" text-anchor="middle" font-family="Arial" font-size="10">1: нажать</text>
+  <text x="175" y="142" text-anchor="middle" font-family="Arial" font-size="10">«Оформить заказ»</text>
+
+  <!-- 2: CustomerUI -> OrderManager: initiateCheckout() -->
+  <line x1="420" y1="210" x2="560" y2="232" stroke="#333" stroke-width="1.5"/>
+  <polygon points="560,232 554,228 558,232" fill="#333"/>
+  <text x="490" y="220" text-anchor="middle" font-family="Arial" font-size="10">2: initiateCheckout()</text>
+
+  <!-- 3: OrderManager -> CustomerUI: requestCustomerData() -->
+  <line x1="560" y1="220" x2="420" y2="242" stroke="#333" stroke-width="1.5"/>
+  <polygon points="420,242 426,238 422,242" fill="#333"/>
+  <text x="490" y="250" text-anchor="middle" font-family="Arial" font-size="10">3: requestCustomerData()</text>
+
+  <!-- 4: Покупатель -> CustomerUI: ввести персональные данные -->
+  <line x1="95" y1="95" x2="260" y2="170" stroke="#333" stroke-width="1.5"/>
+  <polygon points="260,170 254,166 258,170" fill="#333"/>
+  <text x="175" y="150" text-anchor="middle" font-family="Arial" font-size="10">4: ввести</text>
+  <text x="175" y="162" text-anchor="middle" font-family="Arial" font-size="10">персональные данные</text>
+
+  <!-- 5: CustomerUI -> OrderManager: setCustomerData() -->
+  <line x1="420" y1="220" x2="560" y2="220" stroke="#333" stroke-width="1.5"/>
+  <polygon points="560,220 554,216 558,220" fill="#333"/>
+  <text x="490" y="210" text-anchor="middle" font-family="Arial" font-size="10">5: setCustomerData()</text>
+
+  <!-- 6: OrderManager -> Order: createOrder() -->
+  <line x1="340" y1="255" x2="340" y2="280" stroke="#333" stroke-width="1.5"/>
+  <polygon points="340,280 334,276 338,280" fill="#333"/>
+  <text x="355" y="270" text-anchor="start" font-family="Arial" font-size="10">6: createOrder()</text>
+
+  <!-- 7: Покупатель -> CustomerUI: подтвердить состав -->
+  <line x1="95" y1="100" x2="260" y2="178" stroke="#333" stroke-width="1.5"/>
+  <polygon points="260,178 254,174 258,178" fill="#333"/>
+  <text x="175" y="170" text-anchor="middle" font-family="Arial" font-size="10">7: подтвердить состав</text>
+
+  <!-- 8: CustomerUI -> OrderManager: proceedToPayment() -->
+  <line x1="420" y1="230" x2="560" y2="210" stroke="#333" stroke-width="1.5"/>
+  <polygon points="560,210 554,214 558,210" fill="#333"/>
+  <text x="490" y="235" text-anchor="middle" font-family="Arial" font-size="10">8: proceedToPayment()</text>
+
+  <!-- 9: OrderManager -> PaymentGateway: processPayment() -->
+  <line x1="560" y1="255" x2="560" y2="255" stroke="#333" stroke-width="1.5"/>
+  <polygon points="620,255 614,251 618,255" fill="#333"/>
+  <text x="630" y="250" text-anchor="start" font-family="Arial" font-size="10">9: processPayment()</text>
+
+  <!-- 10: PaymentGateway -> OrderManager: paymentResult() -->
+  <line x1="560" y1="245" x2="560" y2="245" stroke="#333" stroke-width="1.5"/>
+  <polygon points="500,245 506,249 502,245" fill="#333"/>
+  <text x="470" y="240" text-anchor="end" font-family="Arial" font-size="10">10: paymentResult()</text>
+
+  <!-- 11: OrderManager -> Order: updateStatus(Paid) -->
+  <line x1="340" y1="262" x2="340" y2="275" stroke="#333" stroke-width="1.5"/>
+  <polygon points="340,275 334,271 338,275" fill="#333"/>
+  <text x="355" y="285" text-anchor="start" font-family="Arial" font-size="10">11: updateStatus(Paid)</text>
+
+  <!-- 12: OrderManager -> CustomerUI: showOrderNumber() -->
+  <line x1="420" y1="240" x2="560" y2="240" stroke="#333" stroke-width="1.5"/>
+  <polygon points="560,240 554,236 558,240" fill="#333"/>
+  <text x="490" y="260" text-anchor="middle" font-family="Arial" font-size="10">12: showOrderNumber()</text>
+
+</svg>

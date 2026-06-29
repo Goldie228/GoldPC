@@ -1,0 +1,145 @@
+<svg width="900pt" height="500pt" viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(10 490)">
+    <title>CommunicationDiagram</title>
+    <polygon fill="white" stroke="none" points="0,0 0,-490 890,-490 890,0"/>
+
+    <!-- ===== ACTOR: Покупатель (stick figure) ===== -->
+    <g id="actor1">
+      <title>Покупатель</title>
+      <!-- Head -->
+      <circle cx="80" cy="-400" r="12" fill="white" stroke="black" stroke-width="2"/>
+      <!-- Body -->
+      <line x1="80" y1="-388" x2="80" y2="-340" stroke="black" stroke-width="2"/>
+      <!-- Arms -->
+      <line x1="55" y1="-370" x2="105" y2="-370" stroke="black" stroke-width="2"/>
+      <!-- Left leg -->
+      <line x1="80" y1="-340" x2="65" y2="-310" stroke="black" stroke-width="2"/>
+      <!-- Right leg -->
+      <line x1="80" y1="-340" x2="95" y2="-310" stroke="black" stroke-width="2"/>
+      <!-- Label -->
+      <text x="80" y="-295" text-anchor="middle" font-family="Arial" font-size="14">Покупатель</text>
+    </g>
+
+    <!-- ===== BOX: CustomerUI ===== -->
+    <g id="node2">
+      <title>CustomerUI</title>
+      <rect x="280" y="-420" width="140" height="40" fill="lightyellow" stroke="black" rx="10"/>
+      <text x="350" y="-395" text-anchor="middle" font-family="Arial" font-size="14">CustomerUI</text>
+    </g>
+
+    <!-- ===== BOX: OrderManager ===== -->
+    <g id="node3">
+      <title>OrderManager</title>
+      <rect x="540" y="-420" width="140" height="40" fill="lightyellow" stroke="black" rx="10"/>
+      <text x="610" y="-395" text-anchor="middle" font-family="Arial" font-size="14">OrderManager</text>
+    </g>
+
+    <!-- ===== BOX: PaymentGateway (top right) ===== -->
+    <g id="node4">
+      <title>PaymentGateway</title>
+      <rect x="540" y="-490" width="140" height="40" fill="lightyellow" stroke="black" rx="10"/>
+      <text x="610" y="-465" text-anchor="middle" font-family="Arial" font-size="14">PaymentGateway</text>
+    </g>
+
+    <!-- ===== MESSAGES (numbered, properly aligned) ===== -->
+
+    <!-- 1: Покупатель -> CustomerUI: нажать Оформить заказ -->
+    <g id="msg1">
+      <title>1. нажать Оформить заказ</title>
+      <path d="M90,-360 C160,-360 260,-410 278,-416" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="278,-416 272,-410 276,-418 278,-416" fill="#333"/>
+      <text x="180" y="-380" text-anchor="middle" font-family="Arial" font-size="10">1. нажать</text>
+      <text x="180" y="-368" text-anchor="middle" font-family="Arial" font-size="10">Оформить заказ</text>
+    </g>
+
+    <!-- 2: CustomerUI -> OrderManager: getCartContents() -->
+    <g id="msg2">
+      <title>2. getCartContents()</title>
+      <path d="M420,-410 C470,-410 530,-410 540,-410" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="540,-410 534,-404 536,-410 540,-410" fill="#333"/>
+      <text x="480" y="-400" text-anchor="middle" font-family="Arial" font-size="10">2. getCartContents()</text>
+    </g>
+
+    <!-- 3: OrderManager -> CustomerUI: список товаров -->
+    <g id="msg3">
+      <title>3. список товаров</title>
+      <path d="M540,-400 C470,-390 420,-390 350,-400" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="350,-400 356,-406 354,-398 350,-400" fill="#333"/>
+      <text x="480" y="-385" text-anchor="middle" font-family="Arial" font-size="10">3. список товаров</text>
+    </g>
+
+    <!-- 4: Покупатель -> CustomerUI: подтвердить состав -->
+    <g id="msg4">
+      <title>4. подтвердить состав</title>
+      <path d="M90,-340 C160,-330 260,-330 278,-340" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="278,-340 272,-334 276,-338 278,-340" fill="#333"/>
+      <text x="180" y="-320" text-anchor="middle" font-family="Arial" font-size="10">4. подтвердить состав</text>
+    </g>
+
+    <!-- 5: CustomerUI -> OrderManager: initiateCheckout() -->
+    <g id="msg5">
+      <title>5. initiateCheckout()</title>
+      <path d="M420,-400 C470,-380 530,-380 540,-390" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="540,-390 534,-384 536,-390 540,-390" fill="#333"/>
+      <text x="480" y="-375" text-anchor="middle" font-family="Arial" font-size="10">5. initiateCheckout()</text>
+    </g>
+
+    <!-- 6: Покупатель -> CustomerUI: ввести персональные данные -->
+    <g id="msg6">
+      <title>6. ввести персональные данные</title>
+      <path d="M95,-320 C160,-310 260,-310 278,-320" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="278,-320 272,-314 276,-318 278,-320" fill="#333"/>
+      <text x="170" y="-300" text-anchor="middle" font-family="Arial" font-size="10">6. ввести</text>
+      <text x="170" y="-288" text-anchor="middle" font-family="Arial" font-size="10">персональные данные</text>
+    </g>
+
+    <!-- 7: CustomerUI -> OrderManager: setCustomerData() -->
+    <g id="msg7">
+      <title>7. setCustomerData()</title>
+      <path d="M420,-390 C470,-370 530,-370 540,-380" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="540,-380 534,-374 536,-380 540,-380" fill="#333"/>
+      <text x="480" y="-360" text-anchor="middle" font-family="Arial" font-size="10">7. setCustomerData()</text>
+    </g>
+
+    <!-- 8: Покупатель -> CustomerUI: начать оплату -->
+    <g id="msg8">
+      <title>8. начать оплату</title>
+      <path d="M95,-300 C160,-290 260,-290 278,-300" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="278,-300 272,-294 276,-298 278,-300" fill="#333"/>
+      <text x="180" y="-280" text-anchor="middle" font-family="Arial" font-size="10">8. начать оплату</text>
+    </g>
+
+    <!-- 9: CustomerUI -> OrderManager: startPayment() -->
+    <g id="msg9">
+      <title>9. startPayment()</title>
+      <path d="M420,-380 C470,-360 530,-360 540,-370" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="540,-370 534,-364 536,-370 540,-370" fill="#333"/>
+      <text x="480" y="-345" text-anchor="middle" font-family="Arial" font-size="10">9. startPayment()</text>
+    </g>
+
+    <!-- 10: OrderManager -> PaymentGateway: processPayment() -->
+    <g id="msg10">
+      <title>10. processPayment()</title>
+      <path d="M610,-420 C610,-440 610,-468 610,-472" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="610,-472 604,-466 608,-470 610,-472" fill="#333"/>
+      <text x="640" y="-445" text-anchor="start" font-family="Arial" font-size="10">10. processPayment()</text>
+    </g>
+
+    <!-- 11: PaymentGateway -> OrderManager: paymentResult -->
+    <g id="msg11">
+      <title>11. paymentResult</title>
+      <path d="M610,-450 C610,-430 610,-425 610,-420" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="610,-420 616,-426 612,-422 610,-420" fill="#333"/>
+      <text x="640" y="-430" text-anchor="start" font-family="Arial" font-size="10">11. paymentResult</text>
+    </g>
+
+    <!-- 12: OrderManager -> CustomerUI: показать номер заказа -->
+    <g id="msg12">
+      <title>12. показать номер заказа</title>
+      <path d="M540,-400 C470,-410 420,-410 350,-400" fill="none" stroke="#333" stroke-width="1.5"/>
+      <polygon points="350,-400 356,-406 354,-398 350,-400" fill="#333"/>
+      <text x="480" y="-415" text-anchor="middle" font-family="Arial" font-size="10">12. показать номер заказа</text>
+    </g>
+
+  </g>
+</svg>

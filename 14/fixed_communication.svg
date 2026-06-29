@@ -1,0 +1,142 @@
+<svg width="854pt" height="373pt" viewBox="0.00 0.00 854.00 373.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 368.94)">
+<title>CommunicationDiagram</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-368.94 850.36,-368.94 850.36,4 -4,4"/>
+
+<!-- Proper Actor: stick figure -->
+<g id="node1" class="node">
+<title>Cust</title>
+<!-- Head -->
+<circle fill="black" stroke="black" cx="66.32" cy="-182.47" r="8"/>
+<!-- Body -->
+<line x1="66.32" y1="-174.47" x2="66.32" y2="-150.47" stroke="black" stroke-width="2"/>
+<!-- Arms -->
+<line x1="50.32" y1="-165.47" x2="82.32" y2="-165.47" stroke="black" stroke-width="2"/>
+<!-- Legs -->
+<line x1="66.32" y1="-150.47" x2="55.32" y2="-130.47" stroke="black" stroke-width="2"/>
+<line x1="66.32" y1="-150.47" x2="77.32" y2="-130.47" stroke="black" stroke-width="2"/>
+<text xml:space="preserve" text-anchor="middle" x="66.32" y="-120.47" font-family="Arial" font-size="14.00">Покупатель</text>
+</g>
+
+<!-- UI -->
+<g id="node2" class="node">
+<title>UI</title>
+<path fill="lightyellow" stroke="black" d="M283.33,-200.47C283.33,-200.47 216.64,-200.47 216.64,-200.47 210.64,-200.47 204.64,-194.47 204.64,-188.47 204.64,-188.47 204.64,-176.47 204.64,-176.47 204.64,-170.47 210.64,-164.47 216.64,-164.47 216.64,-164.47 283.33,-164.47 283.33,-164.47 289.33,-164.47 295.33,-170.47 295.33,-176.47 295.33,-176.47 295.33,-188.47 295.33,-188.47 295.33,-194.47 289.33,-200.47 283.33,-200.47"/>
+<text xml:space="preserve" text-anchor="middle" x="249.98" y="-178.27" font-family="Arial" font-size="14.00">CustomerUI</text>
+</g>
+
+<!-- Cust->UI -->
+<g id="edge1" class="edge">
+<title>Cust-&gt;UI</title>
+<path fill="none" stroke="#333333" d="M74.69,-211.78C105.8,-260.48 214.44,-259.69 243.04,-209.42"/>
+<polygon fill="#333333" stroke="#333333" points="245.51,-210.74 246.29,-202.3 240.42,-208.41 245.51,-210.74"/>
+<text xml:space="preserve" text-anchor="middle" x="196.37" y="-225.6" font-family="Arial" font-size="10.00">1. нажать</text>
+<text xml:space="preserve" text-anchor="middle" x="196.37" y="-213.6" font-family="Arial" font-size="10.00">Оформить заказ</text>
+</g>
+
+<!-- Cust->UI -->
+<g id="edge4" class="edge">
+<title>Cust-&gt;UI</title>
+<path fill="none" stroke="#333333" d="M74.69,-153.16C105.8,-104.46 214.44,-105.25 243.04,-155.52"/>
+<polygon fill="#333333" stroke="#333333" points="240.42,-156.53 246.29,-162.64 245.51,-154.2 240.42,-156.53"/>
+<text xml:space="preserve" text-anchor="middle" x="213.05" y="-145.34" font-family="Arial" font-size="10.00">4. подтвердить состав</text>
+</g>
+
+<!-- Cust->UI -->
+<g id="edge8" class="edge">
+<title>Cust-&gt;UI</title>
+<path fill="none" stroke="#333333" d="M116.51,-162.84C142.33,-160.02 173.73,-160.01 199.58,-162.82"/>
+<polygon fill="#333333" stroke="#333333" points="199.05,-165.58 207.34,-163.79 199.75,-160.02 199.05,-165.58"/>
+<text xml:space="preserve" text-anchor="middle" x="106.65" y="-153.83" font-family="Arial" font-size="10.00">8. ввести</text>
+<text xml:space="preserve" text-anchor="middle" x="106.65" y="-141.83" font-family="Arial" font-size="10.00">персональные данные</text>
+</g>
+
+<!-- Cust->UI -->
+<g id="edge10" class="edge">
+<title>Cust-&gt;UI</title>
+<path fill="none" stroke="#333333" d="M116.51,-202.1C142.33,-204.92 173.73,-204.93 199.58,-202.12"/>
+<polygon fill="#333333" stroke="#333333" points="199.75,-204.92 207.34,-201.15 199.05,-199.36 199.75,-204.92"/>
+<text xml:space="preserve" text-anchor="middle" x="179.58" y="-193.11" font-family="Arial" font-size="10.00">10. начать оплату</text>
+</g>
+
+<!-- OM -->
+<g id="node3" class="node">
+<title>OM</title>
+<path fill="lightyellow" stroke="black" d="M660.86,-200.47C660.86,-200.47 577.82,-200.47 577.82,-200.47 571.82,-200.47 565.82,-194.47 565.82,-188.47 565.82,-188.47 565.82,-176.47 565.82,-176.47 565.82,-170.47 571.82,-164.47 577.82,-164.47 577.82,-164.47 660.86,-164.47 660.86,-164.47 666.86,-164.47 672.86,-170.47 672.86,-176.47 672.86,-176.47 672.86,-188.47 672.86,-188.47 672.86,-194.47 666.86,-200.47 660.86,-200.47"/>
+<text xml:space="preserve" text-anchor="middle" x="619.34" y="-178.27" font-family="Arial" font-size="14.00">OrderManager</text>
+</g>
+
+<!-- UI->OM -->
+<g id="edge2" class="edge">
+<title>UI-&gt;OM</title>
+<path fill="none" stroke="#333333" d="M252.06,-200.75C279.65,-318.32 573.51,-321.3 614.58,-209.68"/>
+<polygon fill="#333333" stroke="#333333" points="617.22,-210.64 616.84,-202.17 611.86,-209.03 617.22,-210.64"/>
+<text xml:space="preserve" text-anchor="middle" x="391.36" y="-208.21" font-family="Arial" font-size="10.00">2. getCartContents</text>
+</g>
+
+<!-- UI->OM -->
+<g id="edge5" class="edge">
+<title>UI-&gt;OM</title>
+<path fill="none" stroke="#333333" d="M252.06,-164.19C279.65,-46.62 573.51,-43.64 614.58,-155.26"/>
+<polygon fill="#333333" stroke="#333333" points="611.86,-155.91 616.84,-162.77 617.22,-154.3 611.86,-155.91"/>
+<text xml:space="preserve" text-anchor="middle" x="392.19" y="-150.73" font-family="Arial" font-size="10.00">5. initiateCheckout</text>
+</g>
+
+<!-- UI->OM -->
+<g id="edge9" class="edge">
+<title>UI-&gt;OM</title>
+<path fill="none" stroke="#333333" d="M256.09,-164.1C298.45,-104.01 548.73,-101.69 607.15,-157.14"/>
+<polygon fill="#333333" stroke="#333333" points="604.94,-158.86 612.31,-163.05 609.16,-155.18 604.94,-158.86"/>
+<text xml:space="preserve" text-anchor="middle" x="476.08" y="-163.62" font-family="Arial" font-size="10.00">9. setCustomerData</text>
+</g>
+
+<!-- UI->OM -->
+<g id="edge11" class="edge">
+<title>UI-&gt;OM</title>
+<path fill="none" stroke="#333333" d="M295.65,-167.55C361.17,-159.14 482.11,-158.5 556.17,-165.61"/>
+<polygon fill="#333333" stroke="#333333" points="555.66,-168.37 563.91,-166.41 556.24,-162.8 555.66,-168.37"/>
+<text xml:space="preserve" text-anchor="middle" x="388.11" y="-169.58" font-family="Arial" font-size="10.00">11. startPayment</text>
+</g>
+
+<!-- OM->UI -->
+<g id="edge3" class="edge">
+<title>OM-&gt;UI</title>
+<path fill="none" stroke="#333333" d="M565.63,-198.35C495.94,-206.14 374.96,-206.18 304.75,-198.47"/>
+<polygon fill="#333333" stroke="#333333" points="305.38,-195.72 297.11,-197.56 304.72,-201.28 305.38,-195.72"/>
+<text xml:space="preserve" text-anchor="middle" x="392.12" y="-189.41" font-family="Arial" font-size="10.00">3. список товаров</text>
+</g>
+
+<!-- OM->UI -->
+<g id="edge17" class="edge">
+<title>OM-&gt;UI</title>
+<path fill="none" stroke="#333333" d="M613.24,-200.84C570.88,-260.93 320.6,-263.25 262.17,-207.8"/>
+<polygon fill="#333333" stroke="#333333" points="264.39,-206.08 257.02,-201.89 260.17,-209.76 264.39,-206.08"/>
+<text xml:space="preserve" text-anchor="middle" x="469.66" y="-219.32" font-family="Arial" font-size="10.00">17. показать</text>
+<text xml:space="preserve" text-anchor="middle" x="469.66" y="-207.32" font-family="Arial" font-size="10.00">номер заказа</text>
+</g>
+
+<!-- PG -->
+<g id="node4" class="node">
+<title>PG</title>
+<path fill="lightyellow" stroke="black" d="M577.94,-36C577.94,-36 475.45,-36 475.45,-36 469.45,-36 463.45,-30 463.45,-24 463.45,-24 463.45,-12 463.45,-12 463.45,-6 469.45,0 475.45,0 475.45,0 577.94,0 577.94,0 583.94,0 589.94,-6 589.94,-12 589.94,-12 589.94,-24 589.94,-24 589.94,-30 583.94,-36 577.94,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="526.69" y="-13.8" font-family="Arial" font-size="14.00">PaymentGateway</text>
+</g>
+
+<!-- UI->PG -->
+<g id="edge13" class="edge">
+<title>UI-&gt;PG</title>
+<path fill="none" stroke="#333333" d="M252.3,-164.34C178.23,-126.3 162.24,-76.15 283.94,-36 374.94,-8.47 457.94,-16.82 508.15,-27.46"/>
+<polygon fill="#333333" stroke="#333333" points="507.47,-30.2 515.99,-29.26 508.78,-24.59 507.47,-30.2"/>
+<text xml:space="preserve" text-anchor="middle" x="337.84" y="-103.13" font-family="Arial" font-size="10.00">13. processPayment</text>
+</g>
+
+<!-- PG->UI -->
+<g id="edge14" class="edge">
+<title>PG-&gt;UI</title>
+<path fill="none" stroke="#333333" d="M508.23,-36.14C457.94,-53.3 373.94,-80.82 283.94,-106 244.94,-117.14 204.94,-131.3 179.41,-141.92"/>
+<polygon fill="#333333" stroke="#333333" points="177.76,-138.84 170.29,-146.18 182.29,-145.03 177.76,-138.84"/>
+<text xml:space="preserve" text-anchor="middle" x="337.84" y="-126.13" font-family="Arial" font-size="10.00">14. paymentResult</text>
+</g>
+
+</g>
+</svg>
