@@ -297,6 +297,22 @@ get-docker.sh
 
 # OpenCode internal files
 .opencode/
+AGENTS.md
+opencode.json
+schema.html
+
+# Debug tools
+src/frontend/console-monitor.ts
+
+# Test artifacts
+playwright-report/
+
+# User uploads (never commit user files)
+src/ServicesService/uploads/tickets/
+src/AuthService/wwwroot/uploads/avatars/
+
+# DB schema dumps
+db-schema/
 
 # Implementation reports
 .reports/impl-findings/
