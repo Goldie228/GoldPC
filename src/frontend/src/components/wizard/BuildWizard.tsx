@@ -289,8 +289,8 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                     {(['atx', 'micro-atx', 'mini-itx', 'any'] as FormFactor[]).map((ff) => (
                       <button
                         key={ff}
-                        className={`px-4 py-2 bg-surface-elevated border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
-                          state.formFactor === ff ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark text-body-text'
+                        className={`px-4 py-2 border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
+                          state.formFactor === ff ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'bg-surface-elevated border-hairline-dark text-body-text'
                         }`}
                         onClick={() => handleFormFactorChange(ff)}
                       >
@@ -310,8 +310,8 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                     ] as [NoiseLevel, string][]).map(([val, label]) => (
                       <button
                         key={val}
-                        className={`px-4 py-2 bg-surface-elevated border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
-                          state.noiseLevel === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark text-body-text'
+                        className={`px-4 py-2 border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
+                          state.noiseLevel === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'bg-surface-elevated border-hairline-dark text-body-text'
                         }`}
                         onClick={() => handleNoiseChange(val)}
                       >
@@ -331,8 +331,8 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                     ] as [RgbPreference, string][]).map(([val, label]) => (
                       <button
                         key={val}
-                        className={`px-4 py-2 bg-surface-elevated border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
-                          state.rgbPreference === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark text-body-text'
+                        className={`px-4 py-2 border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
+                          state.rgbPreference === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'bg-surface-elevated border-hairline-dark text-body-text'
                         }`}
                         onClick={() => handleRgbChange(val)}
                       >
@@ -352,8 +352,8 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
                     ] as [CoolingPreference, string][]).map(([val, label]) => (
                       <button
                         key={val}
-                        className={`px-4 py-2 bg-surface-elevated border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
-                          state.coolingPreference === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'border-hairline-dark text-body-text'
+                        className={`px-4 py-2 border rounded-md cursor-pointer transition-all duration-200 hover:border-gold ${
+                          state.coolingPreference === val ? 'border-2 border-gold bg-gold text-gold-ink font-semibold' : 'bg-surface-elevated border-hairline-dark text-body-text'
                         }`}
                         onClick={() => handleCoolingChange(val)}
                       >

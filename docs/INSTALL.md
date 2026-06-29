@@ -43,7 +43,7 @@ docker compose version
 ## 3. Клонирование проекта
 
 ```bash
-git clone https://github.com/goldpc/GoldPC.git
+git clone https://github.com/Goldie228/GoldPC
 cd GoldPC
 ```
 

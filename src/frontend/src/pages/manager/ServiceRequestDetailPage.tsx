@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton/Skeleton';
 import { getServiceStatusConfig, SERVICE_STATUS_OPTIONS } from '@/utils/service-status';
 import { useToast } from '@/hooks/useToast';
+import { useAuthStore } from '@/store/authStore';
 import { useTicketChat } from '@/hooks/useTicketChat';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatInput } from '@/components/chat/ChatInput';
@@ -58,6 +59,7 @@ export function ServiceRequestDetailPage() {
   const { id: serviceId } = useParams<{ id: string }>();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const currentUserId = useAuthStore((state) => state.user?.id);
   const [selectedMasterId, setSelectedMasterId] = useState('');
   const [confirmClose, setConfirmClose] = useState(false);
 
@@ -324,7 +326,7 @@ export function ServiceRequestDetailPage() {
                 </p>
               ) : (
                 messages.map((msg) => (
-                  <ChatMessage key={msg.id} message={msg} isOwn={msg.authorRole === 'Manager'} />
+                  <ChatMessage key={msg.id} message={msg} isOwn={msg.authorId === currentUserId} />
                 ))
               )}
               {typingUserId && <TypingIndicator who="Клиент" />}

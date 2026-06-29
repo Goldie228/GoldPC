@@ -111,7 +111,7 @@ sudo mkdir -p /opt/goldpc
 sudo chown $USER:$USER /opt/goldpc
 
 # Клонировать
-git clone https://github.com/goldie1k/goldpc.git /opt/goldpc
+git clone https://github.com/Goldie228/GoldPC /opt/goldpc
 cd /opt/goldpc
 ```
 

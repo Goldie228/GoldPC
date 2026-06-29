@@ -454,7 +454,7 @@ export function TicketDetailPage() {
                 </p>
               ) : (
                 messages.map((msg) => (
-                  <ChatMessage key={msg.id} message={msg} isOwn={msg.authorRole === 'Master'} />
+                  <ChatMessage key={msg.id} message={msg} isOwn={msg.authorId === currentUserId} />
                 ))
               )}
               {typingUserId && <TypingIndicator who="Клиент" />}

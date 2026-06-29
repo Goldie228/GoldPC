@@ -132,7 +132,7 @@ graph TB
 
 ```bash
 # 1. Клонировать репозиторий
-git clone <repo-url> && cd kursovaya
+git clone https://github.com/Goldie228/GoldPC && cd GoldPC
 
 # 2. Установить зависимости
 cp .env.example .env

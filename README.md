@@ -94,7 +94,7 @@ GoldPC — комплексная информационная система д
 
 ```bash
 # Клонирование репозитория
-git clone <repository-url>
+git clone https://github.com/Goldie228/GoldPC
 cd kursovaya
 
 # Запуск всех сервисов
