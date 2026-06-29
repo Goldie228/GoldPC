@@ -146,47 +146,6 @@ docker-compose -f docker/docker-compose.yml down
 
 ---
 
-## 🧩 Обновление каталога из X-Core (описание + юридическая информация)
-
-Ниже — рабочий поток, чтобы обновить локальную БД данными со страницы X-Core, включая:
-- структурируемое описание (берётся из `.detail_text`)
-- юридическую информацию (берётся из `.description-prod__lists-item`: гарантия/адреса/импортёр/сервис)
-
-### 1) Пересобрать `xcore-products.json`
-
-```bash
-cd scripts/scraper
-
-# по умолчанию парсит базовый набор категорий
-node index.mjs
-
-# опционально: все категории
-node index.mjs --all
-
-# опционально: медленный режим
-node index.mjs --slow
-```
-
-Результат будет в `scripts/scraper/data/xcore-products.json`.
-
-### 2) Импортировать в БД (обновит и существующие товары)
-
-Обычный локальный сид (без сети): `scripts/seed-data/catalog-seed.json` и картинки в `src/CatalogService/uploads/seed/`.
-
-```bash
-# из корня репозитория
-dotnet run --project src/CatalogService -- seed-catalog
-# совместимый алиас: seed-xcore
-
-# полный сброс товаров со SKU XCORE-* и импорт из catalog-seed.json; опционально merge картинок из xcore-images.json
-dotnet run --project src/CatalogService -- seed-catalog-reset
-# алиас: seed-xcore-reset
-```
-
-Примечание: `CatalogService` при старте применяет миграции автоматически, поэтому новые поля для юридической информации будут созданы при запуске сервиса.
-
----
-
 ## 📚 Документация
 
 Подробная документация находится в папке [`docs/`](./docs/):
