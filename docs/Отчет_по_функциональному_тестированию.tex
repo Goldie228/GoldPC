@@ -1,0 +1,109 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{fontspec}
+\setmainfont{Liberation Serif}
+\setsansfont{Liberation Sans}
+\setmonofont{Liberation Mono}
+\linespread{1.0}
+\fontsize{14pt}{17pt}\selectfont
+
+\usepackage{geometry}
+\geometry{left=3cm,right=1.5cm,top=2cm,bottom=2cm}
+
+\usepackage{indentfirst}
+\setlength{\parindent}{1.25cm}
+
+\usepackage{array}
+\usepackage{tabularx}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+% Титульная страница
+\thispagestyle{empty}
+\begin{center}
+ГОСУДАРСТВЕННОЕ УЧРЕЖДЕНИЕ ОБРАЗОВАНИЯ\\
+<<МИНСКИЙ ГОСУДАРСТВЕННЫЙ КОЛЛЕДЖ\\
+ЭЛЕКТРОНИКИ>>
+\end{center}
+
+\vspace{3cm}
+
+\begin{center}
+{\bfseries ОТЧЁТ\\
+ПО ФУНКЦИОНАЛЬНОМУ ТЕСТИРОВАНИЮ\\
+ПРОЕКТА <<GoldPC>>}
+\end{center}
+
+\vspace{2cm}
+
+\begin{center}
+2026
+\end{center}
+
+\vfill
+
+\newpage
+
+\section*{СОДЕРЖАНИЕ}
+
+1.~Общие сведения о проекте\\
+2.~Объект тестирования\\
+3.~Методы и средства тестирования\\
+4.~Результаты функционального тестирования\\
+5.~Выводы
+
+\newpage
+
+\section{1. Общие сведения о проекте}
+
+Проект <<GoldPC>> представляет собой интернет-магазин персональных компьютеров с функционалом конфигуратора сборки ПК, каталогом товаров, системой заказов, сервисным обслуживанием и гарантийным обслуживанием. Система построена на архитектуре микросервисов и включает следующие компоненты: AuthService, CatalogService, OrdersService, ServicesService, WarrantyService, PCBuilderService, GoldPC.Api.
+
+Стек технологий: ASP.NET Core 8 (бэкенд), React 19 + Vite (фронтенд), PostgreSQL (база данных), gRPC (межсервисное взаимодействие), Redis (кэширование).
+
+\section{2. Объект тестирования}
+
+Объектом тестирования является бэкендная часть системы, реализующая бизнес-логику приложения. Функциональное тестирование проводилось на уровне модульных тестов для каждого микросервиса.
+
+\section{3. Методы и средства тестирования}
+
+Для функционального тестирования использовались: модульные тесты (xUnit, FluentAssertions, Moq), интеграционные тесты (WebApplicationFactory), контрактные тесты (PactNet), in-memory база данных (EF Core InMemory).
+
+\section{4. Результаты функционального тестирования}
+
+В таблице представлены результаты 7 основных функциональных тестов.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{|c|X|c|}
+\hline
+№ & Тест & Результат \\
+\hline
+1 & Register\_ValidRequest (AuthService) & Пройден \\
+\hline
+2 & GetProductById (CatalogService) & Пройден \\
+\hline
+3 & CreateOrder (OrdersService) & Пройден \\
+\hline
+4 & CreateServiceRequest (ServicesService) & Пройден \\
+\hline
+5 & CreateWarrantyClaim (WarrantyService) & Пройден \\
+\hline
+6 & CheckCompatibility (PCBuilderService) & Пройден \\
+\hline
+7 & VerifyPact (ContractTests) & Пройден \\
+\hline
+\end{tabularx}
+\end{center}
+
+Всего тестов: 7. Пройдено: 7. Не пройдено: 0.
+
+\section{5. Выводы}
+
+В ходе функционального тестирования проекта <<GoldPC>> выполнена проверка основных сценариев работы системы. Все 7 тестов прошли успешно, что подтверждает корректность реализации бизнес-логики микросервисов.
+
+\end{document}

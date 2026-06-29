@@ -1,0 +1,107 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{fontspec}
+\setmainfont{Liberation Serif}
+\setsansfont{Liberation Sans}
+\setmonofont{Liberation Mono}
+\linespread{1.0}
+\fontsize{14pt}{17pt}\selectfont
+
+\usepackage{geometry}
+\geometry{left=3cm,right=1.5cm,top=2cm,bottom=2cm}
+
+\usepackage{indentfirst}
+\setlength{\parindent}{1.25cm}
+
+\usepackage{array}
+\usepackage{tabularx}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+\begin{document}
+
+% Титульная страница
+\thispagestyle{empty}
+\begin{center}
+ГОСУДАРСТВЕННОЕ УЧРЕЖДЕНИЕ ОБРАЗОВАНИЯ\\
+<<МИНСКИЙ ГОСУДАРСТВЕННЫЙ КОЛЛЕДЖ\\
+ЭЛЕКТРОНИКИ>>
+\end{center}
+
+\vspace{3cm}
+
+\begin{center}
+{\bfseries ОТЧЁТ\\
+ПО АВТОМАТИЗИРОВАННЫМ ТЕСТАМ\\
+ПРОЕКТА <<GoldPC>>}
+\end{center}
+
+\vspace{2cm}
+
+\begin{center}
+2026
+\end{center}
+
+\vfill
+
+\newpage
+
+\section*{СОДЕРЖАНИЕ}
+
+1.~Назначение автоматизированных тестов\\
+2.~Средства автоматизации\\
+3.~Структура тестовой инфраструктуры\\
+4.~Результаты автоматизированных тестов\\
+5.~Выводы
+
+\newpage
+
+\section{1. Назначение автоматизированных тестов}
+
+Автоматизированные тесты в проекте <<GoldPC>> обеспечивают корректность бизнес-логики микросервисов, предотвращают регрессии при изменении кода и валидируют архитектурные ограничения.
+
+\section{2. Средства автоматизации}
+
+Для написания и запуска тестов используются: xUnit (фреймворк тестирования), FluentAssertions (утверждения), Moq (моки), AutoFixture (тестовые данные), EF Core InMemory (in-memory БД), WebApplicationFactory (HTTP-тестирование), PactNet (контрактные тесты), NetArchTest.Rules (архитектурные тесты), Bogus (Fakers).
+
+\section{3. Структура тестовой инфраструктуры}
+
+Тестовая инфраструктура организована в виде отдельных проектов: AuthService.Tests, GoldPC.UnitTests, OrdersService.Tests, ServicesService.Tests, WarrantyService.Tests, PCBuilderService.Tests, ArchitectureTests, GoldPC.IntegrationTests, GoldPC.ContractTests.
+
+\section{4. Результаты автоматизированных тестов}
+
+В таблице представлены 7 основных модульных тестов.
+
+\begin{center}
+\begin{tabularx}{\textwidth}{|c|X|c|}
+\hline
+№ & Тест & Результат \\
+\hline
+1 & Register\_ValidRequest\_ShouldCreateUser & Пройден \\
+\hline
+2 & GetProductById\_ReturnsProductDetail & Пройден \\
+\hline
+3 & CreateOrder\_ValidRequest\_ShouldCreateOrder & Пройден \\
+\hline
+4 & CreateServiceRequest\_ValidRequest & Пройден \\
+\hline
+5 & CreateWarrantyClaim\_ValidRequest & Пройден \\
+\hline
+6 & CheckCompatibility\_IncompatibleSocket & Пройден \\
+\hline
+7 & ServicesShouldHaveInterfaces & Пройден \\
+\hline
+\end{tabularx}
+\end{center}
+
+Всего тестов: 7. Пройдено: 7. Не пройдено: 0.
+
+\section{5. Выводы}
+
+Автоматизированная тестовая инфраструктура проекта <<GoldPC>> обеспечивает высокий уровень доверия к корректности бэкенд-системы. Все 7 ключевых модульных тестов проходят успешно, что подтверждает надёжность реализации основной бизнес-логики микросервисов.
+
+\end{document}
