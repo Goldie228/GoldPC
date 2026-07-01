@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       
@@ -49,7 +49,7 @@ jobs:
       image: returntocorp/semgrep
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       
       - name: Semgrep CI Scan
         run: semgrep ci --config .semgrep.yml --severity ERROR --json --output semgrep-report.json
@@ -69,7 +69,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3

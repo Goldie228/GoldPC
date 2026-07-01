@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # --- Backend Lint ---
       - name: Setup .NET
@@ -73,7 +73,7 @@ jobs:
     needs: lint
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # --- Build Backend ---
       - name: Setup .NET
@@ -112,7 +112,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -189,7 +189,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # --- SAST: Semgrep ---
       - name: Run Semgrep
@@ -262,7 +262,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
