@@ -170,7 +170,7 @@ jobs:
       
       - name: Deploy and Switch Nginx
         id: rollback
-        uses: appleboy/ssh-action@v1.0.7
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
@@ -345,7 +345,7 @@ jobs:
       - name: Health Check Verification
         id: health-check
         if: inputs.skip_health_check != true
-        uses: appleboy/ssh-action@v1.0.7
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
