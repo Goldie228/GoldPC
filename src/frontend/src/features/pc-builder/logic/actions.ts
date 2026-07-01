@@ -5,6 +5,7 @@
  */
 
 import type { Product } from '@/api/types';
+import type { BundleComponent } from '@/store/cartStore';
 import type {
   PCComponentType,
   PCBuilderSelectedState,
@@ -165,4 +166,96 @@ export function addToCart(
   for (const r of s.ram) addItemToCart(r.product, 1);
   for (const st of s.storage) addItemToCart(st.product, 1);
   for (const f of s.fan) addItemToCart(f.product, 1);
+}
+
+export function addToCartAsAssembly(
+  selectedComponents: PCBuilderSelectedState,
+  addBundleItem: (bundle: {
+    name: string;
+    pcConfigurationId: string;
+    assemblyFee: number;
+    totalPrice: number;
+    components: BundleComponent[];
+  }) => void,
+  totalPrice: number,
+  configurationId?: string
+): void {
+  const s = selectedComponents;
+  const components: BundleComponent[] = [];
+
+  const keys: (keyof PCBuilderSelectedState)[] = [
+    'cpu', 'gpu', 'motherboard', 'psu', 'case', 'cooling',
+    'monitor', 'keyboard', 'mouse', 'headphones',
+  ];
+
+  for (const key of keys) {
+    const c = s[key];
+    if (c != null && typeof c === 'object' && 'product' in c) {
+      const p = (c as { product: Product }).product;
+      components.push({
+        productId: p.id,
+        productName: p.name,
+        category: p.category,
+        price: p.price,
+        quantity: 1,
+        imageUrl: p.mainImage?.url,
+      });
+    }
+  }
+
+  for (const r of s.ram) {
+    components.push({
+      productId: r.product.id,
+      productName: r.product.name,
+      category: r.product.category,
+      price: r.product.price,
+      quantity: 1,
+      imageUrl: r.product.mainImage?.url,
+    });
+  }
+
+  for (const st of s.storage) {
+    components.push({
+      productId: st.product.id,
+      productName: st.product.name,
+      category: st.product.category,
+      price: st.product.price,
+      quantity: 1,
+      imageUrl: st.product.mainImage?.url,
+    });
+  }
+
+  for (const f of s.fan) {
+    components.push({
+      productId: f.product.id,
+      productName: f.product.name,
+      category: f.product.category,
+      price: f.product.price,
+      quantity: 1,
+      imageUrl: f.product.mainImage?.url,
+    });
+  }
+
+  // KNOWN TRADE-OFF: Hardcoded assembly fee of 100 BYN.
+  //
+  // The correct source of truth is ServiceType.BasePrice (fetched via API), but
+  // addToCartAsAssembly is a pure synchronous helper called deep inside a Zustand
+  // store action. Making it async would require:
+  //   1. Changing addToCartAsAssembly to return a Promise
+  //   2. Updating all callers to await it (PCBuilderPage handleAddAsAssembly,
+  //      the entire cartStore.addBundleItem path, etc.)
+  //   3. Adding loading/error states for what is currently an instant operation
+  //
+  // Until a dedicated "get assembly fee" API call is wired in higher up (e.g. the
+  // PCBuilderPage component fetches it and passes it down), this constant is the
+  // pragmatic compromise. To update the fee: change this constant and rebuild.
+  const assemblyFee = 100;
+
+  addBundleItem({
+    name: `Сборка ПК (${components.length} комплектующих)`,
+    pcConfigurationId: configurationId || crypto.randomUUID(),
+    assemblyFee,
+    totalPrice: totalPrice + assemblyFee,
+    components,
+  });
 }

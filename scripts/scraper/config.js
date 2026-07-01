@@ -4,7 +4,7 @@
  */
 
 const BASE_URL = 'https://x-core.by';
-const DELAY_MS = 100; // Задержка между товарами
+const DELAY_MS = 30; // Задержка между товарами (было 100)
 const MAX_PRODUCTS_PER_CATEGORY = 5000; // Лимит на категорию (для видеокарт ~500)
 const PAGE_LOAD_TIMEOUT_MS = 30000; // Таймаут каталога (30 сек)
 const PRODUCT_PAGE_TIMEOUT_MS = 20000; // Таймаут страницы товара (20 сек)

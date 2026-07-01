@@ -2,6 +2,7 @@
 // Copyright (c) GoldPC. All rights reserved.
 
 using System.ComponentModel.DataAnnotations;
+using GoldPC.SharedKernel.Enums;
 
 namespace GoldPC.SharedKernel.DTOs;
 
@@ -24,5 +25,20 @@ public class CreateOrderItemRequest
     [Required(ErrorMessage = "Цена обязательна")]
     [Range(0.01, double.MaxValue, ErrorMessage = "Цена должна быть больше 0")]
     public decimal UnitPrice { get; set; }
+
+    /// <summary>
+    /// Тип позиции заказа (Product, PCBundle, Service)
+    /// </summary>
+    public OrderItemType ItemType { get; set; } = OrderItemType.Product;
+
+    /// <summary>
+    /// ID конфигурации ПК (для PCBundle)
+    /// </summary>
+    public Guid? PCConfigurationId { get; set; }
+
+    /// <summary>
+    /// Стоимость сборки (для PCBundle)
+    /// </summary>
+    public decimal? AssemblyFee { get; set; }
 }
 #pragma warning restore CS1591, SA1600

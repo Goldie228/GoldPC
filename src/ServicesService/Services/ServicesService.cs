@@ -17,7 +17,7 @@ public interface IServicesService
     Task<PagedResultServiceRequest> GetByMasterIdAsync(Guid masterId, int page, int pageSize);
     Task<PagedResultServiceRequest> GetAllAsync(int page, int pageSize, ServiceRequestStatus? status = null);
     Task<(ServiceRequestDto? Request, string? Error)> CreateAsync(Guid clientId, CreateServiceRequestRequest request);
-    Task<(ServiceRequestDto? Request, string? Error)> AssignMasterAsync(Guid id, Guid masterId);
+    Task<(ServiceRequestDto? Request, string? Error)> AssignMasterAsync(Guid id, Guid masterId, Guid changedBy);
     Task<(ServiceRequestDto? Request, string? Error)> UpdateStatusAsync(Guid id, ServiceRequestStatus status, Guid changedBy, string? comment = null);
     Task<(ServiceRequestDto? Request, string? Error)> CompleteAsync(Guid id, Guid masterId, UpdateServiceRequestRequest request);
     Task<(bool Success, string? Error)> CancelAsync(Guid id, Guid userId);
@@ -30,6 +30,17 @@ public interface IServicesService
     Task<List<TicketMessageDto>> GetMessagesAsync(Guid serviceRequestId, Guid userId, int page = 1, int pageSize = 50);
     Task<TicketMessageDto?> SendMessageAsync(Guid serviceRequestId, Guid userId, string authorRole, string content, string? fileUrl = null, string? fileName = null, long? fileSize = null, string? contentType = null);
     Task<int> GetUnreadCountAsync(Guid serviceRequestId, Guid userId);
+
+    // Assembly methods
+    Task<(ServiceRequestDto? Request, string? Error)> CreateAssemblyRequestAsync(Guid clientId, Guid orderId, Guid pcConfigurationId, string? clientPhone);
+    Task<(ServiceRequestDto? Request, string? Error)> CollectPartAsync(Guid requestId, Guid partId, Guid masterId);
+    Task<(ServiceRequestDto? Request, string? Error)> InstallPartAsync(Guid requestId, Guid partId, Guid masterId);
+    Task<(ServiceRequestDto? Request, string? Error)> StartAssemblyAsync(Guid requestId, Guid masterId);
+    Task<(ServiceRequestDto? Request, string? Error)> CompleteAssemblyAsync(Guid requestId, Guid masterId, string serialNumber);
+    Task<(ServiceRequestDto? Request, string? Error)> HandToDeliveryAsync(Guid requestId, Guid masterId);
+    Task<List<AssemblyPartDto>> GetAssemblyPartsAsync(Guid requestId);
+    Task<(ServiceRequestDto? Request, string? Error)> ReassignMasterAsync(Guid requestId, Guid newMasterId, Guid managerId);
+    Task<PagedResultServiceRequest> GetCourierDeliveriesAsync(Guid courierId, int page, int pageSize, ServiceRequestStatus? status = null);
 }
 
 /// <summary>
@@ -65,7 +76,9 @@ public class ServicesService : IServicesService
         var request = await _context.ServiceRequests
             .Include(sr => sr.ServiceType)
             .Include(sr => sr.ServiceParts)
+            .Include(sr => sr.AssemblyParts)
             .Include(sr => sr.WorkReports)
+            .Include(sr => sr.AssembledUnit)
             .FirstOrDefaultAsync(sr => sr.Id == id);
         
         return request != null ? MapToDto(request) : null;
@@ -112,6 +125,32 @@ public class ServicesService : IServicesService
     public async Task<PagedResultServiceRequest> GetAllAsync(int page, int pageSize, ServiceRequestStatus? status = null)
     {
         var query = _context.ServiceRequests.Include(sr => sr.ServiceType).AsQueryable();
+
+        if (status.HasValue)
+            query = query.Where(sr => sr.Status == status.Value);
+
+        query = query.OrderByDescending(sr => sr.CreatedAt);
+
+        var totalCount = await query.CountAsync();
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+        return new PagedResultServiceRequest
+        {
+            Items = items.Select(MapToDto).ToList(),
+            TotalCount = totalCount,
+            PageNumber = page,
+            PageSize = pageSize
+        };
+    }
+
+    public async Task<PagedResultServiceRequest> GetCourierDeliveriesAsync(Guid courierId, int page, int pageSize, ServiceRequestStatus? status = null)
+    {
+        var deliveryStatuses = new[] { ServiceRequestStatus.ReadyForDelivery, ServiceRequestStatus.InDelivery };
+
+        IQueryable<ServiceRequest> query = _context.ServiceRequests
+            .Include(sr => sr.ServiceType)
+            .Where(sr => deliveryStatuses.Contains(sr.Status) &&
+                         (sr.CourierId == courierId || sr.CourierId == null));
 
         if (status.HasValue)
             query = query.Where(sr => sr.Status == status.Value);
@@ -190,7 +229,7 @@ public class ServicesService : IServicesService
         }
     }
 
-    public async Task<(ServiceRequestDto? Request, string? Error)> AssignMasterAsync(Guid id, Guid masterId)
+    public async Task<(ServiceRequestDto? Request, string? Error)> AssignMasterAsync(Guid id, Guid masterId, Guid changedBy)
     {
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
@@ -205,10 +244,7 @@ public class ServicesService : IServicesService
             if (request.Status != ServiceRequestStatus.Submitted)
                 return (null, "Мастера можно назначить только для новой заявки");
 
-            var activeCount = await _context.ServiceRequests
-                .CountAsync(sr => sr.MasterId == masterId && 
-                                 (sr.Status == ServiceRequestStatus.InProgress || 
-                                  sr.Status == ServiceRequestStatus.PartsPending));
+            var activeCount = await GetMasterActiveCountAsync(masterId);
             
             if (activeCount >= MaxActiveRequestsPerMaster)
                 return (null, $"У мастера уже {MaxActiveRequestsPerMaster} активных заявок (лимит FT-4.5)");
@@ -225,7 +261,7 @@ public class ServicesService : IServicesService
                 PreviousStatus = previousStatus,
                 NewStatus = request.Status,
                 Comment = "Назначен мастер, заявка принята в работу",
-                ChangedBy = masterId, // В реальности это ID менеджера, но для простоты используем masterId или передаем changedBy
+                ChangedBy = changedBy,
                 ChangedAt = DateTime.UtcNow
             };
             _context.WorkReports.Add(report);
@@ -367,6 +403,8 @@ public class ServicesService : IServicesService
         var request = await _context.ServiceRequests.FindAsync(id);
         if (request == null) return (null, "Заявка не найдена");
         if (request.MasterId != masterId) return (null, "Доступ запрещен");
+        if (request.Status != ServiceRequestStatus.InProgress)
+            return (null, "Запчасти можно добавить только в заявке 'В работе'");
         
         var part = new ServicePart
         {
@@ -384,7 +422,16 @@ public class ServicesService : IServicesService
         // Но обычно части добавляются в процессе.
         
         await _context.SaveChangesAsync();
-        return (MapToDto(request), null);
+
+        var requestWithIncludes = await _context.ServiceRequests
+            .Include(sr => sr.ServiceType)
+            .Include(sr => sr.ServiceParts)
+            .Include(sr => sr.AssemblyParts)
+            .Include(sr => sr.WorkReports)
+            .Include(sr => sr.AssembledUnit)
+            .FirstOrDefaultAsync(sr => sr.Id == id);
+
+        return (MapToDto(requestWithIncludes!), null);
     }
 
     public async Task<WorkReportDto?> GenerateReportAsync(Guid id)
@@ -410,16 +457,41 @@ public class ServicesService : IServicesService
 
     public async Task<(bool Success, string? Error)> CancelAsync(Guid id, Guid userId)
     {
-        var request = await _context.ServiceRequests.FindAsync(id);
+        var request = await _context.ServiceRequests
+            .Include(sr => sr.ServiceType)
+            .FirstOrDefaultAsync(sr => sr.Id == id);
         if (request == null)
             return (false, "Заявка не найдена");
 
-        if (request.Status != ServiceRequestStatus.Submitted)
-            return (false, "Заявку нельзя отменить в текущем статусе");
+        if (request.Status != ServiceRequestStatus.Submitted && request.Status != ServiceRequestStatus.Assigned)
+            return (false, "Заявку можно отменить только в статусе 'Подана' или 'Назначена'");
+
+        // For assembly tickets in InProgress or later: reject cancellation, warn about parts
+        var isAssembly = request.ServiceType?.Slug == "assembly";
+        var blockingStatuses = new[] {
+            ServiceRequestStatus.InProgress,
+            ServiceRequestStatus.PartsPending,
+            ServiceRequestStatus.AwaitingParts,
+            ServiceRequestStatus.PartsReady,
+            ServiceRequestStatus.Assembled,
+            ServiceRequestStatus.ReadyForDelivery,
+            ServiceRequestStatus.InDelivery,
+            ServiceRequestStatus.Delivered
+        };
+        if (isAssembly && blockingStatuses.Contains(request.Status))
+        {
+            _logger.LogWarning("Attempted to cancel assembly request {RequestId} in status {Status} — parts may need to be returned",
+                request.Id, request.Status);
+            return (false, "Невозможно отменить заявку на сборку в статусе 'В работе' или позже. Необходимо вернуть комплектующие на склад.");
+        }
 
         var previousStatus = request.Status;
         request.Status = ServiceRequestStatus.Cancelled;
         request.UpdatedAt = DateTime.UtcNow;
+
+        var comment = isAssembly
+            ? "Заявка на сборку отменена. Частичная работа может потребовать возврата комплектующих."
+            : "Заявка отменена пользователем";
 
         var report = new WorkReport
         {
@@ -427,7 +499,7 @@ public class ServicesService : IServicesService
             ServiceRequestId = request.Id,
             PreviousStatus = previousStatus,
             NewStatus = ServiceRequestStatus.Cancelled,
-            Comment = "Заявка отменена пользователем",
+            Comment = comment,
             ChangedBy = userId,
             ChangedAt = DateTime.UtcNow
         };
@@ -471,8 +543,404 @@ public class ServicesService : IServicesService
     }
 
     // ──────────────────────────────────────────────
-    // Chat methods
+    // Assembly methods
     // ──────────────────────────────────────────────
+
+    public async Task<(ServiceRequestDto? Request, string? Error)> CreateAssemblyRequestAsync(Guid clientId, Guid orderId, Guid pcConfigurationId, string? clientPhone)
+    {
+        var assemblyServiceType = await _context.ServiceTypes
+            .FirstOrDefaultAsync(st => st.Slug == "assembly" && st.IsActive);
+
+        if (assemblyServiceType == null)
+            return (null, "Тип услуги 'Сборка ПК' не найден");
+
+        // Check if request already exists for this order
+        var existing = await _context.ServiceRequests
+            .FirstOrDefaultAsync(sr => sr.OrderId == orderId && sr.ServiceTypeId == assemblyServiceType.Id);
+        if (existing != null)
+            return (null, "Заявка на сборку для этого заказа уже существует");
+
+        var year = DateTime.UtcNow.Year;
+        var lastRequest = await _context.ServiceRequests
+            .Where(sr => sr.RequestNumber.StartsWith($"SR-{year}-"))
+            .OrderByDescending(sr => sr.RequestNumber)
+            .FirstOrDefaultAsync();
+
+        var nextNumber = lastRequest != null ? int.Parse(lastRequest.RequestNumber.Split('-')[2]) + 1 : 1;
+        var requestNumber = $"SR-{year}-{nextNumber:D6}";
+
+        var serviceRequest = new ServiceRequest
+        {
+            Id = Guid.NewGuid(),
+            RequestNumber = requestNumber,
+            ClientId = clientId,
+            ServiceTypeId = assemblyServiceType.Id,
+            Description = $"Сборка ПК на заказ (заказ {orderId})",
+            EstimatedCost = assemblyServiceType.BasePrice,
+            Status = ServiceRequestStatus.Submitted,
+            OrderId = orderId,
+            PCConfigurationId = pcConfigurationId,
+            ClientPhone = clientPhone,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            _context.ServiceRequests.Add(serviceRequest);
+
+            var report = new WorkReport
+            {
+                Id = Guid.NewGuid(),
+                ServiceRequestId = serviceRequest.Id,
+                PreviousStatus = ServiceRequestStatus.Submitted,
+                NewStatus = ServiceRequestStatus.Submitted,
+                Comment = "Заявка на сборку ПК создана",
+                ChangedBy = clientId,
+                ChangedAt = DateTime.UtcNow
+            };
+            _context.WorkReports.Add(report);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                // Auto-assign master
+                await AutoAssignMasterInternalAsync(serviceRequest.Id);
+
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("Assembly request created: {RequestNumber}", requestNumber);
+                return (MapToDto(serviceRequest), null);
+            }
+            catch (DbUpdateException)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogInformation("Assembly request already exists for Order {OrderId}", orderId);
+                var duplicate = await _context.ServiceRequests
+                    .FirstOrDefaultAsync(sr => sr.OrderId == orderId && sr.ServiceTypeId == assemblyServiceType.Id);
+                return (duplicate != null ? MapToDto(duplicate) : null, null);
+            }
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "Error creating assembly request");
+            return (null, "Ошибка при создании заявки на сборку");
+        }
+    }
+
+    public async Task<(ServiceRequestDto? Request, string? Error)> CollectPartAsync(Guid requestId, Guid partId, Guid masterId)
+    {
+        var request = await _context.ServiceRequests.FindAsync(requestId);
+        if (request == null) return (null, "Заявка не найдена");
+        if (request.MasterId != masterId) return (null, "Вы не назначены на эту заявку");
+
+        var part = await _context.AssemblyParts.FirstOrDefaultAsync(p => p.Id == partId && p.ServiceRequestId == requestId);
+        if (part == null) return (null, "Комплектующая не найдена");
+        if (part.PartStatus != AssemblyPartStatus.Required)
+            return (null, "Комплектующая уже получена или установлена");
+
+        part.PartStatus = AssemblyPartStatus.Collected;
+        part.UpdatedAt = DateTime.UtcNow;
+        request.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Part {PartId} collected for request {RequestId}", partId, requestId);
+
+        var requestWithIncludes = await _context.ServiceRequests
+            .Include(sr => sr.ServiceType)
+            .Include(sr => sr.ServiceParts)
+            .Include(sr => sr.AssemblyParts)
+            .Include(sr => sr.WorkReports)
+            .Include(sr => sr.AssembledUnit)
+            .FirstOrDefaultAsync(sr => sr.Id == requestId);
+
+        return (MapToDto(requestWithIncludes!), null);
+    }
+
+    public async Task<(ServiceRequestDto? Request, string? Error)> InstallPartAsync(Guid requestId, Guid partId, Guid masterId)
+    {
+        var request = await _context.ServiceRequests.FindAsync(requestId);
+        if (request == null) return (null, "Заявка не найдена");
+        if (request.MasterId != masterId) return (null, "Вы не назначены на эту заявку");
+
+        var part = await _context.AssemblyParts.FirstOrDefaultAsync(p => p.Id == partId && p.ServiceRequestId == requestId);
+        if (part == null) return (null, "Комплектующая не найдена");
+        if (part.PartStatus != AssemblyPartStatus.Collected)
+            return (null, "Комплектующая ещё не получена");
+
+        part.PartStatus = AssemblyPartStatus.Installed;
+        part.UpdatedAt = DateTime.UtcNow;
+        request.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Part {PartId} installed for request {RequestId}", partId, requestId);
+
+        var requestWithIncludes = await _context.ServiceRequests
+            .Include(sr => sr.ServiceType)
+            .Include(sr => sr.ServiceParts)
+            .Include(sr => sr.AssemblyParts)
+            .Include(sr => sr.WorkReports)
+            .Include(sr => sr.AssembledUnit)
+            .FirstOrDefaultAsync(sr => sr.Id == requestId);
+
+        return (MapToDto(requestWithIncludes!), null);
+    }
+
+    public async Task<(ServiceRequestDto? Request, string? Error)> StartAssemblyAsync(Guid requestId, Guid masterId)
+    {
+        var request = await _context.ServiceRequests
+            .Include(sr => sr.AssemblyParts)
+            .FirstOrDefaultAsync(sr => sr.Id == requestId);
+
+        if (request == null) return (null, "Заявка не найдена");
+        if (request.MasterId != masterId) return (null, "Вы не назначены на эту заявку");
+        if (request.Status != ServiceRequestStatus.Assigned)
+            return (null, "Можно начать сборку только из статуса 'Назначена'");
+
+        request.Status = ServiceRequestStatus.InProgress;
+        request.UpdatedAt = DateTime.UtcNow;
+
+        var report = new WorkReport
+        {
+            Id = Guid.NewGuid(),
+            ServiceRequestId = request.Id,
+            PreviousStatus = ServiceRequestStatus.Assigned,
+            NewStatus = ServiceRequestStatus.InProgress,
+            Comment = "Мастер начал сборку ПК",
+            ChangedBy = masterId,
+            ChangedAt = DateTime.UtcNow
+        };
+        _context.WorkReports.Add(report);
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Assembly started for request {RequestId}", requestId);
+        return (MapToDto(request), null);
+    }
+
+    public async Task<(ServiceRequestDto? Request, string? Error)> CompleteAssemblyAsync(Guid requestId, Guid masterId, string serialNumber)
+    {
+        var request = await _context.ServiceRequests
+            .Include(sr => sr.ServiceType)
+            .Include(sr => sr.AssemblyParts)
+            .FirstOrDefaultAsync(sr => sr.Id == requestId);
+
+        if (request == null) return (null, "Заявка не найдена");
+        if (request.MasterId != masterId) return (null, "Вы не назначены на эту заявку");
+        if (request.Status != ServiceRequestStatus.InProgress)
+            return (null, "Можно завершить сборку только из статуса 'В работе'");
+
+        // Check all parts are installed
+        var allInstalled = request.AssemblyParts.All(p => p.PartStatus == AssemblyPartStatus.Installed);
+        if (!allInstalled)
+            return (null, "Не все комплектующие установлены");
+
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+            request.Status = ServiceRequestStatus.Assembled;
+            request.AssembledSerialNumber = serialNumber;
+            request.CompletedAt = DateTime.UtcNow;
+            request.ActualCost = request.EstimatedCost;
+            request.UpdatedAt = DateTime.UtcNow;
+
+            var assembledUnit = new AssembledUnit
+            {
+                Id = Guid.NewGuid(),
+                ServiceRequestId = request.Id,
+                PCConfigurationId = request.PCConfigurationId ?? Guid.Empty,
+                SerialNumber = serialNumber,
+                Status = AssembledUnitStatus.Stored,
+                AssembledAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.AssembledUnits.Add(assembledUnit);
+
+            var report = new WorkReport
+            {
+                Id = Guid.NewGuid(),
+                ServiceRequestId = request.Id,
+                PreviousStatus = ServiceRequestStatus.InProgress,
+                NewStatus = ServiceRequestStatus.Assembled,
+                Comment = $"Сборка ПК завершена. Серийный номер: {serialNumber}",
+                ChangedBy = masterId,
+                ChangedAt = DateTime.UtcNow
+            };
+            _context.WorkReports.Add(report);
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            _logger.LogInformation("Assembly completed for request {RequestId}, serial: {Serial}", requestId, serialNumber);
+            return (MapToDto(request), null);
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<(ServiceRequestDto? Request, string? Error)> HandToDeliveryAsync(Guid requestId, Guid masterId)
+    {
+        var request = await _context.ServiceRequests.FindAsync(requestId);
+        if (request == null) return (null, "Заявка не найдена");
+        if (request.MasterId != masterId) return (null, "Вы не назначены на эту заявку");
+        if (request.Status != ServiceRequestStatus.Assembled)
+            return (null, "Можно передать в доставку только из статуса 'Собран'");
+
+        request.Status = ServiceRequestStatus.ReadyForDelivery;
+        request.UpdatedAt = DateTime.UtcNow;
+
+        var report = new WorkReport
+        {
+            Id = Guid.NewGuid(),
+            ServiceRequestId = request.Id,
+            PreviousStatus = ServiceRequestStatus.Assembled,
+            NewStatus = ServiceRequestStatus.ReadyForDelivery,
+            Comment = "ПК передан в доставку",
+            ChangedBy = masterId,
+            ChangedAt = DateTime.UtcNow
+        };
+        _context.WorkReports.Add(report);
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Request {RequestId} handed to delivery", requestId);
+
+        var requestWithIncludes = await _context.ServiceRequests
+            .Include(sr => sr.ServiceType)
+            .Include(sr => sr.ServiceParts)
+            .Include(sr => sr.AssemblyParts)
+            .Include(sr => sr.WorkReports)
+            .Include(sr => sr.AssembledUnit)
+            .FirstOrDefaultAsync(sr => sr.Id == requestId);
+
+        return (MapToDto(requestWithIncludes!), null);
+    }
+
+    public async Task<List<AssemblyPartDto>> GetAssemblyPartsAsync(Guid requestId)
+    {
+        return await _context.AssemblyParts
+            .Where(p => p.ServiceRequestId == requestId)
+            .Select(p => new AssemblyPartDto
+            {
+                Id = p.Id,
+                ProductId = p.ProductId,
+                ProductName = p.ProductName,
+                ComponentType = p.ComponentType,
+                Quantity = p.Quantity,
+                UnitPrice = p.UnitPrice,
+                PartStatus = p.PartStatus
+            })
+            .ToListAsync();
+    }
+
+    public async Task<(ServiceRequestDto? Request, string? Error)> ReassignMasterAsync(Guid requestId, Guid newMasterId, Guid managerId)
+    {
+        var request = await _context.ServiceRequests.FindAsync(requestId);
+        if (request == null) return (null, "Заявка не найдена");
+        if (request.Status != ServiceRequestStatus.Assigned && request.Status != ServiceRequestStatus.Submitted)
+            return (null, "Можно переназначить только заявку в статусе 'Назначена' или 'Подана'");
+
+        // Check new master capacity
+        var activeCount = await GetMasterActiveCountAsync(newMasterId);
+
+        if (activeCount >= MaxActiveRequestsPerMaster)
+            return (null, $"У мастера уже {MaxActiveRequestsPerMaster} активных заявок");
+
+        var previousMasterId = request.MasterId;
+        var previousStatus = request.Status;
+        request.MasterId = newMasterId;
+        if (request.Status == ServiceRequestStatus.Submitted)
+            request.Status = ServiceRequestStatus.Assigned;
+        request.UpdatedAt = DateTime.UtcNow;
+
+        var report = new WorkReport
+        {
+            Id = Guid.NewGuid(),
+            ServiceRequestId = request.Id,
+            PreviousStatus = previousStatus,
+            NewStatus = request.Status,
+            Comment = $"Переназначение мастера с {previousMasterId} на {newMasterId}",
+            ChangedBy = managerId,
+            ChangedAt = DateTime.UtcNow
+        };
+        _context.WorkReports.Add(report);
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Request {RequestId} reassigned to master {MasterId}", requestId, newMasterId);
+
+        var requestWithIncludes = await _context.ServiceRequests
+            .Include(sr => sr.ServiceType)
+            .Include(sr => sr.ServiceParts)
+            .Include(sr => sr.AssemblyParts)
+            .Include(sr => sr.WorkReports)
+            .Include(sr => sr.AssembledUnit)
+            .FirstOrDefaultAsync(sr => sr.Id == requestId);
+
+        return (MapToDto(requestWithIncludes!), null);
+    }
+
+    private async Task<int> GetMasterActiveCountAsync(Guid masterId)
+    {
+        return await _context.ServiceRequests
+            .CountAsync(sr => sr.MasterId == masterId &&
+                             (sr.Status == ServiceRequestStatus.Assigned ||
+                              sr.Status == ServiceRequestStatus.InProgress ||
+                              sr.Status == ServiceRequestStatus.PartsPending ||
+                              sr.Status == ServiceRequestStatus.PartsReady ||
+                              sr.Status == ServiceRequestStatus.AwaitingParts));
+    }
+
+    private async Task AutoAssignMasterInternalAsync(Guid serviceRequestId)
+    {
+        var request = await _context.ServiceRequests.FindAsync(serviceRequestId);
+        if (request == null || request.Status != ServiceRequestStatus.Submitted)
+            return;
+
+        var masters = await _context.ServiceRequests
+            .Where(sr => sr.MasterId.HasValue &&
+                        (sr.Status == ServiceRequestStatus.Assigned ||
+                         sr.Status == ServiceRequestStatus.InProgress ||
+                         sr.Status == ServiceRequestStatus.PartsPending ||
+                         sr.Status == ServiceRequestStatus.PartsReady ||
+                         sr.Status == ServiceRequestStatus.AwaitingParts))
+            .GroupBy(sr => sr.MasterId)
+            .Select(g => new { MasterId = g.Key!.Value, ActiveCount = g.Count() })
+            .OrderBy(x => x.ActiveCount)
+            .ToListAsync();
+
+        var availableMaster = masters.FirstOrDefault(m => m.ActiveCount < MaxActiveRequestsPerMaster);
+
+        if (availableMaster != null)
+        {
+            request.MasterId = availableMaster.MasterId;
+            request.Status = ServiceRequestStatus.Assigned;
+            request.UpdatedAt = DateTime.UtcNow;
+
+            var report = new WorkReport
+            {
+                Id = Guid.NewGuid(),
+                ServiceRequestId = request.Id,
+                PreviousStatus = ServiceRequestStatus.Submitted,
+                NewStatus = ServiceRequestStatus.Assigned,
+                Comment = "Автоназначение: мастер назначен системой",
+                ChangedBy = availableMaster.MasterId,
+                ChangedAt = DateTime.UtcNow
+            };
+            _context.WorkReports.Add(report);
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Master auto-assigned to request {RequestNumber}", request.RequestNumber);
+        }
+    }
 
     public async Task<List<TicketMessageDto>> GetMessagesAsync(Guid serviceRequestId, Guid userId, int page = 1, int pageSize = 50)
     {
@@ -491,7 +959,7 @@ public class ServicesService : IServicesService
 
     public async Task<TicketMessageDto?> SendMessageAsync(Guid serviceRequestId, Guid userId, string authorRole, string content, string? fileUrl = null, string? fileName = null, long? fileSize = null, string? contentType = null)
     {
-        if (!await HasAccessToTicket(serviceRequestId, userId))
+        if (!await HasAccessToTicket(serviceRequestId, userId, authorRole))
             return null;
 
         var message = new TicketMessage
@@ -523,11 +991,13 @@ public class ServicesService : IServicesService
                           && m.ReadAt == null);
     }
 
-    private async Task<bool> HasAccessToTicket(Guid serviceRequestId, Guid userId)
+    private async Task<bool> HasAccessToTicket(Guid serviceRequestId, Guid userId, string? role = null)
     {
         var request = await _context.ServiceRequests.FindAsync(serviceRequestId);
         if (request == null) return false;
-        return request.ClientId == userId || request.MasterId == userId;
+        return request.ClientId == userId ||
+               request.MasterId == userId ||
+               role is "Manager" or "Admin";
     }
 
     private static TicketMessageDto MapToMessageDto(TicketMessage message)
@@ -567,6 +1037,11 @@ public class ServicesService : IServicesService
             MasterComment = request.MasterComment,
             CreatedAt = request.CreatedAt,
             CompletedAt = request.CompletedAt,
+            OrderId = request.OrderId,
+            PCConfigurationId = request.PCConfigurationId,
+            ClientPhone = request.ServiceType?.Slug == "assembly" ? request.ClientPhone : null,
+            CourierId = request.CourierId,
+            AssembledSerialNumber = request.AssembledSerialNumber,
             ServiceParts = request.ServiceParts?.Select(p => new ServicePartDto
             {
                 ProductId = p.ProductId,
@@ -574,6 +1049,16 @@ public class ServicesService : IServicesService
                 Quantity = p.Quantity,
                 UnitPrice = p.UnitPrice
             }).ToList() ?? new List<ServicePartDto>(),
+            AssemblyParts = request.AssemblyParts?.Select(p => new AssemblyPartDto
+            {
+                Id = p.Id,
+                ProductId = p.ProductId,
+                ProductName = p.ProductName,
+                ComponentType = p.ComponentType,
+                Quantity = p.Quantity,
+                UnitPrice = p.UnitPrice,
+                PartStatus = p.PartStatus
+            }).ToList() ?? new List<AssemblyPartDto>(),
             WorkReports = request.WorkReports?.Select(h => new WorkReportDto
             {
                 Id = h.Id,
@@ -584,23 +1069,38 @@ public class ServicesService : IServicesService
                 ChangedBy = h.ChangedBy,
                 ChangedAt = h.ChangedAt
             }).ToList() ?? new List<WorkReportDto>(),
-            // ClientEmail и MasterName заполняются при наличии данных AuthService
-            // Для email-уведомлений требует внедрения IAuthServiceClient
             ClientEmail = null,
-            MasterName = null
+            MasterName = null,
+            AssembledUnit = request.AssembledUnit != null ? new AssembledUnitDto
+            {
+                Id = request.AssembledUnit.Id,
+                ServiceRequestId = request.AssembledUnit.ServiceRequestId,
+                PCConfigurationId = request.AssembledUnit.PCConfigurationId,
+                SerialNumber = request.AssembledUnit.SerialNumber,
+                Status = request.AssembledUnit.Status,
+                AssembledAt = request.AssembledUnit.AssembledAt,
+                DeliveredAt = request.AssembledUnit.DeliveredAt
+            } : null
         };
     }
 
     private static bool IsValidStatusTransition(ServiceRequestStatus from, ServiceRequestStatus to)
     {
         if (to == ServiceRequestStatus.Cancelled)
-            return from == ServiceRequestStatus.Submitted;
+            return from == ServiceRequestStatus.Submitted || from == ServiceRequestStatus.Assigned;
 
         return from switch
         {
-            ServiceRequestStatus.Submitted => to == ServiceRequestStatus.InProgress,
-            ServiceRequestStatus.InProgress => to == ServiceRequestStatus.PartsPending || to == ServiceRequestStatus.ReadyForPickup,
+            ServiceRequestStatus.Submitted => to == ServiceRequestStatus.InProgress || to == ServiceRequestStatus.Assigned,
+            ServiceRequestStatus.Assigned => to == ServiceRequestStatus.InProgress || to == ServiceRequestStatus.AwaitingParts,
+            ServiceRequestStatus.InProgress => to == ServiceRequestStatus.PartsPending || to == ServiceRequestStatus.ReadyForPickup || to == ServiceRequestStatus.Assembled || to == ServiceRequestStatus.AwaitingParts,
+            ServiceRequestStatus.AwaitingParts => to == ServiceRequestStatus.PartsReady || to == ServiceRequestStatus.InProgress,
+            ServiceRequestStatus.PartsReady => to == ServiceRequestStatus.InProgress,
             ServiceRequestStatus.PartsPending => to == ServiceRequestStatus.InProgress,
+            ServiceRequestStatus.Assembled => to == ServiceRequestStatus.ReadyForDelivery || to == ServiceRequestStatus.ReadyForPickup,
+            ServiceRequestStatus.ReadyForDelivery => to == ServiceRequestStatus.InDelivery,
+            ServiceRequestStatus.InDelivery => to == ServiceRequestStatus.Delivered,
+            ServiceRequestStatus.Delivered => to == ServiceRequestStatus.Completed,
             ServiceRequestStatus.ReadyForPickup => to == ServiceRequestStatus.Completed,
             ServiceRequestStatus.Completed => false,
             ServiceRequestStatus.Cancelled => false,
@@ -618,6 +1118,13 @@ public class ServicesService : IServicesService
             ServiceRequestStatus.ReadyForPickup => "Готова к выдаче",
             ServiceRequestStatus.Completed => "Завершена",
             ServiceRequestStatus.Cancelled => "Отменена",
+            ServiceRequestStatus.Assigned => "Назначена",
+            ServiceRequestStatus.AwaitingParts => "Ожидание комплектующих",
+            ServiceRequestStatus.PartsReady => "Комплектующие готовы",
+            ServiceRequestStatus.Assembled => "Собран",
+            ServiceRequestStatus.ReadyForDelivery => "Готов к доставке",
+            ServiceRequestStatus.InDelivery => "В доставке",
+            ServiceRequestStatus.Delivered => "Доставлен",
             _ => status.ToString()
         };
     }

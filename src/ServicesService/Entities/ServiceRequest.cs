@@ -20,11 +20,38 @@ public class ServiceRequest : BaseEntity
     public decimal ActualCost { get; set; }
     public string? MasterComment { get; set; }
     public DateTime? CompletedAt { get; set; }
+
+    /// <summary>
+    /// ID заказа (связь с OrdersService)
+    /// </summary>
+    public Guid? OrderId { get; set; }
+
+    /// <summary>
+    /// ID конфигурации ПК (для заявок типа сборка)
+    /// </summary>
+    public Guid? PCConfigurationId { get; set; }
+
+    /// <summary>
+    /// Телефон клиента (снапшот для связи)
+    /// </summary>
+    public string? ClientPhone { get; set; }
+
+    /// <summary>
+    /// ID курьера (для доставки)
+    /// </summary>
+    public Guid? CourierId { get; set; }
+
+    /// <summary>
+    /// Серийный номер собранного ПК (заполняется при завершении сборки)
+    /// </summary>
+    public string? AssembledSerialNumber { get; set; }
     
     public ServiceType ServiceType { get; set; } = null!;
     public ICollection<ServicePart> ServiceParts { get; set; } = new List<ServicePart>();
+    public ICollection<AssemblyPart> AssemblyParts { get; set; } = new List<AssemblyPart>();
     public ICollection<WorkReport> WorkReports { get; set; } = new List<WorkReport>();
     public ICollection<TicketMessage> TicketMessages { get; set; } = new List<TicketMessage>();
+    public AssembledUnit? AssembledUnit { get; set; }
 }
 
 /// <summary>

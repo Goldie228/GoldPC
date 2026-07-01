@@ -19,6 +19,8 @@ const OUTPUT_DIR = join(__dirname, 'data');
 
 const parseAll = process.argv.includes('--all');
 const slowMode = process.argv.includes('--slow');
+const concurrencyArg = process.argv.find((a) => a.startsWith('--concurrency='));
+const CONCURRENCY = concurrencyArg ? parseInt(concurrencyArg.split('=')[1], 10) : 8;
 const outputRaw = process.argv.find((a) => a.startsWith('--output='));
 const outputArg = outputRaw ? outputRaw.split('=').slice(1).join('=') : null;
 const OUTPUT_FILE = outputArg || join(OUTPUT_DIR, 'xcore-products.json');
@@ -309,7 +311,7 @@ async function parseProductDetail(item) {
     console.warn(`  Ошибка загрузки ${item.url}: ${e.message}`);
     return null;
   }
-  await sleep(300);
+  await sleep(50);
 
   const $ = load(html);
 
@@ -420,20 +422,33 @@ async function main() {
     for (const cat of categoriesToScrape) {
       console.log(`Категория: ${cat.slug} (${cat.path})`);
       const items = await parseCategoryListing(cat.path, cat.slug);
-      console.log(`  Найдено ссылок: ${items.length}`);
+      console.log(`  Найдено ссылок: ${items.length} (параллельно: ${CONCURRENCY})`);
 
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        process.stdout.write(`  [${i + 1}/${items.length}] ${item.externalId || item.url.slice(-50)}\r`);
-        const product = await parseProductDetail(item);
-        if (product && product.price > 0) {
-          product.sku = product.externalId || product.name?.slice(0, 20).replace(/\W/g, '') || String(Date.now());
-          allProducts.push(product);
+      let processed = 0;
+      let imported = 0;
+
+      // Параллельная обработка товаров с пулом
+      for (let i = 0; i < items.length; i += CONCURRENCY) {
+        const batch = items.slice(i, i + CONCURRENCY);
+        const results = await Promise.allSettled(batch.map((item) => parseProductDetail(item)));
+
+        for (const result of results) {
+          processed++;
+          if (result.status === 'fulfilled' && result.value && result.value.price > 0) {
+            const product = result.value;
+            product.sku = product.externalId || product.name?.slice(0, 20).replace(/\W/g, '') || String(Date.now());
+            allProducts.push(product);
+            imported++;
+          }
+          process.stdout.write(`  [${processed}/${items.length}] импорт: ${imported}\r`);
+        }
+
+        // Сохраняем после каждого батча
+        if (processed % 50 === 0 || processed === items.length) {
           saveProducts(allProducts);
         }
-        await sleep(delayMs);
       }
-      console.log(`  Импортировано: ${allProducts.filter((p) => p.categorySlug === cat.slug).length}`);
+      console.log(`  Импортировано: ${imported}`);
     }
   } finally {
     process.off('SIGINT', handleInterrupt);

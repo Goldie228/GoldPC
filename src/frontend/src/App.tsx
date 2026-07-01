@@ -6,6 +6,7 @@ import { AdminLayout } from './components/layout/admin-layout/AdminLayout';
 import { ManagerLayout } from './components/layout/manager-layout/ManagerLayout';
 import { MasterLayout } from './components/layout/master-layout/MasterLayout';
 import { AccountantLayout } from './components/layout/accountant-layout/AccountantLayout';
+import { CourierLayout } from './components/layout/courier-layout/CourierLayout';
 import { AuthModalContainer } from './components/auth';
 import { ModalContainer } from './components/ui/Modal/ModalContainer';
 import { RouteMeta } from './components/seo/RouteMeta';
@@ -86,10 +87,12 @@ const FeedbackPage = lazy(() => import('./pages/manager/FeedbackPage').then(m =>
 const ManagerCatalogPage = lazy(() => import('./pages/manager/ManagerCatalogPage').then(m => ({ default: m.ManagerCatalogPage })));
 const ManagerDictionariesPage = lazy(() => import('./pages/manager/ManagerDictionariesPage').then(m => ({ default: m.ManagerDictionariesPage })));
 const ManagerUsersPage = lazy(() => import('./pages/manager/ManagerUsersPage').then(m => ({ default: m.ManagerUsersPage })));
+const AssemblyKanbanPage = lazy(() => import('./pages/manager/AssemblyKanbanPage').then(m => ({ default: m.AssemblyKanbanPage })));
 const TicketsPage = lazy(() => import('./pages/master').then(m => ({ default: m.TicketsPage })));
 const TicketDetailPage = lazy(() => import('./pages/master').then(m => ({ default: m.TicketDetailPage })));
 const AvailableTicketsPage = lazy(() => import('./pages/master').then(m => ({ default: m.AvailableTicketsPage })));
 const WorkHistoryPage = lazy(() => import('./pages/master').then(m => ({ default: m.WorkHistoryPage })));
+const CourierDeliveriesPage = lazy(() => import('./pages/courier/CourierDeliveriesPage').then(m => ({ default: m.CourierDeliveriesPage })));
 const ReportsPage = lazy(() => import('./pages/accountant').then(m => ({ default: m.ReportsPage })));
 const ExportPage = lazy(() => import('./pages/accountant').then(m => ({ default: m.ExportPage })));
 const NotFoundPage = lazy(() => import('./pages/errors').then(m => ({ default: m.NotFoundPage })));
@@ -287,6 +290,7 @@ const router = createBrowserRouter([
               { path: '/manager/catalog', element: <ManagerCatalogPage /> },
               { path: '/manager/dictionaries', element: <ManagerDictionariesPage /> },
               { path: '/manager/users', element: <ManagerUsersPage /> },
+              { path: '/manager/assembly-kanban', element: <AssemblyKanbanPage /> },
               { path: '/manager/products/:id/edit', element: <ProductEditorPage /> },
               { path: '/manager/notifications', element: <NotificationsPage /> },
             ],
@@ -317,6 +321,18 @@ const router = createBrowserRouter([
               { path: '/accountant', element: <Navigate to="/accountant/reports" replace /> },
               { path: '/accountant/reports', element: <ReportsPage /> },
               { path: '/accountant/export', element: <ExportPage /> },
+            ],
+          },
+        ],
+      },
+      {
+        element: <RoleGuard allowedRoles={['Courier', 'Admin']} />,
+        children: [
+          {
+            element: <CourierLayout />,
+            children: [
+              { path: '/courier', element: <Navigate to="/courier/deliveries" replace /> },
+              { path: '/courier/deliveries', element: <CourierDeliveriesPage /> },
             ],
           },
         ],

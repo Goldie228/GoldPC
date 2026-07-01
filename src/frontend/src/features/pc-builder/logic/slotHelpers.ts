@@ -124,6 +124,36 @@ export function countSelectedCategories(c: PCBuilderSelectedState): number {
   return n;
 }
 
+const PERIPHERY_KEYS: ReadonlyArray<keyof PCBuilderSelectedState> = [
+  'fan',
+  'monitor',
+  'keyboard',
+  'mouse',
+  'headphones',
+];
+
+/**
+ * Проверяет, что заполнены все обязательные слоты (без периферии).
+ * Периферия (вентиляторы, монитор, клавиатура, мышь, наушники) — необязательна.
+ */
+export function hasAllRequiredSlots(c: PCBuilderSelectedState): boolean {
+  if (c.cpu == null) return false;
+  if (c.gpu == null) return false;
+  if (c.motherboard == null) return false;
+  if (c.ram.length === 0) return false;
+  if (c.storage.length === 0) return false;
+  if (c.psu == null) return false;
+  if (c.case == null) return false;
+  if (c.cooling == null) return false;
+  return true;
+}
+
+/** Количество обязательных слотов (для UI-подсчёта прогресса). */
+export const REQUIRED_SLOTS_TOTAL = 8;
+
+/** Список ключей периферии — экспортируется для UI-меток и группировки. */
+export const PERIPHERY_SLOT_KEYS = PERIPHERY_KEYS;
+
 /**
  * Build ComponentMap from selected components state
  * Used for compatibility checks and power consumption calculations

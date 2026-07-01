@@ -98,7 +98,8 @@ public class ProductRepository : IProductRepository
                 .ThenInclude(sv => sv.Attribute)
             .Include(p => p.SpecificationValues)
                 .ThenInclude(sv => sv.CanonicalValue)
-            .Where(p => p.IsActive && p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)));
+            .Where(p => p.IsActive)
+            .Where(p => p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)));
 
         // Фильтрация по ID категории
         if (filter.CategoryId.HasValue)
@@ -361,14 +362,14 @@ public class ProductRepository : IProductRepository
         return await _readContext.Products
             .Include(p => p.Category)
             .Include(p => p.Manufacturer)
-            .Where(p => p.CategoryId == categoryId && p.IsActive && p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)))
+            .Where(p => p.CategoryId == categoryId && p.IsActive)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<Guid>> GetManufacturerIdsByCategoryAsync(Guid categoryId)
     {
         return await _readContext.Products
-            .Where(p => p.CategoryId == categoryId && p.IsActive && p.ManufacturerId.HasValue)
+            .Where(p => p.CategoryId == categoryId && p.IsActive && p.ManufacturerId.HasValue && p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)))
             .Select(p => p.ManufacturerId!.Value)
             .Distinct()
             .ToListAsync();
@@ -380,7 +381,7 @@ public class ProductRepository : IProductRepository
         if (keys.Count == 0)
             return new Dictionary<string, List<string>>();
 
-        var baseProductsQuery = _readContext.Products.Where(p => p.CategoryId == categoryId && p.IsActive);
+        var baseProductsQuery = _readContext.Products.Where(p => p.CategoryId == categoryId && p.IsActive && p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)));
         if (filterContext != null)
         {
             var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
@@ -468,7 +469,7 @@ public class ProductRepository : IProductRepository
         var attr = await _readContext.SpecificationAttributes.FirstOrDefaultAsync(a => a.Key == attributeKey);
         if (attr == null) return new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-        var baseProductsQuery = _readContext.Products.Where(p => p.CategoryId == categoryId && p.IsActive);
+        var baseProductsQuery = _readContext.Products.Where(p => p.CategoryId == categoryId && p.IsActive && p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)));
         if (filterContext != null)
         {
             var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();
@@ -558,7 +559,7 @@ public class ProductRepository : IProductRepository
             return (null, null);
         }
 
-        var baseProductsQuery = _readContext.Products.Where(p => p.CategoryId == categoryId && p.IsActive);
+        var baseProductsQuery = _readContext.Products.Where(p => p.CategoryId == categoryId && p.IsActive && p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)));
         if (filterContext != null)
         {
             var manIds = filterContext.ManufacturerIds?.Where(id => id != Guid.Empty).Distinct().ToList();

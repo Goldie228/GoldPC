@@ -28,5 +28,10 @@ public enum UserRole
     /// <summary>
     /// Бухгалтер - финансовые отчёты
     /// </summary>
-    Accountant = 4
+    Accountant = 4,
+
+    /// <summary>
+    /// Курьер - доставка собранных ПК клиентам
+    /// </summary>
+    Courier = 5
 }

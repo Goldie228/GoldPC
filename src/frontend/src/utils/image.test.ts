@@ -3,12 +3,9 @@ import { isXCorePlaceholderUrl, hasValidProductImage, getProductImageUrl } from 
 
 describe('isXCorePlaceholderUrl', () => {
   it('returns true for non-string input', () => {
-    // @ts-expect-error testing non-string
-    expect(isXCorePlaceholderUrl(null)).toBe(true);
-    // @ts-expect-error testing non-string
-    expect(isXCorePlaceholderUrl(undefined)).toBe(true);
-    // @ts-expect-error testing non-string
-    expect(isXCorePlaceholderUrl(123)).toBe(true);
+    expect(isXCorePlaceholderUrl(null as unknown)).toBe(true);
+    expect(isXCorePlaceholderUrl(undefined as unknown)).toBe(true);
+    expect(isXCorePlaceholderUrl(123 as unknown)).toBe(true);
   });
 
   it('returns true for empty string', () => {
@@ -31,12 +28,9 @@ describe('isXCorePlaceholderUrl', () => {
 
 describe('hasValidProductImage', () => {
   it('returns false for non-string input', () => {
-    // @ts-expect-error testing non-string
-    expect(hasValidProductImage(null)).toBe(false);
-    // @ts-expect-error testing non-string
-    expect(hasValidProductImage(undefined)).toBe(false);
-    // @ts-expect-error testing non-string
-    expect(hasValidProductImage(42)).toBe(false);
+    expect(hasValidProductImage(null as unknown)).toBe(false);
+    expect(hasValidProductImage(undefined as unknown)).toBe(false);
+    expect(hasValidProductImage(42 as unknown)).toBe(false);
   });
 
   it('returns false for empty string', () => {
@@ -51,12 +45,12 @@ describe('hasValidProductImage', () => {
     expect(hasValidProductImage('uploads/product/image.jpg')).toBe(true);
   });
 
-  it('returns false for http URLs', () => {
-    expect(hasValidProductImage('http://example.com/image.jpg')).toBe(false);
+  it('returns true for http URLs', () => {
+    expect(hasValidProductImage('http://example.com/image.jpg')).toBe(true);
   });
 
-  it('returns false for https URLs', () => {
-    expect(hasValidProductImage('https://example.com/image.jpg')).toBe(false);
+  it('returns true for https URLs', () => {
+    expect(hasValidProductImage('https://example.com/image.jpg')).toBe(true);
   });
 
   it('returns false for protocol-relative URLs', () => {
@@ -70,12 +64,9 @@ describe('hasValidProductImage', () => {
 
 describe('getProductImageUrl', () => {
   it('returns null for non-string input', () => {
-    // @ts-expect-error testing non-string
-    expect(getProductImageUrl(null)).toBeNull();
-    // @ts-expect-error testing non-string
-    expect(getProductImageUrl(undefined)).toBeNull();
-    // @ts-expect-error testing non-string
-    expect(getProductImageUrl(42)).toBeNull();
+    expect(getProductImageUrl(null as unknown)).toBeNull();
+    expect(getProductImageUrl(undefined as unknown)).toBeNull();
+    expect(getProductImageUrl(42 as unknown)).toBeNull();
   });
 
   it('returns null for empty string', () => {
@@ -92,12 +83,12 @@ describe('getProductImageUrl', () => {
     expect(result).toBe('http://localhost/uploads/product.jpg');
   });
 
-  it('returns null for http URLs', () => {
-    expect(getProductImageUrl('http://example.com/img.jpg')).toBeNull();
+  it('returns http URL as-is', () => {
+    expect(getProductImageUrl('http://example.com/img.jpg')).toBe('http://example.com/img.jpg');
   });
 
-  it('returns null for https URLs', () => {
-    expect(getProductImageUrl('https://example.com/img.jpg')).toBeNull();
+  it('returns https URL as-is', () => {
+    expect(getProductImageUrl('https://example.com/img.jpg')).toBe('https://example.com/img.jpg');
   });
 
   it('unwraps object with url property', () => {
@@ -105,8 +96,8 @@ describe('getProductImageUrl', () => {
     expect(getProductImageUrl(obj as unknown)).toBe('http://localhost/uploads/product.jpg');
   });
 
-  it('returns null for object with external url', () => {
+  it('returns external url from object as-is', () => {
     const obj = { url: 'https://example.com/img.jpg' };
-    expect(getProductImageUrl(obj as unknown)).toBeNull();
+    expect(getProductImageUrl(obj as unknown)).toBe('https://example.com/img.jpg');
   });
 });

@@ -137,6 +137,18 @@ public static class Permissions
     public const string WarrantyManage = "warranty:manage";
 
 
+
+    /// <summary>
+    /// Управление сборкой ПК (назначение мастеров, статусы).
+    /// </summary>
+    public const string ServicesManageAssembly = "services:manage-assembly";
+
+    /// <summary>
+    /// Доставка собранных ПК клиентам (для курьеров).
+    /// </summary>
+    public const string DeliveryManage = "delivery:manage";
+
+
     /// <summary>
     /// Возвращает список всех разрешений.
     /// </summary>
@@ -164,7 +176,10 @@ public static class Permissions
         PcBuilderUse, PcBuilderManage,
 
         // Warranty
-        WarrantyView, WarrantyManage
+        WarrantyView, WarrantyManage,
+
+        // Assembly & Delivery
+        ServicesManageAssembly, DeliveryManage
     };
 }
 #pragma warning restore CA1724, SA1507

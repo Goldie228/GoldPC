@@ -350,6 +350,19 @@
   transform: translateY(-1px);
 }
 
+/* Assembly button — gold accent */
+.bsp__btn--assembly {
+  background: rgba(252, 213, 53, 0.1);
+  border-color: var(--primary, #FCD535);
+  color: var(--primary, #FCD535);
+}
+
+.bsp__btn--assembly:hover:not(:disabled) {
+  background: rgba(252, 213, 53, 0.2);
+  border-color: var(--primary, #FCD535);
+  transform: translateY(-1px);
+}
+
 /* Checkout button — yellow (primary) */
 .bsp__btn--checkout {
   background: var(--primary, #FCD535);
@@ -386,6 +399,18 @@
 .bsp__btn--save:hover:not(:disabled) {
   background: rgba(252, 213, 53, 0.12);
   border-color: rgba(252, 213, 53, 0.25);
+  transform: translateY(-1px);
+}
+
+.bsp__btn--mock {
+  background: rgba(155, 89, 182, 0.08);
+  border-color: rgba(155, 89, 182, 0.25);
+  color: #c084fc;
+}
+
+.bsp__btn--mock:hover:not(:disabled) {
+  background: rgba(155, 89, 182, 0.16);
+  border-color: rgba(155, 89, 182, 0.4);
   transform: translateY(-1px);
 }
 

@@ -120,22 +120,10 @@ public class OrdersService : IOrdersService
         // Валидация каждой позиции заказа
         foreach (var item in request.Items)
         {
-            // Проверка количества каждого товара (ФТ-3.11)
-            if (item.Quantity > MaxItemQuantity)
-            {
-                return (null, $"Количество товара '{item.ProductName}' превышает максимально допустимое ({MaxItemQuantity} единиц)");
-            }
-
             // Проверка отрицательной цены единицы товара
             if (item.UnitPrice < 0)
             {
                 return (null, $"Цена товара '{item.ProductName}' не может быть отрицательной");
-            }
-
-            // Проверка отрицательного количества
-            if (item.Quantity <= 0)
-            {
-                return (null, $"Количество товара '{item.ProductName}' должно быть положительным числом");
             }
         }
 
@@ -248,15 +236,22 @@ public class OrdersService : IOrdersService
                     ProductId = itemRequest.ProductId,
                     ProductName = itemRequest.ProductName,
                     Quantity = itemRequest.Quantity,
-                    UnitPrice = itemRequest.UnitPrice
+                    UnitPrice = itemRequest.UnitPrice,
+                    ItemType = itemRequest.ItemType,
+                    PCConfigurationId = itemRequest.PCConfigurationId,
+                    AssemblyFee = itemRequest.AssemblyFee
                 };
                 _context.OrderItems.Add(orderItem);
 
-                reserveRequest.Items.Add(new StockItem
+                // Only reserve stock for regular products, not bundles/services
+                if (itemRequest.ItemType == OrderItemType.Product)
                 {
-                    ProductId = itemRequest.ProductId.ToString(),
-                    Quantity = itemRequest.Quantity
-                });
+                    reserveRequest.Items.Add(new StockItem
+                    {
+                        ProductId = itemRequest.ProductId.ToString(),
+                        Quantity = itemRequest.Quantity
+                    });
+                }
             }
 
             // Резервирование товара в каталоге (ФТ-3.5)
@@ -350,19 +345,35 @@ public class OrdersService : IOrdersService
             order.PaidAt = DateTime.UtcNow;
 
             // Publish OrderPaidEvent - via Outbox
-            // Временно отключено пока MassTransit/RabbitMQ не настроены
-            // SaveToOutbox(new OrderPaidEvent
-            // {
-            //     OrderId = order.Id,
-            //     AmountPaid = order.Total,
-            //     Items = order.Items.Select(i => new OrderItemEventDto
-            //     {
-            //         ProductId = i.ProductId,
-            //         ProductName = i.ProductName,
-            //         Quantity = i.Quantity,
-            //         Price = i.UnitPrice
-            //     }).ToList()
-            // });
+            var bundleItems = order.Items
+                .Where(i => i.ItemType == OrderItemType.PCBundle)
+                .ToList();
+
+            var assemblyBundles = bundleItems.Select((item, index) => new AssemblyBundleInfo
+            {
+                PCConfigurationId = item.PCConfigurationId ?? Guid.Empty,
+                BundleIndex = index,
+                AssemblyFee = item.AssemblyFee ?? 100m,
+                OrderId = order.Id,
+                CustomerId = order.UserId,
+                ClientPhone = order.CustomerPhone
+            }).ToList();
+
+            SaveToOutbox(new OrderPaidEvent
+            {
+                OrderId = order.Id,
+                CustomerId = order.UserId,
+                AmountPaid = order.Total,
+                ClientPhone = order.CustomerPhone,
+                Items = order.Items.Select(i => new OrderItemEventDto
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.ProductName,
+                    Quantity = i.Quantity,
+                    Price = i.UnitPrice
+                }).ToList(),
+                AssemblyBundles = assemblyBundles
+            });
         }
 
         if (newStatus == OrderStatus.Cancelled)
@@ -559,7 +570,10 @@ public class OrdersService : IOrdersService
                 ProductName = oi.ProductName,
                 Quantity = oi.Quantity,
                 UnitPrice = oi.UnitPrice,
-                TotalPrice = oi.TotalPrice
+                TotalPrice = oi.TotalPrice,
+                ItemType = oi.ItemType.ToString(),
+                PCConfigurationId = oi.PCConfigurationId,
+                AssemblyFee = oi.AssemblyFee
             }).ToList() ?? new List<OrderItemDto>()
         };
     }

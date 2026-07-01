@@ -1,3 +1,5 @@
+using GoldPC.SharedKernel.Enums;
+
 namespace GoldPC.OrdersService.Entities;
 
 /// <summary>
@@ -36,6 +38,21 @@ public class OrderItem
     /// Общая сумма позиции
     /// </summary>
     public decimal TotalPrice => UnitPrice * Quantity;
+
+    /// <summary>
+    /// Тип позиции заказа
+    /// </summary>
+    public OrderItemType ItemType { get; set; } = OrderItemType.Product;
+
+    /// <summary>
+    /// ID конфигурации ПК (для PCBundle)
+    /// </summary>
+    public Guid? PCConfigurationId { get; set; }
+
+    /// <summary>
+    /// Стоимость сборки (для PCBundle)
+    /// </summary>
+    public decimal? AssemblyFee { get; set; }
     
     /// <summary>
     /// Навигационное свойство к заказу

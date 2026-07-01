@@ -26,7 +26,7 @@ function normalizeCategory(raw: string): ProductCategory {
 
 // === Типы для администрирования ===
 
-export type UserRole = 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant';
+export type UserRole = 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant' | 'Courier';
 
 // === Типы для статистики дашборда ===
 
@@ -292,14 +292,6 @@ export const usersAdminApi = {
     }
   },
 
-  async getUser(userId: string): Promise<User> {
-    try {
-      const response = await api.get<User>(`/auth/admin/users/${userId}`);
-      return response.data;
-    } catch (e) {
-      throw new Error('Failed to fetch user: ' + (e instanceof Error ? e.message : String(e)));
-    }
-  },
 };
 
 /**

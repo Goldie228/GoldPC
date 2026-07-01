@@ -19,5 +19,11 @@ public class OrderItemDto
     public decimal UnitPrice { get; set; }
 
     public decimal TotalPrice { get; set; }
+
+    public string ItemType { get; set; } = "Product";
+
+    public Guid? PCConfigurationId { get; set; }
+
+    public decimal? AssemblyFee { get; set; }
 }
 #pragma warning restore CS1591, SA1600

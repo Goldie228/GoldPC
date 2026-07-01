@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { catalogAdminApi, type CreateProductRequest } from '@/api/admin';
 import { useToast } from '@/hooks/useToast';
-import { hasValidProductImage } from '@/utils/image';
+import { hasValidProductImage, getProductImageUrl } from '@/utils/image';
 import { CATEGORY_LABELS, CATEGORY_ORDER } from '@/utils/category-mappings';
 import type { Product, ProductCategory } from '@/api/types';
 import {
@@ -188,7 +188,8 @@ export function CatalogManagementPage() {
     return new Intl.NumberFormat('ru-BY', {
       style: 'currency',
       currency: 'BYN',
-      minimumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(price);
   };
 
@@ -382,7 +383,7 @@ export function CatalogManagementPage() {
                               <div className="flex items-center gap-3 max-w-[280px]">
                                 {hasValidProductImage(product.mainImage?.url) && product.mainImage ? (
                                   <img
-                                    src={product.mainImage.url}
+                                    src={getProductImageUrl(product.mainImage.url) ?? product.mainImage.url}
                                     alt={product.name}
                                     className="w-10 h-10 rounded-md object-cover flex-shrink-0"
                                   />

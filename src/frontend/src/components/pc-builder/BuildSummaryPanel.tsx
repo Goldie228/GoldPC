@@ -5,12 +5,13 @@
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Zap, BarChart3, Save, ShoppingBag, AlertTriangle, XCircle, FileDown } from 'lucide-react';
+import { Zap, BarChart3, Save, ShoppingBag, AlertTriangle, XCircle, FileDown, FlaskConical, Wrench } from 'lucide-react';
 import {
   calculatePerformance,
   getPerformanceLabel,
   getPerformanceColor,
 } from '@/features/pc-builder/logic/performance';
+import { hasAllRequiredSlots } from '@/features/pc-builder/logic/slotHelpers';
 import type { PCComponentType, PCBuilderSelectedState } from '@/hooks';
 import { PC_BUILDER_SLOTS } from '@/hooks';
 import './BuildSummaryPanel.css';
@@ -27,8 +28,10 @@ export interface BuildSummaryPanelProps {
   compatibilityErrors?: string[];
   compatibilityWarnings?: string[];
   onAddToCart: () => void;
+  onAddAsAssembly?: () => void;
   onSave: () => void;
   onCheckout: () => void;
+  onMockBuildOrder?: () => void;
   onExportPdf?: () => void;
 }
 
@@ -55,8 +58,10 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
   compatibilityErrors,
   compatibilityWarnings,
   onAddToCart,
+  onAddAsAssembly,
   onSave,
   onCheckout,
+  onMockBuildOrder,
   onExportPdf,
 }: BuildSummaryPanelProps) {
   const cpu = selectedComponents.cpu?.product ?? null;
@@ -72,6 +77,7 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
   const powerPercent = Math.min((Math.max(0, powerConsumption) / MAX_POWER) * 100, 100);
   const canAddToCart = isCompatible && selectedCount > 0;
   const canCheckout = canAddToCart;
+  const canMockBuild = hasAllRequiredSlots(selectedComponents);
   const reducedMotion = useReducedMotion();
   const barDur = reducedMotion ? 0 : 0.6;
   const scoreDur = reducedMotion ? 0 : 0.5;
@@ -323,6 +329,17 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
           <ShoppingBag size={16} strokeWidth={2} aria-hidden />
           В корзину
         </button>
+        {onAddAsAssembly && (
+          <button
+            type="button"
+            className="bsp__btn bsp__btn--assembly"
+            disabled={!canAddToCart}
+            onClick={onAddAsAssembly}
+          >
+            <Wrench size={16} strokeWidth={2} aria-hidden />
+            Как сборку (+100 BYN)
+          </button>
+        )}
         <button
           type="button"
           className="bsp__btn bsp__btn--checkout"
@@ -349,6 +366,22 @@ export const BuildSummaryPanel = React.memo(function BuildSummaryPanel({
           <FileDown size={16} strokeWidth={2} aria-hidden />
           Скачать PDF
         </button>
+        {onMockBuildOrder && (
+          <button
+            type="button"
+            className="bsp__btn bsp__btn--mock"
+            disabled={!canMockBuild}
+            onClick={onMockBuildOrder}
+            title={
+              canMockBuild
+                ? 'Оформить заказ из выбранных комплектующих за 100 BYN'
+                : 'Заполните все обязательные слоты (без периферии), чтобы оформить заказ'
+            }
+          >
+            <FlaskConical size={16} strokeWidth={2} aria-hidden />
+            Собрать ПК — 100 BYN
+          </button>
+        )}
       </div>
 
       {!canAddToCart && selectedCount > 0 && !isCompatible && (

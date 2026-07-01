@@ -2,12 +2,12 @@
  * Маппинг ролей между бэкендом (числа) и фронтендом (строки).
  *
  * Бэкенд возвращает роли как числа (enum UserRole):
- *   0 = Client, 1 = Manager, 2 = Master, 3 = Admin, 4 = Accountant
+ *   0 = Client, 1 = Manager, 2 = Master, 3 = Admin, 4 = Accountant, 5 = Courier
  *
- * Фронтенд ожидает строки: 'Client', 'Manager', 'Master', 'Admin', 'Accountant'
+ * Фронтенд ожидает строки: 'Client', 'Manager', 'Master', 'Admin', 'Accountant', 'Courier'
  */
 
-export type FrontendRole = 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant';
+export type FrontendRole = 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant' | 'Courier';
 
 /** Числовой маппинг ролей с бэкенда */
 export const BackendRole = {
@@ -16,6 +16,7 @@ export const BackendRole = {
   Master: 2,
   Admin: 3,
   Accountant: 4,
+  Courier: 5,
 } as const;
 
 export type BackendRole = typeof BackendRole[keyof typeof BackendRole];
@@ -27,6 +28,7 @@ const ROLE_NUMBER_TO_STRING: Record<number, FrontendRole> = {
   2: 'Master',
   3: 'Admin',
   4: 'Accountant',
+  5: 'Courier',
 };
 
 /** Маппинг строка → число */
@@ -36,6 +38,7 @@ const ROLE_STRING_TO_NUMBER: Record<FrontendRole, number> = {
   Master: 2,
   Admin: 3,
   Accountant: 4,
+  Courier: 5,
 };
 
 /**

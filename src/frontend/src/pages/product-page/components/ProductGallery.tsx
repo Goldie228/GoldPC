@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import { hasValidProductImage } from '@/utils/image';
+import { hasValidProductImage, getProductImageUrl } from '@/utils/image';
 import type { Product } from '@/api/types';
 import { ProductImageViewerModal } from './ProductImageViewerModal';
 
@@ -122,7 +122,7 @@ export function ProductGallery({ product }: ProductGalleryProps): ReactElement {
           >
             {hasImage ? (
               <img
-                src={activeImage}
+                src={getProductImageUrl(activeImage) ?? activeImage}
                 alt={product.name}
                 className="w-[85%] h-[85%] object-contain transition-transform duration-500 ease-out pointer-events-none"
                 width={400}
@@ -194,7 +194,7 @@ export function ProductGallery({ product }: ProductGalleryProps): ReactElement {
                   aria-label={`Фото ${idx + 1} из ${images.length}`}
                   aria-current={currentIndex === idx ? 'true' : undefined}
                 >
-                  <img src={img.url} alt={img.alt || product.name} className="w-full h-full object-contain" width={64} height={64} loading="lazy" />
+                  <img src={getProductImageUrl(img.url) ?? img.url} alt={img.alt || product.name} className="w-full h-full object-contain" width={64} height={64} loading="lazy" />
                 </button>
               ))}
             </div>

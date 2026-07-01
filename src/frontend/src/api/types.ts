@@ -255,8 +255,8 @@ export interface User {
     avatarUrl?: string;
     birthDate?: string;
    company?: string;
-   role: 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant';
-   roles?: ('Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant')[];
+    role: 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant' | 'Courier';
+    roles?: ('Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant' | 'Courier')[];
    isActive: boolean;
    isEmailVerified: boolean;
    createdAt: string;
@@ -461,4 +461,68 @@ export interface CategorySpecificationsDto {
   categoryId: string;
   categoryName: string;
   attributes: SpecificationAttributeDto[];
+}
+
+// === Assembly types ===
+
+export type AssemblyPartStatus = 'Required' | 'Collected' | 'Installed';
+export type AssembledUnitStatus = 'Stored' | 'Delivered';
+
+export interface AssemblyPartDto {
+  id: string;
+  productId: string;
+  productName: string;
+  componentType: string;
+  quantity: number;
+  unitPrice: number;
+  partStatus: AssemblyPartStatus;
+}
+
+export interface AssembledUnitDto {
+  id: string;
+  serviceRequestId: string;
+  pcConfigurationId: string;
+  serialNumber: string;
+  status: AssembledUnitStatus;
+  assembledAt: string;
+  deliveredAt?: string;
+}
+
+export interface ServiceRequestWithAssembly {
+  id: string;
+  requestNumber: string;
+  clientId: string;
+  masterId?: string;
+  serviceTypeId: string;
+  serviceTypeName: string;
+  status: string;
+  description: string;
+  deviceModel?: string;
+  serialNumber?: string;
+  estimatedCost: number;
+  actualCost: number;
+  masterComment?: string;
+  createdAt: string;
+  completedAt?: string;
+  orderId?: string;
+  pcConfigurationId?: string;
+  clientPhone?: string;
+  courierId?: string;
+  assembledSerialNumber?: string;
+  serviceParts: ServicePartDto[];
+  assemblyParts: AssemblyPartDto[];
+  assembledUnit?: AssembledUnitDto;
+  workReports: WorkReportDto[];
+  clientEmail?: string;
+  masterName?: string;
+}
+
+export interface WorkReportDto {
+  id: string;
+  serviceRequestId: string;
+  previousStatus: string;
+  newStatus: string;
+  comment?: string;
+  changedBy: string;
+  changedAt: string;
 }

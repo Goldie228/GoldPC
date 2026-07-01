@@ -10,6 +10,8 @@ public class ServicesDbContext : DbContext
     public DbSet<ServiceRequest> ServiceRequests => Set<ServiceRequest>();
     public DbSet<ServiceType> ServiceTypes => Set<ServiceType>();
     public DbSet<ServicePart> ServiceParts => Set<ServicePart>();
+    public DbSet<AssemblyPart> AssemblyParts => Set<AssemblyPart>();
+    public DbSet<AssembledUnit> AssembledUnits => Set<AssembledUnit>();
     public DbSet<WorkReport> WorkReports => Set<WorkReport>();
     public DbSet<TicketMessage> TicketMessages => Set<TicketMessage>();
     
@@ -50,6 +52,13 @@ public class ServicesDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnName("created_at");
             entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
             entity.Property(e => e.CompletedAt).HasColumnName("completed_at");
+
+            // Assembly fields
+            entity.Property(e => e.OrderId).HasColumnName("order_id");
+            entity.Property(e => e.PCConfigurationId).HasColumnName("pc_configuration_id");
+            entity.Property(e => e.ClientPhone).HasColumnName("client_phone").HasMaxLength(20);
+            entity.Property(e => e.CourierId).HasColumnName("courier_id");
+            entity.Property(e => e.AssembledSerialNumber).HasColumnName("assembled_serial_number").HasMaxLength(100);
             
             entity.HasOne(e => e.ServiceType)
                 .WithMany(st => st.ServiceRequests)
@@ -121,6 +130,54 @@ public class ServicesDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.ServiceRequestId);
+        });
+
+        modelBuilder.Entity<AssemblyPart>(entity =>
+        {
+            entity.ToTable("assembly_parts");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ServiceRequestId).HasColumnName("service_request_id");
+            entity.Property(e => e.ProductId).HasColumnName("product_id");
+            entity.Property(e => e.ProductName).HasColumnName("product_name").IsRequired().HasMaxLength(255);
+            entity.Property(e => e.ComponentType).HasColumnName("component_type").IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.UnitPrice).HasColumnName("unit_price").HasPrecision(12, 2);
+            entity.Property(e => e.PartStatus).HasColumnName("part_status").HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(e => e.ServiceRequest)
+                .WithMany(sr => sr.AssemblyParts)
+                .HasForeignKey(e => e.ServiceRequestId)
+                .HasConstraintName("fk_assembly_parts_service_request")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ServiceRequestId);
+        });
+
+        modelBuilder.Entity<AssembledUnit>(entity =>
+        {
+            entity.ToTable("assembled_units");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ServiceRequestId).HasColumnName("service_request_id");
+            entity.Property(e => e.PCConfigurationId).HasColumnName("pc_configuration_id");
+            entity.Property(e => e.SerialNumber).HasColumnName("serial_number").IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Status).HasColumnName("status").HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.AssembledAt).HasColumnName("assembled_at");
+            entity.Property(e => e.DeliveredAt).HasColumnName("delivered_at");
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(e => e.ServiceRequest)
+                .WithOne(sr => sr.AssembledUnit)
+                .HasForeignKey<AssembledUnit>(e => e.ServiceRequestId)
+                .HasConstraintName("fk_assembled_units_service_request")
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ServiceRequestId);
+            entity.HasIndex(e => e.SerialNumber).IsUnique();
         });
     }
 }

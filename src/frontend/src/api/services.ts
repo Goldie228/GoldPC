@@ -9,6 +9,7 @@
  */
 
 import { goldpcApi } from './generated/client';
+import type { AssemblyPartDto, ServiceRequestWithAssembly } from './types';
 
 // ═══════════════════════════════════════════════
 //  TICKET STATUSES (совместимы со статусами бэка)
@@ -16,8 +17,15 @@ import { goldpcApi } from './generated/client';
 
 export const TICKET_STATUSES = [
   { key: 'Submitted', label: 'Подана', color: 'blue' },
+  { key: 'Assigned', label: 'Назначена', color: 'indigo' },
   { key: 'InProgress', label: 'В работе', color: 'yellow' },
+  { key: 'AwaitingParts', label: 'Ожидание комплектующих', color: 'orange' },
+  { key: 'PartsReady', label: 'Комплектующие готовы', color: 'cyan' },
   { key: 'PartsPending', label: 'Ожидание запчастей', color: 'purple' },
+  { key: 'Assembled', label: 'Собран', color: 'emerald' },
+  { key: 'ReadyForDelivery', label: 'Готов к доставке', color: 'teal' },
+  { key: 'InDelivery', label: 'В доставке', color: 'blue' },
+  { key: 'Delivered', label: 'Доставлен', color: 'green' },
   { key: 'ReadyForPickup', label: 'Готова к выдаче', color: 'green' },
   { key: 'Completed', label: 'Завершён', color: 'gray' },
   { key: 'Cancelled', label: 'Отменён', color: 'red' },
@@ -278,9 +286,9 @@ export const servicesApi = {
   },
 
   /** Обновить статус заявки */
-  updateRequestStatus: async (requestId: string, status: string): Promise<ServiceRequestDto> => {
+  updateRequestStatus: async (requestId: string, status: string, comment?: string): Promise<ServiceRequestDto> => {
     try {
-      const response = await goldpcApi.patchServicesIdStatus(requestId, { status: status as any });
+      const response = await goldpcApi.patchServicesIdStatus(requestId, { status: status as any, comment });
       return extractData<ServiceRequestDto>(response);
     } catch (e) {
       throw new Error('Failed to update request status: ' + (e instanceof Error ? e.message : String(e)));
@@ -365,8 +373,8 @@ export const servicesApi = {
   },
 
   /** Alias for updateRequestStatus (used by master panel) */
-  updateTicketStatus: async (requestId: string, status: string): Promise<ServiceRequestDto> => {
-    return servicesApi.updateRequestStatus(requestId, status);
+  updateTicketStatus: async (requestId: string, status: string, comment?: string): Promise<ServiceRequestDto> => {
+    return servicesApi.updateRequestStatus(requestId, status, comment);
   },
 
   /** Alias for completeRequest (used by TicketDetailPage) */
@@ -387,5 +395,77 @@ export const servicesApi = {
   /** Alias for getMyServiceRequests (used by useServiceTickets) */
   getMyServices: async (page: number = 1, pageSize: number = 10, status?: string): Promise<{ items: ServiceRequestDto[]; totalCount: number }> => {
     return servicesApi.getMyServiceRequests(page, pageSize, status);
+  },
+
+  // ─── Assembly methods ──────────────────────────
+
+  /** Получить комплектующие заявки на сборку */
+  getAssemblyParts: async (requestId: string): Promise<AssemblyPartDto[]> => {
+    try {
+      const response = await goldpcApi.getServicesIdAssemblyParts(requestId);
+      return extractData<AssemblyPartDto[]>(response);
+    } catch (e) {
+      throw new Error('Failed to fetch assembly parts: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  },
+
+  /** Отметить комплектующую как полученную */
+  collectPart: async (requestId: string, partId: string): Promise<ServiceRequestWithAssembly> => {
+    try {
+      const response = await goldpcApi.postServicesIdPartsPartIdCollect(requestId, partId);
+      return extractData<ServiceRequestWithAssembly>(response);
+    } catch (e) {
+      throw new Error('Failed to collect part: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  },
+
+  /** Отметить комплектующую как установленную */
+  installPart: async (requestId: string, partId: string): Promise<ServiceRequestWithAssembly> => {
+    try {
+      const response = await goldpcApi.postServicesIdPartsPartIdInstall(requestId, partId);
+      return extractData<ServiceRequestWithAssembly>(response);
+    } catch (e) {
+      throw new Error('Failed to install part: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  },
+
+  /** Начать сборку ПК */
+  startAssembly: async (requestId: string): Promise<ServiceRequestWithAssembly> => {
+    try {
+      const response = await goldpcApi.postServicesIdStartAssembly(requestId);
+      return extractData<ServiceRequestWithAssembly>(response);
+    } catch (e) {
+      throw new Error('Failed to start assembly: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  },
+
+  /** Завершить сборку ПК */
+  completeAssembly: async (requestId: string, serialNumber: string): Promise<ServiceRequestWithAssembly> => {
+    try {
+      const response = await goldpcApi.postServicesIdCompleteAssembly(requestId, { serialNumber });
+      return extractData<ServiceRequestWithAssembly>(response);
+    } catch (e) {
+      throw new Error('Failed to complete assembly: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  },
+
+  /** Передать в доставку */
+  handToDelivery: async (requestId: string): Promise<ServiceRequestWithAssembly> => {
+    try {
+      const response = await goldpcApi.postServicesIdHandToDelivery(requestId);
+      return extractData<ServiceRequestWithAssembly>(response);
+    } catch (e) {
+      throw new Error('Failed to hand to delivery: ' + (e instanceof Error ? e.message : String(e)));
+    }
+  },
+
+  /** Переназначить мастера */
+  reassignMaster: async (requestId: string, newMasterId: string): Promise<any> => {
+    try {
+      const response = await goldpcApi.postServicesIdReassignNewMasterId(requestId, newMasterId);
+      return extractData<any>(response);
+    } catch (e) {
+      throw new Error('Failed to reassign master: ' + (e instanceof Error ? e.message : String(e)));
+    }
   },
 };

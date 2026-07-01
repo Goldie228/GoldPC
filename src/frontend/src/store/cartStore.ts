@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ProductSummary } from '../api/types';
 
+export type CartItemType = 'product' | 'pcbundle' | 'service';
+
 export interface CartItem {
   id: string;
   productId: string;
@@ -12,6 +14,23 @@ export interface CartItem {
   quantity: number;
   imageUrl?: string;
   product?: ProductSummary;
+  /** Тип элемента корзины */
+  itemType?: CartItemType;
+  /** ID конфигурации ПК (для pcbundle) */
+  pcConfigurationId?: string;
+  /** Стоимость сборки (для pcbundle) */
+  assemblyFee?: number;
+  /** Компоненты бандла (для pcbundle) */
+  bundleComponents?: BundleComponent[];
+}
+
+export interface BundleComponent {
+  productId: string;
+  productName: string;
+  category: string;
+  price: number;
+  quantity: number;
+  imageUrl?: string;
 }
 
 export interface PromoValidationResult {
@@ -30,6 +49,13 @@ interface CartState {
 
 interface CartActions {
   addItem: (product: ProductSummary, quantity?: number) => void;
+  addBundleItem: (bundle: {
+    name: string;
+    pcConfigurationId: string;
+    assemblyFee: number;
+    totalPrice: number;
+    components: BundleComponent[];
+  }) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   setPromoResult: (result: PromoValidationResult) => void;
@@ -78,6 +104,25 @@ export const useCartStore = create<CartStore>()(
         });
       },
 
+      addBundleItem: (bundle) => {
+        set((state) => {
+          const bundleId = crypto.randomUUID();
+          const newBundleItem: CartItem = {
+            id: bundleId,
+            productId: bundleId,
+            name: bundle.name,
+            category: 'pcbundle',
+            price: bundle.totalPrice,
+            quantity: 1,
+            itemType: 'pcbundle',
+            pcConfigurationId: bundle.pcConfigurationId,
+            assemblyFee: bundle.assemblyFee,
+            bundleComponents: bundle.components,
+          };
+          return { items: [...state.items, newBundleItem] };
+        });
+      },
+
       removeItem: (productId) => {
         set((state) => ({
           items: state.items.filter((item) => item.productId !== productId),
@@ -102,6 +147,10 @@ export const useCartStore = create<CartStore>()(
       setPromoResult: (result) => {
         if (result.valid) {
           set({
+            // NOTE: Extracting the promo code name via result.message.split(' ')[0] is fragile.
+            // It relies on the human-readable message format (e.g. "SUMMER2025 — скидка 10%").
+            // If the backend changes the message template, the extracted code will be wrong.
+            // A proper fix: the backend should return the promo code text in a dedicated field.
             promoCode: result.discount > 0 ? result.message.split(' ')[0] : null,
             discount: result.discount,
             discountAmount: result.discountAmount,

@@ -5,14 +5,15 @@
 
 import { memo } from 'react';
 import { Package, Edit2, ExternalLink, Trash2, ChevronRight } from 'lucide-react';
-import { hasValidProductImage } from '@/utils/image';
+import { hasValidProductImage, getProductImageUrl } from '@/utils/image';
 import type { Product } from '@/api/types';
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('ru-BY', {
     style: 'currency',
     currency: 'BYN',
-    minimumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(price);
 };
 
@@ -66,7 +67,7 @@ export const ProductCard = memo(function ProductCard({ product, onEdit, onDelete
       <div className="aspect-[4/3] bg-white relative overflow-hidden">
         {imageUrl ? (
           <img
-            src={imageUrl}
+            src={getProductImageUrl(imageUrl) ?? imageUrl}
             alt={product.name}
             className="w-full h-full object-contain p-3"
           />

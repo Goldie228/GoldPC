@@ -18,6 +18,9 @@ import {
   Package,
   AlertTriangle,
   Loader2,
+  Phone,
+  CheckCircle,
+  Truck,
 } from 'lucide-react';
 import { servicesApi, TICKET_STATUSES } from '@/api/services';
 import type { ServiceRequestDto, TicketStatus, ServicePartDto } from '@/api/services';
@@ -28,6 +31,8 @@ import { useTicketChat } from '@/hooks/useTicketChat';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { TypingIndicator } from '@/components/chat/TypingIndicator';
+
+import type { AssemblyPartDto } from '@/api/types';
 
 /* ------------------------------------------------------------------ */
 /*  Constants                                                          */
@@ -58,6 +63,23 @@ function getAllowedStatuses(current: TicketStatus): { value: TicketStatus; label
       { value: 'ReadyForPickup', label: 'Готова к выдаче' },
     ],
     PartsPending: [{ value: 'InProgress', label: 'В работу' }],
+    Assigned: [
+      { value: 'InProgress', label: 'Взять в работу' },
+      { value: 'AwaitingParts', label: 'Ожидание комплектующих' },
+      { value: 'Cancelled', label: 'Отменить' },
+    ],
+    AwaitingParts: [
+      { value: 'PartsReady', label: 'Комплектующие готовы' },
+      { value: 'InProgress', label: 'В работу' },
+    ],
+    PartsReady: [{ value: 'InProgress', label: 'В работу' }],
+    Assembled: [
+      { value: 'ReadyForDelivery', label: 'Готов к доставке' },
+      { value: 'ReadyForPickup', label: 'Готова к выдаче' },
+    ],
+    ReadyForDelivery: [{ value: 'InDelivery', label: 'В доставку' }],
+    InDelivery: [{ value: 'Delivered', label: 'Доставлен' }],
+    Delivered: [{ value: 'Completed', label: 'Завершить' }],
     ReadyForPickup: [],
     Completed: [],
     Cancelled: [],
@@ -77,7 +99,7 @@ function formatDateTime(iso: string): string {
 }
 
 function formatCurrency(value: number): string {
-  return value.toLocaleString('ru-RU', { minimumFractionDigits: 0 }) + ' BYN';
+  return value.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' BYN';
 }
 
 function isTerminal(status: TicketStatus): boolean {
@@ -128,6 +150,59 @@ export function TicketDetailPage() {
     onError: () => showToast('Ошибка при добавлении запчасти', 'error'),
   });
 
+  /* ── Assembly Queries ──────────────────────────────────────────── */
+  const { data: assemblyParts = [] } = useQuery({
+    queryKey: ['master', 'ticket', ticketId, 'assemblyParts'],
+    queryFn: () => servicesApi.getAssemblyParts(ticketId!),
+    enabled: !!ticketId && Array.isArray(ticket?.assemblyParts),
+  });
+
+  /* ── Assembly Mutations ────────────────────────────────────────── */
+  const collectPartMutation = useMutation({
+    mutationFn: (partId: string) => servicesApi.collectPart(ticketId!, partId),
+    onSuccess: () => {
+      showToast('Комплектующая получена со склада', 'success');
+      queryClient.invalidateQueries({ queryKey: ['master', 'ticket', ticketId, 'assemblyParts'] });
+    },
+    onError: () => showToast('Ошибка при получении комплектующей', 'error'),
+  });
+
+  const installPartMutation = useMutation({
+    mutationFn: (partId: string) => servicesApi.installPart(ticketId!, partId),
+    onSuccess: () => {
+      showToast('Комплектующая установлена', 'success');
+      queryClient.invalidateQueries({ queryKey: ['master', 'ticket', ticketId, 'assemblyParts'] });
+    },
+    onError: () => showToast('Ошибка при установке комплектующей', 'error'),
+  });
+
+  const startAssemblyMutation = useMutation({
+    mutationFn: () => servicesApi.startAssembly(ticketId!),
+    onSuccess: () => {
+      showToast('Сборка начата', 'success');
+      queryClient.invalidateQueries({ queryKey: ['master', 'ticket', ticketId] });
+    },
+    onError: () => showToast('Ошибка при начале сборки', 'error'),
+  });
+
+  const completeAssemblyMutation = useMutation({
+    mutationFn: (serialNumber: string) => servicesApi.completeAssembly(ticketId!, serialNumber),
+    onSuccess: () => {
+      showToast('Сборка завершена', 'success');
+      queryClient.invalidateQueries({ queryKey: ['master', 'ticket', ticketId] });
+    },
+    onError: () => showToast('Ошибка при завершении сборки', 'error'),
+  });
+
+  const handToDeliveryMutation = useMutation({
+    mutationFn: () => servicesApi.handToDelivery(ticketId!),
+    onSuccess: () => {
+      showToast('Передано в доставку', 'success');
+      queryClient.invalidateQueries({ queryKey: ['master', 'ticket', ticketId] });
+    },
+    onError: () => showToast('Ошибка при передаче в доставку', 'error'),
+  });
+
   /* ── Chat ──────────────────────────────────────────────────────── */
   const chatBottomRef = useRef<HTMLDivElement>(null);
   const {
@@ -150,6 +225,7 @@ export function TicketDetailPage() {
   const [partName, setPartName] = useState('');
   const [partQty, setPartQty] = useState('1');
   const [partPrice, setPartPrice] = useState('0');
+  const [assemblySerialNumber, setAssemblySerialNumber] = useState('');
   /* ── Loading state ────────────────────────────────────────────── */
   if (isLoading) {
     return (
@@ -305,7 +381,7 @@ export function TicketDetailPage() {
                   e.preventDefault();
                   if (!partName.trim()) return;
                   partMutation.mutate({
-                    productId: crypto.randomUUID(),
+                    productId: crypto.randomUUID(), // TODO: Replace with real product selection from catalog
                     productName: partName.trim(),
                     quantity: Number(partQty) || 1,
                     unitPrice: Number(partPrice) || 0,
@@ -379,6 +455,74 @@ export function TicketDetailPage() {
               </form>
             )}
           </div>
+
+          {/* ── Комплектующие для сборки ──────────────────────────── */}
+          {Array.isArray(ticket.assemblyParts) && ticket.assemblyParts.length > 0 && (
+            <div className="bg-surface-card rounded-xl border border-hairline-dark p-6">
+              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Package size={18} className="text-gold" />
+                Комплектующие для сборки
+              </h2>
+
+              <div className="overflow-x-auto mb-4">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-hairline-dark">
+                      <th scope="col" className="text-left py-2 pr-3 font-medium text-muted-foreground">Название</th>
+                      <th scope="col" className="text-left py-2 px-3 font-medium text-muted-foreground">Тип</th>
+                      <th scope="col" className="text-right py-2 px-3 font-medium text-muted-foreground">Кол-во</th>
+                      <th scope="col" className="text-right py-2 px-3 font-medium text-muted-foreground">Цена</th>
+                      <th scope="col" className="text-center py-2 px-3 font-medium text-muted-foreground">Статус</th>
+                      <th scope="col" className="text-center py-2 pl-3 font-medium text-muted-foreground">Действие</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(assemblyParts as AssemblyPartDto[]).map((part) => (
+                      <tr key={part.id} className="border-b border-hairline-dark/50 last:border-b-0">
+                        <td className="py-2 pr-3 text-foreground">{part.productName}</td>
+                        <td className="py-2 px-3 text-muted-foreground">{part.componentType}</td>
+                        <td className="text-right py-2 px-3 text-foreground">{part.quantity}</td>
+                        <td className="text-right py-2 px-3 text-foreground">{formatCurrency(part.unitPrice)}</td>
+                        <td className="text-center py-2 px-3">
+                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
+                            part.partStatus === 'Installed'
+                              ? 'bg-price-drop/15 text-price-drop'
+                              : part.partStatus === 'Collected'
+                                ? 'bg-gold/15 text-gold'
+                                : 'bg-surface-elevated text-muted-strong'
+                          }`}>
+                            {part.partStatus === 'Installed' ? 'Установлена' : part.partStatus === 'Collected' ? 'Получена' : 'Требуется'}
+                          </span>
+                        </td>
+                        <td className="text-center py-2 pl-3">
+                          {!terminal && !assignedToOther && part.partStatus === 'Required' && (
+                            <button
+                              type="button"
+                              onClick={() => collectPartMutation.mutate(part.id)}
+                              disabled={collectPartMutation.isPending}
+                              className="px-2 py-1 text-xs font-medium text-gold-ink bg-gold rounded hover:bg-gold/90 disabled:opacity-50 transition-colors"
+                            >
+                              {collectPartMutation.isPending ? '...' : 'Забрал со склада'}
+                            </button>
+                          )}
+                          {!terminal && !assignedToOther && part.partStatus === 'Collected' && (
+                            <button
+                              type="button"
+                              onClick={() => installPartMutation.mutate(part.id)}
+                              disabled={installPartMutation.isPending}
+                              className="px-2 py-1 text-xs font-medium text-on-dark bg-price-drop rounded hover:bg-price-drop/90 disabled:opacity-50 transition-colors"
+                            >
+                              {installPartMutation.isPending ? '...' : 'Установил'}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* ── История изменений ────────────────────────────────── */}
           <div className="bg-surface-card rounded-xl border border-hairline-dark p-6">
@@ -490,6 +634,12 @@ export function TicketDetailPage() {
                     : 'Загрузка...'}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">{ticket.clientId}</p>
+                {(clientUser as any)?.phone && (
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                    <Phone size={12} />
+                    {(clientUser as any).phone}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -567,25 +717,94 @@ export function TicketDetailPage() {
             </div>
           )}
 
-          {/* ── Быстрое завершение / отмена ────────────────────────── */}
-          {ticket.status === 'InProgress' && !assignedToOther && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => statusMutation.mutate('Completed')}
-                disabled={statusMutation.isPending}
-                className="flex-1 px-3 py-2 text-sm font-medium text-on-dark bg-price-drop rounded-lg hover:bg-price-drop/90 disabled:opacity-50 transition-colors"
-              >
-                {statusMutation.isPending ? 'Отправка...' : 'Завершить работу'}
-              </button>
-              <button
-                type="button"
-                onClick={() => statusMutation.mutate('Cancelled')}
-                disabled={statusMutation.isPending}
-                className="flex-1 px-3 py-2 text-sm font-medium text-price-rise border border-price-rise/30 rounded-lg hover:bg-price-rise/10 disabled:opacity-50 transition-colors"
-              >
-                Отменить заявку
-              </button>
+          {/* ── Управление сборкой ──────────────────────────────── */}
+          {Array.isArray(ticket.assemblyParts) && ticket.assemblyParts.length > 0 && !terminal && !assignedToOther && (
+            <div className="bg-surface-card rounded-xl border border-hairline-dark p-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Wrench size={16} className="text-gold" />
+                Управление сборкой
+              </h3>
+
+              {(ticket.status as string) === 'Assigned' && (
+                <button
+                  type="button"
+                  onClick={() => startAssemblyMutation.mutate()}
+                  disabled={startAssemblyMutation.isPending}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gold-ink bg-gold rounded-lg hover:bg-gold/90 disabled:opacity-50 transition-colors"
+                >
+                  {startAssemblyMutation.isPending ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin border-gold-ink" />
+                      Запуск...
+                    </>
+                  ) : (
+                    'Начать сборку'
+                  )}
+                </button>
+              )}
+
+              {ticket.status === 'InProgress' && (assemblyParts as AssemblyPartDto[]).every(p => p.partStatus === 'Installed') && (
+                <div className="space-y-3">
+                  <div>
+                    <label htmlFor="assemblySerial" className="block text-xs font-medium text-muted-foreground mb-1">
+                      Серийный номер готового ПК
+                    </label>
+                    <input
+                      id="assemblySerial"
+                      className="w-full rounded-lg border border-hairline-dark px-3 py-2 text-sm bg-surface-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 focus:border-gold/40"
+                      placeholder="Введите серийный номер"
+                      value={assemblySerialNumber}
+                      onChange={(e) => setAssemblySerialNumber(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (assemblySerialNumber.trim()) {
+                        completeAssemblyMutation.mutate(assemblySerialNumber.trim());
+                      }
+                    }}
+                    disabled={completeAssemblyMutation.isPending || !assemblySerialNumber.trim()}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-on-dark bg-price-drop rounded-lg hover:bg-price-drop/90 disabled:opacity-50 transition-colors"
+                  >
+                    {completeAssemblyMutation.isPending ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin border-on-dark" />
+                        Завершение...
+                      </>
+                    ) : (
+                      'Завершить сборку'
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {(ticket.status as string) === 'Assembled' && (
+                <button
+                  type="button"
+                  onClick={() => handToDeliveryMutation.mutate()}
+                  disabled={handToDeliveryMutation.isPending}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-on-dark bg-gold rounded-lg hover:bg-gold/90 disabled:opacity-50 transition-colors"
+                >
+                  {handToDeliveryMutation.isPending ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin border-on-dark" />
+                      Отправка...
+                    </>
+                  ) : (
+                    <>
+                      <Truck size={14} />
+                      Передать в доставку
+                    </>
+                  )}
+                </button>
+              )}
+
+              {ticket.status === 'InProgress' && !(assemblyParts as AssemblyPartDto[]).every(p => p.partStatus === 'Installed') && (
+                <p className="text-xs text-muted-foreground text-center py-2">
+                  Установите все комплектующие для завершения сборки
+                </p>
+              )}
             </div>
           )}
         </div>

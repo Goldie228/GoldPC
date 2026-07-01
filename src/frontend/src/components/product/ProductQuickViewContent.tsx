@@ -22,8 +22,8 @@ function formatPriceByn(price: number): string {
   return new Intl.NumberFormat('ru-RU', {
     style: 'currency',
     currency: 'BYN',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(price);
 }
 

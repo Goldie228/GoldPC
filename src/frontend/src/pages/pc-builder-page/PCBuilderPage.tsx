@@ -338,6 +338,7 @@ export function PCBuilderPage() {
     estimatedFps,
     bottleneck,
     addToCart,
+    addToCartAsAssembly,
     maxRamModules,
     maxRamQty,
     maxStorageModules,
@@ -587,6 +588,30 @@ export function PCBuilderPage() {
     void navigate('/cart');
   };
 
+  const handleMockBuildOrder = () => {
+    const count = selectedCount;
+    addToCart();
+    showToast(
+      `Заказ: ${count} ${pluralizeRu(count, ['компонент', 'компонента', 'компонентов'])} оформлено за 100 BYN`,
+      'success',
+      4000
+    );
+    const cartPayload = {
+      mock: true,
+      fixedPrice: 100,
+      currency: 'BYN',
+      createdAt: new Date().toISOString(),
+      componentCount: count,
+      source: 'pc-builder',
+    };
+    try {
+      sessionStorage.setItem('mockPcBuildOrder', JSON.stringify(cartPayload));
+    } catch {
+      /* storage недоступен — мок всё равно работает в UI */
+    }
+    void navigate('/cart?mock=1');
+  };
+
   const handleAddToCart = () => {
     const count = selectedCount;
     addToCart();
@@ -594,6 +619,25 @@ export function PCBuilderPage() {
     const noun = pluralizeRu(count, ['товар', 'товара', 'товаров']);
     showToast(`${count} ${noun} ${ending}`, 'success', 4000);
   };
+
+  const handleAddAsAssembly = () => {
+    const count = selectedCount;
+    if (count === 0) {
+      showToast('Добавьте хотя бы один компонент', 'error', 3000);
+      return;
+    }
+    addToCartAsAssembly();
+    showToast(`Сборка ПК (${count} комплектующих + 100 BYN за сборку) добавлена в корзину`, 'success', 4000);
+  };
+
+  const handleSave = useCallback(() => {
+    const { isAuthenticated } = useAuthStore.getState();
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    setSaveModalOpen(true);
+  }, [navigate]);
 
   const currentSlotLabel = useMemo(() => {
     if (!selectedSlot) return '';
@@ -724,15 +768,10 @@ export function PCBuilderPage() {
                 selectedCount={selectedCount}
                 totalCount={totalCount}
                 onAddToCart={handleAddToCart}
-                onSave={() => {
-                  const { isAuthenticated } = useAuthStore.getState();
-                  if (!isAuthenticated) {
-                    navigate('/login');
-                    return;
-                  }
-                  setSaveModalOpen(true);
-                }}
+                onAddAsAssembly={handleAddAsAssembly}
+                onSave={handleSave}
                 onCheckout={handleCheckout}
+                onMockBuildOrder={handleMockBuildOrder}
                 onExportPdf={() => setPdfModalOpen(true)}
               />
             </div>

@@ -78,6 +78,8 @@ public class OrdersDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.ProductName).IsRequired().HasMaxLength(255);
             entity.Property(e => e.UnitPrice).HasPrecision(12, 2);
+            entity.Property(e => e.AssemblyFee).HasPrecision(12, 2);
+            entity.Property(e => e.ItemType).HasConversion<string>().HasMaxLength(20);
             entity.Ignore(e => e.TotalPrice);
             entity.HasOne(e => e.Order)
                 .WithMany(o => o.Items)

@@ -854,7 +854,7 @@ public class CatalogService : ICatalogService
         return slug;
     }
 
-    /// <summary>Картинка для витрины — только после выгрузки на наш сервер (поле Path).</summary>
+    /// <summary>Картинка доступна: только сохраненный локальный файл.</summary>
     private static bool HasLocallyStoredImage(ProductImage image) =>
         !string.IsNullOrWhiteSpace(image.Path);
 
@@ -886,11 +886,17 @@ public class CatalogService : ICatalogService
                 ?? product.Images
                     .Where(HasLocallyStoredImage)
                     .Select(MapToImageDto)
-                    .FirstOrDefault(),
+                    .FirstOrDefault()
+                ?? PlaceholderImage,
             // Все изображения товара для галереи в карточке (убирает N+1 запрос)
+            // MainImage исключён, чтобы не дублировался в галерее
             Images = product.Images
-                .Where(HasLocallyStoredImage)
+                .Where(i => HasLocallyStoredImage(i) && i.Id != (
+                    product.Images.FirstOrDefault(x => HasLocallyStoredImage(x) && x.IsPrimary)?.Id
+                    ?? product.Images.FirstOrDefault(x => HasLocallyStoredImage(x))?.Id))
                 .Select(MapToImageDto)
+                .GroupBy(img => img.Url, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First())
                 .ToList(),
             Rating = product.Rating > 0 ? new RatingDto { Average = product.Rating, Count = product.ReviewCount } : null,
             IsActive = product.IsActive,
@@ -959,10 +965,15 @@ public class CatalogService : ICatalogService
                 ?? product.Images
                     .Where(HasLocallyStoredImage)
                     .Select(MapToImageDto)
-                    .FirstOrDefault(),
+                    .FirstOrDefault()
+                ?? PlaceholderImage,
             Images = product.Images
-                .Where(HasLocallyStoredImage)
+                .Where(i => HasLocallyStoredImage(i) && i.Id != (
+                    product.Images.FirstOrDefault(x => HasLocallyStoredImage(x) && x.IsPrimary)?.Id
+                    ?? product.Images.FirstOrDefault(x => HasLocallyStoredImage(x))?.Id))
                 .Select(MapToImageDto)
+                .GroupBy(img => img.Url, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.First())
                 .ToList(),
             Rating = product.Rating > 0 ? new RatingDto { Average = product.Rating, Count = product.ReviewCount } : null,
             IsActive = product.IsActive,
@@ -1002,7 +1013,6 @@ public class CatalogService : ICatalogService
 
     private static ProductImageDto MapToImageDto(ProductImage image)
     {
-        // Клиенту отдаём только локальный путь (/uploads/...). URL источника (x-core) в API не экспонируем.
         return new ProductImageDto
         {
             Id = image.Id,
@@ -1012,6 +1022,25 @@ public class CatalogService : ICatalogService
             Order = image.SortOrder
         };
     }
+
+    /// <summary>SVG-плейсхолдер для товаров без изображений (data URI, не требует файла на диске).</summary>
+    private static readonly ProductImageDto PlaceholderImage = new()
+    {
+        Id = Guid.Empty,
+        Url = "data:image/svg+xml;utf8," + Uri.EscapeDataString(
+            "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'>" +
+            "<rect width='400' height='400' fill='#f1f5f9'/>" +
+            "<g fill='none' stroke='#94a3b8' stroke-width='4'>" +
+            "<rect x='80' y='120' width='240' height='180' rx='12'/>" +
+            "<circle cx='140' cy='180' r='18'/>" +
+            "<path d='M80 270 L180 200 L240 240 L320 180 L320 300 L80 300 Z'/>" +
+            "</g>" +
+            "<text x='200' y='360' text-anchor='middle' font-family='sans-serif' font-size='18' fill='#64748b'>Нет фото</text>" +
+            "</svg>"),
+        Alt = "Нет изображения",
+        IsMain = true,
+        Order = 0
+    };
 
     private static ReviewDto MapToReviewDto(Review review)
     {

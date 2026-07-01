@@ -1,4 +1,5 @@
 using System.Text;
+using GoldPC.ServicesService.Consumers;
 using GoldPC.ServicesService.Data;
 using GoldPC.ServicesService.Hubs;
 using GoldPC.ServicesService.Services;
@@ -15,6 +16,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Formatting.Compact;
+using Shared.Messaging;
 using Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -81,6 +83,12 @@ else
         client.BaseAddress = new Uri(builder.Configuration["Services:WarrantyService"] ?? "http://warranty-service:5004");
     });
 }
+
+// MassTransit - consume OrderPaidEvent for assembly ticket creation
+builder.Services.AddMessaging(builder.Configuration, configurator =>
+{
+    configurator.AddConsumer<OrderPaidConsumer>();
+});
 
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey = jwtSettings["SecretKey"] ?? "development_secret_key_32_chars_long!!";

@@ -6,7 +6,7 @@ import type { User } from '../api/types';
 import { decodeHtmlEntities } from '../utils/decodeHtml';
 import { mapBackendRole, normalizeUserRoles } from '../utils/roleMapper';
 
-export type UserRole = 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant';
+export type UserRole = 'Client' | 'Manager' | 'Master' | 'Admin' | 'Accountant' | 'Courier';
 
 export const getUserRoles = (user: User | null): string[] => {
   return user?.roles ?? (user?.role ? [user.role] : ['Client']);

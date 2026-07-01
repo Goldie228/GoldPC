@@ -86,11 +86,22 @@ public class ServicesController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Manager,Admin")]
+    [Authorize(Roles = "Manager,Admin,Courier")]
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] ServiceRequestStatus? status = null)
     {
-        var result = await _servicesService.GetAllAsync(page, pageSize, status);
-        return Ok(ApiResponse<PagedResultServiceRequest>.Ok(result));
+        var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+        if (roles.Contains("Courier"))
+        {
+            var userId = GetCurrentUserId();
+            if (userId == null)
+                return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+            var result = await _servicesService.GetCourierDeliveriesAsync(userId.Value, page, pageSize, status);
+            return Ok(ApiResponse<PagedResultServiceRequest>.Ok(result));
+        }
+
+        var allResult = await _servicesService.GetAllAsync(page, pageSize, status);
+        return Ok(ApiResponse<PagedResultServiceRequest>.Ok(allResult));
     }
 
     /// <summary>
@@ -122,7 +133,11 @@ public class ServicesController : ControllerBase
     [Authorize(Roles = "Manager,Admin,Master")]
     public async Task<IActionResult> AssignMaster(Guid id, Guid masterId)
     {
-        var (result, error) = await _servicesService.AssignMasterAsync(id, masterId);
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var (result, error) = await _servicesService.AssignMasterAsync(id, masterId, userId.Value);
         if (error != null)
             return BadRequest(ApiResponse.Fail(error));
 
@@ -347,6 +362,145 @@ public class ServicesController : ControllerBase
             return BadRequest(ApiResponse.Fail(error));
 
         return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Заявка успешно закрыта"));
+    }
+
+    // ──────────────────────────────────────────────
+    // Assembly endpoints
+    // ──────────────────────────────────────────────
+
+    /// <summary>
+    /// Создать заявку на сборку ПК (системный вызов из OrderPaidConsumer)
+    /// </summary>
+    [HttpPost("assembly")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> CreateAssemblyRequest([FromBody] CreateAssemblyRequestDto request)
+    {
+        var (result, error) = await _servicesService.CreateAssemblyRequestAsync(
+            request.ClientId, request.OrderId, request.PCConfigurationId, request.ClientPhone);
+        
+        if (error != null)
+            return BadRequest(ApiResponse.Fail(error));
+
+        return CreatedAtAction(nameof(GetById), new { id = result!.Id }, ApiResponse<ServiceRequestDto>.Ok(result, "Заявка на сборку создана"));
+    }
+
+    /// <summary>
+    /// Получить комплектующие заявки на сборку
+    /// </summary>
+    [HttpGet("{id}/assembly-parts")]
+    [Authorize(Roles = "Master,Manager,Admin")]
+    public async Task<IActionResult> GetAssemblyParts(Guid id)
+    {
+        var parts = await _servicesService.GetAssemblyPartsAsync(id);
+        return Ok(ApiResponse<List<AssemblyPartDto>>.Ok(parts));
+    }
+
+    /// <summary>
+    /// Отметить комплектующую как полученную со склада
+    /// </summary>
+    [HttpPost("{id}/parts/{partId}/collect")]
+    [Authorize(Roles = "Master")]
+    public async Task<IActionResult> CollectPart(Guid id, Guid partId)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var (result, error) = await _servicesService.CollectPartAsync(id, partId, userId.Value);
+        if (error != null)
+            return BadRequest(ApiResponse.Fail(error));
+
+        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Комплектующая получена со склада"));
+    }
+
+    /// <summary>
+    /// Отметить комплектующую как установленную
+    /// </summary>
+    [HttpPost("{id}/parts/{partId}/install")]
+    [Authorize(Roles = "Master")]
+    public async Task<IActionResult> InstallPart(Guid id, Guid partId)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var (result, error) = await _servicesService.InstallPartAsync(id, partId, userId.Value);
+        if (error != null)
+            return BadRequest(ApiResponse.Fail(error));
+
+        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Комплектующая установлена"));
+    }
+
+    /// <summary>
+    /// Начать сборку ПК
+    /// </summary>
+    [HttpPost("{id}/start-assembly")]
+    [Authorize(Roles = "Master")]
+    public async Task<IActionResult> StartAssembly(Guid id)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var (result, error) = await _servicesService.StartAssemblyAsync(id, userId.Value);
+        if (error != null)
+            return BadRequest(ApiResponse.Fail(error));
+
+        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Сборка начата"));
+    }
+
+    /// <summary>
+    /// Завершить сборку ПК (указать серийный номер)
+    /// </summary>
+    [HttpPost("{id}/complete-assembly")]
+    [Authorize(Roles = "Master")]
+    public async Task<IActionResult> CompleteAssembly(Guid id, [FromBody] CompleteAssemblyRequest request)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var (result, error) = await _servicesService.CompleteAssemblyAsync(id, userId.Value, request.SerialNumber);
+        if (error != null)
+            return BadRequest(ApiResponse.Fail(error));
+
+        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Сборка завершена"));
+    }
+
+    /// <summary>
+    /// Передать собранный ПК в доставку
+    /// </summary>
+    [HttpPost("{id}/hand-to-delivery")]
+    [Authorize(Roles = "Master")]
+    public async Task<IActionResult> HandToDelivery(Guid id)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var (result, error) = await _servicesService.HandToDeliveryAsync(id, userId.Value);
+        if (error != null)
+            return BadRequest(ApiResponse.Fail(error));
+
+        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "ПК передан в доставку"));
+    }
+
+    /// <summary>
+    /// Переназначить мастера (для менеджера/координатора)
+    /// </summary>
+    [HttpPost("{id}/reassign/{newMasterId}")]
+    [Authorize(Roles = "Manager,Admin")]
+    public async Task<IActionResult> ReassignMaster(Guid id, Guid newMasterId)
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized(ApiResponse.Fail("Пользователь не авторизован"));
+
+        var (result, error) = await _servicesService.ReassignMasterAsync(id, newMasterId, userId.Value);
+        if (error != null)
+            return BadRequest(ApiResponse.Fail(error));
+
+        return Ok(ApiResponse<ServiceRequestDto>.Ok(result!, "Мастер переназначен"));
     }
 
     private Guid? GetCurrentUserId()

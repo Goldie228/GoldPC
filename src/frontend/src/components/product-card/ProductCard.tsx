@@ -41,14 +41,22 @@ const ProductCard = memo(function ProductCard({ product, onAddToCart, viewMode =
 
   // Изображения уже загружены в ProductSummary (без N+1 запроса)
   const images = useMemo(() => {
-    if (product.images && product.images.length > 0) return product.images;
-    if (product.mainImage) {
-      return [{
+    let raw: { url: string; alt?: string }[] = [];
+    if (product.images && product.images.length > 0) {
+      raw = product.images;
+    } else if (product.mainImage) {
+      raw = [{
         url: typeof product.mainImage === 'string' ? product.mainImage : product.mainImage.url,
         alt: typeof product.mainImage === 'string' ? product.name : product.mainImage.alt ?? product.name,
       }];
     }
-    return [];
+    // Deduplicate by URL to avoid repeated identical images
+    const seen = new Set<string>();
+    return raw.filter((img) => {
+      if (seen.has(img.url)) return false;
+      seen.add(img.url);
+      return true;
+    });
   }, [product.images, product.mainImage]);
   const hasMultipleImages = images.length > 1;
 

@@ -53,5 +53,40 @@ public class ServiceRequestDto
     /// Имя мастера для уведомлений (опционально, заполняется при необходимости)
     /// </summary>
     public string? MasterName { get; set; }
+
+    /// <summary>
+    /// ID заказа (связь с заказом)
+    /// </summary>
+    public Guid? OrderId { get; set; }
+
+    /// <summary>
+    /// ID конфигурации ПК (для сборки)
+    /// </summary>
+    public Guid? PCConfigurationId { get; set; }
+
+    /// <summary>
+    /// Телефон клиента (для связи мастера с клиентом)
+    /// </summary>
+    public string? ClientPhone { get; set; }
+
+    /// <summary>
+    /// ID курьера (для доставки)
+    /// </summary>
+    public Guid? CourierId { get; set; }
+
+    /// <summary>
+    /// Серийный номер собранного ПК
+    /// </summary>
+    public string? AssembledSerialNumber { get; set; }
+
+    /// <summary>
+    /// Комплектующие для сборки ПК (заполняется для заявок типа assembly)
+    /// </summary>
+    public ICollection<AssemblyPartDto> AssemblyParts { get; set; } = new List<AssemblyPartDto>();
+
+    /// <summary>
+    /// Информация о собранном ПК (заполняется после завершения сборки)
+    /// </summary>
+    public AssembledUnitDto? AssembledUnit { get; set; }
 }
 #pragma warning restore CA2227, CS1591, SA1600

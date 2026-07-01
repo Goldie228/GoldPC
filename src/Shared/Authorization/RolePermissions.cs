@@ -45,6 +45,7 @@ public static class RolePermissions
             // Services
             Permissions.ServicesView,
             Permissions.ServicesManage,
+            Permissions.ServicesManageAssembly,
 
             // PC Builder
             Permissions.PcBuilderUse,
@@ -52,7 +53,10 @@ public static class RolePermissions
 
             // Warranty
             Permissions.WarrantyView,
-            Permissions.WarrantyManage
+            Permissions.WarrantyManage,
+
+            // Delivery
+            Permissions.DeliveryManage
         },
 
         // Manager - управление товарами, заказами, просмотр отчётов
@@ -90,7 +94,10 @@ public static class RolePermissions
 
             // Warranty
             Permissions.WarrantyView,
-            Permissions.WarrantyManage
+            Permissions.WarrantyManage,
+
+            // Assembly
+            Permissions.ServicesManageAssembly
         },
 
         // Accountant - финансовые отчёты и аналитика
@@ -168,7 +175,23 @@ public static class RolePermissions
 
             // Warranty
             Permissions.WarrantyView,
-            Permissions.WarrantyManage
+            Permissions.WarrantyManage,
+
+            // Assembly
+            Permissions.ServicesManageAssembly
+        },
+
+        // Courier - доставка собранных ПК клиентам
+        [Roles.Courier] = new[]
+        {
+            // Services (только просмотр заявок для доставки)
+            Permissions.ServicesView,
+
+            // Orders (просмотр заказов для доставки)
+            Permissions.OrdersView,
+
+            // Delivery
+            Permissions.DeliveryManage
         }
     };
 

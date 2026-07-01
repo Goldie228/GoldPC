@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Star, X, ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { imagesAdminApi } from '@/api/admin';
+import { getProductImageUrl } from '@/utils/image';
 import type { ProductImage } from '@/api/types';
 
 interface ImageUploadProps {
@@ -384,7 +385,7 @@ export function ImageUpload({
                 `.trim()}
               >
                 <img
-                  src={image.url}
+                  src={getProductImageUrl(image.url) ?? image.url}
                   alt={image.alt ?? ''}
                   className="w-full h-full object-cover pointer-events-none select-none"
                   draggable={false}

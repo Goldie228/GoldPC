@@ -31,8 +31,13 @@ public static class Roles
     public const string Master = "Master";
 
     /// <summary>
+    /// Курьер. Доставка собранных ПК клиентам.
+    /// </summary>
+    public const string Courier = "Courier";
+
+    /// <summary>
     /// Возвращает список всех доступных ролей.
     /// Соответствует enum UserRole из SharedKernel.
     /// </summary>
-    public static readonly string[] AllRoles = { Client, Manager, Master, Admin, Accountant };
+    public static readonly string[] AllRoles = { Client, Manager, Master, Admin, Accountant, Courier };
 }

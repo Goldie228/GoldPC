@@ -53,6 +53,7 @@ import {
   removeComponent,
   resetBuild,
   addToCart,
+  addToCartAsAssembly,
 } from '@/features/pc-builder/logic/actions';
 import { calculateTotalPrice } from '@/features/pc-builder/logic/pricing';
 import { getMaxRamModules, getMaxRamQty } from '@/features/pc-builder/logic/slotLimits';
@@ -80,6 +81,7 @@ export interface UsePCBuilderReturn {
   resetBuild: () => void;
   clearBuild: () => void;
   addToCart: () => void;
+  addToCartAsAssembly: () => void;
   getSlotState: (type: PCComponentType, multiIndex?: number) => ComponentCompatibility;
   checkCompatibility: () => CompatibilityResult;
   isCompatible: boolean;
@@ -104,6 +106,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
 
   // === Cart Store ===
   const cartAddItem = useCartStore((s) => s.addItem);
+  const cartAddBundleItem = useCartStore((s) => s.addBundleItem);
 
   // === Derived Data (pure logic) ===
   const localCompatibility = useMemo(() => {
@@ -210,6 +213,10 @@ export function usePCBuilder(): UsePCBuilderReturn {
     addToCart(selectedComponents, cartAddItem);
   }, [selectedComponents, cartAddItem]);
 
+  const addToCartAsAssemblyAction = useCallback(() => {
+    addToCartAsAssembly(selectedComponents, cartAddBundleItem, totalPrice);
+  }, [selectedComponents, cartAddBundleItem, totalPrice]);
+
   const getSlotState = useCallback(
     (type: PCComponentType, multiIndex?: number): ComponentCompatibility => {
       return getComponentState(type, multiIndex, selectedComponents, compatibility);
@@ -249,6 +256,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     resetBuild: resetBuildAction,
     clearBuild: clearBuildAction,
     addToCart: addToCartAction,
+    addToCartAsAssembly: addToCartAsAssemblyAction,
     getSlotState,
     checkCompatibility: checkCompatibilityAction,
     isCompatible: compatibility.isCompatible,

@@ -23,6 +23,7 @@ import {
   mergeDescriptionIntoSpecifications,
 } from '@/utils/productDescriptionSpecs';
 import { specLabel, formatSpecValueForKey } from '@/utils/specifications';
+import { getProductImageUrl } from '@/utils/image';
 
 function renderDescriptionBlocks(description: string | undefined): ReactElement {
   const raw = trimDescriptionBeforeMain(description);
@@ -286,7 +287,7 @@ export function ProductPage(): ReactElement {
         name={product.name}
         description={product.description ?? product.name}
         price={product.price}
-        imageUrl={product.images?.[0]?.url ?? product.mainImage?.url ?? ''}
+        imageUrl={getProductImageUrl(product.images?.[0]?.url ?? product.mainImage?.url ?? '') ?? ''}
         brand={product.brand}
         sku={product.sku}
         url={`${window.location.origin}/product/${product.slug}`}

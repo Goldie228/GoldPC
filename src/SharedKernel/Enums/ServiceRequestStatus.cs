@@ -33,5 +33,40 @@ public enum ServiceRequestStatus
     /// <summary>
     /// Отменена (Cancelled)
     /// </summary>
-    Cancelled = 5
+    Cancelled = 5,
+
+    /// <summary>
+    /// Назначена мастеру (Assigned) - мастер назначен, ожидает начала работы
+    /// </summary>
+    Assigned = 6,
+
+    /// <summary>
+    /// Ожидание комплектующих (AwaitingParts) - мастер запросил комплектующие со склада
+    /// </summary>
+    AwaitingParts = 7,
+
+    /// <summary>
+    /// Комплектующие готовы (PartsReady) - все комплектующие получены мастером
+    /// </summary>
+    PartsReady = 8,
+
+    /// <summary>
+    /// Собран (Assembled) - ПК собран мастером, готов к передаче на склад/в доставку
+    /// </summary>
+    Assembled = 9,
+
+    /// <summary>
+    /// Готов к доставке (ReadyForDelivery) - ПК сдан на склад, передан курьеру
+    /// </summary>
+    ReadyForDelivery = 10,
+
+    /// <summary>
+    /// В доставке (InDelivery) - курьер забрал, в пути к клиенту
+    /// </summary>
+    InDelivery = 11,
+
+    /// <summary>
+    /// Доставлен (Delivered) - клиент получил ПК
+    /// </summary>
+    Delivered = 12
 }

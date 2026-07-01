@@ -6,48 +6,41 @@ const XCORE_PLACEHOLDER_PATTERNS = [
   '/upload/CNext/', // дефолтный placeholder x-core.by (логотип "X-core")
 ];
 
-/**
- * Допустимы только пути к файлам на нашем бэкенде (/uploads/...).
- * Внешние URL (x-core и др.) с API не приходят и в img не подставляем.
- */
-function isLocalCatalogImagePath(url: unknown): boolean {
-  if (typeof url !== 'string') return false;
-  const str = url;
-  if (!str) return false;
-  const normalized = str.replace(/^\s+|\s+$/g, ''); // trim без .trim()
-  
-  if (
-    normalized.startsWith('http://') ||
-    normalized.startsWith('https://') ||
-    normalized.startsWith('//')
-  ) {
-    return false;
-  }
+function isPlaceholder(url: string): boolean {
+  return XCORE_PLACEHOLDER_PATTERNS.some((p) => url.includes(p));
+}
 
-  return normalized.startsWith('/uploads/') || normalized.startsWith('uploads/');
+/**
+ * Возвращает true, если URL указывает на валидное изображение:
+ * - локальный путь /uploads/...
+ * - внешний http(s):// URL (не placeholder)
+ */
+export function hasValidProductImage(url: unknown): boolean {
+  if (typeof url !== 'string') return false;
+  const u = url.trim();
+  if (!u) return false;
+  if (isPlaceholder(u)) return false;
+
+  // Локальный путь
+  if (u.startsWith('/uploads/') || u.startsWith('uploads/')) return true;
+
+  // Внешний HTTP(S) URL
+  if (u.startsWith('http://') || u.startsWith('https://')) return true;
+
+  return false;
 }
 
 export function isXCorePlaceholderUrl(url: unknown): boolean {
   if (typeof url !== 'string') return true;
-  const str = url;
-  const u = str.replace(/^\s+|\s+$/g, '');
+  const u = url.trim();
   if (!u) return true;
-  return XCORE_PLACEHOLDER_PATTERNS.some((p) => u.includes(p));
+  return isPlaceholder(u);
 }
 
 /**
- * Возвращает true, если в API пришёл локальный путь к файлу на нашем сервере.
- */
-export function hasValidProductImage(url: unknown): boolean {
-  if (typeof url !== 'string') return false;
-  const str = url;
-  const u = str.replace(/^\s+|\s+$/g, '');
-  if (!u) return false;
-  return isLocalCatalogImagePath(u) && !isXCorePlaceholderUrl(u);
-}
-
-/**
- * Абсолютный адрес для img src: только для путей /uploads/ (прокси Vite → CatalogService или origin).
+ * Абсолютный адрес для img src.
+ * Локальные /uploads/ пути — проксируем через origin.
+ * Внешние URL — возвращаем как есть.
  */
 export function getProductImageUrl(url: unknown): string | null {
   // Handle if url is an object (e.g., ProductImage) instead of string
@@ -56,12 +49,20 @@ export function getProductImageUrl(url: unknown): string | null {
   }
   
   if (typeof url !== 'string') return null;
-  const str = url;
-  const u = str.replace(/^\s+|\s+$/g, '');
+  const u = url.trim();
   if (!u) return null;
-  if (!isLocalCatalogImagePath(u)) return null;
-  if (u.startsWith('/')) return `${window.location.origin}${u}`;
-  const apiBase = typeof import.meta.env?.VITE_API_URL === 'string' ? import.meta.env.VITE_API_URL : undefined;
-  const base = apiBase ? String(apiBase).replace(/\/api\/v\d+(\/)?$/, '') : window.location.origin;
-  return `${base.replace(/\/$/, '')}/${u.replace(/^\//, '')}`;
+  if (isPlaceholder(u)) return null;
+
+  // Локальный путь — проксируем через origin
+  if (u.startsWith('/uploads/') || u.startsWith('uploads/')) {
+    if (u.startsWith('/')) return `${window.location.origin}${u}`;
+    const apiBase = typeof import.meta.env?.VITE_API_URL === 'string' ? import.meta.env.VITE_API_URL : undefined;
+    const base = apiBase ? String(apiBase).replace(/\/api\/v\d+(\/)?$/, '') : window.location.origin;
+    return `${base.replace(/\/$/, '')}/${u.replace(/^\//, '')}`;
+  }
+
+  // Внешний HTTP(S) URL — возвращаем как есть
+  if (u.startsWith('http://') || u.startsWith('https://')) return u;
+
+  return null;
 }
