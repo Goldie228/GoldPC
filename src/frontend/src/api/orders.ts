@@ -22,6 +22,9 @@ export interface CreateOrderItem {
   productName: string;
   quantity: number;
   unitPrice: number;
+  itemType?: 'Product' | 'PCBundle' | 'Service';
+  pcConfigurationId?: string | null;
+  assemblyFee?: number | null;
 }
 
 export interface CreateOrderRequest {
@@ -163,6 +166,9 @@ export const ordersApi = {
           productName: item.productName,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
+          itemType: item.itemType ?? 'Product',
+          pcConfigurationId: item.pcConfigurationId ?? null,
+          assemblyFee: item.assemblyFee ?? null,
         })),
       });
       return unwrapResponse<Order>(response.data);

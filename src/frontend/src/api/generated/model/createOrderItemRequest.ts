@@ -20,4 +20,10 @@ export interface CreateOrderItemRequest {
   quantity: number;
   /** @minimum 0.01 */
   unitPrice: number;
+  /** Тип позиции заказа (Product, PCBundle, Service) */
+  itemType?: 'Product' | 'PCBundle' | 'Service';
+  /** ID конфигурации ПК (для PCBundle) */
+  pcConfigurationId?: string | null;
+  /** Стоимость сборки (для PCBundle) */
+  assemblyFee?: number | null;
 }
