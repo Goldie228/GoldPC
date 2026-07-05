@@ -9,9 +9,10 @@
  * NO business logic, NO API calls, NO localStorage
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { Product } from '../api/types';
 import { useCartStore } from '../store/cartStore';
+import { useAuthStore } from '../store/authStore';
 import { calculatePerformance, type EstimatedFps } from '@/features/pc-builder/logic/performance';
 import type { FpsApiResponse } from '../api/pcBuilderService';
 
@@ -99,9 +100,65 @@ export function usePCBuilder(): UsePCBuilderReturn {
   const { apiResult, isLoading: isApiLoading } = useCompatibilityApi(selectedComponents);
   const { fpsData: apiFpsData } = useFpsApi(selectedComponents);
 
+  // Auto-save to API for authenticated users
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const lastSavedJsonRef = useRef('');
+  const lastSavedConfigIdRef = useRef<string | null>(null);
+
+  // On mount: load existing auto-save ID so we update instead of creating new
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const apiClient = (await import('@/api/index')).default;
+        const { data } = await apiClient.get<Array<{ id: string; name: string }>>('/pcbuilder/configurations');
+        if (cancelled) return;
+        const existing = Array.isArray(data) ? data.find((c) => c.name === 'Автосохранение') : null;
+        if (existing) lastSavedConfigIdRef.current = existing.id;
+      } catch {
+        // Ignore — will create new auto-save
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isAuthenticated]);
+
+  const autoSaveToApi = useCallback(async (state: PCBuilderSelectedState) => {
+    if (!isAuthenticated) return;
+    // Skip if nothing meaningful changed (avoid empty saves)
+    const hasAny = state.cpu || state.motherboard || state.gpu || state.ram.length > 0 || state.storage.length > 0;
+    if (!hasAny) return;
+    const json = JSON.stringify(state, (_k, v) => v === undefined ? null : v);
+    if (json === lastSavedJsonRef.current) return;
+    lastSavedJsonRef.current = json;
+    try {
+      const apiClient = (await import('@/api/index')).default;
+      const { calculateTotalPrice } = await import('@/features/pc-builder/logic/pricing');
+      const payload = {
+        id: lastSavedConfigIdRef.current ?? undefined,
+        name: 'Автосохранение',
+        purpose: 'gaming',
+        processorId: state.cpu?.product.id,
+        motherboardId: state.motherboard?.product.id,
+        ramId: state.ram.length > 0 ? state.ram[0].product.id : undefined,
+        gpuId: state.gpu?.product.id,
+        psuId: state.psu?.product.id,
+        storageId: state.storage.length > 0 ? state.storage[0].product.id : undefined,
+        caseId: state.case?.product.id,
+        coolerId: state.cooling?.product.id,
+        totalPrice: calculateTotalPrice(state),
+      };
+      const { data } = await apiClient.post('/pcbuilder/configurations', payload);
+      if (data?.id) lastSavedConfigIdRef.current = data.id;
+    } catch {
+      // Silent fail for auto-save
+    }
+  }, [isAuthenticated]);
+
   usePersistence(selectedComponents, {
     initialState: selectedComponents,
     onClearStorage: () => {},
+    autoSaveToApi,
   });
 
   // === Cart Store ===
@@ -109,6 +166,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
   const cartAddBundleItem = useCartStore((s) => s.addBundleItem);
 
   // === Derived Data (pure logic) ===
+  const SOCKET_ERROR_RE = /Не удалось определить сокет/i;
   const localCompatibility = useMemo(() => {
     const componentMap = buildComponentMap(selectedComponents);
     const allRamSticks = selectedComponents.ram.map(r => r.product);
@@ -116,7 +174,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     const result = checkCompatibility(componentMap, allRamSticks, fanCount);
     return {
       isCompatible: result.isCompatible,
-      errors: result.issues.map(i => i.message),
+      errors: result.issues.filter(i => !SOCKET_ERROR_RE.test(i.message)).map(i => i.message),
       warnings: result.warnings.map(w => w.message),
       bottleneck: result.bottleneckPercentage > 0 ? `${result.bottleneckPercentage}%` : undefined,
     };
@@ -147,6 +205,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
       const apiIssues = apiResult.result;
       const errors: string[] = apiIssues.issues
         .filter((i) => i.severity === 'Error')
+        .filter((i) => !SOCKET_ERROR_RE.test(i.message))
         .map((i) => i.message);
       const warnings: string[] = [
         ...apiIssues.warnings.map((w) => w.message),

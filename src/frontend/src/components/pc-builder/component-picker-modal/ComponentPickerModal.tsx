@@ -121,12 +121,21 @@ function CardImageGallery({ product, hasDiscount, discountPercent, outOfStock }:
 }) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const allImages = useMemo<ProductImage[]>(() => {
-    const imgs = product.images ?? [];
-    if (product.mainImage && !imgs.some((i: ProductImage) => i.id === product.mainImage?.id)) {
-      return [product.mainImage, ...imgs];
-    }
-    return imgs;
-  }, [product]);
+    // Используем только images[] — mainImage в API часто дублирует images[0]
+    // (отдельный объект с другим ID, но тем же URL), из-за чего галерея показывает
+    // одну и ту же картинку дважды. Fallback на mainImage только если images пустой.
+    let raw: ProductImage[] = product.images && product.images.length > 0
+      ? product.images
+      : (product.mainImage ? [product.mainImage] : []);
+    // Дедупликация по URL: даже если API вернёт mainImage как отдельный элемент images,
+    // оставляем только одну копию каждого URL.
+    const seen = new Set<string>();
+    return raw.filter((img) => {
+      if (!img?.url || seen.has(img.url)) return false;
+      seen.add(img.url);
+      return true;
+    });
+  }, [product.images, product.mainImage]);
 
   const validImages = allImages.filter((i) => hasValidProductImage(i.url));
   const current = validImages[currentIdx];
@@ -378,6 +387,11 @@ export function ComponentPickerModal({
       if (s) out.socket = s;
     }
     if (slotType === 'motherboard' && buildContext?.cpu?.product) {
+      const s = resolveSocket(buildContext.cpu.product);
+      if (s) out.socket = s;
+    }
+    // Выбор кулера: ограничиваем сокетами, совместимыми с выбранным CPU
+    if (slotType === 'cooling' && buildContext?.cpu?.product) {
       const s = resolveSocket(buildContext.cpu.product);
       if (s) out.socket = s;
     }
@@ -684,18 +698,28 @@ export function ComponentPickerModal({
 
   const previewImages = useMemo(() => {
     if (!fullPreview) return [];
-    const imgs = fullPreview.images ?? [];
-    if (fullPreview.mainImage && !imgs.some((i: ProductImage) => i.id === fullPreview.mainImage?.id)) {
-      return [fullPreview.mainImage, ...imgs];
-    }
-    return imgs;
+    // Используем только images[] — mainImage часто дублирует images[0] с другим ID но тем же URL
+    const raw: ProductImage[] = fullPreview.images && fullPreview.images.length > 0
+      ? fullPreview.images
+      : (fullPreview.mainImage ? [fullPreview.mainImage] : []);
+    const seen = new Set<string>();
+    return raw.filter((img) => {
+      if (!img?.url || seen.has(img.url)) return false;
+      seen.add(img.url);
+      return true;
+    });
   }, [fullPreview]);
 
   const previewImageUrls = useMemo(() => {
+    const seen = new Set<string>();
     return previewImages
       .filter((i) => hasValidProductImage(i.url))
       .map((i) => getProductImageUrl(i.url)!)
-      .filter(Boolean);
+      .filter((url) => {
+        if (!url || seen.has(url)) return false;
+        seen.add(url);
+        return true;
+      });
   }, [previewImages]);
 
   const handleConfirm = () => {

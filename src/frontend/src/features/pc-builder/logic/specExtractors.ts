@@ -28,9 +28,10 @@ export function extractMbRamSlots(specs: ProductSpecifications | undefined): num
 export function extractModulesCount(specs: ProductSpecifications | undefined, name?: string): number {
   if (specs == null) return 1;
   // Прямое поле из API
-  const raw = specs.modules as string | undefined;
-  if (raw) {
-    const match = raw.match(/(\d+)/);
+  const raw = specs.modules;
+  if (raw != null) {
+    if (typeof raw === 'number') return raw;
+    const match = String(raw).match(/(\d+)/);
     if (match) return parseInt(match[1], 10);
   }
   // Fallback: парсим из названия товара (например "2x16GB" → 2)

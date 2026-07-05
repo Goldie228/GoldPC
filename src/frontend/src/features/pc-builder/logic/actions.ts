@@ -194,6 +194,7 @@ export function addToCartAsAssembly(
       const p = (c as { product: Product }).product;
       components.push({
         productId: p.id,
+        productSlug: p.slug,
         productName: p.name,
         category: p.category,
         price: p.price,
@@ -206,6 +207,7 @@ export function addToCartAsAssembly(
   for (const r of s.ram) {
     components.push({
       productId: r.product.id,
+      productSlug: r.product.slug,
       productName: r.product.name,
       category: r.product.category,
       price: r.product.price,
@@ -217,6 +219,7 @@ export function addToCartAsAssembly(
   for (const st of s.storage) {
     components.push({
       productId: st.product.id,
+      productSlug: st.product.slug,
       productName: st.product.name,
       category: st.product.category,
       price: st.product.price,
@@ -228,6 +231,7 @@ export function addToCartAsAssembly(
   for (const f of s.fan) {
     components.push({
       productId: f.product.id,
+      productSlug: f.product.slug,
       productName: f.product.name,
       category: f.product.category,
       price: f.product.price,

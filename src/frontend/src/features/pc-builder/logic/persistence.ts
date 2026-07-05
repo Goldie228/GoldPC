@@ -187,6 +187,22 @@ function normalizeProduct(product: Record<string, unknown>, targetType: string):
       if (sockSpec) result.socket = sockSpec.value;
     }
   }
+  // Fallback: extract socket from description text
+  if (!result.socket && typeof result.description === 'string') {
+    const desc = result.description as string;
+    const socketMatch = desc.match(/(?:Сокет|Socket)[:\s]+([A-Za-z0-9\s\-]+)/i);
+    if (socketMatch) {
+      result.socket = socketMatch[1].trim().split(/[\s\n]/)[0];
+    }
+  }
+  // Fallback: extract socket from descriptionShort
+  if (!result.socket && typeof result.descriptionShort === 'string') {
+    const descShort = result.descriptionShort as string;
+    const socketMatch = descShort.match(/(?:Сокет|Socket)[:\s]+([A-Za-z0-9\s\-]+)/i);
+    if (socketMatch) {
+      result.socket = socketMatch[1].trim().split(/[\s\n]/)[0];
+    }
+  }
   return result;
 }
 

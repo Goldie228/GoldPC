@@ -3,8 +3,8 @@
  */
 
 import './PCBuilderPage.css';
-import React, { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Cpu, Gpu, CircuitBoard, MemoryStick, HardDrive,
   Zap, Box, Snowflake, Fan, Monitor, Keyboard,
@@ -71,8 +71,8 @@ const componentTypeFilter: Record<PCComponentType, string | string[] | null> = {
   storage: null,
   psu: null,
   case: null,
-  fan: 'Корпусный вентилятор',
-  cooling: ['Башенный кулер', 'Жидкостное охлаждение'],
+  fan: null,
+  cooling: ['кулер для процессора', 'жидкостное охлаждение для процессора', 'система жидкостного охлаждения для процессора'],
   monitor: null,
   keyboard: null,
   mouse: null,
@@ -339,6 +339,7 @@ export function PCBuilderPage() {
     bottleneck,
     addToCart,
     addToCartAsAssembly,
+    resetBuild,
     maxRamModules,
     maxRamQty,
     maxStorageModules,
@@ -353,6 +354,76 @@ export function PCBuilderPage() {
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
   const [showPeripherals, setShowPeripherals] = useState(true);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const configId = searchParams.get('config');
+
+  // Refs for config loading (stable — won't trigger effect re-runs)
+  const selectComponentRef = useRef(selectComponent);
+  selectComponentRef.current = selectComponent;
+  const resetBuildRef = useRef(resetBuild);
+  resetBuildRef.current = resetBuild;
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
+
+  // Load saved configuration when ?config= param is present
+  const loadConfigIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!configId || loadConfigIdRef.current === configId) return;
+    loadConfigIdRef.current = configId;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const { pcbuilderApi } = await import('@/api/pcbuilder');
+        const { catalogApi } = await import('@/api/catalog');
+        const config = await pcbuilderApi.getConfiguration(configId);
+
+        if (cancelled) return;
+
+        resetBuildRef.current();
+
+        const mapping: [string, PCComponentType][] = [
+          ['processorId', 'cpu'],
+          ['motherboardId', 'motherboard'],
+          ['ramId', 'ram'],
+          ['gpuId', 'gpu'],
+          ['psuId', 'psu'],
+          ['storageId', 'storage'],
+          ['caseId', 'case'],
+          ['coolerId', 'cooling'],
+        ];
+
+        const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const fetchProduct = async (id: string) =>
+          UUID_RE.test(id) ? catalogApi.getProduct(id) : catalogApi.getProductBySlug(id);
+
+        for (const [field, type] of mapping) {
+          const id = (config as Record<string, unknown>)[field] as string | undefined;
+          if (!id) continue;
+          try {
+            const product = await fetchProduct(id);
+            if (!cancelled) {
+              selectComponentRef.current(type, product);
+            }
+          } catch {
+            // Product not found — skip
+          }
+        }
+
+        if (!cancelled) {
+          setSearchParams({}, { replace: true });
+          showToastRef.current(`Сборка «${config.name}» загружена`, 'success');
+        }
+      } catch {
+        if (!cancelled) {
+          showToastRef.current('Не удалось загрузить конфигурацию', 'error');
+        }
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [configId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const slotRows = useMemo(() => buildSlotRows(selectedComponents, maxRamQty, maxStorageModules, maxFanModules), [selectedComponents, maxRamQty, maxStorageModules, maxFanModules]);
 
@@ -588,29 +659,7 @@ export function PCBuilderPage() {
     void navigate('/cart');
   };
 
-  const handleMockBuildOrder = () => {
-    const count = selectedCount;
-    addToCart();
-    showToast(
-      `Заказ: ${count} ${pluralizeRu(count, ['компонент', 'компонента', 'компонентов'])} оформлено за 100 BYN`,
-      'success',
-      4000
-    );
-    const cartPayload = {
-      mock: true,
-      fixedPrice: 100,
-      currency: 'BYN',
-      createdAt: new Date().toISOString(),
-      componentCount: count,
-      source: 'pc-builder',
-    };
-    try {
-      sessionStorage.setItem('mockPcBuildOrder', JSON.stringify(cartPayload));
-    } catch {
-      /* storage недоступен — мок всё равно работает в UI */
-    }
-    void navigate('/cart?mock=1');
-  };
+
 
   const handleAddToCart = () => {
     const count = selectedCount;
@@ -771,7 +820,6 @@ export function PCBuilderPage() {
                 onAddAsAssembly={handleAddAsAssembly}
                 onSave={handleSave}
                 onCheckout={handleCheckout}
-                onMockBuildOrder={handleMockBuildOrder}
                 onExportPdf={() => setPdfModalOpen(true)}
               />
             </div>

@@ -29,6 +29,7 @@ interface SaveConfigurationPayload {
   storageId?: string;
   caseId?: string;
   coolerId?: string;
+  totalPrice?: number;
 }
 
 /** Ответ API на сохранение конфигурации */
@@ -100,14 +101,15 @@ export function SaveConfigurationModal({
       purpose,
       processorId: s.cpu?.product.id,
       motherboardId: s.motherboard?.product.id,
-      ramId: s.ram.length > 0 ? s.ram.map((r) => r.product.id).join(',') : undefined,
+      ramId: s.ram.length > 0 ? s.ram[0].product.id : undefined,
       gpuId: s.gpu?.product.id,
       psuId: s.psu?.product.id,
-      storageId: s.storage.length > 0 ? s.storage.map((x) => x.product.id).join(',') : undefined,
+      storageId: s.storage.length > 0 ? s.storage[0].product.id : undefined,
       caseId: s.case?.product.id,
       coolerId: s.cooling?.product.id,
+      totalPrice,
     };
-  }, [selectedComponents, purpose]);
+  }, [selectedComponents, purpose, totalPrice]);
 
   /** Мутация сохранения конфигурации */
   const saveMutation = useMutation<SaveConfigurationResponse, Error, SaveConfigurationPayload>({
