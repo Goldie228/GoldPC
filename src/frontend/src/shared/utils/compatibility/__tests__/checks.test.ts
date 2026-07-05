@@ -134,7 +134,7 @@ describe('checkRAM', () => {
     expect(result!.message).toContain('DDR4');
   });
 
-  it('возвращает Error когда тип памяти RAM неизвестен (fail-closed)', () => {
+  it('пропускает проверку когда тип памяти RAM неизвестен', () => {
     const ram = makeProduct(
       { name: 'Unknown RAM', category: 'ram' as const },
       { memoryFormFactor: 'DIMM', capacity: 8 },
@@ -144,13 +144,10 @@ describe('checkRAM', () => {
       { memoryType: 'DDR5', memoryFormFactor: 'DIMM' },
     );
     const result = checkRAM(ram, mb);
-    expect(result).not.toBeNull();
-    expect(result!.severity).toBe('Error');
-    expect(result!.message).toContain('Не удалось определить тип памяти');
-    expect(result!.message).toContain('Unknown RAM');
+    expect(result).toBeNull();
   });
 
-  it('возвращает Error когда тип памяти MB неизвестен (fail-closed)', () => {
+  it('пропускает проверку когда тип памяти MB неизвестен', () => {
     const ram = makeProduct(
       { name: 'Kingston DDR5', category: 'ram' as const },
       { memoryType: 'DDR5', memoryFormFactor: 'DIMM' },
@@ -160,10 +157,7 @@ describe('checkRAM', () => {
       { memoryFormFactor: 'DIMM' },
     );
     const result = checkRAM(ram, mb);
-    expect(result).not.toBeNull();
-    expect(result!.severity).toBe('Error');
-    expect(result!.message).toContain('Не удалось определить тип памяти');
-    expect(result!.message).toContain('Unknown MB');
+    expect(result).toBeNull();
   });
 
   it('возвращает Error при несовпадении форм-фактора (SO-DIMM vs DIMM)', () => {

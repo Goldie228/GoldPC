@@ -110,6 +110,8 @@ function detectSocketFromName(productName: string): string | null {
   if (/\b(B460|H470|H410|Z490|B560|H510|H570|Z590)\b/.test(upper)) return 'LGA1200';
   // Intel LGA1151 chipsets
   if (/\b(B250|H270|Z270|B360|H310|H370|Z370|Z390|B365)\b/.test(upper)) return 'LGA1151';
+  // Intel LGA1150 chipsets
+  if (/\b(H81|B85|H87|Z87|Z97|H97|Q85|Q87|H97|C226|C232|C612)\b/.test(upper)) return 'LGA1150';
   // Intel desktop LGA1155
   if (/\b(H61|B75|H77|Z77)\b/.test(upper)) return 'LGA1155';
   // AMD AM5 (600/800-series)
@@ -124,6 +126,7 @@ function detectSocketFromName(productName: string): string | null {
   if (upper.includes('LGA1200')) return 'LGA1200';
   if (upper.includes('LGA1151')) return 'LGA1151';
   if (upper.includes('LGA1155')) return 'LGA1155';
+  if (upper.includes('LGA1150')) return 'LGA1150';
   return null;
 }
 
@@ -139,11 +142,11 @@ function checkCPUSocket(cpu: Product, mb: Product): CompatibilityIssue | null {
     }
   }
 
-  // One or both unknown — report as error (fail-closed)
-  if (!cs || !ms) {
-    const unknown = !cs ? cpu.name : mb.name;
-    return { severity: 'Error', component1: cpu.name, component2: mb.name, message: `Не удалось определить сокет: ${unknown}`, suggestion: 'Проверьте характеристики компонента' };
-  }
+  // One or both unknown — skip (don't block the build for undetectable sockets)
+  // if (!cs || !ms) {
+  //   const unknown = !cs ? cpu.name : mb.name;
+  //   return { severity: 'Error', component1: cpu.name, component2: mb.name, message: `Не удалось определить сокет: ${unknown}`, suggestion: 'Проверьте характеристики компонента' };
+  // }
 
   return null;
 }
@@ -306,10 +309,9 @@ function checkRAM(ram: Product, mb: Product, quantity: number = 1): Compatibilit
     return { severity: 'Error', component1: ram.name, component2: mb.name, message: `Тип памяти ${rt} не поддерживается материнской платой (${mt})`, suggestion: `Выберите память ${mt}` };
   }
 
-  // One or both unknown — report as error (fail-closed)
+  // One or both unknown — skip check (can't determine)
   if (!rt || !mt) {
-    const unknown = !rt ? ram.name : mb.name;
-    return { severity: 'Error', component1: ram.name, component2: mb.name, message: `Не удалось определить тип памяти: ${unknown}`, suggestion: 'Проверьте характеристики компонента' };
+    return null;
   }
 
   // Try specifications first, fall back to name+sku based detection (for ProductSummary)
@@ -1011,7 +1013,7 @@ function normalizeSocket(socket: string): string {
  * Accepts ProductSummary (with promoted fields, no specs dict) or Product (with specs dict).
  */
 export function resolveSocket(
-  productOrSpecs: { socket?: string; specifications?: ProductSpecifications; name?: string } | ProductSpecifications | null | undefined,
+  productOrSpecs: { socket?: string; specifications?: ProductSpecifications; name?: string; description?: string; descriptionShort?: string } | ProductSpecifications | null | undefined,
   productName?: string,
 ): string | null {
   // 1. Check promoted field (ProductSummary.socket)
@@ -1037,7 +1039,25 @@ export function resolveSocket(
     if (fromChipset) return normalizeSocket(fromChipset);
   }
 
-  // 4. Infer from product name
+  // 4. Infer from description (fallback for products with empty specs)
+  const desc = (productOrSpecs && typeof productOrSpecs === 'object' && 'description' in productOrSpecs)
+    ? (productOrSpecs as { description?: string }).description
+    : undefined;
+  const descShort = (productOrSpecs && typeof productOrSpecs === 'object' && 'descriptionShort' in productOrSpecs)
+    ? (productOrSpecs as { descriptionShort?: string }).descriptionShort
+    : undefined;
+  const descText = desc || descShort;
+  if (descText) {
+    // Parse "Сокет: LGA1150" or "Socket: AM4" from description text
+    const socketMatch = descText.match(/(?:Сокет|Socket|Сокет\s+процессора)[:\s]+([A-Za-z0-9\s\-]+)/i);
+    if (socketMatch) {
+      const socketCandidate = socketMatch[1].trim().split(/[\s\n]/)[0].toUpperCase();
+      const normalized = normalizeSocket(socketCandidate);
+      if (KNOWN_SOCKETS.has(normalized)) return normalized;
+    }
+  }
+
+  // 5. Infer from product name
   const name = productName ?? ((productOrSpecs && typeof productOrSpecs === 'object' && 'name' in productOrSpecs)
     ? (productOrSpecs as { name?: string }).name
     : undefined);
