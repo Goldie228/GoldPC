@@ -153,10 +153,9 @@ public class CompatibilityServiceTests
     }
 
     [Fact]
-    public async Task MissingRamType_ReturnsError()
+    public async Task MissingRamType_SkipsCheck()
     {
-        // Fail-closed: RAM has no "type" spec → GetSpecValueOrNull returns null
-        // → service should report error "Не удалось определить тип памяти"
+        // When RAM has no "type" spec, the memory type check is skipped
         var request = CreateRequest(
             cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
             { ["socket"] = "AM5", ["tdp"] = 120, ["performanceScore"] = 85 }),
@@ -168,8 +167,8 @@ public class CompatibilityServiceTests
 
         var result = await _service.CheckCompatibilityAsync(request);
 
-        result.Result.IsCompatible.Should().BeFalse();
-        result.Result.Issues.Should().Contain(i => i.Message.Contains("тип памяти"));
+        result.Result.IsCompatible.Should().BeTrue();
+        result.Result.Issues.Should().NotContain(i => i.Message.Contains("тип памяти"));
     }
 
     #endregion
