@@ -75,10 +75,10 @@ export function AccountSavedBuilds() {
   const loadBuilds = async () => {
     setLoading(true);
     try {
-      const builds = await pcbuilderApi.getConfigurations();
-      setBuilds(builds);
+      const allBuilds = await pcbuilderApi.getConfigurations();
+      // Hide auto-saves from the list — they are managed automatically
+      setBuilds(allBuilds.filter((b) => b.name !== 'Автосохранение'));
     } catch {
-      // Endpoint may not be implemented on backend yet — show empty state silently
       setBuilds([]);
     } finally {
       setLoading(false);

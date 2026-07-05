@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import './Modal.css';
 
@@ -75,7 +76,7 @@ export function Modal({
     return null;
   }
 
-  return (
+  return createPortal(
     <div
       className="modal-overlay"
       onClick={handleOverlayClick}
@@ -111,6 +112,7 @@ export function Modal({
           </button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

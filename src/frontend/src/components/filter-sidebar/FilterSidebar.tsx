@@ -311,11 +311,34 @@ export function FilterSidebar({
           : selectedAvailability.includes('on_order')
             ? false
             : undefined;
+        // Разделяем selectedSpecifications на select-значения (массивы/строки)
+        // и range-значения (строки вида "min,max"). Range уходит в specificationRanges,
+        // select — в specifications.
+        const specParam: Record<string, string> = {};
+        const rangeParam: Record<string, string> = {};
+        for (const [k, v] of Object.entries(selectedSpecifications ?? {})) {
+          if (v == null) continue;
+          if (typeof v === 'string' && v.includes(',')) {
+            const [a, b] = v.split(',').map(s => s.trim());
+            if (a !== '' && b !== '' && !Number.isNaN(Number(a)) && !Number.isNaN(Number(b))) {
+              rangeParam[k] = v;
+              continue;
+            }
+          }
+          if (Array.isArray(v)) {
+            if (v.length === 0) continue;
+            specParam[k] = v.map(String).join(',');
+          } else {
+            specParam[k] = String(v);
+          }
+        }
         const attrs = await catalogApi.getFilterFacets(backendSlug, {
           manufacturerIds: selectedManufacturerIds.length > 0
             ? selectedManufacturerIds as string[]
             : undefined,
           inStock: inStockFilter,
+          specifications: Object.keys(specParam).length > 0 ? specParam : undefined,
+          specificationRanges: Object.keys(rangeParam).length > 0 ? rangeParam : undefined,
         });
         if (!cancelled) {
           setFilterFacets(attrs);
@@ -334,6 +357,7 @@ export function FilterSidebar({
     selectedCategory,
     selectedAvailability,
     selectedManufacturerIds,
+    selectedSpecifications,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
