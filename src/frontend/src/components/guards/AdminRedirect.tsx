@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 /**
  * Redirects admin users to the appropriate dashboard based on their role.
- * Must be used as a component (not inline function) to follow Rules of Hooks.
+ * Must be used as a component (not встроенный function) to follow Rules of Hooks.
  */
 export function AdminRedirect() {
   const { user } = useAuth();

@@ -13,9 +13,9 @@ import type { ServiceRequestDto } from '@/api/services';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/useToast';
 
-/* ------------------------------------------------------------------ */
+/* */
 /*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
+/* */
 
 function formatDateTime(iso: string): string {
   if (!iso) return '—';
@@ -33,9 +33,9 @@ function truncate(text: string, max: number): string {
   return text.length > max ? text.slice(0, max) + '…' : text;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Компонент                                                          */
+/* */
 
 export function AvailableTicketsPage() {
   const queryClient = useQueryClient();
@@ -214,9 +214,9 @@ export function AvailableTicketsPage() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Available Ticket Card                                              */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Available Ticket Карточка                                              */
+/* */
 
 function AvailableTicketCard({
   ticket,

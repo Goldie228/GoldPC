@@ -1,5 +1,5 @@
 /**
- * Inventory Page for Manager
+ * Inventory Страница for Manager
  * Страница управления запасами для менеджера
  * Реальные данные с API, без моков
  */

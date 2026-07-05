@@ -164,7 +164,7 @@ public class FpsCalculationService : IFpsCalculationService
             bottleneck = "gpu_partial"; // только CPU, GPU не указан
         }
 
-        // Overall score: взвешенная комбинация
+        // Общая оценка: взвешенная комбинация
         var gpuNormScore = gpuTier != null ? (gpuTier.Tier / 1000.0) * 100 : 0;
         var cpuNormScore = cpuTier != null ? cpuTier.SingleCore * 100 : 0;
         var overallScore = Math.Round(gpuNormScore * 0.6 + cpuNormScore * 0.4, 1);

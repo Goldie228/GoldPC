@@ -1,24 +1,24 @@
 namespace GoldPC.Shared.Services;
 
 /// <summary>
-/// Service for checking whether a notification type is enabled
-/// based on admin settings and user preferences.
+/// Сервис для проверки, включён ли тип уведомления
+/// на основе настроек администратора и предпочтений пользователя.
 /// </summary>
 public interface INotificationPreferenceService
 {
     /// <summary>
-    /// Check if a notification type is globally enabled in admin settings.
+    /// Проверяет, включён ли тип уведомления глобально в настройках администратора.
     /// </summary>
-    /// <param name="notificationType">Notification type string (e.g. "LowStockAlert", "OrderStatusChanged")</param>
-    /// <returns><c>true</c> if the notification type is enabled; otherwise, <c>false</c>.</returns>
+    /// <param name="notificationType">Строка типа уведомления (например "LowStockAlert", "OrderStatusChanged")</param>
+    /// <returns><c>true</c> если тип уведомления включён; иначе <c>false</c>.</returns>
     Task<bool> IsNotificationEnabledAsync(string notificationType);
 
     /// <summary>
-    /// Check if a specific user has opted in for a notification type.
-    /// Also checks the global admin setting as a prerequisite.
+    /// Проверяет, подписан ли конкретный пользователь на тип уведомления.
+    /// Также проверяет глобальную настройку администратора как предварительное условие.
     /// </summary>
-    /// <param name="userId">The user identifier.</param>
-    /// <param name="notificationType">Notification type string (e.g. "LowStockAlert", "OrderStatusChanged")</param>
-    /// <returns><c>true</c> if the user is opted in and the type is enabled; otherwise, <c>false</c>.</returns>
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <param name="notificationType">Строка типа уведомления (например "LowStockAlert", "OrderStatusChanged")</param>
+    /// <returns><c>true</c> если пользователь подписан и тип включён; иначе <c>false</c>.</returns>
     Task<bool> IsUserOptedInAsync(Guid userId, string notificationType);
 }

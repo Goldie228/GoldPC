@@ -42,6 +42,6 @@ export type { UseWarrantyReturn } from './useWarranty';
 // Debounce
 export { useDebounce } from './useDebounce';
 
-// Modal
+// Модальное окно
 export { useModal } from './useModal';
 export type { UseModalReturn } from './useModal';

@@ -24,6 +24,9 @@ export function hasValidProductImage(url: unknown): boolean {
   // Локальный путь
   if (u.startsWith('/uploads/') || u.startsWith('uploads/')) return true;
 
+  // Data URI (inline SVG и т.п.)
+  if (u.startsWith('data:')) return true;
+
   // Внешний HTTP(S) URL
   if (u.startsWith('http://') || u.startsWith('https://')) return true;
 
@@ -43,7 +46,7 @@ export function isXCorePlaceholderUrl(url: unknown): boolean {
  * Внешние URL — возвращаем как есть.
  */
 export function getProductImageUrl(url: unknown): string | null {
-  // Handle if url is an object (e.g., ProductImage) instead of string
+  // Обрабатывает if url is an object (e.g., ProductImage) instead of string
   if (url != null && typeof url === 'object' && 'url' in url) {
     return getProductImageUrl((url as Record<string, unknown>).url);
   }
@@ -52,6 +55,9 @@ export function getProductImageUrl(url: unknown): string | null {
   const u = url.trim();
   if (!u) return null;
   if (isPlaceholder(u)) return null;
+
+  // Data URI (inline SVG placeholder и т.п.)
+  if (u.startsWith('data:')) return u;
 
   // Локальный путь — проксируем через origin
   if (u.startsWith('/uploads/') || u.startsWith('uploads/')) {

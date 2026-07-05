@@ -115,7 +115,7 @@ describe('usePCBuilder', () => {
     localStorage.clear();
   });
 
-  // ===== 1. Socket Incompatibility Detection =====
+  // 1. Socket Incompatibility Detection =====
   describe('should detect socket incompatibility', () => {
     it('возвращает ошибку при несовпадении сокетов CPU и материнской платы', () => {
       const { result } = renderHook(() => usePCBuilder());
@@ -180,7 +180,7 @@ describe('usePCBuilder', () => {
     });
   });
 
-  // ===== 2. Total Price Calculation =====
+  // 2. Total Price Calculation =====
   describe('should calculate total price correctly', () => {
     it('возвращает 0 для пустой сборки', () => {
       const { result } = renderHook(() => usePCBuilder());
@@ -219,7 +219,7 @@ describe('usePCBuilder', () => {
     });
   });
 
-  // ===== 3. Power Consumption Calculation =====
+  // 3. Power Consumption Calculation =====
   describe('should calculate power consumption', () => {
     it('возвращает базовую нагрузку для пустой сборки', () => {
       const { result } = renderHook(() => usePCBuilder());
@@ -254,7 +254,7 @@ describe('usePCBuilder', () => {
     });
   });
 
-  // ===== 4. Save to localStorage on component change =====
+  // 4. Save to localStorage on component change =====
   describe('should save to localStorage on component change', () => {
     it('saves component to localStorage on add', () => {
       const { result } = renderHook(() => usePCBuilder());
@@ -304,7 +304,7 @@ describe('usePCBuilder', () => {
     });
   });
 
-  // ===== 5. Restore from localStorage on mount =====
+  // 5. Restore from localStorage on mount =====
   describe('should restore from localStorage on mount', () => {
     it('restores components from localStorage on init', () => {
       const cpu = createCPU();
@@ -356,7 +356,7 @@ describe('usePCBuilder', () => {
     });
   });
 
-  // ===== 6. Reset Build Correctly =====
+  // 6. Reset Строит Correctly =====
   describe('should reset build correctly', () => {
     it('clears all selected components', () => {
       const { result } = renderHook(() => usePCBuilder());

@@ -58,7 +58,7 @@ export function Header(): ReactElement {
   const mobileDrawerRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Cart flash animation
+  // Анимация вспышки корзины
   useEffect(() => {
     if (cartCount > prevCartCountRef.current) {
       setCartFlash(true);
@@ -71,7 +71,7 @@ export function Header(): ReactElement {
     prevCartCountRef.current = cartCount;
   }, [cartCount]);
 
-  // Close MiniCart on Escape
+  // Закрытие MiniCart по Escape
   useEffect(() => {
     if (!isCartOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -81,12 +81,12 @@ export function Header(): ReactElement {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isCartOpen]);
 
-  // Close MiniCart on navigation
+  // Закрытие MiniCart при навигации
   useEffect(() => {
     setIsCartOpen(false);
   }, [location]);
 
-  // Close dropdowns on outside click
+  // Закрытие выпадающих меню при клике снаружи
   useEffect(() => {
     if (!isProfileDropdownOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
@@ -98,7 +98,7 @@ export function Header(): ReactElement {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [isProfileDropdownOpen]);
 
-  // Keyboard navigation for profile dropdown
+  // Клавиатурная навигация для выпадающего меню профиля
   useEffect(() => {
     if (!isProfileDropdownOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -108,7 +108,7 @@ export function Header(): ReactElement {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isProfileDropdownOpen]);
 
-  // Mobile menu keyboard navigation
+  // Мобильные menu keyboard navigation
   useEffect(() => {
     if (!isMobileMenuOpen) return;
     const container = mobileDrawerRef.current;
@@ -153,7 +153,7 @@ export function Header(): ReactElement {
     };
   }, [isMobileMenuOpen]);
 
-  // Close mobile menu on resize to desktop
+  // Close мобильные menu on resize to desktop
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 768 && isMobileMenuOpen) {

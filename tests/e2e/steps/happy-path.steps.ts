@@ -38,13 +38,13 @@ After(async function (this: HappyPathWorld) {
   await this.browser?.close();
 });
 
-// GIVEN
+// ДАНО (GIVEN)
 Given('Я на главной странице', async function (this: HappyPathWorld) {
   await this.page.goto('/');
   await this.page.waitForLoadState('networkidle');
 });
 
-// WHEN
+// КОГДА (WHEN)
 When('Я ищу процессор {string}', async function (this: HappyPathWorld, query: string) {
   await this.catalogPage.goto();
   await this.catalogPage.search(query);
@@ -111,7 +111,7 @@ Then('Номер заказа должен отображаться на стр�
   expect(this.lastOrderNumber).not.toBe('');
 });
 
-// PC Builder steps
+// Шаги конструктора ПК
 When('Я выбираю совместимые компоненты для сборки', async function (this: HappyPathWorld) {
   await this.pcBuilderPage.selectComponent('Процессор', 'AMD Ryzen 9 7950X');
   await this.pcBuilderPage.selectComponent('Материнская плата', 'ASUS ROG Crosshair X670E');

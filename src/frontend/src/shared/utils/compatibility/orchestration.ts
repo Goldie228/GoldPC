@@ -421,7 +421,7 @@ export function checkCompatibility(components: ComponentMap, ramSticks?: Product
 
   const { cpu, gpu, motherboard, ram, psu, case: chassis, cooling } = components;
 
-  // ===== DATA COMPLETENESS VALIDATION =====
+  // DATA COMPLETENESS VALIDATION =====
   // Verify critical components have specification data loaded.
   // Without this, all checks silently pass as compatible (fail-open bug).
   const criticalComponents: Array<{ name: string; product: Product | undefined | null }> = [

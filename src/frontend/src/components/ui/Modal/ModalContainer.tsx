@@ -9,7 +9,7 @@ function mapStoreSize(size: 'small' | 'default' | 'large' | 'fullWidth' | undefi
     case 'large':
       return 'large';
     case 'fullWidth':
-      // In this project Modal doesn't have a dedicated fullscreen size,
+      // In this project Модальное окно doesn't have a dedicated fullscreen размер,
       // so we map to large and rely on className overrides.
       return 'large';
     case 'default':

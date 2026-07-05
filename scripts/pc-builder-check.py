@@ -5,11 +5,11 @@ PC Builder — Business Logic Check
 Проверяет совместимость компонентов в pc-builder по РЕАЛЬНЫМ характеристикам товаров.
 
 Как работает:
-  1. Открывает страницу pc-builder через Playwright
-  2. Собирает названия выбранных компонентов из DOM
-  3. Для каждого товара получает slug и характеристики через API
-  4. Проверяет совместимость: сокет, память, форм-фактор, TDP, слоты, частоту
-  5. Выдаёт отчёт: что совместимо, а что нет
+   1. Открывает страницу pc-builder через Playwright
+   2. Собирает названия выбранных компонентов из DOM
+   3. Для каждого товара получает slug и характеристики через API
+   4. Проверяет совместимость: сокет, память, форм-фактор, TDP, слоты, частоту
+   5. Выдаёт отчёт: что совместимо, а что нет
 
 Запуск (после запуска dev-сервера):
   python3 scripts/pc-builder-check.py
@@ -31,7 +31,7 @@ from pathlib import Path
 import requests
 from playwright.sync_api import sync_playwright, Error as PWError
 
-# ─── Configuration ───────────────────────────────────────────────────────
+# ─── Конфигурация ───────────────────────────────────────────────────────
 BASE_URL = os.getenv("BASE_URL", "http://localhost:5173")
 API_BASE = f"{BASE_URL}/api/v1"
 LOG_FILE = os.getenv("LOG_FILE", str(Path(__file__).parent / "pc-builder-check.log"))
@@ -52,7 +52,7 @@ CATEGORY_MAP = {
     "Вентилятор": "fans",
 }
 
-# ─── Logger ──────────────────────────────────────────────────────────────
+# ─── Логгер ──────────────────────────────────────────────────────────────
 class Logger:
     def __init__(self, path: str):
         self.path = path
@@ -81,7 +81,7 @@ class Logger:
 
 logger = Logger(LOG_FILE)
 
-# ─── Spec helpers ────────────────────────────────────────────────────────
+# ─── Вспомогательные функции для спецификаций ───────────────────────────
 
 def get_spec(specs: dict | None, *keys: str):
     """Находит значение в specifications по одному из ключей (регистронезависимо)."""
@@ -146,7 +146,7 @@ def format_report_line(passed: bool, label: str, expected: str, actual: str) -> 
     return f"  {icon} [{status}] {label}: ожидается {expected}, получено {actual}"
 
 
-# ─── API helpers ─────────────────────────────────────────────────────────
+# ─── Вспомогательные функции API ────────────────────────────────────────
 
 def api_get(path: str, params: dict | None = None, retries: int = 2) -> dict | list | None:
     """GET-запрос к API с повторными попытками."""
@@ -267,7 +267,7 @@ def get_product_detail(product_id: str) -> dict | None:
     return data
 
 
-# ─── DOM parsing ─────────────────────────────────────────────────────────
+# ─── Разбор DOM ─────────────────────────────────────────────────────────
 
 def collect_components_from_page(page, debug: bool = False) -> list[dict]:
     """Собирает информацию о выбранных компонентах из DOM страницы pc-builder.
@@ -342,7 +342,7 @@ def collect_components_from_page(page, debug: bool = False) -> list[dict]:
     return components
 
 
-# ─── Auto-selection ─────────────────────────────────────────────────────
+# ─── Автоматический выбор ────────────────────────────────────────────────
 
 def auto_select_components(page) -> list[dict]:
     """Пробует автоматически выбрать ключевые компоненты (CPU, MB, RAM) через модалку."""
@@ -474,7 +474,7 @@ def auto_select_components(page) -> list[dict]:
     return collect_components_from_page(page)
 
 
-# ─── Compatibility checks ────────────────────────────────────────────────
+# ─── Проверки совместимости ──────────────────────────────────────────────
 
 def check_cpu_motherboard(cpu: dict, mb: dict) -> list[dict]:
     """Проверка CPU ↔ Материнская плата."""
@@ -905,274 +905,3 @@ def check_gpu_case(gpu: dict, case: dict) -> list[dict]:
         })
     
     return results
-
-
-# ─── Main ────────────────────────────────────────────────────────────────
-
-def main():
-    logger.info("=" * 70)
-    logger.info("PC Builder — Business Logic Check")
-    logger.info(f"URL: {BASE_URL}/pc-builder")
-    logger.info(f"API: {API_BASE}")
-    logger.info("=" * 70)
-    
-    # ── Проверка API ──────────────────────────────────────────────────
-    logger.action("Проверка API...")
-    api_ok = api_get("/catalog/products", {"pageSize": 1})
-    if api_ok is None:
-        logger.error("API НЕ ДОСТУПЕН! Запустите dev-сервер: ./scripts/dev-local.sh")
-        logger.error(f"Проверьте: curl {API_BASE}/catalog/products")
-        sys.exit(1)
-    logger.ok("API доступен")
-    
-    # ── Открываем страницу ─────────────────────────────────────────────
-    logger.action("Открываем страницу pc-builder...")
-    
-    with sync_playwright() as pw:
-        browser = pw.chromium.launch(
-            executable_path="/usr/bin/google-chrome",
-            headless=True,
-            args=["--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"],
-        )
-        context = browser.new_context(
-            viewport={"width": 1440, "height": 900},
-            locale="ru-BY",
-        )
-        page = context.new_page()
-        
-        # Ловим консольные ошибки
-        page.on("pageerror", lambda err: logger.warn(f"Page JS error: {err}"))
-        
-        try:
-            page.goto(f"{BASE_URL}/pc-builder", wait_until="domcontentloaded", timeout=20000)
-            page.wait_for_selector(".pc-builder__container, .pc-builder-container, .component-slot",
-                                   timeout=15000)
-        except PWError as e:
-            logger.error(f"Страница не загрузилась: {e}")
-            browser.close()
-            sys.exit(1)
-        
-        logger.ok("Страница загружена")
-        
-        # ── Собираем компоненты ────────────────────────────────────────
-        logger.action("Сбор выбранных компонентов из DOM...")
-        components = collect_components_from_page(page, debug=True)
-        
-        # Если ничего не выбрано — пробуем выбрать ключевые компоненты
-        if not components:
-            logger.info("Нет выбранных компонентов. Пробуем выбрать автоматически...")
-            components = auto_select_components(page)
-            # Ещё раз логируем что получилось
-            if components:
-                logger.ok(f"После авто-выбора: {len(components)} компонентов")
-                for c in components:
-                    logger.info(f"  {c['type']}: {c['name']}")
-            else:
-                # Debug: покажем все слоты
-                logger.info("Debug: состояние всех слотов после авто-выбора:")
-                collect_components_from_page(page, debug=True)
-        
-        browser.close()
-    
-    if not components:
-        logger.error("Нет выбранных компонентов! Сначала выберите компоненты на странице pc-builder.")
-        sys.exit(1)
-    
-    logger.ok(f"Найдено компонентов: {len(components)}")
-    
-    # ── Получаем характеристики через API ──────────────────────────────
-    logger.action("Получение характеристик товаров через API...")
-    
-    for comp in components:
-        name = comp["name"]
-        cat_label = comp["type"]
-        logger.info(f"  Ищем товар: {name} ({cat_label})")
-        
-        # Шаг 1: найти товар по названию через search API
-        summary = find_product_by_name(cat_label, name)
-        if not summary:
-            logger.error(f"  ❌ Товар не найден в API: {name}")
-            comp["_error"] = "товар не найден"
-            continue
-        
-        product_id = summary.get("id")
-        logger.info(f"  → id: {product_id}")
-        
-        # Шаг 2: получить полные характеристики по ID
-        product_data = get_product_detail(product_id)
-        if not product_data:
-            logger.error(f"  ❌ Не удалось получить характеристики для: {name} (id={product_id})")
-            comp["_error"] = "нет данных"
-            continue
-        
-        # Сохраняем характеристики
-        comp["_id"] = product_id
-        comp["_product_data"] = product_data
-        comp["specifications"] = product_data.get("specifications", {})
-        
-        # Копируем поля верхнего уровня для удобства
-        for field in ["socket", "memoryType", "tdp", "wattage", "category", "id", "slug"]:
-            if field in product_data:
-                comp[field] = product_data[field]
-        
-        specs = comp["specifications"]
-        logger.ok(f"  ✅ Характеристики: socket={get_spec(specs, 'socket')}, "
-                  f"memory_type={get_spec(specs, 'memory_type', 'type', 'memory_support')}, "
-                  f"form_factor={get_spec(specs, 'form_factor')}, "
-                  f"memory_slots={get_spec(specs, 'memory_slots')}")
-    
-    # ── Проверки совместимости ─────────────────────────────────────────
-    logger.action("Проверка совместимости компонентов...")
-    
-    # Организуем компоненты по типам для удобства
-    # Используем slug категории как ключ
-    TYPE_SLUG_MAP = {
-        "processors": "cpu",
-        "motherboards": "motherboard",
-        "ram": "ram",
-        "storage": "storage",
-        "coolers": "cooling",
-        "gpu": "gpu",
-        "psu": "psu",
-        "cases": "case",
-        "fans": "fan",
-    }
-    by_type = {}
-    for comp in components:
-        api_slug = CATEGORY_MAP.get(comp["type"])
-        comp["_type"] = api_slug
-        comp["_type_short"] = TYPE_SLUG_MAP.get(api_slug, api_slug)
-        by_type[api_slug] = comp
-    
-    all_checks = []
-    
-    # 1. CPU ↔ Motherboard
-    cpu = by_type.get("processors")
-    mb = by_type.get("motherboards")
-    if cpu and mb and "_error" not in cpu and "_error" not in mb:
-        logger.check("CPU ↔ Материнская плата:")
-        checks = check_cpu_motherboard(cpu, mb)
-        all_checks.extend(checks)
-        for c in checks:
-            logger.compat(format_report_line(c["passed"], c["label"], c["expected"], c["actual"]))
-    elif cpu and mb:
-        logger.warn("CPU ↔ MB: пропущено (ошибка получения данных)")
-    
-    # 2. CPU → RAM (поддержка типа памяти)
-    cpu = by_type.get("processors")
-    ram = by_type.get("ram")
-    if cpu and ram and "_error" not in cpu and "_error" not in ram:
-        logger.check("CPU → Оперативная память:")
-        checks = check_cpu_ram(cpu, ram)
-        all_checks.extend(checks)
-        for c in checks:
-            logger.compat(format_report_line(c["passed"], c["label"], c["expected"], c["actual"]))
-    
-    # 3. Motherboard ↔ RAM
-    mb = by_type.get("motherboards")
-    ram = by_type.get("ram")
-    if mb and ram and "_error" not in mb and "_error" not in ram:
-        ram_qty = ram.get("qty", 1)
-        logger.check(f"Материнская плата ↔ RAM (x{ram_qty}):")
-        checks = check_motherboard_ram(mb, ram, ram_qty)
-        all_checks.extend(checks)
-        for c in checks:
-            logger.compat(format_report_line(c["passed"], c["label"], c["expected"], c["actual"]))
-    
-    # 4. Motherboard ↔ Case
-    mb = by_type.get("motherboards")
-    case = by_type.get("cases")
-    if mb and case and "_error" not in mb and "_error" not in case:
-        logger.check("Материнская плата ↔ Корпус:")
-        checks = check_motherboard_case(mb, case)
-        all_checks.extend(checks)
-        for c in checks:
-            logger.compat(format_report_line(c["passed"], c["label"], c["expected"], c["actual"]))
-    
-    # 5. CPU ↔ Cooler
-    cpu = by_type.get("processors")
-    cooler = by_type.get("coolers")
-    if cpu and cooler and "_error" not in cpu and "_error" not in cooler:
-        logger.check("CPU ↔ Охлаждение:")
-        checks = check_cpu_cooler(cpu, cooler)
-        all_checks.extend(checks)
-        for c in checks:
-            logger.compat(format_report_line(c["passed"], c["label"], c["expected"], c["actual"]))
-    
-    # 6. PSU ↔ Components
-    psu = by_type.get("psu")
-    if psu and "_error" not in psu:
-        logger.check("Блок питания → Компоненты:")
-        checks = check_psu_components(psu, [c for c in components if "_error" not in c])
-        all_checks.extend(checks)
-        for c in checks:
-            logger.compat(format_report_line(c["passed"], c["label"], c["expected"], c["actual"]))
-    
-    # 7. GPU ↔ Case
-    gpu = by_type.get("gpu")
-    case = by_type.get("cases")
-    if gpu and case and "_error" not in gpu and "_error" not in case:
-        logger.check("GPU ↔ Корпус:")
-        checks = check_gpu_case(gpu, case)
-        all_checks.extend(checks)
-        for c in checks:
-            logger.compat(format_report_line(c["passed"], c["label"], c["expected"], c["actual"]))
-    
-    # ── Итоговый отчёт ─────────────────────────────────────────────────
-    logger.info("=" * 70)
-    logger.info("ИТОГОВЫЙ ОТЧЁТ")
-    logger.info("=" * 70)
-    
-    # Статистика
-    total = len(all_checks)
-    passed = sum(1 for c in all_checks if c["passed"])
-    failed = sum(1 for c in all_checks if not c["passed"])
-    skipped = sum(1 for c in all_checks if c.get("skipped", False))
-    
-    logger.info(f"Всего проверок: {total}")
-    logger.info(f"  ✅ Пройдено: {passed}")
-    logger.info(f"  ❌ Не пройдено: {failed}")
-    if skipped:
-        logger.info(f"  ⏭ Пропущено: {skipped}")
-    
-    if failed > 0:
-        logger.warn("--- Проблемные проверки ---")
-        for c in all_checks:
-            if not c["passed"]:
-                logger.error(f"  ❌ {c['label']}: {c['detail']}")
-    else:
-        logger.ok("--- Все проверки пройдены! Сборка совместима. ---")
-    
-    # Состав сборки
-    logger.info("--- Состав сборки ---")
-    for comp in components:
-        status = "✅" if "_error" not in comp else "❌"
-        price = comp.get("price", "")
-        qty = f" x{comp['qty']}" if comp.get("qty", 1) > 1 else ""
-        logger.info(f"  {status} {comp['type']}: {comp['name']} — {price}{qty}")
-        if "_error" in comp:
-            logger.error(f"       Ошибка: {comp['_error']}")
-    
-    # Сводка
-    logger.info("=" * 70)
-    if failed > 0:
-        logger.warn(f"Обнаружено {failed} проблем(ы) совместимости!")
-        sys.exit(1)
-    elif any("_error" in c for c in components):
-        logger.warn("Есть ошибки получения данных, но проверки совместимости пройдены")
-        sys.exit(1)
-    else:
-        logger.ok("ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ")
-        sys.exit(0)
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        logger.info("Прервано пользователем")
-        sys.exit(130)
-    except Exception as e:
-        logger.error(f"Критическая ошибка: {e}")
-        traceback.print_exc()
-        sys.exit(2)

@@ -3,9 +3,9 @@ import { RotateCw, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 /**
- * ServerErrorPage Component
+ * ServerErrorPage Компонент
  *
- * A 500 error page displayed when a server error occurs.
+ * A 500 error страница displayed when a server error occurs.
  */
 export function ServerErrorPage() {
   const navigate = useNavigate();

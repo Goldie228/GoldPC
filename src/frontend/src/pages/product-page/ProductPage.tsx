@@ -82,7 +82,7 @@ function renderSpecsFromCatalog(
     return renderDescriptionBlocks(trimDescriptionBeforeMain(product.description));
   }
 
-  // Build lookup from metadata: key → displayName
+  // Строит lookup from metadata: key → displayName
   const metaMap = new Map<string, string>();
   if (specMeta) {
     for (const attr of specMeta) {

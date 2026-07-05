@@ -31,9 +31,9 @@ import {
 import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
 import { SectionCard } from '@/components/ui/SectionCard';
 
-// =============================================================================
+// 
 // SettingsSkeleton — заглушка загрузки
-// =============================================================================
+// 
 
 function SettingsSkeleton() {
   return (
@@ -76,9 +76,9 @@ function SettingsSkeleton() {
   );
 }
 
-// =============================================================================
+// 
 // SettingsPage
-// =============================================================================
+// 
 
 export function SettingsPage() {
   const queryClient = useQueryClient();

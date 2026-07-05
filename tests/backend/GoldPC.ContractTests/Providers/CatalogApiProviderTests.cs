@@ -25,7 +25,7 @@ public class CatalogApiProviderTests : IClassFixture<CatalogApiFixture>
     [Fact]
     public void VerifyPactWithFrontend_ShouldSucceed()
     {
-        // Arrange
+        // Подготовка
         var config = new PactVerifierConfig
         {
             Outputters = new List<IOutput>
@@ -35,7 +35,7 @@ public class CatalogApiProviderTests : IClassFixture<CatalogApiFixture>
             LogLevel = PactLogLevel.Information
         };
 
-        // Act & Assert
+        // Действие и Проверка
         using var verifier = new PactVerifier(config);
         
         verifier

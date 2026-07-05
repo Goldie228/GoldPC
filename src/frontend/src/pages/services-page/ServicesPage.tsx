@@ -46,7 +46,7 @@ export function ServicesPage() {
   const { data, isLoading, isError, refetch } = useServices();
   const services = data?.data ?? [];
 
-  // Loading state
+  // Загрузка state
   if (isLoading) {
     return (
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">
@@ -57,7 +57,7 @@ export function ServicesPage() {
     );
   }
 
-  // Error state
+  // Ошибка state
   if (isError) {
     return (
       <div className="max-w-[1200px] mx-auto px-4 md:px-8 pt-8">

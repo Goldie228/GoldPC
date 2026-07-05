@@ -1,9 +1,9 @@
 /**
- * Modal Component Styles
+ * Modal Компонент Styles
  * GoldPC Design System — DESIGN.md tokens
  */
 
-/* Overlay */
+/* Наложение */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -18,7 +18,7 @@
   padding: 1rem;
 }
 
-/* Modal Container */
+/* Модальное окно Контейнер */
 .modal {
   position: relative;
   background: var(--color-surface-card, #1e2329);
@@ -41,7 +41,7 @@
   }
 }
 
-/* Size Variants */
+/* Размер Variants */
 .modal--small {
   width: 100%;
   max-width: 400px;
@@ -70,7 +70,7 @@
   max-height: calc(96vh - 5rem);
 }
 
-/* Header */
+/* Заголовок */
 .modal__header {
   display: flex;
   align-items: center;
@@ -115,7 +115,7 @@
   height: 18px;
 }
 
-/* Content */
+/* Содержимое */
 .modal__content {
   padding: 1.5rem;
   overflow-y: auto;

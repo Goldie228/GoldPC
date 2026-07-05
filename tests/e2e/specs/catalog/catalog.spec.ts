@@ -14,7 +14,7 @@ test.describe('Каталог товаров', () => {
   });
 
   test('Пользователь может просмотреть список продуктов', async ({ page }) => {
-    // Assert - проверяем что страница загружена
+    // Проверка - проверяем что страница загружена
     await page.waitForLoadState('networkidle');
     // Проверяем что есть хотя бы один товарный элемент
     const productCount = await catalogPage.getProductCount();
@@ -22,38 +22,38 @@ test.describe('Каталог товаров', () => {
   });
 
   test('Поиск товаров работает корректно', async ({ page }) => {
-    // Arrange
+    // Подготовка
     const searchQuery = 'процессор';
     
-    // Act
+    // Действие
     await catalogPage.search(searchQuery);
     
-    // Assert - проверяем что поиск выполнился
+    // Проверка - проверяем что поиск выполнился
     await page.waitForLoadState('networkidle');
     await expect(page.locator('input[aria-label="Поиск в каталоге"]').first()).toHaveValue(searchQuery);
   });
 
   test('Фильтрация по категории работает', async ({ page }) => {
-    // Act - кликаем по категории в сайдбаре
+    // Действие - кликаем по категории в сайдбаре
     await catalogPage.selectCategory('Процессоры');
     
-    // Assert
+    // Проверка
     await page.waitForLoadState('networkidle');
   });
 
   test('Сортировка товаров работает', async ({ page }) => {
-    // Act
+    // Действие
     await catalogPage.selectSort('Сначала дешевле');
     
-    // Assert
+    // Проверка
     await page.waitForLoadState('networkidle');
   });
 
   test('Клик по продукту открывает страницу товара', async ({ page }) => {
-    // Act
+    // Действие
     await catalogPage.clickProduct(0);
     
-    // Assert
+    // Проверка
     await expect(page).toHaveURL(/\/product\//);
   });
 });

@@ -1,4 +1,4 @@
-/* ==========================================================================
+/* 
    HomePage — GoldPC Design System
    ==========================================================================
    Секции:
@@ -11,7 +11,7 @@
    7. CTA Band (pre-footer)
    ========================================================================== */
 
-/* ---------- Hero ---------- */
+/* Hero ---------- */
 .home-hero {
   position: relative;
   overflow: hidden;
@@ -117,7 +117,7 @@
 }
 
 
-/* ---------- Categories ---------- */
+/* Categories ---------- */
 .home-categories {
   padding: 60px 0;
   background: var(--color-surface-card, #1e2329);
@@ -232,7 +232,7 @@
   color: #707a8a;
 }
 
-/* ---------- Trust Band ---------- */
+/* Trust Band ---------- */
 .home-trust {
   padding: 60px 0;
   background: var(--color-canvas-dark, #0b0e11);
@@ -353,7 +353,7 @@
   line-height: 1.4;
 }
 
-/* ---------- Popular Products ---------- */
+/* Popular Products ---------- */
 .home-popular {
   padding: 40px 0 60px;
   background: var(--color-canvas-dark, #0b0e11);
@@ -403,7 +403,7 @@
   color: #FCD535;
 }
 
-/* ---------- Gaming Setup Carousel ---------- */
+/* Gaming Setup Carousel ---------- */
 .home-gaming {
   position: relative;
   padding: 0;
@@ -599,7 +599,7 @@
   right: 48px;
 }
 
-/* Footer: dots + pause */
+/* Нижний колонтитул: dots + pause */
 .home-gaming__carousel-footer {
   position: absolute;
   bottom: 16px;
@@ -757,7 +757,7 @@
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
 }
 
-/* ---------- CTA Band ---------- */
+/* CTA Band ---------- */
 .home-cta {
   padding: 60px 0;
   background: var(--color-surface-card, #1e2329);
@@ -804,9 +804,9 @@
   flex-wrap: wrap;
 }
 
-/* ---------- Scroll Fade Animation (framer-motion whileInView) ---------- */
+/* Scroll Fade Animation (framer-motion whileInView) ---------- */
 
-/* ===== Responsive Typography ===== */
+/* Responsive Typography ===== */
 @media (max-width: 768px) {
   .home-hero__title {
     font-size: 36px;
@@ -877,7 +877,7 @@
   }
 }
 
-/* Small phones (500px and below — actual mobile viewport) */
+/* Small phones (500px and below — actual мобильные viewport) */
 @media (max-width: 500px) {
   .home-hero {
     padding: 80px 0 60px;

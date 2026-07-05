@@ -21,17 +21,17 @@ import { mergeDescriptionIntoSpecifications, normalizeMergedSpecKey } from '@/ut
 import type { ProductEditForm } from '../types';
 import type { SpecificationAttributeDto, ProductCategory, FilterFacetAttribute } from '@/api/types';
 
-// ---------------------------------------------------------------------------
+// 
 // Пропсы
-// ---------------------------------------------------------------------------
+// 
 interface SpecificationsTabProps {
   form: ProductEditForm;
   onChange: (field: string, value: string | number | boolean | null) => void;
 }
 
-// ---------------------------------------------------------------------------
+// 
 // Приоритетные ключи (как на странице товара)
-// ---------------------------------------------------------------------------
+// 
 const PRIORITY_KEYS = ['socket', 'chipset', 'cores', 'threads', 'vram', 'capacity', 'frequency'];
 
 /** Сравнение ключей: приоритетные — в начале, остальные — по алфавиту */
@@ -44,9 +44,9 @@ function compareSpecKeys(a: string, b: string): number {
   return a.localeCompare(b);
 }
 
-// ---------------------------------------------------------------------------
+// 
 // Вспомогательные функции
-// ---------------------------------------------------------------------------
+// 
 function removeKey(
   record: Record<string, string | number | boolean>,
   targetKey: string,
@@ -68,9 +68,9 @@ function getSpecValue(
   return String(v);
 }
 
-// ---------------------------------------------------------------------------
+// 
 // Определение типа для характеристик без мета-данных
-// ---------------------------------------------------------------------------
+// 
 
 /** Проверяет, является ли строка числом */
 function isNumericValue(val: string): boolean {
@@ -105,10 +105,10 @@ function parseNumberWithUnit(value: string): { number: string; unit: string } | 
   return { number: match[1].replace(',', '.'), unit: match[2].trim() };
 }
 
-// ---------------------------------------------------------------------------
-// ---------------------------------------------------------------------------
+// 
+// 
 // Обёртка для select с иконкой стрелки вниз
-// ---------------------------------------------------------------------------
+// 
 function SelectWrapper({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={`relative ${className}`}>
@@ -233,7 +233,7 @@ function CreatableSelect({
 }
 
 // Единое представление строки характеристики
-// ---------------------------------------------------------------------------
+// 
 interface SpecEntry {
   key: string;
   label: string;
@@ -248,9 +248,9 @@ interface SpecEntry {
   uniqueValues?: string[];
 }
 
-// ---------------------------------------------------------------------------
+// 
 // Input компоненты для разных типов
-// ---------------------------------------------------------------------------
+// 
 
 /** Числовой input с единицей измерения */
 function NumberSpecInput({
@@ -563,9 +563,9 @@ function UniqueValueSelect({
   );
 }
 
-// ---------------------------------------------------------------------------
+// 
 // GroupSection — группа характеристик
-// ---------------------------------------------------------------------------
+// 
 function GroupSection({
   groupName,
   entries,
@@ -657,9 +657,9 @@ function GroupSection({
   );
 }
 
-// ---------------------------------------------------------------------------
+// 
 // AddSpecDropdown — кнопка «Добавить характеристику» с выпадающим списком
-// ---------------------------------------------------------------------------
+// 
 function AddSpecDropdown({
   specMeta,
   currentKeys,
@@ -819,9 +819,9 @@ function AddSpecDropdown({
   );
 }
 
-// ---------------------------------------------------------------------------
+// 
 // Компонент
-// ---------------------------------------------------------------------------
+// 
 export function SpecificationsTab({ form, onChange }: SpecificationsTabProps) {
   const [specMeta, setSpecMeta] = useState<SpecificationAttributeDto[]>([]);
   const [loadingMeta, setLoadingMeta] = useState(false);

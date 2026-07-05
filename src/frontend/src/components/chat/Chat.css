@@ -1,7 +1,7 @@
-/* ========== Shared Chat Styles ========== */
+/* Shared Chat Styles ========== */
 /* Used by both my-repairs and master TicketDetailPage */
 
-/* ---------- Chat Message Bubbles ---------- */
+/* Chat Message Bubbles ---------- */
 .chat-message {
   display: flex;
   flex-direction: column;
@@ -159,7 +159,7 @@
   color: var(--color-gold, #FCD535);
 }
 
-/* ---------- Chat Input ---------- */
+/* Chat Поле ввода ---------- */
 .chat-input {
   display: flex;
   flex-direction: column;
@@ -180,7 +180,7 @@
   gap: 8px;
 }
 
-/* Input wrapper div (from shared Input component) fills remaining width and centers input vertically */
+/* Поле ввода обёртка div (from shared Поле ввода component) fills remaining width and centers input vertically */
 .chat-input__row > div:first-child {
   flex: 1;
   min-width: 0;
@@ -267,7 +267,7 @@
   flex-shrink: 0;
 }
 
-/* ---------- Typing Indicator ---------- */
+/* Typing Indicator ---------- */
 .typing-indicator {
   display: flex;
   align-items: center;

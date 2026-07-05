@@ -1,11 +1,11 @@
 /**
- * PCBuilderPage.css — Layout for the PC Builder page
+ * PCBuilderPage.css — Макет for the PC Builder страница
  *
  * Design System: Dark canvas, gold accents, 8/4 split layout
  * Spacing follows the 4px system (sm=12, md=16, lg=24, xl=32, xxl=48)
  */
 
-/* ===== Page Container ===== */
+/* Страница Container ===== */
 .pc-builder {
   background: var(--bg-secondary, #0b0e11);
   min-height: 100%;
@@ -16,12 +16,12 @@
   padding-bottom: var(--spacing-xxl, 48px);
 }
 
-/* ===== Breadcrumbs ===== */
+/* Breadcrumbs ===== */
 .pc-builder__breadcrumb {
   margin-bottom: var(--spacing-lg, 24px);
 }
 
-/* ===== Page Title ===== */
+/* Страница Title ===== */
 .pc-builder__page-title {
   font-family: var(--font-sans);
   font-size: 1.75rem;
@@ -32,12 +32,12 @@
   margin: 0 0 var(--spacing-xl, 32px) 0;
 }
 
-/* ===== Main Layout ===== */
+/* Main Макет ===== */
 .pc-builder__main {
   width: 100%;
 }
 
-/* ===== Two-column Grid ===== */
+/* Two-column Grid ===== */
 .pc-builder__content {
   display: grid;
   grid-template-columns: 1fr 360px;
@@ -45,7 +45,7 @@
   align-items: start;
 }
 
-/* ===== Left Column (Slots) ===== */
+/* Left Column (Slots) ===== */
 .pc-builder__left {
   display: flex;
   flex-direction: column;
@@ -53,7 +53,7 @@
   min-width: 0;
 }
 
-/* ===== Slot Group Label ===== */
+/* Slot Group Метка ===== */
 .pc-builder__group-label {
   font-family: var(--font-sans);
   font-size: 0.8rem;
@@ -66,7 +66,7 @@
   padding-left: var(--spacing-xs, 8px);
 }
 
-/* ===== Section Headers ===== */
+/* Section Headers ===== */
 .pc-builder__section-header {
   margin-top: 0;
 }
@@ -90,20 +90,20 @@
   color: var(--fg-muted, #707a8a);
 }
 
-/* ===== Slots Container ===== */
+/* Slots Контейнер ===== */
 .pc-builder__slots {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm, 12px);
 }
 
-/* ===== Right Column (Summary Panel) ===== */
+/* Right Column (Summary Панель) ===== */
 .pc-builder__right {
   position: sticky;
   top: var(--spacing-lg, 24px);
 }
 
-/* ===== Peripherals Toggle ===== */
+/* Peripherals Toggle ===== */
 .pc-builder__periph-toggle {
   display: inline-flex;
   align-items: center;
@@ -133,7 +133,7 @@
   }
 }
 
-/* ===== Mobile Bottom Bar ===== */
+/* Мобильные Bottom Bar ===== */
 .pc-builder__mobile-bar {
   display: none;
 }
@@ -227,7 +227,7 @@
   }
 }
 
-/* ===== Responsive ===== */
+/* Responsive ===== */
 @media (max-width: 1024px) {
   .pc-builder__content {
     grid-template-columns: 1fr;

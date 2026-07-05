@@ -16,13 +16,13 @@ export type CardVariant = 'default' | 'category' | 'product' | 'elevated';
 export type CardAs = 'article' | 'div' | 'section';
 
 export interface CardProps {
-  /** Card variant for different use cases */
+  /** Карточка variant for different use cases */
   variant?: CardVariant;
-  /** Card content */
+  /** Карточка content */
   children: ReactNode;
   /** Optional icon (for category cards) */
   icon?: ReactElement<LucideIcon>;
-  /** Card title */
+  /** Карточка title */
   title?: string;
   /** Optional badge text */
   badge?: string;
@@ -30,15 +30,15 @@ export interface CardProps {
   hoverable?: boolean;
   /** HTML element to render as */
   as?: CardAs;
-  /** Additional CSS class */
+  /** Дополнительный CSS class */
   className?: string;
   /** Click handler */
   onClick?: () => void;
 }
 
 /**
- * Generic Card component - dark background with thin border
- * Supports category and product card variants from prototypes/home.html
+ * Generic Карточка component - dark background with thin border
+ * Supports category and product карточка variants from prototypes/home.html
  */
 export function Card({
   variant = 'default',
@@ -87,7 +87,7 @@ export function Card({
   );
 }
 
-// ===== SUBCOMPONENTS =====
+// SUBCOMPONENTS =====
 
 export interface CardBodyProps extends React.HTMLAttributes<HTMLDivElement> {
   children: ReactNode;

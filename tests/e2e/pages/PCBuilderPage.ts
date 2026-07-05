@@ -139,7 +139,7 @@ export class PCBuilderPage {
     if (index < count) {
       await cards.nth(index).click();
     } else {
-      // Fallback: кликаем по кнопке "Выбрать"
+      // Запасной вариант: кликаем по кнопке "Выбрать"
       const selectBtn = modal.locator('button:has-text("Выбрать")').nth(index);
       await selectBtn.click();
     }

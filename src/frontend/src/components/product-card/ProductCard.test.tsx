@@ -8,7 +8,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ProductCard } from './ProductCard';
 import type { ProductSummary } from '../../api/types';
 
-// Create a custom render function that wraps with required providers
+// Создаёт a произвольный render function that wraps with required providers
 function renderWithProviders(ui: React.ReactElement, options?: RenderOptions) {
   const queryClient = new QueryClient({
     defaultOptions: {

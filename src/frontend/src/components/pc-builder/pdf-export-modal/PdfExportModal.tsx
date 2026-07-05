@@ -30,7 +30,7 @@ export interface PdfExportModalProps {
   compatibilityWarnings: string[];
 }
 
-/* ---------- helpers ---------- */
+/* helpers ---------- */
 
 function computePerformance(s: PCBuilderSelectedState) {
   const cpu = s.cpu?.product ?? null;
@@ -78,7 +78,7 @@ function esc(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-/* ---------- component rows ---------- */
+/* component rows ---------- */
 
 type Row = { category: string; name: string; price: string; imageUrl: string };
 
@@ -109,7 +109,7 @@ function getRows(s: PCBuilderSelectedState): Row[] {
   return rows;
 }
 
-/* ---------- build HTML for canvas ---------- */
+/* build HTML for canvas ---------- */
 
 function buildHtml(props: PdfExportModalProps, imageMap: Record<string, string>): string {
   const { selectedComponents: s, totalPrice, powerConsumption, recommendedPsu, isCompatible, compatibilityErrors, compatibilityWarnings } = props;
@@ -157,7 +157,7 @@ function buildHtml(props: PdfExportModalProps, imageMap: Record<string, string>)
     + '</div>';
 }
 
-/* ---------- PDF generation ---------- */
+/* PDF generation ---------- */
 
 async function generatePdf(props: PdfExportModalProps): Promise<Blob> {
   const rows = getRows(props.selectedComponents);
@@ -196,7 +196,7 @@ async function generatePdf(props: PdfExportModalProps): Promise<Blob> {
   }
 }
 
-/* ---------- component ---------- */
+/* component ---------- */
 
 export function PdfExportModal({
   isOpen, onClose, selectedComponents, totalPrice, powerConsumption,

@@ -161,7 +161,7 @@ function HeroBackground() {
   );
 }
 
-// ─── Stat Card (Trust Band) ────────────────────────────────────────
+// ─── Stat Карточка (Trust Band) ────────────────────────────────────────
 interface StatCardProps {
   icon: React.ReactNode;
   value: string;
@@ -178,7 +178,7 @@ function StatCard({ icon, value, label }: StatCardProps) {
   );
 }
 
-// ─── Category Card ─────────────────────────────────────────────────
+// ─── Category Карточка ─────────────────────────────────────────────────
 interface CategoryCardProps {
   Icon: LucideIcon;
   name: string;

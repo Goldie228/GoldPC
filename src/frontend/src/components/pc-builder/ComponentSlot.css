@@ -1,5 +1,5 @@
 /**
- * ComponentSlot.css - PC Builder Component Slot Styles
+ * ComponentSlot.css - PC Builder Компонент Slot Styles
  * States: empty (как карточка каталога), selected (gold), incompatible (red)
  * Features: 64x64 thumbnail white frame, StatusBadge, 0.3s transitions, CPU/GPU 120%
  */
@@ -19,14 +19,14 @@
   transform: translateY(-1px);
 }
 
-/* ===== PRIORITY (CPU/GPU 120%) ===== */
+/* PRIORITY (CPU/GPU 120%) ===== */
 .component-slot--priority { padding: var(--spacing-xl, 32px); }
 .component-slot--priority .component-slot__icon { width: 56px; height: 56px; }
 .component-slot--priority .component-slot__name { font-size: 1.05rem; }
 .component-slot--priority .component-slot__price-value { font-size: 1.1rem; }
 .component-slot--priority:hover { transform: translateY(-1px); }
 
-/* ===== INNER ===== */
+/* INNER ===== */
 .component-slot__inner {
   display: flex;
   align-items: center;
@@ -48,7 +48,7 @@
   transform: translateY(-2px);
 }
 
-/* ===== SELECTED (gold) ===== */
+/* SELECTED (gold) ===== */
 .component-slot--selected {
   border-color: var(--border-accent);
   background: var(--bg-card, #1e2329);
@@ -60,7 +60,7 @@
 }
 .component-slot--selected:hover { border-color: var(--accent, #FCD535); }
 
-/* ===== INCOMPATIBLE (red) ===== */
+/* INCOMPATIBLE (red) ===== */
 .component-slot--incompatible {
   border-color: rgba(248, 113, 113, 0.3);
   background: var(--bg-card, #1e2329);
@@ -72,7 +72,7 @@
 }
 .component-slot--incompatible:hover { border-color: #f87171; }
 
-/* ===== ICON ===== */
+/* ICON ===== */
 .component-slot__icon {
   width: 56px; height: 56px;
   display: flex; align-items: center; justify-content: center;
@@ -128,7 +128,7 @@
   padding: 12px;
 }
 
-/* ===== INFO ===== */
+/* INFO ===== */
 .component-slot__info {
   flex: 1;
   min-width: 0;
@@ -147,7 +147,7 @@
   line-height: 1.2;
 }
 
-/* ===== QUANTITY SELECTOR ===== */
+/* QUANTITY SELECTOR ===== */
 .component-slot__qty {
   display: inline-flex;
   align-items: center;
@@ -202,7 +202,7 @@
   border-right: 1px solid var(--border-accent, rgba(252, 213, 53, 0.3));
 }
 
-/* ===== Actions ===== */
+/* Действия ===== */
 .component-slot__actions {
   display: inline-flex;
   align-items: stretch;
@@ -263,7 +263,7 @@
   font-weight: 400;
 }
 
-/* ===== SPECS ===== */
+/* SPECS ===== */
 .component-slot__specs {
   display: flex;
   flex-wrap: wrap;
@@ -286,7 +286,7 @@
   margin-right: var(--spacing-xxs, 4px);
 }
 
-/* ===== INLINE STATUS BADGE ===== */
+/* INLINE STATUS BADGE ===== */
 .component-slot__status-badge {
   display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 10px;
   background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2);
@@ -312,7 +312,7 @@
 }
 .component-slot__warning svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-/* ===== PRICE ===== */
+/* PRICE ===== */
 .component-slot__price {
   text-align: right;
   min-width: 110px;
@@ -334,7 +334,7 @@
   color: var(--fg-dim, #52525b);
 }
 
-/* ===== BUTTON ===== */
+/* BUTTON ===== */
 .component-slot__btn {
   display: inline-flex;
   align-items: center;
@@ -375,7 +375,7 @@
   border-color: rgba(252, 213, 53, 0.3);
 }
 
-/* ===== RESPONSIVE ===== */
+/* RESPONSIVE ===== */
 @media (max-width: 768px) {
   .component-slot { padding: 16px; }
   .component-slot__inner { flex-wrap: wrap; gap: 12px; }
@@ -411,7 +411,7 @@
   .component-slot--priority:hover { transform: translateY(-1px); }
 }
 
-/* ===== REDUCED MOTION ===== */
+/* REDUCED MOTION ===== */
 @media (prefers-reduced-motion: reduce) {
   .component-slot, .component-slot__icon, .component-slot__thumbnail img, .component-slot__btn, .component-slot__clear, .component-slot__status-badge {
     transition-duration: 0.01ms !important;
@@ -419,7 +419,7 @@
   .component-slot:hover, .component-slot--priority, .component-slot--priority:hover { transform: none; }
 }
 
-/* ===== TOOLTIP DESCRIPTION ===== */
+/* TOOLTIP DESCRIPTION ===== */
 .component-slot__tooltip {
   position: absolute;
   bottom: 100%;

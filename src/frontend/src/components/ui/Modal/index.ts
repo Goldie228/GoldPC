@@ -1,5 +1,5 @@
 /**
- * Modal Component Export
+ * Modal Компонент Export
  */
 
 export { Modal } from './Modal';

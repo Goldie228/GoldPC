@@ -66,7 +66,7 @@ export default function BuildResult({ build, onBack, isResolving }: BuildResultP
     }
   }, [build, navigate]);
 
-  // Loading skeleton while resolving
+  // Загрузка skeleton while resolving
   if (isResolving) {
     return (
       <div className="max-w-2xl mx-auto">

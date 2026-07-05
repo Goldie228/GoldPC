@@ -16,7 +16,7 @@ public class CatalogJsonImporterBackfillTests
     [Fact]
     public async Task BackfillMissingManufacturersAsync_WhenManufacturerMissing_AssignsAndCreatesManufacturer()
     {
-        // Arrange
+        // Подготовка
         await using var context = CreateContext();
 
         var categoryId = Guid.Parse("00000000-0000-0000-0000-00000000000c"); // mice
@@ -39,13 +39,13 @@ public class CatalogJsonImporterBackfillTests
 
         var importer = CreateImporter(context);
 
-        // Act
+        // Действие
         var result = await importer.BackfillMissingManufacturersAsync(batchSize: 1);
         var updated = await context.Products
             .Include(p => p.Manufacturer)
             .FirstAsync(p => p.Id == product.Id);
 
-        // Assert
+        // Проверка
         result.TotalCandidates.Should().Be(1);
         result.UpdatedProducts.Should().Be(1);
         updated.ManufacturerId.Should().NotBeNull();
@@ -56,7 +56,7 @@ public class CatalogJsonImporterBackfillTests
     [Fact]
     public async Task BackfillMissingManufacturersAsync_WhenNoBrandInName_SkipsProduct()
     {
-        // Arrange
+        // Подготовка
         await using var context = CreateContext();
 
         var categoryId = Guid.Parse("00000000-0000-0000-0000-000000000003"); // ram
@@ -79,11 +79,11 @@ public class CatalogJsonImporterBackfillTests
 
         var importer = CreateImporter(context);
 
-        // Act
+        // Действие
         var result = await importer.BackfillMissingManufacturersAsync(batchSize: 10);
         var updated = await context.Products.FirstAsync(p => p.Id == product.Id);
 
-        // Assert
+        // Проверка
         result.TotalCandidates.Should().Be(1);
         result.UpdatedProducts.Should().Be(0);
         result.Skipped.Should().Be(1);

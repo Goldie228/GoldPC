@@ -83,7 +83,7 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task CreateConfigurationAsync_ValidBuild_ReturnsId()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var context = CreateInMemoryContext();
         var service = CreateService(context);
@@ -96,10 +96,10 @@ public class ConfigurationServiceTests
             ProcessorId = Guid.NewGuid()
         };
 
-        // Act
+        // Действие
         var result = await service.SaveConfigurationAsync(config);
 
-        // Assert
+        // Проверка
         result.Id.Should().NotBe(Guid.Empty, "new config should have an assigned ID");
         result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5),
             "CreatedAt should be set on creation");
@@ -113,7 +113,7 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task SaveConfigurationAsync_ExistingConfig_UpdatesIt()
     {
-        // Arrange
+        // Подготовка
         var context = CreateInMemoryContext();
         var service = CreateService(context);
 
@@ -121,11 +121,11 @@ public class ConfigurationServiceTests
         await context.PCConfigurations.AddAsync(original);
         await context.SaveChangesAsync();
 
-        // Act
+        // Действие
         original.Name = "Updated Name";
         var result = await service.SaveConfigurationAsync(original);
 
-        // Assert
+        // Проверка
         result.Id.Should().Be(original.Id, "ID should remain the same");
         result.Name.Should().Be("Updated Name");
         result.UpdatedAt.Should().NotBeNull("UpdatedAt should be set on update");
@@ -141,7 +141,7 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task GetConfigurationAsync_ExistingConfig_ReturnsConfig()
     {
-        // Arrange
+        // Подготовка
         var context = CreateInMemoryContext();
         var service = CreateService(context);
 
@@ -149,10 +149,10 @@ public class ConfigurationServiceTests
         await context.PCConfigurations.AddAsync(expected);
         await context.SaveChangesAsync();
 
-        // Act
+        // Действие
         var result = await service.GetConfigurationAsync(expected.Id);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result!.Id.Should().Be(expected.Id);
         result.Name.Should().Be("Test Build");
@@ -165,15 +165,15 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task GetConfigurationAsync_Nonexistent_ReturnsNull()
     {
-        // Arrange
+        // Подготовка
         var context = CreateInMemoryContext();
         var service = CreateService(context);
         var nonExistentId = Guid.NewGuid();
 
-        // Act
+        // Действие
         var result = await service.GetConfigurationAsync(nonExistentId);
 
-        // Assert
+        // Проверка
         result.Should().BeNull("configuration with non-existent ID should not be found");
     }
 
@@ -189,7 +189,7 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task DeleteConfigurationAsync_Exists_ReturnsTrue()
     {
-        // Arrange
+        // Подготовка
         var context = CreateInMemoryContext();
         var service = CreateService(context);
 
@@ -197,10 +197,10 @@ public class ConfigurationServiceTests
         await context.PCConfigurations.AddAsync(config);
         await context.SaveChangesAsync();
 
-        // Act
+        // Действие
         var result = await service.DeleteConfigurationAsync(config.Id);
 
-        // Assert
+        // Проверка
         result.Should().BeTrue("deleting an existing config should return true");
         var deleted = await context.PCConfigurations.FindAsync(config.Id);
         deleted.Should().BeNull("config should be removed from database");
@@ -212,14 +212,14 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task DeleteConfigurationAsync_Nonexistent_ReturnsFalse()
     {
-        // Arrange
+        // Подготовка
         var context = CreateInMemoryContext();
         var service = CreateService(context);
 
-        // Act
+        // Действие
         var result = await service.DeleteConfigurationAsync(Guid.NewGuid());
 
-        // Assert
+        // Проверка
         result.Should().BeFalse("deleting a non-existent config should return false");
     }
 
@@ -234,7 +234,7 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task GetUserConfigurationsAsync_ReturnsConfigsForUser()
     {
-        // Arrange
+        // Подготовка
         var context = CreateInMemoryContext();
         var service = CreateService(context);
 
@@ -255,11 +255,11 @@ public class ConfigurationServiceTests
         await context.PCConfigurations.AddRangeAsync(configA1, configA2, configB1);
         await context.SaveChangesAsync();
 
-        // Act
+        // Действие
         var results = await service.GetUserConfigurationsAsync(userA);
         var list = results.ToList();
 
-        // Assert
+        // Проверка
         list.Should().HaveCount(2, "user A should have exactly 2 configurations");
         list.Should().NotContain(c => c.Name == "UserB Config 1",
             "user A should not see user B's configs");
@@ -273,14 +273,14 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task GetUserConfigurationsAsync_NoConfigs_ReturnsEmptyList()
     {
-        // Arrange
+        // Подготовка
         var context = CreateInMemoryContext();
         var service = CreateService(context);
 
-        // Act
+        // Действие
         var results = await service.GetUserConfigurationsAsync(Guid.NewGuid());
 
-        // Assert
+        // Проверка
         results.Should().BeEmpty();
     }
 
@@ -294,7 +294,7 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task GenerateShareTokenAsync_CreatesToken_ReturnsNonNull()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var context = CreateInMemoryContext();
         var service = CreateService(context);
@@ -303,10 +303,10 @@ public class ConfigurationServiceTests
         await context.PCConfigurations.AddAsync(config);
         await context.SaveChangesAsync();
 
-        // Act
+        // Действие
         var token = await service.GenerateShareTokenAsync(config.Id, userId);
 
-        // Assert
+        // Проверка
         token.Should().NotBeNull("share token should be generated");
         token.Should().NotBeEmpty();
         token.Should().NotBe(" ", "share token should not be whitespace");
@@ -318,14 +318,14 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task GenerateShareTokenAsync_NonexistentConfig_ReturnsNull()
     {
-        // Arrange
+        // Подготовка
         var context = CreateInMemoryContext();
         var service = CreateService(context);
 
-        // Act
+        // Действие
         var token = await service.GenerateShareTokenAsync(Guid.NewGuid(), Guid.NewGuid());
 
-        // Assert
+        // Проверка
         token.Should().BeNull("non-existent config should yield null token");
     }
 
@@ -335,7 +335,7 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task GenerateShareTokenAsync_OtherUser_ReturnsNull()
     {
-        // Arrange
+        // Подготовка
         var ownerId = Guid.NewGuid();
         var otherId = Guid.NewGuid();
         var context = CreateInMemoryContext();
@@ -345,10 +345,10 @@ public class ConfigurationServiceTests
         await context.PCConfigurations.AddAsync(config);
         await context.SaveChangesAsync();
 
-        // Act
+        // Действие
         var token = await service.GenerateShareTokenAsync(config.Id, otherId);
 
-        // Assert
+        // Проверка
         token.Should().BeNull("other user should not be able to generate share token");
     }
 
@@ -358,7 +358,7 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task GenerateShareTokenAsync_Idempotent_ReturnsSameToken()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var context = CreateInMemoryContext();
         var service = CreateService(context);
@@ -367,11 +367,11 @@ public class ConfigurationServiceTests
         await context.PCConfigurations.AddAsync(config);
         await context.SaveChangesAsync();
 
-        // Act
+        // Действие
         var token1 = await service.GenerateShareTokenAsync(config.Id, userId);
         var token2 = await service.GenerateShareTokenAsync(config.Id, userId);
 
-        // Assert
+        // Проверка
         token1.Should().Be(token2, "subsequent calls should return the same token");
     }
 
@@ -381,7 +381,7 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task GetConfigurationByShareTokenAsync_ValidToken_ReturnsConfig()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var context = CreateInMemoryContext();
         var service = CreateService(context);
@@ -392,10 +392,10 @@ public class ConfigurationServiceTests
 
         var token = await service.GenerateShareTokenAsync(config.Id, userId);
 
-        // Act
+        // Действие
         var result = await service.GetConfigurationByShareTokenAsync(token!);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result!.Id.Should().Be(config.Id);
     }
@@ -406,14 +406,14 @@ public class ConfigurationServiceTests
     [Fact]
     public async Task GetConfigurationByShareTokenAsync_EmptToken_ReturnsNull()
     {
-        // Arrange
+        // Подготовка
         var context = CreateInMemoryContext();
         var service = CreateService(context);
 
-        // Act
+        // Действие
         var result = await service.GetConfigurationByShareTokenAsync(string.Empty);
 
-        // Assert
+        // Проверка
         result.Should().BeNull("empty token should return null");
     }
 

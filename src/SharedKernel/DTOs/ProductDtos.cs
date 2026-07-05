@@ -34,25 +34,25 @@ public record ProductListDto
 
     public bool IsActive { get; init; }
 
-    /// <summary>Gets краткое описание для QuickView (первые 300 символов)</summary>
+    /// <summary>Получает краткое описание для QuickView (первые 300 символов)</summary>
     public string? DescriptionShort { get; init; }
 
-    /// <summary>Gets сокет процессора (для проверки совместимости CPU/Motherboard)</summary>
+    /// <summary>Получает сокет процессора (для проверки совместимости CPU/Motherboard)</summary>
     public string? Socket { get; init; }
 
-    /// <summary>Gets тип оперативной памяти (для проверки совместимости Motherboard/RAM)</summary>
+    /// <summary>Получает тип оперативной памяти (для проверки совместимости Motherboard/RAM)</summary>
     public string? MemoryType { get; init; }
 
-    /// <summary>Gets форм-фактор оперативной памяти (DIMM/SO-DIMM)</summary>
+    /// <summary>Получает форм-фактор оперативной памяти (DIMM/SO-DIMM)</summary>
     public string? MemoryFormFactor { get; init; }
 
-    /// <summary>Gets тепловыделение процессора в ваттах (для проверки совместимости с кулером)</summary>
+    /// <summary>Получает тепловыделение процессора в ваттах (для проверки совместимости с кулером)</summary>
     public int? Tdp { get; init; }
 
-    /// <summary>Gets мощность блока питания в ваттах (для проверки совместимости PSU/system)</summary>
+    /// <summary>Получает мощность блока питания в ваттах (для проверки совместимости PSU/system)</summary>
     public int? Wattage { get; init; }
 
-    /// <summary>Gets список изображений товара (для галереи в карточке)</summary>
+    /// <summary>Получает список изображений товара (для галереи в карточке)</summary>
     public List<ProductImageDto> Images { get; init; } = new();
 }
 
@@ -119,7 +119,7 @@ public record ProductDetailDto
 
     public DateTime? UpdatedAt { get; init; }
 
-    /// <summary>Gets a value indicating whether the category was auto-detected.</summary>
+    /// <summary>Получает значение, указывающее, была ли категория определена автоматически.</summary>
     public bool IsCategoryAutoDetected { get; init; }
 }
 
@@ -134,10 +134,10 @@ public record CreateProductDto
 
     public string? Slug { get; init; }
 
-    /// <summary>Gets категория товара (slug или название)</summary>
+    /// <summary>Получает категория товара (slug или название)</summary>
     public string Category { get; init; } = string.Empty;
 
-    /// <summary>Gets iD категории (для внутреннего использования)</summary>
+    /// <summary>Получает iD категории (для внутреннего использования)</summary>
     public Guid? CategoryId { get; init; }
 
     public Guid? ManufacturerId { get; init; }
@@ -326,42 +326,42 @@ public record UpdateReviewDto
 /// </summary>
 public record ProductFilterDto
 {
-    /// <summary>Gets фильтр по категории (slug или название)</summary>
+    /// <summary>Получает фильтр по категории (slug или название)</summary>
     public string? Category { get; init; }
 
-    /// <summary>Gets фильтр по ID категории (для внутренней фильтрации)</summary>
+    /// <summary>Получает фильтр по ID категории (для внутренней фильтрации)</summary>
     public Guid? CategoryId { get; init; }
 
-    /// <summary>Gets фильтр по ID производителя (один)</summary>
+    /// <summary>Получает фильтр по ID производителя (один)</summary>
     public Guid? ManufacturerId { get; init; }
 
-    /// <summary>Gets фильтр по списку ID производителей (несколько)</summary>
+    /// <summary>Получает фильтр по списку ID производителей (несколько)</summary>
     public IEnumerable<Guid>? ManufacturerIds { get; init; }
 
-    /// <summary>Gets минимальная цена (query: priceMin)</summary>
+    /// <summary>Получает минимальная цена (query: priceMin)</summary>
     [FromQuery(Name = "priceMin")]
     public decimal? MinPrice { get; init; }
 
-    /// <summary>Gets максимальная цена (query: priceMax)</summary>
+    /// <summary>Получает максимальная цена (query: priceMax)</summary>
     [FromQuery(Name = "priceMax")]
     public decimal? MaxPrice { get; init; }
 
-    /// <summary>Gets только в наличии</summary>
+    /// <summary>Получает только в наличии</summary>
     public bool? InStock { get; init; }
 
-    /// <summary>Gets только рекомендуемые</summary>
+    /// <summary>Получает только рекомендуемые</summary>
     public bool? IsFeatured { get; init; }
 
-    /// <summary>Gets фильтр по активности товара (true — активные, false — неактивные, null — все)</summary>
+    /// <summary>Получает фильтр по активности товара (true — активные, false — неактивные, null — все)</summary>
     public bool? IsActive { get; init; }
 
-    /// <summary>Gets поиск по названию и описанию</summary>
+    /// <summary>Получает поиск по названию и описанию</summary>
     public string? Search { get; init; }
 
-    /// <summary>Gets фильтр по спецификациям (ключ → значение для JSONB containment, select)</summary>
+    /// <summary>Получает фильтр по спецификациям (ключ → значение для JSONB containment, select)</summary>
     public Dictionary<string, string>? Specifications { get; init; }
 
-    /// <summary>Gets диапазоны для range-атрибутов: ключ → "min,max" (например "8,16")</summary>
+    /// <summary>Получает диапазоны для range-атрибутов: ключ → "min,max" (например "8,16")</summary>
     public Dictionary<string, string>? SpecificationRanges { get; init; }
 
     // Пагинация
@@ -386,7 +386,7 @@ public record FilterAttributesQueryDto
 
     public Dictionary<string, string>? SpecificationRanges { get; init; }
 
-    /// <summary>Gets the in-stock filter flag used to align facets with product results.</summary>
+    /// <summary>Получает флаг фильтра "в наличии", используемый для согласования фасетов с результатами товаров.</summary>
     public bool? InStock { get; init; }
 }
 
@@ -403,13 +403,13 @@ public record FilterAttributeDto
 
     public int SortOrder { get; init; }
 
-    /// <summary>Gets уникальные значения для select-фильтра (из товаров категории)</summary>
+    /// <summary>Получает уникальные значения для select-фильтра (из товаров категории)</summary>
     public List<string> Values { get; init; } = new();
 
-    /// <summary>Gets мин. значение для range-фильтра (из товаров категории)</summary>
+    /// <summary>Получает мин. значение для range-фильтра (из товаров категории)</summary>
     public decimal? MinValue { get; init; }
 
-    /// <summary>Gets макс. значение для range-фильтра</summary>
+    /// <summary>Получает макс. значение для range-фильтра</summary>
     public decimal? MaxValue { get; init; }
 }
 
@@ -504,13 +504,13 @@ public record PriceHistoryDto
 /// </summary>
 public record GenerateNameRequest
 {
-    /// <summary>Gets название производителя</summary>
+    /// <summary>Получает название производителя</summary>
     public string? ManufacturerName { get; init; }
 
-    /// <summary>Gets slug категории</summary>
+    /// <summary>Получает slug категории</summary>
     public string? CategorySlug { get; init; }
 
-    /// <summary>Gets характеристики товара</summary>
+    /// <summary>Получает характеристики товара</summary>
     public Dictionary<string, object>? Specifications { get; init; }
 }
 
@@ -519,7 +519,7 @@ public record GenerateNameRequest
 /// </summary>
 public record GenerateNameResponse
 {
-    /// <summary>Gets сгенерированное название</summary>
+    /// <summary>Получает сгенерированное название</summary>
     public string Name { get; init; } = string.Empty;
 }
 
@@ -528,43 +528,43 @@ public record GenerateNameResponse
 /// </summary>
 public record SpecificationAttributeDto
 {
-    /// <summary>Gets the attribute identifier.</summary>
+    /// <summary>Получает идентификатор атрибута.</summary>
     public Guid Id { get; init; }
 
-    /// <summary>Gets the attribute key (socket, cores, frequency...).</summary>
+    /// <summary>Получает ключ атрибута (socket, cores, frequency...).</summary>
     public string Key { get; init; } = string.Empty;
 
-    /// <summary>Gets the display name of the attribute ("Socket", "Core Count").</summary>
+    /// <summary>Получает отображаемое имя атрибута ("Socket", "Core Count").</summary>
     public string DisplayName { get; init; } = string.Empty;
 
-    /// <summary>Gets the value type: "select" or "range".</summary>
+    /// <summary>Получает тип значения: "select" или "range".</summary>
     public string ValueType { get; init; } = "select";
 
-    /// <summary>Gets a value indicating whether the attribute supports multiple values.</summary>
+    /// <summary>Получает значение, указывающее, поддерживает ли атрибут множественные значения.</summary>
     public bool IsMultiValue { get; init; }
 
-    /// <summary>Gets the unit of measurement (MHz, GB, mm, Ohm...).</summary>
+    /// <summary>Получает единица измерения (MHz, GB, mm, Ohm...).</summary>
     public string? Unit { get; init; }
 
-    /// <summary>Gets the group name for grouping attributes.</summary>
+    /// <summary>Получает имя группы для группировки атрибутов.</summary>
     public string? GroupName { get; init; }
 
-    /// <summary>Gets the sort order of the attribute.</summary>
+    /// <summary>Получает порядок сортировки атрибута.</summary>
     public int SortOrder { get; init; }
 
-    /// <summary>Gets the minimum allowed value for range attributes.</summary>
+    /// <summary>Получает минимальное допустимое значение для range-атрибутов.</summary>
     public decimal? ValidationMin { get; init; }
 
-    /// <summary>Gets the maximum allowed value for range attributes.</summary>
+    /// <summary>Получает максимальное допустимое значение для range-атрибутов.</summary>
     public decimal? ValidationMax { get; init; }
 
-    /// <summary>Gets the step increment for range attributes.</summary>
+    /// <summary>Получает шаг изменения для range-атрибутов.</summary>
     public decimal? ValidationStep { get; init; }
 
-    /// <summary>Gets a value indicating whether the attribute is required.</summary>
+    /// <summary>Получает значение, указывающее, является ли атрибут обязательным.</summary>
     public bool IsRequired { get; init; }
 
-    /// <summary>Gets the list of available options for select attributes.</summary>
+    /// <summary>Получает список доступных опций для select-атрибутов.</summary>
     public List<string> Options { get; init; } = new();
 }
 
@@ -573,13 +573,13 @@ public record SpecificationAttributeDto
 /// </summary>
 public record CategorySpecificationsDto
 {
-    /// <summary>Gets the category identifier.</summary>
+    /// <summary>Получает идентификатор категории.</summary>
     public Guid CategoryId { get; init; }
 
-    /// <summary>Gets the category name.</summary>
+    /// <summary>Получает название категории.</summary>
     public string CategoryName { get; init; } = string.Empty;
 
-    /// <summary>Gets the list of specification attributes for the category.</summary>
+    /// <summary>Получает список атрибутов спецификаций для категории.</summary>
     public List<SpecificationAttributeDto> Attributes { get; init; } = new();
 }
 #pragma warning restore CA1002, CA1056, CA1805, CS1591, SA1402, SA1600, SA1649

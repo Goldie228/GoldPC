@@ -14,7 +14,7 @@ export default function CourierDeliveriesPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   // TODO: Backend has a dedicated GetCourierDeliveriesAsync endpoint.
-  // The generated API client doesn't expose it yet — using getAllServiceRequests + client-side filter for now.
+  // The generated API client doesn't expose it yet — using getAllServiceRequests + client-side фильтр for now.
   const fetchDeliveries = useCallback(async () => {
     setLoading(true);
     setError(null);

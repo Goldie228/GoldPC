@@ -42,7 +42,7 @@ export function ProductImageViewerModal({
   const [zoom, setZoom] = useState(1);
   const [origin, setOrigin] = useState({ x: 50, y: 50 });
 
-  // Mobile pinch state
+  // Мобильные pinch state
   const pointersRef = useRef<Map<number, Point>>(new Map());
   const pinchRef = useRef<{
     startDist: number;
@@ -90,14 +90,14 @@ export function ProductImageViewerModal({
     return () => window.removeEventListener('keydown', onKey);
   }, [handlePrev, handleNext, onClose]);
 
-  // Desktop zoom toggle on click
+  // Десктоп zoom toggle on click
   const handleImageClick = useCallback(() => {
     if (isMobile) return;
     setZoom((v) => (v === 1 ? 2.5 : 1));
     if (zoom !== 1) setPan({ x: 0, y: 0 });
   }, [isMobile, zoom]);
 
-  // Desktop mouse move for zoom origin
+  // Десктоп mouse move for zoom origin
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (zoom === 1) return;
     const rect = e.currentTarget.getBoundingClientRect();
@@ -106,7 +106,7 @@ export function ProductImageViewerModal({
     setOrigin({ x: clamp(x, 0, 100), y: clamp(y, 0, 100) });
   }, [zoom]);
 
-  // Mobile touch handlers
+  // Мобильные touch handlers
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (!isMobile || !active?.url) return;
     const el = e.currentTarget;

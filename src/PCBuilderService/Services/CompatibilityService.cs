@@ -108,11 +108,11 @@ public class CompatibilityService : ICompatibilityService
         };
     }
 
-    #region BUG-14: Compatible component lookups
+    #region BUG-14: Поиск совместимых компонентов
 
     public async Task<IEnumerable<Guid>> GetCompatibleMotherboardsAsync(Guid processorId)
     {
-        // 1. Try explicit compatibility rules first
+        // 1. Сначала пробуем явные правила совместимости
         var ruleBased = await _dbContext.CompatibilityRules
             .Where(r => r.RuleType == "cpu_motherboard" && r.IsCompatible)
             .Where(r => r.Component1Id == processorId || r.Component2Id == processorId)
@@ -122,7 +122,7 @@ public class CompatibilityService : ICompatibilityService
         if (ruleBased.Count > 0)
             return ruleBased;
 
-        // 2. Fallback: find processor socket from any rule that mentions it, then match motherboards by socket
+        // 2. Запасной вариант: найти сокет процессора из любого правила, затем найти материнские платы по сокету
         var processorSocket = await _dbContext.CompatibilityRules
             .Where(r => (r.Component1Id == processorId || r.Component2Id == processorId) && r.Socket != null)
             .Select(r => r.Socket)
@@ -131,7 +131,7 @@ public class CompatibilityService : ICompatibilityService
         if (string.IsNullOrEmpty(processorSocket))
             return ruleBased;
 
-        _logger.LogInformation("No cpu_motherboard rules for {ProcessorId}, falling back to socket match: {Socket}", processorId, processorSocket);
+        _logger.LogInformation("Нет правил cpu_motherboard для {ProcessorId}, используем запасной вариант по сокету: {Socket}", processorId, processorSocket);
 
         var socketBased = await _dbContext.CompatibilityRules
             .Where(r => r.Socket == processorSocket && r.IsCompatible)
@@ -172,19 +172,19 @@ public class CompatibilityService : ICompatibilityService
     #endregion
 
     /// <summary>
-    /// Detects RAM type from chipset name.
-    /// B250/B350/H110/H310 → DDR4, B660/H670/Z690 → DDR4 or DDR5, B760/Z790 → DDR5
+    /// Определяет тип RAM по имени чипсета.
+    /// B250/B350/H110/H310 → DDR4, B660/H670/Z690 → DDR4 или DDR5, B760/Z790 → DDR5
     /// </summary>
     private static string? DetectRamTypeFromChipset(string chipset)
     {
         if (string.IsNullOrWhiteSpace(chipset)) return null;
         var upper = chipset.ToUpperInvariant();
 
-        // DDR5 chipsets
+        // DDR5 чипсеты
         if (System.Text.RegularExpressions.Regex.IsMatch(upper, @"^(B760|H770|Z790|B860|H870|Z890|X670|B650|X870)"))
             return "DDR5";
 
-        // DDR4 chipsets (includes B660/Z690/H670 which can be DDR4 or DDR5 — default DDR4)
+        // DDR4 чипсеты (включает B660/Z690/H670 которые могут быть DDR4 или DDR5 — по умолчанию DDR4)
         if (System.Text.RegularExpressions.Regex.IsMatch(upper, @"^(B250|B350|B450|B550|B660|H110|H310|H370|H410|H470|H510|H570|H610|H660|H670|Z170|Z270|Z370|Z390|Z490|Z590|Z690|X370|X470|X570)"))
             return "DDR4";
 
@@ -192,8 +192,8 @@ public class CompatibilityService : ICompatibilityService
     }
 
     /// <summary>
-    /// Extracts chipset name from product name. E.g. "Arktek AK-H310M EG" → "H310"
-    /// Works even when specifications are empty.
+    /// Извлекает имя чипсета из названия товара. Например: "Arktek AK-H310M EG" → "H310"
+    /// Работает даже при пустых спецификациях.
     /// </summary>
     private static string ExtractChipsetNameFromProduct(string name)
     {
@@ -208,20 +208,20 @@ public class CompatibilityService : ICompatibilityService
     }
 
     /// <summary>
-    /// Determines LGA1151 generation (v1 vs v2) from chipset.
-    /// 100/200-series = v1 (Skylake/Kaby Lake), 300-series = v2 (Coffee Lake)
+    /// Определяет поколение LGA1151 (v1 vs v2) по чипсету.
+    /// 100/200-серия = v1 (Skylake/Kaby Lake), 300-серия = v2 (Coffee Lake)
     /// </summary>
     private static string? DetectLGA1151Generation(CpuSpecification cpu)
     {
         var nameUpper = (cpu.Name ?? "").ToUpperInvariant();
 
-        // 8th/9th gen = v2 (Coffee Lake): i3-8xxx, i5-8xxx/9xxx, i7-8xxx/9xxx, i9-9xxx
+        // 8-е/9-е поколение = v2 (Coffee Lake): i3-8xxx, i5-8xxx/9xxx, i7-8xxx/9xxx, i9-9xxx
         if (System.Text.RegularExpressions.Regex.IsMatch(nameUpper, @"\bI[3579]-[89]\d{3}")) return "v2";
 
-        // 6th/7th gen = v1 (Skylake/Kaby Lake): i3-6xxx/7xxx, i5-6xxx/7xxx, i7-6xxx/7xxx
+        // 6-е/7-е поколение = v1 (Skylake/Kaby Lake): i3-6xxx/7xxx, i5-6xxx/7xxx, i7-6xxx/7xxx
         if (System.Text.RegularExpressions.Regex.IsMatch(nameUpper, @"\bI[3579]-[67]\d{3}")) return "v1";
 
-        // Celeron/Pentium on LGA1151 — mostly v1
+        // Celeron/Pentium на LGA1151 — в основном v1
         if (nameUpper.Contains("CELERON") || nameUpper.Contains("PENTIUM"))
         {
             if (System.Text.RegularExpressions.Regex.IsMatch(nameUpper, @"\bG\d{4}\b"))
@@ -245,34 +245,34 @@ public class CompatibilityService : ICompatibilityService
     {
         var chipset = (mb.Chipset ?? "").ToUpperInvariant();
 
-        // 300-series = v2
+        // 300-серия = v2
         if (System.Text.RegularExpressions.Regex.IsMatch(chipset, @"^(B360|H310|H370|Z370|Z390)")) return "v2";
-        // 100/200-series = v1
+        // 100/200-серия = v1
         if (System.Text.RegularExpressions.Regex.IsMatch(chipset, @"^(H110|B150|H170|Z170|B250|H270|Z270)")) return "v1";
 
         return null;
     }
 
     /// <summary>
-    /// Detects socket from product name when specs are empty.
-    /// E.g. "Arktek AK-H310M EG" → "LGA1151", "ASUS PRIME B550M" → "AM4"
+    /// Определяет сокет по названию товара при пустых спецификациях.
+    /// Например: "Arktek AK-H310M EG" → "LGA1151", "ASUS PRIME B550M" → "AM4"
     /// </summary>
     private static string? DetectSocketFromProductName(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return null;
 
-        // Match chipset number from name (e.g. H310M → H310, B650E → B650E)
+        // Извлекаем номер чипсета из названия (например H310M → H310, B650E → B650E)
         var match = System.Text.RegularExpressions.Regex.Match(name, @"([ABHX])(\d{3}[E]?)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
         if (!match.Success) return null;
 
         var prefix = match.Groups[1].Value.ToUpperInvariant();
         var num = match.Groups[2].Value.ToUpperInvariant();
 
-        // AMD AM5 chipsets: A620, B650, X670, X870, B850
+        // AMD AM5 чипсеты: A620, B650, X670, X870, B850
         if (num is "620" or "650" or "670" or "850" or "870" && prefix is "A" or "B" or "X")
             return "AM5";
 
-        // AMD AM4 chipsets: A320, B350, X370, B450, X470, A520, B550, X570
+        // AMD AM4 чипсеты: A320, B350, X370, B450, X470, A520, B550, X570
         if (num is "320" or "350" or "370" or "450" or "470" or "520" or "550" or "570" && prefix is "A" or "B" or "X")
             return "AM4";
 
@@ -294,24 +294,24 @@ public class CompatibilityService : ICompatibilityService
     #region Извлечение спецификаций
 
     /// <summary>
-    /// Detects integrated graphics from CPU name.
-    /// Intel: all Core i3/i5/i7/i9, Celeron, Pentium have iGPU unless suffix is "F".
-    /// AMD: APUs have "G" suffix (e.g. 5600G), Ryzen without G has no iGPU (except 8000G series).
+    /// Определяет наличие встроенной графики по названию CPU.
+    /// Intel: все Core i3/i5/i7/i9, Celeron, Pentium имеют iGPU, если суффикс не "F".
+    /// AMD: APU имеют суффикс "G" (например 5600G), Ryzen без G не имеет iGPU (кроме серии 8000G).
     /// </summary>
     private static bool HasIntegratedGraphicsByName(string name)
     {
         if (string.IsNullOrWhiteSpace(name)) return false;
         var upper = name.ToUpperInvariant();
 
-        // Intel: Core i3/i5/i7/i9, Celeron, Pentium — have iGPU unless model ends with "F"
+        // Intel: Core i3/i5/i7/i9, Celeron, Pentium — имеют iGPU, если модель не заканчивается на "F"
         if (System.Text.RegularExpressions.Regex.IsMatch(upper, @"INTEL\s+(CORE\s+)?(I[3579]|CELERON|PENTIUM)"))
         {
-            // F-suffix CPUs (e.g. i5-8400F, i9-13900KF) lack iGPU
+            // CPU с суффиксом F (например i5-8400F, i9-13900KF) не имеют iGPU
             if (System.Text.RegularExpressions.Regex.IsMatch(upper, @"\b\d{4,5}F\b")) return false;
             return true;
         }
 
-        // AMD: "G" suffix = APU with iGPU (e.g. Ryzen 5 5600G, Ryzen 7 8700G)
+        // AMD: суффикс "G" = APU с iGPU (например Ryzen 5 5600G, Ryzen 7 8700G)
         if (System.Text.RegularExpressions.Regex.IsMatch(upper, @"RYZEN\s+\d+\s+\d{4}G"))
             return true;
 
@@ -455,7 +455,7 @@ public class CompatibilityService : ICompatibilityService
 
     #endregion
 
-    #region BUG-22: Spec value helpers with logging
+    #region BUG-22: Вспомогательные методы для значений спецификаций с логированием
 
     private string GetSpecValue(Dictionary<string, object>? specs, string key, string defaultValue, string componentName = "")
     {
@@ -463,7 +463,7 @@ public class CompatibilityService : ICompatibilityService
         {
             if (!string.IsNullOrEmpty(defaultValue) && !string.IsNullOrEmpty(componentName))
             {
-                _logger.LogWarning("Spec '{Key}' not found for {Component}, defaulting to '{Default}'", key, componentName, defaultValue);
+                _logger.LogWarning("Спецификация '{Key}' не найдена для {Component}, используется значение по умолчанию '{Default}'", key, componentName, defaultValue);
             }
             return defaultValue;
         }
@@ -476,7 +476,7 @@ public class CompatibilityService : ICompatibilityService
         {
             if (defaultValue != 0 && !string.IsNullOrEmpty(componentName))
             {
-                _logger.LogWarning("Spec '{Key}' not found for {Component}, defaulting to {Default}", key, componentName, defaultValue);
+                _logger.LogWarning("Спецификация '{Key}' не найдена для {Component}, используется значение по умолчанию {Default}", key, componentName, defaultValue);
             }
             return defaultValue;
         }
@@ -485,7 +485,7 @@ public class CompatibilityService : ICompatibilityService
         if (int.TryParse(value?.ToString(), out var p)) return p;
         if (defaultValue != 0 && !string.IsNullOrEmpty(componentName))
         {
-            _logger.LogWarning("Spec '{Key}' for {Component} has unparseable value, defaulting to {Default}", key, componentName, defaultValue);
+            _logger.LogWarning("Спецификация '{Key}' для {Component} имеет неразбираемое значение, используется значение по умолчанию {Default}", key, componentName, defaultValue);
         }
         return defaultValue;
     }
@@ -496,7 +496,7 @@ public class CompatibilityService : ICompatibilityService
         {
             if (defaultValue && !string.IsNullOrEmpty(componentName))
             {
-                _logger.LogWarning("Spec '{Key}' not found for {Component}, defaulting to {Default}", key, componentName, defaultValue);
+                _logger.LogWarning("Спецификация '{Key}' не найдена для {Component}, используется значение по умолчанию {Default}", key, componentName, defaultValue);
             }
             return defaultValue;
         }
@@ -506,37 +506,37 @@ public class CompatibilityService : ICompatibilityService
     }
 
     /// <summary>
-    /// Gets a spec value as nullable string. Returns null (not default) when missing.
-    /// Use this for critical compatibility fields where missing data should stop checks.
+    /// Получает значение спецификации как nullable строку. Возвращает null (не значение по умолчанию) при отсутствии.
+    /// Используйте для критических полей совместимости, где отсутствие данных должно останавливать проверки.
     /// </summary>
     private string? GetSpecValueOrNull(Dictionary<string, object>? specs, string key, string componentName = "")
     {
         if (specs == null || !specs.TryGetValue(key, out var value))
         {
             if (!string.IsNullOrEmpty(componentName))
-                _logger.LogWarning("Spec '{Key}' not found for {Component}, returning null", key, componentName);
+                _logger.LogWarning("Спецификация '{Key}' не найдена для {Component}, возвращаем null", key, componentName);
             return null;
         }
         return value?.ToString();
     }
 
     /// <summary>
-    /// Gets a spec value as nullable int. Returns null (not 0) when missing.
-    /// Use this for critical compatibility fields where missing data should stop checks.
+    /// Получает значение спецификации как nullable int. Возвращает null (не 0) при отсутствии.
+    /// Используйте для критических полей совместимости, где отсутствие данных должно останавливать проверки.
     /// </summary>
     private int? GetSpecValueIntOrNull(Dictionary<string, object>? specs, string key, string componentName = "")
     {
         if (specs == null || !specs.TryGetValue(key, out var value))
         {
             if (!string.IsNullOrEmpty(componentName))
-                _logger.LogWarning("Spec '{Key}' not found for {Component}, returning null", key, componentName);
+                _logger.LogWarning("Спецификация '{Key}' не найдена для {Component}, возвращаем null", key, componentName);
             return null;
         }
         if (value is int i) return i;
         if (value is long l) return (int)l;
         if (int.TryParse(value?.ToString(), out var p)) return p;
         if (!string.IsNullOrEmpty(componentName))
-            _logger.LogWarning("Spec '{Key}' for {Component} has unparseable value, returning null", key, componentName);
+            _logger.LogWarning("Спецификация '{Key}' для {Component} имеет неразбираемое значение, возвращаем null", key, componentName);
         return null;
     }
 
@@ -546,13 +546,13 @@ public class CompatibilityService : ICompatibilityService
 
     private void CheckSocketCompatibility(CpuSpecification cpu, MotherboardSpecification mb, CompatibilityResultDto result)
     {
-        // Empty string means component not selected → skip
+        // Пустая строка означает, что компонент не выбран → пропускаем
         if (cpu.Socket == "" || mb.Socket == "")
             return;
 
         if (cpu.Socket == null || mb.Socket == null)
         {
-            // Both unknown or one unknown — skip (don't block build for undetectable sockets)
+            // Оба неизвестны или один неизвестен — пропускаем (не блокируем сборку для неопределяемых сокетов)
             return;
         }
         var (match, _, _) = _ruleEngine.CheckSocketMatch(cpu.Socket, mb.Socket);
@@ -570,7 +570,7 @@ public class CompatibilityService : ICompatibilityService
             return;
         }
 
-        // LGA1151 v1/v2 refinement — substring match passes, but chipsets are incompatible
+        // Уточнение LGA1151 v1/v2 — подстрока совпадает, но чипсеты несовместимы
         if (IsLGA1151Family(cpu.Socket) && IsLGA1151Family(mb.Socket))
         {
             var cpuGen = DetectLGA1151Generation(cpu);
@@ -607,13 +607,13 @@ public class CompatibilityService : ICompatibilityService
 
     private void CheckRamCompatibility(MotherboardSpecification mb, RamSpecification ram, CompatibilityResultDto result)
     {
-        // Empty string means component not selected → skip
+        // Пустая строка означает, что компонент не выбран → пропускаем
         if (mb.RamType == "" || ram.Type == "")
             return;
 
         if (mb.RamType == null || ram.Type == null)
         {
-            return; // unknown type, skip check
+            return; // неизвестный тип, пропускаем проверку
         }
         var issue = _ruleEngine.CheckRamGenerationMismatch(mb.RamType, ram.Type);
         if (issue != null)
@@ -738,12 +738,12 @@ public class CompatibilityService : ICompatibilityService
     {
         if (psu.Wattage <= 0) return;
         
-        // EPS check
+        // Проверка EPS
         int requiredEps = Math.Max(1, mb.RequiredEps);
         var epsIssue = _ruleEngine.CheckEpsSupply(requiredEps, psu.EpsCables, mb.Name, psu.Name);
         if (epsIssue != null) { result.IsCompatible = false; result.Issues.Add(epsIssue); }
         
-        // PCIe power check
+        // Проверка питания PCIe
         if (gpu.PcieConnectors > 0 || gpu.Has12Vhpwr)
         {
             var pcieIssue = _ruleEngine.CheckPciePowerSupply(gpu.PcieConnectors, psu.PcieCables, gpu.Has12Vhpwr, psu.Atx3, gpu.Name, psu.Name, out var pcieWarnings);
@@ -785,7 +785,7 @@ public class CompatibilityService : ICompatibilityService
             var iface = GetSpecValue(storage.Specifications, "interface", "");
             var storageType = GetSpecValue(storage.Specifications, "type", "");
             
-            // M.2 SATA in NVMe slot
+            // M.2 SATA в слоте NVMe
             if (string.Equals(storageType, "sata", StringComparison.OrdinalIgnoreCase) || 
                 string.Equals(iface, "sata", StringComparison.OrdinalIgnoreCase))
             {
@@ -803,7 +803,7 @@ public class CompatibilityService : ICompatibilityService
                 }
             }
             
-            // M.2 PCIe gen check
+            // Проверка поколения PCIe M.2
             var pcieVersion = GetSpecValueInt(storage.Specifications, "pcieVersion", 0, storage.Name);
             if (pcieVersion >= 5 && mb.MaxM2Generation >= 4 && pcieVersion > mb.MaxM2Generation)
             {

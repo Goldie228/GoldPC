@@ -9,7 +9,7 @@ namespace GoldPC.Shared.Authorization;
 public class PermissionRequirement : IAuthorizationRequirement
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="PermissionRequirement"/> class.
+    /// Инициализирует новый экземпляр класса <see cref="PermissionRequirement"/>.
     /// Инициализирует новый экземпляр требования разрешения.
     /// </summary>
     /// <param name="permission">Необходимое разрешение.</param>
@@ -19,7 +19,7 @@ public class PermissionRequirement : IAuthorizationRequirement
     }
 
     /// <summary>
-    /// Gets получает необходимое разрешение.
+    /// Получает необходимое разрешение.
     /// </summary>
     public string Permission { get; }
 }

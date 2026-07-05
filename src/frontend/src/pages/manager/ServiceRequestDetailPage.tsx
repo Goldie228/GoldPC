@@ -1,5 +1,5 @@
 /**
- * Manager Service Request Detail Page
+ * Manager Service Request Detail Страница
  * Страница детального просмотра и управления сервисной заявкой
  * Назначение мастера, смена статуса, просмотр сообщений
  */

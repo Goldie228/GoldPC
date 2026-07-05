@@ -20,22 +20,22 @@ test.describe('Route Tests', () => {
     test(`${route.name} page (${route.path}) should render`, async ({ page }) => {
       await page.goto(BASE_URL + route.path);
       
-      // Wait for page to load
+      // Ожидание загрузки страницы
       await page.waitForLoadState('networkidle');
       
-      // Check that page is not 404
+      // Проверка, что страница не 404
       const body = await page.locator('body').innerHTML();
       const is404 = body.includes('404') || body.includes('Не найдено');
       
-      // Check for blank page
+      // Проверка на пустую страницу
       const rootContent = await page.locator('#root').innerHTML();
       const isBlank = rootContent.trim() === '';
       
-      // Take screenshot for debugging
+      // Сделать скриншот для отладки
       await page.screenshot({ path: `test-results/${route.name.toLowerCase().replace(' ', '-')}.png` });
       
       if (route.path === '/account') {
-        // Account page should redirect to login or show auth required
+        // Страница аккаунта должна перенаправлять на вход или показывать требование авторизации
         const url = page.url();
         const hasLoginContent = body.includes('Войти') || body.includes('login');
         expect(hasLoginContent || url.includes('login')).toBeTruthy();

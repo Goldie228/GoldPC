@@ -33,7 +33,7 @@ After(async function (this: PCBuilderWorld) {
 });
 
 // ========================================
-// GIVEN шаги
+// ДАНО (GIVEN) шаги
 // ========================================
 
 Given('Я на странице конструктора', async function (this: PCBuilderWorld) {
@@ -60,7 +60,7 @@ Given('Я создал совместимую конфигурацию', async f
 });
 
 // ========================================
-// WHEN шаги
+// КОГДА (WHEN) шаги
 // ========================================
 
 When('Я выбираю процессор {string}', async function (this: PCBuilderWorld, productName: string) {
@@ -109,7 +109,7 @@ When('Я ввожу название {string}', async function (this: PCBuilderW
 });
 
 // ========================================
-// THEN шаги
+// ТОГДА (THEN) шаги
 // ========================================
 
 Then('Конфигурация должна быть совместимой', async function (this: PCBuilderWorld) {

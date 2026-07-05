@@ -1,5 +1,5 @@
 /**
- * Input Component
+ * Input Компонент
  * Dark-themed input with gold accent
  */
 

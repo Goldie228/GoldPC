@@ -30,7 +30,7 @@ public class WarrantyServiceUnitTests
     [Fact]
     public async Task CreateClaim_ValidRequest_ShouldCreateClaim()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var request = new CreateWarrantyClaimRequest
         {
@@ -42,10 +42,10 @@ public class WarrantyServiceUnitTests
             WarrantyPeriodMonths = 12
         };
 
-        // Act
+        // Действие
         var (claim, error) = await _warrantyService.CreateClaimAsync(userId, request);
 
-        // Assert
+        // Проверка
         error.Should().BeNull();
         claim.Should().NotBeNull();
         claim!.ProductName.Should().Be(request.ProductName);
@@ -56,7 +56,7 @@ public class WarrantyServiceUnitTests
     [Fact]
     public async Task UpdateClaimStatus_ExistingClaim_ShouldUpdate()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var (claim, _) = await _warrantyService.CreateClaimAsync(userId, new CreateWarrantyClaimRequest
         {
@@ -65,10 +65,10 @@ public class WarrantyServiceUnitTests
             WarrantyPeriodMonths = 12
         });
 
-        // Act
+        // Действие
         var (updatedClaim, error) = await _warrantyService.UpdateClaimStatusAsync(claim!.Id, WarrantyStatus.InProgress, Guid.NewGuid(), "Started processing");
 
-        // Assert
+        // Проверка
         error.Should().BeNull();
         updatedClaim!.Status.Should().Be(WarrantyStatus.InProgress);
         
@@ -79,7 +79,7 @@ public class WarrantyServiceUnitTests
     [Fact]
     public async Task CreateCard_ValidRequest_ShouldCreateCard()
     {
-        // Arrange
+        // Подготовка
         var request = new CreateWarrantyRequest
         {
             OrderId = Guid.NewGuid(),
@@ -90,10 +90,10 @@ public class WarrantyServiceUnitTests
             WarrantyMonths = 36
         };
 
-        // Act
+        // Действие
         var (warranty, error) = await _warrantyService.CreateCardAsync(request);
 
-        // Assert
+        // Проверка
         error.Should().BeNull();
         warranty.Should().NotBeNull();
         warranty!.WarrantyNumber.Should().StartWith($"W-{DateTime.UtcNow.Year}-");
@@ -104,7 +104,7 @@ public class WarrantyServiceUnitTests
     [Fact]
     public async Task AnnulCard_ExistingActiveCard_ShouldAnnul()
     {
-        // Arrange
+        // Подготовка
         var (warranty, _) = await _warrantyService.CreateCardAsync(new CreateWarrantyRequest
         {
             ProductName = "Test",
@@ -115,10 +115,10 @@ public class WarrantyServiceUnitTests
         var annulRequest = new AnnulWarrantyRequest { Reason = "Fraud detected" };
         var adminId = Guid.NewGuid();
 
-        // Act
+        // Действие
         var (success, error) = await _warrantyService.AnnulCardAsync(warranty!.Id, annulRequest, adminId);
 
-        // Assert
+        // Проверка
         success.Should().BeTrue();
         error.Should().BeNull();
         
@@ -130,7 +130,7 @@ public class WarrantyServiceUnitTests
     [Fact]
     public async Task ExpireWarranties_ExpiringCards_ShouldUpdateStatus()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var card = new WarrantyCard
         {
@@ -145,10 +145,10 @@ public class WarrantyServiceUnitTests
         _context.WarrantyCards.Add(card);
         await _context.SaveChangesAsync();
 
-        // Act
+        // Действие
         var expiredCount = await _warrantyService.ExpireWarrantiesAsync();
 
-        // Assert
+        // Проверка
         expiredCount.Should().Be(1);
         var updatedCard = await _context.WarrantyCards.FindAsync(card.Id);
         updatedCard!.Status.Should().Be(WarrantyStatus.Expired);

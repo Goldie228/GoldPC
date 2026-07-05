@@ -9,7 +9,7 @@ interface ChatMessageProps {
 const FILE_EXTENSIONS = /\.(png|jpg|jpeg|gif|webp|svg|pdf|doc|docx|txt|zip|rar|xlsx|xls)$/i;
 
 /**
- * Returns appropriate icon based on file extension
+ * Возвращает appropriate icon based on file extension
  */
 function getFileIcon(fileName: string) {
   if (/\.(png|jpg|jpeg|gif|webp|svg)$/i.test(fileName)) {

@@ -396,12 +396,12 @@ export function ComponentPickerModal({
       if (s) out.socket = s;
     }
     if (slotType === 'ram' && buildContext?.motherboard?.product) {
-      // RAM attribute key is 'type' with combined values like "DDR4 DIMM", "DDR5 SO-DIMM"
+      // RAM attribute key is 'type' with комбинированные values like "DDR4 DIMM", "DDR5 SO-DIMM"
       const mb = buildContext.motherboard.product;
       const mt = extractMemoryTypeWithFallback(mb, mb.specifications);
       if (mt) {
         const ff = extractMemoryFormFactorWithFallback(mb, mb.specifications);
-        // Desktop boards always use DIMM (memoryFormFactor is often null in API)
+        // Десктоп boards always use DIMM (memoryFormFactor is often null in API)
         out.type = ff ? `${mt} ${ff}` : `${mt} DIMM`;
       }
     }
@@ -567,7 +567,7 @@ export function ComponentPickerModal({
     const mbSocket = mb ? resolveSocket(mb) : null;
 
     return products.map((p) => {
-      // When selecting a CPU: filter by motherboard socket
+      // When selecting a CPU: фильтр by motherboard socket
       if (slotType === 'cpu' && mb && mbSocket) {
         const cpuSocket = resolveSocket(p);
         if (cpuSocket && cpuSocket !== mbSocket) {
@@ -578,7 +578,7 @@ export function ComponentPickerModal({
         }
       }
 
-      // When selecting a motherboard: filter by CPU socket
+      // When selecting a motherboard: фильтр by CPU socket
       if (slotType === 'motherboard' && cpu) {
         const cpuSocket = resolveSocket(cpu);
         const mbCandidateSocket = resolveSocket(p);

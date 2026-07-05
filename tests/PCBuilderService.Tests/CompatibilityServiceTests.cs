@@ -92,8 +92,8 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task MissingCpuSocket_ReturnsError()
     {
-        // Fail-closed: CPU has no "socket" spec → GetSpecValueOrNull returns null
-        // → service should report error "Не удалось определить сокет"
+        // Отказоустойчивость: у CPU нет спецификации "socket" → GetSpecValueOrNull возвращает null
+        // → сервис должен сообщить об ошибке "Не удалось определить сокет"
         var request = CreateRequest(
             cpu: CreateCpuComponent("AMD Ryzen 5 5600X", new Dictionary<string, object>
             { ["tdp"] = 65, ["performanceScore"] = 50 }),
@@ -155,7 +155,7 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task MissingRamType_SkipsCheck()
     {
-        // When RAM has no "type" spec, the memory type check is skipped
+        // Когда у RAM нет спецификации "type", проверка типа памяти пропускается
         var request = CreateRequest(
             cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
             { ["socket"] = "AM5", ["tdp"] = 120, ["performanceScore"] = 85 }),
@@ -305,13 +305,13 @@ public class CompatibilityServiceTests
     }
 
     /// <summary>
-    /// Test 5: Bottleneck detected when CPU/GPU performance ratio > 2.0
-    /// CPU score 200, GPU score 80 -> ratio 2.5 > 2.0 -> Bottleneck Warning
+    /// Тест 5: Обнаружение узкого места, когда соотношение производительности CPU/GPU > 2.0
+    /// Оценка CPU 200, GPU 80 -> соотношение 2.5 > 2.0 -> Предупреждение об узком месте
     /// </summary>
     [Fact]
     public async Task CheckBottleneck_Detected_WhenRatioOver2()
     {
-        // Arrange - CPU score 200, GPU score 80 -> ratio = 2.5
+        // Подготовка - оценка CPU 200, GPU 80 -> соотношение = 2.5
         var request = CreateRequest(
             cpu: CreateCpuComponent("Powerful CPU", new Dictionary<string, object>
             { ["socket"] = "AM5", ["tdp"] = 120, ["performanceScore"] = 200 }),
@@ -319,10 +319,10 @@ public class CompatibilityServiceTests
             { ["tdp"] = 150, ["length"] = 250, ["performanceScore"] = 80 })
         );
 
-        // Act
+        // Действие
         var response = await _service.CheckCompatibilityAsync(request);
 
-        // Assert - ratio 200/80 = 2.5 > 2.0 -> bottleneck warning
+        // Проверка - соотношение 200/80 = 2.5 > 2.0 -> предупреждение об узком месте
         response.Result.Warnings.Should().Contain(w =>
             w.Severity == "Warning" && w.Message.Contains("bottleneck"),
             "CPU/GPU ratio 2.5 exceeds threshold 2.0, bottleneck should be detected");
@@ -386,8 +386,8 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task MatchingSocketAndRamType_Passes()
     {
-        // Happy path: all critical specs present and matching
-        // → no errors about "сокет" or "тип памяти"
+        // Позитивный сценарий: все критические спецификации присутствуют и совпадают
+        // → нет ошибок о "сокет" или "тип памяти"
         var request = CreateRequest(
             cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
             { ["socket"] = "AM5", ["tdp"] = 120, ["performanceScore"] = 85 }),
@@ -399,8 +399,8 @@ public class CompatibilityServiceTests
 
         var result = await _service.CheckCompatibilityAsync(request);
 
-        // Socket check should pass, RAM type check should pass
-        // Errors should NOT contain socket or ram type related messages
+        // Проверка сокета должна пройти, проверка типа RAM должна пройти
+        // Ошибки НЕ должны содержать сообщения о сокете или типе RAM
         result.Result.Issues.Should().NotContain(i => i.Message.Contains("сокет"));
         result.Result.Issues.Should().NotContain(i => i.Message.Contains("тип памяти"));
     }

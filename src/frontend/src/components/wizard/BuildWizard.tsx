@@ -1,11 +1,11 @@
 /**
- * BuildWizard — Multi-step PC configuration wizard
+ * BuildWizard — Многошаговый мастер конфигурации ПК
  *
- * Step 0: Presets — choose a pre-configured build or go manual
- * Step 1: Purpose — choose PC purpose (6 categories)
- * Step 2: Budget — choose budget tier (4 + custom slider)
- * Step 3: Preferences — CPU/GPU/RAM/form factor/noise/RGB/cooling
- * Result: Loading + recommendation display
+ * Шаг 0: Пресеты — выбор предварительно собранной конфигурации или ручная сборка
+ * Шаг 1: Назначение — выбор назначения ПК (6 категорий)
+ * Шаг 2: Бюджет — выбор уровня бюджета (4 + произвольный ползунок)
+ * Шаг 3: Предпочтения — CPU/GPU/RAM/форм-фактор/шум/RGB/охлаждение
+ * Результат: Загрузка + отображение рекомендации
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
@@ -36,7 +36,7 @@ const INITIAL_STATE: WizardState = {
   presetId: null,
 };
 
-const TOTAL_STEPS = 4; // 0=Presets, 1=Purpose, 2=Budget, 3=Preferences
+const TOTAL_STEPS = 4; // 0=Пресеты, 1=Назначение, 2=Бюджет, 3=Предпочтения
 
 function updateState(partial: Partial<WizardState>): (prev: WizardState) => WizardState {
   return (prev) => ({ ...prev, ...partial });
@@ -55,12 +55,12 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
   const [result, setResult] = useState<RecommendedBuild | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Cleanup abort controller on unmount
+  // Очистка контроллера отмены при размонтировании
   useEffect(() => {
     return () => { abortRef.current?.abort(); };
   }, []);
 
-  /** Run the recommendation engine */
+  /** Запуск рекомендательного движка */
   const runRecommendation = useCallback(async (wizardState: WizardState) => {
     setLoading(true);
     setError(null);
@@ -86,7 +86,7 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
     }
   }, []);
 
-  /** Handle preset selection: null = go manual, preset = run immediately */
+  /** Обработка выбора пресета: null = ручная сборка, preset = запуск сразу */
   const handlePresetSelect = useCallback((preset: PresetBuild | null) => {
     if (!preset) {
       setStep(1);
@@ -109,24 +109,24 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
     runRecommendation(presetState);
   }, [runRecommendation]);
 
-  /** Purpose selected — auto-advance to Budget */
+  /** Назначение выбрано — автоматический переход к бюджету */
   const handlePurposeSelect = useCallback((purpose: WizardState['purpose']) => {
     setState(updateState({ purpose }));
     setStep(2);
   }, []);
 
-  /** Budget selected — auto-advance to Preferences */
+  /** Бюджет выбран — автоматический переход к предпочтениям */
   const handleBudgetSelect = useCallback((budget: WizardState['budget']) => {
     setState(updateState({ budget }));
     setStep(3);
   }, []);
 
-  /** Custom budget slider change */
+  /** Изменение произвольного бюджета ползунком */
   const handleCustomBudgetChange = useCallback((value: number) => {
     setState(updateState({ customBudget: value, budget: 'custom' }));
   }, []);
 
-  /** Preferences changes */
+  /** Изменения предпочтений */
   const handleCpuChange = useCallback((v: WizardState['cpuPreference']) => {
     setState(updateState({ cpuPreference: v }));
   }, []);
@@ -149,23 +149,23 @@ export default function BuildWizard({ onBack }: BuildWizardProps) {
     setState(updateState({ coolingPreference: v }));
   }, []);
 
-  /** Submit preferences — run recommendation */
+  /** Отправка предпочтений — запуск рекомендации */
   const handleSubmitPreferences = useCallback(() => {
     runRecommendation(state);
   }, [state, runRecommendation]);
 
-  /** Go back to preferences from result */
+  /** Возврат к предпочтениям из результата */
   const handleBackToPreferences = useCallback(() => {
     setResult(null);
     setStep(3);
   }, []);
 
-  /** Navigate back one step */
+  /** Навигация на шаг назад */
   const goBack = useCallback(() => {
     if (step > 0) setStep(step - 1);
   }, [step]);
 
-  // Show result screen
+  // Показ экрана результата
   if (loading || result || error) {
     if (loading) {
       return (

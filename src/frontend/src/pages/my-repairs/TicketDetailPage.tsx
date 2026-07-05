@@ -18,7 +18,7 @@ function getStatusLabel(status: string): string {
 }
 
 /**
- * Ticket Detail Page - Customer view of service ticket
+ * Ticket Detail Страница - Customer view of service ticket
  *
  * Features:
  * - Status timeline

@@ -85,9 +85,9 @@ const SPEC_ORDER: Record<string, string[]> = {
   ],
 };
 
-// ============================================================
+// 
 // FilterGroup
-// ============================================================
+// 
 
 function FilterGroup({
   title,
@@ -129,9 +129,9 @@ function FilterGroup({
   );
 }
 
-// ============================================================
+// 
 // StarRating
-// ============================================================
+// 
 
 function StarRating({ rating, onChange }: { rating: number; onChange: (r: number) => void }) {
   return (
@@ -163,9 +163,9 @@ function StarRating({ rating, onChange }: { rating: number; onChange: (r: number
   );
 }
 
-// ============================================================
+// 
 // FilterSidebar
-// ============================================================
+// 
 
 export interface FilterSidebarProps {
   selectedCategory: ProductCategory | null;
@@ -499,9 +499,9 @@ export function FilterSidebar({
     );
   };
 
-  // ============================================================
+  // 
   // Рендер
-  // ============================================================
+  // 
   return (
     <div
       className={`bg-surface-card ${

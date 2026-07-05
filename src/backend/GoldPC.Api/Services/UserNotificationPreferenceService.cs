@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Hosting;
 namespace GoldPC.Api.Services;
 
 /// <summary>
-/// Per-user notification preferences persisted as JSON files.
-/// Pattern: App_Data/notifications/preferences_{userId}.json
-/// Default: all notification types enabled.
+/// Предпочтения уведомлений пользователя, сохраняемые в JSON-файлах.
+/// Шаблон: App_Data/notifications/preferences_{userId}.json
+/// По умолчанию: все типы уведомлений включены.
 /// </summary>
 public class UserNotificationPreferenceService
 {
@@ -39,7 +39,7 @@ public class UserNotificationPreferenceService
     }
 
     /// <summary>
-    /// Get user's notification preferences. Returns defaults (all true) if no file exists.
+    /// Получает предпочтения уведомлений пользователя. Возвращает значения по умолчанию (все true), если файл не существует.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task<UserNotificationPrefs> GetPreferencesAsync(Guid userId)
@@ -60,23 +60,23 @@ public class UserNotificationPreferenceService
                 {
                     prefs = loaded;
                     _cache[userId] = prefs;
-                    _logger.LogDebug("Loaded notification preferences for user {UserId}", userId);
+                    _logger.LogDebug("Загружены предпочтения уведомлений для пользователя {UserId}", userId);
                     return prefs;
                 }
             }
             catch (JsonException ex)
             {
-                _logger.LogWarning(ex, "Failed to deserialize notification preferences for user {UserId}, using defaults", userId);
+                _logger.LogWarning(ex, "Не удалось десериализовать предпочтения уведомлений для пользователя {UserId}, используются значения по умолчанию", userId);
             }
             catch (IOException ex)
             {
-                _logger.LogWarning(ex, "Failed to read notification preferences file for user {UserId}, using defaults", userId);
+                _logger.LogWarning(ex, "Не удалось прочитать файл предпочтений уведомлений для пользователя {UserId}, используются значения по умолчанию", userId);
             }
-#pragma warning disable CA1031 // Intentional general catch for fail-open file loading
+#pragma warning disable CA1031 // Намеренный общий перехват для fail-open загрузки файла
             catch (Exception ex)
 #pragma warning restore CA1031
             {
-                _logger.LogWarning(ex, "Unexpected error loading notification preferences for user {UserId}, using defaults", userId);
+                _logger.LogWarning(ex, "Неожиданная ошибка при загрузке предпочтений уведомлений для пользователя {UserId}, используются значения по умолчанию", userId);
             }
         }
 
@@ -86,7 +86,7 @@ public class UserNotificationPreferenceService
     }
 
     /// <summary>
-    /// Save user's notification preferences to JSON file and update cache.
+    /// Сохраняет предпочтения уведомлений пользователя в JSON файл и обновляет кеш.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task<UserNotificationPrefs> SavePreferencesAsync(Guid userId, UserNotificationPrefs prefs)
@@ -95,18 +95,18 @@ public class UserNotificationPreferenceService
         var json = JsonSerializer.Serialize(prefs, _jsonOptions);
         await File.WriteAllTextAsync(filePath, json);
         _cache[userId] = prefs;
-        _logger.LogInformation("Saved notification preferences for user {UserId}", userId);
+        _logger.LogInformation("Сохранены предпочтения уведомлений для пользователя {UserId}", userId);
         return prefs;
     }
 
     /// <summary>
-    /// Check if a user has opted in for a specific notification type.
+    /// Проверяет, подписан ли пользователь на конкретный тип уведомления.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task<bool> IsOptedInAsync(Guid userId, string notificationType)
     {
         if (!AllTypes.Contains(notificationType, StringComparer.OrdinalIgnoreCase))
-            return true; // unknown types default to enabled
+            return true; // неизвестные типы по умолчанию включены
 
         var prefs = await GetPreferencesAsync(userId);
         return notificationType.ToLowerInvariant() switch
@@ -125,8 +125,8 @@ public class UserNotificationPreferenceService
 }
 
 /// <summary>
-/// User notification preferences DTO.
-/// Maps to frontend JSON keys: orderStatusChanged, lowStockAlert, etc.
+/// DTO предпочтений уведомлений пользователя.
+/// Сопоставляется с JSON-ключами фронтенда: orderStatusChanged, lowStockAlert, etc.
 /// </summary>
 public record UserNotificationPrefs
 {
@@ -138,8 +138,8 @@ public record UserNotificationPrefs
 }
 
 /// <summary>
-/// Partial update DTO for user notification preferences.
-/// All fields are nullable — only provided fields will be updated.
+/// DTO частичного обновления предпочтений уведомлений пользователя.
+/// Все поля nullable — будут обновлены только указанные поля.
 /// </summary>
 public record UserNotificationPrefsUpdate
 {

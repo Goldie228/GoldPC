@@ -5,35 +5,35 @@ import { AlertCircle } from 'lucide-react';
 export type InputSize = 'sm' | 'md' | 'lg';
 
 export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
-  /** Label text displayed above the input */
+  /** Текст метки, отображаемый над полем ввода */
   label?: string;
-  /** Error message displayed below the input */
+  /** Сообщение об ошибке, отображаемое под полем ввода */
   error?: string;
-  /** Helper text displayed below the input (when no error) */
+  /** Вспомогательный текст под полем ввода (если нет ошибки) */
   helperText?: string;
-  /** Size variant */
+  /** Вариант размера */
   size?: InputSize;
-  /** Full width */
+  /** Полная ширина */
   fullWidth?: boolean;
-  /** Left icon element */
+  /** Элемент левой иконки */
   leftIcon?: ReactNode;
-  /** Right icon element */
+  /** Элемент правой иконки */
   rightIcon?: ReactNode;
-  /** Additional class name for wrapper */
+  /** Дополнительное имя класса для обёртки */
   className?: string;
 }
 
 /**
- * Input component with dark theme and gold accent.
- * Provides accessible form input with label, error, and helper text support.
+ * Компонент ввода с тёмной темой и золотым акцентом.
+ * Предоставляет доступную форму ввода с поддержкой метки, ошибки и вспомогательного текста.
  *
  * @example
  * ```tsx
- * <Input
+ * <Поле ввода
  *   label="Email"
  *   type="email"
- *   placeholder="Enter your email"
- *   error="Invalid email format"
+ *   placeholder="Введите ваш email"
+ *   error="Неверный формат email"
  * />
  * ```
  */
@@ -65,7 +65,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const hasLeftIcon = Boolean(leftIcon);
     const hasRightIcon = Boolean(rightIcon);
 
-    // Build input class names
+    // Собираем имена классов для поля ввода
     const inputClassNames = [
       "w-full px-4 py-3 font-sans text-base text-body-text bg-surface-elevated border border-hairline-dark rounded-md outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-canvas-dark focus:border-gold focus:shadow-[0_0_0_3px_var(--border-brand)] focus:bg-surface-card",
       hasError && "border-price-rise focus:border-price-rise focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]",
@@ -77,7 +77,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       .filter(Boolean)
       .join(' ');
 
-    // Build wrapper class names
+    // Собираем имена классов для обёртки
     const wrapperClassNames = [
       "flex flex-col gap-1.5",
       fullWidth && "w-full",
@@ -86,7 +86,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       .filter(Boolean)
       .join(' ');
 
-    // Build aria-describedby
+    // Строит aria-describedby
     const ariaDescribedBy = [
       hasError && errorId,
       hasHelper && helperId,

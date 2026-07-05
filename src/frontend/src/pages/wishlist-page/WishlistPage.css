@@ -1,6 +1,6 @@
 /* WishlistPage — GoldPC Design System */
 
-/* Toolbar: search input + sort select side-by-side */
+/* Панель инструментов: поиск input + sort select side-by-side */
 .wishlist-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -33,7 +33,7 @@
   border-radius: 2px;
 }
 
-/* Smooth category chip transition */
+/* Smooth category чип transition */
 .wishlist-toolbar button {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }

@@ -21,7 +21,7 @@ public class NotificationService : INotificationService
     private readonly ConcurrentDictionary<Guid, Notification> _notifications = new();
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="NotificationService"/> class.
+    /// Инициализирует новый экземпляр класса <see cref="NotificationService"/>.
     /// Инициализирует новый экземпляр <see cref="NotificationService"/>.
     /// </summary>
     /// <param name="hubContext">Контекст SignalR hub для отправки уведомлений клиентам.</param>
@@ -189,7 +189,7 @@ public class NotificationService : INotificationService
     /// <returns>Задачу, представляющую асинхронную операцию.</returns>
     public async Task SendPushNotificationAsync(string userId, string title, string message)
     {
-        // HACK: Implement push notification service (FCM/APNS)
+        // HACK: Реализовать сервис push-уведомлений (FCM/APNS)
         _logger.LogInformation("Push notification: UserId={UserId}, Title={Title}", userId, title);
         await Task.CompletedTask;
     }

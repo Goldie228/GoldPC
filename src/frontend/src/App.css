@@ -35,7 +35,7 @@
   z-index: 1;
 }
 
-/* Header */
+/* Заголовок */
 .app-header {
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
@@ -158,7 +158,7 @@
   }
 }
 
-/* 403 Forbidden Page */
+/* 403 Forbidden Страница */
 .forbidden-container {
   display: flex;
   align-items: center;

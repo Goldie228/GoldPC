@@ -21,7 +21,7 @@ export function usePWAInstallPrompt() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Check if already in standalone mode
+    // Проверяет if already in standalone mode
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
     }

@@ -36,7 +36,7 @@ export function ProductReviewCard({
     title: review.title ?? '',
   });
 
-  /* ---------- Helpful ---------- */
+  /* Helpful ---------- */
   const handleHelpful = async () => {
     if (helpfulLoading || !onHelpful) return;
     setHelpfulLoading(true);
@@ -52,7 +52,7 @@ export function ProductReviewCard({
     }
   };
 
-  /* ---------- Edit ---------- */
+  /* Edit ---------- */
   const startEditing = () => {
     setEditForm({
       rating: review.rating,
@@ -87,7 +87,7 @@ export function ProductReviewCard({
     setEditForm((f) => ({ ...f, rating: Math.max(1, Math.min(5, next)) }));
   };
 
-  /* ---------- Delete ---------- */
+  /* Delete ---------- */
   const handleDeleteConfirm = async () => {
     if (deleting || !onDelete) return;
     setDeleting(true);
@@ -105,7 +105,7 @@ export function ProductReviewCard({
     setDeleteConfirm(false);
   };
 
-  /* ---------- Star rating component (edit mode) ---------- */
+  /* Star rating component (edit mode) ---------- */
   const editStarRating = (
     <div
       className="inline-flex items-center gap-1 p-1.5 rounded-lg bg-surface-elevated border border-border"

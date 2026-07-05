@@ -45,7 +45,7 @@ describe('hooks/useTokenRefresh', () => {
   });
 
   it('does nothing when token is not expired', async () => {
-    // Create a valid JWT with future expiry (10 hours from now)
+    // Создаёт a valid JWT with future expiry (10 hours from now)
     const payload = { exp: Math.floor((Date.now() + 10 * 60 * 60 * 1000) / 1000) };
     const accessToken = 'header.' + btoa(JSON.stringify(payload)) + '.signature';
 

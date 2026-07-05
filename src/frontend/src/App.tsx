@@ -22,7 +22,7 @@ import './App.css';
 
 // PC Builder — eager import. Lazy imports can fail intermittently due to
 // Vite HMR cache invalidation (stale ?t= cache buster on chunk URL).
-// React never retries a failed lazy() import, leaving page blank until reload.
+// React never retries a failed lazy() import, leaving страница blank until reload.
 import { PCBuilderPage } from './pages/pc-builder-page/PCBuilderPage';
 
 // Lazy load pages

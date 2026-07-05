@@ -15,7 +15,7 @@ const localStorageMock = (() => {
   };
 })();
 
-// Mock sessionStorage
+// Имитация sessionStorage
 const sessionStorageMock = (() => {
   let store: Record<string, string> = {};
   return {

@@ -34,7 +34,7 @@ const queryClient = new QueryClient({
   },
 })
 
-// Prefetch categories at startup — they're used on every page
+// Prefetch categories at startup — they're used on every страница
 queryClient.prefetchQuery({
   queryKey: categoriesKeys.list(),
   queryFn: () => catalogApi.getCategories(),

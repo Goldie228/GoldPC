@@ -123,7 +123,7 @@ getAddresses()
     }
   }, [user]);
 
-  // Calculate delivery cost
+  // Вычисляет delivery cost
   useEffect(() => {
     getDeliveryQuote({
       deliveryMethod: deliveryData.method,

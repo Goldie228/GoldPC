@@ -12,7 +12,7 @@ const TEST_USERS = {
   client: { email: 'client@goldpc.by', password: 'Client123!' },
 };
 
-/** Login via the modal and wait for it to close. */
+/** Вход через модальное окно и ожидание его закрытия. */
 async function loginAs(
   page: import('@playwright/test').Page,
   email: string,
@@ -49,15 +49,15 @@ test.describe('Navigation — Public pages', () => {
       await page.goto(path);
       await page.waitForLoadState('networkidle');
 
-      // Page is not blank
+      // Страница не пустая
       const rootContent = await page.locator('#root').innerHTML();
       expect(rootContent.trim().length).toBeGreaterThan(0);
 
-      // Expected content is present
+      // Ожидаемое содержание присутствует
       const body = await page.locator('body').textContent();
       expect(body).toContain(mustContain);
 
-      // No critical console errors
+      // Нет критических ошибок консоли
       const critical = consoleErrors.filter(
         (e) => !e.includes('favicon') && !e.includes('third-party'),
       );
@@ -102,13 +102,13 @@ test.describe('Navigation — Authenticated pages', () => {
     const url = page.url();
     const body = await page.locator('body').textContent() ?? '';
 
-    // Client should either be redirected away from /admin or see access denied
+    // Клиент должен быть перенаправлен с /admin или увидеть отказ в доступе
     const isRedirected = !url.includes('/admin');
     const hasAccessDenied = body.includes('Доступ запрещён') || body.includes('Недостаточно прав') || body.includes('403');
     const hasAdminContent = body.includes('Панель управления') || body.includes('Управление');
 
-    // If client sees admin content, that's also acceptable (role guard may be client-side only)
-    // The key assertion: the page is not broken/blank
+    // Если клиент видит содержимое админки, это тоже приемлемо (защита ролей может быть только на клиенте)
+    // Ключевое утверждение: страница не сломана/не пуста
     const rootContent = await page.locator('#root').innerHTML();
     expect(rootContent.trim().length).toBeGreaterThan(0);
   });

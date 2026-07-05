@@ -18,7 +18,7 @@ import {
 } from '@/api/__integration__/setup';
 
 // ═══════════════════════════════════════════════
-//  Setup
+//  Настройка
 // ═══════════════════════════════════════════════
 
 let createdAddressId: string | undefined;
@@ -30,12 +30,12 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Cleanup: delete the test address if it was created
+  // Очистка: удалить тестовый адрес, если он был создан
   if (createdAddressId) {
     try {
       await addressesApi.deleteAddress(createdAddressId);
     } catch {
-      // Best-effort cleanup
+      // Очистка по возможности
     }
   }
   clearAuthToken();
@@ -82,7 +82,7 @@ describe('Addresses API', () => {
     const addresses = await addressesApi.getAddresses();
 
     expect(Array.isArray(addresses)).toBe(true);
-    // Each address should have required fields
+    // Каждый адрес должен иметь обязательные поля
     for (const addr of addresses) {
       expect(typeof addr.id).toBe('string');
       expect(typeof addr.name).toBe('string');
@@ -102,7 +102,7 @@ describe('Addresses API', () => {
       isDefault: false,
     };
 
-    // Create
+    // Создание
     const created = await addressesApi.createAddress(testAddress);
     expect(created).toBeDefined();
     expect(created.id).toBeTruthy();
@@ -113,19 +113,19 @@ describe('Addresses API', () => {
     expect(created.postalCode).toBe(testAddress.postalCode);
     expect(created.isDefault).toBe(false);
 
-    // Store ID for afterAll cleanup in case delete fails here
+    // Сохраняем ID для очистки в afterAll на случай ошибки удаления
     createdAddressId = created.id;
 
-    // Verify it appears in the list
+    // Проверяем, что адрес появился в списке
     const addresses = await addressesApi.getAddresses();
     const found = addresses.find((a) => a.id === created.id);
     expect(found).toBeDefined();
 
-    // Delete
+    // Удаляем
     await addressesApi.deleteAddress(created.id);
     createdAddressId = undefined;
 
-    // Verify it is gone
+    // Проверяем, что удалено
     const addressesAfter = await addressesApi.getAddresses();
     const deleted = addressesAfter.find((a) => a.id === created.id);
     expect(deleted).toBeUndefined();
@@ -148,7 +148,7 @@ describe('Warranty API', () => {
     expect(result.pageNumber).toBe(1);
     expect(result.pageSize).toBe(10);
 
-    // Each card should have required fields
+    // Каждая карта должна иметь обязательные поля
     for (const card of result.items) {
       expect(typeof card.id).toBe('string');
       expect(typeof card.warrantyNumber).toBe('string');

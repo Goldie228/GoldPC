@@ -1,5 +1,5 @@
 /**
- * Action Handlers
+ * Action Обработчики
  * Pure state transformations for PC builder actions
  * Extracted from usePCBuilder.ts for better organization
  */
@@ -243,8 +243,8 @@ export function addToCartAsAssembly(
   // KNOWN TRADE-OFF: Hardcoded assembly fee of 100 BYN.
   //
   // The correct source of truth is ServiceType.BasePrice (fetched via API), but
-  // addToCartAsAssembly is a pure synchronous helper called deep inside a Zustand
-  // store action. Making it async would require:
+  // addToCartAsAssembly is a pure synchronous вспомогательный called deep inside a Zustand
+  // store action. Making it асинхронный would require:
   //   1. Changing addToCartAsAssembly to return a Promise
   //   2. Updating all callers to await it (PCBuilderPage handleAddAsAssembly,
   //      the entire cartStore.addBundleItem path, etc.)

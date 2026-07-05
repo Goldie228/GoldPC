@@ -7,13 +7,13 @@ namespace Shared.Middleware;
 public class ChaosException : Exception
 {
     /// <summary>
-    /// Gets тип Chaos-воздействия.
+    /// Получает тип Chaos-воздействия.
     /// </summary>
     public ChaosActionType ActionType { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ChaosException"/> class.
-    /// Создает новый экземпляр ChaosException.
+    /// Инициализирует новый экземпляр класса <see cref="ChaosException"/>.
+    /// Создаёт новый экземпляр ChaosException.
     /// </summary>
     public ChaosException(string message)
         : base(message)
@@ -22,8 +22,8 @@ public class ChaosException : Exception
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ChaosException"/> class.
-    /// Создает новый экземпляр ChaosException с указанием типа воздействия.
+    /// Инициализирует новый экземпляр класса <see cref="ChaosException"/>.
+    /// Создаёт новый экземпляр ChaosException с указанием типа воздействия.
     /// </summary>
     public ChaosException(string message, ChaosActionType actionType)
         : base(message)
@@ -32,8 +32,8 @@ public class ChaosException : Exception
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ChaosException"/> class.
-    /// Создает новый экземпляр ChaosException с внутренним исключением.
+    /// Инициализирует новый экземпляр класса <see cref="ChaosException"/>.
+    /// Создаёт новый экземпляр ChaosException с внутренним исключением.
     /// </summary>
     public ChaosException(string message, Exception innerException)
         : base(message, innerException)

@@ -105,7 +105,7 @@ describe('Header', () => {
 
   it('renders the logo/brand name', () => {
     renderInRouter(<Header />);
-    // Text is split: "Gold" + <span>PC</span>, so query the container
+    // Text is split: "Gold" + <span>PC</span>, so query the контейнер
     const logo = screen.getByText(/Gold/);
     expect(logo).toBeInTheDocument();
   });

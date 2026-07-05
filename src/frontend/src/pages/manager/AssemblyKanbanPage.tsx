@@ -124,8 +124,8 @@ export default function AssemblyKanbanPage() {
     queryFn: async () => {
       // TODO: Client-side filtering by serviceTypeName is a known limitation.
       // The backend has no dedicated "get assembly kanban tickets" endpoint, so
-      // we fetch 200 tickets and filter locally. This breaks pagination and may
-      // miss assembly tickets beyond page 1. A proper fix requires a backend
+      // we fetch 200 tickets and фильтр locally. This breaks пагинация and may
+      // miss assembly tickets beyond страница 1. A proper fix requires a backend
       // endpoint like GET /admin/service-requests/assembly with status filters.
       const response = await servicesApi.getAllServiceRequests({ page: 1, pageSize: 200 });
       return (response.items as ServiceRequestWithAssembly[]).filter(

@@ -80,7 +80,7 @@ export function formatSpecValueForKey(key: string, value: SpecValue): string {
     return `${value} GB`;
   }
 
-  // Default formatting
+  // По умолчанию formatting
   if (isTrue) return 'Да';
   if (isFalse) return 'Нет';
   return formatSpecValue(value);

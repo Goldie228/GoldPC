@@ -1,12 +1,12 @@
 /**
- * usePCBuilder — PC Builder Hook (Thin Orchestrator)
+ * usePCBuilder — Хук сборщика ПК (Тонкий Оркестратор)
  *
- * ONLY wires together:
- - extracted side-effect hooks
- - pure logic modules
- - state + actions
+ * Только связывает вместе:
+ *  - выделенные хуки побочных эффектов
+ *  - чистые логические модули
+ *  - состояние + действия
  *
- * NO business logic, NO API calls, NO localStorage
+ * НИКАКОЙ бизнес-логики, НИКАКИХ API вызовов, НИКАКОГО localStorage
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef, type MutableRefObject } from 'react';
@@ -66,7 +66,7 @@ import { useRamTrim } from './pc-builder/useRamTrim';
 
 export interface UsePCBuilderReturn {
   selectedComponents: PCBuilderSelectedState;
-  /** Stable ref that always holds the latest selectedComponents (avoids stale closures in effects) */
+  /** Стабильный ref, всегда содержащий последние selectedComponents (избегает устаревших замыканий в эффектах) */
   selectedComponentsRef: MutableRefObject<PCBuilderSelectedState>;
   compatibility: CompatibilityResult;
   totalPrice: number;
@@ -83,7 +83,7 @@ export interface UsePCBuilderReturn {
   removeComponent: (type: PCComponentType, multiIndex?: number) => void;
   resetBuild: () => void;
   clearBuild: () => void;
-  /** When set to true, usePersistence will skip saving to localStorage (used during config loading) */
+  /** Если true, usePersistence пропустит сохранение в localStorage (используется во время загрузки конфигурации) */
   skipSaveRef: { current: boolean };
   addToCart: () => void;
   addToCartAsAssembly: () => void;
@@ -97,24 +97,24 @@ export interface UsePCBuilderReturn {
 }
 
 export function usePCBuilder(): UsePCBuilderReturn {
-  // === State ===
+  // === Состояние ===
   const [selectedComponents, setSelectedComponents] = useState<PCBuilderSelectedState>(loadFromLocalStorage);
-  /** Ref that always holds the latest selectedComponents (avoids stale closures) */
+  /** Ref, всегда содержащий последние selectedComponents (избегает устаревших замыканий) */
   const selectedComponentsRef = useRef(selectedComponents);
   selectedComponentsRef.current = selectedComponents;
 
-  // === Side Effect Hooks ===
+  // === Хуки побочных эффектов ===
   const { apiResult, isLoading: isApiLoading } = useCompatibilityApi(selectedComponents);
   const { fpsData: apiFpsData } = useFpsApi(selectedComponents);
 
-  // Auto-save to API for authenticated users
+  // Автосохранение в API для аутентифицированных пользователей
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const lastSavedJsonRef = useRef('');
   const lastSavedConfigIdRef = useRef<string | null>(null);
-  /** Ref that prevents usePersistence from saving to localStorage during config loading */
+  /** Ref, предотвращающий сохранение usePersistence в localStorage во время загрузки конфигурации */
   const skipSaveRef = useRef(false);
 
-  // On mount: load existing auto-save ID so we update instead of creating new
+  // При монтировании: загружаем существующий ID автосохранения, чтобы обновлять, а не создавать новый
   useEffect(() => {
     if (!isAuthenticated) return;
     let cancelled = false;
@@ -126,7 +126,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
         const existing = Array.isArray(data) ? data.find((c) => c.name === 'Автосохранение') : null;
         if (existing) lastSavedConfigIdRef.current = existing.id;
       } catch {
-        // Ignore — will create new auto-save
+        // Игнорируем — будет создано новое автосохранение
       }
     })();
     return () => { cancelled = true; };
@@ -134,7 +134,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
 
   const autoSaveToApi = useCallback(async (state: PCBuilderSelectedState) => {
     if (!isAuthenticated) return;
-    // Skip if nothing meaningful changed (avoid empty saves)
+    // Пропускаем, если ничего значимо не изменилось (избегаем пустых сохранений)
     const hasAny = state.cpu || state.motherboard || state.gpu || state.ram.length > 0 || state.storage.length > 0;
     if (!hasAny) return;
     const json = JSON.stringify(state, (_k, v) => v === undefined ? null : v);
@@ -160,7 +160,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
       const { data } = await apiClient.post('/pcbuilder/configurations', payload);
       if (data?.id) lastSavedConfigIdRef.current = data.id;
     } catch {
-      // Silent fail for auto-save
+      // Тихий сбой для автосохранения
     }
   }, [isAuthenticated]);
 
@@ -171,11 +171,11 @@ export function usePCBuilder(): UsePCBuilderReturn {
     skipSaveRef,
   });
 
-  // === Cart Store ===
+  // === Хранилище корзины ===
   const cartAddItem = useCartStore((s) => s.addItem);
   const cartAddBundleItem = useCartStore((s) => s.addBundleItem);
 
-  // === Derived Data (pure logic) ===
+  // === Производные данные (чистая логика) ===
   const SOCKET_ERROR_RE = /Не удалось определить сокет/i;
   const localCompatibility = useMemo(() => {
     const componentMap = buildComponentMap(selectedComponents);
@@ -209,7 +209,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     [cpuProduct, gpuProduct, ramFirst]
   );
 
-  // === Combined Compatibility (API + local) ===
+  // === Комбинированная совместимость (API + локальная) ===
   const compatibility: CompatibilityResult = useMemo(() => {
     if (apiResult != null) {
       const apiIssues = apiResult.result;
@@ -229,11 +229,11 @@ export function usePCBuilder(): UsePCBuilderReturn {
     return { ...localCompatibility, bottleneck: '' };
   }, [apiResult, localCompatibility]);
 
-  // === Computed Values ===
+  // === Вычисляемые значения ===
   const recommendedPsu = useMemo(() => {
     if (apiResult?.recommendedPSU) return apiResult.recommendedPSU;
-    const gpuRecommendedPsu = selectedComponents.gpu?.product?.specifications?.recommendedPsu as number | undefined;
-    const calculated = Math.ceil(powerConsumption * 1.2); // Unified 1.2x margin
+      const gpuRecommendedPsu = selectedComponents.gpu?.product?.specifications?.recommendedPsu as number | undefined;
+    const calculated = Math.ceil(powerConsumption * 1.2); // Единый запас 1.2x
     return gpuRecommendedPsu ? Math.max(calculated, gpuRecommendedPsu) : calculated;
   }, [apiResult, powerConsumption, selectedComponents.gpu]);
 
@@ -249,14 +249,14 @@ export function usePCBuilder(): UsePCBuilderReturn {
     [selectedComponents.ram.length, maxRamModules]
   );
 
-  // === RAM Trim Effect ===
+  // === Эффект обрезки RAM ===
   useRamTrim({
     ramModules: selectedComponents.ram,
     maxModules: maxRamModules,
     onTrim: (trimmedRam) => setSelectedComponents((prev) => ({ ...prev, ram: trimmedRam })),
   });
 
-  // === Actions ===
+  // === Действия ===
   const selectComponentAction = useCallback(
     (type: PCComponentType, product: Product, options?: SelectComponentOptions) => {
       setSelectedComponents((prev) => selectComponent(prev, type, product, options));
@@ -306,7 +306,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     };
   }, [selectedComponents]);
 
-  // === Return ===
+  // === Возврат ===
   return {
     selectedComponents,
     selectedComponentsRef,

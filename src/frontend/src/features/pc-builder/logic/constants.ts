@@ -1,5 +1,5 @@
 /**
- * PC Builder Constants
+ * PC Builder Константы
  * Extracted from usePCBuilder.ts for better organization
  */
 

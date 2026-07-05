@@ -16,7 +16,7 @@ import {
 } from '@/api/__integration__/setup';
 
 // ═══════════════════════════════════════════════
-//  Lifecycle
+//  Жизненный цикл
 // ═══════════════════════════════════════════════
 
 let createdRequestId: string | null = null;
@@ -28,19 +28,19 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Cleanup: cancel the test request if it was created
+  // Очистка: отменить тестовый запрос, если он был создан
   if (createdRequestId != null) {
     try {
       await servicesApi.cancelServiceRequest(createdRequestId);
     } catch {
-      // Ignore cleanup errors — request may already be cancelled or not exist
+      // Игнорировать ошибки очистки — запрос может быть уже отменён или не существовать
     }
   }
   clearAuthToken();
 });
 
 // ═══════════════════════════════════════════════
-//  Public endpoints (no auth required)
+//  Публичные эндпоинты (без авторизации)
 // ═══════════════════════════════════════════════
 
 describe('Services API — public', () => {
@@ -51,7 +51,7 @@ describe('Services API — public', () => {
     expect(Array.isArray(types)).toBe(true);
     expect(types.length).toBeGreaterThan(0);
 
-    // Each type must have required fields
+    // Каждый тип должен иметь обязательные поля
     const first = types[0];
     expect(first).toHaveProperty('id');
     expect(first).toHaveProperty('name');
@@ -61,7 +61,7 @@ describe('Services API — public', () => {
 });
 
 // ═══════════════════════════════════════════════
-//  Authenticated endpoints (client role)
+//  Аутентифицированные эндпоинты (роль клиента)
 // ═══════════════════════════════════════════════
 
 describe('Services API — authenticated (client)', () => {
@@ -69,13 +69,13 @@ describe('Services API — authenticated (client)', () => {
     const response = await servicesApi.getMyServiceRequests();
     const result = unwrap(response);
 
-    // Result may be a paginated object or an array
+    // Результат может быть пагинированным объектом или массивом
     const requests = Array.isArray(result) ? result : result?.items ?? [];
     expect(Array.isArray(requests)).toBe(true);
   });
 
   it('POST /services — creates a service request', async () => {
-    // First get available service types to pick a valid serviceTypeId
+    // Сначала получить доступные типы услуг, чтобы выбрать корректный serviceTypeId
     const typesResponse = await servicesApi.getServiceTypes();
     const types = unwrap(typesResponse);
     expect(types.length).toBeGreaterThan(0);
@@ -96,12 +96,12 @@ describe('Services API — authenticated (client)', () => {
     expect(created.id).toBeTruthy();
     expect(created.requestNumber).toBeTruthy();
 
-    // Store for later tests and cleanup
+    // Сохранить для последующих тестов и очистки
     createdRequestId = created.id;
   });
 
   it('GET /services/my — includes the created request', async () => {
-    // Skip if creation failed
+    // Пропустить, если создание не удалось
     if (createdRequestId == null) {
       return;
     }

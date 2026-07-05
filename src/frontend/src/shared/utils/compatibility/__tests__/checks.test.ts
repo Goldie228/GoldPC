@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { checkCPUSocket, checkRAM } from '../checks';
 
-// Helper: minimal Product-like object for tests
+// Вспомогательный: minimal Product-like object for tests
 function makeProduct(
   overrides: Record<string, unknown> = {},
   specs: Record<string, string | number | boolean | undefined> = {},

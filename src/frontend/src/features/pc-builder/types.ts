@@ -1,5 +1,5 @@
 /**
- * PC Builder Feature Types
+ * PC Builder Feature Типы
  * Extracted from usePCBuilder.ts for better organization
  */
 

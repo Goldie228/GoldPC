@@ -24,11 +24,11 @@ import {
   Activity,
 } from 'lucide-react';
 
-// ===== Types =====
+// Типы =====
 
 type Period = 'today' | 'week' | 'month' | 'year';
 
-// ===== Helpers =====
+// Вспомогательные функции =====
 
 function formatCurrency(value: number): string {
   return `${value.toLocaleString('ru-BY', {
@@ -47,7 +47,7 @@ function formatDate(dateStr: string): string {
   });
 }
 
-// ===== Sparkline SVG =====
+// Мини-график SVG =====
 
 function Sparkline({
   data,
@@ -101,7 +101,7 @@ function Sparkline({
   );
 }
 
-// ===== Mini Chart (bar chart for orders/revenue) =====
+// Mini Chart (bar chart for orders/revenue) =====
 
 function MiniBarChart({
   data,
@@ -137,7 +137,7 @@ function MiniBarChart({
   );
 }
 
-// ===== Animated Counter =====
+// Анимированный счётчик =====
 
 function AnimatedNumber({ value, prefix = '', suffix = '' }: {
   value: number;
@@ -153,7 +153,7 @@ function AnimatedNumber({ value, prefix = '', suffix = '' }: {
   );
 }
 
-// ===== Skeleton =====
+// Скелетон =====
 
 function StatSkeleton() {
   return (
@@ -171,7 +171,7 @@ function StatSkeleton() {
   );
 }
 
-// ===== Change Indicator =====
+// Индикатор изменения =====
 
 function ChangeIndicator({ change }: { change: number }) {
   if (change === 0) {
@@ -202,7 +202,7 @@ function ChangeIndicator({ change }: { change: number }) {
   );
 }
 
-// ===== Period Selector =====
+// Выбор периода =====
 
 const PERIODS: { key: Period; label: string }[] = [
   { key: 'today', label: 'Сегодня' },
@@ -259,7 +259,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Zap,
 };
 
-// ===== Stat Card =====
+// Stat Карточка =====
 
 function StatCard({
   icon,
@@ -313,7 +313,7 @@ function StatCard({
   );
 }
 
-// ===== Stats Grid =====
+// Статистика Grid =====
 
 function StatsGrid({ period }: { period: Period }) {
   const { data, isLoading, error, refetch } = useQuery({
@@ -419,7 +419,7 @@ function StatsGrid({ period }: { period: Period }) {
   );
 }
 
-// ===== Activity Feed =====
+// Лента активности =====
 
 function ActivityFeed() {
   // Получаем ленту активности из API
@@ -506,7 +506,7 @@ function ActivityFeed() {
   );
 }
 
-// ===== Charts Section =====
+// Раздел графиков =====
 
 function ChartsSection({ period }: { period: Period }) {
   // Получаем данные графиков из API
@@ -603,7 +603,7 @@ function ChartsSection({ period }: { period: Period }) {
   );
 }
 
-// ===== Quick Actions =====
+// Quick Действия =====
 
 function QuickActions() {
   const actions = [
@@ -665,7 +665,7 @@ function QuickActions() {
   );
 }
 
-// ===== Page =====
+// Страница =====
 
 export function CoordinatorDashboard() {
   const [period, setPeriod] = useState<Period>('month');

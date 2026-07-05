@@ -11,27 +11,27 @@ namespace GoldPC.SharedKernel.DTOs;
 public class CreateOrderRequest
 {
     /// <summary>
-    /// Gets or sets имя покупателя.
+    /// Получает или задаёт имя покупателя.
     /// </summary>
     [Required(ErrorMessage = "Имя обязательно")]
     [MaxLength(100, ErrorMessage = "Имя не должно превышать 100 символов")]
     public string FirstName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets фамилия покупателя.
+    /// Получает или задаёт фамилия покупателя.
     /// </summary>
     [MaxLength(100, ErrorMessage = "Фамилия не должна превышать 100 символов")]
     public string? LastName { get; set; }
 
     /// <summary>
-    /// Gets or sets телефон покупателя.
+    /// Получает или задаёт телефон покупателя.
     /// </summary>
     [Required(ErrorMessage = "Телефон обязателен")]
     [MaxLength(20, ErrorMessage = "Телефон не должен превышать 20 символов")]
     public string Phone { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets email покупателя.
+    /// Получает или задаёт email покупателя.
     /// </summary>
     [Required(ErrorMessage = "Email обязателен")]
     [EmailAddress(ErrorMessage = "Неверный формат email")]
@@ -39,13 +39,13 @@ public class CreateOrderRequest
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets способ получения (Pickup | Delivery).
+    /// Получает или задаёт способ получения (Pickup | Delivery).
     /// </summary>
     [Required(ErrorMessage = "Способ получения обязателен")]
     public string DeliveryMethod { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets способ оплаты (Online | OnReceipt).
+    /// Получает или задаёт способ оплаты (Online | OnReceipt).
     /// </summary>
     [Required(ErrorMessage = "Способ оплаты обязателен")]
     public string PaymentMethod { get; set; } = string.Empty;
@@ -60,29 +60,29 @@ public class CreateOrderRequest
     public string? Comment { get; set; }
 
     /// <summary>
-    /// Gets or sets промокод.
+    /// Получает или задаёт промокод.
     /// </summary>
     [MaxLength(50, ErrorMessage = "Промокод не должен превышать 50 символов")]
     public string? PromoCode { get; set; }
 
     /// <summary>
-    /// Gets or sets сумма скидки по промокоду.
+    /// Получает или задаёт сумма скидки по промокоду.
     /// </summary>
     public decimal DiscountAmount { get; set; }
 
     /// <summary>
-    /// Gets or sets желаемая дата доставки.
+    /// Получает или задаёт желаемая дата доставки.
     /// </summary>
     public string? DeliveryDate { get; set; }
 
     /// <summary>
-    /// Gets or sets временной слот доставки (morning | afternoon | evening | asap).
+    /// Получает или задаёт временной слот доставки (morning | afternoon | evening | asap).
     /// </summary>
     [MaxLength(20, ErrorMessage = "Временной слот не должен превышать 20 символов")]
     public string? DeliveryTimeSlot { get; set; }
 
     /// <summary>
-    /// Gets or sets позиции заказа.
+    /// Получает или задаёт позиции заказа.
     /// </summary>
     [Required(ErrorMessage = "Заказ должен содержать минимум одну позицию")]
     [MinLength(1, ErrorMessage = "Заказ должен содержать минимум одну позицию")]

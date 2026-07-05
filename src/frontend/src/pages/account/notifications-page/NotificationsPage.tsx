@@ -17,9 +17,9 @@ import type { UserNotificationPreferences } from '@/api/notifications';
 import { ToggleSwitch } from '@/components/ui/ToggleSwitch';
 import { SectionCard } from '@/components/ui/SectionCard';
 
-// =============================================================================
+// 
 // Типы уведомлений с описаниями
-// =============================================================================
+// 
 
 interface NotificationTypeInfo {
   key: keyof UserNotificationPreferences;
@@ -55,9 +55,9 @@ const NOTIFICATION_TYPES: NotificationTypeInfo[] = [
   },
 ];
 
-// =============================================================================
+// 
 // Skeleton загрузки
-// =============================================================================
+// 
 
 function NotificationsSkeleton() {
   return (
@@ -85,9 +85,9 @@ function NotificationsSkeleton() {
   );
 }
 
-// =============================================================================
+// 
 // NotificationsPage
-// =============================================================================
+// 
 
 export function NotificationsPage() {
   const queryClient = useQueryClient();

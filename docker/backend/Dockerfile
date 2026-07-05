@@ -1,25 +1,25 @@
 # =============================================================================
-# Multi-stage Dockerfile for GoldPC .NET Backend Services
-# Security: Non-root user, Alpine runtime, Health checks
-# Optimization: Layer caching for dependencies
+# Многоэтапный Dockerfile для GoldPC .NET Backend Services
+# Безопасность: Не-root пользователь, Alpine среда выполнения, Проверки здоровья
+# Оптимизация: Кэширование слоёв для зависимостей
 # =============================================================================
 
 ARG SERVICE_NAME=CatalogService
 ARG SERVICE_PORT=5001
 
 # =============================================================================
-# Stage 1: Build - Compile and test
+# Этап 1: Сборка — Компиляция и тестирование
 # =============================================================================
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG SERVICE_NAME
 
 WORKDIR /src
 
-# Optimization: Copy solution file first
+# Оптимизация: Сначала скопировать файл решения
 COPY ["src/GoldPC.sln", "./"]
 
-# Optimization: Copy all .csproj files for layer caching
-# This allows Docker to cache the restore layer when only code changes
+# Оптимизация: Скопировать все .csproj файлы для кэширования слоёв
+# Это позволяет Docker кэшировать слой restore, когда меняется только код
 COPY ["src/AuthService/AuthService.csproj", "AuthService/"]
 COPY ["src/CatalogService/CatalogService.csproj", "CatalogService/"]
 COPY ["src/OrdersService/OrdersService.csproj", "OrdersService/"]
@@ -29,10 +29,10 @@ COPY ["src/WarrantyService/WarrantyService.csproj", "WarrantyService/"]
 COPY ["src/Shared/Shared.csproj", "Shared/"]
 COPY ["src/SharedKernel/SharedKernel.csproj", "SharedKernel/"]
 
-# Restore dependencies - this layer will be cached if .csproj files don't change
+# Восстановление зависимостей — этот слой будет кэширован, если .csproj файлы не меняются
 RUN dotnet restore "GoldPC.sln"
 
-# Copy all source code (after restore for better caching)
+# Копировать весь исходный код (после restore для лучшего кэширования)
 COPY src/AuthService/ AuthService/
 COPY src/CatalogService/ CatalogService/
 COPY src/OrdersService/ OrdersService/
@@ -42,11 +42,11 @@ COPY src/WarrantyService/ WarrantyService/
 COPY src/Shared/ Shared/
 COPY src/SharedKernel/ SharedKernel/
 
-# Build the solution
+# Сборка решения
 RUN dotnet build "GoldPC.sln" -c Release --no-restore
 
 # =============================================================================
-# Stage 2: Publish - Create deployment artifacts
+# Этап 2: Публикация — Создание артефактов развёртывания
 # =============================================================================
 FROM build AS publish
 ARG SERVICE_NAME
@@ -55,45 +55,45 @@ WORKDIR "/src/${SERVICE_NAME}"
 RUN dotnet publish "${SERVICE_NAME}.csproj" -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 # =============================================================================
-# Stage 3: Runtime - Minimal secure image
+# Этап 3: Среда выполнения — Минимальный безопасный образ
 # =============================================================================
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 ARG SERVICE_NAME
 ARG SERVICE_PORT
 
-# Security: Install required packages
-# - ca-certificates: For TLS/SSL connections
-# - wget: For health checks (lighter than curl)
-# - curl: For advanced health checks (POST requests)
-# - tzdata: For timezone support
+# Безопасность: Установка необходимых пакетов
+# - ca-certificates: Для TLS/SSL соединений
+# - wget: Для проверок здоровья (легче чем curl)
+# - curl: Для расширенных проверок здоровья (POST запросы)
+# - tzdata: Для поддержки часовых поясов
 RUN apk add --no-cache ca-certificates wget curl tzdata && \
     update-ca-certificates
 
-# Security: Create non-root user and group
-# Using Alpine's adduser/addgroup commands
+# Безопасность: Создание не-root пользователя и группы
+# Использование команд Alpine adduser/addgroup
 RUN addgroup -g 1000 -S appgroup && \
     adduser -u 1000 -S appuser -G appgroup -h /app
 
 WORKDIR /app
 
-# Copy published application from publish stage
+# Копировать опубликованное приложение из этапа публикации
 COPY --from=publish /app/publish .
 
-# Security: Set proper ownership
+# Безопасность: Установка правильного владельца
 RUN chown -R appuser:appgroup /app
 
-# Security: Switch to non-root user
+# Безопасность: Переключение на не-root пользователя
 USER appuser
 
-# Configure service
+# Настройка сервиса
 EXPOSE ${SERVICE_PORT}
 ENV ASPNETCORE_URLS=http://+:${SERVICE_PORT}
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
-# Health check using wget
+# Проверка здоровья с использованием wget
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:${SERVICE_PORT}/health || exit 1
 
-# Entry point - use shell form to expand SERVICE_NAME
+# Точка входа — использование shell-формы для разворачивания SERVICE_NAME
 CMD ["sh", "-c", "dotnet ${SERVICE_NAME}.dll"]

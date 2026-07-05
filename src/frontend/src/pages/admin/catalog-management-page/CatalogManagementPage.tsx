@@ -53,7 +53,7 @@ export function CatalogManagementPage() {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
 
-  // Filter & pagination state
+  // Фильтр & пагинация state
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory | ''>('');
@@ -72,7 +72,7 @@ export function CatalogManagementPage() {
     return () => clearTimeout(debounceRef.current);
   }, [searchInput]);
 
-  // View mode state (table/grid) with localStorage persistence
+  // View mode state (таблица/grid) with localStorage persistence
   const [viewMode, setViewMode] = useState<'table' | 'grid'>(() => {
     const saved = localStorage.getItem('admin-catalog-view');
     return saved === 'table' || saved === 'grid' ? saved : 'grid';
@@ -85,7 +85,7 @@ export function CatalogManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<ProductFormData>(EMPTY_FORM);
 
-  // Build query params
+  // Строит query params
   const queryParams = {
     page,
     pageSize,
@@ -110,7 +110,7 @@ export function CatalogManagementPage() {
   const totalItems = productsResponse?.meta?.totalItems ?? 0;
   const totalPages = productsResponse?.meta?.totalPages ?? 1;
 
-  // Create mutation
+  // Создаёт mutation
   const createMutation = useMutation({
     mutationFn: (data: CreateProductRequest) => catalogAdminApi.createProduct(data),
     onSuccess: () => {
@@ -138,7 +138,7 @@ export function CatalogManagementPage() {
   const isSaving = createMutation.isPending;
   const isDeleting = deleteMutation.isPending;
 
-  // --- Handlers ---
+  // --- Обработчики ---
 
   const openCreateModal = () => {
     setFormData(EMPTY_FORM);

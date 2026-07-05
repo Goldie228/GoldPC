@@ -152,11 +152,11 @@ describe('ProductCard', () => {
       
       const button = screen.getByRole('button', { name: /в корзину/i });
       
-      // Tab to button
+      // Таб до кнопки
       button.focus();
       expect(button).toHaveFocus();
       
-      // Press Enter
+      // Нажатие Enter
       fireEvent.keyDown(button, { key: 'Enter' });
       expect(mockAddToCart).toHaveBeenCalled();
     });

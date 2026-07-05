@@ -1,74 +1,80 @@
 # =============================================================================
-# Multi-stage Dockerfile for AuthService
-# Security: Non-root user, Alpine runtime, Health checks
-# Optimization: Layer caching for dependencies
+# Многоэтапный Dockerfile для AuthService
+# Безопасность: Не-root пользователь, Alpine среда выполнения, Проверки здоровья
+# Оптимизация: Кэширование слоёв для зависимостей
 # =============================================================================
 
 # =============================================================================
-# Stage 1: Build - Compile
+# Этап 1: Сборка — Компиляция
 # =============================================================================
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Optimization: Copy .csproj files first for layer caching
+# Оптимизация: Сначала скопировать .csproj файлы для кэширования слоёв
 COPY ["src/SharedKernel/SharedKernel.csproj", "SharedKernel/"]
 COPY ["src/Shared/Shared.csproj", "Shared/"]
 COPY ["src/AuthService/AuthService.csproj", "AuthService/"]
 
-# Restore dependencies - cached layer
+# Восстановление зависимостей — кэшированный слой
 RUN dotnet restore "AuthService/AuthService.csproj"
 
-# Copy source code (after restore for better caching)
+# Копировать исходный код (после restore для лучшего кэширования)
 COPY src/SharedKernel/ SharedKernel/
 COPY src/Shared/ Shared/
 COPY src/AuthService/ AuthService/
 
-# Build the service
+# Сборка сервиса
 WORKDIR "/src/AuthService"
 RUN dotnet build "AuthService.csproj" -c Release --no-restore
 
 # =============================================================================
-# Stage 2: Publish - Create deployment artifacts
+# Этап 2: Публикация — Создание артефактов развёртывания
 # =============================================================================
 FROM build AS publish
 WORKDIR "/src/AuthService"
 RUN dotnet publish "AuthService.csproj" -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 # =============================================================================
-# Stage 3: Runtime - Minimal secure image
+# Этап 3: Среда выполнения — Минимальный безопасный образ
 # =============================================================================
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 
-# Security: Install required packages
-# - ca-certificates: For TLS/SSL connections
-# - curl: For health checks
-# - tzdata: For timezone support
+# Безопасность: Установка необходимых пакетов
+# - ca-certificates: Для TLS/SSL соединений
+# - curl: Для проверок здоровья
+# - tzdata: Для поддержки часовых поясов
 RUN apk add --no-cache ca-certificates curl tzdata && \
     update-ca-certificates
 
-# Security: Create non-root user and group
+# Безопасность: Создание не-root пользователя и группы
 RUN addgroup -g 1000 -S appgroup && \
     adduser -u 1000 -S appuser -G appgroup -h /app
 
 WORKDIR /app
 
-# Copy published application from publish stage
+# Копировать опубликованное приложение из этапа публикации
 COPY --from=publish /app/publish .
 
-# Security: Set proper ownership
+# Копировать директорию шаблонов для рендеринга email
+COPY src/AuthService/Templates ./Templates
+
+# Копировать appsettings.json для конфигурации
+COPY src/AuthService/appsettings.json ./appsettings.json
+
+# Безопасность: Установка правильного владельца
 RUN chown -R appuser:appgroup /app
 
-# Security: Switch to non-root user
+# Безопасность: Переключение на не-root пользователя
 USER appuser
 
-# Configure service
-EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
+# Настройка сервиса
+EXPOSE 5003
+ENV ASPNETCORE_URLS=http://+:5003
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
-# Health check using curl
+# Проверка здоровья с использованием curl
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
+    CMD curl -f http://localhost:5003/health || exit 1
 
 ENTRYPOINT ["dotnet", "AuthService.dll"]

@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace GoldPC.Api.Controllers;
 
 /// <summary>
-/// Controller for user notification management (mark read, delete, preferences).
-/// Notifications are pushed via SignalR, this handles CRUD operations.
+/// Контроллер управления уведомлениями пользователя (отметить прочитанным, удалить, настройки).
+/// Уведомления отправляются через SignalR, этот контроллер обрабатывает CRUD операции.
 /// </summary>
 [ApiController]
 [Route("api/v1/notifications")]
@@ -30,9 +30,9 @@ public class NotificationsController : ControllerBase
     }
 
     /// <summary>
-    /// Get notifications for the current user
+    /// Получить уведомления для текущего пользователя
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <returns>A <see cref="Task"/> представляющий асинхронную операцию.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Notification>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Notification>>> GetMyNotifications(
@@ -41,16 +41,16 @@ public class NotificationsController : ControllerBase
     {
         var userId = GetCurrentUserId();
         if (userId == null)
-            return Unauthorized(new { error = "User not authenticated" });
+            return Unauthorized(new { error = "Пользователь не аутентифицирован" });
 
         var notifications = await _notificationService.GetUserNotificationsAsync(userId.Value, unreadOnly, limit);
         return Ok(notifications);
     }
 
     /// <summary>
-    /// Mark a single notification as read
+    /// Отметить одно уведомление как прочитанное
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <returns>A <see cref="Task"/> представляющий асинхронную операцию.</returns>
     [HttpPut("{id:guid}/read")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -59,44 +59,44 @@ public class NotificationsController : ControllerBase
         try
         {
             await _notificationService.MarkAsReadAsync(id);
-            _logger.LogDebug("Notification {Id} marked as read", id);
-            return Ok(new { message = "Notification marked as read" });
+            _logger.LogDebug("Уведомление {Id} отмечено как прочитанное", id);
+            return Ok(new { message = "Уведомление отмечено как прочитанное" });
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Failed to mark notification {Id} as read", id);
-            return NotFound(new { error = "Notification not found" });
+            _logger.LogWarning(ex, "Не удалось отметить уведомление {Id} как прочитанное", id);
+            return NotFound(new { error = "Уведомление не найдено" });
         }
-#pragma warning disable CA1031 // Intentional general catch for notification operation
+#pragma warning disable CA1031 // Намеренный общий перехват для операции уведомления
         catch (Exception ex)
 #pragma warning restore CA1031
         {
-            _logger.LogWarning(ex, "Unexpected error marking notification {Id} as read", id);
-            return NotFound(new { error = "Notification not found" });
+            _logger.LogWarning(ex, "Неожиданная ошибка при отметке уведомления {Id} как прочитанного", id);
+            return NotFound(new { error = "Уведомление не найдено" });
         }
     }
 
     /// <summary>
-    /// Mark all notifications as read for the current user
+    /// Отметить все уведомления как прочитанные для текущего пользователя
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <returns>A <see cref="Task"/> представляющий асинхронную операцию.</returns>
     [HttpPut("read-all")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> MarkAllAsRead()
     {
         var userId = GetCurrentUserId();
         if (userId == null)
-            return Unauthorized(new { error = "User not authenticated" });
+            return Unauthorized(new { error = "Пользователь не аутентифицирован" });
 
         await _notificationService.MarkAllAsReadAsync(userId.Value);
-        _logger.LogDebug("All notifications marked as read for user {UserId}", userId);
-        return Ok(new { message = "All notifications marked as read" });
+        _logger.LogDebug("Все уведомления отмечены как прочитанные для пользователя {UserId}", userId);
+        return Ok(new { message = "Все уведомления отмечены как прочитанные" });
     }
 
     /// <summary>
-    /// Delete a notification
+    /// Удалить уведомление
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <returns>A <see cref="Task"/> представляющий асинхронную операцию.</returns>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -105,45 +105,45 @@ public class NotificationsController : ControllerBase
         try
         {
             await _notificationService.DeleteNotificationAsync(id);
-            _logger.LogDebug("Notification {Id} deleted", id);
-            return Ok(new { message = "Notification deleted" });
+            _logger.LogDebug("Уведомление {Id} удалено", id);
+            return Ok(new { message = "Уведомление удалено" });
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Failed to delete notification {Id}", id);
-            return NotFound(new { error = "Notification not found" });
+            _logger.LogWarning(ex, "Не удалось удалить уведомление {Id}", id);
+            return NotFound(new { error = "Уведомление не найдено" });
         }
-#pragma warning disable CA1031 // Intentional general catch for notification operation
+#pragma warning disable CA1031 // Намеренный общий перехват для операции уведомления
         catch (Exception ex)
 #pragma warning restore CA1031
         {
-            _logger.LogWarning(ex, "Unexpected error deleting notification {Id}", id);
-            return NotFound(new { error = "Notification not found" });
+            _logger.LogWarning(ex, "Неожиданная ошибка при удалении уведомления {Id}", id);
+            return NotFound(new { error = "Уведомление не найдено" });
         }
     }
 
     /// <summary>
-    /// GET /api/v1/notifications/preferences — returns current user's notification preferences.
-    /// All types default to true if not customized.
+    /// GET /api/v1/notifications/preferences — возвращает текущие настройки уведомлений пользователя.
+    /// Все типы по умолчанию включены (true), если не настроены.
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <returns>A <see cref="Task"/> представляющий асинхронную операцию.</returns>
     [HttpGet("preferences")]
     [ProducesResponseType(typeof(UserNotificationPrefs), StatusCodes.Status200OK)]
     public async Task<ActionResult<UserNotificationPrefs>> GetPreferences()
     {
         var userId = GetCurrentUserId();
         if (userId == null)
-            return Unauthorized(new { error = "User not authenticated" });
+            return Unauthorized(new { error = "Пользователь не аутентифицирован" });
 
         var prefs = await _userPrefService.GetPreferencesAsync(userId.Value);
         return Ok(prefs);
     }
 
     /// <summary>
-    /// PUT /api/v1/notifications/preferences — saves user's notification preferences.
-    /// Accepts partial updates — only provided fields will be changed.
+    /// PUT /api/v1/notifications/preferences — сохраняет настройки уведомлений пользователя.
+    /// Принимает частичные обновления — будут изменены только указанные поля.
     /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <returns>A <see cref="Task"/> представляющий асинхронную операцию.</returns>
     [HttpPut("preferences")]
     [ProducesResponseType(typeof(UserNotificationPrefs), StatusCodes.Status200OK)]
     public async Task<ActionResult<UserNotificationPrefs>> UpdatePreferences(
@@ -151,11 +151,11 @@ public class NotificationsController : ControllerBase
     {
         var userId = GetCurrentUserId();
         if (userId == null)
-            return Unauthorized(new { error = "User not authenticated" });
+            return Unauthorized(new { error = "Пользователь не аутентифицирован" });
 
         var current = await _userPrefService.GetPreferencesAsync(userId.Value);
 
-        // Merge: only override fields that were explicitly provided
+        // Слияние: переопределяем только явно указанные поля
         var merged = current with
         {
             OrderStatusChanged = update.OrderStatusChanged ?? current.OrderStatusChanged,
@@ -166,7 +166,7 @@ public class NotificationsController : ControllerBase
         };
 
         var saved = await _userPrefService.SavePreferencesAsync(userId.Value, merged);
-        _logger.LogInformation("Notification preferences updated for user {UserId}", userId);
+        _logger.LogInformation("Настройки уведомлений обновлены для пользователя {UserId}", userId);
         return Ok(saved);
     }
 

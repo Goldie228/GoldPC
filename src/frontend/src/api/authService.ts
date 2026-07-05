@@ -58,7 +58,7 @@ const AUTH_ERROR_MESSAGES: Record<number, string> = {
  * Возвращает понятное пользователю сообщение об ошибке
  */
 export const getAuthErrorMessage = (error: unknown): string => {
-  // Orval-generated errors may be plain objects with { status, data } or Error instances with response
+  // Orval-generated errors may be plain objects with { status, data } or Ошибка instances with response
   if (error != null && typeof error === 'object') {
     const obj = error as Record<string, unknown>;
     const response = obj.response as { status?: number; data?: { message?: string } } | undefined;

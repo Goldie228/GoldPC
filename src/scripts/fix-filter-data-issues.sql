@@ -1,10 +1,10 @@
 -- ============================================================
--- Fix Filter Data Quality Issues
--- Run against: goldpc_catalog
+-- Исправление проблем качества данных фильтров
+-- Запускать против: goldpc_catalog
 -- ============================================================
 
--- 1. MONITOR BRIGHTNESS: Divide all value_number by 10
--- Values are stored ×10 (e.g., 2500 instead of 250 cd/m²)
+-- 1. ЯРКОСТЬ МОНИТОРА: Разделить все value_number на 10
+-- Значения хранятся ×10 (например, 2500 вместо 250 кд/м²)
 DO $$
 DECLARE
     brightness_attr_id UUID;
@@ -16,13 +16,13 @@ BEGIN
     SET value_number = value_number / 10
     WHERE attribute_id = brightness_attr_id
       AND value_number IS NOT NULL
-      AND value_number > 100;  -- Only fix values that are clearly ×10
+      AND value_number > 100;  -- Исправлять только значения, явно умноженные на 10
 
     GET DIAGNOSTICS affected_count = ROW_COUNT;
-    RAISE NOTICE 'Brightness: fixed % rows', affected_count;
+    RAISE NOTICE 'Яркость: исправлено % строк', affected_count;
 END $$;
 
--- 2. HEADPHONE TYPE: Clean up boolean artifacts and corrupted values
+-- 2. ТИП НАУШНИКОВ: Очистка булевых артефактов и повреждённых значений
 DO $$
 DECLARE
     type_attr_id UUID;
@@ -30,7 +30,7 @@ DECLARE
 BEGIN
     SELECT id INTO type_attr_id FROM specification_attributes WHERE key = 'type';
 
-    -- Remove 'false' values (boolean artifact)
+    -- Удалить значения 'false' (булевый артефакт)
     DELETE FROM product_specification_values
     WHERE attribute_id = type_attr_id
       AND canonical_value_id IN (
@@ -38,18 +38,18 @@ BEGIN
           WHERE attribute_id = type_attr_id AND value_text = 'false'
       );
     GET DIAGNOSTICS fixed_count = ROW_COUNT;
-    RAISE NOTICE 'Headphone type: removed % false values', fixed_count;
+    RAISE NOTICE 'Тип наушников: удалено % значений false', fixed_count;
 
-    -- Fix corrupted 'поворотные чашки + (1)' -> 'поворотные чашки'
+    -- Исправить повреждённые 'поворотные чашки + (1)' -> 'поворотные чашки'
     UPDATE specification_canonical_values
     SET value_text = 'поворотные чашки'
     WHERE attribute_id = type_attr_id
       AND value_text LIKE 'поворотные чашки +%';
     GET DIAGNOSTICS fixed_count = ROW_COUNT;
-    RAISE NOTICE 'Headphone type: fixed % corrupted values', fixed_count;
+    RAISE NOTICE 'Тип наушников: исправлено % повреждённых значений', fixed_count;
 END $$;
 
--- 3. COOLER FAN_COUNT: Fix garbage values (10, 120, 140 are likely diameter)
+-- 3. КОЛИЧЕСТВО ВЕНТИЛЯТОРОВ КУЛЕРА: Исправить мусорные значения (10, 120, 140 — вероятно диаметр)
 DO $$
 DECLARE
     fan_count_attr_id UUID;
@@ -57,16 +57,16 @@ DECLARE
 BEGIN
     SELECT id INTO fan_count_attr_id FROM specification_attributes WHERE key = 'fan_count';
 
-    -- Set unreasonable fan_count values to NULL (fan_count should be 1-4)
+    -- Установить неразумные значения fan_count в NULL (fan_count должен быть 1-4)
     UPDATE product_specification_values
     SET value_number = NULL
     WHERE attribute_id = fan_count_attr_id
       AND value_number > 10;
     GET DIAGNOSTICS fixed_count = ROW_COUNT;
-    RAISE NOTICE 'Cooler fan_count: fixed % garbage values', fixed_count;
+    RAISE NOTICE 'Кулер fan_count: исправлено % мусорных значений', fixed_count;
 END $$;
 
--- 4. MOUSE DPI: Cap unreasonable values (max realistic DPI is ~30000)
+-- 4. DPI МЫШИ: Ограничить неразумные значения (макс. реалистичный DPI ~30000)
 DO $$
 DECLARE
     dpi_attr_id UUID;
@@ -74,16 +74,16 @@ DECLARE
 BEGIN
     SELECT id INTO dpi_attr_id FROM specification_attributes WHERE key = 'dpi';
 
-    -- Set unreasonable DPI values to NULL
+    -- Установить неразумные значения DPI в NULL
     UPDATE product_specification_values
     SET value_number = NULL
     WHERE attribute_id = dpi_attr_id
       AND value_number > 30000;
     GET DIAGNOSTICS fixed_count = ROW_COUNT;
-    RAISE NOTICE 'Mouse DPI: fixed % anomalous values', fixed_count;
+    RAISE NOTICE 'DPI мыши: исправлено % аномальных значений', fixed_count;
 END $$;
 
--- 5. HEADPHONE IMPEDANCE: Fix max=4816 (data error)
+-- 5. ИМПЕДАНС НАУШНИКОВ: Исправить макс=4816 (ошибка данных)
 DO $$
 DECLARE
     imp_attr_id UUID;
@@ -91,17 +91,17 @@ DECLARE
 BEGIN
     SELECT id INTO imp_attr_id FROM specification_attributes WHERE key = 'impedance';
 
-    -- Set unreasonable impedance values to NULL (max realistic is ~2000 Ohm)
+    -- Установить неразумные значения impedance в NULL (макс. реалистичное ~2000 Ом)
     UPDATE product_specification_values
     SET value_number = NULL
     WHERE attribute_id = imp_attr_id
       AND value_number > 2000;
     GET DIAGNOSTICS fixed_count = ROW_COUNT;
-    RAISE NOTICE 'Headphone impedance: fixed % anomalous values', fixed_count;
+    RAISE NOTICE 'Импеданс наушников: исправлено % аномальных значений', fixed_count;
 END $$;
 
--- 6. BOOLEAN NORMALIZATION: Convert remaining true/false to Да/Нет
--- The backend already normalizes display, but let's fix the DB too
+-- 6. НОРМАЛИЗАЦИЯ БУЛЕВЫХ: Преобразование оставшихся true/false в Да/Нет
+-- Бэкенд уже нормализует отображение, но давайте исправим и БД тоже
 DO $$
 DECLARE
     rec RECORD;
@@ -109,21 +109,21 @@ DECLARE
     false_cv_id UUID;
     fixed_count INTEGER;
 BEGIN
-    -- For each spec attribute that has boolean-like canonical values
+    -- Для каждого атрибута спецификации, имеющего булевы канонические значения
     FOR rec IN
         SELECT DISTINCT sa.id as attr_id, sa.key
         FROM specification_canonical_values scv
         JOIN specification_attributes sa ON sa.id = scv.attribute_id
         WHERE scv.value_text IN ('true', 'false', 'True', 'False', 'TRUE', 'FALSE')
     LOOP
-        -- Get or create normalized canonical values
+        -- Получить или создать нормализованные канонические значения
         SELECT id INTO true_cv_id FROM specification_canonical_values
         WHERE attribute_id = rec.attr_id AND value_text = 'Да';
 
         SELECT id INTO false_cv_id FROM specification_canonical_values
         WHERE attribute_id = rec.attr_id AND value_text = 'Нет';
 
-        -- Create if not exists
+        -- Создать, если не существуют
         IF true_cv_id IS NULL THEN
             INSERT INTO specification_canonical_values (id, attribute_id, value_text, sort_order)
             VALUES (gen_random_uuid(), rec.attr_id, 'Да', 1)
@@ -135,7 +135,7 @@ BEGIN
             RETURNING id INTO false_cv_id;
         END IF;
 
-        -- Migrate 'true' -> 'Да'
+        -- Мигрировать 'true' -> 'Да'
         UPDATE product_specification_values
         SET canonical_value_id = true_cv_id
         WHERE attribute_id = rec.attr_id
@@ -144,9 +144,9 @@ BEGIN
               WHERE attribute_id = rec.attr_id AND value_text IN ('true', 'True', 'TRUE')
           );
         GET DIAGNOSTICS fixed_count = ROW_COUNT;
-        RAISE NOTICE 'Boolean %: migrated % true -> Да', rec.key, fixed_count;
+        RAISE NOTICE 'Булевый %: мигрировано % true -> Да', rec.key, fixed_count;
 
-        -- Migrate 'false' -> 'Нет'
+        -- Мигрировать 'false' -> 'Нет'
         UPDATE product_specification_values
         SET canonical_value_id = false_cv_id
         WHERE attribute_id = rec.attr_id
@@ -155,18 +155,18 @@ BEGIN
               WHERE attribute_id = rec.attr_id AND value_text IN ('false', 'False', 'FALSE')
           );
         GET DIAGNOSTICS fixed_count = ROW_COUNT;
-        RAISE NOTICE 'Boolean %: migrated % false -> Нет', rec.key, fixed_count;
+        RAISE NOTICE 'Булевый %: мигрировано % false -> Нет', rec.key, fixed_count;
     END LOOP;
 END $$;
 
 -- ============================================================================
--- 7. DOUBLE-UNIT FIX: Fix "3 ТБGB" style doubled units in capacity values
+-- 7. ИСПРАВЛЕНИЕ ДВОЙНЫХ ЕДИНИЦ: Исправление сдвоенных единиц вида "3 ТБGB" в значениях ёмкости
 -- ============================================================================
--- Some scraped products have value_text like "3 ТБGB" where both Russian and
--- English units appear. Fix by extracting the numeric part and keeping a single
--- normalized unit.
+-- Некоторые спарсенные товары имеют value_text вида "3 ТБGB", где и русские, и
+-- английские единицы появляются вместе. Исправляем путём извлечения числовой части
+-- и сохранения одной нормализованной единицы.
 
--- 7a. Fix values where Russian + English unit are concatenated (e.g. "3 ТБGB")
+-- 7a. Исправление значений, где русская + английская единица склеены (например "3 ТБGB")
 DO $$
 DECLARE
     fixed_count INTEGER;
@@ -177,10 +177,10 @@ BEGIN
     WHERE value_text ~ '\d+[\.,]?\d*\s*(ТБ|ГБ|МБ)\s*(TB|GB|MB)';
 
     GET DIAGNOSTICS fixed_count = ROW_COUNT;
-    RAISE NOTICE 'Double-unit (RU+EN): fixed % values', fixed_count;
+    RAISE NOTICE 'Двойные единицы (RU+EN): исправлено % значений', fixed_count;
 END $$;
 
--- 7b. Fix values where English + Russian unit are concatenated (e.g. "3GBГБ")
+-- 7b. Исправление значений, где английская + русская единица склеены (например "3GBГБ")
 DO $$
 DECLARE
     fixed_count INTEGER;
@@ -191,10 +191,10 @@ BEGIN
     WHERE value_text ~ '\d+[\.,]?\d*\s*(TB|GB|MB)\s*(ТБ|ГБ|МБ)';
 
     GET DIAGNOSTICS fixed_count = ROW_COUNT;
-    RAISE NOTICE 'Double-unit (EN+RU): fixed % values', fixed_count;
+    RAISE NOTICE 'Двойные единицы (EN+RU): исправлено % значений', fixed_count;
 END $$;
 
--- 7c. Normalize Russian units to English: "3 ТБ" -> "3 TB", "16 ГБ" -> "16 GB"
+-- 7c. Нормализация русских единиц в английские: "3 ТБ" -> "3 TB", "16 ГБ" -> "16 GB"
 DO $$
 DECLARE
     fixed_count INTEGER;
@@ -215,11 +215,11 @@ BEGIN
     WHERE value_text ~ '\d+[\.,]?\d*\s*МБ';
 
     GET DIAGNOSTICS fixed_count = ROW_COUNT;
-    RAISE NOTICE 'Russian -> English units: fixed % values', fixed_count;
+    RAISE NOTICE 'Русские -> английские единицы: исправлено % значений', fixed_count;
 END $$;
 
--- 7d. Deduplicate: merge canonical values that now have the same value_text
--- e.g. if "3 TB" and "3 ТБ" both exist after step 7c, merge them
+-- 7d. Дедупликация: слияние канонических значений, которые теперь имеют одинаковый value_text
+-- например, если после шага 7c существуют и "3 TB", и "3 ТБ", объединить их
 DO $$
 DECLARE
     rec RECORD;
@@ -234,26 +234,26 @@ BEGIN
         GROUP BY attribute_id, value_text
         HAVING count(*) > 1
     LOOP
-        -- Keep the first one, merge the rest
+        -- Оставить первое, объединить остальные
         target_cv_id := rec.ids[1];
 
         FOR canonical_rec IN
             SELECT unnest(rec.ids[2:]) as old_id
         LOOP
-            -- Migrate product_specification_values
+            -- Мигрировать product_specification_values
             UPDATE product_specification_values
             SET canonical_value_id = target_cv_id
             WHERE canonical_value_id = canonical_rec.old_id;
 
             GET DIAGNOSTICS migrated = ROW_COUNT;
-            RAISE NOTICE 'Dedup: migrated % refs from % to %', migrated, canonical_rec.old_id, target_cv_id;
+            RAISE NOTICE 'Дедупликация: мигрировано % ссылок из % в %', migrated, canonical_rec.old_id, target_cv_id;
 
-            -- Remove the duplicate canonical value
+            -- Удалить дублирующееся каноническое значение
             DELETE FROM specification_canonical_values WHERE id = canonical_rec.old_id;
         END LOOP;
 
         merged_groups := merged_groups + 1;
     END LOOP;
 
-    RAISE NOTICE 'Dedup: merged % groups of duplicate canonical values', merged_groups;
+    RAISE NOTICE 'Дедупликация: объединено % групп дублирующихся канонических значений', merged_groups;
 END $$;

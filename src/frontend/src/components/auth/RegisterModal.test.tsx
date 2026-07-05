@@ -260,7 +260,7 @@ describe('RegisterModal', () => {
     await user.type(screen.getByLabelText('Пароль'), 'Strong1!Pass');
     await user.type(screen.getByPlaceholderText('Повторите пароль'), 'Strong1!Pass');
     await user.click(screen.getByLabelText(/Я принимаю/));
-    // Button is enabled when not loading
+    // Кнопка is enabled when not loading
     expect(screen.getByRole('button', { name: /Зарегистрироваться/ })).not.toBeDisabled();
     expect(screen.getByRole('button', { name: /Зарегистрироваться/ })).toHaveTextContent('Зарегистрироваться');
   });

@@ -26,19 +26,19 @@ AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport
 
 var builder = WebApplication.CreateBuilder(args);
 
-// === SECURITY: JWT SecretKey must come from environment variables in Production ===
+// === БЕЗОПАСНОСТЬ: JWT SecretKey должен поступать из переменных окружения в Production ===
 if (builder.Environment.IsProduction())
 {
     var jwtKey = builder.Configuration["Jwt:SecretKey"];
     if (string.IsNullOrEmpty(jwtKey) || jwtKey.Contains("Dev", StringComparison.OrdinalIgnoreCase) || jwtKey.Contains("development_secret_key", StringComparison.OrdinalIgnoreCase))
     {
         throw new InvalidOperationException(
-            "CRITICAL SECURITY: Jwt:SecretKey is not configured via environment variable in Production. " +
-            "Set the Jwt__SecretKey environment variable (or use Docker secrets).");
+            "КРИТИЧЕСКАЯ БЕЗОПАСНОСТЬ: Jwt:SecretKey не настроен через переменную окружения в Production. " +
+            "Установите переменную окружения Jwt__SecretKey (или используйте Docker secrets).");
     }
 }
 
-// Serilog — structured logging with JSON in Production, human-readable in Development
+// Serilog — структурированное логирование с JSON в Production, человекочитаемый формат в Development
 var loggerConfig = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .Enrich.WithProperty("Application", "GoldPC")
@@ -63,7 +63,7 @@ builder.Services.AddDbContext<OrdersDbContext>(options =>
 builder.Services.AddHealthChecks()
     .AddNpgSql(
         builder.Configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured."),
+            ?? throw new InvalidOperationException("Строка подключения 'DefaultConnection' не настроена."),
         name: "postgresql",
         failureStatus: HealthStatus.Unhealthy,
         tags: ["db", "ready"]);
@@ -82,7 +82,7 @@ builder.Services.AddHostedService<OutboxProcessor>();
 var catalogGrpcUrl = builder.Configuration["CatalogService:GrpcUrl"];
 if (string.IsNullOrWhiteSpace(catalogGrpcUrl))
 {
-    throw new InvalidOperationException("CatalogService:GrpcUrl is not configured for OrdersService");
+    throw new InvalidOperationException("CatalogService:GrpcUrl не настроен для OrdersService");
 }
 
 builder.Services.AddGrpcClient<Shared.Protos.CatalogGrpc.CatalogGrpcClient>(o =>
@@ -96,7 +96,7 @@ builder.Services.AddHostedService<GoldPC.OrdersService.BackgroundServices.OrderE
 // Payment and Notification Services
 if (builder.Environment.IsDevelopment() && builder.Configuration.GetValue<bool>("UseMocks", true))
 {
-    Log.Information("Running in Development mode with Mocks");
+    Log.Information("Запуск в режиме Development с Mocks");
     
     // Payment Service Mock
     builder.Services.AddSingleton<IPaymentService>(sp =>
@@ -127,7 +127,7 @@ if (builder.Environment.IsDevelopment() && builder.Configuration.GetValue<bool>(
 }
 else
 {
-    Log.Information("Using Production Integrations (Stripe, Twilio, SMTP)");
+    Log.Information("Использование Production интеграций (Stripe, Twilio, SMTP)");
 
     // 1. Payment Integration (Stripe with Decorator)
     builder.Services.AddScoped<StripePaymentService>();
@@ -184,7 +184,7 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 
-    // Support JWT in SignalR query string (WebSocket can't set Authorization header)
+    // Поддержка JWT в строке запроса SignalR (WebSocket не может установить заголовок Authorization)
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
@@ -219,7 +219,7 @@ builder.Services.AddSwaggerGen(c =>
     
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header. Example: \"Authorization: Bearer {token}\"",
+        Description = "JWT Authorization header. Пример: \"Authorization: Bearer {token}\"",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
@@ -243,7 +243,7 @@ builder.Services.AddCors(options =>
     var allowedOrigins = builder.Configuration.GetSection("CORS:AllowedOrigins").Get<string[]>()
         ?? new[] { "http://localhost:5173", "http://localhost:3000" };
     
-    // SignalR requires AllowCredentials which conflicts with AllowAnyOrigin
+    // SignalR требует AllowCredentials, что конфликтует с AllowAnyOrigin
     options.AddPolicy("SignalR", policy =>
     {
         policy.WithOrigins(allowedOrigins)
@@ -261,7 +261,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Security Headers Middleware - должен быть в начале pipeline
+// Security Headers Middleware — должен быть в начале pipeline
 app.UseSecurityHeaders();
 
 // Correlation ID middleware
@@ -305,5 +305,5 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions
     Predicate = _ => false
 });
 
-Log.Information("Orders Service starting on port 5002");
+Log.Information("Orders Service запускается на порту 5002");
 app.Run();

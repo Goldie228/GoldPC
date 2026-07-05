@@ -1,5 +1,5 @@
 services:
-  # PostgreSQL Primary
+  # PostgreSQL — Первичный
   postgres:
     image: postgres:16-alpine
     container_name: goldpc-postgres
@@ -32,7 +32,7 @@ services:
     networks:
       - goldpc-network
 
-  # PostgreSQL Replica
+  # PostgreSQL — Реплика
   postgres-replica:
     image: postgres:16-alpine
     container_name: goldpc-postgres-replica
@@ -79,7 +79,7 @@ services:
     networks:
       - goldpc-network
 
-  # Redis Cache
+  # Redis — Кэш
   redis:
     image: redis:7-alpine
     container_name: goldpc-redis
@@ -217,7 +217,7 @@ services:
       - goldpc-network
     restart: on-failure
 
-  # Adminer (Database Management UI)
+  # Adminer (Интерфейс управления БД)
   adminer:
     image: adminer:latest
     container_name: goldpc-adminer

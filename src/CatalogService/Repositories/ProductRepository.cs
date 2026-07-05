@@ -99,7 +99,8 @@ public class ProductRepository : IProductRepository
             .Include(p => p.SpecificationValues)
                 .ThenInclude(sv => sv.CanonicalValue)
             .Where(p => p.IsActive)
-            .Where(p => p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)));
+            .Where(p => p.Images.Any(i => !string.IsNullOrWhiteSpace(i.Path)))
+            .Where(p => !p.Images.All(i => i.Path != null && i.Path.Contains("placeholders")));
 
         // Фильтрация по ID категории
         if (filter.CategoryId.HasValue)

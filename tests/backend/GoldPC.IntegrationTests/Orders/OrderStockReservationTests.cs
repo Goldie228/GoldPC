@@ -32,7 +32,7 @@ public class OrderStockReservationTests : IClassFixture<OrdersApiFactory>
     [Fact]
     public async Task CreateOrder_ShouldCallCatalogServiceToReserveStock()
     {
-        // Arrange
+        // Подготовка
         var productId = Guid.NewGuid();
         var request = new CreateOrderRequest
         {
@@ -45,7 +45,7 @@ public class OrderStockReservationTests : IClassFixture<OrdersApiFactory>
             Address = new AddressDto { City = "Moscow", Street = "Tverskaya", House = "10" }
         };
 
-        // Mock gRPC response
+        // Мок gRPC ответа
         _grpcClientMock.Setup(x => x.ReserveStockAsync(
             It.IsAny<ReserveStockRequest>(),
             null, null, default))
@@ -56,15 +56,15 @@ public class OrderStockReservationTests : IClassFixture<OrdersApiFactory>
                 () => new Metadata(),
                 () => { }));
 
-        // Act
-        // We need to bypass auth or use a test token. 
-        // For simplicity in this test, we assume the factory handles auth mock if needed.
+        // Действие
+        // Необходимо обойти авторизацию или использовать тестовый токен. 
+        // Для простоты в этом тесте предполагаем, что фабрика обрабатывает мок авторизации.
         var response = await _client.PostAsJsonAsync("/api/v1/orders", request);
 
-        // Assert
+        // Проверка
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         
-        // Verify gRPC call
+        // Проверка gRPC вызова
         _grpcClientMock.Verify(x => x.ReserveStockAsync(
             It.Is<ReserveStockRequest>(r => r.Items.Any(i => i.ProductId == productId.ToString() && i.Quantity == 2)),
             null, null, default), Times.Once);
@@ -81,17 +81,17 @@ public class OrdersApiFactory : WebApplicationFactory<Program>
 
         builder.ConfigureTestServices(services =>
         {
-            // Mock DB
+            // Мок БД
             var dbDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<OrdersDbContext>));
             if (dbDescriptor != null) services.Remove(dbDescriptor);
             services.AddDbContext<OrdersDbContext>(options => options.UseInMemoryDatabase("TestOrdersDb"));
 
-            // Mock gRPC Client
+            // Мок gRPC клиента
             var grpcDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(CatalogGrpc.CatalogGrpcClient));
             if (grpcDescriptor != null) services.Remove(grpcDescriptor);
             services.AddSingleton(CatalogGrpcClientMock.Object);
 
-            // Mock Auth if necessary - here we can add a custom auth handler for testing
+            // Мок Auth при необходимости - здесь можно добавить кастомный обработчик auth для тестирования
         });
     }
 }

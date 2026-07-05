@@ -10,7 +10,7 @@ import { ScrollToTop } from '@/components/ui';
 import './MainLayout.css';
 
 /**
- * MainLayout Component
+ * MainLayout Компонент
  *
  * Структура:
  * - Header (навигация)

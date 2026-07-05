@@ -2,29 +2,29 @@
 /**
  * validate-all-dependencies.js
  * 
- * Validates existence of all NPM and NuGet packages in project dependencies.
- * Detects AI-hallucinated packages that don't exist in registries.
+ * Проверяет существование всех пакетов NPM и NuGet в зависимостях проекта.
+ * Обнаруживает AI-галлюцинированные пакеты, которых нет в реестрах.
  * 
- * Usage:
- *   node scripts/validate-all-dependencies.js [options]
+ * Использование:
+ *   node scripts/validate-all-dependencies.js [опции]
  * 
- * Options:
- *   --verbose    Show detailed output for each package
- *   --json       Output results as JSON
- *   --quiet      Only show errors
- *   --help       Show help
+ * Опции:
+ *   --verbose    Показать подробный вывод для каждого пакета
+ *   --json       Вывести результаты в формате JSON
+ *   --quiet      Показывать только ошибки
+ *   --help       Показать справку
  * 
- * Exit codes:
- *   0 - All packages valid
- *   1 - Some packages not found (hallucinated)
- *   2 - Network errors occurred
+ * Коды выхода:
+ *   0 — Все пакеты валидны
+ *   1 — Некоторые пакеты не найдены (галлюцинации)
+ *   2 — Произошли сетевые ошибки
  */
 
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-// Configuration
+// Конфигурация
 const CONFIG = {
   npmRegistry: 'https://registry.npmjs.org',
   nugetRegistry: 'https://api.nuget.org/v3/registration5-semver1',
@@ -34,7 +34,7 @@ const CONFIG = {
   retryDelay: 1000,
 };
 
-// Parse command line arguments
+// Разбор аргументов командной строки
 const args = process.argv.slice(2);
 const options = {
   verbose: args.includes('--verbose') || args.includes('-v'),
@@ -61,7 +61,7 @@ Exit codes:
   process.exit(0);
 }
 
-// Results storage
+// Хранилище результатов
 const results = {
   npm: { valid: [], invalid: [], skipped: [] },
   nuget: { valid: [], invalid: [], skipped: [] },
@@ -76,7 +76,7 @@ const results = {
 };
 
 /**
- * HTTP GET request with timeout and retry
+ * HTTP GET запрос с таймаутом и повторными попытками
  */
 function httpGet(url, retries = CONFIG.retries) {
   return new Promise((resolve, reject) => {
@@ -87,7 +87,7 @@ function httpGet(url, retries = CONFIG.retries) {
     https.get(url, (res) => {
       clearTimeout(timeout);
       
-      // Handle redirects
+      // Обработка перенаправлений
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         httpGet(res.headers.location, retries)
           .then(resolve)
@@ -102,7 +102,7 @@ function httpGet(url, retries = CONFIG.retries) {
     }).on('error', (err) => {
       clearTimeout(timeout);
       
-      // Retry on network errors
+      // Повтор при сетевых ошибках
       if (retries > 0) {
         setTimeout(() => {
           httpGet(url, retries - 1)
@@ -117,11 +117,11 @@ function httpGet(url, retries = CONFIG.retries) {
 }
 
 /**
- * Check NPM package existence
+ * Проверка существования NPM пакета
  */
 async function checkNpmPackage(pkg) {
   try {
-    // Handle scoped packages (@org/package)
+    // Обработка скоуп-пакетов (@org/package)
     const encodedPkg = pkg.startsWith('@') 
       ? `@${encodeURIComponent(pkg.slice(1))}`
       : encodeURIComponent(pkg);
@@ -141,7 +141,7 @@ async function checkNpmPackage(pkg) {
 }
 
 /**
- * Check NuGet package existence
+ * Проверка существования NuGet пакета
  */
 async function checkNugetPackage(pkg) {
   try {
@@ -161,7 +161,7 @@ async function checkNugetPackage(pkg) {
 }
 
 /**
- * Find all package.json files in project
+ * Поиск всех package.json файлов в проекте
  */
 function findPackageJsonFiles(projectRoot) {
   const files = [];
@@ -175,19 +175,19 @@ function findPackageJsonFiles(projectRoot) {
     
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     
-    // Check if current dir has package.json
+    // Проверка, есть ли в текущей директории package.json
     const packageJsonPath = path.join(dir, 'package.json');
     if (fs.existsSync(packageJsonPath)) {
       files.push(packageJsonPath);
     }
     
-    // Search subdirectories
+    // Поиск в поддиректориях
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
       
       const fullPath = path.join(dir, entry.name);
       
-      // Skip common non-source directories
+      // Пропуск стандартных не-исходных директорий
       if (['node_modules', '.git', 'dist', 'build', 'coverage', 'obj', 'bin'].includes(entry.name)) {
         continue;
       }
@@ -201,7 +201,7 @@ function findPackageJsonFiles(projectRoot) {
 }
 
 /**
- * Find all .csproj files in project
+ * Поиск всех .csproj файлов в проекте
  */
 function findCsprojFiles(projectRoot) {
   const files = [];
@@ -219,7 +219,7 @@ function findCsprojFiles(projectRoot) {
       const fullPath = path.join(dir, entry.name);
       
       if (entry.isDirectory()) {
-        // Skip common non-source directories
+        // Пропуск стандартных не-исходных директорий
         if (['bin', 'obj', 'node_modules', '.git'].includes(entry.name)) {
           continue;
         }
@@ -235,7 +235,7 @@ function findCsprojFiles(projectRoot) {
 }
 
 /**
- * Parse dependencies from package.json
+ * Разбор зависимостей из package.json
  */
 function parsePackageJson(filePath) {
   try {
@@ -244,21 +244,21 @@ function parsePackageJson(filePath) {
     
     const deps = [];
     
-    // Regular dependencies
+    // Обычные зависимости
     if (pkg.dependencies) {
       for (const [name, version] of Object.entries(pkg.dependencies)) {
         deps.push({ name, version, type: 'dependency', file: filePath });
       }
     }
     
-    // Dev dependencies
+    // Зависимости разработки
     if (pkg.devDependencies) {
       for (const [name, version] of Object.entries(pkg.devDependencies)) {
         deps.push({ name, version, type: 'devDependency', file: filePath });
       }
     }
     
-    // Peer dependencies
+    // Пировые зависимости
     if (pkg.peerDependencies) {
       for (const [name, version] of Object.entries(pkg.peerDependencies)) {
         deps.push({ name, version, type: 'peerDependency', file: filePath });
@@ -270,21 +270,21 @@ function parsePackageJson(filePath) {
     results.errors.push({
       type: 'parse_error',
       file: filePath,
-      message: `Failed to parse package.json: ${error.message}`,
+      message: `Не удалось разобрать package.json: ${error.message}`,
     });
     return [];
   }
 }
 
 /**
- * Parse PackageReference from .csproj file
+ * Разбор PackageReference из .csproj файла
  */
 function parseCsproj(filePath) {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     const deps = [];
     
-    // Regex patterns for different PackageReference formats
+    // Регулярные выражения для разных форматов PackageReference
     const patterns = [
       // <PackageReference Include="Package" Version="1.0.0" />
       /<PackageReference\s+Include="([^"]+)"\s+Version="([^"]+)"/g,
@@ -299,14 +299,14 @@ function parseCsproj(filePath) {
     for (const pattern of patterns) {
       let match;
       while ((match = pattern.exec(content)) !== null) {
-        // Handle different capture groups based on pattern
+        // Обработка разных групп захвата в зависимости от шаблона
         let name, version;
         if (pattern.source.includes('Version="([^"]+)"\\s+Include')) {
-          // Pattern: Version before Include
+          // Шаблон: Version перед Include
           version = match[1];
           name = match[2];
         } else {
-          // Pattern: Include before Version
+          // Шаблон: Include перед Version
           name = match[1];
           version = match[2];
         }
@@ -324,14 +324,14 @@ function parseCsproj(filePath) {
     results.errors.push({
       type: 'parse_error',
       file: filePath,
-      message: `Failed to parse .csproj: ${error.message}`,
+      message: `Не удалось разобрать .csproj: ${error.message}`,
     });
     return [];
   }
 }
 
 /**
- * Process items with concurrency limit
+ * Обработка элементов с ограничением параллельности
  */
 async function processConcurrently(items, processor, concurrency = CONFIG.maxConcurrent) {
   const output = [];
@@ -351,20 +351,20 @@ async function processConcurrently(items, processor, concurrency = CONFIG.maxCon
     }
   }
   
-  // Start workers
+  // Запуск рабочих
   const workers = [];
   for (let i = 0; i < Math.min(concurrency, items.length); i++) {
     workers.push(worker());
   }
   
-  // Wait for all workers to complete
+  // Ожидание завершения всех рабочих
   await Promise.all(workers);
   
   return output;
 }
 
 /**
- * Check all NPM dependencies
+ * Проверка всех NPM зависимостей
  */
 async function checkNpmDependencies(projectRoot) {
   const packageJsonFiles = findPackageJsonFiles(projectRoot);
@@ -376,7 +376,7 @@ async function checkNpmDependencies(projectRoot) {
     return;
   }
   
-  // Collect all NPM dependencies
+  // Сбор всех NPM зависимостей
   const allDeps = [];
   const seenDeps = new Set();
   
@@ -402,13 +402,13 @@ async function checkNpmDependencies(projectRoot) {
     console.log(`\n📦 Checking ${allDeps.length} unique NPM packages across ${packageJsonFiles.length} package.json files...\n`);
   }
   
-  // Process packages
+  // Обработка пакетов
   const processed = await processConcurrently(allDeps, async (dep) => {
     const result = await checkNpmPackage(dep.name);
     return { ...result };
   });
   
-  // Collect results
+  // Сбор результатов
   for (const { item: dep, result } of processed) {
     const { valid, statusCode, error } = result;
     results.stats.totalChecked++;
@@ -436,7 +436,7 @@ async function checkNpmDependencies(projectRoot) {
 }
 
 /**
- * Check all NuGet dependencies
+ * Проверка всех NuGet зависимостей
  */
 async function checkNugetDependencies(projectRoot) {
   const csprojFiles = findCsprojFiles(projectRoot);
@@ -448,7 +448,7 @@ async function checkNugetDependencies(projectRoot) {
     return;
   }
   
-  // Collect all NuGet dependencies
+  // Сбор всех NuGet зависимостей
   const allDeps = [];
   const seenDeps = new Set();
   
@@ -474,13 +474,13 @@ async function checkNugetDependencies(projectRoot) {
     console.log(`\n📦 Checking ${allDeps.length} unique NuGet packages across ${csprojFiles.length} .csproj files...\n`);
   }
   
-  // Process packages
+  // Обработка пакетов
   const processed = await processConcurrently(allDeps, async (dep) => {
     const result = await checkNugetPackage(dep.name);
     return { ...result };
   });
   
-  // Collect results
+  // Сбор результатов
   for (const { item: dep, result } of processed) {
     const { valid, statusCode, error } = result;
     results.stats.totalChecked++;
@@ -508,7 +508,7 @@ async function checkNugetDependencies(projectRoot) {
 }
 
 /**
- * Print text summary
+ * Вывод текстового отчёта
  */
 function printSummary() {
   console.log('\n');
@@ -578,14 +578,14 @@ function printSummary() {
 }
 
 /**
- * Print JSON output
+ * Вывод в формате JSON
  */
 function printJson() {
   console.log(JSON.stringify(results, null, 2));
 }
 
 /**
- * Main function
+ * Основная функция
  */
 async function main() {
   const projectRoot = process.cwd();
@@ -607,7 +607,7 @@ async function main() {
     printSummary();
   }
   
-  // Exit with appropriate code
+  // Выход с соответствующим кодом
   if (results.stats.invalid > 0) {
     process.exit(1);
   } else if (results.stats.skipped > 0) {
@@ -617,7 +617,7 @@ async function main() {
   }
 }
 
-// Run
+// Запуск
 main().catch(error => {
   console.error('Fatal error:', error);
   process.exit(2);

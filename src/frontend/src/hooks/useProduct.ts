@@ -32,7 +32,7 @@ export function useProduct(
     queryKey: productKeys.detail(productSlug ?? ''),
     queryFn: async () => {
       if (!productSlug) throw new Error('No product identifier');
-      // Detect UUID vs slug
+      // Определяет UUID vs slug
       if (UUID_RE.test(productSlug)) {
         return catalogApi.getProduct(productSlug);
       }

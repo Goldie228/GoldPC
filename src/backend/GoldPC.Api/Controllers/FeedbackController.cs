@@ -136,22 +136,22 @@ public enum FeedbackType
 public record FeedbackRequest
 {
     /// <summary>
-    /// Gets тип обратной связи
+    /// Получает тип обратной связи
     /// </summary>
     public FeedbackType Type { get; init; }
 
     /// <summary>
-    /// Gets оценка от 1 до 5
+    /// Получает оценка от 1 до 5
     /// </summary>
     public int Rating { get; init; }
 
     /// <summary>
-    /// Gets комментарий пользователя
+    /// Получает комментарий пользователя
     /// </summary>
     public string? Comment { get; init; }
 
     /// <summary>
-    /// Gets страница, с которой отправлен отзыв
+    /// Получает страница, с которой отправлен отзыв
     /// </summary>
     public string? Page { get; init; }
 }
@@ -162,42 +162,42 @@ public record FeedbackRequest
 public class Feedback
 {
     /// <summary>
-    /// Gets or sets уникальный идентификатор
+    /// Получает или задаёт уникальный идентификатор
     /// </summary>
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Gets or sets iD пользователя
+    /// Получает или задаёт iD пользователя
     /// </summary>
     public Guid UserId { get; set; }
 
     /// <summary>
-    /// Gets or sets тип обратной связи
+    /// Получает или задаёт тип обратной связи
     /// </summary>
     public FeedbackType Type { get; set; }
 
     /// <summary>
-    /// Gets or sets оценка от 1 до 5
+    /// Получает или задаёт оценка от 1 до 5
     /// </summary>
     public int Rating { get; set; }
 
     /// <summary>
-    /// Gets or sets комментарий
+    /// Получает или задаёт комментарий
     /// </summary>
     public string? Comment { get; set; }
 
     /// <summary>
-    /// Gets or sets страница, с которой отправлен отзыв
+    /// Получает или задаёт страница, с которой отправлен отзыв
     /// </summary>
     public string? Page { get; set; }
 
     /// <summary>
-    /// Gets or sets user-Agent браузера
+    /// Получает или задаёт user-Agent браузера
     /// </summary>
     public string? UserAgent { get; set; }
 
     /// <summary>
-    /// Gets or sets время создания
+    /// Получает или задаёт время создания
     /// </summary>
     public DateTime Timestamp { get; set; }
 }
@@ -208,12 +208,12 @@ public class Feedback
 public class PagedResult<T>
 {
     /// <summary>
-    /// Gets or sets данные
+    /// Получает или задаёт данные
     /// </summary>
     public IEnumerable<T> Data { get; set; } = Enumerable.Empty<T>();
 
     /// <summary>
-    /// Gets or sets метаданные пагинации
+    /// Получает или задаёт метаданные пагинации
     /// </summary>
     public PaginationMeta Meta { get; set; } = new();
 }
@@ -224,32 +224,32 @@ public class PagedResult<T>
 public class PaginationMeta
 {
     /// <summary>
-    /// Gets or sets текущая страница
+    /// Получает или задаёт текущая страница
     /// </summary>
     public int Page { get; set; }
 
     /// <summary>
-    /// Gets or sets размер страницы
+    /// Получает или задаёт размер страницы
     /// </summary>
     public int PageSize { get; set; }
 
     /// <summary>
-    /// Gets or sets всего элементов
+    /// Получает или задаёт всего элементов
     /// </summary>
     public int TotalItems { get; set; }
 
     /// <summary>
-    /// Gets or sets всего страниц
+    /// Получает или задаёт всего страниц
     /// </summary>
     public int TotalPages { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether есть следующая страница
+    /// Получает или задаёт значение, указывающее, есть следующая страница
     /// </summary>
     public bool HasNextPage { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether есть предыдущая страница
+    /// Получает или задаёт значение, указывающее, есть предыдущая страница
     /// </summary>
     public bool HasPrevPage { get; set; }
 }

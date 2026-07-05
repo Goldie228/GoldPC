@@ -9,22 +9,22 @@ namespace GoldPC.SharedKernel.DTOs;
 public class ValidatePromoCodeResponse
 {
     /// <summary>
-    /// Gets or sets a value indicating whether this promo code is valid.
+    /// Получает или задаёт значение, указывающее, действителен ли этот промокод.
     /// </summary>
     public bool Valid { get; set; }
 
     /// <summary>
-    /// Gets or sets процент скидки
+    /// Получает или задаёт процент скидки
     /// </summary>
     public int Discount { get; set; }
 
     /// <summary>
-    /// Gets or sets сообщение о результате валидации
+    /// Получает или задаёт сообщение о результате валидации
     /// </summary>
     public string Message { get; set; } = string.Empty;
     
     /// <summary>
-    /// Gets or sets сумма скидки в валюте
+    /// Получает или задаёт сумма скидки в валюте
     /// </summary>
     public decimal DiscountAmount { get; set; }
 }

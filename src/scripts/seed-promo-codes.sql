@@ -1,6 +1,6 @@
--- Seed script for promo_codes table
--- Usage: psql -U goldpc -d orders_db -f seed-promo-codes.sql
--- Safe to run multiple times (uses ON CONFLICT DO NOTHING).
+-- Скрипт заполнения таблицы promo_codes
+-- Использование: psql -U goldpc -d orders_db -f seed-promo-codes.sql
+-- Безопасен для многократного запуска (использует ON CONFLICT DO NOTHING).
 
 INSERT INTO promo_codes (id, code, discount_percent, min_order_amount, valid_from, valid_to, max_uses, used_count, is_active, description, created_at)
 VALUES

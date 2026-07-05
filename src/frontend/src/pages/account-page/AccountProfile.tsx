@@ -11,7 +11,7 @@ import { PhoneInput } from '@/components/ui/PhoneInput';
 type SecurityModal = 'password' | 'history' | null;
 
 /**
- * AccountProfile - User profile editing page
+ * AccountProfile - User profile editing страница
  *
  * Features:
  * - Personal data form with dark inputs
@@ -43,7 +43,7 @@ export function AccountProfile() {
     }
   }, [user]);
 
-  // Mobile keyboard handling — adjust padding when keyboard opens
+  // Мобильные keyboard handling — adjust padding when keyboard opens
   useEffect(() => {
     const handleResize = () => {
       const vp = window.visualViewport;

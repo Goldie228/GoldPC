@@ -50,7 +50,7 @@ export function ReviewSection({
   const [form, setForm] = useState({ rating: 5, comment: '', pros: '', cons: '' });
   const groupId = useId();
 
-  /* ------ Fetch reviews on mount ------ */
+  /* Fetch reviews on mount ------ */
   useEffect(() => {
     getProductReviews(productId, 1, 20)
       .then((res) => {
@@ -68,7 +68,7 @@ export function ReviewSection({
       .finally(() => setLoading(false));
   }, [productId]);
 
-  /* ------ Derived data ------ */
+  /* Производные data ------ */
   const ratingValue =
     typeof product.rating === 'number'
       ? product.rating
@@ -77,7 +77,7 @@ export function ReviewSection({
   const reviewCount =
     product.reviewCount ?? (product.rating as { count?: number })?.count ?? 0;
 
-  /* ------ Client-side sort ------ */
+  /* Client-side sort ------ */
   const sortedReviews = useMemo<ProductReview[]>(() => {
     const sorted = [...reviews];
     switch (sortBy) {
@@ -97,13 +97,13 @@ export function ReviewSection({
     return sorted;
   }, [reviews, sortBy]);
 
-  /* ------ Client-side rating filter ------ */
+  /* Client-side rating фильтр ------ */
   const filteredReviews = useMemo<ProductReview[]>(() => {
     if (filterRating === null) return sortedReviews;
     return sortedReviews.filter((r) => r.rating === filterRating);
   }, [sortedReviews, filterRating]);
 
-  /* ------ Rating distribution ------ */
+  /* Rating distribution ------ */
   const distribution = useMemo(() => {
     const counts = [0, 0, 0, 0, 0];
     reviews.forEach((r) => {
@@ -118,7 +118,7 @@ export function ReviewSection({
     }));
   }, [reviews]);
 
-  /* ------ Load More (pagination) ------ */
+  /* Load More (пагинация) ------ */
   const handleLoadMore = useCallback(async () => {
     setLoadingMore(true);
     try {
@@ -137,7 +137,7 @@ export function ReviewSection({
     }
   }, [page, productId, getProductReviews, showToast]);
 
-/* ------ Review CRUD callbacks ------ */
+/* Review CRUD callbacks ------ */
 const handleUpdate = useCallback(
     async (reviewId: string, data: UpdateReviewRequest): Promise<boolean> => {
       const updated = await updateProductReview(productId, reviewId, data);

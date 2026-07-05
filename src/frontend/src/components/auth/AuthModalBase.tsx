@@ -13,9 +13,9 @@ export interface AuthModalBaseProps {
   isOpen: boolean;
   /** Close handler */
   onClose: () => void;
-  /** Modal title */
+  /** Модальное окно title */
   title: string;
-  /** Modal content (form) */
+  /** Модальное окно content (form) */
   children: React.ReactNode;
   /** Optional footer content */
   footer?: React.ReactNode;
@@ -25,7 +25,7 @@ export interface AuthModalBaseProps {
     actionText: string;
     onClick: () => void;
   };
-  /** Modal size override */
+  /** Модальное окно размер override */
   size?: 'small' | 'medium' | 'large';
   /** Optional show close button */
   showCloseButton?: boolean;

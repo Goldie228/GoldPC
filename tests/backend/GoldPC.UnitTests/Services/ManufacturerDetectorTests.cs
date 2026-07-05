@@ -22,14 +22,14 @@ public class ManufacturerDetectorTests
     [InlineData("Игровая мышь Logitech Pro X Superlight 2 DEX (розовый)", "Logitech")]
     public void Detect_ShouldReturnCorrectManufacturer_BasedOnNewRule(string productName, string expected)
     {
-        // Add "be quiet!" to known manufacturers for the specific test case
+        // Добавляем "be quiet!" в известные производители для данного теста
         var currentKnown = new List<string>(_knownManufacturers);
         if (expected == "be quiet!") currentKnown.Add("be quiet!");
 
-        // Act
+        // Действие
         var result = _detector.Detect(productName, currentKnown);
 
-        // Assert
+        // Проверка
         Assert.Equal(expected, result);
     }
 
@@ -42,20 +42,20 @@ public class ManufacturerDetectorTests
     [InlineData("SSD накопитель NVMe Samsung 990 PRO 1TB", "Samsung")]
     public void Detect_WithUnknownManufacturer_ShouldReturnFirstEnglishWord(string productName, string expected)
     {
-        // Act
+        // Действие
         var result = _detector.Detect(productName, _knownManufacturers);
 
-        // Assert
+        // Проверка
         Assert.Equal(expected, result);
     }
 
     [Fact]
     public void Detect_EmptyName_ShouldReturnNull()
     {
-        // Act
+        // Действие
         var result = _detector.Detect("", _knownManufacturers);
 
-        // Assert
+        // Проверка
         Assert.Null(result);
     }
 
@@ -66,10 +66,10 @@ public class ManufacturerDetectorTests
     [InlineData("Оперативная память для компьютера", null)]
     public void Detect_OnlyRussianWords_ShouldReturnNull(string productName, string? expected)
     {
-        // Act
+        // Действие
         var result = _detector.Detect(productName, _knownManufacturers);
 
-        // Assert
+        // Проверка
         Assert.Equal(expected, result);
     }
 }

@@ -15,9 +15,9 @@ import {
   ChevronsRight,
 } from 'lucide-react';
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Типы                                                              */
+/* */
 
 interface NavItem {
   to: string;
@@ -25,9 +25,9 @@ interface NavItem {
   label: string;
 }
 
-/* ------------------------------------------------------------------ */
+/* */
 /*  Navigation items                                                   */
-/* ------------------------------------------------------------------ */
+/* */
 
 const navItems: NavItem[] = [
   { to: '/admin/users', icon: Users, label: 'Пользователи' },
@@ -38,9 +38,9 @@ const navItems: NavItem[] = [
   { to: '/admin/settings', icon: Settings, label: 'Настройки' },
 ];
 
-/* ------------------------------------------------------------------ */
+/* */
 /*  AdminLayout                                                        */
-/* ------------------------------------------------------------------ */
+/* */
 
 /**
  * AdminLayout — отдельный лейаут для панели администратора GoldPC.
@@ -51,7 +51,7 @@ const navItems: NavItem[] = [
  *   Main content с <Outlet /> для вложенных роутов
  *
  * Особенности:
- *   - Active link: border-l-2 border-gold + bg-surface-card + text-gold
+ *   - Active link: border-l-2 border-gold + bg-surface-карточка + text-gold
  *   - Mobile (<1024px): sidebar скрыт, открывается как overlay через гамбургер
  *   - Анимация: framer-motion (AnimatePresence + motion.div)
  *   - Полностью самостоятельный (не использует MainLayout)

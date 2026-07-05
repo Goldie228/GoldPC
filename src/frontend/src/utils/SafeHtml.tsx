@@ -1,5 +1,5 @@
 /**
- * SafeHtml React component for securely rendering user-generated HTML content.
+ * React компонент SafeHtml для безопасного отображения пользовательского HTML-контента.
  * @module utils/SafeHtml
  */
 
@@ -7,39 +7,39 @@ import { memo, useMemo, type CSSProperties, type ReactElement } from 'react';
 import { sanitizeHtml, type SanitizeLevel } from './sanitize';
 
 /**
- * Props for the SafeHtml component.
+ * Свойства для компонента SafeHtml.
  */
 export interface SafeHtmlProps {
-  /** HTML content to render safely */
+  /** HTML-контент для безопасного отображения */
   readonly html: string;
-  /** Sanitization level (default: 'strict') */
+  /** Уровень санитизации (по умолчанию: 'strict') */
   readonly level?: SanitizeLevel;
-  /** CSS class name */
+  /** Имя CSS-класса */
   readonly className?: string;
-  /** Additional inline styles */
+  /** Дополнительные inline-стили */
   readonly style?: CSSProperties;
-  /** Test ID for testing */
+  /** ID для тестирования */
   readonly 'data-testid'?: string;
-  /** HTML element tag to render (default: 'div') */
+  /** HTML-тег для отображения (по умолчанию: 'div') */
   readonly as?: 'div' | 'span' | 'article' | 'section' | 'p';
 }
 
 /**
- * React component that safely renders HTML content using dangerouslySetInnerHTML.
- * The HTML is sanitized using DOMPurify before rendering to prevent XSS attacks.
+ * React компонент, безопасно отображающий HTML-контент через dangerouslySetInnerHTML.
+ * HTML санитизируется с помощью DOMPurify перед отображением для предотвращения XSS-атак.
  * 
  * @example
  * ```tsx
- * // Basic usage with strict sanitization (default)
+ * // Базовое использование со строгой санитизацией (по умолчанию)
  * <SafeHtml html={userComment} />
  * 
- * // Product description with moderate sanitization
- * <SafeHtml html={product.description} level="moderate" />
+ * // Описание товара с умеренной санитизацией
+ * <SafeHtml html={product.описание} level="moderate" />
  * 
- * // Admin content with permissive sanitization
+ * // Контент админа с разрешительной санитизацией
  * <SafeHtml html={adminContent} level="permissive" className="prose" />
  * 
- * // Render as a different element
+ * // Отрисовка как другой элемент
  * <SafeHtml html={content} as="article" />
  * ```
  */

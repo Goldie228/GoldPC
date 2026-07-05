@@ -1,5 +1,5 @@
 /**
- * SectionCard — Shared reusable section card with icon and title
+ * SectionCard — Shared reusable section карточка with icon and title
  *
  * Used in SettingsPage (admin) and NotificationsPage (account).
  * Supports optional `warning` prop for error/danger state styling.

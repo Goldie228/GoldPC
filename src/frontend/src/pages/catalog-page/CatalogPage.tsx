@@ -82,19 +82,19 @@ export function CatalogPage() {
     setSelectedCategory(resolvedCategory);
   }, [resolvedCategory]);
 
-  // Reset price bounds when category changes to force recomputation
+  // Сброс ценовых границ при смене категории для принудительного пересчёта
   useEffect(() => {
     setPriceBounds({ min: 0, max: 0 });
   }, [selectedCategory]);
 
-  // Reset spec filters and manufacturer when category changes
+  // Сброс фильтров характеристик и производителя при смене категории
   useEffect(() => {
     setSelectedSpecifications({});
     setSelectedManufacturerIds([]);
     setPage(1);
   }, [selectedCategory]);
 
-  // Filter state — must be declared before useEffect that references them (fetchPriceBounds)
+  // Фильтр state — must be declared before useEffect that references them (fetchPriceBounds)
   const [sortBy, setSortBy] = useState(
     () => searchParams.get('sortBy') || 'popular'
   );
@@ -145,16 +145,16 @@ export function CatalogPage() {
   }));
   const debouncedPriceRange = useDebounce(priceRange, 300);
 
-  // Price bounds - computed WITHOUT price filter, using all other active filters
+  // Ценовые границы — вычисляются БЕЗ фильтра цены, используя все остальные активные фильтры
   const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
   const [_priceBoundsLoading, setPriceBoundsLoading] = useState(false);
 
-  // Fetch price bounds without price filter
+  // Получение ценовых границ без фильтра цены
   useEffect(() => {
     const fetchPriceBounds = async () => {
       setPriceBoundsLoading(true);
       try {
-        // Build params with all filters EXCEPT price
+        // Построение параметров со всеми фильтрами КРОМЕ цены
         const params: GetProductsParams = {};
         if (selectedCategory) params.category = selectedCategory;
         if (debouncedSearchQuery.trim()) params.search = debouncedSearchQuery.trim();
@@ -170,7 +170,7 @@ export function CatalogPage() {
           if (Object.keys(specifications).length > 0) params.specifications = specifications;
           if (Object.keys(specificationRanges).length > 0) params.specificationRanges = specificationRanges;
         }
-        // Fetch min and max price with 2 fast requests
+        // Получение минимальной и максимальной цены двумя быстрыми запросами
         const [minResult, maxResult] = await Promise.all([
           getProducts({ ...params, pageSize: 1, sortBy: 'price', sortOrder: 'asc' }),
           getProducts({ ...params, pageSize: 1, sortBy: 'price', sortOrder: 'desc' }),
@@ -194,7 +194,7 @@ export function CatalogPage() {
   const catalogScrollAnchorRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Listen for mobile filter apply event
+  // Прослушивание события применения фильтра на мобильных
   useEffect(() => {
     const handler = () => setMobileFilterOpen(false);
     window.addEventListener('mobile-filter-apply', handler);
@@ -264,7 +264,7 @@ export function CatalogPage() {
       
       const result = await getProducts(params);
       
-      // Defensive: ensure result has expected structure
+      // Защита: проверка, что результат имеет ожидаемую структуру
       const items = result?.data ?? [];
       const meta = result?.meta ?? { totalPages: 1, totalItems: 0 };
       
@@ -357,13 +357,13 @@ export function CatalogPage() {
     telemetryTrack('catalog_filters_reset');
   }, [isCategoryLocked, selectedCategory]);
 
-  // Build manufacturersById map for filter chips
+  // Построение карты manufacturersById для чипов фильтра
   const manufacturersById = useMemo(() => {
     const map = new Map<string, string>();
-    // This would normally come from API, but for chips we just need the selected ones
+    // Обычно это приходит из API, но для чипов нам нужны только выбранные
     selectedManufacturerIds.forEach(id => {
-      // In real app, you'd look up the name from a manufacturers list
-      map.set(id, id); // placeholder: use id as name
+      // В реальном приложении имя берётся из списка производителей
+      map.set(id, id); // заглушка: используем id как имя
     });
     return map;
   }, [selectedManufacturerIds]);
@@ -415,12 +415,12 @@ export function CatalogPage() {
 
   return (
     <div id="main" className="min-h-screen bg-background flex flex-col">
-       {/* Catalog toolbar — title + search + sort */}
+       {/* Панель каталога — заголовок + поиск + сортировка */}
        <div className="bg-surface-card">
          <div className="max-w-[1440px] mx-auto px-4 md:px-8">
-           {/* Row 1 — Title + Search (center) + View toggle + Filter button (right) */}
+           {/* Ряд 1 — Заголовок + Поиск (центр) + Переключатель вида + Кнопка фильтра (справа) */}
             <div className="flex flex-row items-center gap-2 pt-2 pb-2">
-               {/* Left: Title + count */}
+               {/* Слева: Заголовок + количество */}
                <div className="flex items-baseline gap-2 flex-shrink-0">
                   <div className="font-bold text-body-text tracking-tight text-xl">{categoryName}</div>
                   <span className="text-xs md:text-sm text-muted-text font-tabular" aria-live="polite">
@@ -428,9 +428,9 @@ export function CatalogPage() {
                  </span>
                </div>
 
-               {/* Center: Search — desktop (inline) */}
+               {/* Центр: Поиск — десктоп (встроенный) */}
                <div className="flex justify-center items-center flex-1">
-                 {/* Desktop search bar */}
+                 {/* Строка поиска на десктопе */}
                   <form
                     className="hidden sm:flex items-center gap-0 w-full max-w-[280px] flex-1"
                     onSubmit={handleSearch}
@@ -455,9 +455,9 @@ export function CatalogPage() {
                  </form>
                </div>
 
-               {/* Right: View toggle (desktop) + Mobile filter + search buttons */}
+               {/* Справа: Переключатель вида (десктоп) + кнопки фильтра и поиска (мобильные) */}
                <div className="flex items-center gap-3 flex-shrink-0">
-                 {/* View toggle — desktop only */}
+                 {/* Переключатель вида — только десктоп */}
                  <div className="hidden md:flex items-center bg-surface-elevated rounded-lg p-0.5 border border-hairline-dark">
                    {[
                      { value: 'grid' as const, icon: <LayoutGrid size={18} /> },
@@ -481,7 +481,7 @@ export function CatalogPage() {
                    ))}
                  </div>
 
-                 {/* Mobile search button */}
+                 {/* Кнопка поиска на мобильных */}
                  <button
                    onClick={() => setSearchModalOpen(true)}
                    className="sm:hidden h-9 px-2 bg-surface-elevated text-body-text text-sm rounded-lg border border-hairline-dark flex items-center gap-1 hover:bg-surface-card transition-colors"
@@ -490,7 +490,7 @@ export function CatalogPage() {
                    <Search size={16} />
                  </button>
 
-                  {/* Mobile filter button — compact icon + badge */}
+                  {/* Кнопка фильтра на мобильных — компактная иконка + бейдж */}
                   <button
                     onClick={() => setMobileFilterOpen(true)}
                     className="lg:hidden h-9 px-2 bg-surface-elevated text-body-text text-sm rounded-lg border border-hairline-dark flex items-center gap-1 hover:bg-surface-card transition-colors relative"
@@ -509,10 +509,10 @@ export function CatalogPage() {
          </div>
        </div>
 
-       {/* Main Content Area */}
+       {/* Основная область контента */}
        <div className="flex-1 w-full max-w-[1440px] mx-auto px-6 md:px-10 pt-6">
          <div className="flex gap-6 pb-8">
-          {/* Desktop Sidebar - 280px width */}
+          {/* Боковая панель на десктопе - ширина 280px */}
              <div className="hidden lg:block w-[280px] flex-shrink-0">
               <FilterSidebar
                  selectedCategory={selectedCategory}
@@ -539,9 +539,9 @@ export function CatalogPage() {
              />
           </div>
 
-          {/* Product List Area */}
+          {/* Область списка товаров */}
           <div className="flex-1 min-w-0 mt-2">
-            {/* Mobile Filter Overlay */}
+            {/* Наложение фильтра на мобильных */}
             {mobileFilterOpen && (
               <div
                 className="fixed inset-0 bg-canvas-dark/92 backdrop-blur-[4px] z-[1000] lg:hidden"
@@ -553,7 +553,7 @@ export function CatalogPage() {
                   className="absolute left-0 top-0 bottom-0 w-[90vw] max-w-[380px] bg-surface-elevated flex flex-col"
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
-                  {/* Header — always visible */}
+                  {/* Заголовок — всегда видим */}
                   <div className="flex items-center justify-between px-4 py-3 border-b border-hairline-dark bg-surface-elevated flex-shrink-0">
                     <h2 className="text-sm font-bold text-body-text flex items-center gap-2">
                       Фильтры
@@ -572,7 +572,7 @@ export function CatalogPage() {
                       <X size={20} />
                     </button>
                   </div>
-                  {/* Content — scrollable */}
+                  {/* Содержимое — с прокруткой */}
                   <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-text/20 [&::-webkit-scrollbar-thumb]:rounded-full">
                     <FilterSidebar
                           mobile
@@ -599,7 +599,7 @@ export function CatalogPage() {
                           onViewModeChange={setViewMode}
                         />
                   </div>
-                  {/* Footer — sticky at bottom */}
+                  {/* Нижний колонтитул — фиксированный внизу */}
                   <div className="flex-shrink-0 border-t border-hairline-dark px-4 py-3 bg-surface-elevated">
                     <button
                       onClick={() => setMobileFilterOpen(false)}
@@ -614,7 +614,7 @@ export function CatalogPage() {
               </div>
             )}
 
-            {/* Search Modal */}
+            {/* Модальное окно поиска */}
             {searchModalOpen && (
               <div
                 className="fixed inset-0 bg-canvas-dark/92 backdrop-blur-[4px] z-[1000] lg:hidden"
@@ -656,7 +656,7 @@ export function CatalogPage() {
               </div>
             )}
 
-            {/* Loading State */}
+            {/* Состояние загрузки */}
             {loading && !hasLoadedOnce && (
               <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${viewMode === 'list' ? 'grid-cols-1' : ''}`}>
                 {Array.from({ length: pageSize }).map((_, index) => (
@@ -665,7 +665,7 @@ export function CatalogPage() {
               </div>
             )}
 
-            {/* Error State */}
+            {/* Состояние ошибки */}
             {error && (
               <div className="flex justify-center py-12">
                 <div className="flex flex-col items-center text-center">
@@ -685,7 +685,7 @@ export function CatalogPage() {
               </div>
             )}
 
-            {/* Active Filter Chips */}
+            {/* Активные чипы фильтров */}
             {activeChips.length > 0 && (
               <ActiveFiltersBar
                 chips={activeChips}
@@ -702,7 +702,7 @@ export function CatalogPage() {
               />
             )}
 
-            {/* Products */}
+            {/* Товары */}
             {!error && products.length > 0 && (
               <>
                 {viewMode === 'table' ? (
@@ -751,7 +751,7 @@ export function CatalogPage() {
               </>
             )}
 
-            {/* Empty State */}
+            {/* Пустое состояние */}
             {!loading && !error && hasLoadedOnce && products.length === 0 && (
               <div className="flex items-center justify-center w-full min-h-[400px]">
                 <EmptyState

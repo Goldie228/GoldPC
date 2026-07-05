@@ -177,7 +177,7 @@ async function selectSlotProduct(page: Page, slotIndex: number) {
 }
 
 // =====================================================================
-// Tests
+// Тесты
 // =====================================================================
 
 test.describe('PC Builder — Конструктор ПК', () => {
@@ -237,7 +237,7 @@ test.describe('PC Builder — Конструктор ПК', () => {
   // 3) Сохранение конфигурации для авторизованного пользователя
   // ---------------------------------------------------------------
   test('3 - Сохранение конфигурации для авторизованного пользователя', async ({ page }) => {
-    // Mock save API
+    // Мок API сохранения
     await page.route('**/pcbuilder/configurations', (route) => {
       if (route.request().method() === 'POST') {
         return route.fulfill({
@@ -249,7 +249,7 @@ test.describe('PC Builder — Конструктор ПК', () => {
       return route.continue();
     });
 
-    // Inject authenticated user
+    // Внедрение аутентифицированного пользователя
     await page.addInitScript(() => {
       localStorage.setItem('accessToken', 'mock-token');
       localStorage.setItem('auth-storage', JSON.stringify({

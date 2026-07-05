@@ -124,7 +124,7 @@ export function buildComponentsDTO(components: SelectedComponentsState): PCCompo
   return dto;
 }
 
-// === FPS API ===
+// FPS API ===
 
 export interface FpsGameEstimate {
   gameId: string;
@@ -163,7 +163,7 @@ export async function calculateFpsApi(params: {
   return data;
 }
 
-// === API ===
+// API ===
 
 export interface ApiOptions {
   signal?: AbortSignal;

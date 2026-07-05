@@ -78,7 +78,7 @@ public class CatalogServiceTests
     [Fact]
     public async Task GetProductById_WhenProductExists_ReturnsProductDetailDto()
     {
-        // Arrange
+        // Подготовка
         var productId = _fixture.Create<Guid>();
         var category = CreateTestCategory();
         var manufacturer = CreateTestManufacturer();
@@ -89,10 +89,10 @@ public class CatalogServiceTests
             .Setup(r => r.GetDetailByIdAsync(productId))
             .ReturnsAsync(expectedProduct);
 
-        // Act
+        // Действие
         var result = await _sut.GetProductByIdAsync(productId);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result!.Id.Should().Be(productId);
         result.Name.Should().Be(expectedProduct.Name);
@@ -109,17 +109,17 @@ public class CatalogServiceTests
     [Fact]
     public async Task GetProductById_WhenProductNotFound_ReturnsNull()
     {
-        // Arrange
+        // Подготовка
         var productId = _fixture.Create<Guid>();
 
         _productRepositoryMock
             .Setup(r => r.GetDetailByIdAsync(productId))
             .ReturnsAsync((Product?)null);
 
-        // Act
+        // Действие
         var result = await _sut.GetProductByIdAsync(productId);
 
-        // Assert
+        // Проверка
         result.Should().BeNull();
         _productRepositoryMock.Verify(r => r.GetDetailByIdAsync(productId), Times.Once);
     }
@@ -127,7 +127,7 @@ public class CatalogServiceTests
     [Fact]
     public async Task GetProductById_WhenProductInactive_ReturnsNull()
     {
-        // Arrange
+        // Подготовка
         var productId = _fixture.Create<Guid>();
         var inactiveProduct = CreateTestProduct(productId);
         inactiveProduct.IsActive = false;
@@ -136,17 +136,17 @@ public class CatalogServiceTests
             .Setup(r => r.GetDetailByIdAsync(productId))
             .ReturnsAsync((Product?)null);
 
-        // Act
+        // Действие
         var result = await _sut.GetProductByIdAsync(productId);
 
-        // Assert
+        // Проверка
         result.Should().BeNull();
     }
 
     [Fact]
     public async Task GetProductById_WithImages_ReturnsProductWithImages()
     {
-        // Arrange
+        // Подготовка
         var productId = _fixture.Create<Guid>();
         var product = CreateTestProduct(productId);
         product.Images.Add(new ProductImage
@@ -172,10 +172,10 @@ public class CatalogServiceTests
             .Setup(r => r.GetDetailByIdAsync(productId))
             .ReturnsAsync(product);
 
-        // Act
+        // Действие
         var result = await _sut.GetProductByIdAsync(productId);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result!.Images.Should().HaveCount(2);
         result.Images[0].IsMain.Should().BeTrue();
@@ -185,7 +185,7 @@ public class CatalogServiceTests
     [Fact]
     public async Task GetProductById_WithRating_ReturnsProductWithRating()
     {
-        // Arrange
+        // Подготовка
         var productId = _fixture.Create<Guid>();
         var product = CreateTestProduct(productId);
         product.Rating = 4.5;
@@ -195,10 +195,10 @@ public class CatalogServiceTests
             .Setup(r => r.GetDetailByIdAsync(productId))
             .ReturnsAsync(product);
 
-        // Act
+        // Действие
         var result = await _sut.GetProductByIdAsync(productId);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result!.Rating.Should().NotBeNull();
         result.Rating!.Average.Should().Be(4.5);
@@ -216,7 +216,7 @@ public class CatalogServiceTests
     public async Task GetProducts_WithCategoryFilter_ReturnsFilteredProducts(
         string categorySlug, int page, int pageSize, int expectedCount)
     {
-        // Arrange
+        // Подготовка
         var categoryId = Guid.NewGuid();
         var category = new Category
         {
@@ -246,10 +246,10 @@ public class CatalogServiceTests
                 PageSize = pageSize
             });
 
-        // Act
+        // Действие
         var result = await _sut.GetProductsAsync(filter);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result.Data.Should().HaveCount(expectedCount);
         result.Meta.Page.Should().Be(page);
@@ -264,7 +264,7 @@ public class CatalogServiceTests
     public async Task GetProducts_WithPriceRangeFilter_ReturnsFilteredProducts(
         decimal minPrice, decimal maxPrice, int expectedCount)
     {
-        // Arrange
+        // Подготовка
         var products = Enumerable.Range(0, expectedCount)
             .Select(i => CreateTestProduct(Guid.NewGuid()))
             .ToList();
@@ -287,10 +287,10 @@ public class CatalogServiceTests
                 PageSize = 20
             });
 
-        // Act
+        // Действие
         var result = await _sut.GetProductsAsync(filter);
 
-        // Assert
+        // Проверка
         result.Data.Should().HaveCount(expectedCount);
         _productRepositoryMock.Verify(r => r.GetFilteredAsync(
             It.Is<ProductFilterDto>(f => f.MinPrice == minPrice && f.MaxPrice == maxPrice)), 
@@ -303,7 +303,7 @@ public class CatalogServiceTests
     public async Task GetProducts_WithInStockFilter_ReturnsFilteredProducts(
         bool inStockOnly, int expectedCount)
     {
-        // Arrange
+        // Подготовка
         var products = Enumerable.Range(0, expectedCount)
             .Select(i => 
             {
@@ -330,10 +330,10 @@ public class CatalogServiceTests
                 PageSize = 20
             });
 
-        // Act
+        // Действие
         var result = await _sut.GetProductsAsync(filter);
 
-        // Assert
+        // Проверка
         result.Data.Should().HaveCount(expectedCount);
         _productRepositoryMock.Verify(r => r.GetFilteredAsync(
             It.Is<ProductFilterDto>(f => f.InStock == inStockOnly)), 
@@ -347,7 +347,7 @@ public class CatalogServiceTests
     public async Task GetProducts_WithSearchQuery_ReturnsMatchingProducts(
         string searchQuery, int expectedCount)
     {
-        // Arrange
+        // Подготовка
         var products = Enumerable.Range(0, expectedCount)
             .Select(_ => CreateTestProduct(Guid.NewGuid()))
             .ToList();
@@ -369,10 +369,10 @@ public class CatalogServiceTests
                 PageSize = 20
             });
 
-        // Act
+        // Действие
         var result = await _sut.GetProductsAsync(filter);
 
-        // Assert
+        // Проверка
         result.Data.Should().HaveCount(expectedCount);
         _productRepositoryMock.Verify(r => r.GetFilteredAsync(
             It.Is<ProductFilterDto>(f => f.Search == searchQuery)), 
@@ -385,7 +385,7 @@ public class CatalogServiceTests
     public async Task GetProducts_WithFeaturedFilter_ReturnsFilteredProducts(
         bool featuredOnly, int expectedCount)
     {
-        // Arrange
+        // Подготовка
         var products = Enumerable.Range(0, expectedCount)
             .Select(i => 
             {
@@ -412,10 +412,10 @@ public class CatalogServiceTests
                 PageSize = 20
             });
 
-        // Act
+        // Действие
         var result = await _sut.GetProductsAsync(filter);
 
-        // Assert
+        // Проверка
         result.Data.Should().HaveCount(expectedCount);
         _productRepositoryMock.Verify(r => r.GetFilteredAsync(
             It.Is<ProductFilterDto>(f => f.IsFeatured == featuredOnly)), 
@@ -429,7 +429,7 @@ public class CatalogServiceTests
     public async Task GetProducts_WithPagination_ReturnsCorrectPagedResult(
         int page, int pageSize, int totalCount, int expectedTotalPages)
     {
-        // Arrange
+        // Подготовка
         var products = Enumerable.Range(0, pageSize)
             .Select(_ => CreateTestProduct(Guid.NewGuid()))
             .ToList();
@@ -450,10 +450,10 @@ public class CatalogServiceTests
                 PageSize = pageSize
             });
 
-        // Act
+        // Действие
         var result = await _sut.GetProductsAsync(filter);
 
-        // Assert
+        // Проверка
         result.Data.Should().HaveCount(pageSize);
         result.Meta.Page.Should().Be(page);
         result.Meta.PageSize.Should().Be(pageSize);
@@ -466,7 +466,7 @@ public class CatalogServiceTests
     [Fact]
     public async Task GetProducts_WithManufacturerFilter_ReturnsFilteredProducts()
     {
-        // Arrange
+        // Подготовка
         var manufacturerId = Guid.NewGuid();
         var expectedCount = 5;
         var manufacturer = new Manufacturer
@@ -503,10 +503,10 @@ public class CatalogServiceTests
                 PageSize = 20
             });
 
-        // Act
+        // Действие
         var result = await _sut.GetProductsAsync(filter);
 
-        // Assert
+        // Проверка
         result.Data.Should().HaveCount(expectedCount);
         _productRepositoryMock.Verify(r => r.GetFilteredAsync(
             It.Is<ProductFilterDto>(f => f.ManufacturerId == manufacturerId)), 
@@ -516,7 +516,7 @@ public class CatalogServiceTests
     [Fact]
     public async Task GetProducts_WhenEmpty_ReturnsEmptyPagedResult()
     {
-        // Arrange
+        // Подготовка
         var filter = new ProductFilterDto
         {
             Page = 1,
@@ -533,10 +533,10 @@ public class CatalogServiceTests
                 PageSize = 20
             });
 
-        // Act
+        // Действие
         var result = await _sut.GetProductsAsync(filter);
 
-        // Assert
+        // Проверка
         result.Data.Should().BeEmpty();
         result.Meta.TotalItems.Should().Be(0);
         result.Meta.TotalPages.Should().Be(0);
@@ -549,7 +549,7 @@ public class CatalogServiceTests
     [Fact]
     public async Task GetProductBySku_WhenProductExists_ReturnsProduct()
     {
-        // Arrange
+        // Подготовка
         var sku = "SKU-12345";
         var productId = Guid.NewGuid();
         var category = CreateTestCategory();
@@ -563,10 +563,10 @@ public class CatalogServiceTests
             .Setup(r => r.GetDetailByIdAsync(productId))
             .ReturnsAsync(product);
 
-        // Act
+        // Действие
         var result = await _sut.GetProductBySkuAsync(sku);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result!.Sku.Should().Be(product.Sku);
     }
@@ -574,17 +574,17 @@ public class CatalogServiceTests
     [Fact]
     public async Task GetProductBySku_WhenProductNotFound_ReturnsNull()
     {
-        // Arrange
+        // Подготовка
         var sku = "NONEXISTENT-SKU";
 
         _productRepositoryMock
             .Setup(r => r.GetBySkuAsync(sku))
             .ReturnsAsync((Product?)null);
 
-        // Act
+        // Действие
         var result = await _sut.GetProductBySkuAsync(sku);
 
-        // Assert
+        // Проверка
         result.Should().BeNull();
     }
 
@@ -595,7 +595,7 @@ public class CatalogServiceTests
     [Fact]
     public async Task CreateProduct_WithValidData_ReturnsCreatedProduct()
     {
-        // Arrange
+        // Подготовка
         var categoryId = Guid.NewGuid();
         var category = new Category
         {
@@ -647,10 +647,10 @@ public class CatalogServiceTests
                 return product;
             });
 
-        // Act
+        // Действие
         var result = await _sut.CreateProductAsync(createDto);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result.Name.Should().Be(createDto.Name);
         result.Sku.Should().Be(createDto.Sku);
@@ -663,7 +663,7 @@ public class CatalogServiceTests
     [Fact]
     public async Task CreateProduct_WithDuplicateSku_ThrowsInvalidOperationException()
     {
-        // Arrange
+        // Подготовка
         var createDto = new CreateProductDto
         {
             Name = "Test Product",
@@ -677,10 +677,10 @@ public class CatalogServiceTests
             .Setup(r => r.SkuExistsAsync(createDto.Sku, null))
             .ReturnsAsync(true);
 
-        // Act
+        // Действие
         var act = async () => await _sut.CreateProductAsync(createDto);
 
-        // Assert
+        // Проверка
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage($"*{createDto.Sku}*");
         
@@ -690,7 +690,7 @@ public class CatalogServiceTests
     [Fact]
     public async Task CreateProduct_WithCategorySlug_ResolvesCategory()
     {
-        // Arrange
+        // Подготовка
         var category = new Category
         {
             Id = Guid.NewGuid(),
@@ -727,10 +727,10 @@ public class CatalogServiceTests
             .Setup(r => r.GetDetailByIdAsync(It.IsAny<Guid>()))
             .ReturnsAsync((Guid id) => CreateTestProduct(id, category));
 
-        // Act
+        // Действие
         var result = await _sut.CreateProductAsync(createDto);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         _categoryRepositoryMock.Verify(r => r.GetBySlugAsync("cpu"), Times.Once);
     }
@@ -742,7 +742,7 @@ public class CatalogServiceTests
     [Fact]
     public async Task DeleteProduct_WhenProductExists_ReturnsTrue()
     {
-        // Arrange
+        // Подготовка
         var productId = Guid.NewGuid();
 
         _productRepositoryMock
@@ -753,10 +753,10 @@ public class CatalogServiceTests
             .Setup(r => r.DeleteAsync(productId))
             .Returns(Task.CompletedTask);
 
-        // Act
+        // Действие
         var result = await _sut.DeleteProductAsync(productId);
 
-        // Assert
+        // Проверка
         result.Should().BeTrue();
         _productRepositoryMock.Verify(r => r.DeleteAsync(productId), Times.Once);
     }
@@ -764,17 +764,17 @@ public class CatalogServiceTests
     [Fact]
     public async Task DeleteProduct_WhenProductNotFound_ReturnsFalse()
     {
-        // Arrange
+        // Подготовка
         var productId = Guid.NewGuid();
 
         _productRepositoryMock
             .Setup(r => r.ExistsAsync(productId))
             .ReturnsAsync(false);
 
-        // Act
+        // Действие
         var result = await _sut.DeleteProductAsync(productId);
 
-        // Assert
+        // Проверка
         result.Should().BeFalse();
         _productRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Guid>()), Times.Never);
     }
@@ -786,7 +786,7 @@ public class CatalogServiceTests
     [Fact]
     public async Task GetProductsByIds_WithValidIds_ReturnsProducts()
     {
-        // Arrange
+        // Подготовка
         var ids = new List<Guid> { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
         var products = ids.Select(id => CreateTestProduct(id)).ToList();
 
@@ -794,10 +794,10 @@ public class CatalogServiceTests
             .Setup(r => r.GetByIdsAsync(ids))
             .ReturnsAsync(products);
 
-        // Act
+        // Действие
         var result = await _sut.GetProductsByIdsAsync(ids);
 
-        // Assert
+        // Проверка
         result.Should().HaveCount(3);
         result.Select(p => p.Id).Should().BeEquivalentTo(ids);
     }
@@ -805,17 +805,17 @@ public class CatalogServiceTests
     [Fact]
     public async Task GetProductsByIds_WithEmptyIds_ReturnsEmptyCollection()
     {
-        // Arrange
+        // Подготовка
         var ids = new List<Guid>();
 
         _productRepositoryMock
             .Setup(r => r.GetByIdsAsync(ids))
             .ReturnsAsync(new List<Product>());
 
-        // Act
+        // Действие
         var result = await _sut.GetProductsByIdsAsync(ids);
 
-        // Assert
+        // Проверка
         result.Should().BeEmpty();
     }
 

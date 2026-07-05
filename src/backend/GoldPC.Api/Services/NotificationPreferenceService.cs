@@ -6,9 +6,9 @@ using GoldPC.Shared.Services;
 namespace GoldPC.Api.Services;
 
 /// <summary>
-/// Checks notification preferences from admin settings (via IAdminService)
-/// AND per-user preferences (via UserNotificationPreferenceService).
-/// Caches admin settings for 60 seconds to avoid excessive file reads.
+/// Проверяет предпочтения уведомлений из настроек администратора (через IAdminService)
+/// И предпочтения пользователя (через UserNotificationPreferenceService).
+/// Кеширует настройки администратора на 60 секунд для избежания частого чтения файлов.
 /// </summary>
 public class NotificationPreferenceService : INotificationPreferenceService
 {
@@ -19,16 +19,16 @@ public class NotificationPreferenceService : INotificationPreferenceService
     private static readonly ConcurrentDictionary<string, (bool Value, DateTime CachedAt)> _cache = new();
     private static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(60);
 
-    // Maps notification type strings to the corresponding SiteSettingsDto property
+    // Сопоставляет строки типов уведомлений с соответствующими свойствами SiteSettingsDto
     private static readonly Dictionary<string, Func<SiteSettingsDto, bool>> SettingMap = new()
     {
         [nameof(NotificationType.OrderStatusChanged)] = s => s.OrderEmailNotifications,
         [nameof(NotificationType.LowStockAlert)] = s => s.LowStockNotifications,
-        [nameof(NotificationType.RepairTicketUpdated)] = _ => true, // always enabled
-        [nameof(NotificationType.NewSupportMessage)] = _ => true,   // always enabled
-        [nameof(NotificationType.SystemAnnouncement)] = _ => true,  // always enabled
+        [nameof(NotificationType.RepairTicketUpdated)] = _ => true, // всегда включено
+        [nameof(NotificationType.NewSupportMessage)] = _ => true,   // всегда включено
+        [nameof(NotificationType.SystemAnnouncement)] = _ => true,  // всегда включено
         [nameof(NotificationType.LoginNotification)] = s => s.LoginNotifications,
-        [nameof(NotificationType.TaskAssigned)] = _ => true,        // always enabled
+        [nameof(NotificationType.TaskAssigned)] = _ => true,        // всегда включено
         [nameof(NotificationType.InventoryAlert)] = s => s.LowStockNotifications,
     };
 
@@ -47,11 +47,11 @@ public class NotificationPreferenceService : INotificationPreferenceService
     {
         if (!SettingMap.TryGetValue(notificationType, out var settingAccessor))
         {
-            _logger.LogWarning("Unknown notification type: {Type}, defaulting to enabled", notificationType);
-            return true; // unknown types default to enabled
+            _logger.LogWarning("Неизвестный тип уведомления: {Type}, по умолчанию включено", notificationType);
+            return true; // неизвестные типы по умолчанию включены
         }
 
-        // Check cache
+        // Проверка кеша
         if (_cache.TryGetValue(notificationType, out var cached) &&
             DateTime.UtcNow - cached.CachedAt < CacheDuration)
         {
@@ -64,38 +64,38 @@ public class NotificationPreferenceService : INotificationPreferenceService
             var enabled = settingAccessor(settings);
 
             _cache[notificationType] = (enabled, DateTime.UtcNow);
-            _logger.LogDebug("Notification {Type} enabled={Enabled}", notificationType, enabled);
+            _logger.LogDebug("Уведомление {Type} включено={Enabled}", notificationType, enabled);
             return enabled;
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogError(ex, "Failed to check notification preference for {Type}, defaulting to enabled", notificationType);
+            _logger.LogError(ex, "Не удалось проверить предпочтение уведомления для {Type}, по умолчанию включено", notificationType);
             return true;
         }
-#pragma warning disable CA1031 // Intentional general catch for fail-open notification check
+#pragma warning disable CA1031 // Намеренный общий перехват для fail-open проверки уведомлений
         catch (Exception ex)
 #pragma warning restore CA1031
         {
-            _logger.LogError(ex, "Unexpected error checking notification preference for {Type}, defaulting to enabled", notificationType);
-            return true; // fail open — notifications still work if settings can't be read
+            _logger.LogError(ex, "Неожиданная ошибка при проверке предпочтения уведомления для {Type}, по умолчанию включено", notificationType);
+            return true; // fail open — уведомления продолжают работать, если настройки не могут быть прочитаны
         }
     }
 
     /// <inheritdoc/>
     public async Task<bool> IsUserOptedInAsync(Guid userId, string notificationType)
     {
-        // First check global admin setting
+        // Сначала проверяем глобальную настройку администратора
         var globalEnabled = await IsNotificationEnabledAsync(notificationType);
         if (!globalEnabled)
             return false;
 
-        // Then check per-user preference
+        // Затем проверяем предпочтение пользователя
         var userOptedIn = await _userPrefService.IsOptedInAsync(userId, notificationType);
         return userOptedIn;
     }
 
     /// <summary>
-    /// Clear the entire cache. Called when admin settings are updated.
+    /// Очищает весь кеш. Вызывается при обновлении настроек администратора.
     /// </summary>
     public static void ClearCache()
     {

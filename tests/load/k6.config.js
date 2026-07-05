@@ -56,13 +56,13 @@ export const options = {
     // =========================================================================
     // Сценарий 1: Catalog Browsing - просмотр каталога
     // =========================================================================
-    // Ramp up до 100 VU, проверка GET /api/v1/catalog/products
+    // Разогрев до 100 VU, проверка GET /api/v1/catalog/products
     catalog_browsing: {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
         { duration: '1m', target: 50 },    // Начальный разогрев
-        { duration: '2m', target: 100 },   // Ramp up до 100 VU
+        { duration: '2m', target: 100 },   // Разогрев до 100 VU
         { duration: '5m', target: 100 },   // Удержание 100 VU
         { duration: '1m', target: 0 },     // Снижение
       ],
@@ -200,7 +200,7 @@ function getMockToken() {
     return loginResponse.json('accessToken') || loginResponse.json('token');
   }
   
-  return STATIC_AUTH_TOKEN; // Fallback
+  return STATIC_AUTH_TOKEN; // Запасной вариант
 }
 
 // ============================================================================

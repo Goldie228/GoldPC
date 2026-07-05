@@ -58,7 +58,7 @@ public class ArchitectureTests
     [Fact]
     public void Should_Not_Have_Circular_Dependencies()
     {
-        // Arrange — собираем зависимости между сборками проекта
+        // Подготовка — собираем зависимости между сборками проекта
         var assemblyNames = Assemblies.Select(a => a.GetName().Name!).ToHashSet();
         var dependencies = new Dictionary<string, HashSet<string>>();
 
@@ -78,7 +78,7 @@ public class ArchitectureTests
             dependencies[name] = deps;
         }
 
-        // Act — проверяем наличие циклов (алгоритм DFS)
+        // Действие — проверяем наличие циклов (алгоритм DFS)
         var visited = new HashSet<string>();
         var recursionStack = new HashSet<string>();
         var hasCycle = false;
@@ -119,7 +119,7 @@ public class ArchitectureTests
             }
         }
 
-        // Assert
+        // Проверка
         hasCycle.Should().BeFalse(
             because: "циклические зависимости между сборками запрещены. " +
                      "Они усложняют архитектуру и могут привести к проблемам при развёртывании. " +
@@ -138,7 +138,7 @@ public class ArchitectureTests
     [Fact]
     public void Core_Should_Not_Depend_On_Infrastructure()
     {
-        // Arrange - получаем все типы в namespace с Repositories
+        // Подготовка - получаем все типы в namespace с Repositories
         var repositoryNamespaces = Types.InAssemblies(Assemblies)
             .That()
             .ResideInNamespaceContaining(".Repositories")
@@ -153,7 +153,7 @@ public class ArchitectureTests
         var infrastructureDependencies = new List<string> { "Microsoft.EntityFrameworkCore" };
         infrastructureDependencies.AddRange(repositoryNamespaces);
 
-        // Act - проверяем, что Models/Entities не зависят от Infrastructure
+        // Действие - проверяем, что Models/Entities не зависят от Infrastructure
         var result = Types.InAssemblies(Assemblies)
             .That()
             .ResideInNamespaceContaining(".Models")
@@ -163,7 +163,7 @@ public class ArchitectureTests
             .NotHaveDependencyOnAny(infrastructureDependencies.ToArray())
             .GetResult();
 
-        // Assert
+        // Проверка
         result.IsSuccessful.Should().BeTrue(
             because: "Core слой (Models/Entities) не должен зависеть от Infrastructure. " +
                      "Это ключевое правило Clean Architecture - зависимости направляются внутрь. " +
@@ -183,7 +183,7 @@ public class ArchitectureTests
     [Fact]
     public void Controllers_Should_Not_Depend_On_Repositories()
     {
-        // Arrange - получаем все namespace с репозиториями
+        // Подготовка - получаем все namespace с репозиториями
         var repositoryNamespaces = Types.InAssemblies(Assemblies)
             .That()
             .ResideInNamespaceContaining(".Repositories")
@@ -194,7 +194,7 @@ public class ArchitectureTests
             .Cast<string>()
             .ToList();
 
-        // Act - проверяем контроллеры
+        // Действие - проверяем контроллеры
         var result = Types.InAssemblies(Assemblies)
             .That()
             .ResideInNamespaceContaining(".Controllers")
@@ -204,7 +204,7 @@ public class ArchitectureTests
             .NotHaveDependencyOnAny(repositoryNamespaces.ToArray())
             .GetResult();
 
-        // Assert
+        // Проверка
         result.IsSuccessful.Should().BeTrue(
             because: "контроллеры не должны напрямую зависеть от репозиториев. " +
                      "Используйте сервисы для инкапсуляции бизнес-логики. " +
@@ -223,7 +223,7 @@ public class ArchitectureTests
     [Fact]
     public void ControllersShouldNotReferenceRepositories()
     {
-        // Arrange - получаем все репозитории для проверки зависимостей
+        // Подготовка - получаем все репозитории для проверки зависимостей
         var repositoryTypeNames = Types.InAssemblies(Assemblies)
             .That()
             .HaveNameEndingWith("Repository")
@@ -235,7 +235,7 @@ public class ArchitectureTests
             .Cast<string>()
             .ToArray();
 
-        // Act - проверяем контроллеры
+        // Действие - проверяем контроллеры
         var result = Types.InAssemblies(Assemblies)
             .That()
             .HaveNameEndingWith("Controller")
@@ -245,7 +245,7 @@ public class ArchitectureTests
             .NotHaveDependencyOnAny(repositoryTypeNames)
             .GetResult();
 
-        // Assert
+        // Проверка
         result.IsSuccessful.Should().BeTrue(
             because: "контроллеры не должны напрямую зависеть от репозиториев. " +
                      "Используйте сервисы для инкапсуляции бизнес-логики. " +
@@ -299,7 +299,7 @@ public class ArchitectureTests
             }
         }
 
-        // Assert
+        // Проверка
         failingTypes.Should().BeEmpty(
             because: "все сервисы должны реализовывать хотя бы один интерфейс. " +
                      "Это обеспечивает слабую связанность и упрощает тестирование. " +
@@ -349,7 +349,7 @@ public class ArchitectureTests
             }
         }
 
-        // Assert
+        // Проверка
         failingTypes.Should().BeEmpty(
             because: "каждый сервис должен реализовывать хотя бы один интерфейс (кроме IDisposable). " +
                      "Это обеспечивает слабую связанность и упрощает тестирование. " +
@@ -377,7 +377,7 @@ public class ArchitectureTests
             return;
         }
 
-        // Arrange & Act - проверяем сущности в SharedKernel
+        // Подготовка и Действие - проверяем сущности в SharedKernel
         var entities = Types.InAssembly(sharedKernelAssembly)
             .That()
             .ResideInNamespace("GoldPC.SharedKernel.Entities")
@@ -390,7 +390,7 @@ public class ArchitectureTests
             .Select(t => t.Name)
             .ToList();
 
-        // Assert
+        // Проверка
         failingTypes.Should().BeEmpty(
             because: "сущности домена должны быть sealed или abstract для предотвращения некорректного наследования. " +
                      $"Нарушения: {string.Join(", ", failingTypes)}");
@@ -447,7 +447,7 @@ public class ArchitectureTests
             }
         }
 
-        // Assert - этот тест может быть мягким предупреждением
+        // Проверка - этот тест может быть мягким предупреждением
         failingTypes.Should().BeEmpty(
             because: "сущности должны быть sealed, abstract или наследоваться от абстрактного базового класса. " +
                      "Это обеспечивает защищённость доменной логики. " +
@@ -487,7 +487,7 @@ public class ArchitectureTests
             }
         }
 
-        // Assert
+        // Проверка
         failingTypes.Should().BeEmpty(
             because: "все репозитории должны реализовывать хотя бы один интерфейс. " +
                      $"Нарушения: {string.Join(", ", failingTypes)}");
@@ -499,7 +499,7 @@ public class ArchitectureTests
     [Fact]
     public void ControllersShouldBeInControllersNamespace()
     {
-        // Arrange & Act
+        // Подготовка и Действие
         var result = Types.InAssemblies(Assemblies)
             .That()
             .HaveNameEndingWith("Controller")
@@ -509,7 +509,7 @@ public class ArchitectureTests
             .ResideInNamespaceContaining("Controllers")
             .GetResult();
 
-        // Assert
+        // Проверка
         result.IsSuccessful.Should().BeTrue(
             because: "контроллеры должны находиться в пространстве имён, содержащем 'Controllers'. " +
                      $"Нарушения: {(result.FailingTypes != null ? string.Join(", ", result.FailingTypes.Select(t => t.Name)) : "нет")}");
@@ -547,7 +547,7 @@ public class ArchitectureTests
             }
         }
 
-        // Assert
+        // Проверка
         failingTypes.Should().BeEmpty(
             because: "каждый репозиторий должен иметь интерфейс с именем I{RepositoryName}. " +
                      "Например, ProductRepository должен реализовывать IProductRepository. " +

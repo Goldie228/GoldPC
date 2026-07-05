@@ -1,8 +1,8 @@
 /**
- * Persistence Layer — localStorage + API backend
- * Save/load/migrate PC builder state to localStorage and sync with backend API.
- * localStorage is the source of truth for the active build; the API persists
- * named configurations the user explicitly saves.
+ * Слой персистентности — localStorage + API backend
+ * Сохранение/загрузка/миграция состояния сборщика ПК в localStorage и синхронизация с backend API.
+ * localStorage является источником истины для активной сборки; API сохраняет
+ * именованные конфигурации, которые пользователь явно сохраняет.
  */
 
 import type {
@@ -19,30 +19,30 @@ import {
 import { pcbuilderApi, type SavedBuild } from '@/api/pcbuilder';
 
 /**
- * Runtime validation for deserialized build data.
- * Prevents corrupted localStorage data from crashing the app.
+ * Проверка времени выполнения для десериализованных данных сборки.
+ * Предотвращает сбой приложения из-за повреждённых данных localStorage.
  */
 function isValidSerializedBuild(data: unknown): data is SerializedBuildV2 | SerializedBuildV1 {
   if (!data || typeof data !== 'object') return false;
   const obj = data as Record<string, unknown>;
 
-  // Must have 'v' field (version)
+  // Должно иметь поле 'v' (версия)
   if (typeof obj.v !== 'number') return false;
 
-  // V2 requires 'components' object
+  // V2 требует объект 'components'
   if (obj.v === 2) {
     if (!obj.components || typeof obj.components !== 'object') return false;
     const comps = obj.components as Record<string, unknown>;
-    // At least validate that component entries have product and type
+    // Как минимум проверяем, что записи компонентов имеют product и type
     for (const [, value] of Object.entries(comps)) {
       if (value == null) continue;
       if (!Array.isArray(value)) {
-        // Single component: must have product and type
+        // Одиночный компонент: должен иметь product и type
         if (typeof value !== 'object') return false;
         const entry = value as Record<string, unknown>;
         if (!entry.product || !entry.type) return false;
       } else {
-        // Array component (ram, storage, fan): each item must have product and type
+        // Массивный компонент (ram, storage, fan): каждый элемент должен иметь product и type
         for (const item of value) {
           if (item == null || typeof item !== 'object') return false;
           const entry = item as Record<string, unknown>;
@@ -158,7 +158,7 @@ export function migrateV1ToState(parsed: SerializedBuildV1): PCBuilderSelectedSt
   return out;
 }
 
-/** Normalize API category names to PCBuilder component types */
+/** Нормализует названия категорий API к типам компонентов PCBuilder */
 function normalizeCategory(category: string | undefined, fallback: string): string {
   const map: Record<string, string> = {
     processors: 'cpu', video_cards: 'gpu', motherboards: 'motherboard',
@@ -168,14 +168,14 @@ function normalizeCategory(category: string | undefined, fallback: string): stri
   return map[category ?? ''] ?? category ?? fallback;
 }
 
-/** Normalize a product's category field and extract direct fields extractors need */
+/** Нормализует поле категории товара и извлекает прямые поля, необходимые экстракторам */
 function normalizeProduct(product: Record<string, unknown>, targetType: string): Record<string, unknown> {
   const result = { ...product, category: normalizeCategory(product.category as string, targetType) };
-  // Ensure socket/memoryType direct fields exist (extractors check these first)
+  // Убеждаемся, что прямые поля socket/memoryType существуют (экстракторы проверяют их в первую очередь)
   const specs = result.specifications as Record<string, string> | undefined;
   if (specs && !result.socket && specs['socket']) result.socket = specs['socket'];
   if (specs && !result.memoryType && specs['memoryType']) result.memoryType = specs['memoryType'];
-  // Fallback: extract from specificationValues array if specs dict is missing
+  // Запасной вариант: извлекаем из массива specificationValues, если словарь характеристик отсутствует
   const specValues = result.specificationValues as Array<{ specificationAttributeName: string; value: string }> | undefined;
   if (specValues) {
     if (!result.memoryType) {
@@ -187,7 +187,7 @@ function normalizeProduct(product: Record<string, unknown>, targetType: string):
       if (sockSpec) result.socket = sockSpec.value;
     }
   }
-  // Fallback: extract socket from description text
+  // Запасной вариант: извлекаем сокет из текста описания
   if (!result.socket && typeof result.description === 'string') {
     const desc = result.description as string;
     const socketMatch = desc.match(/(?:Сокет|Socket)[:\s]+([A-Za-z0-9\s\-]+)/i);
@@ -195,7 +195,7 @@ function normalizeProduct(product: Record<string, unknown>, targetType: string):
       result.socket = socketMatch[1].trim().split(/[\s\n]/)[0];
     }
   }
-  // Fallback: extract socket from descriptionShort
+  // Запасной вариант: извлекаем сокет из краткого описания
   if (!result.socket && typeof result.descriptionShort === 'string') {
     const descShort = result.descriptionShort as string;
     const socketMatch = descShort.match(/(?:Сокет|Socket)[:\s]+([A-Za-z0-9\s\-]+)/i);
@@ -212,7 +212,7 @@ export function loadFromLocalStorage(): PCBuilderSelectedState {
     if (!raw) return emptyPcBuilderState();
     const parsed = JSON.parse(raw);
 
-    // Runtime validation before type assertion
+    // Проверка времени выполнения перед утверждением типа
     if (!isValidSerializedBuild(parsed)) {
       clearLocalStorage();
       return emptyPcBuilderState();
@@ -257,15 +257,15 @@ export function clearLocalStorage(): void {
 }
 
 // ============================================================================
-// API-backed persistence
+// Персистентность через API
 // ============================================================================
 
-/** Convert a single SelectedComponent to a product ID for the API. */
+/** Преобразует одиночный SelectedComponent в ID товара для API. */
 function componentToProductId(sc: SelectedComponent): string {
   return sc.product.id;
 }
 
-/** Build a components map from the current state for the API payload. */
+/** Строит карту компонентов из текущего состояния для payload API. */
 function stateToComponentsMap(state: PCBuilderSelectedState): Record<string, string> {
   const map: Record<string, string> = {};
   if (state.cpu) map.cpu = componentToProductId(state.cpu);
@@ -285,9 +285,9 @@ function stateToComponentsMap(state: PCBuilderSelectedState): Record<string, str
 }
 
 /**
- * Save a named configuration to the backend API.
- * localStorage is already the source of truth for the active build;
- * this persists a snapshot the user explicitly saves.
+ * Сохраняет именованную конфигурацию в backend API.
+ * localStorage уже является источником истины для активной сборки;
+ * это сохраняет снимок, который пользователь явно сохраняет.
  */
 export async function saveConfigurationToApi(
   state: PCBuilderSelectedState,
@@ -307,7 +307,7 @@ export async function saveConfigurationToApi(
 }
 
 /**
- * Update an existing named configuration on the backend API.
+ * Обновляет существующую именованную конфигурацию в backend API.
  */
 export async function updateConfigurationOnApi(
   id: string,
@@ -328,8 +328,8 @@ export async function updateConfigurationOnApi(
 }
 
 /**
- * Load all saved configurations from the backend API.
- * Returns null on failure so callers can fall back to localStorage.
+ * Загружает все сохранённые конфигурации из backend API.
+ * Возвращает null при ошибке, чтобы вызывающие могли использовать localStorage как запасной вариант.
  */
 export async function loadConfigurationsFromApi(): Promise<SavedBuild[] | null> {
   try {
@@ -340,7 +340,7 @@ export async function loadConfigurationsFromApi(): Promise<SavedBuild[] | null> 
 }
 
 /**
- * Delete a saved configuration from the backend API.
+ * Удаляет сохранённую конфигурацию из backend API.
  */
 export async function deleteConfigurationFromApi(id: string): Promise<boolean> {
   try {

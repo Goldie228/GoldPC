@@ -1,74 +1,74 @@
 /**
- * GoldPC UI Component Library
- * Reusable UI components
+ * Библиотека UI компонентов GoldPC
+ * Переиспользуемые UI компоненты
  */
 
-// Button Component (Luxury GoldPC style)
+// Компонент кнопки (роскошный стиль GoldPC)
 export { Button, default as ButtonDefault } from './Button';
 export type { ButtonProps } from './Button';
 
-// Card Component
+// Компонент карточки
 export { Card, default as CardDefault } from './Card';
 export type { CardProps, CardVariant } from './Card';
 
-// Input Component
+// Компонент ввода
 export { Input } from './Input';
 
-// Password field with visibility toggle
+// Поле пароля с переключателем видимости
 export { PasswordField } from './PasswordField';
 export type { PasswordFieldProps } from './PasswordField';
 
-// Icon Component
+// Компонент иконки
 export { Icon, default as IconDefault } from './Icon';
 export type { IconProps, IconName, IconSize } from './Icon';
 
-// Modal Component
+// Компонент модального окна
 export { Modal } from './Modal';
 export type { ModalProps, ModalSize } from './Modal';
 
-// Toast Component
+// Компонент уведомлений
 export { Toast, ToastContainer } from './Toast';
 
-// Skeleton Component
+// Компонент скелетона
 export { Skeleton, ProductCardSkeleton } from './Skeleton';
 export type { SkeletonProps } from './Skeleton';
 
-// API error state
+// Состояние ошибки API
 export { ApiErrorBanner } from './ApiErrorBanner';
 export type { ApiErrorBannerProps } from './ApiErrorBanner';
 
-// ScrollToTop Component
+// Компонент прокрутки вверх
 export { ScrollToTop } from './ScrollToTop';
 
-// Tabs Component
+// Компонент вкладок
 export { Tabs, default as TabsDefault } from './Tabs';
 export type { TabsProps, Tab } from './Tabs';
 
-// PhoneInput Component
+// Компонент ввода телефона
 export { PhoneInput } from './PhoneInput';
 
-// PageHero Component
+// Компонент героя страницы
 export { PageHero } from './PageHero';
 
-// IconBox Component
+// Компонент блока иконки
 export { IconBox } from './IconBox';
 
-// StatusBadge Component
+// Компонент значка статуса
 export { StatusBadge } from './StatusBadge';
 export type { StatusVariant } from './StatusBadge';
 
-// StatCard Component
+// Компонент карточки статистики
 export { StatCard } from './StatCard';
 
-// BottomSheet Component
+// Компонент нижней панели
 export { BottomSheet } from './BottomSheet';
 export type { BottomSheetProps } from './BottomSheet';
 
-// ImageUpload Component
+// Компонент загрузки изображений
 export { ImageUpload } from './ImageUpload/ImageUpload';
 
-// ToggleSwitch Component
+// Компонент переключателя
 export { ToggleSwitch } from './ToggleSwitch';
 
-// SectionCard Component
+// Компонент карточки раздела
 export { SectionCard } from './SectionCard';

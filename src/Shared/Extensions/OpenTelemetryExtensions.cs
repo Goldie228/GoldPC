@@ -7,16 +7,16 @@ using OpenTelemetry.Trace;
 namespace Shared.Extensions;
 
 /// <summary>
-/// Extension methods for configuring OpenTelemetry with Prometheus exporter.
+/// Extension методы для настройки OpenTelemetry с экспортером Prometheus.
 /// </summary>
 public static class OpenTelemetryExtensions
 {
     /// <summary>
-    /// Adds OpenTelemetry services with Prometheus exporter for metrics collection.
+    /// Добавляет сервисы OpenTelemetry с экспортером Prometheus для сбора метрик.
     /// </summary>
-    /// <param name="services">The service collection.</param>
-    /// <param name="serviceName">The name of the service for telemetry identification.</param>
-    /// <returns>The service collection for chaining.</returns>
+    /// <param name="services">Коллекция сервисов.</param>
+    /// <param name="serviceName">Имя сервиса для идентификации телеметрии.</param>
+    /// <returns>Коллекция сервисов для chaining.</returns>
     public static IServiceCollection AddGoldPCOpenTelemetry(
         this IServiceCollection services,
         string serviceName)

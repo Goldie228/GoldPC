@@ -20,8 +20,8 @@ public class CompatibilityRuleEngine
         var json = File.ReadAllText(jsonPath);
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         _config = JsonSerializer.Deserialize<RulesConfig>(json, options)
-            ?? throw new InvalidOperationException("Failed to load compatibility rules");
-        _logger.LogInformation("Compatibility rules v{Version} loaded", _config.Version);
+            ?? throw new InvalidOperationException("Не удалось загрузить правила совместимости");
+        _logger.LogInformation("Правила совместимости v{Version} загружены", _config.Version);
         _socketLookup = BuildSocketLookup();
         _formFactorLookup = BuildFormFactorLookup();
     }
@@ -59,7 +59,7 @@ public class CompatibilityRuleEngine
 
     public RulesConfig Config => _config;
 
-    #region Socket Compatibility
+    #region Совместимость сокетов
 
     public SocketGroup? FindSocketGroup(string socket)
     {
@@ -102,7 +102,7 @@ public class CompatibilityRuleEngine
 
     #endregion
 
-    #region Form Factor Compatibility
+    #region Совместимость форм-факторов
 
     public string NormalizeFormFactor(string formFactor)
     {
@@ -131,13 +131,13 @@ public class CompatibilityRuleEngine
 
     #endregion
 
-    #region RAM Compatibility
+    #region Совместимость RAM
 
     public CompatibilityIssueDto? CheckRamGenerationMismatch(string mbRamType, string ramType)
     {
         if (string.IsNullOrEmpty(mbRamType) || string.IsNullOrEmpty(ramType)) return null;
 
-        // Normalize: strip form factor suffixes ("DDR4 DIMM" → "DDR4", "DDR5 SO-DIMM" → "DDR5")
+        // Нормализация: удаляем суффиксы форм-фактора ("DDR4 DIMM" → "DDR4", "DDR5 SO-DIMM" → "DDR5")
         var mbNorm = System.Text.RegularExpressions.Regex.Replace(mbRamType.Trim().ToUpperInvariant(), @"\s+(DIMM|SO-DIMM|UDIMM|RDIMM|LRDIMM)$", "");
         var ramNorm = System.Text.RegularExpressions.Regex.Replace(ramType.Trim().ToUpperInvariant(), @"\s+(DIMM|SO-DIMM|UDIMM|RDIMM|LRDIMM)$", "");
 
@@ -193,7 +193,7 @@ public class CompatibilityRuleEngine
 
     #endregion
 
-    #region Power Compatibility
+    #region Совместимость питания
 
     public int CalculateTotalTdp(int cpuTdp, int gpuTdp)
     {
@@ -249,7 +249,7 @@ public class CompatibilityRuleEngine
 
     #endregion
 
-    #region Dimension Compatibility
+    #region Совместимость размеров
 
     public CompatibilityIssueDto? CheckGpuLength(int gpuLength, int maxGpuLength, string gpuName, string caseName)
     {
@@ -321,7 +321,7 @@ public class CompatibilityRuleEngine
 
     #endregion
 
-    #region Cooler Compatibility
+    #region Совместимость кулеров
 
     public CompatibilityIssueDto? CheckCoolerSocket(List<string> supportedSockets, string cpuSocket, string coolerName)
     {
@@ -361,7 +361,7 @@ public class CompatibilityRuleEngine
 
     #endregion
 
-    #region Bottleneck Detection
+    #region Обнаружение узких мест
 
     /// <summary>
     /// Детекция bottleneck с учётом категории (gaming/workstation/office)
@@ -427,7 +427,7 @@ public class CompatibilityRuleEngine
 
     #endregion
 
-    #region Performance Warnings
+    #region Предупреждения производительности
 
     public CompatibilityWarningDto? CheckRamCapacity(int capacity, int modules, string ramName)
     {
@@ -463,7 +463,7 @@ public class CompatibilityRuleEngine
 
     #endregion
 
-    #region Storage Compatibility
+    #region Совместимость накопителей
 
     /// <summary>
     /// Проверка M.2 слотов: если кол-во NVMe накопителей превышает доступные слоты
@@ -499,7 +499,7 @@ public class CompatibilityRuleEngine
 
     #endregion
 
-    #region New Compatibility Checks
+    #region Новые проверки совместимости
 
     public CompatibilityIssueDto? CheckEpsSupply(int required, int supplied, string mbName, string psuName)
     {
@@ -585,7 +585,7 @@ public class CompatibilityRuleEngine
         var rule = _config.StorageInterfaceCompatibility.M2SataInNvmeSlot;
         return new CompatibilityWarningDto
         {
-            Severity = rule.Severity, // Keep as Warning since this gets escalated to Error by caller
+            Severity = rule.Severity, // Оставляем как Warning, так как вызывающий код повышает до Error
             Component = storageName,
             Message = rule.MessageTemplate ?? "",
             Suggestion = rule.Suggestion
@@ -684,7 +684,7 @@ public class CompatibilityRuleEngine
     #endregion
 }
 
-#region Configuration Models
+#region Модели конфигурации
 
 public class RulesConfig
 {

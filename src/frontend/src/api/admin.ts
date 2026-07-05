@@ -737,7 +737,7 @@ export const auditLogApi = {
   },
 };
 
-// === Stub Manager API ===
+// Stub Manager API ===
 
 export type StubMode = 'Normal' | 'Slow' | 'Failing' | 'Unstable';
 

@@ -1,6 +1,6 @@
 /**
- * Check functions - extracted from compatibilityUtils.ts
- * Validation logic for component compatibility
+ * Функции проверки — извлечены из compatibilityUtils.ts
+ * Логика валидации совместимости компонентов
  */
 
 import type { Product, ProductSpecifications } from '@/api/types';
@@ -67,31 +67,31 @@ import {
 } from './extractors';
 
 /**
- * Detect socket from chipset string (from specs or product name).
+ * Определить сокет из строки чипсета (из характеристик или названия товара).
  */
 function detectSocketFromChipset(chipset: string): string | null {
   const c = chipset.toUpperCase().trim();
-  // Intel LGA1851 (800/900-series)
+  // Intel LGA1851 (800/900-серия)
   if (/\b(Z890|B860|H810)\b/.test(c)) return 'LGA1851';
-  // Intel LGA1700 (600/700-series desktop)
+  // Intel LGA1700 (600/700-серия десктопные)
   if (/\b(H610|B660|H670|Z690|B760|Z790|H770)\b/.test(c)) return 'LGA1700';
-  // Intel LGA1200 (400/500-series)
+  // Intel LGA1200 (400/500-серия)
   if (/\b(B460|H470|H410|Z490|B560|H510|H570|Z590)\b/.test(c)) return 'LGA1200';
-  // Intel LGA1151 (200/300-series)
+  // Intel LGA1151 (200/300-серия)
   if (/\b(B250|H270|Z270|B360|H310|H370|Z370|Z390|B365)\b/.test(c)) return 'LGA1151';
-  // Intel LGA1155 (60/70-series desktop)
+  // Intel LGA1155 (60/70-серия десктопные)
   if (/\b(H61|B75|H77|Z75|Z77)\b/.test(c)) return 'LGA1155';
-  // Intel LGA1150 (80/90-series desktop)
+  // Intel LGA1150 (80/90-серия десктопные)
   if (/\b(B85|H81|H87|Z87|Z97|H97)\b/.test(c)) return 'LGA1150';
   // Intel LGA2011-3 / LGA2066 (X99, X299)
   if (/\b(X99|X299)\b/.test(c)) return 'LGA2011-3';
-  // Intel LGA4189 (server)
+  // Intel LGA4189 (серверные)
   if (/\b(C621|C622|C624|C625|C626)\b/.test(c)) return 'LGA4189';
-  // Intel mobile chipsets → LGA1155 (Sandy/Ivy Bridge)
+  // Intel мобильные чипсеты → LGA1155 (Sandy/Ivy Bridge)
   if (/\b(HM[567]\d|QM[567]\d|QS[567]\d|UM[567]\d)\b/.test(c)) return 'LGA1155';
-  // Intel mobile 80/90-series → LGA1150
+  // Intel мобильные 80/90-серия → LGA1150
   if (/\b(HM8\d|QM8\d|HM9\d|QM9\d)\b/.test(c)) return 'LGA1150';
-  // AMD AM5 (600/800-series)
+  // AMD AM5 (600/800-серия)
   if (/\b(B650E?|X670E?|X870E?|B850|A620)\b/.test(c)) return 'AM5';
   // AMD AM4
   if (/\b(A320|B350|B450|A520|B550|X370|X470|X570)\b/.test(c)) return 'AM4';
@@ -104,21 +104,21 @@ function detectSocketFromName(productName: string): string | null {
   const upper = productName.toUpperCase();
   // Intel LGA1851: Z890, B860, H810
   if (/\b(Z890|B860|H810)\b/.test(upper)) return 'LGA1851';
-  // Intel LGA1700 chipsets
+  // Intel LGA1700 чипсеты
   if (/\b(H610|B660|H670|Z690|B760|Z790|H770)\b/.test(upper)) return 'LGA1700';
-  // Intel LGA1200 chipsets
+  // Intel LGA1200 чипсеты
   if (/\b(B460|H470|H410|Z490|B560|H510|H570|Z590)\b/.test(upper)) return 'LGA1200';
-  // Intel LGA1151 chipsets
+  // Intel LGA1151 чипсеты
   if (/\b(B250|H270|Z270|B360|H310|H370|Z370|Z390|B365)\b/.test(upper)) return 'LGA1151';
-  // Intel LGA1150 chipsets
+  // Intel LGA1150 чипсеты
   if (/\b(H81|B85|H87|Z87|Z97|H97|Q85|Q87|H97|C226|C232|C612)\b/.test(upper)) return 'LGA1150';
-  // Intel desktop LGA1155
+  // Intel десктопные LGA1155
   if (/\b(H61|B75|H77|Z77)\b/.test(upper)) return 'LGA1155';
-  // AMD AM5 (600/800-series)
+  // AMD AM5 (600/800-серия)
   if (/\b(B650E?|X670E?|X870E?|B850|A620)\b/.test(upper)) return 'AM5';
   // AMD AM4
   if (/\b(A320|B350|B450|A520|B550|X370|X470|X570)\b/.test(upper)) return 'AM4';
-  // Socket names directly
+  // Названия сокетов напрямую
   if (upper.includes('AM5')) return 'AM5';
   if (upper.includes('AM4')) return 'AM4';
   if (upper.includes('LGA1851')) return 'LGA1851';
@@ -134,7 +134,7 @@ function checkCPUSocket(cpu: Product, mb: Product): CompatibilityIssue | null {
   const cs = extractSocketWithFallback(cpu, cpu.specifications);
   const ms = extractSocketWithFallback(mb, mb.specifications);
 
-  // Known mismatch (normalize LGA1151 variants — V1/V2 share same physical connector)
+  // Известное несоответствие (нормализуем варианты LGA1151 — V1/V2 имеют один и тот же физический разъём)
   if (cs && ms) {
     const norm = (s: string) => s.replace(/\s*v2/i, '').toUpperCase();
     if (norm(cs) !== norm(ms)) {
@@ -142,7 +142,7 @@ function checkCPUSocket(cpu: Product, mb: Product): CompatibilityIssue | null {
     }
   }
 
-  // One or both unknown — skip (don't block the build for undetectable sockets)
+  // Один или оба неизвестны — пропускаем (не блокируем сборку из-за неопределяемых сокетов)
   // if (!cs || !ms) {
   //   const unknown = !cs ? cpu.name : mb.name;
   //   return { severity: 'Error', component1: cpu.name, component2: mb.name, message: `Не удалось определить сокет: ${unknown}`, suggestion: 'Проверьте характеристики компонента' };
@@ -152,15 +152,15 @@ function checkCPUSocket(cpu: Product, mb: Product): CompatibilityIssue | null {
 }
 
 /**
- * Detect memory form factor from product name or SKU (fallback for ProductSummary without specs).
- * Pure function — same input, same output.
- * @param productName - Product name (always available)
- * @param sku - Product SKU/model number (optional, may contain form factor hints)
+ * Определить форм-фактор памяти из названия товара или SKU (запасной вариант для ProductSummary без характеристик).
+ * Чистая функция — одинаковый вход, одинаковый выход.
+ * @param productName - Название товара (всегда доступно)
+ * @param sku - SKU/модельный номер товара (опционально, может содержать подсказки о форм-факторе)
  */
 function detectMemoryFormFactorFromName(productName: string, sku?: string): 'DIMM' | 'SO-DIMM' | null {
   const upper = productName.toUpperCase();
 
-  // ── SO-DIMM indicators in product name ──
+  // ── Признаки SO-DIMM в названии товара ──
   if (
     upper.includes('SO-DIMM') ||
     upper.includes('SODIMM') ||
@@ -172,7 +172,7 @@ function detectMemoryFormFactorFromName(productName: string, sku?: string): 'DIM
     upper.includes('1.35V')
   ) return 'SO-DIMM';
 
-  // ── Desktop DIMM indicators in product name ──
+  // ── Признаки десктопных DIMM в названии товара ──
   if (
     upper.includes('DIMM') ||
     upper.includes('UDIMM') ||
@@ -180,13 +180,13 @@ function detectMemoryFormFactorFromName(productName: string, sku?: string): 'DIM
     upper.includes('НАСТОЛЬН')
   ) return 'DIMM';
 
-  // ── Check SKU/model number for additional clues ──
+  // ── Проверяем SKU/модельный номер для дополнительных подсказок ──
   if (sku) {
     const skuUpper = sku.toUpperCase();
     if (skuUpper.includes('SO-DIMM') || skuUpper.includes('SODIMM')) return 'SO-DIMM';
     if (skuUpper.includes('DIMM') || skuUpper.includes('UDIMM')) return 'DIMM';
 
-    // Common SO-DIMM module model prefixes: Samsung M471*, SK Hynix HMA* / HMC* / HMT*
+    // Распространённые префиксы моделей SO-DIMM: Samsung M471*, SK Hynix HMA* / HMC* / HMT*
     if (/^M47[0-9]/.test(skuUpper) || /^HM[ACT]/.test(skuUpper)) return 'SO-DIMM';
   }
 
@@ -205,7 +205,7 @@ function detectMBMemoryTypeFromName(productName: string, socket?: string | null,
   const upper = productName.toUpperCase();
   const context = ((socket ?? '') + ' ' + (chipset ?? '') + ' ' + upper).toUpperCase();
 
-  // Direct chipset detection (most reliable)
+  // Прямое определение по чипсету (наиболее надёжно)
   const chipU = (chipset ?? '').toUpperCase();
   if (/\b(Z890|B860|H810)\b/.test(chipU)) return 'DDR5';
   if (/\b(B650E?|X670E?|X870E?|B850|A620)\b/.test(chipU)) return 'DDR5';
@@ -219,21 +219,21 @@ function detectMBMemoryTypeFromName(productName: string, socket?: string | null,
   if (/\b(X99|X299)\b/.test(chipU)) return 'DDR4';
   if (/\b(TRX40|WRX80|TRX50)\b/.test(chipU)) return 'DDR4';
 
-  // Socket-based detection
+  // Определение по сокету
   if (context.includes('AM5') || context.includes('LGA1851')) return 'DDR5';
   if (/\bHM[5678]\d/.test(context)) return 'DDR3';
-  // Server/workstation
+  // Сервер/рабочая станция
   if (context.includes('SP3') || context.includes('EPYC') || upper.includes('SUPERMICRO') || upper.includes('ASUS WS')) return 'DDR4';
   if (context.includes('LGA4677') || context.includes('LGA3647')) return 'DDR4';
   if (context.includes('STRX4') || context.includes('SWRX8') || context.includes('THREADRIPPER')) return 'DDR4';
-  // Consumer
+  // Потребительские
   if (upper.includes('AM4') || upper.includes('LGA1151') || upper.includes('LGA1200')) return 'DDR4';
   if (upper.includes('LGA1700')) {
     if (upper.includes('DDR5')) return 'DDR5';
     return 'DDR4';
   }
 
-  // Name-based chipset detection (last resort — product name contains chipset)
+  // Определение по названию чипсета (крайняя мера — название товара содержит чипсет)
   if (/\b(Z890|B860|H810|Z790|Z690)\b/.test(upper)) {
     if (upper.includes('DDR5')) return 'DDR5';
     return 'DDR4';
@@ -251,27 +251,27 @@ function detectMBMemoryTypeFromName(productName: string, socket?: string | null,
 }
 
 /**
- * Determine DDR type from chipset: maps chipset family to memory generation.
+ * Определить тип DDR по чипсету: сопоставляет семейство чипсета с поколением памяти.
  */
 function detectMemoryTypeFromChipset(chipset: string): 'DDR5' | 'DDR4' | 'DDR3' | null {
-  // Strip trailing M (Micro-ATX form factor indicator, not chipset variant): H310M → H310, B450M → B450
-  // Preserves real chipset suffixes like B650E, X670E
+  // Удаляем завершающую M (признак форм-фактора Micro-ATX, не вариант чипсета): H310M → H310, B450M → B450
+  // Сохраняет реальные суффиксы чипсетов типа B650E, X670E
   const c = chipset.toUpperCase().trim().replace(/([A-Z]\d{3})M$/i, '$1');
   // Intel LGA1851 → DDR5
   if (/\b(Z890|B860|H810)\b/.test(c)) return 'DDR5';
-  // Intel LGA1700 (600-series) → DDR4
+  // Intel LGA1700 (600-серия) → DDR4
   if (/\b(H610|B660|H670|Z690)\b/.test(c)) return 'DDR4';
-  // Intel LGA1700 (700-series) → DDR5
+  // Intel LGA1700 (700-серия) → DDR5
   if (/\b(B760|Z790|H770)\b/.test(c)) return 'DDR5';
-  // Intel LGA1200 (400/500-series) → DDR4
+  // Intel LGA1200 (400/500-серия) → DDR4
   if (/\b(B460|H470|H410|Z490|B560|H510|H570|Z590)\b/.test(c)) return 'DDR4';
-  // Intel LGA1151 (200/300-series) → DDR4
+  // Intel LGA1151 (200/300-серия) → DDR4
   if (/\b(B250|H270|Z270|B360|H310|H370|H410|Z370|Z390|B365)\b/.test(c)) return 'DDR4';
   // Intel LGA1155/1150 → DDR3
   if (/\b(H61|B75|H77|Z77|Z75|B85|H81|H87|Z87|Z97|H97)\b/.test(c)) return 'DDR3';
-  // Intel mobile 50/60/70 series → DDR3
+  // Intel мобильные 50/60/70 серия → DDR3
   if (/\b(HM[567]\d|QM[567]\d)\b/.test(c)) return 'DDR3';
-  // Intel mobile 80/90 series → DDR3L
+  // Intel мобильные 80/90 серия → DDR3L
   if (/\b(HM8\d|QM8\d|HM9\d|QM9\d)\b/.test(c)) return 'DDR3';
   // AMD AM5 → DDR5
   if (/\b(B650E?|X670E?|X870E?|B850|A620)\b/.test(c)) return 'DDR5';
@@ -288,14 +288,14 @@ function checkRAM(ram: Product, mb: Product, quantity: number = 1): Compatibilit
   let rt = extractMemoryTypeWithFallback(ram, ram.specifications);
   let mt = extractMemoryTypeWithFallback(mb, mb.specifications);
 
-  // Fallback: detect memory type from chipset or socket (works even if specs are empty)
+  // Запасной вариант: определяем тип памяти по чипсету или сокету (работает даже если характеристики пусты)
   if (!mt) {
     const chipset = (mb.specifications?.['chipset'] as string) ?? '';
     const chipsetType = detectMemoryTypeFromChipset(chipset);
-    // Also try extracting chipset from product name (e.g. "AFB250" → "B250")
+    // Также пробуем извлечь чипсет из названия товара (например, "AFB250" → "B250")
     const nameChipsetMatch = mb.name.match(/([ABHZ]\d{3}[A-Z]?)\b/i);
     const nameChipsetType = nameChipsetMatch ? detectMemoryTypeFromChipset(nameChipsetMatch[1]) : null;
-    // Try socket-based detection
+    // Пробуем определение по сокету
     const socket = extractSocket(mb, mb.specifications);
     const socketType = socket ? detectMemoryTypeFromChipset(socket) : null;
     mt = chipsetType ?? nameChipsetType ?? socketType ?? null;
@@ -304,26 +304,26 @@ function checkRAM(ram: Product, mb: Product, quantity: number = 1): Compatibilit
     rt = extractMemoryType(ram.specifications) ?? detectMemoryTypeFromName(ram.name);
   }
 
-  // Known memory type mismatch
+  // Известное несоответствие типа памяти
   if (rt && mt && rt !== mt) {
     return { severity: 'Error', component1: ram.name, component2: mb.name, message: `Тип памяти ${rt} не поддерживается материнской платой (${mt})`, suggestion: `Выберите память ${mt}` };
   }
 
-  // One or both unknown — skip check (can't determine)
+  // Один или оба неизвестны — пропускаем проверку (нельзя определить)
   if (!rt || !mt) {
     return null;
   }
 
-  // Try specifications first, fall back to name+sku based detection (for ProductSummary)
+  // Сначала пробуем характеристики, затем определение по названию+SKU (для ProductSummary)
   const rff = extractMemoryFormFactor(ram.specifications) ?? detectMemoryFormFactorFromName(ram.name, ram.sku);
   const mff = extractMemoryFormFactor(mb.specifications) ?? 'DIMM';
 
-  // Known form factor mismatch
+  // Известное несоответствие форм-фактора
   if (rff && mff && rff !== mff) {
     return { severity: 'Error', component1: ram.name, component2: mb.name, message: `Форм-фактор памяти ${rff} несовместим с материнской платой (${mff})`, suggestion: `Выберите модули памяти ${mff}` };
   }
 
-  // RAM form factor unknown
+  // Форм-фактор RAM неизвестен
   if (!rff) {
     return { severity: 'Error', component1: ram.name, component2: mb.name, message: `Не удалось определить форм-фактор памяти: ${ram.name}`, suggestion: 'Проверьте характеристики модуля памяти' };
   }
@@ -340,15 +340,15 @@ function checkRAM(ram: Product, mb: Product, quantity: number = 1): Compatibilit
 }
 
 /**
- * Check for mixed RAM sticks — different manufacturers, speeds, capacities
- * Multiple unmatched sticks can cause instability or POST failure on AM5/etc.
- * Pure function, takes array of RAM products, returns warnings array.
+ * Проверка на смешанные планки RAM — разные производители, частоты, объёмы
+ * Несколько непарных планок могут вызвать нестабильность или отказ POST на AM5 и др.
+ * Чистая функция, принимает массив продуктов RAM, возвращает массив предупреждений.
  */
 function checkMixedRAM(ramSticks: Product[]): CompatibilityWarning[] {
   const warnings: CompatibilityWarning[] = [];
   if (!ramSticks || ramSticks.length < 2) return warnings;
 
-  // 1. Check manufacturer/brand uniformity
+  // 1. Проверка единообразия производителя/бренда
   const brands = new Set(ramSticks.map(s => s.brand?.toLowerCase()).filter(Boolean));
   if (brands.size > 1) {
     warnings.push({
@@ -358,7 +358,7 @@ function checkMixedRAM(ramSticks: Product[]): CompatibilityWarning[] {
     });
   }
 
-  // 2. Check speed uniformity
+  // 2. Проверка единообразия частоты
   const speeds = new Set(ramSticks.map(s => extractRAMSpeed(s.specifications)).filter((s): s is number => s !== null));
   if (speeds.size > 1) {
     const min = Math.min(...speeds);
@@ -369,7 +369,7 @@ function checkMixedRAM(ramSticks: Product[]): CompatibilityWarning[] {
     });
   }
 
-  // 3. Check capacity uniformity
+  // 3. Проверка единообразия объёма
   const capacities = new Set(ramSticks.map(s => extractRAMCapacity(s.specifications)).filter(c => c > 0));
   if (capacities.size > 1) {
     warnings.push({
@@ -379,7 +379,7 @@ function checkMixedRAM(ramSticks: Product[]): CompatibilityWarning[] {
     });
   }
 
-  // 4. Check timings (CAS latency) uniformity
+  // 4. Проверка единообразия таймингов (CAS latency)
   const timings = new Set(ramSticks.map(s => {
     const spec = s.specifications;
     return typeof spec?.timing === 'string' ? spec.timing :
@@ -400,10 +400,10 @@ function checkMixedRAM(ramSticks: Product[]): CompatibilityWarning[] {
 function checkCooler(cooling: Product, cpu: Product): CompatibilityWarning | null {
   const cs = extractSocket(cpu.specifications);
   const ss = extractSupportedSockets(cooling.specifications);
-  if (cs && ss.length > 0 && !ss.includes(cs)) return { severity: 'Warning', component: cooling.name, message: `Cooler may not support socket ${cs}`, suggestion: `Verify cooler compatibility with ${cs}` };
+  if (cs && ss.length > 0 && !ss.includes(cs)) return { severity: 'Warning', component: cooling.name, message: `Кулер может не поддерживать сокет ${cs}`, suggestion: `Проверьте совместимость кулера с ${cs}` };
   const maxTdp = extractMaxCoolerTDP(cooling.specifications);
   const cpuTdp = extractTDP(cpu.specifications);
-  if (maxTdp > 0 && cpuTdp > maxTdp) return { severity: 'Warning', component: cooling.name, message: `Cooler (max TDP ${maxTdp}W) may be insufficient for ${cpu.name} (${cpuTdp}W)`, suggestion: `Choose cooler with TDP >= ${cpuTdp}W` };
+  if (maxTdp > 0 && cpuTdp > maxTdp) return { severity: 'Warning', component: cooling.name, message: `Кулер (макс. TDP ${maxTdp}Вт) может быть недостаточен для ${cpu.name} (${cpuTdp}Вт)`, suggestion: `Выберите кулер с TDP >= ${cpuTdp}Вт` };
   return null;
 }
 
@@ -461,10 +461,10 @@ function checkCaseFF(chassis: Product, mb: Product): CompatibilityIssue | null {
   const sf = extractSupportedFormFactors(chassis.specifications);
 
   if (ff && sf.length > 0 && !sf.includes(ff)) {
-    return { severity: 'Error', component1: chassis.name, component2: mb.name, message: `Case does not support ${ff} form factor`, suggestion: `Supported: ${sf.join(', ')}` };
+    return { severity: 'Error', component1: chassis.name, component2: mb.name, message: `Корпус не поддерживает форм-фактор ${ff}`, suggestion: `Поддерживаемые: ${sf.join(', ')}` };
   }
 
-  // Form factor unknown
+  // Форм-фактор неизвестен
   if (!ff) {
     return { severity: 'Error', component1: chassis.name, component2: mb.name, message: `Не удалось определить форм-фактор материнской платы: ${mb.name}`, suggestion: 'Проверьте характеристики материнской платы' };
   }
@@ -477,10 +477,10 @@ function checkGPULen(chassis: Product, gpu: Product): CompatibilityWarning | nul
   const gl = extractGPULength(gpu.specifications);
 
   if (ml && gl && gl > ml) {
-    return { severity: 'Warning', component: gpu.name, message: `GPU length ${gl}mm may exceed case max ${ml}mm`, suggestion: `Choose shorter GPU or larger case` };
+    return { severity: 'Warning', component: gpu.name, message: `Длина GPU ${gl}мм может превышать макс. для корпуса ${ml}мм`, suggestion: `Выберите более короткую GPU или больший корпус` };
   }
 
-  // Report if one dimension is known but the other isn't
+  // Сообщаем, если один размер известен, а другой нет
   if (ml && !gl) {
     return { severity: 'Warning', component: gpu.name, message: 'Не удалось определить длину видеокарты. Проверьте совместимость с корпусом.', suggestion: 'Проверьте характеристики видеокарты' };
   }
@@ -495,10 +495,10 @@ function checkCoolerHeightCheck(cooling: Product, chassis: Product): Compatibili
   const mch = extractMaxCoolerHeight(chassis.specifications);
 
   if (ch > 0 && mch && ch > mch) {
-    return { severity: 'Error', component1: cooling.name, component2: chassis.name, message: `Cooler height ${ch}mm exceeds case max ${mch}mm`, suggestion: `Choose cooler <= ${mch}mm, AIO, or larger case` };
+    return { severity: 'Error', component1: cooling.name, component2: chassis.name, message: `Высота кулера ${ch}мм превышает макс. для корпуса ${mch}мм`, suggestion: `Выберите кулер <= ${mch}мм, СЖО или больший корпус` };
   }
 
-  // Height unknown
+  // Высота неизвестна
   if (ch > 0 && !mch) {
     return { severity: 'Warning', component1: cooling.name, component2: chassis.name, message: 'Не удалось определить максимальную высоту кулера для корпуса.', suggestion: 'Проверьте характеристики корпуса' };
   }
@@ -512,7 +512,7 @@ function checkIG(cpu: Product, gpu: Product | null | undefined): CompatibilityWa
 }
 
 /**
- * EPR supply check — достаточно ли EPS12V кабелей у БП для материнской платы
+ * Проверка питания EPS — достаточно ли EPS12V кабелей у БП для материнской платы
  */
 function checkEPSSupply(psu: Product, mb: Product): CompatibilityIssue | null {
   const required = extractRequiredEPSConnectors(mb.specifications);
@@ -530,7 +530,7 @@ function checkEPSSupply(psu: Product, mb: Product): CompatibilityIssue | null {
 }
 
 /**
- * PCIe power supply check — достаточно ли PCIe кабелей у БП для видеокарты
+ * Проверка питания PCIe — достаточно ли PCIe кабелей у БП для видеокарты
  */
 function checkPCIeSupply(psu: Product, gpu: Product): CompatibilityIssue | null {
   const gpuCon = extractGPURequiredConnectors(gpu.specifications);
@@ -565,7 +565,7 @@ function checkPCIeSupply(psu: Product, gpu: Product): CompatibilityIssue | null 
 }
 
 /**
- * GPU slot width vs case expansion slots
+ * Ширина слота GPU против слотов расширения корпуса
  */
 function checkGPUSlotFit(gpu: Product, chassis: Product): CompatibilityWarning | null {
   const slotWidth = extractGPUSlotWidth(gpu.specifications);
@@ -583,7 +583,7 @@ function checkGPUSlotFit(gpu: Product, chassis: Product): CompatibilityWarning |
 }
 
 /**
- * 12VHPWR bend radius check — хватает ли глубины корпуса для безопасного изгиба кабеля
+ * Проверка радиуса изгиба 12VHPWR — хватает ли глубины корпуса для безопасного изгиба кабеля
  * 12VHPWR требует ~35 мм зазора от боковой панели до коннектора
  */
 function check12VHPWRBend(gpu: Product, chassis: Product): CompatibilityWarning | null {
@@ -603,7 +603,7 @@ function check12VHPWRBend(gpu: Product, chassis: Product): CompatibilityWarning 
 }
 
 /**
- * GPU width clearance check — не упирается ли широкая видеокарта в стенку корпуса
+ * Проверка зазора по ширине GPU — не упирается ли широкая видеокарта в стенку корпуса
  */
 function checkGPUWidthClearance(gpu: Product, chassis: Product): CompatibilityWarning | null {
   const slotWidth = extractGPUSlotWidth(gpu.specifications);
@@ -639,7 +639,7 @@ function checkVRMCapacity(cpu: Product, mb: Product): CompatibilityWarning | nul
     };
   }
 
-  // Heuristic: если vrmPhases < 8 для CPU > 125W
+  // Эвристика: если vrmPhases < 8 для CPU > 125W
   if (vrmPhases !== null && vrmPhases < 8 && cpuTdp >= 125) {
     return {
       severity: 'Warning',
@@ -653,14 +653,14 @@ function checkVRMCapacity(cpu: Product, mb: Product): CompatibilityWarning | nul
 }
 
 /**
- * RAM speed check — частота RAM превышает поддерживаемую материнской платой или лимит IMC процессора
+ * Проверка скорости RAM — частота RAM превышает поддерживаемую материнской платой или лимит IMC процессора
  */
 function checkRAMSpeed(ram: Product, mb: Product, cpu?: Product): CompatibilityWarning | null {
   const speed = extractRAMSpeed(ram.specifications);
   const mbMaxSpeed = extractMaxRamSpeed(mb.specifications);
   if (speed === null || mbMaxSpeed === null) return null;
 
-  // CPU IMC limit based on socket group (e.g. AM5 maxRamSpeed: 8400)
+  // Лимит IMC процессора на основе группы сокета (например, AM5 maxRamSpeed: 8400)
   const cpuLimit = cpu != null ? extractCPUMaxRamSpeed(extractSocket(cpu.specifications)) : null;
   const effectiveMax = cpuLimit != null ? Math.min(mbMaxSpeed, cpuLimit) : mbMaxSpeed;
 
@@ -684,7 +684,7 @@ function checkRAMSpeed(ram: Product, mb: Product, cpu?: Product): CompatibilityW
 }
 
 /**
- * RAM height vs CPU cooler clearance
+ * Высота RAM и зазор с кулером CPU
  */
 function checkRAMClearance(ram: Product, cooling: Product): CompatibilityWarning | null {
   const ramHeight = extractRAMHeight(ram.specifications);
@@ -702,7 +702,7 @@ function checkRAMClearance(ram: Product, cooling: Product): CompatibilityWarning
 }
 
 /**
- * USB-C front panel header check
+ * Проверка USB-C заголовка на передней панели
  */
 function checkUSB3Header(mb: Product, chassis: Product): CompatibilityWarning | null {
   const hasCaseUSBC = extractCaseHasUSBC(chassis.specifications);
@@ -721,10 +721,10 @@ function checkUSB3Header(mb: Product, chassis: Product): CompatibilityWarning | 
 }
 
 /**
- * M.2 SATA SSD in NVMe-only slot + M.2 key mismatch check
+ * M.2 SATA SSD в слоте только для NVMe + проверка несоответствия ключа M.2
  */
 function checkM2Interface(storage: Product, mb: Product): CompatibilityIssue | null {
-  // M.2 Key mismatch: SSD key B+M physically won't fit in M-only slot
+  // Несоответствие ключа M.2: SSD с ключом B+M физически не подойдёт в слот только M
   const ssdKey = extractM2Key(storage.specifications);
   const mbKey = extractM2Key(mb.specifications);
   if (ssdKey && mbKey) {
@@ -743,7 +743,7 @@ function checkM2Interface(storage: Product, mb: Product): CompatibilityIssue | n
       };
     }
   }
-  // M.2 SATA SSD in NVMe-only slot
+  // M.2 SATA SSD в слоте только для NVMe
   const m2Iface = extractM2Interface(storage.specifications);
   if (m2Iface !== 'sata') return null;
   const mbM2SupportsSata = extractM2SataSupport(mb.specifications);
@@ -760,7 +760,7 @@ function checkM2Interface(storage: Product, mb: Product): CompatibilityIssue | n
 }
 
 /**
- * M.2 PCIe 5.0 in 4.0 slot (overheating warning)
+ * M.2 PCIe 5.0 в слоте 4.0 (предупреждение о перегреве)
  */
 function checkM2PCIeGen(storage: Product, mb: Product): CompatibilityWarning | null {
   const ssdGen = extractPCIeGeneration(storage.specifications);
@@ -778,7 +778,7 @@ function checkM2PCIeGen(storage: Product, mb: Product): CompatibilityWarning | n
 }
 
 /**
- * M.2/SATA lane conflict — M.2 drives may disable SATA ports on budget chipsets (B660, B760, H610)
+ * Конфликт линий M.2/SATA — M.2 накопители могут отключать порты SATA на бюджетных чипсетах (B660, B760, H610)
  */
 function checkM2SataLaneConflict(storage: Product[], motherboard: Product): CompatibilityIssue | null {
   const m2Count = storage.filter(s => extractStorageType(s.specifications) === 'm2').length;
@@ -803,7 +803,7 @@ function checkM2SataLaneConflict(storage: Product[], motherboard: Product): Comp
 }
 
 /**
- * Fan headers count check
+ * Проверка количества разъёмов для вентиляторов
  */
 function checkFanHeaderCount(mb: Product, cooling: Product | undefined, _chassis: Product | undefined, selectedFans: number): CompatibilityWarning | null {
   const mbHeaders = extractFanHeaderCount(mb.specifications);
@@ -827,7 +827,7 @@ function checkFanHeaderCount(mb: Product, cooling: Product | undefined, _chassis
 }
 
 /**
- * RGB voltage compatibility (12V vs 5V)
+ * Совместимость напряжения RGB (12V vs 5V)
  */
 function checkRGBType(mb: Product, chassis: Product | undefined, _fans: Product[]): CompatibilityWarning | null {
   const mbRGB = extractRGBHeaderType(mb.specifications);
@@ -851,7 +851,7 @@ function checkRGBType(mb: Product, chassis: Product | undefined, _fans: Product[
 }
 
 /**
- * ECC compatibility check
+ * Проверка совместимости ECC
  */
 function checkEccSupport(ram: Product, mb: Product): CompatibilityWarning | null {
   const ramEcc = extractRAMECCSupport(ram.specifications);
@@ -869,7 +869,7 @@ function checkEccSupport(ram: Product, mb: Product): CompatibilityWarning | null
 }
 
 /**
- * PSU brand safety check
+ * Проверка безопасности бренда БП
  */
 function checkPSUBrand(psu: Product): CompatibilityWarning | null {
   const safety = extractPSUBrandSafety(psu.specifications);
@@ -885,7 +885,7 @@ function checkPSUBrand(psu: Product): CompatibilityWarning | null {
 }
 
 /**
- * CPU F-series + no GPU
+ * CPU F-серии + нет GPU
  */
 function checkNoIGCPU(cpu: Product, gpu: Product | null | undefined): CompatibilityIssue | null {
   if (gpu) return null;
@@ -900,8 +900,8 @@ function checkNoIGCPU(cpu: Product, gpu: Product | null | undefined): Compatibil
 }
 
 /**
- * Checks if motherboard has video output ports by scanning spec keys
- * for HDMI, DisplayPort, VGA, DVI, or video substrings
+ * Проверяет, имеет ли материнская плата порты видеовыхода, сканируя ключи характеристик
+ * на наличие HDMI, DisplayPort, VGA, DVI или video подстрок
  */
 function motherboardHasVideoOutput(specs: ProductSpecifications | undefined): boolean {
   if (!specs) return false;
@@ -935,14 +935,14 @@ function checkNoVideoOutput(cpu: Product, motherboard: Product, gpu: Product | n
 }
 
 /**
- * CPU overclocking on non-Z chipset
+ * Разгон CPU на не-Z чипсете
  */
 function checkCPUOverclock(mb: Product, cpu: Product): CompatibilityWarning | null {
   const unlocked = extractCPUOverclockable(cpu.specifications);
   if (!unlocked) return null;
   const chipset = extractChipset(mb.specifications);
   if (!chipset) return null;
-  // Intel: non-Z chipsets (B/H series) не поддерживают разгон CPU
+  // Intel: не-Z чипсеты (B/H серии) не поддерживают разгон CPU
   const upper = chipset.toUpperCase();
   if (upper.startsWith('B') || upper.startsWith('H') || upper.startsWith('Q')) {
     return {
@@ -956,7 +956,7 @@ function checkCPUOverclock(mb: Product, cpu: Product): CompatibilityWarning | nu
 }
 
 /**
- * PSY EPS cable length vs case depth
+ * Длина кабеля EPS БП против глубины корпуса
  */
 function checkPSUEPSLength(psu: Product, chassis: Product): CompatibilityWarning | null {
   const epsLen = extractPSUEPSLength(psu.specifications);
@@ -974,7 +974,7 @@ function checkPSUEPSLength(psu: Product, chassis: Product): CompatibilityWarning
 }
 
 /**
- * TPM 2.0 check — Windows 11 requires TPM 2.0 support
+ * Проверка TPM 2.0 — Windows 11 требует поддержки TPM 2.0
  */
 function checkTPM(motherboard: Product): CompatibilityWarning | null {
   const tpm = extractTPMSupport(motherboard.specifications);
@@ -994,29 +994,29 @@ function checkTPM(motherboard: Product): CompatibilityWarning | null {
       suggestion: 'Выберите материнскую плату с поддержкой TPM 2.0 (Intel PTT / AMD fTPM)',
     };
   }
-  return null; // TPM 2.0 supported
+  return null; // TPM 2.0 поддерживается
 }
 
 /**
- * Normalize socket name to canonical DB form.
- * "LGA1151 V2" → "LGA1151", "sTRX4" → "sTRX4", etc.
+ * Нормализовать название сокета к канонической форме БД.
+ * "LGA1151 V2" → "LGA1151", "sTRX4" → "sTRX4", и т.д.
  */
 function normalizeSocket(socket: string): string {
-  // LGA1151 V1 and V2 are the same physical connector — DB stores as "LGA1151"
+  // LGA1151 V1 и V2 — один и тот же физический разъём — БД хранит как "LGA1151"
   if (/^LGA1151\b/i.test(socket)) return 'LGA1151';
   return socket;
 }
 
 /**
- * Best-effort socket resolution for any product.
- * Checks in order: promoted field → specs → chipset → product name.
- * Accepts ProductSummary (with promoted fields, no specs dict) or Product (with specs dict).
+ * Максимально возможное определение сокета для любого товара.
+ * Проверяет по порядку: продвинутое поле → характеристики → чипсет → название товара.
+ * Принимает ProductSummary (с продвинутыми полями, без словаря характеристик) или Product (со словарём характеристик).
  */
 export function resolveSocket(
   productOrSpecs: { socket?: string; specifications?: ProductSpecifications; name?: string; description?: string; descriptionShort?: string } | ProductSpecifications | null | undefined,
   productName?: string,
 ): string | null {
-  // 1. Check promoted field (ProductSummary.socket)
+  // 1. Проверяем продвинутое поле (ProductSummary.socket)
   if (productOrSpecs && typeof productOrSpecs === 'object' && 'socket' in productOrSpecs) {
     const promoted = (productOrSpecs as { socket?: string }).socket;
     if (promoted) {
@@ -1025,21 +1025,21 @@ export function resolveSocket(
     }
   }
 
-  // 2. Extract from specs dict
+  // 2. Извлекаем из словаря характеристик
   const specs = (productOrSpecs && typeof productOrSpecs === 'object' && 'specifications' in productOrSpecs)
     ? (productOrSpecs as { specifications?: ProductSpecifications }).specifications
     : (productOrSpecs as ProductSpecifications | null | undefined);
   const fromSpecs = extractSocket(specs);
   if (fromSpecs) return normalizeSocket(fromSpecs);
 
-  // 3. Infer from chipset
+  // 3. Определяем по чипсету
   const chipset = (specs as Record<string, unknown>)?.chipset;
   if (typeof chipset === 'string') {
     const fromChipset = detectSocketFromChipset(chipset);
     if (fromChipset) return normalizeSocket(fromChipset);
   }
 
-  // 4. Infer from description (fallback for products with empty specs)
+  // 4. Определяем по описанию (запасной вариант для товаров с пустыми характеристиками)
   const desc = (productOrSpecs && typeof productOrSpecs === 'object' && 'description' in productOrSpecs)
     ? (productOrSpecs as { description?: string }).description
     : undefined;
@@ -1048,7 +1048,7 @@ export function resolveSocket(
     : undefined;
   const descText = desc || descShort;
   if (descText) {
-    // Parse "Сокет: LGA1150" or "Socket: AM4" from description text
+    // Парсим "Сокет: LGA1150" или "Socket: AM4" из текста описания
     const socketMatch = descText.match(/(?:Сокет|Socket|Сокет\s+процессора)[:\s]+([A-Za-z0-9\s\-]+)/i);
     if (socketMatch) {
       const socketCandidate = socketMatch[1].trim().split(/[\s\n]/)[0].toUpperCase();
@@ -1057,7 +1057,7 @@ export function resolveSocket(
     }
   }
 
-  // 5. Infer from product name
+  // 5. Определяем по названию товара
   const name = productName ?? ((productOrSpecs && typeof productOrSpecs === 'object' && 'name' in productOrSpecs)
     ? (productOrSpecs as { name?: string }).name
     : undefined);

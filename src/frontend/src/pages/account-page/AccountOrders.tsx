@@ -15,7 +15,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import type { StatusVariant } from '@/components/ui/StatusBadge';
 
 /**
- * Map Order status to StatusBadge variant
+ * Сопоставляет статус заказа с вариантом StatusBadge
  */
 const STATUS_VARIANT: Record<string, StatusVariant> = {
   Completed: 'neutral',
@@ -65,7 +65,7 @@ const FILTERS = [
 
 const PAGE_SIZE = 10;
 
-/* ─── Stagger entrance animation ─── */
+/* ─── Анимация входа с задержкой ─── */
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -93,16 +93,16 @@ function getStatusProgress(status: string): number {
 }
 
 /**
- * AccountOrders — Page with order history, search, filters, and order details
+ * AccountOrders — Страница с историей заказов, поиском, фильтрами и деталями заказа
  *
- * Features:
- * - Order stats cards
- * - Search by order number
- * - Filter by status
- * - Desktop: table layout / Mobile: cards layout
- * - Infinite scroll with "Загрузить ещё" button + IntersectionObserver
- * - Touch targets >= 44px
- * - Order details: bottom sheet on mobile, modal on desktop
+ * Возможности:
+ * - Карточки статистики заказов
+ * - Поиск по номеру заказа
+ * - Фильтрация по статусу
+ * - Десктоп: табличный макет / Мобильный: макет карточек
+ * - Бесконечная прокрутка с кнопкой "Загрузить ещё" + IntersectionObserver
+ * - Цели касания >= 44px
+ * - Детали заказа: bottom sheet на мобильных, модалка на десктопе
  */
 export function AccountOrders() {
   const navigate = useNavigate();
@@ -123,7 +123,7 @@ export function AccountOrders() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // ── Data fetching ──────────────────────────────────────────────────
+  // ── Получение данных ──────────────────────────────────────────────────
 
   const fetchOrders = useCallback(async (pageNum: number, replace: boolean) => {
     const result = await getMyOrders(pageNum, PAGE_SIZE, activeFilter === 'all' ? undefined : activeFilter);
@@ -135,7 +135,7 @@ export function AccountOrders() {
     return result;
   }, [activeFilter, getMyOrders]);
 
-  // Reset on filter change
+  // Сброс при изменении фильтра
   useEffect(() => {
     setLoading(true);
     setOrders([]);
@@ -156,7 +156,7 @@ export function AccountOrders() {
       .finally(() => setLoadingMore(false));
   }, [loadingMore, hasMore, page, fetchOrders]);
 
-  // ── IntersectionObserver for infinite scroll ────────────────────────
+  // ── IntersectionObserver для бесконечной прокрутки ────────────────────────
 
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -177,7 +177,7 @@ export function AccountOrders() {
     return () => observer.disconnect();
   }, [hasMore, loadingMore, loading, loadMore]);
 
-  // ── Stats ───────────────────────────────────────────────────────────
+  // ── Статистика ───────────────────────────────────────────────────────────
 
   const stats = {
     total: totalCount,
@@ -186,7 +186,7 @@ export function AccountOrders() {
     processing: orders.filter(o => o.status === 'Processing').length,
   };
 
-  // ── Order details ───────────────────────────────────────────────────
+  // ── Детали заказа ───────────────────────────────────────────────────
 
   const handleViewDetails = async (order: Order) => {
     setSelectedOrder(order);
@@ -197,7 +197,7 @@ export function AccountOrders() {
       const details = await ordersApi.getOrder(order.id);
       setOrderDetails(details);
     } catch {
-      // Silent fail — modal shows loading
+      // Тихий сбой — модалка показывает загрузку
     } finally {
       setDetailsLoading(false);
     }
@@ -209,7 +209,7 @@ export function AccountOrders() {
     setOrderDetails(null);
   };
 
-  // Polling for status updates
+  // Опрос для обновления статуса
   const refreshOrderStatus = useCallback(async () => {
     if (selectedOrder && showDetailsModal) {
       try {
@@ -228,7 +228,7 @@ export function AccountOrders() {
     return () => clearInterval(interval);
   }, [showDetailsModal, refreshOrderStatus]);
 
-  // ── Actions ─────────────────────────────────────────────────────────
+  // ── Действия ─────────────────────────────────────────────────────────
 
   const handleRepeatOrder = async (orderNumber: string) => {
     const fullOrder = orders.find(o => o.orderNumber === orderNumber);
@@ -240,8 +240,8 @@ export function AccountOrders() {
     const addItem = useCartStore.getState().addItem;
 
     for (const item of fullOrder.items) {
-      // Construct a minimal ProductSummary from OrderItem data.
-      // The cart store only uses id, name, category, price, slug, mainImage — safe defaults for the rest.
+      // Создаём минимальный ProductSummary из данных OrderItem.
+      // Хранилище корзины использует только id, name, category, price, slug, mainImage — безопасные значения по умолчанию для остального.
       const product: ProductSummary = {
         id: item.productId,
         name: item.productName,
@@ -258,7 +258,7 @@ export function AccountOrders() {
     void navigate('/cart');
   };
 
-  // ── Formatting ──────────────────────────────────────────────────────
+  // ── Форматирование ──────────────────────────────────────────────────────
 
   const ordersFormatted = orders.map(order => ({
     id: order.orderNumber,
@@ -274,7 +274,7 @@ export function AccountOrders() {
     !searchQuery || order.id.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  // ── Empty / loading states ──────────────────────────────────────────
+  // ── Пустые состояния / загрузка ──────────────────────────────────────────
 
   if (loading) {
     return (
@@ -287,7 +287,7 @@ export function AccountOrders() {
     );
   }
 
-  // ── Order details content (shared between mobile & desktop) ─────────
+  // ── Содержимое деталей заказа (общее для мобильных и десктопа) ─────────
 
   const renderOrderDetails = () => {
     if (detailsLoading) {
@@ -302,7 +302,7 @@ export function AccountOrders() {
 
     return (
       <div>
-        {/* Status Timeline */}
+        {/* Временная шкала статуса */}
         <div className="mb-8">
           <h4 className="text-base font-semibold text-foreground mb-4">Статус заказа</h4>
           <div className="flex items-start gap-0">
@@ -345,7 +345,7 @@ export function AccountOrders() {
           </div>
         </div>
 
-        {/* Order Items & Delivery Info */}
+        {/* Товары в заказе и информация о доставке */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <h4 className="text-base font-semibold text-foreground mb-3">Состав заказа</h4>
@@ -400,7 +400,7 @@ export function AccountOrders() {
     );
   };
 
-  // ── Order Details: mobile full-screen vs desktop modal ──────────────
+  // ── Детали заказа: полноэкранный режим на мобильных vs модалка на десктопе ──────────────
 
   const renderOrderDetailsPanel = () => {
     if (!showDetailsModal) return null;
@@ -439,12 +439,12 @@ export function AccountOrders() {
     );
   };
 
-  // ── Render ──────────────────────────────────────────────────────────
+  // ── Отрисовка ──────────────────────────────────────────────────────────
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-[1280px] mx-auto">
-        {/* Page Header */}
+        {/* Заголовок страницы */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-foreground">История заказов</h1>
@@ -452,7 +452,7 @@ export function AccountOrders() {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Карточки статистики */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -473,7 +473,7 @@ export function AccountOrders() {
           </motion.div>
         </motion.div>
 
-        {/* Filters · Mobile: horizontal scroll snap */}
+        {/* Фильтры · Мобильные: горизонтальная прокрутка с привязкой */}
         <div className="flex gap-2 mb-4 overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden pb-1">
           {FILTERS.map((filter) => (
             <button
@@ -490,7 +490,7 @@ export function AccountOrders() {
           ))}
         </div>
 
-        {/* Search */}
+        {/* Поиск */}
         <div className="relative mb-6">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -502,7 +502,7 @@ export function AccountOrders() {
           />
         </div>
 
-        {/* Orders List */}
+        {/* Список заказов */}
         {filteredOrders.length === 0 && !loading ? (
           <div className="bg-card rounded-xl border border-border p-12 text-center">
             <div className="text-muted-foreground text-lg mb-2">Нет заказов</div>
@@ -514,7 +514,7 @@ export function AccountOrders() {
           </div>
         ) : (
           <>
-            {/* Desktop: Table */}
+            {/* Десктоп: Таблица */}
             <div className="hidden md:block bg-card rounded-xl border border-border overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -587,7 +587,7 @@ export function AccountOrders() {
               </div>
             </div>
 
-            {/* Mobile: Cards */}
+            {/* Мобильные: Карточки */}
             <motion.div
               variants={containerVariants}
               initial="hidden"
@@ -598,7 +598,7 @@ export function AccountOrders() {
                 const fullOrder = orders.find(o => o.orderNumber === order.id);
                 return (
                   <motion.div key={order.id} variants={itemVariants} className="bg-card rounded-xl border border-border p-4">
-                    {/* Header row */}
+                    {/* Строка заголовка */}
                     <div className="flex items-center justify-between mb-3">
                       <button
                         className="text-info-blue text-sm font-medium hover:underline"
@@ -609,7 +609,7 @@ export function AccountOrders() {
                       <StatusBadge variant={getStatusVariant(order.status)} label={order.statusLabel} />
                     </div>
 
-                    {/* Items */}
+                    {/* Товары */}
                     <div className="text-sm text-foreground mb-2">
                       {order.items.map((item, index) => (
                         <span key={index} className="block">{item.name}</span>
@@ -619,13 +619,13 @@ export function AccountOrders() {
                       )}
                     </div>
 
-                    {/* Date & Total */}
+                    {/* Дата и Итого */}
                     <div className="flex items-center justify-between text-sm mb-3">
                       <span className="text-muted-foreground">{order.date}</span>
                       <span className="text-foreground font-medium">{order.total}</span>
                     </div>
 
-                    {/* Actions */}
+                    {/* Действия */}
                     <div className="flex gap-2 pt-3 border-t border-border">
                       <button
                         className="flex-1 flex items-center justify-center gap-2 p-3 rounded-lg bg-elevated text-muted-foreground hover:text-info-blue hover:border-info-blue/40 border border-border transition-colors text-sm"
@@ -649,7 +649,7 @@ export function AccountOrders() {
               })}
             </motion.div>
 
-            {/* Load more / Infinite scroll sentinel */}
+            {/* Загрузить ещё / Сторож бесконечной прокрутки */}
             {hasMore && (
               <div ref={sentinelRef} className="flex items-center justify-center py-6">
                 {loadingMore ? (
@@ -670,7 +670,7 @@ export function AccountOrders() {
           </>
         )}
 
-        {/* Order Details Panel */}
+        {/* Панель деталей заказа */}
         {renderOrderDetailsPanel()}
       </div>
     </div>

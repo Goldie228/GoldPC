@@ -1,6 +1,6 @@
 /**
- * Extractors - extracted from monolithic compatibilityUtils.ts
- * Pure functions for extracting and normalizing product specifications
+ * Экстракторы — извлечены из монолитного compatibilityUtils.ts
+ * Чистые функции для извлечения и нормализации характеристик товаров
  */
 
 import type { Product, ProductSpecifications, ProductSummary } from '@/api/types';
@@ -82,7 +82,7 @@ export function extractMemoryType(specs: ProductSpecifications | undefined): Mem
     if (upper.startsWith('DDR3') || upper.startsWith('LPDDR3') || upper.startsWith('DDR3L')) return 'DDR3';
     if (upper.startsWith('LPDDR5')) return 'LPDDR5';
   }
-  // Fallback: определяем поколение DDR по сокету/чипсету (когда спецификации неполные)
+  // Запасной вариант: определяем поколение DDR по сокету/чипсету (когда спецификации неполные)
   if (specs) {
     const chipset = getString(specs, 'chipset');
     const socket = getString(specs, 'socket');
@@ -125,7 +125,7 @@ export function extractPSUWattage(specs: ProductSpecifications | undefined): num
 
 export function hasIntegratedGraphics(specs: ProductSpecifications | undefined, cpuName?: string): boolean {
   if (!specs) {
-    // Fallback: Intel CPUs without "F" suffix have iGPU; AMD "G"/"GE" suffixes have iGPU
+  // Запасной вариант: процессоры Intel без суффикса "F" имеют iGPU; суффиксы AMD "G"/"GE" имеют iGPU
     if (cpuName) {
       const upper = cpuName.toUpperCase();
       if (/INTEL\s+(CORE\s+)?(I[3579]|CELERON|PENTIUM)/i.test(upper) && !/\b\d{4}F\b/.test(upper)) return true;
@@ -141,7 +141,7 @@ export function hasIntegratedGraphics(specs: ProductSpecifications | undefined, 
     if (l === 'true' || l === 'да' || l === 'yes') return true;
     if (l.length > 0 && l !== 'false' && l !== 'нет' && l !== 'no' && l !== 'none' && l !== 'отсутствует' && l !== 'нет встроенной' && l !== 'нет графического ядра') return true;
   }
-  // Fallback: Intel CPUs without "F" suffix have iGPU; AMD "G"/"GE" suffixes have iGPU
+  // Запасной вариант: процессоры Intel без суффикса "F" имеют iGPU; суффиксы AMD "G"/"GE" имеют iGPU
   if (cpuName) {
     const upper = cpuName.toUpperCase();
     if (/INTEL\s+(CORE\s+)?(I[3579]|CELERON|PENTIUM)/i.test(upper) && !/\b\d{4}F\b/.test(upper)) return true;
@@ -240,13 +240,13 @@ export function extractThermalPasteIncluded(specs: ProductSpecifications | undef
 export function extractCPUOverclockable(specs: ProductSpecifications | undefined): boolean | null {
   if (!specs) return null;
   const rec = specs as Record<string, unknown>;
-  // Check by model series (e.g., Intel K-series, AMD X-series)
+  // Проверка по серии модели (например, Intel K-series, AMD X-series)
   const modelRaw = getString(specs, 'unlockedMultiplier', 'overclockable', 'model_series', 'modelSeries');
   if (modelRaw) {
     const upper = modelRaw.toUpperCase();
     if (upper.includes('K') || upper.includes('KF') || upper.includes('X') || upper.includes('UNLOCKED')) return true;
   }
-  // Check by boolean field
+  // Проверка по булевому полю
   const val = rec.overclockable ?? rec.unlocked;
   if (typeof val === 'boolean') return val;
   if (typeof val === 'string') {
@@ -395,7 +395,7 @@ export { normalizeFormFactor };
 /** Сколько EPS12V (8-pin CPU) разъёмов нужно материнской плате */
 export function extractRequiredEPSConnectors(specs: ProductSpecifications | undefined): number {
   const raw = getString(specs, 'cpuPowerConnectors', 'epsConnectors', 'cpuPower', 'atx12vConnectors', 'cpuPowerPin');
-  if (!raw) return 1; // Default: 1 EPS
+  if (!raw) return 1; // По умолчанию: 1 EPS
   const upper = raw.toUpperCase();
   // "8+4-pin", "8+4 pin", "8+8", "8+8-pin" = 2 EPS
   if (upper.includes('8+4') || upper.includes('8+8') || upper.includes('8+4+4')) return 2;
@@ -406,7 +406,7 @@ export function extractRequiredEPSConnectors(specs: ProductSpecifications | unde
 /** Сколько EPS12V кабелей даёт БП */
 export function extractPSUEPSPcieCount(specs: ProductSpecifications | undefined): number {
   const raw = getString(specs, 'cpuPowerCables', 'epsCables', 'cpuConnectors');
-  if (!raw) return 1; // Default: 1
+  if (!raw) return 1; // По умолчанию: 1
   const upper = raw.toUpperCase();
   if (upper.includes('2X') || upper.includes('2×') || upper.includes('2+')) return 2;
   if (upper.includes('1X') || upper.includes('1×') || upper.startsWith('1')) return 1;
@@ -418,7 +418,7 @@ export function extractPSUEPSPcieCount(specs: ProductSpecifications | undefined)
 /** Сколько PCIe (6+2-pin) кабелей даёт БП */
 export function extractPSUPCIeCableCount(specs: ProductSpecifications | undefined): number {
   const raw = getString(specs, 'pcieCables', 'pcieConnectors', 'gpuPowerCables', 'pciePowerCables');
-  if (!raw) return 2; // Default: 2
+  if (!raw) return 2; // По умолчанию: 2
   const upper = raw.toUpperCase();
   if (upper.includes('3X') || upper.includes('3×') || upper.includes('3+')) return 3;
   if (upper.includes('4X') || upper.includes('4×') || upper.includes('4+')) return 4;
@@ -435,14 +435,14 @@ export function extractGPURequiredConnectors(specs: ProductSpecifications | unde
   if (!raw) return { count: 0, has12VHPWR: false };
   const upper = raw.toUpperCase();
   const has12VHPWR = upper.includes('12VHPWR') || upper.includes('12V-2X6') || upper.includes('12V 2X6');
-  // Extract number of 8-pin connectors
+  // Извлекаем количество 8-pin коннекторов
   let count = 0;
   if (upper.includes('4X') || upper.includes('4×')) count = 4;
   else if (upper.includes('3X') || upper.includes('3×')) count = 3;
   else if (upper.includes('2X') || upper.includes('2×') || upper.includes('2+')) count = 2;
-  else if (has12VHPWR) count = 1; // 12VHPWR counts as 1 special connector
+  else if (has12VHPWR) count = 1; // 12VHPWR считается как 1 специальный коннектор
   else if (upper.includes('1X') || upper.includes('1×') || !upper.includes('X') && !upper.includes('×')) count = 1;
-  // Check for numeric prefix
+  // Проверяем числовой префикс
   const match = raw.match(/(\d+)\s*[xх×]/i);
   if (match) count = parseInt(match[1], 10);
   return { count, has12VHPWR };
@@ -591,21 +591,21 @@ export function extractM2SataSupport(specs: ProductSpecifications | undefined): 
 }
 
 /**
- * Helper: check if object has a specific property and is not null/undefined.
+ * Вспомогательная функция: проверяет, имеет ли объект определённое свойство и не является null/undefined.
  */
 function hasProp<K extends string>(obj: unknown, prop: K): obj is Record<K, unknown> {
   return obj != null && typeof obj === 'object' && prop in obj;
 }
 
 /**
- * Extract memory type with ProductSummary fallback.
- * Checks ProductSummary.memoryType first, then falls back to specs lookup.
+ * Извлекает тип памяти с запасным вариантом ProductSummary.
+ * Сначала проверяет ProductSummary.memoryType, затем возвращается к поиску по характеристикам.
  */
 export function extractMemoryTypeWithFallback(
   product: ProductSummary | Product,
   specs: ProductSpecifications | undefined
 ): MemoryType | null {
-  // First check ProductSummary direct field
+  // Сначала проверяем прямое поле ProductSummary
   if (hasProp(product, 'memoryType') && typeof (product as Record<string, unknown>).memoryType === 'string') {
     const val = (product as Record<string, unknown>).memoryType as string;
     const upper = val.toUpperCase().trim();
@@ -614,43 +614,43 @@ export function extractMemoryTypeWithFallback(
     if (upper.startsWith('DDR3') || upper.startsWith('LPDDR3') || upper.startsWith('DDR3L')) return 'DDR3';
     if (upper.startsWith('LPDDR5')) return 'LPDDR5';
   }
-  // Fallback to specs
+  // Запасной вариант: поиск по характеристикам
   return extractMemoryType(specs);
 }
 
 /**
- * Extract memory form factor with ProductSummary fallback.
- * Checks ProductSummary.memoryFormFactor first, then falls back to specs lookup.
+ * Извлекает форм-фактор памяти с запасным вариантом ProductSummary.
+ * Сначала проверяет ProductSummary.memoryFormFactor, затем возвращается к поиску по характеристикам.
  */
 export function extractMemoryFormFactorWithFallback(
   product: ProductSummary | Product,
   specs: ProductSpecifications | undefined
 ): MemoryFormFactor | null {
-  // First check ProductSummary direct field
+  // Сначала проверяем прямое поле ProductSummary
   if (hasProp(product, 'memoryFormFactor') && typeof (product as Record<string, unknown>).memoryFormFactor === 'string') {
     const val = (product as Record<string, unknown>).memoryFormFactor as string;
     const upper = val.toUpperCase().trim();
     if (upper.includes('SO-DIMM') || upper.includes('SODIMM')) return 'SO-DIMM';
     if (upper.includes('DIMM')) return 'DIMM';
   }
-  // Fallback to specs
+  // Запасной вариант: поиск по характеристикам
   return extractMemoryFormFactor(specs);
 }
 
 /**
- * Extract socket with ProductSummary fallback.
- * Checks ProductSummary.socket first, then falls back to specs lookup.
+ * Извлекает сокет с запасным вариантом ProductSummary.
+ * Сначала проверяет ProductSummary.socket, затем возвращается к поиску по характеристикам.
  */
 export function extractSocketWithFallback(
   product: ProductSummary | Product,
   specs: ProductSpecifications | undefined
 ): string | null {
-  // First check ProductSummary direct field
+  // Сначала проверяем прямое поле ProductSummary
   if (hasProp(product, 'socket') && typeof (product as Record<string, unknown>).socket === 'string') {
     const val = (product as Record<string, unknown>).socket as string;
     return KNOWN_SOCKETS.has(val.toUpperCase().trim()) ? val.toUpperCase().trim() : null;
   }
-  // Fallback to specs
+  // Запасной вариант: поиск по характеристикам
   return extractSocket(specs);
 }
 

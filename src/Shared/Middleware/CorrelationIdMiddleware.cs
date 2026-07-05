@@ -17,7 +17,7 @@ public class CorrelationIdMiddleware
     private readonly ILogger<CorrelationIdMiddleware> _logger;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="CorrelationIdMiddleware"/> class.
+    /// Инициализирует новый экземпляр класса <see cref="CorrelationIdMiddleware"/>.
     /// Инициализирует новый экземпляр <see cref="CorrelationIdMiddleware"/>.
     /// </summary>
     /// <param name="next">Следующий делегат в pipeline.</param>

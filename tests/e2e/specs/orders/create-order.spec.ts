@@ -30,10 +30,10 @@ test.describe('Создание заказа', () => {
   });
 
   test('User can add product to cart and create order with pickup', async ({ page }) => {
-    // Arrange - переходим в каталог
+    // Подготовка - переходим в каталог
     await catalogPage.goto();
     
-    // Act - добавляем товар в корзину
+    // Действие - добавляем товар в корзину
     await catalogPage.addToCart('AMD Ryzen 9 7950X');
     
     // Переход в корзину
@@ -50,12 +50,12 @@ test.describe('Создание заказа', () => {
     await checkoutPage.waitForLoad();
     await checkoutPage.checkoutWithPickup('online');
     
-    // Verify order status
+    // Проверка статуса заказа
     await checkoutPage.expectOrderCreated();
   });
 
   test('Создание заказа с доставкой', async ({ page }) => {
-    // Arrange
+    // Подготовка
     const deliveryAddress: DeliveryAddress = {
       city: 'Минск',
       street: 'ул. Примерная',
@@ -66,7 +66,7 @@ test.describe('Создание заказа', () => {
     // Переход в каталог
     await catalogPage.goto();
     
-    // Act - добавляем товар
+    // Действие - добавляем товар
     await catalogPage.addToCart('RTX 4090');
     
     // Переход в корзину
@@ -78,30 +78,30 @@ test.describe('Создание заказа', () => {
     await checkoutPage.waitForLoad();
     await checkoutPage.checkoutWithDelivery(deliveryAddress, 'on-receipt');
     
-    // Assert
+    // Проверка
     await checkoutPage.expectOrderCreated();
   });
 
   test('Просмотр истории заказов', async ({ page }) => {
-    // Act
+    // Действие
     await page.goto('/orders');
     
-    // Assert - проверяем страницу заказов
+    // Проверка - проверяем страницу заказов
     await page.waitForLoadState('networkidle');
   });
 
   test('Удаление товара из корзины', async ({ page }) => {
-    // Arrange
+    // Подготовка
     await catalogPage.goto();
     await catalogPage.addToCart('AMD Ryzen 9 7950X');
     
     await cartPage.goto();
     await expect(cartPage.cartItems.first()).toBeVisible({ timeout: 10000 });
     
-    // Act
+    // Действие
     await cartPage.removeItem(0);
     
-    // Assert
+    // Проверка
     await cartPage.expectEmptyCart();
   });
 });

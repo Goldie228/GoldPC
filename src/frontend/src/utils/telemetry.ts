@@ -48,7 +48,7 @@ export function telemetryTrack(name: string, props?: TelemetryProps): void {
 }
 
 export function telemetryInitAutoFlush(): () => void {
-  // Best-effort flush on page hide
+  // Best-effort flush on страница hide
   const handler = () => {
     if (queue.length === 0) return;
     const sessionId = getOrCreateSessionId();

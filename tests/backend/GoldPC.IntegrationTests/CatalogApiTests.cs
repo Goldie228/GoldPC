@@ -30,13 +30,13 @@ public class CatalogApiTests : IClassFixture<CatalogApiFactory>
     [Fact]
     public async Task GetProducts_ReturnsSuccessAndList()
     {
-        // Arrange
+        // Подготовка
         var requestUri = "/api/v1/catalog/products";
 
-        // Act
+        // Действие
         var response = await _client.GetAsync(requestUri);
 
-        // Assert
+        // Проверка
         response.StatusCode.Should().Be(HttpStatusCode.OK, 
             "потому что API должен возвращать успешный статус для корректного запроса");
 
@@ -88,7 +88,7 @@ public class CatalogApiFactory : WebApplicationFactory<Program>
 }
 
 /// <summary>
-/// Mock реализация ICatalogService для тестов
+/// Имитация реализации ICatalogService для тестов
 /// </summary>
 public class MockCatalogService : ICatalogService
 {

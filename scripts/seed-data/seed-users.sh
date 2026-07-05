@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Seed all test users for GoldPC (admin + manager + master + accountant + client)
-# Inserts directly into PostgreSQL to bypass rate limiter.
-# Usage: bash scripts/seed-data/seed-users.sh
+# Создание всех тестовых пользователей для GoldPC (admin + manager + master + accountant + client)
+# Вставка напрямую в PostgreSQL для обхода ограничителя скорости.
+# Использование: bash scripts/seed-data/seed-users.sh
 
 set -e
 
@@ -10,7 +10,7 @@ PG_PORT="${PG_PORT:-5432}"
 PG_USER="${PG_USER:-postgres}"
 AUTH_DB="goldpc_auth"
 
-# Password hashes (bcrypt): admin=G0ldPC#Adm1n2026!, others=Test1234!
+# Хеши паролей (bcrypt): admin=G0ldPC#Adm1n2026!, остальные=Test1234!
 ADMIN_HASH='$2a$12$LJ3m4ys4LzYRZjhFv.p5l.NVXp3R7bQxhTSHkFh2WQ1O6R4S5C7Ha'
 TEST_HASH='$2a$12$EbnPRjviqd9soKFAoBWEn.b/krATU.MWOEEMwsC6dYdOcHwfccApS'
 

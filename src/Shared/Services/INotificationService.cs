@@ -3,64 +3,64 @@ using GoldPC.Shared.Entities;
 namespace GoldPC.Shared.Services;
 
 /// <summary>
-/// Service for creating, retrieving, and sending user notifications.
+/// Сервис для создания, получения и отправки пользовательских уведомлений.
 /// </summary>
 public interface INotificationService
 {
-    /// <summary>Creates a new notification and stores it.</summary>
-    /// <param name="notification">The notification to create.</param>
-    /// <returns>The created notification.</returns>
+    /// <summary>Создаёт новое уведомление и сохраняет его.</summary>
+    /// <param name="notification">Уведомление для создания.</param>
+    /// <returns>Созданное уведомление.</returns>
     Task<Notification> CreateNotificationAsync(Notification notification);
 
-    /// <summary>Retrieves notifications for a user with optional filters.</summary>
-    /// <param name="userId">The user identifier.</param>
-    /// <param name="unreadOnly">If true, returns only unread notifications.</param>
-    /// <param name="limit">Maximum number of notifications to return.</param>
-    /// <returns>A collection of notifications.</returns>
+    /// <summary>Получает уведомления для пользователя с необязательными фильтрами.</summary>
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <param name="unreadOnly">Если true, возвращает только непрочитанные уведомления.</param>
+    /// <param name="limit">Максимальное количество возвращаемых уведомлений.</param>
+    /// <returns>Коллекция уведомлений.</returns>
     Task<IEnumerable<Notification>> GetUserNotificationsAsync(Guid userId, bool unreadOnly = false, int limit = 50);
 
-    /// <summary>Marks a single notification as read.</summary>
-    /// <param name="notificationId">The notification identifier.</param>
-    /// <returns>A task that completes when the operation is done.</returns>
+    /// <summary>Отмечает одно уведомление как прочитанное.</summary>
+    /// <param name="notificationId">Идентификатор уведомления.</param>
+    /// <returns>Задача, завершающаяся после выполнения операции.</returns>
     Task MarkAsReadAsync(Guid notificationId);
 
-    /// <summary>Marks all notifications for a user as read.</summary>
-    /// <param name="userId">The user identifier.</param>
-    /// <returns>A task that completes when the operation is done.</returns>
+    /// <summary>Отмечает все уведомления пользователя как прочитанные.</summary>
+    /// <param name="userId">Идентификатор пользователя.</param>
+    /// <returns>Задача, завершающаяся после выполнения операции.</returns>
     Task MarkAllAsReadAsync(Guid userId);
 
-    /// <summary>Deletes a notification by its identifier.</summary>
-    /// <param name="notificationId">The notification identifier.</param>
-    /// <returns>A task that completes when the operation is done.</returns>
+    /// <summary>Удаляет уведомление по его идентификатору.</summary>
+    /// <param name="notificationId">Идентификатор уведомления.</param>
+    /// <returns>Задача, завершающаяся после выполнения операции.</returns>
     Task DeleteNotificationAsync(Guid notificationId);
 
-    /// <summary>Sends a notification to its target user.</summary>
-    /// <param name="notification">The notification to send.</param>
-    /// <returns>A task that completes when the operation is done.</returns>
+    /// <summary>Отправляет уведомление целевому пользователю.</summary>
+    /// <param name="notification">Уведомление для отправки.</param>
+    /// <returns>Задача, завершающаяся после выполнения операции.</returns>
     Task SendNotificationAsync(Notification notification);
 
-    /// <summary>Sends a notification to all users with the specified role.</summary>
-    /// <param name="role">The target role name.</param>
-    /// <param name="notification">The notification template to send.</param>
-    /// <returns>A task that completes when the operation is done.</returns>
+    /// <summary>Отправляет уведомление всем пользователям с указанной ролью.</summary>
+    /// <param name="role">Имя целевой роли.</param>
+    /// <param name="notification">Шаблон уведомления для отправки.</param>
+    /// <returns>Задача, завершающаяся после выполнения операции.</returns>
     Task SendNotificationToRoleAsync(string role, Notification notification);
 
-    /// <summary>Broadcasts a notification to all users.</summary>
-    /// <param name="notification">The notification to broadcast.</param>
-    /// <returns>A task that completes when the operation is done.</returns>
+    /// <summary>Рассылает уведомление всем пользователям.</summary>
+    /// <param name="notification">Уведомление для рассылки.</param>
+    /// <returns>Задача, завершающаяся после выполнения операции.</returns>
     Task BroadcastNotificationAsync(Notification notification);
 
-    /// <summary>Sends a push notification to a specific user.</summary>
-    /// <param name="userId">The target user identifier.</param>
-    /// <param name="title">The push notification title.</param>
-    /// <param name="message">The push notification body.</param>
-    /// <returns>A task that completes when the operation is done.</returns>
+    /// <summary>Отправляет push-уведомление конкретному пользователю.</summary>
+    /// <param name="userId">Идентификатор целевого пользователя.</param>
+    /// <param name="title">Заголовок push-уведомления.</param>
+    /// <param name="message">Текст push-уведомления.</param>
+    /// <returns>Задача, завершающаяся после выполнения операции.</returns>
     Task SendPushNotificationAsync(string userId, string title, string message);
 
-    /// <summary>Sends an email notification.</summary>
-    /// <param name="recipientEmail">The recipient email address.</param>
-    /// <param name="subject">The email subject.</param>
-    /// <param name="body">The email body content.</param>
-    /// <returns>A task that completes when the operation is done.</returns>
+    /// <summary>Отправляет email-уведомление.</summary>
+    /// <param name="recipientEmail">Email-адрес получателя.</param>
+    /// <param name="subject">Тема письма.</param>
+    /// <param name="body">Содержимое письма.</param>
+    /// <returns>Задача, завершающаяся после выполнения операции.</returns>
     Task SendEmailAsync(string recipientEmail, string subject, string body);
 }

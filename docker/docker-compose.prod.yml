@@ -1,27 +1,28 @@
 # =============================================================================
-# Production Docker Compose for Blue-Green Deployment
+# Production Docker Compose для Blue-Green развёртывания
 # =============================================================================
-# This configuration supports two deployment slots (blue/green) for zero-downtime
-# deployments. Each service has two instances that can be switched via Nginx.
+# Эта конфигурация поддерживает два слота развёртывания (синий/зелёный) для
+# развёртываний с нулевым временем простоя. Каждый сервис имеет два экземпляра,
+# которые могут переключаться через Nginx.
 #
-# Usage:
-#   Blue slot:  docker compose -f docker-compose.prod.yml --profile blue up -d
-#   Green slot: docker compose -f docker-compose.prod.yml --profile green up -d
+# Использование:
+#   Синий слот:  docker compose -f docker-compose.prod.yml --profile blue up -d
+#   Зелёный слот: docker compose -f docker-compose.prod.yml --profile green up -d
 #
-# Environment Variables:
-#   - IMAGE_VERSION: Docker image tag (default: latest)
-#   - REGISTRY: Docker registry URL (default: ghcr.io)
-#   - IMAGE_PREFIX: Image prefix (default: goldpc)
-#   - DB_USER: PostgreSQL username
-#   - DB_PASSWORD: PostgreSQL password
-#   - JWT_KEY: JWT signing key
-#   - JWT_ISSUER: JWT issuer
-#   - JWT_AUDIENCE: JWT audience
+# Переменные окружения:
+#   - IMAGE_VERSION: Тег Docker-образа (по умолчанию: latest)
+#   - REGISTRY: URL реестра Docker (по умолчанию: ghcr.io)
+#   - IMAGE_PREFIX: Префикс образа (по умолчанию: goldpc)
+#   - DB_USER: Имя пользователя PostgreSQL
+#   - DB_PASSWORD: Пароль PostgreSQL
+#   - JWT_KEY: Ключ подписи JWT
+#   - JWT_ISSUER: Издатель JWT
+#   - JWT_AUDIENCE: Аудитория JWT
 # =============================================================================
 
 services:
   # ===========================================================================
-  # SHARED INFRASTRUCTURE (no blue/green)
+  # ОБЩАЯ ИНФРАСТРУКТУРА (без синего/зелёного)
   # ===========================================================================
   
   postgres:
@@ -60,7 +61,7 @@ services:
     restart: unless-stopped
 
   # ===========================================================================
-  # BLUE SLOT - Primary deployment slot
+  # СИНИЙ СЛОТ — Основной слот развёртывания
   # ===========================================================================
   
   catalog-blue:
@@ -189,7 +190,7 @@ services:
       - all
 
   # ===========================================================================
-  # GREEN SLOT - Secondary deployment slot (for Blue-Green deployment)
+  # ЗЕЛЁНЫЙ СЛОТ — Вторичный слот развёртывания (для Blue-Green развёртывания)
   # ===========================================================================
   
   catalog-green:
@@ -318,7 +319,7 @@ services:
       - all
 
   # ===========================================================================
-  # NGINX LOAD BALANCER
+  # NGINX БАЛАНСИРОВЩИК НАГРУЗКИ
   # ===========================================================================
   
   nginx:
@@ -342,7 +343,7 @@ services:
     restart: unless-stopped
 
   # ===========================================================================
-  # MONITORING (Optional)
+  # МОНИТОРИНГ (Опционально)
   # ===========================================================================
   
   prometheus:

@@ -247,9 +247,9 @@ export function ComparisonPage(): ReactElement {
     [facetDisplayNames]
   );
 
-  // ============================================================
+  // 
   // Состояния: пусто, ошибка
-  // ============================================================
+  // 
 
   if (items.length === 0 && !loading) {
     return (
@@ -309,9 +309,9 @@ export function ComparisonPage(): ReactElement {
     );
   }
 
-  // ============================================================
+  // 
   // Основной контент
-  // ============================================================
+  // 
 
   return (
     <div className="min-h-screen bg-canvas-dark pb-12 pt-6">
@@ -473,9 +473,9 @@ export function ComparisonPage(): ReactElement {
             </Link>
           </div>
         ) : (
-          /* ============================================================ */
+          /* */
           /* Таблица сравнения                                             */
-          /* ============================================================ */
+          /* */
           <div className="bg-surface-card border border-hairline-dark rounded-xl overflow-hidden">
             <div className="overflow-x-auto scrollbar-thin">
               <table className="w-full min-w-[860px] border-separate border-spacing-0">

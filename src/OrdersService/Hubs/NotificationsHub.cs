@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace GoldPC.OrdersService.Hubs;
 
 /// <summary>
-/// SignalR hub for real-time notifications
+/// SignalR hub для уведомлений в реальном времени
 /// </summary>
 [Authorize]
 public class NotificationsHub : Hub

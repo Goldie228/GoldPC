@@ -34,9 +34,9 @@ import { TypingIndicator } from '@/components/chat/TypingIndicator';
 
 import type { AssemblyPartDto } from '@/api/types';
 
-/* ------------------------------------------------------------------ */
-/*  Constants                                                          */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Константы                                                          */
+/* */
 
 const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   Submitted:       { label: 'Подана', className: 'bg-gold/15 text-gold' },
@@ -47,9 +47,9 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   Cancelled:       { label: 'Отменена', className: 'bg-price-rise/15 text-price-rise' },
 };
 
-/* ------------------------------------------------------------------ */
+/* */
 /*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
+/* */
 
 function getStatusBadge(status: string) {
     return STATUS_BADGE[status] ?? { label: status, className: 'bg-surface-elevated text-muted-foreground' };
@@ -106,9 +106,9 @@ function isTerminal(status: TicketStatus): boolean {
   return status === 'Completed' || status === 'Cancelled';
 }
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Компонент                                                          */
+/* */
 
 export function TicketDetailPage() {
   const { ticketId } = useParams<{ ticketId: string }>();
@@ -226,7 +226,7 @@ export function TicketDetailPage() {
   const [partQty, setPartQty] = useState('1');
   const [partPrice, setPartPrice] = useState('0');
   const [assemblySerialNumber, setAssemblySerialNumber] = useState('');
-  /* ── Loading state ────────────────────────────────────────────── */
+  /* ── Загрузка state ────────────────────────────────────────────── */
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">

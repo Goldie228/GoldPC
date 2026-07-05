@@ -1,6 +1,6 @@
 /**
- * GoldPC Icon Component
- * A wrapper around lucide-react icons with GoldPC theming support
+ * GoldPC Компонент иконок
+ * Обёртка вокруг иконок lucide-react с поддержкой темизации GoldPC
  */
 
 import {
@@ -86,9 +86,9 @@ import {
 import React from 'react';
 import type { CSSProperties } from 'react';
 
-// Icon name mapping to lucide icons
+// Сопоставление названий иконок с иконками lucide
 const iconMap = {
-  // Navigation & UI
+  // Навигация и UI
   home: Home,
   menu: Menu,
   close: X,
@@ -121,7 +121,7 @@ const iconMap = {
   'x-circle': XCircle,
   'alert-circle': AlertCircle,
   info: Info,
-  // Product & Tech
+  // Товары и Техника
   monitor: Monitor,
   cpu: Cpu,
   'hard-drive': HardDrive,
@@ -130,7 +130,7 @@ const iconMap = {
   battery: Battery,
   power: Power,
   fan: Fan,
-  // Status & Feedback
+  // Статус и Обратная связь
   star: Star,
   'star-half': StarHalf,
   loader: Loader2,
@@ -138,14 +138,14 @@ const iconMap = {
   'alert-triangle': AlertTriangle,
   bell: Bell,
   mail: Mail,
-  // Media
+  // Медиа
   image: Image,
   'file-text': FileText,
   download: Download,
   upload: Upload,
   eye: Eye,
   'eye-off': EyeOff,
-  // Misc
+  // Разное
   clock: Clock,
   calendar: Calendar,
   'map-pin': MapPin,
@@ -162,7 +162,7 @@ const iconMap = {
   zap: Zap,
   building: Building2,
   briefcase: Briefcase,
-  // Services
+  // Услуги
   wrench: Wrench,
   'trending-up': TrendingUp,
   database: Database,
@@ -175,13 +175,13 @@ const iconMap = {
   table: Table,
 } as const;
 
-/** All available icon names */
+/** Все доступные названия иконок */
 export type IconName = keyof typeof iconMap;
 
-/** Predefined icon sizes following GoldPC design system */
+/** Предопределённые размеры иконок в соответствии с дизайн-системой GoldPC */
 export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
-/** Size mappings in pixels */
+/** Соответствие размеров в пикселях */
 const sizeMap: Record<IconSize, number> = {
   xs: 12,
   sm: 16,
@@ -191,7 +191,7 @@ const sizeMap: Record<IconSize, number> = {
   '2xl': 48,
 };
 
-/** GoldPC color scheme for icons */
+/** Цветовая схема GoldPC для иконок */
 export type IconColor =
   | 'default'
   | 'primary'
@@ -203,7 +203,7 @@ export type IconColor =
   | 'gold'
   | 'gold-bright';
 
-/** Color CSS variable mappings */
+/** Соответствие CSS-переменных цветов */
 const colorMap: Record<IconColor, string> = {
   default: 'currentColor',
   primary: 'var(--color-text-primary, #FAFAFA)',
@@ -216,52 +216,52 @@ const colorMap: Record<IconColor, string> = {
   'gold-bright': 'var(--accent-bright, #e8c4a0)',
 };
 
-/** Type guard to check if a value is a valid IconColor */
+/** Проверка типа: является ли значение допустимым IconColor */
 function isIconColor(value: string): value is IconColor {
   return Object.prototype.hasOwnProperty.call(colorMap, value as IconColor);
 }
 
 export interface IconProps {
-  /** Name of the icon to display */
+  /** Название иконки для отображения */
   name: IconName;
-  /** Predefined size or custom pixel value */
+  /** Предопределённый размер или произвольное значение в пикселях */
   size?: IconSize | number;
-  /** Predefined color from GoldPC palette or custom color value */
+  /** Предопределённый цвет из палитры GoldPC или произвольное значение цвета */
   color?: IconColor | string;
-  /** Additional CSS class */
+  /** Дополнительный CSS-класс */
   className?: string;
-  /** Inline styles */
+  /** Inline-стили */
   style?: CSSProperties;
-  /** Accessible label for screen readers */
+  /** Доступная метка для скринридеров */
   'aria-label'?: string;
-  /** Whether to animate the icon (e.g., spinner) */
+  /** Нужно ли анимировать иконку (например, спиннер) */
   animated?: boolean;
-  /** Stroke width */
+  /** Толщина обводки */
   strokeWidth?: number;
-  /** Click handler */
+  /** Обработчик клика */
   onClick?: React.MouseEventHandler<SVGSVGElement>;
 }
 
 /**
- * GoldPC Icon Component
+ * GoldPC Компонент иконок
  *
- * A wrapper around lucide-react icons with GoldPC theming support.
- * Supports predefined sizes and colors following the design system.
- *
- * @example
- * // Basic usage with predefined size and color
- * <Icon name="cart" size="md" color="accent" />
+ * Обёртка вокруг иконок lucide-react с поддержкой темизации GoldPC.
+ * Поддерживает предопределённые размеры и цвета в соответствии с дизайн-системой.
  *
  * @example
- * // Custom size (number in pixels)
- * <Icon name="heart" size={28} color="#ef4444" />
+ * // Базовое использование с предопределённым размером и цветом
+ * <Иконка name="cart" размер="md" color="accent" />
  *
  * @example
- * // Animated loader icon
- * <Icon name="loader" size="lg" animated />
+ * // Произвольный размер (число в пикселях)
+ * <Иконка name="heart" размер={28} color="#ef4444" />
  *
  * @example
- * // With accessible label
+ * // Анимированная иконка загрузки
+ * <Иконка name="loader" размер="lg" animated />
+ *
+ * @example
+ * // С доступной меткой
  * <Icon name="search" aria-label="Поиск товаров" />
  */
 export function Icon({
@@ -277,19 +277,19 @@ export function Icon({
 }: IconProps): React.ReactNode {
   const IconComponent = iconMap[name];
 
-  // Resolve size - either from predefined sizes or custom number
+  // Определяем размер — либо из предопределённых размеров, либо произвольное число
   const resolvedSize: number = typeof size === 'number' ? size : sizeMap[size];
 
-  // Resolve color - either from predefined colors or custom string
+  // Определяем цвет — либо из предопределённых цветов, либо произвольная строка
   const resolvedColor: string = isIconColor(color) ? colorMap[color] : color;
 
-  // Combine styles
+  // Объединяем стили
   const combinedStyle: CSSProperties = {
     color: resolvedColor,
     ...style,
   };
 
-  // Animation class for loader/spinner
+  // Класс анимации для загрузчика/спиннера
   const animationClass = animated || name === 'loader' ? 'animate-spin' : '';
 
   const combinedClassName = [className, animationClass].filter(Boolean).join(' ');

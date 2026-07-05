@@ -22,12 +22,12 @@ import {
 import { useAuthStore } from '@/store/authStore';
 
 /**
- * AccountLayout - Layout for /account/* pages with sidebar navigation
+ * AccountLayout - Макет for /account/* pages with sidebar navigation
  *
  * Features:
  * - Fixed sidebar with user profile from auth store
  * - Navigation links: Overview, Profile, Orders, Repairs
- * - Mobile responsive with slide-over sidebar panel
+ * - Мобильные responsive with slide-over sidebar panel
  */
 export function AccountLayout() {
   const { user, currentRole } = useAuthStore();

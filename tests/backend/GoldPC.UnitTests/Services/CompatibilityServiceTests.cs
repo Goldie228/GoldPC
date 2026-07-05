@@ -108,8 +108,8 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task CheckCompatibility_WhenCpuSocketDoesNotMatchMotherboardSocket_ReturnsIncompatibleSocketError()
     {
-        // Arrange
-        // CPU has AM5 socket, Motherboard has LGA1700 socket - incompatible!
+        // Подготовка
+        // У CPU сокет AM5, у материнской платы сокет LGA1700 - несовместимо!
         var request = CreateRequest(
             cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
             {
@@ -118,16 +118,16 @@ public class CompatibilityServiceTests
             }),
             motherboard: CreateMotherboardComponent("ASUS ROG Maximus Z790", new Dictionary<string, object>
             {
-                ["socket"] = "LGA1700",  // Incompatible with AM5!
+                ["socket"] = "LGA1700",  // Несовместимо с AM5!
                 ["ramType"] = "DDR5",
                 ["formFactor"] = "ATX"
             })
         );
 
-        // Act
+        // Действие
         var response = await _sut.CheckCompatibilityAsync(request);
 
-        // Assert
+        // Проверка
         response.Should().NotBeNull();
         response.Result.IsCompatible.Should().BeFalse("sockets are incompatible");
         response.Result.Issues.Should().ContainSingle(i => i.Message.Contains("Несовместимый сокет"));
@@ -136,8 +136,8 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task CheckCompatibility_WhenCpuSocketMatchesMotherboardSocket_ReturnsCompatible()
     {
-        // Arrange
-        // Both CPU and Motherboard have AM5 socket - compatible!
+        // Подготовка
+        // И CPU и материнская плата имеют сокет AM5 - совместимо!
         var request = CreateRequest(
             cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
             {
@@ -152,10 +152,10 @@ public class CompatibilityServiceTests
             })
         );
 
-        // Act
+        // Действие
         var response = await _sut.CheckCompatibilityAsync(request);
 
-        // Assert
+        // Проверка
         response.Should().NotBeNull();
         response.Result.Issues.Should().NotContain(i => i.Message == "Incompatible Socket");
     }
@@ -167,8 +167,8 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task CheckCompatibility_WhenMotherboardSupportsDDR4_AndRamIsDDR5_ReturnsIncompatibleRamError()
     {
-        // Arrange
-        // Motherboard supports DDR4, but RAM is DDR5 - incompatible!
+        // Подготовка
+        // Материнская плата поддерживает DDR4, но RAM - DDR5 - несовместимо!
         var request = CreateRequest(
             motherboard: CreateMotherboardComponent("ASUS TUF B660M", new Dictionary<string, object>
             {
@@ -184,10 +184,10 @@ public class CompatibilityServiceTests
             })
         );
 
-        // Act
+        // Действие
         var response = await _sut.CheckCompatibilityAsync(request);
 
-        // Assert
+        // Проверка
         response.Should().NotBeNull();
         response.Result.IsCompatible.Should().BeFalse("RAM generation is incompatible");
         response.Result.Issues.Should().ContainSingle(i => 
@@ -199,8 +199,8 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task CheckCompatibility_WhenRamTypeMatchesMotherboard_ReturnsCompatible()
     {
-        // Arrange
-        // Both Motherboard and RAM are DDR5 - compatible!
+        // Подготовка
+        // И материнская плата и RAM - DDR5 - совместимо!
         var request = CreateRequest(
             motherboard: CreateMotherboardComponent("ASUS ROG Crosshair X670E", new Dictionary<string, object>
             {
@@ -216,10 +216,10 @@ public class CompatibilityServiceTests
             })
         );
 
-        // Act
+        // Действие
         var response = await _sut.CheckCompatibilityAsync(request);
 
-        // Assert
+        // Проверка
         response.Should().NotBeNull();
         response.Result.Issues.Should().NotContain(i => i.Message.Contains("Incompatible RAM Generation"));
     }
@@ -231,30 +231,30 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task CheckCompatibility_WhenPsuWattageLessThanTotalTdp_ReturnsInsufficientPowerSupplyError()
     {
-        // Arrange
-        // CPU TDP: 170W, GPU TDP: 450W, System: 50W (with 10% buffer = 737W total)
-        // PSU: 650W - insufficient!
+        // Подготовка
+        // CPU TDP: 170W, GPU TDP: 450W, Система: 50W (с буфером 10% = 737W всего)
+        // БП: 650W - недостаточно!
         var request = CreateRequest(
             cpu: CreateCpuComponent("AMD Ryzen 9 7950X", new Dictionary<string, object>
             {
                 ["socket"] = "AM5",
-                ["tdp"] = 170  // High TDP CPU
+                ["tdp"] = 170  // CPU с высоким TDP
             }),
             gpu: CreateGpuComponent("NVIDIA RTX 4090", new Dictionary<string, object>
             {
-                ["tdp"] = 450,  // High TDP GPU
+                ["tdp"] = 450,  // GPU с высоким TDP
                 ["length"] = 340
             }),
             psu: CreatePsuComponent("Corsair RM650x", new Dictionary<string, object>
             {
-                ["wattage"] = 650  // Insufficient! (170 + 450 + 50) * 1.1 = 737W needed
+                ["wattage"] = 650  // Недостаточно! (170 + 450 + 50) * 1.1 = 737W необходимо
             })
         );
 
-        // Act
+        // Действие
         var response = await _sut.CheckCompatibilityAsync(request);
 
-        // Assert
+        // Проверка
         response.Should().NotBeNull();
         response.Result.IsCompatible.Should().BeFalse("PSU wattage is insufficient");
         response.Result.Issues.Should().Contain(i => i.Message.Contains("insufficient") || i.Message.Contains("PSU") || i.Message.Contains("W"));
@@ -263,9 +263,9 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task CheckCompatibility_WhenPsuWattageEqualsTotalTdp_ReturnsCompatible()
     {
-        // Arrange
-        // CPU TDP: 65W, GPU TDP: 200W, System: 50W (with 10% buffer = 346.5W total)
-        // PSU: 350W - just enough!
+        // Подготовка
+        // CPU TDP: 65W, GPU TDP: 200W, Система: 50W (с буфером 10% = 346.5W всего)
+        // БП: 350W - достаточно!
         var request = CreateRequest(
             cpu: CreateCpuComponent("AMD Ryzen 5 7600", new Dictionary<string, object>
             {
@@ -279,14 +279,14 @@ public class CompatibilityServiceTests
             }),
             psu: CreatePsuComponent("Corsair RM350x", new Dictionary<string, object>
             {
-                ["wattage"] = 350  // Just enough (65 + 200 + 50) * 1.1 = 346.5W
+                ["wattage"] = 350  // Достаточно (65 + 200 + 50) * 1.1 = 346.5W
             })
         );
 
-        // Act
+        // Действие
         var response = await _sut.CheckCompatibilityAsync(request);
 
-        // Assert
+        // Проверка
         response.Should().NotBeNull();
         response.Result.Issues.Should().NotContain(i => i.Message == "Insufficient Power Supply");
     }
@@ -294,9 +294,9 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task CheckCompatibility_WhenPsuWattageExceedsTotalTdp_ReturnsCompatible()
     {
-        // Arrange
-        // CPU TDP: 120W, GPU TDP: 300W, System: 50W (with 10% buffer = 517W total)
-        // PSU: 750W - plenty of power!
+        // Подготовка
+        // CPU TDP: 120W, GPU TDP: 300W, Система: 50W (с буфером 10% = 517W всего)
+        // БП: 750W - с запасом!
         var request = CreateRequest(
             cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
             {
@@ -310,14 +310,14 @@ public class CompatibilityServiceTests
             }),
             psu: CreatePsuComponent("Corsair RM750x", new Dictionary<string, object>
             {
-                ["wattage"] = 750  // Plenty of power (120 + 300 + 50) * 1.1 = 517W
+                ["wattage"] = 750  // С запасом (120 + 300 + 50) * 1.1 = 517W
             })
         );
 
-        // Act
+        // Действие
         var response = await _sut.CheckCompatibilityAsync(request);
 
-        // Assert
+        // Проверка
         response.Should().NotBeNull();
         response.Result.Issues.Should().NotContain(i => i.Message == "Insufficient Power Supply");
     }
@@ -325,9 +325,9 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task CheckCompatibility_CalculatesCorrectPowerConsumption()
     {
-        // Arrange
-        // CPU TDP: 100W, GPU TDP: 200W, System: 50W
-        // Total = (100 + 200 + 50) * 1.1 = 385W
+        // Подготовка
+        // CPU TDP: 100W, GPU TDP: 200W, Система: 50W
+        // Всего = (100 + 200 + 50) * 1.1 = 385W
         var request = CreateRequest(
             cpu: CreateCpuComponent("Test CPU", new Dictionary<string, object>
             {
@@ -345,10 +345,10 @@ public class CompatibilityServiceTests
             })
         );
 
-        // Act
+        // Действие
         var response = await _sut.CheckCompatibilityAsync(request);
 
-        // Assert
+        // Проверка
         response.PowerConsumption.Should().Be(350); // 100 + 200 + 50 = 350W
     }
 
@@ -359,7 +359,7 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task CheckCompatibility_WhenAllComponentsCompatible_ReturnsCompatibleResult()
     {
-        // Arrange - All compatible components
+        // Подготовка - Все совместимые компоненты
         var request = CreateRequest(
             cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
             {
@@ -389,10 +389,10 @@ public class CompatibilityServiceTests
             })
         );
 
-        // Act
+        // Действие
         var response = await _sut.CheckCompatibilityAsync(request);
 
-        // Assert
+        // Проверка
         response.Should().NotBeNull();
         response.Result.IsCompatible.Should().BeTrue();
         response.Result.Issues.Should().BeEmpty();
@@ -401,7 +401,7 @@ public class CompatibilityServiceTests
     [Fact]
     public async Task CheckCompatibility_WhenMultipleIncompatibilities_ReturnsAllErrors()
     {
-        // Arrange - Multiple incompatibilities
+        // Подготовка - Множественные несовместимости
         var request = CreateRequest(
             cpu: CreateCpuComponent("AMD Ryzen 7 7800X3D", new Dictionary<string, object>
             {
@@ -410,13 +410,13 @@ public class CompatibilityServiceTests
             }),
             motherboard: CreateMotherboardComponent("ASUS ROG Maximus Z790", new Dictionary<string, object>
             {
-                ["socket"] = "LGA1700",  // Incompatible socket!
+                ["socket"] = "LGA1700",  // Несовместимый сокет!
                 ["ramType"] = "DDR4",
                 ["formFactor"] = "ATX"
             }),
             ram: CreateRamComponent("Kingston FURY DDR5", new Dictionary<string, object>
             {
-                ["type"] = "DDR5",  // Incompatible with DDR4 motherboard!
+                ["type"] = "DDR5",  // Несовместимо с материнской платой DDR4!
                 ["speed"] = 6000,
                 ["capacity"] = 32
             }),
@@ -427,14 +427,14 @@ public class CompatibilityServiceTests
             }),
             psu: CreatePsuComponent("Corsair RM550x", new Dictionary<string, object>
             {
-                ["wattage"] = 550  // Insufficient power!
+                ["wattage"] = 550  // Недостаточно мощности!
             })
         );
 
-        // Act
+        // Действие
         var response = await _sut.CheckCompatibilityAsync(request);
 
-        // Assert
+        // Проверка
         response.Should().NotBeNull();
         response.Result.IsCompatible.Should().BeFalse();
         response.Result.Issues.Should().Contain(i => i.Message.Contains("Несовместимый сокет"));

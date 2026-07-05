@@ -80,7 +80,7 @@ public class CatalogDbContext : DbContext
             entity.HasIndex(e => e.ExternalId).IsUnique().HasFilter("external_id IS NOT NULL");
             entity.HasIndex(e => e.CategoryId);
             entity.HasIndex(e => e.ManufacturerId);
-            entity.HasIndex(e => new { e.IsActive, e.Price }); // Composite index for filtering
+            entity.HasIndex(e => new { e.IsActive, e.Price }); // Составной индекс для фильтрации
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.Price);
             
@@ -368,11 +368,11 @@ public class CatalogDbContext : DbContext
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000017"), Key = "memory_slots", DisplayName = "Слотов памяти", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000018"), Key = "max_memory", DisplayName = "Макс. память", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000019"), Key = "interface", DisplayName = "Интерфейс", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
-            // Removed legacy spec attributes: data_vykhoda_na_rynok_2, proizvoditel_graficheskogo_protsessora, shirina_shiny_pamyati, okhlazhdenie_1, razyemy_pitaniya, rekomenduemyy_blok_pitaniya
+            // Удалены устаревшие атрибуты спецификаций
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000021"), Key = "dlina_videokarty", DisplayName = "Длина видеокарты", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000022"), Key = "vysota_videokarty", DisplayName = "Высота видеокарты", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000026"), Key = "memory_form_factor", DisplayName = "Форм-фактор памяти", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
-            // === NEW SPEC ATTRIBUTES FOR COOLERS ===
+            // === НОВЫЕ АТРИБУТЫ СПЕЦИФИКАЦИЙ ДЛЯ КУЛЕРОВ ===
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000023"), Key = "cooler_type", DisplayName = "Тип кулера", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = false },
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000024"), Key = "supported_sockets", DisplayName = "Поддерживаемые сокеты", ValueType = SpecificationAttributeValueType.Select, IsMultiValue = true },
             new SpecificationAttribute { Id = Guid.Parse("40000000-0000-0000-0000-000000000025"), Key = "max_tdp", DisplayName = "Макс. TDP кулера", ValueType = SpecificationAttributeValueType.Range, IsMultiValue = false },
@@ -428,12 +428,12 @@ public class CatalogDbContext : DbContext
         foreach (var (text, order) in new[] { ("DDR5", 1), ("DDR4", 2) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = memoryTypeId, ValueText = text, SortOrder = order });
 
-        // --- memory_form_factor canonical values ---
+        // --- канонические значения для форм-фактора памяти ---
         var memoryFormFactorAttrId = Guid.Parse("40000000-0000-0000-0000-000000000026");
         foreach (var (text, order) in new[] { ("DIMM", 1), ("SO-DIMM", 2) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = memoryFormFactorAttrId, ValueText = text, SortOrder = order });
 
-        // === NEW COOLER SPEC ATTRIBUTE CANONICAL VALUES ===
+        // === НОВЫЕ КАНОНИЧЕСКИЕ ЗНАЧЕНИЯ АТРИБУТОВ КУЛЕРОВ ===
         var coolerTypeId = Guid.Parse("40000000-0000-0000-0000-000000000023");
         var supportedSocketsId = Guid.Parse("40000000-0000-0000-0000-000000000024");
         var maxTdpId = Guid.Parse("40000000-0000-0000-0000-000000000025");
@@ -445,7 +445,7 @@ public class CatalogDbContext : DbContext
         foreach (var (text, order) in new[] { ("150W", 1), ("200W", 2), ("250W", 3), ("300W", 4) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = maxTdpId, ValueText = text, SortOrder = order });
 
-        // === NEW CANONICAL VALUES FOR STORAGE, CASES, PERIPHERALS, MONITORS ===
+        // === НОВЫЕ КАНОНИЧЕСКИЕ ЗНАЧЕНИЯ ДЛЯ НАКОПИТЕЛЕЙ, КОРПУСОВ, ПЕРИФЕРИИ, МОНИТОРОВ ===
         var colorCvId = Guid.Parse("40000000-0000-0000-0000-00000000000b");
         var ifaceCvId = Guid.Parse("40000000-0000-0000-0000-000000000019");
         var typeCvId = Guid.Parse("40000000-0000-0000-0000-000000000006");
@@ -454,35 +454,35 @@ public class CatalogDbContext : DbContext
         var refreshRateCvId = Guid.Parse("40000000-0000-0000-0000-00000000000f");
         var sensorTypeCvId = Guid.Parse("40000000-0000-0000-0000-000000000012");
 
-        // Storage capacity (additional)
+        // Ёмкость накопителей (дополнительно)
         foreach (var (text, order) in new[] { ("1TB", 5), ("2TB", 6) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = capacityId, ValueText = text, SortOrder = order });
 
-        // Interface
+        // Интерфейс
         foreach (var (text, order) in new[] { ("NVMe PCIe 4.0", 1), ("NVMe PCIe 3.0", 2), ("SATA III", 3), ("USB Type-C", 4), ("USB Type-A", 5), ("Bluetooth", 6), ("3.5 мм", 7) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = ifaceCvId, ValueText = text, SortOrder = order });
 
-        // Color
+        // Цвет
         foreach (var (text, order) in new[] { ("Черный", 1), ("Белый", 2) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = colorCvId, ValueText = text, SortOrder = order });
 
-        // Type (peripherals — keyboards, mice, headphones)
+        // Тип (периферия — клавиатуры, мыши, наушники)
         foreach (var (text, order) in new[] { ("Механическая", 3), ("Мембранная", 4), ("Игровая", 5), ("Офисная", 6), ("Полноразмерные", 7), ("Вкладыши", 8) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = typeCvId, ValueText = text, SortOrder = order });
 
-        // Diagonal
+        // Диагональ
         foreach (var (text, order) in new[] { ("27\"", 1), ("32\"", 2), ("24\"", 3) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = diagonalCvId, ValueText = text, SortOrder = order });
 
-        // Resolution
+        // Разрешение
         foreach (var (text, order) in new[] { ("1920x1080 (Full HD)", 1), ("2560x1440 (QHD)", 2), ("3840x2160 (4K UHD)", 3) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = resolutionCvId, ValueText = text, SortOrder = order });
 
-        // Refresh rate
+        // Частота обновления
         foreach (var (text, order) in new[] { ("144 Гц", 1), ("165 Гц", 2), ("60 Гц", 3) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = refreshRateCvId, ValueText = text, SortOrder = order });
 
-        // Sensor type
+        // Тип сенсора
         foreach (var (text, order) in new[] { ("Оптический", 1), ("Лазерный", 2) })
             cv.Add(new SpecificationCanonicalValue { Id = NextId(), AttributeId = sensorTypeCvId, ValueText = text, SortOrder = order });
 

@@ -1,10 +1,10 @@
 -- setup-partitioning.sql
--- Run this on goldpc_orders database
+-- Запускать на базе goldpc_orders
 
--- 1. Drop existing table if needed (WARNING: data loss!)
+-- 1. Удалить существующую таблицу при необходимости (ВНИМАНИЕ: потеря данных!)
 DROP TABLE IF EXISTS order_history;
 
--- 2. Create partitioned table
+-- 2. Создать секционированную таблицу
 CREATE TABLE order_history (
     id UUID NOT NULL,
     order_id UUID NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE order_history (
     PRIMARY KEY (id, changed_at)
 ) PARTITION BY RANGE (changed_at);
 
--- 3. Create partitions for 2024 (as example)
+-- 3. Создать секции для 2024 (как пример)
 CREATE TABLE order_history_y2024m01 PARTITION OF order_history FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
 CREATE TABLE order_history_y2024m02 PARTITION OF order_history FOR VALUES FROM ('2024-02-01') TO ('2024-03-01');
 CREATE TABLE order_history_y2024m03 PARTITION OF order_history FOR VALUES FROM ('2024-03-01') TO ('2024-04-01');
@@ -30,8 +30,8 @@ CREATE TABLE order_history_y2024m10 PARTITION OF order_history FOR VALUES FROM (
 CREATE TABLE order_history_y2024m11 PARTITION OF order_history FOR VALUES FROM ('2024-11-01') TO ('2024-12-01');
 CREATE TABLE order_history_y2024m12 PARTITION OF order_history FOR VALUES FROM ('2024-12-01') TO ('2025-01-01');
 
--- 4. Create default partition
+-- 4. Создать секцию по умолчанию
 CREATE TABLE order_history_default PARTITION OF order_history DEFAULT;
 
--- 5. Indexes on partitions are handled by Postgres 16
+-- 5. Индексы на секциях обрабатываются Postgres 16
 CREATE INDEX idx_order_history_order_id ON order_history(order_id);

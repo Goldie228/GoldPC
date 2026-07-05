@@ -52,10 +52,10 @@ public class ProductsApiTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
     [Fact]
     public async Task GetProducts_WithValidData_ReturnsOk()
     {
-        // Arrange
+        // Подготовка
         // В реальном тесте здесь используется _client для запроса к API
         
-        // Act & Assert - демонстрация прямого доступа к БД через fixture
+        // Действие и Проверка - демонстрация прямого доступа к БД через fixture
         await using var context = _fixture.CreateCatalogDbContext();
         
         // Проверяем что БД доступна и содержит таблицы
@@ -66,7 +66,7 @@ public class ProductsApiTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
     [Fact]
     public async Task DatabaseFixture_ResetDatabase_ClearsData()
     {
-        // Arrange - добавляем тестовый товар
+        // Подготовка - добавляем тестовый товар
         await using var context = _fixture.CreateCatalogDbContext();
         
         var category = new CatalogService.Models.Category
@@ -79,14 +79,14 @@ public class ProductsApiTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
         context.Categories.Add(category);
         await context.SaveChangesAsync();
         
-        // Verify data was added
+        // Проверяем, что данные были добавлены
         var countBefore = await context.Categories.CountAsync(c => c.Slug == "test-category");
         countBefore.Should().Be(1);
         
-        // Act - сбрасываем данные
+        // Действие - сбрасываем данные
         await _fixture.ResetCatalogData();
         
-        // Assert - проверяем что данные очищены
+        // Проверка - проверяем что данные очищены
         await using var contextAfter = _fixture.CreateCatalogDbContext();
         var countAfter = await contextAfter.Categories.CountAsync(c => c.Slug == "test-category");
         countAfter.Should().Be(0, "ResetDatabase должен очистить данные");
@@ -95,7 +95,7 @@ public class ProductsApiTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
     [Fact]
     public async Task DatabaseFixture_MultipleTests_ShouldBeIsolated()
     {
-        // Arrange
+        // Подготовка
         await using var context = _fixture.CreateCatalogDbContext();
         
         var category = new CatalogService.Models.Category
@@ -108,10 +108,10 @@ public class ProductsApiTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
         context.Categories.Add(category);
         await context.SaveChangesAsync();
         
-        // Act
+        // Действие
         var savedCategory = await context.Categories.FirstOrDefaultAsync(c => c.Slug == "isolation-test");
         
-        // Assert
+        // Проверка
         savedCategory.Should().NotBeNull("данные должны быть доступны в рамках теста");
     }
 
@@ -139,10 +139,10 @@ public class ProductsApiWithFixtureTests : IClassFixture<ApiFixture<CatalogServi
     [Fact]
     public async Task GetProducts_ReturnsOk()
     {
-        // Act
+        // Действие
         // var response = await _client.GetAsync("/api/v1/catalog/products");
         
-        // Assert
+        // Проверка
         // response.StatusCode.Should().Be(HttpStatusCode.OK);
         
         // Заглушка для демонстрации структуры
@@ -153,13 +153,13 @@ public class ProductsApiWithFixtureTests : IClassFixture<ApiFixture<CatalogServi
     [Fact]
     public async Task CreateProduct_WithAuthorization_ReturnsCreated()
     {
-        // Arrange
+        // Подготовка
         var authorizedClient = _fixture.CreateAuthorizedClient(
             Guid.Parse("00000000-0000-0000-0000-000000000001"),
             "Manager"
         );
         
-        // Act & Assert - демонстрация
+        // Действие и Проверка - демонстрация
         authorizedClient.Should().NotBeNull();
         await Task.CompletedTask;
     }
@@ -167,10 +167,10 @@ public class ProductsApiWithFixtureTests : IClassFixture<ApiFixture<CatalogServi
     [Fact]
     public async Task ResetDatabase_ProvidesIsolationBetweenTests()
     {
-        // Arrange
+        // Подготовка
         await _fixture.ResetDatabase();
         
-        // Act & Assert
+        // Действие и Проверка
         // БД теперь чистая и готова для теста
         true.Should().BeTrue();
     }
@@ -192,20 +192,20 @@ public class ProductsApiCollectionTests
     [Fact]
     public async Task CollectionFixture_ProvidesSharedDatabase()
     {
-        // Arrange
+        // Подготовка
         var connectionString = _fixture.ConnectionString;
         
-        // Assert
+        // Проверка
         connectionString.Should().NotBeNullOrEmpty("fixture должна предоставить строку подключения");
     }
 
     [Fact]
     public async Task CollectionFixture_CanCreateDbContext()
     {
-        // Act
+        // Действие
         await using var context = _fixture.CreateCatalogDbContext();
         
-        // Assert
+        // Проверка
         context.Should().NotBeNull();
         (await context.Database.CanConnectAsync()).Should().BeTrue();
     }
@@ -213,7 +213,7 @@ public class ProductsApiCollectionTests
     [Fact]
     public async Task CollectionFixture_CanMigrateDatabase()
     {
-        // Act & Assert - не должно выбросить исключение
+        // Действие и Проверка - не должно выбросить исключение
         var act = async () => await _fixture.MigrateCatalogAsync();
         await act.Should().NotThrowAsync();
     }

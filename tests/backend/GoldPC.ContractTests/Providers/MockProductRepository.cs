@@ -8,7 +8,7 @@ using CatalogService.Repositories.Interfaces;
 namespace GoldPC.ContractTests.Providers;
 
 /// <summary>
-/// Mock репозитория товаров для контрактных тестов
+/// Имитация репозитория товаров для контрактных тестов
 /// Позволяет динамически изменять состояние данных в процессе верификации контракта
 /// </summary>
 public class MockProductRepository : IProductRepository

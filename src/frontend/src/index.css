@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ======== Nunito Sans (GoldNova replacement — display + body) ======== */
+/* Nunito Sans (GoldNova replacement — display + body) ======== */
 @font-face {
   font-family: 'Nunito Sans';
   src: url('/fonts/NunitoSans.woff2') format('woff2');
@@ -32,7 +32,7 @@
   line-gap-override: 0%;
 }
 
-/* ======== Nunito (GoldPlex replacement — numbers / tabular data) ======== */
+/* Nunito (GoldPlex replacement — numbers / tabular data) ======== */
 @font-face {
   font-family: 'Nunito';
   src: url('/fonts/Nunito.woff2') format('woff2');
@@ -120,7 +120,7 @@
   --layout-page-checkout: 640px;
   --layout-page-pad-x: 1rem;
   
-  /* ======== Footer Dark Token ======== */
+  /* Нижний колонтитул Dark Token ======== */
   --footer-bg: #11151d;
   --footer-divider: #1a1f27;
   --footer-title: #929aa5;
@@ -153,11 +153,11 @@
   --color-ring: var(--color-info-blue);
   
   /* Spacing system */
-  /* NOTE: custom --spacing-* were removed because they shadowed max-w-* 
+  /* NOTE: произвольный --spacing-* were removed because they shadowed max-w-* 
      classes in Tailwind v4.2.x (--spacing-md: 16px hijacked max-w-md).
      Use rem-based numeric spacing (p-4, p-6, p-8) or arbitrary values instead. */
   
-  /* ======== Modal & Component System Variables ======== */
+  /* Modal & Компонент System Variables ======== */
   --bg-primary: var(--color-surface-card, #1e2329);
   --bg-secondary: var(--color-canvas-dark, #0b0e11);
   --bg-elevated: var(--color-surface-elevated, #2b3139);
@@ -212,7 +212,7 @@
 ::-webkit-scrollbar-thumb { background: #2b3139; border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: #3a3f47; }
 
-  /* Custom classes */
+  /* Произвольный classes */
 .font-tabular {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;

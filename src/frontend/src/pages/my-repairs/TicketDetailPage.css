@@ -1,8 +1,8 @@
-/* ==========================================================================
+/* 
    TicketDetailPage — Customer ticket view
    ========================================================================== */
 
-/* ---------- Layout ---------- */
+/* Макет ---------- */
 .ticket-detail {
   width: 100%;
   max-width: 1100px;
@@ -10,7 +10,7 @@
   padding: 32px 24px 64px;
 }
 
-/* ---------- Header ---------- */
+/* Заголовок ---------- */
 .ticket-detail__header {
   margin-bottom: 32px;
 }
@@ -48,7 +48,7 @@
   flex: 1;
 }
 
-/* ---------- Status Badge ---------- */
+/* Status Бейдж ---------- */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -90,7 +90,7 @@
   color: var(--color-price-rise, #f6465d);
 }
 
-/* ---------- Section Title ---------- */
+/* Section Title ---------- */
 .section-title {
   font-size: 18px;
   font-weight: 700;
@@ -106,7 +106,7 @@
   margin: 0 0 12px;
 }
 
-/* ---------- Timeline ---------- */
+/* Timeline ---------- */
 .timeline-track {
   display: flex;
   align-items: flex-start;
@@ -176,7 +176,7 @@
   background: var(--color-gold, #FCD535);
 }
 
-/* ---------- Grid (2 columns) ---------- */
+/* Grid (2 columns) ---------- */
 .ticket-detail__grid {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
@@ -191,7 +191,7 @@
   }
 }
 
-/* ---------- Dashboard Card ---------- */
+/* Dashboard Карточка ---------- */
 .dashboard-card {
   display: flex;
   flex-direction: column;
@@ -225,7 +225,7 @@
   margin-top: 16px;
 }
 
-/* ---------- Photo Strip ---------- */
+/* Photo Strip ---------- */
 .photo-strip {
   display: flex;
   gap: 12px;
@@ -257,7 +257,7 @@
   opacity: 0.5;
 }
 
-/* ---------- Chat Card (in grid) ---------- */
+/* Chat Карточка (in grid) ---------- */
 .chat-card {
   display: flex;
   flex-direction: column;
@@ -266,7 +266,7 @@
 }
 
 
-/* ---------- Cards ---------- */
+/* Cards ---------- */
 .card {
   background: var(--color-surface-card, #1e2329);
   border: 1px solid var(--color-hairline-dark, #2b3139);
@@ -274,7 +274,7 @@
   padding: 28px;
 }
 
-/* ---------- Details Grid ---------- */
+/* Детали Grid ---------- */
 .details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -332,7 +332,7 @@
   margin: 0;
 }
 
-/* ---------- Chat Card Header ---------- */
+/* Chat Карточка Заголовок ---------- */
 .chat-card__header {
   display: flex;
   align-items: center;
@@ -345,7 +345,7 @@
   flex: 1;
 }
 
-/* ---------- Chat Status ---------- */
+/* Chat Status ---------- */
 .chat-status {
   width: 10px;
   height: 10px;
@@ -374,7 +374,7 @@
   50% { opacity: 0.4; }
 }
 
-/* ---------- Messages List ---------- */
+/* Messages List ---------- */
 .messages-list {
   flex: 1;
   overflow-y: auto;
@@ -401,7 +401,7 @@
 
 /* Chat styles imported via ../../components/chat/Chat.css */
 
-/* ---------- Not Found ---------- */
+/* Not Found ---------- */
 .not-found {
   text-align: center;
   padding: 80px 24px;

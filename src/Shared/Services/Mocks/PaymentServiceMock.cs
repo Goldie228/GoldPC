@@ -14,22 +14,22 @@ public class PaymentServiceMock : IPaymentService
     private readonly Random _random = new();
 
     /// <summary>
-    /// Gets or sets вероятность успешного платежа (0.0 - 1.0)
+    /// Получает или задаёт вероятность успешного платежа (0.0 - 1.0)
     /// </summary>
     public double SuccessRate { get; set; } = 0.95;
 
     /// <summary>
-    /// Gets or sets минимальная задержка в миллисекундах
+    /// Получает или задаёт минимальная задержка в миллисекундах
     /// </summary>
     public int MinDelayMs { get; set; } = 100;
 
     /// <summary>
-    /// Gets or sets максимальная задержка в миллисекундах
+    /// Получает или задаёт максимальная задержка в миллисекундах
     /// </summary>
     public int MaxDelayMs { get; set; } = 1000;
 
     /// <summary>
-    /// Gets or sets a value indicating whether включить ли симуляцию задержки
+    /// Получает или задаёт значение, указывающее, включить ли симуляцию задержки
     /// </summary>
     public bool EnableDelay { get; set; } = true;
 

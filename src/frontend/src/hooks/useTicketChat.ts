@@ -44,7 +44,7 @@ interface UseTicketChatReturn {
 }
 
 /**
- * Hook for real-time ticket chat via SignalR + REST history
+ * Хук для чата тикетов в реальном времени через SignalR + история REST
  */
 export function useTicketChat({ ticketId, pageSize = 50 }: UseTicketChatOptions): UseTicketChatReturn {
   const [messages, setMessages] = useState<TicketMessage[]>([]);
@@ -91,7 +91,7 @@ export function useTicketChat({ ticketId, pageSize = 50 }: UseTicketChatOptions)
       setHasMore(data.length >= pageSize);
 
       if (append) {
-        // data is older messages (page N+1) → prepend before current (newer) messages
+        // data is older messages (страница N+1) → prepend before current (newer) messages
         setMessages(prev => [...data, ...prev]);
       } else {
         setMessages(data);
@@ -219,7 +219,7 @@ export function useTicketChat({ ticketId, pageSize = 50 }: UseTicketChatOptions)
     try {
       await connectionRef.current.invoke('SendMessage', ticketId, payload.content, payload.fileUrl, payload.fileName, payload.fileSize, payload.contentType);
     } catch (e) {
-      // Fallback to REST
+      // Запасной вариант to REST
       try {
         const token = getToken();
         const response = await fetch(`/api/v1/services/${ticketId}/messages`, {

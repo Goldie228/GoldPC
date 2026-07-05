@@ -1,35 +1,35 @@
 #!/bin/bash
 #===============================================================================
-# Database Migration Script for GoldPC Project
+# Скрипт миграции базы данных для проекта GoldPC
 #===============================================================================
-# This script safely applies database migrations for microservices using
-# Entity Framework Core with PostgreSQL.
+# Этот скрипт безопасно применяет миграции базы данных для микросервисов,
+# используя Entity Framework Core с PostgreSQL.
 #
-# Usage: ./migrate.sh [OPTIONS]
+# Использование: ./migrate.sh [ОПЦИИ]
 #
-# Options:
-#   -s, --service      Service name (CatalogService, OrdersService, etc.)
-#   -e, --environment  Environment (Development, Staging, Production)
-#   -n, --no-backup    Skip backup creation (NOT RECOMMENDED for production)
-#   -v, --verbose      Enable verbose output
-#   -d, --dry-run      Show what would be done without executing
-#   -h, --help         Show this help message
+# Опции:
+#   -s, --service      Имя сервиса (CatalogService, OrdersService, и т.д.)
+#   -e, --environment  Окружение (Development, Staging, Production)
+#   -n, --no-backup    Пропустить создание резервной копии (НЕ РЕКОМЕНДУЕТСЯ для production)
+#   -v, --verbose      Подробный вывод
+#   -d, --dry-run      Показать, что будет сделано, без выполнения
+#   -h, --help         Показать эту справку
 #
-# Requirements:
-#   - PostgreSQL client tools (pg_dump, psql)
+# Требования:
+#   - Клиентские инструменты PostgreSQL (pg_dump, psql)
 #   - .NET SDK 8.0+
-#   - EF Core tools (dotnet-ef)
+#   - Инструменты EF Core (dotnet-ef)
 #
-# Zero-Downtime Migration Strategy:
-#   This script follows the principle of backward-compatible migrations.
-#   See the "Zero-Downtime Migration Strategy" section below for details.
+# Стратегия миграции с нулевым временем простоя:
+#   Этот скрипт следует принципу обратно-совместимых миграций.
+#   См. раздел "Стратегия миграции с нулевым временем простоя" ниже.
 #===============================================================================
 
-set -e  # Exit on error
-set -o pipefail  # Catch errors in pipes
+set -e  # Выход при ошибке
+set -o pipefail  # Отлавливать ошибки в конвейерах
 
 #-------------------------------------------------------------------------------
-# Configuration
+# Конфигурация
 #-------------------------------------------------------------------------------
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -38,88 +38,88 @@ SRC_DIR="$PROJECT_ROOT/src"
 BACKUP_DIR="$PROJECT_ROOT/backups"
 LOG_DIR="$PROJECT_ROOT/logs"
 
-# Default values
+# Значения по умолчанию
 SERVICE_NAME=""
 ENVIRONMENT="Development"
 NO_BACKUP=false
 VERBOSE=false
 DRY_RUN=false
-TIMEOUT=300  # 5 minutes timeout for migrations
+TIMEOUT=300  # 5 минут таймаут для миграций
 
-# Colors for output
+# Цвета для вывода
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m' # Без цвета
 
 #-------------------------------------------------------------------------------
-# Zero-Downtime Migration Strategy
+# Стратегия миграции с нулевым временем простоя
 #-------------------------------------------------------------------------------
 #
-# IMPORTANT: For production databases, follow this multi-step strategy to avoid
-# downtime during schema changes:
+# ВАЖНО: Для производственных баз данных следуйте этой многоэтапной стратегии,
+# чтобы избежать простоя при изменениях схемы:
 #
-# Phase 1: Add Column (Backward Compatible)
+# Фаза 1: Добавление столбца (обратно совместимо)
 # ──────────────────────────────────────────
 #   migrationBuilder.AddColumn<string>(
-#       "NewColumn", 
-#       "Orders", 
-#       nullable: true);  // MUST be nullable!
-//
-#   ✓ Application continues working with old code
-//   ✓ Old code ignores the new column
-//   ✓ New code can use the column (handling nulls)
+#       "NewColumn",
+#       "Orders",
+#       nullable: true);  // ОБЯЗАТЕЛЬНО должно быть nullable!
 #
-# Phase 2: Deploy Application Code
-// ──────────────────────────────────────────
-//   public class Order
-//   {
-//       public string? NewColumn { get; set; }  // Nullable in code
-//
-//       public string GetNewColumnSafe() => NewColumn ?? "default";
-//   }
-//
-//   ✓ Deploy new version of application
-//   ✓ Verify no errors in logs
-//   ✓ Monitor for any issues
-//
-// Phase 3: Backfill Data (Background Task)
-// ──────────────────────────────────────────
-//   -- Run in batches during low traffic
-//   UPDATE Orders SET NewColumn = 'default' 
-//   WHERE NewColumn IS NULL 
-//   AND id BETWEEN 1 AND 10000;
-//
-//   -- Or use a background job/service
-//   ✓ Avoid locking the entire table
-//   ✓ Process in small batches
-//   ✓ Monitor performance impact
-//
-// Phase 4: Make NOT NULL (Final Migration)
-// ──────────────────────────────────────────
-//   -- Only after ALL data is populated
-//   migrationBuilder.AlterColumn<string>(
-//       "NewColumn", 
-//       "Orders", 
-//       nullable: false);
-//
-//   ✓ Requires all rows to have values
-//   ✓ Creates CHECK constraint
-//   ✓ Now fully enforced at DB level
-//
-// Breaking Changes (Require Coordination):
-// ──────────────────────────────────────────
-//   - Dropping columns: First deploy code that doesn't use column
-//   - Renaming columns: Create new column, migrate data, update code, drop old
-//   - Changing data types: Create new column, migrate, update code, swap names
-//
-// See: development-plan/11-deployment.md Section 11.4 for more details.
-//------------------------------------------------------------------------------
+#   ✓ Приложение продолжает работать со старым кодом
+#   ✓ Старый код игнорирует новый столбец
+#   ✓ Новый код может использовать столбец (обрабатывая null)
+#
+# Фаза 2: Развёртывание кода приложения
+# ──────────────────────────────────────────
+#   public class Order
+#   {
+#       public string? NewColumn { get; set; }  // Nullable в коде
+#
+#       public string GetNewColumnSafe() => NewColumn ?? "default";
+#   }
+#
+#   ✓ Развернуть новую версию приложения
+#   ✓ Проверить отсутствие ошибок в логах
+#   ✓ Мониторить на предмет проблем
+#
+# Фаза 3: Заполнение данных (фоновая задача)
+# ──────────────────────────────────────────
+#   -- Выполнять пакетами в часы низкой нагрузки
+#   UPDATE Orders SET NewColumn = 'default'
+#   WHERE NewColumn IS NULL
+#   AND id BETWEEN 1 AND 10000;
+#
+#   -- Или использовать фоновый job/сервис
+#   ✓ Избегать блокировки всей таблицы
+#   ✓ Обрабатывать небольшими пакетами
+#   ✓ Мониторить влияние на производительность
+#
+# Фаза 4: Сделать NOT NULL (финальная миграция)
+# ──────────────────────────────────────────
+#   -- Только после заполнения ВСЕХ данных
+#   migrationBuilder.AlterColumn<string>(
+#       "NewColumn",
+#       "Orders",
+#       nullable: false);
+#
+#   ✓ Требует значения для всех строк
+#   ✓ Создаёт ограничение CHECK
+#   ✓ Теперь полностью обеспечивается на уровне БД
+#
+# Критические изменения (требуют координации):
+# ──────────────────────────────────────────
+#   - Удаление столбцов: сначала развернуть код, не использующий столбец
+#   - Переименование столбцов: создать новый, перенести данные, обновить код, удалить старый
+#   - Изменение типов данных: создать новый столбец, перенести, обновить код, поменять имена
+#
+# См.: development-plan/11-deployment.md Раздел 11.4 для подробностей.
+#------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
-# Helper Functions
+# Вспомогательные функции
 #-------------------------------------------------------------------------------
 
 log_info() {
@@ -146,84 +146,84 @@ log_debug() {
 
 show_help() {
     cat << EOF
-Database Migration Script for GoldPC Project
+Скрипт миграции базы данных для проекта GoldPC
 
-Usage: $(basename "$0") [OPTIONS]
+Использование: $(basename "$0") [ОПЦИИ]
 
-Options:
-  -s, --service      Service name (required)
-                     Available: CatalogService, OrdersService, AuthService, 
+Опции:
+  -s, --service      Имя сервиса (обязательно)
+                     Доступные: CatalogService, OrdersService, AuthService,
                                 PCBuilderService, WarrantyService
-  -e, --environment  Environment (default: Development)
-                     Options: Development, Staging, Production
-  -n, --no-backup    Skip backup creation (NOT RECOMMENDED for production)
-  -v, --verbose      Enable verbose output
-  -d, --dry-run      Show what would be done without executing
-  -h, --help         Show this help message
+  -e, --environment  Окружение (по умолчанию: Development)
+                     Варианты: Development, Staging, Production
+  -n, --no-backup    Пропустить создание резервной копии (НЕ РЕКОМЕНДУЕТСЯ для production)
+  -v, --verbose      Подробный вывод
+  -d, --dry-run      Показать, что будет сделано, без выполнения
+  -h, --help         Показать эту справку
 
-Examples:
-  # Apply migrations for CatalogService in Development
+Примеры:
+  # Применить миграции для CatalogService в Development
   $(basename "$0") -s CatalogService
 
-  # Apply migrations for OrdersService in Production with verbose output
+  # Применить миграции для OrdersService в Production с подробным выводом
   $(basename "$0") -s OrdersService -e Production -v
 
-  # Dry run to see what would happen
+  # Пробный прогон, чтобы увидеть, что произойдёт
   $(basename "$0") -s CatalogService --dry-run
 
-Zero-Downtime Migration Strategy:
-  This script supports backward-compatible migrations. For production
-  deployments, follow the multi-phase strategy documented in the script
-  header and in development-plan/11-deployment.md Section 11.4.
+Стратегия миграции с нулевым временем простоя:
+  Этот скрипт поддерживает обратно-совместимые миграции. Для production
+  развёртываний следуйте многофазной стратегии, описанной в заголовке скрипта
+  и в development-plan/11-deployment.md Раздел 11.4.
 
-Environment Variables:
-  DATABASE_URL        Full PostgreSQL connection URL
-  DB_HOST            Database host (default: localhost)
-  DB_PORT            Database port (default: 5432)
-  DB_NAME            Database name
-  DB_USER            Database user
-  DB_PASSWORD        Database password
-  DB_CONNECTION_STRING  Full connection string (alternative to individual vars)
+Переменные окружения:
+  DATABASE_URL        Полный URL подключения к PostgreSQL
+  DB_HOST            Хост базы данных (по умолчанию: localhost)
+  DB_PORT            Порт базы данных (по умолчанию: 5432)
+  DB_NAME            Имя базы данных
+  DB_USER            Пользователь базы данных
+  DB_PASSWORD        Пароль базы данных
+  DB_CONNECTION_STRING  Полная строка подключения (альтернатива отдельным переменным)
 
 EOF
 }
 
 check_prerequisites() {
-    log_info "Checking prerequisites..."
-    
+    log_info "Проверка предварительных требований..."
+
     local missing_tools=()
-    
-    # Check for dotnet
+
+    # Проверка dotnet
     if ! command -v dotnet &> /dev/null; then
         missing_tools+=("dotnet")
     fi
-    
-    # Check for dotnet-ef tool
+
+    # Проверка инструмента dotnet-ef
     if ! dotnet ef --version &> /dev/null 2>&1; then
-        log_warning "dotnet-ef tool not found. Installing..."
+        log_warning "Инструмент dotnet-ef не найден. Установка..."
         dotnet tool install --global dotnet-ef 2>/dev/null || {
             missing_tools+=("dotnet-ef")
         }
     fi
-    
-    # Check for PostgreSQL tools (only if backup is needed)
+
+    # Проверка инструментов PostgreSQL (только если нужна резервная копия)
     if [[ "$NO_BACKUP" == false ]]; then
         if ! command -v pg_dump &> /dev/null; then
             missing_tools+=("pg_dump (postgresql-client)")
         fi
-        
+
         if ! command -v psql &> /dev/null; then
             missing_tools+=("psql (postgresql-client)")
         fi
     fi
-    
+
     if [[ ${#missing_tools[@]} -gt 0 ]]; then
-        log_error "Missing required tools: ${missing_tools[*]}"
-        log_info "Please install missing tools and try again."
+        log_error "Отсутствуют необходимые инструменты: ${missing_tools[*]}"
+        log_info "Пожалуйста, установите недостающие инструменты и повторите попытку."
         exit 1
     fi
-    
-    log_success "All prerequisites met"
+
+    log_success "Все предварительные требования выполнены"
 }
 
 validate_service() {
@@ -235,45 +235,45 @@ validate_service() {
         "PCBuilderService"
         "WarrantyService"
     )
-    
+
     for valid in "${valid_services[@]}"; do
         if [[ "$service" == "$valid" ]]; then
             return 0
         fi
     done
-    
-    log_error "Invalid service: $service"
-    log_info "Valid services: ${valid_services[*]}"
+
+    log_error "Недопустимый сервис: $service"
+    log_info "Допустимые сервисы: ${valid_services[*]}"
     return 1
 }
 
 get_connection_string() {
     local service="$1"
     local env="$2"
-    
-    # First, try environment variable
+
+    # Сначала пробуем переменную окружения
     if [[ -n "$DB_CONNECTION_STRING" ]]; then
         echo "$DB_CONNECTION_STRING"
         return 0
     fi
-    
-    # Try DATABASE_URL (common format: postgresql://user:pass@host:port/db)
+
+    # Пробуем DATABASE_URL (распространённый формат: postgresql://user:pass@host:port/db)
     if [[ -n "$DATABASE_URL" ]]; then
-        # Convert DATABASE_URL to connection string format
+        # Конвертируем DATABASE_URL в формат строки подключения
         # postgresql://user:pass@host:port/db -> Host=host;Port=port;Database=db;Username=user;Password=pass
         local parsed_url
         parsed_url=$(echo "$DATABASE_URL" | sed -E 's|postgresql://([^:]+):([^@]+)@([^:]+):([0-9]+)/(.+)|Host=\3;Port=\4;Database=\5;Username=\1;Password=\2|')
         echo "$parsed_url"
         return 0
     fi
-    
-    # Build from individual components
+
+    # Собираем из отдельных компонентов
     local host="${DB_HOST:-localhost}"
     local port="${DB_PORT:-5432}"
-    local db_name="${DB_NAME:-goldpc_${service,,}}"  # Lowercase service name
+    local db_name="${DB_NAME:-goldpc_${service,,}}"  # Имя сервиса в нижнем регистре
     local user="${DB_USER:-goldpc}"
     local password="${DB_PASSWORD:-}"
-    
+
     if [[ -n "$password" ]]; then
         echo "Host=$host;Port=$port;Database=$db_name;Username=$user;Password=$password"
     else
@@ -283,44 +283,44 @@ get_connection_string() {
 
 get_db_version() {
     local conn_string="$1"
-    
-    log_debug "Querying database version..."
-    
-    # Parse connection string for psql
+
+    log_debug "Запрос версии базы данных..."
+
+    # Парсим строку подключения для psql
     local host port db_name user password
-    
-    # Extract components from connection string
+
+    # Извлекаем компоненты из строки подключения
     host=$(echo "$conn_string" | grep -oP 'Host=\K[^;]+' || echo "localhost")
     port=$(echo "$conn_string" | grep -oP 'Port=\K[^;]+' || echo "5432")
     db_name=$(echo "$conn_string" | grep -oP 'Database=\K[^;]+' || echo "postgres")
     user=$(echo "$conn_string" | grep -oP 'Username=\K[^;]+' || echo "postgres")
     password=$(echo "$conn_string" | grep -oP 'Password=\K[^;+' || echo "")
-    
-    # Export password for psql
+
+    # Экспортируем пароль для psql
     export PGPASSWORD="$password"
-    
-    # Check if __EFMigrationsHistory table exists
+
+    # Проверяем, существует ли таблица __EFMigrationsHistory
     local table_exists
     table_exists=$(psql -h "$host" -p "$port" -U "$user" -d "$db_name" -t -c \
         "SELECT EXISTS (
-            SELECT FROM information_schema.tables 
-            WHERE table_schema = 'public' 
+            SELECT FROM information_schema.tables
+            WHERE table_schema = 'public'
             AND table_name = '__EFMigrationsHistory'
         );" 2>/dev/null | tr -d '[:space:]')
-    
+
     if [[ "$table_exists" != "t" ]]; then
-        echo "NONE (No migrations applied)"
+        echo "НЕТ (миграции не применялись)"
         return 0
     fi
-    
-    # Get latest applied migration
+
+    # Получаем последнюю применённую миграцию
     local latest_migration
     latest_migration=$(psql -h "$host" -p "$port" -U "$user" -d "$db_name" -t -c \
         "SELECT MigrationId FROM __EFMigrationsHistory ORDER BY MigrationId DESC LIMIT 1;" 2>/dev/null | tr -d '[:space:]')
-    
-    echo "${latest_migration:-NONE}"
-    
-    # Unset password
+
+    echo "${latest_migration:-НЕТ}"
+
+    # Сбрасываем пароль
     unset PGPASSWORD
 }
 
@@ -330,95 +330,95 @@ create_backup() {
     local timestamp
     timestamp=$(date +%Y%m%d_%H%M%S)
     local backup_file="$BACKUP_DIR/${service}_${timestamp}.sql"
-    
-    # Ensure backup directory exists
+
+    # Убеждаемся, что директория для резервных копий существует
     mkdir -p "$BACKUP_DIR"
-    
-    log_info "Creating database backup..."
-    log_debug "Backup file: $backup_file"
-    
-    # Parse connection string for pg_dump
+
+    log_info "Создание резервной копии базы данных..."
+    log_debug "Файл резервной копии: $backup_file"
+
+    # Парсим строку подключения для pg_dump
     local host port db_name user password
-    
+
     host=$(echo "$conn_string" | grep -oP 'Host=\K[^;]+' || echo "localhost")
     port=$(echo "$conn_string" | grep -oP 'Port=\K[^;]+' || echo "5432")
     db_name=$(echo "$conn_string" | grep -oP 'Database=\K[^;]+' || echo "postgres")
     user=$(echo "$conn_string" | grep -oP 'Username=\K[^;]+' || echo "postgres")
     password=$(echo "$conn_string" | grep -oP 'Password=\K[^;]+' || echo "")
-    
-    # Export password for pg_dump
+
+    # Экспортируем пароль для pg_dump
     export PGPASSWORD="$password"
-    
+
     if pg_dump -h "$host" -p "$port" -U "$user" -d "$db_name" -F p -f "$backup_file" 2>/dev/null; then
         local size
         size=$(du -h "$backup_file" | cut -f1)
-        log_success "Backup created: $backup_file ($size)"
+        log_success "Резервная копия создана: $backup_file ($size)"
         echo "$backup_file"
     else
-        log_error "Failed to create backup"
+        log_error "Не удалось создать резервную копию"
         unset PGPASSWORD
         return 1
     fi
-    
+
     unset PGPASSWORD
 }
 
 get_pending_migrations() {
     local service="$1"
     local project_path="$SRC_DIR/$service"
-    
-    log_debug "Checking for pending migrations in $service..."
-    
-    # Navigate to project and check migrations
+
+    log_debug "Проверка ожидающих миграций в $service..."
+
+    # Переходим в проект и проверяем миграции
     cd "$project_path" 2>/dev/null || {
-        log_error "Service directory not found: $project_path"
+        log_error "Директория сервиса не найдена: $project_path"
         return 1
     }
-    
-    # Get list of migrations and their status
+
+    # Получаем список миграций и их статус
     local output
     output=$(dotnet ef migrations list --no-color 2>&1) || {
-        log_error "Failed to list migrations"
+        log_error "Не удалось получить список миграций"
         cd "$PROJECT_ROOT"
         return 1
     }
-    
+
     cd "$PROJECT_ROOT"
-    
-    # Count pending migrations (lines that don't contain "(Applied)")
+
+    # Считаем ожидающие миграции (строки, не содержащие "(Applied)")
     local pending
     pending=$(echo "$output" | grep -v "Applied" | grep -c "^[0-9]")
-    
+
     echo "$pending"
 }
 
 apply_migrations() {
     local service="$1"
     local project_path="$SRC_DIR/$service"
-    
-    log_info "Applying migrations for $service..."
-    
+
+    log_info "Применение миграций для $service..."
+
     cd "$project_path" 2>/dev/null || {
-        log_error "Service directory not found: $project_path"
+        log_error "Директория сервиса не найдена: $project_path"
         return 1
     }
-    
-    # Apply migrations with timeout
-    log_debug "Running: dotnet ef database update"
-    
+
+    # Применяем миграции с таймаутом
+    log_debug "Выполнение: dotnet ef database update"
+
     local result
     if result=$(timeout "$TIMEOUT" dotnet ef database update --no-color 2>&1); then
         cd "$PROJECT_ROOT"
         if echo "$result" | grep -q "Done\|already up to date"; then
-            log_success "Migrations applied successfully"
+            log_success "Миграции успешно применены"
             return 0
         else
-            log_error "Migration output indicates failure: $result"
+            log_error "Вывод миграции указывает на ошибку: $result"
             return 1
         fi
     else
         cd "$PROJECT_ROOT"
-        log_error "Migration failed or timed out"
+        log_error "Миграция не удалась или превышен таймаут"
         log_debug "$result"
         return 1
     fi
@@ -427,55 +427,55 @@ apply_migrations() {
 verify_migration() {
     local conn_string="$1"
     local service="$2"
-    
-    log_info "Verifying migration success..."
-    
-    # Get new DB version
+
+    log_info "Проверка успешности миграции..."
+
+    # Получаем новую версию БД
     local new_version
     new_version=$(get_db_version "$conn_string")
-    
-    # Check database connectivity
+
+    # Проверяем доступность базы данных
     local host port db_name user password
     host=$(echo "$conn_string" | grep -oP 'Host=\K[^;]+' || echo "localhost")
     port=$(echo "$conn_string" | grep -oP 'Port=\K[^;]+' || echo "5432")
     db_name=$(echo "$conn_string" | grep -oP 'Database=\K[^;]+' || echo "postgres")
     user=$(echo "$conn_string" | grep -oP 'Username=\K[^;]+' || echo "postgres")
     password=$(echo "$conn_string" | grep -oP 'Password=\K[^;]+' || echo "")
-    
+
     export PGPASSWORD="$password"
-    
-    # Verify __EFMigrationsHistory table
+
+    # Проверяем таблицу __EFMigrationsHistory
     local table_check
     table_check=$(psql -h "$host" -p "$port" -U "$user" -d "$db_name" -t -c \
         "SELECT COUNT(*) FROM __EFMigrationsHistory;" 2>/dev/null | tr -d '[:space:]')
-    
+
     unset PGPASSWORD
-    
+
     if [[ "$table_check" -gt 0 ]] 2>/dev/null; then
-        log_success "Verification passed: $table_check migrations recorded"
-        log_info "Current DB version: $new_version"
+        log_success "Проверка пройдена: записано $table_check миграций"
+        log_info "Текущая версия БД: $new_version"
         return 0
     else
-        log_error "Verification failed: No migrations found in history"
+        log_error "Проверка не пройдена: миграции не найдены в истории"
         return 1
     fi
 }
 
 cleanup_old_backups() {
     local keep_count=${1:-10}
-    
-    log_debug "Cleaning up old backups (keeping last $keep_count)..."
-    
+
+    log_debug "Очистка старых резервных копий (оставить последние $keep_count)..."
+
     if [[ -d "$BACKUP_DIR" ]]; then
         ls -t "$BACKUP_DIR"/*.sql 2>/dev/null | tail -n +"$((keep_count + 1))" | while read -r file; do
-            log_debug "Removing old backup: $file"
+            log_debug "Удаление старой резервной копии: $file"
             rm -f "$file"
         done
     fi
 }
 
 #-------------------------------------------------------------------------------
-# Main Script
+# Основной скрипт
 #-------------------------------------------------------------------------------
 
 parse_arguments() {
@@ -506,7 +506,7 @@ parse_arguments() {
                 exit 0
                 ;;
             *)
-                log_error "Unknown option: $1"
+                log_error "Неизвестная опция: $1"
                 show_help
                 exit 1
                 ;;
@@ -517,153 +517,153 @@ parse_arguments() {
 main() {
     local start_time
     start_time=$(date +%s)
-    
+
     echo ""
     echo "========================================"
-    echo "  GoldPC Database Migration Script"
+    echo "  GoldPC — Скрипт миграции базы данных"
     echo "========================================"
     echo ""
-    
-    # Validate required arguments
+
+    # Проверка обязательных аргументов
     if [[ -z "$SERVICE_NAME" ]]; then
-        log_error "Service name is required. Use -s or --service option."
+        log_error "Требуется имя сервиса. Используйте опцию -s или --service."
         show_help
         exit 1
     fi
-    
-    # Validate service name
+
+    # Проверка имени сервиса
     if ! validate_service "$SERVICE_NAME"; then
         exit 1
     fi
-    
-    log_info "Service: $SERVICE_NAME"
-    log_info "Environment: $ENVIRONMENT"
-    log_info "Timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
-    
+
+    log_info "Сервис: $SERVICE_NAME"
+    log_info "Окружение: $ENVIRONMENT"
+    log_info "Время: $(date '+%Y-%m-%d %H:%M:%S')"
+
     if [[ "$DRY_RUN" == true ]]; then
-        log_warning "DRY RUN MODE - No changes will be made"
+        log_warning "РЕЖИМ ПРОБНОГО ПРОГОНА — изменения не будут внесены"
     fi
-    
-    # Check prerequisites
+
+    # Проверка предварительных требований
     check_prerequisites
-    
-    # Get connection string
+
+    # Получение строки подключения
     local conn_string
     conn_string=$(get_connection_string "$SERVICE_NAME" "$ENVIRONMENT")
-    log_debug "Connection string: ${conn_string//Password=*/Password=***}"
-    
-    # Step 1: Check current DB version
+    log_debug "Строка подключения: ${conn_string//Password=*/Password=***}"
+
+    # Шаг 1: Проверка текущей версии БД
     echo ""
-    log_info "=== Step 1: Checking current database version ==="
-    
+    log_info "=== Шаг 1: Проверка текущей версии базы данных ==="
+
     if [[ "$DRY_RUN" == true ]]; then
-        log_info "[DRY RUN] Would check database version"
+        log_info "[ПРОБНЫЙ ПРОГОН] Будет проверена версия базы данных"
     else
         local current_version
         current_version=$(get_db_version "$conn_string")
-        log_info "Current DB version: $current_version"
+        log_info "Текущая версия БД: $current_version"
     fi
-    
-    # Step 2: Check for pending migrations
+
+    # Шаг 2: Проверка ожидающих миграций
     echo ""
-    log_info "=== Step 2: Checking for pending migrations ==="
-    
+    log_info "=== Шаг 2: Проверка ожидающих миграций ==="
+
     if [[ "$DRY_RUN" == true ]]; then
-        log_info "[DRY RUN] Would check for pending migrations"
+        log_info "[ПРОБНЫЙ ПРОГОН] Будет произведена проверка ожидающих миграций"
     else
         local pending
         pending=$(get_pending_migrations "$SERVICE_NAME")
-        
+
         if [[ "$pending" -eq 0 ]]; then
-            log_success "No pending migrations found"
-            log_info "Database is up to date"
+            log_success "Ожидающие миграции не найдены"
+            log_info "База данных актуальна"
             exit 0
         fi
-        
-        log_info "Found $pending pending migration(s)"
+
+        log_info "Найдено $pending ожидающих миграций"
     fi
-    
-    # Step 3: Create backup (unless skipped or dry run)
+
+    # Шаг 3: Создание резервной копии (если не пропущено и не пробный прогон)
     echo ""
-    log_info "=== Step 3: Creating backup ==="
-    
+    log_info "=== Шаг 3: Создание резервной копии ==="
+
     local backup_file=""
     if [[ "$NO_BACKUP" == true ]]; then
-        log_warning "Backup skipped (--no-backup flag)"
+        log_warning "Резервная копия пропущена (флаг --no-backup)"
     elif [[ "$DRY_RUN" == true ]]; then
-        log_info "[DRY RUN] Would create database backup"
+        log_info "[ПРОБНЫЙ ПРОГОН] Будет создана резервная копия базы данных"
     else
         if [[ "$ENVIRONMENT" == "Production" ]]; then
-            log_warning "Creating backup for Production environment"
+            log_warning "Создание резервной копии для окружения Production"
         fi
         backup_file=$(create_backup "$conn_string" "$SERVICE_NAME") || {
-            log_error "Backup creation failed. Aborting migration."
+            log_error "Не удалось создать резервную копию. Прерывание миграции."
             exit 1
         }
     fi
-    
-    # Step 4: Apply migrations
+
+    # Шаг 4: Применение миграций
     echo ""
-    log_info "=== Step 4: Applying migrations ==="
-    
+    log_info "=== Шаг 4: Применение миграций ==="
+
     if [[ "$DRY_RUN" == true ]]; then
-        log_info "[DRY RUN] Would apply migrations using: dotnet ef database update"
+        log_info "[ПРОБНЫЙ ПРОГОН] Будут применены миграции: dotnet ef database update"
     else
         if ! apply_migrations "$SERVICE_NAME"; then
-            log_error "Migration failed!"
-            
+            log_error "Миграция не удалась!"
+
             if [[ -n "$backup_file" && -f "$backup_file" ]]; then
-                log_warning "A backup is available at: $backup_file"
-                log_warning "To restore, run: psql $conn_string < $backup_file"
+                log_warning "Резервная копия доступна: $backup_file"
+                log_warning "Для восстановления выполните: psql $conn_string < $backup_file"
             fi
-            
+
             exit 1
         fi
     fi
-    
-    # Step 5: Verify success
+
+    # Шаг 5: Проверка успешности
     echo ""
-    log_info "=== Step 5: Verifying migration success ==="
-    
+    log_info "=== Шаг 5: Проверка успешности миграции ==="
+
     if [[ "$DRY_RUN" == true ]]; then
-        log_info "[DRY RUN] Would verify migration"
+        log_info "[ПРОБНЫЙ ПРОГОН] Будет выполнена проверка миграции"
     else
         if ! verify_migration "$conn_string" "$SERVICE_NAME"; then
-            log_error "Verification failed!"
+            log_error "Проверка не пройдена!"
             exit 1
         fi
     fi
-    
-    # Cleanup old backups
+
+    # Очистка старых резервных копий
     cleanup_old_backups 10
-    
-    # Summary
+
+    # Итог
     local end_time duration
     end_time=$(date +%s)
     duration=$((end_time - start_time))
-    
+
     echo ""
     echo "========================================"
-    log_success "Migration completed successfully!"
+    log_success "Миграция успешно завершена!"
     echo "========================================"
-    log_info "Duration: ${duration}s"
-    log_info "Service: $SERVICE_NAME"
-    log_info "Environment: $ENVIRONMENT"
-    
+    log_info "Длительность: ${duration}с"
+    log_info "Сервис: $SERVICE_NAME"
+    log_info "Окружение: $ENVIRONMENT"
+
     if [[ -n "$backup_file" ]]; then
-        log_info "Backup: $backup_file"
+        log_info "Резервная копия: $backup_file"
     fi
-    
+
     echo ""
-    log_info "Next steps:"
-    echo "  1. Monitor application logs for any errors"
-    echo "  2. Verify application functionality"
-    echo "  3. For production: follow Zero-Downtime Migration Strategy"
+    log_info "Следующие шаги:"
+    echo "  1. Проверьте логи приложения на наличие ошибок"
+    echo "  2. Проверьте функциональность приложения"
+    echo "  3. Для production: следуйте стратегии миграции с нулевым временем простоя"
     echo ""
-    
+
     return 0
 }
 
-# Run main function with all arguments
+# Запуск основной функции со всеми аргументами
 parse_arguments "$@"
 main

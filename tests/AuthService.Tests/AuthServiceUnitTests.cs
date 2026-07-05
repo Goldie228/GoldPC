@@ -47,6 +47,22 @@ public class AuthServiceUnitTests
         encryptionMock.Setup(x => x.Decrypt(It.IsAny<string>())).Returns((string s) => s.StartsWith("enc_") ? s[4..] : s);
         encryptionMock.Setup(x => x.ComputeHash(It.IsAny<string>())).Returns((string s) => $"hash_{s}");
 
+        var totpService = new TOTPService(
+            _context,
+            encryptionMock.Object,
+            tokenCacheMock.Object,
+            Mock.Of<ILogger<TOTPService>>());
+        var passwordService = new PasswordService(
+            _context,
+            tokenCacheMock.Object,
+            encryptionMock.Object,
+            configurationMock.Object,
+            emailServiceMock.Object,
+            Mock.Of<ILogger<PasswordService>>());
+        var avatarService = new AvatarService(
+            _context,
+            Mock.Of<ILogger<AvatarService>>());
+
         _authService = new AuthService.Services.AuthService(
             _context,
             _jwtServiceMock.Object,
@@ -55,13 +71,16 @@ public class AuthServiceUnitTests
             emailServiceMock.Object,
             tokenCacheMock.Object,
             twoFactorSettings,
-            encryptionMock.Object);
+            encryptionMock.Object,
+            totpService,
+            passwordService,
+            avatarService);
     }
 
     [Fact]
     public async Task Register_ValidRequest_ShouldCreateUser()
     {
-        // Arrange
+        // Подготовка
         var request = new RegisterRequest
         {
             Email = "test@example.com",
@@ -71,10 +90,10 @@ public class AuthServiceUnitTests
             Phone = "+375291234567"
         };
 
-        // Act
+        // Действие
         var (response, error) = await _authService.RegisterAsync(request);
 
-        // Assert
+        // Проверка
         error.Should().BeNull();
         response.Should().NotBeNull();
         response!.User.Email.Should().Be(request.Email);
@@ -86,7 +105,7 @@ public class AuthServiceUnitTests
     [Fact]
     public async Task Register_DuplicateEmail_ShouldReturnError()
     {
-        // Arrange
+        // Подготовка
         var request = new RegisterRequest
         {
             Email = "duplicate@example.com",
@@ -97,10 +116,10 @@ public class AuthServiceUnitTests
         };
         await _authService.RegisterAsync(request);
 
-        // Act
+        // Действие
         var (response, error) = await _authService.RegisterAsync(request);
 
-        // Assert
+        // Проверка
         error.Should().NotBeNull();
         error.Should().Contain("уже существует");
         response.Should().BeNull();
@@ -109,7 +128,7 @@ public class AuthServiceUnitTests
     [Fact]
     public async Task Login_ValidCredentials_ShouldReturnTokens()
     {
-        // Arrange
+        // Подготовка
         var registerRequest = new RegisterRequest
         {
             Email = "login@example.com",
@@ -126,10 +145,10 @@ public class AuthServiceUnitTests
             Password = "Test123!"
         };
 
-        // Act
+        // Действие
         var (response, error) = await _authService.LoginAsync(loginRequest, "127.0.0.1", "test-agent");
 
-        // Assert
+        // Проверка
         error.Should().BeNull();
         response.Should().NotBeNull();
         response!.AccessToken.Should().NotBeNullOrEmpty();
@@ -139,7 +158,7 @@ public class AuthServiceUnitTests
     [Fact]
     public async Task Login_InvalidPassword_ShouldReturnError()
     {
-        // Arrange
+        // Подготовка
         var registerRequest = new RegisterRequest
         {
             Email = "wrongpass@example.com",
@@ -156,10 +175,10 @@ public class AuthServiceUnitTests
             Password = "Wrong123!"
         };
 
-        // Act
+        // Действие
         var (response, error) = await _authService.LoginAsync(loginRequest, "127.0.0.1", "test-agent");
 
-        // Assert
+        // Проверка
         error.Should().NotBeNull();
         response.Should().BeNull();
     }
@@ -167,7 +186,7 @@ public class AuthServiceUnitTests
     [Fact]
     public async Task GetUserById_ExistingUser_ShouldReturnUser()
     {
-        // Arrange
+        // Подготовка
         var registerRequest = new RegisterRequest
         {
             Email = "getuser@example.com",
@@ -178,10 +197,10 @@ public class AuthServiceUnitTests
         };
         var (regResponse, _) = await _authService.RegisterAsync(registerRequest);
 
-        // Act
+        // Действие
         var user = await _authService.GetUserByIdAsync(regResponse!.User.Id);
 
-        // Assert
+        // Проверка
         user.Should().NotBeNull();
         user!.Email.Should().Be(registerRequest.Email);
     }
@@ -189,7 +208,7 @@ public class AuthServiceUnitTests
     [Fact]
     public async Task ChangePassword_CorrectOldPassword_ShouldChange()
     {
-        // Arrange
+        // Подготовка
         var registerRequest = new RegisterRequest
         {
             Email = "changepass@example.com",
@@ -206,14 +225,14 @@ public class AuthServiceUnitTests
             NewPassword = "New123!"
         };
 
-        // Act
+        // Действие
         var (success, error) = await _authService.ChangePasswordAsync(regResponse!.User.Id, changeRequest);
 
-        // Assert
+        // Проверка
         success.Should().BeTrue();
         error.Should().BeNull();
 
-        // Verify can login with new password
+        // Проверяем возможность входа с новым паролем
         var loginRequest = new LoginRequest { Email = "changepass@example.com", Password = "New123!" };
         var (loginResponse, loginError) = await _authService.LoginAsync(loginRequest, "127.0.0.1", "test-agent");
         loginError.Should().BeNull();

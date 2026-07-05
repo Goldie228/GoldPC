@@ -1,26 +1,26 @@
 #!/bin/bash
 # =============================================================================
-# GoldPC Local Development Startup (without Docker)
+# GoldPC: локальный запуск разработки (без Docker)
 # =============================================================================
-# Usage: ./scripts/dev-local.sh [OPTIONS]
+# Использование: ./scripts/dev-local.sh [ОПЦИИ]
 #
-# Options:
-#   --frontend-only    Start only frontend
-#   --backend-only     Start only backend services
-#   --infra-only       Start only infrastructure (postgres, redis) via Docker
-#   --help             Show this help message
+# Опции:
+#   --frontend-only    Запустить только фронтенд
+#   --backend-only     Запустить только бэкенд-сервисы
+#   --infra-only       Запустить только инфраструктуру (postgres, redis) через Docker
+#   --help             Показать эту справку
 # =============================================================================
-# NOTE: This script handles the '#' character in the project path by 
-# copying frontend to /tmp and using inotifywait to sync changes (HMR works!).
+# ПРИМЕЧАНИЕ: Этот скрипт обрабатывает символ '#' в пути проекта,
+# копируя фронтенд в /tmp и используя inotifywait для синхронизации изменений (HMR работает!).
 # =============================================================================
 
 set -e
 
-# Ensure .NET tools can find the runtime
+# Убедиться, что инструменты .NET могут найти среду выполнения
 export DOTNET_ROOT=/usr/share/dotnet
 export PATH="$DOTNET_ROOT:$PATH"
 
-# Colors
+# Цвета
 CYAN='\033[36m'
 GREEN='\033[32m'
 YELLOW='\033[33m'
@@ -81,7 +81,7 @@ run_with_heartbeat() {
         if [ $((elapsed % 10)) -eq 0 ]; then
             local lines
             lines=$(wc -l < "$log_file" 2>/dev/null | tr -d ' ' || echo 0)
-            echo -e "${CYAN}[$(timestamp)] … ещё выполняется: $title (${elapsed}s), строк в логе: ${lines}${RESET}"
+            echo -e "${CYAN}[$(timestamp)] … ещё выполняется: $title (${elapsed}с), строк в логе: ${lines}${RESET}"
             tail_log_hint "$log_file" 3
         fi
     done
@@ -89,7 +89,7 @@ run_with_heartbeat() {
     wait "$cmd_pid"
 }
 
-# Parse arguments
+# Разбор аргументов
 FRONTEND_ONLY=false
 BACKEND_ONLY=false
 INFRA_ONLY=false
@@ -139,7 +139,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         *)
-            echo -e "${RED}Unknown option: $1${RESET}"
+            echo -e "${RED}Неизвестная опция: $1${RESET}"
             exit 1
             ;;
     esac
@@ -151,7 +151,7 @@ FRONTEND_SRC="$PROJECT_DIR/src/frontend"
 FRONTEND_TMP="/tmp/goldpc-frontend-dev"
 LOG_DIR="$PROJECT_DIR/logs"
 
-# Ensure log directory exists
+# Убедиться, что директория логов существует
 mkdir -p "$LOG_DIR"
 rm -f "$LOG_DIR"/*.log
 if [ "$TAIL_LOGS" = true ]; then
@@ -164,15 +164,15 @@ fi
     echo "=========================================="
 } >> "$LOG_DIR/catalog-seed.log"
 
-# Global PID list for cleanup
+# Глобальный список PID для очистки
 declare -a SERVICE_PIDS
 
 echo -e "${CYAN}================================================${RESET}"
-echo -e "${CYAN}   GoldPC Local Development Environment${RESET}"
+echo -e "${CYAN}   GoldPC — Локальная среда разработки${RESET}"
 echo -e "${CYAN}================================================${RESET}"
 echo ""
 
-# Function to check port availability
+# Функция проверки доступности порта
 check_port() {
     local port=$1
     if lsof -Pi :"$port" -sTCP:LISTEN -t >/dev/null ; then
@@ -181,42 +181,42 @@ check_port() {
     return 0
 }
 
-# Kill process occupying a port. Returns 0 if port is now free, 1 if still occupied.
+# Завершить процесс, занимающий порт. Возвращает 0, если порт свободен, 1 — если всё ещё занят.
 free_port() {
     local port=$1
 
-    # First try: if it's a Docker container proxy, stop the container
+    # Первая попытка: если это прокси Docker-контейнера, остановить контейнер
     local container_id
     container_id=$(sudo lsof -i :"$port" -sTCP:LISTEN -t 2>/dev/null | head -1)
     if [ -n "$container_id" ]; then
-        # Find the container that maps this port
+        # Найти контейнер, который маппит этот порт
         local container_name
         container_name=$(sudo docker ps --filter "publish=$port" --format '{{.Names}}' 2>/dev/null | head -1)
         if [ -n "$container_name" ]; then
-            log_warn "Port $port occupied by container '$container_name' — stopping & removing it..."
+            log_warn "Порт $port занят контейнером '$container_name' — остановка и удаление..."
             sudo docker stop "$container_name" >/dev/null 2>&1
             sudo docker rm "$container_name" >/dev/null 2>&1
             sleep 1
             if check_port "$port"; then
-                log_ok "Port $port freed (removed container '$container_name')"
+                log_ok "Порт $port освобождён (удалён контейнер '$container_name')"
                 return 0
             fi
         fi
     fi
 
-    # Second try: kill the process directly
+    # Вторая попытка: завершить процесс напрямую
     local pids
     pids=$(sudo lsof -i :"$port" -sTCP:LISTEN -t 2>/dev/null)
     if [ -n "$pids" ]; then
         for pid in $pids; do
             local proc_name
-            proc_name=$(ps -p "$pid" -o comm= 2>/dev/null || echo "unknown")
-            log_warn "Port $port occupied by $proc_name (PID $pid) — killing..."
+            proc_name=$(ps -p "$pid" -o comm= 2>/dev/null || echo "неизвестно")
+            log_warn "Порт $port занят $proc_name (PID $pid) — завершение..."
             sudo kill "$pid" 2>/dev/null
         done
         sleep 1
         if check_port "$port"; then
-            log_ok "Port $port freed"
+            log_ok "Порт $port освобождён"
             return 0
         fi
     fi
@@ -224,66 +224,66 @@ free_port() {
     return 1
 }
 
-# Pre-flight environment validation
+# Предварительная проверка окружения
 check_env() {
-    echo -e "${CYAN}Validating environment...${RESET}"
+    echo -e "${CYAN}Проверка окружения...${RESET}"
     local missing_tools=0
 
     for tool in dotnet node docker npm rsync; do
         if ! command -v "$tool" &> /dev/null; then
-            echo -e "${RED}✗ $tool is not installed${RESET}"
+            echo -e "${RED}✗ $tool не установлен${RESET}"
             missing_tools=1
         else
-            echo -e "${GREEN}✓ $tool found${RESET}"
+            echo -e "${GREEN}✓ $tool найден${RESET}"
         fi
     done
 
     if [ $missing_tools -eq 1 ]; then
-        echo -e "${RED}Please install missing tools and try again.${RESET}"
+        echo -e "${RED}Пожалуйста, установите недостающие инструменты и повторите попытку.${RESET}"
         exit 1
     fi
 
-    echo -e "${CYAN}Checking port availability...${RESET}"
+    echo -e "${CYAN}Проверка доступности портов...${RESET}"
     local ports=(5000 5001 5002 5003 5004 5005 5173 5434 6379)
     for port in "${ports[@]}"; do
         if ! check_port "$port"; then
             if ! free_port "$port"; then
-                echo -e "${RED}✗ Port $port is already in use and could not be freed${RESET}"
+                echo -e "${RED}✗ Порт $port уже используется и не может быть освобождён${RESET}"
                 exit 1
             fi
         fi
     done
-    echo -e "${GREEN}✓ All required ports are available${RESET}"
+    echo -e "${GREEN}✓ Все требуемые порты доступны${RESET}"
 }
 
-# Run environment check
+# Запуск проверки окружения
 check_env
 
-# Cleanup function for trap
+# Функция очистки для trap
 cleanup() {
-    echo -e "\n${YELLOW}Shutting down all services...${RESET}"
-    
-    # Kill tracked background processes
+    echo -e "\n${YELLOW}Остановка всех сервисов...${RESET}"
+
+    # Завершить отслеживаемые фоновые процессы
     for pid in "${SERVICE_PIDS[@]}"; do
         if kill -0 "$pid" 2>/dev/null; then
             kill "$pid" 2>/dev/null || true
         fi
     done
-    
-    # Also cleanup by process names just in case
+
+    # Также очистка по именам процессов на всякий случай
     pkill -f "dotnet run" 2>/dev/null || true
     pkill -f "vite" 2>/dev/null || true
     pkill -f "inotifywait" 2>/dev/null || true
-    
-    echo -e "${GREEN}✓ Cleanup complete${RESET}"
+
+    echo -e "${GREEN}✓ Очистка завершена${RESET}"
     exit 0
 }
 
-# Register cleanup trap
+# Регистрация trap очистки
 trap cleanup SIGINT SIGTERM EXIT
 
-# Function to wait for service health
-# Usage: wait_for_health URL NAME [PID] [LOG_FILE]
+# Функция ожидания готовности сервиса
+# Использование: wait_for_health URL ИМЯ [PID] [ФАЙЛ_ЛОГА]
 wait_for_health() {
     local url=$1
     local name=$2
@@ -292,14 +292,14 @@ wait_for_health() {
     local timeout=120
     local count=0
 
-    echo -ne "${CYAN}Waiting for $name to be ready...${RESET}"
+    echo -ne "${CYAN}Ожидание готовности $name...${RESET}"
     while [ $count -lt $timeout ]; do
-        # Check if process is still alive
+        # Проверка, жив ли процесс
         if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
-            echo -e " ${RED}CRASHED${RESET}"
-            echo -e "${RED}  ✗ $name process exited unexpectedly.${RESET}"
+            echo -e " ${RED}АВАРИЙНО ЗАВЕРШИЛСЯ${RESET}"
+            echo -e "${RED}  ✗ Процесс $name неожиданно завершился.${RESET}"
             if [ -n "$log_file" ] && [ -f "$log_file" ]; then
-                echo -e "${RED}  Last 10 lines of log:${RESET}"
+                echo -e "${RED}  Последние 10 строк лога:${RESET}"
                 tail -n 10 "$log_file" | sed 's/^/    │ /'
             fi
             return 1
@@ -312,15 +312,15 @@ wait_for_health() {
         sleep 1
         count=$((count + 1))
     done
-    echo -e " ${RED}FAILED (timeout)${RESET}"
+    echo -e " ${RED}НЕУДАЧА (таймаут)${RESET}"
     if [ -n "$log_file" ] && [ -f "$log_file" ]; then
-        echo -e "${RED}  Last 10 lines of $name log:${RESET}"
+        echo -e "${RED}  Последние 10 строк лога $name:${RESET}"
         tail -n 10 "$log_file" | sed 's/^/    │ /'
     fi
     return 1
 }
 
-# Auto-generate JWT_SECRET if still placeholder
+# Автогенерация JWT_SECRET, если всё ещё плейсхолдер
 ensure_jwt_secret() {
     local env_file="$PROJECT_DIR/.env"
     if [ ! -f "$env_file" ]; then
@@ -331,18 +331,18 @@ ensure_jwt_secret() {
         secret=$(openssl rand -base64 32)
         sed -i "s|JWT_SECRET=.*|JWT_SECRET=$secret|" "$env_file"
         sed -i "s|ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$(openssl rand -base64 32)|" "$env_file"
-        log_ok "Generated JWT_SECRET and ENCRYPTION_KEY in .env"
+        log_ok "Сгенерированы JWT_SECRET и ENCRYPTION_KEY в .env"
     fi
 }
 
-# Function to start infrastructure
+# Функция запуска инфраструктуры
 start_infra() {
     ensure_jwt_secret
-    echo -e "${CYAN}Starting infrastructure (PostgreSQL, Redis, RabbitMQ)...${RESET}"
+    echo -e "${CYAN}Запуск инфраструктуры (PostgreSQL, Redis, RabbitMQ)...${RESET}"
     docker compose -f "$PROJECT_DIR/docker/docker-compose.yml" up -d postgres redis rabbitmq
-    
-    # Wait for PostgreSQL
-    echo -ne "${CYAN}Waiting for PostgreSQL to be ready...${RESET}"
+
+    # Ожидание PostgreSQL
+    echo -ne "${CYAN}Ожидание готовности PostgreSQL...${RESET}"
     local timeout=60
     local count=0
     while [ $count -lt $timeout ]; do
@@ -355,11 +355,11 @@ start_infra() {
         count=$((count + 1))
     done
     if [ $count -eq $timeout ]; then
-        echo -e " ${RED}FAILED (timeout)${RESET}"
+        echo -e " ${RED}НЕУДАЧА (таймаут)${RESET}"
     fi
 
-    # Wait for Redis
-    echo -ne "${CYAN}Waiting for Redis to be ready...${RESET}"
+    # Ожидание Redis
+    echo -ne "${CYAN}Ожидание готовности Redis...${RESET}"
     count=0
     while [ $count -lt $timeout ]; do
         if docker exec goldpc-redis redis-cli -a "${REDIS_PASSWORD:-redis_dev_password}" ping 2>/dev/null | grep -q "PONG"; then
@@ -371,11 +371,11 @@ start_infra() {
         count=$((count + 1))
     done
     if [ $count -eq $timeout ]; then
-        echo -e " ${RED}FAILED (timeout)${RESET}"
+        echo -e " ${RED}НЕУДАЧА (таймаут)${RESET}"
     fi
 
-    # Wait for RabbitMQ (может занять до 60 с с management-плагином)
-    echo -ne "${CYAN}Waiting for RabbitMQ to be ready...${RESET}"
+    # Ожидание RabbitMQ (может занять до 60 с с management-плагином)
+    echo -ne "${CYAN}Ожидание готовности RabbitMQ...${RESET}"
     count=0
     local rabbit_timeout=90
     while [ $count -lt $rabbit_timeout ]; do
@@ -388,20 +388,20 @@ start_infra() {
         count=$((count + 1))
     done
     if [ $count -eq $rabbit_timeout ]; then
-        echo -e " ${RED}FAILED (timeout)${RESET}"
+        echo -e " ${RED}НЕУДАЧА (таймаут)${RESET}"
     fi
 
-    # Reset databases if requested
+    # Сброс баз данных, если запрошено
     if [ "$RESET_DB" = true ]; then
-        echo -e "${YELLOW}Resetting databases (--reset)...${RESET}"
+        echo -e "${YELLOW}Сброс баз данных (--reset)...${RESET}"
         for db in goldpc_catalog goldpc_auth goldpc_orders goldpc_services goldpc_warranty goldpc_pcbuilder goldpc_reporting; do
             docker exec goldpc-postgres psql -U postgres -c "DROP DATABASE IF EXISTS $db;" 2>/dev/null || true
         done
-        echo -e "${GREEN}✓ Databases dropped${RESET}"
+        echo -e "${GREEN}✓ Базы данных удалены${RESET}"
     fi
 
-    # Create databases if not exist
-    echo -e "${CYAN}Creating databases...${RESET}"
+    # Создание баз данных, если не существуют
+    echo -e "${CYAN}Создание баз данных...${RESET}"
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_catalog;" 2>/dev/null || true
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_auth;" 2>/dev/null || true
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_orders;" 2>/dev/null || true
@@ -410,71 +410,71 @@ start_infra() {
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_pcbuilder;" 2>/dev/null || true
     docker exec goldpc-postgres psql -U postgres -c "CREATE DATABASE goldpc_reporting;" 2>/dev/null || true
 
-    echo -e "${GREEN}✓ Infrastructure ready${RESET}"
+    echo -e "${GREEN}✓ Инфраструктура готова${RESET}"
 }
 
-# Function to seed catalog database
+# Функция заполнения каталога
 seed_catalog() {
     if [ "$SKIP_SEED" = true ]; then
-        log_warn "Skipping database seed (--skip-seed)"
+        log_warn "Пропуск заполнения БД (--skip-seed)"
         return
     fi
-    log_info "Seeding catalog database..."
+    log_info "Заполнение базы данных каталога..."
     log_info "Полный лог сида: $LOG_DIR/catalog-seed.log"
     if [ "$TAIL_LOGS" != true ]; then
         log_info "Подсказка: ${YELLOW}./scripts/dev-local.sh --tail${RESET} — видеть прогресс сида в консоли"
     fi
-    
+
     # Офлайн-сид (scripts/seed-data/catalog-seed.json + локальные /uploads/seed/*)
-    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-catalog" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-catalog); then
-        log_ok "Catalog upsert completed"
+    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Выполнение seed-catalog" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-catalog); then
+        log_ok "Каталог загружен"
     else
-        log_warn "Seed failed or no JSON found. Check logs/catalog-seed.log"
+        log_warn "Сид не удался или JSON не найден. Проверьте logs/catalog-seed.log"
     fi
 
-    # Backfill производителей для исторических данных
-    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running backfill-manufacturers" "$LOG_DIR/catalog-seed.log" dotnet run -- backfill-manufacturers); then
-        log_ok "Manufacturer backfill completed"
+    # Заполнение производителей для исторических данных
+    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Выполнение backfill-manufacturers" "$LOG_DIR/catalog-seed.log" dotnet run -- backfill-manufacturers); then
+        log_ok "Производители заполнены"
     else
-        log_warn "Manufacturer backfill failed. Check logs/catalog-seed.log"
+        log_warn "Заполнение производителей не удалось. Проверьте logs/catalog-seed.log"
     fi
 
     # Если файлы уже на диске, а path в БД пустой — подтянуть path тем же алгоритмом, что и при импорте
-    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Sync image paths from disk" "$LOG_DIR/catalog-seed.log" dotnet run -- sync-image-paths-from-disk); then
-        log_ok "Image paths synced from disk"
+    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Синхронизация путей изображений с диска" "$LOG_DIR/catalog-seed.log" dotnet run -- sync-image-paths-from-disk); then
+        log_ok "Пути изображений синхронизированы с диска"
     else
-        log_warn "sync-image-paths-from-disk failed. Check logs/catalog-seed.log"
+        log_warn "sync-image-paths-from-disk не удался. Проверьте logs/catalog-seed.log"
     fi
 
-    # Filter attributes sync
-    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running seed-filter-attributes" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-filter-attributes); then
-        log_ok "Filter attributes synced"
+    # Синхронизация атрибутов фильтров
+    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Выполнение seed-filter-attributes" "$LOG_DIR/catalog-seed.log" dotnet run -- seed-filter-attributes); then
+        log_ok "Атрибуты фильтров синхронизированы"
     fi
 
     # Финальная чистка невалидных X-Core товаров
-    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Running cleanup-invalid-products" "$LOG_DIR/catalog-seed.log" dotnet run -- cleanup-invalid-products); then
-        log_ok "Invalid products cleanup completed"
+    if (cd "$PROJECT_DIR/src/CatalogService" && run_with_heartbeat "Выполнение cleanup-invalid-products" "$LOG_DIR/catalog-seed.log" dotnet run -- cleanup-invalid-products); then
+        log_ok "Очистка невалидных товаров завершена"
     else
-        log_warn "Invalid products cleanup failed. Check logs/catalog-seed.log"
+        log_warn "Очистка невалидных товаров не удалась. Проверьте logs/catalog-seed.log"
     fi
 }
 
-# Function to seed admin user (вызывается после seed_catalog)
+# Функция заполнения admin пользователя (вызывается после seed_catalog)
 seed_admin() {
     if [ "$SKIP_SEED" = true ]; then
-        log_warn "Skipping admin seed (--skip-seed)"
+        log_warn "Пропуск заполнения admin (--skip-seed)"
         return
     fi
-    log_info "Seeding users..."
+    log_info "Заполнение пользователей..."
     bash "$PROJECT_DIR/scripts/seed-data/seed-users.sh" 2>&1 | while IFS= read -r line; do
         log_info "  [user-seed] $line"
     done
-    log_ok "User seed completed"
+    log_ok "Пользователи заполнены"
 }
 
-# Function to apply EF Core migrations for all services
+# Функция применения миграций EF Core для всех сервисов
 apply_migrations() {
-    log_info "Applying EF Core migrations..."
+    log_info "Применение миграций EF Core..."
 
     local services=(
         "src/CatalogService"
@@ -494,18 +494,18 @@ apply_migrations() {
             ctx_flag="--context CatalogDbContext"
         fi
         if (cd "$PROJECT_DIR/$path" && dotnet ef database update $ctx_flag --no-color >> "$LOG_DIR/migrations.log" 2>&1); then
-            log_ok "Migrations applied: $name"
+            log_ok "Миграции применены: $name"
         else
-            log_warn "Migrations failed for $name (see $LOG_DIR/migrations.log)"
+            log_warn "Миграции не удались для $name (см. $LOG_DIR/migrations.log)"
         fi
     done
 
-    log_ok "All migrations applied"
+    log_ok "Все миграции применены"
 }
 
-# Function to start backend services
+# Функция запуска бэкенд-сервисов
 start_backend() {
-    echo -e "${CYAN}Starting backend services...${RESET}"
+    echo -e "${CYAN}Запуск бэкенд-сервисов...${RESET}"
 
     local services=(
         "CatalogService:5000:src/CatalogService:/swagger/index.html"
@@ -520,35 +520,35 @@ start_backend() {
 
     for service_info in "${services[@]}"; do
         IFS=":" read -r name port path health_path <<< "$service_info"
-        echo -e "${CYAN}Launching $name...${RESET}"
+        echo -e "${CYAN}Запуск $name...${RESET}"
 
         cd "$PROJECT_DIR/$path"
         ASPNETCORE_ENVIRONMENT=Development dotnet run --urls "http://localhost:$port" > "$LOG_DIR/${name,,}.log" 2>&1 &
         local pid=$!
         SERVICE_PIDS+=($pid)
 
-        # Quick early-death check: if the process exits within 3 seconds, fail fast
+        # Быстрая проверка раннего завершения: если процесс завершается в течение 3 секунд, сообщить об ошибке
         sleep 3
         if ! kill -0 "$pid" 2>/dev/null; then
-            echo -e "${RED}✗ $name exited immediately (PID $pid)${RESET}"
-            echo -e "${CYAN}Last 15 lines of ${name,,}.log:${RESET}"
+            echo -e "${RED}✗ $name завершился сразу (PID $pid)${RESET}"
+            echo -e "${CYAN}Последние 15 строк ${name,,}.log:${RESET}"
             tail -15 "$LOG_DIR/${name,,}.log" 2>/dev/null | sed 's/^/  /'
-            echo -e "${RED}✗ $name failed to start. Fix the errors above and retry.${RESET}"
+            echo -e "${RED}✗ $name не удалось запустить. Исправьте ошибки выше и повторите.${RESET}"
             exit 1
         fi
 
-        # Wait for health before starting next service
+        # Ожидание готовности перед запуском следующего сервиса
         local log_file="$LOG_DIR/${name,,}.log"
         if ! wait_for_health "http://localhost:$port$health_path" "$name" "$pid" "$log_file"; then
-            echo -e "${RED}✗ $name failed to start. Fix the errors above and retry.${RESET}"
+            echo -e "${RED}✗ $name не удалось запустить. Исправьте ошибки выше и повторите.${RESET}"
             exit 1
         fi
     done
 
-    echo -e "${GREEN}✓ All backend services started${RESET}"
+    echo -e "${GREEN}✓ Все бэкенд-сервисы запущены${RESET}"
 }
 
-# Resolve path to local vite binary (npm workspaces hoist to repo root)
+# Определение пути к локальному бинарнику vite (npm workspaces поднимают в корень репозитория)
 vite_bin() {
     if [ -x "$PROJECT_DIR/node_modules/.bin/vite" ]; then
         echo "$PROJECT_DIR/node_modules/.bin/vite"
@@ -559,8 +559,8 @@ vite_bin() {
     fi
 }
 
-# Check that a critical Vite plugin actually has content (not an empty/broken dir)
-# Checks both root and workspace node_modules since hoisting may vary
+# Проверка, что критический плагин Vite имеет содержимое (не пустая/сломанная директория)
+# Проверяет как корневые, так и рабочей области node_modules, так как подъём может различаться
 check_critical_dep() {
     local p1="$PROJECT_DIR/node_modules/@vitejs/plugin-react"
     local p2="$FRONTEND_SRC/node_modules/@vitejs/plugin-react"
@@ -574,64 +574,64 @@ ensure_frontend_deps() {
         return 0
     fi
 
-    echo -e "${CYAN}Frontend dependencies missing or corrupted; reinstalling...${RESET}"
+    echo -e "${CYAN}Зависимости фронтенда отсутствуют или повреждены; переустановка...${RESET}"
 
-    # Try npm install first — npm can overwrite existing files
+    # Сначала попробовать npm install — npm может перезаписать существующие файлы
     if (cd "$PROJECT_DIR" && npm install >> "$LOG_DIR/frontend-setup.log" 2>&1); then
-        echo -e "${GREEN}✓ npm install completed${RESET}"
+        echo -e "${GREEN}✓ npm install завершён${RESET}"
     else
-        # Try removing workspace node_modules for a clean install
+        # Попробовать удалить node_modules рабочей области для чистой установки
         local fe_nm="$FRONTEND_SRC/node_modules"
         if [ -d "$fe_nm" ]; then
-            echo -e "${CYAN}Cleaning workspace node_modules for clean install...${RESET}"
+            echo -e "${CYAN}Очистка node_modules рабочей области для чистой установки...${RESET}"
             rm -rf "$fe_nm" 2>/dev/null || true
-            # Still have leftover root-owned files? Ask user for sudo
+            # Всё ещё есть остаточные файлы, принадлежащие root? Спросить пользователя о sudo
             if [ -d "$fe_nm" ] && [ "$(ls -A "$fe_nm" 2>/dev/null)" ]; then
-                echo -e "${YELLOW}⚠ Some files in $fe_nm are owned by root.${RESET}"
-                echo -e "${YELLOW}  Run: sudo rm -rf $fe_nm${RESET}"
-                echo -e "${YELLOW}  Then: npm install${RESET}"
+                echo -e "${YELLOW}⚠ Некоторые файлы в $fe_nm принадлежат root.${RESET}"
+                echo -e "${YELLOW}  Выполните: sudo rm -rf $fe_nm${RESET}"
+                echo -e "${YELLOW}  Затем: npm install${RESET}"
                 return 1
             fi
         fi
         if (cd "$PROJECT_DIR" && npm install >> "$LOG_DIR/frontend-setup.log" 2>&1); then
-            echo -e "${GREEN}✓ npm install completed after cleanup${RESET}"
+            echo -e "${GREEN}✓ npm install завершён после очистки${RESET}"
         else
-            echo -e "${RED}✗ npm install failed. See $LOG_DIR/frontend-setup.log${RESET}"
+            echo -e "${RED}✗ npm install не удался. См. $LOG_DIR/frontend-setup.log${RESET}"
             return 1
         fi
     fi
 
     if ! vite_bin >/dev/null 2>&1 || ! check_critical_dep; then
-        echo -e "${RED}✗ Critical frontend dependencies still missing after npm install${RESET}"
+        echo -e "${RED}✗ Критические зависимости фронтенда всё ещё отсутствуют после npm install${RESET}"
         return 1
     fi
 }
 
-# Smoke-test: briefly try to start vite — if it crashes, show the error immediately
+# Дымовой тест: кратковременно попробовать запустить vite — если падает, показать ошибку сразу
 frontend_smoke_test() {
     local v_bin
     v_bin="$(vite_bin)" || return 1
-    echo -e "${CYAN}Running frontend smoke test (starting vite briefly)...${RESET}"
+    echo -e "${CYAN}Выполнение дымового теста фронтенда (кратковременный запуск vite)...${RESET}"
 
-    # Start vite on an unused port for 6 seconds — long enough for config to load
+    # Запустить vite на неиспользуемом порту на 6 секунд — достаточно для загрузки конфига
     local output
     output=$(cd "$FRONTEND_SRC" && timeout 6 "$v_bin" --port 19999 2>&1 || true)
 
-    # Check for fatal errors (non-fatal warnings are OK)
+    # Проверка на фатальные ошибки (нефатальные предупреждения — ок)
     if echo "$output" | grep -qi 'failed to load config\|cannot find.*package\|cannot find module\|error.*cannot\|ERR_MODULE_NOT_FOUND\|ERR_PACKAGE_PATH_NOT_EXPORTED'; then
         local err
         err=$(echo "$output" | grep -i 'error\|cannot\|failed\|ERR_' | head -5)
-        echo -e "${RED}✗ Vite failed during smoke test${RESET}"
+        echo -e "${RED}✗ Vite не прошёл дымовой тест${RESET}"
         echo "$err" | sed 's/^/  /'
-        echo -e "${CYAN}Attempting auto-repair...${RESET}"
+        echo -e "${CYAN}Попытка автоматического восстановления...${RESET}"
 
-        # Try to fix via reinstall
+        # Попробовать исправить через переустановку
         if ensure_frontend_deps; then
-            echo -e "${GREEN}✓ Dependencies reinstalled, re-running smoke test...${RESET}"
+            echo -e "${GREEN}✓ Зависимости переустановлены, повторный дымовой тест...${RESET}"
             output=$(cd "$FRONTEND_SRC" && timeout 6 "$v_bin" --port 19998 2>&1 || true)
             if echo "$output" | grep -qi 'failed to load config\|cannot find.*package\|cannot find module\|error.*cannot\|ERR_MODULE_NOT_FOUND\|ERR_PACKAGE_PATH_NOT_EXPORTED'; then
                 err=$(echo "$output" | grep -i 'error\|cannot\|failed\|ERR_' | head -5)
-                echo -e "${RED}✗ Smoke test still failing after repair${RESET}"
+                echo -e "${RED}✗ Дымовой тест всё ещё не проходит после восстановления${RESET}"
                 echo "$err" | sed 's/^/  /'
                 return 1
             fi
@@ -640,22 +640,22 @@ frontend_smoke_test() {
         fi
     fi
 
-    echo -e "${GREEN}✓ Vite smoke test passed${RESET}"
+    echo -e "${GREEN}✓ Дымовой тест Vite пройден${RESET}"
     return 0
 }
 
-# Function to start frontend
+# Функция запуска фронтенда
 start_frontend() {
-    echo -e "${CYAN}Preparing frontend...${RESET}"
+    echo -e "${CYAN}Подготовка фронтенда...${RESET}"
 
-    # Load nvm for Node 24 (Vite 8 несовместим с Node 18)
+    # Загрузка nvm для Node 24 (Vite 8 несовместим с Node 18)
     if [ -s "$HOME/.nvm/nvm.sh" ]; then
         # shellcheck source=/dev/null
         . "$HOME/.nvm/nvm.sh"
         if nvm use 24.13.0 2>/dev/null; then
-            echo -e "${GREEN}✓ Using Node $(node -v) via nvm${RESET}"
+            echo -e "${GREEN}✓ Используется Node $(node -v) через nvm${RESET}"
         else
-            echo -e "${YELLOW}⚠ nvm use 24.13.0 failed, falling back to system Node $(node -v)${RESET}"
+            echo -e "${YELLOW}⚠ nvm use 24.13.0 не удался, используется системный Node $(node -v)${RESET}"
             echo -e "${YELLOW}  Установи: nvm install 24.13.0 && nvm use 24.13.0${RESET}"
         fi
     else
@@ -667,30 +667,30 @@ start_frontend() {
         exit 1
     fi
 
-    # Pre-flight smoke test — catch config/dependency issues before timeout
+    # Предварительный дымовой тест — выявить проблемы конфигурации/зависимостей до таймаута
     if ! frontend_smoke_test; then
-        echo -e "${RED}✗ Frontend failed pre-flight checks. Fix the errors above before starting.${RESET}"
+        echo -e "${RED}✗ Фронтенд не прошёл предварительную проверку. Исправьте ошибки выше перед запуском.${RESET}"
         exit 1
     fi
 
-    # Check if path contains '#' - Vite cannot handle this
+    # Проверка, содержит ли путь символ '#' — Vite не может с этим работать
     if [[ "$FRONTEND_SRC" == *"#"* ]]; then
-        echo -e "${YELLOW}Path contains '#' character. Using rsync + file watcher...${RESET}"
+        echo -e "${YELLOW}Путь содержит символ '#'. Использование rsync + отслеживатель файлов...${RESET}"
 
-        # Install inotify-tools if not available
+        # Установка inotify-tools, если недоступны
         if ! command -v inotifywait &> /dev/null; then
-            echo -e "${CYAN}Installing inotify-tools...${RESET}"
+            echo -e "${CYAN}Установка inotify-tools...${RESET}"
             sudo apt-get update -qq && sudo apt-get install -y -qq inotify-tools
         fi
 
         rm -rf "$FRONTEND_TMP"
-        echo -e "${CYAN}Copying frontend to /tmp...${RESET}"
+        echo -e "${CYAN}Копирование фронтенда в /tmp...${RESET}"
         rsync -a --exclude='node_modules' "$FRONTEND_SRC/" "$FRONTEND_TMP/"
 
-        echo -e "${CYAN}Installing dependencies...${RESET}"
+        echo -e "${CYAN}Установка зависимостей...${RESET}"
         (cd "$FRONTEND_TMP" && npm install >> "$LOG_DIR/frontend-setup.log" 2>&1)
 
-        echo -e "${CYAN}Starting file watcher...${RESET}"
+        echo -e "${CYAN}Запуск отслеживателя файлов...${RESET}"
         (
             while true; do
                 inotifywait -r -q -e modify,create,delete,move "$FRONTEND_SRC" --exclude 'node_modules|.git' 2>/dev/null
@@ -699,41 +699,41 @@ start_frontend() {
         ) &
         SERVICE_PIDS+=($!)
 
-        echo -e "${CYAN}Starting frontend from /tmp...${RESET}"
+        echo -e "${CYAN}Запуск фронтенда из /tmp...${RESET}"
         cd "$FRONTEND_TMP"
         npm run dev:api > "$LOG_DIR/frontend.log" 2>&1 &
         SERVICE_PIDS+=($!)
     else
-        echo -e "${CYAN}Starting frontend...${RESET}"
+        echo -e "${CYAN}Запуск фронтенда...${RESET}"
         cd "$FRONTEND_SRC"
         npm run dev:api > "$LOG_DIR/frontend.log" 2>&1 &
         SERVICE_PIDS+=($!)
     fi
 
-    # Give the process 2 seconds — if it crashes early, report it now
+    # Ожидание 2 секунды — если процесс завершается сразу, сообщить об этом сейчас
     sleep 2
     local fe_pid=${SERVICE_PIDS[-1]}
     if ! kill -0 "$fe_pid" 2>/dev/null; then
-        echo -e "${RED}✗ Frontend process exited immediately${RESET}"
-        echo -e "${CYAN}Last 10 lines of frontend.log:${RESET}"
+        echo -e "${RED}✗ Процесс фронтенда завершился сразу${RESET}"
+        echo -e "${CYAN}Последние 10 строк frontend.log:${RESET}"
         tail -10 "$LOG_DIR/frontend.log" 2>/dev/null | sed 's/^/  /'
-        echo -e "${RED}✗ Frontend failed to start. Fix the errors above and retry.${RESET}"
+        echo -e "${RED}✗ Фронтенд не удалось запустить. Исправьте ошибки выше и повторите.${RESET}"
         exit 1
     fi
 
-    wait_for_health "http://localhost:5173" "Frontend"
-    echo -e "${GREEN}✓ Frontend started${RESET}"
+    wait_for_health "http://localhost:5173" "Фронтенд"
+    echo -e "${GREEN}✓ Фронтенд запущен${RESET}"
 }
 
-# Function to stream logs
+# Функция потоковой передачи логов
 stream_logs() {
     if [ "$TAIL_LOGS" = false ]; then
         return
     fi
 
-    echo -e "${CYAN}Streaming logs (Press Ctrl+C to stop everything)...${RESET}"
-    
-    # Check for multitail, otherwise use simple tail
+    echo -e "${CYAN}Потоковая передача логов (Нажмите Ctrl+C для остановки всего)...${RESET}"
+
+    # Проверка наличия multitail, иначе использовать простой tail
     if command -v multitail &> /dev/null; then
         multitail -s 2 \
             -t "Catalog" "$LOG_DIR/catalogservice.log" \
@@ -745,8 +745,8 @@ stream_logs() {
             -t "Reporting" "$LOG_DIR/reportingservice.log" \
             -t "Frontend" "$LOG_DIR/frontend.log"
     else
-        # Fallback to tail -f with prefixes
-        # We explicitly list files to ensure headers are shown for awk to pick them up
+        # Запасной вариант: tail -f с префиксами
+        # Явно перечисляем файлы, чтобы гарантировать показ заголовков для awk
         tail -f "$LOG_DIR/catalogservice.log" \
                 "$LOG_DIR/authservice.log" \
                 "$LOG_DIR/ordersservice.log" \
@@ -768,7 +768,7 @@ stream_logs() {
     fi
 }
 
-# Main execution
+# Основное выполнение
 if [ "$INFRA_ONLY" = true ]; then
     start_infra
 elif [ "$FRONTEND_ONLY" = true ]; then
@@ -776,7 +776,7 @@ elif [ "$FRONTEND_ONLY" = true ]; then
 elif [ "$BACKEND_ONLY" = true ]; then
     start_backend
 else
-    # Start everything
+    # Запуск всего
     start_infra
     apply_migrations
     seed_catalog
@@ -787,7 +787,7 @@ fi
 
 echo ""
 echo -e "${CYAN}================================================${RESET}"
-echo -e "${CYAN}   Services Status${RESET}"
+echo -e "${CYAN}   Статус сервисов${RESET}"
 echo -e "${CYAN}================================================${RESET}"
 echo -e "${GREEN}Frontend:${RESET}     http://localhost:5173"
 echo -e "${GREEN}Catalog API:${RESET}  http://localhost:5000/swagger"
@@ -798,14 +798,14 @@ echo -e "${GREEN}Warranty API:${RESET} http://localhost:5004/swagger"
 echo -e "${GREEN}PCBuilder API:${RESET} http://localhost:5005/swagger"
 echo -e "${GREEN}Admin Panel API:${RESET} http://localhost:5007/health"
 echo ""
-echo -e "${YELLOW}Logs are available in $LOG_DIR/${RESET}"
+echo -e "${YELLOW}Логи доступны в $LOG_DIR/${RESET}"
 if [ "$TAIL_LOGS" = false ]; then
-    echo -e "${YELLOW}Run with --tail to stream logs, or tail -f logs/*.log${RESET}"
+    echo -e "${YELLOW}Запустите с --tail для потоковой передачи логов, или tail -f logs/*.log${RESET}"
 fi
-echo -e "${YELLOW}Press Ctrl+C to stop all services${RESET}"
+echo -e "${YELLOW}Нажмите Ctrl+C для остановки всех сервисов${RESET}"
 echo ""
 
-# Stream logs if requested, otherwise just wait
+# Потоковая передача логов, если запрошено, иначе просто ожидание
 if [ "$TAIL_LOGS" = true ]; then
     stream_logs
 else

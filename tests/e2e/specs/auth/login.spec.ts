@@ -14,51 +14,51 @@ test.describe('Авторизация', () => {
   });
 
   test('Успешная авторизация redirects to catalog', async ({ page }) => {
-    // Arrange
+    // Подготовка
     const validEmail = 'test@example.com';
     const validPassword = 'password123';
 
-    // Act
+    // Действие
     await loginPage.login(validEmail, validPassword);
 
-    // Assert - успешная авторизация редиректит на каталог
+    // Проверка - успешная авторизация редиректит на каталог
     await expect(page).toHaveURL(/\/(catalog|\/)/, { timeout: 10000 });
   });
 
   test('Invalid credentials show error message', async ({ page }) => {
-    // Arrange
+    // Подготовка
     const invalidEmail = 'wrong@example.com';
     const invalidPassword = 'wrongpassword';
 
-    // Act
+    // Действие
     await loginPage.login(invalidEmail, invalidPassword);
 
-    // Assert - появляется сообщение об ошибке
+    // Проверка - появляется сообщение об ошибке
     await loginPage.expectError(/неверн|ошибк|error/i);
   });
 
   test('Empty fields validation', async ({ page }) => {
-    // Act
+    // Действие
     await loginPage.login('', '');
 
-    // Assert - проверяем что форма осталась видимой
+    // Проверка - проверяем что форма осталась видимой
     await expect(loginPage.emailInput).toBeVisible();
     await expect(loginPage.passwordInput).toBeVisible();
   });
 
   test('Navigation to registration page', async ({ page }) => {
-    // Act
+    // Действие
     await loginPage.goToRegister();
 
-    // Assert - открывается форма регистрации
+    // Проверка - открывается форма регистрации
     await expect(page.locator('text=Зарегистрироваться').first()).toBeVisible();
   });
 
   test('Forgot password link navigation', async ({ page }) => {
-    // Act
+    // Действие
     await page.locator('a[href="/forgot-password"]').click();
 
-    // Assert
+    // Проверка
     await expect(page).toHaveURL(/\/forgot-password/);
   });
 
@@ -75,16 +75,16 @@ test.describe('Авторизация', () => {
   });
 
   test('Login with Enter key', async ({ page }) => {
-    // Arrange
+    // Подготовка
     const validEmail = 'test@example.com';
     const validPassword = 'password123';
 
-    // Act - заполняем поля и нажимаем Enter
+    // Действие - заполняем поля и нажимаем Enter
     await loginPage.emailInput.fill(validEmail);
     await loginPage.passwordInput.fill(validPassword);
     await loginPage.passwordInput.press('Enter');
 
-    // Assert - успешный вход
+    // Проверка - успешный вход
     await expect(page).toHaveURL(/\/(catalog|\/)/, { timeout: 10000 });
   });
 });

@@ -1,4 +1,4 @@
 /**
- * Feedback Component Exports
+ * Feedback Компонент Exports
  */
 export { FeedbackWidget, default } from './FeedbackWidget';

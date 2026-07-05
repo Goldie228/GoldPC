@@ -1,23 +1,23 @@
 # =============================================================================
-# Production Dockerfile for GoldPC .NET Backend Services
-# Multi-stage build: SDK -> Runtime
-# Security: Non-root user (appuser), curl for health checks
+# Production Dockerfile для GoldPC .NET Backend Services
+# Многоэтапная сборка: SDK -> Среда выполнения
+# Безопасность: Не-root пользователь (appuser), curl для проверок здоровья
 # =============================================================================
 
 ARG SERVICE_NAME=CatalogService
 
 # =============================================================================
-# Stage 1: Build - Compile with SDK
+# Этап 1: Сборка — Компиляция с SDK
 # =============================================================================
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG SERVICE_NAME
 
 WORKDIR /src
 
-# Optimization: Copy solution file first
+# Оптимизация: Сначала скопировать файл решения
 COPY ["src/GoldPC.sln", "./"]
 
-# Optimization: Copy all .csproj files for layer caching
+# Оптимизация: Скопировать все .csproj файлы для кэширования слоёв
 COPY ["src/AuthService/AuthService.csproj", "AuthService/"]
 COPY ["src/CatalogService/CatalogService.csproj", "CatalogService/"]
 COPY ["src/OrdersService/OrdersService.csproj", "OrdersService/"]
@@ -27,10 +27,10 @@ COPY ["src/WarrantyService/WarrantyService.csproj", "WarrantyService/"]
 COPY ["src/Shared/Shared.csproj", "Shared/"]
 COPY ["src/SharedKernel/SharedKernel.csproj", "SharedKernel/"]
 
-# Restore dependencies - this layer will be cached if .csproj files don't change
+# Восстановление зависимостей — этот слой будет кэширован, если .csproj файлы не меняются
 RUN dotnet restore "GoldPC.sln"
 
-# Copy all source code (after restore for better caching)
+# Копировать весь исходный код (после restore для лучшего кэширования)
 COPY src/AuthService/ AuthService/
 COPY src/CatalogService/ CatalogService/
 COPY src/OrdersService/ OrdersService/
@@ -40,11 +40,11 @@ COPY src/WarrantyService/ WarrantyService/
 COPY src/Shared/ Shared/
 COPY src/SharedKernel/ SharedKernel/
 
-# Build the solution
+# Сборка решения
 RUN dotnet build "GoldPC.sln" -c Release --no-restore
 
 # =============================================================================
-# Stage 2: Publish - Create deployment artifacts
+# Этап 2: Публикация — Создание артефактов развёртывания
 # =============================================================================
 FROM build AS publish
 ARG SERVICE_NAME
@@ -53,43 +53,43 @@ WORKDIR "/src/${SERVICE_NAME}"
 RUN dotnet publish "${SERVICE_NAME}.csproj" -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 # =============================================================================
-# Stage 3: Runtime - Minimal secure production image
+# Этап 3: Среда выполнения — Минимальный безопасный production образ
 # =============================================================================
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
-# Security: Install curl for health checks and ca-certificates for TLS
+# Безопасность: Установка curl для проверок здоровья и ca-certificates для TLS
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl ca-certificates && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
 
-# Security: Create non-root user and group
+# Безопасность: Создание не-root пользователя и группы
 RUN groupadd --gid 1000 appgroup && \
     useradd --uid 1000 --gid appgroup --shell /bin/bash --create-home appuser
 
 WORKDIR /app
 
-# Copy published application from publish stage
+# Копировать опубликованное приложение из этапа публикации
 COPY --from=publish /app/publish .
 
-# Security: Set proper ownership
+# Безопасность: Установка правильного владельца
 RUN chown -R appuser:appgroup /app
 
-# Production environment configuration
+# Конфигурация производственного окружения
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
 
-# Expose production port
+# Открыть производственный порт
 EXPOSE 8080
 
-# Security: Switch to non-root user
+# Безопасность: Переключение на не-root пользователя
 USER appuser
 
-# Health check using curl
+# Проверка здоровья с использованием curl
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-# Entry point - use shell form to expand SERVICE_NAME
+# Точка входа — использование shell-формы для разворачивания SERVICE_NAME
 ARG SERVICE_NAME
 ENV SERVICE_NAME=${SERVICE_NAME}
 CMD ["sh", "-c", "dotnet ${SERVICE_NAME}.dll"]

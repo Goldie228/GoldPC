@@ -1,52 +1,52 @@
 # =============================================================================
-# Production Dockerfile for GoldPC Frontend
-# Multi-stage build: Node.js (build) -> Nginx (runtime)
-# Security: Non-root user (nginx), minimal Alpine runtime
-# Port: 3000
+# Production Dockerfile для GoldPC Frontend
+# Многоэтапная сборка: Node.js (сборка) -> Nginx (среда выполнения)
+# Безопасность: Не-root пользователь (nginx), минимальная Alpine среда выполнения
+# Порт: 3000
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Stage 1: Build - Compile React/Vite application
+# Этап 1: Сборка — Компиляция React/Vite приложения
 # -----------------------------------------------------------------------------
 FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Install dependencies first (better layer caching)
+# Сначала установить зависимости (лучшее кэширование слоёв)
 COPY src/frontend/package*.json ./
 RUN npm ci --include=dev
 
-# Copy source code
+# Копировать исходный код
 COPY src/frontend/. .
 
-# Build application (outputs to /app/dist)
+# Сборка приложения (вывод в /app/dist)
 RUN npm run build
 
 # -----------------------------------------------------------------------------
-# Stage 2: Runtime with Nginx
+# Этап 2: Среда выполнения с Nginx
 # -----------------------------------------------------------------------------
 FROM nginx:alpine AS runtime
 
-# Labels for container metadata
+# Метки для метаданных контейнера
 LABEL maintainer="GoldPC Team"
 LABEL description="GoldPC Frontend - React/Vite Application (Production)"
 LABEL version="1.0.0"
 
-# Security: Install ca-certificates for TLS connections
+# Безопасность: Установка ca-certificates для TLS соединений
 RUN apk add --no-cache ca-certificates && \
     update-ca-certificates
 
-# Remove default nginx config
+# Удаление конфигурации nginx по умолчанию
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Copy custom nginx config for production (port 3000)
+# Копировать пользовательскую конфигурацию nginx для production (порт 3000)
 COPY docker/frontend/nginx.prod.conf /etc/nginx/nginx.conf
 
-# Copy built assets from build stage
+# Копировать собранные ресурсы из этапа сборки
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Security: Create nginx temp directories with proper permissions
-# nginx user (UID 101) already exists in nginx:alpine image
+# Безопасность: Создание временных директорий nginx с правильными разрешениями
+# Пользователь nginx (UID 101) уже существует в образе nginx:alpine
 RUN mkdir -p /var/lib/nginx/tmp /var/cache/nginx /var/log/nginx && \
     chown -R nginx:nginx /usr/share/nginx/html && \
     chown -R nginx:nginx /var/cache/nginx && \
@@ -55,18 +55,18 @@ RUN mkdir -p /var/lib/nginx/tmp /var/cache/nginx /var/log/nginx && \
     touch /var/run/nginx.pid && \
     chown nginx:nginx /var/run/nginx.pid
 
-# Production environment configuration
+# Конфигурация производственного окружения
 ENV NODE_ENV=production
 
-# Expose port 3000 for production
+# Открыть порт 3000 для production
 EXPOSE 3000
 
-# Security: Run as non-root user (nginx user, UID 101)
+# Безопасность: Запуск от не-root пользователя (пользователь nginx, UID 101)
 USER nginx
 
-# Health check for container orchestration
+# Проверка здоровья для оркестрации контейнеров
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
-# Start nginx in foreground
+# Запуск nginx на переднем плане
 CMD ["nginx", "-g", "daemon off;"]

@@ -1,5 +1,5 @@
 /**
- * Security utilities for sanitizing HTML and URLs to prevent XSS attacks.
+ * Утилиты безопасности для санитизации HTML и URL для предотвращения XSS-атак.
  * @module utils/sanitize
  */
 
@@ -7,10 +7,10 @@ import DOMPurify from 'dompurify';
 import type { Config } from 'dompurify';
 
 /**
- * Sanitization level configuration presets.
- * - **strict**: For user comments, reviews - minimal tags allowed
- * - **moderate**: For product descriptions - more formatting options
- * - **permissive**: For admin-created content - full formatting including images
+ * Предустановки конфигурации уровня санитизации.
+ * - **strict**: Для пользовательских комментариев, отзывов — минимум разрешённых тегов
+ * - **moderate**: Для описаний товаров — больше возможностей форматирования
+ * - **permissive**: Для контента, созданного админом — полное форматирование, включая изображения
  */
 const SANITIZE_CONFIGS: Record<SanitizeLevel, Config> = {
   strict: {
@@ -38,11 +38,11 @@ const SANITIZE_CONFIGS: Record<SanitizeLevel, Config> = {
   },
 };
 
-/** Sanitization levels */
+/** Уровни санитизации */
 export type SanitizeLevel = 'strict' | 'moderate' | 'permissive';
 
 /**
- * List of dangerous URL protocols that should be blocked.
+ * Список опасных протоколов URL, которые должны быть заблокированы.
  */
 const DANGEROUS_PROTOCOLS = [
   'javascript:',
@@ -56,7 +56,7 @@ const DANGEROUS_PROTOCOLS = [
 ];
 
 /**
- * List of allowed URL protocols.
+ * Список разрешённых протоколов URL.
  */
 const ALLOWED_PROTOCOLS = [
   'http://',
@@ -67,47 +67,47 @@ const ALLOWED_PROTOCOLS = [
 ];
 
 /**
- * Checks if a URL contains dangerous protocols after decoding.
+ * Проверяет, содержит ли URL опасные протоколы после декодирования.
  */
 const hasDangerousProtocol = (url: string): boolean => {
   try {
     const decodedUrl = decodeURIComponent(url);
     return decodedUrl.includes('javascript:') || decodedUrl.includes('vbscript:');
   } catch {
-    return true; // Invalid URL encoding, treat as suspicious
+    return true; // Неверная кодировка URL, считаем подозрительным
   }
 };
 
 /**
- * Checks if URL starts with an allowed protocol.
+ * Проверяет, начинается ли URL с разрешённого протокола.
  */
 const hasAllowedProtocol = (normalized: string): boolean => {
   return ALLOWED_PROTOCOLS.some((protocol) => normalized.startsWith(protocol));
 };
 
 /**
- * Checks if URL is a relative URL.
+ * Проверяет, является ли URL относительным.
  */
 const isRelativeUrl = (url: string): boolean => {
   return url.startsWith('/') || url.startsWith('#') || url.startsWith('.');
 };
 
 /**
- * Checks if URL has no protocol or is same-origin.
+ * Проверяет, не имеет ли URL протокола или является same-origin.
  */
 const isProtocolFreeUrl = (normalized: string): boolean => {
   if (!normalized.includes(':')) {
     return true;
   }
   
-  // Check it's not an attempted protocol injection
+  // Проверяем, что это не попытка внедрения протокола
   const slashIndex = normalized.indexOf('/');
   const colonIndex = normalized.indexOf(':');
   return slashIndex !== -1 && slashIndex < colonIndex;
 };
 
 /**
- * Normalizes URL by removing control characters.
+ * Нормализует URL, удаляя управляющие символы.
  */
 const normalizeUrl = (url: string): string => {
   // eslint-disable-next-line no-control-regex
@@ -115,7 +115,7 @@ const normalizeUrl = (url: string): string => {
 };
 
 /**
- * Checks if URL is blocked by dangerous protocols list.
+ * Проверяет, заблокирован ли URL списком опасных протоколов.
  */
 const isBlockedByDangerousProtocol = (normalized: string): boolean => {
   return DANGEROUS_PROTOCOLS.some((protocol) => 
@@ -124,25 +124,25 @@ const isBlockedByDangerousProtocol = (normalized: string): boolean => {
 };
 
 /**
- * Validates and returns a safe URL.
+ * Проверяет и возвращает безопасный URL.
  */
 const validateAndReturnUrl = (trimmed: string, normalized: string): string | null => {
-  // Check for obfuscated javascript: protocol
+  // Проверяем на обфусцированный протокол javascript:
   if (hasDangerousProtocol(normalized)) {
     return null;
   }
 
-  // Allow relative URLs
+  // Разрешаем относительные URL
   if (isRelativeUrl(trimmed)) {
     return trimmed;
   }
 
-  // Check for allowed protocols
+  // Проверяем разрешённые протоколы
   if (hasAllowedProtocol(normalized)) {
     return trimmed;
   }
 
-  // Allow URLs without protocol
+  // Разрешаем URL без протокола
   if (isProtocolFreeUrl(normalized)) {
     return trimmed;
   }
@@ -151,19 +151,19 @@ const validateAndReturnUrl = (trimmed: string, normalized: string): string | nul
 };
 
 /**
- * Sanitizes a URL to prevent javascript: protocol and other injection attacks.
+ * Санитизирует URL для предотвращения протокола javascript: и других инъекционных атак.
  * 
- * @param url - The URL string to sanitize
- * @returns Sanitized URL or null if the URL is dangerous
+ * @param url - Строка URL для санитизации
+ * @returns Санитизированный URL или null, если URL опасен
  * 
  * @example
  * ```tsx
- * // Safe URLs pass through
+ * // Безопасные URL проходят
  * sanitizeUrl('https://example.com'); // 'https://example.com'
- * sanitizeUrl('/path/to/page'); // '/path/to/page'
+ * sanitizeUrl('/path/to/страница'); // '/path/to/страница'
  * sanitizeUrl('mailto:test@example.com'); // 'mailto:test@example.com'
  * 
- * // Dangerous URLs return null
+ * // Опасные URL возвращают null
  * sanitizeUrl('javascript:alert(1)'); // null
  * sanitizeUrl('JAVASCRIPT:alert(1)'); // null
  * sanitizeUrl('data:text/html,<script>alert(1)</script>'); // null
@@ -181,7 +181,7 @@ export const sanitizeUrl = (url: string | null | undefined): string | null => {
 
   const normalized = normalizeUrl(trimmed);
 
-  // Check for dangerous protocols
+  // Проверяем на опасные протоколы
   if (isBlockedByDangerousProtocol(normalized)) {
     return null;
   }
@@ -190,7 +190,7 @@ export const sanitizeUrl = (url: string | null | undefined): string | null => {
 };
 
 /**
- * Validates URL attributes during DOMPurify sanitization.
+ * Проверяет атрибуты URL во время санитизации DOMPurify.
  */
 const validateUrlAttribute = (
   _node: globalThis.Element,
@@ -207,7 +207,7 @@ const validateUrlAttribute = (
 };
 
 /**
- * Sanitizes HTML with URL validation hooks enabled.
+ * Санитизирует HTML с включёнными хуками проверки URL.
  */
 const sanitizeWithUrlValidation = (html: string, config: Config): string => {
   DOMPurify.addHook('uponSanitizeAttribute', validateUrlAttribute);
@@ -217,28 +217,28 @@ const sanitizeWithUrlValidation = (html: string, config: Config): string => {
 };
 
 /**
- * Checks if the sanitization level requires URL validation.
+ * Проверяет, требуется ли проверка URL для данного уровня санитизации.
  */
 const requiresUrlValidation = (level: SanitizeLevel): boolean => {
   return level === 'moderate' || level === 'permissive';
 };
 
 /**
- * Sanitizes HTML content to prevent XSS attacks.
+ * Санитизирует HTML-контент для предотвращения XSS-атак.
  * 
- * @param html - The HTML string to sanitize
- * @param level - The sanitization level to apply (default: 'strict')
- * @returns Sanitized HTML string safe for rendering
+ * @param html - Строка HTML для санитизации
+ * @param level - Применяемый уровень санитизации (по умолчанию: 'strict')
+ * @returns Санитизированная HTML-строка, безопасная для рендеринга
  * 
  * @example
  * ```tsx
- * // For user comments (strict)
+ * // Для пользовательских комментариев (strict)
  * const safeComment = sanitizeHtml(userComment, 'strict');
  * 
- * // For product descriptions (moderate)
- * const safeDescription = sanitizeHtml(product.description, 'moderate');
+ * // Для описаний товаров (moderate)
+ * const safeDescription = sanitizeHtml(product.описание, 'moderate');
  * 
- * // For admin content (permissive)
+ * // Для контента админа (permissive)
  * const safeContent = sanitizeHtml(adminContent, 'permissive');
  * ```
  */
@@ -260,12 +260,12 @@ export const sanitizeHtml = (
 };
 
 /**
- * Creates a sanitized HTML object for use with dangerouslySetInnerHTML.
- * This is a convenience function for inline usage.
+ * Создаёт санитизированный HTML-объект для использования с dangerouslySetInnerHTML.
+ * Это вспомогательная функция для встроенного использования.
  * 
- * @param html - The HTML string to sanitize
- * @param level - The sanitization level (default: 'strict')
- * @returns Object with __html property containing sanitized HTML
+ * @param html - Строка HTML для санитизации
+ * @param level - Уровень санитизации (по умолчанию: 'strict')
+ * @returns Объект со свойством __html, содержащим санитизированный HTML
  * 
  * @example
  * ```tsx
@@ -279,5 +279,5 @@ export const createSafeHtml = (
   return { __html: sanitizeHtml(html, level) };
 };
 
-// Re-export DOMPurify for advanced use cases
+// Ре-экспорт DOMPurify для продвинутых случаев использования
 export { DOMPurify };

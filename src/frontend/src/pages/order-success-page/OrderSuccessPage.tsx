@@ -16,9 +16,9 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/Button';
 import type { Order } from '@/api/orders';
 
-/* ------------------------------------------------------------------ */
+/* */
 /*  Framer Motion variants                                             */
-/* ------------------------------------------------------------------ */
+/* */
 
 const fadeUp = {
   initial: { opacity: 0, y: 24 },
@@ -36,9 +36,9 @@ const stagger = {
   },
 };
 
-/* ------------------------------------------------------------------ */
+/* */
 /*  Timeline steps                                                     */
-/* ------------------------------------------------------------------ */
+/* */
 
 const TIMELINE_STEPS = [
   { key: 'created', label: 'Создан', icon: Package },
@@ -55,9 +55,9 @@ function getStepIndex(status: unknown): number {
   return 0;
 }
 
-/* ------------------------------------------------------------------ */
+/* */
 /*  Format helpers                                                     */
-/* ------------------------------------------------------------------ */
+/* */
 
 function formatPrice(n: number): string {
   return n.toLocaleString('ru-RU', { style: 'currency', currency: 'BYN', maximumFractionDigits: 0 });
@@ -73,9 +73,9 @@ function formatDate(iso: string): string {
   });
 }
 
-/* ------------------------------------------------------------------ */
+/* */
 /*  Confetti particles (pure CSS, gold themed)                         */
-/* ------------------------------------------------------------------ */
+/* */
 
 function ConfettiParticles() {
   const particles = Array.from({ length: 28 }, (_, i) => i);
@@ -111,9 +111,9 @@ function ConfettiParticles() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Main Component                                                     */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Main Компонент                                                     */
+/* */
 
 export function OrderSuccessPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();

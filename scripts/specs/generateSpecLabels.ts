@@ -5,7 +5,7 @@ import readline from 'node:readline';
 type SeedLabelMap = Map<string, string>;
 type KeyStats = { count: number; examples: Set<string> };
 
-// tsx/esbuild may run this script in CJS mode; rely on __dirname.
+// tsx/esbuild может запускать этот скрипт в режиме CJS; полагаемся на __dirname.
 // eslint-disable-next-line no-underscore-dangle
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const BACKEND_SEED_PATH = path.join(REPO_ROOT, 'src', 'CatalogService', 'Data', 'CatalogDbContext.cs');
@@ -45,7 +45,7 @@ function readFilterAttributesMap(filePath: string): SeedLabelMap {
 
   const map: SeedLabelMap = new Map();
 
-  // supports two formats:
+  // поддерживает два формата:
   // 1) { gpu: [{ attribute_key, display_name, ... }], ... }
   // 2) { categories: { processors: { attributes: [{ key, displayName, ... }] } } }
   if (typeof json === 'object' && json != null) {
@@ -98,7 +98,7 @@ function isWhitespace(ch: number): boolean {
 }
 
 function readString(buf: Buffer, start: number): { value: string; next: number } {
-  // start points at opening quote
+  // start указывает на открывающую кавычку
   let i = start + 1;
   let out = '';
   while (i < buf.length) {
@@ -109,7 +109,7 @@ function readString(buf: Buffer, start: number): { value: string; next: number }
     if (c === 0x5c) {
       const n = buf[i + 1];
       if (n === undefined) break;
-      // minimal escape handling
+      // минимальная обработка экранирования
       if (n === 0x22) out += '"';
       else if (n === 0x5c) out += '\\';
       else if (n === 0x6e) out += '\n';
@@ -134,7 +134,7 @@ function skipValue(buf: Buffer, start: number): number {
     return next;
   }
   if (c === 0x7b) {
-    // object
+    // объект
     let depth = 0;
     while (i < buf.length) {
       const ch = buf[i];
@@ -155,7 +155,7 @@ function skipValue(buf: Buffer, start: number): number {
     return i;
   }
   if (c === 0x5b) {
-    // array
+    // массив
     let depth = 0;
     while (i < buf.length) {
       const ch = buf[i];
@@ -175,7 +175,7 @@ function skipValue(buf: Buffer, start: number): number {
     }
     return i;
   }
-  // number/true/false/null
+  // число/true/false/null
   while (i < buf.length) {
     const ch = buf[i];
     if (ch === 0x2c || ch === 0x7d || ch === 0x5d) return i;
@@ -200,7 +200,7 @@ function readPrimitivePreview(buf: Buffer, start: number): { preview: string; ne
 async function collectKeysFromXcoreProducts(filePath: string): Promise<Map<string, KeyStats>> {
   const stats = new Map<string, KeyStats>();
 
-  // Stream by lines to keep memory low, but parse the `"specifications": { ... }` block by a small state machine.
+  // Построчная потоковая обработка для экономии памяти, но разбор блока `"specifications": { ... }` через маленький конечный автомат.
   const stream = fs.createReadStream(filePath, { encoding: 'utf8' });
   const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
 
@@ -212,13 +212,13 @@ async function collectKeysFromXcoreProducts(filePath: string): Promise<Map<strin
     const chunk = carry + line + '\n';
     carry = '';
 
-    // Convert to Buffer for byte-level parsing
+    // Конвертация в Buffer для побайтового разбора
     const buf = Buffer.from(chunk, 'utf8');
     let i = 0;
 
     while (i < buf.length) {
       if (!inSpecs) {
-        // Find `"specifications": {`
+        // Поиск `"specifications": {`
         const idx = chunk.indexOf('"specifications"', i);
         if (idx === -1) break;
         const after = chunk.indexOf('{', idx);
@@ -229,16 +229,16 @@ async function collectKeysFromXcoreProducts(filePath: string): Promise<Map<strin
         continue;
       }
 
-      // We are inside the specifications object. Parse keys at depth 1: "key": value
+      // Мы внутри объекта specifications. Разбираем ключи на глубине 1: "key": value
       const ch = buf[i];
       if (ch === 0x22) {
         const { value: key, next } = readString(buf, i);
         i = next;
 
-        // Skip whitespace and colon
+        // Пропуск пробелов и двоеточия
         while (i < buf.length && isWhitespace(buf[i])) i++;
-        if (buf[i] !== 0x3a) continue; // not a key in object
-        i++; // colon
+        if (buf[i] !== 0x3a) continue; // не ключ в объекте
+        i++; // двоеточие
 
         const { preview, next: afterVal } = readPrimitivePreview(buf, i);
         i = afterVal;
@@ -270,7 +270,7 @@ async function collectKeysFromXcoreProducts(filePath: string): Promise<Map<strin
       i++;
     }
 
-    // If specs block spans lines, keep some tail to avoid losing `"specifications"` split.
+    // Если блок specs переносится на несколько строк, сохраняем хвост, чтобы не потерять разбивку `"specifications"`
     if (!inSpecs && chunk.length > 64) {
       carry = chunk.slice(-64);
     }
@@ -285,7 +285,7 @@ function mergeLabels(seed: SeedLabelMap, filters: SeedLabelMap, xcore: Map<strin
 
   const sorted = Array.from(keys).sort((a, b) => a.localeCompare(b));
   for (const key of sorted) {
-    // Priority: backend seed (authoritative) -> filter dumps (usually RU) -> fallback
+    // Приоритет: backend seed (авторитетный) -> дампы фильтров (обычно RU) -> запасной вариант
     out[key] = seed.get(key) ?? filters.get(key) ?? fallbackLabel(key);
   }
   return out;
@@ -304,10 +304,10 @@ function renderTs(labels: Record<string, string>): string {
 
 async function main(): Promise<void> {
   if (!fs.existsSync(BACKEND_SEED_PATH)) {
-    throw new Error(`Seed file not found: ${BACKEND_SEED_PATH}`);
+    throw new Error(`Файл seed не найден: ${BACKEND_SEED_PATH}`);
   }
   if (!fs.existsSync(XCORE_PRODUCTS_PATH)) {
-    throw new Error(`XCore products file not found: ${XCORE_PRODUCTS_PATH}`);
+    throw new Error(`Файл товаров XCore не найден: ${XCORE_PRODUCTS_PATH}`);
   }
 
   const seedSource = fs.readFileSync(BACKEND_SEED_PATH, 'utf8');
@@ -324,9 +324,9 @@ async function main(): Promise<void> {
   fs.mkdirSync(path.dirname(OUT_TS_PATH), { recursive: true });
   fs.writeFileSync(OUT_TS_PATH, ts, 'utf8');
 
-  // Minimal console output (useful in CI)
+  // Минимальный вывод в консоль (полезно в CI)
   // eslint-disable-next-line no-console
-  console.log(`Generated ${Object.keys(labels).length} labels -> ${OUT_TS_PATH}`);
+  console.log(`Сгенерировано ${Object.keys(labels).length} меток -> ${OUT_TS_PATH}`);
 }
 
 main().catch((err: unknown) => {
@@ -334,4 +334,3 @@ main().catch((err: unknown) => {
   console.error(err);
   process.exitCode = 1;
 });
-

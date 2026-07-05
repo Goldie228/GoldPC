@@ -9,7 +9,7 @@ import apiClient from '@/api/client';
 import { goldpcApi } from '@/api/generated/client';
 
 // ═══════════════════════════════════════════════
-//  Test credentials (from dev-seed.sql)
+//  Тестовые учётные данные (из dev-seed.sql)
 // ═══════════════════════════════════════════════
 
 export const TEST_USERS = {
@@ -26,11 +26,11 @@ export const TEST_USERS = {
 
 const GATEWAY_URL = process.env.INTEGRATION_API_URL ?? 'http://localhost:5000';
 
-// Override apiClient baseURL for integration tests (Node.js environment)
+// Переопределение baseURL apiClient для интеграционных тестов (окружение Node.js)
 apiClient.defaults.baseURL = `${GATEWAY_URL}/api/v1`;
 
 // ═══════════════════════════════════════════════
-//  Auth helpers
+//  Вспомогательные функции для Auth
 // ═══════════════════════════════════════════════
 
 export interface LoginResult {
@@ -81,11 +81,11 @@ export function clearAuthToken(): void {
 }
 
 // ═══════════════════════════════════════════════
-//  Backend health check
+//  Проверка работоспособности бэкенда
 // ═══════════════════════════════════════════════
 
 /**
- * Check if the backend gateway is reachable.
+ * Проверяет if the backend gateway is reachable.
  * Call this in beforeAll to skip tests if backend is down.
  */
 export async function assertBackendAlive(): Promise<void> {
@@ -104,11 +104,11 @@ export async function assertBackendAlive(): Promise<void> {
 }
 
 // ═══════════════════════════════════════════════
-//  Response assertion helpers
+//  Вспомогательные функции проверки ответов
 // ═══════════════════════════════════════════════
 
 /**
- * Extract data from ApiResponse<T> wrapper.
+ * Извлекает data from ApiResponse<T> обёртка.
  * Backend wraps all responses in { success, data, message }.
  */
 export function unwrap<T>(response: unknown): T {

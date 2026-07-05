@@ -315,7 +315,7 @@ public class OrderServiceTests
     [Fact]
     public async Task CreateOrder_WhenProductsAvailable_CreatesOrderAndSendsNotification()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var products = new ProductFaker().Generate(2);
         var orderDto = new CreateOrderDto
@@ -337,10 +337,10 @@ public class OrderServiceTests
             .Setup(r => r.CreateAsync(It.IsAny<Order>()))
             .ReturnsAsync((Order o) => o);
 
-        // Act
+        // Действие
         var result = await _sut.CreateOrderAsync(userId, orderDto);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result.Status.Should().Be(OrderStatus.New);
         result.UserId.Should().Be(userId);
@@ -354,7 +354,7 @@ public class OrderServiceTests
     [Fact]
     public async Task CreateOrder_WhenProductNotAvailable_ThrowsInsufficientStockException()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var products = new ProductFaker().Generate(2);
         var orderDto = new CreateOrderDto
@@ -372,10 +372,10 @@ public class OrderServiceTests
             .Setup(i => i.CheckAvailabilityAsync(It.IsAny<Dictionary<Guid, int>>()))
             .ReturnsAsync(false);
 
-        // Act
+        // Действие
         var act = async () => await _sut.CreateOrderAsync(userId, orderDto);
 
-        // Assert
+        // Проверка
         await act.Should().ThrowAsync<InsufficientStockException>()
             .WithMessage("*недостаточно*складе*");
     }
@@ -383,7 +383,7 @@ public class OrderServiceTests
     [Fact]
     public async Task CreateOrder_WhenProductNotFound_ThrowsProductNotFoundException()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var orderDto = new CreateOrderDto
         {
@@ -396,17 +396,17 @@ public class OrderServiceTests
             .Setup(p => p.GetProductsByIdsAsync(It.IsAny<IEnumerable<Guid>>()))
             .ReturnsAsync(new List<Product>());
 
-        // Act
+        // Действие
         var act = async () => await _sut.CreateOrderAsync(userId, orderDto);
 
-        // Assert
+        // Проверка
         await act.Should().ThrowAsync<ProductNotFoundException>();
     }
 
     [Fact]
     public async Task CreateOrder_WithEmptyItems_ThrowsValidationException()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var orderDto = new CreateOrderDto
         {
@@ -415,10 +415,10 @@ public class OrderServiceTests
             PaymentMethod = "Online"
         };
 
-        // Act
+        // Действие
         var act = async () => await _sut.CreateOrderAsync(userId, orderDto);
 
-        // Assert
+        // Проверка
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*товары*обязательны*");
     }
@@ -429,7 +429,7 @@ public class OrderServiceTests
     [InlineData(-100)]
     public async Task CreateOrder_WithInvalidQuantity_ThrowsValidationException(int quantity)
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var orderDto = new CreateOrderDto
         {
@@ -441,10 +441,10 @@ public class OrderServiceTests
             PaymentMethod = "Online"
         };
 
-        // Act
+        // Действие
         var act = async () => await _sut.CreateOrderAsync(userId, orderDto);
 
-        // Assert
+        // Проверка
         await act.Should().ThrowAsync<ValidationException>()
             .WithMessage("*количество*должно быть положительным*");
     }
@@ -456,7 +456,7 @@ public class OrderServiceTests
     [Fact]
     public async Task GetOrderById_WhenOrderExists_ReturnsOrder()
     {
-        // Arrange
+        // Подготовка
         var orderId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var order = new OrderFaker()
@@ -469,10 +469,10 @@ public class OrderServiceTests
             .Setup(r => r.GetByIdAsync(orderId))
             .ReturnsAsync(order);
 
-        // Act
+        // Действие
         var result = await _sut.GetOrderByIdAsync(orderId, userId);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result!.Id.Should().Be(orderId);
     }
@@ -480,7 +480,7 @@ public class OrderServiceTests
     [Fact]
     public async Task GetOrderById_WhenOrderNotFound_ReturnsNull()
     {
-        // Arrange
+        // Подготовка
         var orderId = Guid.NewGuid();
         var userId = Guid.NewGuid();
 
@@ -488,17 +488,17 @@ public class OrderServiceTests
             .Setup(r => r.GetByIdAsync(orderId))
             .ReturnsAsync((Order?)null);
 
-        // Act
+        // Действие
         var result = await _sut.GetOrderByIdAsync(orderId, userId);
 
-        // Assert
+        // Проверка
         result.Should().BeNull();
     }
 
     [Fact]
     public async Task GetOrderById_WhenUserNotOwner_ThrowsUnauthorizedAccessException()
     {
-        // Arrange
+        // Подготовка
         var orderId = Guid.NewGuid();
         var orderOwnerId = Guid.NewGuid();
         var requestingUserId = Guid.NewGuid(); // Другой пользователь
@@ -511,10 +511,10 @@ public class OrderServiceTests
             .Setup(r => r.GetByIdAsync(orderId))
             .ReturnsAsync(order);
 
-        // Act
+        // Действие
         var act = async () => await _sut.GetOrderByIdAsync(orderId, requestingUserId);
 
-        // Assert
+        // Проверка
         await act.Should().ThrowAsync<UnauthorizedAccessException>();
     }
 
@@ -525,7 +525,7 @@ public class OrderServiceTests
     [Fact]
     public async Task UpdateOrderStatus_WhenValidTransition_UpdatesStatus()
     {
-        // Arrange
+        // Подготовка
         var orderId = Guid.NewGuid();
         var order = new OrderFaker()
             .AsNew()
@@ -540,10 +540,10 @@ public class OrderServiceTests
             .Setup(r => r.UpdateAsync(It.IsAny<Order>()))
             .ReturnsAsync((Order o) => o);
 
-        // Act
+        // Действие
         var result = await _sut.UpdateOrderStatusAsync(orderId, OrderStatus.Processing);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result!.Status.Should().Be(OrderStatus.Processing);
     }
@@ -554,7 +554,7 @@ public class OrderServiceTests
     public async Task UpdateOrderStatus_WhenInvalidTransition_ThrowsInvalidStatusTransitionException(
         OrderStatus from, OrderStatus to)
     {
-        // Arrange
+        // Подготовка
         var orderId = Guid.NewGuid();
         var order = new OrderFaker()
             .WithStatus(from)
@@ -565,10 +565,10 @@ public class OrderServiceTests
             .Setup(r => r.GetByIdAsync(orderId))
             .ReturnsAsync(order);
 
-        // Act
+        // Действие
         var act = async () => await _sut.UpdateOrderStatusAsync(orderId, to);
 
-        // Assert
+        // Проверка
         await act.Should().ThrowAsync<InvalidStatusTransitionException>();
     }
 
@@ -579,7 +579,7 @@ public class OrderServiceTests
     [Fact]
     public async Task CancelOrder_WhenNewOrProcessing_CancelsAndRestoresStock()
     {
-        // Arrange
+        // Подготовка
         var orderId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var order = new OrderFaker()
@@ -596,10 +596,10 @@ public class OrderServiceTests
             .Setup(r => r.UpdateAsync(It.IsAny<Order>()))
             .ReturnsAsync((Order o) => o);
 
-        // Act
+        // Действие
         var result = await _sut.CancelOrderAsync(orderId, userId);
 
-        // Assert
+        // Проверка
         result.Should().NotBeNull();
         result!.Status.Should().Be(OrderStatus.Cancelled);
         
@@ -617,7 +617,7 @@ public class OrderServiceTests
     [Fact]
     public async Task CancelOrder_WhenAlreadyCompleted_ThrowsInvalidOperationException()
     {
-        // Arrange
+        // Подготовка
         var orderId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var order = new OrderFaker()
@@ -630,10 +630,10 @@ public class OrderServiceTests
             .Setup(r => r.GetByIdAsync(orderId))
             .ReturnsAsync(order);
 
-        // Act
+        // Действие
         var act = async () => await _sut.CancelOrderAsync(orderId, userId);
 
-        // Assert
+        // Проверка
         await act.Should().ThrowAsync<InvalidOperationException>()
             .WithMessage("*нельзя отменить*");
     }
@@ -645,7 +645,7 @@ public class OrderServiceTests
     [Fact]
     public async Task ProcessPayment_WhenSuccessful_UpdatesOrderStatus()
     {
-        // Arrange
+        // Подготовка
         var orderId = Guid.NewGuid();
         var order = new OrderFaker()
             .AsProcessing()
@@ -664,10 +664,10 @@ public class OrderServiceTests
             .Setup(r => r.UpdateAsync(It.IsAny<Order>()))
             .ReturnsAsync((Order o) => o);
 
-        // Act
+        // Действие
         var result = await _sut.ProcessPaymentAsync(orderId, order.TotalAmount);
 
-        // Assert
+        // Проверка
         result.Success.Should().BeTrue();
         result.OrderStatus.Should().Be(OrderStatus.Paid);
     }
@@ -675,7 +675,7 @@ public class OrderServiceTests
     [Fact]
     public async Task ProcessPayment_WhenFailed_ReturnsFailureResult()
     {
-        // Arrange
+        // Подготовка
         var orderId = Guid.NewGuid();
         var order = new OrderFaker()
             .AsProcessing()
@@ -695,10 +695,10 @@ public class OrderServiceTests
                 ErrorMessage = "Недостаточно средств"
             });
 
-        // Act
+        // Действие
         var result = await _sut.ProcessPaymentAsync(orderId, order.TotalAmount);
 
-        // Assert
+        // Проверка
         result.Success.Should().BeFalse();
         result.ErrorCode.Should().Be("INSUFFICIENT_FUNDS");
         result.OrderStatus.Should().Be(OrderStatus.Processing);
@@ -711,7 +711,7 @@ public class OrderServiceTests
     [Fact]
     public async Task GetUserOrders_ReturnsUserOrders()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var orders = new OrderFaker()
             .Generate(5);
@@ -721,10 +721,10 @@ public class OrderServiceTests
         .Setup(r => r.GetByUserIdAsync(userId, It.IsAny<OrderStatus?>()))
         .ReturnsAsync(orders);
 
-        // Act
+        // Действие
         var result = await _sut.GetUserOrdersAsync(userId);
 
-        // Assert
+        // Проверка
         result.Should().HaveCount(5);
         result.All(o => o.UserId == userId).Should().BeTrue();
     }
@@ -732,7 +732,7 @@ public class OrderServiceTests
     [Fact]
     public async Task GetUserOrders_WithStatusFilter_ReturnsFilteredOrders()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var orders = new List<Order>
         {
@@ -745,10 +745,10 @@ public class OrderServiceTests
             .Setup(r => r.GetByUserIdAsync(userId, OrderStatus.Completed))
             .ReturnsAsync(orders.Where(o => o.Status == OrderStatus.Completed).ToList());
 
-        // Act
+        // Действие
         var result = await _sut.GetUserOrdersAsync(userId, OrderStatus.Completed);
 
-        // Assert
+        // Проверка
         result.Should().HaveCount(2);
         result.All(o => o.Status == OrderStatus.Completed).Should().BeTrue();
     }

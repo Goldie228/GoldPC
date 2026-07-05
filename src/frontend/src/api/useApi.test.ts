@@ -134,7 +134,7 @@ describe('api/useApi', () => {
         mutationFn: expect.any(Function),
       });
 
-      // Extract and test the mutationFn wrapper
+      // Извлекает and test the mutationFn обёртка
       const wrappedFn = mockUseMutation.mock.calls[0][0].mutationFn;
       mockMutationFn.mockResolvedValueOnce({ data: { id: '1' } });
       const result = await wrappedFn({ name: 'test' });

@@ -14,7 +14,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
     private readonly ILogger<PermissionAuthorizationHandler> _logger;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="PermissionAuthorizationHandler"/> class.
+    /// Инициализирует новый экземпляр класса <see cref="PermissionAuthorizationHandler"/>.
     /// Инициализирует новый экземпляр обработчика авторизации.
     /// </summary>
     /// <param name="logger">Логгер.</param>

@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode, ReactElement } from 'react';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Button variant */
+  /** Кнопка variant */
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   /** Vertical rhythm */
   size?: 'sm' | 'md' | 'lg';

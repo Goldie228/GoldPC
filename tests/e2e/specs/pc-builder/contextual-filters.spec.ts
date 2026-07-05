@@ -143,7 +143,7 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Материнская плата');
     const names = await pom.getModalProductNames();
     expect(names).toContain('MSI B550-A PRO');
-    // Incompatible items are now shown (not filtered out)
+    // Несовместимые товары теперь отображаются (не отфильтровываются)
   });
 
   test('CPU AM5 shows compatible DDR5 and incompatible DDR3/DDR4 in RAM picker', async ({ page }) => {
@@ -159,7 +159,7 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Оперативная память');
     const names = await pom.getModalProductNames();
     expect(names).toContain('Corsair 16GB DDR5-5600');
-    // Incompatible items are now visible instead of hidden
+    // Несовместимые товары теперь видны вместо скрытия
     expect(names).toContain('Kingston 8GB DDR3-1600');
     expect(names).toContain('G.Skill 16GB DDR4-3200');
   });
@@ -179,7 +179,7 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Оперативная память');
     const names = await pom.getModalProductNames();
     expect(names).toContain('G.Skill 16GB DDR4-3200');
-    // Incompatible DDR3 is now visible instead of hidden
+    // Несовместимая DDR3 теперь видна вместо скрытия
     expect(names).toContain('Kingston 8GB DDR3-1600');
   });
 
@@ -196,7 +196,7 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Процессор');
     const names = await pom.getModalProductNames();
     expect(names).toContain('AMD Ryzen 5 3600');
-    // Incompatible items are now visible
+    // Несовместимые товары теперь видны
     expect(names).toContain('AMD Ryzen 5 7600X');
   });
 
@@ -221,7 +221,7 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Блок питания');
     const names = await pom.getModalProductNames();
     expect(names).toContain('Corsair RM850x');
-    // Incompatible low-wattage PSU is now visible
+    // Несовместимый БП низкой мощности теперь виден
     expect(names).toContain('Generic 300W PSU');
   });
 
@@ -236,10 +236,10 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Материнская плата');
     const names = await pom.getModalProductNames();
-    // Both MBs should be visible now (incompatible shown with badge)
+    // Обе материнские платы должны быть видны (несовместимые отображаются с бейджем)
     expect(names).toContain('MSI B550-A PRO');
     expect(names).toContain('ASUS Z790-P');
-    // Toggle button or filter for incompatible items should be present
+    // Кнопка переключения или фильтр для несовместимых товаров должны присутствовать
     // В текущей версии несовместимые товары скрыты, проверяем что модалка открыта
     const modal = page.locator('.modal[role="dialog"]');
     await expect(modal).toBeVisible();
@@ -258,14 +258,14 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Материнская плата');
     let names = await pom.getModalProductNames();
     expect(names).toContain('MSI B550-A PRO');
-    // Incompatible MBs are now visible
+    // Несовместимые материнские платы теперь видны
     expect(names).toContain('ASUS Z790-P');
     expect(names).toContain('ASUS B650-PLUS');
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Оперативная память');
     names = await pom.getModalProductNames();
     expect(names).toContain('G.Skill 16GB DDR4-3200');
-    // Incompatible RAM items now visible
+    // Несовместимые модули RAM теперь видны
     expect(names).toContain('Kingston 8GB DDR3-1600');
     expect(names).toContain('Corsair 16GB DDR5-5600');
   });
@@ -283,14 +283,14 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Процессор');
     let names = await pom.getModalProductNames();
     expect(names).toContain('AMD Ryzen 5 3600');
-    // Incompatible CPUs are now visible
+    // Несовместимые процессоры теперь видны
     expect(names).toContain('AMD Ryzen 5 7600X');
     expect(names).toContain('Intel Core i5-13600K');
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Оперативная память');
     names = await pom.getModalProductNames();
     expect(names).toContain('G.Skill 16GB DDR4-3200');
-    // Incompatible RAM is now visible
+    // Несовместимая RAM теперь видна
     expect(names).toContain('Kingston 8GB DDR3-1600');
   });
 
@@ -313,7 +313,7 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Материнская плата');
     names = await pom.getModalProductNames();
     expect(names).toContain('MSI B550-A PRO');
-    // Incompatible MBs are now visible
+    // Несовместимые материнские платы теперь видны
     expect(names).toContain('ASUS Z790-P');
     expect(names).toContain('ASUS B650-PLUS');
   });
@@ -331,7 +331,7 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.openSlotPicker('Оперативная память');
     const names = await pom.getModalProductNames();
     expect(names).toContain('Corsair 16GB DDR5-5600');
-    // Incompatible DDR3/DDR4 are now visible
+    // Несовместимые DDR3/DDR4 теперь видны
     expect(names).toContain('Kingston 8GB DDR3-1600');
     expect(names).toContain('G.Skill 16GB DDR4-3200');
   });
@@ -348,9 +348,9 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Оперативная память');
     const names = await pom.getModalProductNames();
-    // Incompatible RAM is now visible (not hidden)
+    // Несовместимая RAM теперь видна (не скрыта)
     expect(names).toContain('Corsair 16GB DDR5-5600');
-    // Toggle button or filter for incompatible items should be present
+    // Кнопка переключения или фильтр для несовместимых товаров должны присутствовать
     // В текущей версии несовместимые товары скрыты, проверяем что модалка открыта
     const modal = page.locator('.modal[role="dialog"]');
     await expect(modal).toBeVisible();
@@ -371,7 +371,7 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Материнская плата');
     results = await pom.getModalResultsCount();
-    // All 3 MBs are now visible (compatible + incompatible)
+    // Все 3 материнские платы теперь видны (совместимые + несовместимые)
     expect(results).toMatch(/Найдено: 3/);
   });
 
@@ -388,16 +388,16 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Корпус');
     const names = await pom.getModalProductNames();
-    // All cases visible now (ITX compatible, others incompatible)
+    // Все корпуса теперь видны (ITX совместимый, остальные несовместимые)
     expect(names).toContain('NZXT H1 V2');
     expect(names).toContain('NZXT H5 Flow');
     expect(names).toContain('Corsair 1000D');
   });
 
   test('Case ATX → MB picker hides Mini-ITX boards from FF filter perspective', async ({ page }) => {
-    // Case selected first → MB picker should show MBs with formFactor compatible with ATX case
-    // ATX case supports ITX, mATX, ATX — so all three MBs appear, but the contextual
-    // filter still passes them. EATX MB would be hidden.
+    // Сначала выбран корпус → выбор материнской платы должен показывать MB с форм-фактором, совместимым с корпусом ATX
+    // Корпус ATX поддерживает ITX, mATX, ATX — поэтому все три материнские платы отображаются, но контекстный
+    // фильтр всё ещё пропускает их. EATX MB была бы скрыта.
     await mockProducts(page, {
       processors: [cpu_am4],
       motherboards: [mb_am4, mb_mini_itx, mb_intel],
@@ -409,8 +409,8 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0);
     await pom.openSlotPicker('Материнская плата');
     const names = await pom.getModalProductNames();
-    // All three MBs should appear since ATX case supports ITX, mATX, ATX
-    // The socket constraint from CPU=none yet, but cpu is not selected
+    // Все три материнские платы должны появиться, так как корпус ATX поддерживает ITX, mATX, ATX
+    // Ограничение по сокету от CPU=пока нет, так как CPU не выбран
     expect(names.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -444,7 +444,7 @@ test.describe('Contextual filters - PC Builder', () => {
     await pom.selectModalProduct(0); // AM4-only cooler
     await pom.openSlotPicker('Процессор');
     const names = await pom.getModalProductNames();
-    // All CPUs visible: AM4 compatible, others incompatible
+    // Все процессоры видны: AM4 совместимый, остальные несовместимые
     expect(names).toContain('AMD Ryzen 5 3600');
     expect(names).toContain('AMD Ryzen 5 7600X');
     expect(names).toContain('Intel Core i5-13600K');
@@ -452,7 +452,7 @@ test.describe('Contextual filters - PC Builder', () => {
 });
 
 // ─── InStock faceting tests ───
-// Products: some in stock, some out of stock
+// Товары: некоторые в наличии, некоторые нет в наличии
 const cpu_instock = {
   id: 'cpu-1', name: 'AMD Ryzen 5 5600', sku: 'R5-5600',
   category: 'processors', price: 180, stock: 5, isActive: true,
@@ -476,18 +476,18 @@ const cpu_outofstock_am5 = {
 
 test.describe('InStock faceting - facet counts must match product search', () => {
   test('facet counts with inStock=true should exclude out-of-stock products', async ({ page }) => {
-    // Mock products response with inStock filter
+    // Мок ответа товаров с фильтром inStock
     await page.route(
       (url) => url.pathname.includes('/catalog/products') && url.searchParams.get('inStock') === 'true',
       (route) => route.fulfill({
         status: 200,
         body: JSON.stringify({
-          data: [cpu_instock, cpu_instock_am5], // only in-stock products
+          data: [cpu_instock, cpu_instock_am5], // только товары в наличии
           meta: { page: 1, pageSize: 50, totalPages: 1, totalItems: 2, hasNextPage: false, hasPrevPage: false },
         }),
       }),
     );
-    // Mock products without inStock filter (facets ignore stock → all active)
+    // Мок товаров без фильтра inStock (фасеты игнорируют наличие → все активные)
     await page.route(
       (url) => url.pathname.includes('/catalog/products') && !url.searchParams.has('inStock'),
       (route) => route.fulfill({
@@ -498,7 +498,7 @@ test.describe('InStock faceting - facet counts must match product search', () =>
         }),
       }),
     );
-    // Mock facets WITH inStock=true — should return only in-stock counts
+    // Мок фасетов С inStock=true — должен возвращать количество только товаров в наличии
     await page.route(
       (url) => url.pathname.includes('/filter-facets') && url.searchParams.get('inStock') === 'true',
       (route) => route.fulfill({
@@ -517,7 +517,7 @@ test.describe('InStock faceting - facet counts must match product search', () =>
         }),
       }),
     );
-    // Mock facets WITHOUT inStock — all active
+    // Мок фасетов БЕЗ inStock — все активные
     await page.route(
       (url) => url.pathname.includes('/filter-facets') && !url.searchParams.has('inStock'),
       (route) => route.fulfill({
@@ -537,7 +537,7 @@ test.describe('InStock faceting - facet counts must match product search', () =>
       }),
     );
 
-    // Also mock categories for the sidebar
+    // Также мок категорий для боковой панели
     await page.route(
       (url) => url.pathname.includes('/catalog/categories'),
       (route) => route.fulfill({
@@ -559,9 +559,9 @@ test.describe('InStock faceting - facet counts must match product search', () =>
       await page.waitForTimeout(1000);
     }
 
-    // Find the "in_stock" checkbox in the FilterSidebar or quick filter bar
-    // In Stock checkbox should be checked by default
-    // Verify that facets (select filter) were called with inStock=true
+    // Найти чекбокс "in_stock" в FilterSidebar или панели быстрых фильтров
+    // Чекбокс "В наличии" должен быть отмечен по умолчанию
+    // Проверить, что фасеты (фильтр выбора) были вызваны с inStock=true
     const facetRequests = [];
     page.on('request', (request) => {
       if (request.url().includes('/filter-facets')) {
@@ -569,24 +569,24 @@ test.describe('InStock faceting - facet counts must match product search', () =>
       }
     });
 
-    // Re-check: intercept next facet request to verify inStock param
-    // The inStock=true should be present in at least one facet request
-    // Since we mocked the facet response for inStock=true, verify via the UI
-    // that facet count shows 1 (not 2) for AM5
+    // Повторная проверка: перехватить следующий запрос фасетов для проверки параметра inStock
+    // inStock=true должен присутствовать хотя бы в одном запросе фасетов
+    // Так как мы замокали ответ фасетов для inStock=true, проверяем через UI
+    // что количество фасетов показывает 1 (не 2) для AM5
 
-    // If facet with inStock=true returns count:1, the AM5 option should show "(1)"
-    // If facet without inStock returns count:2, it would show "(2)" — this is the bug
+    // Если фасет с inStock=true возвращает count:1, опция AM5 должна показывать "(1)"
+    // Если фасет без inStock возвращает count:2, он показывал бы "(2)" — это и есть баг
     const am5Count1 = page.locator('text=AM5 (1)').first();
     const am5Count2 = page.locator('text=AM5 (2)').first();
 
-    // Wait for facet response
+    // Ожидание ответа фасетов
     await page.waitForResponse((resp) => resp.url().includes('/filter-facets'));
 
-    // Check which count is displayed — with the fix, should be AM5 (1) for inStock=true
-    // If the backend is properly filtering facets by inStock, facet options should reflect only in-stock items
-    // This test verifies the UI displays facet counts consistent with product search
+    // Проверить, какое количество отображается — с исправлением должно быть AM5 (1) для inStock=true
+    // Если бэкенд правильно фильтрует фасеты по inStock, опции фасетов должны отражать только товары в наличии
+    // Этот тест проверяет, что UI отображает количество фасетов, соответствующее поиску товаров
     const hasAm5 = await am5Count1.isVisible().catch(() => false) || await am5Count2.isVisible().catch(() => false);
-    // At minimum: AM5 facet option should be displayed
+    // Как минимум: опция фасета AM5 должна отображаться
     expect(hasAm5).toBe(true);
   });
 });

@@ -29,57 +29,57 @@ public enum ContractChangeType
 public class ContractChangeEvent
 {
     /// <summary>
-    /// Gets or sets уникальный идентификатор события
+    /// Получает или задаёт уникальный идентификатор события
     /// </summary>
     public Guid EventId { get; set; } = Guid.NewGuid();
 
     /// <summary>
-    /// Gets or sets имя контракта (например, "orders-api", "catalog-api")
+    /// Получает или задаёт имя контракта (например, "orders-api", "catalog-api")
     /// </summary>
     public required string ContractName { get; set; }
 
     /// <summary>
-    /// Gets or sets предыдущая версия контракта
+    /// Получает или задаёт предыдущая версия контракта
     /// </summary>
     public string? PreviousVersion { get; set; }
 
     /// <summary>
-    /// Gets or sets новая версия контракта
+    /// Получает или задаёт новая версия контракта
     /// </summary>
     public required string NewVersion { get; set; }
 
     /// <summary>
-    /// Gets or sets тип изменения (Breaking, NonBreaking, Patch)
+    /// Получает или задаёт тип изменения (Breaking, NonBreaking, Patch)
     /// </summary>
     public ContractChangeType ChangeType { get; set; }
 
     /// <summary>
-    /// Gets or sets список критических изменений (для Breaking типа)
+    /// Получает или задаёт список критических изменений (для Breaking типа)
     /// </summary>
     public List<string> BreakingChanges { get; set; } = new();
 
     /// <summary>
-    /// Gets or sets затронутые эндпоинты
+    /// Получает или задаёт затронутые эндпоинты
     /// </summary>
     public List<string> AffectedEndpoints { get; set; } = new();
 
     /// <summary>
-    /// Gets or sets руководство по миграции
+    /// Получает или задаёт руководство по миграции
     /// </summary>
     public string? MigrationGuide { get; set; }
 
     /// <summary>
-    /// Gets or sets время создания события
+    /// Получает или задаёт время создания события
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// Gets or sets инициатор изменения
+    /// Получает или задаёт инициатор изменения
     /// </summary>
     public string? ChangedBy { get; set; }
 
     /// <summary>
-    /// Gets or sets дополнительные метаданные
+    /// Получает или задаёт дополнительные метаданные
     /// </summary>
     public Dictionary<string, string> Metadata { get; set; } = new();
 }
@@ -90,27 +90,27 @@ public class ContractChangeEvent
 public class AgentNotification
 {
     /// <summary>
-    /// Gets or sets тип уведомления
+    /// Получает или задаёт тип уведомления
     /// </summary>
     public required string Type { get; set; }
 
     /// <summary>
-    /// Gets or sets сообщение уведомления
+    /// Получает или задаёт сообщение уведомления
     /// </summary>
     public required string Message { get; set; }
 
     /// <summary>
-    /// Gets or sets требуемое действие
+    /// Получает или задаёт требуемое действие
     /// </summary>
     public string? Action { get; set; }
 
     /// <summary>
-    /// Gets or sets дедлайн для выполнения действия
+    /// Получает или задаёт дедлайн для выполнения действия
     /// </summary>
     public DateTime? Deadline { get; set; }
 
     /// <summary>
-    /// Gets or sets связанное событие изменения контракта
+    /// Получает или задаёт связанное событие изменения контракта
     /// </summary>
     public ContractChangeEvent? ContractEvent { get; set; }
 }

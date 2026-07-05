@@ -122,7 +122,7 @@ describe('hooks/useOrders', () => {
       try { await result.current.getOrder('bad'); } catch { /* expected */ }
     });
 
-    // Error is thrown, not stored in hook state for individual queries
+    // Ошибка is thrown, not stored in hook state for individual queries
   });
 
   it('createOrder calls API', async () => {

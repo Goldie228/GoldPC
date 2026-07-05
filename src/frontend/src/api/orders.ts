@@ -111,7 +111,7 @@ export interface PagedResult<T> {
   pageSize: number;
 }
 
-/** Extract data from ApiResponse wrapper (success + data envelope) */
+/** Извлекает data from ApiResponse обёртка (success + data envelope) */
 function unwrapResponse<T>(data: unknown): T {
   if (data != null && typeof data === 'object' && 'data' in (data as object)) {
     const wrapped = data as { data?: T };

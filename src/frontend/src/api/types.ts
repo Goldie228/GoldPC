@@ -463,7 +463,7 @@ export interface CategorySpecificationsDto {
   attributes: SpecificationAttributeDto[];
 }
 
-// === Assembly types ===
+// Assembly types ===
 
 export type AssemblyPartStatus = 'Required' | 'Collected' | 'Installed';
 export type AssembledUnitStatus = 'Stored' | 'Delivered';

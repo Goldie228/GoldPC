@@ -126,7 +126,7 @@ function ActiveRepairTimeline({ status }: { status: string }) {
 
 
 // ═══════════════════════════════════════════════════════════════════
-//  AccountRepairs — My Repairs page
+//  AccountRepairs — My Repairs страница
 // ═══════════════════════════════════════════════════════════════════
 
 export function AccountRepairs() {

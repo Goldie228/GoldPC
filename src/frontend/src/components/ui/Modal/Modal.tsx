@@ -1,5 +1,5 @@
 /**
- * Modal - Reusable Modal/Dialog Component
+ * Modal - Reusable Modal/Dialog Компонент
  */
 
 import { useEffect, useCallback, useRef } from 'react';
@@ -35,21 +35,21 @@ export function Modal({
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
 
-  // Handle Escape key
+  // Обрабатывает Escape key
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape' && closeOnEscape) {
       onClose();
     }
   }, [onClose, closeOnEscape]);
 
-  // Handle overlay click
+  // Обрабатывает overlay click
   const handleOverlayClick = useCallback(() => {
     if (closeOnOverlayClick) {
       onClose();
     }
   }, [onClose, closeOnOverlayClick]);
 
-  // Handle modal content click (prevent propagation)
+  // Обрабатывает modal content click (prevent propagation)
   const handleModalClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);

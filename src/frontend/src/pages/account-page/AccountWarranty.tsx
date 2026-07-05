@@ -5,9 +5,9 @@ import type { WarrantyCard, WarrantyStatus } from '@/api/warranty';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { StatCard } from '@/components/ui/StatCard';
 
-/* ------------------------------------------------------------------ */
+/* */
 /*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
+/* */
 
 /**
  * Маппинг статуса гарантии на variant для StatusBadge.
@@ -64,9 +64,9 @@ function formatDate(iso: string): string {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Компонент                                                          */
+/* */
 
 /**
  * AccountWarranty — страница «Мои гарантии» (/account/warranty)
@@ -90,7 +90,7 @@ export function AccountWarranty() {
     };
   }, [cards, totalCount]);
 
-  /* ---- Loading state ---- */
+  /* ---- Загрузка state ---- */
   if (loading && !cards) {
     return (
       <div className="min-h-screen bg-background">
@@ -104,7 +104,7 @@ export function AccountWarranty() {
     );
   }
 
-  /* ---- Error state ---- */
+  /* ---- Ошибка state ---- */
   if (error && !cards) {
     return (
       <div className="min-h-screen bg-background">

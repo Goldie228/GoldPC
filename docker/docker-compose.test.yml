@@ -4,7 +4,7 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database (Test)
+  # PostgreSQL База данных (Тест)
   postgres-test:
     image: postgres:16-alpine
     container_name: goldpc-postgres-test
@@ -25,7 +25,7 @@ services:
     networks:
       - goldpc-test-network
 
-  # Redis Cache (Test)
+  # Redis Кэш (Тест)
   redis-test:
     image: redis:7-alpine
     container_name: goldpc-redis-test
@@ -42,7 +42,7 @@ services:
     networks:
       - goldpc-test-network
 
-  # Catalog Service (Test)
+  # Catalog Service (Тест)
   catalogservice-test:
     build:
       context: ../src
@@ -73,7 +73,7 @@ services:
       - goldpc-test-network
     restart: on-failure
 
-  # PC Builder Service (Test)
+  # PC Builder Service (Тест)
   pcbuilderservice-test:
     build:
       context: ../src
@@ -107,7 +107,7 @@ services:
       - goldpc-test-network
     restart: on-failure
 
-  # Auth Service (Test)
+  # Auth Service (Тест)
   authservice-test:
     build:
       context: ../src
@@ -137,7 +137,7 @@ services:
       - goldpc-test-network
     restart: on-failure
 
-  # Frontend (Test)
+  # Frontend (Тест)
   frontend-test:
     build:
       context: ..
@@ -166,7 +166,7 @@ services:
       - goldpc-test-network
     restart: on-failure
 
-  # Playwright Test Runner
+  # Playwright — Запуск тестов
   playwright:
     image: mcr.microsoft.com/playwright:v1.40.0-jammy
     container_name: goldpc-playwright
@@ -188,7 +188,7 @@ services:
     networks:
       - goldpc-test-network
 
-  # k6 Load Testing
+  # k6 — Нагрузочное тестирование
   k6:
     image: grafana/k6:latest
     container_name: goldpc-k6

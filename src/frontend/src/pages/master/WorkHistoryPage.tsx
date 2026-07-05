@@ -12,9 +12,9 @@ import { History, Search, Eye, ChevronLeft, ChevronRight, CheckCircle2, XCircle 
 import { servicesApi } from '@/api/services';
 import type { ServiceRequestDto } from '@/api/services';
 
-/* ------------------------------------------------------------------ */
-/*  Constants                                                          */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Константы                                                          */
+/* */
 
 const PAGE_SIZE = 15;
 
@@ -30,9 +30,9 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   ReadyForPickup: { label: 'Готова к выдаче', className: 'bg-price-drop/15 text-price-drop' },
 };
 
-/* ------------------------------------------------------------------ */
+/* */
 /*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
+/* */
 
 function formatDateTime(iso: string): string {
   if (!iso) return '—';
@@ -50,9 +50,9 @@ function truncate(text: string, max: number): string {
   return text.length > max ? text.slice(0, max) + '…' : text;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Компонент                                                          */
+/* */
 
 export function WorkHistoryPage() {
   const [page, setPage] = useState(1);

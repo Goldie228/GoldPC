@@ -22,7 +22,7 @@ vi.mock('keycloak-js', () => {
   };
 });
 
-// Mock import.meta.env
+// Имитация import.meta.env
 vi.stubEnv('VITE_KEYCLOAK_URL', 'https://custom-keycloak.example.com');
 vi.stubEnv('VITE_KEYCLOAK_REALM', 'custom-realm');
 vi.stubEnv('VITE_KEYCLOAK_CLIENT_ID', 'custom-client');

@@ -13,9 +13,9 @@ import { servicesApi, TICKET_STATUSES } from '@/api/services';
 import type { ServiceRequestDto, TicketStatus } from '@/api/services';
 import { PagePagination } from '@/components/ui/PagePagination';
 
-/* ------------------------------------------------------------------ */
-/*  Constants                                                          */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Константы                                                          */
+/* */
 
 const PAGE_SIZE = 15;
 
@@ -28,9 +28,9 @@ const STATUS_BADGE: Record<string, { label: string; className: string }> = {
   Cancelled:       { label: 'Отменена', className: 'bg-price-rise/15 text-price-rise' },
 };
 
-/* ------------------------------------------------------------------ */
+/* */
 /*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
+/* */
 
 function getStatusBadge(status: string) {
     return STATUS_BADGE[status] ?? { label: status, className: 'bg-surface-elevated text-muted-foreground' };
@@ -61,9 +61,9 @@ function truncate(text: string, max: number): string {
   return text.length > max ? text.slice(0, max) + '…' : text;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                          */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Компонент                                                          */
+/* */
 
 export function TicketsPage() {
   const [page, setPage] = useState(1);
@@ -80,7 +80,7 @@ export function TicketsPage() {
   const total = data?.totalCount ?? 0;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  /* ── Client-side search filter ────────────────────────────────── */
+  /* ── Client-side search фильтр ────────────────────────────────── */
   const filteredTickets = searchQuery.trim()
     ? tickets.filter((t) => {
         const q = searchQuery.toLowerCase();
@@ -328,9 +328,9 @@ export function TicketsPage() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Quick Status Button (inline)                                       */
-/* ------------------------------------------------------------------ */
+/* */
+/*  Quick Status Кнопка (встроенный)                                       */
+/* */
 
 function QuickStatusButton({
   ticketId,

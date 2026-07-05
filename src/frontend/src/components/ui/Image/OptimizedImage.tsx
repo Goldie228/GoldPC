@@ -78,7 +78,7 @@ export function OptimizedImage({
 
     preload.src = effectiveSrc;
 
-    // If the DOM <img> already has it cached/complete, sync state
+    // If the DOM <img> already has it cached/complete, синхронный state
     if (imgRef.current?.src === effectiveSrc && imgRef.current.complete) {
       setIsLoaded(true);
       window.clearTimeout(timeoutId);

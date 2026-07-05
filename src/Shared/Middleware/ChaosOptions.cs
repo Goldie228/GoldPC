@@ -8,65 +8,65 @@ namespace Shared.Middleware;
 public class ChaosOptions
 {
     /// <summary>
-    /// Gets or sets a value indicating whether включить или отключить Chaos Engineering.
+    /// Получает или задаёт значение, указывающее, включить или отключить Chaos Engineering.
     /// </summary>
     public bool Enabled { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets a value indicating whether включить случайные исключения (simulate server errors).
+    /// Получает или задаёт значение, указывающее, включить случайные исключения (simulate server errors).
     /// </summary>
     public bool EnableRandomFailures { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets вероятность возникновения случайного исключения (0.0 - 1.0).
+    /// Получает или задаёт вероятность возникновения случайного исключения (0.0 - 1.0).
     /// По умолчанию 5% (0.05).
     /// </summary>
     public double FailureRate { get; set; } = 0.05;
 
     /// <summary>
-    /// Gets or sets a value indicating whether включить случайные задержки (simulate slow network).
+    /// Получает или задаёт значение, указывающее, включить случайные задержки (simulate slow network).
     /// </summary>
     public bool EnableLatency { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets вероятность возникновения задержки (0.0 - 1.0).
+    /// Получает или задаёт вероятность возникновения задержки (0.0 - 1.0).
     /// По умолчанию 10% (0.1).
     /// </summary>
     public double LatencyRate { get; set; } = 0.1;
 
     /// <summary>
-    /// Gets or sets минимальная задержка в миллисекундах.
+    /// Получает или задаёт минимальная задержка в миллисекундах.
     /// </summary>
     public int MinLatencyMs { get; set; } = 100;
 
     /// <summary>
-    /// Gets or sets максимальная задержка в миллисекундах.
+    /// Получает или задаёт максимальная задержка в миллисекундах.
     /// </summary>
     public int MaxLatencyMs { get; set; } = 3000;
 
     /// <summary>
-    /// Gets or sets a value indicating whether включить возврат 503 Service Unavailable.
+    /// Получает или задаёт значение, указывающее, включить возврат 503 Service Unavailable.
     /// </summary>
     public bool EnableServiceOutage { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets вероятность возврата 503 (0.0 - 1.0).
+    /// Получает или задаёт вероятность возврата 503 (0.0 - 1.0).
     /// По умолчанию 1% (0.01).
     /// </summary>
     public double OutageRate { get; set; } = 0.01;
 
     /// <summary>
-    /// Gets or sets время в секундах для заголовка Retry-After при 503 ответе.
+    /// Получает или задаёт время в секундах для заголовка Retry-After при 503 ответе.
     /// </summary>
     public int RetryAfterSeconds { get; set; } = 30;
 
     /// <summary>
-    /// Gets or sets исключить определенные пути из Chaos (например, health checks, swagger).
+    /// Получает или задаёт исключить определенные пути из Chaos (например, health checks, swagger).
     /// </summary>
     public string[] ExcludedPaths { get; set; } = Array.Empty<string>();
 
     /// <summary>
-    /// Gets or sets a value indicating whether включить логирование всех Chaos-воздействий.
+    /// Получает или задаёт значение, указывающее, включить логирование всех Chaos-воздействий.
     /// </summary>
     public bool EnableLogging { get; set; } = true;
 }

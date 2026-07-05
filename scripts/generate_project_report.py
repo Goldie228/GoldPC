@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GoldPC Project Report Generator
+Генератор отчёта о проекте GoldPC
 Сканирует все исходные файлы проекта, считает строки и генерирует
 детальный отчёт в формате Markdown.
 """

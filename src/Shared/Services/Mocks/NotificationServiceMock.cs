@@ -20,7 +20,7 @@ public class NotificationServiceMock : INotificationService
     private static readonly ConcurrentDictionary<Guid, Notification> _storedNotifications = new();
 
     /// <summary>
-    /// Gets получить все отправленные уведомления (для тестирования)
+    /// Получает все отправленные уведомления (для тестирования)
     /// </summary>
     public static IReadOnlyList<Notification> SentNotifications => _sentNotifications.ToList().AsReadOnly();
 
@@ -34,12 +34,12 @@ public class NotificationServiceMock : INotificationService
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether включить логирование в консоль
+    /// Получает или задаёт значение, указывающее, включить логирование в консоль
     /// </summary>
     public bool EnableConsoleLogging { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets имитация задержки отправки (мс)
+    /// Получает или задаёт имитация задержки отправки (мс)
     /// </summary>
     public int SimulatedDelayMs { get; set; } = 50;
 
@@ -62,7 +62,7 @@ public class NotificationServiceMock : INotificationService
 
         if (EnableConsoleLogging)
         {
-            _logger.LogInformation("[Mock NotificationService] Created notification: Id={Id}, Type={Type}", notification.Id, notification.Type);
+            _logger.LogInformation("[Mock NotificationService] Создано уведомление: Id={Id}, Type={Type}", notification.Id, notification.Type);
         }
 
         return notification;
@@ -99,7 +99,7 @@ public class NotificationServiceMock : INotificationService
 
         if (EnableConsoleLogging)
         {
-            _logger.LogInformation("[Mock NotificationService] Marked notification as read: Id={Id}", notificationId);
+            _logger.LogInformation("[Mock NotificationService] Уведомление отмечено как прочитанное: Id={Id}", notificationId);
         }
     }
 
@@ -118,7 +118,7 @@ public class NotificationServiceMock : INotificationService
 
         if (EnableConsoleLogging)
         {
-            _logger.LogInformation("[Mock NotificationService] Marked all notifications as read for user: UserId={UserId}", userId);
+            _logger.LogInformation("[Mock NotificationService] Все уведомления отмечены как прочитанные для пользователя: UserId={UserId}", userId);
         }
     }
 
@@ -133,7 +133,7 @@ public class NotificationServiceMock : INotificationService
 
         if (EnableConsoleLogging)
         {
-            _logger.LogInformation("[Mock NotificationService] Deleted notification: Id={Id}", notificationId);
+            _logger.LogInformation("[Mock NotificationService] Уведомление удалено: Id={Id}", notificationId);
         }
     }
 
@@ -148,7 +148,7 @@ public class NotificationServiceMock : INotificationService
 
         if (EnableConsoleLogging)
         {
-            _logger.LogInformation("[Mock NotificationService] Sent notification: Id={Id}, Type={Type}, Recipient={UserId}",
+            _logger.LogInformation("[Mock NotificationService] Отправлено уведомление: Id={Id}, Type={Type}, Recipient={UserId}",
                 notification.Id, notification.Type, notification.UserId);
         }
     }
@@ -164,7 +164,7 @@ public class NotificationServiceMock : INotificationService
 
         if (EnableConsoleLogging)
         {
-            _logger.LogInformation("[Mock NotificationService] Sent notification to role: Role={Role}, NotificationId={Id}", role, notification.Id);
+            _logger.LogInformation("[Mock NotificationService] Отправлено уведомление по роли: Role={Role}, NotificationId={Id}", role, notification.Id);
         }
     }
 
@@ -179,7 +179,7 @@ public class NotificationServiceMock : INotificationService
 
         if (EnableConsoleLogging)
         {
-            _logger.LogInformation("[Mock NotificationService] Broadcasted notification: Id={Id}, Type={Type}", notification.Id, notification.Type);
+            _logger.LogInformation("[Mock NotificationService] Выполнена рассылка уведомления: Id={Id}, Type={Type}", notification.Id, notification.Type);
         }
     }
 
@@ -192,7 +192,7 @@ public class NotificationServiceMock : INotificationService
 
         if (EnableConsoleLogging)
         {
-            _logger.LogInformation("[Mock NotificationService] Push notification: UserId={UserId}, Title={Title}, Message={Message}", userId, title, message);
+            _logger.LogInformation("[Mock NotificationService] Push-уведомление: UserId={UserId}, Title={Title}, Message={Message}", userId, title, message);
         }
     }
 

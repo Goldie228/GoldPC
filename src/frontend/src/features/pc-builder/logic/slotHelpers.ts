@@ -1,5 +1,5 @@
 /**
- * Slot Helper Functions
+ * Slot Вспомогательный Functions
  * Pure functions for computing slot states and category counts
  * Extracted from usePCBuilder.ts for better organization
  */
@@ -155,7 +155,7 @@ export const REQUIRED_SLOTS_TOTAL = 8;
 export const PERIPHERY_SLOT_KEYS = PERIPHERY_KEYS;
 
 /**
- * Build ComponentMap from selected components state
+ * Строит ComponentMap from selected components state
  * Used for compatibility checks and power consumption calculations
  */
 export function buildComponentMap(components: PCBuilderSelectedState): ComponentMap {

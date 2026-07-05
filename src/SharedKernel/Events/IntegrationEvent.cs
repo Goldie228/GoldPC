@@ -2,7 +2,7 @@
 namespace SharedKernel.Events;
 
 /// <summary>
-/// Base class for all integration events across microservices.
+/// Базовый класс для всех интеграционных событий между микросервисами.
 /// </summary>
 public abstract record IntegrationEvent
 {

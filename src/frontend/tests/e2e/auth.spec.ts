@@ -14,19 +14,19 @@ const TEST_USERS = {
   accountant: { email: 'accountant@goldpc.by', password: 'Accountant123!' },
 };
 
-/** Open the login modal via the header profile button. */
+/** Открытие модального окна входа через кнопку профиля в шапке. */
 async function openLoginModal(page: import('@playwright/test').Page) {
-  // Click the profile/login icon in the header
+  // Клик по иконке профиля/входа в шапке
   const profileBtn = page.locator('header button[aria-label="Войти"]');
   await profileBtn.click();
-  // Click "Войти" in the dropdown
+  // Клик "Войти" в выпадающем меню
   const loginBtn = page.getByRole('button', { name: 'Войти' }).first();
   await loginBtn.click();
-  // Wait for the modal form to appear
+  // Ожидание появления модальной формы
   await expect(page.locator('#login-email')).toBeVisible();
 }
 
-/** Fill login form and submit. */
+/** Заполнение формы входа и отправка. */
 async function submitLogin(
   page: import('@playwright/test').Page,
   email: string,
@@ -56,10 +56,10 @@ test.describe('Auth — Login flow', () => {
     await openLoginModal(page);
     await submitLogin(page, TEST_USERS.client.email, TEST_USERS.client.password);
 
-    // Modal should close (email field no longer visible)
+    // Модальное окно должно закрыться (поле email больше не видно)
     await expect(page.locator('#login-email')).not.toBeVisible({ timeout: 10000 });
 
-    // Profile icon should show authenticated state
+    // Иконка профиля должна показывать состояние аутентификации
     const profileBtn = page.locator('header button[aria-label="Профиль"]');
     await expect(profileBtn).toBeVisible({ timeout: 5000 });
   });
@@ -70,14 +70,14 @@ test.describe('Auth — Login flow', () => {
 
     await expect(page.locator('#login-email')).not.toBeVisible({ timeout: 10000 });
 
-    // Navigate to admin panel
+    // Переход в панель администратора
     await page.goto('/admin');
     await page.waitForLoadState('networkidle');
 
-    // Should see admin content, not a redirect to login
+    // Должно отображаться содержимое админки, а не перенаправление на вход
     const body = await page.locator('body').textContent();
     expect(body).not.toBeNull();
-    // Admin page should have some content (not blank)
+    // Страница админа должна иметь содержимое (не пустое)
     const rootContent = await page.locator('#root').innerHTML();
     expect(rootContent.trim().length).toBeGreaterThan(0);
   });
@@ -86,20 +86,20 @@ test.describe('Auth — Login flow', () => {
     await openLoginModal(page);
     await submitLogin(page, TEST_USERS.client.email, 'WrongPassword123!');
 
-    // Error alert should appear
+    // Должно появиться уведомление об ошибке
     const errorAlert = page.locator('[role="alert"]');
     await expect(errorAlert).toBeVisible({ timeout: 10000 });
 
-    // Modal should still be open (login didn't succeed)
+    // Модальное окно должно оставаться открытым (вход не удался)
     await expect(page.locator('#login-email')).toBeVisible();
   });
 
   test('login with empty fields shows validation errors', async ({ page }) => {
     await openLoginModal(page);
-    // Submit without filling anything
+    // Отправка без заполнения полей
     await page.locator('button[type="submit"]').click();
 
-    // Email validation error should appear
+    // Должна появиться ошибка валидации email
     const emailError = page.locator('#login-email-error');
     await expect(emailError).toBeVisible();
   });
@@ -123,10 +123,10 @@ test.describe('Auth — Login flow', () => {
         await openLoginModal(page);
         await submitLogin(page, email, password);
 
-        // Modal should close
+        // Модальное окно должно закрыться
         await expect(page.locator('#login-email')).not.toBeVisible({ timeout: 10000 });
 
-        // No critical console errors (ignore noisy third-party)
+        // Нет критических ошибок консоли (игнорируем шумные сторонние)
         const critical = consoleErrors.filter(
           (e) => !e.includes('favicon') && !e.includes('third-party'),
         );

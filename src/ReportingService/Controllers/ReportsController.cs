@@ -34,7 +34,7 @@ public class ReportsController : ControllerBase
     }
 
     /// <summary>
-    /// Ensure DateTime is UTC — PostgreSQL requires timestamp with time zone.
+    /// Обеспечивает DateTime в UTC — PostgreSQL требует timestamp with time zone.
     /// </summary>
     private static DateTime EnsureUtc(DateTime? dt, DateTime fallback)
     {

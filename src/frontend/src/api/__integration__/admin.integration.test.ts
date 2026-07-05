@@ -54,7 +54,7 @@ describe('usersAdminApi', () => {
     expect(result).toBeDefined();
     expect(result.data).toBeDefined();
     expect(Array.isArray(result.data)).toBe(true);
-    // Should find at least the admin user
+    // Должен найти хотя бы пользователя admin
     expect(result.data.length).toBeGreaterThan(0);
 
     const emails = result.data.map((u) => u.email.toLowerCase());
@@ -78,7 +78,7 @@ describe('catalogAdminApi', () => {
     expect(result.page).toBe(1);
     expect(result.pageSize).toBe(10);
 
-    // Verify product structure
+    // Проверка структуры товара
     const product = result.data[0];
     expect(product.id).toBeDefined();
     expect(product.name).toBeDefined();
@@ -86,7 +86,7 @@ describe('catalogAdminApi', () => {
 });
 
 // ═══════════════════════════════════════════════
-//  Stats API
+//  Статистика API
 // ═══════════════════════════════════════════════
 
 describe('statsApi', () => {

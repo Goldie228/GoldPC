@@ -3,7 +3,7 @@
  * GoldPC Design System — консистентно с Modal.css
  */
 
-/* Overlay */
+/* Наложение */
 .bottom-sheet-overlay {
   position: fixed;
   top: 0;
@@ -23,7 +23,7 @@
   to { opacity: 1; }
 }
 
-/* Sheet container */
+/* Sheet контейнер */
 .bottom-sheet {
   width: 100%;
   max-width: 100%;

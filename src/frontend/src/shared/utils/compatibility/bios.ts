@@ -1,6 +1,6 @@
 /**
  * BIOS checking logic - extracted from compatibilityUtils.ts
- * Handles BIOS update warnings based on CPU socket and motherboard chipset
+ * Обрабатывает BIOS update warnings based on CPU socket and motherboard chipset
  */
 
 import type { CompatibilityWarning } from './types';

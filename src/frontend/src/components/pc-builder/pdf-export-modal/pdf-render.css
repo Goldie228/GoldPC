@@ -10,7 +10,7 @@
   line-height: 1.5;
 }
 
-/* Header */
+/* Заголовок */
 .pdf-header {
   display: flex;
   justify-content: space-between;
@@ -126,7 +126,7 @@
   margin-bottom: 10px;
 }
 
-/* Component table */
+/* Компонент таблица */
 .pdf-table {
   width: 100%;
   border-collapse: collapse;
@@ -201,7 +201,7 @@
   width: 100px;
 }
 
-/* Stats cards */
+/* Статистика cards */
 .pdf-stats {
   display: flex;
   gap: 12px;
@@ -268,7 +268,7 @@
   color: #fcd535;
 }
 
-/* Footer */
+/* Нижний колонтитул */
 .pdf-footer {
   display: flex;
   justify-content: space-between;

@@ -75,7 +75,7 @@ export function ChatInput({
       setAttachment(null);
       inputRef.current?.focus();
     } catch {
-      // Error handled upstream
+      // Ошибка handled upstream
     } finally {
       setSending(false);
     }

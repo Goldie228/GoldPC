@@ -5,97 +5,97 @@ namespace GoldPC.Shared.Entities;
 #pragma warning restore CA1716
 
 /// <summary>
-/// Represents a system notification for users
+/// Представляет системное уведомление для пользователей
 /// </summary>
 public class Notification
 {
-    /// <summary>Gets or sets the unique notification identifier.</summary>
+    /// <summary>Получает или задаёт уникальный идентификатор уведомления.</summary>
     public Guid Id { get; set; }
 
-    /// <summary>Gets or sets the identifier of the user this notification belongs to.</summary>
+    /// <summary>Получает или задаёт идентификатор пользователя, которому принадлежит уведомление.</summary>
     public Guid UserId { get; set; }
 
-    /// <summary>Gets or sets the notification title.</summary>
+    /// <summary>Получает или задаёт заголовок уведомления.</summary>
     public string Title { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the notification body text.</summary>
+    /// <summary>Получает или задаёт текст уведомления.</summary>
     public string Message { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the notification type.</summary>
+    /// <summary>Получает или задаёт тип уведомления.</summary>
     public NotificationType Type { get; set; }
 
-    /// <summary>Gets or sets the notification priority level.</summary>
+    /// <summary>Получает или задаёт уровень приоритета уведомления.</summary>
     public NotificationPriority Priority { get; set; }
 
-    /// <summary>Gets or sets a value indicating whether the notification has been read.</summary>
+    /// <summary>Получает или задаёт значение, указывающее, было ли уведомление прочитано.</summary>
     public bool IsRead { get; set; }
 
-    /// <summary>Gets or sets the date and time when the notification was created.</summary>
+    /// <summary>Получает или задаёт дату и время создания уведомления.</summary>
     public DateTime CreatedAt { get; set; }
 
-    /// <summary>Gets or sets the date and time when the notification was read.</summary>
+    /// <summary>Получает или задаёт дату и время прочтения уведомления.</summary>
     public DateTime? ReadAt { get; set; }
 
-    /// <summary>Gets or sets an optional URL related to the notification.</summary>
+    /// <summary>Получает или задаёт необязательный URL, связанный с уведомлением.</summary>
     public string? RelatedUrl { get; set; }
 
-    /// <summary>Gets or sets optional JSON metadata for the notification.</summary>
+    /// <summary>Получает или задаёт необязательные JSON-метаданные для уведомления.</summary>
     public string? Metadata { get; set; }
 }
 
 /// <summary>
-/// Type of notification
+/// Тип уведомления
 /// </summary>
 public enum NotificationType
 {
-    /// <summary>Notification about an order status change.</summary>
+    /// <summary>Уведомление об изменении статуса заказа.</summary>
     OrderStatusChanged,
 
-    /// <summary>Notification about a repair ticket update.</summary>
+    /// <summary>Уведомление об обновлении заявки на ремонт.</summary>
     RepairTicketUpdated,
 
-    /// <summary>Alert for low stock levels.</summary>
+    /// <summary>Предупреждение о низком уровне запасов.</summary>
     LowStockAlert,
 
-    /// <summary>Notification about a user login.</summary>
+    /// <summary>Уведомление о входе пользователя.</summary>
     LoginNotification,
 
-    /// <summary>Notification about a new support message.</summary>
+    /// <summary>Уведомление о новом сообщении поддержки.</summary>
     NewSupportMessage,
 
-    /// <summary>System-wide announcement.</summary>
+    /// <summary>Общесистемное объявление.</summary>
     SystemAnnouncement,
 
-    /// <summary>Notification that a task has been assigned.</summary>
+    /// <summary>Уведомление о назначении задачи.</summary>
     TaskAssigned,
 
-    /// <summary>Alert for inventory changes.</summary>
+    /// <summary>Предупреждение об изменениях в инвентаре.</summary>
     InventoryAlert,
 
-    /// <summary>Notification about a product update.</summary>
+    /// <summary>Уведомление об обновлении товара.</summary>
     ProductUpdate,
 
-    /// <summary>Notification about a user profile update.</summary>
+    /// <summary>Уведомление об обновлении профиля пользователя.</summary>
     UserUpdate,
 
-    /// <summary>Notification about settings changes.</summary>
+    /// <summary>Уведомление об изменениях настроек.</summary>
     SettingsUpdate,
 }
 
 /// <summary>
-/// Priority level for notification
+/// Уровень приоритета уведомления
 /// </summary>
 public enum NotificationPriority
 {
-    /// <summary>Low priority notification.</summary>
+    /// <summary>Низкий приоритет уведомления.</summary>
     Low,
 
-    /// <summary>Medium priority notification.</summary>
+    /// <summary>Средний приоритет уведомления.</summary>
     Medium,
 
-    /// <summary>High priority notification.</summary>
+    /// <summary>Высокий приоритет уведомления.</summary>
     High,
 
-    /// <summary>Critical priority notification.</summary>
+    /// <summary>Критический приоритет уведомления.</summary>
     Critical,
 }

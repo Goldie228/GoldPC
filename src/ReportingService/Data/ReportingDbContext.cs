@@ -179,7 +179,7 @@ public class ReportingDbContext : DbContext
     }
 
     /// <summary>
-    /// Creates a foreign table in the specified schema if it does not already exist.
+    /// Создаёт внешнюю таблицу в указанной схеме, если она ещё не существует.
     /// </summary>
     private async Task CreateForeignTableAsync(string schema, string tableName, string serverName,
         (string name, string pgType)[] columns)

@@ -12,7 +12,7 @@ const PURPOSE_LABELS: Record<string, string> = {
   Workstation: 'Рабочая станция',
 };
 
-/** Stagger entrance animation — each card fades in with a tiny delay */
+/** Stagger entrance animation — each карточка fades in with a tiny delay */
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -64,7 +64,7 @@ export function AccountSavedBuilds() {
     void loadBuilds();
   }, []);
 
-  /** Detect mobile viewport for FAB and swipe behavior */
+  /** Detect мобильные viewport for FAB and swipe behavior */
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -100,7 +100,7 @@ export function AccountSavedBuilds() {
     }
   };
 
-  /** Swipe-to-delete: snap back card first, then show confirm */
+  /** Swipe-to-delete: snap back карточка first, then show confirm */
   const handleSwipeDelete = async (id: string, name: string) => {
     setSwipedBuildId(null);
     await handleDelete(id, name);
@@ -147,7 +147,7 @@ export function AccountSavedBuilds() {
     if (build.components) {
       return Object.keys(build.components).filter((k) => build.components[k]).length;
     }
-    // Fallback: count individual ID fields from backend DTO
+    // Запасной вариант: count individual ID fields from backend DTO
     let count = 0;
     if (build.processorId) count++;
     if (build.motherboardId) count++;

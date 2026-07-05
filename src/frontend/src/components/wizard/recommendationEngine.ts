@@ -1,5 +1,5 @@
 /**
- * Recommendation Engine for Build Wizard
+ * Recommendation Engine for Строит Wizard
  *
  * Uses pre-built mock assemblies for instant, reliable results.
  * Each mock is hand-crafted with real products from the database.
@@ -75,13 +75,13 @@ function selectMockBuild(state: WizardState): MockBuild {
       return false;
     });
     if (tierMatch) return tierMatch;
-    // Fallback: pick closest by price
+    // Запасной вариант: pick closest by price
     const target = tier === 'economy' ? 500 : tier === 'optimal' ? 1500 : 3500;
     candidates.sort((a, b) => Math.abs(a.totalPrice - target) - Math.abs(b.totalPrice - target));
     return candidates[0];
   }
 
-  // Fallback: pick first build
+  // Запасной вариант: pick first build
   return MOCK_BUILDS[0];
 }
 

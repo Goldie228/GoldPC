@@ -30,7 +30,7 @@ public class ServicesServiceUnitTests
             Mock.Of<ILogger<ServicesService.Services.ServicesService>>(),
             Mock.Of<INotificationService>());
         
-        // Seed service types
+        // Настройка типов услуг
         _context.ServiceTypes.Add(new ServiceType { Id = Guid.NewGuid(), Name = "Диагностика", BasePrice = 50, EstimatedDurationMinutes = 60 });
         _context.SaveChanges();
     }
@@ -38,7 +38,7 @@ public class ServicesServiceUnitTests
     [Fact]
     public async Task CreateServiceRequest_ValidRequest_ShouldCreate()
     {
-        // Arrange
+        // Подготовка
         var clientId = Guid.NewGuid();
         var serviceType = await _context.ServiceTypes.FirstAsync();
         var request = new CreateServiceRequestRequest
@@ -48,10 +48,10 @@ public class ServicesServiceUnitTests
             DeviceModel = "Dell XPS 15"
         };
 
-        // Act
+        // Действие
         var (result, error) = await _servicesService.CreateAsync(clientId, request);
 
-        // Assert
+        // Проверка
         error.Should().BeNull();
         result.Should().NotBeNull();
         result!.RequestNumber.Should().StartWith("SR-");
@@ -61,17 +61,17 @@ public class ServicesServiceUnitTests
     [Fact]
     public async Task AssignMaster_NewRequest_ShouldAssign()
     {
-        // Arrange
+        // Подготовка
         var clientId = Guid.NewGuid();
         var masterId = Guid.NewGuid();
         var serviceType = await _context.ServiceTypes.FirstAsync();
         var request = new CreateServiceRequestRequest { ServiceTypeId = serviceType.Id, Description = "Test" };
         var (serviceRequest, _) = await _servicesService.CreateAsync(clientId, request);
 
-        // Act
-        var (result, error) = await _servicesService.AssignMasterAsync(serviceRequest!.Id, masterId);
+        // Действие
+        var (result, error) = await _servicesService.AssignMasterAsync(serviceRequest!.Id, masterId, masterId);
 
-        // Assert
+        // Проверка
         error.Should().BeNull();
         result!.MasterId.Should().Be(masterId);
         result.Status.Should().Be(ServiceRequestStatus.InProgress);
@@ -80,13 +80,13 @@ public class ServicesServiceUnitTests
     [Fact]
     public async Task Complete_ServiceRequest_ShouldMarkAsReadyForPickup()
     {
-        // Arrange
+        // Подготовка
         var clientId = Guid.NewGuid();
         var masterId = Guid.NewGuid();
         var serviceType = await _context.ServiceTypes.FirstAsync();
         var request = new CreateServiceRequestRequest { ServiceTypeId = serviceType.Id, Description = "Test" };
         var (serviceRequest, _) = await _servicesService.CreateAsync(clientId, request);
-        await _servicesService.AssignMasterAsync(serviceRequest!.Id, masterId);
+        await _servicesService.AssignMasterAsync(serviceRequest!.Id, masterId, masterId);
 
         var completeRequest = new UpdateServiceRequestRequest
         {
@@ -94,10 +94,10 @@ public class ServicesServiceUnitTests
             ActualCost = 100
         };
 
-        // Act
+        // Действие
         var (result, error) = await _servicesService.CompleteAsync(serviceRequest.Id, masterId, completeRequest);
 
-        // Assert
+        // Проверка
         error.Should().BeNull();
         result!.Status.Should().Be(ServiceRequestStatus.ReadyForPickup);
     }
@@ -105,16 +105,16 @@ public class ServicesServiceUnitTests
     [Fact]
     public async Task Cancel_NewRequest_ShouldCancel()
     {
-        // Arrange
+        // Подготовка
         var clientId = Guid.NewGuid();
         var serviceType = await _context.ServiceTypes.FirstAsync();
         var request = new CreateServiceRequestRequest { ServiceTypeId = serviceType.Id, Description = "Test" };
         var (serviceRequest, _) = await _servicesService.CreateAsync(clientId, request);
 
-        // Act
+        // Действие
         var (success, error) = await _servicesService.CancelAsync(serviceRequest!.Id, clientId);
 
-        // Assert
+        // Проверка
         success.Should().BeTrue();
         var cancelled = await _servicesService.GetByIdAsync(serviceRequest.Id);
         cancelled!.Status.Should().Be(ServiceRequestStatus.Cancelled);

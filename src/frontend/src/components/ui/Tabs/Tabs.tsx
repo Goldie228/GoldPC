@@ -16,7 +16,7 @@ export interface TabsProps {
  * Компонент Tabs — переключаемые вкладки
  * 
  * @example
- * <Tabs
+ * <Вкладки
  *   tabs={[
  *     { id: 'specs', label: 'Характеристики', content: <SpecsTable /> },
  *     { id: 'desc', label: 'Описание', content: <p>Описание товара</p> },

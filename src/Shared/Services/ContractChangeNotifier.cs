@@ -15,7 +15,7 @@ public class ContractChangeNotifier : IContractChangeNotifier
     private readonly List<ContractChangeEvent> _eventHistory = new();
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ContractChangeNotifier"/> class.
+    /// Инициализирует новый экземпляр класса <see cref="ContractChangeNotifier"/>.
     /// Создать экземпляр сервиса уведомлений об изменении контрактов
     /// </summary>
     /// <param name="logger">Логгер</param>

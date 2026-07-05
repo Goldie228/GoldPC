@@ -9,7 +9,7 @@ interface AuthModalState {
   /** Активное модальное окно */
   activeModal: AuthModalType;
 
-  // Actions
+  // Действия
   /** Открыть модальное окно входа */
   openLoginModal: () => void;
   /** Открыть модальное окно регистрации */

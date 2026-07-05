@@ -31,7 +31,7 @@ public class CatalogProviderTests : IClassFixture<CatalogApiProviderFixture>
     [Fact]
     public void VerifyPactWithFrontend_ShouldSucceed()
     {
-        // Arrange - настройка конфигурации верификатора
+        // Подготовка - настройка конфигурации верификатора
         var config = new PactVerifierConfig
         {
             Outputters = new List<IOutput>
@@ -41,7 +41,7 @@ public class CatalogProviderTests : IClassFixture<CatalogApiProviderFixture>
             LogLevel = PactLogLevel.Information
         };
 
-        // Act & Assert - верификация контракта
+        // Действие и Проверка - верификация контракта
         using var verifier = new PactVerifier(config);
 
         verifier
@@ -59,7 +59,7 @@ public class CatalogProviderTests : IClassFixture<CatalogApiProviderFixture>
     [Fact(Skip = "Requires Pact Broker connection - enable in CI environment")]
     public void VerifyPactWithFrontend_FromBroker_ShouldSucceed()
     {
-        // Arrange
+        // Подготовка
         var brokerBaseUrl = Environment.GetEnvironmentVariable("PACT_BROKER_URL")
             ?? "http://localhost:9292";
 
@@ -73,7 +73,7 @@ public class CatalogProviderTests : IClassFixture<CatalogApiProviderFixture>
             PublishResults = true
         };
 
-        // Act & Assert
+        // Действие и Проверка
         using var verifier = new PactVerifier(config);
 
         verifier

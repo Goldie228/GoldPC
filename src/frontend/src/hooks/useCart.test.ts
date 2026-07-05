@@ -251,7 +251,7 @@ describe('hooks/useCart', () => {
     });
   });
 
-  // ─── computed values ──────────────────────────────────────────
+  // ─── вычисляемые values ──────────────────────────────────────────
 
   describe('computed values', () => {
     it('isEmpty is true when cart has no items', () => {

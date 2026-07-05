@@ -129,7 +129,7 @@ export function ServiceSelector({ selectedServiceId, onSelect }: ServiceSelector
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [services]);
 
-  // --- Loading State ---
+  // --- Загрузка Состояние ---
   if (isLoading) {
     return (
       <section>
@@ -149,7 +149,7 @@ export function ServiceSelector({ selectedServiceId, onSelect }: ServiceSelector
     );
   }
 
-  // --- Error State ---
+  // --- Ошибка Состояние ---
   if (isError) {
     return (
       <section>
@@ -166,7 +166,7 @@ export function ServiceSelector({ selectedServiceId, onSelect }: ServiceSelector
     );
   }
 
-  // --- Empty State ---
+  // --- Пусто Состояние ---
   if (services.length === 0) {
     return (
       <section>
@@ -180,7 +180,7 @@ export function ServiceSelector({ selectedServiceId, onSelect }: ServiceSelector
     );
   }
 
-  // --- Normal State ---
+  // --- Normal Состояние ---
   return (
     <section>
       <h2 className="text-foreground text-lg font-semibold mb-4 flex items-center gap-2">

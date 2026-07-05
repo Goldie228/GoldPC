@@ -1,5 +1,5 @@
 /**
- * Shared Types - API and Domain Types
+ * Shared Типы - API and Domain Типы
  * 
  * This folder contains:
  * - api.ts - API response types (re-exported from api/)

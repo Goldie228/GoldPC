@@ -106,7 +106,7 @@ export function AuditLogPage() {
 
   const handleExport = async () => {
     try {
-      // Fetch ALL logs for export (no pagination)
+      // Fetch ALL logs for export (no пагинация)
       const params: Record<string, unknown> = { page: 1, pageSize: 10000 };
       if (actionFilter) params.actionType = actionFilter;
       if (severityFilter) params.severity = severityFilter;

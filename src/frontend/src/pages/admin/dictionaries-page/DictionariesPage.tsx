@@ -1,7 +1,7 @@
 /**
  * Страница управления справочниками (Справочники)
  * 3 вкладки: Категории, Производители, Характеристики
- * Inline-редактирование, добавление, удаление с подтверждением
+ * Встроенное редактирование, добавление, удаление с подтверждением
  */
 
 import { useState, useMemo, useCallback } from 'react';
@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
-// Types
+// Типы
 // ---------------------------------------------------------------------------
 
 type TabType = 'categories' | 'manufacturers' | 'attributes';
@@ -47,7 +47,7 @@ interface ItemFormData {
 type DictionaryUnion = DictionaryCategory | DictionaryManufacturer | DictionaryItem;
 
 // ---------------------------------------------------------------------------
-// Constants
+// Константы
 // ---------------------------------------------------------------------------
 
 const TABS: TabConfig[] = [
@@ -76,27 +76,27 @@ function deriveSlug(name: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Компонент
 // ---------------------------------------------------------------------------
 
 export function DictionariesPage() {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
-  // ----- Tab & filter state -----------------------------------------------
+  // ----- Состояние вкладки и фильтра -----------------------------------------------
   const [activeTab, setActiveTab] = useState<TabType>('categories');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
 
-  // ----- Inline edit state ------------------------------------------------
+  // ----- Состояние встроенного редактирования ------------------------------------------------
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<ItemFormData>({ name: '', slug: '' });
 
-  // ----- Add-new-row state -------------------------------------------------
+  // ----- Состояние добавления новой строки -------------------------------------------------
   const [showAddForm, setShowAddForm] = useState(false);
   const [addForm, setAddForm] = useState<ItemFormData>({ name: '', slug: '' });
 
-  // ===== React Query: fetch per tab =======================================
+  // ===== React Query: получение по вкладке =======================================
 
   const categoriesQuery = useQuery({
     queryKey: ['admin', 'dictionaries', 'categories'],
@@ -116,7 +116,7 @@ export function DictionariesPage() {
     enabled: activeTab === 'attributes',
   });
 
-  // ----- Resolve active query ---------------------------------------------
+  // ----- Определение активного запроса ---------------------------------------------
   const activeQuery =
     activeTab === 'categories'
       ? categoriesQuery
@@ -128,7 +128,7 @@ export function DictionariesPage() {
   const isLoading = activeQuery.isLoading;
   const isError = activeQuery.isError;
 
-  // ----- Search filter ----------------------------------------------------
+  // ----- Фильтр поиска ----------------------------------------------------
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) return allData;
     const q = searchQuery.toLowerCase();
@@ -139,7 +139,7 @@ export function DictionariesPage() {
     );
   }, [allData, searchQuery]);
 
-  // ----- Client-side pagination -------------------------------------------
+  // ----- Пагинация на стороне клиента -------------------------------------------
   const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
   const paginatedItems = filteredData.slice(
     (page - 1) * PAGE_SIZE,
@@ -159,7 +159,7 @@ export function DictionariesPage() {
     return [page - 2, page - 1, page, page + 1, page + 2];
   }, [page, totalPages]);
 
-  // ===== Mutations =========================================================
+  // ===== Мутации =========================================================
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['admin', 'dictionaries'] });
@@ -203,7 +203,7 @@ export function DictionariesPage() {
     },
   });
 
-  // ===== Handlers ===========================================================
+  // ===== Обработчики ===========================================================
 
   const handleStartEdit = (item: DictionaryItem) => {
     setEditingId(item.id);
@@ -254,9 +254,9 @@ export function DictionariesPage() {
     setAddForm({ name: '', slug: '' });
   };
 
-  // ===== Render helpers =====================================================
+  // ===== Вспомогательные функции отрисовки =====================================================
 
-  /** Renders a status badge (active / inactive) */
+  /** Отрисовывает значок статуса (активен / неактивен) */
   const StatusBadge = ({ isActive }: { isActive: boolean }) => (
     <span
       className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md ${
@@ -269,7 +269,7 @@ export function DictionariesPage() {
     </span>
   );
 
-  /** Renders loading skeleton */
+  /** Отрисовывает скелетон загрузки */
   const LoadingState = () => (
     <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
       <Loader2 className="w-8 h-8 animate-spin text-gold mb-4" />
@@ -277,7 +277,7 @@ export function DictionariesPage() {
     </div>
   );
 
-  /** Renders error with retry */
+  /** Отрисовывает ошибку с повтором */
   const ErrorState = () => (
     <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
       <p className="text-sm text-price-rise mb-4">Не удалось загрузить данные. Попробуйте позже.</p>
@@ -291,7 +291,7 @@ export function DictionariesPage() {
     </div>
   );
 
-  /** Renders empty-state placeholder */
+  /** Отрисовывает заглушку пустого состояния */
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
       <BookOpen className="w-12 h-12 mb-4 opacity-40" />
@@ -299,7 +299,7 @@ export function DictionariesPage() {
     </div>
   );
 
-  /** Renders an inline input cell used in both edit and add modes */
+  /** Отрисовывает встроенную ячейку ввода, используемую в режимах редактирования и добавления */
   const InlineInput = ({
     value,
     onChange,
@@ -318,7 +318,7 @@ export function DictionariesPage() {
     />
   );
 
-  // ----- Table body ---------------------------------------------------------
+  // ----- Тело таблицы ---------------------------------------------------------
   const renderTableBody = () => {
     if (isLoading) return <tr><td colSpan={100}><LoadingState /></td></tr>;
     if (isError) return <tr><td colSpan={100}><ErrorState /></td></tr>;
@@ -329,7 +329,7 @@ export function DictionariesPage() {
 
     return (
       <>
-        {/* ---- Add-new row ---- */}
+        {/* ---- Новая строка ---- */}
         {showAddForm && (
           <tr className="bg-surface-elevated/30">
             {renderAddRowCells()}
@@ -360,7 +360,7 @@ export function DictionariesPage() {
           </tr>
         )}
 
-        {/* ---- Existing rows ---- */}
+        {/* ---- Существующие строки ---- */}
         {paginatedItems.map((item) => {
           const isEditing = editingId === item.id;
           const isPending =
@@ -431,7 +431,7 @@ export function DictionariesPage() {
     );
   };
 
-  // --- Normal row cells (read-only) ---
+  // --- Ячейки обычной строки (только чтение) ---
   const renderNormalRowCells = (item: DictionaryUnion) => {
     const showProductCount = isCategory(item) || isManufacturer(item);
 
@@ -460,7 +460,7 @@ export function DictionariesPage() {
     );
   };
 
-  // --- Edit row cells (inline inputs) ---
+  // --- Ячейки строки редактирования (встроенные поля ввода) ---
   const renderEditRowCells = (item: DictionaryUnion) => {
     const showProductCount = isCategory(item) || isManufacturer(item);
 
@@ -497,7 +497,7 @@ export function DictionariesPage() {
     );
   };
 
-  // --- Add row cells ---
+  // --- Ячейки строки добавления ---
   const renderAddRowCells = () => {
     const showProductCount = activeTab !== 'attributes';
 
@@ -534,12 +534,12 @@ export function DictionariesPage() {
     );
   };
 
-  // ===== Main render ========================================================
+  // ===== Основная отрисовка ========================================================
 
   return (
     <div className="bg-canvas-dark min-h-screen">
       <div className="p-8 max-w-[1400px] mx-auto">
-        {/* ---- Page header ---- */}
+        {/* ---- Заголовок страницы ---- */}
         <header className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-lg font-semibold text-body-text">Справочники</h1>
@@ -549,7 +549,7 @@ export function DictionariesPage() {
           </div>
         </header>
 
-        {/* ---- Tabs ---- */}
+        {/* ---- Вкладки ---- */}
         <div className="bg-surface-card rounded-xl p-1 inline-flex gap-1 mb-6">
           {TABS.map((tab) => (
             <button
@@ -572,7 +572,7 @@ export function DictionariesPage() {
           ))}
         </div>
 
-        {/* ---- Toolbar: search + add button ---- */}
+        {/* ---- Панель инструментов: поиск + кнопка добавления ---- */}
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -598,7 +598,7 @@ export function DictionariesPage() {
           </button>
         </div>
 
-        {/* ---- Table ---- */}
+        {/* ---- Таблица ---- */}
         <div className="bg-surface-card rounded-xl overflow-hidden">
           <table className="w-full border-collapse">
             <thead>
@@ -631,7 +631,7 @@ export function DictionariesPage() {
           </table>
         </div>
 
-        {/* ---- Summary footer ---- */}
+        {/* ---- Нижний колонтитул сводки ---- */}
         {!isLoading && !isError && filteredData.length > 0 && (
           <>
             <div className="flex items-center justify-between pt-4 border-t border-hairline-dark mt-3">

@@ -4,10 +4,12 @@ using GoldPC.OrdersService.Services;
 using GoldPC.SharedKernel.DTOs;
 using GoldPC.SharedKernel.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using FluentAssertions;
 using Xunit;
 using Moq;
 using Microsoft.Extensions.Logging;
+using GoldPC.OrdersService.Services.Interfaces;
 using Shared.Protos;
 
 namespace GoldPC.OrdersService.Tests;
@@ -21,18 +23,20 @@ public class OrdersServiceUnitTests
     {
         var options = new DbContextOptionsBuilder<OrdersDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
         _context = new OrdersDbContext(options);
         _ordersService = new OrdersService.Services.OrdersService(
             _context,
             Mock.Of<ILogger<OrdersService.Services.OrdersService>>(),
-            Mock.Of<CatalogGrpc.CatalogGrpcClient>());
+            Mock.Of<CatalogGrpc.CatalogGrpcClient>(),
+            Mock.Of<IPromoCodeService>());
     }
 
     [Fact]
     public async Task CreateOrder_ValidRequest_ShouldCreateOrder()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var request = new CreateOrderRequest
         {
@@ -48,10 +52,10 @@ public class OrdersServiceUnitTests
             }
         };
 
-        // Act
+        // Действие
         var (order, error) = await _ordersService.CreateAsync(userId, request);
 
-        // Assert
+        // Проверка
         error.Should().BeNull();
         order.Should().NotBeNull();
         order!.OrderNumber.Should().StartWith("ORD-");
@@ -62,7 +66,7 @@ public class OrdersServiceUnitTests
     [Fact]
     public async Task UpdateStatus_FromNewToProcessing_ShouldUpdate()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var request = new CreateOrderRequest
         {
@@ -78,10 +82,10 @@ public class OrdersServiceUnitTests
         };
         var (order, _) = await _ordersService.CreateAsync(userId, request);
 
-        // Act
+        // Действие
         var (updated, error) = await _ordersService.UpdateStatusAsync(order!.Id, OrderStatus.Processing, Guid.NewGuid());
 
-        // Assert
+        // Проверка
         error.Should().BeNull();
         updated!.Status.Should().Be(OrderStatus.Processing);
     }
@@ -89,7 +93,7 @@ public class OrdersServiceUnitTests
     [Fact]
     public async Task CancelOrder_InNewStatus_ShouldCancel()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         var request = new CreateOrderRequest
         {
@@ -105,10 +109,10 @@ public class OrdersServiceUnitTests
         };
         var (order, _) = await _ordersService.CreateAsync(userId, request);
 
-        // Act
+        // Действие
         var (success, error) = await _ordersService.CancelAsync(order!.Id, userId);
 
-        // Assert
+        // Проверка
         success.Should().BeTrue();
         error.Should().BeNull();
         
@@ -119,7 +123,7 @@ public class OrdersServiceUnitTests
     [Fact]
     public async Task GetAll_ShouldReturnPagedResults()
     {
-        // Arrange
+        // Подготовка
         var userId = Guid.NewGuid();
         for (int i = 0; i < 15; i++)
         {
@@ -137,10 +141,10 @@ public class OrdersServiceUnitTests
             });
         }
 
-        // Act
+        // Действие
         var result = await _ordersService.GetAllAsync(1, 10);
 
-        // Assert
+        // Проверка
         result.TotalCount.Should().BeGreaterOrEqualTo(15);
         result.Items.Count.Should().Be(10);
     }
@@ -148,7 +152,7 @@ public class OrdersServiceUnitTests
     [Fact]
     public async Task GetByUserId_ShouldReturnOnlyUserOrders()
     {
-        // Arrange
+        // Подготовка
         var userId1 = Guid.NewGuid();
         var userId2 = Guid.NewGuid();
         
@@ -190,10 +194,10 @@ public class OrdersServiceUnitTests
             }
         });
 
-        // Act
+        // Действие
         var result = await _ordersService.GetByUserIdAsync(userId1, 1, 10);
 
-        // Assert
+        // Проверка
         result.Items.All(o => o.UserId == userId1).Should().BeTrue();
         result.TotalCount.Should().Be(2);
     }

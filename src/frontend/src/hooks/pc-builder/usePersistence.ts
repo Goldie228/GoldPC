@@ -1,5 +1,5 @@
 /**
- * usePersistence — LocalStorage + optional API sync for PC Builder
+ * usePersistence — LocalStorage + optional API синхронный for PC Builder
  * Isolated side effect: localStorage read/write + debounced API auto-save
  */
 
