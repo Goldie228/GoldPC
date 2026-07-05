@@ -1,0 +1,59 @@
+erDiagram
+    Users ||--o{ Orders : создает
+    Users ||--o{ RefreshTokens : имеет
+    Users ||--o{ LoginHistories : имеет
+    Users ||--o{ UserAddresses : имеет
+    Users ||--o{ WishlistItems : имеет
+    Users ||--o{ PasswordResetTokens : имеет
+    Users ||--o{ EmailVerificationTokens : имеет
+    Users ||--o{ NotificationPreferences : имеет
+    Users ||--o| UserTwoFactors : настраивает
+    Users ||--o{ ServiceRequests : "создает / как мастер"
+    Users ||--o{ WarrantyCards : получает
+    Users ||--o{ WarrantyClaims : подаёт
+    Users ||--o{ Reviews : пишет
+    Users ||--o{ PCConfigurations : сохраняет
+
+    Orders ||--|{ OrderItems : содержит
+    Orders ||--|{ OrderHistories : "история"
+    Orders ||--o| WarrantyCards : "гарантия товара"
+    Orders ||--o| ServiceRequests : "инициирует"
+    Orders ||--o| PromoCodes : применяет
+
+    OrderItems }o--|| Products : ссылается
+
+    Products ||--o{ Reviews : получает
+    Products ||--o{ ProductImages : содержит
+    Products ||--o{ PriceHistories : "история цен"
+    Products ||--o{ ProductSpecificationValues : "спецификации"
+    Products }o--|| Categories : относится
+    Products }o--|| Manufacturers : произведен
+
+    Categories ||--o| Categories : "родительская"
+    Categories ||--o{ CategoryFilterAttributes : "атрибуты фильтров"
+
+    SpecificationAttributes ||--o{ ProductSpecificationValues : "значения"
+    SpecificationAttributes ||--o{ CategoryFilterAttributes : "атрибуты фильтров"
+    SpecificationAttributes ||--o{ SpecificationCanonicalValues : "значения"
+
+    ServiceRequests ||--o{ ServiceParts : содержит
+    ServiceRequests ||--o{ WorkReports : "отчёт"
+    ServiceRequests ||--o{ TicketMessages : "чат"
+    ServiceRequests ||--o{ AssemblyParts : "комплектующие"
+    ServiceRequests ||--o| AssembledUnits : "сборка"
+    ServiceRequests ||--o| WarrantyCards : "гарантия услуги"
+    ServiceRequests }o--|| ServiceTypes : "тип"
+
+    WarrantyCards ||--o{ WarrantyCardOperations : "операции"
+    WarrantyClaims ||--o{ WarrantyHistories : "история"
+
+    PCConfigurations ||--o| Products : "процессор"
+    PCConfigurations ||--o| Products : "матплата"
+    PCConfigurations ||--o| Products : "ОЗУ"
+    PCConfigurations ||--o| Products : "видеокарта"
+    PCConfigurations ||--o| Products : "БП"
+    PCConfigurations ||--o| Products : "корпус"
+    PCConfigurations ||--o| Products : "накопитель"
+    PCConfigurations ||--o| Products : "охлаждение"
+
+    PCConfigurations ||--o{ CompatibilityRules : проверяется
