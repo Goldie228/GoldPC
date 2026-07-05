@@ -50,8 +50,15 @@ public class OrderPaidConsumer : IConsumer<OrderPaidEvent>
         // Process each assembly bundle
         foreach (var bundle in message.AssemblyBundles)
         {
-            // No dedup: allow multiple service requests per order (one per bundle).
-            // Duplicate bundles with the same PCConfigurationId should each get their own request.
+            // Dedup: skip if a service request already exists for this order+configuration
+            var existingRequest = await _context.ServiceRequests
+                .FirstOrDefaultAsync(sr => sr.OrderId == message.OrderId && sr.PCConfigurationId == bundle.PCConfigurationId);
+            if (existingRequest != null)
+            {
+                _logger.LogInformation("Service request already exists for Order {OrderId}, config {ConfigId}, skipping",
+                    message.OrderId, bundle.PCConfigurationId);
+                continue;
+            }
 
             // Generate request number
             var year = DateTime.UtcNow.Year;

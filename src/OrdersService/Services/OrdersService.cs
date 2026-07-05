@@ -295,21 +295,41 @@ public class OrdersService : IOrdersService
         _logger.LogInformation("Order created: {OrderNumber} for user {UserId} with {ItemCount} items, total: {Total}", 
             orderNumber, userId, request.Items.Count, total);
 
-        // Publish OrderPlacedEvent (ФТ-3.13 - уведомление внешних систем) - via Outbox
-        // Временно отключено пока MassTransit/RabbitMQ не настроены
-        // SaveToOutbox(new OrderPlacedEvent
-        // {
-        //     OrderId = order.Id,
-        //     CustomerId = userId,
-        //     TotalAmount = total,
-        //     Items = request.Items.Select(i => new OrderItemEventDto
-        //     {
-        //         ProductId = i.ProductId,
-        //         ProductName = i.ProductName,
-        //         Quantity = i.Quantity,
-        //         Price = i.UnitPrice
-        //     }).ToList()
-        // });
+        // Publish OrderPaidEvent for bundle items so ServicesService creates assembly requests
+        var bundleItems = request.Items
+            .Where(i => i.ItemType == OrderItemType.PCBundle)
+            .ToList();
+
+        if (bundleItems.Any())
+        {
+            var assemblyBundles = bundleItems.Select((item, index) => new AssemblyBundleInfo
+            {
+                PCConfigurationId = item.PCConfigurationId ?? Guid.Empty,
+                BundleIndex = index,
+                AssemblyFee = item.AssemblyFee ?? 100m,
+                OrderId = order.Id,
+                CustomerId = userId,
+                ClientPhone = request.Phone
+            }).ToList();
+
+            SaveToOutbox(new OrderPaidEvent
+            {
+                OrderId = order.Id,
+                CustomerId = userId,
+                AmountPaid = total,
+                ClientPhone = request.Phone,
+                Items = request.Items.Select(i => new OrderItemEventDto
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.ProductName,
+                    Quantity = i.Quantity,
+                    Price = i.UnitPrice
+                }).ToList(),
+                AssemblyBundles = assemblyBundles
+            });
+
+            await _context.SaveChangesAsync();
+        }
 
         // Загружаем позиции для маппинга
         order.Items = await _context.OrderItems.Where(oi => oi.OrderId == order.Id).ToListAsync();
