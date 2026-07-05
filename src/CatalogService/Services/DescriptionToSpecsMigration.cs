@@ -353,6 +353,11 @@ public partial class DescriptionToSpecsMigration
         // которые были записаны старым импортом (например, "Конструкция микрофона" → type)
         await CleanupLegacyDataAsync();
 
+        // Очистка многосокетных записей, оставшихся от предыдущего прогона миграции
+        // (когда всё значение "AM5, AM4, LGA1700, ..." сохранялось в одну запись socket).
+        // Сейчас такие значения должны быть разбиты на отдельные записи по каждому сокету.
+        await CleanupMultiValueSocketRecordsAsync();
+
         // Загружаем все атрибуты для быстрого поиска
         var allAttrs = await _context.SpecificationAttributes
             .Include(a => a.CanonicalValues)
@@ -377,6 +382,9 @@ public partial class DescriptionToSpecsMigration
             {
                 _logger.LogWarning(ex, "Error processing product {ProductId} ({Name})", product.Id, product.Name);
                 result.Errors++;
+                // После исключения DbContext может быть в faulted state — сбрасываем ChangeTracker,
+                // чтобы следующие товары могли обрабатываться.
+                _context.ChangeTracker.Clear();
             }
         }
 
@@ -440,30 +448,48 @@ public partial class DescriptionToSpecsMigration
             if (existingKeys.Contains(attr.Id))
                 continue;
 
-            // Создаём значение
-            var specValue = ParseAndCreateValue(product.Id, attr, valuePart);
-            if (specValue == null)
+            // Создаём значение. Для мультизначных полей (например, socket у кулеров
+            // — "AM5, AM4, LGA1700, LGA1150, ...") возвращается список отдельных записей,
+            // чтобы фасеты фильтров и PC Builder видели каждый сокет как опцию.
+            var specValues = ParseAndCreateValue(product.Id, attr, valuePart);
+            if (specValues == null || specValues.Count == 0)
             {
                 result.Skipped++;
                 continue;
             }
 
-            _context.ProductSpecificationValues.Add(specValue);
-            result.Saved++;
-            result.Mapped++;
+            foreach (var sv in specValues)
+            {
+                _context.ProductSpecificationValues.Add(sv);
+                result.Saved++;
+                result.Mapped++;
+            }
+
+            // Помечаем атрибут как обработанный — даже если описание содержит
+            // повторяющиеся строки, мы не будем создавать дублирующиеся записи.
+            existingKeys.Add(attr.Id);
 
             // Сохраняем батчами по 100
             if (result.Saved % 100 == 0)
             {
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Saved {Count} specification values so far", result.Saved);
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Saved {Count} specification values so far", result.Saved);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Batch save failed at {Count} values — clearing tracker and continuing", result.Saved);
+                    _context.ChangeTracker.Clear();
+                    result.Errors++;
+                }
             }
         }
 
         // Не сохраняем после каждого товара — только батчами
     }
 
-    private ProductSpecificationValue? ParseAndCreateValue(
+    private List<ProductSpecificationValue>? ParseAndCreateValue(
         Guid productId,
         SpecificationAttribute attr,
         string valueText)
@@ -476,24 +502,30 @@ public partial class DescriptionToSpecsMigration
             var number = ExtractNumber(valueText);
             if (number.HasValue)
             {
-                return new ProductSpecificationValue
+                return new List<ProductSpecificationValue>
                 {
-                    Id = Guid.NewGuid(),
-                    ProductId = productId,
-                    AttributeId = attr.Id,
-                    ValueNumber = number.Value,
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = productId,
+                        AttributeId = attr.Id,
+                        ValueNumber = number.Value,
+                    }
                 };
             }
 
             // Если число не извлеклось, возможно это дата (год)
             if (int.TryParse(valueText.TrimEnd('г', ' ', '.'), out var year) && year > 1900 && year < 2100)
             {
-                return new ProductSpecificationValue
+                return new List<ProductSpecificationValue>
                 {
-                    Id = Guid.NewGuid(),
-                    ProductId = productId,
-                    AttributeId = attr.Id,
-                    ValueNumber = year,
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = productId,
+                        AttributeId = attr.Id,
+                        ValueNumber = year,
+                    }
                 };
             }
 
@@ -501,43 +533,88 @@ public partial class DescriptionToSpecsMigration
             return null;
         }
 
-        // Select-атрибут — ищем или создаём canonical value
-        var normalizedValue = NormalizeValue(valueText);
-        if (string.IsNullOrWhiteSpace(normalizedValue))
+        // Select-атрибут. Для мультизначных полей (например, socket у кулеров:
+        // "AM5, AM4, LGA1700, LGA1150, ...") разбиваем на отдельные записи —
+        // иначе фасет фильтра и PC Builder не смогут работать с каждой опцией.
+        var rawValues = SplitMultiValue(valueText, attr.Key);
+        if (rawValues.Count == 0)
             return null;
 
-        // Нормализуем булевы значения
-        normalizedValue = NormalizeBoolean(normalizedValue);
-
-        // Ищем существующее каноническое значение
-        var canonical = attr.CanonicalValues
-            .FirstOrDefault(cv => 
-                cv.ValueText.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase) ||
-                cv.ValueText.Replace(" ", "").Equals(normalizedValue.Replace(" ", ""), StringComparison.OrdinalIgnoreCase));
-
-        if (canonical == null)
+        var result = new List<ProductSpecificationValue>(rawValues.Count);
+        foreach (var raw in rawValues)
         {
-            // Создаём новое каноническое значение — явно добавляем в контекст,
-            // чтобы EF Core знал о нём при сохранении ProductSpecificationValue
-            canonical = new SpecificationCanonicalValue
+            var normalizedValue = NormalizeValue(raw);
+            if (string.IsNullOrWhiteSpace(normalizedValue))
+                continue;
+
+            normalizedValue = NormalizeBoolean(normalizedValue);
+
+            // Ограничиваем длину до 200 символов (лимит value_text в БД).
+            if (normalizedValue.Length > 200)
+            {
+                normalizedValue = normalizedValue.Substring(0, 200).TrimEnd();
+            }
+
+            // Ищем существующее каноническое значение
+            var canonical = attr.CanonicalValues
+                .FirstOrDefault(cv =>
+                    cv.ValueText.Equals(normalizedValue, StringComparison.OrdinalIgnoreCase) ||
+                    cv.ValueText.Replace(" ", "").Equals(normalizedValue.Replace(" ", ""), StringComparison.OrdinalIgnoreCase));
+
+            if (canonical == null)
+            {
+                canonical = new SpecificationCanonicalValue
+                {
+                    Id = Guid.NewGuid(),
+                    AttributeId = attr.Id,
+                    ValueText = normalizedValue,
+                    SortOrder = attr.CanonicalValues.Count,
+                };
+                attr.CanonicalValues.Add(canonical);
+                _context.SpecificationCanonicalValues.Add(canonical);
+            }
+
+            result.Add(new ProductSpecificationValue
             {
                 Id = Guid.NewGuid(),
+                ProductId = productId,
                 AttributeId = attr.Id,
-                ValueText = normalizedValue,
-                SortOrder = attr.CanonicalValues.Count,
-            };
-            attr.CanonicalValues.Add(canonical);
-            _context.SpecificationCanonicalValues.Add(canonical);
+                CanonicalValueId = canonical.Id,
+                CanonicalValue = canonical,
+            });
         }
 
-        return new ProductSpecificationValue
-        {
-            Id = Guid.NewGuid(),
-            ProductId = productId,
-            AttributeId = attr.Id,
-            CanonicalValueId = canonical.Id,
-            CanonicalValue = canonical, // navigation property для EF Core
-        };
+        return result.Count > 0 ? result : null;
+    }
+
+    /// <summary>
+    /// Разбивает многосокетное (или любое мультизначное) значение на отдельные токены.
+    /// Для атрибута socket — разделяет по запятой/точке с запятой, обрезая мусор типа "(LGA2011-3,LGA2011".
+    /// Для остальных атрибутов — возвращает исходное значение как один токен.
+    /// </summary>
+    private static List<string> SplitMultiValue(string valueText, string attrKey)
+    {
+        if (string.IsNullOrWhiteSpace(valueText))
+            return new List<string>();
+
+        // Атрибуты, для которых допустимо мультизначение через запятую.
+        bool isMultiValueAttr = attrKey.Equals("socket", StringComparison.OrdinalIgnoreCase)
+            || attrKey.Equals("memory_type", StringComparison.OrdinalIgnoreCase)
+            || attrKey.Equals("supported_sockets", StringComparison.OrdinalIgnoreCase);
+
+        if (!isMultiValueAttr)
+            return new List<string> { valueText };
+
+        // Разделяем по запятой или точке с запятой, чистим каждую часть.
+        var parts = valueText
+            .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Trim().TrimEnd('.').Trim())
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            // Убираем явный мусор: значения, начинающиеся с "(" или ")" без смысла
+            .Select(p => p.StartsWith("(") && !p.Contains(")") ? p.TrimStart('(').Trim() : p)
+            .ToList();
+
+        return parts;
     }
 
     private static decimal? ExtractNumber(string valueText)
@@ -652,6 +729,39 @@ public partial class DescriptionToSpecsMigration
             await _context.SaveChangesAsync();
             _logger.LogInformation("Cleaned up {Count} duplicate canonical values", removedCount);
         }
+    }
+
+    /// <summary>
+    /// Удаляет старые многосокетные записи (когда в одной записи socket хранился
+    /// список "AM5, AM4, LGA1700, ..."), чтобы миграция создала по отдельной записи
+    /// на каждый сокет. Без этого шага миграция пропустит socket у таких товаров
+    /// (existingKeys.Contains(attr.Id) == true) и фасеты фильтров не будут работать.
+    /// </summary>
+    private async Task CleanupMultiValueSocketRecordsAsync()
+    {
+        var socketAttr = await _context.SpecificationAttributes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Key == "socket");
+        if (socketAttr == null) return;
+
+        // Загружаем все PSV с ключом socket в память и фильтруем на клиенте —
+        // EF Core не может транслировать string.Contains(char) для PostgreSQL.
+        var allSockets = await _context.ProductSpecificationValues
+            .Include(v => v.CanonicalValue)
+            .Where(v => v.AttributeId == socketAttr.Id && v.CanonicalValue != null)
+            .ToListAsync();
+
+        var multiValueSockets = allSockets
+            .Where(v => v.CanonicalValue!.ValueText.Contains(',') || v.CanonicalValue!.ValueText.Contains(';'))
+            .ToList();
+
+        if (multiValueSockets.Count == 0) return;
+
+        // Удаляем записи, но НЕ удаляем canonical values — они могут использоваться
+        // другими продуктами, у которых запись не многосокетная.
+        _context.ProductSpecificationValues.RemoveRange(multiValueSockets);
+        await _context.SaveChangesAsync();
+        _logger.LogInformation("Cleaned up {Count} multi-value 'socket' records for re-splitting", multiValueSockets.Count);
     }
 
     public record MigrationResult

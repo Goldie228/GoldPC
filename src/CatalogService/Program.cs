@@ -340,6 +340,39 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions
 // Prometheus metrics endpoint для сбора метрик
 app.MapPrometheusScrapingEndpoint();
 
+// ──────────────────────────────────────────────────────
+// Auto-seed filter attributes on startup if table is empty
+// ──────────────────────────────────────────────────────
+if (!args.Any(a => a.StartsWith("seed-", StringComparison.Ordinal)))
+{
+    try
+    {
+        using var seedScope = app.Services.CreateScope();
+        var dbContext = seedScope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+        var hasAttrs = await dbContext.CategoryFilterAttributes.AnyAsync();
+        if (!hasAttrs)
+        {
+            var seeder = seedScope.ServiceProvider.GetRequiredService<CatalogService.Services.FilterAttributesSeeder>();
+            var repoRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+            var jsonPath = Path.Combine(repoRoot, "scripts", "scraper", "config", "xcore-filter-attributes.json");
+            if (File.Exists(jsonPath))
+            {
+                var seedResult = await seeder.SeedFromFileAsync(jsonPath);
+                Log.Information("Auto-seed filter attributes: {Added} added, {Deleted} deleted, {Skipped} skipped",
+                    seedResult.Added, seedResult.Deleted, seedResult.Skipped);
+            }
+            else
+            {
+                Log.Warning("Filter attributes seed file not found: {JsonPath}", jsonPath);
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "Failed to auto-seed filter attributes on startup");
+    }
+}
+
 // CLI: dotnet run -- seed-xcore-images [путь к xcore-images.json]
 if (args is ["seed-xcore-images"] or ["seed-xcore-images", _])
 {

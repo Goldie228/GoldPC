@@ -394,7 +394,11 @@ public class ProductRepository : IProductRepository
 
         if (filterContext?.Specifications != null && filterContext.Specifications.Count > 0)
         {
-            foreach (var (specKey, value) in filterContext.Specifications.Where(kv => kv.Key != null && kv.Value != null))
+            // Facet behavior: для каждого запрашиваемого ключа исключаем его же из фильтра.
+            // Иначе при выбранном socket=AM4 в фасете socket останется только AM4.
+            var otherSpecs = filterContext.Specifications
+                .Where(kv => kv.Key != null && kv.Value != null && !keys.Contains(kv.Key, StringComparer.OrdinalIgnoreCase));
+            foreach (var (specKey, value) in otherSpecs)
             {
                 var allowedTexts = value.Split(',', StringSplitOptions.TrimEntries).Where(s => !string.IsNullOrEmpty(s)).ToList();
                 if (allowedTexts.Count == 0) continue;
@@ -413,7 +417,8 @@ public class ProductRepository : IProductRepository
         }
         if (filterContext?.SpecificationRanges != null && filterContext.SpecificationRanges.Count > 0)
         {
-            foreach (var (rangeKey, rangeStr) in filterContext.SpecificationRanges)
+            // Facet behavior: исключаем range-фильтр для текущего ключа, чтобы не схлопывать диапазон.
+            foreach (var (rangeKey, rangeStr) in filterContext.SpecificationRanges.Where(kv => !string.IsNullOrEmpty(kv.Key) && !keys.Contains(kv.Key, StringComparer.OrdinalIgnoreCase)))
             {
                 if (string.IsNullOrEmpty(rangeKey)) continue;
                 var parts = rangeStr.Split(',', StringSplitOptions.TrimEntries);

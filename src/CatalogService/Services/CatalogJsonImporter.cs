@@ -166,24 +166,104 @@ public class CatalogJsonImporter
             SortOrder = sortOrder,
         };
 
-    private void ReplaceProductImagesFromImport(Product product, List<object>? images)
+    /// <summary>
+    /// Подсчитывает частоту URL изображений среди всех товаров.
+    /// Возвращает Set URL-ов, которые встречаются чаще порога — это site-wide placeholder'ы.
+    /// </summary>
+    private static HashSet<string> DetectPlaceholderImageUrls(XCoreImportData data, int threshold = 5)
     {
-        if (images == null || images.Count == 0)
+        var urlCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        if (data.Products == null) return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var p in data.Products)
+        {
+            if (p.Images == null) continue;
+            foreach (var img in p.Images)
+            {
+                var raw = img is JsonElement je ? je.GetString() : img?.ToString();
+                if (string.IsNullOrWhiteSpace(raw)) continue;
+                var normalized = raw.Trim();
+                if (urlCounts.TryGetValue(normalized, out var count))
+                    urlCounts[normalized] = count + 1;
+                else
+                    urlCounts[normalized] = 1;
+            }
+        }
+
+        var placeholders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var kv in urlCounts)
+        {
+            if (kv.Value >= threshold)
+                placeholders.Add(kv.Key);
+        }
+        return placeholders;
+    }
+
+    /// <summary>
+    /// Фильтрует дубликаты и placeholder-изображения для одного товара.
+    /// </summary>
+    private static List<string> FilterProductImages(List<object>? images, HashSet<string> placeholders)
+    {
+        var result = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (images == null) return result;
+
+        foreach (var img in images)
+        {
+            var raw = img is JsonElement je ? je.GetString() : img?.ToString();
+            if (string.IsNullOrWhiteSpace(raw)) continue;
+            var url = raw.Trim();
+            if (seen.Contains(url)) continue;
+            if (placeholders.Contains(url)) continue;
+            seen.Add(url);
+            result.Add(url);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Подсчитывает частоту URL изображений в XCoreImagesData (seed-xcore-images).
+    /// </summary>
+    private static HashSet<string> DetectPlaceholderImageUrlsFromXCore(XCoreImagesData data, int threshold = 5)
+    {
+        var urlCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        if (data.Products == null) return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var p in data.Products)
+        {
+            if (p.Images == null) continue;
+            foreach (var url in p.Images)
+            {
+                if (string.IsNullOrWhiteSpace(url)) continue;
+                var normalized = url.Trim();
+                if (urlCounts.TryGetValue(normalized, out var count))
+                    urlCounts[normalized] = count + 1;
+                else
+                    urlCounts[normalized] = 1;
+            }
+        }
+
+        var placeholders = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var kv in urlCounts)
+        {
+            if (kv.Value >= threshold)
+                placeholders.Add(kv.Key);
+        }
+        return placeholders;
+    }
+
+    private void ReplaceProductImagesFromImport(Product product, List<string> imageUrls)
+    {
+        if (imageUrls.Count == 0)
         {
             return;
         }
 
         _context.ProductImages.RemoveRange(product.Images.ToList());
 
-        for (var i = 0; i < images.Count; i++)
+        for (var i = 0; i < imageUrls.Count; i++)
         {
-            var raw = images[i];
-            var imgRaw = raw is JsonElement je ? je.GetString() : raw?.ToString();
-            if (string.IsNullOrEmpty(imgRaw))
-            {
-                continue;
-            }
-
+            var imgRaw = imageUrls[i];
             var path = TryResolveStoredImagePath(imgRaw);
             var urlForDb = path != null && imgRaw.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase) ? path : imgRaw;
             _context.ProductImages.Add(CreateProductImageRow(product.Id, urlForDb, path, product.Name, i == 0, i));
@@ -210,6 +290,15 @@ public class CatalogJsonImporter
         if (data.Products == null || data.Products.Count == 0)
         {
             return result;
+        }
+
+        // Определяем site-wide placeholder-изображения (встречаются в >5 товаров)
+        var placeholderThreshold = Math.Max(5, data.Products.Count / 100);
+        var placeholderUrls = DetectPlaceholderImageUrls(data, placeholderThreshold);
+        if (placeholderUrls.Count > 0)
+        {
+            _logger.LogWarning("Обнаружено {Count} site-wide placeholder-изображений (порог: {Threshold} товаров), они будут исключены из импорта",
+                placeholderUrls.Count, placeholderThreshold);
         }
 
         var categories = await _context.Categories.ToDictionaryAsync(c => c.Slug, c => c.Id);
@@ -498,7 +587,7 @@ public class CatalogJsonImporter
                         _context.ProductSpecificationValues.Add(sv);
                     }
 
-                    ReplaceProductImagesFromImport(existing, p.Images);
+                    ReplaceProductImagesFromImport(existing, FilterProductImages(p.Images, placeholderUrls));
                     
                     _logger.LogDebug("Обновлён товар {Sku}", existing.Sku);
                     result.Updated++;
@@ -551,7 +640,7 @@ public class CatalogJsonImporter
                         _context.ProductSpecificationValues.Add(sv);
                     }
 
-                    ReplaceProductImagesFromImport(product, p.Images);
+                    ReplaceProductImagesFromImport(product, FilterProductImages(p.Images, placeholderUrls));
 
                     result.Imported++;
                 }
@@ -674,6 +763,13 @@ public class CatalogJsonImporter
             return result;
         }
 
+        // Определяем site-wide placeholder-изображения
+        var placeholderUrls = DetectPlaceholderImageUrlsFromXCore(data);
+        if (placeholderUrls.Count > 0)
+        {
+            _logger.LogWarning("seed-xcore-images: обнаружено {Count} site-wide placeholder-изображений, они будут исключены", placeholderUrls.Count);
+        }
+
         var processedProductIds = new HashSet<Guid>();
         var matchedProductIds = new HashSet<Guid>();
 
@@ -715,10 +811,20 @@ public class CatalogJsonImporter
                 _context.ProductImages.RemoveRange(product.Images.ToList());
 
                 var imageUrls = item.Images ?? new List<string>();
+                var seenUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var sortIndex = 0;
                 for (var i = 0; i < imageUrls.Count; i++)
                 {
                     var url = imageUrls[i]?.ToString();
                     if (string.IsNullOrEmpty(url) || IsXCorePlaceholderUrl(url))
+                    {
+                        continue;
+                    }
+                    if (placeholderUrls.Contains(url))
+                    {
+                        continue;
+                    }
+                    if (!seenUrls.Add(url))
                     {
                         continue;
                     }
@@ -733,8 +839,8 @@ public class CatalogJsonImporter
                         Url = urlTruncated,
                         Path = existingPath,
                         AltText = product.Name,
-                        IsPrimary = i == 0,
-                        SortOrder = i,
+                        IsPrimary = sortIndex == 0,
+                        SortOrder = sortIndex++,
                     });
                 }
 
@@ -795,6 +901,13 @@ public class CatalogJsonImporter
             return result;
         }
 
+        // Определяем site-wide placeholder-изображения
+        var placeholderUrls = DetectPlaceholderImageUrlsFromXCore(data);
+        if (placeholderUrls.Count > 0)
+        {
+            _logger.LogWarning("seed-xcore-images-merge: обнаружено {Count} site-wide placeholder-изображений, они будут исключены", placeholderUrls.Count);
+        }
+
         foreach (var item in data.Products)
         {
             if (string.IsNullOrWhiteSpace(item.Sku))
@@ -833,6 +946,10 @@ public class CatalogJsonImporter
                 {
                     var url = raw?.ToString();
                     if (string.IsNullOrWhiteSpace(url) || IsXCorePlaceholderUrl(url))
+                    {
+                        continue;
+                    }
+                    if (placeholderUrls.Contains(url))
                     {
                         continue;
                     }
