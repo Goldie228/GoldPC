@@ -552,17 +552,7 @@ public class CompatibilityService : ICompatibilityService
 
         if (cpu.Socket == null || mb.Socket == null)
         {
-            if (cpu.Socket == null && mb.Socket == null) return; // both unknown, skip
-            var unknownComponent = cpu.Socket == null ? cpu.Name : mb.Name;
-            result.IsCompatible = false;
-            result.Issues.Add(new CompatibilityIssueDto
-            {
-                Severity = "Error",
-                Component1 = cpu.Name,
-                Component2 = mb.Name,
-                Message = $"Не удалось определить сокет: {unknownComponent}",
-                Suggestion = "Проверьте характеристики компонента"
-            });
+            // Both unknown or one unknown — skip (don't block build for undetectable sockets)
             return;
         }
         var (match, _, _) = _ruleEngine.CheckSocketMatch(cpu.Socket, mb.Socket);
@@ -623,18 +613,7 @@ public class CompatibilityService : ICompatibilityService
 
         if (mb.RamType == null || ram.Type == null)
         {
-            if (mb.RamType == null && ram.Type == null) return; // both unknown, skip
-            var unknownComponent = mb.RamType == null ? mb.Name : ram.Name;
-            result.IsCompatible = false;
-            result.Issues.Add(new CompatibilityIssueDto
-            {
-                Severity = "Error",
-                Component1 = mb.Name,
-                Component2 = ram.Name,
-                Message = $"Не удалось определить тип памяти: {unknownComponent}",
-                Suggestion = "Проверьте характеристики компонента"
-            });
-            return;
+            return; // unknown type, skip check
         }
         var issue = _ruleEngine.CheckRamGenerationMismatch(mb.RamType, ram.Type);
         if (issue != null)

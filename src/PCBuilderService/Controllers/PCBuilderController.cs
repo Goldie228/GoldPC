@@ -108,6 +108,19 @@ public class PCBuilderController : ControllerBase
         var config = MapToConfiguration(dto);
         config.UserId = userId;
 
+        // Calculate total price from products if not provided
+        if (config.TotalPrice <= 0)
+        {
+            try
+            {
+                config.TotalPrice = await _configurationService.CalculateTotalPriceAsync(dto);
+            }
+            catch
+            {
+                // Fallback: keep 0 if price calculation fails
+            }
+        }
+
         // Проверяем совместимость
         var compatibility = await _compatibilityService.CheckCompatibilityAsync(config);
         config.IsCompatible = compatibility.IsCompatible;
@@ -507,7 +520,8 @@ public class PCBuilderController : ControllerBase
             PsuId = dto.PsuId,
             StorageId = dto.StorageId,
             CaseId = dto.CaseId,
-            CoolerId = dto.CoolerId
+            CoolerId = dto.CoolerId,
+            TotalPrice = dto.TotalPrice ?? 0
         };
     }
 
