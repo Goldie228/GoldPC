@@ -26,6 +26,7 @@ export interface CartItem {
 
 export interface BundleComponent {
   productId: string;
+  productSlug?: string;
   productName: string;
   category: string;
   price: number;
@@ -107,6 +108,8 @@ export const useCartStore = create<CartStore>()(
       addBundleItem: (bundle) => {
         set((state) => {
           const bundleId = crypto.randomUUID();
+          // Use first component's image as the bundle thumbnail
+          const firstImage = bundle.components.length > 0 ? bundle.components[0].imageUrl : undefined;
           const newBundleItem: CartItem = {
             id: bundleId,
             productId: bundleId,
@@ -114,6 +117,7 @@ export const useCartStore = create<CartStore>()(
             category: 'pcbundle',
             price: bundle.totalPrice,
             quantity: 1,
+            imageUrl: firstImage,
             itemType: 'pcbundle',
             pcConfigurationId: bundle.pcConfigurationId,
             assemblyFee: bundle.assemblyFee,

@@ -60,7 +60,7 @@ function getStepIndex(status: unknown): number {
 /* ------------------------------------------------------------------ */
 
 function formatPrice(n: number): string {
-  return n.toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 });
+  return n.toLocaleString('ru-RU', { style: 'currency', currency: 'BYN', maximumFractionDigits: 0 });
 }
 
 function formatDate(iso: string): string {

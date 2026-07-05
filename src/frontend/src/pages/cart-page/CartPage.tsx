@@ -7,15 +7,21 @@ import {
   Minus,
   Plus,
   ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  Cpu,
 } from 'lucide-react';
 import { pluralizeRu } from '@/utils/pluralizeRu';
-import { useCart } from '@/hooks/useCart';
 import { hasValidProductImage } from '@/utils/image';
+import { useCart } from '@/hooks/useCart';
+import { useAuthStore } from '@/store/authStore';
+import { useAuthModalStore } from '@/store/authModalStore';
 import { useToastStore } from '@/store/toastStore';
 import { RelatedProducts } from '@/components/cart/RelatedProducts';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs';
+import type { CartItem } from '@/store/cartStore';
 
 const CATEGORY_LABELS: Record<string, string> = {
   cpu: 'Процессор',
@@ -31,10 +37,71 @@ const CATEGORY_LABELS: Record<string, string> = {
   keyboard: 'Клавиатура',
   mouse: 'Мышь',
   headphones: 'Наушники',
+  pcbundle: 'Сборка ПК',
 };
 
 function getCategoryLabel(category: string): string {
   return CATEGORY_LABELS[category] ?? category;
+}
+
+/** Bundle item: expandable list of components with assembly fee */
+function BundleItemCard({
+  item,
+  expanded,
+  onToggle,
+}: {
+  item: CartItem;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const components = item.bundleComponents ?? [];
+  const formatPrice = (p: number) => p.toLocaleString('ru-BY');
+
+  return (
+    <div className="flex flex-col gap-2 min-w-0">
+      <span className="text-[0.65rem] text-foreground-dim uppercase tracking-[0.1em] font-medium">Сборка ПК</span>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex items-center gap-2 text-left text-[0.95rem] font-medium text-foreground leading-1.4 bg-transparent border-none cursor-pointer p-0 transition-colors hover:text-gold"
+      >
+        <Cpu size={14} className="text-gold shrink-0" />
+        <span className="line-clamp-2">{item.name}</span>
+        {expanded ? <ChevronUp size={14} className="shrink-0 text-muted-foreground" /> : <ChevronDown size={14} className="shrink-0 text-muted-foreground" />}
+      </button>
+
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-col gap-1.5 mt-1 pl-4 border-l-2 border-border/50">
+              {components.map((comp) => (
+                <Link
+                  key={comp.productId}
+                  to={`/product/${comp.productSlug ?? comp.productId}`}
+                  className="flex items-center justify-between gap-2 text-xs text-muted-foreground no-underline hover:text-gold transition-colors py-0.5"
+                >
+                  <span className="truncate">{comp.productName}</span>
+                  <span className="shrink-0 font-mono">{formatPrice(comp.price)} BYN</span>
+                </Link>
+              ))}
+              {item.assemblyFee != null && item.assemblyFee > 0 && (
+                <div className="flex items-center justify-between gap-2 text-xs text-gold py-0.5">
+                  <span>Сборка</span>
+                  <span className="shrink-0 font-mono">{formatPrice(item.assemblyFee)} BYN</span>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 /**
@@ -109,6 +176,10 @@ export function CartPage(): ReactElement {
 
   const showToast = useToastStore((state) => state.showToast);
   const [totalFlash, setTotalFlash] = useState(false);
+  const [expandedBundles, setExpandedBundles] = useState<Set<string>>(new Set());
+
+  const hasBundle = items.some((item) => item.itemType === 'pcbundle');
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const handleRemoveItem = (productId: string, name: string): void => {
     removeFromCart(productId);
@@ -159,7 +230,9 @@ export function CartPage(): ReactElement {
                   >
                     {/* Image */}
                     <div className="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center bg-white rounded-xl flex-shrink-0 p-2 md:p-3 overflow-hidden">
-                      {hasValidProductImage(item.imageUrl) ? (
+                      {item.itemType === 'pcbundle' ? (
+                        <Cpu size={32} className="text-gold" />
+                      ) : hasValidProductImage(item.imageUrl) ? (
                         <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain block" width={80} height={80} loading="lazy" />
                       ) : (
                         <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="max-w-[80%] max-h-[80%]" role="img" aria-label={`Фото ${item.name} отсутствует`}>
@@ -171,10 +244,27 @@ export function CartPage(): ReactElement {
 
                     {/* Details */}
                     <div className="flex flex-col justify-center gap-2 min-w-0">
-                      <span className="text-[0.65rem] text-foreground-dim uppercase tracking-[0.1em] font-medium">{getCategoryLabel(item.category)}</span>
-                      <Link to={`/product/${item.productSlug ?? item.productId}`} className="text-[0.95rem] font-medium text-foreground leading-1.4 no-underline transition-colors hover:text-gold line-clamp-2">
-                        {item.name}
-                      </Link>
+                      {item.itemType === 'pcbundle' ? (
+                        <BundleItemCard
+                          item={item}
+                          expanded={expandedBundles.has(item.productId)}
+                          onToggle={() => {
+                            setExpandedBundles((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(item.productId)) next.delete(item.productId);
+                              else next.add(item.productId);
+                              return next;
+                            });
+                          }}
+                        />
+                      ) : (
+                        <>
+                          <span className="text-[0.65rem] text-foreground-dim uppercase tracking-[0.1em] font-medium">{getCategoryLabel(item.category)}</span>
+                          <Link to={`/product/${item.productSlug ?? item.productId}`} className="text-[0.95rem] font-medium text-foreground leading-1.4 no-underline transition-colors hover:text-gold line-clamp-2">
+                            {item.name}
+                          </Link>
+                        </>
+                      )}
                     </div>
 
                     {/* Actions */}
@@ -261,14 +351,28 @@ export function CartPage(): ReactElement {
           </div>
 
           <div className="flex flex-col gap-3">
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleCheckout}
-              rightIcon={<Icon name="arrow-right" size="sm" />}
-            >
-              Оформить заказ
-            </Button>
+            {hasBundle && !isAuthenticated ? (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => {
+                  localStorage.setItem('authRedirectPath', '/cart');
+                  useAuthModalStore.getState().openLoginModal();
+                }}
+                rightIcon={<Icon name="arrow-right" size="sm" />}
+              >
+                Войдите, чтобы оформить сборку
+              </Button>
+            ) : (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleCheckout}
+                rightIcon={<Icon name="arrow-right" size="sm" />}
+              >
+                Оформить заказ
+              </Button>
+            )}
 
             <Link to="/catalog" className="block mt-3">
               <Button variant="ghost" size="md" fullWidth>

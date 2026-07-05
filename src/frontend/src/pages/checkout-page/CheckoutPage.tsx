@@ -264,6 +264,9 @@ getAddresses()
           productName: item.name,
           quantity: item.quantity,
           unitPrice: item.price,
+          itemType: item.itemType === 'pcbundle' ? 'PCBundle' : 'Product',
+          pcConfigurationId: item.pcConfigurationId ?? null,
+          assemblyFee: item.assemblyFee ?? null,
         })),
       });
 
