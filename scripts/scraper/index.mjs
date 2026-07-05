@@ -334,15 +334,36 @@ async function parseProductDetail(item) {
   const descEl = $('.xf-product-desc, .item-desc, .product-description, .detail_text').first();
   const description = descEl.text()?.trim() || null;
 
-  const thumbImages = [];
-  $('.catalog-detail .item_slider img, .bx-catalog-element-shot img, .detail_img img, img[src*="upload"], img[src*="resize_cache"]').each((_, el) => {
-    const src = $(el).attr('src') || $(el).attr('data-src');
-    if (!src || thumbImages.includes(src)) return;
-    if (src.includes('upload') || src.includes('resize_cache')) {
-      thumbImages.push(ensureAbs(src));
-    }
+  // Сначала ищем картинки только в галерее товара (ultramodern и classic)
+  const imageSet = new Set();
+  const addImage = (raw) => {
+    if (!raw) return;
+    const abs = ensureAbs(raw);
+    const full = thumbToFullUrl(abs) || abs;
+    if (!full || !full.includes('upload/iblock/')) return;
+    // Исключаем site-wide картинки (логотип, плейсхолдеры, иконки меню)
+    if (full.includes('/menu_img/') || full.includes('7ed3a254421df44ec')) return;
+    if (full.includes('/upload/CNext/')) return;
+    if (!imageSet.has(full)) imageSet.add(full);
+  };
+
+  // 1. Галерея товара: ссылки на полные картинки (ultramodern структура)
+  $('a.gallery-item[href*="upload/iblock"], .xf-product-gallery a[href*="upload/iblock"]').each((_, el) => {
+    addImage($(el).attr('href'));
   });
-  const images = thumbImages.slice(0, 5).map((t) => thumbToFullUrl(t) || t);
+  // 2. Галерея: itemprop=image
+  $('link[itemprop="image"][href*="upload"], meta[property="og:image"][content*="upload"]').each((_, el) => {
+    addImage($(el).attr('href') || $(el).attr('content'));
+  });
+  // 3. Слайдер: только внутри .item_slider (не глобальные img)
+  $('.item_slider .slides img, .item_slider .thumbs img').each((_, el) => {
+    addImage($(el).attr('data-xpreview') || $(el).attr('src'));
+  });
+  // 4. Fallback: классический detail_img
+  $('.catalog-detail .detail_img img, .bx-catalog-element-shot img').each((_, el) => {
+    addImage($(el).attr('src') || $(el).attr('data-src'));
+  });
+  const images = [...imageSet].slice(0, 5);
 
   const specs = {};
   // New xf-* site structure

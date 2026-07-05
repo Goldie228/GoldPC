@@ -84,9 +84,13 @@ function parseSlidesImages(html, productName) {
   const seen = new Set();
 
   const add = (url) => {
-    const full = ensureAbs(url);
-    if (!full || !full.includes('upload') || seen.has(full)) return;
+    const abs = ensureAbs(url);
+    const full = thumbToFullUrl(abs) || abs;
+    if (!full || !full.includes('upload/iblock/')) return;
+    if (seen.has(full)) return;
+    // Исключаем site-wide картинки
     if (full.includes('/menu_img/') || full.includes('7ed3a254421df44ec')) return;
+    if (full.includes('/upload/CNext/')) return;
     seen.add(full);
     images.push(full);
   };

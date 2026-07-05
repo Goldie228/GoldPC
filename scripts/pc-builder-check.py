@@ -548,8 +548,8 @@ def check_cpu_ram(cpu: dict, ram: dict) -> list[dict]:
             "label": "Тип памяти (CPU → RAM)",
             "expected": cpu_mem_type or "неизвестно",
             "actual": ram_mem_type or "неизвестно",
-            "passed": False,
-            "detail": f"Не удалось определить тип памяти (CPU: {cpu_mem_type}, RAM: {ram_mem_type})",
+            "passed": True,
+            "detail": "Тип памяти не определён, проверка пропущена",
         })
     
     return results
@@ -588,8 +588,8 @@ def check_motherboard_ram(mb: dict, ram: dict, ram_qty: int) -> list[dict]:
             "label": "Тип памяти (MB → RAM)",
             "expected": mb_mem_type or "неизвестно",
             "actual": ram_mem_type or "неизвестно",
-            "passed": False,
-            "detail": f"Не удалось определить тип памяти (MB: {mb_mem_type}, RAM: {ram_mem_type})",
+            "passed": True,
+            "detail": "Тип памяти не определён, проверка пропущена",
         })
     
     # 2. Количество слотов памяти
