@@ -12,6 +12,8 @@ interface UsePersistenceOptions {
   onClearStorage: () => void;
   /** When provided, auto-save is debounced and sent to the API */
   autoSaveToApi?: (state: PCBuilderSelectedState) => Promise<void>;
+  /** When current is true, skip saving to localStorage and API (used during config loading) */
+  skipSaveRef?: { current: boolean };
 }
 
 export function usePersistence(
@@ -21,15 +23,17 @@ export function usePersistence(
   const isFirstRender = useRef(true);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoSaveToApi = options.autoSaveToApi;
+  const skipSaveRef = options.skipSaveRef;
 
-  // Always save to localStorage (immediate)
+  // Always save to localStorage (immediate) — skip during config loading
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
+    if (skipSaveRef?.current) return;
     saveToLocalStorage(components);
-  }, [components]);
+  }, [components, skipSaveRef]);
 
   // Debounced API auto-save (when autoSaveToApi is provided)
   const debouncedApiSave = useCallback(
@@ -45,8 +49,9 @@ export function usePersistence(
 
   useEffect(() => {
     if (isFirstRender.current) return;
+    if (skipSaveRef?.current) return;
     debouncedApiSave(components);
-  }, [components, debouncedApiSave]);
+  }, [components, debouncedApiSave, skipSaveRef]);
 
   useEffect(() => {
     return () => {

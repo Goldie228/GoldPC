@@ -29,6 +29,9 @@ import { extractStorageType, extractM2Slots, extractSataPorts } from '@/shared/u
 import type { Product, ProductCategory } from '@/api/types';
 import { useToastStore } from '@/store/toastStore';
 import { pluralizeRu } from '@/utils/pluralizeRu';
+import { pcbuilderApi } from '@/api/pcbuilder';
+import { catalogApi } from '@/api/catalog';
+import { saveToLocalStorage } from '@/features/pc-builder/logic/persistence';
 
 const icons = {
   cpu: <Cpu />,
@@ -340,6 +343,8 @@ export function PCBuilderPage() {
     addToCart,
     addToCartAsAssembly,
     resetBuild,
+    skipSaveRef,
+    selectedComponentsRef,
     maxRamModules,
     maxRamQty,
     maxStorageModules,
@@ -359,10 +364,10 @@ export function PCBuilderPage() {
   const configId = searchParams.get('config');
 
   // Refs for config loading (stable — won't trigger effect re-runs)
-  const selectComponentRef = useRef(selectComponent);
-  selectComponentRef.current = selectComponent;
   const resetBuildRef = useRef(resetBuild);
   resetBuildRef.current = resetBuild;
+  const selectComponentRef = useRef(selectComponent);
+  selectComponentRef.current = selectComponent;
   const showToastRef = useRef(showToast);
   showToastRef.current = showToast;
 
@@ -375,12 +380,12 @@ export function PCBuilderPage() {
     let cancelled = false;
     (async () => {
       try {
-        const { pcbuilderApi } = await import('@/api/pcbuilder');
-        const { catalogApi } = await import('@/api/catalog');
         const config = await pcbuilderApi.getConfiguration(configId);
 
         if (cancelled) return;
 
+        // Batch persistence: prevent intermediate empty/partial states from being saved
+        skipSaveRef.current = true;
         resetBuildRef.current();
 
         const mapping: [string, PCComponentType][] = [
@@ -412,17 +417,27 @@ export function PCBuilderPage() {
         }
 
         if (!cancelled) {
+          // Re-enable persistence and save the final complete state to localStorage
+          skipSaveRef.current = false;
+          saveToLocalStorage(selectedComponentsRef.current);
+
           setSearchParams({}, { replace: true });
           showToastRef.current(`Сборка «${config.name}» загружена`, 'success');
+        } else {
+          skipSaveRef.current = false;
         }
       } catch {
+        skipSaveRef.current = false;
         if (!cancelled) {
           showToastRef.current('Не удалось загрузить конфигурацию', 'error');
         }
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      loadConfigIdRef.current = null;
+    };
   }, [configId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const slotRows = useMemo(() => buildSlotRows(selectedComponents, maxRamQty, maxStorageModules, maxFanModules), [selectedComponents, maxRamQty, maxStorageModules, maxFanModules]);

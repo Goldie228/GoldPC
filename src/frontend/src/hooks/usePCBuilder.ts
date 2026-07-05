@@ -9,7 +9,7 @@
  * NO business logic, NO API calls, NO localStorage
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, type MutableRefObject } from 'react';
 import type { Product } from '../api/types';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
@@ -66,6 +66,8 @@ import { useRamTrim } from './pc-builder/useRamTrim';
 
 export interface UsePCBuilderReturn {
   selectedComponents: PCBuilderSelectedState;
+  /** Stable ref that always holds the latest selectedComponents (avoids stale closures in effects) */
+  selectedComponentsRef: MutableRefObject<PCBuilderSelectedState>;
   compatibility: CompatibilityResult;
   totalPrice: number;
   powerConsumption: number;
@@ -81,6 +83,8 @@ export interface UsePCBuilderReturn {
   removeComponent: (type: PCComponentType, multiIndex?: number) => void;
   resetBuild: () => void;
   clearBuild: () => void;
+  /** When set to true, usePersistence will skip saving to localStorage (used during config loading) */
+  skipSaveRef: { current: boolean };
   addToCart: () => void;
   addToCartAsAssembly: () => void;
   getSlotState: (type: PCComponentType, multiIndex?: number) => ComponentCompatibility;
@@ -95,6 +99,9 @@ export interface UsePCBuilderReturn {
 export function usePCBuilder(): UsePCBuilderReturn {
   // === State ===
   const [selectedComponents, setSelectedComponents] = useState<PCBuilderSelectedState>(loadFromLocalStorage);
+  /** Ref that always holds the latest selectedComponents (avoids stale closures) */
+  const selectedComponentsRef = useRef(selectedComponents);
+  selectedComponentsRef.current = selectedComponents;
 
   // === Side Effect Hooks ===
   const { apiResult, isLoading: isApiLoading } = useCompatibilityApi(selectedComponents);
@@ -104,6 +111,8 @@ export function usePCBuilder(): UsePCBuilderReturn {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const lastSavedJsonRef = useRef('');
   const lastSavedConfigIdRef = useRef<string | null>(null);
+  /** Ref that prevents usePersistence from saving to localStorage during config loading */
+  const skipSaveRef = useRef(false);
 
   // On mount: load existing auto-save ID so we update instead of creating new
   useEffect(() => {
@@ -159,6 +168,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     initialState: selectedComponents,
     onClearStorage: () => {},
     autoSaveToApi,
+    skipSaveRef,
   });
 
   // === Cart Store ===
@@ -299,6 +309,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
   // === Return ===
   return {
     selectedComponents,
+    selectedComponentsRef,
     compatibility,
     totalPrice,
     powerConsumption,
@@ -314,6 +325,7 @@ export function usePCBuilder(): UsePCBuilderReturn {
     removeComponent: removeComponentAction,
     resetBuild: resetBuildAction,
     clearBuild: clearBuildAction,
+    skipSaveRef,
     addToCart: addToCartAction,
     addToCartAsAssembly: addToCartAsAssemblyAction,
     getSlotState,
